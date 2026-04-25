@@ -1,0 +1,15 @@
+.aider*
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.tmp
+.DS_Store
+
+output/
+renders/
+
+Scripting/v61b_backgood/
+old script legacy/
+
