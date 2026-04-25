@@ -2,6 +2,10 @@ import sys
 import time
 from pathlib import Path
 import bpy
+import logging
+
+# Configurazione del logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 SCRIPT_DIR = None
 
@@ -9,7 +13,8 @@ try:
     text = bpy.context.space_data.text
     if text is not None and text.filepath:
         SCRIPT_DIR = Path(text.filepath).resolve().parent
-except Exception:
+except Exception as e:
+    logging.warning(f"Impossibile determinare la directory dello script: {e}")
     SCRIPT_DIR = None
 
 if SCRIPT_DIR is None:
@@ -76,57 +81,57 @@ def register_tuning_panel():
         import scene_tuning_panel
 
         scene_tuning_panel.register()
-        print("[INFO] Spaziotempo tuning panel registered. Open Viewport sidebar with N > Spaziotempo.")
+        logging.info("Pannello di tuning Spaziotempo registrato. Aprire il pannello laterale con N > Spaziotempo.")
     except Exception as exc:
-        print(f"[WARN] Tuning panel non registrato: {exc}")
+        logging.warning(f"Impossibile registrare il pannello di tuning: {exc}")
 
 
 def classify_project_structure(scene):
     try:
         report = classify_scene_objects(scene, include_reserved=True)
         summary = compact_structure_summary(report)
-        print(f"[INFO] Scene structure classified: {summary}")
+        logging.info(f"Struttura della scena classificata: {summary}")
         return report
     except Exception as exc:
-        print(f"[WARN] Scene structure non classificata: {exc}")
+        logging.warning(f"Impossibile classificare la struttura della scena: {exc}")
         return None
 
 
 def print_summary(scene, analysis_file, hero_asset, secondary_asset, audio_file, fps, frame_count, elapsed):
-    print("=" * 68)
-    print("SPAZIOTEMPOREC HERO + SECONDARY ASSET VISUAL READY")
-    print(f"Engine: {scene.render.engine}")
-    print(f"Resolution: {scene.render.resolution_x}x{scene.render.resolution_y} @ {scene.render.resolution_percentage}%")
-    print(f"FPS: {fps}")
-    print(f"Frames: {frame_count}")
-    print(f"Analysis JSON: {analysis_file}")
-    print(f"Hero asset:    {hero_asset['asset_file']}")
+    logging.info("=" * 68)
+    logging.info("SPAZIOTEMPOREC HERO + SECONDARY ASSET VISUAL READY")
+    logging.info(f"Engine: {scene.render.engine}")
+    logging.info(f"Resolution: {scene.render.resolution_x}x{scene.render.resolution_y} @ {scene.render.resolution_percentage}%")
+    logging.info(f"FPS: {fps}")
+    logging.info(f"Frames: {frame_count}")
+    logging.info(f"Analysis JSON: {analysis_file}")
+    logging.info(f"Hero asset:    {hero_asset['asset_file']}")
     if secondary_asset is not None:
-        print(f"Secondary:     {secondary_asset['asset_file']}")
+        logging.info(f"Secondary:     {secondary_asset['asset_file']}")
     else:
-        print("Secondary:     NONE")
-    print(f"Audio:         {audio_file}")
+        logging.info("Secondary:     NONE")
+    logging.info(f"Audio:         {audio_file}")
     if str(RENDER_OUTPUT_MODE).upper() == "IMAGE_SEQUENCE":
-        print(f"Frames:        {OUTPUT_IMAGE_SEQUENCE_DIR}")
-        print(f"Prefix:        {OUTPUT_IMAGE_SEQUENCE_PREFIX}")
-        print(f"Encode MP4:    run encode_image_sequence_v61b.py after Render Animation")
+        logging.info(f"Frames:        {OUTPUT_IMAGE_SEQUENCE_DIR}")
+        logging.info(f"Prefix:        {OUTPUT_IMAGE_SEQUENCE_PREFIX}")
+        logging.info(f"Encode MP4:    eseguire encode_image_sequence_v61b.py dopo il Render Animation")
     else:
-        print(f"MP4:           {scene.render.filepath}")
-    print(f"Elapsed:       {elapsed:.2f}s")
-    print("Use Render > Render Animation to export the configured output.")
-    print("=" * 68)
+        logging.info(f"MP4:           {scene.render.filepath}")
+    logging.info(f"Elapsed:       {elapsed:.2f}s")
+    logging.info("Utilizzare Render > Render Animation per esportare l'output configurato.")
+    logging.info("=" * 68)
 
 
 def main():
     t0 = time.time()
 
-    print("[1/10] Verifica input...")
+    logging.info("[1/10] Verifica input...")
     analysis_file, audio_file = ensure_inputs_exist(
         ANALYSIS_JSON_PATH,
         AUDIO_PATH,
     )
 
-    print("[2/10] Carico analysis JSON...")
+    logging.info("[2/10] Carico analysis JSON...")
     analysis = load_json(analysis_file)
     meta = analysis["meta"]
     frames = analysis["frames"]
@@ -136,44 +141,44 @@ def main():
 
     scene = bpy.context.scene
     if CLEAR_SCENE:
-        print("[3/10] Pulisco scena...")
+        logging.info("[3/10] Pulisco scena...")
         clear_scene()
 
     scene.frame_start = 1
     scene.frame_end = frame_count
     scene.frame_set(1)
 
-    print("[4/10] Configuro render e world...")
+    logging.info("[4/10] Configuro render e world...")
     configure_scene_physics(scene)
     configure_render(scene, OUTPUT_MP4, fps)
     configure_world(scene)
 
-    print("[5/10] Aggiungo audio strip...")
+    logging.info("[5/10] Aggiungo audio strip...")
     add_audio_strip(scene, audio_file, clear_existing=CLEAR_SEQUENCER, sync_audio=True)
 
     if scene.rigidbody_world is not None and scene.rigidbody_world.point_cache is not None:
         scene.rigidbody_world.point_cache.frame_start = 1
         scene.rigidbody_world.point_cache.frame_end = frame_count
 
-    print("[6/10] Creo camera...")
+    logging.info("[6/10] Creo camera...")
     camera, target = create_camera_rig()
 
-    print("[7/10] Creo base scena...")
+    logging.info("[7/10] Creo base scena...")
     scene_base = create_floor_and_backdrop()
     lights = create_area_lights()
 
-    print("[8/10] Importo hero + secondary asset...")
+    logging.info("[8/10] Importo hero + secondary asset...")
     scene_core = create_scene_core()
     hero_asset = create_primary_asset(parent=scene_core)
     secondary_asset = create_secondary_asset(parent=scene_core)
 
-    print(f"[INFO] Hero asset file: {hero_asset['asset_file']}")
+    logging.info(f"[INFO] Hero asset file: {hero_asset['asset_file']}")
     if secondary_asset is not None:
-        print(f"[INFO] Secondary asset file: {secondary_asset['asset_file']}")
+        logging.info(f"[INFO] Secondary asset file: {secondary_asset['asset_file']}")
     else:
-        print("[INFO] Secondary asset: NONE")
+        logging.info("[INFO] Secondary asset: NONE")
 
-    print("[9/10] Creo atmosfera e fisica...")
+    logging.info("[9/10] Creo atmosfera e fisica...")
     aura_data = create_hero_aura(parent=scene_core)
     energy_rings = create_energy_rings(parent=scene_core)
     energy_ribbons = create_energy_ribbons(parent=scene_core)
@@ -184,7 +189,7 @@ def main():
 
     physics_data = create_physics_accents(parent=scene_core)
 
-    print("[10/10] Animo scena...")
+    logging.info("[10/10] Animo scena...")
     animate_scene(
         scene=scene,
         frames=frames,
