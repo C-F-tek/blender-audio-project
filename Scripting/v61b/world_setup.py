@@ -10,6 +10,8 @@ from config import (
     HDRI_ROT_Z,
     LIGHT_ENERGY_MIN,
     FLOOR_SIZE,
+    FLOOR_RENDER_VISIBLE,
+    FLOOR_VIEWPORT_VISIBLE,
     USE_SOFT_BACKDROP,
     BACKDROP_SIZE,
     BACKDROP_LOCATION,
@@ -92,6 +94,8 @@ def create_floor_and_backdrop():
     floor = bpy.context.active_object
     floor.name = "PeaceFloor"
     floor.data.materials.append(floor_mat)
+    floor.hide_render = not FLOOR_RENDER_VISIBLE
+    floor.hide_viewport = not FLOOR_VIEWPORT_VISIBLE
 
     invisible_plane = None
     if USE_INVISIBLE_COLLISION_PLANE:

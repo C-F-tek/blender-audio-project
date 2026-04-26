@@ -108,16 +108,16 @@ def build_soft_backdrop_material():
 
     noise = nodes.new("ShaderNodeTexNoise")
     noise.location = (-320, 0)
-    noise.inputs["Scale"].default_value = 2.4
-    noise.inputs["Detail"].default_value = 8.0
-    noise.inputs["Roughness"].default_value = 0.55
+    noise.inputs["Scale"].default_value = 1.35
+    noise.inputs["Detail"].default_value = 5.0
+    noise.inputs["Roughness"].default_value = 0.42
 
     ramp = nodes.new("ShaderNodeValToRGB")
     ramp.location = (-80, 0)
-    ramp.color_ramp.elements[0].position = 0.20
-    ramp.color_ramp.elements[0].color = PEACE_PALETTE["twilight_blue"]
+    ramp.color_ramp.elements[0].position = 0.14
+    ramp.color_ramp.elements[0].color = (0.004, 0.018, 0.020, 1.0)
     ramp.color_ramp.elements[1].position = 1.00
-    ramp.color_ramp.elements[1].color = PEACE_PALETTE["soft_teal"]
+    ramp.color_ramp.elements[1].color = (0.030, 0.090, 0.088, 1.0)
 
     emission = nodes.new("ShaderNodeEmission")
     emission.location = (280, 0)
@@ -498,18 +498,16 @@ def build_fog_filament_material(name="FogFilamentMaterial"):
     out = nodes.new("ShaderNodeOutputMaterial")
     out.location = (720, 0)
 
-    bsdf = nodes.new("ShaderNodeBsdfPrincipled")
-    bsdf.location = (470, 0)
-    if "Base Color" in bsdf.inputs:
-        bsdf.inputs["Base Color"].default_value = (0.62, 0.80, 0.82, 1.0)
-    if "Roughness" in bsdf.inputs:
-        bsdf.inputs["Roughness"].default_value = 0.82
-    if "Alpha" in bsdf.inputs:
-        bsdf.inputs["Alpha"].default_value = FOG_FILAMENT_ALPHA_MIN
-    if "Emission Color" in bsdf.inputs:
-        bsdf.inputs["Emission Color"].default_value = PEACE_PALETTE["soft_teal"]
-    if "Emission Strength" in bsdf.inputs:
-        bsdf.inputs["Emission Strength"].default_value = FOG_FILAMENT_EMISSION_MIN
+    transparent = nodes.new("ShaderNodeBsdfTransparent")
+    transparent.location = (420, 120)
+
+    emission_shader = nodes.new("ShaderNodeEmission")
+    emission_shader.location = (420, -60)
+    emission_shader.inputs["Color"].default_value = (0.58, 0.86, 0.86, 1.0)
+    emission_shader.inputs["Strength"].default_value = FOG_FILAMENT_EMISSION_MIN
+
+    mix_shader = nodes.new("ShaderNodeMixShader")
+    mix_shader.location = (650, 20)
 
     texcoord = nodes.new("ShaderNodeTexCoord")
     texcoord.location = (-900, 120)
@@ -591,11 +589,11 @@ def build_fog_filament_material(name="FogFilamentMaterial"):
     links.new(alpha_mix.outputs[0], alpha_mul.inputs[0])
     links.new(alpha_value.outputs[0], alpha_mul.inputs[1])
 
-    if "Alpha" in bsdf.inputs:
-        links.new(alpha_mul.outputs[0], bsdf.inputs["Alpha"])
-    if "Emission Strength" in bsdf.inputs:
-        links.new(emission_value.outputs[0], bsdf.inputs["Emission Strength"])
-    links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
+    links.new(alpha_mul.outputs[0], mix_shader.inputs[0])
+    links.new(transparent.outputs["BSDF"], mix_shader.inputs[1])
+    links.new(emission_shader.outputs["Emission"], mix_shader.inputs[2])
+    links.new(emission_value.outputs[0], emission_shader.inputs["Strength"])
+    links.new(mix_shader.outputs["Shader"], out.inputs["Surface"])
 
     controls = {
         "alpha_socket": alpha_value.outputs[0],

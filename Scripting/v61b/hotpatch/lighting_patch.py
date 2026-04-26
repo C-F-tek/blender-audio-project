@@ -15,6 +15,27 @@ LIGHT_ENERGY_MAX = cfg_value("LIGHT_ENERGY_MAX", 128.0)
 WORLD_STRENGTH = cfg_value("WORLD_STRENGTH", 0.115)
 BACKDROP_EMISSION_MIN = cfg_value("BACKDROP_EMISSION_MIN", 0.025)
 BACKDROP_EMISSION_MAX = cfg_value("BACKDROP_EMISSION_MAX", 0.027)
+BACKDROP_SIZE = cfg_value("BACKDROP_SIZE", 92.0)
+BACKDROP_LOCATION = cfg_value("BACKDROP_LOCATION", (0.0, 12.0, 5.2))
+BACKDROP_ROT_X = cfg_value("BACKDROP_ROT_X", 1.57079632679)
+FLOOR_RENDER_VISIBLE = cfg_value("FLOOR_RENDER_VISIBLE", False)
+FLOOR_VIEWPORT_VISIBLE = cfg_value("FLOOR_VIEWPORT_VISIBLE", True)
+
+
+def resize_plane_local(obj, target_size):
+    mesh = getattr(obj, "data", None)
+    vertices = getattr(mesh, "vertices", None)
+    if not vertices:
+        return
+
+    xs = [v.co.x for v in vertices]
+    ys = [v.co.y for v in vertices]
+    width = max(xs) - min(xs)
+    height = max(ys) - min(ys)
+    if width > 0.0001:
+        obj.scale.x = float(target_size) / width
+    if height > 0.0001:
+        obj.scale.y = float(target_size) / height
 
 
 def update_world(scene):
@@ -30,6 +51,8 @@ def update_world(scene):
         bg = nodes.new("ShaderNodeBackground")
     if "Strength" in bg.inputs:
         bg.inputs["Strength"].default_value = WORLD_STRENGTH
+    if "Color" in bg.inputs:
+        bg.inputs["Color"].default_value = (0.004, 0.012, 0.014, 1.0)
 
 
 def remove_legacy_rhythm_objects():
@@ -65,21 +88,29 @@ def update_area_lights(frames):
 def update_backdrop():
     backdrop = bpy.data.objects.get("SoftRhythmBackdrop")
     material = bpy.data.materials.get("SoftBackdropMaterial")
+    floor = bpy.data.objects.get("PeaceFloor")
+
+    if floor is not None:
+        floor.hide_render = not bool(FLOOR_RENDER_VISIBLE)
+        floor.hide_viewport = not bool(FLOOR_VIEWPORT_VISIBLE)
 
     if material is not None and material.use_nodes:
         clear_animation(material.node_tree)
         emission = get_node(material, "BackdropEmission")
         socket = socket_by_name(emission, "Strength")
         if socket is not None:
-            socket.default_value = BACKDROP_EMISSION_MIN + (BACKDROP_EMISSION_MAX - BACKDROP_EMISSION_MIN) * 0.06
+            socket.default_value = BACKDROP_EMISSION_MIN + (BACKDROP_EMISSION_MAX - BACKDROP_EMISSION_MIN) * 0.18
 
         for node in material.node_tree.nodes:
             if node.type == "TEX_NOISE" and "Scale" in node.inputs:
-                node.inputs["Scale"].default_value = 2.18
+                node.inputs["Scale"].default_value = 1.35
 
     if backdrop is not None:
         clear_animation(backdrop)
         backdrop.hide_render = False
         backdrop.hide_viewport = False
+        backdrop.location = BACKDROP_LOCATION
+        backdrop.rotation_euler = (BACKDROP_ROT_X, 0.0, 0.0)
+        resize_plane_local(backdrop, BACKDROP_SIZE)
 
     return backdrop is not None

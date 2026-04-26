@@ -106,6 +106,9 @@ def ensure_fog_filaments(parent=None):
     )
     elif parent is not None and root.parent is None:
         root.parent = parent
+    root.hide_render = True
+    root.hide_viewport = False
+    root.hide_select = True
 
     existing = _collect_objects()
 

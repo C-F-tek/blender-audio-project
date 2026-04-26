@@ -811,7 +811,7 @@ class ST_TuningSettings(bpy.types.PropertyGroup):
     show_backdrop: BoolProperty(name="Show backdrop", default=True)
     render_backdrop: BoolProperty(name="Render backdrop", default=True)
     show_floor: BoolProperty(name="Show floor", default=True)
-    render_floor: BoolProperty(name="Render floor", default=True)
+    render_floor: BoolProperty(name="Render floor", default=False)
     show_emitters: BoolProperty(name="Show emitters", default=False)
     show_particle_sources: BoolProperty(name="Show source objects", default=False)
     motion_blur: BoolProperty(name="Motion blur", default=False)

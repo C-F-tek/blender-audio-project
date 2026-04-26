@@ -70,6 +70,9 @@ def run_hotpatch(mode="ALL"):
         result["legacy_removed"] = remove_legacy_rhythm_objects()
         result["area_lights"] = update_area_lights(frames)
         result["backdrop"] = update_backdrop()
+    elif mode == "FOG":
+        update_world(scene)
+        result["backdrop"] = update_backdrop()
 
     if mode in {"MATERIALS", "ALL"}:
         result["hero_materials"] = patch_hero_materials(frames)
