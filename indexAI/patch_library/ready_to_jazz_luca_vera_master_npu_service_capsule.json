@@ -1,0 +1,1861 @@
+{
+  "format": "SPAZIOTEMPO_AI_SERVICE_CAPSULE_V1",
+  "generated_at": "2026-04-27T14:41:42",
+  "routing_policy": {
+    "heavy_reasoning": "GPU_OLLAMA",
+    "code_generation": "GPU_OLLAMA_SCENE_SCRIPT_WRITER",
+    "npu_role": "service_data_router_compact_capsule",
+    "npu_heavy_generation": false,
+    "full_keyframes_policy": "reference_only_never_compact_for_blender",
+    "memory_policy": "Every AI call receives compact user memory, scene brief, asset inventory and project/audio chunk references."
+  },
+  "track": {
+    "stem": "Ready To Jazz-Luca Vera_Master",
+    "duration": 345.6001,
+    "fps": 30.0,
+    "bpm": 126.048,
+    "frames": 10369,
+    "segments": 22
+  },
+  "refs": {
+    "analysis_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis.json",
+    "track_summary_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_track_summary.json",
+    "music_context_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_music_context.json",
+    "analysis_ai_context_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis_ai_context.json",
+    "full_blender_keyframes_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis_blender_keyframes.json",
+    "full_blender_keyframes_sha": "d8c1ee517a31f8200cf43ca6688026d45b360cdc15b1354008bc1ef5d83f9667",
+    "dual_plan_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_dual_ai_scene_plan.json",
+    "project_manifest_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI\\project_code_manifest.json"
+  },
+  "audio_language": {
+    "legend": "S{id}: t=[sec0,sec1], b=band, i=intensity, ctl={hero,mat,fog,emit,cam}, evt=top events.",
+    "overall": {
+      "low": 0.2369,
+      "mid": 0.4517,
+      "high": 0.2885,
+      "onset": 0.1415,
+      "beat": 0.068
+    },
+    "segments": [
+      {
+        "id": "S001",
+        "t": [
+          0.0,
+          16.0
+        ],
+        "b": "high",
+        "i": "low",
+        "score": 0.2203,
+        "beats": 34,
+        "ctl": {
+          "hero": 0.347,
+          "mat": 0.2897,
+          "fog": 0.0889,
+          "emit": 0.5305,
+          "cam": 0.2557
+        },
+        "evt": [
+          {
+            "t": 11.067,
+            "lo": 0.051,
+            "mi": 0.39,
+            "hi": 0.932,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 8.2,
+            "lo": 0.369,
+            "mi": 0.213,
+            "hi": 0.728,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 7.233,
+            "lo": 0.396,
+            "mi": 0.126,
+            "hi": 0.661,
+            "on": 1.0,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S002",
+        "t": [
+          16.0,
+          32.0
+        ],
+        "b": "high",
+        "i": "low",
+        "score": 0.2434,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3481,
+          "mat": 0.3377,
+          "fog": 0.1166,
+          "emit": 0.52,
+          "cam": 0.2427
+        },
+        "evt": [
+          {
+            "t": 23.567,
+            "lo": 0.355,
+            "mi": 0.225,
+            "hi": 0.868,
+            "on": 0.998,
+            "bt": 1.0
+          },
+          {
+            "t": 26.433,
+            "lo": 0.038,
+            "mi": 0.443,
+            "hi": 0.981,
+            "on": 0.967,
+            "bt": 1.0
+          },
+          {
+            "t": 22.6,
+            "lo": 0.382,
+            "mi": 0.211,
+            "hi": 0.78,
+            "on": 0.994,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S003",
+        "t": [
+          32.0,
+          48.0
+        ],
+        "b": "mid",
+        "i": "low",
+        "score": 0.2849,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3454,
+          "mat": 0.4017,
+          "fog": 0.1703,
+          "emit": 0.5364,
+          "cam": 0.2375
+        },
+        "evt": [
+          {
+            "t": 35.067,
+            "lo": 0.805,
+            "mi": 0.445,
+            "hi": 0.56,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 36.033,
+            "lo": 0.333,
+            "mi": 0.308,
+            "hi": 0.591,
+            "on": 0.904,
+            "bt": 1.0
+          },
+          {
+            "t": 45.633,
+            "lo": 0.39,
+            "mi": 0.278,
+            "hi": 0.575,
+            "on": 0.877,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S004",
+        "t": [
+          48.0,
+          64.0
+        ],
+        "b": "mid",
+        "i": "low",
+        "score": 0.2889,
+        "beats": 34,
+        "ctl": {
+          "hero": 0.3339,
+          "mat": 0.4459,
+          "fog": 0.1806,
+          "emit": 0.5475,
+          "cam": 0.2424
+        },
+        "evt": [
+          {
+            "t": 50.433,
+            "lo": 0.859,
+            "mi": 0.482,
+            "hi": 0.664,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 63.867,
+            "lo": 0.149,
+            "mi": 0.33,
+            "hi": 0.733,
+            "on": 0.833,
+            "bt": 1.0
+          },
+          {
+            "t": 51.4,
+            "lo": 0.283,
+            "mi": 0.344,
+            "hi": 0.689,
+            "on": 0.785,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S005",
+        "t": [
+          64.0,
+          80.0
+        ],
+        "b": "mid",
+        "i": "low",
+        "score": 0.3167,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3253,
+          "mat": 0.4882,
+          "fog": 0.2041,
+          "emit": 0.5392,
+          "cam": 0.2389
+        },
+        "evt": [
+          {
+            "t": 67.7,
+            "lo": 0.154,
+            "mi": 0.353,
+            "hi": 0.721,
+            "on": 0.963,
+            "bt": 1.0
+          },
+          {
+            "t": 71.567,
+            "lo": 0.169,
+            "mi": 0.333,
+            "hi": 0.713,
+            "on": 0.824,
+            "bt": 1.0
+          },
+          {
+            "t": 64.833,
+            "lo": 0.139,
+            "mi": 0.29,
+            "hi": 0.642,
+            "on": 0.801,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S006",
+        "t": [
+          80.0,
+          96.0
+        ],
+        "b": "mid",
+        "i": "low",
+        "score": 0.3299,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3425,
+          "mat": 0.5368,
+          "fog": 0.2076,
+          "emit": 0.5775,
+          "cam": 0.2159
+        },
+        "evt": [
+          {
+            "t": 87.867,
+            "lo": 0.096,
+            "mi": 0.558,
+            "hi": 0.932,
+            "on": 0.967,
+            "bt": 1.0
+          },
+          {
+            "t": 84.033,
+            "lo": 0.443,
+            "mi": 0.573,
+            "hi": 0.692,
+            "on": 0.997,
+            "bt": 1.0
+          },
+          {
+            "t": 85.0,
+            "lo": 0.379,
+            "mi": 0.559,
+            "hi": 0.734,
+            "on": 0.95,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S007",
+        "t": [
+          96.0,
+          112.0
+        ],
+        "b": "mid",
+        "i": "low",
+        "score": 0.33,
+        "beats": 34,
+        "ctl": {
+          "hero": 0.3386,
+          "mat": 0.5202,
+          "fog": 0.2083,
+          "emit": 0.5566,
+          "cam": 0.2119
+        },
+        "evt": [
+          {
+            "t": 111.867,
+            "lo": 0.782,
+            "mi": 0.559,
+            "hi": 0.558,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 99.4,
+            "lo": 0.35,
+            "mi": 0.559,
+            "hi": 0.795,
+            "on": 0.928,
+            "bt": 1.0
+          },
+          {
+            "t": 103.233,
+            "lo": 0.113,
+            "mi": 0.585,
+            "hi": 0.981,
+            "on": 0.848,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S008",
+        "t": [
+          112.0,
+          128.0
+        ],
+        "b": "mid",
+        "i": "low",
+        "score": 0.3301,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3324,
+          "mat": 0.5276,
+          "fog": 0.2096,
+          "emit": 0.5619,
+          "cam": 0.2375
+        },
+        "evt": [
+          {
+            "t": 127.233,
+            "lo": 0.817,
+            "mi": 0.762,
+            "hi": 0.898,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 121.467,
+            "lo": 0.145,
+            "mi": 0.299,
+            "hi": 0.691,
+            "on": 0.839,
+            "bt": 1.0
+          },
+          {
+            "t": 122.433,
+            "lo": 0.363,
+            "mi": 0.331,
+            "hi": 0.585,
+            "on": 0.847,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S009",
+        "t": [
+          128.0,
+          144.0
+        ],
+        "b": "mid",
+        "i": "low",
+        "score": 0.3351,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3359,
+          "mat": 0.5229,
+          "fog": 0.2163,
+          "emit": 0.5776,
+          "cam": 0.2187
+        },
+        "evt": [
+          {
+            "t": 132.033,
+            "lo": 0.263,
+            "mi": 0.462,
+            "hi": 0.561,
+            "on": 0.888,
+            "bt": 1.0
+          },
+          {
+            "t": 137.3,
+            "lo": 0.714,
+            "mi": 0.71,
+            "hi": 0.138,
+            "on": 0.872,
+            "bt": 1.0
+          },
+          {
+            "t": 140.667,
+            "lo": 0.11,
+            "mi": 0.729,
+            "hi": 0.765,
+            "on": 0.776,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S010",
+        "t": [
+          144.0,
+          160.0
+        ],
+        "b": "mid",
+        "i": "medium",
+        "score": 0.3499,
+        "beats": 34,
+        "ctl": {
+          "hero": 0.3515,
+          "mat": 0.5356,
+          "fog": 0.2259,
+          "emit": 0.5858,
+          "cam": 0.2392
+        },
+        "evt": [
+          {
+            "t": 144.5,
+            "lo": 0.119,
+            "mi": 0.898,
+            "hi": 0.762,
+            "on": 0.915,
+            "bt": 1.0
+          },
+          {
+            "t": 159.867,
+            "lo": 0.43,
+            "mi": 0.475,
+            "hi": 0.832,
+            "on": 0.812,
+            "bt": 1.0
+          },
+          {
+            "t": 151.233,
+            "lo": 0.133,
+            "mi": 0.425,
+            "hi": 0.436,
+            "on": 0.855,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S011",
+        "t": [
+          160.0,
+          176.0
+        ],
+        "b": "mid",
+        "i": "medium",
+        "score": 0.3837,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3924,
+          "mat": 0.6476,
+          "fog": 0.259,
+          "emit": 0.582,
+          "cam": 0.2019
+        },
+        "evt": [
+          {
+            "t": 160.833,
+            "lo": 0.436,
+            "mi": 0.432,
+            "hi": 0.715,
+            "on": 0.996,
+            "bt": 1.0
+          },
+          {
+            "t": 164.667,
+            "lo": 0.092,
+            "mi": 0.822,
+            "hi": 1.0,
+            "on": 0.944,
+            "bt": 1.0
+          },
+          {
+            "t": 161.8,
+            "lo": 0.615,
+            "mi": 0.39,
+            "hi": 0.854,
+            "on": 0.756,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S012",
+        "t": [
+          176.0,
+          192.0
+        ],
+        "b": "mid",
+        "i": "medium",
+        "score": 0.3686,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3432,
+          "mat": 0.5951,
+          "fog": 0.2385,
+          "emit": 0.6035,
+          "cam": 0.2064
+        },
+        "evt": [
+          {
+            "t": 188.667,
+            "lo": 0.752,
+            "mi": 0.564,
+            "hi": 0.649,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 176.2,
+            "lo": 0.417,
+            "mi": 0.495,
+            "hi": 0.823,
+            "on": 0.907,
+            "bt": 1.0
+          },
+          {
+            "t": 191.567,
+            "lo": 0.346,
+            "mi": 0.392,
+            "hi": 0.914,
+            "on": 0.753,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S013",
+        "t": [
+          192.0,
+          208.0
+        ],
+        "b": "mid",
+        "i": "medium",
+        "score": 0.3642,
+        "beats": 34,
+        "ctl": {
+          "hero": 0.3408,
+          "mat": 0.6031,
+          "fog": 0.2324,
+          "emit": 0.6438,
+          "cam": 0.2109
+        },
+        "evt": [
+          {
+            "t": 204.033,
+            "lo": 0.836,
+            "mi": 0.753,
+            "hi": 0.726,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 199.233,
+            "lo": 0.352,
+            "mi": 0.322,
+            "hi": 0.602,
+            "on": 0.831,
+            "bt": 1.0
+          },
+          {
+            "t": 198.267,
+            "lo": 0.062,
+            "mi": 0.687,
+            "hi": 0.734,
+            "on": 0.776,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S014",
+        "t": [
+          208.0,
+          224.0
+        ],
+        "b": "mid",
+        "i": "medium",
+        "score": 0.3674,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3276,
+          "mat": 0.6159,
+          "fog": 0.2445,
+          "emit": 0.6235,
+          "cam": 0.2256
+        },
+        "evt": [
+          {
+            "t": 221.3,
+            "lo": 0.215,
+            "mi": 0.439,
+            "hi": 0.736,
+            "on": 0.977,
+            "bt": 1.0
+          },
+          {
+            "t": 218.433,
+            "lo": 0.111,
+            "mi": 0.49,
+            "hi": 0.676,
+            "on": 0.939,
+            "bt": 1.0
+          },
+          {
+            "t": 217.467,
+            "lo": 0.177,
+            "mi": 0.413,
+            "hi": 0.748,
+            "on": 0.894,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S015",
+        "t": [
+          224.0,
+          240.0
+        ],
+        "b": "mid",
+        "i": "medium",
+        "score": 0.3815,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3465,
+          "mat": 0.6019,
+          "fog": 0.2441,
+          "emit": 0.5919,
+          "cam": 0.2467
+        },
+        "evt": [
+          {
+            "t": 237.633,
+            "lo": 0.42,
+            "mi": 0.585,
+            "hi": 0.795,
+            "on": 0.995,
+            "bt": 1.0
+          },
+          {
+            "t": 236.667,
+            "lo": 0.149,
+            "mi": 0.541,
+            "hi": 0.857,
+            "on": 0.886,
+            "bt": 1.0
+          },
+          {
+            "t": 229.467,
+            "lo": 0.781,
+            "mi": 0.975,
+            "hi": 0.325,
+            "on": 0.96,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S016",
+        "t": [
+          240.0,
+          256.0
+        ],
+        "b": "mid",
+        "i": "medium",
+        "score": 0.3927,
+        "beats": 34,
+        "ctl": {
+          "hero": 0.34,
+          "mat": 0.5986,
+          "fog": 0.2573,
+          "emit": 0.5534,
+          "cam": 0.2329
+        },
+        "evt": [
+          {
+            "t": 241.467,
+            "lo": 0.108,
+            "mi": 0.877,
+            "hi": 0.911,
+            "on": 0.961,
+            "bt": 1.0
+          },
+          {
+            "t": 253.0,
+            "lo": 0.351,
+            "mi": 0.687,
+            "hi": 0.878,
+            "on": 0.939,
+            "bt": 1.0
+          },
+          {
+            "t": 244.833,
+            "lo": 0.837,
+            "mi": 0.79,
+            "hi": 0.224,
+            "on": 0.905,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S017",
+        "t": [
+          256.0,
+          272.0
+        ],
+        "b": "mid",
+        "i": "medium",
+        "score": 0.3804,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3466,
+          "mat": 0.594,
+          "fog": 0.2405,
+          "emit": 0.589,
+          "cam": 0.2454
+        },
+        "evt": [
+          {
+            "t": 265.467,
+            "lo": 0.796,
+            "mi": 0.591,
+            "hi": 0.596,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 256.833,
+            "lo": 0.116,
+            "mi": 0.811,
+            "hi": 0.968,
+            "on": 0.924,
+            "bt": 1.0
+          },
+          {
+            "t": 266.433,
+            "lo": 0.257,
+            "mi": 0.547,
+            "hi": 0.597,
+            "on": 0.967,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S018",
+        "t": [
+          272.0,
+          288.0
+        ],
+        "b": "mid",
+        "i": "medium",
+        "score": 0.3711,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3494,
+          "mat": 0.5575,
+          "fog": 0.2391,
+          "emit": 0.5601,
+          "cam": 0.2618
+        },
+        "evt": [
+          {
+            "t": 280.833,
+            "lo": 0.854,
+            "mi": 0.631,
+            "hi": 0.696,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 285.633,
+            "lo": 0.165,
+            "mi": 0.567,
+            "hi": 0.582,
+            "on": 0.98,
+            "bt": 1.0
+          },
+          {
+            "t": 286.6,
+            "lo": 0.156,
+            "mi": 0.474,
+            "hi": 0.665,
+            "on": 0.911,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S019",
+        "t": [
+          288.0,
+          304.0
+        ],
+        "b": "mid",
+        "i": "low",
+        "score": 0.3394,
+        "beats": 34,
+        "ctl": {
+          "hero": 0.3405,
+          "mat": 0.5442,
+          "fog": 0.216,
+          "emit": 0.5529,
+          "cam": 0.2609
+        },
+        "evt": [
+          {
+            "t": 294.267,
+            "lo": 0.165,
+            "mi": 0.451,
+            "hi": 0.728,
+            "on": 0.997,
+            "bt": 1.0
+          },
+          {
+            "t": 298.1,
+            "lo": 0.132,
+            "mi": 0.381,
+            "hi": 0.721,
+            "on": 0.979,
+            "bt": 1.0
+          },
+          {
+            "t": 290.433,
+            "lo": 0.119,
+            "mi": 0.435,
+            "hi": 0.813,
+            "on": 0.921,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S020",
+        "t": [
+          304.0,
+          320.0
+        ],
+        "b": "high",
+        "i": "low",
+        "score": 0.2522,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3607,
+          "mat": 0.3601,
+          "fog": 0.1287,
+          "emit": 0.5271,
+          "cam": 0.2508
+        },
+        "evt": [
+          {
+            "t": 318.267,
+            "lo": 0.061,
+            "mi": 0.383,
+            "hi": 0.932,
+            "on": 0.996,
+            "bt": 1.0
+          },
+          {
+            "t": 315.4,
+            "lo": 0.356,
+            "mi": 0.217,
+            "hi": 0.729,
+            "on": 0.998,
+            "bt": 1.0
+          },
+          {
+            "t": 314.433,
+            "lo": 0.491,
+            "mi": 0.176,
+            "hi": 0.651,
+            "on": 1.0,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S021",
+        "t": [
+          320.0,
+          336.0
+        ],
+        "b": "high",
+        "i": "low",
+        "score": 0.2363,
+        "beats": 33,
+        "ctl": {
+          "hero": 0.3549,
+          "mat": 0.3347,
+          "fog": 0.0985,
+          "emit": 0.5286,
+          "cam": 0.2573
+        },
+        "evt": [
+          {
+            "t": 333.633,
+            "lo": 0.068,
+            "mi": 0.391,
+            "hi": 0.981,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 330.767,
+            "lo": 0.327,
+            "mi": 0.206,
+            "hi": 0.87,
+            "on": 1.0,
+            "bt": 1.0
+          },
+          {
+            "t": 329.8,
+            "lo": 0.417,
+            "mi": 0.151,
+            "hi": 0.78,
+            "on": 1.0,
+            "bt": 1.0
+          }
+        ]
+      },
+      {
+        "id": "S022",
+        "t": [
+          336.0,
+          345.6
+        ],
+        "b": "high",
+        "i": "quiet",
+        "score": 0.0381,
+        "beats": 5,
+        "ctl": {
+          "hero": 0.0301,
+          "mat": 0.0868,
+          "fog": 0.0063,
+          "emit": 0.182,
+          "cam": 0.1308
+        },
+        "evt": [
+          {
+            "t": 337.0,
+            "lo": 0.027,
+            "mi": 0.253,
+            "hi": 0.093,
+            "on": 0.87,
+            "bt": 1.0
+          },
+          {
+            "t": 337.967,
+            "lo": 0.098,
+            "mi": 0.066,
+            "hi": 0.315,
+            "on": 0.81,
+            "bt": 1.0
+          },
+          {
+            "t": 337.467,
+            "lo": 0.028,
+            "mi": 0.16,
+            "hi": 0.487,
+            "on": 0.989,
+            "bt": 0.0
+          }
+        ]
+      }
+    ]
+  },
+  "director_memory": {
+    "scene_preferences": {
+      "creative_intent": "cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero",
+      "hero_object": "sfera/aura viva con deformazione mesh completa su tutti i keyframe audio",
+      "background": "azzurro/verde sfumato coerente con cover, niente nero piatto, niente linee/pannelli visibili",
+      "fog": "filamenti o banchi morbidi tipo fumo, visibili ma leggeri, compressi/decompressi dal suono",
+      "particles_orbits": "orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti",
+      "materials_lights": "materia + emissione fusi, luce generale stabile, no strobo forte, accenti su oggetti secondari",
+      "camera_motion": "movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
+      "avoid": "placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
+      "render_target": "test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
+      "free_notes": "analizza ci dati raccolti fin ora\nù"
+    },
+    "conversation_memory": {
+      "updated_at": "2026-04-27T14:41:09",
+      "memory_version": 3,
+      "message_count": 4,
+      "preference_summary": [
+        "creative_intent: cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero",
+        "hero_object: sfera/aura viva con deformazione mesh completa su tutti i keyframe audio",
+        "background: azzurro/verde sfumato coerente con cover, niente nero piatto, niente linee/pannelli visibili",
+        "fog: filamenti o banchi morbidi tipo fumo, visibili ma leggeri, compressi/decompressi dal suono",
+        "particles_orbits: orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti",
+        "materials_lights: materia + emissione fusi, luce generale stabile, no strobo forte, accenti su oggetti secondari",
+        "camera_motion: movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
+        "avoid: placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
+        "render_target: test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
+        "free_notes: analizza ci dati raccolti fin ora ù"
+      ],
+      "recent_user_requests": [
+        "analizza ci dati raccolti fin ora",
+        "ù"
+      ],
+      "recent_user_questions": [],
+      "recent_assistant_notes": [
+        "### Analisi dei Dati Raccolti #### Traccia Generale - **Durata Totale**: Il tracciamento copre un totale di 22 segmenti, ciascuno di 16 secondi. - **Banda Dominante**: La maggior parte dei segmenti inizia con la banda \"high\" e si evolve verso la banda \"mid\". - **Intensità**: L'intensità generale...",
+        "It looks like you've provided a detailed JSON structure containing information about an audio analysis and related assets for a Blender project. Here's a summary of the key points: ### Audio Analysis Summary - **Track Duration**: The track is divided into 22 segments, each lasting 16 seconds. - *..."
+      ],
+      "durable_constraints": [],
+      "asset_mentions": [
+        "ball",
+        "fbx",
+        "primary_ball_asset"
+      ],
+      "memory_policy": "This compact memory is always passed to the local chat/model; recent_conversation is only the short working window."
+    },
+    "ai_memory_context": {
+      "format": "SPAZIOTEMPO_AI_MEMORY_CONTEXT_V1",
+      "track_stem": "Ready To Jazz-Luca Vera_Master",
+      "scene_brief_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_scene_brief.json",
+      "asset_inventory_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\spaziotempo_asset_inventory.json",
+      "has_scene_brief": true,
+      "scene_preferences": {
+        "creative_intent": "cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero",
+        "hero_object": "sfera/aura viva con deformazione mesh completa su tutti i keyframe audio",
+        "background": "azzurro/verde sfumato coerente con cover, niente nero piatto, niente linee/pannelli visibili",
+        "fog": "filamenti o banchi morbidi tipo fumo, visibili ma leggeri, compressi/decompressi dal suono",
+        "particles_orbits": "orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti",
+        "materials_lights": "materia + emissione fusi, luce generale stabile, no strobo forte, accenti su oggetti secondari",
+        "camera_motion": "movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
+        "avoid": "placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
+        "render_target": "test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
+        "free_notes": "analizza ci dati raccolti fin ora\nù"
+      },
+      "conversation_memory": {
+        "updated_at": "2026-04-27T14:41:09",
+        "memory_version": 3,
+        "message_count": 4,
+        "preference_summary": [
+          "creative_intent: cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero",
+          "hero_object: sfera/aura viva con deformazione mesh completa su tutti i keyframe audio",
+          "background: azzurro/verde sfumato coerente con cover, niente nero piatto, niente linee/pannelli visibili",
+          "fog: filamenti o banchi morbidi tipo fumo, visibili ma leggeri, compressi/decompressi dal suono",
+          "particles_orbits: orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti",
+          "materials_lights: materia + emissione fusi, luce generale stabile, no strobo forte, accenti su oggetti secondari",
+          "camera_motion: movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
+          "avoid: placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
+          "render_target: test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
+          "free_notes: analizza ci dati raccolti fin ora ù"
+        ],
+        "recent_user_requests": [
+          "analizza ci dati raccolti fin ora",
+          "ù"
+        ],
+        "recent_user_questions": [],
+        "recent_assistant_notes": [
+          "### Analisi dei Dati Raccolti #### Traccia Generale - **Durata Totale**: Il tracciamento copre un totale di 22 segmenti, ciascuno di 16 secondi. - **Banda Dominante**: La maggior parte dei segmenti inizia con la banda \"high\" e si evolve verso la banda \"mid\". - **Intensità**: L'intensità generale...",
+          "It looks like you've provided a detailed JSON structure containing information about an audio analysis and related assets for a Blender project. Here's a summary of the key points: ### Audio Analysis Summary - **Track Duration**: The track is divided into 22 segments, each lasting 16 seconds. - *..."
+        ],
+        "durable_constraints": [],
+        "asset_mentions": [
+          "ball",
+          "fbx",
+          "primary_ball_asset"
+        ],
+        "memory_policy": "This compact memory is always passed to the local chat/model; recent_conversation is only the short working window."
+      },
+      "recent_user_requests": [
+        "analizza ci dati raccolti fin ora",
+        "ù"
+      ],
+      "durable_constraints": [],
+      "asset_memory": {
+        "asset_count": 5,
+        "primary_assets": [
+          {
+            "role": "primary_ball_asset",
+            "name": "ball",
+            "path": "C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+            "type": ".fbx"
+          },
+          {
+            "role": "animated_effect_asset",
+            "name": "Animated effect",
+            "path": "C:\\Users\\carmi\\blender\\assets\\animated-effect\\source\\Animated effect.blend",
+            "type": ".blend"
+          },
+          {
+            "role": "blend_scene_reference",
+            "name": "First good",
+            "path": "C:\\Users\\carmi\\blender\\First good.blend",
+            "type": ".blend"
+          },
+          {
+            "role": "blend_scene_reference",
+            "name": "second good",
+            "path": "C:\\Users\\carmi\\blender\\second good.blend",
+            "type": ".blend"
+          }
+        ],
+        "notes": [
+          "Use primary_ball_asset as known existing ball/hero asset when the scene director asks for ball or dual focus.",
+          "Do not assume imported .blend files are available inside the current Blender scene; import/link explicitly in generated scripts."
+        ]
+      },
+      "project_awareness": {
+        "format": "SPAZIOTEMPO_PROJECT_AWARENESS_V1",
+        "generated_at": "2026-04-27T14:41:02",
+        "track_identity": {
+          "track_stem": "Ready To Jazz-Luca Vera_Master",
+          "title": "Ready To Jazz",
+          "artist": "Luca Vera",
+          "identity_source": "current workflow WAV filename/session",
+          "external_metadata_allowed": false
+        },
+        "pipeline_state": {
+          "audio_already_loaded_by_pipeline": true,
+          "wav_analysis_ready": true,
+          "music_context_ready": true,
+          "project_index_ready": true,
+          "manual_index_ready": true,
+          "service_packet_ready": true,
+          "scene_brief_ready": true,
+          "can_generate_scene_script": true,
+          "segment_count": 22
+        },
+        "npu_context": {
+          "preflight_ready": false,
+          "available_devices": [],
+          "can_delegate_uncertainty": false,
+          "fallback": "If NPU is not ready, use deterministic project awareness and existing chunks instead of pretending uncertainty."
+        },
+        "verified_answers": [
+          {
+            "question": "Di che brano stiamo parlando?",
+            "answer": "Il brano corrente e `Ready To Jazz` di `Luca Vera`. Non usare titoli/artisti esterni non presenti nei file del progetto.",
+            "evidence": {
+              "track_stem": "Ready To Jazz-Luca Vera_Master",
+              "title": "Ready To Jazz",
+              "artist": "Luca Vera",
+              "identity_source": "current workflow WAV filename/session",
+              "external_metadata_allowed": false
+            }
+          },
+          {
+            "question": "Cosa pensi della traccia del progetto?",
+            "answer": "Parlo del brano del progetto, `Ready To Jazz - Luca Vera`, non di metadati esterni.\nDai JSON lo leggo come una traccia con 22 segmenti compatti e BPM stimato 126.05.\nL'apertura sembra guidata da banda `high` con intensita `low`, mentre la coda arriva su `high` / `quiet`.\nDa art direction lo tratterei come un brano da doppio fulcro: due `primary_ball_asset` centrali in controfase, uno piu materico e uno piu luminoso, usando tutti i frame del `blender_keyframes_json`.\nI punti da far respirare visivamente sono: segmento 16 (240.0-256.0s, mid, medium); segmento 11 (160.0-176.0s, mid, medium); segmento 15 (224.0-240.0s, mid, medium).\nQuindi: niente narrativa generica da canzone pop; qui conviene costruire una scena audio-reactive precisa, con deformazioni mesh e materiali che seguono low/mid/high/onset/beat.",
+            "evidence": {
+              "duration_sec": 345.60009070294785,
+              "fps": 30.0,
+              "bpm": 126.04801829268293,
+              "segment_count": 22,
+              "first_segment": {
+                "dominant_band": "high",
+                "intensity": "low",
+                "controls": {
+                  "primary_band": "high",
+                  "intensity": "low",
+                  "hero_deformation": 0.347,
+                  "material_shimmer": 0.2897,
+                  "fog_motion": 0.0889,
+                  "accent_emission": 0.5305,
+                  "camera_pressure": 0.2557
+                }
+              },
+              "last_segment": {
+                "dominant_band": "high",
+                "intensity": "quiet",
+                "controls": {
+                  "primary_band": "high",
+                  "intensity": "quiet",
+                  "hero_deformation": 0.0301,
+                  "material_shimmer": 0.0868,
+                  "fog_motion": 0.0063,
+                  "accent_emission": 0.182,
+                  "camera_pressure": 0.1308
+                }
+              },
+              "top_energy_segments": [
+                {
+                  "index": 16,
+                  "start_sec": 240.0,
+                  "end_sec": 256.0,
+                  "dominant_band": "mid",
+                  "intensity_score": 0.3927,
+                  "intensity": "medium"
+                },
+                {
+                  "index": 11,
+                  "start_sec": 160.0,
+                  "end_sec": 176.0,
+                  "dominant_band": "mid",
+                  "intensity_score": 0.3837,
+                  "intensity": "medium"
+                },
+                {
+                  "index": 15,
+                  "start_sec": 224.0,
+                  "end_sec": 240.0,
+                  "dominant_band": "mid",
+                  "intensity_score": 0.3815,
+                  "intensity": "medium"
+                },
+                {
+                  "index": 17,
+                  "start_sec": 256.0,
+                  "end_sec": 272.0,
+                  "dominant_band": "mid",
+                  "intensity_score": 0.3804,
+                  "intensity": "medium"
+                },
+                {
+                  "index": 18,
+                  "start_sec": 272.0,
+                  "end_sec": 288.0,
+                  "dominant_band": "mid",
+                  "intensity_score": 0.3711,
+                  "intensity": "medium"
+                }
+              ]
+            }
+          },
+          {
+            "question": "Abbiamo qualcosa che puo essere usata sui keyframe dell'audio?",
+            "answer": "Si. Usa `blender_keyframes_json`: contiene il JSON frame-by-frame completo con `frames` per low/mid/high/onset/beat. `music_context_json` e i segmenti servono solo per decisioni macro.",
+            "evidence": {
+              "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis_blender_keyframes.json",
+              "exists": true,
+              "bytes": 2122470,
+              "updated": "2026-04-27T14:37:27"
+            }
+          },
+          {
+            "question": "Serve importare manualmente il WAV in Blender?",
+            "answer": "No. Il WAV e gia rappresentato dai JSON `analysis_json`, `music_context_json` e `blender_keyframes_json`. La chat deve parlare di pipeline/script, non di import audio manuale.",
+            "evidence": {
+              "audio_already_loaded_by_pipeline": true,
+              "analysis_json": {
+                "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis.json",
+                "exists": true,
+                "bytes": 2122470,
+                "updated": "2026-04-27T14:36:56"
+              }
+            }
+          },
+          {
+            "question": "Quale asset va usato quando l'utente dice ball?",
+            "answer": "Usa `primary_ball_asset`: C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+            "evidence": {
+              "role": "primary_ball_asset",
+              "name": "ball",
+              "path": "C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+              "type": ".fbx"
+            }
+          },
+          {
+            "question": "La pipeline e pronta per generare lo script scena?",
+            "answer": "Si: analisi, music context, project index, manual index, service packet e scene brief risultano pronti.",
+            "evidence": {
+              "audio_already_loaded_by_pipeline": true,
+              "wav_analysis_ready": true,
+              "music_context_ready": true,
+              "project_index_ready": true,
+              "manual_index_ready": true,
+              "service_packet_ready": true,
+              "scene_brief_ready": true,
+              "can_generate_scene_script": true,
+              "segment_count": 22
+            }
+          },
+          {
+            "question": "Quanti segmenti musicali compatti sono disponibili?",
+            "answer": "Sono disponibili 22 segmenti compatti.",
+            "evidence": {
+              "segment_count": 22
+            }
+          }
+        ],
+        "director_rules": [
+          "Never suggest manually importing audio into Blender; the WAV is already represented by analysis/music/keyframe JSON.",
+          "Never suggest opening Blender as the next generic step; the user decides when to run Blender.",
+          "Do not suggest rebuilding from scratch if technical files already exist.",
+          "When technical files exist, refer to the pipeline action: scene brief, dual AI plan, scene script draft, hot update, or review generated script.",
+          "Use project asset roles. If user says ball, prefer primary_ball_asset.",
+          "Full analysis_blender_keyframes JSON is authoritative and must not be summarized away.",
+          "If unsure, say which technical file/chunk should be checked, not generic Blender advice."
+        ],
+        "missing_or_suspicious": [
+          "npu_preflight"
+        ]
+      },
+      "operating_rules": [
+        "Use this memory as interpretation context for AI outputs, never to alter numeric audio analysis.",
+        "Respect user corrections over generic defaults.",
+        "If the user mentions ball, prefer asset role primary_ball_asset.",
+        "Full analysis_blender_keyframes frames must remain complete and authoritative.",
+        "For two central ball objects, use counterphase animation and inverted audio mapping.",
+        "Do not suggest manual Blender/audio import steps already handled by the project pipeline."
+      ]
+    },
+    "project_awareness": {
+      "format": "SPAZIOTEMPO_PROJECT_AWARENESS_V1",
+      "generated_at": "2026-04-27T14:41:02",
+      "track_identity": {
+        "track_stem": "Ready To Jazz-Luca Vera_Master",
+        "title": "Ready To Jazz",
+        "artist": "Luca Vera",
+        "identity_source": "current workflow WAV filename/session",
+        "external_metadata_allowed": false
+      },
+      "pipeline_state": {
+        "audio_already_loaded_by_pipeline": true,
+        "wav_analysis_ready": true,
+        "music_context_ready": true,
+        "project_index_ready": true,
+        "manual_index_ready": true,
+        "service_packet_ready": true,
+        "scene_brief_ready": true,
+        "can_generate_scene_script": true,
+        "segment_count": 22
+      },
+      "npu_context": {
+        "preflight_ready": false,
+        "available_devices": [],
+        "can_delegate_uncertainty": false,
+        "fallback": "If NPU is not ready, use deterministic project awareness and existing chunks instead of pretending uncertainty."
+      },
+      "verified_answers": [
+        {
+          "question": "Di che brano stiamo parlando?",
+          "answer": "Il brano corrente e `Ready To Jazz` di `Luca Vera`. Non usare titoli/artisti esterni non presenti nei file del progetto.",
+          "evidence": {
+            "track_stem": "Ready To Jazz-Luca Vera_Master",
+            "title": "Ready To Jazz",
+            "artist": "Luca Vera",
+            "identity_source": "current workflow WAV filename/session",
+            "external_metadata_allowed": false
+          }
+        },
+        {
+          "question": "Cosa pensi della traccia del progetto?",
+          "answer": "Parlo del brano del progetto, `Ready To Jazz - Luca Vera`, non di metadati esterni.\nDai JSON lo leggo come una traccia con 22 segmenti compatti e BPM stimato 126.05.\nL'apertura sembra guidata da banda `high` con intensita `low`, mentre la coda arriva su `high` / `quiet`.\nDa art direction lo tratterei come un brano da doppio fulcro: due `primary_ball_asset` centrali in controfase, uno piu materico e uno piu luminoso, usando tutti i frame del `blender_keyframes_json`.\nI punti da far respirare visivamente sono: segmento 16 (240.0-256.0s, mid, medium); segmento 11 (160.0-176.0s, mid, medium); segmento 15 (224.0-240.0s, mid, medium).\nQuindi: niente narrativa generica da canzone pop; qui conviene costruire una scena audio-reactive precisa, con deformazioni mesh e materiali che seguono low/mid/high/onset/beat.",
+          "evidence": {
+            "duration_sec": 345.60009070294785,
+            "fps": 30.0,
+            "bpm": 126.04801829268293,
+            "segment_count": 22,
+            "first_segment": {
+              "dominant_band": "high",
+              "intensity": "low",
+              "controls": {
+                "primary_band": "high",
+                "intensity": "low",
+                "hero_deformation": 0.347,
+                "material_shimmer": 0.2897,
+                "fog_motion": 0.0889,
+                "accent_emission": 0.5305,
+                "camera_pressure": 0.2557
+              }
+            },
+            "last_segment": {
+              "dominant_band": "high",
+              "intensity": "quiet",
+              "controls": {
+                "primary_band": "high",
+                "intensity": "quiet",
+                "hero_deformation": 0.0301,
+                "material_shimmer": 0.0868,
+                "fog_motion": 0.0063,
+                "accent_emission": 0.182,
+                "camera_pressure": 0.1308
+              }
+            },
+            "top_energy_segments": [
+              {
+                "index": 16,
+                "start_sec": 240.0,
+                "end_sec": 256.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3927,
+                "intensity": "medium"
+              },
+              {
+                "index": 11,
+                "start_sec": 160.0,
+                "end_sec": 176.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3837,
+                "intensity": "medium"
+              },
+              {
+                "index": 15,
+                "start_sec": 224.0,
+                "end_sec": 240.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3815,
+                "intensity": "medium"
+              },
+              {
+                "index": 17,
+                "start_sec": 256.0,
+                "end_sec": 272.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3804,
+                "intensity": "medium"
+              },
+              {
+                "index": 18,
+                "start_sec": 272.0,
+                "end_sec": 288.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3711,
+                "intensity": "medium"
+              }
+            ]
+          }
+        },
+        {
+          "question": "Abbiamo qualcosa che puo essere usata sui keyframe dell'audio?",
+          "answer": "Si. Usa `blender_keyframes_json`: contiene il JSON frame-by-frame completo con `frames` per low/mid/high/onset/beat. `music_context_json` e i segmenti servono solo per decisioni macro.",
+          "evidence": {
+            "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis_blender_keyframes.json",
+            "exists": true,
+            "bytes": 2122470,
+            "updated": "2026-04-27T14:37:27"
+          }
+        },
+        {
+          "question": "Serve importare manualmente il WAV in Blender?",
+          "answer": "No. Il WAV e gia rappresentato dai JSON `analysis_json`, `music_context_json` e `blender_keyframes_json`. La chat deve parlare di pipeline/script, non di import audio manuale.",
+          "evidence": {
+            "audio_already_loaded_by_pipeline": true,
+            "analysis_json": {
+              "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis.json",
+              "exists": true,
+              "bytes": 2122470,
+              "updated": "2026-04-27T14:36:56"
+            }
+          }
+        },
+        {
+          "question": "Quale asset va usato quando l'utente dice ball?",
+          "answer": "Usa `primary_ball_asset`: C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+          "evidence": {
+            "role": "primary_ball_asset",
+            "name": "ball",
+            "path": "C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+            "type": ".fbx"
+          }
+        },
+        {
+          "question": "La pipeline e pronta per generare lo script scena?",
+          "answer": "Si: analisi, music context, project index, manual index, service packet e scene brief risultano pronti.",
+          "evidence": {
+            "audio_already_loaded_by_pipeline": true,
+            "wav_analysis_ready": true,
+            "music_context_ready": true,
+            "project_index_ready": true,
+            "manual_index_ready": true,
+            "service_packet_ready": true,
+            "scene_brief_ready": true,
+            "can_generate_scene_script": true,
+            "segment_count": 22
+          }
+        },
+        {
+          "question": "Quanti segmenti musicali compatti sono disponibili?",
+          "answer": "Sono disponibili 22 segmenti compatti.",
+          "evidence": {
+            "segment_count": 22
+          }
+        }
+      ],
+      "director_rules": [
+        "Never suggest manually importing audio into Blender; the WAV is already represented by analysis/music/keyframe JSON.",
+        "Never suggest opening Blender as the next generic step; the user decides when to run Blender.",
+        "Do not suggest rebuilding from scratch if technical files already exist.",
+        "When technical files exist, refer to the pipeline action: scene brief, dual AI plan, scene script draft, hot update, or review generated script.",
+        "Use project asset roles. If user says ball, prefer primary_ball_asset.",
+        "Full analysis_blender_keyframes JSON is authoritative and must not be summarized away.",
+        "If unsure, say which technical file/chunk should be checked, not generic Blender advice."
+      ],
+      "missing_or_suspicious": [
+        "npu_preflight"
+      ]
+    },
+    "verified_answers": [
+      {
+        "question": "Di che brano stiamo parlando?",
+        "answer": "Il brano corrente e `Ready To Jazz` di `Luca Vera`. Non usare titoli/artisti esterni non presenti nei file del progetto.",
+        "evidence": {
+          "track_stem": "Ready To Jazz-Luca Vera_Master",
+          "title": "Ready To Jazz",
+          "artist": "Luca Vera",
+          "identity_source": "current workflow WAV filename/session",
+          "external_metadata_allowed": false
+        }
+      },
+      {
+        "question": "Cosa pensi della traccia del progetto?",
+        "answer": "Parlo del brano del progetto, `Ready To Jazz - Luca Vera`, non di metadati esterni.\nDai JSON lo leggo come una traccia con 22 segmenti compatti e BPM stimato 126.05.\nL'apertura sembra guidata da banda `high` con intensita `low`, mentre la coda arriva su `high` / `quiet`.\nDa art direction lo tratterei come un brano da doppio fulcro: due `primary_ball_asset` centrali in controfase, uno piu materico e uno piu luminoso, usando tutti i frame del `blender_keyframes_json`.\nI punti da far respirare visivamente sono: segmento 16 (240.0-256.0s, mid, medium); segmento 11 (160.0-176.0s, mid, medium); segmento 15 (224.0-240.0s, mid, medium).\nQuindi: niente narrativa generica da canzone pop; qui conviene costruire una scena audio-reactive precisa, con deformazioni mesh e materiali che seguono low/mid/high/onset/beat.",
+        "evidence": {
+          "duration_sec": 345.60009070294785,
+          "fps": 30.0,
+          "bpm": 126.04801829268293,
+          "segment_count": 22,
+          "first_segment": {
+            "dominant_band": "high",
+            "intensity": "low",
+            "controls": {
+              "primary_band": "high",
+              "intensity": "low",
+              "hero_deformation": 0.347,
+              "material_shimmer": 0.2897,
+              "fog_motion": 0.0889,
+              "accent_emission": 0.5305,
+              "camera_pressure": 0.2557
+            }
+          },
+          "last_segment": {
+            "dominant_band": "high",
+            "intensity": "quiet",
+            "controls": {
+              "primary_band": "high",
+              "intensity": "quiet",
+              "hero_deformation": 0.0301,
+              "material_shimmer": 0.0868,
+              "fog_motion": 0.0063,
+              "accent_emission": 0.182,
+              "camera_pressure": 0.1308
+            }
+          },
+          "top_energy_segments": [
+            {
+              "index": 16,
+              "start_sec": 240.0,
+              "end_sec": 256.0,
+              "dominant_band": "mid",
+              "intensity_score": 0.3927,
+              "intensity": "medium"
+            },
+            {
+              "index": 11,
+              "start_sec": 160.0,
+              "end_sec": 176.0,
+              "dominant_band": "mid",
+              "intensity_score": 0.3837,
+              "intensity": "medium"
+            },
+            {
+              "index": 15,
+              "start_sec": 224.0,
+              "end_sec": 240.0,
+              "dominant_band": "mid",
+              "intensity_score": 0.3815,
+              "intensity": "medium"
+            },
+            {
+              "index": 17,
+              "start_sec": 256.0,
+              "end_sec": 272.0,
+              "dominant_band": "mid",
+              "intensity_score": 0.3804,
+              "intensity": "medium"
+            },
+            {
+              "index": 18,
+              "start_sec": 272.0,
+              "end_sec": 288.0,
+              "dominant_band": "mid",
+              "intensity_score": 0.3711,
+              "intensity": "medium"
+            }
+          ]
+        }
+      },
+      {
+        "question": "Abbiamo qualcosa che puo essere usata sui keyframe dell'audio?",
+        "answer": "Si. Usa `blender_keyframes_json`: contiene il JSON frame-by-frame completo con `frames` per low/mid/high/onset/beat. `music_context_json` e i segmenti servono solo per decisioni macro.",
+        "evidence": {
+          "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis_blender_keyframes.json",
+          "exists": true,
+          "bytes": 2122470,
+          "updated": "2026-04-27T14:37:27"
+        }
+      },
+      {
+        "question": "Serve importare manualmente il WAV in Blender?",
+        "answer": "No. Il WAV e gia rappresentato dai JSON `analysis_json`, `music_context_json` e `blender_keyframes_json`. La chat deve parlare di pipeline/script, non di import audio manuale.",
+        "evidence": {
+          "audio_already_loaded_by_pipeline": true,
+          "analysis_json": {
+            "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis.json",
+            "exists": true,
+            "bytes": 2122470,
+            "updated": "2026-04-27T14:36:56"
+          }
+        }
+      },
+      {
+        "question": "Quale asset va usato quando l'utente dice ball?",
+        "answer": "Usa `primary_ball_asset`: C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+        "evidence": {
+          "role": "primary_ball_asset",
+          "name": "ball",
+          "path": "C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+          "type": ".fbx"
+        }
+      },
+      {
+        "question": "La pipeline e pronta per generare lo script scena?",
+        "answer": "Si: analisi, music context, project index, manual index, service packet e scene brief risultano pronti.",
+        "evidence": {
+          "audio_already_loaded_by_pipeline": true,
+          "wav_analysis_ready": true,
+          "music_context_ready": true,
+          "project_index_ready": true,
+          "manual_index_ready": true,
+          "service_packet_ready": true,
+          "scene_brief_ready": true,
+          "can_generate_scene_script": true,
+          "segment_count": 22
+        }
+      },
+      {
+        "question": "Quanti segmenti musicali compatti sono disponibili?",
+        "answer": "Sono disponibili 22 segmenti compatti.",
+        "evidence": {
+          "segment_count": 22
+        }
+      }
+    ],
+    "recent_conversation": [
+      {
+        "time": "2026-04-27T14:40:30",
+        "role": "user",
+        "content": "analizza ci dati raccolti fin ora"
+      },
+      {
+        "time": "2026-04-27T14:40:49",
+        "role": "assistant",
+        "content": "### Analisi dei Dati Raccolti\n\n#### Traccia Generale\n- **Durata Totale**: Il tracciamento copre un totale di 22 segmenti, ciascuno di 16 secondi.\n- **Banda Dominante**: La maggior parte dei segmenti inizia con la banda \"high\" e si evolve verso la banda \"mid\".\n- **Intensità**: L'intensità generale è bassa nei primi segmenti, ma aumenta gradualmente nel tempo.\n\n#### Segmenti Iniziali\nI primi 8 segmenti mostrano una tendenza comune:\n- **Banda Dominante**: La maggior parte dei segmenti inizia con la banda \"high\" e si evolve verso la banda \"mid\".\n- **Intensità**: L'intensità è bassa nei primi segmenti, ma aumenta gradualmente nel tempo.\n- **Controlli**:\n  - **Hero Deformation**: Inizialmente basso (0.347), poi aumenta leggermente.\n  - **Material Shimmer**: Inizia basso e aumenta progressivamente.\n  - **Fog Motion**: Inizia basso e aumenta gradualmente.\n  - **Accent Emission**: Inizia alto (0.5305) e diminuisce leggermente nel tempo.\n  - **Camera Pressure**: Inizia basso e aumenta leggermente.\n\n#### Energia Profilo\n- **Media Banda**:\n  - **Low Avg**: 0.2369\n  - **Mid Avg**: 0.4517\n  - **High Avg**: 0.2885\n- **Pico Media**:\n  - **Low Peak Avg**: 0.6981\n  - **Mid Peak Avg**: 0.8674\n  - **High Peak Avg**: 0.7607\n- **Onset e Beat Avg**:\n  - **Onset Avg**: 0.1415\n  - **Beat Avg**: 0.068\n\n#### Asset Conosciuti\n- **Primary Ball Asset**: Un oggetto \"ball\" esistente che può essere utilizzato come asset principale.\n- **Animated Effect Asset**: Un effetto animato che può essere integrato nella scena.\n- **Blend Scene Reference**: Due scene Blender (\"First good\" e \"second good\") che possono essere riferimento per la creazione di nuove scene.\n- **Environment Asset**: Un HDRI (EveningSkyHDRI037A_4K) che può essere utilizzato come ambiente.\n\n#### Note sugli Asset\n- Utilizzare l'asset \"primary_ball_asset\" quando richiesto un oggetto ball o focalizzazione doppia.\n- Non assumere che i file .blend importati siano disponibili nella scena corrente; importarli/linkarli esplicitamente nei script generati.\n\n#### Recent Conversation\nL'ultima conversazione ha riguardato l'analisi dei dati raccolti finora.\n\n### Suggested Actions\n1. **Integrare il Primary Ball Asset**: Utilizzare l'asset \"ball\" come oggetto principale o focalizzazione doppia.\n2. **Creare Animazioni**: Integrare l'effetto animato per aggiungere dinamismo alla scena.\n3. **Referenziare Scene Preesistenti**: Fare riferimento alle scene \"First good\" e \"second good\" per ottenere ispirazione o struttura.\n4. **Utilizzare HDRI Ambient**: Utilizzare l'HDRI (EveningSkyHDRI037A_4K) come ambiente per creare un'atmosfera realistica.\n\n### Script di Esempio\nEcco un esempio di script che potrebbe essere utilizzato per integrare l'asset \"primary_ball_asset\" nella scena:\n\n```python\nimport bpy\n\n# Importa il file FBX dell'oggetto ball\nbpy.ops.import_scene.fbx(filepath=\"C:\\\\Users\\\\carmi\\\\blender\\\\assets\\\\ball\\\\source\\\\ball.fbx\")\n\n# Seleziona l'oggetto ball appena importato\nball_object = bpy.context.selected_objects[0]\n\n# Imposta il ruolo dell'oggetto come primary_ball_asset\nball_object.name = \"primary_ball_asset\"\n\n# Aggiungi un effetto animato all'oggetto ball\nbpy.ops.wm.append(filepath=\"C:\\\\Users\\\\carmi\\\\blender\\\\assets\\\\animated-effect\\\\source\\\\Animated effect.blend\")\n\n# Seleziona l'effetto animato appena importato\nanimated_effect = bpy.context.selected_objects[0]\n\n# Collega l'effetto animato all'oggetto ball\nanimated_effect.parent = ball_object\n\n# Imposta la posizione dell'oggetto ball nel centro della scena\nball_object.location = (0, 0, 0)\n\n# Aggiungi un ambiente HDRI\nbpy.ops.import_scene.fbx(filepath=\"C:\\\\Users\\\\carmi\\\\blender\\\\assets\\\\hdri\\\\EveningSkyHDRI037A_4K\\\\EveningSkyHDRI037A_4K.blend\")\n\n# Seleziona l'ambiente appena importato\nenvironment = bpy.context.selected_objects[0]\n\n# Imposta l'ambiente come ambiente principale\nbpy.context.scene.world.use_nodes = True\nworld_node_tree = bpy.context.scene.world.node_tree\nbackground_node = world_node_tree.nodes.get('Background')\nif background_node:\n    background_node.image = environment.data.background_images["
+      },
+      {
+        "time": "2026-04-27T14:41:02",
+        "role": "user",
+        "content": "ù"
+      },
+      {
+        "time": "2026-04-27T14:41:09",
+        "role": "assistant",
+        "content": "It looks like you've provided a detailed JSON structure containing information about an audio analysis and related assets for a Blender project. Here's a summary of the key points:\n\n### Audio Analysis Summary\n\n- **Track Duration**: The track is divided into 22 segments, each lasting 16 seconds.\n- **Dominant Band**: Most segments start with the \"high\" frequency band and transition to the \"mid\" frequency band over time.\n- **Intensity**: The intensity starts low in the initial segments and gradually increases.\n\n### Initial Segments Analysis\n\nThe first eight segments show a consistent pattern:\n- **Dominant Band**: Begins with \"high\" and transitions to \"mid\".\n- **Intensity**: Starts low and increases over time.\n- **Controls**:\n  - **Hero Deformation**: Initially low, then slightly increases.\n  - **Material Shimmer**: Increases from low to moderate levels.\n  - **Fog Motion**: Slightly increases over the initial segments.\n  - **Accent Emission**: Increases from moderate to high levels.\n  - **Camera Pressure**: Decreases slightly over the first few segments.\n\n### Known Assets\n\n- **Ball**: A primary ball asset used as a hero object in scenes.\n- **Animated Effect**: An animated effect asset for visual enhancements.\n- **First Good and Second Good**: Reference Blender scenes.\n- **EveningSkyHDRI037A_4K**: An environment asset for sky lighting.\n\n### Asset Notes\n\n- Use the primary ball asset when asked for a ball or dual focus in the scene.\n- Ensure that imported .blend files are explicitly imported or linked within generated scripts.\n\n### Recent Conversation\n\n- The user requested an analysis of the collected data, and the assistant provided a summary of the track's segments, dominant bands, intensity trends, and initial segment controls.\n- The user then sent a brief message \"ù\", which seems to be a typo or placeholder.\n\nIf you have any specific questions or need further assistance with this data, feel free to ask!"
+      }
+    ],
+    "must_apply": [
+      "Respect user corrections from scene brief over generic defaults.",
+      "Do not echo the whole brief as an answer.",
+      "Use primary_ball_asset when the user says ball.",
+      "For dual central ball objects, animate/deform them in counterphase using the full keyframe JSON."
+    ]
+  },
+  "asset_language": {
+    "asset_count": 5,
+    "known_primary_assets": [
+      {
+        "name": "ball",
+        "role": "primary_ball_asset",
+        "path": "C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+        "relative_path": "assets\\ball\\source\\ball.fbx",
+        "extension": ".fbx",
+        "bytes": 7440560
+      },
+      {
+        "name": "Animated effect",
+        "role": "animated_effect_asset",
+        "path": "C:\\Users\\carmi\\blender\\assets\\animated-effect\\source\\Animated effect.blend",
+        "relative_path": "assets\\animated-effect\\source\\Animated effect.blend",
+        "extension": ".blend",
+        "bytes": 1988528
+      },
+      {
+        "name": "First good",
+        "role": "blend_scene_reference",
+        "path": "C:\\Users\\carmi\\blender\\First good.blend",
+        "relative_path": "First good.blend",
+        "extension": ".blend",
+        "bytes": 59426203
+      },
+      {
+        "name": "second good",
+        "role": "blend_scene_reference",
+        "path": "C:\\Users\\carmi\\blender\\second good.blend",
+        "relative_path": "second good.blend",
+        "extension": ".blend",
+        "bytes": 66200083
+      }
+    ],
+    "notes": [
+      "Use primary_ball_asset as known existing ball/hero asset when the scene director asks for ball or dual focus.",
+      "Do not assume imported .blend files are available inside the current Blender scene; import/link explicitly in generated scripts."
+    ]
+  },
+  "project_language": {
+    "legend": "F{id}: existing source file reference; GPU may propose new draft files but must not modify these directly.",
+    "files": [
+      {
+        "id": "F001",
+        "file": "Scripting/v61b/config.py",
+        "lines": 439,
+        "sha": "a01b8504529d",
+        "role": "CFG profile/path/render/audio constants"
+      },
+      {
+        "id": "F002",
+        "file": "Scripting/v61b/main_v61b.py",
+        "lines": 220,
+        "sha": "326af60e14ed",
+        "role": "MAIN build orchestration"
+      },
+      {
+        "id": "F003",
+        "file": "Scripting/v61b/animation.py",
+        "lines": 1080,
+        "sha": "8e08e656c5fd",
+        "role": "ANIM keyframes/audio driven transforms"
+      },
+      {
+        "id": "F004",
+        "file": "Scripting/v61b/materials.py",
+        "lines": 658,
+        "sha": "073e38f04df3",
+        "role": "MAT shader/node/material setup"
+      },
+      {
+        "id": "F005",
+        "file": "Scripting/v61b/fog_dynamics.py",
+        "lines": 393,
+        "sha": "21628c1c0e71",
+        "role": "FOG audio reactive volume controls"
+      },
+      {
+        "id": "F006",
+        "file": "Scripting/v61b/fog_filaments.py",
+        "lines": 160,
+        "sha": "2b1d13a0b254",
+        "role": "FOG_FILAMENT procedural fog strands"
+      },
+      {
+        "id": "F007",
+        "file": "Scripting/v61b/physics_setup.py",
+        "lines": 738,
+        "sha": "15ccd171bf92",
+        "role": "PHYS orbit/force/particle setup"
+      },
+      {
+        "id": "F008",
+        "file": "Scripting/v61b/render_setup.py",
+        "lines": 271,
+        "sha": "d798f6054b2e",
+        "role": "RENDER compositor/quality profiles"
+      },
+      {
+        "id": "F009",
+        "file": "Scripting/v61b/scene_tuning_panel.py",
+        "lines": 1263,
+        "sha": "55c3c28fad20",
+        "role": "PANEL Blender UI/operators"
+      },
+      {
+        "id": "F010",
+        "file": "Scripting/v61b/hot_update_scene_v61b.py",
+        "lines": 64,
+        "sha": "e11a0f377365",
+        "role": "HOT_UPDATE partial scene refresh"
+      },
+      {
+        "id": "F011",
+        "file": "Tools/workflow/workflow_state.py",
+        "lines": 1231,
+        "sha": "0dd21d73af14",
+        "role": "WF shell/GUI operation orchestration"
+      },
+      {
+        "id": "F012",
+        "file": "Tools/npu/run_dual_ai_pipeline.py",
+        "lines": 1705,
+        "sha": "a6a3d187992b",
+        "role": "AI_PIPELINE NPU/GPU routing"
+      }
+    ],
+    "source_fingerprint": "15bc00b62ad868065405f589427c5c2c54a6d634af8a082cc08e21cc06f71199"
+  },
+  "style_contract": {
+    "do_not_modify_project_source": true,
+    "propose_new_files_only": [
+      "indexAI/scene_scripts/",
+      "indexAI/patch_library/"
+    ],
+    "match_existing_style": true,
+    "preserve_current_scene_logic": true,
+    "all_existing_files_are_reference_only": true
+  },
+  "task_contract": {
+    "gpu_director": "create scene plan using capsule, manual, and project style",
+    "gpu_code_interpreter": "write review-only standalone Blender Python scene builder in allowed output path",
+    "validator": "reject empty scripts, markdown answers, existing-source modifications, missing reference files",
+    "chunk_protocol": [
+      "Treat capsule refs as authoritative file handles.",
+      "Ask for or load exact source chunks only when needed.",
+      "Never replace full keyframes with compact segments; compact segments are only semantic guidance.",
+      "Return structured JSON for machine use, not prose, during plan/script phases."
+    ]
+  },
+  "npu_service": {
+    "status": "skipped_gpu_heavy_mode",
+    "notes_digest": "# Deterministic Technical Notes\n\nReason: NPU output was not trusted (`npu_skipped_gpu_heavy_mode`).\n\n## Track Map\n- Duration: `345.60009070294785` seconds.\n- FPS: `30.0`.\n- BPM: `126.04801829268293`.\n- Segment count: `22`.\n\n## Project Primary Files\n- `Scripting/v61b/config.py`\n- `Scripting/v61b/fog_dynamics.py`\n- `Scripting/v61b/materials.py`\n- `Scripting/v61b/physics_setup.py`\n- `Scripting/v61b/scene_tuning_panel.py`\n- `Tools/npu/run_dual_ai_pipeline.py`\n- `Tools/workflow/workflow_state.py`\n\n## Safe Implementation Policy\n- Use full frame-by-frame Blender keyframe JSON as data input only.\n- Generate patch plans against existing project files, not monolithic replacement scripts.\n- Prefer hotpatch/panel/update modules for materials, fog, lights and render changes.\n- Require a reload only when primary object creation or scene topology changes.\n\n## Audio Control Map\n- Low band: hero mesh deformation scale, gravity/attractor strength, fog density body.\n- Mid band: material roughness/emission mix, secondary object motion, fog filament drift.\n- High band: small emission accents, glints, particle sparkle, sharp camera micro motion.\n- Onset/beat: short impulses, never a constant global light flash.\n\n"
+  },
+  "plan_digest": {
+    "has_plan": true,
+    "summary": {}
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "kind": "spaziotempo_scene_director_brief",
+  "generated_at": "2026-04-26T19:37:52",
+  "track_stem": "New Plan-Luca Vera_Master",
+  "audio_path": "C:\\Users\\carmi\\Desktop\\Living Life In Peace-Luca Vera\\New Plan-Luca Vera_Master.wav",
+  "scene_preferences": {
+    "creative_intent": "cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero",
+    "hero_object": "sfera/aura viva con deformazione mesh completa su tutti i keyframe audio",
+    "background": "azzurro/verde sfumato coerente con cover, niente nero piatto, niente linee/pannelli visibili",
+    "fog": "filamenti o banchi morbidi tipo fumo, visibili ma leggeri, compressi/decompressi dal suono",
+    "particles_orbits": "orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti",
+    "materials_lights": "materia + emissione fusi, luce generale stabile, no strobo forte, accenti su oggetti secondari",
+    "camera_motion": "movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
+    "avoid": "placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
+    "render_target": "test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
+    "free_notes": "ciao cosa pensi della scena?\ncosa trasmette la traccia secondo te?\ncosa trasmette la traccia secondo te?\npuoi applicaer ildualismo mettenedo due oggetti sferici centrali, c'è una ball gia presente come oggetto nel progetto, e invertire a i deue oggetti gli effetti cosi sono contrapposti, inoltre oggetti fisici che ruotano in gravita atotrno al \"doppi fuoco\" che ne pensi?\nla sezione render puo restare inviata tanto la finalita è la stessa\nriassumi la scena quindi\npuoi aggiugnere ahce il brief\ndico puoi fare il riassunto testuale piu brief"
+  },
+  "must_keep": [
+    "Use the full analysis_blender_keyframes JSON frames for animation.",
+    "Use compact music segments only for composition and macro decisions.",
+    "Create a standalone Blender Python scene script under indexAI/scene_scripts.",
+    "Do not modify existing project source files."
+  ],
+  "workflow_policy": {
+    "npu_role": "optional compact service/router, not heavy generator",
+    "gpu_or_ollama_role": "heavy reasoning and code generation",
+    "manual_review_required": true
+  },
+  "conversation_transcript": [
+    {
+      "time": "2026-04-26T19:27:50",
+      "role": "user",
+      "content": "ciao cosa pensi della scena?"
+    },
+    {
+      "time": "2026-04-26T19:30:05",
+      "role": "user",
+      "content": "cosa trasmette la traccia secondo te?"
+    },
+    {
+      "time": "2026-04-26T19:33:37",
+      "role": "user",
+      "content": "cosa trasmette la traccia secondo te?"
+    },
+    {
+      "time": "2026-04-26T19:33:47",
+      "role": "assistant",
+      "content": "La traccia \"New Plan-Luca Vera_Master\" sembra avere un'atmosfera spaziale e futuristica, con elementi di tecnologia avanzata e potere. Il ritmo musicale potrebbe essere interpretato come una sorta di progressione o evoluzione continua.\n\nPer il progetto Blender Spaziotempo, ecco i punti chiave da includere nel brief:\n\n1. **Hero Object**: Una sfera/aura viva con deformazione mesh completa su tutti i keyframe audio.\n2. **Background**: Un colore sfumato di azzurro e verde coerente con la cover, senza nero piatto o linee visibili.\n3. **Fog**: Filamenti morbidi tipo fumo, visibili ma leggeri, che si comprimono o decomprimono in base al suono.\n4. **Particles/Orbits**: Orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti.\n5. **Materials/Lights**: Materia e emissione fusi, luce generale stabile senza strobo forte, accenti su oggetti secondari.\n6. **Camera Motion**: Movimento lento e musicale con micro pressioni sui beat, niente scatti aggressivi.\n7. **Avoid**: Placeholder, scene vuote, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe.\n\nLe parti dello script che dovranno cambiare includono:\n- La configurazione del background per essere azzurro/verde sfumato.\n- L'aggiunta di filamenti morbidi tipo fumo come fog.\n- La creazione di orbite attorno al centro e mini-satelliti.\n- La definizione dei materiali e delle luci in modo da avere un'atmosfera luminosa ma stabile.\n- Il movimento della camera per essere lento e musicale.\n\nIl file `analysis_blender_keyframes.json` deve essere mantenuto interamente."
+    },
+    {
+      "time": "2026-04-26T19:35:30",
+      "role": "user",
+      "content": "puoi applicaer ildualismo mettenedo due oggetti sferici centrali, c'è una ball gia presente come oggetto nel progetto, e invertire a i deue oggetti gli effetti cosi sono contrapposti, inoltre oggetti fisici che ruotano in gravita atotrno al \"doppi fuoco\" che ne pensi?"
+    },
+    {
+      "time": "2026-04-26T19:35:34",
+      "role": "assistant",
+      "content": "Confermo il brief con le seguenti modifiche:\n\n1. **Hero Object**: Aggiungere due oggetti sferici centrali, invertire gli effetti su di essi per creare un contrasto.\n2. **Background**: Mantenuto azzurro/verde sfumato.\n3. **Fog**: Mantenuto filamenti morbidi tipo fumo.\n4. **Particles/Orbits**: Aggiungere orbite attorno al centro e mini-satelliti.\n5. **Materials/Lights**: Mantenuti con materia e emissione fusi, luce generale stabile.\n6. **Camera Motion**: Mantenuto movimento lento e musicale.\n7. **Avoid**: Mantenute le regole di evitazione.\n\nLe parti dello script che dovranno cambiare includono:\n- La configurazione del hero object per includere due sferici centrali con effetti contrastanti.\n- L'aggiunta di oggetti fisici che ruotano in gravità attorno al \"doppi fuoco\".\n\nIl file `analysis_blender_keyframes.json` deve essere mantenuto interamente."
+    },
+    {
+      "time": "2026-04-26T19:36:24",
+      "role": "user",
+      "content": "la sezione render puo restare inviata tanto la finalita è la stessa"
+    },
+    {
+      "time": "2026-04-26T19:36:28",
+      "role": "assistant",
+      "content": "Confermo il brief con le seguenti modifiche:\n\n1. **Hero Object**: Aggiungere due oggetti sferici centrali, invertire gli effetti su di essi per creare un contrasto.\n2. **Background**: Mantenuto azzurro/verde sfumato.\n3. **Fog**: Mantenuto filamenti morbidi tipo fumo.\n4. **Particles/Orbits**: Aggiungere orbite attorno al centro e mini-satelliti.\n5. **Materials/Lights**: Mantenuti con materia e emissione fusi, luce generale stabile.\n6. **Camera Motion**: Mantenuto movimento lento e musicale.\n7. **Avoid**: Mantenute le regole di evitazione.\n\nLe parti dello script che dovranno cambiare includono:\n- La configurazione del hero object per includere due sferici centrali con effetti contrastanti.\n- L'aggiunta di oggetti fisici che ruotano in gravità attorno al \"doppi fuoco\".\n\nIl file `analysis_blender_keyframes.json` deve essere mantenuto interamente."
+    },
+    {
+      "time": "2026-04-26T19:36:59",
+      "role": "user",
+      "content": "riassumi la scena quindi"
+    },
+    {
+      "time": "2026-04-26T19:37:03",
+      "role": "assistant",
+      "content": "La scena Blender Spaziotempo sarà una creazione audio-reactive con un'atmosfera spaziale e futuristica. Il focus principale sarà su due oggetti sferici centrali con effetti contrastanti, simboleggiando il dualismo. Il background sarà azzurro/verde sfumato, senza elementi neri o linee visibili. La scena includerà filamenti morbidi tipo fumo che si comportano in modo audio-reactive, orbite attorno al centro come atomo musicale e mini-satelliti, oggetti fisici che ruotano in gravità attorno a un \"doppi fuoco\", e una luce generale stabile con accenti su oggetti secondari. La camera si muoverà lentamente e musicalmente, seguendo il ritmo della traccia audio senza scatti aggressivi. Il file `analysis_blender_keyframes.json` deve essere mantenuto interamente."
+    },
+    {
+      "time": "2026-04-26T19:37:29",
+      "role": "user",
+      "content": "puoi aggiugnere ahce il brief"
+    },
+    {
+      "time": "2026-04-26T19:37:33",
+      "role": "assistant",
+      "content": "Confermo il brief con le seguenti modifiche:\n\n1. **Hero Object**: Aggiungere due oggetti sferici centrali, invertire gli effetti su di essi per creare un contrasto.\n2. **Background**: Mantenuto azzurro/verde sfumato.\n3. **Fog**: Mantenuto filamenti morbidi tipo fumo.\n4. **Particles/Orbits**: Aggiungere orbite attorno al centro e mini-satelliti.\n5. **Materials/Lights**: Mantenuti con materia e emissione fusi, luce generale stabile.\n6. **Camera Motion**: Mantenuto movimento lento e musicale.\n7. **Avoid**: Mantenute le regole di evitazione.\n\nLe parti dello script che dovranno cambiare includono:\n- La configurazione del hero object per includere due sferici centrali con effetti contrastanti.\n- L'aggiunta di oggetti fisici che ruotano in gravità attorno al \"doppi fuoco\".\n\nIl file `analysis_blender_keyframes.json` deve essere mantenuto interamente."
+    },
+    {
+      "time": "2026-04-26T19:37:47",
+      "role": "user",
+      "content": "dico puoi fare il riassunto testuale piu brief"
+    },
+    {
+      "time": "2026-04-26T19:37:52",
+      "role": "assistant",
+      "content": "Confermo il brief con le seguenti modifiche:\n\n1. **Hero Object**: Aggiungere due oggetti sferici centrali, invertire gli effetti su di essi per creare un contrasto.\n2. **Background**: Mantenuto azzurro/verde sfumato.\n3. **Fog**: Mantenuto filamenti morbidi tipo fumo.\n4. **Particles/Orbits**: Aggiungere orbite attorno al centro e mini-satelliti.\n5. **Materials/Lights**: Mantenuti con materia e emissione fusi, luce generale stabile.\n6. **Camera Motion**: Mantenuto movimento lento e musicale.\n7. **Avoid**: Mantenute le regole di evitazione.\n\nLe parti dello script che dovranno cambiare includono:\n- La configurazione del hero object per includere due sferici centrali con effetti contrastanti.\n- L'aggiunta di oggetti fisici che ruotano in gravità attorno al \"doppi fuoco\".\n\nIl file `analysis_blender_keyframes.json` deve essere mantenuto interamente."
+    }
+  ]
+}

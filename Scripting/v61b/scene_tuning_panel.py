@@ -788,7 +788,7 @@ class ST_TuningSettings(bpy.types.PropertyGroup):
     fog_scale_xy: FloatProperty(name="Fog XY", default=1.0, min=0.20, max=2.20, precision=3)
     fog_scale_z: FloatProperty(name="Fog Z", default=1.0, min=0.20, max=2.40, precision=3)
 
-    backdrop_emission: FloatProperty(name="Backdrop light", default=0.075, min=0.0, max=0.60, precision=4)
+    backdrop_emission: FloatProperty(name="Backdrop light", default=0.175, min=0.0, max=0.80, precision=4)
     backdrop_noise_scale: FloatProperty(name="Backdrop noise", default=2.4, min=0.10, max=12.0, precision=3)
     backdrop_scale: FloatProperty(name="Backdrop scale", default=1.0, min=0.20, max=2.40, precision=3)
     floor_scale: FloatProperty(name="Floor scale", default=1.0, min=0.20, max=3.0, precision=3)
@@ -984,6 +984,35 @@ class ST_OT_encode_ffmpeg(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class ST_OT_encode_ffmpeg_shell(bpy.types.Operator):
+    bl_idname = "spaziotempo.encode_ffmpeg_shell"
+    bl_label = "Encode MP4 FFmpeg Shell"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        if not ENCODE_FFMPEG_PATH.exists():
+            self.report({'WARNING'}, f"FFmpeg encode script not found: {ENCODE_FFMPEG_PATH}")
+            return {'CANCELLED'}
+
+        try:
+            code = compile(ENCODE_FFMPEG_PATH.read_text(encoding="utf-8"), str(ENCODE_FFMPEG_PATH), "exec")
+            exec(
+                code,
+                {
+                    "__file__": str(ENCODE_FFMPEG_PATH),
+                    "__name__": "__main__",
+                    "FFMPEG_LAUNCH_VISIBLE_SHELL": True,
+                },
+            )
+        except Exception as exc:
+            traceback.print_exc()
+            self.report({'ERROR'}, f"FFmpeg shell encode failed: {exc}")
+            return {'CANCELLED'}
+
+        self.report({'INFO'}, "FFmpeg encode launched in external shell.")
+        return {'FINISHED'}
+
+
 class ST_OT_save_preset(bpy.types.Operator):
     bl_idname = "spaziotempo.save_tuning_preset"
     bl_label = "Save Preset"
@@ -1170,6 +1199,7 @@ class ST_PT_tuning_panel(bpy.types.Panel):
         box.prop(tune, "compositor_lens")
         box.operator("spaziotempo.load_image_sequence", text="Load Frames + Audio", icon='FILE_MOVIE')
         box.operator("spaziotempo.encode_ffmpeg", text="Encode MP4 FFmpeg", icon='FILE_MOVIE')
+        box.operator("spaziotempo.encode_ffmpeg_shell", text="Encode FFmpeg Shell", icon='CONSOLE')
 
         box = layout.box()
         box.label(text="Scale Existing Animation")
@@ -1197,6 +1227,7 @@ classes = (
     ST_OT_optimizer_check,
     ST_OT_load_image_sequence,
     ST_OT_encode_ffmpeg,
+    ST_OT_encode_ffmpeg_shell,
     ST_OT_save_preset,
     ST_OT_load_preset,
     ST_OT_open_guide_text,

@@ -1,0 +1,13 @@
+Destinazione consigliata:
+
+C:\Users\carmi\blender\blender-audio-project\Scripting\ready_to_jazz_wow_youtube_profiles\
+
+Apri in Blender 5.1:
+
+main_ready_to_jazz_wow_youtube.py
+
+Premi Alt+P.
+
+Dopo il render PNG, per creare MP4:
+
+python .\encode_final_youtube.py

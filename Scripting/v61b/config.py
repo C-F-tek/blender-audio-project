@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import math
 
 # ============================================================
@@ -17,6 +18,28 @@ AUDIO_PATH = AUDIO_DIR / "Feel The Light-Luca Vera_Master.wav"
 OUTPUT_MP4 = RENDERS_DIR / "spaziotempo_asset_visual_v61b.mp4"
 OUTPUT_IMAGE_SEQUENCE_DIR = RENDERS_DIR / "spaziotempo_asset_visual_v61b_frames"
 OUTPUT_IMAGE_SEQUENCE_PREFIX = "spaziotempo_v61b_"
+
+WORKFLOW_SESSION_PATH = OUTPUT_DIR / "spaziotempo_workflow_session.json"
+WORKFLOW_SESSION_ACTIVE = False
+WORKFLOW_SESSION_ARTIFACTS = {}
+
+if WORKFLOW_SESSION_PATH.exists():
+    try:
+        _workflow_session = json.loads(WORKFLOW_SESSION_PATH.read_text(encoding="utf-8"))
+        if _workflow_session.get("use_session_track") and isinstance(_workflow_session.get("artifacts"), dict):
+            WORKFLOW_SESSION_ACTIVE = True
+            WORKFLOW_SESSION_ARTIFACTS = _workflow_session["artifacts"]
+            ANALYSIS_JSON_PATH = Path(WORKFLOW_SESSION_ARTIFACTS.get("analysis_json", ANALYSIS_JSON_PATH))
+            AUDIO_PATH = Path(WORKFLOW_SESSION_ARTIFACTS.get("audio_path", AUDIO_PATH))
+            OUTPUT_MP4 = Path(WORKFLOW_SESSION_ARTIFACTS.get("render_mp4", OUTPUT_MP4))
+            OUTPUT_IMAGE_SEQUENCE_DIR = Path(
+                WORKFLOW_SESSION_ARTIFACTS.get("render_frames_dir", OUTPUT_IMAGE_SEQUENCE_DIR)
+            )
+            OUTPUT_IMAGE_SEQUENCE_PREFIX = str(
+                WORKFLOW_SESSION_ARTIFACTS.get("render_frame_prefix", OUTPUT_IMAGE_SEQUENCE_PREFIX)
+            )
+    except Exception:
+        WORKFLOW_SESSION_ACTIVE = False
 # ============================================================
 # MASTER SWITCHES
 # ============================================================
@@ -73,15 +96,28 @@ IMAGE_SEQUENCE_COLOR_DEPTH = '16'
 IMAGE_SEQUENCE_COMPRESSION = 15
 ENCODE_SEQUENCE_AUTO_RENDER = False
 ENCODE_SEQUENCE_SYNC_AUDIO_TO_FRAME_NUMBER = True
+ENCODE_SEQUENCE_AUDIO_ZERO_FRAME = 1
 ENCODE_SEQUENCE_SKIP_PLACEHOLDERS = True
 ENCODE_SEQUENCE_SWITCH_TO_SEQUENCER = True
 ENCODE_USE_EXTERNAL_FFMPEG = True
 FFMPEG_EXE_PATH = ""
-FFMPEG_OUTPUT_MP4 = OUTPUT_MP4
+FFMPEG_OUTPUT_SUFFIX = "_ffmpeg"
+FFMPEG_OUTPUT_MP4 = OUTPUT_MP4.with_name(f"{OUTPUT_MP4.stem}{FFMPEG_OUTPUT_SUFFIX}{OUTPUT_MP4.suffix}")
+FFMPEG_LAUNCH_VISIBLE_SHELL = False
+FFMPEG_PROFILE = "GPU_AV1_YOUTUBE_SAFE"  # GPU_AV1_YOUTUBE_SAFE, X264_HIGH_QUALITY, CPU_SVTAV1_YOUTUBE
+FFMPEG_GPU_INDEX = 0
+FFMPEG_NVENC_PRESET = "p7"
+FFMPEG_NVENC_TUNE = "hq"
+FFMPEG_NVENC_CQ = 18
 FFMPEG_CRF = 16 if FINAL_FOR_YOUTUBE else 17
 FFMPEG_PRESET = "slow"
 FFMPEG_TUNE = "film"
-FFMPEG_AUDIO_BITRATE = "320k"
+FFMPEG_SVTAV1_PRESET = 4
+FFMPEG_SVTAV1_CRF = 18 if FINAL_FOR_YOUTUBE else 24
+FFMPEG_THREADS = 12
+FFMPEG_VIDEO_FILTER = "eq=brightness=0.018:contrast=1.015:saturation=1.04,format=yuv420p"
+FFMPEG_AUDIO_BITRATE = "384k"
+FFMPEG_AUDIO_SAMPLE_RATE = 48000
 # ============================================================
 # HERO ASSET
 # ============================================================
@@ -122,7 +158,10 @@ USE_BLOOM = True
 BLOOM_THRESHOLD = 1.20
 BLOOM_INTENSITY = 0.02 if FINAL_FOR_YOUTUBE else 0.018
 
-WORLD_STRENGTH = 0.090 if FINAL_FOR_YOUTUBE else 0.080
+WORLD_STRENGTH = 0.085 if FINAL_FOR_YOUTUBE else 0.075
+WORLD_CAMERA_STRENGTH = 0.58 if FINAL_FOR_YOUTUBE else 0.52
+WORLD_LIGHT_COLOR = (0.012, 0.052, 0.058, 1.0)
+WORLD_CAMERA_COLOR = (0.045, 0.170, 0.185, 1.0)
 
 USE_HDRI_WORLD = False
 HDRI_PATH = ASSETS_DIR / "hdri" / "EveningSkyHDRI037A_4K" / "EveningSkyHDRI037A_4K_HDR.exr"
@@ -140,8 +179,8 @@ USE_SOFT_BACKDROP = True
 BACKDROP_SIZE = 92.0
 BACKDROP_LOCATION = (0.0, 12.0, 5.2)
 BACKDROP_ROT_X = math.radians(90.0)
-BACKDROP_EMISSION_MIN = 0.038
-BACKDROP_EMISSION_MAX = 0.052 if FINAL_FOR_YOUTUBE else 0.046
+BACKDROP_EMISSION_MIN = 0.145
+BACKDROP_EMISSION_MAX = 0.245 if FINAL_FOR_YOUTUBE else 0.205
 BACKDROP_BREATHE_SCALE = 0.002
 
 USE_INVISIBLE_COLLISION_PLANE = True

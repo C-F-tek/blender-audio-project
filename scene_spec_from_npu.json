@@ -1,0 +1,65 @@
+{
+  "scene_name": ".",
+  "camera": {
+    "location": [
+      16,
+      16,
+      16
+    ],
+    "rotation": [
+      0,
+      540,
+      360
+    ],
+    "lens": 455
+  },
+  "palette": [
+    "#20354D",
+    "#38215A",
+    "#4D2A37"
+  ],
+  "objects": [
+    {
+      "type": "sphere",
+      "name": "central_sphere",
+      "location": [
+        8,
+        8,
+        8
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "type": "light_columns_ring",
+      "name": ".",
+      "count": 12,
+      "radius": 5.0
+    }
+  ],
+  "audio_mapping": [
+    {
+      "target": "central_sphere",
+      "property": "material_select",
+      "band": "beat"
+    },
+    {
+      "target": "light_cobinates_ring",
+      "property": "strength",
+      "band": "beat"
+    },
+    {
+      "target": "central_sphere",
+      "property": "material_shader",
+      "band": "beat"
+    },
+    {
+      "target": "light_cobinates_ring",
+      "property": "strength",
+      "band": "beat"
+    }
+  ]
+}

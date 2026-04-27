@@ -19,3 +19,27 @@ Tools/npu/__pycache__/
 Tools/npu/npu_blender_manual_chunks/
 Tools/npu/npu_code_chunks/
 Tools/npu/npu_music_chunks/
+
+# NPU generated cache/chunks
+Tools/npu/.npucache/
+Tools/npu/__pycache__/
+Tools/npu/npu_blender_manual_chunks/
+Tools/npu/npu_code_chunks/
+Tools/npu/npu_music_chunks/
+
+# AI generated indexes/chunks
+indexAI/project_code_chunks/
+indexAI/project_code_index.md
+indexAI/project_code_manifest.json
+
+# Generated scene bundles / AI packets
+indexAI/scene_scripts/*_scene_bundle/
+indexAI/patch_library/*_gpu_task_packet.json
+indexAI/patch_library/*_npu_service_capsule.json
+indexAI/patch_library/*_npu_service_capsule.md
+
+# Backups / archives
+*.bak
+*.bak2
+*.zip
+*_backup_*.py

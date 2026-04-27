@@ -67,6 +67,7 @@ ENCODE_SEQUENCE_SYNC_AUDIO_TO_FRAME_NUMBER = getattr(
     "ENCODE_SEQUENCE_SYNC_AUDIO_TO_FRAME_NUMBER",
     True,
 )
+ENCODE_SEQUENCE_AUDIO_ZERO_FRAME = int(getattr(cfg, "ENCODE_SEQUENCE_AUDIO_ZERO_FRAME", 1))
 ENCODE_SEQUENCE_SKIP_PLACEHOLDERS = getattr(
     cfg,
     "ENCODE_SEQUENCE_SKIP_PLACEHOLDERS",
@@ -258,7 +259,7 @@ def add_synced_audio(editor, first_frame):
     audio_offset_frames = 0
     audio_start_frame = 1
     if ENCODE_SEQUENCE_SYNC_AUDIO_TO_FRAME_NUMBER and first_frame is not None:
-        audio_offset_frames = max(0, int(first_frame) - 1)
+        audio_offset_frames = max(0, int(first_frame) - ENCODE_SEQUENCE_AUDIO_ZERO_FRAME)
         audio_start_frame = 1 - audio_offset_frames
 
     collection = get_sequence_collection(editor)
@@ -272,7 +273,8 @@ def add_synced_audio(editor, first_frame):
     if audio_offset_frames > 0:
         print(
             "[INFO] Audio sincronizzato: "
-            f"frame originale {first_frame}, audio strip start {audio_start_frame}."
+            f"frame originale {first_frame}, frame zero audio {ENCODE_SEQUENCE_AUDIO_ZERO_FRAME}, "
+            f"audio strip start {audio_start_frame}."
         )
     else:
         print("[INFO] Audio sample avviato dal frame 1 della canzone.")

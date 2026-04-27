@@ -1,0 +1,53 @@
+```json
+{
+  "scene_name": "dark futuristic stage",
+  "camera": {
+    "location": [0, 0, 0],
+    "rotation": [0, 0, 0],
+    "lens": 1
+  },
+  "palette": ["blue", "violet"],
+  "objects": [
+    {
+      "type": "sphere",
+      "name": "bass_sphere",
+      "location": [0, 5, 7.3],
+      "scale": [1, 1, 1]
+    }
+  ],
+  "objects_additional": [
+    {
+      "type": "light_columns_ring",
+      "name": "columns_ring",
+      "count": 12,
+      "radius": 0.5
+    }
+  ],
+  "audio_mapping": [
+    {
+      "target": "bass_sphere",
+      "property": "scale",
+      "band": "bass"
+    },
+    {
+      "target": "light_columns_ring",
+      "property": "radius",
+      "band": "bass"
+    },
+    {
+      "target": "light_columns_ring",
+      "property": "count",
+      "band": "bass"
+    },
+    {
+      "target": "light_columns_ring",
+      "property": "intensity",
+      "band": "mid"
+    },
+    {
+      "target": "light_columns_ring",
+      "property": "intensity",
+      "band": "high"
+    },
+    {
+      "target": "light_columns_

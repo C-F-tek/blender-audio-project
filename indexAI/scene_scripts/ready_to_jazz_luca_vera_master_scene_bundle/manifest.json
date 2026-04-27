@@ -1,0 +1,22 @@
+{
+  "kind": "spaziotempo_generated_scene_bundle_manifest",
+  "track_stem": "Ready To Jazz-Luca Vera_Master",
+  "main_script": "indexAI/scene_scripts/ready_to_jazz_luca_vera_master_scene_builder_candidate.py",
+  "npu_service_role": [
+    "create split/module plan",
+    "maintain manifest of generated files",
+    "check naming consistency",
+    "summarize previous script for next GPU revision",
+    "avoid heavy code generation unless explicitly requested"
+  ],
+  "gpu_writer_role": [
+    "generate Blender Python scene logic",
+    "apply scene director changes",
+    "keep full audio keyframes as the animation source"
+  ],
+  "generated_files": [
+    "indexAI/scene_scripts/ready_to_jazz_luca_vera_master_scene_bundle/manifest.json",
+    "indexAI/scene_scripts/ready_to_jazz_luca_vera_master_scene_bundle/director_brief_snapshot.json",
+    "indexAI/scene_scripts/ready_to_jazz_luca_vera_master_scene_bundle/README.md"
+  ]
+}

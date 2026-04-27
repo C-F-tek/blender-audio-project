@@ -4,6 +4,9 @@ from pathlib import Path
 from config import (
     PEACE_PALETTE,
     WORLD_STRENGTH,
+    WORLD_CAMERA_STRENGTH,
+    WORLD_LIGHT_COLOR,
+    WORLD_CAMERA_COLOR,
     USE_HDRI_WORLD,
     HDRI_PATH,
     HDRI_STRENGTH,
@@ -78,11 +81,28 @@ def configure_world(scene):
         links.new(bg_black.outputs["Background"], mix.inputs[2])
         links.new(mix.outputs["Shader"], out.inputs["Surface"])
     else:
-        bg = nodes.new("ShaderNodeBackground")
-        bg.location = (260, 0)
-        bg.inputs["Strength"].default_value = WORLD_STRENGTH
-        bg.inputs["Color"].default_value = PEACE_PALETTE["twilight_blue"]
-        links.new(bg.outputs["Background"], out.inputs["Surface"])
+        bg_camera = nodes.new("ShaderNodeBackground")
+        bg_camera.name = "WorldCameraAzzurro"
+        bg_camera.location = (-260, 80)
+        bg_camera.inputs["Strength"].default_value = WORLD_CAMERA_STRENGTH
+        bg_camera.inputs["Color"].default_value = WORLD_CAMERA_COLOR
+
+        bg_light = nodes.new("ShaderNodeBackground")
+        bg_light.name = "WorldSceneLight"
+        bg_light.location = (-260, -130)
+        bg_light.inputs["Strength"].default_value = WORLD_STRENGTH
+        bg_light.inputs["Color"].default_value = WORLD_LIGHT_COLOR
+
+        light_path = nodes.new("ShaderNodeLightPath")
+        light_path.location = (-560, -70)
+
+        mix = nodes.new("ShaderNodeMixShader")
+        mix.location = (120, 0)
+
+        links.new(light_path.outputs["Is Camera Ray"], mix.inputs[0])
+        links.new(bg_light.outputs["Background"], mix.inputs[1])
+        links.new(bg_camera.outputs["Background"], mix.inputs[2])
+        links.new(mix.outputs["Shader"], out.inputs["Surface"])
 
     return world
 

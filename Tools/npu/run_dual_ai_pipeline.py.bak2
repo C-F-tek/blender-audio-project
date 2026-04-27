@@ -1,0 +1,815 @@
+from __future__ import annotations
+
+from pathlib import Path
+import argparse
+import json
+import subprocess
+import sys
+from datetime import datetime
+
+from build_music_context import build_music_context
+from build_npu_code_context import main as build_code_context
+from build_blender_manual_context import build_manual_context
+from build_project_ai_index import PROJECT_INDEX_MD, PROJECT_MANIFEST_JSON, build_project_ai_index
+from npu_runtime import DEFAULT_MODEL_DIR, DEFAULT_NPU_PYTHON, npu_preflight, write_npu_preflight_report
+from ollama_runtime import OllamaModelManager, parse_json_response
+from run_ollama_music_agent import build_prompt as build_music_prompt
+from run_ollama_music_agent import markdown_from_insights
+
+
+ROOT = Path(__file__).resolve().parents[2]
+TOOLS_DIR = ROOT / "Tools" / "npu"
+OUTPUT_DIR = ROOT / "output"
+
+TRACK_STEM = "Feel The Light-Luca Vera_Master"
+MUSIC_AI_CONTEXT = OUTPUT_DIR / f"{TRACK_STEM}_analysis_ai_context.json"
+DUAL_PLAN_JSON = OUTPUT_DIR / f"{TRACK_STEM}_dual_ai_scene_plan.json"
+DUAL_BRIEF_MD = TOOLS_DIR / "dual_ai_blender_agent_brief.md"
+OLLAMA_INSIGHTS_JSON = OUTPUT_DIR / f"{TRACK_STEM}_ollama_music_insights.json"
+OLLAMA_INSIGHTS_MD = TOOLS_DIR / "ollama_music_insights.md"
+NPU_TECH_MD = TOOLS_DIR / "npu_dual_ai_technical_notes.md"
+NPU_PREFLIGHT_JSON = TOOLS_DIR / "npu_preflight_report.json"
+IMPLEMENTATION_DRAFT_JSON = OUTPUT_DIR / f"{TRACK_STEM}_ai_implementation_draft.json"
+IMPLEMENTATION_SCRIPT = TOOLS_DIR / "generated_blender_script_candidate.py"
+IMPLEMENTATION_NOTES = TOOLS_DIR / "generated_implementation_notes.md"
+NPU_IMPLEMENTATION_NOTES = TOOLS_DIR / "npu_dual_ai_implementation_notes.md"
+
+
+def read_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8", errors="replace") if path.exists() else ""
+
+
+def read_json(path: Path) -> dict:
+    with open(path, "r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def write_json(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def validate_input_files(args: argparse.Namespace) -> None:
+    required = [
+        ("analysis JSON", Path(args.analysis)),
+        ("track summary JSON", Path(args.track_summary)),
+        ("compact music context JSON", Path(args.compact_json)),
+        ("analysis AI context JSON", Path(args.analysis_ai_context)),
+        ("full Blender keyframes JSON", Path(args.blender_keyframes_json)),
+    ]
+    if args.phase == "implementation":
+        required.append(("dual AI scene plan JSON", DUAL_PLAN_JSON))
+
+    missing = [f"{label}: {path}" for label, path in required if not path.exists()]
+    if missing:
+        raise FileNotFoundError(
+            "Prerequisiti mancanti per la pipeline AI:\n"
+            + "\n".join(f"- {item}" for item in missing)
+            + "\nEsegui/rigenera analysis, track summary, music context e piano prima del draft."
+        )
+
+
+def looks_degraded_text(text: str) -> bool:
+    stripped = text.strip()
+    if len(stripped) < 260:
+        return True
+    alnum = sum(ch.isalnum() for ch in stripped)
+    visible = sum(not ch.isspace() for ch in stripped)
+    if visible and alnum / visible < 0.45:
+        return True
+    markdown_heads = stripped.count("##")
+    useful_words = sum(stripped.lower().count(word) for word in ["audio", "blender", "segment", "material", "fog", "light", "mesh"])
+    return markdown_heads < 2 and useful_words < 5
+
+
+def deterministic_technical_notes(music_context: dict, project_manifest: dict, reason: str) -> str:
+    summary = music_context.get("analysis_summary") or {}
+    track_summary = music_context.get("track_summary") or {}
+    segments = music_context.get("segments") or []
+    files = project_manifest.get("files") or []
+    priority_files = [
+        item.get("file")
+        for item in files
+        if item.get("file", "").endswith((
+            "Scripting/v61b/config.py",
+            "Scripting/v61b/materials.py",
+            "Scripting/v61b/fog_dynamics.py",
+            "Scripting/v61b/physics_setup.py",
+            "Scripting/v61b/scene_tuning_panel.py",
+            "Tools/workflow/workflow_state.py",
+            "Tools/npu/run_dual_ai_pipeline.py",
+        ))
+    ]
+
+    lines = [
+        "# Deterministic Technical Notes\n\n",
+        f"Reason: NPU output was not trusted (`{reason}`).\n\n",
+        "## Track Map\n",
+        f"- Duration: `{summary.get('duration_sec', track_summary.get('duration_sec', '?'))}` seconds.\n",
+        f"- FPS: `{summary.get('fps', track_summary.get('fps', '?'))}`.\n",
+        f"- BPM: `{summary.get('estimated_tempo_bpm', track_summary.get('estimated_tempo_bpm', '?'))}`.\n",
+        f"- Segment count: `{len(segments)}`.\n\n",
+        "## Project Primary Files\n",
+    ]
+    for file_name in priority_files[:20]:
+        lines.append(f"- `{file_name}`\n")
+
+    lines.extend(
+        [
+            "\n## Safe Implementation Policy\n",
+            "- Use full frame-by-frame Blender keyframe JSON as data input only.\n",
+            "- Generate patch plans against existing project files, not monolithic replacement scripts.\n",
+            "- Prefer hotpatch/panel/update modules for materials, fog, lights and render changes.\n",
+            "- Require a reload only when primary object creation or scene topology changes.\n\n",
+            "## Audio Control Map\n",
+            "- Low band: hero mesh deformation scale, gravity/attractor strength, fog density body.\n",
+            "- Mid band: material roughness/emission mix, secondary object motion, fog filament drift.\n",
+            "- High band: small emission accents, glints, particle sparkle, sharp camera micro motion.\n",
+            "- Onset/beat: short impulses, never a constant global light flash.\n\n",
+        ]
+    )
+    return "".join(lines)
+
+
+def run_npu_technical_pass(args: argparse.Namespace) -> str:
+    script = TOOLS_DIR / "run_npu_review.py"
+    python_exe = Path(args.npu_python)
+    cmd = [
+        str(python_exe),
+        str(script),
+        "--engine",
+        "npu",
+        "--domain",
+        "music",
+        "--mode",
+        "chunked",
+        "--context",
+        str(TOOLS_DIR / "npu_music_context.md"),
+        "--chunk-dir",
+        str(TOOLS_DIR / "npu_music_chunks"),
+        "--out",
+        str(NPU_TECH_MD),
+        "--notes-out",
+        str(TOOLS_DIR / "npu_dual_ai_chunk_notes.md"),
+        "--max-context-chars",
+        "0",
+        "--chunk-chars",
+        "10500",
+        "--chunk-overlap-chars",
+        "700",
+        "--max-prompt-chars",
+        "15000",
+        "--max-chunk-tokens",
+        str(args.npu_chunk_tokens),
+        "--max-reduce-tokens",
+        str(args.npu_reduce_tokens),
+        "--max-new-tokens",
+        str(args.npu_final_tokens),
+        "--max-prompt-len",
+        "16384",
+        "--min-response-len",
+        "64",
+    ]
+
+    subprocess.run(cmd, check=True)
+    return read_text(NPU_TECH_MD)
+
+
+def build_creative_scene_prompt(music_context: dict, npu_notes: str, project_index: str) -> str:
+    compact = {
+        "analysis_summary": music_context.get("analysis_summary"),
+        "track_summary": music_context.get("track_summary"),
+        "scene_summaries": music_context.get("scene_summaries"),
+        "segments": [
+            {
+                "index": segment.get("index"),
+                "start_sec": segment.get("start_sec"),
+                "end_sec": segment.get("end_sec"),
+                "dominant_band": segment.get("dominant_band"),
+                "intensity": segment.get("intensity"),
+                "intensity_score": segment.get("intensity_score"),
+                "controls": segment.get("controls"),
+                "top_events": segment.get("top_events", [])[:6],
+            }
+            for segment in music_context.get("segments", [])
+        ],
+        "npu_technical_notes": npu_notes[:18000],
+        "primary_project_index": project_index[:14000],
+    }
+    payload = json.dumps(compact, indent=2, ensure_ascii=False)
+    return f"""
+Sei il generatore creativo locale per una scena Blender audio-reactive.
+
+Hai un contesto musicale compatto, scene JSON esistenti e note tecniche NPU.
+Devi proporre una scena piu ricca SENZA cambiare direttamente codice Blender.
+Il codice reale del progetto e' la fonte primaria: rispetta file, moduli e funzioni esistenti.
+Il JSON full frame per Blender deve restare completo e invariato.
+
+Rispondi SOLO con JSON valido.
+
+Schema richiesto:
+{{
+  "creative_intent": "...",
+  "visual_language": {{
+    "background": "...",
+    "hero": "...",
+    "fog": "...",
+    "materials": "...",
+    "lights": "...",
+    "physics": "..."
+  }},
+  "scene_layers": [
+    {{
+      "layer": "Hero",
+      "objects": ["..."],
+      "audio_drivers": ["low", "mid", "high", "onset", "beat"],
+      "implementation_hint": "..."
+    }}
+  ],
+  "segment_variations": [
+    {{
+      "segment": 1,
+      "time_range": "0.0-16.0",
+      "variation": "...",
+      "material_modulation": "...",
+      "fog_modulation": "...",
+      "light_modulation": "...",
+      "camera_modulation": "..."
+    }}
+  ],
+  "render_safety": {{
+    "heavy_features_to_avoid": ["..."],
+    "fast_preview_strategy": "...",
+    "final_strategy": "..."
+  }},
+  "json_outputs_to_create": ["..."],
+  "do_not_touch": ["full analysis frame JSON", "..."]
+}}
+
+CONTESTO:
+{payload}
+""".strip()
+
+
+def build_merge_prompt(music_context: dict, npu_notes: str, creative: dict, technical: dict) -> str:
+    payload = {
+        "music_summary": music_context.get("analysis_summary"),
+        "npu_technical_notes": npu_notes[:14000],
+        "primary_project_index": read_text(PROJECT_INDEX_MD)[:12000],
+        "ollama_creative": creative,
+        "ollama_technical": technical,
+    }
+    return f"""
+Sei l'orchestratore finale NPU+Ollama per Blender.
+
+Devi fondere note tecniche e proposte creative in un piano applicabile, ma NON applicare niente.
+Il piano deve essere prudente, modulare e compatibile con hotpatch successivi.
+
+Rispondi SOLO con JSON valido.
+
+Schema:
+{{
+  "pipeline_policy": {{
+    "use_full_blender_keyframes_json": true,
+    "ai_context_is_analysis_only": true,
+    "ollama_model_switch_policy": "unload previous model before loading next"
+  }},
+  "recommended_scene_plan": {{
+    "summary": "...",
+    "priority_changes": ["..."],
+    "defer_changes": ["..."]
+  }},
+  "file_plan": {{
+    "read_only": ["..."],
+    "hotpatch_candidates": ["..."],
+    "json_outputs": ["..."],
+    "must_use_existing_files": true
+  }},
+  "audio_mapping_plan": {{
+    "hero_mesh": "...",
+    "materials": "...",
+    "fog": "...",
+    "lights": "...",
+    "physics": "...",
+    "camera": "..."
+  }},
+  "safety_checks": ["..."],
+  "next_commands": ["..."]
+}}
+
+DATI:
+{json.dumps(payload, indent=2, ensure_ascii=False)}
+""".strip()
+
+
+def build_implementation_prompt(plan: dict, npu_notes: str, include_manual: bool) -> str:
+    manual_index = read_text(TOOLS_DIR / "npu_blender_manual_index.md")[:12000] if include_manual else ""
+    project_index = read_text(PROJECT_INDEX_MD)[:22000]
+    project_manifest = read_text(PROJECT_MANIFEST_JSON)[:18000]
+    legacy_code_index = read_text(TOOLS_DIR / "npu_code_index.md")[:8000]
+    guide = read_text(ROOT / "Scripting" / "v61b" / "SCENE_TUNING_GUIDE.md")[:10000]
+    project_structure = read_text(ROOT / "Scripting" / "v61b" / "PROJECT_STRUCTURE.md")[:8000]
+
+    payload = {
+        "dual_ai_plan": plan,
+        "npu_notes": npu_notes[:14000],
+        "primary_project_index": project_index,
+        "primary_project_manifest": project_manifest,
+        "legacy_code_index": legacy_code_index,
+        "project_structure": project_structure,
+        "scene_tuning_guide": guide,
+        "manual_index": manual_index,
+    }
+
+    return f"""
+Sei un agente implementatore Blender Python.
+
+Devi generare una BOZZA di patch plan per il progetto esistente.
+Non devi riscrivere tutto in uno script monolitico.
+Ogni modifica deve riferirsi a un file gia presente nel primary_project_index, salvo nuovi file hotpatch o indexAI/patch_library.
+La bozza script candidata e' opzionale: usala solo se e' davvero un hotpatch separato e coerente.
+Non ridurre il JSON frame-by-frame del brano.
+Non inventare API se nel manuale/indice non sono presenti; se non sei sicuro, scrivi note.
+
+Rispondi SOLO con JSON valido:
+{{
+  "implementation_kind": "existing_project_patch_plan",
+  "safety": {{
+    "does_not_modify_full_analysis_json": true,
+    "requires_manual_review": true,
+    "needs_blender_run": true
+  }},
+  "target_files": [
+    {{
+      "file": "Scripting/v61b/materials.py",
+      "exists_in_project_index": true,
+      "reason": "...",
+      "hot_update_possible": true,
+      "requires_full_reload": false
+    }}
+  ],
+  "patch_plan": [
+    {{
+      "file": "Scripting/v61b/materials.py",
+      "function_or_section": "...",
+      "change": "...",
+      "why": "...",
+      "risk": "low|medium|high",
+      "test_or_check": "..."
+    }}
+  ],
+  "new_files_allowed": ["Scripting/v61b/hotpatch/...", "indexAI/patch_library/..."],
+  "hotpatch_candidate_script": "codice python opzionale, oppure stringa vuota",
+  "notes": ["..."],
+  "files_to_review_before_applying": ["..."],
+  "expected_panel_or_operator": "..."
+}}
+
+CONTESTO:
+{json.dumps(payload, indent=2, ensure_ascii=False)}
+""".strip()
+
+
+def safe_parse_json(text: str, fallback_key: str) -> dict:
+    try:
+        return parse_json_response(text)
+    except Exception:
+        return {fallback_key: text, "parse_error": True}
+
+
+def write_brief(plan: dict, creative: dict, technical: dict, npu_notes: str) -> None:
+    lines = [
+        "# Dual AI Blender Agent Brief\n\n",
+        f"Generated: `{datetime.now().isoformat(timespec='seconds')}`\n\n",
+        "## Policy\n",
+        "- Full Blender keyframe JSON remains untouched.\n",
+        "- AI compact context is analysis only.\n",
+        "- Ollama model switch unloads the previous model before loading the next.\n\n",
+        "## Recommended Plan\n",
+        json.dumps(plan.get("recommended_scene_plan", plan), indent=2, ensure_ascii=False),
+        "\n\n## Audio Mapping\n",
+        json.dumps(plan.get("audio_mapping_plan", {}), indent=2, ensure_ascii=False),
+        "\n\n## Creative Source\n",
+        json.dumps(creative, indent=2, ensure_ascii=False)[:12000],
+        "\n\n## Technical Source\n",
+        json.dumps(technical, indent=2, ensure_ascii=False)[:12000],
+        "\n\n## NPU Notes\n",
+        npu_notes[:12000],
+        "\n",
+    ]
+    DUAL_BRIEF_MD.write_text("".join(lines), encoding="utf-8")
+
+
+def validate_implementation_draft(draft: dict) -> dict:
+    allowed_new_prefixes = ("Scripting/v61b/hotpatch/", "indexAI/patch_library/")
+    manifest = read_json(PROJECT_MANIFEST_JSON) if PROJECT_MANIFEST_JSON.exists() else {}
+    indexed_files = {item.get("file") for item in manifest.get("files", []) if item.get("file")}
+
+    issues: list[str] = []
+    target_files = draft.get("target_files") or []
+    patch_plan = draft.get("patch_plan") or []
+
+    if draft.get("implementation_kind") != "existing_project_patch_plan":
+        issues.append("implementation_kind should be existing_project_patch_plan.")
+
+    if not target_files:
+        issues.append("No target_files entries were provided.")
+
+    if not patch_plan:
+        issues.append("No patch_plan entries were provided.")
+
+    for item in target_files:
+        file_name = str(item.get("file") or "").replace("\\", "/")
+        if not file_name:
+            issues.append("A target_files entry has no file.")
+            continue
+        is_existing = file_name in indexed_files
+        is_allowed_new = file_name.startswith(allowed_new_prefixes)
+        if not is_existing and not is_allowed_new:
+            issues.append(f"Target file is not in project index and not an allowed new file: {file_name}")
+
+    for item in patch_plan:
+        file_name = str(item.get("file") or "").replace("\\", "/")
+        if not file_name:
+            issues.append("A patch_plan entry has no file.")
+            continue
+        is_existing = file_name in indexed_files
+        is_allowed_new = file_name.startswith(allowed_new_prefixes)
+        if not is_existing and not is_allowed_new:
+            issues.append(f"Patch target is not in project index and not an allowed new file: {file_name}")
+
+    script = draft.get("hotpatch_candidate_script", draft.get("script", ""))
+    if script and "analysis_blender_keyframes" in script and "write" in script.lower():
+        issues.append("Candidate script appears to write keyframe analysis data; review required.")
+
+    return {
+        "ok": not issues,
+        "issues": issues,
+        "indexed_file_count": len(indexed_files),
+        "allowed_new_prefixes": list(allowed_new_prefixes),
+    }
+def build_fallback_implementation_draft(reason: str, model: str | None = None) -> dict:
+    allowed_new_file = "Scripting/v61b/hotpatch/generated_audio_reactive_hotpatch.py"
+
+    preferred_existing_files = [
+        "Scripting/v61b/materials.py",
+        "Scripting/v61b/fog_dynamics.py",
+        "Scripting/v61b/physics_setup.py",
+        "Scripting/v61b/scene_tuning_panel.py",
+        "Scripting/v61b/config.py",
+    ]
+
+    manifest = read_json(PROJECT_MANIFEST_JSON) if PROJECT_MANIFEST_JSON.exists() else {}
+    indexed_files = {item.get("file") for item in manifest.get("files", []) if item.get("file")}
+
+    selected_files = [path for path in preferred_existing_files if path in indexed_files]
+
+    target_files = [
+        {
+            "file": path,
+            "exists_in_project_index": True,
+            "reason": "Deterministic fallback target selected from existing indexed project files.",
+            "hot_update_possible": path.endswith(("materials.py", "fog_dynamics.py", "scene_tuning_panel.py")),
+            "requires_full_reload": path.endswith(("config.py", "physics_setup.py")),
+        }
+        for path in selected_files
+    ]
+
+    patch_plan = [
+        {
+            "file": path,
+            "function_or_section": "To be reviewed manually",
+            "change": "Review and apply audio-reactive scene tuning changes according to the generated dual AI scene plan.",
+            "why": "The AI implementation response was missing or invalid, so a conservative patch plan was generated.",
+            "risk": "medium",
+            "test_or_check": "Run Blender in preview mode and verify materials, fog, lights, physics and panel behaviour without modifying the full analysis JSON.",
+        }
+        for path in selected_files
+    ]
+
+    if not target_files:
+        target_files = [
+            {
+                "file": allowed_new_file,
+                "exists_in_project_index": False,
+                "reason": "No preferred indexed project file was found; using allowed hotpatch path.",
+                "hot_update_possible": True,
+                "requires_full_reload": False,
+            }
+        ]
+
+        patch_plan = [
+            {
+                "file": allowed_new_file,
+                "function_or_section": "new hotpatch module",
+                "change": "Create a review-only Blender hotpatch candidate module.",
+                "why": "Fallback path is allowed by validator and avoids modifying unknown project files.",
+                "risk": "medium",
+                "test_or_check": "Load only after manual review inside Blender.",
+            }
+        ]
+
+    draft = {
+        "implementation_kind": "existing_project_patch_plan",
+        "safety": {
+            "does_not_modify_full_analysis_json": True,
+            "requires_manual_review": True,
+            "needs_blender_run": True,
+        },
+        "target_files": target_files,
+        "patch_plan": patch_plan,
+        "new_files_allowed": [
+            "Scripting/v61b/hotpatch/...",
+            "indexAI/patch_library/...",
+        ],
+        "hotpatch_candidate_script": "",
+        "notes": [
+            f"Deterministic fallback generated because implementation draft was invalid: {reason}",
+            "Review target_files and patch_plan before applying anything in Blender.",
+        ],
+        "files_to_review_before_applying": [item["file"] for item in target_files],
+        "expected_panel_or_operator": "Scene tuning panel or manually reviewed hotpatch operator.",
+    }
+
+    if model:
+        draft["model"] = model
+
+    return draft
+
+
+def normalize_implementation_draft(draft: dict, model: str | None = None) -> dict:
+    if not isinstance(draft, dict):
+        return build_fallback_implementation_draft("draft is not a dictionary", model=model)
+
+    validation = validate_implementation_draft(draft)
+
+    if validation.get("ok"):
+        return draft
+
+    reason = "; ".join(validation.get("issues", [])) or "unknown validation failure"
+
+    fallback = build_fallback_implementation_draft(reason, model=model)
+
+    fallback["raw_invalid_draft"] = draft
+    fallback["original_validation"] = validation
+
+    return fallback
+
+def write_implementation_draft(draft: dict) -> None:
+    draft["validation"] = validate_implementation_draft(draft)
+    write_json(IMPLEMENTATION_DRAFT_JSON, draft)
+    script = draft.get("hotpatch_candidate_script", draft.get("script", ""))
+    if not script:
+        script = (
+            "# AI implementation draft is a patch plan, not a runnable script.\n"
+            "# Review the JSON draft for target_files, patch_plan, validation and notes.\n"
+        )
+    IMPLEMENTATION_SCRIPT.write_text(script.rstrip() + "\n", encoding="utf-8")
+    notes = [
+        "# Generated Implementation Notes\n\n",
+        "This file is an AI draft. Review before loading in Blender.\n\n",
+        "## Validation\n",
+        json.dumps(draft.get("validation", {}), indent=2, ensure_ascii=False),
+        "\n\n",
+        "## Safety\n",
+        json.dumps(draft.get("safety", {}), indent=2, ensure_ascii=False),
+        "\n\n## Notes\n",
+    ]
+    for note in draft.get("notes", []):
+        notes.append(f"- {note}\n")
+    notes.append("\n## Files To Review\n")
+    for path in draft.get("files_to_review_before_applying", []):
+        notes.append(f"- `{path}`\n")
+    IMPLEMENTATION_NOTES.write_text("".join(notes), encoding="utf-8")
+
+
+def main() -> None:
+    global TRACK_STEM
+    global MUSIC_AI_CONTEXT, DUAL_PLAN_JSON, OLLAMA_INSIGHTS_JSON
+    global IMPLEMENTATION_DRAFT_JSON
+
+    parser = argparse.ArgumentParser(description="Build code/music contexts, run NPU technical pass and Ollama creative passes.")
+    parser.add_argument("--phase", choices=["plan", "implementation", "full"], default="plan")
+    parser.add_argument("--track-stem", default=TRACK_STEM)
+    parser.add_argument("--analysis", default=str(OUTPUT_DIR / f"{TRACK_STEM}_analysis.json"))
+    parser.add_argument("--track-summary", default=str(OUTPUT_DIR / f"{TRACK_STEM}_track_summary.json"))
+    parser.add_argument("--compact-json", default=str(OUTPUT_DIR / f"{TRACK_STEM}_music_context.json"))
+    parser.add_argument("--analysis-ai-context", default=str(MUSIC_AI_CONTEXT))
+    parser.add_argument("--blender-keyframes-json", default=str(OUTPUT_DIR / f"{TRACK_STEM}_analysis_blender_keyframes.json"))
+    parser.add_argument("--skip-npu", action="store_true")
+    parser.add_argument("--skip-ollama", action="store_true")
+    parser.add_argument("--include-manual", action="store_true")
+    parser.add_argument("--creative-model", default="gpt-oss:20b")
+    parser.add_argument("--technical-model", default="qwen2.5-coder:14b")
+    parser.add_argument("--ollama-base-url", default=None)
+    parser.add_argument("--npu-python", default=str(DEFAULT_NPU_PYTHON))
+    parser.add_argument("--npu-model-dir", default=str(DEFAULT_MODEL_DIR))
+    parser.add_argument("--npu-chunk-tokens", type=int, default=520)
+    parser.add_argument("--npu-reduce-tokens", type=int, default=650)
+    parser.add_argument("--npu-final-tokens", type=int, default=900)
+    parser.add_argument("--max-new-tokens", type=int, default=1800)
+    parser.add_argument("--force-npu", action="store_true", help="Re-run NPU notes even when reusable notes exist.")
+    args = parser.parse_args()
+
+    TRACK_STEM = args.track_stem
+    MUSIC_AI_CONTEXT = Path(args.analysis_ai_context)
+    DUAL_PLAN_JSON = OUTPUT_DIR / f"{TRACK_STEM}_dual_ai_scene_plan.json"
+    OLLAMA_INSIGHTS_JSON = OUTPUT_DIR / f"{TRACK_STEM}_ollama_music_insights.json"
+    IMPLEMENTATION_DRAFT_JSON = OUTPUT_DIR / f"{TRACK_STEM}_ai_implementation_draft.json"
+
+    if not Path(args.analysis).exists():
+        raise FileNotFoundError(f"Analysis JSON missing: {args.analysis}")
+    if not Path(args.track_summary).exists():
+        raise FileNotFoundError(
+            f"Track summary missing: {args.track_summary}\n"
+            "Crea prima il track summary o usa la workflow shell che ora lo ripara automaticamente."
+        )
+    if args.phase == "implementation" and not DUAL_PLAN_JSON.exists():
+        raise FileNotFoundError(f"Dual AI scene plan missing, run phase plan first: {DUAL_PLAN_JSON}")
+
+    build_code_context()
+    project_manifest = build_project_ai_index()
+    build_music_context(
+        analysis_path=Path(args.analysis),
+        track_summary_path=Path(args.track_summary),
+        compact_json_path=Path(args.compact_json),
+        analysis_ai_context_path=Path(args.analysis_ai_context),
+        blender_keyframes_path=Path(args.blender_keyframes_json),
+    )
+    if args.include_manual:
+        build_manual_context(limit_files=80)
+    validate_input_files(args)
+    music_context = read_json(MUSIC_AI_CONTEXT)
+
+    npu_notes = ""
+    if not args.skip_npu:
+        if args.phase == "implementation" and not args.force_npu and NPU_TECH_MD.exists():
+            npu_notes = read_text(NPU_TECH_MD)
+            print(f"[NPU] Reusing plan technical notes: {NPU_TECH_MD}")
+        else:
+            report = npu_preflight(args.npu_python, args.npu_model_dir)
+            write_npu_preflight_report(report, NPU_PREFLIGHT_JSON)
+            if report.get("ready"):
+                try:
+                    npu_notes = run_npu_technical_pass(args)
+                except Exception as exc:
+                    npu_notes = f"NPU technical pass unavailable after ready preflight: {exc}"
+                    NPU_TECH_MD.write_text(npu_notes, encoding="utf-8")
+            else:
+                npu_notes = "NPU not ready. Preflight:\n" + json.dumps(report, indent=2, ensure_ascii=False)
+                NPU_TECH_MD.write_text(npu_notes, encoding="utf-8")
+
+        if looks_degraded_text(npu_notes):
+            npu_notes = deterministic_technical_notes(
+                music_context=music_context,
+                project_manifest=project_manifest,
+                reason="degraded_or_too_short_npu_output",
+            )
+            NPU_TECH_MD.write_text(npu_notes, encoding="utf-8")
+            if args.phase == "implementation":
+                NPU_IMPLEMENTATION_NOTES.write_text(npu_notes, encoding="utf-8")
+            print("[WARN] NPU notes looked degraded; deterministic technical notes were used.")
+
+    if args.phase == "implementation":
+        if args.skip_ollama:
+            draft = {
+                "implementation_kind": "existing_project_patch_plan",
+                "safety": {
+                    "does_not_modify_full_analysis_json": True,
+                    "requires_manual_review": True,
+                    "needs_blender_run": True,
+                },
+                "target_files": [],
+                "patch_plan": [],
+                "hotpatch_candidate_script": "",
+                "notes": ["Ollama skipped; implementation draft intentionally contains no generated patch."],
+                "files_to_review_before_applying": [],
+                "expected_panel_or_operator": "",
+            }
+            write_implementation_draft(draft)
+        else:
+            plan_output = read_json(DUAL_PLAN_JSON)
+            plan = plan_output.get("final_plan", plan_output)
+            manager_kwargs = {}
+            if args.ollama_base_url:
+                manager_kwargs["base_url"] = args.ollama_base_url
+            try:
+                with OllamaModelManager(**manager_kwargs) as manager:
+                    implementation_prompt = build_implementation_prompt(plan, npu_notes, args.include_manual)
+                    implementation_text, implementation_model = manager.generate(
+                        args.technical_model,
+                        implementation_prompt,
+                        max_new_tokens=max(args.max_new_tokens, 2400),
+                        temperature=0.05,
+                    )
+                    draft = safe_parse_json(implementation_text, "raw_implementation_response")
+                    draft["model"] = implementation_model
+                    draft = normalize_implementation_draft(draft, model=implementation_model)
+                    write_implementation_draft(draft)
+            finally:
+                pass
+
+        print(f"[OK] Wrote: {IMPLEMENTATION_DRAFT_JSON}")
+        print(f"[OK] Wrote: {IMPLEMENTATION_SCRIPT}")
+        print(f"[OK] Wrote: {IMPLEMENTATION_NOTES}")
+        return
+
+    if args.skip_ollama:
+        creative = {"skipped": True}
+        technical = {"skipped": True}
+        plan = {
+            "pipeline_policy": {
+                "use_full_blender_keyframes_json": True,
+                "ai_context_is_analysis_only": True,
+                "ollama_model_switch_policy": "unload previous model before loading next",
+            },
+            "recommended_scene_plan": {
+                "summary": "Ollama skipped; use NPU notes only.",
+                "priority_changes": [],
+                "defer_changes": [],
+            },
+        }
+    else:
+        manager_kwargs = {}
+        if args.ollama_base_url:
+            manager_kwargs["base_url"] = args.ollama_base_url
+
+        with OllamaModelManager(**manager_kwargs) as manager:
+            creative_prompt = build_creative_scene_prompt(music_context, npu_notes, read_text(PROJECT_INDEX_MD))
+            creative_text, creative_model = manager.generate(
+                args.creative_model,
+                creative_prompt,
+                max_new_tokens=args.max_new_tokens,
+                temperature=0.20,
+            )
+            creative = safe_parse_json(creative_text, "raw_creative_response")
+            creative["model"] = creative_model
+
+            technical_prompt = build_music_prompt(music_context)
+            technical_text, technical_model = manager.generate(
+                args.technical_model,
+                technical_prompt,
+                max_new_tokens=args.max_new_tokens,
+                temperature=0.10,
+            )
+            technical = safe_parse_json(technical_text, "raw_technical_response")
+            technical["model"] = technical_model
+
+            merge_prompt = build_merge_prompt(music_context, npu_notes, creative, technical)
+            merge_text, merge_model = manager.generate(
+                args.technical_model,
+                merge_prompt,
+                max_new_tokens=args.max_new_tokens,
+                temperature=0.08,
+            )
+            plan = safe_parse_json(merge_text, "raw_plan_response")
+            plan["merge_model"] = merge_model
+
+            if args.phase in {"implementation", "full"}:
+                implementation_prompt = build_implementation_prompt(plan, npu_notes, args.include_manual)
+                implementation_text, implementation_model = manager.generate(
+                    args.technical_model,
+                    implementation_prompt,
+                    max_new_tokens=max(args.max_new_tokens, 2400),
+                    temperature=0.06,
+                )
+                draft = safe_parse_json(implementation_text, "raw_implementation_response")
+                draft["model"] = implementation_model
+                draft = normalize_implementation_draft(draft, model=implementation_model)
+                write_implementation_draft(draft)
+
+    output = {
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "track_stem": TRACK_STEM,
+        "policy": {
+            "full_blender_keyframes_json": str(Path(args.blender_keyframes_json)),
+            "ai_context_json": str(MUSIC_AI_CONTEXT),
+            "model_switch_rule": "Unload/stop previous Ollama model before loading the next model.",
+            "phase": args.phase,
+            "manual_context_used": args.include_manual,
+            "implementation_draft_json": str(IMPLEMENTATION_DRAFT_JSON) if args.phase in {"implementation", "full"} else None,
+            "implementation_script": str(IMPLEMENTATION_SCRIPT) if args.phase in {"implementation", "full"} else None,
+        },
+        "npu_preflight_json": str(NPU_PREFLIGHT_JSON),
+        "npu_technical_notes_md": str(NPU_TECH_MD),
+        "creative_ollama": creative,
+        "technical_ollama": technical,
+        "final_plan": plan,
+    }
+
+    write_json(DUAL_PLAN_JSON, output)
+    write_json(OLLAMA_INSIGHTS_JSON, technical)
+    OLLAMA_INSIGHTS_MD.write_text(markdown_from_insights(technical, technical.get("model", args.technical_model)), encoding="utf-8")
+    write_brief(plan, creative, technical, npu_notes)
+
+    print(f"[OK] Wrote: {DUAL_PLAN_JSON}")
+    print(f"[OK] Wrote: {DUAL_BRIEF_MD}")
+    print(f"[OK] Wrote: {NPU_TECH_MD}")
+    if args.phase in {"implementation", "full"} and not args.skip_ollama:
+        print(f"[OK] Wrote: {IMPLEMENTATION_DRAFT_JSON}")
+        print(f"[OK] Wrote: {IMPLEMENTATION_SCRIPT}")
+        print(f"[OK] Wrote: {IMPLEMENTATION_NOTES}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,6566 @@
+{
+  "created_at": "2026-04-27T14:41:26",
+  "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "script_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\Scripting\\v61b",
+  "long_context": {
+    "mode": "file_line_chunks",
+    "chunk_dir": "Tools/npu/npu_code_chunks",
+    "max_chunk_chars": 10500,
+    "chunk_count": 100,
+    "index": "Tools/npu/npu_code_index.md"
+  },
+  "files": [
+    {
+      "file": "analyze_wav.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 258,
+      "chars": 10299,
+      "sha256": "f32673c8b1b1da5df82885235ad6be93a15ca36eb2adb924dac73a4e5a3c8ff8",
+      "symbols": {
+        "imports": [
+          "argparse",
+          "json",
+          "sys",
+          "from pathlib import Path",
+          "librosa",
+          "numpy",
+          "matplotlib.pyplot"
+        ],
+        "functions": [
+          {
+            "name": "moving_average",
+            "line": 11,
+            "args": [
+              "x",
+              "window"
+            ],
+            "async": false
+          },
+          {
+            "name": "robust_normalize",
+            "line": 18,
+            "args": [
+              "x",
+              "floor_percentile",
+              "ceil_percentile"
+            ],
+            "async": false
+          },
+          {
+            "name": "compress_curve",
+            "line": 27,
+            "args": [
+              "x",
+              "gamma"
+            ],
+            "async": false
+          },
+          {
+            "name": "band_envelope_from_stft",
+            "line": 32,
+            "args": [
+              "S_mag",
+              "freqs",
+              "fmin",
+              "fmax"
+            ],
+            "async": false
+          },
+          {
+            "name": "resample_to_fps",
+            "line": 48,
+            "args": [
+              "times",
+              "values",
+              "fps",
+              "duration"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_music_context_if_available",
+            "line": 54,
+            "args": [
+              "json_path",
+              "output_dir",
+              "run_ollama",
+              "ollama_model"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_ai_memory_context_if_available",
+            "line": 92,
+            "args": [
+              "track_stem",
+              "output_dir"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 106,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "build_track_summary.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 114,
+      "chars": 4062,
+      "sha256": "7dfbac89818d9b1903ae6828e502ec8b9965c84ce6097a5e049e551c95d3286a",
+      "symbols": {
+        "imports": [
+          "from pathlib import Path",
+          "argparse",
+          "json",
+          "sys",
+          "from statistics import mean"
+        ],
+        "functions": [
+          {
+            "name": "avg_top",
+            "line": 15,
+            "args": [
+              "values",
+              "ratio"
+            ],
+            "async": false
+          },
+          {
+            "name": "safe_mean",
+            "line": 22,
+            "args": [
+              "values"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_summary",
+            "line": 26,
+            "args": [
+              "analysis_json",
+              "out_json",
+              "update_music_context"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 98,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "PROJECT_DIR",
+          "OUTPUT_DIR",
+          "ANALYSIS_JSON",
+          "OUT_JSON"
+        ]
+      }
+    },
+    {
+      "file": "normalize_scene_spec.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 488,
+      "chars": 14873,
+      "sha256": "e85a233bd5b31b27296f4bf5b761a0bc5b33bdce66aecc4f80dbf1d305f21b12",
+      "symbols": {
+        "imports": [
+          "from pathlib import Path",
+          "json",
+          "re",
+          "sys"
+        ],
+        "functions": [
+          {
+            "name": "load_json",
+            "line": 41,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "slugify",
+            "line": 48,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "safe_scene_name",
+            "line": 55,
+            "args": [
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "safe_visual_concept",
+            "line": 64,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "normalize_palette",
+            "line": 73,
+            "args": [
+              "values"
+            ],
+            "async": false
+          },
+          {
+            "name": "normalize_camera_style",
+            "line": 93,
+            "args": [
+              "camera_style"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_object_specs",
+            "line": 123,
+            "args": [
+              "brief"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_materials",
+            "line": 200,
+            "args": [
+              "brief"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_node_animation",
+            "line": 275,
+            "args": [
+              "brief"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_audio_mapping",
+            "line": 329,
+            "args": [
+              "brief"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_optimization",
+            "line": 376,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "build_render_strategy",
+            "line": 393,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "normalize_brief",
+            "line": 401,
+            "args": [
+              "brief"
+            ],
+            "async": false
+          },
+          {
+            "name": "safe_scene_name",
+            "line": 436,
+            "args": [
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "safe_visual_concept",
+            "line": 445,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 454,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "PROJECT_DIR",
+          "IN_JSON",
+          "OUT_JSON",
+          "DEFAULT_SCENE_NAME",
+          "DEFAULT_VISUAL_CONCEPT",
+          "PALETTE_MAP",
+          "CAMERA_PRESETS"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/npu_runtime.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 96,
+      "chars": 3199,
+      "sha256": "8e0b1328626cb202c8f7a47bcf159df0725c7370a631440ce11989cca5be58bb",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from pathlib import Path",
+          "json",
+          "subprocess"
+        ],
+        "functions": [
+          {
+            "name": "_run_python",
+            "line": 13,
+            "args": [
+              "python_exe",
+              "code",
+              "timeout"
+            ],
+            "async": false
+          },
+          {
+            "name": "npu_preflight",
+            "line": 31,
+            "args": [
+              "python_exe",
+              "model_dir"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_npu_preflight_report",
+            "line": 93,
+            "args": [
+              "report",
+              "out_path"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "DEFAULT_NPU_PYTHON",
+          "DEFAULT_MODEL_DIR"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/ollama_runtime.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 352,
+      "chars": 11053,
+      "sha256": "dbcdde9d1d43964bd77a64a8cfe8e900346aa4b5554e41daf19758269cbd4cbd",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from pathlib import Path",
+          "json",
+          "os",
+          "shutil",
+          "subprocess",
+          "time",
+          "urllib.error",
+          "urllib.request"
+        ],
+        "functions": [
+          {
+            "name": "normalize_base_url",
+            "line": 13,
+            "args": [
+              "value"
+            ],
+            "async": false
+          },
+          {
+            "name": "ollama_home",
+            "line": 24,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "manifest_root",
+            "line": 31,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "find_ollama_exe",
+            "line": 36,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "_json_request",
+            "line": 74,
+            "args": [
+              "base_url",
+              "path",
+              "payload",
+              "timeout"
+            ],
+            "async": false
+          },
+          {
+            "name": "is_server_ready",
+            "line": 91,
+            "args": [
+              "base_url",
+              "timeout"
+            ],
+            "async": false
+          },
+          {
+            "name": "list_models",
+            "line": 99,
+            "args": [
+              "base_url"
+            ],
+            "async": false
+          },
+          {
+            "name": "list_models_from_disk",
+            "line": 110,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "start_server",
+            "line": 139,
+            "args": [
+              "ollama_exe",
+              "base_url",
+              "startup_timeout"
+            ],
+            "async": false
+          },
+          {
+            "name": "choose_model",
+            "line": 160,
+            "args": [
+              "preferred_model",
+              "available_models"
+            ],
+            "async": false
+          },
+          {
+            "name": "strip_json_fence",
+            "line": 175,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "parse_json_response",
+            "line": 187,
+            "args": [
+              "text"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [
+          {
+            "name": "OllamaModelManager",
+            "line": 199,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 200
+              },
+              {
+                "name": "generate",
+                "line": 214
+              },
+              {
+                "name": "close",
+                "line": 240
+              },
+              {
+                "name": "__enter__",
+                "line": 246
+              },
+              {
+                "name": "__exit__",
+                "line": 249
+              }
+            ]
+          },
+          {
+            "name": "OllamaSession",
+            "line": 253,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 254
+              },
+              {
+                "name": "start",
+                "line": 275
+              },
+              {
+                "name": "generate",
+                "line": 291
+              },
+              {
+                "name": "unload_model",
+                "line": 308
+              },
+              {
+                "name": "close",
+                "line": 336
+              },
+              {
+                "name": "__enter__",
+                "line": 347
+              },
+              {
+                "name": "__exit__",
+                "line": 350
+              }
+            ]
+          }
+        ],
+        "assignments": [
+          "DEFAULT_BASE_URL",
+          "DEFAULT_MODELS"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/build_blender_manual_context.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 327,
+      "chars": 10493,
+      "sha256": "5516f84a1f112607a51f93aa7dbe52631a7e834353a0b98c71706e33b152719c",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from pathlib import Path",
+          "from html.parser import HTMLParser",
+          "argparse",
+          "hashlib",
+          "json",
+          "re",
+          "from datetime import datetime"
+        ],
+        "functions": [
+          {
+            "name": "sha256_text",
+            "line": 95,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "rel",
+            "line": 99,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "slug",
+            "line": 106,
+            "args": [
+              "value"
+            ],
+            "async": false
+          },
+          {
+            "name": "extract_text",
+            "line": 110,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "score_text",
+            "line": 119,
+            "args": [
+              "path",
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "score_path",
+            "line": 124,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "split_text",
+            "line": 144,
+            "args": [
+              "text",
+              "max_chars"
+            ],
+            "async": false
+          },
+          {
+            "name": "ensure_manual_root",
+            "line": 161,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "source_group",
+            "line": 167,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "iter_manual_files",
+            "line": 175,
+            "args": [
+              "manual_root"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_manual_context",
+            "line": 195,
+            "args": [
+              "limit_files",
+              "manual_root"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 296,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [
+          {
+            "name": "TextExtractor",
+            "line": 62,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 63
+              },
+              {
+                "name": "handle_starttag",
+                "line": 68
+              },
+              {
+                "name": "handle_endtag",
+                "line": 74
+              },
+              {
+                "name": "handle_data",
+                "line": 80
+              },
+              {
+                "name": "text",
+                "line": 88
+              }
+            ]
+          }
+        ],
+        "assignments": [
+          "ROOT",
+          "MANUAL_ROOT",
+          "LEGACY_MANUAL_DIR",
+          "MANUAL_README",
+          "OUT_DIR",
+          "CHUNK_DIR",
+          "OUT_INDEX",
+          "OUT_MANIFEST",
+          "MAX_CHARS",
+          "TEXT_EXTENSIONS",
+          "HTML_EXTENSIONS",
+          "KEYWORDS",
+          "README_TEXT"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 1705,
+      "chars": 72162,
+      "sha256": "a6a3d187992b5d66d4d8edb064e2a04cc303c5f685b05b0a698efd953f636bbb",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from pathlib import Path",
+          "argparse",
+          "json",
+          "subprocess",
+          "from datetime import datetime",
+          "from typing import Any",
+          "from build_music_context import build_music_context",
+          "from build_npu_code_context import main",
+          "from build_blender_manual_context import build_manual_context",
+          "from build_ai_service_packet import build_ai_service_packet, slugify",
+          "from build_project_ai_index import PROJECT_INDEX_MD, PROJECT_MANIFEST_JSON, build_project_ai_index",
+          "from npu_runtime import DEFAULT_MODEL_DIR, DEFAULT_NPU_PYTHON, npu_preflight, write_npu_preflight_report",
+          "from ollama_runtime import OllamaModelManager, parse_json_response",
+          "from run_ollama_music_agent import build_prompt",
+          "from run_ollama_music_agent import markdown_from_insights"
+        ],
+        "functions": [
+          {
+            "name": "read_text",
+            "line": 53,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "read_json",
+            "line": 57,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_json",
+            "line": 63,
+            "args": [
+              "path",
+              "data"
+            ],
+            "async": false
+          },
+          {
+            "name": "read_optional_json",
+            "line": 68,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "update_track_paths",
+            "line": 81,
+            "args": [
+              "track_stem",
+              "analysis_ai_context"
+            ],
+            "async": false
+          },
+          {
+            "name": "apply_default_input_paths",
+            "line": 93,
+            "args": [
+              "args"
+            ],
+            "async": false
+          },
+          {
+            "name": "validate_input_files",
+            "line": 106,
+            "args": [
+              "args"
+            ],
+            "async": false
+          },
+          {
+            "name": "looks_degraded_text",
+            "line": 126,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "deterministic_technical_notes",
+            "line": 142,
+            "args": [
+              "music_context",
+              "project_manifest",
+              "reason"
+            ],
+            "async": false
+          },
+          {
+            "name": "run_npu_technical_pass",
+            "line": 191,
+            "args": [
+              "args"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_creative_scene_prompt",
+            "line": 235,
+            "args": [
+              "music_context",
+              "npu_notes",
+              "project_index"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_merge_prompt",
+            "line": 317,
+            "args": [
+              "music_context",
+              "npu_notes",
+              "creative",
+              "technical"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_implementation_prompt",
+            "line": 379,
+            "args": [
+              "plan",
+              "npu_notes",
+              "include_manual",
+              "gpu_packet",
+              "scene_brief",
+              "asset_inventory"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_implementation_retry_prompt",
+            "line": 491,
+            "args": [
+              "plan",
+              "invalid_draft",
+              "validation"
+            ],
+            "async": false
+          },
+          {
+            "name": "safe_parse_json",
+            "line": 580,
+            "args": [
+              "text",
+              "fallback_key"
+            ],
+            "async": false
+          },
+          {
+            "name": "extract_python_script",
+            "line": 588,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "draft_from_raw_python_script",
+            "line": 608,
+            "args": [
+              "text",
+              "model",
+              "reason"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_indexed_project_files",
+            "line": 659,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "validate_implementation_draft",
+            "line": 664,
+            "args": [
+              "draft"
+            ],
+            "async": false
+          },
+          {
+            "name": "generated_scene_script_relpath",
+            "line": 761,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "generated_scene_script_abspath",
+            "line": 765,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "deterministic_scene_builder_script",
+            "line": 769,
+            "args": [
+              "track_stem",
+              "analysis_json",
+              "music_context_json",
+              "ai_context_json",
+              "blender_keyframes_json",
+              "asset_inventory_json",
+              "scene_brief"
+            ],
+            "async": false
+          },
+          {
+            "name": "deterministic_support_files",
+            "line": 1152,
+            "args": [
+              "track_stem",
+              "scene_brief"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_fallback_implementation_draft",
+            "line": 1205,
+            "args": [
+              "reason",
+              "model",
+              "args",
+              "scene_brief",
+              "asset_inventory"
+            ],
+            "async": false
+          },
+          {
+            "name": "normalize_implementation_draft",
+            "line": 1292,
+            "args": [
+              "draft",
+              "model",
+              "args",
+              "scene_brief",
+              "asset_inventory"
+            ],
+            "async": false
+          },
+          {
+            "name": "generate_implementation_draft_with_retry",
+            "line": 1313,
+            "args": [
+              "manager",
+              "model_name",
+              "implementation_prompt",
+              "plan",
+              "max_new_tokens",
+              "args",
+              "scene_brief",
+              "asset_inventory"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_brief",
+            "line": 1376,
+            "args": [
+              "plan",
+              "creative",
+              "technical",
+              "npu_notes"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_implementation_draft",
+            "line": 1399,
+            "args": [
+              "draft"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 1453,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "TOOLS_DIR",
+          "OUTPUT_DIR",
+          "DEFAULT_TRACK_STEM",
+          "TRACK_STEM",
+          "MUSIC_AI_CONTEXT",
+          "DUAL_PLAN_JSON",
+          "DUAL_BRIEF_MD",
+          "OLLAMA_INSIGHTS_JSON",
+          "OLLAMA_INSIGHTS_MD",
+          "NPU_TECH_MD",
+          "NPU_PREFLIGHT_JSON",
+          "IMPLEMENTATION_DRAFT_JSON",
+          "IMPLEMENTATION_SCRIPT",
+          "IMPLEMENTATION_NOTES",
+          "NPU_IMPLEMENTATION_NOTES",
+          "ALLOWED_NEW_PREFIXES",
+          "PREFERRED_IMPLEMENTATION_FILES"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/config.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 439,
+      "chars": 15317,
+      "sha256": "a01b8504529dd7bd8d25d54a6612e17f834097d74f448034c6a945d8f523913e",
+      "symbols": {
+        "imports": [
+          "from pathlib import Path",
+          "json",
+          "math"
+        ],
+        "functions": [],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "PROJECT_DIR",
+          "OUTPUT_DIR",
+          "ASSETS_DIR",
+          "AUDIO_DIR",
+          "RENDERS_DIR",
+          "SCRIPTING_DIR",
+          "ANALYSIS_JSON_PATH",
+          "AUDIO_PATH",
+          "OUTPUT_MP4",
+          "OUTPUT_IMAGE_SEQUENCE_DIR",
+          "OUTPUT_IMAGE_SEQUENCE_PREFIX",
+          "WORKFLOW_SESSION_PATH",
+          "WORKFLOW_SESSION_ACTIVE",
+          "WORKFLOW_SESSION_ARTIFACTS",
+          "FINAL_FOR_YOUTUBE",
+          "YOUTUBE_FINAL_RESOLUTION",
+          "CLEAR_SCENE",
+          "CLEAR_SEQUENCER",
+          "FPS_OVERRIDE",
+          "RENDER_OUTPUT_MODE",
+          "YOUTUBE_FINAL_RESOLUTION",
+          "USE_4K",
+          "RENDER_PERCENT",
+          "USE_MOTION_BLUR",
+          "EEVEE_TAA_RENDER_SAMPLES",
+          "VOLUMETRIC_SAMPLES",
+          "VOLUMETRIC_TILE_SIZE",
+          "USE_COMPOSITING",
+          "COMPOSITOR_GLARE_THRESHOLD_MIN",
+          "COMPOSITOR_GLARE_THRESHOLD_MAX",
+          "COMPOSITOR_GLARE_MIX",
+          "COMPOSITOR_GLARE_SIZE",
+          "COMPOSITOR_LENS_DISTORT_MIN",
+          "COMPOSITOR_LENS_DISTORT_MAX",
+          "COMPOSITOR_LENS_DISPERSION_MIN",
+          "COMPOSITOR_LENS_DISPERSION_MAX",
+          "VIDEO_BITRATE",
+          "VIDEO_MAXRATE",
+          "VIDEO_MINRATE",
+          "VIDEO_BUFFERSIZE",
+          "AUDIO_BITRATE",
+          "IMAGE_SEQUENCE_FORMAT",
+          "IMAGE_SEQUENCE_COLOR_DEPTH",
+          "IMAGE_SEQUENCE_COMPRESSION",
+          "ENCODE_SEQUENCE_AUTO_RENDER",
+          "ENCODE_SEQUENCE_SYNC_AUDIO_TO_FRAME_NUMBER",
+          "ENCODE_SEQUENCE_AUDIO_ZERO_FRAME",
+          "ENCODE_SEQUENCE_SKIP_PLACEHOLDERS",
+          "ENCODE_SEQUENCE_SWITCH_TO_SEQUENCER",
+          "ENCODE_USE_EXTERNAL_FFMPEG",
+          "FFMPEG_EXE_PATH",
+          "FFMPEG_OUTPUT_SUFFIX",
+          "FFMPEG_OUTPUT_MP4",
+          "FFMPEG_LAUNCH_VISIBLE_SHELL",
+          "FFMPEG_PROFILE",
+          "FFMPEG_GPU_INDEX",
+          "FFMPEG_NVENC_PRESET",
+          "FFMPEG_NVENC_TUNE",
+          "FFMPEG_NVENC_CQ",
+          "FFMPEG_CRF",
+          "FFMPEG_PRESET",
+          "FFMPEG_TUNE",
+          "FFMPEG_SVTAV1_PRESET",
+          "FFMPEG_SVTAV1_CRF",
+          "FFMPEG_THREADS",
+          "FFMPEG_VIDEO_FILTER",
+          "FFMPEG_AUDIO_BITRATE",
+          "FFMPEG_AUDIO_SAMPLE_RATE",
+          "PRIMARY_ASSET_DIR",
+          "SUPPORTED_ASSET_EXTENSIONS",
+          "PRIMARY_KEEP_INTERNAL_ANIMATION",
+          "USE_SECONDARY_ASSET",
+          "SECONDARY_ASSET_DIR",
+          "SECONDARY_TARGET_SIZE",
+          "SECONDARY_BASE_Z",
+          "SECONDARY_BASE_OFFSET_X",
+          "SECONDARY_BASE_OFFSET_Y",
+          "SECONDARY_BASE_OFFSET_Z",
+          "SECONDARY_SCALE_MIN",
+          "SECONDARY_SCALE_MAX",
+          "SECONDARY_BOUNCE_Z",
+          "SECONDARY_DRIFT_X",
+          "SECONDARY_DRIFT_Y",
+          "SECONDARY_ROT_Z",
+          "SECONDARY_ROT_X",
+          "VIEW_EXPOSURE",
+          "VIEW_GAMMA",
+          "USE_BLOOM",
+          "BLOOM_THRESHOLD",
+          "BLOOM_INTENSITY",
+          "WORLD_STRENGTH",
+          "WORLD_CAMERA_STRENGTH",
+          "WORLD_LIGHT_COLOR",
+          "WORLD_CAMERA_COLOR",
+          "USE_HDRI_WORLD",
+          "HDRI_PATH",
+          "HDRI_STRENGTH",
+          "HDRI_ROT_Z",
+          "FLOOR_SIZE",
+          "FLOOR_RENDER_VISIBLE",
+          "FLOOR_VIEWPORT_VISIBLE",
+          "USE_SOFT_BACKDROP",
+          "BACKDROP_SIZE",
+          "BACKDROP_LOCATION",
+          "BACKDROP_ROT_X",
+          "BACKDROP_EMISSION_MIN",
+          "BACKDROP_EMISSION_MAX",
+          "BACKDROP_BREATHE_SCALE",
+          "USE_INVISIBLE_COLLISION_PLANE",
+          "INVISIBLE_COLLISION_PLANE_SIZE",
+          "INVISIBLE_COLLISION_PLANE_Z",
+          "PRIMARY_TARGET_SIZE",
+          "PRIMARY_BASE_Z",
+          "AURA_RADIUS",
+          "USE_HERO_AURA_MESH",
+          "AURA_EMIT_MIN",
+          "AURA_DEFORM_KEYFRAME_STEP",
+          "AURA_DEFORM_SUBDIV_VIEW",
+          "AURA_DEFORM_SUBDIV_RENDER",
+          "AURA_DEFORM_FIELD_RADIUS",
+          "AURA_DEFORM_DISPLACE_MIN",
+          "AURA_DEFORM_DISPLACE_MAX",
+          "AURA_DEFORM_DETAIL_MAX",
+          "AURA_DEFORM_WAVE_HEIGHT_MAX",
+          "AURA_DEFORM_FIELD_STRENGTH_MAX",
+          "AURA_DEFORM_FIELD_DRIFT",
+          "AURA_DEFORM_FIELD_SCALE",
+          "RING_EMIT_MIN",
+          "RIBBON_EMIT_MIN",
+          "CREATE_VARIANTS",
+          "VARIANT_COUNT",
+          "VARIANT_RING_RADIUS",
+          "VARIANT_SCALE_MIN",
+          "VARIANT_SCALE_MAX",
+          "ENERGY_RING_COUNT",
+          "RIBBON_COUNT",
+          "USE_MIST_PARTICLES",
+          "MIST_PARTICLE_COUNT",
+          "MIST_SCALE_MIN",
+          "MIST_SCALE_MAX",
+          "USE_PHYSICS_ACCENTS",
+          "PHYSICS_ACCENT_COUNT",
+          "PHYSICS_ORBIT_RADIUS_MIN",
+          "PHYSICS_ORBIT_RADIUS_MAX",
+          "PHYSICS_ATOM_ORBIT_SPEED_MIN",
+          "PHYSICS_ATOM_ORBIT_SPEED_MAX",
+          "PHYSICS_ATOM_ORBIT_AUDIO_SPEED",
+          "PHYSICS_ATOM_ORBIT_RADIUS_PULSE",
+          "PHYSICS_ATOM_ORBIT_HEIGHT_SWAY",
+          "PHYSICS_ATOM_MICRO_WOBBLE",
+          "TETHER_SPRING_STIFFNESS",
+          "TETHER_SPRING_DAMPING",
+          "USE_RHYTHM_PARTICLE_PHYSICS",
+          "RHYTHM_PARTICLE_COUNT",
+          "RHYTHM_DUST_PARTICLE_COUNT",
+          "RHYTHM_STREAK_PARTICLE_COUNT",
+          "RHYTHM_PARTICLE_LIFETIME",
+          "RHYTHM_DUST_LIFETIME",
+          "RHYTHM_PARTICLE_EMITTER_RADIUS",
+          "RHYTHM_PARTICLE_EMITTER_Z",
+          "RHYTHM_PARTICLE_SOURCE_RADIUS",
+          "RHYTHM_PARTICLE_SIZE_MIN",
+          "RHYTHM_PARTICLE_SIZE_MAX",
+          "RHYTHM_PARTICLE_NORMAL_MIN",
+          "RHYTHM_PARTICLE_NORMAL_MAX",
+          "RHYTHM_PARTICLE_TANGENT_MIN",
+          "RHYTHM_PARTICLE_TANGENT_MAX",
+          "RHYTHM_PARTICLE_BROWNIAN_MIN",
+          "RHYTHM_PARTICLE_BROWNIAN_MAX",
+          "RHYTHM_PARTICLE_EMIT_MIN",
+          "RHYTHM_PARTICLE_EMIT_MAX",
+          "RHYTHM_PARTICLE_KEYFRAME_STEP",
+          "USE_ALBUM_LETTER_PARTICLES",
+          "ALBUM_PARTICLE_TEXT",
+          "PARTICLE_SOURCE_LOCATION",
+          "ALBUM_LETTER_PARTICLE_COUNT",
+          "ALBUM_LETTER_PARTICLE_LIFETIME",
+          "ALBUM_LETTER_SOURCE_SIZE",
+          "ALBUM_LETTER_EXTRUDE",
+          "ALBUM_LETTER_EMISSION_STRENGTH",
+          "ALBUM_LETTER_PARTICLE_SIZE_MIN",
+          "ALBUM_LETTER_PARTICLE_SIZE_MAX",
+          "ALBUM_LETTER_ROOT_SCALE_MIN",
+          "ALBUM_LETTER_ROOT_SCALE_MAX",
+          "ATMOSPHERE_CUBE_SIZE",
+          "FOG_VOLUME_ENABLED",
+          "FOG_VOLUME_VIEWPORT_VISIBLE",
+          "FOG_FILAMENTS_ENABLED",
+          "FOG_FILAMENT_COUNT",
+          "FOG_FILAMENT_KEYFRAME_STEP",
+          "FOG_FILAMENT_ALPHA_MIN",
+          "FOG_FILAMENT_ALPHA_MAX",
+          "FOG_FILAMENT_EMISSION_MIN",
+          "FOG_FILAMENT_EMISSION_MAX",
+          "FOG_FILAMENT_WIDTH_MIN",
+          "FOG_FILAMENT_WIDTH_MAX",
+          "FOG_FILAMENT_HEIGHT_MIN",
+          "FOG_FILAMENT_HEIGHT_MAX",
+          "FOG_FILAMENT_DEPTH_MIN",
+          "FOG_FILAMENT_DEPTH_MAX",
+          "FOG_FILAMENT_Z_MIN",
+          "FOG_FILAMENT_Z_MAX",
+          "FOG_FILAMENT_WIND_DRIFT",
+          "FOG_FILAMENT_COMPACT_SCALE",
+          "FOG_FILAMENT_NOISE_SCALE_MIN",
+          "FOG_FILAMENT_NOISE_SCALE_MAX",
+          "FOG_FILAMENT_WAVE_SCALE_MIN",
+          "FOG_FILAMENT_WAVE_SCALE_MAX",
+          "FOG_DENSITY_MIN",
+          "FOG_DENSITY_MAX",
+          "FOG_EMISSION_MIN",
+          "FOG_EMISSION_MAX",
+          "FOG_NOISE_SCALE_MIN",
+          "FOG_NOISE_SCALE_MAX",
+          "FOG_RAMP_LOW_BASE",
+          "FOG_RAMP_HIGH_BASE",
+          "FOG_CLUMP_SCALE_MIN",
+          "FOG_CLUMP_SCALE_MAX",
+          "FOG_CLUMP_RAMP_LOW_BASE",
+          "FOG_CLUMP_RAMP_HIGH_BASE",
+          "FOG_CLUMP_WEIGHT_MIN",
+          "FOG_CLUMP_WEIGHT_MAX",
+          "FOG_COMPACT_XY",
+          "FOG_EXPAND_Z",
+          "FOG_CONTROLLER_DRIFT",
+          "FOG_WAVE_SCALE_MIN",
+          "FOG_WAVE_SCALE_MAX",
+          "FOG_WAVE_DISTORTION_MIN",
+          "FOG_WAVE_DISTORTION_MAX",
+          "FOG_WAVE_WEIGHT_MIN",
+          "FOG_WAVE_WEIGHT_MAX",
+          "FOG_WIND_SHEAR_X",
+          "FOG_WIND_SHEAR_Y",
+          "FOG_DRIFT_SPEED_X",
+          "FOG_DRIFT_SPEED_Y",
+          "FOG_DRIFT_SPEED_Z",
+          "HERO_SCALE_MIN",
+          "HERO_SCALE_MAX",
+          "HERO_BOUNCE_Z",
+          "HERO_ROT_Z",
+          "HERO_ROT_X",
+          "HERO_ROT_Y",
+          "HERO_DRIFT_X",
+          "HERO_DRIFT_Y",
+          "HERO_ORBIT_X",
+          "HERO_ORBIT_Y",
+          "HERO_BEAT_TWIST_Z",
+          "HERO_ONSET_SHAKE",
+          "USE_HERO_MESH_DEFORM",
+          "HERO_DEFORM_STRENGTH_MIN",
+          "HERO_DEFORM_STRENGTH_MAX",
+          "HERO_DEFORM_DETAIL_STRENGTH_MAX",
+          "HERO_DEFORM_WAVE_HEIGHT_MAX",
+          "HERO_DEFORM_MAIN_DIM_FACTOR",
+          "HERO_DEFORM_DETAIL_DIM_FACTOR",
+          "HERO_DEFORM_WAVE_DIM_FACTOR",
+          "HERO_DEFORM_TWIST_MAX",
+          "HERO_DEFORM_SUBDIV_VIEW",
+          "HERO_DEFORM_SUBDIV_RENDER",
+          "HERO_DEFORM_NOISE_SIZE",
+          "HERO_DEFORM_DETAIL_NOISE_SIZE",
+          "HERO_DEFORM_NOISE_CONTRAST",
+          "HERO_DEFORM_CONTROLLER_RADIUS",
+          "HERO_DEFORM_CONTROLLER_Z",
+          "HERO_DEFORM_KEYFRAME_STEP",
+          "USE_HERO_MATERIAL_AUDIO_NODES",
+          "HERO_MATERIAL_EMISSION_MIN",
+          "HERO_MATERIAL_EMISSION_MAX",
+          "HERO_MATERIAL_SELF_LIGHT_MIN",
+          "HERO_MATERIAL_SELF_LIGHT_MAX",
+          "HERO_MATERIAL_BUMP_MIN",
+          "HERO_MATERIAL_BUMP_MAX",
+          "HERO_MATERIAL_ROUGHNESS_MIN",
+          "HERO_MATERIAL_ROUGHNESS_MAX",
+          "HERO_MATERIAL_NOISE_SCALE_MIN",
+          "HERO_MATERIAL_NOISE_SCALE_MAX",
+          "HERO_MATERIAL_MAPPING_DRIFT",
+          "CAMERA_BASE_LOCATION",
+          "CAMERA_BASE_LENS",
+          "CAMERA_DOF_FSTOP",
+          "CAMERA_BEAT_BUMP_Z",
+          "CAMERA_BEAT_BUMP_Y",
+          "CAMERA_ORBIT_AMOUNT",
+          "CAMERA_PUSH_AMOUNT",
+          "CAMERA_VERTICAL_SWAY",
+          "LIGHT_ENERGY_MIN",
+          "LIGHT_ENERGY_MAX",
+          "PHYSICS_ACCENT_EMISSION_MIN",
+          "PHYSICS_ACCENT_EMISSION_MAX",
+          "PHYSICS_ACCENT_MIX_MIN",
+          "PHYSICS_ACCENT_MIX_MAX",
+          "FIELD_STRENGTH_MIN",
+          "FIELD_STRENGTH_MAX",
+          "HERO_GRAVITY_STRENGTH_MIN",
+          "HERO_GRAVITY_STRENGTH_MAX",
+          "TURB_STRENGTH_MIN",
+          "TURB_STRENGTH_MAX",
+          "VORTEX_STRENGTH_MIN",
+          "VORTEX_STRENGTH_MAX",
+          "MIST_FLOAT_AMPLITUDE",
+          "MIST_BEAT_BOOST",
+          "PEACE_PALETTE",
+          "PALETTE_LIST"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/main_v61b.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 220,
+      "chars": 7357,
+      "sha256": "326af60e14ed96c850673830305d471c3575235a3462600ab8361ebe221d8b8e",
+      "symbols": {
+        "imports": [
+          "sys",
+          "time",
+          "from pathlib import Path",
+          "bpy",
+          "logging",
+          "from config import ANALYSIS_JSON_PATH, AUDIO_PATH, OUTPUT_MP4, OUTPUT_IMAGE_SEQUENCE_DIR, OUTPUT_IMAGE_SEQUENCE_PREFIX, RENDER_OUTPUT_MODE, CLEAR_SCENE, CLEAR_SEQUENCER, FPS_OVERRIDE",
+          "from scene_utils import clear_scene",
+          "from io_utils import load_json, ensure_inputs_exist, add_audio_strip",
+          "from render_setup import configure_scene_physics, configure_render",
+          "from world_setup import configure_world, create_floor_and_backdrop, create_area_lights",
+          "from camera_setup import create_camera_rig",
+          "from asset_setup import create_scene_core, create_primary_asset, create_secondary_asset",
+          "from atmosphere_setup import create_hero_aura, create_energy_rings, create_energy_ribbons, create_variants, create_atmosphere_cube, create_mist_particles",
+          "from physics_setup import create_physics_accents",
+          "from animation import animate_scene",
+          "from spaziotempo.core.collections import classify_scene_objects, compact_structure_summary"
+        ],
+        "functions": [
+          {
+            "name": "register_tuning_panel",
+            "line": 79,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "classify_project_structure",
+            "line": 89,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "print_summary",
+            "line": 100,
+            "args": [
+              "scene",
+              "analysis_file",
+              "hero_asset",
+              "secondary_asset",
+              "audio_file",
+              "fps",
+              "frame_count",
+              "elapsed"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 125,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "SCRIPT_DIR",
+          "reload_modules",
+          "reload_prefixes"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/animation.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 1080,
+      "chars": 50253,
+      "sha256": "8e08e656c5fdf65cf95d2d6c4c24df4b5d2e5b17ea47f7ab7b12034f970461ce",
+      "symbols": {
+        "imports": [
+          "math",
+          "from config import HERO_SCALE_MIN, HERO_SCALE_MAX, HERO_BOUNCE_Z, HERO_ROT_Z, HERO_ROT_X, HERO_ROT_Y, HERO_DRIFT_X, HERO_DRIFT_Y, HERO_ORBIT_X, HERO_ORBIT_Y, HERO_BEAT_TWIST_Z, HERO_ONSET_SHAKE, HERO_DEFORM_STRENGTH_MIN, HERO_DEFORM_STRENGTH_MAX, HERO_DEFORM_DETAIL_STRENGTH_MAX, HERO_DEFORM_WAVE_HEIGHT_MAX, HERO_DEFORM_TWIST_MAX, HERO_DEFORM_CONTROLLER_RADIUS, HERO_DEFORM_KEYFRAME_STEP, HERO_MATERIAL_EMISSION_MIN, HERO_MATERIAL_EMISSION_MAX, HERO_MATERIAL_SELF_LIGHT_MIN, HERO_MATERIAL_SELF_LIGHT_MAX, HERO_MATERIAL_BUMP_MIN, HERO_MATERIAL_BUMP_MAX, HERO_MATERIAL_ROUGHNESS_MIN, HERO_MATERIAL_ROUGHNESS_MAX, HERO_MATERIAL_NOISE_SCALE_MIN, HERO_MATERIAL_NOISE_SCALE_MAX, HERO_MATERIAL_MAPPING_DRIFT, AURA_DEFORM_KEYFRAME_STEP, AURA_DEFORM_FIELD_DRIFT, AURA_DEFORM_FIELD_SCALE, SECONDARY_SCALE_MIN, SECONDARY_SCALE_MAX, SECONDARY_BOUNCE_Z, SECONDARY_DRIFT_X, SECONDARY_DRIFT_Y, SECONDARY_ROT_Z, SECONDARY_ROT_X, CAMERA_BEAT_BUMP_Z, CAMERA_BEAT_BUMP_Y, CAMERA_ORBIT_AMOUNT, CAMERA_PUSH_AMOUNT, CAMERA_VERTICAL_SWAY, LIGHT_ENERGY_MIN, LIGHT_ENERGY_MAX, PHYSICS_ACCENT_EMISSION_MIN, PHYSICS_ACCENT_EMISSION_MAX, PHYSICS_ACCENT_MIX_MIN, PHYSICS_ACCENT_MIX_MAX, PHYSICS_ATOM_ORBIT_SPEED_MIN, PHYSICS_ATOM_ORBIT_AUDIO_SPEED, PHYSICS_ATOM_ORBIT_RADIUS_PULSE, PHYSICS_ATOM_ORBIT_HEIGHT_SWAY, PHYSICS_ATOM_MICRO_WOBBLE, COMPOSITOR_GLARE_THRESHOLD_MIN, COMPOSITOR_GLARE_THRESHOLD_MAX, COMPOSITOR_LENS_DISTORT_MIN, COMPOSITOR_LENS_DISTORT_MAX, COMPOSITOR_LENS_DISPERSION_MIN, COMPOSITOR_LENS_DISPERSION_MAX, FIELD_STRENGTH_MIN, FIELD_STRENGTH_MAX, HERO_GRAVITY_STRENGTH_MIN, HERO_GRAVITY_STRENGTH_MAX, TURB_STRENGTH_MIN, TURB_STRENGTH_MAX, VORTEX_STRENGTH_MIN, VORTEX_STRENGTH_MAX, RHYTHM_PARTICLE_SIZE_MIN, RHYTHM_PARTICLE_SIZE_MAX, RHYTHM_PARTICLE_NORMAL_MIN, RHYTHM_PARTICLE_NORMAL_MAX, RHYTHM_PARTICLE_TANGENT_MIN, RHYTHM_PARTICLE_TANGENT_MAX, RHYTHM_PARTICLE_BROWNIAN_MIN, RHYTHM_PARTICLE_BROWNIAN_MAX, RHYTHM_PARTICLE_EMIT_MIN, RHYTHM_PARTICLE_EMIT_MAX, RHYTHM_PARTICLE_KEYFRAME_STEP, ALBUM_LETTER_PARTICLE_SIZE_MIN, ALBUM_LETTER_PARTICLE_SIZE_MAX, ALBUM_LETTER_ROOT_SCALE_MIN, ALBUM_LETTER_ROOT_SCALE_MAX, BACKDROP_EMISSION_MIN, BACKDROP_EMISSION_MAX, BACKDROP_BREATHE_SCALE, MIST_FLOAT_AMPLITUDE, MIST_BEAT_BOOST",
+          "from fog_dynamics import animate_fog_frame",
+          "from scene_utils import set_linear_interpolation_idblock"
+        ],
+        "functions": [
+          {
+            "name": "keyframe_if_possible",
+            "line": 99,
+            "args": [
+              "idblock",
+              "data_path",
+              "frame"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_scene_compositor_tree",
+            "line": 106,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "rhythm_band_drive",
+            "line": 114,
+            "args": [
+              "band",
+              "response",
+              "low",
+              "mid",
+              "high",
+              "onset",
+              "beat",
+              "pulse",
+              "local_pulse"
+            ],
+            "async": false
+          },
+          {
+            "name": "animate_scene",
+            "line": 132,
+            "args": [
+              "scene",
+              "frames",
+              "camera",
+              "target",
+              "hero_asset",
+              "secondary_asset",
+              "aura_data",
+              "fog_controller",
+              "scene_base",
+              "lights",
+              "physics_data",
+              "mist_particles",
+              "variants",
+              "energy_rings",
+              "energy_ribbons"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/materials.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 658,
+      "chars": 23180,
+      "sha256": "073e38f04df3414be8fe87cc0a568ce396592e19553f991815cfb94c7b749577",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "from config import PEACE_PALETTE, FOG_DENSITY_MIN, FOG_EMISSION_MIN, FOG_NOISE_SCALE_MIN, FOG_CLUMP_SCALE_MIN, FOG_CLUMP_RAMP_LOW_BASE, FOG_CLUMP_RAMP_HIGH_BASE, FOG_WAVE_SCALE_MIN, FOG_WAVE_DISTORTION_MIN, FOG_WAVE_WEIGHT_MIN, FOG_FILAMENT_ALPHA_MIN, FOG_FILAMENT_EMISSION_MIN, FOG_FILAMENT_NOISE_SCALE_MIN, FOG_FILAMENT_WAVE_SCALE_MIN, AURA_EMIT_MIN, RING_EMIT_MIN, RIBBON_EMIT_MIN, BACKDROP_EMISSION_MIN"
+        ],
+        "functions": [
+          {
+            "name": "build_reflective_floor_material",
+            "line": 25,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "build_invisible_surface_material",
+            "line": 67,
+            "args": [
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_soft_backdrop_material",
+            "line": 91,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "build_aura_material",
+            "line": 140,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "build_variant_material",
+            "line": 186,
+            "args": [
+              "name",
+              "color"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_ring_material",
+            "line": 226,
+            "args": [
+              "name",
+              "color"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_ribbon_material",
+            "line": 248,
+            "args": [
+              "name",
+              "color"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_atmosphere_volume_material",
+            "line": 270,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "build_fog_filament_material",
+            "line": 478,
+            "args": [
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_mist_particle_material",
+            "line": 618,
+            "args": [
+              "name",
+              "color"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/physics_setup.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 738,
+      "chars": 23685,
+      "sha256": "15ccd171bf927564a01d46238dca9f9149d70198caf5cd7eb451733a5cbf2edf",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "math",
+          "random",
+          "from config import USE_PHYSICS_ACCENTS, PHYSICS_ACCENT_COUNT, PRIMARY_BASE_Z, TURB_STRENGTH_MIN, VORTEX_STRENGTH_MIN, PHYSICS_ORBIT_RADIUS_MIN, PHYSICS_ORBIT_RADIUS_MAX, PHYSICS_ATOM_ORBIT_SPEED_MIN, PHYSICS_ATOM_ORBIT_SPEED_MAX, PHYSICS_ATOM_MICRO_WOBBLE, HERO_GRAVITY_STRENGTH_MIN, TETHER_SPRING_STIFFNESS, TETHER_SPRING_DAMPING, USE_RHYTHM_PARTICLE_PHYSICS, RHYTHM_PARTICLE_COUNT, RHYTHM_DUST_PARTICLE_COUNT, RHYTHM_STREAK_PARTICLE_COUNT, RHYTHM_PARTICLE_LIFETIME, RHYTHM_DUST_LIFETIME, RHYTHM_PARTICLE_EMITTER_RADIUS, RHYTHM_PARTICLE_EMITTER_Z, PARTICLE_SOURCE_LOCATION, RHYTHM_PARTICLE_SOURCE_RADIUS, RHYTHM_PARTICLE_SIZE_MIN, RHYTHM_PARTICLE_NORMAL_MIN, RHYTHM_PARTICLE_TANGENT_MIN, RHYTHM_PARTICLE_BROWNIAN_MIN, USE_ALBUM_LETTER_PARTICLES, ALBUM_PARTICLE_TEXT, ALBUM_LETTER_PARTICLE_COUNT, ALBUM_LETTER_PARTICLE_LIFETIME, ALBUM_LETTER_SOURCE_SIZE, ALBUM_LETTER_EXTRUDE, ALBUM_LETTER_EMISSION_STRENGTH, ALBUM_LETTER_PARTICLE_SIZE_MIN, PHYSICS_ACCENT_EMISSION_MIN, PHYSICS_ACCENT_MIX_MIN, PALETTE_LIST, PEACE_PALETTE",
+          "from materials import build_variant_material",
+          "from scene_utils import deselect_all, safe_active"
+        ],
+        "functions": [
+          {
+            "name": "set_if_available",
+            "line": 50,
+            "args": [
+              "obj",
+              "attr",
+              "value"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_particle_emission_material",
+            "line": 60,
+            "args": [
+              "name",
+              "color",
+              "strength"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_invisible_emitter_material",
+            "line": 82,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "get_material_node_socket",
+            "line": 106,
+            "args": [
+              "material",
+              "node_name",
+              "socket_name",
+              "is_output"
+            ],
+            "async": false
+          },
+          {
+            "name": "add_particle_collision",
+            "line": 121,
+            "args": [
+              "obj"
+            ],
+            "async": false
+          },
+          {
+            "name": "add_passive_rigidbody",
+            "line": 138,
+            "args": [
+              "obj"
+            ],
+            "async": false
+          },
+          {
+            "name": "add_active_rigidbody",
+            "line": 147,
+            "args": [
+              "obj",
+              "mass"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_hidden_anchor",
+            "line": 159,
+            "args": [
+              "name",
+              "location"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_spring_constraint",
+            "line": 172,
+            "args": [
+              "name",
+              "object1",
+              "object2",
+              "location"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_particle_instance",
+            "line": 215,
+            "args": [
+              "name",
+              "color",
+              "strength",
+              "shape"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_album_letter_particle_collection",
+            "line": 255,
+            "args": [
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_particle_emitter",
+            "line": 339,
+            "args": [
+              "name",
+              "kind",
+              "invisible_mat"
+            ],
+            "async": false
+          },
+          {
+            "name": "configure_particle_system",
+            "line": 367,
+            "args": [
+              "emitter",
+              "name",
+              "instance_obj",
+              "count",
+              "lifetime",
+              "particle_size",
+              "normal_factor",
+              "tangent_factor",
+              "brownian_factor",
+              "damping",
+              "child_count",
+              "child_percent",
+              "instance_collection"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_rhythm_particle_physics",
+            "line": 445,
+            "args": [
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_physics_accents",
+            "line": 606,
+            "args": [
+              "parent"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/fog_dynamics.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 393,
+      "chars": 15491,
+      "sha256": "21628c1c0e713ecbdf20bcae478983798b2354f4ed6bb8e700cc2adad4c59b58",
+      "symbols": {
+        "imports": [
+          "math",
+          "from config import FOG_DENSITY_MIN, FOG_DENSITY_MAX, FOG_EMISSION_MIN, FOG_EMISSION_MAX, FOG_NOISE_SCALE_MIN, FOG_NOISE_SCALE_MAX, FOG_CLUMP_SCALE_MIN, FOG_CLUMP_SCALE_MAX, FOG_CLUMP_RAMP_LOW_BASE, FOG_CLUMP_RAMP_HIGH_BASE, FOG_CLUMP_WEIGHT_MIN, FOG_CLUMP_WEIGHT_MAX, FOG_RAMP_LOW_BASE, FOG_RAMP_HIGH_BASE, FOG_COMPACT_XY, FOG_EXPAND_Z, FOG_CONTROLLER_DRIFT, FOG_DRIFT_SPEED_X, FOG_DRIFT_SPEED_Y, FOG_DRIFT_SPEED_Z, FOG_WAVE_SCALE_MIN, FOG_WAVE_SCALE_MAX, FOG_WAVE_DISTORTION_MIN, FOG_WAVE_DISTORTION_MAX, FOG_WAVE_WEIGHT_MIN, FOG_WAVE_WEIGHT_MAX, FOG_WIND_SHEAR_X, FOG_WIND_SHEAR_Y, FOG_VOLUME_ENABLED, FOG_VOLUME_VIEWPORT_VISIBLE, FOG_FILAMENT_KEYFRAME_STEP, FOG_FILAMENT_ALPHA_MIN, FOG_FILAMENT_ALPHA_MAX, FOG_FILAMENT_EMISSION_MIN, FOG_FILAMENT_EMISSION_MAX, FOG_FILAMENT_WIND_DRIFT, FOG_FILAMENT_COMPACT_SCALE, FOG_FILAMENT_NOISE_SCALE_MIN, FOG_FILAMENT_NOISE_SCALE_MAX, FOG_FILAMENT_WAVE_SCALE_MIN, FOG_FILAMENT_WAVE_SCALE_MAX"
+        ],
+        "functions": [
+          {
+            "name": "clamp",
+            "line": 48,
+            "args": [
+              "value",
+              "low",
+              "high"
+            ],
+            "async": false
+          },
+          {
+            "name": "keyframe_if_possible",
+            "line": 52,
+            "args": [
+              "idblock",
+              "data_path",
+              "frame"
+            ],
+            "async": false
+          },
+          {
+            "name": "set_socket_value",
+            "line": 59,
+            "args": [
+              "socket",
+              "value",
+              "frame"
+            ],
+            "async": false
+          },
+          {
+            "name": "animate_vector_socket",
+            "line": 69,
+            "args": [
+              "socket",
+              "values",
+              "frame"
+            ],
+            "async": false
+          },
+          {
+            "name": "should_keyframe_filaments",
+            "line": 82,
+            "args": [
+              "frame",
+              "beat",
+              "onset"
+            ],
+            "async": false
+          },
+          {
+            "name": "animate_fog_filaments",
+            "line": 91,
+            "args": [
+              "frame",
+              "low",
+              "mid",
+              "high",
+              "onset",
+              "beat",
+              "pulse",
+              "filaments"
+            ],
+            "async": false
+          },
+          {
+            "name": "animate_fog_frame",
+            "line": 204,
+            "args": [
+              "frame",
+              "low",
+              "mid",
+              "high",
+              "onset",
+              "beat",
+              "pulse",
+              "fog_controller",
+              "fog_obj",
+              "fog_control",
+              "fog_base_scale",
+              "fog_base_loc"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/fog_filaments.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 160,
+      "chars": 4634,
+      "sha256": "2b1d13a0b254084944ce0df40028222be32a6f8e96b7133e42044ee64d94d901",
+      "symbols": {
+        "imports": [
+          "math",
+          "random",
+          "bpy",
+          "from mathutils import Euler, Vector",
+          "from config import FOG_FILAMENTS_ENABLED, FOG_FILAMENT_COUNT, FOG_FILAMENT_WIDTH_MIN, FOG_FILAMENT_WIDTH_MAX, FOG_FILAMENT_HEIGHT_MIN, FOG_FILAMENT_HEIGHT_MAX, FOG_FILAMENT_DEPTH_MIN, FOG_FILAMENT_DEPTH_MAX, FOG_FILAMENT_Z_MIN, FOG_FILAMENT_Z_MAX",
+          "from materials import build_fog_filament_material",
+          "from scene_utils import create_controller_empty"
+        ],
+        "functions": [
+          {
+            "name": "_store_base_transform",
+            "line": 28,
+            "args": [
+              "obj",
+              "phase"
+            ],
+            "async": false
+          },
+          {
+            "name": "_base_vector",
+            "line": 36,
+            "args": [
+              "obj",
+              "key",
+              "fallback"
+            ],
+            "async": false
+          },
+          {
+            "name": "_base_euler",
+            "line": 46,
+            "args": [
+              "obj",
+              "key",
+              "fallback"
+            ],
+            "async": false
+          },
+          {
+            "name": "_make_filament",
+            "line": 56,
+            "args": [
+              "index",
+              "material",
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "_collect_objects",
+            "line": 90,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "ensure_fog_filaments",
+            "line": 95,
+            "args": [
+              "parent"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT_NAME",
+          "OBJECT_PREFIX",
+          "MATERIAL_NAME"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/atmosphere_setup.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 555,
+      "chars": 16075,
+      "sha256": "bb571c0bdf08feacdb1649491e01709e6bb54938b3805fdd8796944ec87cd874",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "math",
+          "random",
+          "from config import PRIMARY_BASE_Z, AURA_RADIUS, USE_HERO_AURA_MESH, AURA_DEFORM_SUBDIV_VIEW, AURA_DEFORM_SUBDIV_RENDER, AURA_DEFORM_FIELD_RADIUS, AURA_DEFORM_DISPLACE_MIN, AURA_DEFORM_DISPLACE_MAX, AURA_DEFORM_DETAIL_MAX, AURA_DEFORM_WAVE_HEIGHT_MAX, AURA_DEFORM_FIELD_STRENGTH_MAX, ENERGY_RING_COUNT, RIBBON_COUNT, CREATE_VARIANTS, VARIANT_COUNT, VARIANT_RING_RADIUS, VARIANT_SCALE_MIN, VARIANT_SCALE_MAX, USE_MIST_PARTICLES, MIST_PARTICLE_COUNT, MIST_SCALE_MIN, MIST_SCALE_MAX, ATMOSPHERE_CUBE_SIZE, FOG_VOLUME_ENABLED, FOG_VOLUME_VIEWPORT_VISIBLE, FOG_RAMP_LOW_BASE, FOG_RAMP_HIGH_BASE, PALETTE_LIST, PEACE_PALETTE",
+          "from materials import build_aura_material, build_ring_material, build_ribbon_material, build_variant_material, build_atmosphere_volume_material, build_mist_particle_material",
+          "from asset_setup import duplicate_hierarchy, assign_material_to_hierarchy",
+          "from scene_utils import create_controller_empty",
+          "from fog_filaments import ensure_fog_filaments"
+        ],
+        "functions": [
+          {
+            "name": "init_audio_props",
+            "line": 62,
+            "args": [
+              "obj"
+            ],
+            "async": false
+          },
+          {
+            "name": "add_prop_driver",
+            "line": 71,
+            "args": [
+              "idblock",
+              "data_path",
+              "expression",
+              "prop_targets"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_aura_deform_field",
+            "line": 96,
+            "args": [
+              "controller",
+              "aura_location",
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "add_hero_aura_deformers",
+            "line": 144,
+            "args": [
+              "aura",
+              "controller",
+              "deform_field"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_hero_aura",
+            "line": 249,
+            "args": [
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_energy_rings",
+            "line": 325,
+            "args": [
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_energy_ribbons",
+            "line": 361,
+            "args": [
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_variants",
+            "line": 399,
+            "args": [
+              "hero_root",
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_atmosphere_cube",
+            "line": 433,
+            "args": [
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_mist_particles",
+            "line": 502,
+            "args": [
+              "parent"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "AURA_AUDIO_PROPS"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/world_setup.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 199,
+      "chars": 6567,
+      "sha256": "4d57f4b5253bb156e40125592238f3a9e872420ebe9b5d5b273d392f3759ef04",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "from pathlib import Path",
+          "from config import PEACE_PALETTE, WORLD_STRENGTH, WORLD_CAMERA_STRENGTH, WORLD_LIGHT_COLOR, WORLD_CAMERA_COLOR, USE_HDRI_WORLD, HDRI_PATH, HDRI_STRENGTH, HDRI_ROT_Z, LIGHT_ENERGY_MIN, FLOOR_SIZE, FLOOR_RENDER_VISIBLE, FLOOR_VIEWPORT_VISIBLE, USE_SOFT_BACKDROP, BACKDROP_SIZE, BACKDROP_LOCATION, BACKDROP_ROT_X, USE_INVISIBLE_COLLISION_PLANE, INVISIBLE_COLLISION_PLANE_SIZE, INVISIBLE_COLLISION_PLANE_Z",
+          "from materials import build_reflective_floor_material, build_invisible_surface_material, build_soft_backdrop_material",
+          "from scene_utils import create_controller_empty"
+        ],
+        "functions": [
+          {
+            "name": "configure_world",
+            "line": 34,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_floor_and_backdrop",
+            "line": 110,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "create_area_lights",
+            "line": 175,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/render_setup.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 271,
+      "chars": 8038,
+      "sha256": "d798f6054b2e94e063ff5b21a9648641ce99231902dd16e288784ecf962a24ca",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "from pathlib import Path",
+          "from config import RENDER_RESOLUTION_X, RENDER_RESOLUTION_Y, USE_4K, RENDER_PERCENT, USE_MOTION_BLUR, EEVEE_TAA_RENDER_SAMPLES, USE_BLOOM, BLOOM_THRESHOLD, BLOOM_INTENSITY, VIEW_EXPOSURE, VIEW_GAMMA, VIDEO_BITRATE, VIDEO_MAXRATE, VIDEO_MINRATE, VIDEO_BUFFERSIZE, AUDIO_BITRATE, RENDER_OUTPUT_MODE, OUTPUT_IMAGE_SEQUENCE_DIR, OUTPUT_IMAGE_SEQUENCE_PREFIX, IMAGE_SEQUENCE_FORMAT, IMAGE_SEQUENCE_COLOR_DEPTH, IMAGE_SEQUENCE_COMPRESSION, VOLUMETRIC_SAMPLES, VOLUMETRIC_TILE_SIZE, FOG_VOLUME_ENABLED, USE_COMPOSITING, COMPOSITOR_GLARE_THRESHOLD_MAX, COMPOSITOR_GLARE_MIX, COMPOSITOR_GLARE_SIZE, COMPOSITOR_LENS_DISTORT_MIN, COMPOSITOR_LENS_DISPERSION_MIN"
+        ],
+        "functions": [
+          {
+            "name": "configure_scene_physics",
+            "line": 39,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_scene_compositor_tree",
+            "line": 67,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "configure_compositor",
+            "line": 75,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "configure_render",
+            "line": 157,
+            "args": [
+              "scene",
+              "output_mp4",
+              "fps"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/scene_tuning_panel.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 1263,
+      "chars": 47791,
+      "sha256": "55c3c28fad20ca2dd87058f9f9959ad655e51b0a85286e1af9876627eac81057",
+      "symbols": {
+        "imports": [
+          "json",
+          "sys",
+          "traceback",
+          "from pathlib import Path",
+          "bpy",
+          "from bpy.props import BoolProperty, FloatProperty, PointerProperty, StringProperty"
+        ],
+        "functions": [
+          {
+            "name": "resolve_script_dir",
+            "line": 20,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "iter_action_fcurves",
+            "line": 56,
+            "args": [
+              "action"
+            ],
+            "async": false
+          },
+          {
+            "name": "find_obj",
+            "line": 88,
+            "args": [
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "objects_with_prefix",
+            "line": 92,
+            "args": [
+              "prefix"
+            ],
+            "async": false
+          },
+          {
+            "name": "particle_emitters",
+            "line": 96,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "particle_source_objects",
+            "line": 106,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "store_base_vector",
+            "line": 117,
+            "args": [
+              "obj",
+              "key",
+              "value"
+            ],
+            "async": false
+          },
+          {
+            "name": "store_base_float",
+            "line": 123,
+            "args": [
+              "idblock",
+              "key",
+              "value"
+            ],
+            "async": false
+          },
+          {
+            "name": "set_scale_from_base",
+            "line": 132,
+            "args": [
+              "obj",
+              "factor",
+              "key"
+            ],
+            "async": false
+          },
+          {
+            "name": "keyframe_if_possible",
+            "line": 140,
+            "args": [
+              "idblock",
+              "data_path",
+              "frame"
+            ],
+            "async": false
+          },
+          {
+            "name": "find_material",
+            "line": 147,
+            "args": [
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "find_node",
+            "line": 151,
+            "args": [
+              "material_name",
+              "node_name"
+            ],
+            "async": false
+          },
+          {
+            "name": "set_value_node",
+            "line": 158,
+            "args": [
+              "material_name",
+              "node_name",
+              "value"
+            ],
+            "async": false
+          },
+          {
+            "name": "set_input_node",
+            "line": 169,
+            "args": [
+              "material_name",
+              "node_name",
+              "input_name",
+              "value"
+            ],
+            "async": false
+          },
+          {
+            "name": "keyframe_socket",
+            "line": 180,
+            "args": [
+              "socket",
+              "frame"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_scene_compositor_tree",
+            "line": 186,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "clamp_value",
+            "line": 194,
+            "args": [
+              "value",
+              "min_value",
+              "max_value"
+            ],
+            "async": false
+          },
+          {
+            "name": "normalize_runtime_profile",
+            "line": 198,
+            "args": [
+              "profile"
+            ],
+            "async": false
+          },
+          {
+            "name": "runtime_profile_label",
+            "line": 244,
+            "args": [
+              "profile"
+            ],
+            "async": false
+          },
+          {
+            "name": "apply_runtime_profile",
+            "line": 257,
+            "args": [
+              "context",
+              "profile"
+            ],
+            "async": false
+          },
+          {
+            "name": "all_particle_settings",
+            "line": 442,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "apply_tuning",
+            "line": 454,
+            "args": [
+              "context",
+              "insert_keyframes"
+            ],
+            "async": false
+          },
+          {
+            "name": "scale_fcurve_values",
+            "line": 669,
+            "args": [
+              "idblock",
+              "predicate",
+              "factor"
+            ],
+            "async": false
+          },
+          {
+            "name": "scale_full_animation",
+            "line": 685,
+            "args": [
+              "context"
+            ],
+            "async": false
+          },
+          {
+            "name": "preset_data",
+            "line": 721,
+            "args": [
+              "settings"
+            ],
+            "async": false
+          },
+          {
+            "name": "load_preset_data",
+            "line": 764,
+            "args": [
+              "settings",
+              "data"
+            ],
+            "async": false
+          },
+          {
+            "name": "register",
+            "line": 1239,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "unregister",
+            "line": 1254,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [
+          {
+            "name": "ST_TuningSettings",
+            "line": 770,
+            "methods": []
+          },
+          {
+            "name": "ST_OT_apply_tuning",
+            "line": 822,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 827
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_keyframe_tuning",
+            "line": 833,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 838
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_scale_animation",
+            "line": 844,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 849
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_apply_runtime_profile",
+            "line": 855,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 863
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_hot_update_scene",
+            "line": 871,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 878
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_rebuild_restart_check",
+            "line": 895,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 900
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_optimizer_check",
+            "line": 920,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 925
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_load_image_sequence",
+            "line": 943,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 948
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_encode_ffmpeg",
+            "line": 965,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 970
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_encode_ffmpeg_shell",
+            "line": 987,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 992
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_save_preset",
+            "line": 1016,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 1020
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_load_preset",
+            "line": 1027,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 1031
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_open_guide_text",
+            "line": 1043,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 1047
+              }
+            ]
+          },
+          {
+            "name": "ST_OT_select_group",
+            "line": 1062,
+            "methods": [
+              {
+                "name": "execute",
+                "line": 1068
+              }
+            ]
+          },
+          {
+            "name": "ST_PT_tuning_panel",
+            "line": 1098,
+            "methods": [
+              {
+                "name": "draw",
+                "line": 1105
+              }
+            ]
+          }
+        ],
+        "assignments": [
+          "bl_info",
+          "SCRIPT_DIR",
+          "PRESET_PATH",
+          "GUIDE_PATH",
+          "HOT_UPDATE_PATH",
+          "ENCODE_SEQUENCE_PATH",
+          "ENCODE_FFMPEG_PATH",
+          "classes"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/hot_update_scene_v61b.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 64,
+      "chars": 1475,
+      "sha256": "e11a0f377365de65b0fb38a393fb6b3259e2a7afe398455cd8f47ca5d2ac5437",
+      "symbols": {
+        "imports": [
+          "sys",
+          "from pathlib import Path",
+          "bpy"
+        ],
+        "functions": [
+          {
+            "name": "resolve_script_dir",
+            "line": 7,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "drop_hotpatch_cache",
+            "line": 38,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 53,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "SCRIPT_DIR"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/encode_image_sequence_v61b.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 396,
+      "chars": 11882,
+      "sha256": "f10f55d9f550c7124b46cf897dec2602b653ec62358d3c1f885a20ca149fe384",
+      "symbols": {
+        "imports": [
+          "re",
+          "sys",
+          "from pathlib import Path",
+          "bpy",
+          "config"
+        ],
+        "functions": [
+          {
+            "name": "resolve_script_dir",
+            "line": 8,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "extract_frame_number",
+            "line": 83,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "sorted_frame_files",
+            "line": 90,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "contiguous_frame_files",
+            "line": 116,
+            "args": [
+              "frame_files"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_sequence_collection",
+            "line": 143,
+            "args": [
+              "editor"
+            ],
+            "async": false
+          },
+          {
+            "name": "all_editor_strips",
+            "line": 151,
+            "args": [
+              "editor"
+            ],
+            "async": false
+          },
+          {
+            "name": "remove_editor_strip",
+            "line": 163,
+            "args": [
+              "editor",
+              "strip"
+            ],
+            "async": false
+          },
+          {
+            "name": "force_visible_sequencer",
+            "line": 176,
+            "args": [
+              "scene",
+              "editor"
+            ],
+            "async": false
+          },
+          {
+            "name": "clear_sequence_editor",
+            "line": 224,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "add_image_sequence",
+            "line": 235,
+            "args": [
+              "editor",
+              "frame_files"
+            ],
+            "async": false
+          },
+          {
+            "name": "add_synced_audio",
+            "line": 258,
+            "args": [
+              "editor",
+              "first_frame"
+            ],
+            "async": false
+          },
+          {
+            "name": "configure_video_output",
+            "line": 285,
+            "args": [
+              "scene",
+              "frame_count"
+            ],
+            "async": false
+          },
+          {
+            "name": "print_strip_report",
+            "line": 327,
+            "args": [
+              "scene",
+              "editor"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 342,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "SCRIPT_DIR",
+          "ROOT",
+          "RENDERS_DIR",
+          "AUDIO_PATH",
+          "OUTPUT_MP4",
+          "OUTPUT_IMAGE_SEQUENCE_DIR",
+          "OUTPUT_IMAGE_SEQUENCE_PREFIX",
+          "IMAGE_SEQUENCE_FORMAT",
+          "VIDEO_BITRATE",
+          "VIDEO_MAXRATE",
+          "VIDEO_MINRATE",
+          "VIDEO_BUFFERSIZE",
+          "AUDIO_BITRATE",
+          "ENCODE_SEQUENCE_AUTO_RENDER",
+          "ENCODE_SEQUENCE_SYNC_AUDIO_TO_FRAME_NUMBER",
+          "ENCODE_SEQUENCE_AUDIO_ZERO_FRAME",
+          "ENCODE_SEQUENCE_SKIP_PLACEHOLDERS",
+          "ENCODE_SEQUENCE_SWITCH_TO_SEQUENCER"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/encode_ffmpeg_v61b.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 399,
+      "chars": 12329,
+      "sha256": "c8c7a5a772e173407ffedf0b8abf7b1908634ea91543946f5f71c361d2076034",
+      "symbols": {
+        "imports": [
+          "json",
+          "os",
+          "re",
+          "shutil",
+          "subprocess",
+          "sys",
+          "from pathlib import Path",
+          "config"
+        ],
+        "functions": [
+          {
+            "name": "resolve_script_dir",
+            "line": 15,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "extract_frame_number",
+            "line": 82,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "sorted_frame_files",
+            "line": 89,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "contiguous_frame_files",
+            "line": 109,
+            "args": [
+              "frame_files"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_fps",
+            "line": 133,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "candidate_path_values",
+            "line": 155,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "find_ffmpeg",
+            "line": 175,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "build_image_pattern",
+            "line": 203,
+            "args": [
+              "first_file",
+              "first_frame"
+            ],
+            "async": false
+          },
+          {
+            "name": "source_frame_to_audio_offset",
+            "line": 216,
+            "args": [
+              "first_frame",
+              "fps"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_command",
+            "line": 222,
+            "args": [
+              "ffmpeg",
+              "pattern",
+              "first_frame",
+              "frame_count",
+              "fps",
+              "audio_offset"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_visible_shell_launcher",
+            "line": 328,
+            "args": [
+              "command",
+              "output",
+              "first_frame",
+              "frame_count",
+              "fps",
+              "audio_offset"
+            ],
+            "async": false
+          },
+          {
+            "name": "launch_visible_shell",
+            "line": 355,
+            "args": [
+              "command",
+              "output",
+              "first_frame",
+              "frame_count",
+              "fps",
+              "audio_offset"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 362,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "SCRIPT_DIR",
+          "AUDIO_PATH",
+          "ANALYSIS_JSON_PATH",
+          "OUTPUT_IMAGE_SEQUENCE_DIR",
+          "OUTPUT_IMAGE_SEQUENCE_PREFIX",
+          "IMAGE_SEQUENCE_FORMAT",
+          "OUTPUT_MP4",
+          "FFMPEG_EXE_PATH",
+          "FFMPEG_CRF",
+          "FFMPEG_PRESET",
+          "FFMPEG_TUNE",
+          "FFMPEG_AUDIO_BITRATE",
+          "FFMPEG_PROFILE",
+          "FFMPEG_GPU_INDEX",
+          "FFMPEG_NVENC_PRESET",
+          "FFMPEG_NVENC_TUNE",
+          "FFMPEG_NVENC_CQ",
+          "FFMPEG_SVTAV1_PRESET",
+          "FFMPEG_SVTAV1_CRF",
+          "FFMPEG_THREADS",
+          "FFMPEG_VIDEO_FILTER",
+          "FFMPEG_AUDIO_SAMPLE_RATE",
+          "SYNC_AUDIO",
+          "AUDIO_ZERO_FRAME",
+          "SKIP_PLACEHOLDERS",
+          "LAUNCH_VISIBLE_SHELL"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/PROJECT_STRUCTURE.md",
+      "exists": true,
+      "suffix": ".md",
+      "lines": 44,
+      "chars": 2497,
+      "sha256": "a1dc036f5e6a993dd1197de70a96338f76de597950e5164def3f1dc17eb188e4"
+    },
+    {
+      "file": "Scripting/v61b/SCENE_TUNING_GUIDE.md",
+      "exists": true,
+      "suffix": ".md",
+      "lines": 305,
+      "chars": 13330,
+      "sha256": "edd8ed0ef33670b4bbd79078b76fa9943be23a39ccf8c40c731eb0e7b7feeaac"
+    },
+    {
+      "file": "Scripting/v61b/__init__.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 1,
+      "chars": 16,
+      "sha256": "c0bbbb5b6d776bd569a8ce1dde718a322055ae62b1c3b48f26826d6e8acdb651",
+      "symbols": {
+        "imports": [],
+        "functions": [],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/asset_setup.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 726,
+      "chars": 23898,
+      "sha256": "91343beb43af7ff1a9a022e03ce20e1d104057e497a74a8da19b07658605689e",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "from mathutils import Vector",
+          "from pathlib import Path",
+          "from config import PRIMARY_ASSET_DIR, PRIMARY_TARGET_SIZE, PRIMARY_BASE_Z, SUPPORTED_ASSET_EXTENSIONS, USE_SECONDARY_ASSET, SECONDARY_ASSET_DIR, SECONDARY_TARGET_SIZE, SECONDARY_BASE_Z, SECONDARY_BASE_OFFSET_X, SECONDARY_BASE_OFFSET_Y, SECONDARY_BASE_OFFSET_Z, PEACE_PALETTE, USE_HERO_MESH_DEFORM, HERO_DEFORM_STRENGTH_MAX, HERO_DEFORM_STRENGTH_MIN, HERO_DEFORM_DETAIL_STRENGTH_MAX, HERO_DEFORM_WAVE_HEIGHT_MAX, HERO_DEFORM_MAIN_DIM_FACTOR, HERO_DEFORM_DETAIL_DIM_FACTOR, HERO_DEFORM_WAVE_DIM_FACTOR, HERO_DEFORM_TWIST_MAX, HERO_DEFORM_SUBDIV_VIEW, HERO_DEFORM_SUBDIV_RENDER, HERO_DEFORM_NOISE_SIZE, HERO_DEFORM_DETAIL_NOISE_SIZE, HERO_DEFORM_NOISE_CONTRAST, HERO_DEFORM_CONTROLLER_Z, USE_HERO_MATERIAL_AUDIO_NODES, HERO_MATERIAL_EMISSION_MIN, HERO_MATERIAL_SELF_LIGHT_MIN, HERO_MATERIAL_BUMP_MIN, HERO_MATERIAL_ROUGHNESS_MAX, HERO_MATERIAL_NOISE_SCALE_MIN",
+          "from scene_utils import create_controller_empty"
+        ],
+        "functions": [
+          {
+            "name": "find_asset_file",
+            "line": 43,
+            "args": [
+              "asset_dir"
+            ],
+            "async": false
+          },
+          {
+            "name": "import_asset_file",
+            "line": 62,
+            "args": [
+              "asset_file"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_world_bbox",
+            "line": 94,
+            "args": [
+              "objects"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_scene_core",
+            "line": 127,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "make_asset_root",
+            "line": 134,
+            "args": [
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "parent_objects_keep_transform",
+            "line": 141,
+            "args": [
+              "objects",
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "center_and_scale_asset",
+            "line": 150,
+            "args": [
+              "root",
+              "objects",
+              "target_size",
+              "base_z"
+            ],
+            "async": false
+          },
+          {
+            "name": "collect_meshes",
+            "line": 171,
+            "args": [
+              "objects"
+            ],
+            "async": false
+          },
+          {
+            "name": "soften_materials_to_peace",
+            "line": 175,
+            "args": [
+              "meshes"
+            ],
+            "async": false
+          },
+          {
+            "name": "find_principled_node",
+            "line": 206,
+            "args": [
+              "material"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_node_input",
+            "line": 216,
+            "args": [
+              "node"
+            ],
+            "async": false
+          },
+          {
+            "name": "link_node_sockets",
+            "line": 226,
+            "args": [
+              "links",
+              "output_socket",
+              "input_socket",
+              "replace_existing"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_or_create_node",
+            "line": 243,
+            "args": [
+              "nodes",
+              "node_type",
+              "name",
+              "location"
+            ],
+            "async": false
+          },
+          {
+            "name": "find_material_output",
+            "line": 252,
+            "args": [
+              "material"
+            ],
+            "async": false
+          },
+          {
+            "name": "ensure_hero_surface_light_layer",
+            "line": 266,
+            "args": [
+              "mat",
+              "principled"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_local_mesh_extent",
+            "line": 346,
+            "args": [
+              "obj"
+            ],
+            "async": false
+          },
+          {
+            "name": "add_hero_material_audio_nodes",
+            "line": 360,
+            "args": [
+              "meshes"
+            ],
+            "async": false
+          },
+          {
+            "name": "duplicate_hierarchy",
+            "line": 460,
+            "args": [
+              "root",
+              "name_prefix"
+            ],
+            "async": false
+          },
+          {
+            "name": "assign_material_to_hierarchy",
+            "line": 488,
+            "args": [
+              "root",
+              "material"
+            ],
+            "async": false
+          },
+          {
+            "name": "add_hero_mesh_deformers",
+            "line": 498,
+            "args": [
+              "asset_root",
+              "meshes"
+            ],
+            "async": false
+          },
+          {
+            "name": "_create_asset_from_dir",
+            "line": 653,
+            "args": [
+              "asset_dir",
+              "target_size",
+              "base_z",
+              "root_name",
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_primary_asset",
+            "line": 688,
+            "args": [
+              "parent"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_secondary_asset",
+            "line": 698,
+            "args": [
+              "parent"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/camera_setup.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 30,
+      "chars": 815,
+      "sha256": "8265f48a256d126408f250dfb84af546e4ff10fbdcd1c98dd114040e17e52181",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "math",
+          "from config import CAMERA_BASE_LOCATION, CAMERA_BASE_LENS, CAMERA_DOF_FSTOP"
+        ],
+        "functions": [
+          {
+            "name": "create_camera_rig",
+            "line": 7,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/io_utils.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 81,
+      "chars": 2234,
+      "sha256": "6f0db21475f14dff120a5cc57d748b2178b75fbc4f60fdb6d16b8e438513dd2d",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "json",
+          "from pathlib import Path"
+        ],
+        "functions": [
+          {
+            "name": "load_json",
+            "line": 6,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "ensure_file_exists",
+            "line": 12,
+            "args": [
+              "path",
+              "label"
+            ],
+            "async": false
+          },
+          {
+            "name": "ensure_inputs_exist",
+            "line": 19,
+            "args": [
+              "analysis_path",
+              "audio_path"
+            ],
+            "async": false
+          },
+          {
+            "name": "clear_sequencer",
+            "line": 25,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "add_audio_strip",
+            "line": 49,
+            "args": [
+              "scene",
+              "audio_path",
+              "clear_existing",
+              "sync_audio"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/scene_utils.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 98,
+      "chars": 2463,
+      "sha256": "98780b6455aae7c8857bf8698e8e4b57feceec9187a04a8850f87bad2bb4d295",
+      "symbols": {
+        "imports": [
+          "bpy"
+        ],
+        "functions": [
+          {
+            "name": "clear_scene",
+            "line": 4,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "deselect_all",
+            "line": 29,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "safe_active",
+            "line": 33,
+            "args": [
+              "obj"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_controller_empty",
+            "line": 38,
+            "args": [
+              "name",
+              "location",
+              "parent",
+              "display_size",
+              "hide_view"
+            ],
+            "async": false
+          },
+          {
+            "name": "iter_action_fcurves",
+            "line": 53,
+            "args": [
+              "action"
+            ],
+            "async": false
+          },
+          {
+            "name": "set_linear_interpolation_idblock",
+            "line": 83,
+            "args": [
+              "idblock"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/hotpatch/__init__.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 4,
+      "chars": 51,
+      "sha256": "90be9d97c6b8230b5cabf560b23404b9a3b2699f8df93b89605425c5cf164147",
+      "symbols": {
+        "imports": [
+          "from runner import run_all"
+        ],
+        "functions": [],
+        "classes": [],
+        "assignments": [
+          "__all__"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/hotpatch/accent_patch.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 302,
+      "chars": 12916,
+      "sha256": "0e7166fd48278eaeab80e30d9b45d5b04c43c1c4a6f4b34a0d2ecf17b5745f94",
+      "symbols": {
+        "imports": [
+          "math",
+          "bpy",
+          "from materials import build_variant_material",
+          "from common import PALETTE_LIST, cfg_value, clear_animation, get_node, iter_objects_prefix, keyframe_if_possible, socket_by_name, store_base_vector"
+        ],
+        "functions": [
+          {
+            "name": "drive_for_band",
+            "line": 40,
+            "args": [
+              "band",
+              "response",
+              "sample",
+              "frame",
+              "phase"
+            ],
+            "async": false
+          },
+          {
+            "name": "ensure_accent_material",
+            "line": 63,
+            "args": [
+              "obj",
+              "index"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_or_store_float",
+            "line": 84,
+            "args": [
+              "obj",
+              "key",
+              "default"
+            ],
+            "async": false
+          },
+          {
+            "name": "atom_center",
+            "line": 90,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "find_or_create_force_object",
+            "line": 100,
+            "args": [
+              "name",
+              "effector_type",
+              "location"
+            ],
+            "async": false
+          },
+          {
+            "name": "update_central_fields",
+            "line": 121,
+            "args": [
+              "frames",
+              "center"
+            ],
+            "async": false
+          },
+          {
+            "name": "update_physics_accents",
+            "line": 175,
+            "args": [
+              "frames"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "PHYSICS_ACCENT_EMISSION_MIN",
+          "PHYSICS_ACCENT_EMISSION_MAX",
+          "PHYSICS_ACCENT_MIX_MIN",
+          "PHYSICS_ACCENT_MIX_MAX",
+          "PRIMARY_BASE_Z",
+          "PHYSICS_ORBIT_RADIUS_MIN",
+          "PHYSICS_ORBIT_RADIUS_MAX",
+          "PHYSICS_ATOM_ORBIT_SPEED_MIN",
+          "PHYSICS_ATOM_ORBIT_SPEED_MAX",
+          "PHYSICS_ATOM_ORBIT_AUDIO_SPEED",
+          "PHYSICS_ATOM_ORBIT_RADIUS_PULSE",
+          "PHYSICS_ATOM_ORBIT_HEIGHT_SWAY",
+          "PHYSICS_ATOM_MICRO_WOBBLE",
+          "HERO_GRAVITY_STRENGTH_MIN",
+          "HERO_GRAVITY_STRENGTH_MAX",
+          "TURB_STRENGTH_MIN",
+          "TURB_STRENGTH_MAX",
+          "VORTEX_STRENGTH_MIN",
+          "VORTEX_STRENGTH_MAX"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/hotpatch/common.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 92,
+      "chars": 2201,
+      "sha256": "81758e52dae24735b45e08524292be5d1a6d0f820c15526514518e1e2e5c6662",
+      "symbols": {
+        "imports": [
+          "json",
+          "from pathlib import Path",
+          "bpy",
+          "config"
+        ],
+        "functions": [
+          {
+            "name": "cfg_value",
+            "line": 9,
+            "args": [
+              "name",
+              "default"
+            ],
+            "async": false
+          },
+          {
+            "name": "load_analysis",
+            "line": 32,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "iter_objects_prefix",
+            "line": 42,
+            "args": [
+              "prefix"
+            ],
+            "async": false
+          },
+          {
+            "name": "remove_objects_with_prefixes",
+            "line": 46,
+            "args": [
+              "prefixes"
+            ],
+            "async": false
+          },
+          {
+            "name": "keyframe_if_possible",
+            "line": 56,
+            "args": [
+              "idblock",
+              "data_path",
+              "frame"
+            ],
+            "async": false
+          },
+          {
+            "name": "clear_animation",
+            "line": 63,
+            "args": [
+              "idblock"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_node",
+            "line": 72,
+            "args": [
+              "material",
+              "node_name"
+            ],
+            "async": false
+          },
+          {
+            "name": "socket_by_name",
+            "line": 78,
+            "args": [
+              "node",
+              "socket_name",
+              "is_output"
+            ],
+            "async": false
+          },
+          {
+            "name": "store_base_vector",
+            "line": 88,
+            "args": [
+              "obj",
+              "key",
+              "value"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ANALYSIS_JSON_PATH",
+          "OUTPUT_MP4",
+          "PALETTE_LIST"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/hotpatch/diagnostics.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 287,
+      "chars": 10043,
+      "sha256": "0c67d184cf13c5fb66ea91e3bcaa77312ecec4022985d7dd810a2d238f966092",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "from common import ANALYSIS_JSON_PATH, cfg_value, load_analysis",
+          "from spaziotempo.core.registry import LAYER_ORDER, LAYER_SPECS, PROJECT_ROOT_COLLECTION"
+        ],
+        "functions": [
+          {
+            "name": "text_report",
+            "line": 17,
+            "args": [
+              "name",
+              "lines"
+            ],
+            "async": false
+          },
+          {
+            "name": "has_object",
+            "line": 24,
+            "args": [
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "count_objects",
+            "line": 28,
+            "args": [
+              "prefix"
+            ],
+            "async": false
+          },
+          {
+            "name": "collection_exists",
+            "line": 32,
+            "args": [
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "layer_collection_counts",
+            "line": 36,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "scene_frame_count",
+            "line": 45,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "material_node_exists",
+            "line": 49,
+            "args": [
+              "node_name"
+            ],
+            "async": false
+          },
+          {
+            "name": "modifier_exists",
+            "line": 56,
+            "args": [
+              "mod_name"
+            ],
+            "async": false
+          },
+          {
+            "name": "point_cache_state",
+            "line": 64,
+            "args": [
+              "cache"
+            ],
+            "async": false
+          },
+          {
+            "name": "particle_cache_state",
+            "line": 72,
+            "args": [
+              "ps"
+            ],
+            "async": false
+          },
+          {
+            "name": "analyze_rebuild_need",
+            "line": 83,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "analyze_optimizer",
+            "line": 169,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "STRUCTURAL_OBJECTS"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/hotpatch/fog_patch.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 134,
+      "chars": 5066,
+      "sha256": "728d3daf653f3a0551843b26040422d0f14826005a8a0e7abb0cc5b7414d3df4",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "from mathutils import Vector",
+          "from fog_dynamics import animate_fog_frame",
+          "from fog_filaments import ensure_fog_filaments",
+          "from materials import build_atmosphere_volume_material",
+          "from common import cfg_value, clear_animation, store_base_vector"
+        ],
+        "functions": [
+          {
+            "name": "find_or_create_fog_controller",
+            "line": 11,
+            "args": [
+              "cube"
+            ],
+            "async": false
+          },
+          {
+            "name": "ensure_fog_cube",
+            "line": 25,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "update_fog",
+            "line": 47,
+            "args": [
+              "frames"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/hotpatch/hero_material_patch.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 396,
+      "chars": 14403,
+      "sha256": "94be76940e0b8ef01d1dfd973d767f0cfdb1a398621a512c8810429940d4cfe7",
+      "symbols": {
+        "imports": [
+          "math",
+          "bpy",
+          "from common import cfg_value, clear_animation, keyframe_if_possible"
+        ],
+        "functions": [
+          {
+            "name": "find_principled_node",
+            "line": 28,
+            "args": [
+              "material"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_node_input",
+            "line": 37,
+            "args": [
+              "node"
+            ],
+            "async": false
+          },
+          {
+            "name": "link_node_sockets",
+            "line": 46,
+            "args": [
+              "links",
+              "output_socket",
+              "input_socket",
+              "replace_existing"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_or_create_node",
+            "line": 61,
+            "args": [
+              "nodes",
+              "node_type",
+              "name",
+              "location"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_or_create_value",
+            "line": 70,
+            "args": [
+              "nodes",
+              "name",
+              "label",
+              "location",
+              "default"
+            ],
+            "async": false
+          },
+          {
+            "name": "find_material_output",
+            "line": 81,
+            "args": [
+              "material"
+            ],
+            "async": false
+          },
+          {
+            "name": "ensure_surface_light_layer",
+            "line": 93,
+            "args": [
+              "material",
+              "principled"
+            ],
+            "async": false
+          },
+          {
+            "name": "hero_meshes",
+            "line": 172,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "lift_principled_material",
+            "line": 183,
+            "args": [
+              "principled"
+            ],
+            "async": false
+          },
+          {
+            "name": "ensure_hero_controls",
+            "line": 211,
+            "args": [
+              "material"
+            ],
+            "async": false
+          },
+          {
+            "name": "collect_hero_controls",
+            "line": 300,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "patch_hero_materials",
+            "line": 317,
+            "args": [
+              "frames"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "HERO_MATERIAL_EMISSION_MIN",
+          "HERO_MATERIAL_EMISSION_MAX",
+          "HERO_MATERIAL_SELF_LIGHT_MIN",
+          "HERO_MATERIAL_SELF_LIGHT_MAX",
+          "HERO_MATERIAL_BUMP_MIN",
+          "HERO_MATERIAL_BUMP_MAX",
+          "HERO_MATERIAL_ROUGHNESS_MIN",
+          "HERO_MATERIAL_ROUGHNESS_MAX",
+          "HERO_MATERIAL_NOISE_SCALE_MIN",
+          "HERO_MATERIAL_NOISE_SCALE_MAX",
+          "HERO_MATERIAL_MAPPING_DRIFT",
+          "PEACE_PALETTE"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/hotpatch/lighting_patch.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 151,
+      "chars": 5444,
+      "sha256": "132d9dc0fbbfe26fb6ff8909d3307d6503c50aede3577911dea73cfd18770956",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "from common import cfg_value, clear_animation, get_node, keyframe_if_possible, remove_objects_with_prefixes, socket_by_name"
+        ],
+        "functions": [
+          {
+            "name": "resize_plane_local",
+            "line": 28,
+            "args": [
+              "obj",
+              "target_size"
+            ],
+            "async": false
+          },
+          {
+            "name": "update_world",
+            "line": 44,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "remove_legacy_rhythm_objects",
+            "line": 84,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "update_area_lights",
+            "line": 88,
+            "args": [
+              "frames"
+            ],
+            "async": false
+          },
+          {
+            "name": "update_backdrop",
+            "line": 114,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "LIGHT_ENERGY_MIN",
+          "LIGHT_ENERGY_MAX",
+          "WORLD_STRENGTH",
+          "WORLD_CAMERA_STRENGTH",
+          "WORLD_LIGHT_COLOR",
+          "WORLD_CAMERA_COLOR",
+          "BACKDROP_EMISSION_MIN",
+          "BACKDROP_EMISSION_MAX",
+          "BACKDROP_SIZE",
+          "BACKDROP_LOCATION",
+          "BACKDROP_ROT_X",
+          "FLOOR_RENDER_VISIBLE",
+          "FLOOR_VIEWPORT_VISIBLE"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/hotpatch/render_patch.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 207,
+      "chars": 6904,
+      "sha256": "916caf8f5ad9d9010a3dcf0b50897b0118c208306b11495c7bbd603d02bd907f",
+      "symbols": {
+        "imports": [
+          "from render_setup import configure_render",
+          "from common import OUTPUT_MP4, cfg_value"
+        ],
+        "functions": [
+          {
+            "name": "normalize_runtime_profile",
+            "line": 6,
+            "args": [
+              "profile"
+            ],
+            "async": false
+          },
+          {
+            "name": "get_scene_compositor_tree",
+            "line": 49,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "current_runtime_profile",
+            "line": 57,
+            "args": [
+              "scene"
+            ],
+            "async": false
+          },
+          {
+            "name": "apply_runtime_profile_to_scene",
+            "line": 72,
+            "args": [
+              "scene",
+              "profile"
+            ],
+            "async": false
+          },
+          {
+            "name": "configure_existing_render",
+            "line": 201,
+            "args": [
+              "scene",
+              "meta"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/hotpatch/runner.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 104,
+      "chars": 3026,
+      "sha256": "938c367a2ea774376d12815124f8c755672d67578d5ae8c1bfb6c69e9379b074",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "from accent_patch import update_physics_accents",
+          "from common import load_analysis",
+          "from fog_patch import update_fog",
+          "from hero_material_patch import patch_hero_materials",
+          "from lighting_patch import remove_legacy_rhythm_objects, update_area_lights, update_backdrop, update_world",
+          "from render_patch import configure_existing_render",
+          "from spaziotempo.core.collections import classify_scene_objects, compact_structure_summary"
+        ],
+        "functions": [
+          {
+            "name": "print_result",
+            "line": 17,
+            "args": [
+              "title",
+              "result"
+            ],
+            "async": false
+          },
+          {
+            "name": "run_hotpatch",
+            "line": 41,
+            "args": [
+              "mode"
+            ],
+            "async": false
+          },
+          {
+            "name": "run_all",
+            "line": 102,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/spaziotempo/__init__.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 5,
+      "chars": 128,
+      "sha256": "b4c134fb5b10b26b42246d0fb626a393396d9ce775a0a7183c8754fd5b85387c",
+      "symbols": {
+        "imports": [],
+        "functions": [],
+        "classes": [],
+        "assignments": [
+          "PROJECT_SLUG",
+          "PROJECT_VERSION"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/spaziotempo/core/__init__.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 2,
+      "chars": 41,
+      "sha256": "3d9532a93d330048ac9408aa2c49adbfb3263e6e950b10fe579a330b5e8f4925",
+      "symbols": {
+        "imports": [],
+        "functions": [],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/spaziotempo/core/collections.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 133,
+      "chars": 3958,
+      "sha256": "2cf178afbdd5d808c520edd44d2e4c80eaa671480e65b571adb9b798f9df808b",
+      "symbols": {
+        "imports": [
+          "bpy",
+          "from registry import EXACT_OBJECT_LAYERS, LAYER_ORDER, LAYER_SPECS, PARENT_LAYER_HINTS, PREFIX_OBJECT_LAYERS, PROJECT_ROOT_COLLECTION, STRUCTURE_VERSION, TYPE_FALLBACK_LAYERS"
+        ],
+        "functions": [
+          {
+            "name": "_children_by_name",
+            "line": 17,
+            "args": [
+              "collection"
+            ],
+            "async": false
+          },
+          {
+            "name": "_objects_by_name",
+            "line": 21,
+            "args": [
+              "collection"
+            ],
+            "async": false
+          },
+          {
+            "name": "ensure_child_collection",
+            "line": 25,
+            "args": [
+              "parent",
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "ensure_project_collections",
+            "line": 33,
+            "args": [
+              "scene",
+              "include_reserved"
+            ],
+            "async": false
+          },
+          {
+            "name": "_parent_hint",
+            "line": 54,
+            "args": [
+              "obj"
+            ],
+            "async": false
+          },
+          {
+            "name": "classify_object",
+            "line": 64,
+            "args": [
+              "obj"
+            ],
+            "async": false
+          },
+          {
+            "name": "link_object_to_layer",
+            "line": 86,
+            "args": [
+              "obj",
+              "collection"
+            ],
+            "async": false
+          },
+          {
+            "name": "apply_object_metadata",
+            "line": 91,
+            "args": [
+              "obj",
+              "spec"
+            ],
+            "async": false
+          },
+          {
+            "name": "classify_scene_objects",
+            "line": 99,
+            "args": [
+              "scene",
+              "include_reserved"
+            ],
+            "async": false
+          },
+          {
+            "name": "compact_structure_summary",
+            "line": 126,
+            "args": [
+              "report"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/spaziotempo/core/registry.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 222,
+      "chars": 6567,
+      "sha256": "020c0bb68dc89e3fc2221d37ff68f61a7988df30d9d291ef38470ff54f6db14a",
+      "symbols": {
+        "imports": [
+          "from dataclasses import dataclass"
+        ],
+        "functions": [],
+        "classes": [
+          {
+            "name": "LayerSpec",
+            "line": 16,
+            "methods": []
+          }
+        ],
+        "assignments": [
+          "PROJECT_ROOT_COLLECTION",
+          "STRUCTURE_VERSION",
+          "LAYER_SPECS",
+          "LAYER_ORDER",
+          "EXACT_OBJECT_LAYERS",
+          "PREFIX_OBJECT_LAYERS",
+          "PARENT_LAYER_HINTS",
+          "TYPE_FALLBACK_LAYERS",
+          "FEATURE_CATALOG"
+        ]
+      }
+    },
+    {
+      "file": "Scripting/v61b/spaziotempo/features/__init__.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 2,
+      "chars": 49,
+      "sha256": "341fbf840d490246ee054c4503c7aaaa697331ff4afe12a5356d124aacc16a3f",
+      "symbols": {
+        "imports": [],
+        "functions": [],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/spaziotempo/features/catalog.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 20,
+      "chars": 466,
+      "sha256": "39e20ca9b04ec97730a95013071e03e253c00dfacc0345af72ddeec2b79cd3b3",
+      "symbols": {
+        "imports": [
+          "from spaziotempo.core.registry import FEATURE_CATALOG, LAYER_SPECS"
+        ],
+        "functions": [
+          {
+            "name": "get_feature",
+            "line": 10,
+            "args": [
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "feature_layer",
+            "line": 14,
+            "args": [
+              "name"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
+      }
+    },
+    {
+      "file": "Tools/npu/ai_memory_context.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 112,
+      "chars": 4815,
+      "sha256": "4febdeb28cc24886e60e547d4cb1097a0928f17283ecd58ba22db9fd3c12f9a7",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from pathlib import Path",
+          "from typing import Any",
+          "json"
+        ],
+        "functions": [
+          {
+            "name": "read_json",
+            "line": 13,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "compact_asset_inventory",
+            "line": 23,
+            "args": [
+              "asset_inventory"
+            ],
+            "async": false
+          },
+          {
+            "name": "slugify",
+            "line": 43,
+            "args": [
+              "value"
+            ],
+            "async": false
+          },
+          {
+            "name": "compact_project_awareness",
+            "line": 48,
+            "args": [
+              "track_stem"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_ai_memory_context",
+            "line": 76,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "OUTPUT_DIR",
+          "INDEX_AI_DIR"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/build_ai_service_packet.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 356,
+      "chars": 15673,
+      "sha256": "0906bc0f6df6c0da50221ca38e0cce89d78afea243278b5f396225c6eb38af1d",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from datetime import datetime",
+          "from pathlib import Path",
+          "argparse",
+          "hashlib",
+          "json",
+          "re",
+          "from typing import Any"
+        ],
+        "functions": [
+          {
+            "name": "slugify",
+            "line": 20,
+            "args": [
+              "value",
+              "max_len"
+            ],
+            "async": false
+          },
+          {
+            "name": "read_json",
+            "line": 25,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "sha256_file",
+            "line": 33,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "safe_float",
+            "line": 43,
+            "args": [
+              "value",
+              "default"
+            ],
+            "async": false
+          },
+          {
+            "name": "top_project_files",
+            "line": 50,
+            "args": [
+              "manifest"
+            ],
+            "async": false
+          },
+          {
+            "name": "role_for_file",
+            "line": 83,
+            "args": [
+              "file_name"
+            ],
+            "async": false
+          },
+          {
+            "name": "compact_segments",
+            "line": 102,
+            "args": [
+              "music_context",
+              "limit"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_ai_service_packet",
+            "line": 138,
+            "args": [
+              "track_stem",
+              "analysis_path",
+              "track_summary_path",
+              "music_context_path",
+              "analysis_ai_context_path",
+              "blender_keyframes_path",
+              "dual_plan_path",
+              "npu_notes",
+              "npu_status",
+              "scene_brief",
+              "asset_inventory"
+            ],
+            "async": false
+          },
+          {
+            "name": "format_capsule_md",
+            "line": 305,
+            "args": [
+              "capsule"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 325,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "OUTPUT_DIR",
+          "INDEX_AI_DIR",
+          "PATCH_LIBRARY_DIR",
+          "SCENE_SCRIPTS_DIR",
+          "PROJECT_MANIFEST_JSON"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/build_music_context.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 712,
+      "chars": 27167,
+      "sha256": "dedb206a9a9e8d6f554be7d0a70ab29fe3d27ec81ffb133130e12b61b2a5d97b",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from pathlib import Path",
+          "argparse",
+          "hashlib",
+          "json",
+          "math",
+          "statistics",
+          "from datetime import datetime",
+          "from ai_memory_context import build_ai_memory_context"
+        ],
+        "functions": [
+          {
+            "name": "sha256_text",
+            "line": 41,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "rel_to_root",
+            "line": 45,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "read_text",
+            "line": 52,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "load_json",
+            "line": 56,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "round_float",
+            "line": 61,
+            "args": [
+              "value",
+              "digits"
+            ],
+            "async": false
+          },
+          {
+            "name": "quantile",
+            "line": 71,
+            "args": [
+              "values",
+              "ratio"
+            ],
+            "async": false
+          },
+          {
+            "name": "avg_top",
+            "line": 85,
+            "args": [
+              "values",
+              "ratio"
+            ],
+            "async": false
+          },
+          {
+            "name": "value_stats",
+            "line": 92,
+            "args": [
+              "values"
+            ],
+            "async": false
+          },
+          {
+            "name": "frame_values",
+            "line": 117,
+            "args": [
+              "frames",
+              "key"
+            ],
+            "async": false
+          },
+          {
+            "name": "energy_stats",
+            "line": 121,
+            "args": [
+              "frames"
+            ],
+            "async": false
+          },
+          {
+            "name": "dominant_band",
+            "line": 131,
+            "args": [
+              "stats"
+            ],
+            "async": false
+          },
+          {
+            "name": "intensity_label",
+            "line": 140,
+            "args": [
+              "score"
+            ],
+            "async": false
+          },
+          {
+            "name": "segment_score",
+            "line": 152,
+            "args": [
+              "stats"
+            ],
+            "async": false
+          },
+          {
+            "name": "control_suggestions",
+            "line": 162,
+            "args": [
+              "stats",
+              "beat_count"
+            ],
+            "async": false
+          },
+          {
+            "name": "split_segments",
+            "line": 176,
+            "args": [
+              "frames",
+              "segment_seconds",
+              "duration"
+            ],
+            "async": false
+          },
+          {
+            "name": "sampled_frames",
+            "line": 189,
+            "args": [
+              "frames",
+              "max_rows"
+            ],
+            "async": false
+          },
+          {
+            "name": "top_events",
+            "line": 210,
+            "args": [
+              "frames",
+              "limit"
+            ],
+            "async": false
+          },
+          {
+            "name": "beats_in_range",
+            "line": 235,
+            "args": [
+              "beats",
+              "start",
+              "end"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_segments",
+            "line": 239,
+            "args": [
+              "analysis",
+              "segment_seconds"
+            ],
+            "async": false
+          },
+          {
+            "name": "summarize_analysis",
+            "line": 273,
+            "args": [
+              "analysis_path",
+              "segment_seconds"
+            ],
+            "async": false
+          },
+          {
+            "name": "scene_summary_from_json",
+            "line": 319,
+            "args": [
+              "path",
+              "data"
+            ],
+            "async": false
+          },
+          {
+            "name": "load_scene_records",
+            "line": 353,
+            "args": [
+              "scene_files"
+            ],
+            "async": false
+          },
+          {
+            "name": "markdown_table_rows",
+            "line": 387,
+            "args": [
+              "rows",
+              "keys"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_chunk",
+            "line": 394,
+            "args": [
+              "path",
+              "title",
+              "body"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_music_chunks",
+            "line": 404,
+            "args": [
+              "context",
+              "scene_records"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_music_context_md",
+            "line": 481,
+            "args": [
+              "context",
+              "scene_records",
+              "chunks"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_analysis_ai_context",
+            "line": 538,
+            "args": [
+              "context"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_blender_keyframe_alias",
+            "line": 572,
+            "args": [
+              "analysis_path",
+              "blender_keyframes_path"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_music_context",
+            "line": 579,
+            "args": [
+              "analysis_path",
+              "track_summary_path",
+              "scene_files",
+              "segment_seconds",
+              "compact_json_path",
+              "analysis_ai_context_path",
+              "blender_keyframes_path",
+              "run_ollama",
+              "ollama_model"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 676,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "OUTPUT_DIR",
+          "OUT_DIR",
+          "CHUNK_DIR",
+          "DEFAULT_TRACK_STEM",
+          "DEFAULT_ANALYSIS",
+          "DEFAULT_TRACK_SUMMARY",
+          "DEFAULT_COMPACT_JSON",
+          "DEFAULT_ANALYSIS_AI_CONTEXT",
+          "DEFAULT_BLENDER_KEYFRAMES_JSON",
+          "OUT_MD",
+          "OUT_JSON",
+          "DEFAULT_SCENE_FILES",
+          "DEFAULT_SEGMENT_SECONDS",
+          "SAMPLE_ROWS_PER_SEGMENT",
+          "TOP_EVENTS_PER_SEGMENT"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/build_npu_code_context.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 390,
+      "chars": 12139,
+      "sha256": "45037f46cd073bdc0d191828f75224d1d8726bf519620bc3ba7f795b687922b0",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from pathlib import Path",
+          "ast",
+          "hashlib",
+          "json",
+          "re",
+          "from datetime import datetime"
+        ],
+        "functions": [
+          {
+            "name": "sha256_text",
+            "line": 56,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "rel_to_root",
+            "line": 60,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "slugify",
+            "line": 64,
+            "args": [
+              "value",
+              "max_len"
+            ],
+            "async": false
+          },
+          {
+            "name": "is_usable_text_file",
+            "line": 69,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "collect_files",
+            "line": 75,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "target_name",
+            "line": 99,
+            "args": [
+              "target"
+            ],
+            "async": false
+          },
+          {
+            "name": "extract_symbols",
+            "line": 107,
+            "args": [
+              "source"
+            ],
+            "async": false
+          },
+          {
+            "name": "file_record",
+            "line": 169,
+            "args": [
+              "path",
+              "source"
+            ],
+            "async": false
+          },
+          {
+            "name": "format_symbol_summary",
+            "line": 184,
+            "args": [
+              "record"
+            ],
+            "async": false
+          },
+          {
+            "name": "numbered_lines",
+            "line": 225,
+            "args": [
+              "lines",
+              "start_line"
+            ],
+            "async": false
+          },
+          {
+            "name": "split_source",
+            "line": 229,
+            "args": [
+              "source",
+              "max_chars"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_context_chunks",
+            "line": 255,
+            "args": [
+              "files",
+              "sources"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_index",
+            "line": 325,
+            "args": [
+              "files",
+              "chunks",
+              "created_at"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 348,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "SCRIPT_DIR",
+          "OUT_DIR",
+          "OUT_MD",
+          "OUT_INDEX_MD",
+          "OUT_JSON",
+          "CHUNK_DIR",
+          "MAX_CHUNK_CHARS",
+          "PRIORITY_FILES",
+          "DISCOVERY_GLOBS",
+          "EXCLUDE_PARTS",
+          "TEXT_SUFFIXES"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/build_project_ai_index.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 420,
+      "chars": 14905,
+      "sha256": "5d0e447d5d77e945f831b80e31a0f0ccdd224276d30fe452a85293c99251e7c7",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from datetime import datetime",
+          "from pathlib import Path",
+          "argparse",
+          "ast",
+          "hashlib",
+          "json",
+          "re"
+        ],
+        "functions": [
+          {
+            "name": "sha256_text",
+            "line": 74,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "sha256_file",
+            "line": 78,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "rel_to_root",
+            "line": 86,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "slugify",
+            "line": 90,
+            "args": [
+              "value",
+              "max_len"
+            ],
+            "async": false
+          },
+          {
+            "name": "should_exclude",
+            "line": 95,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "collect_project_files",
+            "line": 116,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "target_name",
+            "line": 131,
+            "args": [
+              "target"
+            ],
+            "async": false
+          },
+          {
+            "name": "extract_symbols",
+            "line": 139,
+            "args": [
+              "source"
+            ],
+            "async": false
+          },
+          {
+            "name": "file_record",
+            "line": 182,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "format_symbol_summary",
+            "line": 196,
+            "args": [
+              "record"
+            ],
+            "async": false
+          },
+          {
+            "name": "numbered_lines",
+            "line": 223,
+            "args": [
+              "lines",
+              "start_line"
+            ],
+            "async": false
+          },
+          {
+            "name": "split_source",
+            "line": 227,
+            "args": [
+              "source",
+              "max_chars"
+            ],
+            "async": false
+          },
+          {
+            "name": "source_fingerprint",
+            "line": 249,
+            "args": [
+              "records"
+            ],
+            "async": false
+          },
+          {
+            "name": "existing_cache_valid",
+            "line": 258,
+            "args": [
+              "fingerprint"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_readme",
+            "line": 272,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "write_chunks",
+            "line": 293,
+            "args": [
+              "records",
+              "max_chunk_chars"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_index",
+            "line": 347,
+            "args": [
+              "records",
+              "chunks",
+              "created_at",
+              "fingerprint"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_project_ai_index",
+            "line": 367,
+            "args": [
+              "force",
+              "max_chunk_chars"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 410,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "INDEX_DIR",
+          "PROJECT_INDEX_MD",
+          "PROJECT_MANIFEST_JSON",
+          "PROJECT_CHUNK_DIR",
+          "PATCH_LIBRARY_DIR",
+          "README_MD",
+          "DEFAULT_MAX_CHUNK_CHARS",
+          "TEXT_SUFFIXES",
+          "EXCLUDE_DIRS",
+          "EXCLUDE_PARTS",
+          "EXCLUDE_FILE_PREFIXES",
+          "MEDIA_SUFFIXES"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/run_dual_ai_pipeline - Copia.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 706,
+      "chars": 29030,
+      "sha256": "868f5619cef911174e14aa2fa79b9ac61cd3c2b47c05144e468a6a663869ca95",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from pathlib import Path",
+          "argparse",
+          "json",
+          "subprocess",
+          "sys",
+          "from datetime import datetime",
+          "from build_music_context import build_music_context",
+          "from build_npu_code_context import main",
+          "from build_blender_manual_context import build_manual_context",
+          "from build_project_ai_index import PROJECT_INDEX_MD, PROJECT_MANIFEST_JSON, build_project_ai_index",
+          "from npu_runtime import DEFAULT_MODEL_DIR, DEFAULT_NPU_PYTHON, npu_preflight, write_npu_preflight_report",
+          "from ollama_runtime import OllamaModelManager, parse_json_response",
+          "from run_ollama_music_agent import build_prompt",
+          "from run_ollama_music_agent import markdown_from_insights"
+        ],
+        "functions": [
+          {
+            "name": "read_text",
+            "line": 38,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "read_json",
+            "line": 42,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_json",
+            "line": 47,
+            "args": [
+              "path",
+              "data"
+            ],
+            "async": false
+          },
+          {
+            "name": "validate_input_files",
+            "line": 52,
+            "args": [
+              "args"
+            ],
+            "async": false
+          },
+          {
+            "name": "looks_degraded_text",
+            "line": 72,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "deterministic_technical_notes",
+            "line": 85,
+            "args": [
+              "music_context",
+              "project_manifest",
+              "reason"
+            ],
+            "async": false
+          },
+          {
+            "name": "run_npu_technical_pass",
+            "line": 134,
+            "args": [
+              "args"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_creative_scene_prompt",
+            "line": 178,
+            "args": [
+              "music_context",
+              "npu_notes",
+              "project_index"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_merge_prompt",
+            "line": 254,
+            "args": [
+              "music_context",
+              "npu_notes",
+              "creative",
+              "technical"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_implementation_prompt",
+            "line": 305,
+            "args": [
+              "plan",
+              "npu_notes",
+              "include_manual"
+            ],
+            "async": false
+          },
+          {
+            "name": "safe_parse_json",
+            "line": 373,
+            "args": [
+              "text",
+              "fallback_key"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_brief",
+            "line": 380,
+            "args": [
+              "plan",
+              "creative",
+              "technical",
+              "npu_notes"
+            ],
+            "async": false
+          },
+          {
+            "name": "validate_implementation_draft",
+            "line": 403,
+            "args": [
+              "draft"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_implementation_draft",
+            "line": 450,
+            "args": [
+              "draft"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 478,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "TOOLS_DIR",
+          "OUTPUT_DIR",
+          "TRACK_STEM",
+          "MUSIC_AI_CONTEXT",
+          "DUAL_PLAN_JSON",
+          "DUAL_BRIEF_MD",
+          "OLLAMA_INSIGHTS_JSON",
+          "OLLAMA_INSIGHTS_MD",
+          "NPU_TECH_MD",
+          "NPU_PREFLIGHT_JSON",
+          "IMPLEMENTATION_DRAFT_JSON",
+          "IMPLEMENTATION_SCRIPT",
+          "IMPLEMENTATION_NOTES",
+          "NPU_IMPLEMENTATION_NOTES"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/run_npu_review.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 566,
+      "chars": 18230,
+      "sha256": "d13f94b1d0c5c586cc63177f44f022f33f3e19a926fc675a1540e4d24cc524ed",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from pathlib import Path",
+          "argparse",
+          "from datetime import datetime"
+        ],
+        "functions": [
+          {
+            "name": "read_text",
+            "line": 21,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "read_text_limited",
+            "line": 25,
+            "args": [
+              "path",
+              "max_chars"
+            ],
+            "async": false
+          },
+          {
+            "name": "split_text",
+            "line": 34,
+            "args": [
+              "text",
+              "max_chars",
+              "overlap_chars"
+            ],
+            "async": false
+          },
+          {
+            "name": "load_context_chunks",
+            "line": 52,
+            "args": [
+              "context_path",
+              "chunk_dir",
+              "chunk_chars",
+              "overlap_chars",
+              "max_chunks"
+            ],
+            "async": false
+          },
+          {
+            "name": "fit_prompt",
+            "line": 78,
+            "args": [
+              "prefix",
+              "context",
+              "suffix",
+              "max_prompt_chars"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_onepass_prompt",
+            "line": 92,
+            "args": [
+              "context",
+              "max_prompt_chars",
+              "domain"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_chunk_prompt",
+            "line": 163,
+            "args": [
+              "title",
+              "index",
+              "total",
+              "context",
+              "max_prompt_chars",
+              "domain"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_batch_reduce_prompt",
+            "line": 235,
+            "args": [
+              "batch_title",
+              "notes",
+              "max_prompt_chars",
+              "domain"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_final_prompt",
+            "line": 274,
+            "args": [
+              "notes",
+              "max_prompt_chars",
+              "domain"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_pipeline",
+            "line": 346,
+            "args": [
+              "model_dir",
+              "device",
+              "max_prompt_len",
+              "min_response_len"
+            ],
+            "async": false
+          },
+          {
+            "name": "create_ollama_pipeline",
+            "line": 358,
+            "args": [
+              "args"
+            ],
+            "async": false
+          },
+          {
+            "name": "generate_text",
+            "line": 373,
+            "args": [
+              "pipe",
+              "prompt",
+              "max_new_tokens"
+            ],
+            "async": false
+          },
+          {
+            "name": "write_notes",
+            "line": 378,
+            "args": [
+              "notes_out",
+              "notes"
+            ],
+            "async": false
+          },
+          {
+            "name": "pack_batches",
+            "line": 393,
+            "args": [
+              "items",
+              "max_chars"
+            ],
+            "async": false
+          },
+          {
+            "name": "reduce_notes",
+            "line": 413,
+            "args": [
+              "pipe",
+              "notes",
+              "args"
+            ],
+            "async": false
+          },
+          {
+            "name": "run_onepass",
+            "line": 435,
+            "args": [
+              "pipe",
+              "context_path",
+              "args"
+            ],
+            "async": false
+          },
+          {
+            "name": "run_chunked",
+            "line": 441,
+            "args": [
+              "pipe",
+              "context_path",
+              "chunk_dir",
+              "notes_out",
+              "args"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 477,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "DEFAULT_MODEL_DIR",
+          "DEFAULT_CONTEXT",
+          "DEFAULT_CHUNK_DIR",
+          "DEFAULT_OUT",
+          "DEFAULT_NOTES_OUT",
+          "DEFAULT_MUSIC_CONTEXT",
+          "DEFAULT_MUSIC_CHUNK_DIR",
+          "DEFAULT_MUSIC_OUT",
+          "DEFAULT_MUSIC_NOTES_OUT"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/run_ollama_music_agent.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 239,
+      "chars": 8218,
+      "sha256": "e5c78a8bdd345b4b4a638f9b0482a039fe7b990c31465c780b2359009bb1157c",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from pathlib import Path",
+          "argparse",
+          "json",
+          "from datetime import datetime",
+          "from ollama_runtime import OllamaSession, parse_json_response"
+        ],
+        "functions": [
+          {
+            "name": "read_json",
+            "line": 22,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "compact_context_for_prompt",
+            "line": 27,
+            "args": [
+              "context"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_prompt",
+            "line": 56,
+            "args": [
+              "context"
+            ],
+            "async": false
+          },
+          {
+            "name": "markdown_from_insights",
+            "line": 111,
+            "args": [
+              "data",
+              "model"
+            ],
+            "async": false
+          },
+          {
+            "name": "run_ollama_music_agent",
+            "line": 141,
+            "args": [
+              "context_json",
+              "fallback_context_json",
+              "out_json",
+              "out_md",
+              "model",
+              "base_url",
+              "keep_alive",
+              "max_new_tokens",
+              "temperature",
+              "keep_server",
+              "keep_model"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 207,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "ROOT",
+          "OUTPUT_DIR",
+          "TOOLS_DIR",
+          "DEFAULT_TRACK_STEM",
+          "DEFAULT_CONTEXT_JSON",
+          "DEFAULT_MUSIC_CONTEXT_JSON",
+          "DEFAULT_OUT_JSON",
+          "DEFAULT_OUT_MD"
+        ]
+      }
+    },
+    {
+      "file": "Tools/npu/run_npu_context.ps1",
+      "exists": true,
+      "suffix": ".ps1",
+      "lines": 239,
+      "chars": 7213,
+      "sha256": "2eecccc5fb54474ebaf957686aff5de3e875f3822e6ec16dc26efe8bb525154d"
+    }
+  ],
+  "chunks": [
+    {
+      "index": 1,
+      "file": "analyze_wav.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_001_analyze_wav_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 213,
+      "chars": 10943,
+      "sha256": "95bf0c688760f38bbf4fb2647d233f28408ee34e3d69dea2ded7d89020425a4d"
+    },
+    {
+      "index": 2,
+      "file": "analyze_wav.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_002_analyze_wav_py.md",
+      "part": 2,
+      "start_line": 214,
+      "end_line": 257,
+      "chars": 2521,
+      "sha256": "7be941249f940bd1233e248c35d21b0111541c9c6f6d6be8dc4b282eafb5b555"
+    },
+    {
+      "index": 3,
+      "file": "build_track_summary.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_003_build_track_summary_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 113,
+      "chars": 5325,
+      "sha256": "a942e518cbe07ec14e90551a11e59535449dfa318d73fdc35f2c4e32674c8e02"
+    },
+    {
+      "index": 4,
+      "file": "normalize_scene_spec.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_004_normalize_scene_spec_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 275,
+      "chars": 11108,
+      "sha256": "8bd34ef7c8392166a482a7515607e105ae1aaaebe41f8b0330c1581f853e8139"
+    },
+    {
+      "index": 5,
+      "file": "normalize_scene_spec.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_005_normalize_scene_spec_py.md",
+      "part": 2,
+      "start_line": 276,
+      "end_line": 487,
+      "chars": 8972,
+      "sha256": "6927c0372c22319da93f37f6af9c0d732b6f517ecf6fc667460bc8e0635ce4de"
+    },
+    {
+      "index": 6,
+      "file": "Tools/npu/npu_runtime.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_006_Tools_npu_npu_runtime_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 95,
+      "chars": 4325,
+      "sha256": "4cc3247a4d13d357dcff2fc06ac5c246aabf242f393aca27192f35bf16444b97"
+    },
+    {
+      "index": 7,
+      "file": "Tools/npu/ollama_runtime.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_007_Tools_npu_ollama_runtime_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 269,
+      "chars": 11225,
+      "sha256": "4f8304c8f201af76baa028265d5345871a5815dd01786cc203f0802f9ec69c78"
+    },
+    {
+      "index": 8,
+      "file": "Tools/npu/ollama_runtime.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_008_Tools_npu_ollama_runtime_py.md",
+      "part": 2,
+      "start_line": 270,
+      "end_line": 351,
+      "chars": 4377,
+      "sha256": "6ed13ac721c0619d79de273d4e37ea09d94cce8ec1217d8c444107fcaeb279f9"
+    },
+    {
+      "index": 9,
+      "file": "Tools/npu/build_blender_manual_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_009_Tools_npu_build_blender_manual_context_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 268,
+      "chars": 11221,
+      "sha256": "2e813ad25bc435038025e7c265da78b3b6ef52f0d7f957c256974bfb011792cb"
+    },
+    {
+      "index": 10,
+      "file": "Tools/npu/build_blender_manual_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_010_Tools_npu_build_blender_manual_context_py.md",
+      "part": 2,
+      "start_line": 269,
+      "end_line": 326,
+      "chars": 3657,
+      "sha256": "aa7260f8ab399351434c71a51ebfa614af189a282c7448485740a846d1bcefec"
+    },
+    {
+      "index": 11,
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_011_Tools_npu_run_dual_ai_pipeline_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 213,
+      "chars": 13447,
+      "sha256": "5bce181f48adfddd442a2cfc3d2da53e685dddb26fc844302da9eb729e9fb33d"
+    },
+    {
+      "index": 12,
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_012_Tools_npu_run_dual_ai_pipeline_py.md",
+      "part": 2,
+      "start_line": 214,
+      "end_line": 432,
+      "chars": 13261,
+      "sha256": "75b6a21e4ff2bac5dd3e3c1e77d4a1184fd8ade5f2f33067b8763e11167e3fb7"
+    },
+    {
+      "index": 13,
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_013_Tools_npu_run_dual_ai_pipeline_py.md",
+      "part": 3,
+      "start_line": 433,
+      "end_line": 671,
+      "chars": 13367,
+      "sha256": "f09e0dba03e2df440288433ff4cca4d718f55420437ccbd0a01f5f9934bf0749"
+    },
+    {
+      "index": 14,
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_014_Tools_npu_run_dual_ai_pipeline_py.md",
+      "part": 4,
+      "start_line": 672,
+      "end_line": 866,
+      "chars": 13340,
+      "sha256": "a3601a0738814bdf23d095fdf6be0f954a400fca35b23b151ee61d543ef5844e"
+    },
+    {
+      "index": 15,
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_015_Tools_npu_run_dual_ai_pipeline_py.md",
+      "part": 5,
+      "start_line": 867,
+      "end_line": 1068,
+      "chars": 13407,
+      "sha256": "dda506b56145d7880bf1eedd438dc61597d2af91a06779d096138a4280525585"
+    },
+    {
+      "index": 16,
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_016_Tools_npu_run_dual_ai_pipeline_py.md",
+      "part": 6,
+      "start_line": 1069,
+      "end_line": 1267,
+      "chars": 13412,
+      "sha256": "335157881f74c2e724892cabedfe04cdae33adfb96fc55208fd0845eb0e920b5"
+    },
+    {
+      "index": 17,
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_017_Tools_npu_run_dual_ai_pipeline_py.md",
+      "part": 7,
+      "start_line": 1268,
+      "end_line": 1470,
+      "chars": 13461,
+      "sha256": "92653f0de7be8612f781e45a10dcc319b394c668b658c96224a1a04db1726f8d"
+    },
+    {
+      "index": 18,
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_018_Tools_npu_run_dual_ai_pipeline_py.md",
+      "part": 8,
+      "start_line": 1471,
+      "end_line": 1662,
+      "chars": 13420,
+      "sha256": "e7848af8dd03f4d5378db105346c38d4512da10785612fb060502d594945edd3"
+    },
+    {
+      "index": 19,
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_019_Tools_npu_run_dual_ai_pipeline_py.md",
+      "part": 9,
+      "start_line": 1663,
+      "end_line": 1704,
+      "chars": 5503,
+      "sha256": "2df523dc6d91ad55e5d9039dc83502bffc83ffd550f6f367e4f8d7f691272f47"
+    },
+    {
+      "index": 20,
+      "file": "Scripting/v61b/config.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_020_Scripting_v61b_config_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 236,
+      "chars": 12307,
+      "sha256": "5a889dc2b22ba245357ad68e80bcdcecfbb711ac136f34b79ea564cdc8f0656a"
+    },
+    {
+      "index": 21,
+      "file": "Scripting/v61b/config.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_021_Scripting_v61b_config_py.md",
+      "part": 2,
+      "start_line": 237,
+      "end_line": 438,
+      "chars": 10238,
+      "sha256": "6e52228b4231e6d526b91f59ef342dfb801d9118353e05fe3341857849eaae22"
+    },
+    {
+      "index": 22,
+      "file": "Scripting/v61b/main_v61b.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_022_Scripting_v61b_main_v61b_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 219,
+      "chars": 10326,
+      "sha256": "930f3d79a890c07ea67e4a16ff9bb592083ea39dfaa0973e121b5bddaab241aa"
+    },
+    {
+      "index": 23,
+      "file": "Scripting/v61b/animation.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_023_Scripting_v61b_animation_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 246,
+      "chars": 13126,
+      "sha256": "3517c7033b590394fe6023f760b5f7f4615ceb9a09198f9e6f8261b51a8e4ed4"
+    },
+    {
+      "index": 24,
+      "file": "Scripting/v61b/animation.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_024_Scripting_v61b_animation_py.md",
+      "part": 2,
+      "start_line": 247,
+      "end_line": 424,
+      "chars": 13201,
+      "sha256": "8be2d16d19e9b0895561717dfeb3e4fb352adee1b103990ecca06734d90cd5bc"
+    },
+    {
+      "index": 25,
+      "file": "Scripting/v61b/animation.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_025_Scripting_v61b_animation_py.md",
+      "part": 3,
+      "start_line": 425,
+      "end_line": 602,
+      "chars": 13139,
+      "sha256": "9b9bbfd44c7068ea33722898310c32495448858253875905762e53de0bbf9287"
+    },
+    {
+      "index": 26,
+      "file": "Scripting/v61b/animation.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_026_Scripting_v61b_animation_py.md",
+      "part": 4,
+      "start_line": 603,
+      "end_line": 791,
+      "chars": 13159,
+      "sha256": "97c90c0c3163c5c611b9c464c107752f8a77d9d6a381815aa282224bd4969726"
+    },
+    {
+      "index": 27,
+      "file": "Scripting/v61b/animation.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_027_Scripting_v61b_animation_py.md",
+      "part": 5,
+      "start_line": 792,
+      "end_line": 960,
+      "chars": 13194,
+      "sha256": "71c4930366061d187b9984b83308704ebfadb5ab15dc80d91acc26cf50a0641f"
+    },
+    {
+      "index": 28,
+      "file": "Scripting/v61b/animation.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_028_Scripting_v61b_animation_py.md",
+      "part": 6,
+      "start_line": 961,
+      "end_line": 1079,
+      "chars": 9338,
+      "sha256": "505e8b494ee762030bef4dcc171cf8e23f9f33ccd650fe95c9c9e4bb71b12315"
+    },
+    {
+      "index": 29,
+      "file": "Scripting/v61b/materials.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_029_Scripting_v61b_materials_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 268,
+      "chars": 11265,
+      "sha256": "855a5c36fa94f092989e10567813c511ee3f749d19b09b32a9b9536a9ac0914c"
+    },
+    {
+      "index": 30,
+      "file": "Scripting/v61b/materials.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_030_Scripting_v61b_materials_py.md",
+      "part": 2,
+      "start_line": 269,
+      "end_line": 488,
+      "chars": 11277,
+      "sha256": "ddeeebe6a866fc9cd50c6aa8eb739fce541544e39e26799892e76e24c29cabcf"
+    },
+    {
+      "index": 31,
+      "file": "Scripting/v61b/materials.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_031_Scripting_v61b_materials_py.md",
+      "part": 3,
+      "start_line": 489,
+      "end_line": 657,
+      "chars": 8343,
+      "sha256": "3823c02e97489d7e79df972e940c668a297f9382d7a0e001a3890c9046d8843f"
+    },
+    {
+      "index": 32,
+      "file": "Scripting/v61b/physics_setup.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_032_Scripting_v61b_physics_setup_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 286,
+      "chars": 12480,
+      "sha256": "7d448510719b262182efb441ed16b1c03fb870d759521de776632edac6c3d55b"
+    },
+    {
+      "index": 33,
+      "file": "Scripting/v61b/physics_setup.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_033_Scripting_v61b_physics_setup_py.md",
+      "part": 2,
+      "start_line": 287,
+      "end_line": 541,
+      "chars": 12508,
+      "sha256": "861a4f913fe08b5c20a5b714f12e507fe941f901f529a04ce413cf0ed7555255"
+    },
+    {
+      "index": 34,
+      "file": "Scripting/v61b/physics_setup.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_034_Scripting_v61b_physics_setup_py.md",
+      "part": 3,
+      "start_line": 542,
+      "end_line": 737,
+      "chars": 10721,
+      "sha256": "15e277fc59822a64f26c228fd158428c59eb387dfd0c5116380f130880558f78"
+    },
+    {
+      "index": 35,
+      "file": "Scripting/v61b/fog_dynamics.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_035_Scripting_v61b_fog_dynamics_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 248,
+      "chars": 11812,
+      "sha256": "d12417da4414196576cad51732cb60ecddef8a473bc6b106f655285ff9d3b8db"
+    },
+    {
+      "index": 36,
+      "file": "Scripting/v61b/fog_dynamics.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_036_Scripting_v61b_fog_dynamics_py.md",
+      "part": 2,
+      "start_line": 249,
+      "end_line": 392,
+      "chars": 9607,
+      "sha256": "3a6271dc2424cbae1438562a3ed0f5d91c076073a152fa1650a4e6e5309b81a3"
+    },
+    {
+      "index": 37,
+      "file": "Scripting/v61b/fog_filaments.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_037_Scripting_v61b_fog_filaments_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 159,
+      "chars": 6642,
+      "sha256": "8c3c0b57a111f31ebfdb869122e7d8b293147f99ba4e05cefc798f9b74382e44"
+    },
+    {
+      "index": 38,
+      "file": "Scripting/v61b/atmosphere_setup.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_038_Scripting_v61b_atmosphere_setup_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 308,
+      "chars": 11825,
+      "sha256": "b7536f5c33d79f78a84310572e5658cc4ca3377c8e18d3f93f0c6e4fcac5787b"
+    },
+    {
+      "index": 39,
+      "file": "Scripting/v61b/atmosphere_setup.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_039_Scripting_v61b_atmosphere_setup_py.md",
+      "part": 2,
+      "start_line": 309,
+      "end_line": 554,
+      "chars": 11524,
+      "sha256": "0940e4a5e14c85ce96b39f97db3af764c97a7b0b841f970ae5e97abad4c8d6d1"
+    },
+    {
+      "index": 40,
+      "file": "Scripting/v61b/world_setup.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_040_Scripting_v61b_world_setup_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 198,
+      "chars": 8833,
+      "sha256": "6fa741561f47da55d0353b8f04fabf6bfce705a7fb717fa438c23a3ac3c8ad3b"
+    },
+    {
+      "index": 41,
+      "file": "Scripting/v61b/render_setup.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_041_Scripting_v61b_render_setup_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 270,
+      "chars": 10956,
+      "sha256": "d49a941c027cc6dfb3ad27e247d076c004a40e93acaab00e6227311d7a8fd977"
+    },
+    {
+      "index": 42,
+      "file": "Scripting/v61b/scene_tuning_panel.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_042_Scripting_v61b_scene_tuning_panel_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 286,
+      "chars": 12707,
+      "sha256": "d89d6c411899297659fe36df8c28bbf3142de9f4c2f450b2924ceee507778e2a"
+    },
+    {
+      "index": 43,
+      "file": "Scripting/v61b/scene_tuning_panel.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_043_Scripting_v61b_scene_tuning_panel_py.md",
+      "part": 2,
+      "start_line": 287,
+      "end_line": 513,
+      "chars": 12688,
+      "sha256": "4fef33628c2073e7bb35688732eebb0b2c1032a4b51110d91986f49d8c461ca1"
+    },
+    {
+      "index": 44,
+      "file": "Scripting/v61b/scene_tuning_panel.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_044_Scripting_v61b_scene_tuning_panel_py.md",
+      "part": 3,
+      "start_line": 514,
+      "end_line": 724,
+      "chars": 12783,
+      "sha256": "e51f951ca76397b3cae2d22188981425e2647de8862d1ad210771fcb6cf50612"
+    },
+    {
+      "index": 45,
+      "file": "Scripting/v61b/scene_tuning_panel.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_045_Scripting_v61b_scene_tuning_panel_py.md",
+      "part": 4,
+      "start_line": 725,
+      "end_line": 906,
+      "chars": 12810,
+      "sha256": "8439d1985d4a55bc158f4a7bca70bf0ab6437ccabeb20e2c906f4d0c754d26bf"
+    },
+    {
+      "index": 46,
+      "file": "Scripting/v61b/scene_tuning_panel.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_046_Scripting_v61b_scene_tuning_panel_py.md",
+      "part": 5,
+      "start_line": 907,
+      "end_line": 1136,
+      "chars": 12769,
+      "sha256": "6425171b4df908af99c919c8acf420587af4d19ff134f285b5a2a41a8095c32e"
+    },
+    {
+      "index": 47,
+      "file": "Scripting/v61b/scene_tuning_panel.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_047_Scripting_v61b_scene_tuning_panel_py.md",
+      "part": 6,
+      "start_line": 1137,
+      "end_line": 1262,
+      "chars": 7857,
+      "sha256": "1deece3a5603ebb1894bfa088a3bb44b87377b3d0493a3ea0596f53c5521e878"
+    },
+    {
+      "index": 48,
+      "file": "Scripting/v61b/hot_update_scene_v61b.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_048_Scripting_v61b_hot_update_scene_v61b_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 63,
+      "chars": 2238,
+      "sha256": "ae0c95d205c58b99e3f3a40bee533ac87aa471e1a947b7bcbbee924d97b60ee9"
+    },
+    {
+      "index": 49,
+      "file": "Scripting/v61b/encode_image_sequence_v61b.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_049_Scripting_v61b_encode_image_sequence_v61b_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 289,
+      "chars": 11462,
+      "sha256": "d606faa5dc5729d70e69b161c218b82c84193e2cbfc6dfb7a29e8d2f4fef781c"
+    },
+    {
+      "index": 50,
+      "file": "Scripting/v61b/encode_image_sequence_v61b.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_050_Scripting_v61b_encode_image_sequence_v61b_py.md",
+      "part": 2,
+      "start_line": 290,
+      "end_line": 395,
+      "chars": 5723,
+      "sha256": "5ba6964b42cb1844eb3dfde4641e2eb7b3a0f2ca2d1e1b18bb74da8d4578451b"
+    },
+    {
+      "index": 51,
+      "file": "Scripting/v61b/encode_ffmpeg_v61b.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_051_Scripting_v61b_encode_ffmpeg_v61b_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 273,
+      "chars": 11643,
+      "sha256": "be0680a4d5b31893c64e67fef80b6afa5c9ab19e508d5f2614587179e8aa152e"
+    },
+    {
+      "index": 52,
+      "file": "Scripting/v61b/encode_ffmpeg_v61b.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_052_Scripting_v61b_encode_ffmpeg_v61b_py.md",
+      "part": 2,
+      "start_line": 274,
+      "end_line": 398,
+      "chars": 6392,
+      "sha256": "d61a943d5736887b424fc45056bea5388f507c07d98ae780ea474a75c03512b7"
+    },
+    {
+      "index": 53,
+      "file": "Scripting/v61b/PROJECT_STRUCTURE.md",
+      "path": "Tools/npu/npu_code_chunks/chunk_053_Scripting_v61b_PROJECT_STRUCTURE_md.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 43,
+      "chars": 2927,
+      "sha256": "d631f2b0f01db4f9a9000a910de1b52c7396f59d2e67c5db044f6f7b252a134f"
+    },
+    {
+      "index": 54,
+      "file": "Scripting/v61b/SCENE_TUNING_GUIDE.md",
+      "path": "Tools/npu/npu_code_chunks/chunk_054_Scripting_v61b_SCENE_TUNING_GUIDE_md.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 179,
+      "chars": 10412,
+      "sha256": "0a142ab9f0f46b6b51994508c8021ca3086d6e0203878e6601e32e50ed068e0d"
+    },
+    {
+      "index": 55,
+      "file": "Scripting/v61b/SCENE_TUNING_GUIDE.md",
+      "path": "Tools/npu/npu_code_chunks/chunk_055_Scripting_v61b_SCENE_TUNING_GUIDE_md.md",
+      "part": 2,
+      "start_line": 180,
+      "end_line": 304,
+      "chars": 5310,
+      "sha256": "0183303f7f78fea803fd1fa5923334285a1c873c1b2aae79da2c79542247993a"
+    },
+    {
+      "index": 56,
+      "file": "Scripting/v61b/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_056_Scripting_v61b_init_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 1,
+      "chars": 143,
+      "sha256": "ba7aad75faf6df5be450de6bbcffa1cd63546f7caea408d0fd0718006b0eaa12"
+    },
+    {
+      "index": 57,
+      "file": "Scripting/v61b/asset_setup.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_057_Scripting_v61b_asset_setup_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 274,
+      "chars": 12490,
+      "sha256": "7000eeb9ae300545e3ed695c0b0b705e11b6afed0c837c4f715aac54d0733317"
+    },
+    {
+      "index": 58,
+      "file": "Scripting/v61b/asset_setup.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_058_Scripting_v61b_asset_setup_py.md",
+      "part": 2,
+      "start_line": 275,
+      "end_line": 507,
+      "chars": 12532,
+      "sha256": "aac4817745f17ee8b1d4368f861a0518398388d16de64bf4d661067fd953928f"
+    },
+    {
+      "index": 59,
+      "file": "Scripting/v61b/asset_setup.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_059_Scripting_v61b_asset_setup_py.md",
+      "part": 3,
+      "start_line": 508,
+      "end_line": 725,
+      "chars": 10804,
+      "sha256": "072703126e5307680ef39941a91550ff528f79b4d9ffa2764a9276fb903db59d"
+    },
+    {
+      "index": 60,
+      "file": "Scripting/v61b/camera_setup.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_060_Scripting_v61b_camera_setup_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 29,
+      "chars": 1303,
+      "sha256": "a246c62c78f41cbf5a99aa1c62ef3e3bd91665027bd11377442b7cd58853ac95"
+    },
+    {
+      "index": 61,
+      "file": "Scripting/v61b/io_utils.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_061_Scripting_v61b_io_utils_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 81,
+      "chars": 3237,
+      "sha256": "fea1074a0d60238ac618999304384bc9e34de10adc1c361b0a80aaa93ab0db97"
+    },
+    {
+      "index": 62,
+      "file": "Scripting/v61b/scene_utils.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_062_Scripting_v61b_scene_utils_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 97,
+      "chars": 3563,
+      "sha256": "886026eec16b1dd83720310d889b8e67f7bbab3afa5430207ab2eea9e7bbc0d4"
+    },
+    {
+      "index": 63,
+      "file": "Scripting/v61b/hotpatch/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_063_Scripting_v61b_hotpatch_init_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 3,
+      "chars": 280,
+      "sha256": "4196e90583e690e4299539f69e30d04a62b16b591b12ab88e70dcaf327db7c5e"
+    },
+    {
+      "index": 64,
+      "file": "Scripting/v61b/hotpatch/accent_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_064_Scripting_v61b_hotpatch_accent_patch_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 211,
+      "chars": 11546,
+      "sha256": "8de2fb5942f6e43b27fad100d9296e2fca018efc81b2ad470f80a4216c574c8a"
+    },
+    {
+      "index": 65,
+      "file": "Scripting/v61b/hotpatch/accent_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_065_Scripting_v61b_hotpatch_accent_patch_py.md",
+      "part": 2,
+      "start_line": 212,
+      "end_line": 301,
+      "chars": 6033,
+      "sha256": "964589d8bb4299708424860e322debcc19bdd44842d77c411328acbf6d11ee3d"
+    },
+    {
+      "index": 66,
+      "file": "Scripting/v61b/hotpatch/common.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_066_Scripting_v61b_hotpatch_common_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 91,
+      "chars": 3510,
+      "sha256": "9c16ffac11b81bcfd493b6967222b6c76799ee45ce61c75233468be65a68784d"
+    },
+    {
+      "index": 67,
+      "file": "Scripting/v61b/hotpatch/diagnostics.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_067_Scripting_v61b_hotpatch_diagnostics_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 244,
+      "chars": 11029,
+      "sha256": "a042aa9c4396fe9ae2d42c0939e4bf6f33c4512ab25d35c07c82168ec9423d93"
+    },
+    {
+      "index": 68,
+      "file": "Scripting/v61b/hotpatch/diagnostics.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_068_Scripting_v61b_hotpatch_diagnostics_py.md",
+      "part": 2,
+      "start_line": 245,
+      "end_line": 286,
+      "chars": 2606,
+      "sha256": "48e174cea918b425dd9a4a51eac8b7b02c6cfd408e4079c5067910a28fcb42c5"
+    },
+    {
+      "index": 69,
+      "file": "Scripting/v61b/hotpatch/fog_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_069_Scripting_v61b_hotpatch_fog_patch_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 133,
+      "chars": 6532,
+      "sha256": "6a6c9be929c05f97db7b4930a19e3cf92f167a97a5fe4eb10e84dae72de9eac4"
+    },
+    {
+      "index": 70,
+      "file": "Scripting/v61b/hotpatch/hero_material_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_070_Scripting_v61b_hotpatch_hero_material_patch_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 265,
+      "chars": 11418,
+      "sha256": "e5641e0b5b3301b7b1db6660e4bc29613fea5313dc234f2653b51449c0b782a0"
+    },
+    {
+      "index": 71,
+      "file": "Scripting/v61b/hotpatch/hero_material_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_071_Scripting_v61b_hotpatch_hero_material_patch_py.md",
+      "part": 2,
+      "start_line": 266,
+      "end_line": 395,
+      "chars": 8188,
+      "sha256": "4189122344f7d9896af1c2792510ee49e75f1d93c6f55f01f772cb12c6ffe200"
+    },
+    {
+      "index": 72,
+      "file": "Scripting/v61b/hotpatch/lighting_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_072_Scripting_v61b_hotpatch_lighting_patch_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 150,
+      "chars": 7286,
+      "sha256": "7dcc4bb2da06d2260377a13800b01487294281bab54f9daa826dc0b80d6998c6"
+    },
+    {
+      "index": 73,
+      "file": "Scripting/v61b/hotpatch/render_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_073_Scripting_v61b_hotpatch_render_patch_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 206,
+      "chars": 8846,
+      "sha256": "03e4d15c1b1f568851bf298ad5dbe29033a4284ec8442124b8eb2608e9c409fe"
+    },
+    {
+      "index": 74,
+      "file": "Scripting/v61b/hotpatch/runner.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_074_Scripting_v61b_hotpatch_runner_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 103,
+      "chars": 4447,
+      "sha256": "f6947211f0ef5dc5e4ad470fc7a99c670d05470993a9bb3101765625d6b7c7c6"
+    },
+    {
+      "index": 75,
+      "file": "Scripting/v61b/spaziotempo/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_075_Scripting_v61b_spaziotempo_init_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 4,
+      "chars": 351,
+      "sha256": "3a9c1515b359543a39e525407dcf1d315541670ff0c5b79aa0197b6f1cde383e"
+    },
+    {
+      "index": 76,
+      "file": "Scripting/v61b/spaziotempo/core/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_076_Scripting_v61b_spaziotempo_core_init_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 1,
+      "chars": 184,
+      "sha256": "8bff1194b23656f24feccc26ebc441889050af1f3a7a06931f9b05e4e495f95c"
+    },
+    {
+      "index": 77,
+      "file": "Scripting/v61b/spaziotempo/core/collections.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_077_Scripting_v61b_spaziotempo_core_collections_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 132,
+      "chars": 5697,
+      "sha256": "a545a07f96e9b9f81ec374f942aa0dd46a8337b71fb9976a3275d4d50753a6f2"
+    },
+    {
+      "index": 78,
+      "file": "Scripting/v61b/spaziotempo/core/registry.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_078_Scripting_v61b_spaziotempo_core_registry_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 221,
+      "chars": 8549,
+      "sha256": "0f7085932d5ca4850f29ba2924469b3ff9cda21db9e78465fb2f28c12bade92b"
+    },
+    {
+      "index": 79,
+      "file": "Scripting/v61b/spaziotempo/features/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_079_Scripting_v61b_spaziotempo_features_init_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 1,
+      "chars": 196,
+      "sha256": "8f10024a0de05c2f040783749942e58fa5e75d4e0a17a724d058af37751dbe54"
+    },
+    {
+      "index": 80,
+      "file": "Scripting/v61b/spaziotempo/features/catalog.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_080_Scripting_v61b_spaziotempo_features_catalog_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 19,
+      "chars": 906,
+      "sha256": "e6527a72079c8926981b96b53efb57bbbc46ae96fb6b2b8333a82b9ef6f89281"
+    },
+    {
+      "index": 81,
+      "file": "Tools/npu/ai_memory_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_081_Tools_npu_ai_memory_context_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 111,
+      "chars": 6097,
+      "sha256": "cabf6451ace53d57c99c1ceabe46dec817f4ac27972df422dd858a85d24cec5c"
+    },
+    {
+      "index": 82,
+      "file": "Tools/npu/build_ai_service_packet.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_082_Tools_npu_build_ai_service_packet_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 211,
+      "chars": 11269,
+      "sha256": "df5e45c6addfcfc56f17453981de09b9a6afb5d5183cf8b276465c6b9669cae9"
+    },
+    {
+      "index": 83,
+      "file": "Tools/npu/build_ai_service_packet.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_083_Tools_npu_build_ai_service_packet_py.md",
+      "part": 2,
+      "start_line": 212,
+      "end_line": 355,
+      "chars": 8859,
+      "sha256": "887cb55a8a1fcf6c3df57f2ea9abed08296265cc8983c4d5781494183cb23512"
+    },
+    {
+      "index": 84,
+      "file": "Tools/npu/build_music_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_084_Tools_npu_build_music_context_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 255,
+      "chars": 12336,
+      "sha256": "bbd1553ce26a78a15fda6b62dead0f9e4bbc67f253b25f8b4070fc7543f8b245"
+    },
+    {
+      "index": 85,
+      "file": "Tools/npu/build_music_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_085_Tools_npu_build_music_context_py.md",
+      "part": 2,
+      "start_line": 256,
+      "end_line": 491,
+      "chars": 12383,
+      "sha256": "254e197cf031fe6c577511af946cbbbfcc7fddd218e87f040754fbc3c6120807"
+    },
+    {
+      "index": 86,
+      "file": "Tools/npu/build_music_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_086_Tools_npu_build_music_context_py.md",
+      "part": 3,
+      "start_line": 492,
+      "end_line": 682,
+      "chars": 12369,
+      "sha256": "82d2677ec6019baa330cec743ef211bd89fbdb68a29e7a45c20f86600c659437"
+    },
+    {
+      "index": 87,
+      "file": "Tools/npu/build_music_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_087_Tools_npu_build_music_context_py.md",
+      "part": 4,
+      "start_line": 683,
+      "end_line": 711,
+      "chars": 3598,
+      "sha256": "58ba5f6cdcbaea9a844348ea2c06e4f5efaed82a48a8413fb87410ebcab03276"
+    },
+    {
+      "index": 88,
+      "file": "Tools/npu/build_npu_code_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_088_Tools_npu_build_npu_code_context_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 270,
+      "chars": 11222,
+      "sha256": "8fb225941ae7343f896d715d80d6dc3ebefcc5d0cd1822c8e887c589dd174324"
+    },
+    {
+      "index": 89,
+      "file": "Tools/npu/build_npu_code_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_089_Tools_npu_build_npu_code_context_py.md",
+      "part": 2,
+      "start_line": 271,
+      "end_line": 389,
+      "chars": 5640,
+      "sha256": "95cec8721c585f74f301ec1202fb8048eceba765b64d000665c66cdf26e3128e"
+    },
+    {
+      "index": 90,
+      "file": "Tools/npu/build_project_ai_index.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_090_Tools_npu_build_project_ai_index_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 266,
+      "chars": 11480,
+      "sha256": "748bdac148311449660489f7f448926114d812bc31d7b833462f18f8f5ba1d75"
+    },
+    {
+      "index": 91,
+      "file": "Tools/npu/build_project_ai_index.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_091_Tools_npu_build_project_ai_index_py.md",
+      "part": 2,
+      "start_line": 267,
+      "end_line": 419,
+      "chars": 8946,
+      "sha256": "c1bcec9d54e6362b039b0cc116a012729f35155f1680b6d8a14498f9548bec49"
+    },
+    {
+      "index": 92,
+      "file": "Tools/npu/run_dual_ai_pipeline - Copia.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_092_Tools_npu_run_dual_ai_pipeline_Copia_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 223,
+      "chars": 12184,
+      "sha256": "5dcc19cbd30ea8345694b618021a5637f4dc6e38b748d4c02bc7d5f67c30efe3"
+    },
+    {
+      "index": 93,
+      "file": "Tools/npu/run_dual_ai_pipeline - Copia.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_093_Tools_npu_run_dual_ai_pipeline_Copia_py.md",
+      "part": 2,
+      "start_line": 224,
+      "end_line": 461,
+      "chars": 12149,
+      "sha256": "102205251d686ee12389ba6cee05293b537d94090d90971f98d945be04b9e9d0"
+    },
+    {
+      "index": 94,
+      "file": "Tools/npu/run_dual_ai_pipeline - Copia.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_094_Tools_npu_run_dual_ai_pipeline_Copia_py.md",
+      "part": 3,
+      "start_line": 462,
+      "end_line": 646,
+      "chars": 12226,
+      "sha256": "4c49166c229371008d12eaeb1fd9c32f8cc488a63050a9a12a0fc5fbcaf050de"
+    },
+    {
+      "index": 95,
+      "file": "Tools/npu/run_dual_ai_pipeline - Copia.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_095_Tools_npu_run_dual_ai_pipeline_Copia_py.md",
+      "part": 4,
+      "start_line": 647,
+      "end_line": 705,
+      "chars": 5080,
+      "sha256": "0801b121b48b7510da0a3fbd2086f0bab5037216e93af41e88c08d0d9906d3da"
+    },
+    {
+      "index": 96,
+      "file": "Tools/npu/run_npu_review.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_096_Tools_npu_run_npu_review_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 287,
+      "chars": 11712,
+      "sha256": "c8d8bd72aeca66820ac1f8f0635d67a9cbbcd5e05c6763775515cf326f286088"
+    },
+    {
+      "index": 97,
+      "file": "Tools/npu/run_npu_review.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_097_Tools_npu_run_npu_review_py.md",
+      "part": 2,
+      "start_line": 288,
+      "end_line": 520,
+      "chars": 11795,
+      "sha256": "a267a66a234e32ac108b088e3851dd3ca13869b19bcedefd0b53635322d6ad05"
+    },
+    {
+      "index": 98,
+      "file": "Tools/npu/run_npu_review.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_098_Tools_npu_run_npu_review_py.md",
+      "part": 3,
+      "start_line": 521,
+      "end_line": 565,
+      "chars": 3263,
+      "sha256": "85f6e24b93a9e2efa14e5aab61f495e495fcdc31c835eb86ef9513edb2d6e266"
+    },
+    {
+      "index": 99,
+      "file": "Tools/npu/run_ollama_music_agent.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_099_Tools_npu_run_ollama_music_agent_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 238,
+      "chars": 10745,
+      "sha256": "c9f6573a1094b69ea251055aa0a225ef6657958bee731d68da3523e1a5a05200"
+    },
+    {
+      "index": 100,
+      "file": "Tools/npu/run_npu_context.ps1",
+      "path": "Tools/npu/npu_code_chunks/chunk_100_Tools_npu_run_npu_context_ps1.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 238,
+      "chars": 9005,
+      "sha256": "b3ee3ccebbb4ceeff698756ff0ed2c6bb1f14894ea2e00fec88da5a39567d002"
+    }
+  ]
+}

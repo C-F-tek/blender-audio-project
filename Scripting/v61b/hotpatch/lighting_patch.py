@@ -13,6 +13,9 @@ from .common import (
 LIGHT_ENERGY_MIN = cfg_value("LIGHT_ENERGY_MIN", 105.0)
 LIGHT_ENERGY_MAX = cfg_value("LIGHT_ENERGY_MAX", 128.0)
 WORLD_STRENGTH = cfg_value("WORLD_STRENGTH", 0.115)
+WORLD_CAMERA_STRENGTH = cfg_value("WORLD_CAMERA_STRENGTH", 0.52)
+WORLD_LIGHT_COLOR = cfg_value("WORLD_LIGHT_COLOR", (0.012, 0.052, 0.058, 1.0))
+WORLD_CAMERA_COLOR = cfg_value("WORLD_CAMERA_COLOR", (0.045, 0.170, 0.185, 1.0))
 BACKDROP_EMISSION_MIN = cfg_value("BACKDROP_EMISSION_MIN", 0.025)
 BACKDROP_EMISSION_MAX = cfg_value("BACKDROP_EMISSION_MAX", 0.027)
 BACKDROP_SIZE = cfg_value("BACKDROP_SIZE", 92.0)
@@ -46,13 +49,36 @@ def update_world(scene):
 
     world.use_nodes = True
     nodes = world.node_tree.nodes
-    bg = nodes.get("Background")
-    if bg is None:
-        bg = nodes.new("ShaderNodeBackground")
-    if "Strength" in bg.inputs:
-        bg.inputs["Strength"].default_value = WORLD_STRENGTH
-    if "Color" in bg.inputs:
-        bg.inputs["Color"].default_value = (0.004, 0.012, 0.014, 1.0)
+    links = world.node_tree.links
+
+    for node in list(nodes):
+        nodes.remove(node)
+
+    out = nodes.new("ShaderNodeOutputWorld")
+    out.location = (520, 0)
+
+    bg_camera = nodes.new("ShaderNodeBackground")
+    bg_camera.name = "WorldCameraAzzurro"
+    bg_camera.location = (-260, 80)
+    bg_camera.inputs["Strength"].default_value = WORLD_CAMERA_STRENGTH
+    bg_camera.inputs["Color"].default_value = WORLD_CAMERA_COLOR
+
+    bg_light = nodes.new("ShaderNodeBackground")
+    bg_light.name = "WorldSceneLight"
+    bg_light.location = (-260, -130)
+    bg_light.inputs["Strength"].default_value = WORLD_STRENGTH
+    bg_light.inputs["Color"].default_value = WORLD_LIGHT_COLOR
+
+    light_path = nodes.new("ShaderNodeLightPath")
+    light_path.location = (-560, -70)
+
+    mix = nodes.new("ShaderNodeMixShader")
+    mix.location = (120, 0)
+
+    links.new(light_path.outputs["Is Camera Ray"], mix.inputs[0])
+    links.new(bg_light.outputs["Background"], mix.inputs[1])
+    links.new(bg_camera.outputs["Background"], mix.inputs[2])
+    links.new(mix.outputs["Shader"], out.inputs["Surface"])
 
 
 def remove_legacy_rhythm_objects():
@@ -103,7 +129,15 @@ def update_backdrop():
 
         for node in material.node_tree.nodes:
             if node.type == "TEX_NOISE" and "Scale" in node.inputs:
-                node.inputs["Scale"].default_value = 1.35
+                node.inputs["Scale"].default_value = 1.18
+            if node.type == "VALTORGB":
+                try:
+                    node.color_ramp.elements[0].position = 0.14
+                    node.color_ramp.elements[0].color = (0.012, 0.055, 0.064, 1.0)
+                    node.color_ramp.elements[1].position = 1.00
+                    node.color_ramp.elements[1].color = (0.085, 0.245, 0.255, 1.0)
+                except Exception:
+                    pass
 
     if backdrop is not None:
         clear_animation(backdrop)

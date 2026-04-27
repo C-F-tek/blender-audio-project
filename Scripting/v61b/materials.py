@@ -108,16 +108,16 @@ def build_soft_backdrop_material():
 
     noise = nodes.new("ShaderNodeTexNoise")
     noise.location = (-320, 0)
-    noise.inputs["Scale"].default_value = 1.35
-    noise.inputs["Detail"].default_value = 5.0
-    noise.inputs["Roughness"].default_value = 0.42
+    noise.inputs["Scale"].default_value = 1.18
+    noise.inputs["Detail"].default_value = 6.0
+    noise.inputs["Roughness"].default_value = 0.46
 
     ramp = nodes.new("ShaderNodeValToRGB")
     ramp.location = (-80, 0)
     ramp.color_ramp.elements[0].position = 0.14
-    ramp.color_ramp.elements[0].color = (0.004, 0.018, 0.020, 1.0)
+    ramp.color_ramp.elements[0].color = (0.012, 0.055, 0.064, 1.0)
     ramp.color_ramp.elements[1].position = 1.00
-    ramp.color_ramp.elements[1].color = (0.030, 0.090, 0.088, 1.0)
+    ramp.color_ramp.elements[1].color = (0.085, 0.245, 0.255, 1.0)
 
     emission = nodes.new("ShaderNodeEmission")
     emission.location = (280, 0)

@@ -58,8 +58,25 @@ FFMPEG_CRF = int(getattr(cfg, "FFMPEG_CRF", 17))
 FFMPEG_PRESET = str(getattr(cfg, "FFMPEG_PRESET", "slow"))
 FFMPEG_TUNE = str(getattr(cfg, "FFMPEG_TUNE", "film"))
 FFMPEG_AUDIO_BITRATE = str(getattr(cfg, "FFMPEG_AUDIO_BITRATE", "320k"))
+FFMPEG_PROFILE = str(getattr(cfg, "FFMPEG_PROFILE", "X264_HIGH_QUALITY")).upper()
+FFMPEG_GPU_INDEX = int(getattr(cfg, "FFMPEG_GPU_INDEX", 0))
+FFMPEG_NVENC_PRESET = str(getattr(cfg, "FFMPEG_NVENC_PRESET", "p7"))
+FFMPEG_NVENC_TUNE = str(getattr(cfg, "FFMPEG_NVENC_TUNE", "hq"))
+FFMPEG_NVENC_CQ = int(getattr(cfg, "FFMPEG_NVENC_CQ", 18))
+FFMPEG_SVTAV1_PRESET = int(getattr(cfg, "FFMPEG_SVTAV1_PRESET", 4))
+FFMPEG_SVTAV1_CRF = int(getattr(cfg, "FFMPEG_SVTAV1_CRF", 24))
+FFMPEG_THREADS = int(getattr(cfg, "FFMPEG_THREADS", 12))
+FFMPEG_VIDEO_FILTER = str(getattr(cfg, "FFMPEG_VIDEO_FILTER", "") or "")
+FFMPEG_AUDIO_SAMPLE_RATE = int(getattr(cfg, "FFMPEG_AUDIO_SAMPLE_RATE", 48000))
 SYNC_AUDIO = bool(getattr(cfg, "ENCODE_SEQUENCE_SYNC_AUDIO_TO_FRAME_NUMBER", True))
+AUDIO_ZERO_FRAME = int(getattr(cfg, "ENCODE_SEQUENCE_AUDIO_ZERO_FRAME", 1))
 SKIP_PLACEHOLDERS = bool(getattr(cfg, "ENCODE_SEQUENCE_SKIP_PLACEHOLDERS", True))
+LAUNCH_VISIBLE_SHELL = bool(
+    globals().get(
+        "FFMPEG_LAUNCH_VISIBLE_SHELL",
+        getattr(cfg, "FFMPEG_LAUNCH_VISIBLE_SHELL", False),
+    )
+)
 
 
 def extract_frame_number(path):
@@ -196,6 +213,12 @@ def build_image_pattern(first_file, first_frame):
     return str(first_file.with_name(f"{stem_prefix}%0{len(digits)}d{first_file.suffix}"))
 
 
+def source_frame_to_audio_offset(first_frame, fps):
+    if not SYNC_AUDIO or first_frame is None:
+        return 0.0
+    return max(0.0, (float(first_frame) - float(AUDIO_ZERO_FRAME)) / float(fps))
+
+
 def build_command(ffmpeg, pattern, first_frame, frame_count, fps, audio_offset):
     output = Path(OUTPUT_MP4)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -204,6 +227,9 @@ def build_command(ffmpeg, pattern, first_frame, frame_count, fps, audio_offset):
         str(ffmpeg),
         "-y",
         "-hide_banner",
+        "-stats",
+        "-stats_period",
+        "0.5",
         "-framerate",
         f"{fps:.6f}",
         "-start_number",
@@ -216,6 +242,9 @@ def build_command(ffmpeg, pattern, first_frame, frame_count, fps, audio_offset):
         command.extend(["-ss", f"{audio_offset:.6f}"])
     command.extend(["-i", str(AUDIO_PATH)])
 
+    if FFMPEG_VIDEO_FILTER:
+        command.extend(["-vf", FFMPEG_VIDEO_FILTER])
+
     command.extend([
         "-frames:v",
         str(frame_count),
@@ -223,14 +252,55 @@ def build_command(ffmpeg, pattern, first_frame, frame_count, fps, audio_offset):
         "0:v:0",
         "-map",
         "1:a:0",
-        "-c:v",
-        "libx264",
-        "-preset",
-        FFMPEG_PRESET,
-        "-tune",
-        FFMPEG_TUNE,
-        "-crf",
-        str(FFMPEG_CRF),
+    ])
+
+    if FFMPEG_PROFILE in {"GPU_AV1_YOUTUBE_SAFE", "GPU_AV1_NVENC", "AV1_NVENC"}:
+        command.extend([
+            "-c:v",
+            "av1_nvenc",
+            "-gpu",
+            str(FFMPEG_GPU_INDEX),
+            "-preset",
+            FFMPEG_NVENC_PRESET,
+            "-tune",
+            FFMPEG_NVENC_TUNE,
+            "-rc:v",
+            "vbr",
+            "-cq:v",
+            str(FFMPEG_NVENC_CQ),
+            "-b:v",
+            "0",
+        ])
+    elif FFMPEG_PROFILE in {"CPU_SVTAV1_YOUTUBE", "CPU_SVTAV1", "SVTAV1"}:
+        command.extend([
+            "-threads",
+            str(FFMPEG_THREADS),
+            "-c:v",
+            "libsvtav1",
+            "-preset",
+            str(FFMPEG_SVTAV1_PRESET),
+            "-crf",
+            str(FFMPEG_SVTAV1_CRF),
+            "-svtav1-params",
+            f"lp={FFMPEG_THREADS}",
+        ])
+    else:
+        command.extend([
+            "-threads",
+            str(FFMPEG_THREADS),
+            "-c:v",
+            "libx264",
+            "-preset",
+            FFMPEG_PRESET,
+            "-tune",
+            FFMPEG_TUNE,
+            "-crf",
+            str(FFMPEG_CRF),
+            "-profile:v",
+            "high",
+        ])
+
+    command.extend([
         "-pix_fmt",
         "yuv420p",
         "-colorspace",
@@ -243,6 +313,8 @@ def build_command(ffmpeg, pattern, first_frame, frame_count, fps, audio_offset):
         f"{fps:.6f}",
         "-c:a",
         "aac",
+        "-ar",
+        str(FFMPEG_AUDIO_SAMPLE_RATE),
         "-b:a",
         FFMPEG_AUDIO_BITRATE,
         "-shortest",
@@ -251,6 +323,40 @@ def build_command(ffmpeg, pattern, first_frame, frame_count, fps, audio_offset):
         str(output),
     ])
     return command
+
+
+def write_visible_shell_launcher(command, output, first_frame, frame_count, fps, audio_offset):
+    output = Path(output)
+    output_dir = output.parent
+    launcher = output_dir / f"{output.stem}_run_ffmpeg.cmd"
+    command_line = subprocess.list2cmdline([str(part) for part in command]).replace("%", "%%")
+
+    lines = [
+        "@echo off",
+        "title Spaziotempo FFmpeg Encode",
+        f'cd /d "{output_dir}"',
+        "echo Spaziotempo FFmpeg encode",
+        f"echo Frames: {frame_count} from source frame {first_frame}",
+        f"echo FPS: {fps:.6f}",
+        f"echo Audio zero frame: {AUDIO_ZERO_FRAME}",
+        f"echo Audio offset seconds: {audio_offset:.6f}",
+        f'echo Output: "{output}"',
+        "echo.",
+        command_line,
+        "set ST_FFMPEG_EXIT=%ERRORLEVEL%",
+        "echo.",
+        "echo FFmpeg exit code: %ST_FFMPEG_EXIT%",
+        'if not "%ST_FFMPEG_EXIT%"=="0" echo FFmpeg failed. Check the messages above.',
+    ]
+    launcher.write_text("\r\n".join(lines) + "\r\n", encoding="utf-8")
+    return launcher
+
+
+def launch_visible_shell(command, output, first_frame, frame_count, fps, audio_offset):
+    launcher = write_visible_shell_launcher(command, output, first_frame, frame_count, fps, audio_offset)
+    creationflags = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
+    subprocess.Popen(["cmd.exe", "/k", str(launcher)], creationflags=creationflags)
+    return launcher
 
 
 def main():
@@ -266,7 +372,7 @@ def main():
         raise FileNotFoundError(f"Audio non trovato: {AUDIO_PATH}")
 
     fps = get_fps()
-    audio_offset = max(0.0, (float(first_frame) - 1.0) / fps) if SYNC_AUDIO else 0.0
+    audio_offset = source_frame_to_audio_offset(first_frame, fps)
     pattern = build_image_pattern(frame_files[0], first_frame)
     ffmpeg = find_ffmpeg()
     command = build_command(ffmpeg, pattern, first_frame, len(frame_files), fps, audio_offset)
@@ -275,8 +381,14 @@ def main():
     print(f"[INFO] ffmpeg: {ffmpeg}")
     print(f"[INFO] frames: {len(frame_files)} from frame {first_frame}")
     print(f"[INFO] fps:    {fps:.6f}")
+    print(f"[INFO] audio zero frame: {AUDIO_ZERO_FRAME}")
     print(f"[INFO] audio offset seconds: {audio_offset:.6f}")
     print(f"[INFO] output: {OUTPUT_MP4}")
+
+    if LAUNCH_VISIBLE_SHELL:
+        launcher = launch_visible_shell(command, OUTPUT_MP4, first_frame, len(frame_files), fps, audio_offset)
+        print(f"[INFO] FFmpeg launched in visible shell: {launcher}")
+        return
 
     subprocess.run(command, check=True)
     print("[INFO] FFmpeg MP4 complete.")

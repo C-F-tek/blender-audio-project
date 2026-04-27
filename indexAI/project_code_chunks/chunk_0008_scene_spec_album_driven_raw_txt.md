@@ -1,0 +1,10 @@
+# Project Code Chunk 8/212
+
+- File: `scene_spec_album_driven_raw.txt`
+- Part: `1`
+- Lines: `1-1`
+
+## Content
+```txt
+00001: {"scene_name":". .","style_mode":"stylized_cinematic_abstract","visual_concept":".","hero_object":"abstract_signal_monolith","environment":"reflective_void_stage","lighting_style":"soft_volumetric_glow","palette":["deep_blue","muted_gold","soft_white","soft_white","midnight_black"],"camera_style":{"mood":"intimate","movement":"gentle_push","lens":100,"angle_bias":"slightly_top"},"objects":[{"type":"reflective_floor","name":"reflective_void_stage","role":"background_reflection_and_mood_enhancer"},{"type":"light_architecture","name":"luminous_arches","role":"visual_pillar_and_guidance_for_eyes"},{"type":"floating_lights","name":"floating_centerpiece","role":"interactive_point_of_focus_and_ambiance_enhancer"}],"audio_mapping":[{"target":"reflective_void_stage","property":"intensity","band":"low","intent":"soft_pulsating_glow"},{"target":"reflective_void_stage","property":"intensity","band":"mid","intent":"subtle_flicker"},{"target":"reflective_void_stage","property":"intensity","band":"high","intent":"bright_flashes"},{"target":"floating_centerpiece","property":"intensity","band":"low","intent":"soft_glow"},{"target":"floating_centerpiece","property":"intensity","band":"mid","intent":"muted_shimmer"},{"target":"floating_centerpiece","property":"intensity","band":"high","intent":"dynamic_light_show"}]}
+```
