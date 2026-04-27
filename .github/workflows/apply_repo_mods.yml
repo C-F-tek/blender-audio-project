@@ -1,0 +1,115 @@
+name: Apply repo patch specs
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'patch_specs/inbox/*.json'
+  workflow_dispatch:
+    inputs:
+      spec_path:
+        description: 'Patch spec path, for example patch_specs/inbox/fix_example.json'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  apply-specs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git author
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Collect patch specs
+        id: specs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SPEC_LIST="/tmp/repo_patch_specs.txt"
+          : > "$SPEC_LIST"
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            SPEC_PATH="${{ inputs.spec_path }}"
+            if [[ ! "$SPEC_PATH" =~ ^patch_specs/inbox/[^/]+\.json$ ]]; then
+              echo "Spec path not allowed: $SPEC_PATH" >&2
+              exit 1
+            fi
+            if [[ ! -f "$SPEC_PATH" ]]; then
+              echo "Spec not found: $SPEC_PATH" >&2
+              exit 1
+            fi
+            echo "$SPEC_PATH" >> "$SPEC_LIST"
+          else
+            BEFORE="${{ github.event.before }}"
+            AFTER="${{ github.sha }}"
+
+            if [[ "$BEFORE" =~ ^0+$ ]]; then
+              find patch_specs/inbox -maxdepth 1 -type f -name '*.json' | sort >> "$SPEC_LIST" || true
+            else
+              git diff --name-only "$BEFORE" "$AFTER" -- 'patch_specs/inbox/*.json' | sort >> "$SPEC_LIST" || true
+            fi
+          fi
+
+          if [[ ! -s "$SPEC_LIST" ]]; then
+            echo "No patch specs to apply."
+            echo "has_specs=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Patch specs:"
+            cat "$SPEC_LIST"
+            echo "has_specs=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply patch specs
+        if: steps.specs.outputs.has_specs == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SPEC_LIST="/tmp/repo_patch_specs.txt"
+          mkdir -p patch_specs/applied
+
+          while IFS= read -r SPEC; do
+            [[ -z "$SPEC" ]] && continue
+            echo "::group::Dry run $SPEC"
+            python Tools/repo_patch_runner/apply_repo_mods.py --spec "$SPEC" --dry-run
+            echo "::endgroup::"
+
+            echo "::group::Apply $SPEC"
+            python Tools/repo_patch_runner/apply_repo_mods.py --spec "$SPEC" --write --no-backup --show-diff
+            echo "::endgroup::"
+
+            BASE_NAME="$(basename "$SPEC" .json)"
+            DEST="patch_specs/applied/${BASE_NAME}_${GITHUB_RUN_ID}.json"
+            git mv "$SPEC" "$DEST"
+            echo "Moved $SPEC -> $DEST"
+          done < "$SPEC_LIST"
+
+      - name: Commit applied changes
+        if: steps.specs.outputs.has_specs == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git status --short
+          git add -A
+          git commit -m "Apply repo patch specs"
+          git push origin HEAD:master
