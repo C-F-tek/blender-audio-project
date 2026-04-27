@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 r"""
 Ready To Jazz - Luca Vera | Dual Gravity Audio-Reactive Scene
 Standalone Blender Python script.
@@ -501,12 +501,13 @@ def make_layered_surface_mat(
     noise.inputs[3].default_value = 3.2
     noise.inputs[4].default_value = 0.54
 
-    musgrave = nodes.new("ShaderNodeTexMusgrave")
-    musgrave.location = (-800, -30)
-    musgrave.inputs[2].default_value = 8.0
-    musgrave.inputs[3].default_value = 2.0
-    musgrave.inputs[4].default_value = 0.55
-    musgrave.inputs[5].default_value = 1.8
+    detail_noise = nodes.new("ShaderNodeTexNoise")
+    detail_noise.location = (-800, -30)
+    detail_noise.inputs["Scale"].default_value = 18.0
+    detail_noise.inputs["Detail"].default_value = 10.0
+    detail_noise.inputs["Roughness"].default_value = 0.58
+    if "Distortion" in detail_noise.inputs:
+        detail_noise.inputs["Distortion"].default_value = 0.18
 
     ramp = nodes.new("ShaderNodeValToRGB")
     ramp.location = (-590, 220)
@@ -558,13 +559,13 @@ def make_layered_surface_mat(
 
     links.new(tex.outputs["Object"], mapping.inputs["Vector"])
     links.new(mapping.outputs["Vector"], noise.inputs["Vector"])
-    links.new(mapping.outputs["Vector"], musgrave.inputs["Vector"])
+    links.new(mapping.outputs["Vector"], detail_noise.inputs["Vector"])
     links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
     links.new(ramp.outputs["Color"], mix_base.inputs[1])
     links.new(mix_base.outputs["Color"], bsdf.inputs["Base Color"])
     if "Alpha" in bsdf.inputs:
         links.new(alpha_value.outputs[0], bsdf.inputs["Alpha"])
-    links.new(musgrave.outputs["Fac"], bump.inputs["Height"])
+    links.new(detail_noise.outputs["Fac"], bump.inputs["Height"])
     links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
     links.new(layer_weight.outputs["Facing"], emission.inputs["Color"])
     # preserve explicit emission palette while adding edge tint
