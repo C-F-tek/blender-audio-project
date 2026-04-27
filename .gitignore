@@ -13,3 +13,9 @@ renders/
 Scripting/v61b_backgood/
 old script legacy/
 
+
+Tools/npu/.npucache/
+Tools/npu/__pycache__/
+Tools/npu/npu_blender_manual_chunks/
+Tools/npu/npu_code_chunks/
+Tools/npu/npu_music_chunks/
