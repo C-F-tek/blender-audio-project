@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "description": "Example: replace Blender removed ShaderNodeTexMusgrave with ShaderNodeTexNoise",
+  "operations": [
+    {
+      "path": "Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py",
+      "expected_line_delta": 1,
+      "replacements": [
+        {
+          "type": "exact",
+          "old": "    musgrave = nodes.new(\"ShaderNodeTexMusgrave\")\n    musgrave.location = (-800, -30)\n    musgrave.inputs[2].default_value = 8.0\n    musgrave.inputs[3].default_value = 2.0\n    musgrave.inputs[4].default_value = 0.55\n    musgrave.inputs[5].default_value = 1.8",
+          "new": "    detail_noise = nodes.new(\"ShaderNodeTexNoise\")\n    detail_noise.location = (-800, -30)\n    detail_noise.inputs[\"Scale\"].default_value = 18.0\n    detail_noise.inputs[\"Detail\"].default_value = 10.0\n    detail_noise.inputs[\"Roughness\"].default_value = 0.58\n    if \"Distortion\" in detail_noise.inputs:\n        detail_noise.inputs[\"Distortion\"].default_value = 0.18",
+          "count": 1
+        },
+        {
+          "type": "exact",
+          "old": "links.new(mapping.outputs[\"Vector\"], musgrave.inputs[\"Vector\"])",
+          "new": "links.new(mapping.outputs[\"Vector\"], detail_noise.inputs[\"Vector\"])",
+          "count": 1
+        },
+        {
+          "type": "exact",
+          "old": "links.new(musgrave.outputs[\"Fac\"], bump.inputs[\"Height\"])",
+          "new": "links.new(detail_noise.outputs[\"Fac\"], bump.inputs[\"Height\"])",
+          "count": 1
+        }
+      ],
+      "require_contains_after": [
+        "detail_noise = nodes.new(\"ShaderNodeTexNoise\")",
+        "links.new(mapping.outputs[\"Vector\"], detail_noise.inputs[\"Vector\"])",
+        "links.new(detail_noise.outputs[\"Fac\"], bump.inputs[\"Height\"])"
+      ],
+      "forbid_contains_after": [
+        "ShaderNodeTexMusgrave",
+        "musgrave.outputs[\"Fac\"]",
+        "musgrave.inputs[\"Vector\"]"
+      ]
+    }
+  ]
+}
