@@ -23,28 +23,9 @@ if SCRIPT_DIR is None:
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-reload_modules = {
-    "config",
-    "scene_utils",
-    "io_utils",
-    "render_setup",
-    "world_setup",
-    "camera_setup",
-    "asset_setup",
-    "atmosphere_setup",
-    "physics_setup",
-    "fog_dynamics",
-    "fog_filaments",
-    "animation",
-    "scene_tuning_panel",
-}
-reload_prefixes = ("spaziotempo",)
+from reload_utils import reload_known_modules
 
-for mod_name in list(sys.modules):
-    if mod_name in reload_modules or any(
-        mod_name == prefix or mod_name.startswith(prefix + ".") for prefix in reload_prefixes
-    ):
-        sys.modules.pop(mod_name, None)
+reload_known_modules()
 
 from config import (
     ANALYSIS_JSON_PATH,

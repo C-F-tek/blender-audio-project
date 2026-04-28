@@ -1,3 +1,4 @@
+import importlib
 import json
 import os
 import re
@@ -43,8 +44,8 @@ SCRIPT_DIR = resolve_script_dir()
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-sys.modules.pop("config", None)
-import config as cfg  # noqa: E402
+cfg = importlib.import_module("config")
+cfg = importlib.reload(cfg)
 
 
 AUDIO_PATH = cfg.AUDIO_PATH

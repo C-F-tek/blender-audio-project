@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import json
 import math
@@ -5,12 +6,12 @@ import math
 # ============================================================
 # PROJECT PATHS
 # ============================================================
-ROOT = Path.home() / "blender"
-PROJECT_DIR = ROOT / "blender-audio-project"
-OUTPUT_DIR = PROJECT_DIR / "output"
-ASSETS_DIR = ROOT / "assets"
-AUDIO_DIR = ROOT / "audio"
-RENDERS_DIR = ROOT / "renders"
+ROOT = Path(os.environ.get("BAP_ROOT", Path.home() / "blender")).expanduser().resolve()
+PROJECT_DIR = Path(os.environ.get("BAP_PROJECT_DIR", ROOT / "blender-audio-project")).expanduser().resolve()
+OUTPUT_DIR = Path(os.environ.get("BAP_OUTPUT_DIR", PROJECT_DIR / "output")).expanduser().resolve()
+ASSETS_DIR = Path(os.environ.get("BAP_ASSETS_DIR", ROOT / "assets")).expanduser().resolve()
+AUDIO_DIR = Path(os.environ.get("BAP_AUDIO_DIR", ROOT / "audio")).expanduser().resolve()
+RENDERS_DIR = Path(os.environ.get("BAP_RENDERS_DIR", ROOT / "renders")).expanduser().resolve()
 SCRIPTING_DIR = PROJECT_DIR / "Scripting" / "v61b"
 
 ANALYSIS_JSON_PATH = OUTPUT_DIR / "Feel The Light-Luca Vera_Master_analysis.json"

@@ -52,24 +52,6 @@ def slugify(text: str) -> str:
     return text or "item"
 
 
-def safe_scene_name(name: str) -> str:
-    if not isinstance(name, str):
-        return DEFAULT_SCENE_NAME
-    name = name.strip()
-    if not name or name == ".":
-        return DEFAULT_SCENE_NAME
-    return name
-
-
-def safe_visual_concept(text: str) -> str:
-    if not isinstance(text, str):
-        return DEFAULT_VISUAL_CONCEPT
-    text = text.strip()
-    if not text or text == ".":
-        return DEFAULT_VISUAL_CONCEPT
-    return text
-
-
 def normalize_palette(values):
     if not isinstance(values, list):
         values = []
