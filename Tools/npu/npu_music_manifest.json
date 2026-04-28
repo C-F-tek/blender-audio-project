@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-04-28T20:45:51",
+  "created_at": "2026-04-28T21:01:06",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "analysis_json": "output/Phazzah-Luca Vera_Master_analysis.json",
   "blender_keyframes_json": "output/Phazzah-Luca Vera_Master_analysis_blender_keyframes.json",
@@ -11,10 +11,52 @@
     "track_stem": "Phazzah-Luca Vera_Master",
     "scene_brief_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_scene_brief.json",
     "asset_inventory_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\spaziotempo_asset_inventory.json",
-    "has_scene_brief": false,
-    "scene_preferences": {},
-    "conversation_memory": {},
-    "recent_user_requests": [],
+    "has_scene_brief": true,
+    "scene_preferences": {
+      "creative_intent": "cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero",
+      "hero_object": "sfera/aura viva con deformazione mesh completa su tutti i keyframe audio",
+      "background": "azzurro/verde sfumato coerente con cover, niente nero piatto, niente linee/pannelli visibili",
+      "fog": "filamenti o banchi morbidi tipo fumo, visibili ma leggeri, compressi/decompressi dal suono",
+      "particles_orbits": "orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti",
+      "materials_lights": "materia + emissione fusi, luce generale stabile, no strobo forte, accenti su oggetti secondari",
+      "camera_motion": "movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
+      "avoid": "placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
+      "render_target": "test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
+      "free_notes": "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign\nquando hai finito di pensare procedi ppure"
+    },
+    "conversation_memory": {
+      "updated_at": "2026-04-28T20:57:27",
+      "memory_version": 3,
+      "message_count": 4,
+      "preference_summary": [
+        "creative_intent: cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero",
+        "hero_object: sfera/aura viva con deformazione mesh completa su tutti i keyframe audio",
+        "background: azzurro/verde sfumato coerente con cover, niente nero piatto, niente linee/pannelli visibili",
+        "fog: filamenti o banchi morbidi tipo fumo, visibili ma leggeri, compressi/decompressi dal suono",
+        "particles_orbits: orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti",
+        "materials_lights: materia + emissione fusi, luce generale stabile, no strobo forte, accenti su oggetti secondari",
+        "camera_motion: movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
+        "avoid: placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
+        "render_target: test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
+        "free_notes: analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign quando hai finito di pensare procedi ppure"
+      ],
+      "recent_user_requests": [
+        "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign",
+        "quando hai finito di pensare procedi ppure"
+      ],
+      "recent_user_questions": [],
+      "recent_assistant_notes": [
+        "Ollama non ha restituito testo. Il messaggio utente e' comunque salvato nel brief.",
+        "Ollama non ha restituito testo. Il messaggio utente e' comunque salvato nel brief."
+      ],
+      "durable_constraints": [],
+      "asset_mentions": [],
+      "memory_policy": "This compact memory is always passed to the local chat/model; recent_conversation is only the short working window."
+    },
+    "recent_user_requests": [
+      "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign",
+      "quando hai finito di pensare procedi ppure"
+    ],
     "durable_constraints": [],
     "asset_memory": {
       "asset_count": 8,
@@ -61,7 +103,192 @@
         "Do not assume imported .blend files are available inside the current Blender scene; import/link explicitly in generated scripts."
       ]
     },
-    "project_awareness": {},
+    "project_awareness": {
+      "format": "SPAZIOTEMPO_PROJECT_AWARENESS_V1",
+      "generated_at": "2026-04-28T20:56:50",
+      "track_identity": {
+        "track_stem": "Phazzah-Luca Vera_Master",
+        "title": "Phazzah",
+        "artist": "Luca Vera",
+        "identity_source": "current workflow WAV filename/session",
+        "external_metadata_allowed": false
+      },
+      "pipeline_state": {
+        "audio_already_loaded_by_pipeline": true,
+        "wav_analysis_ready": true,
+        "music_context_ready": true,
+        "project_index_ready": true,
+        "manual_index_ready": true,
+        "service_packet_ready": true,
+        "scene_brief_ready": true,
+        "can_generate_scene_script": true,
+        "segment_count": 20
+      },
+      "npu_context": {
+        "preflight_ready": false,
+        "available_devices": [],
+        "can_delegate_uncertainty": false,
+        "fallback": "If NPU is not ready, use deterministic project awareness and existing chunks instead of pretending uncertainty."
+      },
+      "verified_answers": [
+        {
+          "question": "Di che brano stiamo parlando?",
+          "answer": "Il brano corrente e `Phazzah` di `Luca Vera`. Non usare titoli/artisti esterni non presenti nei file del progetto.",
+          "evidence": {
+            "track_stem": "Phazzah-Luca Vera_Master",
+            "title": "Phazzah",
+            "artist": "Luca Vera",
+            "identity_source": "current workflow WAV filename/session",
+            "external_metadata_allowed": false
+          }
+        },
+        {
+          "question": "Cosa pensi della traccia del progetto?",
+          "answer": "Parlo del brano del progetto, `Phazzah - Luca Vera`, non di metadati esterni.\nDai JSON lo leggo come una traccia con 20 segmenti compatti e BPM stimato 79.51.\nL'apertura sembra guidata da banda `low` con intensita `quiet`, mentre la coda arriva su `low` / `quiet`.\nDa art direction lo tratterei come un brano da doppio fulcro: due `primary_ball_asset` centrali in controfase, uno piu materico e uno piu luminoso, usando tutti i frame del `blender_keyframes_json`.\nI punti da far respirare visivamente sono: segmento 7 (96.0-112.0s, mid, medium); segmento 10 (144.0-160.0s, mid, medium); segmento 8 (112.0-128.0s, mid, medium).\nQuindi: niente narrativa generica da canzone pop; qui conviene costruire una scena audio-reactive precisa, con deformazioni mesh e materiali che seguono low/mid/high/onset/beat.",
+          "evidence": {
+            "duration_sec": 318.00027210884355,
+            "fps": 30.0,
+            "bpm": 79.50721153846153,
+            "segment_count": 20,
+            "first_segment": {
+              "dominant_band": "low",
+              "intensity": "quiet",
+              "controls": {
+                "primary_band": "low",
+                "intensity": "quiet",
+                "hero_deformation": 0.3594,
+                "material_shimmer": 0.2497,
+                "fog_motion": 0.1075,
+                "accent_emission": 0.2438,
+                "camera_pressure": 0.1636
+              }
+            },
+            "last_segment": {
+              "dominant_band": "low",
+              "intensity": "quiet",
+              "controls": {
+                "primary_band": "low",
+                "intensity": "quiet",
+                "hero_deformation": 0.3649,
+                "material_shimmer": 0.134,
+                "fog_motion": 0.0835,
+                "accent_emission": 0.1475,
+                "camera_pressure": 0.2469
+              }
+            },
+            "top_energy_segments": [
+              {
+                "index": 7,
+                "start_sec": 96.0,
+                "end_sec": 112.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3933,
+                "intensity": "medium"
+              },
+              {
+                "index": 10,
+                "start_sec": 144.0,
+                "end_sec": 160.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3889,
+                "intensity": "medium"
+              },
+              {
+                "index": 8,
+                "start_sec": 112.0,
+                "end_sec": 128.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3872,
+                "intensity": "medium"
+              },
+              {
+                "index": 11,
+                "start_sec": 160.0,
+                "end_sec": 176.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.386,
+                "intensity": "medium"
+              },
+              {
+                "index": 16,
+                "start_sec": 240.0,
+                "end_sec": 256.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3725,
+                "intensity": "medium"
+              }
+            ]
+          }
+        },
+        {
+          "question": "Abbiamo qualcosa che puo essere usata sui keyframe dell'audio?",
+          "answer": "Si. Usa `blender_keyframes_json`: contiene il JSON frame-by-frame completo con `frames` per low/mid/high/onset/beat. `music_context_json` e i segmenti servono solo per decisioni macro.",
+          "evidence": {
+            "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis_blender_keyframes.json",
+            "exists": true,
+            "bytes": 1949032,
+            "updated": "2026-04-28T20:45:51"
+          }
+        },
+        {
+          "question": "Serve importare manualmente il WAV in Blender?",
+          "answer": "No. Il WAV e gia rappresentato dai JSON `analysis_json`, `music_context_json` e `blender_keyframes_json`. La chat deve parlare di pipeline/script, non di import audio manuale.",
+          "evidence": {
+            "audio_already_loaded_by_pipeline": true,
+            "analysis_json": {
+              "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis.json",
+              "exists": true,
+              "bytes": 1949032,
+              "updated": "2026-04-28T20:42:18"
+            }
+          }
+        },
+        {
+          "question": "Quale asset va usato quando l'utente dice ball?",
+          "answer": "Usa `primary_ball_asset`: C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+          "evidence": {
+            "role": "primary_ball_asset",
+            "name": "ball",
+            "path": "C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+            "type": ".fbx"
+          }
+        },
+        {
+          "question": "La pipeline e pronta per generare lo script scena?",
+          "answer": "Si: analisi, music context, project index, manual index, service packet e scene brief risultano pronti.",
+          "evidence": {
+            "audio_already_loaded_by_pipeline": true,
+            "wav_analysis_ready": true,
+            "music_context_ready": true,
+            "project_index_ready": true,
+            "manual_index_ready": true,
+            "service_packet_ready": true,
+            "scene_brief_ready": true,
+            "can_generate_scene_script": true,
+            "segment_count": 20
+          }
+        },
+        {
+          "question": "Quanti segmenti musicali compatti sono disponibili?",
+          "answer": "Sono disponibili 20 segmenti compatti.",
+          "evidence": {
+            "segment_count": 20
+          }
+        }
+      ],
+      "director_rules": [
+        "Never suggest manually importing audio into Blender; the WAV is already represented by analysis/music/keyframe JSON.",
+        "Never suggest opening Blender as the next generic step; the user decides when to run Blender.",
+        "Do not suggest rebuilding from scratch if technical files already exist.",
+        "When technical files exist, refer to the pipeline action: scene brief, dual AI plan, scene script draft, hot update, or review generated script.",
+        "Use project asset roles. If user says ball, prefer primary_ball_asset.",
+        "Full analysis_blender_keyframes JSON is authoritative and must not be summarized away.",
+        "If unsure, say which technical file/chunk should be checked, not generic Blender advice."
+      ],
+      "missing_or_suspicious": [
+        "npu_preflight"
+      ]
+    },
     "operating_rules": [
       "Use this memory as interpretation context for AI outputs, never to alter numeric audio analysis.",
       "Respect user corrections over generic defaults.",
@@ -290,8 +517,8 @@
       "index": 1,
       "kind": "overview",
       "path": "Tools/npu/npu_music_chunks/chunk_001_music_overview.md",
-      "chars": 14752,
-      "sha256": "261ca2e748b5fcb50755d1a33c2a38a6eff7af19522315618cc1ff2813ebf44a"
+      "chars": 26474,
+      "sha256": "56fcd9be863ad4bb3fef64127face8d7be7e7af093bb1005b9ed67d78e7861da"
     },
     {
       "index": 2,

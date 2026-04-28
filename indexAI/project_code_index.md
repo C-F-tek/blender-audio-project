@@ -1,8 +1,8 @@
 # Spaziotempo Primary Project Code Index
 
-Generated: `2026-04-28T20:45:51`
+Generated: `2026-04-28T21:01:06`
 
-Source fingerprint: `e6b75a3f1d4eab85f4feef99ffeb7627e433b3de3b162480e51f12e85f540774`
+Source fingerprint: `33116afdd5c0440ea26de94a0a0e371e9170f533e670682704e27e350c23d1c1`
 
 Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.
 
@@ -176,10 +176,10 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/npu/build_project_ai_index.py`: 420 lines, 14905 chars, sha256 `5d0e447d5d77e945f831b80e31a0f0ccdd224276d30fe452a85293c99251e7c7`
 - `Tools/npu/build_semantic_code_chunks.py`: 92 lines, 5773 chars, sha256 `c95155adaba9dbffa80174feb6e7ee16ac23346d70a437cd75aa89138ff1dffb`
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
-- `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `778a6fc8ed8246e179b0fe7f2f9106d73e90a5d1f41286c60fe1af17f7695c42`
-- `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `f0517cbbcb416187efb5350a98121a76813aa5fa83693b012035ed3753a01a10`
-- `Tools/npu/npu_code_manifest.json`: 6795 lines, 184212 chars, sha256 `2101d3d00690b97786d1458e92b380e9e2394910d7d66338845629af5a13ccfb`
-- `Tools/npu/npu_music_manifest.json`: 537 lines, 17168 chars, sha256 `eb5ea57e09350509621a658a9e561205a5d8d16f96519026423d55bd13e19151`
+- `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `d90ac38e6c1379e2057053cfc70233d5cbfc73fc5c0cc858eb5d8de8c6e4532b`
+- `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `7aadda9d5fb497f377499c091bfe48ddf9bbea05fb348989bc1211783d80d11c`
+- `Tools/npu/npu_code_manifest.json`: 6795 lines, 184212 chars, sha256 `37c6fcc970f24e6c32a11f0aa34e22b9bceaf36ce76fe44cf5b251b6ada9de40`
+- `Tools/npu/npu_music_manifest.json`: 537 lines, 17168 chars, sha256 `337983b82922b8117a19bdd753ad9800ae7273be8db1ff27a5deebdf8576a53a`
 - `Tools/npu/npu_runtime.py`: 96 lines, 3199 chars, sha256 `8e0b1328626cb202c8f7a47bcf159df0725c7370a631440ce11989cca5be58bb`
 - `Tools/npu/ollama_runtime.py`: 352 lines, 11053 chars, sha256 `dbcdde9d1d43964bd77a64a8cfe8e900346aa4b5554e41daf19758269cbd4cbd`
 - `Tools/npu/README.md`: 38 lines, 1231 chars, sha256 `bb15beeb5dc9eaa8282b6d5dac0ce782574f844e9cfe25655e97c80b1145c916`
