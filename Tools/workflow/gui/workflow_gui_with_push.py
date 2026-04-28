@@ -11,13 +11,13 @@ if str(WORKFLOW_DIR) not in sys.path:
 
 from components.artifact_browser import ArtifactBrowserWindow  # noqa: E402
 from git_auto_push import run_auto_push_generated_data  # noqa: E402
-from workflow_gui import WorkflowGui as BaseWorkflowGui  # noqa: E402
+from workflow_gui_modern import WorkflowGui as BaseWorkflowGui  # noqa: E402
 
 
 class WorkflowGuiWithPush(BaseWorkflowGui):
     """Workflow GUI with generated-data push and artifact consultation buttons.
 
-    This wrapper avoids invasive edits to the main GUI file. It injects:
+    It uses the adaptive grouped modern GUI as base and injects:
     - an artifact browser button near project/debug utilities;
     - the push button after the structured-data generation steps.
     """
