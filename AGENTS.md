@@ -12,6 +12,7 @@ This file provides operating context for AI assistants and automated code-review
 - Domain: audio-reactive visual generation and Blender scene automation
 - License: MIT
 - Maturity: work in progress
+- Default branch: `master`
 
 ## Core goals
 
@@ -22,6 +23,7 @@ This file provides operating context for AI assistants and automated code-review
 5. Mark unverified information as `not specified`.
 6. Use `Scripting/v61b/` as the quality reference for complex generated packages.
 7. Keep shared utility extraction non-destructive.
+8. Keep AI-generated changes reviewable through GitHub PRs and checklists.
 
 ## Required reading order for AI systems
 
@@ -29,14 +31,17 @@ Before creating or editing a package, read:
 
 1. `README.md`
 2. `docs/README.md`
-3. `docs/MODULE_MAP.md`
-4. `docs/DATA_FLOW.md`
-5. `docs/AI_GENERATED_PACKAGE_STANDARD.md`
-6. `docs/PACKAGE_CREATION_WORKFLOW.md`
-7. `docs/QUALITY_GATE.md`
-8. `docs/SHARED_SCRIPTING_UTILITIES.md`
-9. the README of the target package under `Scripting/`
-10. the target Python file before modifying it
+3. `docs/AI_REPOSITORY_MANIFEST.md`
+4. `indexAI/ai_manifest.json`
+5. `docs/MODULE_MAP.md`
+6. `docs/DATA_FLOW.md`
+7. `docs/AI_GENERATED_PACKAGE_STANDARD.md`
+8. `docs/PACKAGE_CREATION_WORKFLOW.md`
+9. `docs/QUALITY_GATE.md`
+10. `docs/REVIEW_CHECKLIST.md`
+11. `docs/SHARED_SCRIPTING_UTILITIES.md`
+12. the README of the target package under `Scripting/`
+13. the target Python file before modifying it
 
 ## Expected AI workflow
 
@@ -50,6 +55,7 @@ When editing this repository:
 6. Document every new assumption.
 7. Report changed files, purpose, risks, and tests.
 8. Report line counts for scripts created or modified.
+9. Prefer pull requests over direct changes to `master` when the change spans multiple files.
 
 ## Safe modification rules
 
@@ -62,6 +68,7 @@ When editing this repository:
 - Do not destructively refactor `Scripting/v61b/`.
 - Use additive extraction for shared utilities.
 - Do not collapse separate generated packages into one folder.
+- Keep `master` as default branch unless repository settings are changed intentionally.
 
 ## Known important folders
 
@@ -71,9 +78,20 @@ When editing this repository:
 | `Scripting/v61b/` | Current quality reference for complex Blender package structure. |
 | `Scripting/shared/` | Target area for reusable package-agnostic utilities. |
 | `Tools/npu/` | Local AI, NPU, context-building, and review tooling. |
+| `Tools/repo_patch_runner/` | Structured repository patch tooling. |
 | `indexAI/` | AI indexes, manifests, context, and patch artifacts. |
 | `docs/` | Documentation for humans and AI systems. |
 | `examples/` | Future reproducible examples. |
+| `.github/` | Issue templates, PR template, and CI workflow definitions. |
+
+## AI-friendly files
+
+| File | Purpose |
+|---|---|
+| `docs/AI_REPOSITORY_MANIFEST.md` | Human-readable repository manifest for AI tools. |
+| `indexAI/ai_manifest.json` | Machine-readable repository manifest. |
+| `docs/AI_PROMPTS.md` | Reusable prompts for review, patching, and package generation. |
+| `docs/REVIEW_CHECKLIST.md` | Shared checklist for manual and AI review. |
 
 ## Output expectations
 
@@ -89,4 +107,4 @@ For code changes, report:
 
 ## Quality rule
 
-A generated package should not be accepted as complete unless it satisfies `docs/QUALITY_GATE.md` or clearly states which checks are still missing.
+A generated package should not be accepted as complete unless it satisfies `docs/QUALITY_GATE.md` and `docs/REVIEW_CHECKLIST.md`, or clearly states which checks are still missing.
