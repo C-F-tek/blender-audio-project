@@ -10,6 +10,8 @@ from pathlib import Path
 from tkinter import messagebox, ttk
 from typing import Any
 
+from components.st_theme import text_widget_colors
+
 
 TEXT_EXTENSIONS = {".json", ".md", ".txt", ".py", ".log", ".jsonl", ".csv"}
 IMAGE_EXTENSIONS = {".png", ".gif", ".ppm", ".pgm"}
@@ -108,11 +110,9 @@ def collect_session_artifacts(session: Any, extra_roots: list[Path] | None = Non
 
 
 class ArtifactBrowserWindow(tk.Toplevel):
-    """Browse and inspect generated workflow artifacts.
+    """Browse and inspect generated workflow artifacts."""
 
-    The widget intentionally keeps video playback delegated to the operating
-    system media player, while text/JSON and basic images are previewed inline.
-    """
+    SORT_COLUMNS = ("status", "category", "key", "size", "path")
 
     def __init__(self, master: tk.Tk, *, session_loader, extra_roots_loader=None) -> None:
         super().__init__(master)
@@ -123,8 +123,10 @@ class ArtifactBrowserWindow(tk.Toplevel):
         self.image_ref: tk.PhotoImage | None = None
         self.filter_var = tk.StringVar(value="all")
         self.search_var = tk.StringVar(value="")
+        self.sort_column = "key"
+        self.sort_reverse = False
 
-        self.title("Spaziotempo Artifact Browser")
+        self.title("Artifact Browser")
         self.geometry("1220x780")
         self.protocol("WM_DELETE_WINDOW", self.hide)
         self.build_layout()
@@ -139,6 +141,7 @@ class ArtifactBrowserWindow(tk.Toplevel):
         ttk.Button(toolbar, text="Refresh", command=self.refresh).pack(side="left")
         ttk.Button(toolbar, text="Open", command=self.open_selected).pack(side="left", padx=(6, 0))
         ttk.Button(toolbar, text="Open folder", command=self.open_selected_folder).pack(side="left", padx=(6, 0))
+        ttk.Button(toolbar, text="Sort reset", command=self.reset_sort).pack(side="left", padx=(6, 0))
         ttk.Button(toolbar, text="Hide", command=self.hide).pack(side="right")
 
         ttk.Label(toolbar, text="Filter").pack(side="left", padx=(14, 4))
@@ -168,14 +171,14 @@ class ArtifactBrowserWindow(tk.Toplevel):
         columns = ("status", "category", "key", "size", "path")
         self.tree = ttk.Treeview(left, columns=columns, show="headings", height=28)
         for column, width in [
-            ("status", 72),
-            ("category", 82),
-            ("key", 220),
-            ("size", 90),
-            ("path", 440),
+            ("status", 78),
+            ("category", 88),
+            ("key", 230),
+            ("size", 96),
+            ("path", 460),
         ]:
-            self.tree.heading(column, text=column.upper())
-            self.tree.column(column, width=width, anchor="w")
+            self.tree.column(column, width=width, anchor="e" if column == "size" else "w")
+        self.configure_headings()
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", lambda _event: self.preview_selected())
         self.tree.bind("<Double-1>", lambda _event: self.open_selected())
@@ -187,12 +190,56 @@ class ArtifactBrowserWindow(tk.Toplevel):
         self.preview_title = ttk.Label(right, text="Preview", font=("TkDefaultFont", 11, "bold"))
         self.preview_title.pack(anchor="w", pady=(0, 6))
 
-        self.preview = tk.Text(right, wrap="none")
+        self.preview = tk.Text(right, wrap="none", **text_widget_colors(self))
         self.preview.pack(fill="both", expand=True)
 
         self.preview_scroll = ttk.Scrollbar(self.preview, orient="vertical", command=self.preview.yview)
         self.preview.configure(yscrollcommand=self.preview_scroll.set)
         self.preview_scroll.pack(side="right", fill="y")
+
+    def configure_headings(self) -> None:
+        labels = {
+            "status": "STATO",
+            "category": "TIPO",
+            "key": "CHIAVE",
+            "size": "DIMENSIONE",
+            "path": "PERCORSO",
+        }
+        arrow = " ↓" if self.sort_reverse else " ↑"
+        for column in self.SORT_COLUMNS:
+            self.tree.heading(
+                column,
+                text=labels[column] + (arrow if self.sort_column == column else ""),
+                command=lambda col=column: self.sort_by(col),
+            )
+
+    def sort_by(self, column: str) -> None:
+        if column == self.sort_column:
+            self.sort_reverse = not self.sort_reverse
+        else:
+            self.sort_column = column
+            self.sort_reverse = False
+        self.configure_headings()
+        self.apply_filter()
+
+    def reset_sort(self) -> None:
+        self.sort_column = "key"
+        self.sort_reverse = False
+        self.configure_headings()
+        self.apply_filter()
+
+    def sort_key(self, item: ArtifactItem):
+        if self.sort_column == "status":
+            return 0 if item.exists else 1
+        if self.sort_column == "category":
+            return item.category.lower()
+        if self.sort_column == "key":
+            return item.key.lower()
+        if self.sort_column == "size":
+            return item.size
+        if self.sort_column == "path":
+            return str(item.path).lower()
+        return item.key.lower()
 
     def hide(self) -> None:
         self.withdraw()
@@ -225,6 +272,7 @@ class ArtifactBrowserWindow(tk.Toplevel):
                 continue
             self.filtered_items.append(item)
 
+        self.filtered_items.sort(key=self.sort_key, reverse=self.sort_reverse)
         self.tree.delete(*self.tree.get_children())
         for index, item in enumerate(self.filtered_items):
             self.tree.insert(
@@ -239,7 +287,7 @@ class ArtifactBrowserWindow(tk.Toplevel):
                     str(item.path),
                 ),
             )
-        self.write_preview(f"{len(self.filtered_items)} artefatti visualizzati su {len(self.items)} totali.")
+        self.write_preview(f"{len(self.filtered_items)} artefatti visualizzati su {len(self.items)} totali. Clicca sulle intestazioni per ordinare.")
 
     def selected_item(self) -> ArtifactItem | None:
         selected = self.tree.selection()
@@ -263,15 +311,9 @@ class ArtifactBrowserWindow(tk.Toplevel):
         elif item.category == "image":
             self.preview_image_file(item.path)
         elif item.category == "video":
-            self.write_preview(
-                "Video disponibile. Usa Open per aprirlo nel player di sistema.\n\n"
-                f"File: {item.path}\nSize: {human_bytes(item.size)}"
-            )
+            self.write_preview("Video disponibile. Usa Open per aprirlo nel player di sistema.\n\n" f"File: {item.path}\nSize: {human_bytes(item.size)}")
         elif item.category == "audio":
-            self.write_preview(
-                "Audio disponibile. Usa Open per aprirlo nel player/editor di sistema.\n\n"
-                f"File: {item.path}\nSize: {human_bytes(item.size)}"
-            )
+            self.write_preview("Audio disponibile. Usa Open per aprirlo nel player/editor di sistema.\n\n" f"File: {item.path}\nSize: {human_bytes(item.size)}")
         elif item.category == "folder":
             self.write_preview_folder(item.path)
         else:
@@ -308,8 +350,7 @@ class ArtifactBrowserWindow(tk.Toplevel):
             self.preview.insert("end", f"\n\n{path}\n{image.width()}x{image.height()} px | {human_bytes(path.stat().st_size)}")
         except Exception as exc:
             self.write_preview(
-                "Preview immagine non disponibile in Tk per questo file. "
-                "Usa Open per aprirlo esternamente.\n\n"
+                "Preview immagine non disponibile in Tk per questo file. Usa Open per aprirlo esternamente.\n\n"
                 f"{path}\n\n{exc}"
             )
 
