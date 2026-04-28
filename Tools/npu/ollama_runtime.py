@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from datetime import datetime
 import json
 import os
 import shutil
@@ -19,6 +20,29 @@ def normalize_base_url(value: str | None) -> str:
 
 DEFAULT_BASE_URL = normalize_base_url(os.environ.get("OLLAMA_API_BASE") or os.environ.get("OLLAMA_HOST"))
 DEFAULT_MODELS = ("qwen2.5-coder:14b", "gpt-oss:20b", "autumnzsd/qwen2.5-coder-tools:latest")
+
+
+def now_iso() -> str:
+    return datetime.now().isoformat(timespec="seconds")
+
+
+def project_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def ollama_runtime_log_path() -> Path:
+    return project_root() / "output" / "workflow_logs" / "ollama_runtime_events.jsonl"
+
+
+def append_ollama_runtime_event(event: str, payload: dict) -> None:
+    try:
+        path = ollama_runtime_log_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        row = {"time": now_iso(), "event": event, "payload": payload}
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
 
 
 def ollama_home() -> Path:
@@ -273,8 +297,10 @@ class OllamaSession:
         self.model: str | None = None
 
     def start(self) -> "OllamaSession":
+        start = time.perf_counter()
         if not is_server_ready(self.base_url):
             if not self.ollama_exe:
+                append_ollama_runtime_event("server_not_ready", {"base_url": self.base_url, "preferred_model": self.preferred_model})
                 raise FileNotFoundError(
                     "Ollama server is not reachable and ollama.exe was not found. "
                     "Set OLLAMA_EXE or restart the shell after installing Ollama."
@@ -286,6 +312,7 @@ class OllamaSession:
         if not available:
             available = list_models_from_disk()
         self.model = choose_model(self.preferred_model, available)
+        append_ollama_runtime_event("session_start", {"preferred_model": self.preferred_model, "selected_model": self.model, "available_model_count": len(available), "started_server": self.started_server, "elapsed_sec": round(time.perf_counter() - start, 4)})
         return self
 
     def generate(self, prompt: str, max_new_tokens: int = 900, temperature: float = 0.15) -> str:
@@ -302,8 +329,15 @@ class OllamaSession:
                 "num_predict": max_new_tokens,
             },
         }
-        data = _json_request(self.base_url, "/api/generate", payload=payload, timeout=600.0)
-        return str(data.get("response", "")).strip()
+        start = time.perf_counter()
+        try:
+            data = _json_request(self.base_url, "/api/generate", payload=payload, timeout=600.0)
+        except Exception as exc:
+            append_ollama_runtime_event("generate_error", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "elapsed_sec": round(time.perf_counter() - start, 4), "error_type": type(exc).__name__, "error": str(exc)})
+            raise
+        response = str(data.get("response", "")).strip()
+        append_ollama_runtime_event("generate_result", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "elapsed_sec": round(time.perf_counter() - start, 4), "response_chars": len(response), "empty_response": not bool(response), "done": data.get("done"), "done_reason": data.get("done_reason"), "prompt_eval_count": data.get("prompt_eval_count"), "eval_count": data.get("eval_count"), "response_preview": response[:300]})
+        return response
 
     def unload_model(self) -> None:
         if not self.model:
@@ -343,6 +377,7 @@ class OllamaSession:
                 self.process.wait(timeout=8.0)
             except subprocess.TimeoutExpired:
                 self.process.kill()
+        append_ollama_runtime_event("session_close", {"model": self.model, "started_server": self.started_server, "unload_model": self.unload_model_on_close})
 
     def __enter__(self) -> "OllamaSession":
         return self.start()
