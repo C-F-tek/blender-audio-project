@@ -7,6 +7,7 @@ from tkinter import messagebox, ttk
 
 import workflow_state as wf
 from components.action_panel import ActionGroup, ActionSpec, GroupedActionPanel
+from components.live_output_panel import LiveOutputPanel
 from components.session_overview import SessionOverviewFrame
 from components.st_theme import apply_spaziotempo_theme, text_widget_colors
 from components.storage_dashboard import StorageDashboardWindow
@@ -14,7 +15,7 @@ from workflow_gui import WorkflowGui as LegacyWorkflowGui
 
 
 class ModernWorkflowGui(LegacyWorkflowGui):
-    """Adaptive workflow GUI with grouped, scrollable operations."""
+    """Adaptive workflow GUI with grouped actions and graphical live output."""
 
     def configure_style(self) -> None:
         apply_spaziotempo_theme(self)
@@ -88,13 +89,18 @@ class ModernWorkflowGui(LegacyWorkflowGui):
     def build_right_panel(self, parent: ttk.Frame) -> None:
         notebook = ttk.Notebook(parent)
         notebook.pack(fill="both", expand=True)
+        self.main_notebook = notebook
 
+        live_tab = ttk.Frame(notebook, padding=8)
         status_tab = ttk.Frame(notebook, padding=8)
-        output_tab = ttk.Frame(notebook, padding=8)
         help_tab = ttk.Frame(notebook, padding=8)
+        notebook.add(live_tab, text="Live Output")
         notebook.add(status_tab, text="Session / Outputs")
-        notebook.add(output_tab, text="Live Output")
         notebook.add(help_tab, text="Workflow Guide")
+
+        self.live_output_panel = LiveOutputPanel(live_tab)
+        self.live_output_panel.pack(fill="both", expand=True)
+        self.output = self.live_output_panel.raw_text
 
         self.session_overview = SessionOverviewFrame(
             status_tab,
@@ -103,23 +109,21 @@ class ModernWorkflowGui(LegacyWorkflowGui):
         )
         self.session_box = self.session_overview.detail
 
-        self.output = tk.Text(output_tab, wrap="word", borderwidth=1, relief="solid", **text_widget_colors(self))
-        self.output.pack(fill="both", expand=True)
-
         help_text = tk.Text(help_tab, wrap="word", borderwidth=0, **text_widget_colors(self))
         help_text.pack(fill="both", expand=True)
         help_text.insert(
             "1.0",
             "Ordine operativo consigliato:\n\n"
-            "1. Analyze WAV / Full audio prepare per generare i dati tecnici.\n"
-            "2. Dual AI plan per produrre il piano strutturato.\n"
-            "3. Scene director chat per affinare brief e vincoli.\n"
-            "4. Dual AI scene script per generare lo script Blender.\n"
-            "5. Artifact browser per controllare JSON, immagini, output audio/video e script prodotti.\n"
+            "1. Apri la GUI: il primo piano e' Live Output.\n"
+            "2. Avvia Analyze WAV / Full audio prepare per generare i dati tecnici.\n"
+            "3. Segui eventi, errori, warning e comandi dal pannello Live Output.\n"
+            "4. Usa Session / Outputs per verificare file prodotti e percorsi.\n"
+            "5. Usa Artifact browser e Project stats solo per consultazione secondaria.\n"
             "6. Push generated data solo dopo avere completato e verificato i dati strutturati.\n\n"
             "GUI:\n"
+            "- Live Output e' la vista principale e tratta graficamente stdout/stderr.\n"
             "- Le tabelle seguono l'ordinamento stile Esplora file: clic su intestazione, secondo clic inverte.\n"
-            "- Session / Outputs mostra riepilogo e output in tabella, non più testo grezzo.\n"
+            "- Session / Outputs mostra riepilogo e output in tabella, non piu' testo grezzo.\n"
             "- Project stats controlla la cartella blender e distingue blender-audio-project dal resto.\n\n"
             "Estensione GUI:\n"
             "- aggiungi una nuova ActionSpec dentro build_action_groups();\n"
@@ -127,6 +131,13 @@ class ModernWorkflowGui(LegacyWorkflowGui):
             "- la GUI gestisce automaticamente scroll, spacing e abilitazione pulsanti.\n",
         )
         help_text.configure(state="disabled")
+        notebook.select(live_tab)
+
+    def append_output(self, text: str) -> None:
+        if hasattr(self, "live_output_panel"):
+            self.live_output_panel.append_text(text)
+        else:
+            super().append_output(text)
 
     def open_system_path(self, path: Path) -> None:
         try:
