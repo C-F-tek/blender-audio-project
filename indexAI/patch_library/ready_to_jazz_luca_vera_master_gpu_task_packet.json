@@ -1,10 +1,10 @@
 {
   "format": "SPAZIOTEMPO_GPU_TASK_PACKET_V1",
-  "generated_at": "2026-04-28T13:33:30",
+  "generated_at": "2026-04-28T20:30:45",
   "track_stem": "Ready To Jazz-Luca Vera_Master",
   "capsule": {
     "format": "SPAZIOTEMPO_AI_SERVICE_CAPSULE_V1",
-    "generated_at": "2026-04-28T13:33:30",
+    "generated_at": "2026-04-28T20:30:45",
     "routing_policy": {
       "heavy_reasoning": "GPU_OLLAMA",
       "code_generation": "GPU_OLLAMA_SCENE_SCRIPT_WRITER",
@@ -27,7 +27,7 @@
       "music_context_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_music_context.json",
       "analysis_ai_context_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis_ai_context.json",
       "full_blender_keyframes_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis_blender_keyframes.json",
-      "full_blender_keyframes_sha": "6debdf16fba553939203dbbb0241c6ffe97664a3379cf7c05e4a5c9f633625e4",
+      "full_blender_keyframes_sha": "8c56f358c1111321863f3bf78c278bdb0aafb5d569b9a7ce9f8f380afc6bab2e",
       "dual_plan_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_dual_ai_scene_plan.json",
       "project_manifest_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI\\project_code_manifest.json"
     },
@@ -1777,15 +1777,15 @@
         {
           "id": "F001",
           "file": "Scripting/v61b/config.py",
-          "lines": 439,
-          "sha": "a01b8504529d",
+          "lines": 440,
+          "sha": "98836c3a5165",
           "role": "CFG profile/path/render/audio constants"
         },
         {
           "id": "F002",
           "file": "Scripting/v61b/main_v61b.py",
-          "lines": 220,
-          "sha": "326af60e14ed",
+          "lines": 201,
+          "sha": "e8bfc826b8fc",
           "role": "MAIN build orchestration"
         },
         {
@@ -1859,7 +1859,7 @@
           "role": "AI_PIPELINE NPU/GPU routing"
         }
       ],
-      "source_fingerprint": "201bc7325502d9226a9da8b596a84cbfaab1e3800d2b8a5d71f16f0a8f651f6c"
+      "source_fingerprint": "4b6023cfe88c416939c01ec8b1800bf8148d74277c0a23e42d1308b4acb2ee0e"
     },
     "style_contract": {
       "do_not_modify_project_source": true,

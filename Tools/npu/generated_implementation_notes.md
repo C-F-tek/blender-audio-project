@@ -6,7 +6,7 @@ This file is an AI draft. Review before loading in Blender.
 {
   "ok": true,
   "issues": [],
-  "indexed_file_count": 98,
+  "indexed_file_count": 201,
   "allowed_new_prefixes": [
     "indexAI/scene_scripts/",
     "indexAI/patch_library/"
@@ -22,7 +22,7 @@ This file is an AI draft. Review before loading in Blender.
 }
 
 ## Notes
-- Deterministic fallback generated because implementation draft was invalid: scene_script is missing or too short.; scene_script must use the full Blender keyframes JSON frames.; scene_script must include at least one mesh/modifier-driven visual system.
+- Deterministic fallback generated because implementation draft was invalid: scene_script is missing or too short.; scene_script must load and use the JSON context files.; scene_script must use the full Blender keyframes JSON frames.; scene_script must create Blender keyframes from the audio context.; scene_script must include at least one mesh/modifier-driven visual system.
 - This is a standalone scene builder; it does not patch the existing project files.
 - NPU service work is represented as manifest/split-plan support files.
 

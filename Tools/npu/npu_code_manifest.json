@@ -1,12 +1,12 @@
 {
-  "created_at": "2026-04-28T13:33:12",
+  "created_at": "2026-04-28T20:30:25",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "script_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\Scripting\\v61b",
   "long_context": {
     "mode": "file_line_chunks",
     "chunk_dir": "Tools/npu/npu_code_chunks",
     "max_chunk_chars": 10500,
-    "chunk_count": 99,
+    "chunk_count": 102,
     "index": "Tools/npu/npu_code_index.md"
   },
   "files": [
@@ -173,9 +173,9 @@
       "file": "normalize_scene_spec.py",
       "exists": true,
       "suffix": ".py",
-      "lines": 488,
-      "chars": 14873,
-      "sha256": "e85a233bd5b31b27296f4bf5b761a0bc5b33bdce66aecc4f80dbf1d305f21b12",
+      "lines": 470,
+      "chars": 14431,
+      "sha256": "af12b708bf2b6aff49d87872a79fa883a7c32b299a54b6cceb7182bacc1341b9",
       "symbols": {
         "imports": [
           "from pathlib import Path",
@@ -201,24 +201,8 @@
             "async": false
           },
           {
-            "name": "safe_scene_name",
-            "line": 55,
-            "args": [
-              "name"
-            ],
-            "async": false
-          },
-          {
-            "name": "safe_visual_concept",
-            "line": 64,
-            "args": [
-              "text"
-            ],
-            "async": false
-          },
-          {
             "name": "normalize_palette",
-            "line": 73,
+            "line": 55,
             "args": [
               "values"
             ],
@@ -226,7 +210,7 @@
           },
           {
             "name": "normalize_camera_style",
-            "line": 93,
+            "line": 75,
             "args": [
               "camera_style"
             ],
@@ -234,7 +218,7 @@
           },
           {
             "name": "build_object_specs",
-            "line": 123,
+            "line": 105,
             "args": [
               "brief"
             ],
@@ -242,7 +226,7 @@
           },
           {
             "name": "build_materials",
-            "line": 200,
+            "line": 182,
             "args": [
               "brief"
             ],
@@ -250,7 +234,7 @@
           },
           {
             "name": "build_node_animation",
-            "line": 275,
+            "line": 257,
             "args": [
               "brief"
             ],
@@ -258,7 +242,7 @@
           },
           {
             "name": "build_audio_mapping",
-            "line": 329,
+            "line": 311,
             "args": [
               "brief"
             ],
@@ -266,19 +250,19 @@
           },
           {
             "name": "build_optimization",
-            "line": 376,
+            "line": 358,
             "args": [],
             "async": false
           },
           {
             "name": "build_render_strategy",
-            "line": 393,
+            "line": 375,
             "args": [],
             "async": false
           },
           {
             "name": "normalize_brief",
-            "line": 401,
+            "line": 383,
             "args": [
               "brief"
             ],
@@ -286,7 +270,7 @@
           },
           {
             "name": "safe_scene_name",
-            "line": 436,
+            "line": 418,
             "args": [
               "name"
             ],
@@ -294,7 +278,7 @@
           },
           {
             "name": "safe_visual_concept",
-            "line": 445,
+            "line": 427,
             "args": [
               "text"
             ],
@@ -302,7 +286,7 @@
           },
           {
             "name": "main",
-            "line": 454,
+            "line": 436,
             "args": [],
             "async": false
           }
@@ -1039,11 +1023,12 @@
       "file": "Scripting/v61b/config.py",
       "exists": true,
       "suffix": ".py",
-      "lines": 439,
-      "chars": 15317,
-      "sha256": "a01b8504529dd7bd8d25d54a6612e17f834097d74f448034c6a945d8f523913e",
+      "lines": 440,
+      "chars": 15700,
+      "sha256": "98836c3a51657ef0934410486d649d34d1faf3ba260d692b73c39741ab6c7c4e",
       "symbols": {
         "imports": [
+          "os",
           "from pathlib import Path",
           "json",
           "math"
@@ -1362,9 +1347,9 @@
       "file": "Scripting/v61b/main_v61b.py",
       "exists": true,
       "suffix": ".py",
-      "lines": 220,
-      "chars": 7357,
-      "sha256": "326af60e14ed96c850673830305d471c3575235a3462600ab8361ebe221d8b8e",
+      "lines": 201,
+      "chars": 6896,
+      "sha256": "e8bfc826b8fcf9071a8ef48f7bdfb973cb0f908d99eed4f2de4390a4b3f051c4",
       "symbols": {
         "imports": [
           "sys",
@@ -1372,6 +1357,7 @@
           "from pathlib import Path",
           "bpy",
           "logging",
+          "from reload_utils import reload_known_modules",
           "from config import ANALYSIS_JSON_PATH, AUDIO_PATH, OUTPUT_MP4, OUTPUT_IMAGE_SEQUENCE_DIR, OUTPUT_IMAGE_SEQUENCE_PREFIX, RENDER_OUTPUT_MODE, CLEAR_SCENE, CLEAR_SEQUENCER, FPS_OVERRIDE",
           "from scene_utils import clear_scene",
           "from io_utils import load_json, ensure_inputs_exist, add_audio_strip",
@@ -1387,13 +1373,13 @@
         "functions": [
           {
             "name": "register_tuning_panel",
-            "line": 79,
+            "line": 60,
             "args": [],
             "async": false
           },
           {
             "name": "classify_project_structure",
-            "line": 89,
+            "line": 70,
             "args": [
               "scene"
             ],
@@ -1401,7 +1387,7 @@
           },
           {
             "name": "print_summary",
-            "line": 100,
+            "line": 81,
             "args": [
               "scene",
               "analysis_file",
@@ -1416,16 +1402,14 @@
           },
           {
             "name": "main",
-            "line": 125,
+            "line": 106,
             "args": [],
             "async": false
           }
         ],
         "classes": [],
         "assignments": [
-          "SCRIPT_DIR",
-          "reload_modules",
-          "reload_prefixes"
+          "SCRIPT_DIR"
         ]
       }
     },
@@ -2774,30 +2758,30 @@
       "file": "Scripting/v61b/encode_ffmpeg_v61b.py",
       "exists": true,
       "suffix": ".py",
-      "lines": 399,
-      "chars": 12329,
-      "sha256": "c8c7a5a772e173407ffedf0b8abf7b1908634ea91543946f5f71c361d2076034",
+      "lines": 400,
+      "chars": 12347,
+      "sha256": "3a34c4604f4ec8ac8520be78453029456b496f80382e47216f01e4552937eb11",
       "symbols": {
         "imports": [
+          "importlib",
           "json",
           "os",
           "re",
           "shutil",
           "subprocess",
           "sys",
-          "from pathlib import Path",
-          "config"
+          "from pathlib import Path"
         ],
         "functions": [
           {
             "name": "resolve_script_dir",
-            "line": 15,
+            "line": 16,
             "args": [],
             "async": false
           },
           {
             "name": "extract_frame_number",
-            "line": 82,
+            "line": 83,
             "args": [
               "path"
             ],
@@ -2805,13 +2789,13 @@
           },
           {
             "name": "sorted_frame_files",
-            "line": 89,
+            "line": 90,
             "args": [],
             "async": false
           },
           {
             "name": "contiguous_frame_files",
-            "line": 109,
+            "line": 110,
             "args": [
               "frame_files"
             ],
@@ -2819,25 +2803,25 @@
           },
           {
             "name": "get_fps",
-            "line": 133,
+            "line": 134,
             "args": [],
             "async": false
           },
           {
             "name": "candidate_path_values",
-            "line": 155,
+            "line": 156,
             "args": [],
             "async": false
           },
           {
             "name": "find_ffmpeg",
-            "line": 175,
+            "line": 176,
             "args": [],
             "async": false
           },
           {
             "name": "build_image_pattern",
-            "line": 203,
+            "line": 204,
             "args": [
               "first_file",
               "first_frame"
@@ -2846,7 +2830,7 @@
           },
           {
             "name": "source_frame_to_audio_offset",
-            "line": 216,
+            "line": 217,
             "args": [
               "first_frame",
               "fps"
@@ -2855,7 +2839,7 @@
           },
           {
             "name": "build_command",
-            "line": 222,
+            "line": 223,
             "args": [
               "ffmpeg",
               "pattern",
@@ -2868,7 +2852,7 @@
           },
           {
             "name": "write_visible_shell_launcher",
-            "line": 328,
+            "line": 329,
             "args": [
               "command",
               "output",
@@ -2881,7 +2865,7 @@
           },
           {
             "name": "launch_visible_shell",
-            "line": 355,
+            "line": 356,
             "args": [
               "command",
               "output",
@@ -2894,7 +2878,7 @@
           },
           {
             "name": "main",
-            "line": 362,
+            "line": 363,
             "args": [],
             "async": false
           }
@@ -2902,6 +2886,8 @@
         "classes": [],
         "assignments": [
           "SCRIPT_DIR",
+          "cfg",
+          "cfg",
           "AUDIO_PATH",
           "ANALYSIS_JSON_PATH",
           "OUTPUT_IMAGE_SEQUENCE_DIR",
@@ -3268,6 +3254,43 @@
         ],
         "classes": [],
         "assignments": []
+      }
+    },
+    {
+      "file": "Scripting/v61b/reload_utils.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 52,
+      "chars": 1325,
+      "sha256": "757b7f5af331ec38e1063072f70fcfc50edae48cf9dd8fbbff1706090bed8e49",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "importlib",
+          "sys",
+          "from types import ModuleType"
+        ],
+        "functions": [
+          {
+            "name": "should_reload_module",
+            "line": 28,
+            "args": [
+              "module_name"
+            ],
+            "async": false
+          },
+          {
+            "name": "reload_known_modules",
+            "line": 37,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "MODULES_TO_RELOAD",
+          "PACKAGE_PREFIXES_TO_RELOAD"
+        ]
       }
     },
     {
@@ -5084,6 +5107,118 @@
       }
     },
     {
+      "file": "Tools/npu/build_semantic_code_chunks.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 92,
+      "chars": 5773,
+      "sha256": "c95155adaba9dbffa80174feb6e7ee16ac23346d70a437cd75aa89138ff1dffb",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "argparse",
+          "ast",
+          "hashlib",
+          "json",
+          "re",
+          "from datetime import datetime, timezone",
+          "from pathlib import Path"
+        ],
+        "functions": [
+          {
+            "name": "sha",
+            "line": 13,
+            "args": [
+              "text"
+            ],
+            "async": false
+          },
+          {
+            "name": "excluded",
+            "line": 17,
+            "args": [
+              "path",
+              "root"
+            ],
+            "async": false
+          },
+          {
+            "name": "py_files",
+            "line": 21,
+            "args": [
+              "root",
+              "sources"
+            ],
+            "async": false
+          },
+          {
+            "name": "deps",
+            "line": 31,
+            "args": [
+              "node"
+            ],
+            "async": false
+          },
+          {
+            "name": "domain_tags",
+            "line": 39,
+            "args": [
+              "path",
+              "symbol",
+              "code"
+            ],
+            "async": false
+          },
+          {
+            "name": "api_refs",
+            "line": 45,
+            "args": [
+              "code"
+            ],
+            "async": false
+          },
+          {
+            "name": "risk",
+            "line": 53,
+            "args": [
+              "code"
+            ],
+            "async": false
+          },
+          {
+            "name": "chunks",
+            "line": 60,
+            "args": [
+              "path",
+              "root"
+            ],
+            "async": false
+          },
+          {
+            "name": "write",
+            "line": 76,
+            "args": [
+              "path",
+              "data"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 80,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": [
+          "EXCLUDE",
+          "RISK",
+          "DOMAINS"
+        ]
+      }
+    },
+    {
       "file": "Tools/npu/generated_blender_script_candidate_FristNear.py",
       "exists": true,
       "suffix": ".py",
@@ -5262,6 +5397,70 @@
           "ASSET_INVENTORY_JSON",
           "USE_DUAL_FOCUS"
         ]
+      }
+    },
+    {
+      "file": "Tools/npu/run_npu_artifact_reviewer.py",
+      "exists": true,
+      "suffix": ".py",
+      "lines": 128,
+      "chars": 5173,
+      "sha256": "37e7c4d9016bcff4e4ff8ce7219bffb7a743dd537da7928a7d077a01865a9b75",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "argparse",
+          "concurrent.futures",
+          "json",
+          "from datetime import datetime, timezone",
+          "from pathlib import Path",
+          "from typing import Any"
+        ],
+        "functions": [
+          {
+            "name": "load",
+            "line": 13,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "list_targets",
+            "line": 17,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "expect_for_name",
+            "line": 25,
+            "args": [
+              "path",
+              "data",
+              "warnings",
+              "positives"
+            ],
+            "async": false
+          },
+          {
+            "name": "review",
+            "line": 55,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "main",
+            "line": 91,
+            "args": [],
+            "async": false
+          }
+        ],
+        "classes": [],
+        "assignments": []
       }
     },
     {
@@ -5579,8 +5778,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 213,
-      "chars": 10942,
-      "sha256": "f3ed5d5f7c3db59e84537d80b25282263268f83229a6bbcd0cdc66fa6c8c9432"
+      "chars": 10943,
+      "sha256": "d3bc09c179316744068e74aa814172b7bdf49242a24ea9898a286042762a06bf"
     },
     {
       "index": 2,
@@ -5589,8 +5788,8 @@
       "part": 2,
       "start_line": 214,
       "end_line": 257,
-      "chars": 2520,
-      "sha256": "ca41b97efeb6d5dfc786e7bf3112f927a2ab24874586154b239849528a13c225"
+      "chars": 2521,
+      "sha256": "8274c50971ea7aba9fd6841abd4153c7bfce1b5cba54f48508fd3ad48365fa7c"
     },
     {
       "index": 3,
@@ -5599,8 +5798,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 113,
-      "chars": 5324,
-      "sha256": "6c151552b07980c2ce4cd15af0be55c3732bbc7db23c5aa21239ff8eda03d943"
+      "chars": 5325,
+      "sha256": "8ffc84245d0b3a4cb0c3fe24c063a5ee32e7b1991ab43e7dc009aeeadc7b29da"
     },
     {
       "index": 4,
@@ -5608,19 +5807,19 @@
       "path": "Tools/npu/npu_code_chunks/chunk_004_normalize_scene_spec_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 275,
-      "chars": 11107,
-      "sha256": "feefbe47c62ad427f9df4fcaf3c33869497d128e2ba23ec86b74fb74f24f29de"
+      "end_line": 273,
+      "chars": 11028,
+      "sha256": "f9fb2c7f078bc6fb3acf46196c5db4df56111afa665a1148c63cbd8721153684"
     },
     {
       "index": 5,
       "file": "normalize_scene_spec.py",
       "path": "Tools/npu/npu_code_chunks/chunk_005_normalize_scene_spec_py.md",
       "part": 2,
-      "start_line": 276,
-      "end_line": 487,
-      "chars": 8971,
-      "sha256": "8a5932393e8c0a7479f2499f866b21cb34dc600a100bc0b4050799269bd2e799"
+      "start_line": 274,
+      "end_line": 469,
+      "chars": 8344,
+      "sha256": "2745f7b068489e1d416199e1709f732a5d1153122704032ea32d786da6aa16ea"
     },
     {
       "index": 6,
@@ -5629,8 +5828,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 95,
-      "chars": 4324,
-      "sha256": "0ec5280aabaae51a9e091e37677c1df1641251ba414df926f31e6bf2e7211619"
+      "chars": 4325,
+      "sha256": "74af91099b05a1c7fb0c0f9643753a0a0bbd9d67d5b2ac655cb4ba11ad04ee9f"
     },
     {
       "index": 7,
@@ -5639,8 +5838,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 269,
-      "chars": 11224,
-      "sha256": "4adbb013997b19b7788d2b96e143bf6d1e09c4ad378afc6d84a5e145fc55c54c"
+      "chars": 11225,
+      "sha256": "862481834b42f2bd8c0bbd841f9a81a987cef58008903625fa446412a24108ff"
     },
     {
       "index": 8,
@@ -5649,8 +5848,8 @@
       "part": 2,
       "start_line": 270,
       "end_line": 351,
-      "chars": 4376,
-      "sha256": "feced36c82b3ea9f1d1198e642d75940552db2777d0c5dd9643c68f4efb693b9"
+      "chars": 4377,
+      "sha256": "64f5982bcb9c6417e7f83bf33f10f9ae13fb02393959abbe90da871cef5fb194"
     },
     {
       "index": 9,
@@ -5659,8 +5858,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 268,
-      "chars": 11220,
-      "sha256": "0378075bfe3274531c466d9aef1b6b53e55b0f3fd5bf8e81690fad0f33248f01"
+      "chars": 11221,
+      "sha256": "8cd1329fef9f251a8c03d035c41cfc432a95b5e6ad0700f44988703c13dd5265"
     },
     {
       "index": 10,
@@ -5669,8 +5868,8 @@
       "part": 2,
       "start_line": 269,
       "end_line": 326,
-      "chars": 3656,
-      "sha256": "27986687920b0fb8da8c2f492df50682ed22fd6b77d25aaef94d20bc9e2c0f22"
+      "chars": 3657,
+      "sha256": "89312a8b7e224752c4af32d7dbec9958725e4a72bf3f64920bf780f692053f0f"
     },
     {
       "index": 11,
@@ -5679,8 +5878,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 213,
-      "chars": 13446,
-      "sha256": "256d3237394b3bf2b59acf775c8c6c4d0b886e20c1ef5aea311371306a37aa99"
+      "chars": 13447,
+      "sha256": "1f561de067ce0262018a92a973bb208a00672a03b33cddc2f5f121e6f70d8e93"
     },
     {
       "index": 12,
@@ -5689,8 +5888,8 @@
       "part": 2,
       "start_line": 214,
       "end_line": 432,
-      "chars": 13260,
-      "sha256": "67bb62a0238fba9ca3d43568df0984243f2b4b5ca979f171f3fd2d7a6f55835e"
+      "chars": 13261,
+      "sha256": "613dd49e2d08729c74ab40cf936d986dafc549b0fbbb070dedb7b203b6f6ad08"
     },
     {
       "index": 13,
@@ -5699,8 +5898,8 @@
       "part": 3,
       "start_line": 433,
       "end_line": 671,
-      "chars": 13366,
-      "sha256": "2a3cc10e0d74ea99486c7bb6451530fb95dd48949ec3aa892483088e08d952d4"
+      "chars": 13367,
+      "sha256": "7d856ac1e9051fbbc6938f0620af94263a7da59bda41a17826e02b93924cba98"
     },
     {
       "index": 14,
@@ -5709,8 +5908,8 @@
       "part": 4,
       "start_line": 672,
       "end_line": 866,
-      "chars": 13339,
-      "sha256": "29251e9657e799826dccde713060817c3fcc4b24157c3e361aa6208dae8378ed"
+      "chars": 13340,
+      "sha256": "5202935d63e58d22caa0ebe90244398f9ff32c47abe95880d167327cc53637ec"
     },
     {
       "index": 15,
@@ -5719,8 +5918,8 @@
       "part": 5,
       "start_line": 867,
       "end_line": 1068,
-      "chars": 13406,
-      "sha256": "ad38b72557567b61ea3151ad253c7a3d8cb74f594314821a08f9df8a45c998b4"
+      "chars": 13407,
+      "sha256": "8409e43d615f873331f52217e055f83b6068403825d60f046d1a24b886fbb743"
     },
     {
       "index": 16,
@@ -5729,8 +5928,8 @@
       "part": 6,
       "start_line": 1069,
       "end_line": 1267,
-      "chars": 13411,
-      "sha256": "ccb81a22654d77237f594f7aabb55e1ae9cec556aa3823ad0de5cd7068ef9403"
+      "chars": 13412,
+      "sha256": "2cebdcbe3283c324101ce3cf983049ff95a4da8d2b9b9fdc479c6778a2dca7ef"
     },
     {
       "index": 17,
@@ -5739,8 +5938,8 @@
       "part": 7,
       "start_line": 1268,
       "end_line": 1470,
-      "chars": 13460,
-      "sha256": "f2aea01e59d2e0771cc7ef38e3127f4f57a28d0682353f4c8c2ba4e9d44d67dd"
+      "chars": 13461,
+      "sha256": "65a6be00c34e21c4fd2159639a627e1e6efcebe8f2dcc8ba7270e5d6fa536c4a"
     },
     {
       "index": 18,
@@ -5749,8 +5948,8 @@
       "part": 8,
       "start_line": 1471,
       "end_line": 1662,
-      "chars": 13419,
-      "sha256": "19892733c8c463209ecd279cda9ed027a1092764a958f86fbfe7392cbeac3537"
+      "chars": 13420,
+      "sha256": "ebabbf4a747012083a661c8dcfb317330f7dc558ab8112fb0f5e9545b4fd0f97"
     },
     {
       "index": 19,
@@ -5759,8 +5958,8 @@
       "part": 9,
       "start_line": 1663,
       "end_line": 1704,
-      "chars": 5502,
-      "sha256": "5425b84e96506911a1da89ef8bac3ff47e17fb8fa0748d9be7853163e5495800"
+      "chars": 5503,
+      "sha256": "20f502729da421a448dc681d2d400ea5afcfa7e82c100e5de98621e2fdd688bf"
     },
     {
       "index": 20,
@@ -5768,19 +5967,19 @@
       "path": "Tools/npu/npu_code_chunks/chunk_020_Scripting_v61b_config_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 236,
-      "chars": 12306,
-      "sha256": "6565ff746a83d9c087bcba5fc13d1b3170dd7130bf7382d580aeec45664ec285"
+      "end_line": 228,
+      "chars": 12353,
+      "sha256": "7430d8593897ebcdecc831c99e7dc0db91dbba2f2bb6d2865fc4c8a797166710"
     },
     {
       "index": 21,
       "file": "Scripting/v61b/config.py",
       "path": "Tools/npu/npu_code_chunks/chunk_021_Scripting_v61b_config_py.md",
       "part": 2,
-      "start_line": 237,
-      "end_line": 438,
-      "chars": 10237,
-      "sha256": "b00445ff76adc69a998658ccc6c088ecc107f6671d257c90140f315393deb3b5"
+      "start_line": 229,
+      "end_line": 439,
+      "chars": 10594,
+      "sha256": "acf6aded580b2719afe843f37860722a371f100983ebd4ce81612942a615c980"
     },
     {
       "index": 22,
@@ -5788,9 +5987,9 @@
       "path": "Tools/npu/npu_code_chunks/chunk_022_Scripting_v61b_main_v61b_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 219,
-      "chars": 10325,
-      "sha256": "8f45d7bf08b7833fe5265c18b866c5dcbd7dc94935c2dd48c12326f2e6e731b0"
+      "end_line": 200,
+      "chars": 9743,
+      "sha256": "cfb98388b7e493f60dfa1849560b45199b29eb16ac07deb13de01918a72d1730"
     },
     {
       "index": 23,
@@ -5799,8 +5998,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 246,
-      "chars": 13125,
-      "sha256": "a7380a68e75ef428a90ecda30570fab87ff217dac40d8dedef07b3dd710b49f7"
+      "chars": 13126,
+      "sha256": "f94262dcf30615db3b3c04887656f5d6aac067e3b73badb702792b4d351e4205"
     },
     {
       "index": 24,
@@ -5809,8 +6008,8 @@
       "part": 2,
       "start_line": 247,
       "end_line": 424,
-      "chars": 13200,
-      "sha256": "b5b1e14df962c1eff510e262a66fa31f8fb010267349814971dfa494bcf54d0b"
+      "chars": 13201,
+      "sha256": "fc4ee4a52956c46fb0dca3006667debc6de5c54f3dfcc0cca6f6d0a501e5ab31"
     },
     {
       "index": 25,
@@ -5819,8 +6018,8 @@
       "part": 3,
       "start_line": 425,
       "end_line": 602,
-      "chars": 13138,
-      "sha256": "5e8d41fc67b828d6afbfd611b27a64e7ad52dc9dd3bdc20229901df942b3c2d2"
+      "chars": 13139,
+      "sha256": "149e91e9956680f1c67f96213bb5795995e0f99c936915a01ce7102f56a1856c"
     },
     {
       "index": 26,
@@ -5829,8 +6028,8 @@
       "part": 4,
       "start_line": 603,
       "end_line": 791,
-      "chars": 13158,
-      "sha256": "789b68d3400c3a0c93970d8cdd521daed00d03d54e25cb2f07066b3c6d2a24c5"
+      "chars": 13159,
+      "sha256": "f99aa0d595297bf329c8dccc1ec6bf21aed02076616c324ebc0ea98a965a32d1"
     },
     {
       "index": 27,
@@ -5839,8 +6038,8 @@
       "part": 5,
       "start_line": 792,
       "end_line": 960,
-      "chars": 13193,
-      "sha256": "2adb69baba3f676efc8206c7f113c690d34188b1fbe79342dd6c484afd675c1b"
+      "chars": 13194,
+      "sha256": "18a97b20f956a7dc4a035f102ce04f5d2302457ceb8a77ceb51d5dbc17cb96c6"
     },
     {
       "index": 28,
@@ -5849,8 +6048,8 @@
       "part": 6,
       "start_line": 961,
       "end_line": 1079,
-      "chars": 9337,
-      "sha256": "aecd44660d9c27a440609f546e4f613497f900638977d33cab9272402cbb418c"
+      "chars": 9338,
+      "sha256": "24149c54b5d2a4cef7beb88a2c83645ec3e07316c0a7999fd769961421b029ad"
     },
     {
       "index": 29,
@@ -5859,8 +6058,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 268,
-      "chars": 11264,
-      "sha256": "15269a93cb6ebc38da72659757db757aba39708d0bc0f34bc5feb961d6499fa2"
+      "chars": 11265,
+      "sha256": "9b52822e0f17f6a823c9b84ec660882e88f8b1e4c7bba2eda51c4b9bd8297f83"
     },
     {
       "index": 30,
@@ -5869,8 +6068,8 @@
       "part": 2,
       "start_line": 269,
       "end_line": 488,
-      "chars": 11276,
-      "sha256": "4a2754a14f0485ea9ab2714bd502333a1f380ab6eeb839b4beb4a36b4c9092fd"
+      "chars": 11277,
+      "sha256": "22bf4ec3d111a7f689018d34fb06aa4d0220603b2a9057aad497387a627ec6f7"
     },
     {
       "index": 31,
@@ -5879,8 +6078,8 @@
       "part": 3,
       "start_line": 489,
       "end_line": 657,
-      "chars": 8342,
-      "sha256": "ec0983c07894129f25f8f3ad68df65b0308fc7994efaa5a1155923fe9b5bee49"
+      "chars": 8343,
+      "sha256": "170bcfa43c57c0fc0d46fe60b5cafe6ec6737b9c5f968da8e17cd3242827279a"
     },
     {
       "index": 32,
@@ -5889,8 +6088,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 286,
-      "chars": 12479,
-      "sha256": "9993e8aa7a5c3fe00f18b5990ddac56c6444ad87e403f03a07c11c35d6b65ecf"
+      "chars": 12480,
+      "sha256": "f7b96c10e5b205197441e1124d4c3d16064cf0227e9abab1ec98789c996132b8"
     },
     {
       "index": 33,
@@ -5899,8 +6098,8 @@
       "part": 2,
       "start_line": 287,
       "end_line": 541,
-      "chars": 12507,
-      "sha256": "997c1b6b73b1de929be9295976a475c3bec4c33906f22c46eae2930486603262"
+      "chars": 12508,
+      "sha256": "65df6327ba4001756ba66080e1152a84ad9304ddcd248b4d5c954c3eb877b6fc"
     },
     {
       "index": 34,
@@ -5909,8 +6108,8 @@
       "part": 3,
       "start_line": 542,
       "end_line": 737,
-      "chars": 10720,
-      "sha256": "52f47ce25f9af66737b1ba67efc284b9ef51b5984d03612e92bfd0adc4ee5755"
+      "chars": 10721,
+      "sha256": "eb5425f6e10faae96b73c1091e098068e8f7f519d29cd7009e1f961a885ebb34"
     },
     {
       "index": 35,
@@ -5919,8 +6118,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 248,
-      "chars": 11811,
-      "sha256": "b68b2cdfda11eee57767005b9ed30583ba75aee83167436682732225a1d094ae"
+      "chars": 11812,
+      "sha256": "abe03d2f84d9b95e5577b4d1610d684bb1a6a6845f40078d68cbf6650d585897"
     },
     {
       "index": 36,
@@ -5929,8 +6128,8 @@
       "part": 2,
       "start_line": 249,
       "end_line": 392,
-      "chars": 9606,
-      "sha256": "7fe61f4846c5f6ef11298fcfc63ccdaba3e571e0116a2b4f4918caad0e1d806c"
+      "chars": 9607,
+      "sha256": "cbf5ec5dc8dd328355125a78df86df54d499b5dbfdfef4505be17366a3739ec7"
     },
     {
       "index": 37,
@@ -5939,8 +6138,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 159,
-      "chars": 6641,
-      "sha256": "96194ea23675b00d7561c5de4e1a21a0cd533f2ff1697bb63acd52428aad9dec"
+      "chars": 6642,
+      "sha256": "e76040ff5f5f20c42d5a96f23cb999078b12bc59bc15c201770422622b5ea1b5"
     },
     {
       "index": 38,
@@ -5949,8 +6148,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 308,
-      "chars": 11824,
-      "sha256": "81a170ba9aa8b5369c0abaaf9b17008f397d59f36206b28dd616fcc1829b023e"
+      "chars": 11825,
+      "sha256": "b3d4526e0c59d4d3758fa47fd7c0bfa9186184f8942e566ef47b13eef899b86f"
     },
     {
       "index": 39,
@@ -5959,8 +6158,8 @@
       "part": 2,
       "start_line": 309,
       "end_line": 554,
-      "chars": 11523,
-      "sha256": "4f09391c4ebe63faba42158c7ea83d760f46b71ef30043e5daa442f9cbd2d0a0"
+      "chars": 11524,
+      "sha256": "6d2ad9d0025cd8ad9b630c068f9e977600d21e71b847bee0cf3ab82207a45a83"
     },
     {
       "index": 40,
@@ -5969,8 +6168,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 198,
-      "chars": 8832,
-      "sha256": "1442c08e17895d2d91c4539933d08a1aa4a3cba341e2d1c0fd428039116559e7"
+      "chars": 8833,
+      "sha256": "6244fd6722587970d90662c4191cc8c3c234d6ccd3db6e798d48fcf165f25a3b"
     },
     {
       "index": 41,
@@ -5979,8 +6178,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 270,
-      "chars": 10955,
-      "sha256": "bd8a491c9e5b68c5aaa25343243d0f91aac7120657e00ebb551d304aad2e3754"
+      "chars": 10956,
+      "sha256": "43cd083e1269cd28abb78fbbf4d424ab3cae64230afc859c70412e791e803e71"
     },
     {
       "index": 42,
@@ -5989,8 +6188,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 286,
-      "chars": 12706,
-      "sha256": "4388630a55343bcc079b1a4c59917e8450beb487d7ecc54be7b67328a756c3e5"
+      "chars": 12707,
+      "sha256": "046c9f9bccc7f25e26cd794e2a72bd6060493b4bb82aecd15634d158656ead94"
     },
     {
       "index": 43,
@@ -5999,8 +6198,8 @@
       "part": 2,
       "start_line": 287,
       "end_line": 513,
-      "chars": 12687,
-      "sha256": "e79e19e94e99141bff4b78588c2de33411955decce3dccdc036e3bc85328d004"
+      "chars": 12688,
+      "sha256": "3dba151a4a5dcb89b87f519754be91b0c136742d615bf708d26496b0dd1efc82"
     },
     {
       "index": 44,
@@ -6009,8 +6208,8 @@
       "part": 3,
       "start_line": 514,
       "end_line": 724,
-      "chars": 12782,
-      "sha256": "5fe149f1d2ac96ebd2dda38da8123afe8961fda4fcffda9c0f25f5e74f79af4e"
+      "chars": 12783,
+      "sha256": "e46c4a624d9e314970201736fb33a0ad6bf0d4053662c0afb86d4c491744c3d1"
     },
     {
       "index": 45,
@@ -6019,8 +6218,8 @@
       "part": 4,
       "start_line": 725,
       "end_line": 906,
-      "chars": 12809,
-      "sha256": "6c8046eac94b7cd813b2c23d098eb48c41a14edddce0405e0a121777314b70f8"
+      "chars": 12810,
+      "sha256": "bb3210d94ce5ccf7ba107ecd3d45d2c0ed7f1cb9d73f80e9ba643ffa6e1bb124"
     },
     {
       "index": 46,
@@ -6029,8 +6228,8 @@
       "part": 5,
       "start_line": 907,
       "end_line": 1136,
-      "chars": 12768,
-      "sha256": "36a35e348ff94ce8039a85cc0d3131d3dca7833ccf245e03b0b09b511d109f1b"
+      "chars": 12769,
+      "sha256": "b4a471b40fa036a5e408fbf57ae54759a5df7d2c77ab60b5423d12c282126c49"
     },
     {
       "index": 47,
@@ -6039,8 +6238,8 @@
       "part": 6,
       "start_line": 1137,
       "end_line": 1262,
-      "chars": 7856,
-      "sha256": "5832dff867df9fd9f46cc577e19694393e2fdfc689d51a129d6338ce3cc1f293"
+      "chars": 7857,
+      "sha256": "87b42330090a2f40131453171f9afaebcdc73da3344a48059e0fcdbdef9a7090"
     },
     {
       "index": 48,
@@ -6049,8 +6248,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 63,
-      "chars": 2237,
-      "sha256": "d881d51fb1ca271df26a418b3055acf999c14cfc04fe491ee42ebedf7a86f8b4"
+      "chars": 2238,
+      "sha256": "4da1a7cdc642562342399d9f62a60bbd86f86b2c934964a68d0e8eb22865fcdc"
     },
     {
       "index": 49,
@@ -6059,8 +6258,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 289,
-      "chars": 11461,
-      "sha256": "0c66a453d704ec20633e28a53810ccd001d45355f3609a20e461d7aea8640b4d"
+      "chars": 11462,
+      "sha256": "2038636e78fbce8fbc7088965fa6f7a23d4a053d5212be5392ba4cbbc41c24f9"
     },
     {
       "index": 50,
@@ -6069,8 +6268,8 @@
       "part": 2,
       "start_line": 290,
       "end_line": 395,
-      "chars": 5722,
-      "sha256": "4b5bf658cf69a6d2a8787f38625c7c34db9008e4475b6950a00829eeefe31482"
+      "chars": 5723,
+      "sha256": "453824b876bc259cd17884b56a5bee6d5f4a14803cea8dad5b5c5a931f7d6f6f"
     },
     {
       "index": 51,
@@ -6078,19 +6277,19 @@
       "path": "Tools/npu/npu_code_chunks/chunk_051_Scripting_v61b_encode_ffmpeg_v61b_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 273,
-      "chars": 11642,
-      "sha256": "5b5c6319e935cddf0ed1aa613d9101d00925affa99c889dd13be3a7b32d9692a"
+      "end_line": 274,
+      "chars": 11685,
+      "sha256": "1094cf5c5c69c12ae3508f5d1f83d571016dc94cbbc1aeeea3c01b1639acc89c"
     },
     {
       "index": 52,
       "file": "Scripting/v61b/encode_ffmpeg_v61b.py",
       "path": "Tools/npu/npu_code_chunks/chunk_052_Scripting_v61b_encode_ffmpeg_v61b_py.md",
       "part": 2,
-      "start_line": 274,
-      "end_line": 398,
-      "chars": 6391,
-      "sha256": "abebed5f71f902b3b93eef39f16d6d10e2a76cb283ebf4b6d7a9b59f735ca795"
+      "start_line": 275,
+      "end_line": 399,
+      "chars": 6409,
+      "sha256": "f3cb3aa073245d79f7ded3f2e88010a2f09f2a2882b900ed51b7834654dd7c9b"
     },
     {
       "index": 53,
@@ -6099,8 +6298,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 43,
-      "chars": 2926,
-      "sha256": "ad275456d9d96972ac12289cf44a06412df18c79706339a0b136a4314cbb30b0"
+      "chars": 2927,
+      "sha256": "e15a34d23ad705379d906bc5fc851fe71db29a2ac7159128ba178880a987651d"
     },
     {
       "index": 54,
@@ -6109,8 +6308,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 179,
-      "chars": 10411,
-      "sha256": "0bad8b03c9b2a15e75e193b22efe15c8131f5a04318c8cc662298c065d206c7e"
+      "chars": 10412,
+      "sha256": "78c181834bd6deb00c41ea3fa1323d8acea45d318284ce06fc79f812f976fdbc"
     },
     {
       "index": 55,
@@ -6119,8 +6318,8 @@
       "part": 2,
       "start_line": 180,
       "end_line": 304,
-      "chars": 5309,
-      "sha256": "e0191f99e02111d17c2c7eecffa4134fd994fca6c3bceb001f71713d1ad2eb52"
+      "chars": 5310,
+      "sha256": "36dfc6dd669f0b86fee167cc6ecc215453a639e2295a12ca6f3bed173003d49e"
     },
     {
       "index": 56,
@@ -6129,8 +6328,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 1,
-      "chars": 142,
-      "sha256": "342f4fb5f305f0f0018c6b1b1af575514c6787e10e42404486fb810f2a275c0f"
+      "chars": 143,
+      "sha256": "d3a3073e636a1bb9afeb6007ee94f1b45a51b315fd41fa3a90d6247797c5d71d"
     },
     {
       "index": 57,
@@ -6139,8 +6338,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 274,
-      "chars": 12489,
-      "sha256": "692b01f0ac070516c35b0bb64a0b984711629b090b1bda07a3d744fe0fc18fd9"
+      "chars": 12490,
+      "sha256": "a0c1ddb88a0ea9cd6468fa38b992b2f257242554238174f886acb17c0373ef55"
     },
     {
       "index": 58,
@@ -6149,8 +6348,8 @@
       "part": 2,
       "start_line": 275,
       "end_line": 507,
-      "chars": 12531,
-      "sha256": "f4b067ee08dbd78a893d87e3f8075b2c2a7f87857780cb1569f7ac1c85434ffe"
+      "chars": 12532,
+      "sha256": "2d4cec922630c44c65bd7694d7db596683ae563069a30fe01a98d99a7f51529a"
     },
     {
       "index": 59,
@@ -6159,8 +6358,8 @@
       "part": 3,
       "start_line": 508,
       "end_line": 725,
-      "chars": 10803,
-      "sha256": "cbf3afdbedf21c54afa86c15a4fa773d5503299b40e69d4a78441e1856620963"
+      "chars": 10804,
+      "sha256": "3e4fe67953582ce918883c65db20e48a77a85ad09def2ae2c9e360e7ac5776db"
     },
     {
       "index": 60,
@@ -6169,8 +6368,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 29,
-      "chars": 1302,
-      "sha256": "40767acb455cec2213b2a6dfa6c1c19d288faeb2a795f77a8d97120d494b425e"
+      "chars": 1303,
+      "sha256": "c2392862997601bc7fc34ecbf1be86ddbc9b4a1e473a27771b394d5112887cb6"
     },
     {
       "index": 61,
@@ -6179,388 +6378,418 @@
       "part": 1,
       "start_line": 1,
       "end_line": 81,
-      "chars": 3236,
-      "sha256": "fcd5b2f83186b50638bb0eeac774ed9cee8dd98228ab9d673b3599151a198616"
+      "chars": 3237,
+      "sha256": "7f3cc79fa9f16a304e55bf571bf1d353756508805b016a5e30b38746b6e1a390"
     },
     {
       "index": 62,
-      "file": "Scripting/v61b/scene_utils.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_062_Scripting_v61b_scene_utils_py.md",
+      "file": "Scripting/v61b/reload_utils.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_062_Scripting_v61b_reload_utils_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 97,
-      "chars": 3562,
-      "sha256": "30d8cef72fe2bfe622d21ebd950019718207556241bd267d663d702bab0a2375"
+      "end_line": 51,
+      "chars": 2077,
+      "sha256": "de1e9731b41871a79d7edcb1a04ebad8339794d1e3e1816f0b8202b11217bc91"
     },
     {
       "index": 63,
-      "file": "Scripting/v61b/README.md",
-      "path": "Tools/npu/npu_code_chunks/chunk_063_Scripting_v61b_README_md.md",
+      "file": "Scripting/v61b/scene_utils.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_063_Scripting_v61b_scene_utils_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 94,
-      "chars": 3913,
-      "sha256": "bca853898128a78917e79a8c8417bdf7504f831ec3753c904429fa39a8f0ed8d"
+      "end_line": 97,
+      "chars": 3563,
+      "sha256": "7f526f7d2d51d59fd390c1628246092e086d1940ef1ad246284b55f614e9c6ba"
     },
     {
       "index": 64,
-      "file": "Scripting/v61b/hotpatch/__init__.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_064_Scripting_v61b_hotpatch_init_py.md",
+      "file": "Scripting/v61b/README.md",
+      "path": "Tools/npu/npu_code_chunks/chunk_064_Scripting_v61b_README_md.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 3,
-      "chars": 279,
-      "sha256": "181050a71b3daf9578323cd9d330eb6107306fcd1550deae67cda481408a308b"
+      "end_line": 94,
+      "chars": 3914,
+      "sha256": "76925169ca01df4b43ea517cac3fddbde31a216b35ded3b40ce5e58f890b3acd"
     },
     {
       "index": 65,
-      "file": "Scripting/v61b/hotpatch/accent_patch.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_065_Scripting_v61b_hotpatch_accent_patch_py.md",
+      "file": "Scripting/v61b/hotpatch/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_065_Scripting_v61b_hotpatch_init_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 211,
-      "chars": 11545,
-      "sha256": "08a1b82ec46de274de880f590082158af4a857617ad33139a0bb93111018aeae"
+      "end_line": 3,
+      "chars": 280,
+      "sha256": "2a0cb032de1e114087e6b26d0efeb2a48bafdaaff401862f905eb675a6d1545a"
     },
     {
       "index": 66,
       "file": "Scripting/v61b/hotpatch/accent_patch.py",
       "path": "Tools/npu/npu_code_chunks/chunk_066_Scripting_v61b_hotpatch_accent_patch_py.md",
-      "part": 2,
-      "start_line": 212,
-      "end_line": 301,
-      "chars": 6032,
-      "sha256": "b3abfe3d62b38a4556321b7bc20a4fcfb3ddb2186c29a40204e8fb4f15784a64"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 211,
+      "chars": 11546,
+      "sha256": "4dd58677e0a1d0afa1d510a060ea8f2816ddd27d1cf331a385dd8878ba01b94c"
     },
     {
       "index": 67,
-      "file": "Scripting/v61b/hotpatch/common.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_067_Scripting_v61b_hotpatch_common_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 91,
-      "chars": 3509,
-      "sha256": "27b5928255f86725c58a6ffb4a3d9211a02e7e84de0359b7207452141a38eab6"
+      "file": "Scripting/v61b/hotpatch/accent_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_067_Scripting_v61b_hotpatch_accent_patch_py.md",
+      "part": 2,
+      "start_line": 212,
+      "end_line": 301,
+      "chars": 6033,
+      "sha256": "f07b1553a1d19f1012fdc415158ebd6de71ab5cabe7470ee041f4b4a1ee89d3f"
     },
     {
       "index": 68,
-      "file": "Scripting/v61b/hotpatch/diagnostics.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_068_Scripting_v61b_hotpatch_diagnostics_py.md",
+      "file": "Scripting/v61b/hotpatch/common.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_068_Scripting_v61b_hotpatch_common_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 244,
-      "chars": 11028,
-      "sha256": "c4ea19d7cc2d3816d98469199437b14716356301282c7317f8e604e3e8dbb67e"
+      "end_line": 91,
+      "chars": 3510,
+      "sha256": "2f548aaee742fe4946d1202893d107a4eedb13404f7005e40c4e7069779ab4a1"
     },
     {
       "index": 69,
       "file": "Scripting/v61b/hotpatch/diagnostics.py",
       "path": "Tools/npu/npu_code_chunks/chunk_069_Scripting_v61b_hotpatch_diagnostics_py.md",
-      "part": 2,
-      "start_line": 245,
-      "end_line": 286,
-      "chars": 2605,
-      "sha256": "2f0230cd17b96a042b35c1ac6860c050359113df43478bf56f96402c49d4d0d2"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 244,
+      "chars": 11029,
+      "sha256": "79a848fb8b87d1852b7bd253dfd0cc87fe9709a5657ddf0e027025d8fde40b2c"
     },
     {
       "index": 70,
-      "file": "Scripting/v61b/hotpatch/fog_patch.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_070_Scripting_v61b_hotpatch_fog_patch_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 133,
-      "chars": 6531,
-      "sha256": "2d894b0cf71987417a3c4be046373b29113af05a41219f1ba11c382df423486d"
+      "file": "Scripting/v61b/hotpatch/diagnostics.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_070_Scripting_v61b_hotpatch_diagnostics_py.md",
+      "part": 2,
+      "start_line": 245,
+      "end_line": 286,
+      "chars": 2606,
+      "sha256": "3e6f4531c55bf1c806baccbb97406d7179f2820ce3d9a4591aa122e1a9776942"
     },
     {
       "index": 71,
-      "file": "Scripting/v61b/hotpatch/hero_material_patch.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_071_Scripting_v61b_hotpatch_hero_material_patch_py.md",
+      "file": "Scripting/v61b/hotpatch/fog_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_071_Scripting_v61b_hotpatch_fog_patch_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 265,
-      "chars": 11417,
-      "sha256": "472d24d31e0aeb702b412f082737dc437f85ef6439c152fc652bf3435a83db08"
+      "end_line": 133,
+      "chars": 6532,
+      "sha256": "8f2b22e7e4ddafb16d153a2ead925b7bd3b6d0cc6bf3f7d0ca3da01c4e30f50c"
     },
     {
       "index": 72,
       "file": "Scripting/v61b/hotpatch/hero_material_patch.py",
       "path": "Tools/npu/npu_code_chunks/chunk_072_Scripting_v61b_hotpatch_hero_material_patch_py.md",
-      "part": 2,
-      "start_line": 266,
-      "end_line": 395,
-      "chars": 8187,
-      "sha256": "ea296946329215f6cb4fa0d355ded4f40fd85e04c9a7a03fd4129176687641be"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 265,
+      "chars": 11418,
+      "sha256": "c334929f58dd3c04652988c9c0a9bd795a49aaa337f19831bd5bddcc99d90868"
     },
     {
       "index": 73,
-      "file": "Scripting/v61b/hotpatch/lighting_patch.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_073_Scripting_v61b_hotpatch_lighting_patch_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 150,
-      "chars": 7285,
-      "sha256": "dc66a5971aca92a40b0f002ccec61dfb91ba427a19db4cbfdf79b15668850a6a"
+      "file": "Scripting/v61b/hotpatch/hero_material_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_073_Scripting_v61b_hotpatch_hero_material_patch_py.md",
+      "part": 2,
+      "start_line": 266,
+      "end_line": 395,
+      "chars": 8188,
+      "sha256": "a5849883814b023a5a9959e3a2e9248df61ce4cc3cbd61e7a71dc2ca33fc83bf"
     },
     {
       "index": 74,
-      "file": "Scripting/v61b/hotpatch/render_patch.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_074_Scripting_v61b_hotpatch_render_patch_py.md",
+      "file": "Scripting/v61b/hotpatch/lighting_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_074_Scripting_v61b_hotpatch_lighting_patch_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 206,
-      "chars": 8845,
-      "sha256": "3a25529b755305596688be83a28b9a438d27c20f8175f928be83999d35f0fa48"
+      "end_line": 150,
+      "chars": 7286,
+      "sha256": "a588ddb0fbef716c1237cd6506c37fb32b0aa8d34b77bc4abe2600ffceed4841"
     },
     {
       "index": 75,
-      "file": "Scripting/v61b/hotpatch/runner.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_075_Scripting_v61b_hotpatch_runner_py.md",
+      "file": "Scripting/v61b/hotpatch/render_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_075_Scripting_v61b_hotpatch_render_patch_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 103,
-      "chars": 4446,
-      "sha256": "3d0a7f45ad2bb3332388224cb6e54eb119e499b92aa207a83f677349cf8e870d"
+      "end_line": 206,
+      "chars": 8846,
+      "sha256": "2d8511ad173570611abba4e1c41a5eaac16aa0a62e8b074db5474a549311f2ae"
     },
     {
       "index": 76,
-      "file": "Scripting/v61b/spaziotempo/__init__.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_076_Scripting_v61b_spaziotempo_init_py.md",
+      "file": "Scripting/v61b/hotpatch/runner.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_076_Scripting_v61b_hotpatch_runner_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 4,
-      "chars": 350,
-      "sha256": "b1585ac1be24ef20f47b53cab78b797a69158333d6c0f4c712ba07c57f050a5c"
+      "end_line": 103,
+      "chars": 4447,
+      "sha256": "649ba7f97bcbe01df936bcff419a77c2f52fda9eb252f5e185c4f65a7f0b16a6"
     },
     {
       "index": 77,
-      "file": "Scripting/v61b/spaziotempo/core/__init__.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_077_Scripting_v61b_spaziotempo_core_init_py.md",
+      "file": "Scripting/v61b/spaziotempo/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_077_Scripting_v61b_spaziotempo_init_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 1,
-      "chars": 183,
-      "sha256": "2d1549d7924208d486c006f1d87476625bd5c2a0acc682ee99b364cd399bebec"
+      "end_line": 4,
+      "chars": 351,
+      "sha256": "3de0cd3e9b0f76a21fb08b24a462097fb4ed9e127a9ce2d60aa2b1ae1e6c4129"
     },
     {
       "index": 78,
-      "file": "Scripting/v61b/spaziotempo/core/collections.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_078_Scripting_v61b_spaziotempo_core_collections_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 132,
-      "chars": 5696,
-      "sha256": "4ec17f890ceb24be8112d0ea74cad7c269e5867c549e80d56b7096fa8f159dea"
-    },
-    {
-      "index": 79,
-      "file": "Scripting/v61b/spaziotempo/core/registry.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_079_Scripting_v61b_spaziotempo_core_registry_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 221,
-      "chars": 8548,
-      "sha256": "5c728bb93a2c50e09c658b206ddb318512e372e981bbdfdf105b840c411964d3"
-    },
-    {
-      "index": 80,
-      "file": "Scripting/v61b/spaziotempo/features/__init__.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_080_Scripting_v61b_spaziotempo_features_init_py.md",
+      "file": "Scripting/v61b/spaziotempo/core/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_078_Scripting_v61b_spaziotempo_core_init_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 1,
-      "chars": 195,
-      "sha256": "5c3746878ea8f7bec6499286dc51c7e55d7dd6ac7332497f3622d96e16a805b7"
+      "chars": 184,
+      "sha256": "83666321becdd3ffeeda4294478917f60175e3e3ffb57ab646cd2e4d9be2c27c"
+    },
+    {
+      "index": 79,
+      "file": "Scripting/v61b/spaziotempo/core/collections.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_079_Scripting_v61b_spaziotempo_core_collections_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 132,
+      "chars": 5697,
+      "sha256": "f81f6cd59e4cf4fc502a992356641ca42ccf44a0047f9611f974c29732ae6122"
+    },
+    {
+      "index": 80,
+      "file": "Scripting/v61b/spaziotempo/core/registry.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_080_Scripting_v61b_spaziotempo_core_registry_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 221,
+      "chars": 8549,
+      "sha256": "d1a948e33e51f40dc7a1803dc95704a61beed1261af2a1c4e7faa42a6a224179"
     },
     {
       "index": 81,
-      "file": "Scripting/v61b/spaziotempo/features/catalog.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_081_Scripting_v61b_spaziotempo_features_catalog_py.md",
+      "file": "Scripting/v61b/spaziotempo/features/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_081_Scripting_v61b_spaziotempo_features_init_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 19,
-      "chars": 905,
-      "sha256": "14290be2a4fcc47acc82aafd083d0f8ce18b9faf8696f683dc87a66995380465"
+      "end_line": 1,
+      "chars": 196,
+      "sha256": "47ce8926e8f2a82d0294bdc1971a4d68ae1f63bbe37dcdd58b50aafd83496990"
     },
     {
       "index": 82,
-      "file": "Tools/npu/ai_memory_context.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_082_Tools_npu_ai_memory_context_py.md",
+      "file": "Scripting/v61b/spaziotempo/features/catalog.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_082_Scripting_v61b_spaziotempo_features_catalog_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 111,
-      "chars": 6096,
-      "sha256": "f98aec9350ade76028071646f62b3cd2362b75b9ba8117fd4668181990761417"
+      "end_line": 19,
+      "chars": 906,
+      "sha256": "1ade19f3d4b5d6010c721ea437d56a250239a13a4a5bd5fb9d6eef15b76ed6f3"
     },
     {
       "index": 83,
-      "file": "Tools/npu/build_ai_service_packet.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_083_Tools_npu_build_ai_service_packet_py.md",
+      "file": "Tools/npu/ai_memory_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_083_Tools_npu_ai_memory_context_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 211,
-      "chars": 11268,
-      "sha256": "52e1ce18661fe58f4634ecd801d7fb994e28260f27f500464c8a7ca5d8740a92"
+      "end_line": 111,
+      "chars": 6097,
+      "sha256": "4ab4f3a989c1ea80bb7587d57dbde62a35768736032a60b9be0a01db05226930"
     },
     {
       "index": 84,
       "file": "Tools/npu/build_ai_service_packet.py",
       "path": "Tools/npu/npu_code_chunks/chunk_084_Tools_npu_build_ai_service_packet_py.md",
-      "part": 2,
-      "start_line": 212,
-      "end_line": 355,
-      "chars": 8858,
-      "sha256": "c6204829e4e9811e0fe7b12198b5ad0dece620284823c59c3ee12913735fab04"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 211,
+      "chars": 11269,
+      "sha256": "8a06f72fd2d81828c26f69b39825b3840976d78582b217166a953c4a2b4a070d"
     },
     {
       "index": 85,
-      "file": "Tools/npu/build_music_context.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_085_Tools_npu_build_music_context_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 255,
-      "chars": 12335,
-      "sha256": "91fb1e286d17de81da5342a0b8b85172d760ade86c57350b9875e757f898a61d"
+      "file": "Tools/npu/build_ai_service_packet.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_085_Tools_npu_build_ai_service_packet_py.md",
+      "part": 2,
+      "start_line": 212,
+      "end_line": 355,
+      "chars": 8859,
+      "sha256": "0ee791ccdf7c6e97c36c5ebf02df023e526c7ccbebeae96fd04f0307d21ce1f5"
     },
     {
       "index": 86,
       "file": "Tools/npu/build_music_context.py",
       "path": "Tools/npu/npu_code_chunks/chunk_086_Tools_npu_build_music_context_py.md",
-      "part": 2,
-      "start_line": 256,
-      "end_line": 491,
-      "chars": 12382,
-      "sha256": "da38a3e7f34cab622f3850761bd80eadd8bae024fa5cd52e6d45389bee5497c4"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 255,
+      "chars": 12336,
+      "sha256": "dc8ec103190b9acad60a256299fa167eb6ec239128ad496e24237ff0f3c007c3"
     },
     {
       "index": 87,
       "file": "Tools/npu/build_music_context.py",
       "path": "Tools/npu/npu_code_chunks/chunk_087_Tools_npu_build_music_context_py.md",
-      "part": 3,
-      "start_line": 492,
-      "end_line": 682,
-      "chars": 12368,
-      "sha256": "1720a9b8040f737c65d47895484d32339c0ab3aa7cb8574e889e0963b859bf45"
+      "part": 2,
+      "start_line": 256,
+      "end_line": 491,
+      "chars": 12383,
+      "sha256": "081fea115aaeae5067c8ac073e5921dda226c45dcdc56899bd64c81778560225"
     },
     {
       "index": 88,
       "file": "Tools/npu/build_music_context.py",
       "path": "Tools/npu/npu_code_chunks/chunk_088_Tools_npu_build_music_context_py.md",
-      "part": 4,
-      "start_line": 683,
-      "end_line": 711,
-      "chars": 3597,
-      "sha256": "eb540600e76ee7c329be62c27bf33d5f4c46a4121c83e288080b2e5066dba10b"
+      "part": 3,
+      "start_line": 492,
+      "end_line": 682,
+      "chars": 12369,
+      "sha256": "cff1ca40951fcf336786939181903b867cedc8175b019a8785f1bc0cfc743241"
     },
     {
       "index": 89,
-      "file": "Tools/npu/build_npu_code_context.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_089_Tools_npu_build_npu_code_context_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 270,
-      "chars": 11221,
-      "sha256": "ee5fa216acaaf62bb2a6d05f473f783f765d50af44c66f3be45dcfe6314d10e2"
+      "file": "Tools/npu/build_music_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_089_Tools_npu_build_music_context_py.md",
+      "part": 4,
+      "start_line": 683,
+      "end_line": 711,
+      "chars": 3598,
+      "sha256": "0b6c4bfb06e36d631dc2191cff5a7e9f1f49062dd63eaf50009618f33880775b"
     },
     {
       "index": 90,
       "file": "Tools/npu/build_npu_code_context.py",
       "path": "Tools/npu/npu_code_chunks/chunk_090_Tools_npu_build_npu_code_context_py.md",
-      "part": 2,
-      "start_line": 271,
-      "end_line": 389,
-      "chars": 5639,
-      "sha256": "13882172155fada98e227351473d1a1bae0afcf8c9373cc9c32434b412e0b54d"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 270,
+      "chars": 11222,
+      "sha256": "3ae999e2d43c9c6425cc47edf194275726b133ef50b36dbb666bc2c259c65940"
     },
     {
       "index": 91,
-      "file": "Tools/npu/build_project_ai_index.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_091_Tools_npu_build_project_ai_index_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 266,
-      "chars": 11479,
-      "sha256": "b9dd384061e6c9ce4263f4f692ff082384bb45f3e5d7acf52946fc3c132ef1c5"
+      "file": "Tools/npu/build_npu_code_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_091_Tools_npu_build_npu_code_context_py.md",
+      "part": 2,
+      "start_line": 271,
+      "end_line": 389,
+      "chars": 5640,
+      "sha256": "a9acf76ce9f3d3d1f83fefd7fd4f1cc6e388fe63a4ca085b62efb1d9178b1b70"
     },
     {
       "index": 92,
       "file": "Tools/npu/build_project_ai_index.py",
       "path": "Tools/npu/npu_code_chunks/chunk_092_Tools_npu_build_project_ai_index_py.md",
-      "part": 2,
-      "start_line": 267,
-      "end_line": 419,
-      "chars": 8945,
-      "sha256": "34c3f75bb760e793481033c17a90b7ac2811593f81aa5de0a46e1ab2fde2baed"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 266,
+      "chars": 11480,
+      "sha256": "590e9951087905965e48463141546b4b21c747a45145e347a61c402f03dece7c"
     },
     {
       "index": 93,
-      "file": "Tools/npu/generated_blender_script_candidate_FristNear.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_093_Tools_npu_generated_blender_script_candidate_FristNear_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 213,
-      "chars": 11512,
-      "sha256": "e71a939fdfe4951c23b0d262f9f8c1d0625dd3edc3679c83887335819f4a5a41"
+      "file": "Tools/npu/build_project_ai_index.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_093_Tools_npu_build_project_ai_index_py.md",
+      "part": 2,
+      "start_line": 267,
+      "end_line": 419,
+      "chars": 8946,
+      "sha256": "48499962093e2f00c1a333093fbf8786aa2916510e3aae1162270fa59b9a8085"
     },
     {
       "index": 94,
-      "file": "Tools/npu/generated_blender_script_candidate_FristNear.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_094_Tools_npu_generated_blender_script_candidate_FristNear_py.md",
-      "part": 2,
-      "start_line": 214,
-      "end_line": 369,
-      "chars": 10158,
-      "sha256": "6adc56ca2438e4e4b351eb3f1048c8d4d073bfd332dce936242f435974ed2433"
+      "file": "Tools/npu/build_semantic_code_chunks.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_094_Tools_npu_build_semantic_code_chunks_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 91,
+      "chars": 7055,
+      "sha256": "e0d28625e64f07e5c2d93dd9771eaeb8bbf91fcfe76e0bb0979b68ad5b0f4d44"
     },
     {
       "index": 95,
-      "file": "Tools/npu/run_npu_review.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_095_Tools_npu_run_npu_review_py.md",
+      "file": "Tools/npu/generated_blender_script_candidate_FristNear.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_095_Tools_npu_generated_blender_script_candidate_FristNear_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 287,
-      "chars": 11711,
-      "sha256": "c21dcf1727346a221628100789db68e9df78f6239ba82b5d33b68d81119dac32"
+      "end_line": 213,
+      "chars": 11513,
+      "sha256": "3ed075c7e34d51d11a6490196a14557428a731a024ce31824e079d347ef8a335"
     },
     {
       "index": 96,
-      "file": "Tools/npu/run_npu_review.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_096_Tools_npu_run_npu_review_py.md",
+      "file": "Tools/npu/generated_blender_script_candidate_FristNear.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_096_Tools_npu_generated_blender_script_candidate_FristNear_py.md",
       "part": 2,
-      "start_line": 288,
-      "end_line": 520,
-      "chars": 11794,
-      "sha256": "f9ba416b04fcfa8ee8a708623dafa11acefbf62419301355942878a5df184957"
+      "start_line": 214,
+      "end_line": 369,
+      "chars": 10159,
+      "sha256": "eca2f76948c5e6f387b7ddba4b04a12d988112f2671196042a8eb636927b5cff"
     },
     {
       "index": 97,
-      "file": "Tools/npu/run_npu_review.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_097_Tools_npu_run_npu_review_py.md",
-      "part": 3,
-      "start_line": 521,
-      "end_line": 565,
-      "chars": 3262,
-      "sha256": "1b324a2c3b0240f91e2dfae281f666bdf53257993b021d4faf310ab05347fb13"
+      "file": "Tools/npu/run_npu_artifact_reviewer.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_097_Tools_npu_run_npu_artifact_reviewer_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 127,
+      "chars": 6563,
+      "sha256": "021cbf7ede17305b67054a31b88afa00ba5f83d22502cf2bdcf934881ee835d1"
     },
     {
       "index": 98,
-      "file": "Tools/npu/run_ollama_music_agent.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_098_Tools_npu_run_ollama_music_agent_py.md",
+      "file": "Tools/npu/run_npu_review.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_098_Tools_npu_run_npu_review_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 238,
-      "chars": 10744,
-      "sha256": "fb29b71950392629600095328403512075d2480b34f7646ced78ef6811bc9be4"
+      "end_line": 287,
+      "chars": 11712,
+      "sha256": "7b4ecda067ab90197d522e035ba8da22ce4b37edbb3a107b65db01bc06607afa"
     },
     {
       "index": 99,
-      "file": "Tools/npu/run_npu_context.ps1",
-      "path": "Tools/npu/npu_code_chunks/chunk_099_Tools_npu_run_npu_context_ps1.md",
+      "file": "Tools/npu/run_npu_review.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_099_Tools_npu_run_npu_review_py.md",
+      "part": 2,
+      "start_line": 288,
+      "end_line": 520,
+      "chars": 11795,
+      "sha256": "e267a9821d616485549ea759fff661643fb038ca6fe7e04d3beb63448390834d"
+    },
+    {
+      "index": 100,
+      "file": "Tools/npu/run_npu_review.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_100_Tools_npu_run_npu_review_py.md",
+      "part": 3,
+      "start_line": 521,
+      "end_line": 565,
+      "chars": 3264,
+      "sha256": "9f370c8dbac19ccddf6943d742e4386372d23145e00c1152db809b9d8aecc6d0"
+    },
+    {
+      "index": 101,
+      "file": "Tools/npu/run_ollama_music_agent.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_101_Tools_npu_run_ollama_music_agent_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 238,
-      "chars": 9003,
-      "sha256": "daa092a43e1ed4cc51fe857e4c5fc9a7aeaa58c5b876f177ef878a0d37695265"
+      "chars": 10746,
+      "sha256": "a89be6008aa6bc8348036786d336623ce29130be04e417050783fc0f67a75918"
+    },
+    {
+      "index": 102,
+      "file": "Tools/npu/run_npu_context.ps1",
+      "path": "Tools/npu/npu_code_chunks/chunk_102_Tools_npu_run_npu_context_ps1.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 238,
+      "chars": 9005,
+      "sha256": "a7b16822adcff2d82438bd39d55340757952444a91de2a538bdd215486c0f50e"
     }
   ]
 }

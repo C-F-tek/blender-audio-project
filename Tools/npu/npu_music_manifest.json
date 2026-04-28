@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-04-28T13:33:13",
+  "created_at": "2026-04-28T20:30:26",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "analysis_json": "output/Ready To Jazz-Luca Vera_Master_analysis.json",
   "blender_keyframes_json": "output/Ready To Jazz-Luca Vera_Master_analysis_blender_keyframes.json",
@@ -521,8 +521,8 @@
       "index": 1,
       "kind": "overview",
       "path": "Tools/npu/npu_music_chunks/chunk_001_music_overview.md",
-      "chars": 53756,
-      "sha256": "9e16bf2fd22bc91a32218b6eb6e53ac4f939358aa2c90bd7d9072872c7c707d5"
+      "chars": 54764,
+      "sha256": "ca23ec052bffe658ccdca10f10309ff28ee2d33868c281bbd17b614bae4704bd"
     },
     {
       "index": 2,

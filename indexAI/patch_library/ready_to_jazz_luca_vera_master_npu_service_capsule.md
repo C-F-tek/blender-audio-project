@@ -1,6 +1,6 @@
 # Spaziotempo NPU Service Capsule
 
-Generated: `2026-04-28T13:33:30`
+Generated: `2026-04-28T20:30:45`
 
 ## Routing
 {

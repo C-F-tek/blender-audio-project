@@ -1,0 +1,837 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-28T18:23:04.791786+00:00",
+  "source_dirs": [
+    "Scripting",
+    "Tools",
+    "."
+  ],
+  "files_scanned": 118,
+  "chunk_count": 1030,
+  "files": [
+    {
+      "path": "analyze_wav.py",
+      "status": "ok",
+      "chunks": 8,
+      "lines": 257,
+      "sha256": "f32673c8b1b1da5df82885235ad6be93a15ca36eb2adb924dac73a4e5a3c8ff8"
+    },
+    {
+      "path": "build_track_summary.py",
+      "status": "ok",
+      "chunks": 4,
+      "lines": 113,
+      "sha256": "7dfbac89818d9b1903ae6828e502ec8b9965c84ce6097a5e049e551c95d3286a"
+    },
+    {
+      "path": "normalize_scene_spec.py",
+      "status": "ok",
+      "chunks": 14,
+      "lines": 469,
+      "sha256": "af12b708bf2b6aff49d87872a79fa883a7c32b299a54b6cceb7182bacc1341b9"
+    },
+    {
+      "path": "old script legacy/spaziotempo_album_visual_v3.py",
+      "status": "ok",
+      "chunks": 21,
+      "lines": 710,
+      "sha256": "0a260cd18bd31de5503e2b1d5c568461f2348f3d7cb72c177122c0f8821263f3"
+    },
+    {
+      "path": "old script legacy/spaziotempo_album_visual_v5.py",
+      "status": "ok",
+      "chunks": 29,
+      "lines": 969,
+      "sha256": "1db5cad49687541ab8cac21596d98e7cd2c658479ebc16638aedd2243810f2d9"
+    },
+    {
+      "path": "old script legacy/spaziotempo_asset_visual_v6.py",
+      "status": "ok",
+      "chunks": 33,
+      "lines": 1174,
+      "sha256": "b69b41d5b36de4832f392ef433262d234bac8bf240c8f162ff5a2d4e16e44910"
+    },
+    {
+      "path": "old script legacy/spaziotempo_asset_visual_v61.py",
+      "status": "ok",
+      "chunks": 38,
+      "lines": 1513,
+      "sha256": "c74753fbf2e5c2e1d12a943980bab8a7627c0d2374814d02afde58cff3326c96"
+    },
+    {
+      "path": "Scripting/_template_audio_reactive_package/audio_mapping.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 51,
+      "sha256": "de523a3b59fa8b52ccebc3d22674e0160a92562873c639c8e6ad025d254902f1"
+    },
+    {
+      "path": "Scripting/_template_audio_reactive_package/camera.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 26,
+      "sha256": "34faa378ffd378ab631ba0b740411a0027378c8d5f5fbdbe568d14e7c55267c3"
+    },
+    {
+      "path": "Scripting/_template_audio_reactive_package/config.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 49,
+      "sha256": "adc4cac1915a3d596735f01278f83b5848cb5884689106b8aafce056f0fa1703"
+    },
+    {
+      "path": "Scripting/_template_audio_reactive_package/encode_ffmpeg.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 75,
+      "sha256": "c9c6722823d9c6d631b9b83a6ba9915a12a507f12a68769e1574a95e16d36fe9"
+    },
+    {
+      "path": "Scripting/_template_audio_reactive_package/lighting.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 23,
+      "sha256": "1ca256b9923b455e6be333a4599d0c4549748f0ea04e0ecfe76ffa135d1856f5"
+    },
+    {
+      "path": "Scripting/_template_audio_reactive_package/main.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 79,
+      "sha256": "21f48273002262cfea9e7e03a5ee7031ede7d8ef35fab775250be8cf9317d932"
+    },
+    {
+      "path": "Scripting/_template_audio_reactive_package/materials.py",
+      "status": "ok",
+      "chunks": 2,
+      "lines": 35,
+      "sha256": "3d0b85462ae00c98bca743a91f5443e0f3fc0f02c6839fb366b8300e5bf07374"
+    },
+    {
+      "path": "Scripting/_template_audio_reactive_package/render_settings.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 26,
+      "sha256": "6352d0c8a48205b6614c844c02e95b93e06dd8c7e476dae1d46ff9a988609e08"
+    },
+    {
+      "path": "Scripting/_template_audio_reactive_package/scene_objects.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 21,
+      "sha256": "226f38731cd0368918323ac7a84c9070e37cfb98c5bd7b3cd3dcfd788e1f3827"
+    },
+    {
+      "path": "Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/encode_final_youtube.py",
+      "status": "ok",
+      "chunks": 10,
+      "lines": 203,
+      "sha256": "91fff833a13128a4b7c894ce4ad3dea586900f075c6a3c5f55ec07cd023dee27"
+    },
+    {
+      "path": "Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py",
+      "status": "syntax_error",
+      "error": "invalid non-printable character U+FEFF (<unknown>, line 1)"
+    },
+    {
+      "path": "Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/render_profiles_reference.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 20,
+      "sha256": "eefb6cfc522d3f47be7cb351fb57c0ce1feb68c405bb003e7172aaa5dff04b2a"
+    },
+    {
+      "path": "Scripting/v61b/__init__.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 1,
+      "sha256": "c0bbbb5b6d776bd569a8ce1dde718a322055ae62b1c3b48f26826d6e8acdb651"
+    },
+    {
+      "path": "Scripting/v61b/animation.py",
+      "status": "ok",
+      "chunks": 4,
+      "lines": 1079,
+      "sha256": "8e08e656c5fdf65cf95d2d6c4c24df4b5d2e5b17ea47f7ab7b12034f970461ce"
+    },
+    {
+      "path": "Scripting/v61b/asset_setup.py",
+      "status": "ok",
+      "chunks": 23,
+      "lines": 725,
+      "sha256": "91343beb43af7ff1a9a022e03ce20e1d104057e497a74a8da19b07658605689e"
+    },
+    {
+      "path": "Scripting/v61b/atmosphere_setup.py",
+      "status": "ok",
+      "chunks": 10,
+      "lines": 554,
+      "sha256": "bb571c0bdf08feacdb1649491e01709e6bb54938b3805fdd8796944ec87cd874"
+    },
+    {
+      "path": "Scripting/v61b/camera_setup.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 29,
+      "sha256": "8265f48a256d126408f250dfb84af546e4ff10fbdcd1c98dd114040e17e52181"
+    },
+    {
+      "path": "Scripting/v61b/config.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 439,
+      "sha256": "98836c3a51657ef0934410486d649d34d1faf3ba260d692b73c39741ab6c7c4e"
+    },
+    {
+      "path": "Scripting/v61b/encode_ffmpeg_v61b.py",
+      "status": "ok",
+      "chunks": 13,
+      "lines": 399,
+      "sha256": "3a34c4604f4ec8ac8520be78453029456b496f80382e47216f01e4552937eb11"
+    },
+    {
+      "path": "Scripting/v61b/encode_image_sequence_v61b.py",
+      "status": "ok",
+      "chunks": 14,
+      "lines": 395,
+      "sha256": "f10f55d9f550c7124b46cf897dec2602b653ec62358d3c1f885a20ca149fe384"
+    },
+    {
+      "path": "Scripting/v61b/fog_dynamics.py",
+      "status": "ok",
+      "chunks": 7,
+      "lines": 392,
+      "sha256": "21628c1c0e713ecbdf20bcae478983798b2354f4ed6bb8e700cc2adad4c59b58"
+    },
+    {
+      "path": "Scripting/v61b/fog_filaments.py",
+      "status": "ok",
+      "chunks": 6,
+      "lines": 159,
+      "sha256": "2b1d13a0b254084944ce0df40028222be32a6f8e96b7133e42044ee64d94d901"
+    },
+    {
+      "path": "Scripting/v61b/hot_update_scene_v61b.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 63,
+      "sha256": "e11a0f377365de65b0fb38a393fb6b3259e2a7afe398455cd8f47ca5d2ac5437"
+    },
+    {
+      "path": "Scripting/v61b/hotpatch/__init__.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 3,
+      "sha256": "90be9d97c6b8230b5cabf560b23404b9a3b2699f8df93b89605425c5cf164147"
+    },
+    {
+      "path": "Scripting/v61b/hotpatch/accent_patch.py",
+      "status": "ok",
+      "chunks": 7,
+      "lines": 301,
+      "sha256": "0e7166fd48278eaeab80e30d9b45d5b04c43c1c4a6f4b34a0d2ecf17b5745f94"
+    },
+    {
+      "path": "Scripting/v61b/hotpatch/common.py",
+      "status": "ok",
+      "chunks": 9,
+      "lines": 91,
+      "sha256": "81758e52dae24735b45e08524292be5d1a6d0f820c15526514518e1e2e5c6662"
+    },
+    {
+      "path": "Scripting/v61b/hotpatch/diagnostics.py",
+      "status": "ok",
+      "chunks": 12,
+      "lines": 286,
+      "sha256": "0c67d184cf13c5fb66ea91e3bcaa77312ecec4022985d7dd810a2d238f966092"
+    },
+    {
+      "path": "Scripting/v61b/hotpatch/fog_patch.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 133,
+      "sha256": "728d3daf653f3a0551843b26040422d0f14826005a8a0e7abb0cc5b7414d3df4"
+    },
+    {
+      "path": "Scripting/v61b/hotpatch/hero_material_patch.py",
+      "status": "ok",
+      "chunks": 12,
+      "lines": 395,
+      "sha256": "94be76940e0b8ef01d1dfd973d767f0cfdb1a398621a512c8810429940d4cfe7"
+    },
+    {
+      "path": "Scripting/v61b/hotpatch/lighting_patch.py",
+      "status": "ok",
+      "chunks": 5,
+      "lines": 150,
+      "sha256": "132d9dc0fbbfe26fb6ff8909d3307d6503c50aede3577911dea73cfd18770956"
+    },
+    {
+      "path": "Scripting/v61b/hotpatch/render_patch.py",
+      "status": "ok",
+      "chunks": 5,
+      "lines": 206,
+      "sha256": "916caf8f5ad9d9010a3dcf0b50897b0118c208306b11495c7bbd603d02bd907f"
+    },
+    {
+      "path": "Scripting/v61b/hotpatch/runner.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 103,
+      "sha256": "938c367a2ea774376d12815124f8c755672d67578d5ae8c1bfb6c69e9379b074"
+    },
+    {
+      "path": "Scripting/v61b/io_utils.py",
+      "status": "ok",
+      "chunks": 5,
+      "lines": 81,
+      "sha256": "6f0db21475f14dff120a5cc57d748b2178b75fbc4f60fdb6d16b8e438513dd2d"
+    },
+    {
+      "path": "Scripting/v61b/main_v61b.py",
+      "status": "ok",
+      "chunks": 4,
+      "lines": 200,
+      "sha256": "e8bfc826b8fcf9071a8ef48f7bdfb973cb0f908d99eed4f2de4390a4b3f051c4"
+    },
+    {
+      "path": "Scripting/v61b/materials.py",
+      "status": "ok",
+      "chunks": 10,
+      "lines": 657,
+      "sha256": "073e38f04df3414be8fe87cc0a568ce396592e19553f991815cfb94c7b749577"
+    },
+    {
+      "path": "Scripting/v61b/physics_setup.py",
+      "status": "ok",
+      "chunks": 15,
+      "lines": 737,
+      "sha256": "15ccd171bf927564a01d46238dca9f9149d70198caf5cd7eb451733a5cbf2edf"
+    },
+    {
+      "path": "Scripting/v61b/reload_utils.py",
+      "status": "ok",
+      "chunks": 2,
+      "lines": 51,
+      "sha256": "757b7f5af331ec38e1063072f70fcfc50edae48cf9dd8fbbff1706090bed8e49"
+    },
+    {
+      "path": "Scripting/v61b/render_setup.py",
+      "status": "ok",
+      "chunks": 4,
+      "lines": 270,
+      "sha256": "d798f6054b2e94e063ff5b21a9648641ce99231902dd16e288784ecf962a24ca"
+    },
+    {
+      "path": "Scripting/v61b/scene_tuning_panel.py",
+      "status": "ok",
+      "chunks": 44,
+      "lines": 1262,
+      "sha256": "55c3c28fad20ca2dd87058f9f9959ad655e51b0a85286e1af9876627eac81057"
+    },
+    {
+      "path": "Scripting/v61b/scene_utils.py",
+      "status": "ok",
+      "chunks": 6,
+      "lines": 97,
+      "sha256": "98780b6455aae7c8857bf8698e8e4b57feceec9187a04a8850f87bad2bb4d295"
+    },
+    {
+      "path": "Scripting/v61b/spaziotempo/__init__.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 4,
+      "sha256": "b4c134fb5b10b26b42246d0fb626a393396d9ce775a0a7183c8754fd5b85387c"
+    },
+    {
+      "path": "Scripting/v61b/spaziotempo/core/__init__.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 1,
+      "sha256": "3d9532a93d330048ac9408aa2c49adbfb3263e6e950b10fe579a330b5e8f4925"
+    },
+    {
+      "path": "Scripting/v61b/spaziotempo/core/collections.py",
+      "status": "ok",
+      "chunks": 10,
+      "lines": 132,
+      "sha256": "2cf178afbdd5d808c520edd44d2e4c80eaa671480e65b571adb9b798f9df808b"
+    },
+    {
+      "path": "Scripting/v61b/spaziotempo/core/registry.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 221,
+      "sha256": "020c0bb68dc89e3fc2221d37ff68f61a7988df30d9d291ef38470ff54f6db14a"
+    },
+    {
+      "path": "Scripting/v61b/spaziotempo/features/__init__.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 1,
+      "sha256": "341fbf840d490246ee054c4503c7aaaa697331ff4afe12a5356d124aacc16a3f"
+    },
+    {
+      "path": "Scripting/v61b/spaziotempo/features/catalog.py",
+      "status": "ok",
+      "chunks": 2,
+      "lines": 19,
+      "sha256": "39e20ca9b04ec97730a95013071e03e253c00dfacc0345af72ddeec2b79cd3b3"
+    },
+    {
+      "path": "Scripting/v61b/world_setup.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 198,
+      "sha256": "4d57f4b5253bb156e40125592238f3a9e872420ebe9b5d5b273d392f3759ef04"
+    },
+    {
+      "path": "Scripting/v61b_backgood/__init__.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 1,
+      "sha256": "c0bbbb5b6d776bd569a8ce1dde718a322055ae62b1c3b48f26826d6e8acdb651"
+    },
+    {
+      "path": "Scripting/v61b_backgood/animation.py",
+      "status": "ok",
+      "chunks": 4,
+      "lines": 1019,
+      "sha256": "c0f9ac3b5c1aed6515e870316efb2692ba7d7c31373a2de74d0fdb3f2b371506"
+    },
+    {
+      "path": "Scripting/v61b_backgood/asset_setup.py",
+      "status": "ok",
+      "chunks": 23,
+      "lines": 725,
+      "sha256": "91343beb43af7ff1a9a022e03ce20e1d104057e497a74a8da19b07658605689e"
+    },
+    {
+      "path": "Scripting/v61b_backgood/atmosphere_setup.py",
+      "status": "ok",
+      "chunks": 10,
+      "lines": 543,
+      "sha256": "919ca54123367f7d4ced97029a81754ed608e37de32d4b0f5ba0af9915493f23"
+    },
+    {
+      "path": "Scripting/v61b_backgood/camera_setup.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 29,
+      "sha256": "8265f48a256d126408f250dfb84af546e4ff10fbdcd1c98dd114040e17e52181"
+    },
+    {
+      "path": "Scripting/v61b_backgood/config.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 358,
+      "sha256": "d08d4631427b4aa834722a4da01a8cf8eb3a9a162cc01d7193934a2c26dfbcc1"
+    },
+    {
+      "path": "Scripting/v61b_backgood/encode_image_sequence_v61b.py",
+      "status": "ok",
+      "chunks": 13,
+      "lines": 376,
+      "sha256": "5cf55b1b281ed0d399587c230fe77d9d98dd5d256a77bd237b8d340c94e11f57"
+    },
+    {
+      "path": "Scripting/v61b_backgood/fog_dynamics.py",
+      "status": "ok",
+      "chunks": 5,
+      "lines": 240,
+      "sha256": "a0e6dd02d58557d51e80a1d3de7f523b29cebd44eb521c76c0cd114790728b9d"
+    },
+    {
+      "path": "Scripting/v61b_backgood/hot_update_scene_v61b.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 61,
+      "sha256": "db6fd6bfbefb886c0703eef350e97cf067fbe3bc30d2590ee0b6d48be22a07c0"
+    },
+    {
+      "path": "Scripting/v61b_backgood/hotpatch/__init__.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 3,
+      "sha256": "90be9d97c6b8230b5cabf560b23404b9a3b2699f8df93b89605425c5cf164147"
+    },
+    {
+      "path": "Scripting/v61b_backgood/hotpatch/accent_patch.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 125,
+      "sha256": "5a6eac7d9f3c81ceae1384e694e7eb2c6cf41429542c6d9131d9ad4bbc7af1ec"
+    },
+    {
+      "path": "Scripting/v61b_backgood/hotpatch/common.py",
+      "status": "ok",
+      "chunks": 9,
+      "lines": 91,
+      "sha256": "81758e52dae24735b45e08524292be5d1a6d0f820c15526514518e1e2e5c6662"
+    },
+    {
+      "path": "Scripting/v61b_backgood/hotpatch/fog_patch.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 124,
+      "sha256": "fb603c40885361658deec34cc35204419efd8f2695c8f1ac7a50ede28c6ec571"
+    },
+    {
+      "path": "Scripting/v61b_backgood/hotpatch/hero_material_patch.py",
+      "status": "ok",
+      "chunks": 12,
+      "lines": 395,
+      "sha256": "94be76940e0b8ef01d1dfd973d767f0cfdb1a398621a512c8810429940d4cfe7"
+    },
+    {
+      "path": "Scripting/v61b_backgood/hotpatch/lighting_patch.py",
+      "status": "ok",
+      "chunks": 4,
+      "lines": 85,
+      "sha256": "de3f4be0ba7ea194d006c583747b4f99194d8e649fad561a4b26794db8e4314a"
+    },
+    {
+      "path": "Scripting/v61b_backgood/hotpatch/render_patch.py",
+      "status": "ok",
+      "chunks": 5,
+      "lines": 206,
+      "sha256": "5ee4a1224eb28be176338db1bb1ee095e0bd69f5b1636627b49d65b6fcd9c602"
+    },
+    {
+      "path": "Scripting/v61b_backgood/hotpatch/runner.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 60,
+      "sha256": "3b4062d31ed5d7acd9a8d4dd70e832e1c3d0b994445946f8923903bdc21b1353"
+    },
+    {
+      "path": "Scripting/v61b_backgood/io_utils.py",
+      "status": "ok",
+      "chunks": 5,
+      "lines": 81,
+      "sha256": "6f0db21475f14dff120a5cc57d748b2178b75fbc4f60fdb6d16b8e438513dd2d"
+    },
+    {
+      "path": "Scripting/v61b_backgood/main_v61b.py",
+      "status": "ok",
+      "chunks": 2,
+      "lines": 181,
+      "sha256": "0e6561bd270446aee7f36d2c2b6418bd8d2c5a0eaf7ad8d56a4e5607701f2f73"
+    },
+    {
+      "path": "Scripting/v61b_backgood/materials.py",
+      "status": "ok",
+      "chunks": 9,
+      "lines": 513,
+      "sha256": "542cdad79c9d397a6463bd26115b3d2dbb50bf3faf9c89a73b1c81871549f797"
+    },
+    {
+      "path": "Scripting/v61b_backgood/physics_setup.py",
+      "status": "ok",
+      "chunks": 15,
+      "lines": 720,
+      "sha256": "ccaa9bf7b05dd689f74a4a8788fec9415f4d8b2231d3be4c2a0de41f27f999cf"
+    },
+    {
+      "path": "Scripting/v61b_backgood/render_setup.py",
+      "status": "ok",
+      "chunks": 4,
+      "lines": 267,
+      "sha256": "04b84c45221370247af073e9c113d7a112152ccbddd5a20d266a66f1ed797754"
+    },
+    {
+      "path": "Scripting/v61b_backgood/scene_tuning_panel.py",
+      "status": "ok",
+      "chunks": 39,
+      "lines": 1097,
+      "sha256": "a12f7378648a8231ee4645558214cf7cb38a91867632464866bd3de5ec452bee"
+    },
+    {
+      "path": "Scripting/v61b_backgood/scene_utils.py",
+      "status": "ok",
+      "chunks": 6,
+      "lines": 97,
+      "sha256": "98780b6455aae7c8857bf8698e8e4b57feceec9187a04a8850f87bad2bb4d295"
+    },
+    {
+      "path": "Scripting/v61b_backgood/world_setup.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 174,
+      "sha256": "5e5b7923c84b44e207fca509cb55714759da056cf4c7093543cf33dde88abdec"
+    },
+    {
+      "path": "Tools/ai/build_music_intermediates.py",
+      "status": "ok",
+      "chunks": 14,
+      "lines": 314,
+      "sha256": "e70f7c1833fea79e65ebd46c54a7fb7d91328e8a3045619d4b7dd4e9bffe9498"
+    },
+    {
+      "path": "Tools/ai/merge_ai_candidates.py",
+      "status": "ok",
+      "chunks": 4,
+      "lines": 53,
+      "sha256": "65efc4c9136a95d79be9931ca4f8825b819bc4b3f43f33594ccf1799554395a2"
+    },
+    {
+      "path": "Tools/ai/run_parallel_artifact_pipeline.py",
+      "status": "ok",
+      "chunks": 10,
+      "lines": 271,
+      "sha256": "870764c264e2c4f752aea921c85c003612572f578abdf24903faf0f67c3f01c0"
+    },
+    {
+      "path": "Tools/ai/validate_ai_artifacts.py",
+      "status": "ok",
+      "chunks": 5,
+      "lines": 163,
+      "sha256": "12d72cb4c73c53f7289b3f88e41065b01f7b098a5e60540e48124507c7bf25f0"
+    },
+    {
+      "path": "Tools/npu/ai_memory_context.py",
+      "status": "ok",
+      "chunks": 5,
+      "lines": 111,
+      "sha256": "4febdeb28cc24886e60e547d4cb1097a0928f17283ecd58ba22db9fd3c12f9a7"
+    },
+    {
+      "path": "Tools/npu/build_ai_service_packet.py",
+      "status": "ok",
+      "chunks": 10,
+      "lines": 355,
+      "sha256": "0906bc0f6df6c0da50221ca38e0cce89d78afea243278b5f396225c6eb38af1d"
+    },
+    {
+      "path": "Tools/npu/build_blender_manual_context.py",
+      "status": "ok",
+      "chunks": 13,
+      "lines": 326,
+      "sha256": "5516f84a1f112607a51f93aa7dbe52631a7e834353a0b98c71706e33b152719c"
+    },
+    {
+      "path": "Tools/npu/build_music_context.py",
+      "status": "ok",
+      "chunks": 30,
+      "lines": 711,
+      "sha256": "dedb206a9a9e8d6f554be7d0a70ab29fe3d27ec81ffb133130e12b61b2a5d97b"
+    },
+    {
+      "path": "Tools/npu/build_npu_code_context.py",
+      "status": "ok",
+      "chunks": 14,
+      "lines": 389,
+      "sha256": "45037f46cd073bdc0d191828f75224d1d8726bf519620bc3ba7f795b687922b0"
+    },
+    {
+      "path": "Tools/npu/build_project_ai_index.py",
+      "status": "ok",
+      "chunks": 19,
+      "lines": 419,
+      "sha256": "5d0e447d5d77e945f831b80e31a0f0ccdd224276d30fe452a85293c99251e7c7"
+    },
+    {
+      "path": "Tools/npu/build_semantic_code_chunks.py",
+      "status": "ok",
+      "chunks": 10,
+      "lines": 91,
+      "sha256": "c95155adaba9dbffa80174feb6e7ee16ac23346d70a437cd75aa89138ff1dffb"
+    },
+    {
+      "path": "Tools/npu/generated_blender_script_candidate_FristNear.py",
+      "status": "ok",
+      "chunks": 16,
+      "lines": 369,
+      "sha256": "c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432"
+    },
+    {
+      "path": "Tools/npu/npu_runtime.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 95,
+      "sha256": "8e0b1328626cb202c8f7a47bcf159df0725c7370a631440ce11989cca5be58bb"
+    },
+    {
+      "path": "Tools/npu/ollama_runtime.py",
+      "status": "ok",
+      "chunks": 14,
+      "lines": 351,
+      "sha256": "dbcdde9d1d43964bd77a64a8cfe8e900346aa4b5554e41daf19758269cbd4cbd"
+    },
+    {
+      "path": "Tools/npu/run_dual_ai_pipeline.py",
+      "status": "ok",
+      "chunks": 29,
+      "lines": 1704,
+      "sha256": "a6a3d187992b5d66d4d8edb064e2a04cc303c5f685b05b0a698efd953f636bbb"
+    },
+    {
+      "path": "Tools/npu/run_npu_artifact_reviewer.py",
+      "status": "ok",
+      "chunks": 5,
+      "lines": 127,
+      "sha256": "37e7c4d9016bcff4e4ff8ce7219bffb7a743dd537da7928a7d077a01865a9b75"
+    },
+    {
+      "path": "Tools/npu/run_npu_review.py",
+      "status": "ok",
+      "chunks": 18,
+      "lines": 565,
+      "sha256": "d13f94b1d0c5c586cc63177f44f022f33f3e19a926fc675a1540e4d24cc524ed"
+    },
+    {
+      "path": "Tools/npu/run_ollama_music_agent.py",
+      "status": "ok",
+      "chunks": 6,
+      "lines": 238,
+      "sha256": "e5c78a8bdd345b4b4a638f9b0482a039fe7b990c31465c780b2359009bb1157c"
+    },
+    {
+      "path": "Tools/repo_patch_runner/apply_repo_mods.py",
+      "status": "ok",
+      "chunks": 21,
+      "lines": 443,
+      "sha256": "64307a6f42dddbb2363773954311fae7fc1dd76855e1f056b3c92c1cfc5a37fb"
+    },
+    {
+      "path": "Tools/workflow/artifact_consult.py",
+      "status": "ok",
+      "chunks": 7,
+      "lines": 144,
+      "sha256": "1e91bdc3e5b8d0104b878f8949c5cf59f229f9c28892dc6b9b47fcaedd02330e"
+    },
+    {
+      "path": "Tools/workflow/asset_inventory.py",
+      "status": "ok",
+      "chunks": 2,
+      "lines": 110,
+      "sha256": "9fe28344f2d02d5ad5b3ca2a3eb111f91fc69c2ed8952923dddefee87b7d709e"
+    },
+    {
+      "path": "Tools/workflow/git_auto_push.py",
+      "status": "ok",
+      "chunks": 6,
+      "lines": 165,
+      "sha256": "492e75895c1df77a8529f1fbb72c5b92c7b711ab45d8df8467ec2da50fb15c73"
+    },
+    {
+      "path": "Tools/workflow/gui/components/__init__.py",
+      "status": "ok",
+      "chunks": 1,
+      "lines": 1,
+      "sha256": "3406a564822a250020ca4f94a0125e8687c17d142b81417a1cda2e7662b3fee8"
+    },
+    {
+      "path": "Tools/workflow/gui/components/action_panel.py",
+      "status": "ok",
+      "chunks": 4,
+      "lines": 123,
+      "sha256": "65b8579e3592131af2afb8159a436258de1779960f3250e4fb2bc7bfd820cf96"
+    },
+    {
+      "path": "Tools/workflow/gui/components/artifact_browser.py",
+      "status": "ok",
+      "chunks": 6,
+      "lines": 390,
+      "sha256": "a37e8e71bd48ea41cce9b2f4f4d5a6448f55f69cda1afb6cad0455736088c0a7"
+    },
+    {
+      "path": "Tools/workflow/gui/components/live_output_panel.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 182,
+      "sha256": "ad060c57d62c57b774c6454d3e74d8246ae57ec1370ab59f0475078e3742b9e1"
+    },
+    {
+      "path": "Tools/workflow/gui/components/session_overview.py",
+      "status": "ok",
+      "chunks": 3,
+      "lines": 278,
+      "sha256": "65bd025f1f63daf8fbcd951dba2ab7d2492ed84757b375b3712f31d7f1bc968a"
+    },
+    {
+      "path": "Tools/workflow/gui/components/st_theme.py",
+      "status": "ok",
+      "chunks": 5,
+      "lines": 92,
+      "sha256": "3741be3f643d8d746377b5d82fca4684325a205b2c38832c898d4f0c60fcb8c1"
+    },
+    {
+      "path": "Tools/workflow/gui/components/storage_dashboard.py",
+      "status": "ok",
+      "chunks": 6,
+      "lines": 422,
+      "sha256": "ed4682b41fa1b3339fc3d6630623ffb2572cf7a6b9dabb6d0f873b5e9d0fc895"
+    },
+    {
+      "path": "Tools/workflow/gui/workflow_gui.py",
+      "status": "ok",
+      "chunks": 7,
+      "lines": 738,
+      "sha256": "8410e2ae172bde1c70316cd85c3ddea38533423268af446ec53a51f4d352893c"
+    },
+    {
+      "path": "Tools/workflow/gui/workflow_gui_modern.py",
+      "status": "ok",
+      "chunks": 2,
+      "lines": 317,
+      "sha256": "9c0d93813e533f13cf75177d0787d36318b3aadf5dc5ef68ebc00c0d261377cb"
+    },
+    {
+      "path": "Tools/workflow/gui/workflow_gui_with_push.py",
+      "status": "ok",
+      "chunks": 2,
+      "lines": 116,
+      "sha256": "6130bedc1645d887cac0067008278b3a6805944712c0d0071746fb1aa4f1203b"
+    },
+    {
+      "path": "Tools/workflow/project_awareness.py",
+      "status": "ok",
+      "chunks": 11,
+      "lines": 353,
+      "sha256": "c734994d90d95af74aebc3053ad6faf1eb24045bbbd5596caaf793ab162da70e"
+    },
+    {
+      "path": "Tools/workflow/scene_brief.py",
+      "status": "ok",
+      "chunks": 18,
+      "lines": 599,
+      "sha256": "3e059017208e1501dde6ac54f88640edc865a87220a98a63cffbb41239a99914"
+    },
+    {
+      "path": "Tools/workflow/startup_check.py",
+      "status": "ok",
+      "chunks": 15,
+      "lines": 284,
+      "sha256": "1096a57973628a44876bec0b0639bc9ce909d02f1568f741ae0946d31e00ff4f"
+    },
+    {
+      "path": "Tools/workflow/workflow_debug.py",
+      "status": "ok",
+      "chunks": 18,
+      "lines": 607,
+      "sha256": "d18ebede0a4b6e18ae378702469f12bf014a7fc95df44b68f57ad4e4fc2e1b2d"
+    },
+    {
+      "path": "Tools/workflow/workflow_shell.py",
+      "status": "ok",
+      "chunks": 7,
+      "lines": 324,
+      "sha256": "dd202a0a4e6dbf0cd91dec41c1a3cdfa27dc32eac572a99371985ba9d8cc0fb3"
+    },
+    {
+      "path": "Tools/workflow/workflow_shell_with_push.py",
+      "status": "ok",
+      "chunks": 4,
+      "lines": 117,
+      "sha256": "b486ec8aa3af52c4c16592a4f0802402e3cd420c78dcde962a81e701b1e7d598"
+    },
+    {
+      "path": "Tools/workflow/workflow_state.py",
+      "status": "ok",
+      "chunks": 52,
+      "lines": 1230,
+      "sha256": "0dd21d73af1469f617ce717a385d56fd56c29b6920fbc1c360a8b2c0aa460a6e"
+    }
+  ]
+}
