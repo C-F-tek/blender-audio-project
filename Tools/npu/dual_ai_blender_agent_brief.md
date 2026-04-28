@@ -1,6 +1,6 @@
 # Dual AI Blender Agent Brief
 
-Generated: `2026-04-28T20:30:05`
+Generated: `2026-04-28T20:54:04`
 
 ## Policy
 - Full Blender keyframe JSON remains untouched.
@@ -9,121 +9,8 @@ Generated: `2026-04-28T20:30:05`
 
 ## Recommended Plan
 {
-  "index": 0,
-  "start_sec": 0.0,
-  "end_sec": 3.0,
-  "dominant_band": "mid",
-  "intensity_score": 50,
-  "intensity": "medium",
-  "beat_count": 4,
-  "low": {
-    "average": 12.3,
-    "min": 8.9,
-    "max": 16.7,
-    "std_dev": 2.4,
-    "p50": 13.5,
-    "p90": 15.0,
-    "p98": 16.0
-  },
-  "mid": {
-    "average": 25.6,
-    "min": 20.0,
-    "max": 30.0,
-    "std_dev": 1.8,
-    "p50": 24.0,
-    "p90": 27.0,
-    "p98": 29.0
-  },
-  "high": {
-    "average": 10.2,
-    "min": 6.0,
-    "max": 15.0,
-    "std_dev": 2.1,
-    "p50": 10.0,
-    "p90": 13.0,
-    "p98": 14.0
-  },
-  "onset": {
-    "average": 0.5,
-    "min": 0.3,
-    "max": 0.7,
-    "std_dev": 0.1,
-    "p50": 0.5,
-    "p90": 0.6,
-    "p98": 0.7
-  },
-  "beat": {
-    "average": 0.2,
-    "min": 0.1,
-    "max": 0.3,
-    "std_dev": 0.05,
-    "p50": 0.2,
-    "p90": 0.25,
-    "p98": 0.3
-  },
-  "hero_deformation": {
-    "average": 1.0,
-    "min": 0.8,
-    "max": 1.2,
-    "std_dev": 0.1,
-    "p50": 1.0,
-    "p90": 1.1,
-    "p98": 1.2
-  },
-  "material_shimmer": {
-    "average": 0.3,
-    "min": 0.2,
-    "max": 0.4,
-    "std_dev": 0.05,
-    "p50": 0.3,
-    "p90": 0.35,
-    "p98": 0.4
-  },
-  "fog_motion": {
-    "average": 0.1,
-    "min": 0.05,
-    "max": 0.15,
-    "std_dev": 0.02,
-    "p50": 0.1,
-    "p90": 0.13,
-    "p98": 0.14
-  },
-  "accent_emission": {
-    "average": 0.7,
-    "min": 0.6,
-    "max": 0.8,
-    "std_dev": 0.05,
-    "p50": 0.7,
-    "p90": 0.75,
-    "p98": 0.8
-  },
-  "camera_pressure": {
-    "average": 0.4,
-    "min": 0.3,
-    "max": 0.5,
-    "std_dev": 0.05,
-    "p50": 0.4,
-    "p90": 0.45,
-    "p98": 0.5
-  },
-  "top_events": [
-    {
-      "timestamp_sec": 1.2,
-      "low": 16.7,
-      "mid": 30.0,
-      "high": 15.0,
-      "onset": 0.7,
-      "beat": 0.3
-    },
-    {
-      "timestamp_sec": 2.8,
-      "low": 14.0,
-      "mid": 28.0,
-      "high": 13.0,
-      "onset": 0.6,
-      "beat": 0.25
-    }
-  ],
+  "raw_plan_response": "The provided JSON data represents a series of audio segments, each containing detailed information about its characteristics and corresponding visual effects controls. Here's a breakdown of the structure and key elements:\n\n### Structure Overview\n\n- **segments**: An array containing multiple objects, each representing an audio segment.\n- **index**: A unique identifier for each segment.\n- **start_sec** and **end_sec**: The start and end times of the segment in seconds.\n- **dominant_band**: The primary frequency band (low, mid, high) that is most prominent in the segment.\n- **intensity_score**: A numerical score indicating the intensity level of the audio.\n- **intensity**: A textual description of the intensity (e.g., quiet, low).\n- **beat_count**: The number of beats detected in the segment.\n- **stats**: An object containing statistical data about various features of the audio:\n  - **low**, **mid**, **high**: Statistics for each frequency band.\n  - **onset**: Statistics related to the onset (beginning) of sounds.\n  - **beat**: Statistics related to beats.\n- **controls**: Visual effects controls that should be applied based on the audio characteristics:\n  - **primary_band**: The primary visual effect corresponding to the dominant audio band.\n  - **intensity**: The intensity level for visual effects.\n  - **hero_deformation**, **material_shimmer**, **fog_motion**, **accent_emission**, **camera_pressure**: Specific control values for various visual elements.\n\n### Example Segment\n\nHere's an example of a single segment from the JSON data:\n\n```json\n{\n  \"index\": 0,\n  \"start_sec\": 0.0,\n  \"end_sec\": 14.0,\n  \"dominant_band\": \"low\",\n  \"intensity_score\": 0.2389,\n  \"intensity\": \"quiet\",\n  \"beat_count\": 6,\n  \"stats\": {\n    \"low\": {\n      \"avg\": 0.175,\n      \"min\": 0.0,\n      \"max\": 1.0,\n      \"std\": 0.2834,\n      \"p50\": 0.0,\n      \"p90\": 0.611,\n      \"p98\": 0.9463,\n      \"top10_avg\": 0.7936\n    },\n    \"mid\": {\n      \"avg\": 0.0575,\n      \"min\": 0.0,\n      \"max\": 0.8937,\n      \"std\": 0.1491,\n      \"p50\": 0.0,\n      \"p90\": 0.196,\n      \"p98\": 0.7337,\n      \"top10_avg\": 0.4277\n    },\n    \"high\": {\n      \"avg\": 0.0592,\n      \"min\": 0.0,\n      \"max\": 0.985,\n      \"std\": 0.1572,\n      \"p50\": 0.0125,\n      \"p90\": 0.1308,\n      \"p98\": 0.7251,\n      \"top10_avg\": 0.4477\n    },\n    \"onset\": {\n      \"avg\": 0.0666,\n      \"min\": 0.0,\n      \"max\": 1.0,\n      \"std\": 0.1723,\n      \"p50\": 0.0127,\n      \"p90\": 0.1441,\n      \"p98\": 0.8716,\n      \"top10_avg\": 0.4941\n    },\n    \"beat\": {\n      \"avg\": 0.0238,\n      \"min\": 0.0,\n      \"max\": 1.0,\n      \"std\": 0.1523,\n      \"p50\": 0.0,\n      \"p90\": 0.0,\n      \"p98\": 1.0,\n      \"top10_avg\": 0.2381\n    }\n  },\n  \"controls\": {\n    \"primary_band\": \"low\",\n    \"intensity\": \"quiet\",\n    \"hero_deformation\": 0.3649,\n    \"material_shimmer\": 0.134,\n    \"fog_motion\": 0.0835,\n    \"accent_emission\": 0.1475,\n    \"camera_pressure\": 0.2469\n  },\n  \"top_events\": [\n    {\n      \"time\": 311.267,\n      \"low\": 0.245,\n      \"mid\": 0.753,\n      \"high\": 0.818,\n      \"onset\": 1.0,\n      \"beat\": 1.0\n    },\n    // Additional top events...\n  ]\n}\n```\n\n### Key Points\n\n- **Dominant Band**: The audio segment is primarily characterized by the low frequency band.\n- **Intensity**: The intensity level is described as \"quiet,\" with a score of 0.2389.\n- **Beat Count**: There are 6 beats detected in this segment.\n- **Statistics**: Detailed statistics for each frequency band, onset, and beat provide insights into the audio's characteristics.\n- **Controls**: Specific visual effects controls are provided to match the audio characteristics, such as deformation of a hero element, shimmering materials, fog motion, accent emission, and camera pressure.\n\nThis data can be used in applications that synchronize audio with visual effects, ensuring that the visuals respond dynamically to changes in the audio.",
+  "parse_error": true,
   "merge_model": "qwen2.5-coder:14b"
 }
 
@@ -132,14 +19,14 @@ Generated: `2026-04-28T20:30:05`
 
 ## Creative Source
 {
-  "raw_creative_response": "**Answer:**\n\nThe function that checks whether a given string is a valid number is called **`isValid`**.",
+  "raw_creative_response": "",
   "parse_error": true,
   "model": "gpt-oss:20b"
 }
 
 ## Technical Source
 {
-  "raw_technical_response": "This JSON data represents a series of audio analysis segments for a song or music track. Each segment is divided into 3-second intervals, and the data includes various metrics and control parameters derived from the audio content within those intervals. Here's a breakdown of the key components:\n\n1. **Segment Information**:\n   - `index`: The sequence number of the segment.\n   - `start_sec` and `end_sec`: The start and end times of the segment in seconds.\n\n2. **Audio Features**:\n   - `dominant_band`: The primary frequency band (low, mid, high) that is most prominent in the segment.\n   - `intensity_score`: A numerical score indicating the intensity or loudness level of the segment.\n   - `intensity`: A textual description of the intensity level (e.g., \"quiet\", \"low\", \"medium\", \"high\").\n\n3. **Beat Information**:\n   - `beat_count`: The number of beats detected in the segment.\n\n4. **Statistics**:\n   - For each frequency band (`low`, `mid`, `high`), there are statistical measures such as average, minimum, maximum, standard deviation, and percentiles (p50, p90, p98).\n   - `onset`: Measures related to the onset of sounds or beats.\n   - `beat`: Additional beat-related statistics.\n\n5. **Control Parameters**:\n   - These are parameters that might be used to control visual or audio effects in a music video or interactive experience based on the audio analysis.\n     - `hero_deformation`: Likely controls the deformation or animation of a main character or object.\n     - `material_shimmer`: Controls shimmering effects on materials.\n     - `fog_motion`: Controls motion or changes in fog or atmospheric conditions.\n     - `accent_emission`: Controls emission or highlighting of accents or highlights.\n     - `camera_pressure`: Likely controls camera movement or pressure effects.\n\n6. **Top Events**:\n   - A list of significant audio events within the segment, including their timestamps and associated metrics (low, mid, high, onset, beat).\n\nThis data can be used for various applications such as music visualization, interactive experiences, or even machine learning models that analyze and respond to music in real-time.",
+  "raw_technical_response": "This JSON data represents a series of audio segments, each with detailed information about its characteristics and corresponding visual effects controls. Here's a breakdown of the structure and key elements:\n\n### Structure Overview\n\n- **segments**: An array containing multiple objects, each representing an audio segment.\n- **index**: A unique identifier for each segment.\n- **start_sec** and **end_sec**: The start and end times of the segment in seconds.\n- **dominant_band**: The primary frequency band (low, mid, high) that is most prominent in the segment.\n- **intensity_score**: A numerical score indicating the intensity level of the audio.\n- **intensity**: A textual description of the intensity (e.g., quiet, low).\n- **beat_count**: The number of beats detected in the segment.\n- **stats**: An object containing statistical data about various features of the audio:\n  - **low**, **mid**, **high**: Statistics for each frequency band.\n  - **onset**: Statistics related to the onset (beginning) of sounds.\n  - **beat**: Statistics related to beats.\n- **controls**: Visual effects controls that should be applied based on the audio characteristics:\n  - **primary_band**: The primary visual effect corresponding to the dominant audio band.\n  - **intensity**: The intensity level for visual effects.\n  - **hero_deformation**, **material_shimmer**, **fog_motion**, **accent_emission**, **camera_pressure**: Specific control values for various visual elements.\n\n### Example Segment\n\nHere's an example of a single segment from the JSON data:\n\n```json\n{\n  \"index\": 0,\n  \"start_sec\": 0.0,\n  \"end_sec\": 14.0,\n  \"dominant_band\": \"low\",\n  \"intensity_score\": 0.2389,\n  \"intensity\": \"quiet\",\n  \"beat_count\": 6,\n  \"stats\": {\n    \"low\": {\n      \"avg\": 0.175,\n      \"min\": 0.0,\n      \"max\": 1.0,\n      \"std\": 0.2834,\n      \"p50\": 0.0,\n      \"p90\": 0.611,\n      \"p98\": 0.9463,\n      \"top10_avg\": 0.7936\n    },\n    \"mid\": {\n      \"avg\": 0.0575,\n      \"min\": 0.0,\n      \"max\": 0.8937,\n      \"std\": 0.1491,\n      \"p50\": 0.0,\n      \"p90\": 0.196,\n      \"p98\": 0.7337,\n      \"top10_avg\": 0.4277\n    },\n    \"high\": {\n      \"avg\": 0.0592,\n      \"min\": 0.0,\n      \"max\": 0.985,\n      \"std\": 0.1572,\n      \"p50\": 0.0125,\n      \"p90\": 0.1308,\n      \"p98\": 0.7251,\n      \"top10_avg\": 0.4477\n    },\n    \"onset\": {\n      \"avg\": 0.0666,\n      \"min\": 0.0,\n      \"max\": 1.0,\n      \"std\": 0.1723,\n      \"p50\": 0.0127,\n      \"p90\": 0.1441,\n      \"p98\": 0.8716,\n      \"top10_avg\": 0.4941\n    },\n    \"beat\": {\n      \"avg\": 0.0238,\n      \"min\": 0.0,\n      \"max\": 1.0,\n      \"std\": 0.1523,\n      \"p50\": 0.0,\n      \"p90\": 0.0,\n      \"p98\": 1.0,\n      \"top10_avg\": 0.2381\n    }\n  },\n  \"controls\": {\n    \"primary_band\": \"low\",\n    \"intensity\": \"quiet\",\n    \"hero_deformation\": 0.3649,\n    \"material_shimmer\": 0.134,\n    \"fog_motion\": 0.0835,\n    \"accent_emission\": 0.1475,\n    \"camera_pressure\": 0.2469\n  },\n  \"top_events\": [\n    {\n      \"time\": 311.267,\n      \"low\": 0.245,\n      \"mid\": 0.753,\n      \"high\": 0.818,\n      \"onset\": 1.0,\n      \"beat\": 1.0\n    },\n    // Additional top events...\n  ]\n}\n```\n\n### Key Points\n\n- **Dominant Band**: The audio segment is primarily characterized by the low frequency band.\n- **Intensity**: The intensity level is described as \"quiet,\" with a score of 0.2389.\n- **Beat Count**: There are 6 beats detected in this segment.\n- **Statistics**: Detailed statistics for each frequency band, onset, and beat provide insights into the audio's characteristics.\n- **Controls**: Specific visual effects controls are provided to match the audio characteristics, such as deformation of a hero element, shimmering materials, fog motion, accent emission, and camera pressure.\n\nThis data can be used in applications that synchronize audio with visual effects, ensuring that the visuals respond dynamically to changes in the audio.",
   "parse_error": true,
   "model": "qwen2.5-coder:14b"
 }
@@ -150,10 +37,10 @@ Generated: `2026-04-28T20:30:05`
 Reason: NPU output was not trusted (`npu_skipped_gpu_heavy_mode`).
 
 ## Track Map
-- Duration: `345.60009070294785` seconds.
+- Duration: `318.00027210884355` seconds.
 - FPS: `30.0`.
-- BPM: `126.04801829268293`.
-- Segment count: `22`.
+- BPM: `79.50721153846153`.
+- Segment count: `20`.
 
 ## Project Primary Files
 - `Scripting/v61b/config.py`

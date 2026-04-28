@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-28T18:23:04.791786+00:00",
+  "generated_at": "2026-04-28T18:42:40.137237+00:00",
   "source_dirs": [
     "Scripting",
     "Tools",
     "."
   ],
   "files_scanned": 118,
-  "chunk_count": 1030,
+  "chunk_count": 1033,
   "files": [
     {
       "path": "analyze_wav.py",
@@ -578,15 +578,15 @@
       "path": "Tools/ai/run_parallel_artifact_pipeline.py",
       "status": "ok",
       "chunks": 10,
-      "lines": 271,
-      "sha256": "870764c264e2c4f752aea921c85c003612572f578abdf24903faf0f67c3f01c0"
+      "lines": 276,
+      "sha256": "f980a171f00f6d8f0b847c31646bf7cf3c1c66b4b2ed5c969d512ec4a69e464a"
     },
     {
       "path": "Tools/ai/validate_ai_artifacts.py",
       "status": "ok",
-      "chunks": 5,
-      "lines": 163,
-      "sha256": "12d72cb4c73c53f7289b3f88e41065b01f7b098a5e60540e48124507c7bf25f0"
+      "chunks": 7,
+      "lines": 200,
+      "sha256": "b5f5da7831718465e262131a0bd7ef5fd59aaa4362c6f9545c28daef3bb34353"
     },
     {
       "path": "Tools/npu/ai_memory_context.py",
@@ -724,9 +724,9 @@
     {
       "path": "Tools/workflow/gui/components/action_panel.py",
       "status": "ok",
-      "chunks": 4,
-      "lines": 123,
-      "sha256": "65b8579e3592131af2afb8159a436258de1779960f3250e4fb2bc7bfd820cf96"
+      "chunks": 5,
+      "lines": 183,
+      "sha256": "f2dbd3c97f60b5567f8ceee6743a26e35edce6be9dcdea0ac565c042234d7a57"
     },
     {
       "path": "Tools/workflow/gui/components/artifact_browser.py",
@@ -774,8 +774,8 @@
       "path": "Tools/workflow/gui/workflow_gui_modern.py",
       "status": "ok",
       "chunks": 2,
-      "lines": 317,
-      "sha256": "9c0d93813e533f13cf75177d0787d36318b3aadf5dc5ef68ebc00c0d261377cb"
+      "lines": 319,
+      "sha256": "87f65430327acbb217d9e556dea8b9cb36e653e0f34f20f0dc8455e960bb88dc"
     },
     {
       "path": "Tools/workflow/gui/workflow_gui_with_push.py",

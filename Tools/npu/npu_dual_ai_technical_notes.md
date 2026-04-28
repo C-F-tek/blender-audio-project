@@ -3,10 +3,10 @@
 Reason: NPU output was not trusted (`npu_skipped_gpu_heavy_mode`).
 
 ## Track Map
-- Duration: `345.60009070294785` seconds.
+- Duration: `318.00027210884355` seconds.
 - FPS: `30.0`.
-- BPM: `126.04801829268293`.
-- Segment count: `22`.
+- BPM: `79.50721153846153`.
+- Segment count: `20`.
 
 ## Project Primary Files
 - `Scripting/v61b/config.py`

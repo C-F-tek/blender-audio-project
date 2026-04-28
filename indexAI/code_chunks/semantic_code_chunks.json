@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-28T18:23:04.791786+00:00",
-  "chunk_count": 1030,
+  "generated_at": "2026-04-28T18:42:40.137237+00:00",
+  "chunk_count": 1033,
   "chunks": [
     {
       "chunk_id": "analyze_wav.py::moving_average",
@@ -27127,7 +27127,7 @@
       "symbol": "main",
       "kind": "function",
       "line_start": 161,
-      "line_end": 267,
+      "line_end": 272,
       "domain": [
         "lighting",
         "config",
@@ -27213,7 +27213,7 @@
         "write_dry_run_report",
         "write_text"
       ],
-      "sha256": "b85f403ec137b45c8564002a2f8f6c7683cb7cb84333c407556d513d7ee4cd26",
+      "sha256": "7b19a5cfc6efa71b25d1aefe5e08196d68f8b2891890d33c6cb670e64bda3193",
       "summary_short": "function main in Tools/ai/run_parallel_artifact_pipeline.py",
       "do_not_change": false
     },
@@ -27222,8 +27222,8 @@
       "path": "Tools/ai/validate_ai_artifacts.py",
       "symbol": "load_json",
       "kind": "function",
-      "line_start": 22,
-      "line_end": 23,
+      "line_start": 35,
+      "line_end": 36,
       "domain": [
         "config",
         "ai_context",
@@ -27250,8 +27250,8 @@
       "path": "Tools/ai/validate_ai_artifacts.py",
       "symbol": "load_patterns",
       "kind": "function",
-      "line_start": 26,
-      "line_end": 36,
+      "line_start": 39,
+      "line_end": 49,
       "domain": [
         "config",
         "ai_context",
@@ -27286,12 +27286,74 @@
       "do_not_change": false
     },
     {
+      "chunk_id": "Tools/ai/validate_ai_artifacts.py::is_guardrail_reference",
+      "path": "Tools/ai/validate_ai_artifacts.py",
+      "symbol": "is_guardrail_reference",
+      "kind": "function",
+      "line_start": 52,
+      "line_end": 59,
+      "domain": [
+        "config",
+        "ai_context",
+        "validation"
+      ],
+      "blender_api": [],
+      "risk": "low",
+      "risk_signals": [],
+      "compatibility_notes": [],
+      "dependencies": [
+        "CODELIKE_SUFFIXES",
+        "Path",
+        "any",
+        "bool",
+        "guardrail_terms",
+        "lower",
+        "path",
+        "pattern",
+        "pattern_lower",
+        "str",
+        "suffix",
+        "term",
+        "text"
+      ],
+      "sha256": "289e3bc25e704e37587305fee11f5adb76112c4c6f860b41b916ef7dd2f49faa",
+      "summary_short": "Return True when a blocked pattern appears as an instruction, not generated code.",
+      "do_not_change": false
+    },
+    {
+      "chunk_id": "Tools/ai/validate_ai_artifacts.py::should_ignore_local_path_warning",
+      "path": "Tools/ai/validate_ai_artifacts.py",
+      "symbol": "should_ignore_local_path_warning",
+      "kind": "function",
+      "line_start": 62,
+      "line_end": 63,
+      "domain": [
+        "config",
+        "ai_context",
+        "validation"
+      ],
+      "blender_api": [],
+      "risk": "low",
+      "risk_signals": [],
+      "compatibility_notes": [],
+      "dependencies": [
+        "LOCAL_PATH_ALLOWED_ARTIFACTS",
+        "Path",
+        "bool",
+        "name",
+        "path"
+      ],
+      "sha256": "348d99b3057167ccd0abb9ff0a32108b2f5fff68666b6c132cdc62c5d6eac378",
+      "summary_short": "function should_ignore_local_path_warning in Tools/ai/validate_ai_artifacts.py",
+      "do_not_change": false
+    },
+    {
       "chunk_id": "Tools/ai/validate_ai_artifacts.py::scan",
       "path": "Tools/ai/validate_ai_artifacts.py",
       "symbol": "scan",
       "kind": "function",
-      "line_start": 39,
-      "line_end": 48,
+      "line_start": 66,
+      "line_end": 83,
       "domain": [
         "config",
         "ai_context",
@@ -27307,15 +27369,20 @@
         "blocked",
         "errors",
         "get",
+        "is_guardrail_reference",
         "item",
+        "name",
         "path",
         "pattern",
+        "positives",
         "read_text",
+        "should_ignore_local_path_warning",
+        "startswith",
         "text",
         "warn_patterns",
         "warnings"
       ],
-      "sha256": "84c1519ae205810e000170bb639dc407c43129c69e294f0d5da33f203198face",
+      "sha256": "32f87c42f4a89db6c534bbcad8349cc73f6c649689d84be4d98e1e085b1f5a06",
       "summary_short": "function scan in Tools/ai/validate_ai_artifacts.py",
       "do_not_change": false
     },
@@ -27324,8 +27391,8 @@
       "path": "Tools/ai/validate_ai_artifacts.py",
       "symbol": "validate_semantics",
       "kind": "function",
-      "line_start": 51,
-      "line_end": 85,
+      "line_start": 86,
+      "line_end": 122,
       "domain": [
         "materials",
         "config",
@@ -27370,7 +27437,7 @@
         "str",
         "warnings"
       ],
-      "sha256": "44fd31106dd7f20817107afbfd2ec1fa7842d6d6ecb571ce58ced3f9ba8f9835",
+      "sha256": "f6de17f79fefce5f452ab4e6d3836a3ffb2c1e17e55098bf1ddaafd94c8c2823",
       "summary_short": "function validate_semantics in Tools/ai/validate_ai_artifacts.py",
       "do_not_change": false
     },
@@ -27379,8 +27446,8 @@
       "path": "Tools/ai/validate_ai_artifacts.py",
       "symbol": "main",
       "kind": "function",
-      "line_start": 88,
-      "line_end": 159,
+      "line_start": 125,
+      "line_end": 196,
       "domain": [
         "config",
         "ai_context",
@@ -27458,7 +27525,7 @@
         "warnings",
         "write_text"
       ],
-      "sha256": "9133fc28d5a109139ba59953a990bc6f160a9fdbd3ca9bba2f187e59bd7a7aee",
+      "sha256": "db588867396b120dd7fcc2f178d7f77ecb55c9327696478b3c4b916cce5a3ab4",
       "summary_short": "function main in Tools/ai/validate_ai_artifacts.py",
       "do_not_change": false
     },
@@ -36512,12 +36579,67 @@
       "do_not_change": false
     },
     {
+      "chunk_id": "Tools/workflow/gui/components/action_panel.py::Tooltip",
+      "path": "Tools/workflow/gui/components/action_panel.py",
+      "symbol": "Tooltip",
+      "kind": "class",
+      "line_start": 31,
+      "line_end": 86,
+      "domain": [
+        "render"
+      ],
+      "blender_api": [],
+      "risk": "low",
+      "risk_signals": [],
+      "compatibility_notes": [],
+      "dependencies": [
+        "Frame",
+        "Label",
+        "Toplevel",
+        "Widget",
+        "after",
+        "after_cancel",
+        "after_id",
+        "bind",
+        "cancel",
+        "delay_ms",
+        "destroy",
+        "event",
+        "frame",
+        "hide",
+        "int",
+        "label",
+        "move",
+        "pack",
+        "schedule",
+        "self",
+        "show",
+        "str",
+        "strip",
+        "text",
+        "tk",
+        "ttk",
+        "widget",
+        "window",
+        "winfo_pointerx",
+        "winfo_pointery",
+        "wm_geometry",
+        "wm_overrideredirect",
+        "wraplength",
+        "x",
+        "y"
+      ],
+      "sha256": "9679b7af2ac07a7ee1e4ef1ef33864219374267fcf1e24ede449051ee5c17f87",
+      "summary_short": "Small delayed tooltip for Tk/ttk widgets.",
+      "do_not_change": false
+    },
+    {
       "chunk_id": "Tools/workflow/gui/components/action_panel.py::ScrollableFrame",
       "path": "Tools/workflow/gui/components/action_panel.py",
       "symbol": "ScrollableFrame",
       "kind": "class",
-      "line_start": 31,
-      "line_end": 77,
+      "line_start": 89,
+      "line_end": 135,
       "domain": [
         "lighting",
         "render",
@@ -36575,8 +36697,8 @@
       "path": "Tools/workflow/gui/components/action_panel.py",
       "symbol": "GroupedActionPanel",
       "kind": "class",
-      "line_start": 80,
-      "line_end": 123,
+      "line_start": 138,
+      "line_end": 183,
       "domain": [
         "render"
       ],
@@ -36591,6 +36713,7 @@
         "Label",
         "LabelFrame",
         "ScrollableFrame",
+        "Tooltip",
         "actions",
         "always_enabled",
         "always_enabled_buttons",
@@ -36617,10 +36740,11 @@
         "str",
         "super",
         "title",
+        "tooltips",
         "ttk",
         "tuple"
       ],
-      "sha256": "e9d42d20f9a01caf81b6979352fd9c59934e4902cd06ea9a367e04f66d415177",
+      "sha256": "89ae49a8847c15f723186b7c58a370acaba59b00e23443ed604970c744205f50",
       "summary_short": "Scrollable grouped button panel for workflow operations.",
       "do_not_change": false
     },
@@ -38111,7 +38235,7 @@
       "symbol": "ModernWorkflowGui",
       "kind": "class",
       "line_start": 17,
-      "line_end": 305,
+      "line_end": 307,
       "domain": [
         "audio",
         "render",
@@ -38205,7 +38329,7 @@
         "messagebox",
         "minsize"
       ],
-      "sha256": "7dcba5e2e5298fe8daedd903dc132c2722c5e5d6d56a29b37679d8e32009f836",
+      "sha256": "f58ca4e8e35f725e597fb1b8457e12c8de467004b84f2032e2e1506c311a6204",
       "summary_short": "Adaptive workflow GUI with grouped actions and graphical live output.",
       "do_not_change": false
     },
@@ -38214,8 +38338,8 @@
       "path": "Tools/workflow/gui/workflow_gui_modern.py",
       "symbol": "main",
       "kind": "function",
-      "line_start": 311,
-      "line_end": 313,
+      "line_start": 313,
+      "line_end": 315,
       "domain": [
         "ai_context"
       ],

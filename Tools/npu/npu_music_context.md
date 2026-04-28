@@ -1,31 +1,31 @@
 # NPU Music Context
 
-Generated: `2026-04-28T20:30:26`
+Generated: `2026-04-28T20:45:51`
 
 Purpose: compact long-context map for WAV analysis and generated scene JSON.
 
 ## Track
-- Name: `Ready To Jazz-Luca Vera_Master`
-- Duration: `345.6` sec
+- Name: `Phazzah-Luca Vera_Master`
+- Duration: `318.0` sec
 - FPS: `30.0`
-- BPM: `126.048`
-- Frames: `10369`
-- Beats: `705`
-- Segments: `22` x `16.0` sec
+- BPM: `79.507`
+- Frames: `9541`
+- Beats: `408`
+- Segments: `20` x `16.0` sec
 
 ## Top Energy Segments
-- Segment `16` 240.0-256.0 sec: medium / mid / score `0.3927`
-- Segment `11` 160.0-176.0 sec: medium / mid / score `0.3837`
-- Segment `15` 224.0-240.0 sec: medium / mid / score `0.3815`
-- Segment `17` 256.0-272.0 sec: medium / mid / score `0.3804`
-- Segment `18` 272.0-288.0 sec: medium / mid / score `0.3711`
-- Segment `12` 176.0-192.0 sec: medium / mid / score `0.3686`
-- Segment `14` 208.0-224.0 sec: medium / mid / score `0.3674`
-- Segment `13` 192.0-208.0 sec: medium / mid / score `0.3642`
+- Segment `7` 96.0-112.0 sec: medium / mid / score `0.3933`
+- Segment `10` 144.0-160.0 sec: medium / mid / score `0.3889`
+- Segment `8` 112.0-128.0 sec: medium / mid / score `0.3872`
+- Segment `11` 160.0-176.0 sec: medium / mid / score `0.386`
+- Segment `16` 240.0-256.0 sec: medium / mid / score `0.3725`
+- Segment `12` 176.0-192.0 sec: medium / mid / score `0.3582`
+- Segment `15` 224.0-240.0 sec: medium / mid / score `0.3567`
+- Segment `4` 48.0-64.0 sec: medium / low / score `0.3548`
 
 ## AI Memory Context
-- Scene brief: `C:\Users\carmi\blender\blender-audio-project\output\Ready To Jazz-Luca Vera_Master_scene_brief.json`
-- Has brief: `True`
+- Scene brief: `C:\Users\carmi\blender\blender-audio-project\output\Phazzah-Luca Vera_Master_scene_brief.json`
+- Has brief: `False`
 - Asset `primary_ball_asset`: `C:\Users\carmi\blender\assets\ball\source\ball.fbx`
 - Asset `primary_ball_asset`: `C:\Users\carmi\blender\blender-audio-project\assets\ball\source\ball.fbx`
 - Asset `animated_effect_asset`: `C:\Users\carmi\blender\assets\animated-effect\source\Animated effect.blend`
@@ -61,11 +61,9 @@ Purpose: compact long-context map for WAV analysis and generated scene JSON.
 - `Tools/npu/npu_music_chunks/chunk_018_audio_segment_017.md`: audio_segment segment 17 256.0-272.0 sec
 - `Tools/npu/npu_music_chunks/chunk_019_audio_segment_018.md`: audio_segment segment 18 272.0-288.0 sec
 - `Tools/npu/npu_music_chunks/chunk_020_audio_segment_019.md`: audio_segment segment 19 288.0-304.0 sec
-- `Tools/npu/npu_music_chunks/chunk_021_audio_segment_020.md`: audio_segment segment 20 304.0-320.0 sec
-- `Tools/npu/npu_music_chunks/chunk_022_audio_segment_021.md`: audio_segment segment 21 320.0-336.0 sec
-- `Tools/npu/npu_music_chunks/chunk_023_audio_segment_022.md`: audio_segment segment 22 336.0-345.6 sec
-- `Tools/npu/npu_music_chunks/chunk_024_scene_scene_spec_album_driven.md`: scene_spec scene_spec_album_driven.json
-- `Tools/npu/npu_music_chunks/chunk_025_scene_scene_spec_album_driven_normalized.md`: scene_spec scene_spec_album_driven_normalized.json
-- `Tools/npu/npu_music_chunks/chunk_026_scene_scene_spec_album_driven_raw.md`: scene_spec scene_spec_album_driven_raw.txt
-- `Tools/npu/npu_music_chunks/chunk_027_scene_scene_spec_from_npu.md`: scene_spec scene_spec_from_npu.json
-- `Tools/npu/npu_music_chunks/chunk_028_scene_scene_spec_from_npu_raw.md`: scene_spec scene_spec_from_npu_raw.txt
+- `Tools/npu/npu_music_chunks/chunk_021_audio_segment_020.md`: audio_segment segment 20 304.0-318.0 sec
+- `Tools/npu/npu_music_chunks/chunk_022_scene_scene_spec_album_driven.md`: scene_spec scene_spec_album_driven.json
+- `Tools/npu/npu_music_chunks/chunk_023_scene_scene_spec_album_driven_normalized.md`: scene_spec scene_spec_album_driven_normalized.json
+- `Tools/npu/npu_music_chunks/chunk_024_scene_scene_spec_album_driven_raw.md`: scene_spec scene_spec_album_driven_raw.txt
+- `Tools/npu/npu_music_chunks/chunk_025_scene_scene_spec_from_npu.md`: scene_spec scene_spec_from_npu.json
+- `Tools/npu/npu_music_chunks/chunk_026_scene_scene_spec_from_npu_raw.md`: scene_spec scene_spec_from_npu_raw.txt
