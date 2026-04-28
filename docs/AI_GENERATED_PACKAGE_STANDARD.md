@@ -10,6 +10,23 @@ This document defines the preferred standard for new Blender packages generated 
 
 Future generated packages should use `v61b` as the baseline unless the user explicitly requests a quick prototype or minimal demo.
 
+## Shared utilities rule
+
+Before duplicating logic from `v61b`, check `Scripting/shared/` and `docs/SHARED_SCRIPTING_UTILITIES.md`.
+
+If a v61b function is useful across multiple packages, it should be generalized and promoted to `Scripting/shared/` instead of being copied into every package.
+
+Good extraction candidates include:
+
+- FFmpeg encoding;
+- image-sequence encoding;
+- render profile handling;
+- path/config resolution;
+- Blender panel base patterns;
+- scene hot-update helpers;
+- diagnostics helpers;
+- JSON loading and validation helpers.
+
 ## Quality target
 
 Generated packages should aim for:
@@ -55,6 +72,8 @@ Scripting/package_name/
     tuning_notes.md
 ```
 
+If shared utilities are available, package-level files such as `encode_ffmpeg.py` may be thin wrappers around `Scripting/shared/` modules.
+
 ## Required package documentation
 
 Every serious generated package should include:
@@ -75,6 +94,7 @@ Every serious generated package should include:
 - Keep audio mapping separate from scene object creation.
 - Keep material logic separate from camera and lighting logic.
 - Keep render and encoding settings explicit.
+- Use shared utilities for global operational tasks when available.
 - Add comments around Blender API compatibility-sensitive code.
 
 ## Audio-driven requirements
@@ -95,6 +115,8 @@ The package should explain:
 - Do not overwrite previous generated packages.
 - Create a new package folder for major visual concepts or tracks.
 - Use `Scripting/v61b/` as the reference for depth and modularity.
+- Check `Scripting/shared/` before copying render, encoding, path, panel, or diagnostic logic.
+- Promote reusable v61b functions to shared utilities when they become global.
 
 ## Not specified
 
