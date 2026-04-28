@@ -17,13 +17,37 @@ This additive layer improves AI-assisted artifact production without replacing B
 
 ```text
 analysis JSON
+  -> preflight awareness report
   -> compact music artifacts
   -> semantic code chunks
   -> task capsules
   -> optional NPU review
   -> optional GPU planner
-  -> validation report
+  -> semantic validation report
 ```
+
+## Awareness upgrade
+
+The orchestrator now emits `schema_version: 2` reports with:
+
+- preflight checks;
+- Python runtime metadata;
+- local workstation context from `docs/LOCAL_WORKSTATION_TARGET.md`;
+- input file existence and size metadata;
+- expected output file metadata;
+- CPU/NPU/GPU lane grouping;
+- per-step purpose and expected outputs.
+
+The music-intermediate builder now emits richer downstream context:
+
+- `track_summary.json` with `ai_readiness`, primary series stats and trend;
+- `music_segments.json` with per-segment visual directives;
+- `audio_event_map.json` with peak density metadata;
+- `ai_scene_brief.json` with constraints and assumptions;
+- `ai_mapping_candidates.json` with multiple mapping candidates;
+- `ai_assumptions.md` for downstream prompts.
+
+The validator and NPU reviewer now check quality signals, not only JSON syntax.
 
 ## Entry point
 
@@ -35,6 +59,12 @@ Dry run:
 
 ```powershell
 py .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run
+```
+
+Dry run with report file:
+
+```powershell
+py .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run --write-dry-run-report
 ```
 
 ## Outputs
