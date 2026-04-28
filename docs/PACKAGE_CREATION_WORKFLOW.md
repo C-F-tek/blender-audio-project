@@ -4,6 +4,22 @@
 
 This document defines the recommended workflow for creating a new Blender package under `Scripting/` from audio data, JSON analysis, and AI-assisted coding.
 
+## Template package
+
+New serious packages should start by copying:
+
+```text
+Scripting/_template_audio_reactive_package/
+```
+
+to a new descriptive package folder, for example:
+
+```text
+Scripting/track_name_visual_concept/
+```
+
+The template provides the expected package structure, documentation placeholders, modular Python files, input schema notes, output folder notes, and report/checklist files.
+
 ## Workflow overview
 
 ```text
@@ -22,7 +38,13 @@ Audio track
 
 ## Step 1: create a package folder
 
-Use a descriptive package folder name:
+Copy the template folder:
+
+```text
+Scripting/_template_audio_reactive_package/
+```
+
+Then rename it to a descriptive package folder:
 
 ```text
 Scripting/track_name_visual_concept/
@@ -32,7 +54,7 @@ Avoid overwriting older attempts. Create a new folder for major concepts or vers
 
 ## Step 2: prepare context files
 
-Before generating code, prepare:
+Before generating project-specific code, complete these files in the copied package:
 
 ```text
 README.md
@@ -79,7 +101,7 @@ Do not generate complex code before the plan is coherent.
 
 Use the `v61b` style as the quality reference.
 
-Recommended modules:
+The copied template already contains these modules:
 
 ```text
 main.py
@@ -130,6 +152,7 @@ Create or update `REPORT.md` with:
 
 ## AI rules
 
+- Start from `Scripting/_template_audio_reactive_package/` for serious new packages.
 - Do not skip documentation files for serious packages.
 - Do not generate code directly from a large JSON without a compact summary.
 - Do not overwrite previous packages.
