@@ -1,23 +1,27 @@
 <#
 .SYNOPSIS
-  Commit and push app-generated technical data to GitHub.
+  Commit and push app-generated technical data or the full project to GitHub.
 
 .DESCRIPTION
-  This script is intended to be called by the local project application after it regenerates
-  technical data such as AI indexes, manifests, compact JSON files, schema notes, or reports.
+  Default mode is conservative and stages only allowlisted generated paths.
 
-  It is intentionally conservative:
-  - it only stages allowlisted paths by default;
-  - it does not create an empty commit;
-  - it prints the staged changes before committing;
-  - it can run in dry-run mode;
-  - it does not pull or rebase automatically unless explicitly requested.
+  FullProject mode is intentionally explicit and performs this safe sequence:
+  - save local changes with git stash push -u;
+  - git pull --rebase origin <branch>;
+  - restore the stash;
+  - git status;
+  - git add .;
+  - git commit -m <message> when there are staged changes;
+  - git push origin <branch>.
 
 .EXAMPLE
   .\Tools\git\auto_push_generated_data.ps1
 
 .EXAMPLE
   .\Tools\git\auto_push_generated_data.ps1 -Message "chore: update app-generated technical data"
+
+.EXAMPLE
+  .\Tools\git\auto_push_generated_data.ps1 -FullProject -Message "chore: update full project"
 
 .EXAMPLE
   .\Tools\git\auto_push_generated_data.ps1 -DryRun
@@ -31,7 +35,8 @@ param(
     [switch]$DryRun,
     [switch]$IncludeOutputJson,
     [switch]$IncludeDocs,
-    [switch]$IncludeAllGenerated
+    [switch]$IncludeAllGenerated,
+    [switch]$FullProject
 )
 
 Set-StrictMode -Version Latest
@@ -56,6 +61,82 @@ function Invoke-Git {
     return $code
 }
 
+function Has-WorkingTreeChanges {
+    $status = (& git status --porcelain=v1)
+    return -not [string]::IsNullOrWhiteSpace(($status -join "`n"))
+}
+
+function Has-StagedChanges {
+    $staged = (& git diff --cached --name-only)
+    return -not [string]::IsNullOrWhiteSpace(($staged -join "`n"))
+}
+
+function Run-FullProjectPush {
+    param(
+        [string]$Branch,
+        [string]$Message,
+        [switch]$DryRun
+    )
+
+    Write-Step "Mode: full project push."
+    Write-Step "Sequence: stash -u, pull --rebase, stash pop, status, add ., commit, push."
+
+    if ($DryRun) {
+        Write-Step "Dry run: git status before full project push."
+        Invoke-Git @("status", "--short") | Out-Null
+        Write-Step "Dry run complete. No changes staged, committed, rebased, or pushed."
+        return
+    }
+
+    $stashCreated = $false
+    if (Has-WorkingTreeChanges) {
+        Write-Step "Saving local working tree with git stash push -u."
+        Invoke-Git @("stash", "push", "-u", "-m", "local staged changes before rebase") | Out-Null
+        $stashCreated = $true
+    }
+    else {
+        Write-Step "Working tree is already clean before pull."
+    }
+
+    try {
+        Write-Step "Pulling latest remote changes with rebase."
+        Invoke-Git @("pull", "--rebase", "origin", $Branch) | Out-Null
+
+        if ($stashCreated) {
+            Write-Step "Restoring stashed local changes."
+            $popCode = Invoke-Git @("stash", "pop") -AllowFailure
+            if ($popCode -ne 0) {
+                Write-Step "stash pop reported conflicts. Resolve them manually, then run commit/push again."
+                throw "git stash pop failed with exit code $popCode"
+            }
+        }
+
+        Write-Step "Current status after rebase/stash restore:"
+        Invoke-Git @("status", "--short") | Out-Null
+
+        Write-Step "Staging full project with git add ."
+        Invoke-Git @("add", ".") | Out-Null
+
+        if (-not (Has-StagedChanges)) {
+            Write-Step "No staged changes found after git add .. Nothing to commit."
+            return
+        }
+
+        Write-Step "Staged files:"
+        (& git diff --cached --name-only) -split "`n" | Where-Object { $_.Trim() } | ForEach-Object { Write-Host "  - $_" }
+
+        Invoke-Git @("commit", "-m", $Message) | Out-Null
+        Write-Step "Commit created."
+
+        Invoke-Git @("push", "origin", $Branch) | Out-Null
+        Write-Step "Pushed full project to origin/$Branch."
+    }
+    catch {
+        Write-Step "Full project push stopped: $($_.Exception.Message)"
+        throw
+    }
+}
+
 $root = Resolve-Path $RepoPath
 Write-Step "Repository: $root"
 
@@ -66,6 +147,11 @@ try {
     $currentBranch = (& git branch --show-current).Trim()
     if ($currentBranch -ne $Branch) {
         throw "Current branch is '$currentBranch', expected '$Branch'. Stop to avoid pushing the wrong branch."
+    }
+
+    if ($FullProject) {
+        Run-FullProjectPush -Branch $Branch -Message $Message -DryRun:$DryRun
+        exit 0
     }
 
     if ($PullFirst) {
