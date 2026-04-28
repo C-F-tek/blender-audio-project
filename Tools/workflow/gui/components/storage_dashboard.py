@@ -8,7 +8,7 @@ from pathlib import Path
 from tkinter import messagebox, ttk
 from typing import Any
 
-from components.st_theme import STTheme, apply_spaziotempo_theme
+from components.st_theme import apply_spaziotempo_theme, text_widget_colors
 
 
 @dataclass(frozen=True)
@@ -75,10 +75,7 @@ def immediate_children_stats(path: Path) -> list[PathStats]:
     path = Path(path).expanduser()
     if not path.exists() or not path.is_dir():
         return []
-    children = []
-    for child in sorted(path.iterdir(), key=lambda item: (not item.is_dir(), item.name.lower())):
-        children.append(scan_tree(child))
-    return children
+    return [scan_tree(child) for child in sorted(path.iterdir(), key=lambda item: (not item.is_dir(), item.name.lower()))]
 
 
 def safe_path(value: Any) -> Path | None:
@@ -88,7 +85,9 @@ def safe_path(value: Any) -> Path | None:
 
 
 class StorageDashboardWindow(tk.Toplevel):
-    """Themed project/storage dashboard focused on the Blender workspace root."""
+    """Native-themed storage dashboard focused on the Blender workspace root."""
+
+    SORT_COLUMNS = ("name", "type", "size", "files", "dirs", "path")
 
     def __init__(self, master: tk.Tk, *, session_loader, workflow_state_module) -> None:
         super().__init__(master)
@@ -98,8 +97,11 @@ class StorageDashboardWindow(tk.Toplevel):
         self.root_dir = Path(self.wf.ROOT).expanduser()
         self.project_dir = Path(self.wf.PROJECT_DIR).expanduser()
         self.selected_path: Path | None = None
+        self.item_stats: dict[str, PathStats | None] = {}
+        self.sort_column = "name"
+        self.sort_reverse = False
 
-        self.title("Spaziotempo Storage Dashboard")
+        self.title("Storage Dashboard")
         self.geometry("1280x820")
         self.minsize(980, 640)
         self.protocol("WM_DELETE_WINDOW", self.hide)
@@ -124,7 +126,7 @@ class StorageDashboardWindow(tk.Toplevel):
         ttk.Label(header, text="Storage Dashboard", style="Header.TLabel").pack(side="left")
         ttk.Label(
             header,
-            text="Focus: cartella blender, progetto e artefatti generati",
+            text="Cartella blender, progetto e artefatti generati",
             style="SubHeader.TLabel",
         ).pack(side="left", padx=(14, 0))
         ttk.Button(header, text="Refresh", command=self.refresh).pack(side="right")
@@ -142,18 +144,13 @@ class StorageDashboardWindow(tk.Toplevel):
         body.add(right, weight=3)
 
         self.tree = ttk.Treeview(left, columns=("type", "size", "files", "dirs", "path"), show="tree headings")
-        self.tree.heading("#0", text="Nome")
-        self.tree.heading("type", text="Tipo")
-        self.tree.heading("size", text="Dimensione")
-        self.tree.heading("files", text="File")
-        self.tree.heading("dirs", text="Dir")
-        self.tree.heading("path", text="Percorso")
+        self.configure_tree_headings()
         self.tree.column("#0", width=250)
-        self.tree.column("type", width=90)
-        self.tree.column("size", width=95, anchor="e")
-        self.tree.column("files", width=70, anchor="e")
-        self.tree.column("dirs", width=70, anchor="e")
-        self.tree.column("path", width=460)
+        self.tree.column("type", width=95)
+        self.tree.column("size", width=110, anchor="e")
+        self.tree.column("files", width=80, anchor="e")
+        self.tree.column("dirs", width=80, anchor="e")
+        self.tree.column("path", width=520)
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", lambda _event: self.preview_selected())
         self.tree.bind("<Double-1>", lambda _event: self.open_selected())
@@ -167,17 +164,72 @@ class StorageDashboardWindow(tk.Toplevel):
         ttk.Button(toolbar, text="Open selected", command=self.open_selected).pack(side="left")
         ttk.Button(toolbar, text="Open folder", command=self.open_selected_folder).pack(side="left", padx=(8, 0))
         ttk.Button(toolbar, text="Copy path", command=self.copy_selected_path).pack(side="left", padx=(8, 0))
+        ttk.Button(toolbar, text="Sort reset", command=self.reset_sort).pack(side="left", padx=(8, 0))
 
-        self.preview = tk.Text(
-            right,
-            wrap="word",
-            background=STTheme.panel,
-            foreground=STTheme.text,
-            insertbackground=STTheme.cyan,
-            borderwidth=1,
-            relief="solid",
-        )
+        self.preview = tk.Text(right, wrap="word", borderwidth=1, relief="solid", **text_widget_colors(self))
         self.preview.pack(fill="both", expand=True)
+
+    def configure_tree_headings(self) -> None:
+        labels = {
+            "name": "Nome",
+            "type": "Tipo",
+            "size": "Dimensione",
+            "files": "File",
+            "dirs": "Dir",
+            "path": "Percorso",
+        }
+        arrow = " ↓" if self.sort_reverse else " ↑"
+        self.tree.heading("#0", text=labels["name"] + (arrow if self.sort_column == "name" else ""), command=lambda: self.sort_by("name"))
+        for column in ("type", "size", "files", "dirs", "path"):
+            self.tree.heading(
+                column,
+                text=labels[column] + (arrow if self.sort_column == column else ""),
+                command=lambda col=column: self.sort_by(col),
+            )
+
+    def sort_by(self, column: str) -> None:
+        if column == self.sort_column:
+            self.sort_reverse = not self.sort_reverse
+        else:
+            self.sort_column = column
+            self.sort_reverse = False
+        self.configure_tree_headings()
+        self.sort_all_tree_levels()
+
+    def reset_sort(self) -> None:
+        self.sort_column = "name"
+        self.sort_reverse = False
+        self.configure_tree_headings()
+        self.sort_all_tree_levels()
+
+    def sort_key(self, iid: str):
+        stat = self.item_stats.get(iid)
+        text = self.tree.item(iid, "text") or ""
+        values = self.tree.item(iid, "values") or ("", "", 0, 0, "")
+
+        if self.sort_column == "name":
+            return str(text).lower()
+        if self.sort_column == "type":
+            return str(values[0]).lower()
+        if self.sort_column == "size":
+            return stat.bytes if stat is not None else -1
+        if self.sort_column == "files":
+            return stat.files if stat is not None else -1
+        if self.sort_column == "dirs":
+            return stat.dirs if stat is not None else -1
+        if self.sort_column == "path":
+            return str(values[4]).lower() if len(values) > 4 else ""
+        return str(text).lower()
+
+    def sort_children(self, parent: str) -> None:
+        children = list(self.tree.get_children(parent))
+        children.sort(key=self.sort_key, reverse=self.sort_reverse)
+        for index, iid in enumerate(children):
+            self.tree.move(iid, parent, index)
+            self.sort_children(iid)
+
+    def sort_all_tree_levels(self) -> None:
+        self.sort_children("")
 
     def clear_metrics(self) -> None:
         for child in self.metric_frame.winfo_children():
@@ -216,21 +268,23 @@ class StorageDashboardWindow(tk.Toplevel):
         self.add_metric("Renders", human_bytes(renders_stats.bytes), str(self.wf.RENDERS_DIR))
         self.add_metric("Output dati", human_bytes(output_stats.bytes), str(self.wf.OUTPUT_DIR))
 
+        self.item_stats.clear()
         self.tree.delete(*self.tree.get_children())
         root_id = self.insert_stat("", root_stats, "blender-root")
         project_id = self.insert_stat(root_id, project_stats, "project")
 
-        outside_id = self.tree.insert(
+        outside_id = self.insert_group(
             root_id,
-            "end",
-            text="Contenuto in blender fuori da blender-audio-project",
-            values=("group", human_bytes(outside_bytes), outside_files, sum(item.dirs for item in outside_stats), str(self.root_dir)),
-            open=True,
+            "Contenuto in blender fuori da blender-audio-project",
+            human_bytes(outside_bytes),
+            outside_files,
+            sum(item.dirs for item in outside_stats),
+            self.root_dir,
         )
         for item in outside_stats:
             self.insert_stat(outside_id, item, "external")
 
-        generated_id = self.tree.insert(project_id, "end", text="Artefatti sessione corrente", values=("group", "", "", "", ""), open=True)
+        generated_id = self.insert_group(project_id, "Artefatti sessione corrente", "", "", "", None)
         for key, value in self.session.artifacts.items():
             path = safe_path(value)
             if path is None:
@@ -243,24 +297,33 @@ class StorageDashboardWindow(tk.Toplevel):
 
         self.tree.item(root_id, open=True)
         self.tree.item(project_id, open=True)
+        self.tree.item(outside_id, open=True)
+        self.tree.item(generated_id, open=True)
+        self.sort_all_tree_levels()
         self.write_preview(self.build_overview_text(root_stats, project_stats, outside_stats))
+
+    def insert_group(self, parent: str, label: str, size: str, files, dirs, path: Path | None) -> str:
+        iid = self.tree.insert(parent, "end", text=label, values=("group", size, files, dirs, str(path or "")), open=True)
+        self.item_stats[iid] = None
+        return iid
 
     def insert_stat(self, parent: str, stat: PathStats, kind: str) -> str:
         type_name = "folder" if stat.path.is_dir() else "file"
         if not stat.exists:
             type_name = "missing"
+        displayed_type = kind if kind not in {"project", "external", "blender-root"} else type_name
         iid = self.tree.insert(
             parent,
             "end",
             text=stat.name,
-            values=(type_name, human_bytes(stat.bytes), stat.files, stat.dirs, str(stat.path)),
+            values=(displayed_type, human_bytes(stat.bytes), stat.files, stat.dirs, str(stat.path)),
         )
-        self.tree.set(iid, "type", kind if kind not in {"project", "external", "blender-root"} else type_name)
+        self.item_stats[iid] = stat
         return iid
 
     def build_overview_text(self, root_stats: PathStats, project_stats: PathStats, outside_stats: list[PathStats]) -> str:
         lines = [
-            "SPAZIOTEMPOREC STORAGE OVERVIEW",
+            "STORAGE OVERVIEW",
             "=" * 80,
             f"Blender root: {self.root_dir}",
             f"Project dir:  {self.project_dir}",
@@ -273,13 +336,12 @@ class StorageDashboardWindow(tk.Toplevel):
         if not outside_stats:
             lines.append("  Nessun elemento rilevato fuori dal progetto.")
         for item in outside_stats[:60]:
-            lines.append(
-                f"  - {item.path.name}: {human_bytes(item.bytes)} | files={item.files} dirs={item.dirs} | {item.path}"
-            )
+            lines.append(f"  - {item.path.name}: {human_bytes(item.bytes)} | files={item.files} dirs={item.dirs} | {item.path}")
         if len(outside_stats) > 60:
             lines.append(f"  ... altri {len(outside_stats) - 60} elementi")
         lines.extend([
             "",
+            "Clicca sulle intestazioni Nome/Tipo/Dimensione/File/Dir/Percorso per ordinare.",
             "Doppio click su una riga per aprire file/cartella.",
             "Usa Open folder per aprire la cartella che contiene il file selezionato.",
         ])
