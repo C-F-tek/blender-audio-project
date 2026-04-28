@@ -1,0 +1,28 @@
+{
+  "schema_status": "template",
+  "required_fields": {
+    "bands": {
+      "low": "number between 0 and 1",
+      "mid": "number between 0 and 1",
+      "high": "number between 0 and 1"
+    },
+    "rhythm": {
+      "beat_strength": "number between 0 and 1",
+      "onset_strength": "number between 0 and 1"
+    },
+    "section_intensity": "number between 0 and 1"
+  },
+  "optional_fields": {
+    "duration_sec": "number",
+    "estimated_bpm": "number",
+    "fps": "number",
+    "sections": "array",
+    "mood": "string",
+    "visual_strategy": "object"
+  },
+  "notes": [
+    "This is a template schema, not a confirmed project schema.",
+    "Do not invent fields in code without documenting them here.",
+    "Preserve full analysis JSON files separately when they are large."
+  ]
+}
