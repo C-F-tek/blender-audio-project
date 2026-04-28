@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "description": "Integra il browser artefatti nella GUI principale e aggiunge consultazione artefatti nella shell.",
+  "operations": [
+    {
+      "path": "Tools/workflow/gui/workflow_gui.py",
+      "replacements": [
+        {
+          "type": "exact",
+          "old": "import workflow_state as wf  # noqa: E402\nfrom scene_brief import append_scene_message, clear_scene_chat_history, generate_scene_chat_reply, load_or_create_scene_brief  # noqa: E402\n",
+          "new": "import workflow_state as wf  # noqa: E402\nfrom components.artifact_browser import ArtifactBrowserWindow  # noqa: E402\nfrom scene_brief import append_scene_message, clear_scene_chat_history, generate_scene_chat_reply, load_or_create_scene_brief  # noqa: E402\n",
+          "count": 1
+        },
+        {
+          "type": "exact",
+          "old": "        self.project_stats_window: ProjectStatsWindow | None = None\n        self.scene_director_window: SceneDirectorChatWindow | None = None\n",
+          "new": "        self.project_stats_window: ProjectStatsWindow | None = None\n        self.artifact_browser_window: ArtifactBrowserWindow | None = None\n        self.scene_director_window: SceneDirectorChatWindow | None = None\n",
+          "count": 1
+        },
+        {
+          "type": "exact",
+          "old": "            (\"Project stats\", self.open_project_stats_window, True),\n            (\"Debug monitor shell\", self.open_debug_monitor_shell, True),\n",
+          "new": "            (\"Project stats\", self.open_project_stats_window, True),\n            (\"Artifact browser\", self.open_artifact_browser_window, True),\n            (\"Debug monitor shell\", self.open_debug_monitor_shell, True),\n",
+          "count": 1
+        },
+        {
+          "type": "insert_before",
+          "anchor": "    def open_log_window(self) -> None:\n",
+          "insert": "    def artifact_extra_roots(self, session) -> list[Path]:\n        roots: list[Path] = []\n        for key in (\"output_dir\", \"render_frames_dir\"):\n            value = session.artifacts.get(key)\n            if value:\n                roots.append(Path(value))\n        for key in (\"render_mp4\", \"render_ffmpeg_mp4\"):\n            value = session.artifacts.get(key)\n            if value:\n                roots.append(Path(value).parent)\n        return roots\n\n    def open_artifact_browser_window(self) -> None:\n        if self.artifact_browser_window is None or not self.artifact_browser_window.winfo_exists():\n            self.artifact_browser_window = ArtifactBrowserWindow(\n                self,\n                session_loader=lambda: wf.load_session(create=True),\n                extra_roots_loader=self.artifact_extra_roots,\n            )\n        self.artifact_browser_window.show()\n\n",
+          "count": 1
+        }
+      ],
+      "require_contains_after": [
+        "from components.artifact_browser import ArtifactBrowserWindow",
+        "self.artifact_browser_window: ArtifactBrowserWindow | None = None",
+        "(\"Artifact browser\", self.open_artifact_browser_window, True)",
+        "def open_artifact_browser_window(self) -> None:"
+      ]
+    },
+    {
+      "path": "Tools/workflow/workflow_shell.py",
+      "replacements": [
+        {
+          "type": "exact",
+          "old": "from git_auto_push import run_auto_push_generated_data\nfrom workflow_state import (\n",
+          "new": "from artifact_consult import collect_artifacts, format_artifact_table, open_artifact\nfrom git_auto_push import run_auto_push_generated_data\nfrom workflow_state import (\n",
+          "count": 1
+        },
+        {
+          "type": "exact",
+          "old": "    print(\"  21 Project storage stats\")\n    print(\"  22 Configura modelli AI\")\n    print(\"  23 Startup service check\")\n",
+          "new": "    print(\"  21 Project storage stats\")\n    print(\"  22 Consulta/apri artefatti prodotti\")\n    print(\"  23 Configura modelli AI\")\n    print(\"  24 Startup service check\")\n",
+          "count": 1
+        },
+        {
+          "type": "exact",
+          "old": "            elif choice == \"21\":\n                print(format_project_storage_stats(build_project_storage_stats(session)))\n\n            elif choice == \"22\":\n                creative = choose_model(\"Creative model per piano/visione\", session.creative_model)\n",
+          "new": "            elif choice == \"21\":\n                print(format_project_storage_stats(build_project_storage_stats(session)))\n\n            elif choice == \"22\":\n                records = collect_artifacts(session)\n                print(format_artifact_table(records))\n                raw_index = input(\"\\nIndice da aprire, F<indice> per cartella, Invio per tornare: \" ).strip()\n                if raw_index:\n                    open_folder = raw_index.lower().startswith(\"f\")\n                    number_text = raw_index[1:] if open_folder else raw_index\n                    opened = open_artifact(records, int(number_text), folder=open_folder)\n                    print(f\"Aperto: {opened.path}\")\n\n            elif choice == \"23\":\n                creative = choose_model(\"Creative model per piano/visione\", session.creative_model)\n",
+          "count": 1
+        },
+        {
+          "type": "exact",
+          "old": "            elif choice == \"23\":\n                print(run_startup_service_check())\n",
+          "new": "            elif choice == \"24\":\n                print(run_startup_service_check())\n",
+          "count": 1
+        }
+      ],
+      "require_contains_after": [
+        "from artifact_consult import collect_artifacts, format_artifact_table, open_artifact",
+        "22 Consulta/apri artefatti prodotti",
+        "Indice da aprire, F<indice> per cartella",
+        "elif choice == \"24\":"
+      ]
+    }
+  ]
+}
