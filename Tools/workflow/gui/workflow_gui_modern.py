@@ -116,12 +116,14 @@ class ModernWorkflowGui(LegacyWorkflowGui):
             "Ordine operativo consigliato:\n\n"
             "1. Apri la GUI: il primo piano e' Live Output.\n"
             "2. Avvia Analyze WAV / Full audio prepare per generare i dati tecnici.\n"
-            "3. Segui eventi, errori, warning e comandi dal pannello Live Output.\n"
-            "4. Usa Session / Outputs per verificare file prodotti e percorsi.\n"
-            "5. Usa Artifact browser e Project stats solo per consultazione secondaria.\n"
+            "3. Usa AI pipeline dry-run per verificare preflight, contesto macchina e output attesi.\n"
+            "4. Usa AI artifact pipeline per generare chunk semantici e intermedi IA consapevoli.\n"
+            "5. Usa Dual AI plan / Scene director chat / Dual AI scene script per la fase creativa.\n"
             "6. Push generated data solo dopo avere completato e verificato i dati strutturati.\n\n"
             "GUI:\n"
             "- Live Output e' la vista principale e tratta graficamente stdout/stderr.\n"
+            "- Skip NPU heavy pass controlla il vecchio passaggio NPU pesante, non la nuova review IA leggera.\n"
+            "- AI pipeline usa CPU per preflight/validazione e NPU solo per review/scoring leggero.\n"
             "- Le tabelle seguono l'ordinamento stile Esplora file: clic su intestazione, secondo clic inverte.\n"
             "- Session / Outputs mostra riepilogo e output in tabella, non piu' testo grezzo.\n"
             "- Project stats controlla la cartella blender e distingue blender-audio-project dal resto.\n\n"
@@ -172,6 +174,41 @@ class ModernWorkflowGui(LegacyWorkflowGui):
             )
         self.project_stats_window.show()
 
+    def ai_artifact_pipeline_command(self, dry_run: bool) -> list[str]:
+        command = [
+            str(wf.python_executable()),
+            str(wf.PROJECT_DIR / "Tools" / "ai" / "run_parallel_artifact_pipeline.py"),
+            "--repo-root",
+            str(wf.PROJECT_DIR),
+            "--analysis-json",
+            str(self.session.artifacts["analysis_json"]),
+            "--build-chunks",
+            "--build-music-summary",
+            "--use-npu",
+            "--validate",
+        ]
+        if dry_run:
+            command.extend(["--dry-run", "--write-dry-run-report"])
+        return command
+
+    def run_ai_artifact_pipeline(self, dry_run: bool) -> None:
+        label = "AI pipeline dry-run" if dry_run else "AI artifact pipeline"
+
+        def task():
+            return wf.run_command(
+                self.ai_artifact_pipeline_command(dry_run),
+                operation="ai_artifact_pipeline_dry_run" if dry_run else "ai_artifact_pipeline",
+                metadata={
+                    "analysis_json": self.session.artifacts.get("analysis_json"),
+                    "track_stem": self.session.track_stem,
+                    "dry_run": dry_run,
+                    "skip_npu_heavy_pass": self.skip_npu.get(),
+                    "note": "Independent from legacy heavy NPU pass; uses the lightweight AI artifact pipeline.",
+                },
+            )
+
+        self.run_task(label, task)
+
     def build_action_groups(self) -> tuple[ActionGroup, ...]:
         return (
             ActionGroup(
@@ -220,6 +257,21 @@ class ModernWorkflowGui(LegacyWorkflowGui):
                         description="Rigenera forzatamente l'indice progetto.",
                     ),
                     ActionSpec("Index manuals", self.index_manuals, description="Indicizza manuali locali Blender/progetto."),
+                ),
+            ),
+            ActionGroup(
+                "AI artifact pipeline",
+                (
+                    ActionSpec(
+                        "AI pipeline dry-run",
+                        lambda: self.run_ai_artifact_pipeline(dry_run=True),
+                        description="Verifica preflight, contesto macchina, input e output attesi senza generare artefatti reali.",
+                    ),
+                    ActionSpec(
+                        "AI artifact pipeline",
+                        lambda: self.run_ai_artifact_pipeline(dry_run=False),
+                        description="Genera chunk semantici, intermedi IA, review NPU leggera e validazione artefatti.",
+                    ),
                 ),
             ),
             ActionGroup(
