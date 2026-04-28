@@ -10,11 +10,11 @@ import bpy
 from mathutils import Vector
 
 
-TRACK_STEM = 'Phazzah-Luca Vera_Master'
-ANALYSIS_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis.json')
-MUSIC_CONTEXT_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_music_context.json')
-AI_CONTEXT_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis_ai_context.json')
-BLENDER_KEYFRAMES_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis_blender_keyframes.json')
+TRACK_STEM = 'Parameters-Luca Vera Premaster_Master'
+ANALYSIS_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Parameters-Luca Vera Premaster_Master_analysis.json')
+MUSIC_CONTEXT_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Parameters-Luca Vera Premaster_Master_music_context.json')
+AI_CONTEXT_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Parameters-Luca Vera Premaster_Master_analysis_ai_context.json')
+BLENDER_KEYFRAMES_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Parameters-Luca Vera Premaster_Master_analysis_blender_keyframes.json')
 ASSET_INVENTORY_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\spaziotempo_asset_inventory.json') if True else None
 USE_DUAL_FOCUS = False
 

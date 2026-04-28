@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-28T19:35:17.406922+00:00",
+  "generated_at": "2026-04-28T20:17:43.517533+00:00",
   "source_dirs": [
     "Scripting",
     "Tools",
     "."
   ],
-  "files_scanned": 120,
-  "chunk_count": 1064,
+  "files_scanned": 119,
+  "chunk_count": 1049,
   "files": [
     {
       "path": "analyze_wav.py",
@@ -638,13 +638,6 @@
       "sha256": "c95155adaba9dbffa80174feb6e7ee16ac23346d70a437cd75aa89138ff1dffb"
     },
     {
-      "path": "Tools/npu/generated_blender_script_candidate.py",
-      "status": "ok",
-      "chunks": 16,
-      "lines": 369,
-      "sha256": "b344451190d4035cc4d5d1dbbe5475b60e60856cf22549d856e3a1d2e0661a81"
-    },
-    {
       "path": "Tools/npu/generated_blender_script_candidate_FristNear.py",
       "status": "ok",
       "chunks": 16,
@@ -724,9 +717,9 @@
     {
       "path": "Tools/workflow/git_auto_push.py",
       "status": "ok",
-      "chunks": 6,
-      "lines": 165,
-      "sha256": "492e75895c1df77a8529f1fbb72c5b92c7b711ab45d8df8467ec2da50fb15c73"
+      "chunks": 7,
+      "lines": 186,
+      "sha256": "3eb5975ba3514f6fca9c982e10f83a39aab18b4a9e3776d3d53697b58fb048be"
     },
     {
       "path": "Tools/workflow/gui/components/__init__.py",
@@ -795,8 +788,8 @@
       "path": "Tools/workflow/gui/workflow_gui_with_push.py",
       "status": "ok",
       "chunks": 2,
-      "lines": 176,
-      "sha256": "fba50b19f7c74fc9334751fb207ca3dd1f6b68a8b46b2b818b40f13eed848704"
+      "lines": 181,
+      "sha256": "bb961946809cb4426957710cec75f7e87519f25ff749f50cc9b591c32b8083bb"
     },
     {
       "path": "Tools/workflow/project_awareness.py",

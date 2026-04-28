@@ -1,15 +1,15 @@
 {
-  "created_at": "2026-04-28T21:39:51",
+  "created_at": "2026-04-28T22:22:02",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
-  "analysis_json": "output/Phazzah-Luca Vera_Master_analysis.json",
-  "blender_keyframes_json": "output/Phazzah-Luca Vera_Master_analysis_blender_keyframes.json",
-  "analysis_ai_context_json": "output/Phazzah-Luca Vera_Master_analysis_ai_context.json",
-  "track_summary_json": "output/Phazzah-Luca Vera_Master_track_summary.json",
-  "compact_json": "output/Phazzah-Luca Vera_Master_music_context.json",
+  "analysis_json": "output/Parameters-Luca Vera Premaster_Master_analysis.json",
+  "blender_keyframes_json": "output/Parameters-Luca Vera Premaster_Master_analysis_blender_keyframes.json",
+  "analysis_ai_context_json": "output/Parameters-Luca Vera Premaster_Master_analysis_ai_context.json",
+  "track_summary_json": "output/Parameters-Luca Vera Premaster_Master_track_summary.json",
+  "compact_json": "output/Parameters-Luca Vera Premaster_Master_music_context.json",
   "ai_memory_context": {
     "format": "SPAZIOTEMPO_AI_MEMORY_CONTEXT_V1",
-    "track_stem": "Phazzah-Luca Vera_Master",
-    "scene_brief_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_scene_brief.json",
+    "track_stem": "Parameters-Luca Vera Premaster_Master",
+    "scene_brief_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Parameters-Luca Vera Premaster_Master_scene_brief.json",
     "asset_inventory_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\spaziotempo_asset_inventory.json",
     "has_scene_brief": true,
     "scene_preferences": {
@@ -22,10 +22,10 @@
       "camera_motion": "movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
       "avoid": "placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
       "render_target": "test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
-      "free_notes": "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign"
+      "free_notes": "fammi vedere di cosa è capace un arct blender python specialist direct della tua natura"
     },
     "conversation_memory": {
-      "updated_at": "2026-04-28T21:39:18",
+      "updated_at": "2026-04-28T22:20:53",
       "memory_version": 3,
       "message_count": 2,
       "preference_summary": [
@@ -38,23 +38,27 @@
         "camera_motion: movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
         "avoid: placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
         "render_target: test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
-        "free_notes: analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign"
+        "free_notes: fammi vedere di cosa è capace un arct blender python specialist direct della tua natura"
       ],
       "recent_user_requests": [
-        "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign"
+        "fammi vedere di cosa è capace un arct blender python specialist direct della tua natura"
       ],
       "recent_user_questions": [],
       "recent_assistant_notes": [
         "Errore chiamando Ollama: cannot import name 'ollama_runtime_log_path' from 'ollama_runtime' (C:\\Users\\carmi\\blender\\blender-audio-project\\Tools\\npu\\ollama_runtime.py) Il tuo messaggio e' comunque salvato nel brief; puoi generare lo script anche senza risposta chat."
       ],
-      "durable_constraints": [],
+      "durable_constraints": [
+        "fammi vedere di cosa è capace un arct blender python specialist direct della tua natura"
+      ],
       "asset_mentions": [],
       "memory_policy": "This compact memory is always passed to the local chat/model; recent_conversation is only the short working window."
     },
     "recent_user_requests": [
-      "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign"
+      "fammi vedere di cosa è capace un arct blender python specialist direct della tua natura"
     ],
-    "durable_constraints": [],
+    "durable_constraints": [
+      "fammi vedere di cosa è capace un arct blender python specialist direct della tua natura"
+    ],
     "asset_memory": {
       "asset_count": 8,
       "primary_assets": [
@@ -102,11 +106,11 @@
     },
     "project_awareness": {
       "format": "SPAZIOTEMPO_PROJECT_AWARENESS_V1",
-      "generated_at": "2026-04-28T21:39:18",
+      "generated_at": "2026-04-28T22:20:53",
       "track_identity": {
-        "track_stem": "Phazzah-Luca Vera_Master",
-        "title": "Phazzah",
-        "artist": "Luca Vera",
+        "track_stem": "Parameters-Luca Vera Premaster_Master",
+        "title": "Parameters",
+        "artist": "Luca Vera Premaster",
         "identity_source": "current workflow WAV filename/session",
         "external_metadata_allowed": false
       },
@@ -119,7 +123,7 @@
         "service_packet_ready": true,
         "scene_brief_ready": true,
         "can_generate_scene_script": true,
-        "segment_count": 20
+        "segment_count": 23
       },
       "npu_context": {
         "preflight_ready": false,
@@ -130,34 +134,34 @@
       "verified_answers": [
         {
           "question": "Di che brano stiamo parlando?",
-          "answer": "Il brano corrente e `Phazzah` di `Luca Vera`. Non usare titoli/artisti esterni non presenti nei file del progetto.",
+          "answer": "Il brano corrente e `Parameters` di `Luca Vera Premaster`. Non usare titoli/artisti esterni non presenti nei file del progetto.",
           "evidence": {
-            "track_stem": "Phazzah-Luca Vera_Master",
-            "title": "Phazzah",
-            "artist": "Luca Vera",
+            "track_stem": "Parameters-Luca Vera Premaster_Master",
+            "title": "Parameters",
+            "artist": "Luca Vera Premaster",
             "identity_source": "current workflow WAV filename/session",
             "external_metadata_allowed": false
           }
         },
         {
           "question": "Cosa pensi della traccia del progetto?",
-          "answer": "Parlo del brano del progetto, `Phazzah - Luca Vera`, non di metadati esterni.\nDai JSON lo leggo come una traccia con 20 segmenti compatti e BPM stimato 79.51.\nL'apertura sembra guidata da banda `low` con intensita `quiet`, mentre la coda arriva su `low` / `quiet`.\nDa art direction lo tratterei come un brano da doppio fulcro: due `primary_ball_asset` centrali in controfase, uno piu materico e uno piu luminoso, usando tutti i frame del `blender_keyframes_json`.\nI punti da far respirare visivamente sono: segmento 7 (96.0-112.0s, mid, medium); segmento 10 (144.0-160.0s, mid, medium); segmento 8 (112.0-128.0s, mid, medium).\nQuindi: niente narrativa generica da canzone pop; qui conviene costruire una scena audio-reactive precisa, con deformazioni mesh e materiali che seguono low/mid/high/onset/beat.",
+          "answer": "Parlo del brano del progetto, `Parameters - Luca Vera Premaster`, non di metadati esterni.\nDai JSON lo leggo come una traccia con 23 segmenti compatti e BPM stimato 112.35.\nL'apertura sembra guidata da banda `high` con intensita `quiet`, mentre la coda arriva su `low` / `quiet`.\nDa art direction lo tratterei come un brano da doppio fulcro: due `primary_ball_asset` centrali in controfase, uno piu materico e uno piu luminoso, usando tutti i frame del `blender_keyframes_json`.\nI punti da far respirare visivamente sono: segmento 5 (64.0-80.0s, mid, medium); segmento 18 (272.0-288.0s, mid, medium); segmento 12 (176.0-192.0s, mid, medium).\nQuindi: niente narrativa generica da canzone pop; qui conviene costruire una scena audio-reactive precisa, con deformazioni mesh e materiali che seguono low/mid/high/onset/beat.",
           "evidence": {
-            "duration_sec": 318.00027210884355,
+            "duration_sec": 352.16662131519274,
             "fps": 30.0,
-            "bpm": 79.50721153846153,
-            "segment_count": 20,
+            "bpm": 112.34714673913044,
+            "segment_count": 23,
             "first_segment": {
-              "dominant_band": "low",
+              "dominant_band": "high",
               "intensity": "quiet",
               "controls": {
-                "primary_band": "low",
+                "primary_band": "high",
                 "intensity": "quiet",
-                "hero_deformation": 0.3594,
-                "material_shimmer": 0.2497,
-                "fog_motion": 0.1075,
-                "accent_emission": 0.2438,
-                "camera_pressure": 0.1636
+                "hero_deformation": 0.1178,
+                "material_shimmer": 0.2409,
+                "fog_motion": 0.0404,
+                "accent_emission": 0.4452,
+                "camera_pressure": 0.2255
               }
             },
             "last_segment": {
@@ -166,52 +170,52 @@
               "controls": {
                 "primary_band": "low",
                 "intensity": "quiet",
-                "hero_deformation": 0.3649,
-                "material_shimmer": 0.134,
-                "fog_motion": 0.0835,
-                "accent_emission": 0.1475,
-                "camera_pressure": 0.2469
+                "hero_deformation": 0.0,
+                "material_shimmer": 0.0,
+                "fog_motion": 0.0,
+                "accent_emission": 0.0,
+                "camera_pressure": 0.0
               }
             },
             "top_energy_segments": [
+              {
+                "index": 5,
+                "start_sec": 64.0,
+                "end_sec": 80.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3744,
+                "intensity": "medium"
+              },
+              {
+                "index": 18,
+                "start_sec": 272.0,
+                "end_sec": 288.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3693,
+                "intensity": "medium"
+              },
+              {
+                "index": 12,
+                "start_sec": 176.0,
+                "end_sec": 192.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3647,
+                "intensity": "medium"
+              },
               {
                 "index": 7,
                 "start_sec": 96.0,
                 "end_sec": 112.0,
                 "dominant_band": "mid",
-                "intensity_score": 0.3933,
+                "intensity_score": 0.3614,
                 "intensity": "medium"
               },
               {
-                "index": 10,
-                "start_sec": 144.0,
-                "end_sec": 160.0,
+                "index": 9,
+                "start_sec": 128.0,
+                "end_sec": 144.0,
                 "dominant_band": "mid",
-                "intensity_score": 0.3889,
-                "intensity": "medium"
-              },
-              {
-                "index": 8,
-                "start_sec": 112.0,
-                "end_sec": 128.0,
-                "dominant_band": "mid",
-                "intensity_score": 0.3872,
-                "intensity": "medium"
-              },
-              {
-                "index": 11,
-                "start_sec": 160.0,
-                "end_sec": 176.0,
-                "dominant_band": "mid",
-                "intensity_score": 0.386,
-                "intensity": "medium"
-              },
-              {
-                "index": 16,
-                "start_sec": 240.0,
-                "end_sec": 256.0,
-                "dominant_band": "mid",
-                "intensity_score": 0.3725,
+                "intensity_score": 0.3593,
                 "intensity": "medium"
               }
             ]
@@ -221,10 +225,10 @@
           "question": "Abbiamo qualcosa che puo essere usata sui keyframe dell'audio?",
           "answer": "Si. Usa `blender_keyframes_json`: contiene il JSON frame-by-frame completo con `frames` per low/mid/high/onset/beat. `music_context_json` e i segmenti servono solo per decisioni macro.",
           "evidence": {
-            "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis_blender_keyframes.json",
+            "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Parameters-Luca Vera Premaster_Master_analysis_blender_keyframes.json",
             "exists": true,
-            "bytes": 1963096,
-            "updated": "2026-04-28T21:37:52"
+            "bytes": 2166394,
+            "updated": "2026-04-28T22:19:14"
           }
         },
         {
@@ -233,10 +237,10 @@
           "evidence": {
             "audio_already_loaded_by_pipeline": true,
             "analysis_json": {
-              "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis.json",
+              "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Parameters-Luca Vera Premaster_Master_analysis.json",
               "exists": true,
-              "bytes": 1963096,
-              "updated": "2026-04-28T21:35:09"
+              "bytes": 2166394,
+              "updated": "2026-04-28T22:17:33"
             }
           }
         },
@@ -262,14 +266,14 @@
             "service_packet_ready": true,
             "scene_brief_ready": true,
             "can_generate_scene_script": true,
-            "segment_count": 20
+            "segment_count": 23
           }
         },
         {
           "question": "Quanti segmenti musicali compatti sono disponibili?",
-          "answer": "Sono disponibili 20 segmenti compatti.",
+          "answer": "Sono disponibili 23 segmenti compatti.",
           "evidence": {
-            "segment_count": 20
+            "segment_count": 23
           }
         }
       ],
@@ -297,9 +301,9 @@
   },
   "context_md": "Tools/npu/npu_music_context.md",
   "chunk_dir": "Tools/npu/npu_music_chunks",
-  "chunk_count": 26,
+  "chunk_count": 29,
   "segment_seconds": 16.0,
-  "segment_count": 20,
+  "segment_count": 23,
   "scene_files": [
     {
       "file": "scene_spec_album_driven.json",
@@ -514,8 +518,8 @@
       "index": 1,
       "kind": "overview",
       "path": "Tools/npu/npu_music_chunks/chunk_001_music_overview.md",
-      "chars": 54505,
-      "sha256": "9e00ef3b5f95e554162204a2b348f8ebb6e9e0ec8a347d3474e5e3ad6e11539c"
+      "chars": 26655,
+      "sha256": "2707aeae84fa37fce2773d72133a0d75e32898300972fcbf6ea362e4cb7d4055"
     },
     {
       "index": 2,
@@ -524,8 +528,8 @@
       "start_sec": 0.0,
       "end_sec": 16.0,
       "path": "Tools/npu/npu_music_chunks/chunk_002_audio_segment_001.md",
-      "chars": 5523,
-      "sha256": "d917a86faa373e318aac36207514926533592ca457cab21f2ad8f036d37b12a4"
+      "chars": 5752,
+      "sha256": "666a62d22fdc59b5ee2bb959f95158c04195b57c62c3f18df0697dcc3693a731"
     },
     {
       "index": 3,
@@ -534,8 +538,8 @@
       "start_sec": 16.0,
       "end_sec": 32.0,
       "path": "Tools/npu/npu_music_chunks/chunk_003_audio_segment_002.md",
-      "chars": 5676,
-      "sha256": "a1ae4801bc58f0eccbb07dc7175c4cc6ccb19d65e8cd1576cc6fd301a0944dd2"
+      "chars": 5811,
+      "sha256": "ec0abe0af33e6dc0bd00d591b841eb3fca7bc884908353ee55878cd3cc0bcbf4"
     },
     {
       "index": 4,
@@ -544,8 +548,8 @@
       "start_sec": 32.0,
       "end_sec": 48.0,
       "path": "Tools/npu/npu_music_chunks/chunk_004_audio_segment_003.md",
-      "chars": 5722,
-      "sha256": "3feaff4029c9f3764334200a16d9522ca83dfdb72b238c50d04026cd97664c01"
+      "chars": 5815,
+      "sha256": "878593ecdd2cc54e78f33f1a807f3df33cb92fd5cde587ec5ac6a1d78c52101b"
     },
     {
       "index": 5,
@@ -554,8 +558,8 @@
       "start_sec": 48.0,
       "end_sec": 64.0,
       "path": "Tools/npu/npu_music_chunks/chunk_005_audio_segment_004.md",
-      "chars": 5739,
-      "sha256": "d30f62d49b261fada2c8dcbb56c6f5600edac5e711ef82352dc0d15097c1be1b"
+      "chars": 5807,
+      "sha256": "4e08f50f59623c11fe079b8a45de45e77b79123a6d3dbfb39182b8d87380ca20"
     },
     {
       "index": 6,
@@ -564,8 +568,8 @@
       "start_sec": 64.0,
       "end_sec": 80.0,
       "path": "Tools/npu/npu_music_chunks/chunk_006_audio_segment_005.md",
-      "chars": 5722,
-      "sha256": "11465f36e0e8aeb3b4f875b024e25654712c3cc82a5d75927eb60d4580c60ce0"
+      "chars": 5819,
+      "sha256": "1f95de19badcce07caeb350856f34a64114273e3edc37c4f2ad2bbb2ec2f8699"
     },
     {
       "index": 7,
@@ -574,8 +578,8 @@
       "start_sec": 80.0,
       "end_sec": 96.0,
       "path": "Tools/npu/npu_music_chunks/chunk_007_audio_segment_006.md",
-      "chars": 5707,
-      "sha256": "cd12d5cf1bbdfd73a341a61a30e659fef5843fc93581a2283ca2e0e60d343272"
+      "chars": 5828,
+      "sha256": "96e44454092771e2f5a2d407d927d27ed9bc2bb18ae611d708e3789c64dbf772"
     },
     {
       "index": 8,
@@ -584,8 +588,8 @@
       "start_sec": 96.0,
       "end_sec": 112.0,
       "path": "Tools/npu/npu_music_chunks/chunk_008_audio_segment_007.md",
-      "chars": 5803,
-      "sha256": "823ea3c0e9d05d0712938e84c46b634e74666dfe895fed404c9a665a372e6272"
+      "chars": 5916,
+      "sha256": "522a7b408733c86d0c525c8f335ed77e1b7fecae47d189fb3a0e4445b96ed83f"
     },
     {
       "index": 9,
@@ -594,8 +598,8 @@
       "start_sec": 112.0,
       "end_sec": 128.0,
       "path": "Tools/npu/npu_music_chunks/chunk_009_audio_segment_008.md",
-      "chars": 5806,
-      "sha256": "7b9440731c27b24af6014d14bd1558bee405e83447f9e8a95a475cfda74e56a9"
+      "chars": 5899,
+      "sha256": "5e7a5f1e5716763835b11e5570192b2346281aa6a10b614e734a29873a3ae4c0"
     },
     {
       "index": 10,
@@ -604,8 +608,8 @@
       "start_sec": 128.0,
       "end_sec": 144.0,
       "path": "Tools/npu/npu_music_chunks/chunk_010_audio_segment_009.md",
-      "chars": 5816,
-      "sha256": "ae98885ddc0fc286301764b7128c091a8418320efde31ff064fdbbd9c05a975e"
+      "chars": 5924,
+      "sha256": "6b472fe2cc09ff2d104cf8c1f31d033a5a352d87834b9d0dc1a1db7a69483bc3"
     },
     {
       "index": 11,
@@ -614,8 +618,8 @@
       "start_sec": 144.0,
       "end_sec": 160.0,
       "path": "Tools/npu/npu_music_chunks/chunk_011_audio_segment_010.md",
-      "chars": 5830,
-      "sha256": "f4587a5b40650e7fd83ebf992ae3a6c0dd27851f58f06f9ba9813dd4f7de9df8"
+      "chars": 5919,
+      "sha256": "440092d192174dabd0a49c574cc73af06e83ab145cf980b80cda11d9780f01a7"
     },
     {
       "index": 12,
@@ -624,8 +628,8 @@
       "start_sec": 160.0,
       "end_sec": 176.0,
       "path": "Tools/npu/npu_music_chunks/chunk_012_audio_segment_011.md",
-      "chars": 5827,
-      "sha256": "1bcaca903d2c57a764b9aa64be29f6aa411daa0efd99c12cc921a4c17d45cc9d"
+      "chars": 5929,
+      "sha256": "022e9816ff50c97840cd9b782012b079069098a234172a8c86f2231f5acdd270"
     },
     {
       "index": 13,
@@ -634,8 +638,8 @@
       "start_sec": 176.0,
       "end_sec": 192.0,
       "path": "Tools/npu/npu_music_chunks/chunk_013_audio_segment_012.md",
-      "chars": 5803,
-      "sha256": "be5d6691c3649e19536deabf74c9cabf4be0063867d2687a4c00e0e487804af8"
+      "chars": 5938,
+      "sha256": "b586116cce9168e7731c6fd15da7bd0fbf394242ea1ea6abe5547789ce314ddf"
     },
     {
       "index": 14,
@@ -644,8 +648,8 @@
       "start_sec": 192.0,
       "end_sec": 208.0,
       "path": "Tools/npu/npu_music_chunks/chunk_014_audio_segment_013.md",
-      "chars": 5848,
-      "sha256": "0f17995027cb910923b7d354289375141bf1a6ecaa2cd5afce91f5b8f64c6d2a"
+      "chars": 5897,
+      "sha256": "a02e5837e1a0898815c6eef849392589f67c369cd839f6d672fbc915b08fd4eb"
     },
     {
       "index": 15,
@@ -654,8 +658,8 @@
       "start_sec": 208.0,
       "end_sec": 224.0,
       "path": "Tools/npu/npu_music_chunks/chunk_015_audio_segment_014.md",
-      "chars": 5820,
-      "sha256": "96f28b145d5541b587d03cfd1d6e5c94741ac958d797d52b6b998d326541adbb"
+      "chars": 5947,
+      "sha256": "3fe1630001139743f637ed3a975bc7ca7a78f426425147012272f8479cc7c46e"
     },
     {
       "index": 16,
@@ -664,8 +668,8 @@
       "start_sec": 224.0,
       "end_sec": 240.0,
       "path": "Tools/npu/npu_music_chunks/chunk_016_audio_segment_015.md",
-      "chars": 5820,
-      "sha256": "fe5a1fea0ee6ac2465b2df00ac7b5afb9a3575223cc9dd70a31fa3ef0859aa16"
+      "chars": 5932,
+      "sha256": "c5526ea05144a876b87535f5d5c5751a0007ec1970d04a3222faa551655a67be"
     },
     {
       "index": 17,
@@ -674,8 +678,8 @@
       "start_sec": 240.0,
       "end_sec": 256.0,
       "path": "Tools/npu/npu_music_chunks/chunk_017_audio_segment_016.md",
-      "chars": 5845,
-      "sha256": "5bc76e3f5f596cb4c5d3e6d21fce84def7623d8a22b6a85f6408eea28f6c51e5"
+      "chars": 5920,
+      "sha256": "d86e2cba788ee4d462ac58a1cc0257ce63e814075d8082410d0945e6640c655e"
     },
     {
       "index": 18,
@@ -684,8 +688,8 @@
       "start_sec": 256.0,
       "end_sec": 272.0,
       "path": "Tools/npu/npu_music_chunks/chunk_018_audio_segment_017.md",
-      "chars": 5811,
-      "sha256": "139a2122ff490bf68b25058118810885d039a871210dc0df68497a49de1fd6d4"
+      "chars": 5910,
+      "sha256": "b05c35a087a5b74b662103ee8432cef456eae38c3f964060446201604a3278d4"
     },
     {
       "index": 19,
@@ -694,8 +698,8 @@
       "start_sec": 272.0,
       "end_sec": 288.0,
       "path": "Tools/npu/npu_music_chunks/chunk_019_audio_segment_018.md",
-      "chars": 5832,
-      "sha256": "40d3ff9aa6b6dd1dfb17fce2b515ea0a0f81e414196fd7ab59e01f0bebef032a"
+      "chars": 5940,
+      "sha256": "8749e777b87a7d86194d1f5fb48658a6cf273c94e47499ce4b8d93f0802816fc"
     },
     {
       "index": 20,
@@ -704,56 +708,86 @@
       "start_sec": 288.0,
       "end_sec": 304.0,
       "path": "Tools/npu/npu_music_chunks/chunk_020_audio_segment_019.md",
-      "chars": 5784,
-      "sha256": "9eb5670796ab55205a45dacfb4952ec6b3d472016c59f9c08c1cecefec6319f6"
+      "chars": 5928,
+      "sha256": "17c449cb7e12a3be04d5316b60b8a2cc46b6b3a996be8ed3378133c08639300d"
     },
     {
       "index": 21,
       "kind": "audio_segment",
       "segment_index": 20,
       "start_sec": 304.0,
-      "end_sec": 318.0,
+      "end_sec": 320.0,
       "path": "Tools/npu/npu_music_chunks/chunk_021_audio_segment_020.md",
-      "chars": 5406,
-      "sha256": "b3a468ca363be887c4a1d90ff028ae18b76d9575af4b2cd5e2ce7cc2d25fe31c"
+      "chars": 5908,
+      "sha256": "c03206eb8e58f0c967b999ca8d1b413d37c3d6b723485c94bd45ad790e787283"
     },
     {
       "index": 22,
-      "kind": "scene_spec",
-      "source": "scene_spec_album_driven.json",
-      "path": "Tools/npu/npu_music_chunks/chunk_022_scene_scene_spec_album_driven.md",
-      "chars": 3048,
-      "sha256": "c3af8fef65c1f9e93fd6fa6b88bb1b254071841d3df99a2a8578a149e4bf2107"
+      "kind": "audio_segment",
+      "segment_index": 21,
+      "start_sec": 320.0,
+      "end_sec": 336.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_022_audio_segment_021.md",
+      "chars": 5900,
+      "sha256": "f3d369fb9cc25af83faacc7a0db1fde5091feae2ac469a202e2a66fe56d71460"
     },
     {
       "index": 23,
-      "kind": "scene_spec",
-      "source": "scene_spec_album_driven_normalized.json",
-      "path": "Tools/npu/npu_music_chunks/chunk_023_scene_scene_spec_album_driven_normalized.md",
-      "chars": 8821,
-      "sha256": "8519fc00d135275b09d59d75d96618501e2949f12d466a1a7eb76bd7e050e0fe"
+      "kind": "audio_segment",
+      "segment_index": 22,
+      "start_sec": 336.0,
+      "end_sec": 352.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_023_audio_segment_022.md",
+      "chars": 5450,
+      "sha256": "690ccb9300504dc527653677294ab5ca5a84b21ff20ffdb8d7560440080fd444"
     },
     {
       "index": 24,
-      "kind": "scene_spec",
-      "source": "scene_spec_album_driven_raw.txt",
-      "path": "Tools/npu/npu_music_chunks/chunk_024_scene_scene_spec_album_driven_raw.md",
-      "chars": 1518,
-      "sha256": "40e8ac0d0504b76e8e6b43cde28980c44990d8136d4fc00499d279885819e75a"
+      "kind": "audio_segment",
+      "segment_index": 23,
+      "start_sec": 352.0,
+      "end_sec": 352.167,
+      "path": "Tools/npu/npu_music_chunks/chunk_024_audio_segment_023.md",
+      "chars": 2249,
+      "sha256": "c9704281aa52759be354cbadeb5acbdf1e5109735c9730f6cb422478975232d0"
     },
     {
       "index": 25,
       "kind": "scene_spec",
-      "source": "scene_spec_from_npu.json",
-      "path": "Tools/npu/npu_music_chunks/chunk_025_scene_scene_spec_from_npu.md",
-      "chars": 1925,
-      "sha256": "7f4d31dd82b912995ecd880535ceb706bbffdf88ba3fd8d6cacb6e3a049bca91"
+      "source": "scene_spec_album_driven.json",
+      "path": "Tools/npu/npu_music_chunks/chunk_025_scene_scene_spec_album_driven.md",
+      "chars": 3048,
+      "sha256": "c3af8fef65c1f9e93fd6fa6b88bb1b254071841d3df99a2a8578a149e4bf2107"
     },
     {
       "index": 26,
       "kind": "scene_spec",
+      "source": "scene_spec_album_driven_normalized.json",
+      "path": "Tools/npu/npu_music_chunks/chunk_026_scene_scene_spec_album_driven_normalized.md",
+      "chars": 8821,
+      "sha256": "8519fc00d135275b09d59d75d96618501e2949f12d466a1a7eb76bd7e050e0fe"
+    },
+    {
+      "index": 27,
+      "kind": "scene_spec",
+      "source": "scene_spec_album_driven_raw.txt",
+      "path": "Tools/npu/npu_music_chunks/chunk_027_scene_scene_spec_album_driven_raw.md",
+      "chars": 1518,
+      "sha256": "40e8ac0d0504b76e8e6b43cde28980c44990d8136d4fc00499d279885819e75a"
+    },
+    {
+      "index": 28,
+      "kind": "scene_spec",
+      "source": "scene_spec_from_npu.json",
+      "path": "Tools/npu/npu_music_chunks/chunk_028_scene_scene_spec_from_npu.md",
+      "chars": 1925,
+      "sha256": "7f4d31dd82b912995ecd880535ceb706bbffdf88ba3fd8d6cacb6e3a049bca91"
+    },
+    {
+      "index": 29,
+      "kind": "scene_spec",
       "source": "scene_spec_from_npu_raw.txt",
-      "path": "Tools/npu/npu_music_chunks/chunk_026_scene_scene_spec_from_npu_raw.md",
+      "path": "Tools/npu/npu_music_chunks/chunk_029_scene_scene_spec_from_npu_raw.md",
       "chars": 1206,
       "sha256": "0e937aa34c55922eeb3c22a7d631f20178680bcbb461552bc64768aca96d34a6"
     }
