@@ -1,0 +1,70 @@
+name: Lightweight CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  validate:
+    name: Validate repository basics
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate JSON files
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          failed = False
+          for path in Path('.').rglob('*.json'):
+              if any(part in {'.git', '__pycache__'} for part in path.parts):
+                  continue
+              try:
+                  json.loads(path.read_text(encoding='utf-8'))
+              except Exception as exc:
+                  print(f'JSON validation failed: {path}: {exc}')
+                  failed = True
+          raise SystemExit(1 if failed else 0)
+          PY
+
+      - name: Compile top-level Python tools
+        run: |
+          python -m py_compile analyze_wav.py build_track_summary.py normalize_scene_spec.py
+
+      - name: Check required documentation files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          required = [
+              'README.md',
+              'AGENTS.md',
+              'CONTRIBUTING.md',
+              'CHANGELOG.md',
+              'CODE_OF_CONDUCT.md',
+              'docs/README.md',
+              'docs/AI_REPOSITORY_MANIFEST.md',
+              'docs/AI_PROMPTS.md',
+              'docs/REVIEW_CHECKLIST.md',
+              'indexAI/ai_manifest.json',
+              '.github/PULL_REQUEST_TEMPLATE.md',
+          ]
+
+          missing = [path for path in required if not Path(path).exists()]
+          if missing:
+              print('Missing required files:')
+              for path in missing:
+                  print(f'- {path}')
+              raise SystemExit(1)
+          PY
