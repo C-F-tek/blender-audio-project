@@ -17,6 +17,7 @@ if str(WORKFLOW_DIR) not in sys.path:
     sys.path.insert(0, str(WORKFLOW_DIR))
 
 import workflow_state as wf  # noqa: E402
+from components.artifact_browser import ArtifactBrowserWindow  # noqa: E402
 from scene_brief import append_scene_message, clear_scene_chat_history, generate_scene_chat_reply, load_or_create_scene_brief  # noqa: E402
 
 
@@ -370,6 +371,7 @@ class WorkflowGui(tk.Tk):
         self.log_window: LogWindow | None = None
         self.advanced_debug_window: AdvancedDebugWindow | None = None
         self.project_stats_window: ProjectStatsWindow | None = None
+        self.artifact_browser_window: ArtifactBrowserWindow | None = None
         self.scene_director_window: SceneDirectorChatWindow | None = None
 
         self.include_manual = tk.BooleanVar(value=True)
@@ -450,6 +452,7 @@ class WorkflowGui(tk.Tk):
             ("Advanced debug check", self.open_advanced_debug_window, True),
             ("Startup service check", self.startup_service_check, True),
             ("Project stats", self.open_project_stats_window, True),
+            ("Artifact browser", self.open_artifact_browser_window, True),
             ("Debug monitor shell", self.open_debug_monitor_shell, True),
             ("Mark interrupted", self.mark_interrupted, True),
             ("Refresh", self.refresh_session, True),
@@ -673,6 +676,27 @@ class WorkflowGui(tk.Tk):
         self.refresh_session()
         if self.session.debug_enabled:
             self.open_log_window()
+
+    def artifact_extra_roots(self, session) -> list[Path]:
+        roots: list[Path] = []
+        for key in ("output_dir", "render_frames_dir"):
+            value = session.artifacts.get(key)
+            if value:
+                roots.append(Path(value))
+        for key in ("render_mp4", "render_ffmpeg_mp4"):
+            value = session.artifacts.get(key)
+            if value:
+                roots.append(Path(value).parent)
+        return roots
+
+    def open_artifact_browser_window(self) -> None:
+        if self.artifact_browser_window is None or not self.artifact_browser_window.winfo_exists():
+            self.artifact_browser_window = ArtifactBrowserWindow(
+                self,
+                session_loader=lambda: wf.load_session(create=True),
+                extra_roots_loader=self.artifact_extra_roots,
+            )
+        self.artifact_browser_window.show()
 
     def open_log_window(self) -> None:
         if self.log_window is None or not self.log_window.winfo_exists():

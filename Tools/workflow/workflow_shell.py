@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
+from artifact_consult import collect_artifacts, format_artifact_table, open_artifact
 from git_auto_push import run_auto_push_generated_data
 from workflow_state import (
     DEFAULT_WAV,
@@ -104,8 +105,9 @@ def menu() -> None:
     print("  19 Rigenera indexAI progetto")
     print("  20 Scene director chat / modifica brief")
     print("  21 Project storage stats")
-    print("  22 Configura modelli AI")
-    print("  23 Startup service check")
+    print("  22 Consulta/apri artefatti prodotti")
+    print("  23 Configura modelli AI")
+    print("  24 Startup service check")
     print("  0  Esci")
 
 
@@ -279,6 +281,16 @@ def main() -> None:
                 print(format_project_storage_stats(build_project_storage_stats(session)))
 
             elif choice == "22":
+                records = collect_artifacts(session)
+                print(format_artifact_table(records))
+                raw_index = input("\nIndice da aprire, F<indice> per cartella, Invio per tornare: " ).strip()
+                if raw_index:
+                    open_folder = raw_index.lower().startswith("f")
+                    number_text = raw_index[1:] if open_folder else raw_index
+                    opened = open_artifact(records, int(number_text), folder=open_folder)
+                    print(f"Aperto: {opened.path}")
+
+            elif choice == "23":
                 creative = choose_model("Creative model per piano/visione", session.creative_model)
                 technical = choose_model("Technical model per script Python Blender", session.technical_model)
                 chat = choose_model("Chat model per direttore AI", session.chat_model)
@@ -291,7 +303,7 @@ def main() -> None:
                     script_max_tokens=tokens,
                 )
 
-            elif choice == "23":
+            elif choice == "24":
                 print(run_startup_service_check())
 
             else:
