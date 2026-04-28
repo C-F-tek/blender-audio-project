@@ -28,6 +28,64 @@ class ActionGroup:
     actions: tuple[ActionSpec, ...]
 
 
+class Tooltip:
+    """Small delayed tooltip for Tk/ttk widgets."""
+
+    def __init__(self, widget: tk.Widget, text: str, *, delay_ms: int = 650, wraplength: int = 360) -> None:
+        self.widget = widget
+        self.text = text.strip()
+        self.delay_ms = delay_ms
+        self.wraplength = wraplength
+        self.after_id: str | None = None
+        self.window: tk.Toplevel | None = None
+        if self.text:
+            widget.bind("<Enter>", self.schedule, add="+")
+            widget.bind("<Leave>", self.hide, add="+")
+            widget.bind("<ButtonPress>", self.hide, add="+")
+            widget.bind("<Motion>", self.move, add="+")
+
+    def schedule(self, event=None) -> None:
+        self.cancel()
+        self.after_id = self.widget.after(self.delay_ms, lambda: self.show(event))
+
+    def cancel(self) -> None:
+        if self.after_id:
+            self.widget.after_cancel(self.after_id)
+            self.after_id = None
+
+    def show(self, event=None) -> None:
+        self.cancel()
+        if self.window or not self.text:
+            return
+        x = self.widget.winfo_pointerx() + 14
+        y = self.widget.winfo_pointery() + 18
+        self.window = tk.Toplevel(self.widget)
+        self.window.wm_overrideredirect(True)
+        self.window.wm_geometry(f"+{x}+{y}")
+        frame = ttk.Frame(self.window, relief="solid", borderwidth=1)
+        frame.pack(fill="both", expand=True)
+        label = ttk.Label(
+            frame,
+            text=self.text,
+            justify="left",
+            wraplength=self.wraplength,
+            padding=(8, 5),
+        )
+        label.pack(fill="both", expand=True)
+
+    def move(self, event=None) -> None:
+        if self.window:
+            x = self.widget.winfo_pointerx() + 14
+            y = self.widget.winfo_pointery() + 18
+            self.window.wm_geometry(f"+{x}+{y}")
+
+    def hide(self, event=None) -> None:
+        self.cancel()
+        if self.window:
+            self.window.destroy()
+            self.window = None
+
+
 class ScrollableFrame(ttk.Frame):
     """A vertical scrollable frame implemented with a Canvas.
 
@@ -83,6 +141,7 @@ class GroupedActionPanel(ttk.Frame):
     def __init__(self, master, *, title: str = "Operations", min_width: int = 340) -> None:
         super().__init__(master)
         self.title = title
+        self.tooltips: list[Tooltip] = []
         header = ttk.Frame(self)
         header.pack(fill="x", padx=2, pady=(0, 6))
         ttk.Label(header, text=title, font=("TkDefaultFont", 11, "bold")).pack(side="left")
@@ -106,6 +165,7 @@ class GroupedActionPanel(ttk.Frame):
                 button.pack(fill="x")
 
                 if spec.description:
+                    self.tooltips.append(Tooltip(button, spec.description))
                     description = ttk.Label(
                         row,
                         text=spec.description,
