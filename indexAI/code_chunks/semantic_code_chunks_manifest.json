@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-28T20:17:43.517533+00:00",
+  "generated_at": "2026-04-28T21:02:46.691186+00:00",
   "source_dirs": [
     "Scripting",
     "Tools",
     "."
   ],
   "files_scanned": 119,
-  "chunk_count": 1049,
+  "chunk_count": 1055,
   "files": [
     {
       "path": "analyze_wav.py",
@@ -654,9 +654,9 @@
     {
       "path": "Tools/npu/ollama_runtime.py",
       "status": "ok",
-      "chunks": 14,
-      "lines": 351,
-      "sha256": "dbcdde9d1d43964bd77a64a8cfe8e900346aa4b5554e41daf19758269cbd4cbd"
+      "chunks": 18,
+      "lines": 386,
+      "sha256": "bd594cc34384f89d7f8ba42c9441d3df85413efee7b4df9d2f0b43da17991cce"
     },
     {
       "path": "Tools/npu/run_dual_ai_pipeline.py",
@@ -801,9 +801,9 @@
     {
       "path": "Tools/workflow/scene_brief.py",
       "status": "ok",
-      "chunks": 19,
-      "lines": 526,
-      "sha256": "8e8a80b0798c463f308905fa0c0bd4232478cf5a3db743ebbf72326d657bbd73"
+      "chunks": 21,
+      "lines": 419,
+      "sha256": "97afd3a2803151e531c00ba3b4ec3c1d554a974a30b9fe441ea9a03761ca6c92"
     },
     {
       "path": "Tools/workflow/startup_check.py",

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-28T20:17:43.517533+00:00",
-  "chunk_count": 1049,
+  "generated_at": "2026-04-28T21:02:46.691186+00:00",
+  "chunk_count": 1055,
   "chunks": [
     {
       "chunk_id": "analyze_wav.py::moving_average",
@@ -32240,8 +32240,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "normalize_base_url",
       "kind": "function",
-      "line_start": 13,
-      "line_end": 17,
+      "line_start": 14,
+      "line_end": 18,
       "domain": [
         "ai_context"
       ],
@@ -32261,12 +32261,120 @@
       "do_not_change": false
     },
     {
+      "chunk_id": "Tools/npu/ollama_runtime.py::now_iso",
+      "path": "Tools/npu/ollama_runtime.py",
+      "symbol": "now_iso",
+      "kind": "function",
+      "line_start": 25,
+      "line_end": 26,
+      "domain": [
+        "ai_context"
+      ],
+      "blender_api": [],
+      "risk": "low",
+      "risk_signals": [],
+      "compatibility_notes": [],
+      "dependencies": [
+        "datetime",
+        "isoformat",
+        "now",
+        "str"
+      ],
+      "sha256": "f754bcfc0b716ab4fadcf6bc6861c625ed492072d00ed396ed458f374d78623f",
+      "summary_short": "function now_iso in Tools/npu/ollama_runtime.py",
+      "do_not_change": false
+    },
+    {
+      "chunk_id": "Tools/npu/ollama_runtime.py::project_root",
+      "path": "Tools/npu/ollama_runtime.py",
+      "symbol": "project_root",
+      "kind": "function",
+      "line_start": 29,
+      "line_end": 30,
+      "domain": [
+        "config",
+        "ai_context"
+      ],
+      "blender_api": [],
+      "risk": "low",
+      "risk_signals": [],
+      "compatibility_notes": [],
+      "dependencies": [
+        "Path",
+        "parents",
+        "resolve"
+      ],
+      "sha256": "d552a91a61d86f6595f0527dd3ee27ab07a14c76b633fd975aab15c5210d1ddf",
+      "summary_short": "function project_root in Tools/npu/ollama_runtime.py",
+      "do_not_change": false
+    },
+    {
+      "chunk_id": "Tools/npu/ollama_runtime.py::ollama_runtime_log_path",
+      "path": "Tools/npu/ollama_runtime.py",
+      "symbol": "ollama_runtime_log_path",
+      "kind": "function",
+      "line_start": 33,
+      "line_end": 34,
+      "domain": [
+        "config",
+        "ai_context"
+      ],
+      "blender_api": [],
+      "risk": "low",
+      "risk_signals": [],
+      "compatibility_notes": [],
+      "dependencies": [
+        "Path",
+        "project_root"
+      ],
+      "sha256": "b4f9f9ef84ded2264c73346ef73f4b76e76b5503b10112a615335bbf5fd366f9",
+      "summary_short": "function ollama_runtime_log_path in Tools/npu/ollama_runtime.py",
+      "do_not_change": false
+    },
+    {
+      "chunk_id": "Tools/npu/ollama_runtime.py::append_ollama_runtime_event",
+      "path": "Tools/npu/ollama_runtime.py",
+      "symbol": "append_ollama_runtime_event",
+      "kind": "function",
+      "line_start": 37,
+      "line_end": 45,
+      "domain": [
+        "config",
+        "ai_context"
+      ],
+      "blender_api": [],
+      "risk": "low",
+      "risk_signals": [],
+      "compatibility_notes": [],
+      "dependencies": [
+        "Exception",
+        "dict",
+        "dumps",
+        "event",
+        "handle",
+        "json",
+        "mkdir",
+        "now_iso",
+        "ollama_runtime_log_path",
+        "open",
+        "parent",
+        "path",
+        "payload",
+        "row",
+        "str",
+        "write"
+      ],
+      "sha256": "3e1d6172a2cd3907676fd9b71990f00b4fdc2e333d9a5da9bec47e5203c77bad",
+      "summary_short": "function append_ollama_runtime_event in Tools/npu/ollama_runtime.py",
+      "do_not_change": false
+    },
+    {
       "chunk_id": "Tools/npu/ollama_runtime.py::ollama_home",
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "ollama_home",
       "kind": "function",
-      "line_start": 24,
-      "line_end": 28,
+      "line_start": 48,
+      "line_end": 52,
       "domain": [
         "config",
         "ai_context"
@@ -32295,8 +32403,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "manifest_root",
       "kind": "function",
-      "line_start": 31,
-      "line_end": 33,
+      "line_start": 55,
+      "line_end": 57,
       "domain": [
         "config",
         "ai_context"
@@ -32324,8 +32432,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "find_ollama_exe",
       "kind": "function",
-      "line_start": 36,
-      "line_end": 71,
+      "line_start": 60,
+      "line_end": 95,
       "domain": [
         "config",
         "ai_context"
@@ -32362,8 +32470,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "_json_request",
       "kind": "function",
-      "line_start": 74,
-      "line_end": 88,
+      "line_start": 98,
+      "line_end": 112,
       "domain": [
         "config",
         "ai_context"
@@ -32407,8 +32515,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "is_server_ready",
       "kind": "function",
-      "line_start": 91,
-      "line_end": 96,
+      "line_start": 115,
+      "line_end": 120,
       "domain": [
         "ai_context"
       ],
@@ -32435,8 +32543,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "list_models",
       "kind": "function",
-      "line_start": 99,
-      "line_end": 107,
+      "line_start": 123,
+      "line_end": 131,
       "domain": [
         "ai_context"
       ],
@@ -32469,8 +32577,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "list_models_from_disk",
       "kind": "function",
-      "line_start": 110,
-      "line_end": 136,
+      "line_start": 134,
+      "line_end": 160,
       "domain": [
         "ai_context"
       ],
@@ -32511,8 +32619,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "start_server",
       "kind": "function",
-      "line_start": 139,
-      "line_end": 157,
+      "line_start": 163,
+      "line_end": 181,
       "domain": [
         "config",
         "ai_context"
@@ -32554,8 +32662,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "choose_model",
       "kind": "function",
-      "line_start": 160,
-      "line_end": 172,
+      "line_start": 184,
+      "line_end": 196,
       "domain": [
         "ai_context"
       ],
@@ -32583,8 +32691,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "strip_json_fence",
       "kind": "function",
-      "line_start": 175,
-      "line_end": 184,
+      "line_start": 199,
+      "line_end": 208,
       "domain": [
         "ai_context"
       ],
@@ -32611,8 +32719,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "parse_json_response",
       "kind": "function",
-      "line_start": 187,
-      "line_end": 196,
+      "line_start": 211,
+      "line_end": 220,
       "domain": [
         "ai_context"
       ],
@@ -32643,8 +32751,8 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "OllamaModelManager",
       "kind": "class",
-      "line_start": 199,
-      "line_end": 250,
+      "line_start": 223,
+      "line_end": 274,
       "domain": [
         "ai_context"
       ],
@@ -32686,11 +32794,10 @@
       "path": "Tools/npu/ollama_runtime.py",
       "symbol": "OllamaSession",
       "kind": "class",
-      "line_start": 253,
-      "line_end": 351,
+      "line_start": 277,
+      "line_end": 386,
       "domain": [
-        "ai_context",
-        "validation"
+        "ai_context"
       ],
       "blender_api": [],
       "risk": "medium",
@@ -32706,12 +32813,14 @@
         "Popen",
         "TimeoutExpired",
         "_json_request",
+        "append_ollama_runtime_event",
         "available",
         "base_url",
         "bool",
         "choose_model",
         "close",
         "data",
+        "exc",
         "find_ollama_exe",
         "float",
         "get",
@@ -32719,6 +32828,7 @@
         "is_server_ready",
         "keep_alive",
         "kill",
+        "len",
         "list_models",
         "list_models_from_disk",
         "max_new_tokens",
@@ -32726,9 +32836,12 @@
         "normalize_base_url",
         "ollama_exe",
         "payload",
+        "perf_counter",
         "preferred_model",
         "process",
         "prompt",
+        "response",
+        "round",
         "run",
         "self",
         "shutdown_server",
@@ -32741,11 +32854,13 @@
         "subprocess",
         "temperature",
         "terminate",
+        "time",
+        "type",
         "unload_model",
         "unload_model_on_close",
         "wait"
       ],
-      "sha256": "9e603577982674c759184d161cd6b38bd1a8dc216d292aad74eef155b966a32b",
+      "sha256": "cbe7315c6b55f18b5257677396a4ec55368909d57b6608bb0fe9a307f64c3a1e",
       "summary_short": "class OllamaSession in Tools/npu/ollama_runtime.py",
       "do_not_change": false
     },
@@ -39435,8 +39550,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "now_iso",
       "kind": "function",
-      "line_start": 82,
-      "line_end": 83,
+      "line_start": 32,
+      "line_end": 33,
       "domain": [
         "general"
       ],
@@ -39459,8 +39574,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "read_json",
       "kind": "function",
-      "line_start": 86,
-      "line_end": 93,
+      "line_start": 36,
+      "line_end": 43,
       "domain": [
         "config"
       ],
@@ -39489,8 +39604,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "write_json",
       "kind": "function",
-      "line_start": 96,
-      "line_end": 98,
+      "line_start": 46,
+      "line_end": 48,
       "domain": [
         "config"
       ],
@@ -39518,8 +39633,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "append_scene_runtime_event",
       "kind": "function",
-      "line_start": 101,
-      "line_end": 109,
+      "line_start": 51,
+      "line_end": 59,
       "domain": [
         "config"
       ],
@@ -39556,8 +39671,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "default_scene_preferences",
       "kind": "function",
-      "line_start": 112,
-      "line_end": 113,
+      "line_start": 62,
+      "line_end": 63,
       "domain": [
         "general"
       ],
@@ -39583,8 +39698,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "compact_text",
       "kind": "function",
-      "line_start": 116,
-      "line_end": 120,
+      "line_start": 66,
+      "line_end": 70,
       "domain": [
         "general"
       ],
@@ -39598,13 +39713,50 @@
         "len",
         "limit",
         "max",
+        "object",
         "rstrip",
         "split",
         "str",
+        "text",
         "value"
       ],
-      "sha256": "3f571ced7986a914d19271d9b80c74ee8e1ed8d69a4d6b9a564a7eaa58f8f1f7",
+      "sha256": "a7e16f510a25d01674386cf35e5e9b1d3ea86e8a7c08e9d22591c4615eed18de",
       "summary_short": "function compact_text in Tools/workflow/scene_brief.py",
+      "do_not_change": false
+    },
+    {
+      "chunk_id": "Tools/workflow/scene_brief.py::trim_jsonable",
+      "path": "Tools/workflow/scene_brief.py",
+      "symbol": "trim_jsonable",
+      "kind": "function",
+      "line_start": 73,
+      "line_end": 80,
+      "domain": [
+        "general"
+      ],
+      "blender_api": [],
+      "risk": "low",
+      "risk_signals": [],
+      "compatibility_notes": [],
+      "dependencies": [
+        "compact_text",
+        "dict",
+        "int",
+        "isinstance",
+        "item",
+        "items",
+        "k",
+        "limit",
+        "list",
+        "max",
+        "object",
+        "str",
+        "trim_jsonable",
+        "v",
+        "value"
+      ],
+      "sha256": "9711fffcb4b03ef01eaaa9e77d21e0d350af99efe8cadaef839f56bb191bae17",
+      "summary_short": "function trim_jsonable in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
     {
@@ -39612,8 +39764,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "build_conversation_memory",
       "kind": "function",
-      "line_start": 123,
-      "line_end": 204,
+      "line_start": 83,
+      "line_end": 140,
       "domain": [
         "audio",
         "lighting",
@@ -39673,7 +39825,7 @@
         "values",
         "word"
       ],
-      "sha256": "b7e1a8eb4fdfcd97d90b43c8978326a6d0bdb80498179179897fae8f6fbcbc4f",
+      "sha256": "15db4249628c60ee43678a8850448c357e6848ba54b50634fc16e0b0bf559fd5",
       "summary_short": "function build_conversation_memory in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
@@ -39682,8 +39834,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "load_or_create_scene_brief",
       "kind": "function",
-      "line_start": 207,
-      "line_end": 223,
+      "line_start": 143,
+      "line_end": 155,
       "domain": [
         "audio",
         "config"
@@ -39717,7 +39869,7 @@
         "value",
         "write_json"
       ],
-      "sha256": "707ea90dcd9829f522e75255841efef8128dd69543cd5d6fe28ef2870f72385a",
+      "sha256": "b284e4a4eb9d11570cc6e0ae30293fce2cceab88856b3d5c23348cdb7728861b",
       "summary_short": "function load_or_create_scene_brief in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
@@ -39726,8 +39878,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "append_scene_message",
       "kind": "function",
-      "line_start": 226,
-      "line_end": 249,
+      "line_start": 158,
+      "line_end": 168,
       "domain": [
         "audio",
         "config"
@@ -39742,6 +39894,7 @@
         "audio_path",
         "brief",
         "build_scene_brief",
+        "compact_text",
         "content",
         "current_notes",
         "default_scene_preferences",
@@ -39764,7 +39917,7 @@
         "value",
         "write_json"
       ],
-      "sha256": "25a4d8440c9caf89d8d3d6a76f7f87eccb69ccfd7df2c32a70a399a25249b939",
+      "sha256": "2f724055d22e40f2ab27a32430fd77209efbd884862d0f128e264ea9c152c180",
       "summary_short": "function append_scene_message in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
@@ -39773,8 +39926,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "clear_scene_chat_history",
       "kind": "function",
-      "line_start": 252,
-      "line_end": 262,
+      "line_start": 171,
+      "line_end": 179,
       "domain": [
         "audio",
         "config"
@@ -39804,7 +39957,7 @@
         "value",
         "write_json"
       ],
-      "sha256": "c46a8bda1b855b97fecf092f97e8e8b4cb4186dadde25239d70886b30f52e982",
+      "sha256": "089075a0c2de9c251ae2e0f7f3e94f455af33059f8d00dc978360b00f5164664",
       "summary_short": "function clear_scene_chat_history in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
@@ -39813,8 +39966,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "compact_music_for_chat",
       "kind": "function",
-      "line_start": 265,
-      "line_end": 285,
+      "line_start": 182,
+      "line_end": 203,
       "domain": [
         "ai_context"
       ],
@@ -39825,15 +39978,42 @@
       "dependencies": [
         "dict",
         "get",
+        "isinstance",
         "item",
         "len",
         "music_context",
         "segments",
         "summary",
-        "track"
+        "track",
+        "trim_jsonable"
       ],
-      "sha256": "4951f15ff7a0838e7168f588812a5d6edd318ea6f8ffbd570fbfd7c67127055b",
+      "sha256": "9c4fdf9ce7f31736a6030d20bde96a19b2f88f5991a3bc18540e3ed6a6aa47be",
       "summary_short": "function compact_music_for_chat in Tools/workflow/scene_brief.py",
+      "do_not_change": false
+    },
+    {
+      "chunk_id": "Tools/workflow/scene_brief.py::compact_awareness_for_chat",
+      "path": "Tools/workflow/scene_brief.py",
+      "symbol": "compact_awareness_for_chat",
+      "kind": "function",
+      "line_start": 206,
+      "line_end": 215,
+      "domain": [
+        "ai_context"
+      ],
+      "blender_api": [],
+      "risk": "low",
+      "risk_signals": [],
+      "compatibility_notes": [],
+      "dependencies": [
+        "data",
+        "dict",
+        "get",
+        "project_awareness",
+        "trim_jsonable"
+      ],
+      "sha256": "58c56981db19c7bb0941d054431b1c7720c470b02df627adaac4d454d103ae6b",
+      "summary_short": "function compact_awareness_for_chat in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
     {
@@ -39841,8 +40021,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "classify_user_intent",
       "kind": "function",
-      "line_start": 288,
-      "line_end": 296,
+      "line_start": 218,
+      "line_end": 226,
       "domain": [
         "general"
       ],
@@ -39860,7 +40040,7 @@
         "user_message",
         "word"
       ],
-      "sha256": "a0cdb29ba2de292def4dc5f489c76f56e77be6480a8650688ad425e874699c7f",
+      "sha256": "07d5a6a89d97c4b4b3ee18bcb6decba4102193efb3d95feef34658f13c28038c",
       "summary_short": "function classify_user_intent in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
@@ -39869,8 +40049,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "compact_recent_conversation",
       "kind": "function",
-      "line_start": 299,
-      "line_end": 310,
+      "line_start": 229,
+      "line_end": 239,
       "domain": [
         "ai_context"
       ],
@@ -39881,7 +40061,6 @@
       "dependencies": [
         "any",
         "append",
-        "boilerplate_markers",
         "compact_text",
         "content",
         "dict",
@@ -39891,14 +40070,14 @@
         "limit",
         "list",
         "lower",
-        "lowered",
         "marker",
         "result",
         "role",
+        "skip_markers",
         "str",
         "transcript"
       ],
-      "sha256": "8647610dfb1e8a3d0c6c8d4744a10b65b3f12907c3e344c946ec4ef5ca9d9a10",
+      "sha256": "00fd9f66797931d4bbccdb2492339e6e8355859ca9dd7621af0f61be57c22a7d",
       "summary_short": "function compact_recent_conversation in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
@@ -39907,13 +40086,11 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "build_scene_chat_prompt",
       "kind": "function",
-      "line_start": 313,
-      "line_end": 361,
+      "line_start": 242,
+      "line_end": 283,
       "domain": [
-        "audio",
         "lighting",
         "render",
-        "config",
         "ai_context"
       ],
       "blender_api": [],
@@ -39921,26 +40098,32 @@
       "risk_signals": [],
       "compatibility_notes": [],
       "dependencies": [
+        "MAX_SCENE_CHAT_PROMPT_CHARS",
         "asset_inventory",
         "brief",
         "classify_user_intent",
         "compact",
+        "compact_awareness_for_chat",
         "compact_music_for_chat",
         "compact_recent_conversation",
+        "compact_text",
         "dict",
         "dumps",
         "get",
         "intent",
         "json",
+        "len",
         "list",
         "music_context",
         "preflight_answers",
         "project_awareness",
+        "prompt",
         "str",
         "strip",
+        "trim_jsonable",
         "user_message"
       ],
-      "sha256": "293c7efdfe5686afa72112d5b661e7fec93b18592c820ff18f2cba311317d7e5",
+      "sha256": "f2afdd8e4d2eb9d2897bf75bc2e6b92168c36c7a6e025450152243170f4b9642",
       "summary_short": "function build_scene_chat_prompt in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
@@ -39949,12 +40132,11 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "sanitize_scene_reply",
       "kind": "function",
-      "line_start": 364,
-      "line_end": 397,
+      "line_start": 286,
+      "line_end": 306,
       "domain": [
         "audio",
         "lighting",
-        "render",
         "config",
         "ai_context"
       ],
@@ -39968,7 +40150,6 @@
         "any",
         "append",
         "awareness",
-        "capitalize",
         "cleaned",
         "correction",
         "deterministic_track_opinion",
@@ -39978,7 +40159,6 @@
         "get",
         "item",
         "join",
-        "keyframes",
         "list",
         "lower",
         "lowered",
@@ -39992,7 +40172,7 @@
         "strip",
         "track_identity"
       ],
-      "sha256": "c1079d8cb7a0a4f2ac36232935c2536dcf43ede61bf1805db296d8db7bd7d488",
+      "sha256": "f95a395462d4717efbd57af5473119348163a6f1f1d765d6dcf7bff1d831578f",
       "summary_short": "function sanitize_scene_reply in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
@@ -40001,8 +40181,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "generate_scene_chat_reply",
       "kind": "function",
-      "line_start": 400,
-      "line_end": 462,
+      "line_start": 309,
+      "line_end": 354,
       "domain": [
         "audio",
         "lighting",
@@ -40015,6 +40195,7 @@
       "compatibility_notes": [],
       "dependencies": [
         "Exception",
+        "MAX_SCENE_CHAT_PROMPT_CHARS",
         "OllamaSession",
         "Path",
         "append_scene_message",
@@ -40027,7 +40208,6 @@
         "build_preflight_answers_for_message",
         "build_project_awareness",
         "build_scene_chat_prompt",
-        "dict",
         "exc",
         "generate",
         "get",
@@ -40036,7 +40216,6 @@
         "load_or_create_scene_brief",
         "model",
         "music_context",
-        "music_context_path",
         "npu_dir",
         "ollama_runtime_log_path",
         "output_path",
@@ -40045,7 +40224,6 @@
         "path",
         "preflight_answers",
         "prompt",
-        "raw_reply_chars",
         "read_json",
         "reply",
         "resolve",
@@ -40061,7 +40239,7 @@
         "user_message",
         "with_name"
       ],
-      "sha256": "12e0245038a4409ac77047327f5cb7a892a02a6fec7a2bc1e877cfab09f78a26",
+      "sha256": "9032255f466f45f15ba5e048e02d331c972096700cdf2e04bc3e5ab5e46fd489",
       "summary_short": "function generate_scene_chat_reply in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
@@ -40070,8 +40248,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "build_scene_brief",
       "kind": "function",
-      "line_start": 465,
-      "line_end": 489,
+      "line_start": 357,
+      "line_end": 382,
       "domain": [
         "audio",
         "render",
@@ -40083,6 +40261,7 @@
       "risk_signals": [],
       "compatibility_notes": [],
       "dependencies": [
+        "MAX_SCENE_CHAT_PROMPT_CHARS",
         "active_transcript",
         "audio_path",
         "build_conversation_memory",
@@ -40097,7 +40276,7 @@
         "track_stem",
         "transcript"
       ],
-      "sha256": "c1279c705a9b1c726569c7876a2493839693b5d92e2f0fe502b6fbc3af481e4c",
+      "sha256": "b7b283b72051f17e89fc314f3ed68ed946106a7dc76779c409a40dd7899ae163",
       "summary_short": "function build_scene_brief in Tools/workflow/scene_brief.py",
       "do_not_change": false
     },
@@ -40106,8 +40285,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "prompt_value",
       "kind": "function",
-      "line_start": 492,
-      "line_end": 499,
+      "line_start": 385,
+      "line_end": 392,
       "domain": [
         "ai_context"
       ],
@@ -40137,8 +40316,8 @@
       "path": "Tools/workflow/scene_brief.py",
       "symbol": "run_interactive_scene_brief",
       "kind": "function",
-      "line_start": 502,
-      "line_end": 526,
+      "line_start": 395,
+      "line_end": 419,
       "domain": [
         "audio",
         "config"
