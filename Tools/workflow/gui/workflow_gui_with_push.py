@@ -10,19 +10,13 @@ if str(WORKFLOW_DIR) not in sys.path:
     sys.path.insert(0, str(WORKFLOW_DIR))
 
 from components.artifact_browser import ArtifactBrowserWindow  # noqa: E402
-from git_auto_push import run_auto_push_generated_data  # noqa: E402
+from git_auto_push import run_auto_push_full_project, run_auto_push_generated_data  # noqa: E402
 from workflow_gui_modern import WorkflowGui as BaseWorkflowGui  # noqa: E402
 import workflow_state as wf  # noqa: E402
 
 
 class WorkflowGuiWithPush(BaseWorkflowGui):
-    """Workflow GUI with generated-data push and artifact consultation buttons.
-
-    It uses the adaptive grouped modern GUI as base and injects:
-    - an artifact browser button near project/debug utilities;
-    - an AI runtime diagnostics button near project/debug utilities;
-    - the push button after the structured-data generation steps.
-    """
+    """Workflow GUI with generated-data publishing and artifact consultation buttons."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -147,13 +141,13 @@ class WorkflowGuiWithPush(BaseWorkflowGui):
 
             if anchor_button is None:
                 messagebox.showwarning(
-                    "Auto-push button",
-                    "Punto di inserimento non trovato: il pulsante auto-push non e' stato aggiunto.",
+                    "Publish button",
+                    "Punto di inserimento non trovato: i pulsanti Git non sono stati aggiunti.",
                 )
                 return
 
             parent = anchor_button.master
-            button = ttk.Button(
+            data_button = ttk.Button(
                 parent,
                 text="Push generated data",
                 command=lambda: self.run_task(
@@ -161,10 +155,21 @@ class WorkflowGuiWithPush(BaseWorkflowGui):
                     lambda: run_auto_push_generated_data(include_output_json=True),
                 ),
             )
-            button.pack(in_=parent, after=anchor_button, fill="x", padx=8, pady=3)
-            self.buttons.append(button)
+            data_button.pack(in_=parent, after=anchor_button, fill="x", padx=8, pady=3)
+            self.buttons.append(data_button)
+
+            all_button = ttk.Button(
+                parent,
+                text="Push all project changes",
+                command=lambda: self.run_task(
+                    "Push all project changes",
+                    lambda: run_auto_push_full_project(message="chore: update full project"),
+                ),
+            )
+            all_button.pack(in_=parent, after=data_button, fill="x", padx=8, pady=3)
+            self.buttons.append(all_button)
         except Exception as exc:
-            messagebox.showwarning("Auto-push button", f"Impossibile aggiungere il pulsante auto-push: {exc}")
+            messagebox.showwarning("Publish button", f"Impossibile aggiungere i pulsanti Git: {exc}")
 
 
 def main() -> None:
