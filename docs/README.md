@@ -9,16 +9,19 @@ This folder contains the main technical documentation for `blender-audio-project
 3. `DATA_FLOW.md`
 4. `BLENDER_SCRIPT_ENTRYPOINTS.md`
 5. `AI_GENERATED_PACKAGE_STANDARD.md`
-6. `AUDIO_ANALYSIS_PIPELINE.md`
-7. `JSON_SCHEMAS.md`
-8. `RENDER_WORKFLOW.md`
-9. `FFMPEG_WORKFLOW.md`
-10. `LOCAL_AI_WORKFLOW.md`
-11. `INSTALLATION.md`
-12. `USAGE.md`
-13. `COMPATIBILITY.md`
-14. `KNOWN_LIMITATIONS.md`
-15. `DEVELOPER_GUIDE.md`
+6. `PACKAGE_CREATION_WORKFLOW.md`
+7. `QUALITY_GATE.md`
+8. `SHARED_SCRIPTING_UTILITIES.md`
+9. `AUDIO_ANALYSIS_PIPELINE.md`
+10. `JSON_SCHEMAS.md`
+11. `RENDER_WORKFLOW.md`
+12. `FFMPEG_WORKFLOW.md`
+13. `LOCAL_AI_WORKFLOW.md`
+14. `INSTALLATION.md`
+15. `USAGE.md`
+16. `COMPATIBILITY.md`
+17. `KNOWN_LIMITATIONS.md`
+18. `DEVELOPER_GUIDE.md`
 
 ## Documentation groups
 
@@ -32,7 +35,13 @@ This folder contains the main technical documentation for `blender-audio-project
 ### AI-generated package workflow
 
 - `AI_GENERATED_PACKAGE_STANDARD.md`
+- `PACKAGE_CREATION_WORKFLOW.md`
+- `QUALITY_GATE.md`
 - `LOCAL_AI_WORKFLOW.md`
+
+### Shared utilities and non-destructive extraction
+
+- `SHARED_SCRIPTING_UTILITIES.md`
 
 ### Blender workflow
 
@@ -58,4 +67,4 @@ The documentation is explicit and structured. Unknown information is marked as `
 
 ## AI usage
 
-AI systems should read `../AGENTS.md` first, then this documentation index, then `MODULE_MAP.md`, `DATA_FLOW.md`, and `AI_GENERATED_PACKAGE_STANDARD.md` before creating or editing generated Blender packages.
+AI systems should read `../AGENTS.md` first, then this documentation index, then `MODULE_MAP.md`, `DATA_FLOW.md`, `AI_GENERATED_PACKAGE_STANDARD.md`, `PACKAGE_CREATION_WORKFLOW.md`, and `QUALITY_GATE.md` before creating or editing generated Blender packages.
