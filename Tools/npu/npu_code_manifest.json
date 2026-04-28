@@ -1,12 +1,12 @@
 {
-  "created_at": "2026-04-27T14:41:26",
+  "created_at": "2026-04-28T13:33:12",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "script_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\Scripting\\v61b",
   "long_context": {
     "mode": "file_line_chunks",
     "chunk_dir": "Tools/npu/npu_code_chunks",
     "max_chunk_chars": 10500,
-    "chunk_count": 100,
+    "chunk_count": 99,
     "index": "Tools/npu/npu_code_index.md"
   },
   "files": [
@@ -3336,6 +3336,14 @@
       }
     },
     {
+      "file": "Scripting/v61b/README.md",
+      "exists": true,
+      "suffix": ".md",
+      "lines": 95,
+      "chars": 3138,
+      "sha256": "c34a4cc32e8ba7b0098790df7131734425f37ec069e4097384113b125458987f"
+    },
+    {
       "file": "Scripting/v61b/hotpatch/__init__.py",
       "exists": true,
       "suffix": ".py",
@@ -5076,181 +5084,183 @@
       }
     },
     {
-      "file": "Tools/npu/run_dual_ai_pipeline - Copia.py",
+      "file": "Tools/npu/generated_blender_script_candidate_FristNear.py",
       "exists": true,
       "suffix": ".py",
-      "lines": 706,
-      "chars": 29030,
-      "sha256": "868f5619cef911174e14aa2fa79b9ac61cd3c2b47c05144e468a6a663869ca95",
+      "lines": 370,
+      "chars": 16507,
+      "sha256": "c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
-          "from pathlib import Path",
-          "argparse",
           "json",
-          "subprocess",
-          "sys",
-          "from datetime import datetime",
-          "from build_music_context import build_music_context",
-          "from build_npu_code_context import main",
-          "from build_blender_manual_context import build_manual_context",
-          "from build_project_ai_index import PROJECT_INDEX_MD, PROJECT_MANIFEST_JSON, build_project_ai_index",
-          "from npu_runtime import DEFAULT_MODEL_DIR, DEFAULT_NPU_PYTHON, npu_preflight, write_npu_preflight_report",
-          "from ollama_runtime import OllamaModelManager, parse_json_response",
-          "from run_ollama_music_agent import build_prompt",
-          "from run_ollama_music_agent import markdown_from_insights"
+          "math",
+          "from pathlib import Path",
+          "bpy",
+          "from mathutils import Vector"
         ],
         "functions": [
           {
-            "name": "read_text",
-            "line": 38,
+            "name": "load_json",
+            "line": 22,
             "args": [
               "path"
             ],
             "async": false
           },
           {
-            "name": "read_json",
-            "line": 42,
+            "name": "clear_scene",
+            "line": 30,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "preferred_ball_asset_path",
+            "line": 35,
             "args": [
-              "path"
+              "inventory"
             ],
             "async": false
           },
           {
-            "name": "write_json",
-            "line": 47,
+            "name": "import_asset_file",
+            "line": 44,
             "args": [
-              "path",
-              "data"
+              "asset_file"
             ],
             "async": false
           },
           {
-            "name": "validate_input_files",
-            "line": 52,
+            "name": "get_world_bbox",
+            "line": 68,
             "args": [
-              "args"
+              "objects"
             ],
             "async": false
           },
           {
-            "name": "looks_degraded_text",
-            "line": 72,
+            "name": "make_asset_focus",
+            "line": 88,
             "args": [
-              "text"
+              "name",
+              "asset_path",
+              "location",
+              "material",
+              "fallback_radius"
             ],
             "async": false
           },
           {
-            "name": "deterministic_technical_notes",
-            "line": 85,
+            "name": "make_collection",
+            "line": 118,
             "args": [
-              "music_context",
-              "project_manifest",
-              "reason"
+              "name"
             ],
             "async": false
           },
           {
-            "name": "run_npu_technical_pass",
-            "line": 134,
+            "name": "link_to",
+            "line": 124,
             "args": [
-              "args"
+              "collection",
+              "obj"
             ],
             "async": false
           },
           {
-            "name": "build_creative_scene_prompt",
-            "line": 178,
+            "name": "create_material",
+            "line": 130,
             "args": [
-              "music_context",
-              "npu_notes",
-              "project_index"
+              "name",
+              "color",
+              "emission_strength"
             ],
             "async": false
           },
           {
-            "name": "build_merge_prompt",
-            "line": 254,
+            "name": "add_uv_sphere",
+            "line": 147,
             "args": [
-              "music_context",
-              "npu_notes",
-              "creative",
-              "technical"
+              "name",
+              "radius",
+              "location",
+              "material",
+              "segments"
             ],
             "async": false
           },
           {
-            "name": "build_implementation_prompt",
-            "line": 305,
-            "args": [
-              "plan",
-              "npu_notes",
-              "include_manual"
-            ],
-            "async": false
-          },
-          {
-            "name": "safe_parse_json",
-            "line": 373,
+            "name": "add_text_label",
+            "line": 156,
             "args": [
               "text",
-              "fallback_key"
+              "location",
+              "size",
+              "material"
             ],
             "async": false
           },
           {
-            "name": "write_brief",
-            "line": 380,
+            "name": "animate_value",
+            "line": 169,
             "args": [
-              "plan",
-              "creative",
-              "technical",
-              "npu_notes"
+              "obj",
+              "data_path",
+              "frames",
+              "index"
             ],
             "async": false
           },
           {
-            "name": "validate_implementation_draft",
-            "line": 403,
+            "name": "keyframe_material_emission",
+            "line": 180,
             "args": [
-              "draft"
+              "mat",
+              "frame",
+              "strength"
             ],
             "async": false
           },
           {
-            "name": "write_implementation_draft",
-            "line": 450,
+            "name": "apply_full_audio_keyframes",
+            "line": 191,
             "args": [
-              "draft"
+              "hero",
+              "disp",
+              "hero_mat",
+              "keyframes",
+              "fps"
             ],
             "async": false
           },
           {
-            "name": "main",
-            "line": 478,
+            "name": "apply_full_audio_keyframes_inverted",
+            "line": 219,
+            "args": [
+              "hero",
+              "disp",
+              "hero_mat",
+              "keyframes",
+              "fps"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_scene",
+            "line": 243,
             "args": [],
             "async": false
           }
         ],
         "classes": [],
         "assignments": [
-          "ROOT",
-          "TOOLS_DIR",
-          "OUTPUT_DIR",
           "TRACK_STEM",
-          "MUSIC_AI_CONTEXT",
-          "DUAL_PLAN_JSON",
-          "DUAL_BRIEF_MD",
-          "OLLAMA_INSIGHTS_JSON",
-          "OLLAMA_INSIGHTS_MD",
-          "NPU_TECH_MD",
-          "NPU_PREFLIGHT_JSON",
-          "IMPLEMENTATION_DRAFT_JSON",
-          "IMPLEMENTATION_SCRIPT",
-          "IMPLEMENTATION_NOTES",
-          "NPU_IMPLEMENTATION_NOTES"
+          "ANALYSIS_JSON",
+          "MUSIC_CONTEXT_JSON",
+          "AI_CONTEXT_JSON",
+          "BLENDER_KEYFRAMES_JSON",
+          "ASSET_INVENTORY_JSON",
+          "USE_DUAL_FOCUS"
         ]
       }
     },
@@ -5569,8 +5579,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 213,
-      "chars": 10943,
-      "sha256": "95bf0c688760f38bbf4fb2647d233f28408ee34e3d69dea2ded7d89020425a4d"
+      "chars": 10942,
+      "sha256": "f3ed5d5f7c3db59e84537d80b25282263268f83229a6bbcd0cdc66fa6c8c9432"
     },
     {
       "index": 2,
@@ -5579,8 +5589,8 @@
       "part": 2,
       "start_line": 214,
       "end_line": 257,
-      "chars": 2521,
-      "sha256": "7be941249f940bd1233e248c35d21b0111541c9c6f6d6be8dc4b282eafb5b555"
+      "chars": 2520,
+      "sha256": "ca41b97efeb6d5dfc786e7bf3112f927a2ab24874586154b239849528a13c225"
     },
     {
       "index": 3,
@@ -5589,8 +5599,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 113,
-      "chars": 5325,
-      "sha256": "a942e518cbe07ec14e90551a11e59535449dfa318d73fdc35f2c4e32674c8e02"
+      "chars": 5324,
+      "sha256": "6c151552b07980c2ce4cd15af0be55c3732bbc7db23c5aa21239ff8eda03d943"
     },
     {
       "index": 4,
@@ -5599,8 +5609,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 275,
-      "chars": 11108,
-      "sha256": "8bd34ef7c8392166a482a7515607e105ae1aaaebe41f8b0330c1581f853e8139"
+      "chars": 11107,
+      "sha256": "feefbe47c62ad427f9df4fcaf3c33869497d128e2ba23ec86b74fb74f24f29de"
     },
     {
       "index": 5,
@@ -5609,8 +5619,8 @@
       "part": 2,
       "start_line": 276,
       "end_line": 487,
-      "chars": 8972,
-      "sha256": "6927c0372c22319da93f37f6af9c0d732b6f517ecf6fc667460bc8e0635ce4de"
+      "chars": 8971,
+      "sha256": "8a5932393e8c0a7479f2499f866b21cb34dc600a100bc0b4050799269bd2e799"
     },
     {
       "index": 6,
@@ -5619,8 +5629,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 95,
-      "chars": 4325,
-      "sha256": "4cc3247a4d13d357dcff2fc06ac5c246aabf242f393aca27192f35bf16444b97"
+      "chars": 4324,
+      "sha256": "0ec5280aabaae51a9e091e37677c1df1641251ba414df926f31e6bf2e7211619"
     },
     {
       "index": 7,
@@ -5629,8 +5639,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 269,
-      "chars": 11225,
-      "sha256": "4f8304c8f201af76baa028265d5345871a5815dd01786cc203f0802f9ec69c78"
+      "chars": 11224,
+      "sha256": "4adbb013997b19b7788d2b96e143bf6d1e09c4ad378afc6d84a5e145fc55c54c"
     },
     {
       "index": 8,
@@ -5639,8 +5649,8 @@
       "part": 2,
       "start_line": 270,
       "end_line": 351,
-      "chars": 4377,
-      "sha256": "6ed13ac721c0619d79de273d4e37ea09d94cce8ec1217d8c444107fcaeb279f9"
+      "chars": 4376,
+      "sha256": "feced36c82b3ea9f1d1198e642d75940552db2777d0c5dd9643c68f4efb693b9"
     },
     {
       "index": 9,
@@ -5649,8 +5659,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 268,
-      "chars": 11221,
-      "sha256": "2e813ad25bc435038025e7c265da78b3b6ef52f0d7f957c256974bfb011792cb"
+      "chars": 11220,
+      "sha256": "0378075bfe3274531c466d9aef1b6b53e55b0f3fd5bf8e81690fad0f33248f01"
     },
     {
       "index": 10,
@@ -5659,8 +5669,8 @@
       "part": 2,
       "start_line": 269,
       "end_line": 326,
-      "chars": 3657,
-      "sha256": "aa7260f8ab399351434c71a51ebfa614af189a282c7448485740a846d1bcefec"
+      "chars": 3656,
+      "sha256": "27986687920b0fb8da8c2f492df50682ed22fd6b77d25aaef94d20bc9e2c0f22"
     },
     {
       "index": 11,
@@ -5669,8 +5679,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 213,
-      "chars": 13447,
-      "sha256": "5bce181f48adfddd442a2cfc3d2da53e685dddb26fc844302da9eb729e9fb33d"
+      "chars": 13446,
+      "sha256": "256d3237394b3bf2b59acf775c8c6c4d0b886e20c1ef5aea311371306a37aa99"
     },
     {
       "index": 12,
@@ -5679,8 +5689,8 @@
       "part": 2,
       "start_line": 214,
       "end_line": 432,
-      "chars": 13261,
-      "sha256": "75b6a21e4ff2bac5dd3e3c1e77d4a1184fd8ade5f2f33067b8763e11167e3fb7"
+      "chars": 13260,
+      "sha256": "67bb62a0238fba9ca3d43568df0984243f2b4b5ca979f171f3fd2d7a6f55835e"
     },
     {
       "index": 13,
@@ -5689,8 +5699,8 @@
       "part": 3,
       "start_line": 433,
       "end_line": 671,
-      "chars": 13367,
-      "sha256": "f09e0dba03e2df440288433ff4cca4d718f55420437ccbd0a01f5f9934bf0749"
+      "chars": 13366,
+      "sha256": "2a3cc10e0d74ea99486c7bb6451530fb95dd48949ec3aa892483088e08d952d4"
     },
     {
       "index": 14,
@@ -5699,8 +5709,8 @@
       "part": 4,
       "start_line": 672,
       "end_line": 866,
-      "chars": 13340,
-      "sha256": "a3601a0738814bdf23d095fdf6be0f954a400fca35b23b151ee61d543ef5844e"
+      "chars": 13339,
+      "sha256": "29251e9657e799826dccde713060817c3fcc4b24157c3e361aa6208dae8378ed"
     },
     {
       "index": 15,
@@ -5709,8 +5719,8 @@
       "part": 5,
       "start_line": 867,
       "end_line": 1068,
-      "chars": 13407,
-      "sha256": "dda506b56145d7880bf1eedd438dc61597d2af91a06779d096138a4280525585"
+      "chars": 13406,
+      "sha256": "ad38b72557567b61ea3151ad253c7a3d8cb74f594314821a08f9df8a45c998b4"
     },
     {
       "index": 16,
@@ -5719,8 +5729,8 @@
       "part": 6,
       "start_line": 1069,
       "end_line": 1267,
-      "chars": 13412,
-      "sha256": "335157881f74c2e724892cabedfe04cdae33adfb96fc55208fd0845eb0e920b5"
+      "chars": 13411,
+      "sha256": "ccb81a22654d77237f594f7aabb55e1ae9cec556aa3823ad0de5cd7068ef9403"
     },
     {
       "index": 17,
@@ -5729,8 +5739,8 @@
       "part": 7,
       "start_line": 1268,
       "end_line": 1470,
-      "chars": 13461,
-      "sha256": "92653f0de7be8612f781e45a10dcc319b394c668b658c96224a1a04db1726f8d"
+      "chars": 13460,
+      "sha256": "f2aea01e59d2e0771cc7ef38e3127f4f57a28d0682353f4c8c2ba4e9d44d67dd"
     },
     {
       "index": 18,
@@ -5739,8 +5749,8 @@
       "part": 8,
       "start_line": 1471,
       "end_line": 1662,
-      "chars": 13420,
-      "sha256": "e7848af8dd03f4d5378db105346c38d4512da10785612fb060502d594945edd3"
+      "chars": 13419,
+      "sha256": "19892733c8c463209ecd279cda9ed027a1092764a958f86fbfe7392cbeac3537"
     },
     {
       "index": 19,
@@ -5749,8 +5759,8 @@
       "part": 9,
       "start_line": 1663,
       "end_line": 1704,
-      "chars": 5503,
-      "sha256": "2df523dc6d91ad55e5d9039dc83502bffc83ffd550f6f367e4f8d7f691272f47"
+      "chars": 5502,
+      "sha256": "5425b84e96506911a1da89ef8bac3ff47e17fb8fa0748d9be7853163e5495800"
     },
     {
       "index": 20,
@@ -5759,8 +5769,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 236,
-      "chars": 12307,
-      "sha256": "5a889dc2b22ba245357ad68e80bcdcecfbb711ac136f34b79ea564cdc8f0656a"
+      "chars": 12306,
+      "sha256": "6565ff746a83d9c087bcba5fc13d1b3170dd7130bf7382d580aeec45664ec285"
     },
     {
       "index": 21,
@@ -5769,8 +5779,8 @@
       "part": 2,
       "start_line": 237,
       "end_line": 438,
-      "chars": 10238,
-      "sha256": "6e52228b4231e6d526b91f59ef342dfb801d9118353e05fe3341857849eaae22"
+      "chars": 10237,
+      "sha256": "b00445ff76adc69a998658ccc6c088ecc107f6671d257c90140f315393deb3b5"
     },
     {
       "index": 22,
@@ -5779,8 +5789,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 219,
-      "chars": 10326,
-      "sha256": "930f3d79a890c07ea67e4a16ff9bb592083ea39dfaa0973e121b5bddaab241aa"
+      "chars": 10325,
+      "sha256": "8f45d7bf08b7833fe5265c18b866c5dcbd7dc94935c2dd48c12326f2e6e731b0"
     },
     {
       "index": 23,
@@ -5789,8 +5799,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 246,
-      "chars": 13126,
-      "sha256": "3517c7033b590394fe6023f760b5f7f4615ceb9a09198f9e6f8261b51a8e4ed4"
+      "chars": 13125,
+      "sha256": "a7380a68e75ef428a90ecda30570fab87ff217dac40d8dedef07b3dd710b49f7"
     },
     {
       "index": 24,
@@ -5799,8 +5809,8 @@
       "part": 2,
       "start_line": 247,
       "end_line": 424,
-      "chars": 13201,
-      "sha256": "8be2d16d19e9b0895561717dfeb3e4fb352adee1b103990ecca06734d90cd5bc"
+      "chars": 13200,
+      "sha256": "b5b1e14df962c1eff510e262a66fa31f8fb010267349814971dfa494bcf54d0b"
     },
     {
       "index": 25,
@@ -5809,8 +5819,8 @@
       "part": 3,
       "start_line": 425,
       "end_line": 602,
-      "chars": 13139,
-      "sha256": "9b9bbfd44c7068ea33722898310c32495448858253875905762e53de0bbf9287"
+      "chars": 13138,
+      "sha256": "5e8d41fc67b828d6afbfd611b27a64e7ad52dc9dd3bdc20229901df942b3c2d2"
     },
     {
       "index": 26,
@@ -5819,8 +5829,8 @@
       "part": 4,
       "start_line": 603,
       "end_line": 791,
-      "chars": 13159,
-      "sha256": "97c90c0c3163c5c611b9c464c107752f8a77d9d6a381815aa282224bd4969726"
+      "chars": 13158,
+      "sha256": "789b68d3400c3a0c93970d8cdd521daed00d03d54e25cb2f07066b3c6d2a24c5"
     },
     {
       "index": 27,
@@ -5829,8 +5839,8 @@
       "part": 5,
       "start_line": 792,
       "end_line": 960,
-      "chars": 13194,
-      "sha256": "71c4930366061d187b9984b83308704ebfadb5ab15dc80d91acc26cf50a0641f"
+      "chars": 13193,
+      "sha256": "2adb69baba3f676efc8206c7f113c690d34188b1fbe79342dd6c484afd675c1b"
     },
     {
       "index": 28,
@@ -5839,8 +5849,8 @@
       "part": 6,
       "start_line": 961,
       "end_line": 1079,
-      "chars": 9338,
-      "sha256": "505e8b494ee762030bef4dcc171cf8e23f9f33ccd650fe95c9c9e4bb71b12315"
+      "chars": 9337,
+      "sha256": "aecd44660d9c27a440609f546e4f613497f900638977d33cab9272402cbb418c"
     },
     {
       "index": 29,
@@ -5849,8 +5859,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 268,
-      "chars": 11265,
-      "sha256": "855a5c36fa94f092989e10567813c511ee3f749d19b09b32a9b9536a9ac0914c"
+      "chars": 11264,
+      "sha256": "15269a93cb6ebc38da72659757db757aba39708d0bc0f34bc5feb961d6499fa2"
     },
     {
       "index": 30,
@@ -5859,8 +5869,8 @@
       "part": 2,
       "start_line": 269,
       "end_line": 488,
-      "chars": 11277,
-      "sha256": "ddeeebe6a866fc9cd50c6aa8eb739fce541544e39e26799892e76e24c29cabcf"
+      "chars": 11276,
+      "sha256": "4a2754a14f0485ea9ab2714bd502333a1f380ab6eeb839b4beb4a36b4c9092fd"
     },
     {
       "index": 31,
@@ -5869,8 +5879,8 @@
       "part": 3,
       "start_line": 489,
       "end_line": 657,
-      "chars": 8343,
-      "sha256": "3823c02e97489d7e79df972e940c668a297f9382d7a0e001a3890c9046d8843f"
+      "chars": 8342,
+      "sha256": "ec0983c07894129f25f8f3ad68df65b0308fc7994efaa5a1155923fe9b5bee49"
     },
     {
       "index": 32,
@@ -5879,8 +5889,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 286,
-      "chars": 12480,
-      "sha256": "7d448510719b262182efb441ed16b1c03fb870d759521de776632edac6c3d55b"
+      "chars": 12479,
+      "sha256": "9993e8aa7a5c3fe00f18b5990ddac56c6444ad87e403f03a07c11c35d6b65ecf"
     },
     {
       "index": 33,
@@ -5889,8 +5899,8 @@
       "part": 2,
       "start_line": 287,
       "end_line": 541,
-      "chars": 12508,
-      "sha256": "861a4f913fe08b5c20a5b714f12e507fe941f901f529a04ce413cf0ed7555255"
+      "chars": 12507,
+      "sha256": "997c1b6b73b1de929be9295976a475c3bec4c33906f22c46eae2930486603262"
     },
     {
       "index": 34,
@@ -5899,8 +5909,8 @@
       "part": 3,
       "start_line": 542,
       "end_line": 737,
-      "chars": 10721,
-      "sha256": "15e277fc59822a64f26c228fd158428c59eb387dfd0c5116380f130880558f78"
+      "chars": 10720,
+      "sha256": "52f47ce25f9af66737b1ba67efc284b9ef51b5984d03612e92bfd0adc4ee5755"
     },
     {
       "index": 35,
@@ -5909,8 +5919,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 248,
-      "chars": 11812,
-      "sha256": "d12417da4414196576cad51732cb60ecddef8a473bc6b106f655285ff9d3b8db"
+      "chars": 11811,
+      "sha256": "b68b2cdfda11eee57767005b9ed30583ba75aee83167436682732225a1d094ae"
     },
     {
       "index": 36,
@@ -5919,8 +5929,8 @@
       "part": 2,
       "start_line": 249,
       "end_line": 392,
-      "chars": 9607,
-      "sha256": "3a6271dc2424cbae1438562a3ed0f5d91c076073a152fa1650a4e6e5309b81a3"
+      "chars": 9606,
+      "sha256": "7fe61f4846c5f6ef11298fcfc63ccdaba3e571e0116a2b4f4918caad0e1d806c"
     },
     {
       "index": 37,
@@ -5929,8 +5939,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 159,
-      "chars": 6642,
-      "sha256": "8c3c0b57a111f31ebfdb869122e7d8b293147f99ba4e05cefc798f9b74382e44"
+      "chars": 6641,
+      "sha256": "96194ea23675b00d7561c5de4e1a21a0cd533f2ff1697bb63acd52428aad9dec"
     },
     {
       "index": 38,
@@ -5939,8 +5949,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 308,
-      "chars": 11825,
-      "sha256": "b7536f5c33d79f78a84310572e5658cc4ca3377c8e18d3f93f0c6e4fcac5787b"
+      "chars": 11824,
+      "sha256": "81a170ba9aa8b5369c0abaaf9b17008f397d59f36206b28dd616fcc1829b023e"
     },
     {
       "index": 39,
@@ -5949,8 +5959,8 @@
       "part": 2,
       "start_line": 309,
       "end_line": 554,
-      "chars": 11524,
-      "sha256": "0940e4a5e14c85ce96b39f97db3af764c97a7b0b841f970ae5e97abad4c8d6d1"
+      "chars": 11523,
+      "sha256": "4f09391c4ebe63faba42158c7ea83d760f46b71ef30043e5daa442f9cbd2d0a0"
     },
     {
       "index": 40,
@@ -5959,8 +5969,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 198,
-      "chars": 8833,
-      "sha256": "6fa741561f47da55d0353b8f04fabf6bfce705a7fb717fa438c23a3ac3c8ad3b"
+      "chars": 8832,
+      "sha256": "1442c08e17895d2d91c4539933d08a1aa4a3cba341e2d1c0fd428039116559e7"
     },
     {
       "index": 41,
@@ -5969,8 +5979,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 270,
-      "chars": 10956,
-      "sha256": "d49a941c027cc6dfb3ad27e247d076c004a40e93acaab00e6227311d7a8fd977"
+      "chars": 10955,
+      "sha256": "bd8a491c9e5b68c5aaa25343243d0f91aac7120657e00ebb551d304aad2e3754"
     },
     {
       "index": 42,
@@ -5979,8 +5989,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 286,
-      "chars": 12707,
-      "sha256": "d89d6c411899297659fe36df8c28bbf3142de9f4c2f450b2924ceee507778e2a"
+      "chars": 12706,
+      "sha256": "4388630a55343bcc079b1a4c59917e8450beb487d7ecc54be7b67328a756c3e5"
     },
     {
       "index": 43,
@@ -5989,8 +5999,8 @@
       "part": 2,
       "start_line": 287,
       "end_line": 513,
-      "chars": 12688,
-      "sha256": "4fef33628c2073e7bb35688732eebb0b2c1032a4b51110d91986f49d8c461ca1"
+      "chars": 12687,
+      "sha256": "e79e19e94e99141bff4b78588c2de33411955decce3dccdc036e3bc85328d004"
     },
     {
       "index": 44,
@@ -5999,8 +6009,8 @@
       "part": 3,
       "start_line": 514,
       "end_line": 724,
-      "chars": 12783,
-      "sha256": "e51f951ca76397b3cae2d22188981425e2647de8862d1ad210771fcb6cf50612"
+      "chars": 12782,
+      "sha256": "5fe149f1d2ac96ebd2dda38da8123afe8961fda4fcffda9c0f25f5e74f79af4e"
     },
     {
       "index": 45,
@@ -6009,8 +6019,8 @@
       "part": 4,
       "start_line": 725,
       "end_line": 906,
-      "chars": 12810,
-      "sha256": "8439d1985d4a55bc158f4a7bca70bf0ab6437ccabeb20e2c906f4d0c754d26bf"
+      "chars": 12809,
+      "sha256": "6c8046eac94b7cd813b2c23d098eb48c41a14edddce0405e0a121777314b70f8"
     },
     {
       "index": 46,
@@ -6019,8 +6029,8 @@
       "part": 5,
       "start_line": 907,
       "end_line": 1136,
-      "chars": 12769,
-      "sha256": "6425171b4df908af99c919c8acf420587af4d19ff134f285b5a2a41a8095c32e"
+      "chars": 12768,
+      "sha256": "36a35e348ff94ce8039a85cc0d3131d3dca7833ccf245e03b0b09b511d109f1b"
     },
     {
       "index": 47,
@@ -6029,8 +6039,8 @@
       "part": 6,
       "start_line": 1137,
       "end_line": 1262,
-      "chars": 7857,
-      "sha256": "1deece3a5603ebb1894bfa088a3bb44b87377b3d0493a3ea0596f53c5521e878"
+      "chars": 7856,
+      "sha256": "5832dff867df9fd9f46cc577e19694393e2fdfc689d51a129d6338ce3cc1f293"
     },
     {
       "index": 48,
@@ -6039,8 +6049,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 63,
-      "chars": 2238,
-      "sha256": "ae0c95d205c58b99e3f3a40bee533ac87aa471e1a947b7bcbbee924d97b60ee9"
+      "chars": 2237,
+      "sha256": "d881d51fb1ca271df26a418b3055acf999c14cfc04fe491ee42ebedf7a86f8b4"
     },
     {
       "index": 49,
@@ -6049,8 +6059,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 289,
-      "chars": 11462,
-      "sha256": "d606faa5dc5729d70e69b161c218b82c84193e2cbfc6dfb7a29e8d2f4fef781c"
+      "chars": 11461,
+      "sha256": "0c66a453d704ec20633e28a53810ccd001d45355f3609a20e461d7aea8640b4d"
     },
     {
       "index": 50,
@@ -6059,8 +6069,8 @@
       "part": 2,
       "start_line": 290,
       "end_line": 395,
-      "chars": 5723,
-      "sha256": "5ba6964b42cb1844eb3dfde4641e2eb7b3a0f2ca2d1e1b18bb74da8d4578451b"
+      "chars": 5722,
+      "sha256": "4b5bf658cf69a6d2a8787f38625c7c34db9008e4475b6950a00829eeefe31482"
     },
     {
       "index": 51,
@@ -6069,8 +6079,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 273,
-      "chars": 11643,
-      "sha256": "be0680a4d5b31893c64e67fef80b6afa5c9ab19e508d5f2614587179e8aa152e"
+      "chars": 11642,
+      "sha256": "5b5c6319e935cddf0ed1aa613d9101d00925affa99c889dd13be3a7b32d9692a"
     },
     {
       "index": 52,
@@ -6079,8 +6089,8 @@
       "part": 2,
       "start_line": 274,
       "end_line": 398,
-      "chars": 6392,
-      "sha256": "d61a943d5736887b424fc45056bea5388f507c07d98ae780ea474a75c03512b7"
+      "chars": 6391,
+      "sha256": "abebed5f71f902b3b93eef39f16d6d10e2a76cb283ebf4b6d7a9b59f735ca795"
     },
     {
       "index": 53,
@@ -6089,8 +6099,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 43,
-      "chars": 2927,
-      "sha256": "d631f2b0f01db4f9a9000a910de1b52c7396f59d2e67c5db044f6f7b252a134f"
+      "chars": 2926,
+      "sha256": "ad275456d9d96972ac12289cf44a06412df18c79706339a0b136a4314cbb30b0"
     },
     {
       "index": 54,
@@ -6099,8 +6109,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 179,
-      "chars": 10412,
-      "sha256": "0a142ab9f0f46b6b51994508c8021ca3086d6e0203878e6601e32e50ed068e0d"
+      "chars": 10411,
+      "sha256": "0bad8b03c9b2a15e75e193b22efe15c8131f5a04318c8cc662298c065d206c7e"
     },
     {
       "index": 55,
@@ -6109,8 +6119,8 @@
       "part": 2,
       "start_line": 180,
       "end_line": 304,
-      "chars": 5310,
-      "sha256": "0183303f7f78fea803fd1fa5923334285a1c873c1b2aae79da2c79542247993a"
+      "chars": 5309,
+      "sha256": "e0191f99e02111d17c2c7eecffa4134fd994fca6c3bceb001f71713d1ad2eb52"
     },
     {
       "index": 56,
@@ -6119,8 +6129,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 1,
-      "chars": 143,
-      "sha256": "ba7aad75faf6df5be450de6bbcffa1cd63546f7caea408d0fd0718006b0eaa12"
+      "chars": 142,
+      "sha256": "342f4fb5f305f0f0018c6b1b1af575514c6787e10e42404486fb810f2a275c0f"
     },
     {
       "index": 57,
@@ -6129,8 +6139,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 274,
-      "chars": 12490,
-      "sha256": "7000eeb9ae300545e3ed695c0b0b705e11b6afed0c837c4f715aac54d0733317"
+      "chars": 12489,
+      "sha256": "692b01f0ac070516c35b0bb64a0b984711629b090b1bda07a3d744fe0fc18fd9"
     },
     {
       "index": 58,
@@ -6139,8 +6149,8 @@
       "part": 2,
       "start_line": 275,
       "end_line": 507,
-      "chars": 12532,
-      "sha256": "aac4817745f17ee8b1d4368f861a0518398388d16de64bf4d661067fd953928f"
+      "chars": 12531,
+      "sha256": "f4b067ee08dbd78a893d87e3f8075b2c2a7f87857780cb1569f7ac1c85434ffe"
     },
     {
       "index": 59,
@@ -6149,8 +6159,8 @@
       "part": 3,
       "start_line": 508,
       "end_line": 725,
-      "chars": 10804,
-      "sha256": "072703126e5307680ef39941a91550ff528f79b4d9ffa2764a9276fb903db59d"
+      "chars": 10803,
+      "sha256": "cbf3afdbedf21c54afa86c15a4fa773d5503299b40e69d4a78441e1856620963"
     },
     {
       "index": 60,
@@ -6159,8 +6169,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 29,
-      "chars": 1303,
-      "sha256": "a246c62c78f41cbf5a99aa1c62ef3e3bd91665027bd11377442b7cd58853ac95"
+      "chars": 1302,
+      "sha256": "40767acb455cec2213b2a6dfa6c1c19d288faeb2a795f77a8d97120d494b425e"
     },
     {
       "index": 61,
@@ -6169,8 +6179,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 81,
-      "chars": 3237,
-      "sha256": "fea1074a0d60238ac618999304384bc9e34de10adc1c361b0a80aaa93ab0db97"
+      "chars": 3236,
+      "sha256": "fcd5b2f83186b50638bb0eeac774ed9cee8dd98228ab9d673b3599151a198616"
     },
     {
       "index": 62,
@@ -6179,388 +6189,378 @@
       "part": 1,
       "start_line": 1,
       "end_line": 97,
-      "chars": 3563,
-      "sha256": "886026eec16b1dd83720310d889b8e67f7bbab3afa5430207ab2eea9e7bbc0d4"
+      "chars": 3562,
+      "sha256": "30d8cef72fe2bfe622d21ebd950019718207556241bd267d663d702bab0a2375"
     },
     {
       "index": 63,
-      "file": "Scripting/v61b/hotpatch/__init__.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_063_Scripting_v61b_hotpatch_init_py.md",
+      "file": "Scripting/v61b/README.md",
+      "path": "Tools/npu/npu_code_chunks/chunk_063_Scripting_v61b_README_md.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 3,
-      "chars": 280,
-      "sha256": "4196e90583e690e4299539f69e30d04a62b16b591b12ab88e70dcaf327db7c5e"
+      "end_line": 94,
+      "chars": 3913,
+      "sha256": "bca853898128a78917e79a8c8417bdf7504f831ec3753c904429fa39a8f0ed8d"
     },
     {
       "index": 64,
-      "file": "Scripting/v61b/hotpatch/accent_patch.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_064_Scripting_v61b_hotpatch_accent_patch_py.md",
+      "file": "Scripting/v61b/hotpatch/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_064_Scripting_v61b_hotpatch_init_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 211,
-      "chars": 11546,
-      "sha256": "8de2fb5942f6e43b27fad100d9296e2fca018efc81b2ad470f80a4216c574c8a"
+      "end_line": 3,
+      "chars": 279,
+      "sha256": "181050a71b3daf9578323cd9d330eb6107306fcd1550deae67cda481408a308b"
     },
     {
       "index": 65,
       "file": "Scripting/v61b/hotpatch/accent_patch.py",
       "path": "Tools/npu/npu_code_chunks/chunk_065_Scripting_v61b_hotpatch_accent_patch_py.md",
-      "part": 2,
-      "start_line": 212,
-      "end_line": 301,
-      "chars": 6033,
-      "sha256": "964589d8bb4299708424860e322debcc19bdd44842d77c411328acbf6d11ee3d"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 211,
+      "chars": 11545,
+      "sha256": "08a1b82ec46de274de880f590082158af4a857617ad33139a0bb93111018aeae"
     },
     {
       "index": 66,
-      "file": "Scripting/v61b/hotpatch/common.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_066_Scripting_v61b_hotpatch_common_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 91,
-      "chars": 3510,
-      "sha256": "9c16ffac11b81bcfd493b6967222b6c76799ee45ce61c75233468be65a68784d"
+      "file": "Scripting/v61b/hotpatch/accent_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_066_Scripting_v61b_hotpatch_accent_patch_py.md",
+      "part": 2,
+      "start_line": 212,
+      "end_line": 301,
+      "chars": 6032,
+      "sha256": "b3abfe3d62b38a4556321b7bc20a4fcfb3ddb2186c29a40204e8fb4f15784a64"
     },
     {
       "index": 67,
-      "file": "Scripting/v61b/hotpatch/diagnostics.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_067_Scripting_v61b_hotpatch_diagnostics_py.md",
+      "file": "Scripting/v61b/hotpatch/common.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_067_Scripting_v61b_hotpatch_common_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 244,
-      "chars": 11029,
-      "sha256": "a042aa9c4396fe9ae2d42c0939e4bf6f33c4512ab25d35c07c82168ec9423d93"
+      "end_line": 91,
+      "chars": 3509,
+      "sha256": "27b5928255f86725c58a6ffb4a3d9211a02e7e84de0359b7207452141a38eab6"
     },
     {
       "index": 68,
       "file": "Scripting/v61b/hotpatch/diagnostics.py",
       "path": "Tools/npu/npu_code_chunks/chunk_068_Scripting_v61b_hotpatch_diagnostics_py.md",
-      "part": 2,
-      "start_line": 245,
-      "end_line": 286,
-      "chars": 2606,
-      "sha256": "48e174cea918b425dd9a4a51eac8b7b02c6cfd408e4079c5067910a28fcb42c5"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 244,
+      "chars": 11028,
+      "sha256": "c4ea19d7cc2d3816d98469199437b14716356301282c7317f8e604e3e8dbb67e"
     },
     {
       "index": 69,
-      "file": "Scripting/v61b/hotpatch/fog_patch.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_069_Scripting_v61b_hotpatch_fog_patch_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 133,
-      "chars": 6532,
-      "sha256": "6a6c9be929c05f97db7b4930a19e3cf92f167a97a5fe4eb10e84dae72de9eac4"
+      "file": "Scripting/v61b/hotpatch/diagnostics.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_069_Scripting_v61b_hotpatch_diagnostics_py.md",
+      "part": 2,
+      "start_line": 245,
+      "end_line": 286,
+      "chars": 2605,
+      "sha256": "2f0230cd17b96a042b35c1ac6860c050359113df43478bf56f96402c49d4d0d2"
     },
     {
       "index": 70,
-      "file": "Scripting/v61b/hotpatch/hero_material_patch.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_070_Scripting_v61b_hotpatch_hero_material_patch_py.md",
+      "file": "Scripting/v61b/hotpatch/fog_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_070_Scripting_v61b_hotpatch_fog_patch_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 265,
-      "chars": 11418,
-      "sha256": "e5641e0b5b3301b7b1db6660e4bc29613fea5313dc234f2653b51449c0b782a0"
+      "end_line": 133,
+      "chars": 6531,
+      "sha256": "2d894b0cf71987417a3c4be046373b29113af05a41219f1ba11c382df423486d"
     },
     {
       "index": 71,
       "file": "Scripting/v61b/hotpatch/hero_material_patch.py",
       "path": "Tools/npu/npu_code_chunks/chunk_071_Scripting_v61b_hotpatch_hero_material_patch_py.md",
-      "part": 2,
-      "start_line": 266,
-      "end_line": 395,
-      "chars": 8188,
-      "sha256": "4189122344f7d9896af1c2792510ee49e75f1d93c6f55f01f772cb12c6ffe200"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 265,
+      "chars": 11417,
+      "sha256": "472d24d31e0aeb702b412f082737dc437f85ef6439c152fc652bf3435a83db08"
     },
     {
       "index": 72,
-      "file": "Scripting/v61b/hotpatch/lighting_patch.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_072_Scripting_v61b_hotpatch_lighting_patch_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 150,
-      "chars": 7286,
-      "sha256": "7dcc4bb2da06d2260377a13800b01487294281bab54f9daa826dc0b80d6998c6"
+      "file": "Scripting/v61b/hotpatch/hero_material_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_072_Scripting_v61b_hotpatch_hero_material_patch_py.md",
+      "part": 2,
+      "start_line": 266,
+      "end_line": 395,
+      "chars": 8187,
+      "sha256": "ea296946329215f6cb4fa0d355ded4f40fd85e04c9a7a03fd4129176687641be"
     },
     {
       "index": 73,
-      "file": "Scripting/v61b/hotpatch/render_patch.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_073_Scripting_v61b_hotpatch_render_patch_py.md",
+      "file": "Scripting/v61b/hotpatch/lighting_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_073_Scripting_v61b_hotpatch_lighting_patch_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 206,
-      "chars": 8846,
-      "sha256": "03e4d15c1b1f568851bf298ad5dbe29033a4284ec8442124b8eb2608e9c409fe"
+      "end_line": 150,
+      "chars": 7285,
+      "sha256": "dc66a5971aca92a40b0f002ccec61dfb91ba427a19db4cbfdf79b15668850a6a"
     },
     {
       "index": 74,
-      "file": "Scripting/v61b/hotpatch/runner.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_074_Scripting_v61b_hotpatch_runner_py.md",
+      "file": "Scripting/v61b/hotpatch/render_patch.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_074_Scripting_v61b_hotpatch_render_patch_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 103,
-      "chars": 4447,
-      "sha256": "f6947211f0ef5dc5e4ad470fc7a99c670d05470993a9bb3101765625d6b7c7c6"
+      "end_line": 206,
+      "chars": 8845,
+      "sha256": "3a25529b755305596688be83a28b9a438d27c20f8175f928be83999d35f0fa48"
     },
     {
       "index": 75,
-      "file": "Scripting/v61b/spaziotempo/__init__.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_075_Scripting_v61b_spaziotempo_init_py.md",
+      "file": "Scripting/v61b/hotpatch/runner.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_075_Scripting_v61b_hotpatch_runner_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 4,
-      "chars": 351,
-      "sha256": "3a9c1515b359543a39e525407dcf1d315541670ff0c5b79aa0197b6f1cde383e"
+      "end_line": 103,
+      "chars": 4446,
+      "sha256": "3d0a7f45ad2bb3332388224cb6e54eb119e499b92aa207a83f677349cf8e870d"
     },
     {
       "index": 76,
-      "file": "Scripting/v61b/spaziotempo/core/__init__.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_076_Scripting_v61b_spaziotempo_core_init_py.md",
+      "file": "Scripting/v61b/spaziotempo/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_076_Scripting_v61b_spaziotempo_init_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 1,
-      "chars": 184,
-      "sha256": "8bff1194b23656f24feccc26ebc441889050af1f3a7a06931f9b05e4e495f95c"
+      "end_line": 4,
+      "chars": 350,
+      "sha256": "b1585ac1be24ef20f47b53cab78b797a69158333d6c0f4c712ba07c57f050a5c"
     },
     {
       "index": 77,
-      "file": "Scripting/v61b/spaziotempo/core/collections.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_077_Scripting_v61b_spaziotempo_core_collections_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 132,
-      "chars": 5697,
-      "sha256": "a545a07f96e9b9f81ec374f942aa0dd46a8337b71fb9976a3275d4d50753a6f2"
-    },
-    {
-      "index": 78,
-      "file": "Scripting/v61b/spaziotempo/core/registry.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_078_Scripting_v61b_spaziotempo_core_registry_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 221,
-      "chars": 8549,
-      "sha256": "0f7085932d5ca4850f29ba2924469b3ff9cda21db9e78465fb2f28c12bade92b"
-    },
-    {
-      "index": 79,
-      "file": "Scripting/v61b/spaziotempo/features/__init__.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_079_Scripting_v61b_spaziotempo_features_init_py.md",
+      "file": "Scripting/v61b/spaziotempo/core/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_077_Scripting_v61b_spaziotempo_core_init_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 1,
-      "chars": 196,
-      "sha256": "8f10024a0de05c2f040783749942e58fa5e75d4e0a17a724d058af37751dbe54"
+      "chars": 183,
+      "sha256": "2d1549d7924208d486c006f1d87476625bd5c2a0acc682ee99b364cd399bebec"
+    },
+    {
+      "index": 78,
+      "file": "Scripting/v61b/spaziotempo/core/collections.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_078_Scripting_v61b_spaziotempo_core_collections_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 132,
+      "chars": 5696,
+      "sha256": "4ec17f890ceb24be8112d0ea74cad7c269e5867c549e80d56b7096fa8f159dea"
+    },
+    {
+      "index": 79,
+      "file": "Scripting/v61b/spaziotempo/core/registry.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_079_Scripting_v61b_spaziotempo_core_registry_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 221,
+      "chars": 8548,
+      "sha256": "5c728bb93a2c50e09c658b206ddb318512e372e981bbdfdf105b840c411964d3"
     },
     {
       "index": 80,
-      "file": "Scripting/v61b/spaziotempo/features/catalog.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_080_Scripting_v61b_spaziotempo_features_catalog_py.md",
+      "file": "Scripting/v61b/spaziotempo/features/__init__.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_080_Scripting_v61b_spaziotempo_features_init_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 19,
-      "chars": 906,
-      "sha256": "e6527a72079c8926981b96b53efb57bbbc46ae96fb6b2b8333a82b9ef6f89281"
+      "end_line": 1,
+      "chars": 195,
+      "sha256": "5c3746878ea8f7bec6499286dc51c7e55d7dd6ac7332497f3622d96e16a805b7"
     },
     {
       "index": 81,
-      "file": "Tools/npu/ai_memory_context.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_081_Tools_npu_ai_memory_context_py.md",
+      "file": "Scripting/v61b/spaziotempo/features/catalog.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_081_Scripting_v61b_spaziotempo_features_catalog_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 111,
-      "chars": 6097,
-      "sha256": "cabf6451ace53d57c99c1ceabe46dec817f4ac27972df422dd858a85d24cec5c"
+      "end_line": 19,
+      "chars": 905,
+      "sha256": "14290be2a4fcc47acc82aafd083d0f8ce18b9faf8696f683dc87a66995380465"
     },
     {
       "index": 82,
-      "file": "Tools/npu/build_ai_service_packet.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_082_Tools_npu_build_ai_service_packet_py.md",
+      "file": "Tools/npu/ai_memory_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_082_Tools_npu_ai_memory_context_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 211,
-      "chars": 11269,
-      "sha256": "df5e45c6addfcfc56f17453981de09b9a6afb5d5183cf8b276465c6b9669cae9"
+      "end_line": 111,
+      "chars": 6096,
+      "sha256": "f98aec9350ade76028071646f62b3cd2362b75b9ba8117fd4668181990761417"
     },
     {
       "index": 83,
       "file": "Tools/npu/build_ai_service_packet.py",
       "path": "Tools/npu/npu_code_chunks/chunk_083_Tools_npu_build_ai_service_packet_py.md",
-      "part": 2,
-      "start_line": 212,
-      "end_line": 355,
-      "chars": 8859,
-      "sha256": "887cb55a8a1fcf6c3df57f2ea9abed08296265cc8983c4d5781494183cb23512"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 211,
+      "chars": 11268,
+      "sha256": "52e1ce18661fe58f4634ecd801d7fb994e28260f27f500464c8a7ca5d8740a92"
     },
     {
       "index": 84,
-      "file": "Tools/npu/build_music_context.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_084_Tools_npu_build_music_context_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 255,
-      "chars": 12336,
-      "sha256": "bbd1553ce26a78a15fda6b62dead0f9e4bbc67f253b25f8b4070fc7543f8b245"
+      "file": "Tools/npu/build_ai_service_packet.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_084_Tools_npu_build_ai_service_packet_py.md",
+      "part": 2,
+      "start_line": 212,
+      "end_line": 355,
+      "chars": 8858,
+      "sha256": "c6204829e4e9811e0fe7b12198b5ad0dece620284823c59c3ee12913735fab04"
     },
     {
       "index": 85,
       "file": "Tools/npu/build_music_context.py",
       "path": "Tools/npu/npu_code_chunks/chunk_085_Tools_npu_build_music_context_py.md",
-      "part": 2,
-      "start_line": 256,
-      "end_line": 491,
-      "chars": 12383,
-      "sha256": "254e197cf031fe6c577511af946cbbbfcc7fddd218e87f040754fbc3c6120807"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 255,
+      "chars": 12335,
+      "sha256": "91fb1e286d17de81da5342a0b8b85172d760ade86c57350b9875e757f898a61d"
     },
     {
       "index": 86,
       "file": "Tools/npu/build_music_context.py",
       "path": "Tools/npu/npu_code_chunks/chunk_086_Tools_npu_build_music_context_py.md",
-      "part": 3,
-      "start_line": 492,
-      "end_line": 682,
-      "chars": 12369,
-      "sha256": "82d2677ec6019baa330cec743ef211bd89fbdb68a29e7a45c20f86600c659437"
+      "part": 2,
+      "start_line": 256,
+      "end_line": 491,
+      "chars": 12382,
+      "sha256": "da38a3e7f34cab622f3850761bd80eadd8bae024fa5cd52e6d45389bee5497c4"
     },
     {
       "index": 87,
       "file": "Tools/npu/build_music_context.py",
       "path": "Tools/npu/npu_code_chunks/chunk_087_Tools_npu_build_music_context_py.md",
-      "part": 4,
-      "start_line": 683,
-      "end_line": 711,
-      "chars": 3598,
-      "sha256": "58ba5f6cdcbaea9a844348ea2c06e4f5efaed82a48a8413fb87410ebcab03276"
+      "part": 3,
+      "start_line": 492,
+      "end_line": 682,
+      "chars": 12368,
+      "sha256": "1720a9b8040f737c65d47895484d32339c0ab3aa7cb8574e889e0963b859bf45"
     },
     {
       "index": 88,
-      "file": "Tools/npu/build_npu_code_context.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_088_Tools_npu_build_npu_code_context_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 270,
-      "chars": 11222,
-      "sha256": "8fb225941ae7343f896d715d80d6dc3ebefcc5d0cd1822c8e887c589dd174324"
+      "file": "Tools/npu/build_music_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_088_Tools_npu_build_music_context_py.md",
+      "part": 4,
+      "start_line": 683,
+      "end_line": 711,
+      "chars": 3597,
+      "sha256": "eb540600e76ee7c329be62c27bf33d5f4c46a4121c83e288080b2e5066dba10b"
     },
     {
       "index": 89,
       "file": "Tools/npu/build_npu_code_context.py",
       "path": "Tools/npu/npu_code_chunks/chunk_089_Tools_npu_build_npu_code_context_py.md",
-      "part": 2,
-      "start_line": 271,
-      "end_line": 389,
-      "chars": 5640,
-      "sha256": "95cec8721c585f74f301ec1202fb8048eceba765b64d000665c66cdf26e3128e"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 270,
+      "chars": 11221,
+      "sha256": "ee5fa216acaaf62bb2a6d05f473f783f765d50af44c66f3be45dcfe6314d10e2"
     },
     {
       "index": 90,
-      "file": "Tools/npu/build_project_ai_index.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_090_Tools_npu_build_project_ai_index_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 266,
-      "chars": 11480,
-      "sha256": "748bdac148311449660489f7f448926114d812bc31d7b833462f18f8f5ba1d75"
+      "file": "Tools/npu/build_npu_code_context.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_090_Tools_npu_build_npu_code_context_py.md",
+      "part": 2,
+      "start_line": 271,
+      "end_line": 389,
+      "chars": 5639,
+      "sha256": "13882172155fada98e227351473d1a1bae0afcf8c9373cc9c32434b412e0b54d"
     },
     {
       "index": 91,
       "file": "Tools/npu/build_project_ai_index.py",
       "path": "Tools/npu/npu_code_chunks/chunk_091_Tools_npu_build_project_ai_index_py.md",
-      "part": 2,
-      "start_line": 267,
-      "end_line": 419,
-      "chars": 8946,
-      "sha256": "c1bcec9d54e6362b039b0cc116a012729f35155f1680b6d8a14498f9548bec49"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 266,
+      "chars": 11479,
+      "sha256": "b9dd384061e6c9ce4263f4f692ff082384bb45f3e5d7acf52946fc3c132ef1c5"
     },
     {
       "index": 92,
-      "file": "Tools/npu/run_dual_ai_pipeline - Copia.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_092_Tools_npu_run_dual_ai_pipeline_Copia_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 223,
-      "chars": 12184,
-      "sha256": "5dcc19cbd30ea8345694b618021a5637f4dc6e38b748d4c02bc7d5f67c30efe3"
+      "file": "Tools/npu/build_project_ai_index.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_092_Tools_npu_build_project_ai_index_py.md",
+      "part": 2,
+      "start_line": 267,
+      "end_line": 419,
+      "chars": 8945,
+      "sha256": "34c3f75bb760e793481033c17a90b7ac2811593f81aa5de0a46e1ab2fde2baed"
     },
     {
       "index": 93,
-      "file": "Tools/npu/run_dual_ai_pipeline - Copia.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_093_Tools_npu_run_dual_ai_pipeline_Copia_py.md",
-      "part": 2,
-      "start_line": 224,
-      "end_line": 461,
-      "chars": 12149,
-      "sha256": "102205251d686ee12389ba6cee05293b537d94090d90971f98d945be04b9e9d0"
+      "file": "Tools/npu/generated_blender_script_candidate_FristNear.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_093_Tools_npu_generated_blender_script_candidate_FristNear_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 213,
+      "chars": 11512,
+      "sha256": "e71a939fdfe4951c23b0d262f9f8c1d0625dd3edc3679c83887335819f4a5a41"
     },
     {
       "index": 94,
-      "file": "Tools/npu/run_dual_ai_pipeline - Copia.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_094_Tools_npu_run_dual_ai_pipeline_Copia_py.md",
-      "part": 3,
-      "start_line": 462,
-      "end_line": 646,
-      "chars": 12226,
-      "sha256": "4c49166c229371008d12eaeb1fd9c32f8cc488a63050a9a12a0fc5fbcaf050de"
+      "file": "Tools/npu/generated_blender_script_candidate_FristNear.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_094_Tools_npu_generated_blender_script_candidate_FristNear_py.md",
+      "part": 2,
+      "start_line": 214,
+      "end_line": 369,
+      "chars": 10158,
+      "sha256": "6adc56ca2438e4e4b351eb3f1048c8d4d073bfd332dce936242f435974ed2433"
     },
     {
       "index": 95,
-      "file": "Tools/npu/run_dual_ai_pipeline - Copia.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_095_Tools_npu_run_dual_ai_pipeline_Copia_py.md",
-      "part": 4,
-      "start_line": 647,
-      "end_line": 705,
-      "chars": 5080,
-      "sha256": "0801b121b48b7510da0a3fbd2086f0bab5037216e93af41e88c08d0d9906d3da"
+      "file": "Tools/npu/run_npu_review.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_095_Tools_npu_run_npu_review_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 287,
+      "chars": 11711,
+      "sha256": "c21dcf1727346a221628100789db68e9df78f6239ba82b5d33b68d81119dac32"
     },
     {
       "index": 96,
       "file": "Tools/npu/run_npu_review.py",
       "path": "Tools/npu/npu_code_chunks/chunk_096_Tools_npu_run_npu_review_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 287,
-      "chars": 11712,
-      "sha256": "c8d8bd72aeca66820ac1f8f0635d67a9cbbcd5e05c6763775515cf326f286088"
+      "part": 2,
+      "start_line": 288,
+      "end_line": 520,
+      "chars": 11794,
+      "sha256": "f9ba416b04fcfa8ee8a708623dafa11acefbf62419301355942878a5df184957"
     },
     {
       "index": 97,
       "file": "Tools/npu/run_npu_review.py",
       "path": "Tools/npu/npu_code_chunks/chunk_097_Tools_npu_run_npu_review_py.md",
-      "part": 2,
-      "start_line": 288,
-      "end_line": 520,
-      "chars": 11795,
-      "sha256": "a267a66a234e32ac108b088e3851dd3ca13869b19bcedefd0b53635322d6ad05"
-    },
-    {
-      "index": 98,
-      "file": "Tools/npu/run_npu_review.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_098_Tools_npu_run_npu_review_py.md",
       "part": 3,
       "start_line": 521,
       "end_line": 565,
-      "chars": 3263,
-      "sha256": "85f6e24b93a9e2efa14e5aab61f495e495fcdc31c835eb86ef9513edb2d6e266"
+      "chars": 3262,
+      "sha256": "1b324a2c3b0240f91e2dfae281f666bdf53257993b021d4faf310ab05347fb13"
+    },
+    {
+      "index": 98,
+      "file": "Tools/npu/run_ollama_music_agent.py",
+      "path": "Tools/npu/npu_code_chunks/chunk_098_Tools_npu_run_ollama_music_agent_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 238,
+      "chars": 10744,
+      "sha256": "fb29b71950392629600095328403512075d2480b34f7646ced78ef6811bc9be4"
     },
     {
       "index": 99,
-      "file": "Tools/npu/run_ollama_music_agent.py",
-      "path": "Tools/npu/npu_code_chunks/chunk_099_Tools_npu_run_ollama_music_agent_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 238,
-      "chars": 10745,
-      "sha256": "c9f6573a1094b69ea251055aa0a225ef6657958bee731d68da3523e1a5a05200"
-    },
-    {
-      "index": 100,
       "file": "Tools/npu/run_npu_context.ps1",
-      "path": "Tools/npu/npu_code_chunks/chunk_100_Tools_npu_run_npu_context_ps1.md",
+      "path": "Tools/npu/npu_code_chunks/chunk_099_Tools_npu_run_npu_context_ps1.md",
       "part": 1,
       "start_line": 1,
       "end_line": 238,
-      "chars": 9005,
-      "sha256": "b3ee3ccebbb4ceeff698756ff0ed2c6bb1f14894ea2e00fec88da5a39567d002"
+      "chars": 9003,
+      "sha256": "daa092a43e1ed4cc51fe857e4c5fc9a7aeaa58c5b876f177ef878a0d37695265"
     }
   ]
 }

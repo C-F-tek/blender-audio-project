@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-04-27T14:41:27",
+  "created_at": "2026-04-28T13:33:13",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "analysis_json": "output/Ready To Jazz-Luca Vera_Master_analysis.json",
   "blender_keyframes_json": "output/Ready To Jazz-Luca Vera_Master_analysis_blender_keyframes.json",
@@ -63,7 +63,7 @@
     ],
     "durable_constraints": [],
     "asset_memory": {
-      "asset_count": 5,
+      "asset_count": 8,
       "primary_assets": [
         {
           "role": "primary_ball_asset",
@@ -72,9 +72,21 @@
           "type": ".fbx"
         },
         {
+          "role": "primary_ball_asset",
+          "name": "ball",
+          "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\assets\\ball\\source\\ball.fbx",
+          "type": ".fbx"
+        },
+        {
           "role": "animated_effect_asset",
           "name": "Animated effect",
           "path": "C:\\Users\\carmi\\blender\\assets\\animated-effect\\source\\Animated effect.blend",
+          "type": ".blend"
+        },
+        {
+          "role": "animated_effect_asset",
+          "name": "Animated effect",
+          "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\assets\\animated-effect\\source\\Animated effect.blend",
           "type": ".blend"
         },
         {
@@ -509,8 +521,8 @@
       "index": 1,
       "kind": "overview",
       "path": "Tools/npu/npu_music_chunks/chunk_001_music_overview.md",
-      "chars": 26108,
-      "sha256": "a8e9df07752c6eddfed27604847c305e03f1c4d48a528b11340a7d6a8ba9e255"
+      "chars": 53756,
+      "sha256": "9e16bf2fd22bc91a32218b6eb6e53ac4f939358aa2c90bd7d9072872c7c707d5"
     },
     {
       "index": 2,

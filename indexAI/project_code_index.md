@@ -1,8 +1,8 @@
 # Spaziotempo Primary Project Code Index
 
-Generated: `2026-04-27T14:41:27`
+Generated: `2026-04-28T13:33:13`
 
-Source fingerprint: `15bc00b62ad868065405f589427c5c2c54a6d634af8a082cc08e21cc06f71199`
+Source fingerprint: `201bc7325502d9226a9da8b596a84cbfaab1e3800d2b8a5d71f16f0a8f651f6c`
 
 Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.
 
@@ -13,14 +13,79 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI` is generated context and must not be re-indexed as source.
 
 ## Files
+- `.github/ISSUE_TEMPLATE/bug_report.md`: 44 lines, 461 chars, sha256 `660c83a7fa825b9940fbb7fc7537d115b43b579861f9af56e39f6266e4674438`
+- `.github/ISSUE_TEMPLATE/feature_request.md`: 37 lines, 461 chars, sha256 `cf33b46d55831c9bdb4df2013572a76e0800fd0eac30968cd3913174aaee6840`
+- `.github/PULL_REQUEST_TEMPLATE.md`: 26 lines, 356 chars, sha256 `ff7c7d6c1d5943f0ac1fa6c11499837791b8cb36187c9f1899e59bfd70c9c782`
+- `.github/workflows/apply_repo_mods.yml`: 116 lines, 3437 chars, sha256 `06cc0a568e257be4bf1ab88b4352effddbc3f965559f907d7655b491d1bcd5c8`
+- `AGENTS.md`: 93 lines, 3264 chars, sha256 `9eec4843b705029a9e53d3fee23fcd762f6795a8cdd6b176661021ad9e31d967`
 - `analyze_wav.py`: 258 lines, 10299 chars, sha256 `f32673c8b1b1da5df82885235ad6be93a15ca36eb2adb924dac73a4e5a3c8ff8`
+- `apply_fix_blender_51_musgrave_v2.ps1`: 57 lines, 2621 chars, sha256 `dcc2a0f077acc1d8f5c24c588cb16277c4878168296f29e73ece8abeb7d558e1`
 - `build_track_summary.py`: 114 lines, 4062 chars, sha256 `7dfbac89818d9b1903ae6828e502ec8b9965c84ce6097a5e049e551c95d3286a`
+- `CHANGELOG.md`: 25 lines, 447 chars, sha256 `9897add2a2e4b1ea83e72c7cf4ac0802b16fc00e59e7f72c6e670f3c5e05c3e6`
+- `CONTRIBUTING.md`: 45 lines, 1188 chars, sha256 `ca116600a0c0e4c216555d6248765069c8dd83460a07ed409436fc1745751616`
+- `docs/AI_GENERATED_PACKAGE_STANDARD.md`: 127 lines, 4009 chars, sha256 `330f12198136fc62938a66b8036c23d48869f290aaec58d43fe3f5c1ced452cf`
+- `docs/AUDIO_ANALYSIS_PIPELINE.md`: 62 lines, 1753 chars, sha256 `a362dbc5c2406a2573eced9cd208d2132bb1e0e8f9bcfd7043fe1ff81bee6253`
+- `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md`: 136 lines, 3284 chars, sha256 `9b26de02efa0e965235c9de4dd622017f5c396e0138d804ebeed8bd24e575af2`
+- `docs/BLENDER_SCRIPT_ENTRYPOINTS.md`: 55 lines, 1725 chars, sha256 `58056718276bbfad727d6231badd4cc91c53942a284b54bfe9f8545a1b1d7163`
+- `docs/CODE_CONSULTATION_REPORT.md`: 268 lines, 8873 chars, sha256 `e455af5434f86ad81f05c707f406ef217beddee6078eefd72c9457c67039f4fd`
+- `docs/COMPATIBILITY.md`: 31 lines, 867 chars, sha256 `b17fd4a45acac909f79ccc09201f13057618aca4f739b48c34c13496927cccb4`
+- `docs/DATA_FLOW.md`: 57 lines, 2091 chars, sha256 `c5b0c387d7493e3506aec7ffa4fda8e63d21c45b56583dbdaaf3ce24fd021aaa`
+- `docs/DEVELOPER_GUIDE.md`: 70 lines, 1902 chars, sha256 `a23ad840f127ed7a334e88d8d58b5f0e1090031b2ad83e91dca8f59268667f7b`
+- `docs/FFMPEG_WORKFLOW.md`: 76 lines, 1570 chars, sha256 `adb4c4708138fa022c1bd55c6a03d83400cdef044a72e6b17bc2d0ee71dd9a99`
+- `docs/INDEX_REGEN_POLICY.md`: 155 lines, 4736 chars, sha256 `a3b1252fe66c3bd4f6026f2fb3c725b6e3a6fcafedae11ec7dc68432aeb18d00`
+- `docs/INSTALLATION.md`: 39 lines, 865 chars, sha256 `0c2420c304cb297d11e3454a9301ad4fc90a38b6a9669ef341a6ea25c2f22dc0`
+- `docs/JSON_SCHEMAS.md`: 52 lines, 1778 chars, sha256 `cf814e9eac053edd1d99b11b74fb589432ba6a605f1088d8b58cc2df313bc8ec`
+- `docs/KNOWN_LIMITATIONS.md`: 28 lines, 928 chars, sha256 `3849d1394b759ca04476a99e73db5dfc57d82e90d66b81af396735be3e98f61f`
+- `docs/LOCAL_AI_WORKFLOW.md`: 87 lines, 2516 chars, sha256 `077e4b0f1e290d10463d6e208bdf1994af4c9be1ba4bbfd0dd0770451e456800`
+- `docs/MODULE_MAP.md`: 59 lines, 2966 chars, sha256 `84f24313f7b470d92f78a7f6b606cce7322659b7e40300cae11382d6a7ec2a45`
+- `docs/PACKAGE_CREATION_WORKFLOW.md`: 161 lines, 3486 chars, sha256 `6369839a1e14cfcfca2cfb4d828b91d69f6f99ee8fb70436ba88cfb18f023f54`
+- `docs/PROJECT_AUDIT.md`: 162 lines, 6610 chars, sha256 `3ecc1a0f99dd2c73426fa3a46e304c8ddf03ae45713ddbbdb4293006c6dfa6eb`
+- `docs/PROJECT_OVERVIEW.md`: 39 lines, 1078 chars, sha256 `e16d6c16d65e69622726e204f129f9fb893f0b5e33f16082472ffe7b83a54f69`
+- `docs/QUALITY_GATE.md`: 123 lines, 3959 chars, sha256 `c4b3f2f130f731338f9fa54699d443f3276e4bc3115582054801663dfe7a3040`
+- `docs/README.md`: 71 lines, 1688 chars, sha256 `4259903d894e94ee0e170992e65f38968f69bafba16e882c68f82732f3320e0d`
+- `docs/RENDER_WORKFLOW.md`: 52 lines, 1283 chars, sha256 `def05a0c6564b32e2b5cd913ee2f4bd67a6b3e39a09df5639b9d7c9741f5c72d`
+- `docs/SHARED_SCRIPTING_UTILITIES.md`: 100 lines, 3992 chars, sha256 `cb118004350d592a671b16ce0f438931900812ed7f2b7ecca825098f490e094d`
+- `docs/USAGE.md`: 58 lines, 1203 chars, sha256 `e253584611273d0c7e8170be97c074f6105bc51065d9f528d7a1473d209dda98`
+- `examples/README.md`: 15 lines, 280 chars, sha256 `330f4a3a4445bbe353232cb1d6d829e78a802f3d8b3dc71a5936eaa38c31d2f3`
+- `guida_git_github_blender_audio_project.md`: 536 lines, 10474 chars, sha256 `1fd5cc5ab5e275f0ee6376ca6e9d0a3a9429e6223e1f6053520b44aee27e2751`
 - `normalize_scene_spec.py`: 488 lines, 14873 chars, sha256 `e85a233bd5b31b27296f4bf5b761a0bc5b33bdce66aecc4f80dbf1d305f21b12`
+- `patch_specs/README.md`: 34 lines, 882 chars, sha256 `0360176a0109171641a7abe9c92b0d94b173bdb57b23625743009126098acc1a`
+- `README.md`: 88 lines, 2884 chars, sha256 `efa76e17e0edd221e2311d1bac4687c640e3fd41dd6d858f6178f97fbc6af9ec`
 - `scene_spec_album_driven.json`: 76 lines, 1775 chars, sha256 `4c65268928e2562850baa27cc07d6081babcd9f1dea0e32016467b5828155baf`
 - `scene_spec_album_driven_normalized.json`: 325 lines, 7341 chars, sha256 `ad7b9afbf649af9a06f1c1dae92c685d2982e9be24a648944c4c818627d95dc7`
 - `scene_spec_album_driven_raw.txt`: 1 lines, 1319 chars, sha256 `661f73c43add339a50e542f7e65c23199a29b167163a1453edbc7114b2819f7e`
 - `scene_spec_from_npu.json`: 65 lines, 993 chars, sha256 `c4f28325c5249aa6f434707884d3d97766f45d7768d0e067f649253ad26baf69`
 - `scene_spec_from_npu_raw.txt`: 53 lines, 1014 chars, sha256 `dfcc73cfd7b3c1a0e1cc79f68cc0c31e0c30a8f7243bb160bfe2dcba04addc5a`
+- `Scripting/_template_audio_reactive_package/AGENT_CONTEXT.md`: 52 lines, 1413 chars, sha256 `f35fa71f852fa0a6dbe32414b6b0a1b8324c5e45751ca23a56f828b5c6a95b15`
+- `Scripting/_template_audio_reactive_package/audio_mapping.py`: 52 lines, 1783 chars, sha256 `de523a3b59fa8b52ccebc3d22674e0160a92562873c639c8e6ad025d254902f1`
+- `Scripting/_template_audio_reactive_package/camera.py`: 27 lines, 626 chars, sha256 `34faa378ffd378ab631ba0b740411a0027378c8d5f5fbdbe568d14e7c55267c3`
+- `Scripting/_template_audio_reactive_package/config.py`: 50 lines, 1219 chars, sha256 `adc4cac1915a3d596735f01278f83b5848cb5884689106b8aafce056f0fa1703`
+- `Scripting/_template_audio_reactive_package/CREATIVE_BRIEF.md`: 57 lines, 963 chars, sha256 `30301ea220a895f401ff355961f88f5404ff50e28d932d2d2ff2e50ecca047de`
+- `Scripting/_template_audio_reactive_package/encode_ffmpeg.py`: 76 lines, 1818 chars, sha256 `c9c6722823d9c6d631b9b83a6ba9915a12a507f12a68769e1574a95e16d36fe9`
+- `Scripting/_template_audio_reactive_package/IMPLEMENTATION_PLAN.md`: 59 lines, 1402 chars, sha256 `00fdfc51231021a89b4ca067f0323feef3927bb3358deabb24b55732fb99e405`
+- `Scripting/_template_audio_reactive_package/inputs/input_schema.json`: 29 lines, 784 chars, sha256 `59ab1a76fbfdafc7533e522552032af2063a88e5696946978365d90755301070`
+- `Scripting/_template_audio_reactive_package/inputs/music_context.json`: 11 lines, 237 chars, sha256 `0665f5f0ea579614d0d209fb0687f7bdeac1a80c4597589929a5148a994ab57d`
+- `Scripting/_template_audio_reactive_package/inputs/README.md`: 19 lines, 619 chars, sha256 `48342e5e91f5c26687ee9f0b78b239ac583d0a8519dde36028b76f9e8291d06f`
+- `Scripting/_template_audio_reactive_package/inputs/track_summary.json`: 20 lines, 330 chars, sha256 `c1be6d803637977da18aef72f8893af34c231560f9c8e7af2b9bb0d7997963d2`
+- `Scripting/_template_audio_reactive_package/lighting.py`: 24 lines, 624 chars, sha256 `1ca256b9923b455e6be333a4599d0c4549748f0ea04e0ecfe76ffa135d1856f5`
+- `Scripting/_template_audio_reactive_package/main.py`: 80 lines, 2150 chars, sha256 `21f48273002262cfea9e7e03a5ee7031ede7d8ef35fab775250be8cf9317d932`
+- `Scripting/_template_audio_reactive_package/materials.py`: 36 lines, 1134 chars, sha256 `3d0b85462ae00c98bca743a91f5443e0f3fc0f02c6839fb366b8300e5bf07374`
+- `Scripting/_template_audio_reactive_package/notes/known_issues.md`: 16 lines, 176 chars, sha256 `58e5a89ed36fd3c48a2c8d84a91253fd4f5f0fe5c0bb229b3eb4fb6d2ee92fba`
+- `Scripting/_template_audio_reactive_package/notes/tuning_notes.md`: 21 lines, 256 chars, sha256 `faafc502320302901f1f5bde04e432ac5e07346dff4a17205da381b69954f489`
+- `Scripting/_template_audio_reactive_package/outputs/README.md`: 15 lines, 285 chars, sha256 `0db7686f5cdc0f67cf10202b92d1dea5298f67070199021576a68b04f7a3b685`
+- `Scripting/_template_audio_reactive_package/README.md`: 72 lines, 2121 chars, sha256 `10eaed2d3680e76e0e66a54aabdbc8f88a8acb8521ea53d09c1fa88311d33e10`
+- `Scripting/_template_audio_reactive_package/render_settings.py`: 27 lines, 795 chars, sha256 `6352d0c8a48205b6614c844c02e95b93e06dd8c7e476dae1d46ff9a988609e08`
+- `Scripting/_template_audio_reactive_package/REPORT.md`: 47 lines, 594 chars, sha256 `f66fe93248a81f9b944acd364c14acc273b192566da4301487affa152d7fd727`
+- `Scripting/_template_audio_reactive_package/scene_objects.py`: 22 lines, 591 chars, sha256 `226f38731cd0368918323ac7a84c9070e37cfb98c5bd7b3cd3dcfd788e1f3827`
+- `Scripting/_template_audio_reactive_package/TEST_CHECKLIST.md`: 46 lines, 1184 chars, sha256 `13b5ba58632e40ede483967c8b5cf63c32bb4b494f7631d5c47d4f754afb2180`
+- `Scripting/README.md`: 53 lines, 2714 chars, sha256 `05a726567b3a0481e55e7639d767431485989c1c3ca103b757b1e6a76971e28b`
+- `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/encode_final_youtube.py`: 204 lines, 6994 chars, sha256 `91fff833a13128a4b7c894ce4ad3dea586900f075c6a3c5f55ec07cd023dee27`
+- `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/INSTALL_LOCATION.txt`: 14 lines, 260 chars, sha256 `86fd756fa71c43c7cdcb8230cb63332f37f077bfec6896fdd1d4d95e28231c81`
+- `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/LINE_COUNTS.json`: 9 lines, 242 chars, sha256 `652816b155e372a214f7a4ec2e44b3d8a4c76d4ffb040ce2ccbf09e71ca090f8`
+- `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py`: 2198 lines, 92449 chars, sha256 `ed156de0a594aebe2b6a5cf55e6fcaef30f5cf62ca74685cd5fc943e106ca3e2`
+- `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/README.md`: 88 lines, 2527 chars, sha256 `cd2d996c81af456591642e1cd22a6169ca823b7edf43b7726a090eafdf7e2ffa`
+- `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/render_profiles_reference.py`: 21 lines, 569 chars, sha256 `eefb6cfc522d3f47be7cb351fb57c0ce1feb68c405bb003e7172aaa5dff04b2a`
+- `Scripting/shared/README.md`: 72 lines, 2763 chars, sha256 `4148f3599f6921eb63f46cf1edec75b21e9c7d3a2fe6c2077cb1fe3ee8768097`
 - `Scripting/v61b/__init__.py`: 1 lines, 16 chars, sha256 `c0bbbb5b6d776bd569a8ce1dde718a322055ae62b1c3b48f26826d6e8acdb651`
 - `Scripting/v61b/animation.py`: 1080 lines, 50253 chars, sha256 `8e08e656c5fdf65cf95d2d6c4c24df4b5d2e5b17ea47f7ab7b12034f970461ce`
 - `Scripting/v61b/asset_setup.py`: 726 lines, 23898 chars, sha256 `91343beb43af7ff1a9a022e03ce20e1d104057e497a74a8da19b07658605689e`
@@ -46,6 +111,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Scripting/v61b/materials.py`: 658 lines, 23180 chars, sha256 `073e38f04df3414be8fe87cc0a568ce396592e19553f991815cfb94c7b749577`
 - `Scripting/v61b/physics_setup.py`: 738 lines, 23685 chars, sha256 `15ccd171bf927564a01d46238dca9f9149d70198caf5cd7eb451733a5cbf2edf`
 - `Scripting/v61b/PROJECT_STRUCTURE.md`: 44 lines, 2497 chars, sha256 `a1dc036f5e6a993dd1197de70a96338f76de597950e5164def3f1dc17eb188e4`
+- `Scripting/v61b/README.md`: 95 lines, 3138 chars, sha256 `c34a4cc32e8ba7b0098790df7131734425f37ec069e4097384113b125458987f`
 - `Scripting/v61b/render_setup.py`: 271 lines, 8038 chars, sha256 `d798f6054b2e94e063ff5b21a9648641ce99231902dd16e288784ecf962a24ca`
 - `Scripting/v61b/SCENE_TUNING_GUIDE.md`: 305 lines, 13330 chars, sha256 `edd8ed0ef33670b4bbd79078b76fa9943be23a39ccf8c40c731eb0e7b7feeaac`
 - `Scripting/v61b/scene_tuning_panel.py`: 1263 lines, 47791 chars, sha256 `55c3c28fad20ca2dd87058f9f9959ad655e51b0a85286e1af9876627eac81057`
@@ -83,245 +149,346 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Scripting/v61b_backgood/scene_tuning_panel.py`: 1098 lines, 41226 chars, sha256 `a12f7378648a8231ee4645558214cf7cb38a91867632464866bd3de5ec452bee`
 - `Scripting/v61b_backgood/scene_utils.py`: 98 lines, 2463 chars, sha256 `98780b6455aae7c8857bf8698e8e4b57feceec9187a04a8850f87bad2bb4d295`
 - `Scripting/v61b_backgood/world_setup.py`: 175 lines, 5619 chars, sha256 `5e5b7923c84b44e207fca509cb55714759da056cf4c7093543cf33dde88abdec`
+- `SECURITY.md`: 23 lines, 680 chars, sha256 `75626cbd9746e3ef0fa49e26814e6bafc1ee79cdbad50fac5cc181a93e1d5a15`
+- `SUPPORT.md`: 34 lines, 532 chars, sha256 `a2c47418f136dba63e348924ed79f3a602480c21171c2af4c82ac74acaee4f5f`
+- `Tools/git/auto_push_generated_artifacts.ps1`: 136 lines, 3891 chars, sha256 `cd65aa2cd41cfc5b8205efd92c7b71d9967498bd8e3e71d92853e0b166782d2d`
+- `Tools/git/auto_push_generated_data.ps1`: 132 lines, 3616 chars, sha256 `c5e16828fa0b348487f4d587534c320d984e3f53b77bfa3291ffed41b4520fe9`
+- `Tools/git/README.md`: 76 lines, 1846 chars, sha256 `bb1002cb3385a138d3ba6d963a4fc4cb835c17f152731beb34bd9487faa2011a`
 - `Tools/npu/ai_memory_context.py`: 112 lines, 4815 chars, sha256 `4febdeb28cc24886e60e547d4cb1097a0928f17283ecd58ba22db9fd3c12f9a7`
 - `Tools/npu/build_ai_service_packet.py`: 356 lines, 15673 chars, sha256 `0906bc0f6df6c0da50221ca38e0cce89d78afea243278b5f396225c6eb38af1d`
 - `Tools/npu/build_blender_manual_context.py`: 327 lines, 10493 chars, sha256 `5516f84a1f112607a51f93aa7dbe52631a7e834353a0b98c71706e33b152719c`
 - `Tools/npu/build_music_context.py`: 712 lines, 27167 chars, sha256 `dedb206a9a9e8d6f554be7d0a70ab29fe3d27ec81ffb133130e12b61b2a5d97b`
 - `Tools/npu/build_npu_code_context.py`: 390 lines, 12139 chars, sha256 `45037f46cd073bdc0d191828f75224d1d8726bf519620bc3ba7f795b687922b0`
 - `Tools/npu/build_project_ai_index.py`: 420 lines, 14905 chars, sha256 `5d0e447d5d77e945f831b80e31a0f0ccdd224276d30fe452a85293c99251e7c7`
-- `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `f5b9dd1e211a5af4b25c64ec3dbf8a8bde47b7d2472a9dd77b3c1127070d14d7`
-- `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `2bdf1eae832a9db6a7b45ab219c88493eeba2d0d854c4c317ca72ba16eed5300`
-- `Tools/npu/npu_code_manifest.json`: 6566 lines, 179223 chars, sha256 `9b7b560ab15bf8d576351eefbe4884a0a5c9732e236df815251464bdc4036e38`
-- `Tools/npu/npu_music_manifest.json`: 545 lines, 17380 chars, sha256 `790d7ed14d35480fc41d9313040767b2a84d1bf58bd6d975118b0e5b4970fa35`
+- `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
+- `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `1c60facaca8193d6cb6d08abc85c3441e3e6c64dabe0559e293674ef8be20b0d`
+- `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `107f93024123426b33261b02c7d89d849d6fa29ae94ae7408b9f61da11f53564`
+- `Tools/npu/npu_code_manifest.json`: 6566 lines, 178641 chars, sha256 `9d1cfcfe8b457ad89c9fc76b90f743eabf609249088d9ac4ed39a952eb11eb28`
+- `Tools/npu/npu_music_manifest.json`: 776 lines, 29120 chars, sha256 `ad37371da37e46ef27346838ca6ae0f9dc4a9a0e99effa051ba997246297f14c`
 - `Tools/npu/npu_runtime.py`: 96 lines, 3199 chars, sha256 `8e0b1328626cb202c8f7a47bcf159df0725c7370a631440ce11989cca5be58bb`
 - `Tools/npu/ollama_runtime.py`: 352 lines, 11053 chars, sha256 `dbcdde9d1d43964bd77a64a8cfe8e900346aa4b5554e41daf19758269cbd4cbd`
-- `Tools/npu/run_dual_ai_pipeline - Copia.py`: 706 lines, 29030 chars, sha256 `868f5619cef911174e14aa2fa79b9ac61cd3c2b47c05144e468a6a663869ca95`
+- `Tools/npu/README.md`: 38 lines, 1231 chars, sha256 `bb15beeb5dc9eaa8282b6d5dac0ce782574f844e9cfe25655e97c80b1145c916`
 - `Tools/npu/run_dual_ai_pipeline.py`: 1705 lines, 72162 chars, sha256 `a6a3d187992b5d66d4d8edb064e2a04cc303c5f685b05b0a698efd953f636bbb`
 - `Tools/npu/run_npu_context.ps1`: 239 lines, 7213 chars, sha256 `2eecccc5fb54474ebaf957686aff5de3e875f3822e6ec16dc26efe8bb525154d`
 - `Tools/npu/run_npu_review.py`: 566 lines, 18230 chars, sha256 `d13f94b1d0c5c586cc63177f44f022f33f3e19a926fc675a1540e4d24cc524ed`
 - `Tools/npu/run_ollama_music_agent.py`: 239 lines, 8218 chars, sha256 `e5c78a8bdd345b4b4a638f9b0482a039fe7b990c31465c780b2359009bb1157c`
+- `Tools/repo_patch_runner/apply_repo_mods.py`: 444 lines, 15286 chars, sha256 `64307a6f42dddbb2363773954311fae7fc1dd76855e1f056b3c92c1cfc5a37fb`
+- `Tools/repo_patch_runner/example_fix_blender_51_musgrave.json`: 41 lines, 1979 chars, sha256 `6a6cc0f592252664ac99b71434b852b97bdb32ae0b447a59a2eb780d0cfb486a`
+- `Tools/repo_patch_runner/README.md`: 112 lines, 2369 chars, sha256 `84a16a0cc3ea9c612998d7b6b411e9b4a34a406b8a7732d5fdf50da28a53e460`
 - `Tools/workflow/asset_inventory.py`: 111 lines, 3674 chars, sha256 `9fe28344f2d02d5ad5b3ca2a3eb111f91fc69c2ed8952923dddefee87b7d709e`
+- `Tools/workflow/git_auto_push.py`: 166 lines, 4615 chars, sha256 `492e75895c1df77a8529f1fbb72c5b92c7b711ab45d8df8467ec2da50fb15c73`
 - `Tools/workflow/gui/workflow_gui.py`: 715 lines, 29958 chars, sha256 `9e2dad125e93992b70adb314b96fb9521c8e9c86a2c02b95498404b56f14d997`
+- `Tools/workflow/gui/workflow_gui_with_push.py`: 67 lines, 2153 chars, sha256 `27922b035c5dba447b0587bde0706ddbe38dd51d6740a8f5334e7991ca9675c1`
 - `Tools/workflow/project_awareness.py`: 354 lines, 16475 chars, sha256 `c734994d90d95af74aebc3053ad6faf1eb24045bbbd5596caaf793ab162da70e`
 - `Tools/workflow/scene_brief.py`: 600 lines, 22757 chars, sha256 `3e059017208e1501dde6ac54f88640edc865a87220a98a63cffbb41239a99914`
 - `Tools/workflow/startup_check.py`: 285 lines, 10524 chars, sha256 `1096a57973628a44876bec0b0639bc9ce909d02f1568f741ae0946d31e00ff4f`
 - `Tools/workflow/startup_preflight.ps1`: 338 lines, 12498 chars, sha256 `ee0094a285943221ae11ce05ea822381866bc4240bdb837c691a809e77a384b7`
 - `Tools/workflow/workflow_debug.py`: 608 lines, 23650 chars, sha256 `d18ebede0a4b6e18ae378702469f12bf014a7fc95df44b68f57ad4e4fc2e1b2d`
 - `Tools/workflow/workflow_shell.py`: 299 lines, 10719 chars, sha256 `6752e7a4bec941050a8a5ef8d3c2eaa374cd3284ec9052a8bb549da98aed7c05`
+- `Tools/workflow/workflow_shell_with_push.py`: 118 lines, 3671 chars, sha256 `b486ec8aa3af52c4c16592a4f0802402e3cd420c78dcde962a81e701b1e7d598`
 - `Tools/workflow/workflow_state.py`: 1231 lines, 44525 chars, sha256 `0dd21d73af1469f617ce717a385d56fd56c29b6920fbc1c360a8b2c0aa460a6e`
-- `workflow_gui.ps1`: 36 lines, 1067 chars, sha256 `a3f90cce2ded2a870e013c1693afb1f64b7c3817329c206a208aa478df7d9fd7`
+- `workflow_gui.ps1`: 36 lines, 1077 chars, sha256 `6d91cb7cc2389c2736abe2477d1b9a484fae32bdfd5e708f7c84915d469fadd2`
 - `workflow_shell.ps1`: 36 lines, 1076 chars, sha256 `417b7ac913832a379006e41369fe860194f5156ea2deb53f939fb95c9a40a468`
 
 ## Chunks
-- `indexAI/project_code_chunks/chunk_0001_analyze_wav_py.md` -> `analyze_wav.py` lines 1-245
-- `indexAI/project_code_chunks/chunk_0002_analyze_wav_py.md` -> `analyze_wav.py` lines 246-257
-- `indexAI/project_code_chunks/chunk_0003_build_track_summary_py.md` -> `build_track_summary.py` lines 1-113
-- `indexAI/project_code_chunks/chunk_0004_normalize_scene_spec_py.md` -> `normalize_scene_spec.py` lines 1-315
-- `indexAI/project_code_chunks/chunk_0005_normalize_scene_spec_py.md` -> `normalize_scene_spec.py` lines 316-487
-- `indexAI/project_code_chunks/chunk_0006_scene_spec_album_driven_json.md` -> `scene_spec_album_driven.json` lines 1-76
-- `indexAI/project_code_chunks/chunk_0007_scene_spec_album_driven_normalized_json.md` -> `scene_spec_album_driven_normalized.json` lines 1-325
-- `indexAI/project_code_chunks/chunk_0008_scene_spec_album_driven_raw_txt.md` -> `scene_spec_album_driven_raw.txt` lines 1-1
-- `indexAI/project_code_chunks/chunk_0009_scene_spec_from_npu_json.md` -> `scene_spec_from_npu.json` lines 1-65
-- `indexAI/project_code_chunks/chunk_0010_scene_spec_from_npu_raw_txt.md` -> `scene_spec_from_npu_raw.txt` lines 1-53
-- `indexAI/project_code_chunks/chunk_0011_Scripting_v61b_init_py.md` -> `Scripting/v61b/__init__.py` lines 1-1
-- `indexAI/project_code_chunks/chunk_0012_Scripting_v61b_animation_py.md` -> `Scripting/v61b/animation.py` lines 1-280
-- `indexAI/project_code_chunks/chunk_0013_Scripting_v61b_animation_py.md` -> `Scripting/v61b/animation.py` lines 281-476
-- `indexAI/project_code_chunks/chunk_0014_Scripting_v61b_animation_py.md` -> `Scripting/v61b/animation.py` lines 477-682
-- `indexAI/project_code_chunks/chunk_0015_Scripting_v61b_animation_py.md` -> `Scripting/v61b/animation.py` lines 683-893
-- `indexAI/project_code_chunks/chunk_0016_Scripting_v61b_animation_py.md` -> `Scripting/v61b/animation.py` lines 894-1079
-- `indexAI/project_code_chunks/chunk_0017_Scripting_v61b_asset_setup_py.md` -> `Scripting/v61b/asset_setup.py` lines 1-316
-- `indexAI/project_code_chunks/chunk_0018_Scripting_v61b_asset_setup_py.md` -> `Scripting/v61b/asset_setup.py` lines 317-580
-- `indexAI/project_code_chunks/chunk_0019_Scripting_v61b_asset_setup_py.md` -> `Scripting/v61b/asset_setup.py` lines 581-725
-- `indexAI/project_code_chunks/chunk_0020_Scripting_v61b_atmosphere_setup_py.md` -> `Scripting/v61b/atmosphere_setup.py` lines 1-346
-- `indexAI/project_code_chunks/chunk_0021_Scripting_v61b_atmosphere_setup_py.md` -> `Scripting/v61b/atmosphere_setup.py` lines 347-554
-- `indexAI/project_code_chunks/chunk_0022_Scripting_v61b_camera_setup_py.md` -> `Scripting/v61b/camera_setup.py` lines 1-29
-- `indexAI/project_code_chunks/chunk_0023_Scripting_v61b_config_py.md` -> `Scripting/v61b/config.py` lines 1-270
-- `indexAI/project_code_chunks/chunk_0024_Scripting_v61b_config_py.md` -> `Scripting/v61b/config.py` lines 271-438
-- `indexAI/project_code_chunks/chunk_0025_Scripting_v61b_encode_ffmpeg_v61b_py.md` -> `Scripting/v61b/encode_ffmpeg_v61b.py` lines 1-322
-- `indexAI/project_code_chunks/chunk_0026_Scripting_v61b_encode_ffmpeg_v61b_py.md` -> `Scripting/v61b/encode_ffmpeg_v61b.py` lines 323-398
-- `indexAI/project_code_chunks/chunk_0027_Scripting_v61b_encode_image_sequence_v61b_py.md` -> `Scripting/v61b/encode_image_sequence_v61b.py` lines 1-329
-- `indexAI/project_code_chunks/chunk_0028_Scripting_v61b_encode_image_sequence_v61b_py.md` -> `Scripting/v61b/encode_image_sequence_v61b.py` lines 330-395
-- `indexAI/project_code_chunks/chunk_0029_Scripting_v61b_fog_dynamics_py.md` -> `Scripting/v61b/fog_dynamics.py` lines 1-271
-- `indexAI/project_code_chunks/chunk_0030_Scripting_v61b_fog_dynamics_py.md` -> `Scripting/v61b/fog_dynamics.py` lines 272-392
-- `indexAI/project_code_chunks/chunk_0031_Scripting_v61b_fog_filaments_py.md` -> `Scripting/v61b/fog_filaments.py` lines 1-159
-- `indexAI/project_code_chunks/chunk_0032_Scripting_v61b_hot_update_scene_v61b_py.md` -> `Scripting/v61b/hot_update_scene_v61b.py` lines 1-63
-- `indexAI/project_code_chunks/chunk_0033_Scripting_v61b_hotpatch_init_py.md` -> `Scripting/v61b/hotpatch/__init__.py` lines 1-3
-- `indexAI/project_code_chunks/chunk_0034_Scripting_v61b_hotpatch_accent_patch_py.md` -> `Scripting/v61b/hotpatch/accent_patch.py` lines 1-244
-- `indexAI/project_code_chunks/chunk_0035_Scripting_v61b_hotpatch_accent_patch_py.md` -> `Scripting/v61b/hotpatch/accent_patch.py` lines 245-301
-- `indexAI/project_code_chunks/chunk_0036_Scripting_v61b_hotpatch_common_py.md` -> `Scripting/v61b/hotpatch/common.py` lines 1-91
-- `indexAI/project_code_chunks/chunk_0037_Scripting_v61b_hotpatch_diagnostics_py.md` -> `Scripting/v61b/hotpatch/diagnostics.py` lines 1-276
-- `indexAI/project_code_chunks/chunk_0038_Scripting_v61b_hotpatch_diagnostics_py.md` -> `Scripting/v61b/hotpatch/diagnostics.py` lines 277-286
-- `indexAI/project_code_chunks/chunk_0039_Scripting_v61b_hotpatch_fog_patch_py.md` -> `Scripting/v61b/hotpatch/fog_patch.py` lines 1-133
-- `indexAI/project_code_chunks/chunk_0040_Scripting_v61b_hotpatch_hero_material_patch_py.md` -> `Scripting/v61b/hotpatch/hero_material_patch.py` lines 1-291
-- `indexAI/project_code_chunks/chunk_0041_Scripting_v61b_hotpatch_hero_material_patch_py.md` -> `Scripting/v61b/hotpatch/hero_material_patch.py` lines 292-395
-- `indexAI/project_code_chunks/chunk_0042_Scripting_v61b_hotpatch_lighting_patch_py.md` -> `Scripting/v61b/hotpatch/lighting_patch.py` lines 1-150
-- `indexAI/project_code_chunks/chunk_0043_Scripting_v61b_hotpatch_render_patch_py.md` -> `Scripting/v61b/hotpatch/render_patch.py` lines 1-206
-- `indexAI/project_code_chunks/chunk_0044_Scripting_v61b_hotpatch_runner_py.md` -> `Scripting/v61b/hotpatch/runner.py` lines 1-103
-- `indexAI/project_code_chunks/chunk_0045_Scripting_v61b_io_utils_py.md` -> `Scripting/v61b/io_utils.py` lines 1-81
-- `indexAI/project_code_chunks/chunk_0046_Scripting_v61b_main_v61b_py.md` -> `Scripting/v61b/main_v61b.py` lines 1-219
-- `indexAI/project_code_chunks/chunk_0047_Scripting_v61b_materials_py.md` -> `Scripting/v61b/materials.py` lines 1-308
-- `indexAI/project_code_chunks/chunk_0048_Scripting_v61b_materials_py.md` -> `Scripting/v61b/materials.py` lines 309-562
-- `indexAI/project_code_chunks/chunk_0049_Scripting_v61b_materials_py.md` -> `Scripting/v61b/materials.py` lines 563-657
-- `indexAI/project_code_chunks/chunk_0050_Scripting_v61b_physics_setup_py.md` -> `Scripting/v61b/physics_setup.py` lines 1-323
-- `indexAI/project_code_chunks/chunk_0051_Scripting_v61b_physics_setup_py.md` -> `Scripting/v61b/physics_setup.py` lines 324-614
-- `indexAI/project_code_chunks/chunk_0052_Scripting_v61b_physics_setup_py.md` -> `Scripting/v61b/physics_setup.py` lines 615-737
-- `indexAI/project_code_chunks/chunk_0053_Scripting_v61b_PROJECT_STRUCTURE_md.md` -> `Scripting/v61b/PROJECT_STRUCTURE.md` lines 1-43
-- `indexAI/project_code_chunks/chunk_0054_Scripting_v61b_render_setup_py.md` -> `Scripting/v61b/render_setup.py` lines 1-270
-- `indexAI/project_code_chunks/chunk_0055_Scripting_v61b_SCENE_TUNING_GUIDE_md.md` -> `Scripting/v61b/SCENE_TUNING_GUIDE.md` lines 1-213
-- `indexAI/project_code_chunks/chunk_0056_Scripting_v61b_SCENE_TUNING_GUIDE_md.md` -> `Scripting/v61b/SCENE_TUNING_GUIDE.md` lines 214-304
-- `indexAI/project_code_chunks/chunk_0057_Scripting_v61b_scene_tuning_panel_py.md` -> `Scripting/v61b/scene_tuning_panel.py` lines 1-323
-- `indexAI/project_code_chunks/chunk_0058_Scripting_v61b_scene_tuning_panel_py.md` -> `Scripting/v61b/scene_tuning_panel.py` lines 324-574
-- `indexAI/project_code_chunks/chunk_0059_Scripting_v61b_scene_tuning_panel_py.md` -> `Scripting/v61b/scene_tuning_panel.py` lines 575-792
-- `indexAI/project_code_chunks/chunk_0060_Scripting_v61b_scene_tuning_panel_py.md` -> `Scripting/v61b/scene_tuning_panel.py` lines 793-1037
-- `indexAI/project_code_chunks/chunk_0061_Scripting_v61b_scene_tuning_panel_py.md` -> `Scripting/v61b/scene_tuning_panel.py` lines 1038-1262
-- `indexAI/project_code_chunks/chunk_0062_Scripting_v61b_scene_utils_py.md` -> `Scripting/v61b/scene_utils.py` lines 1-97
-- `indexAI/project_code_chunks/chunk_0063_Scripting_v61b_spaziotempo_init_py.md` -> `Scripting/v61b/spaziotempo/__init__.py` lines 1-4
-- `indexAI/project_code_chunks/chunk_0064_Scripting_v61b_spaziotempo_core_init_py.md` -> `Scripting/v61b/spaziotempo/core/__init__.py` lines 1-1
-- `indexAI/project_code_chunks/chunk_0065_Scripting_v61b_spaziotempo_core_collections_py.md` -> `Scripting/v61b/spaziotempo/core/collections.py` lines 1-132
-- `indexAI/project_code_chunks/chunk_0066_Scripting_v61b_spaziotempo_core_registry_py.md` -> `Scripting/v61b/spaziotempo/core/registry.py` lines 1-221
-- `indexAI/project_code_chunks/chunk_0067_Scripting_v61b_spaziotempo_features_init_py.md` -> `Scripting/v61b/spaziotempo/features/__init__.py` lines 1-1
-- `indexAI/project_code_chunks/chunk_0068_Scripting_v61b_spaziotempo_features_catalog_py.md` -> `Scripting/v61b/spaziotempo/features/catalog.py` lines 1-19
-- `indexAI/project_code_chunks/chunk_0069_Scripting_v61b_world_setup_py.md` -> `Scripting/v61b/world_setup.py` lines 1-198
-- `indexAI/project_code_chunks/chunk_0070_Scripting_v61b_backgood_init_py.md` -> `Scripting/v61b_backgood/__init__.py` lines 1-1
-- `indexAI/project_code_chunks/chunk_0071_Scripting_v61b_backgood_animation_py.md` -> `Scripting/v61b_backgood/animation.py` lines 1-280
-- `indexAI/project_code_chunks/chunk_0072_Scripting_v61b_backgood_animation_py.md` -> `Scripting/v61b_backgood/animation.py` lines 281-476
-- `indexAI/project_code_chunks/chunk_0073_Scripting_v61b_backgood_animation_py.md` -> `Scripting/v61b_backgood/animation.py` lines 477-682
-- `indexAI/project_code_chunks/chunk_0074_Scripting_v61b_backgood_animation_py.md` -> `Scripting/v61b_backgood/animation.py` lines 683-882
-- `indexAI/project_code_chunks/chunk_0075_Scripting_v61b_backgood_animation_py.md` -> `Scripting/v61b_backgood/animation.py` lines 883-1019
-- `indexAI/project_code_chunks/chunk_0076_Scripting_v61b_backgood_asset_setup_py.md` -> `Scripting/v61b_backgood/asset_setup.py` lines 1-316
-- `indexAI/project_code_chunks/chunk_0077_Scripting_v61b_backgood_asset_setup_py.md` -> `Scripting/v61b_backgood/asset_setup.py` lines 317-580
-- `indexAI/project_code_chunks/chunk_0078_Scripting_v61b_backgood_asset_setup_py.md` -> `Scripting/v61b_backgood/asset_setup.py` lines 581-725
-- `indexAI/project_code_chunks/chunk_0079_Scripting_v61b_backgood_atmosphere_setup_py.md` -> `Scripting/v61b_backgood/atmosphere_setup.py` lines 1-348
-- `indexAI/project_code_chunks/chunk_0080_Scripting_v61b_backgood_atmosphere_setup_py.md` -> `Scripting/v61b_backgood/atmosphere_setup.py` lines 349-543
-- `indexAI/project_code_chunks/chunk_0081_Scripting_v61b_backgood_camera_setup_py.md` -> `Scripting/v61b_backgood/camera_setup.py` lines 1-29
-- `indexAI/project_code_chunks/chunk_0082_Scripting_v61b_backgood_config_py.md` -> `Scripting/v61b_backgood/config.py` lines 1-287
-- `indexAI/project_code_chunks/chunk_0083_Scripting_v61b_backgood_config_py.md` -> `Scripting/v61b_backgood/config.py` lines 288-358
-- `indexAI/project_code_chunks/chunk_0084_Scripting_v61b_backgood_encode_image_sequence_v61b_py.md` -> `Scripting/v61b_backgood/encode_image_sequence_v61b.py` lines 1-327
-- `indexAI/project_code_chunks/chunk_0085_Scripting_v61b_backgood_encode_image_sequence_v61b_py.md` -> `Scripting/v61b_backgood/encode_image_sequence_v61b.py` lines 328-376
-- `indexAI/project_code_chunks/chunk_0086_Scripting_v61b_backgood_fog_dynamics_py.md` -> `Scripting/v61b_backgood/fog_dynamics.py` lines 1-240
-- `indexAI/project_code_chunks/chunk_0087_Scripting_v61b_backgood_hot_update_scene_v61b_py.md` -> `Scripting/v61b_backgood/hot_update_scene_v61b.py` lines 1-61
-- `indexAI/project_code_chunks/chunk_0088_Scripting_v61b_backgood_hotpatch_init_py.md` -> `Scripting/v61b_backgood/hotpatch/__init__.py` lines 1-3
-- `indexAI/project_code_chunks/chunk_0089_Scripting_v61b_backgood_hotpatch_accent_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/accent_patch.py` lines 1-125
-- `indexAI/project_code_chunks/chunk_0090_Scripting_v61b_backgood_hotpatch_common_py.md` -> `Scripting/v61b_backgood/hotpatch/common.py` lines 1-91
-- `indexAI/project_code_chunks/chunk_0091_Scripting_v61b_backgood_hotpatch_fog_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/fog_patch.py` lines 1-124
-- `indexAI/project_code_chunks/chunk_0092_Scripting_v61b_backgood_hotpatch_hero_material_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/hero_material_patch.py` lines 1-291
-- `indexAI/project_code_chunks/chunk_0093_Scripting_v61b_backgood_hotpatch_hero_material_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/hero_material_patch.py` lines 292-395
-- `indexAI/project_code_chunks/chunk_0094_Scripting_v61b_backgood_hotpatch_lighting_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/lighting_patch.py` lines 1-85
-- `indexAI/project_code_chunks/chunk_0095_Scripting_v61b_backgood_hotpatch_render_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/render_patch.py` lines 1-206
-- `indexAI/project_code_chunks/chunk_0096_Scripting_v61b_backgood_hotpatch_runner_py.md` -> `Scripting/v61b_backgood/hotpatch/runner.py` lines 1-60
-- `indexAI/project_code_chunks/chunk_0097_Scripting_v61b_backgood_io_utils_py.md` -> `Scripting/v61b_backgood/io_utils.py` lines 1-81
-- `indexAI/project_code_chunks/chunk_0098_Scripting_v61b_backgood_main_v61b_py.md` -> `Scripting/v61b_backgood/main_v61b.py` lines 1-181
-- `indexAI/project_code_chunks/chunk_0099_Scripting_v61b_backgood_materials_py.md` -> `Scripting/v61b_backgood/materials.py` lines 1-307
-- `indexAI/project_code_chunks/chunk_0100_Scripting_v61b_backgood_materials_py.md` -> `Scripting/v61b_backgood/materials.py` lines 308-513
-- `indexAI/project_code_chunks/chunk_0101_Scripting_v61b_backgood_physics_setup_py.md` -> `Scripting/v61b_backgood/physics_setup.py` lines 1-323
-- `indexAI/project_code_chunks/chunk_0102_Scripting_v61b_backgood_physics_setup_py.md` -> `Scripting/v61b_backgood/physics_setup.py` lines 324-614
-- `indexAI/project_code_chunks/chunk_0103_Scripting_v61b_backgood_physics_setup_py.md` -> `Scripting/v61b_backgood/physics_setup.py` lines 615-720
-- `indexAI/project_code_chunks/chunk_0104_Scripting_v61b_backgood_render_setup_py.md` -> `Scripting/v61b_backgood/render_setup.py` lines 1-267
-- `indexAI/project_code_chunks/chunk_0105_Scripting_v61b_backgood_SCENE_TUNING_GUIDE_md.md` -> `Scripting/v61b_backgood/SCENE_TUNING_GUIDE.md` lines 1-223
-- `indexAI/project_code_chunks/chunk_0106_Scripting_v61b_backgood_scene_tuning_panel_py.md` -> `Scripting/v61b_backgood/scene_tuning_panel.py` lines 1-323
-- `indexAI/project_code_chunks/chunk_0107_Scripting_v61b_backgood_scene_tuning_panel_py.md` -> `Scripting/v61b_backgood/scene_tuning_panel.py` lines 324-575
-- `indexAI/project_code_chunks/chunk_0108_Scripting_v61b_backgood_scene_tuning_panel_py.md` -> `Scripting/v61b_backgood/scene_tuning_panel.py` lines 576-785
-- `indexAI/project_code_chunks/chunk_0109_Scripting_v61b_backgood_scene_tuning_panel_py.md` -> `Scripting/v61b_backgood/scene_tuning_panel.py` lines 786-1038
-- `indexAI/project_code_chunks/chunk_0110_Scripting_v61b_backgood_scene_tuning_panel_py.md` -> `Scripting/v61b_backgood/scene_tuning_panel.py` lines 1039-1097
-- `indexAI/project_code_chunks/chunk_0111_Scripting_v61b_backgood_scene_utils_py.md` -> `Scripting/v61b_backgood/scene_utils.py` lines 1-97
-- `indexAI/project_code_chunks/chunk_0112_Scripting_v61b_backgood_world_setup_py.md` -> `Scripting/v61b_backgood/world_setup.py` lines 1-174
-- `indexAI/project_code_chunks/chunk_0113_Tools_npu_ai_memory_context_py.md` -> `Tools/npu/ai_memory_context.py` lines 1-111
-- `indexAI/project_code_chunks/chunk_0114_Tools_npu_build_ai_service_packet_py.md` -> `Tools/npu/build_ai_service_packet.py` lines 1-235
-- `indexAI/project_code_chunks/chunk_0115_Tools_npu_build_ai_service_packet_py.md` -> `Tools/npu/build_ai_service_packet.py` lines 236-355
-- `indexAI/project_code_chunks/chunk_0116_Tools_npu_build_blender_manual_context_py.md` -> `Tools/npu/build_blender_manual_context.py` lines 1-301
-- `indexAI/project_code_chunks/chunk_0117_Tools_npu_build_blender_manual_context_py.md` -> `Tools/npu/build_blender_manual_context.py` lines 302-326
-- `indexAI/project_code_chunks/chunk_0118_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 1-285
-- `indexAI/project_code_chunks/chunk_0119_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 286-547
-- `indexAI/project_code_chunks/chunk_0120_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 548-711
-- `indexAI/project_code_chunks/chunk_0121_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 1-306
-- `indexAI/project_code_chunks/chunk_0122_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 307-389
-- `indexAI/project_code_chunks/chunk_0123_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 1-300
-- `indexAI/project_code_chunks/chunk_0124_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 301-419
-- `indexAI/project_code_chunks/chunk_0125_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 1-77
-- `indexAI/project_code_chunks/chunk_0126_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 78-130
-- `indexAI/project_code_chunks/chunk_0127_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 131-182
-- `indexAI/project_code_chunks/chunk_0128_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 183-236
-- `indexAI/project_code_chunks/chunk_0129_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 237-289
-- `indexAI/project_code_chunks/chunk_0130_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 290-344
-- `indexAI/project_code_chunks/chunk_0131_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 345-383
-- `indexAI/project_code_chunks/chunk_0132_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1-231
-- `indexAI/project_code_chunks/chunk_0133_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 232-449
-- `indexAI/project_code_chunks/chunk_0134_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 450-661
-- `indexAI/project_code_chunks/chunk_0135_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 662-881
-- `indexAI/project_code_chunks/chunk_0136_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 882-1100
-- `indexAI/project_code_chunks/chunk_0137_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1101-1311
-- `indexAI/project_code_chunks/chunk_0138_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1312-1525
-- `indexAI/project_code_chunks/chunk_0139_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1526-1745
-- `indexAI/project_code_chunks/chunk_0140_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1746-1968
-- `indexAI/project_code_chunks/chunk_0141_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1969-2181
-- `indexAI/project_code_chunks/chunk_0142_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2182-2399
-- `indexAI/project_code_chunks/chunk_0143_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2400-2619
-- `indexAI/project_code_chunks/chunk_0144_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2620-2839
-- `indexAI/project_code_chunks/chunk_0145_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2840-3059
-- `indexAI/project_code_chunks/chunk_0146_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 3060-3273
-- `indexAI/project_code_chunks/chunk_0147_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 3274-3339
-- `indexAI/project_code_chunks/chunk_0148_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1-383
-- `indexAI/project_code_chunks/chunk_0149_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 384-752
-- `indexAI/project_code_chunks/chunk_0150_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 753-1106
-- `indexAI/project_code_chunks/chunk_0151_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1107-1381
-- `indexAI/project_code_chunks/chunk_0152_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1382-1633
-- `indexAI/project_code_chunks/chunk_0153_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1634-1964
-- `indexAI/project_code_chunks/chunk_0154_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1965-2282
-- `indexAI/project_code_chunks/chunk_0155_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2283-2669
-- `indexAI/project_code_chunks/chunk_0156_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2670-3010
-- `indexAI/project_code_chunks/chunk_0157_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3011-3389
-- `indexAI/project_code_chunks/chunk_0158_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3390-3759
-- `indexAI/project_code_chunks/chunk_0159_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3760-4111
-- `indexAI/project_code_chunks/chunk_0160_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4112-4488
-- `indexAI/project_code_chunks/chunk_0161_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4489-4874
-- `indexAI/project_code_chunks/chunk_0162_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4875-5244
-- `indexAI/project_code_chunks/chunk_0163_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5245-5607
-- `indexAI/project_code_chunks/chunk_0164_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5608-5895
-- `indexAI/project_code_chunks/chunk_0165_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5896-6177
-- `indexAI/project_code_chunks/chunk_0166_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6178-6456
-- `indexAI/project_code_chunks/chunk_0167_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6457-6566
-- `indexAI/project_code_chunks/chunk_0168_Tools_npu_npu_music_manifest_json.md` -> `Tools/npu/npu_music_manifest.json` lines 1-305
-- `indexAI/project_code_chunks/chunk_0169_Tools_npu_npu_music_manifest_json.md` -> `Tools/npu/npu_music_manifest.json` lines 306-545
-- `indexAI/project_code_chunks/chunk_0170_Tools_npu_npu_runtime_py.md` -> `Tools/npu/npu_runtime.py` lines 1-95
-- `indexAI/project_code_chunks/chunk_0171_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 1-302
-- `indexAI/project_code_chunks/chunk_0172_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 303-351
-- `indexAI/project_code_chunks/chunk_0173_Tools_npu_run_dual_ai_pipeline_Copia_py.md` -> `Tools/npu/run_dual_ai_pipeline - Copia.py` lines 1-264
-- `indexAI/project_code_chunks/chunk_0174_Tools_npu_run_dual_ai_pipeline_Copia_py.md` -> `Tools/npu/run_dual_ai_pipeline - Copia.py` lines 265-506
-- `indexAI/project_code_chunks/chunk_0175_Tools_npu_run_dual_ai_pipeline_Copia_py.md` -> `Tools/npu/run_dual_ai_pipeline - Copia.py` lines 507-705
-- `indexAI/project_code_chunks/chunk_0176_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1-245
-- `indexAI/project_code_chunks/chunk_0177_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 246-508
-- `indexAI/project_code_chunks/chunk_0178_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 509-743
-- `indexAI/project_code_chunks/chunk_0179_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 744-992
-- `indexAI/project_code_chunks/chunk_0180_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 993-1212
-- `indexAI/project_code_chunks/chunk_0181_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1213-1453
-- `indexAI/project_code_chunks/chunk_0182_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1454-1664
-- `indexAI/project_code_chunks/chunk_0183_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1665-1704
-- `indexAI/project_code_chunks/chunk_0184_Tools_npu_run_npu_context_ps1.md` -> `Tools/npu/run_npu_context.ps1` lines 1-238
-- `indexAI/project_code_chunks/chunk_0185_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 1-326
-- `indexAI/project_code_chunks/chunk_0186_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 327-565
-- `indexAI/project_code_chunks/chunk_0187_Tools_npu_run_ollama_music_agent_py.md` -> `Tools/npu/run_ollama_music_agent.py` lines 1-238
-- `indexAI/project_code_chunks/chunk_0188_Tools_workflow_asset_inventory_py.md` -> `Tools/workflow/asset_inventory.py` lines 1-110
-- `indexAI/project_code_chunks/chunk_0189_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 1-265
-- `indexAI/project_code_chunks/chunk_0190_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 266-478
-- `indexAI/project_code_chunks/chunk_0191_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 479-714
-- `indexAI/project_code_chunks/chunk_0192_Tools_workflow_project_awareness_py.md` -> `Tools/workflow/project_awareness.py` lines 1-249
-- `indexAI/project_code_chunks/chunk_0193_Tools_workflow_project_awareness_py.md` -> `Tools/workflow/project_awareness.py` lines 250-353
-- `indexAI/project_code_chunks/chunk_0194_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 1-285
-- `indexAI/project_code_chunks/chunk_0195_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 286-516
-- `indexAI/project_code_chunks/chunk_0196_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 517-599
-- `indexAI/project_code_chunks/chunk_0197_Tools_workflow_startup_check_py.md` -> `Tools/workflow/startup_check.py` lines 1-264
-- `indexAI/project_code_chunks/chunk_0198_Tools_workflow_startup_check_py.md` -> `Tools/workflow/startup_check.py` lines 265-284
-- `indexAI/project_code_chunks/chunk_0199_Tools_workflow_startup_preflight_ps1.md` -> `Tools/workflow/startup_preflight.ps1` lines 1-281
-- `indexAI/project_code_chunks/chunk_0200_Tools_workflow_startup_preflight_ps1.md` -> `Tools/workflow/startup_preflight.ps1` lines 282-337
-- `indexAI/project_code_chunks/chunk_0201_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 1-271
-- `indexAI/project_code_chunks/chunk_0202_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 272-505
-- `indexAI/project_code_chunks/chunk_0203_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 506-607
-- `indexAI/project_code_chunks/chunk_0204_Tools_workflow_workflow_shell_py.md` -> `Tools/workflow/workflow_shell.py` lines 1-269
-- `indexAI/project_code_chunks/chunk_0205_Tools_workflow_workflow_shell_py.md` -> `Tools/workflow/workflow_shell.py` lines 270-298
-- `indexAI/project_code_chunks/chunk_0206_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 1-265
-- `indexAI/project_code_chunks/chunk_0207_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 266-573
-- `indexAI/project_code_chunks/chunk_0208_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 574-855
-- `indexAI/project_code_chunks/chunk_0209_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 856-1102
-- `indexAI/project_code_chunks/chunk_0210_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 1103-1230
-- `indexAI/project_code_chunks/chunk_0211_workflow_gui_ps1.md` -> `workflow_gui.ps1` lines 1-35
-- `indexAI/project_code_chunks/chunk_0212_workflow_shell_ps1.md` -> `workflow_shell.ps1` lines 1-35
+- `indexAI/project_code_chunks/chunk_0001_github_ISSUE_TEMPLATE_bug_report_md.md` -> `.github/ISSUE_TEMPLATE/bug_report.md` lines 1-43
+- `indexAI/project_code_chunks/chunk_0002_github_ISSUE_TEMPLATE_feature_request_md.md` -> `.github/ISSUE_TEMPLATE/feature_request.md` lines 1-36
+- `indexAI/project_code_chunks/chunk_0003_github_PULL_REQUEST_TEMPLATE_md.md` -> `.github/PULL_REQUEST_TEMPLATE.md` lines 1-25
+- `indexAI/project_code_chunks/chunk_0004_github_workflows_apply_repo_mods_yml.md` -> `.github/workflows/apply_repo_mods.yml` lines 1-115
+- `indexAI/project_code_chunks/chunk_0005_AGENTS_md.md` -> `AGENTS.md` lines 1-92
+- `indexAI/project_code_chunks/chunk_0006_analyze_wav_py.md` -> `analyze_wav.py` lines 1-245
+- `indexAI/project_code_chunks/chunk_0007_analyze_wav_py.md` -> `analyze_wav.py` lines 246-257
+- `indexAI/project_code_chunks/chunk_0008_apply_fix_blender_51_musgrave_v2_ps1.md` -> `apply_fix_blender_51_musgrave_v2.ps1` lines 1-56
+- `indexAI/project_code_chunks/chunk_0009_build_track_summary_py.md` -> `build_track_summary.py` lines 1-113
+- `indexAI/project_code_chunks/chunk_0010_CHANGELOG_md.md` -> `CHANGELOG.md` lines 1-24
+- `indexAI/project_code_chunks/chunk_0011_CONTRIBUTING_md.md` -> `CONTRIBUTING.md` lines 1-44
+- `indexAI/project_code_chunks/chunk_0012_docs_AI_GENERATED_PACKAGE_STANDARD_md.md` -> `docs/AI_GENERATED_PACKAGE_STANDARD.md` lines 1-126
+- `indexAI/project_code_chunks/chunk_0013_docs_AUDIO_ANALYSIS_PIPELINE_md.md` -> `docs/AUDIO_ANALYSIS_PIPELINE.md` lines 1-61
+- `indexAI/project_code_chunks/chunk_0014_docs_AUTO_PUSH_GENERATED_ARTIFACTS_md.md` -> `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` lines 1-135
+- `indexAI/project_code_chunks/chunk_0015_docs_BLENDER_SCRIPT_ENTRYPOINTS_md.md` -> `docs/BLENDER_SCRIPT_ENTRYPOINTS.md` lines 1-54
+- `indexAI/project_code_chunks/chunk_0016_docs_CODE_CONSULTATION_REPORT_md.md` -> `docs/CODE_CONSULTATION_REPORT.md` lines 1-267
+- `indexAI/project_code_chunks/chunk_0017_docs_COMPATIBILITY_md.md` -> `docs/COMPATIBILITY.md` lines 1-30
+- `indexAI/project_code_chunks/chunk_0018_docs_DATA_FLOW_md.md` -> `docs/DATA_FLOW.md` lines 1-56
+- `indexAI/project_code_chunks/chunk_0019_docs_DEVELOPER_GUIDE_md.md` -> `docs/DEVELOPER_GUIDE.md` lines 1-69
+- `indexAI/project_code_chunks/chunk_0020_docs_FFMPEG_WORKFLOW_md.md` -> `docs/FFMPEG_WORKFLOW.md` lines 1-75
+- `indexAI/project_code_chunks/chunk_0021_docs_INDEX_REGEN_POLICY_md.md` -> `docs/INDEX_REGEN_POLICY.md` lines 1-154
+- `indexAI/project_code_chunks/chunk_0022_docs_INSTALLATION_md.md` -> `docs/INSTALLATION.md` lines 1-38
+- `indexAI/project_code_chunks/chunk_0023_docs_JSON_SCHEMAS_md.md` -> `docs/JSON_SCHEMAS.md` lines 1-51
+- `indexAI/project_code_chunks/chunk_0024_docs_KNOWN_LIMITATIONS_md.md` -> `docs/KNOWN_LIMITATIONS.md` lines 1-27
+- `indexAI/project_code_chunks/chunk_0025_docs_LOCAL_AI_WORKFLOW_md.md` -> `docs/LOCAL_AI_WORKFLOW.md` lines 1-86
+- `indexAI/project_code_chunks/chunk_0026_docs_MODULE_MAP_md.md` -> `docs/MODULE_MAP.md` lines 1-58
+- `indexAI/project_code_chunks/chunk_0027_docs_PACKAGE_CREATION_WORKFLOW_md.md` -> `docs/PACKAGE_CREATION_WORKFLOW.md` lines 1-160
+- `indexAI/project_code_chunks/chunk_0028_docs_PROJECT_AUDIT_md.md` -> `docs/PROJECT_AUDIT.md` lines 1-161
+- `indexAI/project_code_chunks/chunk_0029_docs_PROJECT_OVERVIEW_md.md` -> `docs/PROJECT_OVERVIEW.md` lines 1-38
+- `indexAI/project_code_chunks/chunk_0030_docs_QUALITY_GATE_md.md` -> `docs/QUALITY_GATE.md` lines 1-122
+- `indexAI/project_code_chunks/chunk_0031_docs_README_md.md` -> `docs/README.md` lines 1-70
+- `indexAI/project_code_chunks/chunk_0032_docs_RENDER_WORKFLOW_md.md` -> `docs/RENDER_WORKFLOW.md` lines 1-51
+- `indexAI/project_code_chunks/chunk_0033_docs_SHARED_SCRIPTING_UTILITIES_md.md` -> `docs/SHARED_SCRIPTING_UTILITIES.md` lines 1-99
+- `indexAI/project_code_chunks/chunk_0034_docs_USAGE_md.md` -> `docs/USAGE.md` lines 1-57
+- `indexAI/project_code_chunks/chunk_0035_examples_README_md.md` -> `examples/README.md` lines 1-14
+- `indexAI/project_code_chunks/chunk_0036_guida_git_github_blender_audio_project_md.md` -> `guida_git_github_blender_audio_project.md` lines 1-450
+- `indexAI/project_code_chunks/chunk_0037_guida_git_github_blender_audio_project_md.md` -> `guida_git_github_blender_audio_project.md` lines 451-535
+- `indexAI/project_code_chunks/chunk_0038_normalize_scene_spec_py.md` -> `normalize_scene_spec.py` lines 1-315
+- `indexAI/project_code_chunks/chunk_0039_normalize_scene_spec_py.md` -> `normalize_scene_spec.py` lines 316-487
+- `indexAI/project_code_chunks/chunk_0040_patch_specs_README_md.md` -> `patch_specs/README.md` lines 1-33
+- `indexAI/project_code_chunks/chunk_0041_README_md.md` -> `README.md` lines 1-87
+- `indexAI/project_code_chunks/chunk_0042_scene_spec_album_driven_json.md` -> `scene_spec_album_driven.json` lines 1-76
+- `indexAI/project_code_chunks/chunk_0043_scene_spec_album_driven_normalized_json.md` -> `scene_spec_album_driven_normalized.json` lines 1-325
+- `indexAI/project_code_chunks/chunk_0044_scene_spec_album_driven_raw_txt.md` -> `scene_spec_album_driven_raw.txt` lines 1-1
+- `indexAI/project_code_chunks/chunk_0045_scene_spec_from_npu_json.md` -> `scene_spec_from_npu.json` lines 1-65
+- `indexAI/project_code_chunks/chunk_0046_scene_spec_from_npu_raw_txt.md` -> `scene_spec_from_npu_raw.txt` lines 1-53
+- `indexAI/project_code_chunks/chunk_0047_Scripting_template_audio_reactive_package_AGENT_CONTEXT_md.md` -> `Scripting/_template_audio_reactive_package/AGENT_CONTEXT.md` lines 1-51
+- `indexAI/project_code_chunks/chunk_0048_Scripting_template_audio_reactive_package_audio_mapping_py.md` -> `Scripting/_template_audio_reactive_package/audio_mapping.py` lines 1-51
+- `indexAI/project_code_chunks/chunk_0049_Scripting_template_audio_reactive_package_camera_py.md` -> `Scripting/_template_audio_reactive_package/camera.py` lines 1-26
+- `indexAI/project_code_chunks/chunk_0050_Scripting_template_audio_reactive_package_config_py.md` -> `Scripting/_template_audio_reactive_package/config.py` lines 1-49
+- `indexAI/project_code_chunks/chunk_0051_Scripting_template_audio_reactive_package_CREATIVE_BRIEF_md.md` -> `Scripting/_template_audio_reactive_package/CREATIVE_BRIEF.md` lines 1-56
+- `indexAI/project_code_chunks/chunk_0052_Scripting_template_audio_reactive_package_encode_ffmpeg_py.md` -> `Scripting/_template_audio_reactive_package/encode_ffmpeg.py` lines 1-75
+- `indexAI/project_code_chunks/chunk_0053_Scripting_template_audio_reactive_package_IMPLEMENTATION_PLAN_md.md` -> `Scripting/_template_audio_reactive_package/IMPLEMENTATION_PLAN.md` lines 1-58
+- `indexAI/project_code_chunks/chunk_0054_Scripting_template_audio_reactive_package_inputs_input_schema_json.md` -> `Scripting/_template_audio_reactive_package/inputs/input_schema.json` lines 1-28
+- `indexAI/project_code_chunks/chunk_0055_Scripting_template_audio_reactive_package_inputs_music_context_json.md` -> `Scripting/_template_audio_reactive_package/inputs/music_context.json` lines 1-10
+- `indexAI/project_code_chunks/chunk_0056_Scripting_template_audio_reactive_package_inputs_README_md.md` -> `Scripting/_template_audio_reactive_package/inputs/README.md` lines 1-18
+- `indexAI/project_code_chunks/chunk_0057_Scripting_template_audio_reactive_package_inputs_track_summary_json.md` -> `Scripting/_template_audio_reactive_package/inputs/track_summary.json` lines 1-19
+- `indexAI/project_code_chunks/chunk_0058_Scripting_template_audio_reactive_package_lighting_py.md` -> `Scripting/_template_audio_reactive_package/lighting.py` lines 1-23
+- `indexAI/project_code_chunks/chunk_0059_Scripting_template_audio_reactive_package_main_py.md` -> `Scripting/_template_audio_reactive_package/main.py` lines 1-79
+- `indexAI/project_code_chunks/chunk_0060_Scripting_template_audio_reactive_package_materials_py.md` -> `Scripting/_template_audio_reactive_package/materials.py` lines 1-35
+- `indexAI/project_code_chunks/chunk_0061_Scripting_template_audio_reactive_package_notes_known_issues_md.md` -> `Scripting/_template_audio_reactive_package/notes/known_issues.md` lines 1-15
+- `indexAI/project_code_chunks/chunk_0062_Scripting_template_audio_reactive_package_notes_tuning_notes_md.md` -> `Scripting/_template_audio_reactive_package/notes/tuning_notes.md` lines 1-20
+- `indexAI/project_code_chunks/chunk_0063_Scripting_template_audio_reactive_package_outputs_README_md.md` -> `Scripting/_template_audio_reactive_package/outputs/README.md` lines 1-14
+- `indexAI/project_code_chunks/chunk_0064_Scripting_template_audio_reactive_package_README_md.md` -> `Scripting/_template_audio_reactive_package/README.md` lines 1-71
+- `indexAI/project_code_chunks/chunk_0065_Scripting_template_audio_reactive_package_render_settings_py.md` -> `Scripting/_template_audio_reactive_package/render_settings.py` lines 1-26
+- `indexAI/project_code_chunks/chunk_0066_Scripting_template_audio_reactive_package_REPORT_md.md` -> `Scripting/_template_audio_reactive_package/REPORT.md` lines 1-46
+- `indexAI/project_code_chunks/chunk_0067_Scripting_template_audio_reactive_package_scene_objects_py.md` -> `Scripting/_template_audio_reactive_package/scene_objects.py` lines 1-21
+- `indexAI/project_code_chunks/chunk_0068_Scripting_template_audio_reactive_package_TEST_CHECKLIST_md.md` -> `Scripting/_template_audio_reactive_package/TEST_CHECKLIST.md` lines 1-45
+- `indexAI/project_code_chunks/chunk_0069_Scripting_README_md.md` -> `Scripting/README.md` lines 1-52
+- `indexAI/project_code_chunks/chunk_0070_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_encode_final_youtube_py.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/encode_final_youtube.py` lines 1-203
+- `indexAI/project_code_chunks/chunk_0071_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_INSTALL_LOCATION_txt.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/INSTALL_LOCATION.txt` lines 1-13
+- `indexAI/project_code_chunks/chunk_0072_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_LINE_COUNTS_json.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/LINE_COUNTS.json` lines 1-9
+- `indexAI/project_code_chunks/chunk_0073_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_main_ready_to_jazz_wow_y.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py` lines 1-261
+- `indexAI/project_code_chunks/chunk_0074_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_main_ready_to_jazz_wow_y.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py` lines 262-538
+- `indexAI/project_code_chunks/chunk_0075_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_main_ready_to_jazz_wow_y.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py` lines 539-763
+- `indexAI/project_code_chunks/chunk_0076_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_main_ready_to_jazz_wow_y.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py` lines 764-1033
+- `indexAI/project_code_chunks/chunk_0077_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_main_ready_to_jazz_wow_y.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py` lines 1034-1299
+- `indexAI/project_code_chunks/chunk_0078_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_main_ready_to_jazz_wow_y.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py` lines 1300-1548
+- `indexAI/project_code_chunks/chunk_0079_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_main_ready_to_jazz_wow_y.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py` lines 1549-1756
+- `indexAI/project_code_chunks/chunk_0080_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_main_ready_to_jazz_wow_y.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py` lines 1757-1971
+- `indexAI/project_code_chunks/chunk_0081_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_main_ready_to_jazz_wow_y.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py` lines 1972-2165
+- `indexAI/project_code_chunks/chunk_0082_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_main_ready_to_jazz_wow_y.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py` lines 2166-2197
+- `indexAI/project_code_chunks/chunk_0083_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_README_md.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/README.md` lines 1-87
+- `indexAI/project_code_chunks/chunk_0084_Scripting_ready_to_jazz_wow_youtube_profiles_audio_sync_render_profiles_referenc.md` -> `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/render_profiles_reference.py` lines 1-20
+- `indexAI/project_code_chunks/chunk_0085_Scripting_shared_README_md.md` -> `Scripting/shared/README.md` lines 1-71
+- `indexAI/project_code_chunks/chunk_0086_Scripting_v61b_init_py.md` -> `Scripting/v61b/__init__.py` lines 1-1
+- `indexAI/project_code_chunks/chunk_0087_Scripting_v61b_animation_py.md` -> `Scripting/v61b/animation.py` lines 1-280
+- `indexAI/project_code_chunks/chunk_0088_Scripting_v61b_animation_py.md` -> `Scripting/v61b/animation.py` lines 281-476
+- `indexAI/project_code_chunks/chunk_0089_Scripting_v61b_animation_py.md` -> `Scripting/v61b/animation.py` lines 477-682
+- `indexAI/project_code_chunks/chunk_0090_Scripting_v61b_animation_py.md` -> `Scripting/v61b/animation.py` lines 683-893
+- `indexAI/project_code_chunks/chunk_0091_Scripting_v61b_animation_py.md` -> `Scripting/v61b/animation.py` lines 894-1079
+- `indexAI/project_code_chunks/chunk_0092_Scripting_v61b_asset_setup_py.md` -> `Scripting/v61b/asset_setup.py` lines 1-316
+- `indexAI/project_code_chunks/chunk_0093_Scripting_v61b_asset_setup_py.md` -> `Scripting/v61b/asset_setup.py` lines 317-580
+- `indexAI/project_code_chunks/chunk_0094_Scripting_v61b_asset_setup_py.md` -> `Scripting/v61b/asset_setup.py` lines 581-725
+- `indexAI/project_code_chunks/chunk_0095_Scripting_v61b_atmosphere_setup_py.md` -> `Scripting/v61b/atmosphere_setup.py` lines 1-346
+- `indexAI/project_code_chunks/chunk_0096_Scripting_v61b_atmosphere_setup_py.md` -> `Scripting/v61b/atmosphere_setup.py` lines 347-554
+- `indexAI/project_code_chunks/chunk_0097_Scripting_v61b_camera_setup_py.md` -> `Scripting/v61b/camera_setup.py` lines 1-29
+- `indexAI/project_code_chunks/chunk_0098_Scripting_v61b_config_py.md` -> `Scripting/v61b/config.py` lines 1-270
+- `indexAI/project_code_chunks/chunk_0099_Scripting_v61b_config_py.md` -> `Scripting/v61b/config.py` lines 271-438
+- `indexAI/project_code_chunks/chunk_0100_Scripting_v61b_encode_ffmpeg_v61b_py.md` -> `Scripting/v61b/encode_ffmpeg_v61b.py` lines 1-322
+- `indexAI/project_code_chunks/chunk_0101_Scripting_v61b_encode_ffmpeg_v61b_py.md` -> `Scripting/v61b/encode_ffmpeg_v61b.py` lines 323-398
+- `indexAI/project_code_chunks/chunk_0102_Scripting_v61b_encode_image_sequence_v61b_py.md` -> `Scripting/v61b/encode_image_sequence_v61b.py` lines 1-329
+- `indexAI/project_code_chunks/chunk_0103_Scripting_v61b_encode_image_sequence_v61b_py.md` -> `Scripting/v61b/encode_image_sequence_v61b.py` lines 330-395
+- `indexAI/project_code_chunks/chunk_0104_Scripting_v61b_fog_dynamics_py.md` -> `Scripting/v61b/fog_dynamics.py` lines 1-271
+- `indexAI/project_code_chunks/chunk_0105_Scripting_v61b_fog_dynamics_py.md` -> `Scripting/v61b/fog_dynamics.py` lines 272-392
+- `indexAI/project_code_chunks/chunk_0106_Scripting_v61b_fog_filaments_py.md` -> `Scripting/v61b/fog_filaments.py` lines 1-159
+- `indexAI/project_code_chunks/chunk_0107_Scripting_v61b_hot_update_scene_v61b_py.md` -> `Scripting/v61b/hot_update_scene_v61b.py` lines 1-63
+- `indexAI/project_code_chunks/chunk_0108_Scripting_v61b_hotpatch_init_py.md` -> `Scripting/v61b/hotpatch/__init__.py` lines 1-3
+- `indexAI/project_code_chunks/chunk_0109_Scripting_v61b_hotpatch_accent_patch_py.md` -> `Scripting/v61b/hotpatch/accent_patch.py` lines 1-244
+- `indexAI/project_code_chunks/chunk_0110_Scripting_v61b_hotpatch_accent_patch_py.md` -> `Scripting/v61b/hotpatch/accent_patch.py` lines 245-301
+- `indexAI/project_code_chunks/chunk_0111_Scripting_v61b_hotpatch_common_py.md` -> `Scripting/v61b/hotpatch/common.py` lines 1-91
+- `indexAI/project_code_chunks/chunk_0112_Scripting_v61b_hotpatch_diagnostics_py.md` -> `Scripting/v61b/hotpatch/diagnostics.py` lines 1-276
+- `indexAI/project_code_chunks/chunk_0113_Scripting_v61b_hotpatch_diagnostics_py.md` -> `Scripting/v61b/hotpatch/diagnostics.py` lines 277-286
+- `indexAI/project_code_chunks/chunk_0114_Scripting_v61b_hotpatch_fog_patch_py.md` -> `Scripting/v61b/hotpatch/fog_patch.py` lines 1-133
+- `indexAI/project_code_chunks/chunk_0115_Scripting_v61b_hotpatch_hero_material_patch_py.md` -> `Scripting/v61b/hotpatch/hero_material_patch.py` lines 1-291
+- `indexAI/project_code_chunks/chunk_0116_Scripting_v61b_hotpatch_hero_material_patch_py.md` -> `Scripting/v61b/hotpatch/hero_material_patch.py` lines 292-395
+- `indexAI/project_code_chunks/chunk_0117_Scripting_v61b_hotpatch_lighting_patch_py.md` -> `Scripting/v61b/hotpatch/lighting_patch.py` lines 1-150
+- `indexAI/project_code_chunks/chunk_0118_Scripting_v61b_hotpatch_render_patch_py.md` -> `Scripting/v61b/hotpatch/render_patch.py` lines 1-206
+- `indexAI/project_code_chunks/chunk_0119_Scripting_v61b_hotpatch_runner_py.md` -> `Scripting/v61b/hotpatch/runner.py` lines 1-103
+- `indexAI/project_code_chunks/chunk_0120_Scripting_v61b_io_utils_py.md` -> `Scripting/v61b/io_utils.py` lines 1-81
+- `indexAI/project_code_chunks/chunk_0121_Scripting_v61b_main_v61b_py.md` -> `Scripting/v61b/main_v61b.py` lines 1-219
+- `indexAI/project_code_chunks/chunk_0122_Scripting_v61b_materials_py.md` -> `Scripting/v61b/materials.py` lines 1-308
+- `indexAI/project_code_chunks/chunk_0123_Scripting_v61b_materials_py.md` -> `Scripting/v61b/materials.py` lines 309-562
+- `indexAI/project_code_chunks/chunk_0124_Scripting_v61b_materials_py.md` -> `Scripting/v61b/materials.py` lines 563-657
+- `indexAI/project_code_chunks/chunk_0125_Scripting_v61b_physics_setup_py.md` -> `Scripting/v61b/physics_setup.py` lines 1-323
+- `indexAI/project_code_chunks/chunk_0126_Scripting_v61b_physics_setup_py.md` -> `Scripting/v61b/physics_setup.py` lines 324-614
+- `indexAI/project_code_chunks/chunk_0127_Scripting_v61b_physics_setup_py.md` -> `Scripting/v61b/physics_setup.py` lines 615-737
+- `indexAI/project_code_chunks/chunk_0128_Scripting_v61b_PROJECT_STRUCTURE_md.md` -> `Scripting/v61b/PROJECT_STRUCTURE.md` lines 1-43
+- `indexAI/project_code_chunks/chunk_0129_Scripting_v61b_README_md.md` -> `Scripting/v61b/README.md` lines 1-94
+- `indexAI/project_code_chunks/chunk_0130_Scripting_v61b_render_setup_py.md` -> `Scripting/v61b/render_setup.py` lines 1-270
+- `indexAI/project_code_chunks/chunk_0131_Scripting_v61b_SCENE_TUNING_GUIDE_md.md` -> `Scripting/v61b/SCENE_TUNING_GUIDE.md` lines 1-213
+- `indexAI/project_code_chunks/chunk_0132_Scripting_v61b_SCENE_TUNING_GUIDE_md.md` -> `Scripting/v61b/SCENE_TUNING_GUIDE.md` lines 214-304
+- `indexAI/project_code_chunks/chunk_0133_Scripting_v61b_scene_tuning_panel_py.md` -> `Scripting/v61b/scene_tuning_panel.py` lines 1-323
+- `indexAI/project_code_chunks/chunk_0134_Scripting_v61b_scene_tuning_panel_py.md` -> `Scripting/v61b/scene_tuning_panel.py` lines 324-574
+- `indexAI/project_code_chunks/chunk_0135_Scripting_v61b_scene_tuning_panel_py.md` -> `Scripting/v61b/scene_tuning_panel.py` lines 575-792
+- `indexAI/project_code_chunks/chunk_0136_Scripting_v61b_scene_tuning_panel_py.md` -> `Scripting/v61b/scene_tuning_panel.py` lines 793-1037
+- `indexAI/project_code_chunks/chunk_0137_Scripting_v61b_scene_tuning_panel_py.md` -> `Scripting/v61b/scene_tuning_panel.py` lines 1038-1262
+- `indexAI/project_code_chunks/chunk_0138_Scripting_v61b_scene_utils_py.md` -> `Scripting/v61b/scene_utils.py` lines 1-97
+- `indexAI/project_code_chunks/chunk_0139_Scripting_v61b_spaziotempo_init_py.md` -> `Scripting/v61b/spaziotempo/__init__.py` lines 1-4
+- `indexAI/project_code_chunks/chunk_0140_Scripting_v61b_spaziotempo_core_init_py.md` -> `Scripting/v61b/spaziotempo/core/__init__.py` lines 1-1
+- `indexAI/project_code_chunks/chunk_0141_Scripting_v61b_spaziotempo_core_collections_py.md` -> `Scripting/v61b/spaziotempo/core/collections.py` lines 1-132
+- `indexAI/project_code_chunks/chunk_0142_Scripting_v61b_spaziotempo_core_registry_py.md` -> `Scripting/v61b/spaziotempo/core/registry.py` lines 1-221
+- `indexAI/project_code_chunks/chunk_0143_Scripting_v61b_spaziotempo_features_init_py.md` -> `Scripting/v61b/spaziotempo/features/__init__.py` lines 1-1
+- `indexAI/project_code_chunks/chunk_0144_Scripting_v61b_spaziotempo_features_catalog_py.md` -> `Scripting/v61b/spaziotempo/features/catalog.py` lines 1-19
+- `indexAI/project_code_chunks/chunk_0145_Scripting_v61b_world_setup_py.md` -> `Scripting/v61b/world_setup.py` lines 1-198
+- `indexAI/project_code_chunks/chunk_0146_Scripting_v61b_backgood_init_py.md` -> `Scripting/v61b_backgood/__init__.py` lines 1-1
+- `indexAI/project_code_chunks/chunk_0147_Scripting_v61b_backgood_animation_py.md` -> `Scripting/v61b_backgood/animation.py` lines 1-280
+- `indexAI/project_code_chunks/chunk_0148_Scripting_v61b_backgood_animation_py.md` -> `Scripting/v61b_backgood/animation.py` lines 281-476
+- `indexAI/project_code_chunks/chunk_0149_Scripting_v61b_backgood_animation_py.md` -> `Scripting/v61b_backgood/animation.py` lines 477-682
+- `indexAI/project_code_chunks/chunk_0150_Scripting_v61b_backgood_animation_py.md` -> `Scripting/v61b_backgood/animation.py` lines 683-882
+- `indexAI/project_code_chunks/chunk_0151_Scripting_v61b_backgood_animation_py.md` -> `Scripting/v61b_backgood/animation.py` lines 883-1019
+- `indexAI/project_code_chunks/chunk_0152_Scripting_v61b_backgood_asset_setup_py.md` -> `Scripting/v61b_backgood/asset_setup.py` lines 1-316
+- `indexAI/project_code_chunks/chunk_0153_Scripting_v61b_backgood_asset_setup_py.md` -> `Scripting/v61b_backgood/asset_setup.py` lines 317-580
+- `indexAI/project_code_chunks/chunk_0154_Scripting_v61b_backgood_asset_setup_py.md` -> `Scripting/v61b_backgood/asset_setup.py` lines 581-725
+- `indexAI/project_code_chunks/chunk_0155_Scripting_v61b_backgood_atmosphere_setup_py.md` -> `Scripting/v61b_backgood/atmosphere_setup.py` lines 1-348
+- `indexAI/project_code_chunks/chunk_0156_Scripting_v61b_backgood_atmosphere_setup_py.md` -> `Scripting/v61b_backgood/atmosphere_setup.py` lines 349-543
+- `indexAI/project_code_chunks/chunk_0157_Scripting_v61b_backgood_camera_setup_py.md` -> `Scripting/v61b_backgood/camera_setup.py` lines 1-29
+- `indexAI/project_code_chunks/chunk_0158_Scripting_v61b_backgood_config_py.md` -> `Scripting/v61b_backgood/config.py` lines 1-287
+- `indexAI/project_code_chunks/chunk_0159_Scripting_v61b_backgood_config_py.md` -> `Scripting/v61b_backgood/config.py` lines 288-358
+- `indexAI/project_code_chunks/chunk_0160_Scripting_v61b_backgood_encode_image_sequence_v61b_py.md` -> `Scripting/v61b_backgood/encode_image_sequence_v61b.py` lines 1-327
+- `indexAI/project_code_chunks/chunk_0161_Scripting_v61b_backgood_encode_image_sequence_v61b_py.md` -> `Scripting/v61b_backgood/encode_image_sequence_v61b.py` lines 328-376
+- `indexAI/project_code_chunks/chunk_0162_Scripting_v61b_backgood_fog_dynamics_py.md` -> `Scripting/v61b_backgood/fog_dynamics.py` lines 1-240
+- `indexAI/project_code_chunks/chunk_0163_Scripting_v61b_backgood_hot_update_scene_v61b_py.md` -> `Scripting/v61b_backgood/hot_update_scene_v61b.py` lines 1-61
+- `indexAI/project_code_chunks/chunk_0164_Scripting_v61b_backgood_hotpatch_init_py.md` -> `Scripting/v61b_backgood/hotpatch/__init__.py` lines 1-3
+- `indexAI/project_code_chunks/chunk_0165_Scripting_v61b_backgood_hotpatch_accent_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/accent_patch.py` lines 1-125
+- `indexAI/project_code_chunks/chunk_0166_Scripting_v61b_backgood_hotpatch_common_py.md` -> `Scripting/v61b_backgood/hotpatch/common.py` lines 1-91
+- `indexAI/project_code_chunks/chunk_0167_Scripting_v61b_backgood_hotpatch_fog_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/fog_patch.py` lines 1-124
+- `indexAI/project_code_chunks/chunk_0168_Scripting_v61b_backgood_hotpatch_hero_material_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/hero_material_patch.py` lines 1-291
+- `indexAI/project_code_chunks/chunk_0169_Scripting_v61b_backgood_hotpatch_hero_material_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/hero_material_patch.py` lines 292-395
+- `indexAI/project_code_chunks/chunk_0170_Scripting_v61b_backgood_hotpatch_lighting_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/lighting_patch.py` lines 1-85
+- `indexAI/project_code_chunks/chunk_0171_Scripting_v61b_backgood_hotpatch_render_patch_py.md` -> `Scripting/v61b_backgood/hotpatch/render_patch.py` lines 1-206
+- `indexAI/project_code_chunks/chunk_0172_Scripting_v61b_backgood_hotpatch_runner_py.md` -> `Scripting/v61b_backgood/hotpatch/runner.py` lines 1-60
+- `indexAI/project_code_chunks/chunk_0173_Scripting_v61b_backgood_io_utils_py.md` -> `Scripting/v61b_backgood/io_utils.py` lines 1-81
+- `indexAI/project_code_chunks/chunk_0174_Scripting_v61b_backgood_main_v61b_py.md` -> `Scripting/v61b_backgood/main_v61b.py` lines 1-181
+- `indexAI/project_code_chunks/chunk_0175_Scripting_v61b_backgood_materials_py.md` -> `Scripting/v61b_backgood/materials.py` lines 1-307
+- `indexAI/project_code_chunks/chunk_0176_Scripting_v61b_backgood_materials_py.md` -> `Scripting/v61b_backgood/materials.py` lines 308-513
+- `indexAI/project_code_chunks/chunk_0177_Scripting_v61b_backgood_physics_setup_py.md` -> `Scripting/v61b_backgood/physics_setup.py` lines 1-323
+- `indexAI/project_code_chunks/chunk_0178_Scripting_v61b_backgood_physics_setup_py.md` -> `Scripting/v61b_backgood/physics_setup.py` lines 324-614
+- `indexAI/project_code_chunks/chunk_0179_Scripting_v61b_backgood_physics_setup_py.md` -> `Scripting/v61b_backgood/physics_setup.py` lines 615-720
+- `indexAI/project_code_chunks/chunk_0180_Scripting_v61b_backgood_render_setup_py.md` -> `Scripting/v61b_backgood/render_setup.py` lines 1-267
+- `indexAI/project_code_chunks/chunk_0181_Scripting_v61b_backgood_SCENE_TUNING_GUIDE_md.md` -> `Scripting/v61b_backgood/SCENE_TUNING_GUIDE.md` lines 1-223
+- `indexAI/project_code_chunks/chunk_0182_Scripting_v61b_backgood_scene_tuning_panel_py.md` -> `Scripting/v61b_backgood/scene_tuning_panel.py` lines 1-323
+- `indexAI/project_code_chunks/chunk_0183_Scripting_v61b_backgood_scene_tuning_panel_py.md` -> `Scripting/v61b_backgood/scene_tuning_panel.py` lines 324-575
+- `indexAI/project_code_chunks/chunk_0184_Scripting_v61b_backgood_scene_tuning_panel_py.md` -> `Scripting/v61b_backgood/scene_tuning_panel.py` lines 576-785
+- `indexAI/project_code_chunks/chunk_0185_Scripting_v61b_backgood_scene_tuning_panel_py.md` -> `Scripting/v61b_backgood/scene_tuning_panel.py` lines 786-1038
+- `indexAI/project_code_chunks/chunk_0186_Scripting_v61b_backgood_scene_tuning_panel_py.md` -> `Scripting/v61b_backgood/scene_tuning_panel.py` lines 1039-1097
+- `indexAI/project_code_chunks/chunk_0187_Scripting_v61b_backgood_scene_utils_py.md` -> `Scripting/v61b_backgood/scene_utils.py` lines 1-97
+- `indexAI/project_code_chunks/chunk_0188_Scripting_v61b_backgood_world_setup_py.md` -> `Scripting/v61b_backgood/world_setup.py` lines 1-174
+- `indexAI/project_code_chunks/chunk_0189_SECURITY_md.md` -> `SECURITY.md` lines 1-22
+- `indexAI/project_code_chunks/chunk_0190_SUPPORT_md.md` -> `SUPPORT.md` lines 1-33
+- `indexAI/project_code_chunks/chunk_0191_Tools_git_auto_push_generated_artifacts_ps1.md` -> `Tools/git/auto_push_generated_artifacts.ps1` lines 1-135
+- `indexAI/project_code_chunks/chunk_0192_Tools_git_auto_push_generated_data_ps1.md` -> `Tools/git/auto_push_generated_data.ps1` lines 1-131
+- `indexAI/project_code_chunks/chunk_0193_Tools_git_README_md.md` -> `Tools/git/README.md` lines 1-75
+- `indexAI/project_code_chunks/chunk_0194_Tools_npu_ai_memory_context_py.md` -> `Tools/npu/ai_memory_context.py` lines 1-111
+- `indexAI/project_code_chunks/chunk_0195_Tools_npu_build_ai_service_packet_py.md` -> `Tools/npu/build_ai_service_packet.py` lines 1-235
+- `indexAI/project_code_chunks/chunk_0196_Tools_npu_build_ai_service_packet_py.md` -> `Tools/npu/build_ai_service_packet.py` lines 236-355
+- `indexAI/project_code_chunks/chunk_0197_Tools_npu_build_blender_manual_context_py.md` -> `Tools/npu/build_blender_manual_context.py` lines 1-301
+- `indexAI/project_code_chunks/chunk_0198_Tools_npu_build_blender_manual_context_py.md` -> `Tools/npu/build_blender_manual_context.py` lines 302-326
+- `indexAI/project_code_chunks/chunk_0199_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 1-285
+- `indexAI/project_code_chunks/chunk_0200_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 286-547
+- `indexAI/project_code_chunks/chunk_0201_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 548-711
+- `indexAI/project_code_chunks/chunk_0202_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 1-306
+- `indexAI/project_code_chunks/chunk_0203_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 307-389
+- `indexAI/project_code_chunks/chunk_0204_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 1-300
+- `indexAI/project_code_chunks/chunk_0205_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 301-419
+- `indexAI/project_code_chunks/chunk_0206_Tools_npu_generated_blender_script_candidate_FristNear_py.md` -> `Tools/npu/generated_blender_script_candidate_FristNear.py` lines 1-244
+- `indexAI/project_code_chunks/chunk_0207_Tools_npu_generated_blender_script_candidate_FristNear_py.md` -> `Tools/npu/generated_blender_script_candidate_FristNear.py` lines 245-369
+- `indexAI/project_code_chunks/chunk_0208_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 1-77
+- `indexAI/project_code_chunks/chunk_0209_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 78-130
+- `indexAI/project_code_chunks/chunk_0210_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 131-182
+- `indexAI/project_code_chunks/chunk_0211_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 183-236
+- `indexAI/project_code_chunks/chunk_0212_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 237-289
+- `indexAI/project_code_chunks/chunk_0213_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 290-344
+- `indexAI/project_code_chunks/chunk_0214_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 345-383
+- `indexAI/project_code_chunks/chunk_0215_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1-231
+- `indexAI/project_code_chunks/chunk_0216_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 232-449
+- `indexAI/project_code_chunks/chunk_0217_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 450-661
+- `indexAI/project_code_chunks/chunk_0218_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 662-881
+- `indexAI/project_code_chunks/chunk_0219_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 882-1100
+- `indexAI/project_code_chunks/chunk_0220_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1101-1311
+- `indexAI/project_code_chunks/chunk_0221_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1312-1525
+- `indexAI/project_code_chunks/chunk_0222_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1526-1745
+- `indexAI/project_code_chunks/chunk_0223_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1746-1968
+- `indexAI/project_code_chunks/chunk_0224_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1969-2181
+- `indexAI/project_code_chunks/chunk_0225_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2182-2399
+- `indexAI/project_code_chunks/chunk_0226_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2400-2619
+- `indexAI/project_code_chunks/chunk_0227_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2620-2839
+- `indexAI/project_code_chunks/chunk_0228_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2840-3059
+- `indexAI/project_code_chunks/chunk_0229_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 3060-3273
+- `indexAI/project_code_chunks/chunk_0230_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 3274-3339
+- `indexAI/project_code_chunks/chunk_0231_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1-383
+- `indexAI/project_code_chunks/chunk_0232_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 384-752
+- `indexAI/project_code_chunks/chunk_0233_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 753-1106
+- `indexAI/project_code_chunks/chunk_0234_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1107-1381
+- `indexAI/project_code_chunks/chunk_0235_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1382-1633
+- `indexAI/project_code_chunks/chunk_0236_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1634-1964
+- `indexAI/project_code_chunks/chunk_0237_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1965-2282
+- `indexAI/project_code_chunks/chunk_0238_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2283-2669
+- `indexAI/project_code_chunks/chunk_0239_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2670-3010
+- `indexAI/project_code_chunks/chunk_0240_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3011-3387
+- `indexAI/project_code_chunks/chunk_0241_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3388-3757
+- `indexAI/project_code_chunks/chunk_0242_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3758-4109
+- `indexAI/project_code_chunks/chunk_0243_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4110-4486
+- `indexAI/project_code_chunks/chunk_0244_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4487-4872
+- `indexAI/project_code_chunks/chunk_0245_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4873-5258
+- `indexAI/project_code_chunks/chunk_0246_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5259-5622
+- `indexAI/project_code_chunks/chunk_0247_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5623-5909
+- `indexAI/project_code_chunks/chunk_0248_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5910-6192
+- `indexAI/project_code_chunks/chunk_0249_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6193-6471
+- `indexAI/project_code_chunks/chunk_0250_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6472-6566
+- `indexAI/project_code_chunks/chunk_0251_Tools_npu_npu_music_manifest_json.md` -> `Tools/npu/npu_music_manifest.json` lines 1-205
+- `indexAI/project_code_chunks/chunk_0252_Tools_npu_npu_music_manifest_json.md` -> `Tools/npu/npu_music_manifest.json` lines 206-494
+- `indexAI/project_code_chunks/chunk_0253_Tools_npu_npu_music_manifest_json.md` -> `Tools/npu/npu_music_manifest.json` lines 495-776
+- `indexAI/project_code_chunks/chunk_0254_Tools_npu_npu_runtime_py.md` -> `Tools/npu/npu_runtime.py` lines 1-95
+- `indexAI/project_code_chunks/chunk_0255_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 1-302
+- `indexAI/project_code_chunks/chunk_0256_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 303-351
+- `indexAI/project_code_chunks/chunk_0257_Tools_npu_README_md.md` -> `Tools/npu/README.md` lines 1-37
+- `indexAI/project_code_chunks/chunk_0258_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1-245
+- `indexAI/project_code_chunks/chunk_0259_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 246-508
+- `indexAI/project_code_chunks/chunk_0260_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 509-743
+- `indexAI/project_code_chunks/chunk_0261_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 744-992
+- `indexAI/project_code_chunks/chunk_0262_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 993-1212
+- `indexAI/project_code_chunks/chunk_0263_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1213-1453
+- `indexAI/project_code_chunks/chunk_0264_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1454-1664
+- `indexAI/project_code_chunks/chunk_0265_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1665-1704
+- `indexAI/project_code_chunks/chunk_0266_Tools_npu_run_npu_context_ps1.md` -> `Tools/npu/run_npu_context.ps1` lines 1-238
+- `indexAI/project_code_chunks/chunk_0267_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 1-326
+- `indexAI/project_code_chunks/chunk_0268_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 327-565
+- `indexAI/project_code_chunks/chunk_0269_Tools_npu_run_ollama_music_agent_py.md` -> `Tools/npu/run_ollama_music_agent.py` lines 1-238
+- `indexAI/project_code_chunks/chunk_0270_Tools_repo_patch_runner_apply_repo_mods_py.md` -> `Tools/repo_patch_runner/apply_repo_mods.py` lines 1-300
+- `indexAI/project_code_chunks/chunk_0271_Tools_repo_patch_runner_apply_repo_mods_py.md` -> `Tools/repo_patch_runner/apply_repo_mods.py` lines 301-443
+- `indexAI/project_code_chunks/chunk_0272_Tools_repo_patch_runner_example_fix_blender_51_musgrave_json.md` -> `Tools/repo_patch_runner/example_fix_blender_51_musgrave.json` lines 1-40
+- `indexAI/project_code_chunks/chunk_0273_Tools_repo_patch_runner_README_md.md` -> `Tools/repo_patch_runner/README.md` lines 1-111
+- `indexAI/project_code_chunks/chunk_0274_Tools_workflow_asset_inventory_py.md` -> `Tools/workflow/asset_inventory.py` lines 1-110
+- `indexAI/project_code_chunks/chunk_0275_Tools_workflow_git_auto_push_py.md` -> `Tools/workflow/git_auto_push.py` lines 1-165
+- `indexAI/project_code_chunks/chunk_0276_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 1-265
+- `indexAI/project_code_chunks/chunk_0277_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 266-478
+- `indexAI/project_code_chunks/chunk_0278_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 479-714
+- `indexAI/project_code_chunks/chunk_0279_Tools_workflow_gui_workflow_gui_with_push_py.md` -> `Tools/workflow/gui/workflow_gui_with_push.py` lines 1-66
+- `indexAI/project_code_chunks/chunk_0280_Tools_workflow_project_awareness_py.md` -> `Tools/workflow/project_awareness.py` lines 1-249
+- `indexAI/project_code_chunks/chunk_0281_Tools_workflow_project_awareness_py.md` -> `Tools/workflow/project_awareness.py` lines 250-353
+- `indexAI/project_code_chunks/chunk_0282_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 1-285
+- `indexAI/project_code_chunks/chunk_0283_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 286-516
+- `indexAI/project_code_chunks/chunk_0284_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 517-599
+- `indexAI/project_code_chunks/chunk_0285_Tools_workflow_startup_check_py.md` -> `Tools/workflow/startup_check.py` lines 1-264
+- `indexAI/project_code_chunks/chunk_0286_Tools_workflow_startup_check_py.md` -> `Tools/workflow/startup_check.py` lines 265-284
+- `indexAI/project_code_chunks/chunk_0287_Tools_workflow_startup_preflight_ps1.md` -> `Tools/workflow/startup_preflight.ps1` lines 1-281
+- `indexAI/project_code_chunks/chunk_0288_Tools_workflow_startup_preflight_ps1.md` -> `Tools/workflow/startup_preflight.ps1` lines 282-337
+- `indexAI/project_code_chunks/chunk_0289_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 1-271
+- `indexAI/project_code_chunks/chunk_0290_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 272-505
+- `indexAI/project_code_chunks/chunk_0291_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 506-607
+- `indexAI/project_code_chunks/chunk_0292_Tools_workflow_workflow_shell_py.md` -> `Tools/workflow/workflow_shell.py` lines 1-269
+- `indexAI/project_code_chunks/chunk_0293_Tools_workflow_workflow_shell_py.md` -> `Tools/workflow/workflow_shell.py` lines 270-298
+- `indexAI/project_code_chunks/chunk_0294_Tools_workflow_workflow_shell_with_push_py.md` -> `Tools/workflow/workflow_shell_with_push.py` lines 1-117
+- `indexAI/project_code_chunks/chunk_0295_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 1-265
+- `indexAI/project_code_chunks/chunk_0296_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 266-573
+- `indexAI/project_code_chunks/chunk_0297_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 574-855
+- `indexAI/project_code_chunks/chunk_0298_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 856-1102
+- `indexAI/project_code_chunks/chunk_0299_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 1103-1230
+- `indexAI/project_code_chunks/chunk_0300_workflow_gui_ps1.md` -> `workflow_gui.ps1` lines 1-35
+- `indexAI/project_code_chunks/chunk_0301_workflow_shell_ps1.md` -> `workflow_shell.ps1` lines 1-35

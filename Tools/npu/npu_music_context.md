@@ -1,6 +1,6 @@
 # NPU Music Context
 
-Generated: `2026-04-27T14:41:27`
+Generated: `2026-04-28T13:33:13`
 
 Purpose: compact long-context map for WAV analysis and generated scene JSON.
 
@@ -27,7 +27,9 @@ Purpose: compact long-context map for WAV analysis and generated scene JSON.
 - Scene brief: `C:\Users\carmi\blender\blender-audio-project\output\Ready To Jazz-Luca Vera_Master_scene_brief.json`
 - Has brief: `True`
 - Asset `primary_ball_asset`: `C:\Users\carmi\blender\assets\ball\source\ball.fbx`
+- Asset `primary_ball_asset`: `C:\Users\carmi\blender\blender-audio-project\assets\ball\source\ball.fbx`
 - Asset `animated_effect_asset`: `C:\Users\carmi\blender\assets\animated-effect\source\Animated effect.blend`
+- Asset `animated_effect_asset`: `C:\Users\carmi\blender\blender-audio-project\assets\animated-effect\source\Animated effect.blend`
 - Asset `blend_scene_reference`: `C:\Users\carmi\blender\First good.blend`
 - Asset `blend_scene_reference`: `C:\Users\carmi\blender\second good.blend`
 

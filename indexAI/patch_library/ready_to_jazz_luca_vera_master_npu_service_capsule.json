@@ -1,6 +1,6 @@
 {
   "format": "SPAZIOTEMPO_AI_SERVICE_CAPSULE_V1",
-  "generated_at": "2026-04-27T14:41:42",
+  "generated_at": "2026-04-28T13:33:30",
   "routing_policy": {
     "heavy_reasoning": "GPU_OLLAMA",
     "code_generation": "GPU_OLLAMA_SCENE_SCRIPT_WRITER",
@@ -23,7 +23,7 @@
     "music_context_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_music_context.json",
     "analysis_ai_context_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis_ai_context.json",
     "full_blender_keyframes_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_analysis_blender_keyframes.json",
-    "full_blender_keyframes_sha": "d8c1ee517a31f8200cf43ca6688026d45b360cdc15b1354008bc1ef5d83f9667",
+    "full_blender_keyframes_sha": "6debdf16fba553939203dbbb0241c6ffe97664a3379cf7c05e4a5c9f633625e4",
     "dual_plan_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Ready To Jazz-Luca Vera_Master_dual_ai_scene_plan.json",
     "project_manifest_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI\\project_code_manifest.json"
   },
@@ -1110,7 +1110,7 @@
       ],
       "durable_constraints": [],
       "asset_memory": {
-        "asset_count": 5,
+        "asset_count": 8,
         "primary_assets": [
           {
             "role": "primary_ball_asset",
@@ -1119,9 +1119,21 @@
             "type": ".fbx"
           },
           {
+            "role": "primary_ball_asset",
+            "name": "ball",
+            "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\assets\\ball\\source\\ball.fbx",
+            "type": ".fbx"
+          },
+          {
             "role": "animated_effect_asset",
             "name": "Animated effect",
             "path": "C:\\Users\\carmi\\blender\\assets\\animated-effect\\source\\Animated effect.blend",
+            "type": ".blend"
+          },
+          {
+            "role": "animated_effect_asset",
+            "name": "Animated effect",
+            "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\assets\\animated-effect\\source\\Animated effect.blend",
             "type": ".blend"
           },
           {
@@ -1699,7 +1711,7 @@
     ]
   },
   "asset_language": {
-    "asset_count": 5,
+    "asset_count": 8,
     "known_primary_assets": [
       {
         "name": "ball",
@@ -1710,10 +1722,26 @@
         "bytes": 7440560
       },
       {
+        "name": "ball",
+        "role": "primary_ball_asset",
+        "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\assets\\ball\\source\\ball.fbx",
+        "relative_path": "blender-audio-project\\assets\\ball\\source\\ball.fbx",
+        "extension": ".fbx",
+        "bytes": 7440560
+      },
+      {
         "name": "Animated effect",
         "role": "animated_effect_asset",
         "path": "C:\\Users\\carmi\\blender\\assets\\animated-effect\\source\\Animated effect.blend",
         "relative_path": "assets\\animated-effect\\source\\Animated effect.blend",
+        "extension": ".blend",
+        "bytes": 1988528
+      },
+      {
+        "name": "Animated effect",
+        "role": "animated_effect_asset",
+        "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\assets\\animated-effect\\source\\Animated effect.blend",
+        "relative_path": "blender-audio-project\\assets\\animated-effect\\source\\Animated effect.blend",
         "extension": ".blend",
         "bytes": 1988528
       },
@@ -1827,7 +1855,7 @@
         "role": "AI_PIPELINE NPU/GPU routing"
       }
     ],
-    "source_fingerprint": "15bc00b62ad868065405f589427c5c2c54a6d634af8a082cc08e21cc06f71199"
+    "source_fingerprint": "201bc7325502d9226a9da8b596a84cbfaab1e3800d2b8a5d71f16f0a8f651f6c"
   },
   "style_contract": {
     "do_not_modify_project_source": true,
