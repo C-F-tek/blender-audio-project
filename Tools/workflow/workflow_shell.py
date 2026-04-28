@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
+from git_auto_push import run_auto_push_generated_data
 from workflow_state import (
     DEFAULT_WAV,
     EVENT_LOG_PATH,
@@ -92,18 +93,19 @@ def menu() -> None:
     print("  8  Indicizza manuali locali")
     print("  9  Dual AI plan")
     print("  10 Dual AI scene script draft")
-    print("  11 Mostra sessione")
-    print("  12 Toggle debug dettagliato")
-    print("  13 Pulisci intermedi")
-    print("  14 Pulisci frame render")
-    print("  15 Debug advanced check")
-    print("  16 Apri debug monitor finestra")
-    print("  17 Registra operazione interrotta")
-    print("  18 Rigenera indexAI progetto")
-    print("  19 Scene director chat / modifica brief")
-    print("  20 Project storage stats")
-    print("  21 Configura modelli AI")
-    print("  22 Startup service check")
+    print("  11 Push dati strutturati generati su GitHub")
+    print("  12 Mostra sessione")
+    print("  13 Toggle debug dettagliato")
+    print("  14 Pulisci intermedi")
+    print("  15 Pulisci frame render")
+    print("  16 Debug advanced check")
+    print("  17 Apri debug monitor finestra")
+    print("  18 Registra operazione interrotta")
+    print("  19 Rigenera indexAI progetto")
+    print("  20 Scene director chat / modifica brief")
+    print("  21 Project storage stats")
+    print("  22 Configura modelli AI")
+    print("  23 Startup service check")
     print("  0  Esci")
 
 
@@ -220,51 +222,63 @@ def main() -> None:
                 session = load_session()
 
             elif choice == "11":
-                pass
+                pull_first = ask_bool("Fare pull --ff-only prima del push?", default=True)
+                dry_run = ask_bool("Eseguire solo dry-run senza commit/push?", default=False)
+                include_docs = ask_bool("Includere anche docs?", default=False)
+                run_auto_push_generated_data(
+                    include_output_json=True,
+                    include_docs=include_docs,
+                    pull_first=pull_first,
+                    dry_run=dry_run,
+                )
+                session = load_session()
 
             elif choice == "12":
+                pass
+
+            elif choice == "13":
                 session = set_debug_enabled(not session.debug_enabled)
                 print(f"Debug dettagliato: {'ON' if session.debug_enabled else 'OFF'}")
 
-            elif choice == "13":
+            elif choice == "14":
                 targets = cleanup_intermediate_targets(session, include_all_tracks=True, include_logs=True)
                 if confirm_cleanup("Pulizia intermedi progetto", targets):
                     result = cleanup_intermediates(session, include_all_tracks=True, include_logs=True)
                     print(f"Eliminati: {result.metadata.get('deleted_count', 0) if result.metadata else 0}")
                     session = load_session()
 
-            elif choice == "14":
+            elif choice == "15":
                 targets = cleanup_render_frame_targets(session)
                 if confirm_cleanup("Pulizia frame render", targets):
                     result = cleanup_render_frames(session)
                     print(f"Eliminati: {result.metadata.get('deleted_count', 0) if result.metadata else 0}")
                     session = load_session()
 
-            elif choice == "15":
+            elif choice == "16":
                 print(run_advanced_debug_check(probe_write=True))
 
-            elif choice == "16":
+            elif choice == "17":
                 process = open_debug_monitor_window(interval=3.0, probe_write=True)
                 print(f"Debug monitor aperto in una nuova finestra. PID: {process.pid}")
 
-            elif choice == "17":
+            elif choice == "18":
                 result = mark_active_operation_interrupted("manual interrupt from workflow shell")
                 print(f"Registrata interruzione: {result.operation}, elapsed={result.elapsed_sec}s")
                 session = load_session()
 
-            elif choice == "18":
+            elif choice == "19":
                 force = ask_bool("Forzare rebuild anche se cache valida?", default=False)
                 run_project_ai_index(session, force=force)
                 session = load_session()
 
-            elif choice == "19":
+            elif choice == "20":
                 run_scene_director_brief(session)
                 session = load_session()
 
-            elif choice == "20":
+            elif choice == "21":
                 print(format_project_storage_stats(build_project_storage_stats(session)))
 
-            elif choice == "21":
+            elif choice == "22":
                 creative = choose_model("Creative model per piano/visione", session.creative_model)
                 technical = choose_model("Technical model per script Python Blender", session.technical_model)
                 chat = choose_model("Chat model per direttore AI", session.chat_model)
@@ -277,7 +291,7 @@ def main() -> None:
                     script_max_tokens=tokens,
                 )
 
-            elif choice == "22":
+            elif choice == "23":
                 print(run_startup_service_check())
 
             else:
