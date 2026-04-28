@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0",
+  "repository": {
+    "name": "blender-audio-project",
+    "owner": "C-F-tek",
+    "default_branch": "master",
+    "license": "MIT",
+    "primary_language": "Python",
+    "target_runtime": "Blender Python API",
+    "domain": "audio-reactive 3D visual generation"
+  },
+  "maintainer": {
+    "name": "Carmine Faiola",
+    "linkedin": "https://it.linkedin.com/in/carmine-faiola-12471a183"
+  },
+  "ai_operating_rules": {
+    "required_reading_order": [
+      "AGENTS.md",
+      "README.md",
+      "docs/README.md",
+      "docs/MODULE_MAP.md",
+      "docs/DATA_FLOW.md",
+      "docs/QUALITY_GATE.md",
+      "docs/AI_GENERATED_PACKAGE_STANDARD.md",
+      "docs/PACKAGE_CREATION_WORKFLOW.md",
+      "docs/AI_PROMPTS.md"
+    ],
+    "safe_editing": [
+      "inspect target files before editing",
+      "prefer additive patches",
+      "avoid destructive rewrites",
+      "do not delete generated analysis JSON files unless explicitly requested",
+      "keep paths configurable",
+      "mark unverified assumptions as not specified",
+      "report changed files tests risks and script line counts"
+    ]
+  },
+  "important_paths": {
+    "audio_tools": [
+      "analyze_wav.py",
+      "build_track_summary.py",
+      "normalize_scene_spec.py"
+    ],
+    "blender_packages": [
+      "Scripting/v61b/",
+      "Scripting/_template_audio_reactive_package/",
+      "Scripting/shared/"
+    ],
+    "ai_tools": [
+      "Tools/npu/",
+      "Tools/repo_patch_runner/",
+      "indexAI/"
+    ],
+    "documentation": [
+      "docs/",
+      "README.md",
+      "AGENTS.md",
+      "CONTRIBUTING.md",
+      "CHANGELOG.md"
+    ],
+    "github": [
+      ".github/ISSUE_TEMPLATE/",
+      ".github/PULL_REQUEST_TEMPLATE.md",
+      ".github/workflows/ci.yml"
+    ]
+  },
+  "validation_expectations": {
+    "markdown": [
+      "path sanity check",
+      "link sanity check where practical"
+    ],
+    "python": [
+      "python -m py_compile for generic Python scripts"
+    ],
+    "blender_python": [
+      "Blender runtime test when available",
+      "otherwise mark Blender test as not specified"
+    ],
+    "json": [
+      "JSON parse validation"
+    ]
+  },
+  "preferred_patch_outputs": [
+    "summary",
+    "changed_files",
+    "tests_performed",
+    "untested_areas",
+    "risks",
+    "script_line_counts",
+    "follow_up_recommendations"
+  ]
+}
