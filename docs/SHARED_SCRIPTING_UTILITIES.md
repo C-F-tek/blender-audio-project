@@ -10,9 +10,25 @@ Package folders under `Scripting/` can contain project-specific Blender code. Ho
 
 This keeps future AI-generated packages cleaner, avoids duplication, and makes local automation easier.
 
-## Functions that should become global/shared
+## Critical safety rule
 
-The following categories should be extracted when they are reused:
+Do not break working package code through premature refactoring.
+
+`Scripting/v61b/` is a working reference model and must not be destructively refactored only to make utilities global.
+
+Shared extraction must be additive first:
+
+1. Create a shared utility under `Scripting/shared/`.
+2. Keep the original package file unchanged.
+3. Test the shared utility separately.
+4. Create an optional wrapper or adapter only after validation.
+5. Update the original package only when the replacement has been tested in Blender.
+
+A working duplicated function is better than a broken global abstraction.
+
+## Functions that can become global/shared
+
+The following categories can be extracted when they are reused and when the extraction is safe:
 
 - FFmpeg encoding logic;
 - image-sequence encoding logic;
@@ -56,25 +72,28 @@ Scripting/shared/scene_update.py
 Scripting/shared/diagnostics.py
 ```
 
-## Migration strategy
+## Safe migration strategy
 
 1. Identify duplicated or reusable logic in a package.
 2. Copy the logic into `Scripting/shared/` with package-neutral names.
-3. Remove hardcoded package names and track-specific paths.
-4. Add parameters for package root, config object, and output paths.
-5. Keep the original package script working.
-6. Add a wrapper in the package that calls the shared utility.
-7. Test inside Blender.
-8. Update package README and this document if behavior changes.
+3. Remove hardcoded package names and track-specific paths only in the shared copy.
+4. Keep the original package script working.
+5. Add parameters for package root, config object, and output paths in the shared copy.
+6. Test the shared module independently.
+7. Add an optional wrapper in a new package that calls the shared utility.
+8. Only after successful Blender tests, consider updating existing packages.
+9. Never perform broad refactoring in the same step as utility extraction.
 
 ## AI rules
 
-- Do not move code out of `v61b` destructively without testing.
-- Prefer non-breaking extraction: add shared module first, then update consumers.
+- Do not move code out of `v61b` destructively.
+- Do not refactor working scripts only for aesthetic reasons.
+- Prefer non-breaking extraction: add shared module first, keep current consumers unchanged.
 - New packages should check `Scripting/shared/` before duplicating encoding, render, path, or panel code.
+- Existing packages should be migrated only after explicit validation.
 - If code is tied to object names or materials of one scene, keep it package-specific.
-- If code only depends on configuration and paths, make it shared.
+- If code only depends on configuration and paths, it can be made shared, but only through additive extraction.
 
 ## Current status
 
-The shared folder exists as a target area. Full code extraction is not completed yet.
+The shared folder exists as a target area. Full code extraction is not completed yet. Existing working package code should remain untouched unless a tested migration is explicitly requested.
