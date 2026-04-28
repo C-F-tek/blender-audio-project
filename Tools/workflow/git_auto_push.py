@@ -58,6 +58,7 @@ def build_auto_push_command(
     include_docs: bool = False,
     include_all_generated: bool = False,
     pull_first: bool = False,
+    full_project: bool = False,
     dry_run: bool = False,
     message: str = "chore: update app-generated technical data",
 ) -> list[str]:
@@ -85,6 +86,8 @@ def build_auto_push_command(
         command.append("-IncludeAllGenerated")
     if pull_first:
         command.append("-PullFirst")
+    if full_project:
+        command.append("-FullProject")
     if dry_run:
         command.append("-DryRun")
 
@@ -97,6 +100,7 @@ def run_auto_push_generated_data(
     include_docs: bool = False,
     include_all_generated: bool = False,
     pull_first: bool = False,
+    full_project: bool = False,
     dry_run: bool = False,
     message: str = "chore: update app-generated technical data",
     check: bool = True,
@@ -108,6 +112,7 @@ def run_auto_push_generated_data(
         include_docs=include_docs,
         include_all_generated=include_all_generated,
         pull_first=pull_first,
+        full_project=full_project,
         dry_run=dry_run,
         message=message,
     )
@@ -126,7 +131,7 @@ def run_auto_push_generated_data(
         print(output.rstrip())
 
     result = AutoPushResult(
-        operation="auto_push_generated_data",
+        operation="auto_push_full_project" if full_project else "auto_push_generated_data",
         ok=completed.returncode == 0,
         started_at=started_at,
         ended_at=now_iso(),
@@ -144,17 +149,33 @@ def run_auto_push_generated_data(
     return result
 
 
+def run_auto_push_full_project(
+    *,
+    message: str = "chore: update full project",
+    dry_run: bool = False,
+    check: bool = True,
+) -> AutoPushResult:
+    return run_auto_push_generated_data(
+        full_project=True,
+        dry_run=dry_run,
+        message=message,
+        check=check,
+    )
+
+
 def main() -> int:
     include_output_json = "--include-output-json" in sys.argv
     include_docs = "--include-docs" in sys.argv
     include_all_generated = "--include-all-generated" in sys.argv
     pull_first = "--pull-first" in sys.argv
+    full_project = "--full-project" in sys.argv
     dry_run = "--dry-run" in sys.argv
     result = run_auto_push_generated_data(
         include_output_json=include_output_json,
         include_docs=include_docs,
         include_all_generated=include_all_generated,
         pull_first=pull_first,
+        full_project=full_project,
         dry_run=dry_run,
         check=False,
     )
