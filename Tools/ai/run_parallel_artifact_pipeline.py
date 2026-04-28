@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Safe additive orchestrator for the AI artifact pipeline.
 
-Schema v5 adds a guardrail remediation loop. The NPU-light guardrail can now
-emit structured requests for safe enrichment passes, context regeneration, or
-manual Python/code correction requests. The orchestrator may re-run only
-auto-safe stages during the same run.
+Schema v6 adds first-wave WAV entrypoint review. The pipeline can now review the
+scripts that generate the earliest WAV-derived artifacts and feed their notes,
+attention flags, and remediation requests into future guardrail decisions.
 """
 from __future__ import annotations
 
@@ -22,6 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+EXPECTED_WAVE_REVIEW_ARTIFACTS = ["wave_entrypoint_review.json"]
 EXPECTED_MUSIC_ARTIFACTS = ["track_summary.json", "music_segments.json", "audio_event_map.json", "ai_scene_brief.json", "ai_resource_budget.json"]
 EXPECTED_CHUNK_ARTIFACTS = ["indexAI/code_chunks/semantic_code_chunks.json", "indexAI/code_chunks/semantic_code_chunks_manifest.json"]
 EXPECTED_SMART_CONTEXT_ARTIFACTS = ["smart_context/{track_slug}_smart_context_packet.json", "smart_context/{track_slug}_smart_context_manifest.json", "smart_context/{track_slug}_smart_context_packet.md"]
@@ -74,6 +74,8 @@ def file_meta(path: Path, root: Path) -> dict[str, Any]:
 def planned_outputs(repo: Path, out: Path, args: argparse.Namespace) -> list[dict[str, Any]]:
     outputs: list[Path] = []
     track_slug = slugify(args.track_stem)
+    if args.review_wave_entrypoints:
+        outputs += [out / item for item in EXPECTED_WAVE_REVIEW_ARTIFACTS]
     if args.build_chunks:
         outputs += [repo / item for item in EXPECTED_CHUNK_ARTIFACTS]
     if args.build_music_summary:
@@ -117,6 +119,8 @@ def preflight(repo: Path, out: Path, args: argparse.Namespace) -> dict[str, Any]
         warnings.append("NPU guardrail works best with smart context; falling back to artifact directory review.")
     if args.guardrail_auto_remediate and not args.npu_guardrail:
         warnings.append("Guardrail auto-remediation was requested but npu_guardrail is disabled.")
+    if args.review_wave_entrypoints and not (repo / "analyze_wav.py").exists():
+        warnings.append("Wave entrypoint review enabled but analyze_wav.py was not found at repository root.")
     if args.gpu_command and "{brief}" not in args.gpu_command:
         warnings.append("GPU command does not include {brief}; planner may not receive ai_scene_brief.json.")
     if args.gpu_command and "{output}" not in args.gpu_command:
@@ -127,7 +131,7 @@ def preflight(repo: Path, out: Path, args: argparse.Namespace) -> dict[str, Any]
     input_files = []
     if analysis:
         input_files.append(file_meta(analysis, repo))
-    for item in ["docs/LOCAL_WORKSTATION_TARGET.md", "indexAI/task_capsules/blender_51_compat.json", "indexAI/task_capsules/resource_budget.json"]:
+    for item in ["analyze_wav.py", "build_track_summary.py", "docs/LOCAL_WORKSTATION_TARGET.md", "indexAI/task_capsules/blender_51_compat.json", "indexAI/task_capsules/resource_budget.json"]:
         input_files.append(file_meta(repo / item, repo))
     return {"passed": not errors, "errors": errors, "warnings": warnings, "input_files": input_files, "planned_outputs": planned_outputs(repo, out, args), "python_runtime": python_runtime(), "workstation_context": workstation_context(repo), "environment": {"cwd": os.getcwd(), "dry_run": args.dry_run}}
 
@@ -144,6 +148,8 @@ def build_step_commands(repo: Path, out: Path, args: argparse.Namespace) -> dict
         return str((repo / path).resolve())
 
     commands: dict[str, list[str]] = {}
+    if args.review_wave_entrypoints:
+        commands["review_wave_entrypoints"] = [py, script("Tools/ai/review_wave_entrypoints.py"), "--repo-root", str(repo), "--output", str(out / "wave_entrypoint_review.json")]
     if args.build_chunks:
         commands["build_semantic_code_chunks"] = [py, script("Tools/npu/build_semantic_code_chunks.py"), "--repo-root", str(repo)]
     if args.build_music_summary:
@@ -188,6 +194,8 @@ def remedial_commands(repo: Path, out: Path, args: argparse.Namespace, requests:
     stages = {str(item.get("suggested_stage") or "") for item in requests}
     todo: list[tuple[dict[str, Any], list[str]]] = []
 
+    if "wave_entrypoint_review" in stages and "review_wave_entrypoints" in commands:
+        todo.append((step_meta("remediate_review_wave_entrypoints", "CPU", "Repeat first-wave script review requested by guardrail.", EXPECTED_WAVE_REVIEW_ARTIFACTS), commands["review_wave_entrypoints"]))
     if "enrich_intermediates" in stages and "build_music_intermediates" in commands:
         todo.append((step_meta("remediate_build_music_intermediates", "CPU", "Auto-safe enrichment pass requested by NPU guardrail.", EXPECTED_MUSIC_ARTIFACTS), commands["build_music_intermediates"]))
     if "compact_context_generation" in stages and "build_smart_ai_context" in commands:
@@ -247,6 +255,8 @@ def main() -> int:
     ap.add_argument("--analysis-json")
     ap.add_argument("--track-stem", default="track")
     ap.add_argument("--output-dir", default="output/ai_pipeline")
+    ap.add_argument("--review-wave-entrypoints", dest="review_wave_entrypoints", action="store_true", default=True)
+    ap.add_argument("--no-review-wave-entrypoints", dest="review_wave_entrypoints", action="store_false")
     ap.add_argument("--build-chunks", action="store_true")
     ap.add_argument("--build-music-summary", action="store_true")
     ap.add_argument("--smart-context", dest="smart_context", action="store_true", default=True)
@@ -273,7 +283,7 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     pf = preflight(repo, out, args)
     if not pf["passed"] and not args.continue_on_error:
-        report = {"schema_version": 5, "generated_at": datetime.now(timezone.utc).isoformat(), "repo_root": str(repo), "output_dir": str(out), "dry_run": args.dry_run, "passed": False, "preflight": pf, "step_count": 0, "steps": []}
+        report = {"schema_version": 6, "generated_at": datetime.now(timezone.utc).isoformat(), "repo_root": str(repo), "output_dir": str(out), "dry_run": args.dry_run, "passed": False, "preflight": pf, "step_count": 0, "steps": []}
         print(json.dumps(report, indent=2, ensure_ascii=False))
         return 2
 
@@ -282,6 +292,8 @@ def main() -> int:
     parallel: list[tuple[dict[str, Any], list[str]]] = []
     track_slug = slugify(args.track_stem)
 
+    if "review_wave_entrypoints" in commands:
+        serial.append((step_meta("review_wave_entrypoints", "CPU", "Review first-wave WAV artifact scripts and emit future guardrail flags.", EXPECTED_WAVE_REVIEW_ARTIFACTS), commands["review_wave_entrypoints"]))
     if "build_semantic_code_chunks" in commands:
         serial.append((step_meta("build_semantic_code_chunks", "CPU", "Build symbol-aware repository context for AI retrieval.", EXPECTED_CHUNK_ARTIFACTS), commands["build_semantic_code_chunks"]))
     if "build_music_intermediates" in commands:
@@ -315,7 +327,7 @@ def main() -> int:
     remediation_loop = execute_remediation_loop(repo, out, args, results)
 
     report = {
-        "schema_version": 5,
+        "schema_version": 6,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "repo_root": str(repo),
         "output_dir": str(out),
@@ -324,6 +336,7 @@ def main() -> int:
         "preflight": pf,
         "step_count": len(results),
         "lanes": {"CPU": [r["name"] for r in results if r.get("lane") == "CPU"], "NPU": [r["name"] for r in results if r.get("lane") == "NPU"], "GPU": [r["name"] for r in results if r.get("lane") == "GPU"]},
+        "wave_entrypoint_review": {"enabled": args.review_wave_entrypoints, "report": str(out / "wave_entrypoint_review.json") if args.review_wave_entrypoints else None},
         "smart_context": {"enabled": args.smart_context, "task": args.smart_task, "packet": str(out / "smart_context" / f"{track_slug}_smart_context_packet.json") if args.smart_context else None},
         "guardrail_remediation_loop": remediation_loop,
         "steps": results,
