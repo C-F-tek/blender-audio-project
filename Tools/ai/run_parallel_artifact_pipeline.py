@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Safe additive orchestrator for the AI artifact pipeline.
 
-Schema v4 adds a smart context lane and an NPU-light guardrail lane.
-These are enabled by default so the existing GUI button becomes smarter without
-needing GUI changes.
+Schema v5 adds a guardrail remediation loop. The NPU-light guardrail can now
+emit structured requests for safe enrichment passes, context regeneration, or
+manual Python/code correction requests. The orchestrator may re-run only
+auto-safe stages during the same run.
 """
 from __future__ import annotations
 
@@ -52,6 +53,15 @@ def read_text_if_exists(path: Path, limit: int = 6000) -> str | None:
     return path.read_text(encoding="utf-8", errors="replace")[:limit]
 
 
+def load_json_if_exists(path: Path) -> Any | None:
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8", errors="replace"))
+    except Exception:
+        return None
+
+
 def file_meta(path: Path, root: Path) -> dict[str, Any]:
     exists = path.exists()
     meta: dict[str, Any] = {"path": rel(path, root), "exists": exists}
@@ -73,7 +83,7 @@ def planned_outputs(repo: Path, out: Path, args: argparse.Namespace) -> list[dic
     if args.use_npu:
         outputs.append(out / "npu_artifact_review.json")
     if args.npu_guardrail:
-        outputs += [out / "npu_guardrail_report.json", out / "npu_guardrail_report.md", out / "npu_guardrail_preflight.json"]
+        outputs += [out / "npu_guardrail_report.json", out / "npu_guardrail_report.md", out / "npu_guardrail_preflight.json", out / "npu_guardrail_action_queue.json"]
     if args.gpu_command:
         outputs.append(out / "gpu_planner_output.json")
     if args.validate:
@@ -105,6 +115,8 @@ def preflight(repo: Path, out: Path, args: argparse.Namespace) -> dict[str, Any]
         warnings.append("npu_workers is greater than 4; local workstation policy recommends 4 or fewer.")
     if args.npu_guardrail and not args.smart_context:
         warnings.append("NPU guardrail works best with smart context; falling back to artifact directory review.")
+    if args.guardrail_auto_remediate and not args.npu_guardrail:
+        warnings.append("Guardrail auto-remediation was requested but npu_guardrail is disabled.")
     if args.gpu_command and "{brief}" not in args.gpu_command:
         warnings.append("GPU command does not include {brief}; planner may not receive ai_scene_brief.json.")
     if args.gpu_command and "{output}" not in args.gpu_command:
@@ -120,8 +132,113 @@ def preflight(repo: Path, out: Path, args: argparse.Namespace) -> dict[str, Any]
     return {"passed": not errors, "errors": errors, "warnings": warnings, "input_files": input_files, "planned_outputs": planned_outputs(repo, out, args), "python_runtime": python_runtime(), "workstation_context": workstation_context(repo), "environment": {"cwd": os.getcwd(), "dry_run": args.dry_run}}
 
 
-def step_meta(name: str, lane: str, purpose: str, expected_outputs: list[str]) -> dict[str, Any]:
-    return {"name": name, "lane": lane, "purpose": purpose, "expected_outputs": expected_outputs}
+def step_meta(name: str, lane: str, purpose: str, expected_outputs: list[str], pass_index: int = 0) -> dict[str, Any]:
+    return {"name": name, "lane": lane, "purpose": purpose, "expected_outputs": expected_outputs, "pass_index": pass_index}
+
+
+def build_step_commands(repo: Path, out: Path, args: argparse.Namespace) -> dict[str, list[str]]:
+    py = sys.executable
+    track_slug = slugify(args.track_stem)
+
+    def script(path: str) -> str:
+        return str((repo / path).resolve())
+
+    commands: dict[str, list[str]] = {}
+    if args.build_chunks:
+        commands["build_semantic_code_chunks"] = [py, script("Tools/npu/build_semantic_code_chunks.py"), "--repo-root", str(repo)]
+    if args.build_music_summary:
+        commands["build_music_intermediates"] = [py, script("Tools/ai/build_music_intermediates.py"), "--analysis-json", str(Path(args.analysis_json).resolve()), "--output-dir", str(out)]
+    if args.smart_context:
+        commands["build_smart_ai_context"] = [py, script("Tools/workflow/smart_ai_context.py"), "--repo-root", str(repo), "--track-stem", args.track_stem, "--task", args.smart_task, "--output-dir", str(out / "smart_context"), "--max-packet-chars", str(args.smart_max_packet_chars), "--max-capsule-chars", str(args.smart_max_capsule_chars)]
+    if args.use_npu:
+        commands["npu_artifact_review"] = [py, script("Tools/npu/run_npu_artifact_reviewer.py"), "--input", str(out), "--output", str(out / "npu_artifact_review.json"), "--max-workers", str(args.npu_workers)]
+    if args.npu_guardrail:
+        guardrail_input = out / "smart_context" / f"{track_slug}_smart_context_packet.json" if args.smart_context else out
+        commands["npu_guardrail"] = [py, script("Tools/npu/npu_guardrail_service.py"), "--input", str(guardrail_input), "--output", str(out / "npu_guardrail_report.json")]
+    if args.validate:
+        commands["validate_ai_artifacts"] = [py, script("Tools/ai/validate_ai_artifacts.py"), "--repo-root", str(repo), "--artifact-dir", str(out), "--output", str(out / "ai_validation_report.json"), "--allow-errors"]
+    return commands
+
+
+def guardrail_queue(out: Path) -> dict[str, Any]:
+    payload = load_json_if_exists(out / "npu_guardrail_action_queue.json")
+    if isinstance(payload, dict):
+        return payload
+    return {"schema_version": 1, "queue": []}
+
+
+def auto_safe_requests(out: Path) -> list[dict[str, Any]]:
+    queue = guardrail_queue(out).get("queue") or []
+    return [item for item in queue if isinstance(item, dict) and item.get("auto_safe")]
+
+
+def remediation_plan_from_requests(requests: list[dict[str, Any]]) -> dict[str, Any]:
+    by_stage: dict[str, int] = {}
+    by_type: dict[str, int] = {}
+    for item in requests:
+        stage = str(item.get("suggested_stage") or "unknown")
+        action = str(item.get("action_type") or "unknown")
+        by_stage[stage] = by_stage.get(stage, 0) + 1
+        by_type[action] = by_type.get(action, 0) + 1
+    return {"request_count": len(requests), "by_stage": by_stage, "by_type": by_type, "requests": requests}
+
+
+def remedial_commands(repo: Path, out: Path, args: argparse.Namespace, requests: list[dict[str, Any]]) -> list[tuple[dict[str, Any], list[str]]]:
+    commands = build_step_commands(repo, out, args)
+    stages = {str(item.get("suggested_stage") or "") for item in requests}
+    todo: list[tuple[dict[str, Any], list[str]]] = []
+
+    if "enrich_intermediates" in stages and "build_music_intermediates" in commands:
+        todo.append((step_meta("remediate_build_music_intermediates", "CPU", "Auto-safe enrichment pass requested by NPU guardrail.", EXPECTED_MUSIC_ARTIFACTS), commands["build_music_intermediates"]))
+    if "compact_context_generation" in stages and "build_smart_ai_context" in commands:
+        todo.append((step_meta("remediate_build_smart_ai_context_compact", "CPU", "Auto-safe compact context rebuild requested by NPU guardrail.", EXPECTED_SMART_CONTEXT_ARTIFACTS), commands["build_smart_ai_context"]))
+    if "smart_context_generation" in stages and "build_smart_ai_context" in commands:
+        todo.append((step_meta("remediate_build_smart_ai_context", "CPU", "Auto-safe smart context rebuild requested by NPU guardrail.", EXPECTED_SMART_CONTEXT_ARTIFACTS), commands["build_smart_ai_context"]))
+    if "guardrail_second_pass" in stages and "npu_guardrail" in commands:
+        todo.append((step_meta("remediate_npu_guardrail_second_pass", "NPU", "Second guardrail pass requested by NPU guardrail.", [str(out / "npu_guardrail_report.json")]), commands["npu_guardrail"]))
+
+    if todo and "npu_guardrail" in commands and all(meta["name"] != "remediate_npu_guardrail_second_pass" for meta, _ in todo):
+        todo.append((step_meta("remediate_npu_guardrail_verify", "NPU", "Verify artifact state after auto-safe remediation passes.", [str(out / "npu_guardrail_report.json")]), commands["npu_guardrail"]))
+
+    return todo
+
+
+def execute_remediation_loop(repo: Path, out: Path, args: argparse.Namespace, results: list[dict[str, Any]]) -> dict[str, Any]:
+    if not args.guardrail_auto_remediate or not args.npu_guardrail:
+        return {"enabled": False, "reason": "disabled", "passes": []}
+
+    passes: list[dict[str, Any]] = []
+    seen_signatures: set[str] = set()
+    for pass_index in range(1, max(1, args.guardrail_max_passes) + 1):
+        requests = auto_safe_requests(out)
+        plan = remediation_plan_from_requests(requests)
+        signature = json.dumps(plan.get("by_stage", {}), sort_keys=True)
+        if not requests:
+            passes.append({"pass_index": pass_index, "status": "no_auto_safe_requests", "plan": plan, "steps": []})
+            break
+        if signature in seen_signatures:
+            passes.append({"pass_index": pass_index, "status": "repeated_plan_stopped", "plan": plan, "steps": []})
+            break
+        seen_signatures.add(signature)
+
+        todo = remedial_commands(repo, out, args, requests)
+        if not todo:
+            passes.append({"pass_index": pass_index, "status": "no_supported_remediation_commands", "plan": plan, "steps": []})
+            break
+
+        step_results = []
+        for meta, cmd in todo:
+            meta["pass_index"] = pass_index
+            res = run(cmd, repo, args.dry_run)
+            res.update(meta)
+            step_results.append(res)
+            results.append(res)
+            if res["returncode"] and not args.continue_on_error:
+                break
+        passes.append({"pass_index": pass_index, "status": "executed", "plan": plan, "steps": step_results})
+        if any(item["returncode"] for item in step_results) and not args.continue_on_error:
+            break
+    return {"enabled": True, "max_passes": args.guardrail_max_passes, "passes": passes}
 
 
 def main() -> int:
@@ -141,6 +258,9 @@ def main() -> int:
     ap.add_argument("--npu-guardrail", dest="npu_guardrail", action="store_true", default=True)
     ap.add_argument("--no-npu-guardrail", dest="npu_guardrail", action="store_false")
     ap.add_argument("--npu-workers", type=int, default=4)
+    ap.add_argument("--guardrail-auto-remediate", dest="guardrail_auto_remediate", action="store_true", default=True)
+    ap.add_argument("--no-guardrail-auto-remediate", dest="guardrail_auto_remediate", action="store_false")
+    ap.add_argument("--guardrail-max-passes", type=int, default=2)
     ap.add_argument("--gpu-command", help="External command with placeholders {brief} and {output}.")
     ap.add_argument("--validate", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
@@ -153,33 +273,29 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     pf = preflight(repo, out, args)
     if not pf["passed"] and not args.continue_on_error:
-        report = {"schema_version": 4, "generated_at": datetime.now(timezone.utc).isoformat(), "repo_root": str(repo), "output_dir": str(out), "dry_run": args.dry_run, "passed": False, "preflight": pf, "step_count": 0, "steps": []}
+        report = {"schema_version": 5, "generated_at": datetime.now(timezone.utc).isoformat(), "repo_root": str(repo), "output_dir": str(out), "dry_run": args.dry_run, "passed": False, "preflight": pf, "step_count": 0, "steps": []}
         print(json.dumps(report, indent=2, ensure_ascii=False))
         return 2
 
-    py = sys.executable
+    commands = build_step_commands(repo, out, args)
     serial: list[tuple[dict[str, Any], list[str]]] = []
     parallel: list[tuple[dict[str, Any], list[str]]] = []
     track_slug = slugify(args.track_stem)
 
-    def script(path: str) -> str:
-        return str((repo / path).resolve())
-
-    if args.build_chunks:
-        serial.append((step_meta("build_semantic_code_chunks", "CPU", "Build symbol-aware repository context for AI retrieval.", EXPECTED_CHUNK_ARTIFACTS), [py, script("Tools/npu/build_semantic_code_chunks.py"), "--repo-root", str(repo)]))
-    if args.build_music_summary:
-        serial.append((step_meta("build_music_intermediates", "CPU", "Build compact AI-friendly music artifacts from the full analysis JSON.", EXPECTED_MUSIC_ARTIFACTS), [py, script("Tools/ai/build_music_intermediates.py"), "--analysis-json", str(Path(args.analysis_json).resolve()), "--output-dir", str(out)]))
-    if args.smart_context:
-        serial.append((step_meta("build_smart_ai_context", "CPU", "Build hierarchical capsules and ranked smart context packet for central AI.", [item.format(track_slug=track_slug) for item in EXPECTED_SMART_CONTEXT_ARTIFACTS]), [py, script("Tools/workflow/smart_ai_context.py"), "--repo-root", str(repo), "--track-stem", args.track_stem, "--task", args.smart_task, "--output-dir", str(out / "smart_context"), "--max-packet-chars", str(args.smart_max_packet_chars), "--max-capsule-chars", str(args.smart_max_capsule_chars)]))
-    if args.use_npu:
-        parallel.append((step_meta("npu_artifact_review", "NPU", "Review compact artifacts for schema, size, blocked patterns, and obvious risks.", [str(out / "npu_artifact_review.json")]), [py, script("Tools/npu/run_npu_artifact_reviewer.py"), "--input", str(out), "--output", str(out / "npu_artifact_review.json"), "--max-workers", str(args.npu_workers)]))
-    if args.npu_guardrail:
-        guardrail_input = out / "smart_context" / f"{track_slug}_smart_context_packet.json" if args.smart_context else out
-        parallel.append((step_meta("npu_guardrail", "NPU", "Always-on NPU-light guardrail/preflight for smart context and AI artifacts.", [str(out / "npu_guardrail_report.json"), str(out / "npu_guardrail_preflight.json")]), [py, script("Tools/npu/npu_guardrail_service.py"), "--input", str(guardrail_input), "--output", str(out / "npu_guardrail_report.json")]))
+    if "build_semantic_code_chunks" in commands:
+        serial.append((step_meta("build_semantic_code_chunks", "CPU", "Build symbol-aware repository context for AI retrieval.", EXPECTED_CHUNK_ARTIFACTS), commands["build_semantic_code_chunks"]))
+    if "build_music_intermediates" in commands:
+        serial.append((step_meta("build_music_intermediates", "CPU", "Build compact AI-friendly music artifacts from the full analysis JSON.", EXPECTED_MUSIC_ARTIFACTS), commands["build_music_intermediates"]))
+    if "build_smart_ai_context" in commands:
+        serial.append((step_meta("build_smart_ai_context", "CPU", "Build hierarchical capsules and ranked smart context packet for central AI.", [item.format(track_slug=track_slug) for item in EXPECTED_SMART_CONTEXT_ARTIFACTS]), commands["build_smart_ai_context"]))
+    if "npu_artifact_review" in commands:
+        parallel.append((step_meta("npu_artifact_review", "NPU", "Review compact artifacts for schema, size, blocked patterns, and obvious risks.", [str(out / "npu_artifact_review.json")]), commands["npu_artifact_review"]))
+    if "npu_guardrail" in commands:
+        parallel.append((step_meta("npu_guardrail", "NPU", "Always-on guardrail/preflight plus action queue for corrections and enrichment.", [str(out / "npu_guardrail_report.json"), str(out / "npu_guardrail_action_queue.json")]), commands["npu_guardrail"]))
     if args.gpu_command:
         parallel.append((step_meta("gpu_command", "GPU", "Run optional heavy planner/generator command.", [str(out / "gpu_planner_output.json")]), shlex.split(args.gpu_command.format(brief=str(out / "ai_scene_brief.json"), output=str(out / "gpu_planner_output.json")))))
-    if args.validate:
-        serial.append((step_meta("validate_ai_artifacts", "CPU", "Validate generated artifacts and apply task-capsule guardrails.", [str(out / "ai_validation_report.json")]), [py, script("Tools/ai/validate_ai_artifacts.py"), "--repo-root", str(repo), "--artifact-dir", str(out), "--output", str(out / "ai_validation_report.json"), "--allow-errors"]))
+    if "validate_ai_artifacts" in commands:
+        serial.append((step_meta("validate_ai_artifacts", "CPU", "Validate generated artifacts and apply task-capsule guardrails.", [str(out / "ai_validation_report.json")]), commands["validate_ai_artifacts"]))
 
     results: list[dict[str, Any]] = []
     for meta, cmd in serial:
@@ -196,7 +312,23 @@ def main() -> int:
                 res.update(futs[fut])
                 results.append(res)
 
-    report = {"schema_version": 4, "generated_at": datetime.now(timezone.utc).isoformat(), "repo_root": str(repo), "output_dir": str(out), "dry_run": args.dry_run, "passed": pf["passed"] and all(r["returncode"] == 0 for r in results), "preflight": pf, "step_count": len(results), "lanes": {"CPU": [r["name"] for r in results if r.get("lane") == "CPU"], "NPU": [r["name"] for r in results if r.get("lane") == "NPU"], "GPU": [r["name"] for r in results if r.get("lane") == "GPU"]}, "smart_context": {"enabled": args.smart_context, "task": args.smart_task, "packet": str(out / "smart_context" / f"{track_slug}_smart_context_packet.json") if args.smart_context else None}, "steps": results, "post_run_expected_outputs": planned_outputs(repo, out, args)}
+    remediation_loop = execute_remediation_loop(repo, out, args, results)
+
+    report = {
+        "schema_version": 5,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "repo_root": str(repo),
+        "output_dir": str(out),
+        "dry_run": args.dry_run,
+        "passed": pf["passed"] and all(r["returncode"] == 0 for r in results),
+        "preflight": pf,
+        "step_count": len(results),
+        "lanes": {"CPU": [r["name"] for r in results if r.get("lane") == "CPU"], "NPU": [r["name"] for r in results if r.get("lane") == "NPU"], "GPU": [r["name"] for r in results if r.get("lane") == "GPU"]},
+        "smart_context": {"enabled": args.smart_context, "task": args.smart_task, "packet": str(out / "smart_context" / f"{track_slug}_smart_context_packet.json") if args.smart_context else None},
+        "guardrail_remediation_loop": remediation_loop,
+        "steps": results,
+        "post_run_expected_outputs": planned_outputs(repo, out, args),
+    }
     if not args.dry_run:
         (out / "ai_pipeline_run_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     elif args.write_dry_run_report:
