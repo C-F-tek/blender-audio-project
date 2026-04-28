@@ -1,0 +1,26 @@
+{
+  "capsule_id": "resource_budget",
+  "version": 1,
+  "purpose": "Local workstation resource policy for AI artifact generation.",
+  "workstation_profile": {
+    "gpu": "NVIDIA RTX 5080",
+    "vram_gb": 16,
+    "ram_gb": 32,
+    "cpu_family": "Intel Core Ultra",
+    "npu": true
+  },
+  "policy": {
+    "avoid_heavy_blender_render_plus_large_llm": true,
+    "max_npu_workers": 4,
+    "prefer_compact_context": true,
+    "gpu_for_heavy_generation": true,
+    "npu_for_short_review": true,
+    "cpu_for_validation": true
+  },
+  "risk_signals": [
+    "system swapping",
+    "GPU out of memory",
+    "NPU prompt too large",
+    "full analysis JSON used as direct LLM prompt"
+  ]
+}
