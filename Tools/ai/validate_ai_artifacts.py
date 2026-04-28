@@ -2,9 +2,11 @@
 """Validate AI pipeline artifacts without touching runtime packages."""
 from __future__ import annotations
 
-import argparse, json
+import argparse
+import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 REQUIRED = {
     "track_summary.json": ["schema_version", "source_analysis"],
@@ -12,15 +14,16 @@ REQUIRED = {
     "audio_event_map.json": ["schema_version"],
     "ai_scene_brief.json": ["schema_version", "creative_intent", "technical_intent"],
     "ai_resource_budget.json": ["schema_version", "recommendations"],
+    "ai_mapping_candidates.json": ["schema_version", "candidates"],
     "ai_selected_mapping.json": ["schema_version", "selected"],
 }
 
 
-def load_json(path: Path):
+def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8", errors="replace"))
 
 
-def load_patterns(capsules: Path):
+def load_patterns(capsules: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     blocked, warnings = [], []
     if capsules.exists():
         for path in sorted(capsules.glob("*.json")):
@@ -33,7 +36,7 @@ def load_patterns(capsules: Path):
     return blocked, warnings
 
 
-def scan(path: Path, blocked, warn_patterns, errors, warnings):
+def scan(path: Path, blocked, warn_patterns, errors, warnings) -> None:
     text = path.read_text(encoding="utf-8", errors="replace")
     for item in blocked:
         pattern = item.get("pattern")
@@ -43,6 +46,43 @@ def scan(path: Path, blocked, warn_patterns, errors, warnings):
         pattern = item.get("pattern")
         if pattern and pattern in text:
             warnings.append(f"{path}: warning pattern `{pattern}`: {item.get('reason', 'warning')}")
+
+
+def validate_semantics(path: Path, data: Any, errors: list[str], warnings: list[str], positives: list[str]) -> None:
+    if not isinstance(data, dict):
+        return
+    if path.name == "track_summary.json":
+        readiness = data.get("ai_readiness") or {}
+        score = readiness.get("score")
+        if isinstance(score, (int, float)):
+            positives.append(f"track_summary ai_readiness score={score}")
+            if score < 0.5:
+                warnings.append("track_summary ai_readiness score is low; generated scene planning may need manual context.")
+        else:
+            warnings.append("track_summary missing ai_readiness score.")
+        if not data.get("primary_series"):
+            warnings.append("track_summary has no primary_series; peak mapping may be weak.")
+    elif path.name == "music_segments.json":
+        segments = data.get("segments") or []
+        if not segments:
+            warnings.append("music_segments has no segments.")
+        for i, segment in enumerate(segments):
+            if not isinstance(segment, dict):
+                continue
+            if "visual_directive" not in segment:
+                warnings.append(f"music_segments segment {i} missing visual_directive.")
+    elif path.name == "ai_mapping_candidates.json":
+        candidates = data.get("candidates") or []
+        if len(candidates) < 2:
+            warnings.append("ai_mapping_candidates contains fewer than 2 candidates; creative selection is weak.")
+        else:
+            positives.append(f"ai_mapping_candidates candidate_count={len(candidates)}")
+    elif path.name == "ai_scene_brief.json":
+        if not data.get("recommended_visual_progression"):
+            warnings.append("ai_scene_brief missing recommended_visual_progression.")
+        constraints = data.get("constraints") or []
+        if not any("ShaderNodeTexMusgrave" in str(item) for item in constraints):
+            warnings.append("ai_scene_brief does not mention Blender 5.x ShaderNodeTexMusgrave guardrail.")
 
 
 def main() -> int:
@@ -56,7 +96,10 @@ def main() -> int:
     args = ap.parse_args()
     repo = Path(args.repo_root).resolve()
     artifact_dir = (repo / args.artifact_dir).resolve()
-    errors, warnings, checked = [], [], []
+    errors: list[str] = []
+    warnings: list[str] = []
+    positives: list[str] = []
+    checked: list[str] = []
 
     if artifact_dir.exists():
         for path in sorted(artifact_dir.glob("*.json")):
@@ -69,8 +112,15 @@ def main() -> int:
             for key in REQUIRED.get(path.name, []):
                 if not isinstance(data, dict) or key not in data:
                     errors.append(f"{path.name} missing `{key}`")
+            validate_semantics(path, data, errors, warnings, positives)
     else:
         warnings.append(f"Artifact directory not found: {artifact_dir}")
+
+    assumptions = artifact_dir / "ai_assumptions.md"
+    if artifact_dir.exists() and not assumptions.exists():
+        warnings.append("ai_assumptions.md not found; downstream AI should receive explicit assumptions.")
+    elif assumptions.exists():
+        positives.append("ai_assumptions.md present.")
 
     blocked, warn_patterns = load_patterns((repo / args.capsules_dir).resolve())
     files = list(artifact_dir.rglob("*")) if artifact_dir.exists() else []
@@ -87,8 +137,23 @@ def main() -> int:
             scan(path, blocked, warn_patterns, errors, warnings)
 
     score = max(0.0, round(1.0 - min(0.7, len(errors) * 0.2) - min(0.3, len(warnings) * 0.04), 4))
-    report = {"schema_version": 1, "generated_at": datetime.now(timezone.utc).isoformat(), "passed": not errors, "score": score, "checked_files": checked, "blocking_errors": errors, "warnings": warnings}
-    out = Path(args.output).resolve(); out.parent.mkdir(parents=True, exist_ok=True)
+    report = {
+        "schema_version": 2,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "passed": not errors,
+        "score": score,
+        "checked_files": checked,
+        "blocking_errors": errors,
+        "warnings": warnings,
+        "positives": positives,
+        "quality_summary": {
+            "error_count": len(errors),
+            "warning_count": len(warnings),
+            "positive_count": len(positives),
+        },
+    }
+    out = Path(args.output).resolve()
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] or args.allow_errors else 2
