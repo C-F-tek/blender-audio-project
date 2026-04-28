@@ -1,9 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
+import sys
 from tkinter import messagebox, ttk
 
-from git_auto_push import run_auto_push_generated_data
-from workflow_gui import WorkflowGui as BaseWorkflowGui
+THIS_DIR = Path(__file__).resolve().parent
+WORKFLOW_DIR = THIS_DIR.parent
+if str(WORKFLOW_DIR) not in sys.path:
+    sys.path.insert(0, str(WORKFLOW_DIR))
+
+from git_auto_push import run_auto_push_generated_data  # noqa: E402
+from workflow_gui import WorkflowGui as BaseWorkflowGui  # noqa: E402
 
 
 class WorkflowGuiWithPush(BaseWorkflowGui):
