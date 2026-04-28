@@ -7,7 +7,7 @@ $ErrorActionPreference = "Stop"
 $Project = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Root = Split-Path -Parent $Project
 $NpuPython = Join-Path $Root "venvs\blender-npu-ai\Scripts\python.exe"
-$GuiScript = Join-Path $Project "Tools\workflow\gui\workflow_gui.py"
+$GuiScript = Join-Path $Project "Tools\workflow\gui\workflow_gui_with_push.py"
 $StartupPreflight = Join-Path $Project "Tools\workflow\startup_preflight.ps1"
 
 if (Test-Path -LiteralPath $NpuPython) {
