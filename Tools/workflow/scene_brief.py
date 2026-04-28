@@ -16,66 +16,16 @@ MEMORY_VERSION = 3
 
 
 QUESTION_FIELDS = [
-    (
-        "creative_intent",
-        "Idea generale / mood",
-        "Che sensazione deve dare la scena?",
-        "cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero",
-    ),
-    (
-        "hero_object",
-        "Oggetto centrale",
-        "Come deve comportarsi l'oggetto centrale?",
-        "sfera/aura viva con deformazione mesh completa su tutti i keyframe audio",
-    ),
-    (
-        "background",
-        "Sfondo",
-        "Che sfondo vuoi?",
-        "azzurro/verde sfumato coerente con cover, niente nero piatto, niente linee/pannelli visibili",
-    ),
-    (
-        "fog",
-        "Nebbia",
-        "Come deve muoversi la nebbia?",
-        "filamenti o banchi morbidi tipo fumo, visibili ma leggeri, compressi/decompressi dal suono",
-    ),
-    (
-        "particles_orbits",
-        "Particelle/orbite",
-        "Che comportamento vuoi per satelliti/particelle?",
-        "orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti",
-    ),
-    (
-        "materials_lights",
-        "Materiali/luci",
-        "Come devono reagire materiali e luci?",
-        "materia + emissione fusi, luce generale stabile, no strobo forte, accenti su oggetti secondari",
-    ),
-    (
-        "camera_motion",
-        "Camera",
-        "Che tipo di camera vuoi?",
-        "movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
-    ),
-    (
-        "avoid",
-        "Da evitare",
-        "Cosa non vuoi vedere?",
-        "placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
-    ),
-    (
-        "render_target",
-        "Target render",
-        "A cosa deve stare attento il generatore per i tempi render?",
-        "test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
-    ),
-    (
-        "free_notes",
-        "Note libere",
-        "Aggiungi istruzioni extra per la scena.",
-        "",
-    ),
+    ("creative_intent", "Idea generale / mood", "Che sensazione deve dare la scena?", "cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero"),
+    ("hero_object", "Oggetto centrale", "Come deve comportarsi l'oggetto centrale?", "sfera/aura viva con deformazione mesh completa su tutti i keyframe audio"),
+    ("background", "Sfondo", "Che sfondo vuoi?", "azzurro/verde sfumato coerente con cover, niente nero piatto, niente linee/pannelli visibili"),
+    ("fog", "Nebbia", "Come deve muoversi la nebbia?", "filamenti o banchi morbidi tipo fumo, visibili ma leggeri, compressi/decompressi dal suono"),
+    ("particles_orbits", "Particelle/orbite", "Che comportamento vuoi per satelliti/particelle?", "orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti"),
+    ("materials_lights", "Materiali/luci", "Come devono reagire materiali e luci?", "materia + emissione fusi, luce generale stabile, no strobo forte, accenti su oggetti secondari"),
+    ("camera_motion", "Camera", "Che tipo di camera vuoi?", "movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi"),
+    ("avoid", "Da evitare", "Cosa non vuoi vedere?", "placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe"),
+    ("render_target", "Target render", "A cosa deve stare attento il generatore per i tempi render?", "test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili"),
+    ("free_notes", "Note libere", "Aggiungi istruzioni extra per la scena.", ""),
 ]
 
 
@@ -120,12 +70,7 @@ def compact_text(value: str, limit: int = 900) -> str:
     return value[: max(0, limit - 3)].rstrip() + "..."
 
 
-def build_conversation_memory(
-    *,
-    preferences: dict[str, str],
-    transcript: list[dict] | None,
-    previous: dict | None = None,
-) -> dict:
+def build_conversation_memory(*, preferences: dict[str, str], transcript: list[dict] | None, previous: dict | None = None) -> dict:
     previous = previous or {}
     transcript = transcript or []
     user_requests: list[str] = []
@@ -134,20 +79,8 @@ def build_conversation_memory(
     durable_constraints: list[str] = []
     question_history: list[str] = []
 
-    boilerplate_markers = (
-        "certo, posso aiutarti",
-        "brief aggiornato",
-        "istruzioni operative",
-        "traccia audio",
-        "percorso audio",
-        "coldplay",
-        "new beginnings",
-    )
-
-    keywords = (
-        "keyframe", "audio", "asset", "ball", "sfera", "hero", "aura", "fog", "nebbia", "luce", "emission",
-        "nero", "sfondo", "render", "npu", "ollama", "gpu", "script", "blender", "memoria", "chat",
-    )
+    boilerplate_markers = ("certo, posso aiutarti", "brief aggiornato", "istruzioni operative", "traccia audio", "percorso audio", "coldplay", "new beginnings")
+    keywords = ("keyframe", "audio", "asset", "ball", "sfera", "hero", "aura", "fog", "nebbia", "luce", "emission", "nero", "sfondo", "render", "npu", "ollama", "gpu", "script", "blender", "memoria", "chat")
 
     for item in transcript:
         role = str(item.get("role") or "note").lower()
@@ -169,11 +102,7 @@ def build_conversation_memory(
             if token.lower() in lowered:
                 asset_mentions.append(token)
 
-    preference_summary = []
-    for key, value in preferences.items():
-        if value:
-            preference_summary.append(f"{key}: {compact_text(value, 260)}")
-
+    preference_summary = [f"{key}: {compact_text(value, 260)}" for key, value in preferences.items() if value]
     previous_memory = previous.get("conversation_memory") if isinstance(previous.get("conversation_memory"), dict) else {}
     previous_constraints = previous_memory.get("durable_constraints") if isinstance(previous_memory, dict) else []
     if isinstance(previous_constraints, list) and previous_memory.get("memory_version") == MEMORY_VERSION:
@@ -211,11 +140,7 @@ def load_or_create_scene_brief(*, track_stem: str, audio_path: str, output_path:
         if memory.get("memory_version") != MEMORY_VERSION:
             preferences = existing.get("scene_preferences") if isinstance(existing.get("scene_preferences"), dict) else default_scene_preferences()
             transcript = existing.get("conversation_transcript") if isinstance(existing.get("conversation_transcript"), list) else []
-            existing["conversation_memory"] = build_conversation_memory(
-                preferences={key: str(value) for key, value in preferences.items()},
-                transcript=transcript,
-                previous=existing,
-            )
+            existing["conversation_memory"] = build_conversation_memory(preferences={key: str(value) for key, value in preferences.items()}, transcript=transcript, previous=existing)
             write_json(output_path, existing)
         return existing
     brief = build_scene_brief(track_stem=track_stem, audio_path=audio_path, preferences=default_scene_preferences(), transcript=[])
@@ -238,13 +163,7 @@ def append_scene_message(*, track_stem: str, audio_path: str, output_path: Path,
         current_notes = str(preferences.get("free_notes") or "").strip()
         preferences["free_notes"] = (current_notes + "\n" + content).strip() if current_notes else content
 
-    updated = build_scene_brief(
-        track_stem=track_stem,
-        audio_path=audio_path,
-        preferences={key: str(value) for key, value in preferences.items()},
-        transcript=transcript,
-        previous=brief,
-    )
+    updated = build_scene_brief(track_stem=track_stem, audio_path=audio_path, preferences={key: str(value) for key, value in preferences.items()}, transcript=transcript, previous=brief)
     write_json(output_path, updated)
     return updated
 
@@ -272,14 +191,7 @@ def compact_music_for_chat(music_context: dict | None) -> dict:
         "track_summary": track,
         "segment_count": len(segments),
         "first_segments": [
-            {
-                "index": item.get("index"),
-                "time": [item.get("start_sec"), item.get("end_sec")],
-                "dominant_band": item.get("dominant_band"),
-                "intensity": item.get("intensity"),
-                "intensity_score": item.get("intensity_score"),
-                "controls": item.get("controls"),
-            }
+            {"index": item.get("index"), "time": [item.get("start_sec"), item.get("end_sec")], "dominant_band": item.get("dominant_band"), "intensity": item.get("intensity"), "intensity_score": item.get("intensity_score"), "controls": item.get("controls")}
             for item in segments[:8]
         ],
     }
@@ -291,7 +203,7 @@ def classify_user_intent(user_message: str) -> str:
         return "script_or_code_request"
     if "cosa pensi" in text or "che ne pensi" in text or text.endswith("?"):
         return "opinion_or_question"
-    if any(word in text for word in ["vorrei", "aggiungi", "modifica", "crea", "usa", "togli", "deve"]):
+    if any(word in text for word in ["vorrei", "aggiungi", "modifica", "crea", "usa", "togli", "deve", "procedi", "analizza"]):
         return "scene_change_request"
     return "director_note"
 
@@ -310,14 +222,7 @@ def compact_recent_conversation(transcript: list[dict] | None, limit: int = 12) 
     return result[-limit:]
 
 
-def build_scene_chat_prompt(
-    brief: dict,
-    user_message: str,
-    asset_inventory: dict | None = None,
-    music_context: dict | None = None,
-    project_awareness: dict | None = None,
-    preflight_answers: list[dict] | None = None,
-) -> str:
+def build_scene_chat_prompt(brief: dict, user_message: str, asset_inventory: dict | None = None, music_context: dict | None = None, project_awareness: dict | None = None, preflight_answers: list[dict] | None = None) -> str:
     intent = classify_user_intent(user_message)
     compact = {
         "track_stem": brief.get("track_stem"),
@@ -361,24 +266,45 @@ Contesto:
 """.strip()
 
 
+def deterministic_scene_director_reply(*, user_message: str, awareness: dict, music_context: dict, response_meta: dict) -> str:
+    files = awareness.get("technical_files", {}) if isinstance(awareness, dict) else {}
+    pipeline = awareness.get("pipeline_state", {}) if isinstance(awareness, dict) else {}
+    track_identity = awareness.get("track_identity", {}) if isinstance(awareness, dict) else {}
+    music = compact_music_for_chat(music_context)
+    track_name = track_identity.get("track_stem") or awareness.get("track_stem") or "traccia corrente"
+    keyframes_path = (files.get("blender_keyframes_json") or {}).get("path") if isinstance(files.get("blender_keyframes_json"), dict) else None
+    music_path = (files.get("music_context_json") or {}).get("path") if isinstance(files.get("music_context_json"), dict) else None
+    intent = classify_user_intent(user_message)
+    return "\n".join([
+        "Fallback regia tecnica attivo: Ollama non ha prodotto una risposta utilizzabile, quindi uso i dati locali gia disponibili.",
+        f"Brano/sessione: {track_name}.",
+        f"Intento rilevato: {intent}.",
+        "Decisione operativa:",
+        "- Usa i file tecnici gia generati; non rifare import manuali in Blender.",
+        f"- Keyframe autorevoli: {keyframes_path or 'analysis_blender_keyframes.json non rilevato nel project awareness'}.",
+        f"- Contesto musicale compatto: {music_path or 'music_context_json non rilevato'}.",
+        f"- Segmenti musicali disponibili: {music.get('segment_count', 0)}.",
+        "- Per la prossima generazione script: mantenere tutti i frame JSON, usare materiali/emissione/fog/camera come reazione audio, evitare placeholder e scene minime.",
+        "- Se vuoi una direzione alien/futuristic, applico: doppio centro luminoso in controfase, orbite audio-reactive, fog volumetrico leggero, emissioni controllate sui beat e camera lenta con micro-pressioni.",
+        "Diagnostica:",
+        f"- Modello chat: {response_meta.get('selected_model') or response_meta.get('model')}",
+        f"- prompt_chars: {response_meta.get('prompt_chars')}",
+        f"- log Ollama: {response_meta.get('ollama_runtime_log', 'output/workflow_logs/ollama_runtime_events.jsonl')}",
+    ])
+
+
 def sanitize_scene_reply(reply: str, *, awareness: dict, preflight_answers: list[dict]) -> str:
     if not reply:
         return ""
     lowered = reply.lower()
-    forbidden_markers = [
-        "assicurati di avere il file wav", "assicurati che il file wav", "importa l'audio in blender",
-        "importare l'audio in blender", "apri blender e importa", "aggiungi l'audio in blender",
-        "carica il file wav in blender", "coldplay", "new beginnings",
-    ]
+    forbidden_markers = ["assicurati di avere il file wav", "assicurati che il file wav", "importa l'audio in blender", "importare l'audio in blender", "apri blender e importa", "aggiungi l'audio in blender", "carica il file wav in blender", "coldplay", "new beginnings"]
     if not any(marker in lowered for marker in forbidden_markers):
         return reply
-
     if "coldplay" in lowered or "new beginnings" in lowered:
         track_identity = awareness.get("track_identity", {})
         files = awareness.get("technical_files", {})
         music_context = read_json(Path(files.get("music_context_json", {}).get("path", "")))
         return deterministic_track_opinion(track_identity, music_context)
-
     correction = ["Correzione di contesto progetto: non serve importare manualmente il WAV in Blender."]
     for item in preflight_answers:
         answer = str(item.get("answer") or "").strip()
@@ -397,15 +323,7 @@ def sanitize_scene_reply(reply: str, *, awareness: dict, preflight_answers: list
     return "\n".join(correction) + "\n" + cleaned.strip()
 
 
-def generate_scene_chat_reply(
-    *,
-    track_stem: str,
-    audio_path: str,
-    output_path: Path,
-    user_message: str,
-    model: str = "qwen2.5-coder:14b",
-    asset_inventory_path: Path | None = None,
-) -> str:
+def generate_scene_chat_reply(*, track_stem: str, audio_path: str, output_path: Path, user_message: str, model: str = "qwen2.5-coder:14b", asset_inventory_path: Path | None = None) -> str:
     brief = load_or_create_scene_brief(track_stem=track_stem, audio_path=audio_path, output_path=output_path)
     asset_inventory = read_json(asset_inventory_path) if asset_inventory_path else {}
     music_context_path = output_path.with_name(f"{track_stem}_music_context.json")
@@ -414,21 +332,12 @@ def generate_scene_chat_reply(
     save_project_awareness(awareness)
     preflight_answers = build_preflight_answers_for_message(user_message, awareness, music_context)
     prompt = build_scene_chat_prompt(brief, user_message, asset_inventory, music_context, awareness, preflight_answers)
-
     npu_dir = Path(__file__).resolve().parents[1] / "npu"
     if str(npu_dir) not in sys.path:
         sys.path.insert(0, str(npu_dir))
-
-    response_meta: dict = {
-        "track_stem": track_stem,
-        "model": model,
-        "prompt_chars": len(prompt),
-        "user_message_chars": len(user_message),
-        "output_path": str(output_path),
-    }
+    response_meta: dict = {"track_stem": track_stem, "model": model, "prompt_chars": len(prompt), "user_message_chars": len(user_message), "output_path": str(output_path)}
     try:
         from ollama_runtime import OllamaSession, ollama_runtime_log_path  # type: ignore
-
         with OllamaSession(model=model, keep_alive="2m", shutdown_server=False, unload_model=False, startup_timeout=20.0) as session:
             reply = session.generate(prompt, max_new_tokens=1200, temperature=0.18)
             response_meta["selected_model"] = session.model
@@ -437,12 +346,7 @@ def generate_scene_chat_reply(
         response_meta["error_type"] = type(exc).__name__
         response_meta["error"] = str(exc)
         append_scene_runtime_event("scene_chat_error", response_meta)
-        reply = (
-            "Errore chiamando Ollama: "
-            f"{exc}\n\n"
-            "Il tuo messaggio e' comunque salvato nel brief; puoi generare lo script anche senza risposta chat."
-        )
-
+        reply = ""
     raw_reply_chars = len(str(reply or ""))
     response_meta["raw_reply_chars"] = raw_reply_chars
     response_meta["empty_response"] = raw_reply_chars == 0
@@ -450,14 +354,9 @@ def generate_scene_chat_reply(
         append_scene_runtime_event("scene_chat_empty_response", response_meta)
     else:
         append_scene_runtime_event("scene_chat_response", response_meta)
-
-    reply = sanitize_scene_reply(reply.strip(), awareness=awareness, preflight_answers=preflight_answers)
+    reply = sanitize_scene_reply(str(reply or "").strip(), awareness=awareness, preflight_answers=preflight_answers)
     if not reply:
-        reply = (
-            "Ollama non ha restituito testo. Il messaggio utente e' comunque salvato nel brief.\n\n"
-            f"Diagnostica: modello={response_meta.get('selected_model') or model}, prompt_chars={response_meta.get('prompt_chars')}, "
-            f"log={response_meta.get('ollama_runtime_log', 'output/workflow_logs/ollama_runtime_events.jsonl')}"
-        )
+        reply = deterministic_scene_director_reply(user_message=user_message, awareness=awareness, music_context=music_context, response_meta=response_meta)
     append_scene_message(track_stem=track_stem, audio_path=audio_path, output_path=output_path, role="assistant", content=reply)
     return reply
 
@@ -473,17 +372,8 @@ def build_scene_brief(*, track_stem: str, audio_path: str, preferences: dict[str
         "track_stem": track_stem,
         "audio_path": audio_path,
         "scene_preferences": preferences,
-        "must_keep": [
-            "Use the full analysis_blender_keyframes JSON frames for animation.",
-            "Use compact music segments only for composition and macro decisions.",
-            "Create a standalone Blender Python scene script under indexAI/scene_scripts.",
-            "Do not modify existing project source files.",
-        ],
-        "workflow_policy": {
-            "npu_role": "optional compact service/router, not heavy generator",
-            "gpu_or_ollama_role": "heavy reasoning and code generation",
-            "manual_review_required": True,
-        },
+        "must_keep": ["Use the full analysis_blender_keyframes JSON frames for animation.", "Use compact music segments only for composition and macro decisions.", "Create a standalone Blender Python scene script under indexAI/scene_scripts.", "Do not modify existing project source files."],
+        "workflow_policy": {"npu_role": "optional compact service/router, not heavy generator", "gpu_or_ollama_role": "heavy reasoning and code generation", "manual_review_required": True},
         "conversation_memory": memory,
         "conversation_transcript": active_transcript,
     }
@@ -505,21 +395,18 @@ def run_interactive_scene_brief(*, track_stem: str, audio_path: str, output_path
     defaults = default_scene_preferences()
     preferences: dict[str, str] = {}
     transcript: list[dict] = []
-
     print("\n" + "=" * 72)
     print("SPAZIOTEMPO SCENE DIRECTOR CHAT")
     print("=" * 72)
     print("Rispondi liberamente. Invio mantiene il default o la risposta precedente.")
     print(f"Track: {track_stem}")
     print(f"Output: {output_path}")
-
     for field, label, question, default in QUESTION_FIELDS:
         current_default = str(previous_preferences.get(field) or defaults.get(field) or default)
         answer, item = prompt_value(label, question, current_default)
         preferences[field] = answer
         item["field"] = field
         transcript.append(item)
-
     brief = build_scene_brief(track_stem=track_stem, audio_path=audio_path, preferences=preferences, transcript=transcript, previous=previous)
     write_json(output_path, brief)
     print(f"\n[OK] Scene director brief salvato: {output_path}")
