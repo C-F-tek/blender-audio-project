@@ -1,0 +1,19 @@
+{
+  "track": "not specified",
+  "artist": "not specified",
+  "duration_sec": null,
+  "estimated_bpm": null,
+  "fps": 30,
+  "bands": {
+    "low": 0.0,
+    "mid": 0.0,
+    "high": 0.0
+  },
+  "rhythm": {
+    "beat_strength": 0.0,
+    "onset_strength": 0.0
+  },
+  "section_intensity": 0.0,
+  "sections": [],
+  "visual_strategy": {}
+}
