@@ -1,22 +1,20 @@
 from __future__ import annotations
 
+import os
 import tkinter as tk
-from tkinter import ttk
+from pathlib import Path
+from tkinter import messagebox, ttk
 
 import workflow_state as wf
 from components.action_panel import ActionGroup, ActionSpec, GroupedActionPanel
-from components.st_theme import STTheme, apply_spaziotempo_theme
+from components.session_overview import SessionOverviewFrame
+from components.st_theme import apply_spaziotempo_theme, text_widget_colors
 from components.storage_dashboard import StorageDashboardWindow
 from workflow_gui import WorkflowGui as LegacyWorkflowGui
 
 
 class ModernWorkflowGui(LegacyWorkflowGui):
-    """Adaptive workflow GUI with grouped, scrollable operations.
-
-    This class keeps all operational methods from the legacy GUI and replaces
-    only the layout layer. New GUI actions should be added by extending
-    build_action_groups(), not by manually packing buttons in multiple places.
-    """
+    """Adaptive workflow GUI with grouped, scrollable operations."""
 
     def configure_style(self) -> None:
         apply_spaziotempo_theme(self)
@@ -98,38 +96,17 @@ class ModernWorkflowGui(LegacyWorkflowGui):
         notebook.add(output_tab, text="Live Output")
         notebook.add(help_tab, text="Workflow Guide")
 
-        self.session_box = tk.Text(
+        self.session_overview = SessionOverviewFrame(
             status_tab,
-            height=16,
-            wrap="word",
-            borderwidth=1,
-            relief="solid",
-            background=STTheme.panel,
-            foreground=STTheme.text,
-            insertbackground=STTheme.cyan,
+            open_path_callback=self.open_system_path,
+            copy_callback=self.copy_text_to_clipboard,
         )
-        self.session_box.pack(fill="both", expand=True)
-        self.session_box.configure(state="disabled")
+        self.session_box = self.session_overview.detail
 
-        self.output = tk.Text(
-            output_tab,
-            wrap="word",
-            borderwidth=1,
-            relief="solid",
-            background=STTheme.panel,
-            foreground=STTheme.text,
-            insertbackground=STTheme.cyan,
-        )
+        self.output = tk.Text(output_tab, wrap="word", borderwidth=1, relief="solid", **text_widget_colors(self))
         self.output.pack(fill="both", expand=True)
 
-        help_text = tk.Text(
-            help_tab,
-            wrap="word",
-            borderwidth=0,
-            background=STTheme.panel,
-            foreground=STTheme.text,
-            insertbackground=STTheme.cyan,
-        )
+        help_text = tk.Text(help_tab, wrap="word", borderwidth=0, **text_widget_colors(self))
         help_text.pack(fill="both", expand=True)
         help_text.insert(
             "1.0",
@@ -140,16 +117,40 @@ class ModernWorkflowGui(LegacyWorkflowGui):
             "4. Dual AI scene script per generare lo script Blender.\n"
             "5. Artifact browser per controllare JSON, immagini, output audio/video e script prodotti.\n"
             "6. Push generated data solo dopo avere completato e verificato i dati strutturati.\n\n"
-            "Statistiche:\n"
-            "- Project stats apre una dashboard dedicata alla cartella blender.\n"
-            "- La dashboard distingue blender-audio-project dal resto dei contenuti nella root blender.\n"
-            "- Doppio click su cartelle/file per aprirli nel sistema.\n\n"
+            "GUI:\n"
+            "- Le tabelle seguono l'ordinamento stile Esplora file: clic su intestazione, secondo clic inverte.\n"
+            "- Session / Outputs mostra riepilogo e output in tabella, non più testo grezzo.\n"
+            "- Project stats controlla la cartella blender e distingue blender-audio-project dal resto.\n\n"
             "Estensione GUI:\n"
             "- aggiungi una nuova ActionSpec dentro build_action_groups();\n"
             "- scegli il gruppo corretto o creane uno nuovo;\n"
             "- la GUI gestisce automaticamente scroll, spacing e abilitazione pulsanti.\n",
         )
         help_text.configure(state="disabled")
+
+    def open_system_path(self, path: Path) -> None:
+        try:
+            if not path.exists():
+                raise FileNotFoundError(f"Percorso non trovato: {path}")
+            os.startfile(str(path))  # type: ignore[attr-defined]
+        except Exception as exc:
+            messagebox.showerror("Open", str(exc))
+
+    def copy_text_to_clipboard(self, text: str) -> None:
+        self.clipboard_clear()
+        self.clipboard_append(text)
+
+    def refresh_session(self) -> None:
+        self.session = wf.load_session(create=True)
+        self.creative_model.set(self.session.creative_model)
+        self.technical_model.set(self.session.technical_model)
+        self.chat_model.set(self.session.chat_model)
+        self.script_tokens.set(str(self.session.script_max_tokens))
+        status = wf.operation_status(self.session)
+        if hasattr(self, "session_overview"):
+            self.session_overview.update_session(self.session, status)
+        if self.session.debug_enabled and self.log_window is None:
+            self.open_log_window()
 
     def open_project_stats_window(self) -> None:
         if self.project_stats_window is None or not self.project_stats_window.winfo_exists():
