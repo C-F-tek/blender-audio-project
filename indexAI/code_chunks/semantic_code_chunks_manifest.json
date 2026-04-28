@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-28T18:42:40.137237+00:00",
+  "generated_at": "2026-04-28T19:35:17.406922+00:00",
   "source_dirs": [
     "Scripting",
     "Tools",
     "."
   ],
-  "files_scanned": 118,
-  "chunk_count": 1033,
+  "files_scanned": 120,
+  "chunk_count": 1064,
   "files": [
     {
       "path": "analyze_wav.py",
@@ -638,6 +638,13 @@
       "sha256": "c95155adaba9dbffa80174feb6e7ee16ac23346d70a437cd75aa89138ff1dffb"
     },
     {
+      "path": "Tools/npu/generated_blender_script_candidate.py",
+      "status": "ok",
+      "chunks": 16,
+      "lines": 369,
+      "sha256": "b344451190d4035cc4d5d1dbbe5475b60e60856cf22549d856e3a1d2e0661a81"
+    },
+    {
       "path": "Tools/npu/generated_blender_script_candidate_FristNear.py",
       "status": "ok",
       "chunks": 16,
@@ -692,6 +699,13 @@
       "chunks": 21,
       "lines": 443,
       "sha256": "64307a6f42dddbb2363773954311fae7fc1dd76855e1f056b3c92c1cfc5a37fb"
+    },
+    {
+      "path": "Tools/workflow/ai_runtime_diagnostics.py",
+      "status": "ok",
+      "chunks": 14,
+      "lines": 267,
+      "sha256": "73d4ac730a5cbe1ac9121c1143fd8eee291ea9533a9bfe3c065cd32606ee9235"
     },
     {
       "path": "Tools/workflow/artifact_consult.py",
@@ -781,8 +795,8 @@
       "path": "Tools/workflow/gui/workflow_gui_with_push.py",
       "status": "ok",
       "chunks": 2,
-      "lines": 116,
-      "sha256": "6130bedc1645d887cac0067008278b3a6805944712c0d0071746fb1aa4f1203b"
+      "lines": 176,
+      "sha256": "fba50b19f7c74fc9334751fb207ca3dd1f6b68a8b46b2b818b40f13eed848704"
     },
     {
       "path": "Tools/workflow/project_awareness.py",
@@ -794,9 +808,9 @@
     {
       "path": "Tools/workflow/scene_brief.py",
       "status": "ok",
-      "chunks": 18,
-      "lines": 599,
-      "sha256": "3e059017208e1501dde6ac54f88640edc865a87220a98a63cffbb41239a99914"
+      "chunks": 19,
+      "lines": 526,
+      "sha256": "8e8a80b0798c463f308905fa0c0bd4232478cf5a3db743ebbf72326d657bbd73"
     },
     {
       "path": "Tools/workflow/startup_check.py",

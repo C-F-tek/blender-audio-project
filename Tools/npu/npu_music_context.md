@@ -1,6 +1,6 @@
 # NPU Music Context
 
-Generated: `2026-04-28T21:01:06`
+Generated: `2026-04-28T21:39:51`
 
 Purpose: compact long-context map for WAV analysis and generated scene JSON.
 

@@ -1,6 +1,6 @@
 {
   "format": "SPAZIOTEMPO_PROJECT_AWARENESS_V1",
-  "generated_at": "2026-04-28T20:56:50",
+  "generated_at": "2026-04-28T21:39:18",
   "track_stem": "Phazzah-Luca Vera_Master",
   "audio_path": "C:\\Users\\carmi\\Desktop\\Living Life In Peace-Luca Vera\\Phazzah-Luca Vera_Master.wav",
   "track_identity": {
@@ -32,104 +32,104 @@
     "analysis_json": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis.json",
       "exists": true,
-      "bytes": 1949032,
-      "updated": "2026-04-28T20:42:18"
+      "bytes": 1963096,
+      "updated": "2026-04-28T21:35:09"
     },
     "track_summary_json": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_track_summary.json",
       "exists": true,
-      "bytes": 1743,
-      "updated": "2026-04-28T20:42:19"
+      "bytes": 15273,
+      "updated": "2026-04-28T21:35:10"
     },
     "music_context_json": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_music_context.json",
       "exists": true,
-      "bytes": 325498,
-      "updated": "2026-04-28T20:45:51"
+      "bytes": 366109,
+      "updated": "2026-04-28T21:37:52"
     },
     "analysis_ai_context_json": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis_ai_context.json",
       "exists": true,
-      "bytes": 100943,
-      "updated": "2026-04-28T20:45:51"
+      "bytes": 141554,
+      "updated": "2026-04-28T21:37:52"
     },
     "blender_keyframes_json": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis_blender_keyframes.json",
       "exists": true,
-      "bytes": 1949032,
-      "updated": "2026-04-28T20:45:51"
+      "bytes": 1963096,
+      "updated": "2026-04-28T21:37:52"
     },
     "scene_brief_json": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_scene_brief.json",
       "exists": true,
-      "bytes": 4592,
-      "updated": "2026-04-28T20:56:50"
+      "bytes": 4031,
+      "updated": "2026-04-28T21:39:18"
     },
     "asset_inventory_json": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\spaziotempo_asset_inventory.json",
       "exists": true,
       "bytes": 2967,
-      "updated": "2026-04-28T20:45:50"
+      "updated": "2026-04-28T21:37:51"
     },
     "dual_ai_plan_json": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_dual_ai_scene_plan.json",
       "exists": true,
-      "bytes": 10165,
-      "updated": "2026-04-28T20:54:04"
+      "bytes": 7466,
+      "updated": "2026-04-28T21:38:53"
     },
     "gpu_task_packet_json": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_gpu_task_packet.json",
       "exists": true,
-      "bytes": 34266,
-      "updated": "2026-04-28T20:46:07"
+      "bytes": 66626,
+      "updated": "2026-04-28T21:38:06"
     },
     "ai_implementation_draft_json": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_ai_implementation_draft.json",
-      "exists": false,
-      "bytes": 0,
-      "updated": null
+      "exists": true,
+      "bytes": 44850,
+      "updated": "2026-04-28T21:02:06"
     },
     "generated_scene_script": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI\\scene_scripts\\phazzah_luca_vera_master_scene_builder_candidate.py",
-      "exists": false,
-      "bytes": 0,
-      "updated": null
+      "exists": true,
+      "bytes": 16477,
+      "updated": "2026-04-28T21:08:24"
     },
     "project_code_index": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI\\project_code_index.md",
       "exists": true,
-      "bytes": 76411,
-      "updated": "2026-04-28T20:45:51"
+      "bytes": 77592,
+      "updated": "2026-04-28T21:37:52"
     },
     "project_code_manifest": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI\\project_code_manifest.json",
       "exists": true,
-      "bytes": 453455,
-      "updated": "2026-04-28T20:45:51"
+      "bytes": 463989,
+      "updated": "2026-04-28T21:37:52"
     },
     "npu_music_context_md": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\Tools\\npu\\npu_music_context.md",
       "exists": true,
-      "bytes": 4713,
-      "updated": "2026-04-28T20:45:51"
+      "bytes": 4712,
+      "updated": "2026-04-28T21:37:52"
     },
     "npu_music_manifest": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\Tools\\npu\\npu_music_manifest.json",
       "exists": true,
-      "bytes": 17704,
-      "updated": "2026-04-28T20:45:51"
+      "bytes": 29653,
+      "updated": "2026-04-28T21:37:52"
     },
     "npu_code_index": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\Tools\\npu\\npu_code_index.md",
       "exists": true,
-      "bytes": 21186,
-      "updated": "2026-04-28T20:45:50"
+      "bytes": 21654,
+      "updated": "2026-04-28T21:37:51"
     },
     "npu_manual_index": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\Tools\\npu\\npu_blender_manual_index.md",
       "exists": true,
       "bytes": 77575,
-      "updated": "2026-04-28T20:46:07"
+      "updated": "2026-04-28T21:38:06"
     },
     "npu_preflight": {
       "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\Tools\\npu\\npu_preflight_report.json",
@@ -293,8 +293,8 @@
       "evidence": {
         "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis_blender_keyframes.json",
         "exists": true,
-        "bytes": 1949032,
-        "updated": "2026-04-28T20:45:51"
+        "bytes": 1963096,
+        "updated": "2026-04-28T21:37:52"
       }
     },
     {
@@ -305,8 +305,8 @@
         "analysis_json": {
           "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis.json",
           "exists": true,
-          "bytes": 1949032,
-          "updated": "2026-04-28T20:42:18"
+          "bytes": 1963096,
+          "updated": "2026-04-28T21:35:09"
         }
       }
     },

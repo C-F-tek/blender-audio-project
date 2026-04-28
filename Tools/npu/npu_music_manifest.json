@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-04-28T21:01:06",
+  "created_at": "2026-04-28T21:39:51",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "analysis_json": "output/Phazzah-Luca Vera_Master_analysis.json",
   "blender_keyframes_json": "output/Phazzah-Luca Vera_Master_analysis_blender_keyframes.json",
@@ -22,12 +22,12 @@
       "camera_motion": "movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
       "avoid": "placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
       "render_target": "test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
-      "free_notes": "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign\nquando hai finito di pensare procedi ppure"
+      "free_notes": "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign"
     },
     "conversation_memory": {
-      "updated_at": "2026-04-28T20:57:27",
+      "updated_at": "2026-04-28T21:39:18",
       "memory_version": 3,
-      "message_count": 4,
+      "message_count": 2,
       "preference_summary": [
         "creative_intent: cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero",
         "hero_object: sfera/aura viva con deformazione mesh completa su tutti i keyframe audio",
@@ -38,24 +38,21 @@
         "camera_motion: movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
         "avoid: placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
         "render_target: test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
-        "free_notes: analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign quando hai finito di pensare procedi ppure"
+        "free_notes: analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign"
       ],
       "recent_user_requests": [
-        "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign",
-        "quando hai finito di pensare procedi ppure"
+        "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign"
       ],
       "recent_user_questions": [],
       "recent_assistant_notes": [
-        "Ollama non ha restituito testo. Il messaggio utente e' comunque salvato nel brief.",
-        "Ollama non ha restituito testo. Il messaggio utente e' comunque salvato nel brief."
+        "Errore chiamando Ollama: cannot import name 'ollama_runtime_log_path' from 'ollama_runtime' (C:\\Users\\carmi\\blender\\blender-audio-project\\Tools\\npu\\ollama_runtime.py) Il tuo messaggio e' comunque salvato nel brief; puoi generare lo script anche senza risposta chat."
       ],
       "durable_constraints": [],
       "asset_mentions": [],
       "memory_policy": "This compact memory is always passed to the local chat/model; recent_conversation is only the short working window."
     },
     "recent_user_requests": [
-      "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign",
-      "quando hai finito di pensare procedi ppure"
+      "analizza i file che hai a dispsozione e diventa un vero acrt director belend 5.1 specialist python furistic engegnee alien-orign"
     ],
     "durable_constraints": [],
     "asset_memory": {
@@ -105,7 +102,7 @@
     },
     "project_awareness": {
       "format": "SPAZIOTEMPO_PROJECT_AWARENESS_V1",
-      "generated_at": "2026-04-28T20:56:50",
+      "generated_at": "2026-04-28T21:39:18",
       "track_identity": {
         "track_stem": "Phazzah-Luca Vera_Master",
         "title": "Phazzah",
@@ -226,8 +223,8 @@
           "evidence": {
             "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis_blender_keyframes.json",
             "exists": true,
-            "bytes": 1949032,
-            "updated": "2026-04-28T20:45:51"
+            "bytes": 1963096,
+            "updated": "2026-04-28T21:37:52"
           }
         },
         {
@@ -238,8 +235,8 @@
             "analysis_json": {
               "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Phazzah-Luca Vera_Master_analysis.json",
               "exists": true,
-              "bytes": 1949032,
-              "updated": "2026-04-28T20:42:18"
+              "bytes": 1963096,
+              "updated": "2026-04-28T21:35:09"
             }
           }
         },
@@ -517,8 +514,8 @@
       "index": 1,
       "kind": "overview",
       "path": "Tools/npu/npu_music_chunks/chunk_001_music_overview.md",
-      "chars": 26474,
-      "sha256": "56fcd9be863ad4bb3fef64127face8d7be7e7af093bb1005b9ed67d78e7861da"
+      "chars": 54505,
+      "sha256": "9e00ef3b5f95e554162204a2b348f8ebb6e9e0ec8a347d3474e5e3ad6e11539c"
     },
     {
       "index": 2,

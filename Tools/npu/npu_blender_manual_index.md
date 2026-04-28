@@ -1,6 +1,6 @@
 # Blender Manual Context Index
 
-Generated: `2026-04-28T21:01:24`
+Generated: `2026-04-28T21:40:15`
 
 Purpose: offline local manual chunks for NPU/Ollama implementation drafts.
 
