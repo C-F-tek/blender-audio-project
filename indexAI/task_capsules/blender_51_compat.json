@@ -1,0 +1,34 @@
+{
+  "capsule_id": "blender_51_compat",
+  "version": 1,
+  "purpose": "Guardrails for Blender 5.x compatible generated scripts.",
+  "blocked_patterns": [
+    {
+      "pattern": "ShaderNodeTexMusgrave",
+      "severity": "blocking",
+      "reason": "Musgrave shader node is not available in the target Blender 5.x environment seen in project failures.",
+      "replacement": "Use ShaderNodeTexNoise, ShaderNodeTexVoronoi, ColorRamp, or procedural noise combinations."
+    }
+  ],
+  "warning_patterns": [
+    {
+      "pattern": "BLENDER_EEVEE_NEXT",
+      "severity": "warning",
+      "reason": "Verify Blender enum compatibility on the local target version before accepting generated code."
+    },
+    {
+      "pattern": "C:\\\\Users\\\\",
+      "severity": "warning",
+      "reason": "Hardcoded workstation paths must be marked local-only or moved to config."
+    },
+    {
+      "pattern": "bpy.ops.object.delete",
+      "severity": "warning",
+      "reason": "Scene deletion should be explicit, configurable, and documented."
+    }
+  ],
+  "validation_policy": {
+    "reject_on_blocking_patterns": true,
+    "warn_on_private_paths": true
+  }
+}
