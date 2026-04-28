@@ -1,0 +1,46 @@
+{
+  "capsule_id": "scene_generation",
+  "version": 1,
+  "purpose": "Operational context for generating audio-reactive Blender packages.",
+  "quality_reference": "Scripting/v61b/",
+  "non_destructive_rules": [
+    "Do not overwrite working packages.",
+    "Do not destructively refactor Scripting/v61b/.",
+    "Do not rewrite full frame-by-frame analysis JSON files.",
+    "Prefer generated packages or hotpatches over monolithic replacement scripts.",
+    "Keep paths configurable unless explicitly local-only."
+  ],
+  "minimum_package_files": [
+    "README.md",
+    "config.py",
+    "main.py"
+  ],
+  "recommended_package_files": [
+    "audio_mapping.py",
+    "materials.py",
+    "lighting.py",
+    "camera.py",
+    "render_settings.py",
+    "TEST_CHECKLIST.md",
+    "notes/known_issues.md"
+  ],
+  "required_questions": [
+    "What does this package create?",
+    "Which file is the entry point?",
+    "Which audio file is expected?",
+    "Which JSON files are expected?",
+    "Which Blender version was used or expected?",
+    "Where are renders written?",
+    "What was tested?",
+    "What should the next AI avoid changing?"
+  ],
+  "risk_signals": [
+    "oversized single-file scripts",
+    "hidden hardcoded paths",
+    "missing render output path",
+    "missing audio path",
+    "missing JSON input documentation",
+    "invented JSON fields",
+    "untested Blender API compatibility"
+  ]
+}
