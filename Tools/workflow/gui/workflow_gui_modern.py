@@ -31,49 +31,34 @@ class ModernWorkflowGui(LegacyWorkflowGui):
         header = ttk.Frame(root)
         header.pack(fill="x", pady=(0, 10))
         ttk.Label(header, text="Spaziotempo Workflow Control", style="Header.TLabel").pack(side="left")
-        ttk.Label(
-            header,
-            text="Pipeline audio, AI, script Blender, artefatti e pubblicazione GitHub",
-            style="SubHeader.TLabel",
-        ).pack(side="left", padx=(14, 0))
+        ttk.Label(header, text="Pipeline audio, AI, script Blender, artefatti e pubblicazione GitHub", style="SubHeader.TLabel").pack(side="left", padx=(14, 0))
 
         body = ttk.PanedWindow(root, orient="horizontal")
         body.pack(fill="both", expand=True)
-
         left = ttk.Frame(body, padding=(0, 0, 8, 0))
         right = ttk.Frame(body)
         body.add(left, weight=0)
         body.add(right, weight=1)
-
         self.build_left_panel(left)
         self.build_right_panel(right)
 
     def build_left_panel(self, parent: ttk.Frame) -> None:
         options = ttk.LabelFrame(parent, text="AI Runtime")
         options.pack(fill="x", pady=(0, 10))
-
         toggles = ttk.Frame(options)
         toggles.pack(fill="x")
         ttk.Checkbutton(toggles, text="Include manual", variable=self.include_manual).pack(anchor="w", pady=(0, 2))
         ttk.Checkbutton(toggles, text="Skip NPU heavy pass", variable=self.skip_npu).pack(anchor="w", pady=(0, 2))
         ttk.Checkbutton(toggles, text="Skip Ollama", variable=self.skip_ollama).pack(anchor="w", pady=(0, 6))
-
         model_grid = ttk.Frame(options)
         model_grid.pack(fill="x")
         ttk.Label(model_grid, text="Creative").grid(row=0, column=0, sticky="w", pady=(0, 4))
-        ttk.Combobox(model_grid, textvariable=self.creative_model, values=self.available_models, width=31).grid(
-            row=0, column=1, sticky="ew", padx=(8, 0), pady=(0, 4)
-        )
+        ttk.Combobox(model_grid, textvariable=self.creative_model, values=self.available_models, width=31).grid(row=0, column=1, sticky="ew", padx=(8, 0), pady=(0, 4))
         ttk.Label(model_grid, text="Technical").grid(row=1, column=0, sticky="w", pady=(0, 4))
-        ttk.Combobox(model_grid, textvariable=self.technical_model, values=self.available_models, width=31).grid(
-            row=1, column=1, sticky="ew", padx=(8, 0), pady=(0, 4)
-        )
+        ttk.Combobox(model_grid, textvariable=self.technical_model, values=self.available_models, width=31).grid(row=1, column=1, sticky="ew", padx=(8, 0), pady=(0, 4))
         ttk.Label(model_grid, text="Chat").grid(row=2, column=0, sticky="w", pady=(0, 4))
-        ttk.Combobox(model_grid, textvariable=self.chat_model, values=self.available_models, width=31).grid(
-            row=2, column=1, sticky="ew", padx=(8, 0), pady=(0, 4)
-        )
+        ttk.Combobox(model_grid, textvariable=self.chat_model, values=self.available_models, width=31).grid(row=2, column=1, sticky="ew", padx=(8, 0), pady=(0, 4))
         model_grid.columnconfigure(1, weight=1)
-
         lower = ttk.Frame(options)
         lower.pack(fill="x", pady=(4, 0))
         ttk.Label(lower, text="Script tokens").pack(side="left")
@@ -81,7 +66,6 @@ class ModernWorkflowGui(LegacyWorkflowGui):
         ttk.Label(lower, text="Manual limit").pack(side="left", padx=(14, 0))
         ttk.Entry(lower, textvariable=self.manual_limit, width=8).pack(side="left", padx=(8, 0))
         ttk.Button(options, text="Save AI models", command=self.save_ai_models).pack(fill="x", pady=(8, 0))
-
         action_panel = GroupedActionPanel(parent, title="Workflow Actions", min_width=370)
         action_panel.pack(fill="both", expand=True)
         self.buttons, self.always_enabled_buttons = action_panel.build(self.build_action_groups())
@@ -90,50 +74,20 @@ class ModernWorkflowGui(LegacyWorkflowGui):
         notebook = ttk.Notebook(parent)
         notebook.pack(fill="both", expand=True)
         self.main_notebook = notebook
-
         live_tab = ttk.Frame(notebook, padding=8)
         status_tab = ttk.Frame(notebook, padding=8)
         help_tab = ttk.Frame(notebook, padding=8)
         notebook.add(live_tab, text="Live Output")
         notebook.add(status_tab, text="Session / Outputs")
         notebook.add(help_tab, text="Workflow Guide")
-
         self.live_output_panel = LiveOutputPanel(live_tab)
         self.live_output_panel.pack(fill="both", expand=True)
         self.output = self.live_output_panel.raw_text
-
-        self.session_overview = SessionOverviewFrame(
-            status_tab,
-            open_path_callback=self.open_system_path,
-            copy_callback=self.copy_text_to_clipboard,
-        )
+        self.session_overview = SessionOverviewFrame(status_tab, open_path_callback=self.open_system_path, copy_callback=self.copy_text_to_clipboard)
         self.session_box = self.session_overview.detail
-
         help_text = tk.Text(help_tab, wrap="word", borderwidth=0, **text_widget_colors(self))
         help_text.pack(fill="both", expand=True)
-        help_text.insert(
-            "1.0",
-            "Ordine operativo consigliato:\n\n"
-            "1. Apri la GUI: il primo piano e' Live Output.\n"
-            "2. Avvia Analyze WAV / Full audio prepare per generare i dati tecnici.\n"
-            "3. Usa AI pipeline dry-run per verificare preflight, contesto macchina e output attesi.\n"
-            "4. Usa AI artifact pipeline per generare chunk semantici e intermedi IA consapevoli.\n"
-            "5. Usa Code context + indexAI / Rebuild indexAI quando hai modificato codice o documentazione.\n"
-            "6. Usa Dual AI plan / Scene director chat / Dual AI scene script per la fase creativa.\n"
-            "7. Push generated data solo dopo avere completato e verificato i dati strutturati.\n\n"
-            "GUI:\n"
-            "- Live Output e' la vista principale e tratta graficamente stdout/stderr.\n"
-            "- Fermando il mouse su un pulsante compare una descrizione rapida della funzione.\n"
-            "- Skip NPU heavy pass controlla il vecchio passaggio NPU pesante, non la nuova review IA leggera.\n"
-            "- AI pipeline usa CPU per preflight/validazione e NPU solo per review/scoring leggero.\n"
-            "- Le tabelle seguono l'ordinamento stile Esplora file: clic su intestazione, secondo clic inverte.\n"
-            "- Session / Outputs mostra riepilogo e output in tabella, non piu' testo grezzo.\n"
-            "- Project stats controlla la cartella blender e distingue blender-audio-project dal resto.\n\n"
-            "Estensione GUI:\n"
-            "- aggiungi una nuova ActionSpec dentro build_action_groups();\n"
-            "- scegli il gruppo corretto o creane uno nuovo;\n"
-            "- la GUI gestisce automaticamente scroll, spacing, tooltip e abilitazione pulsanti.\n",
-        )
+        help_text.insert("1.0", "Ordine operativo consigliato:\n\n1. Full audio prepare.\n2. AI pipeline dry-run.\n3. AI artifact pipeline: ora genera smart context packet + guardrail NPU-light.\n4. Scene director chat / Dual AI scene script.\n5. Push generated data o Push all project changes.\n\nNote tecniche:\n- Skip NPU heavy pass controlla solo il vecchio passaggio NPU pesante.\n- La nuova NPU guardrail resta separata e leggera.\n- Smart context non taglia conoscenza: crea capsule, manifest e packet selezionati.\n- I file completi restano referenziati e leggibili tramite path/SHA.\n")
         help_text.configure(state="disabled")
         notebook.select(live_tab)
 
@@ -169,25 +123,24 @@ class ModernWorkflowGui(LegacyWorkflowGui):
 
     def open_project_stats_window(self) -> None:
         if self.project_stats_window is None or not self.project_stats_window.winfo_exists():
-            self.project_stats_window = StorageDashboardWindow(
-                self,
-                session_loader=lambda: wf.load_session(create=True),
-                workflow_state_module=wf,
-            )
+            self.project_stats_window = StorageDashboardWindow(self, session_loader=lambda: wf.load_session(create=True), workflow_state_module=wf)
         self.project_stats_window.show()
 
     def ai_artifact_pipeline_command(self, dry_run: bool) -> list[str]:
         command = [
             str(wf.python_executable()),
             str(wf.PROJECT_DIR / "Tools" / "ai" / "run_parallel_artifact_pipeline.py"),
-            "--repo-root",
-            str(wf.PROJECT_DIR),
-            "--analysis-json",
-            str(self.session.artifacts["analysis_json"]),
+            "--repo-root", str(wf.PROJECT_DIR),
+            "--analysis-json", str(self.session.artifacts["analysis_json"]),
+            "--track-stem", self.session.track_stem,
             "--build-chunks",
             "--build-music-summary",
+            "--smart-context",
+            "--smart-task", "Scene Director Blender Python generation audio-reactive full keyframe preservation asset-aware composition",
+            "--npu-guardrail",
             "--use-npu",
             "--validate",
+            "--continue-on-error",
         ]
         if dry_run:
             command.extend(["--dry-run", "--write-dry-run-report"])
@@ -197,113 +150,47 @@ class ModernWorkflowGui(LegacyWorkflowGui):
         label = "AI pipeline dry-run" if dry_run else "AI artifact pipeline"
 
         def task():
-            return wf.run_command(
-                self.ai_artifact_pipeline_command(dry_run),
-                operation="ai_artifact_pipeline_dry_run" if dry_run else "ai_artifact_pipeline",
-                metadata={
-                    "analysis_json": self.session.artifacts.get("analysis_json"),
-                    "track_stem": self.session.track_stem,
-                    "dry_run": dry_run,
-                    "skip_npu_heavy_pass": self.skip_npu.get(),
-                    "note": "Independent from legacy heavy NPU pass; uses the lightweight AI artifact pipeline.",
-                },
-            )
+            return wf.run_command(self.ai_artifact_pipeline_command(dry_run), operation="ai_artifact_pipeline_dry_run" if dry_run else "ai_artifact_pipeline", metadata={"analysis_json": self.session.artifacts.get("analysis_json"), "track_stem": self.session.track_stem, "dry_run": dry_run, "smart_context": True, "npu_guardrail": True, "skip_npu_heavy_pass": self.skip_npu.get(), "note": "Smart context + NPU guardrail are independent from legacy heavy NPU pass."})
 
         self.run_task(label, task)
 
     def build_action_groups(self) -> tuple[ActionGroup, ...]:
         return (
-            ActionGroup(
-                "Track setup",
-                (
-                    ActionSpec("Choose WAV", self.choose_wav, description="Seleziona un nuovo file audio WAV."),
-                    ActionSpec("Reset default WAV", self.reset_wav, description="Torna alla traccia predefinita."),
-                ),
-            ),
-            ActionGroup(
-                "Data preparation",
-                (
-                    ActionSpec(
-                        "Analyze WAV",
-                        lambda: self.run_task("Analyze WAV", lambda: wf.run_analyze_wav(self.session, skip_music_context=True)),
-                        description="Genera l'analisi tecnica del WAV e i file JSON base necessari al resto del workflow.",
-                    ),
-                    ActionSpec(
-                        "Track summary",
-                        lambda: self.run_task("Track summary", lambda: wf.run_track_summary(self.session)),
-                        description="Crea un riassunto tecnico compatto della traccia partendo dall'analisi audio.",
-                    ),
-                    ActionSpec(
-                        "Music context",
-                        lambda: self.run_task("Music context", lambda: wf.run_music_context(self.session)),
-                        description="Produce un contesto musicale strutturato per le fasi IA successive.",
-                    ),
-                    ActionSpec(
-                        "Full audio prepare",
-                        lambda: self.run_task("Full audio prepare", lambda: wf.run_full_audio_prepare(self.session)),
-                        description="Esegue la preparazione audio completa: analisi, summary, contesto e keyframe Blender.",
-                    ),
-                ),
-            ),
-            ActionGroup(
-                "AI artifact pipeline",
-                (
-                    ActionSpec(
-                        "AI pipeline dry-run",
-                        lambda: self.run_ai_artifact_pipeline(dry_run=True),
-                        description="Verifica preflight, profilo macchina, input disponibili, lane CPU/NPU/GPU e output attesi senza scrivere artefatti reali.",
-                    ),
-                    ActionSpec(
-                        "AI artifact pipeline",
-                        lambda: self.run_ai_artifact_pipeline(dry_run=False),
-                        description="Genera chunk semantici, intermedi musicali AI-friendly, candidati di mapping, review NPU leggera e validazione artefatti.",
-                    ),
-                ),
-            ),
-            ActionGroup(
-                "Project intelligence",
-                (
-                    ActionSpec(
-                        "Code context + indexAI",
-                        lambda: self.run_task("Code context + indexAI", lambda: wf.run_code_context(self.session)),
-                        description="Aggiorna contesto codice e indici AI tradizionali usati dalla pipeline dual-AI.",
-                    ),
-                    ActionSpec(
-                        "Rebuild indexAI",
-                        lambda: self.run_task("Rebuild indexAI", lambda: wf.run_project_ai_index(self.session, force=True)),
-                        description="Rigenera forzatamente l'indice progetto quando hai modificato codice, documentazione o strutture IA.",
-                    ),
-                    ActionSpec("Index manuals", self.index_manuals, description="Indicizza manuali locali Blender/progetto con il limite file configurato."),
-                ),
-            ),
-            ActionGroup(
-                "Creative AI pipeline",
-                (
-                    ActionSpec("Dual AI plan", self.dual_ai_plan, description="Genera il piano scena strutturato usando Ollama e, se non bypassato, il vecchio passaggio NPU pesante."),
-                    ActionSpec("Scene director chat", self.scene_director_chat, description="Apre la chat locale per affinare il brief e salvare preferenze creative persistenti."),
-                    ActionSpec("Dual AI scene script", self.dual_ai_draft, description="Genera la bozza dello script Blender finale a partire dal piano, dal brief e dal contesto tecnico."),
-                ),
-            ),
-            ActionGroup(
-                "Review and diagnostics",
-                (
-                    ActionSpec("Open log panel", self.open_log_window, always_enabled=True, description="Consulta eventi workflow, ultimo risultato e log operativi."),
-                    ActionSpec("Advanced debug check", self.open_advanced_debug_window, always_enabled=True, description="Esegue controlli diagnostici avanzati su percorsi, scrittura file e stato progetto."),
-                    ActionSpec("Startup service check", self.startup_service_check, always_enabled=True, description="Verifica i servizi locali necessari al workflow, inclusi runtime e modelli quando disponibili."),
-                    ActionSpec("Project stats", self.open_project_stats_window, always_enabled=True, description="Apre la dashboard di spazio occupato e riepilogo delle aree del progetto."),
-                    ActionSpec("Debug monitor shell", self.open_debug_monitor_shell, always_enabled=True, description="Apre un monitor debug in una shell separata con aggiornamento periodico."),
-                ),
-            ),
-            ActionGroup(
-                "Maintenance",
-                (
-                    ActionSpec("Cleanup intermedi", self.cleanup_intermediates, description="Rimuove intermedi generati in modo controllato, preservando audio e render finali."),
-                    ActionSpec("Cleanup render frames", self.cleanup_render_frames, description="Pulisce la directory dei frame render della traccia corrente, mantenendo gli MP4 finali."),
-                    ActionSpec("Toggle debug", self.toggle_debug, always_enabled=True, description="Abilita o disabilita il logging dettagliato del workflow."),
-                    ActionSpec("Mark interrupted", self.mark_interrupted, always_enabled=True, description="Marca manualmente l'operazione corrente come interrotta nei log di workflow."),
-                    ActionSpec("Refresh", self.refresh_session, always_enabled=True, description="Aggiorna lo stato della sessione e la lista degli output rilevati."),
-                ),
-            ),
+            ActionGroup("Track setup", (ActionSpec("Choose WAV", self.choose_wav, description="Seleziona un nuovo file audio WAV."), ActionSpec("Reset default WAV", self.reset_wav, description="Torna alla traccia predefinita."))),
+            ActionGroup("Data preparation", (
+                ActionSpec("Analyze WAV", lambda: self.run_task("Analyze WAV", lambda: wf.run_analyze_wav(self.session, skip_music_context=True)), description="Genera l'analisi tecnica del WAV e i file JSON base."),
+                ActionSpec("Track summary", lambda: self.run_task("Track summary", lambda: wf.run_track_summary(self.session)), description="Crea un riassunto tecnico compatto della traccia."),
+                ActionSpec("Music context", lambda: self.run_task("Music context", lambda: wf.run_music_context(self.session)), description="Produce un contesto musicale strutturato."),
+                ActionSpec("Full audio prepare", lambda: self.run_task("Full audio prepare", lambda: wf.run_full_audio_prepare(self.session)), description="Esegue preparazione audio completa."),
+            )),
+            ActionGroup("AI artifact pipeline", (
+                ActionSpec("AI pipeline dry-run", lambda: self.run_ai_artifact_pipeline(dry_run=True), description="Verifica preflight e piano: include smart context e NPU guardrail."),
+                ActionSpec("AI artifact pipeline", lambda: self.run_ai_artifact_pipeline(dry_run=False), description="Genera intermedi IA, smart context packet, manifest, review NPU e validazione."),
+            )),
+            ActionGroup("Project intelligence", (
+                ActionSpec("Code context + indexAI", lambda: self.run_task("Code context + indexAI", lambda: wf.run_code_context(self.session)), description="Aggiorna contesto codice e indici AI tradizionali."),
+                ActionSpec("Rebuild indexAI", lambda: self.run_task("Rebuild indexAI", lambda: wf.run_project_ai_index(self.session, force=True)), description="Rigenera forzatamente l'indice progetto."),
+                ActionSpec("Index manuals", self.index_manuals, description="Indicizza manuali locali Blender/progetto."),
+            )),
+            ActionGroup("Creative AI pipeline", (
+                ActionSpec("Dual AI plan", self.dual_ai_plan, description="Genera il piano scena strutturato."),
+                ActionSpec("Scene director chat", self.scene_director_chat, description="Apre la chat locale per affinare il brief."),
+                ActionSpec("Dual AI scene script", self.dual_ai_draft, description="Genera la bozza dello script Blender finale."),
+            )),
+            ActionGroup("Review and diagnostics", (
+                ActionSpec("Open log panel", self.open_log_window, always_enabled=True, description="Consulta eventi workflow e ultimo risultato."),
+                ActionSpec("Advanced debug check", self.open_advanced_debug_window, always_enabled=True, description="Controlli diagnostici avanzati."),
+                ActionSpec("Startup service check", self.startup_service_check, always_enabled=True, description="Verifica servizi locali e runtime."),
+                ActionSpec("Project stats", self.open_project_stats_window, always_enabled=True, description="Dashboard spazio occupato e stato progetto."),
+                ActionSpec("Debug monitor shell", self.open_debug_monitor_shell, always_enabled=True, description="Monitor debug in shell separata."),
+            )),
+            ActionGroup("Maintenance", (
+                ActionSpec("Cleanup intermedi", self.cleanup_intermediates, description="Rimuove intermedi, smart context e log workflow preservando audio/render."),
+                ActionSpec("Cleanup render frames", self.cleanup_render_frames, description="Pulisce frame render della traccia corrente."),
+                ActionSpec("Toggle debug", self.toggle_debug, always_enabled=True, description="Abilita/disabilita logging dettagliato."),
+                ActionSpec("Mark interrupted", self.mark_interrupted, always_enabled=True, description="Marca operazione come interrotta."),
+                ActionSpec("Refresh", self.refresh_session, always_enabled=True, description="Aggiorna stato sessione e output."),
+            )),
         )
 
 
