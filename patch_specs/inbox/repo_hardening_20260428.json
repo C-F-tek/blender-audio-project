@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "description": "Hardening non distruttivo: BAP_ROOT, reload controllato, rimozione helper duplicati e importlib per config reload.",
+  "operations": [
+    {
+      "path": "Scripting/v61b/config.py",
+      "replacements": [
+        {
+          "type": "exact",
+          "old": "from pathlib import Path\nimport json\nimport math\n",
+          "new": "import os\nfrom pathlib import Path\nimport json\nimport math\n",
+          "count": 1
+        },
+        {
+          "type": "exact",
+          "old": "ROOT = Path.home() / \"blender\"\nPROJECT_DIR = ROOT / \"blender-audio-project\"\nOUTPUT_DIR = PROJECT_DIR / \"output\"\nASSETS_DIR = ROOT / \"assets\"\nAUDIO_DIR = ROOT / \"audio\"\nRENDERS_DIR = ROOT / \"renders\"\nSCRIPTING_DIR = PROJECT_DIR / \"Scripting\" / \"v61b\"\n",
+          "new": "ROOT = Path(os.environ.get(\"BAP_ROOT\", Path.home() / \"blender\")).expanduser().resolve()\nPROJECT_DIR = Path(os.environ.get(\"BAP_PROJECT_DIR\", ROOT / \"blender-audio-project\")).expanduser().resolve()\nOUTPUT_DIR = Path(os.environ.get(\"BAP_OUTPUT_DIR\", PROJECT_DIR / \"output\")).expanduser().resolve()\nASSETS_DIR = Path(os.environ.get(\"BAP_ASSETS_DIR\", ROOT / \"assets\")).expanduser().resolve()\nAUDIO_DIR = Path(os.environ.get(\"BAP_AUDIO_DIR\", ROOT / \"audio\")).expanduser().resolve()\nRENDERS_DIR = Path(os.environ.get(\"BAP_RENDERS_DIR\", ROOT / \"renders\")).expanduser().resolve()\nSCRIPTING_DIR = PROJECT_DIR / \"Scripting\" / \"v61b\"\n",
+          "count": 1
+        }
+      ],
+      "require_contains_after": [
+        "import os",
+        "BAP_ROOT",
+        "BAP_PROJECT_DIR",
+        "BAP_OUTPUT_DIR",
+        "BAP_ASSETS_DIR",
+        "BAP_AUDIO_DIR",
+        "BAP_RENDERS_DIR"
+      ],
+      "forbid_contains_after": [
+        "ROOT = Path.home() / \"blender\""
+      ]
+    },
+    {
+      "path": "Scripting/v61b/main_v61b.py",
+      "replacements": [
+        {
+          "type": "exact",
+          "old": "reload_modules = {\n    \"config\",\n    \"scene_utils\",\n    \"io_utils\",\n    \"render_setup\",\n    \"world_setup\",\n    \"camera_setup\",\n    \"asset_setup\",\n    \"atmosphere_setup\",\n    \"physics_setup\",\n    \"fog_dynamics\",\n    \"fog_filaments\",\n    \"animation\",\n    \"scene_tuning_panel\",\n}\nreload_prefixes = (\"spaziotempo\",)\n\nfor mod_name in list(sys.modules):\n    if mod_name in reload_modules or any(\n        mod_name == prefix or mod_name.startswith(prefix + \".\") for prefix in reload_prefixes\n    ):\n        sys.modules.pop(mod_name, None)\n\n",
+          "new": "from reload_utils import reload_known_modules\n\nreload_known_modules()\n\n",
+          "count": 1
+        }
+      ],
+      "require_contains_after": [
+        "from reload_utils import reload_known_modules",
+        "reload_known_modules()"
+      ],
+      "forbid_contains_after": [
+        "reload_modules = {",
+        "reload_prefixes = (\"spaziotempo\",)",
+        "sys.modules.pop(mod_name, None)"
+      ]
+    },
+    {
+      "path": "Scripting/v61b/encode_ffmpeg_v61b.py",
+      "replacements": [
+        {
+          "type": "exact",
+          "old": "import json\nimport os\nimport re\nimport shutil\nimport subprocess\nimport sys\n",
+          "new": "import importlib\nimport json\nimport os\nimport re\nimport shutil\nimport subprocess\nimport sys\n",
+          "count": 1
+        },
+        {
+          "type": "exact",
+          "old": "sys.modules.pop(\"config\", None)\nimport config as cfg  # noqa: E402\n",
+          "new": "cfg = importlib.import_module(\"config\")\ncfg = importlib.reload(cfg)\n",
+          "count": 1
+        }
+      ],
+      "require_contains_after": [
+        "import importlib",
+        "cfg = importlib.import_module(\"config\")",
+        "cfg = importlib.reload(cfg)"
+      ],
+      "forbid_contains_after": [
+        "sys.modules.pop(\"config\", None)"
+      ]
+    },
+    {
+      "path": "normalize_scene_spec.py",
+      "replacements": [
+        {
+          "type": "exact",
+          "old": "\n\ndef safe_scene_name(name: str) -> str:\n    if not isinstance(name, str):\n        return DEFAULT_SCENE_NAME\n    name = name.strip()\n    if not name or name == \".\":\n        return DEFAULT_SCENE_NAME\n    return name\n\n\ndef safe_visual_concept(text: str) -> str:\n    if not isinstance(text, str):\n        return DEFAULT_VISUAL_CONCEPT\n    text = text.strip()\n    if not text or text == \".\":\n        return DEFAULT_VISUAL_CONCEPT\n    return text\n",
+          "new": "",
+          "count": 1
+        }
+      ],
+      "require_contains_after": [
+        "def normalize_brief(brief: dict):",
+        "def main():"
+      ],
+      "expected_line_delta": -18
+    }
+  ]
+}
