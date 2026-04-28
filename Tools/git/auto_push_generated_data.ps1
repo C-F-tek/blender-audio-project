@@ -54,17 +54,22 @@ function Invoke-Git {
     )
 
     & git @Args
-    $code = $LASTEXITCODE
+    $code = [int]$LASTEXITCODE
     if ($code -ne 0 -and -not $AllowFailure) {
         throw "git $($Args -join ' ') failed with exit code $code"
     }
-    return [int]$code
+    return $code
 }
 
 function Invoke-GitCodeOnly {
     param([Parameter(Mandatory=$true)][string[]]$Args)
-    & git @Args
-    return [int]$LASTEXITCODE
+
+    $gitOutput = & git @Args 2>&1
+    $code = [int]$LASTEXITCODE
+    foreach ($line in $gitOutput) {
+        Write-Host $line
+    }
+    return $code
 }
 
 function Has-WorkingTreeChanges {
@@ -111,7 +116,7 @@ function Run-FullProjectPush {
         if ($stashCreated) {
             Write-Step "Restoring stashed local changes."
             $popCode = Invoke-GitCodeOnly @("stash", "pop")
-            if ($popCode -ne 0) {
+            if ([int]$popCode -ne 0) {
                 Write-Step "stash pop reported conflicts. Resolve them manually, then run commit/push again."
                 throw "git stash pop failed with exit code $popCode"
             }
