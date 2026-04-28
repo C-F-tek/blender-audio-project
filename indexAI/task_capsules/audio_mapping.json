@@ -1,0 +1,17 @@
+{
+  "capsule_id": "audio_mapping",
+  "version": 1,
+  "purpose": "Guidance for mapping compact audio-analysis artifacts to visual behavior.",
+  "inputs": ["track_summary.json", "music_segments.json", "audio_event_map.json"],
+  "mapping_principles": [
+    {"audio_signal": "bpm", "visual_targets": ["camera pulse interval", "emissive flicker rhythm", "orbital motion accents"]},
+    {"audio_signal": "peak_events", "visual_targets": ["light bursts", "material bloom boosts", "fog density pulses", "camera impact keyframes"]},
+    {"audio_signal": "segments", "visual_targets": ["scene density progression", "camera path changes", "color palette shifts", "object activation phases"]}
+  ],
+  "quality_rules": [
+    "Every generated scene brief should mention how segments affect visuals.",
+    "Peak events should produce accents, not permanent overexposure.",
+    "Mapping must be configurable and documented.",
+    "Full frame-level JSON should remain an input, not rewritten by AI."
+  ]
+}
