@@ -15,6 +15,8 @@ SESSION_PATH = OUTPUT_DIR / "spaziotempo_workflow_session.json"
 LAST_RESULT_PATH = LOG_DIR / "last_operation_result.json"
 EVENT_LOG_PATH = LOG_DIR / "workflow_events.jsonl"
 OLLAMA_LOG_PATH = LOG_DIR / "ollama_runtime_events.jsonl"
+SCENE_DIRECTOR_LOG_PATH = LOG_DIR / "scene_director_runtime_events.jsonl"
+NPU_TRACE_PATH = LOG_DIR / "npu_runtime_trace.jsonl"
 DIAG_JSON = LOG_DIR / "ai_runtime_diagnostics.json"
 DIAG_MD = LOG_DIR / "ai_runtime_diagnostics.md"
 
@@ -49,6 +51,12 @@ def tail_jsonl(path: Path, limit: int = 80) -> list[dict[str, Any]]:
         except Exception:
             rows.append({"raw": line})
     return rows
+
+
+def append_jsonl(path: Path, event: str, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps({"time": now_iso(), "event": event, "payload": payload}, ensure_ascii=False) + "\n")
 
 
 def file_info(path: Path) -> dict[str, Any]:
@@ -124,7 +132,6 @@ def analyze_implementation(path: Path, script_path: Path, notes_path: Path) -> d
 def analyze_workflow_events(events: list[dict[str, Any]]) -> dict[str, Any]:
     dual_events = [row for row in events if str(row.get("operation", "")).startswith("dual_ai") or row.get("operation") in {"run_dual_ai", "dual_ai_plan", "dual_ai_implementation"}]
     ai_ops = []
-    token_mismatches = []
     for row in events:
         payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
         metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else payload.get("metadata")
@@ -132,19 +139,17 @@ def analyze_workflow_events(events: list[dict[str, Any]]) -> dict[str, Any]:
             item = {
                 "time": row.get("time"),
                 "operation": row.get("operation"),
+                "event": row.get("event"),
                 "skip_npu_heavy_pass": metadata.get("skip_npu") if "skip_npu" in metadata else metadata.get("skip_npu_heavy_pass"),
                 "skip_ollama": metadata.get("skip_ollama"),
                 "creative_model": metadata.get("creative_model"),
                 "technical_model": metadata.get("technical_model"),
                 "max_new_tokens": metadata.get("max_new_tokens"),
+                "script_max_tokens": metadata.get("script_max_tokens"),
             }
             if any(value is not None for value in item.values()):
                 ai_ops.append(item)
-    return {
-        "dual_event_count": len(dual_events),
-        "recent_ai_operation_metadata": ai_ops[-12:],
-        "token_mismatch_notes": token_mismatches,
-    }
+    return {"dual_event_count": len(dual_events), "recent_ai_operation_metadata": ai_ops[-12:]}
 
 
 def analyze_ollama(events: list[dict[str, Any]]) -> dict[str, Any]:
@@ -163,6 +168,25 @@ def analyze_ollama(events: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def run_npu_preflight() -> dict[str, Any]:
+    npu_dir = PROJECT_DIR / "Tools" / "npu"
+    if str(npu_dir) not in sys.path:
+        sys.path.insert(0, str(npu_dir))
+    try:
+        from npu_runtime import npu_preflight, DEFAULT_NPU_PYTHON, DEFAULT_MODEL_DIR, write_npu_preflight_report  # type: ignore
+
+        report = npu_preflight(DEFAULT_NPU_PYTHON, DEFAULT_MODEL_DIR)
+        report_path = PROJECT_DIR / "Tools" / "npu" / "npu_preflight_report.json"
+        write_npu_preflight_report(report, report_path)
+        payload = {"ready": report.get("ready"), "devices": report.get("openvino_available_devices"), "report_path": str(report_path), "errors": report.get("errors", [])}
+        append_jsonl(NPU_TRACE_PATH, "npu_preflight", payload)
+        return {"available": True, "report": report, "trace_path": str(NPU_TRACE_PATH), "report_path": str(report_path)}
+    except Exception as exc:
+        payload = {"available": False, "error_type": type(exc).__name__, "error": str(exc)}
+        append_jsonl(NPU_TRACE_PATH, "npu_preflight_error", payload)
+        return payload
+
+
 def build_report(track_stem: str | None = None) -> dict[str, Any]:
     session = read_json(SESSION_PATH)
     session_track = session.get("track_stem") if isinstance(session, dict) else None
@@ -170,22 +194,24 @@ def build_report(track_stem: str | None = None) -> dict[str, Any]:
     artifacts = artifacts_for_track(track)
     workflow_events = tail_jsonl(EVENT_LOG_PATH, limit=240)
     ollama_events = tail_jsonl(OLLAMA_LOG_PATH, limit=240)
+    scene_events = tail_jsonl(SCENE_DIRECTOR_LOG_PATH, limit=120)
+    npu_events_before = tail_jsonl(NPU_TRACE_PATH, limit=120)
+    npu_preflight = run_npu_preflight()
+    npu_events_after = tail_jsonl(NPU_TRACE_PATH, limit=120)
 
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": now_iso(),
         "track_stem": track,
         "session": session if isinstance(session, dict) else {},
         "last_result": read_json(LAST_RESULT_PATH),
         "files": {key: file_info(path) for key, path in artifacts.items()},
         "scene_brief_analysis": analyze_scene_brief(artifacts["scene_brief_json"]),
-        "implementation_analysis": analyze_implementation(
-            artifacts["implementation_draft_json"],
-            artifacts["generated_scene_script"],
-            artifacts["generated_notes"],
-        ),
+        "implementation_analysis": analyze_implementation(artifacts["implementation_draft_json"], artifacts["generated_scene_script"], artifacts["generated_notes"]),
         "workflow_event_analysis": analyze_workflow_events(workflow_events),
         "ollama_analysis": analyze_ollama(ollama_events),
+        "scene_director_runtime_events": {"log_path": str(SCENE_DIRECTOR_LOG_PATH), "event_count": len(scene_events), "recent_events": scene_events[-12:]},
+        "npu_analysis": {"preflight": npu_preflight, "trace_path": str(NPU_TRACE_PATH), "previous_event_count": len(npu_events_before), "event_count": len(npu_events_after), "recent_events": npu_events_after[-12:]},
         "recommendations": [],
     }
 
@@ -196,45 +222,25 @@ def build_report(track_stem: str | None = None) -> dict[str, Any]:
         recs.append("Generated script appears to come from fallback or invalid draft recovery; inspect implementation_draft validation and Ollama raw output.")
     last_ai = report["workflow_event_analysis"].get("recent_ai_operation_metadata", [])[-1:] or []
     if last_ai and last_ai[0].get("skip_npu_heavy_pass") is True:
-        recs.append("Skip NPU heavy pass is active: Dual AI will not call the legacy heavy NPU pass by design.")
+        recs.append("Skip NPU heavy pass is active: Dual AI will not call the legacy heavy NPU pass by design; NPU preflight is still logged in npu_runtime_trace.jsonl.")
+    npu_report = report["npu_analysis"].get("preflight", {})
+    if isinstance(npu_report, dict) and isinstance(npu_report.get("report"), dict) and not npu_report["report"].get("ready"):
+        recs.append("NPU preflight is not ready; check Tools/npu/npu_preflight_report.json for missing runtime/model/device.")
     return report
 
 
 def markdown_report(report: dict[str, Any]) -> str:
-    lines = [
-        "# AI Runtime Diagnostics",
-        "",
-        f"Generated: {report.get('generated_at')}",
-        f"Track: `{report.get('track_stem')}`",
-        "",
-        "## Scene Director Chat",
-    ]
+    lines = ["# AI Runtime Diagnostics", "", f"Generated: {report.get('generated_at')}", f"Track: `{report.get('track_stem')}`", "", "## Scene Director Chat"]
     chat = report.get("scene_brief_analysis", {})
-    lines.extend([
-        f"- Messages: `{chat.get('message_count', 0)}`",
-        f"- Empty Ollama assistant replies: `{chat.get('assistant_empty_response_count', 0)}`",
-        "",
-        "## Ollama",
-    ])
+    lines.extend([f"- Messages: `{chat.get('message_count', 0)}`", f"- Empty Ollama assistant replies: `{chat.get('assistant_empty_response_count', 0)}`", "", "## Ollama"])
     ollama = report.get("ollama_analysis", {})
-    lines.extend([
-        f"- Events: `{ollama.get('event_count', 0)}`",
-        f"- Generate results: `{ollama.get('generate_result_count', 0)}`",
-        f"- Generate errors: `{ollama.get('generate_error_count', 0)}`",
-        f"- Empty responses: `{ollama.get('empty_response_count', 0)}`",
-        f"- Log: `{ollama.get('log_path')}`",
-        "",
-        "## Implementation Draft / Script",
-    ])
+    lines.extend([f"- Events: `{ollama.get('event_count', 0)}`", f"- Generate results: `{ollama.get('generate_result_count', 0)}`", f"- Generate errors: `{ollama.get('generate_error_count', 0)}`", f"- Empty responses: `{ollama.get('empty_response_count', 0)}`", f"- Log: `{ollama.get('log_path')}`", "", "## NPU"])
+    npu = report.get("npu_analysis", {})
+    preflight = npu.get("preflight", {}) if isinstance(npu, dict) else {}
+    preflight_report = preflight.get("report", {}) if isinstance(preflight, dict) else {}
+    lines.extend([f"- Trace log: `{npu.get('trace_path')}`", f"- Event count: `{npu.get('event_count', 0)}`", f"- Preflight ready: `{preflight_report.get('ready')}`", f"- Devices: `{preflight_report.get('openvino_available_devices')}`", f"- Errors: `{preflight_report.get('errors')}`", "", "## Implementation Draft / Script"])
     impl = report.get("implementation_analysis", {})
-    lines.extend([
-        f"- Script chars: `{impl.get('script_chars', 0)}`",
-        f"- Has import bpy: `{impl.get('script_has_import_bpy')}`",
-        f"- Has keyframe_insert: `{impl.get('script_has_keyframe_insert')}`",
-        f"- Fallback markers: `{', '.join(impl.get('fallback_markers', [])) or '-'}`",
-        "",
-        "## Recent AI Operation Metadata",
-    ])
+    lines.extend([f"- Script chars: `{impl.get('script_chars', 0)}`", f"- Has import bpy: `{impl.get('script_has_import_bpy')}`", f"- Has keyframe_insert: `{impl.get('script_has_keyframe_insert')}`", f"- Fallback markers: `{', '.join(impl.get('fallback_markers', [])) or '-'}`", "", "## Recent AI Operation Metadata"])
     for item in report.get("workflow_event_analysis", {}).get("recent_ai_operation_metadata", [])[-8:]:
         lines.append(f"- `{item}`")
     lines.extend(["", "## Recommendations"])
