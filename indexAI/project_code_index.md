@@ -1,8 +1,8 @@
 # Spaziotempo Primary Project Code Index
 
-Generated: `2026-04-28T22:22:02`
+Generated: `2026-04-28T22:38:22`
 
-Source fingerprint: `523e36784395e4db625264e9095abf0bd9a4fd4836cb755df3e7f2b95196d1c0`
+Source fingerprint: `2cf2eeb18e1bd857b11441e70203625ead0db5f858c9f6793ef8ac65a0c873c4`
 
 Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.
 
@@ -166,7 +166,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/ai/run_parallel_artifact_pipeline.py`: 277 lines, 11552 chars, sha256 `f980a171f00f6d8f0b847c31646bf7cf3c1c66b4b2ed5c969d512ec4a69e464a`
 - `Tools/ai/validate_ai_artifacts.py`: 201 lines, 8660 chars, sha256 `b5f5da7831718465e262131a0bd7ef5fd59aaa4362c6f9545c28daef3bb34353`
 - `Tools/git/auto_push_generated_artifacts.ps1`: 136 lines, 3891 chars, sha256 `cd65aa2cd41cfc5b8205efd92c7b71d9967498bd8e3e71d92853e0b166782d2d`
-- `Tools/git/auto_push_generated_data.ps1`: 218 lines, 6356 chars, sha256 `e2a1194d6e20ece5b622b3b0b5a86f1679d1192225117d7d9b0d0fd9ab5476c9`
+- `Tools/git/auto_push_generated_data.ps1`: 224 lines, 6489 chars, sha256 `a1ecf5c2b47a6849ae45c2b803f55d9108ef85381f0db5502b002b4cf8c36880`
 - `Tools/git/README.md`: 76 lines, 1846 chars, sha256 `bb1002cb3385a138d3ba6d963a4fc4cb835c17f152731beb34bd9487faa2011a`
 - `Tools/npu/ai_memory_context.py`: 112 lines, 4815 chars, sha256 `4febdeb28cc24886e60e547d4cb1097a0928f17283ecd58ba22db9fd3c12f9a7`
 - `Tools/npu/build_ai_service_packet.py`: 356 lines, 15673 chars, sha256 `0906bc0f6df6c0da50221ca38e0cce89d78afea243278b5f396225c6eb38af1d`
@@ -175,13 +175,14 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/npu/build_npu_code_context.py`: 390 lines, 12139 chars, sha256 `45037f46cd073bdc0d191828f75224d1d8726bf519620bc3ba7f795b687922b0`
 - `Tools/npu/build_project_ai_index.py`: 420 lines, 14905 chars, sha256 `5d0e447d5d77e945f831b80e31a0f0ccdd224276d30fe452a85293c99251e7c7`
 - `Tools/npu/build_semantic_code_chunks.py`: 92 lines, 5773 chars, sha256 `c95155adaba9dbffa80174feb6e7ee16ac23346d70a437cd75aa89138ff1dffb`
+- `Tools/npu/generated_blender_script_candidate.py`: 370 lines, 16542 chars, sha256 `6fa88ab4ede12c2acad87729f41a9cf8419a29adb25be4af6db6d5a0a9462a21`
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
-- `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `03e0f4ff4714aefe09f9092711955c71c0171bcb2bcfa615015474087b12a580`
-- `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `845054a74377f006cf10e5076c44af3da0271a06f01a14bfe403fdd9ef3d5f5c`
-- `Tools/npu/npu_code_manifest.json`: 6795 lines, 184212 chars, sha256 `a47a16f15091d35c53de51dd111830f0cc19e3170a4d1be31ccba99e8259a50f`
-- `Tools/npu/npu_music_manifest.json`: 567 lines, 18218 chars, sha256 `fdd01b19f6fb04f4927805f501d8c505f4225b064534f76019ea464a5a99bfb7`
+- `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `04b388798bbd0144c8fd5538f5f91b1ddaf44aecf2958a88b485d5d89c05ed8e`
+- `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `661eba894fdb3ab4c3fb0c573f8f5779398f0f59bc43981f4fb53d62063bdfe6`
+- `Tools/npu/npu_code_manifest.json`: 7024 lines, 189850 chars, sha256 `2a15281b09b8b649db6af51534e8668f35b5255e65f854a1fe513a3dc6735622`
+- `Tools/npu/npu_music_manifest.json`: 795 lines, 29978 chars, sha256 `1ca6a8a9a95fe68c50bb3b42163fe411dbed804154a906c85c89a9184fffb532`
 - `Tools/npu/npu_runtime.py`: 96 lines, 3199 chars, sha256 `8e0b1328626cb202c8f7a47bcf159df0725c7370a631440ce11989cca5be58bb`
-- `Tools/npu/ollama_runtime.py`: 352 lines, 11053 chars, sha256 `dbcdde9d1d43964bd77a64a8cfe8e900346aa4b5554e41daf19758269cbd4cbd`
+- `Tools/npu/ollama_runtime.py`: 387 lines, 13260 chars, sha256 `bd594cc34384f89d7f8ba42c9441d3df85413efee7b4df9d2f0b43da17991cce`
 - `Tools/npu/README.md`: 38 lines, 1231 chars, sha256 `bb15beeb5dc9eaa8282b6d5dac0ce782574f844e9cfe25655e97c80b1145c916`
 - `Tools/npu/run_dual_ai_pipeline.py`: 1705 lines, 72162 chars, sha256 `a6a3d187992b5d66d4d8edb064e2a04cc303c5f685b05b0a698efd953f636bbb`
 - `Tools/npu/run_npu_artifact_reviewer.py`: 128 lines, 5173 chars, sha256 `37e7c4d9016bcff4e4ff8ce7219bffb7a743dd537da7928a7d077a01865a9b75`
@@ -424,7 +425,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI/project_code_chunks/chunk_0205_Tools_ai_run_parallel_artifact_pipeline_py.md` -> `Tools/ai/run_parallel_artifact_pipeline.py` lines 247-276
 - `indexAI/project_code_chunks/chunk_0206_Tools_ai_validate_ai_artifacts_py.md` -> `Tools/ai/validate_ai_artifacts.py` lines 1-200
 - `indexAI/project_code_chunks/chunk_0207_Tools_git_auto_push_generated_artifacts_ps1.md` -> `Tools/git/auto_push_generated_artifacts.ps1` lines 1-135
-- `indexAI/project_code_chunks/chunk_0208_Tools_git_auto_push_generated_data_ps1.md` -> `Tools/git/auto_push_generated_data.ps1` lines 1-217
+- `indexAI/project_code_chunks/chunk_0208_Tools_git_auto_push_generated_data_ps1.md` -> `Tools/git/auto_push_generated_data.ps1` lines 1-223
 - `indexAI/project_code_chunks/chunk_0209_Tools_git_README_md.md` -> `Tools/git/README.md` lines 1-75
 - `indexAI/project_code_chunks/chunk_0210_Tools_npu_ai_memory_context_py.md` -> `Tools/npu/ai_memory_context.py` lines 1-111
 - `indexAI/project_code_chunks/chunk_0211_Tools_npu_build_ai_service_packet_py.md` -> `Tools/npu/build_ai_service_packet.py` lines 1-235
@@ -439,115 +440,120 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI/project_code_chunks/chunk_0220_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 1-300
 - `indexAI/project_code_chunks/chunk_0221_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 301-419
 - `indexAI/project_code_chunks/chunk_0222_Tools_npu_build_semantic_code_chunks_py.md` -> `Tools/npu/build_semantic_code_chunks.py` lines 1-91
-- `indexAI/project_code_chunks/chunk_0223_Tools_npu_generated_blender_script_candidate_FristNear_py.md` -> `Tools/npu/generated_blender_script_candidate_FristNear.py` lines 1-244
-- `indexAI/project_code_chunks/chunk_0224_Tools_npu_generated_blender_script_candidate_FristNear_py.md` -> `Tools/npu/generated_blender_script_candidate_FristNear.py` lines 245-369
-- `indexAI/project_code_chunks/chunk_0225_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 1-77
-- `indexAI/project_code_chunks/chunk_0226_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 78-130
-- `indexAI/project_code_chunks/chunk_0227_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 131-182
-- `indexAI/project_code_chunks/chunk_0228_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 183-236
-- `indexAI/project_code_chunks/chunk_0229_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 237-289
-- `indexAI/project_code_chunks/chunk_0230_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 290-344
-- `indexAI/project_code_chunks/chunk_0231_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 345-383
-- `indexAI/project_code_chunks/chunk_0232_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1-231
-- `indexAI/project_code_chunks/chunk_0233_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 232-449
-- `indexAI/project_code_chunks/chunk_0234_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 450-661
-- `indexAI/project_code_chunks/chunk_0235_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 662-881
-- `indexAI/project_code_chunks/chunk_0236_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 882-1100
-- `indexAI/project_code_chunks/chunk_0237_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1101-1311
-- `indexAI/project_code_chunks/chunk_0238_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1312-1525
-- `indexAI/project_code_chunks/chunk_0239_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1526-1745
-- `indexAI/project_code_chunks/chunk_0240_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1746-1968
-- `indexAI/project_code_chunks/chunk_0241_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1969-2181
-- `indexAI/project_code_chunks/chunk_0242_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2182-2399
-- `indexAI/project_code_chunks/chunk_0243_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2400-2619
-- `indexAI/project_code_chunks/chunk_0244_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2620-2839
-- `indexAI/project_code_chunks/chunk_0245_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2840-3059
-- `indexAI/project_code_chunks/chunk_0246_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 3060-3273
-- `indexAI/project_code_chunks/chunk_0247_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 3274-3339
-- `indexAI/project_code_chunks/chunk_0248_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1-383
-- `indexAI/project_code_chunks/chunk_0249_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 384-754
-- `indexAI/project_code_chunks/chunk_0250_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 755-1104
-- `indexAI/project_code_chunks/chunk_0251_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1105-1372
-- `indexAI/project_code_chunks/chunk_0252_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1373-1633
-- `indexAI/project_code_chunks/chunk_0253_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1634-1951
-- `indexAI/project_code_chunks/chunk_0254_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1952-2296
-- `indexAI/project_code_chunks/chunk_0255_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2297-2683
-- `indexAI/project_code_chunks/chunk_0256_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2684-3023
-- `indexAI/project_code_chunks/chunk_0257_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3024-3398
-- `indexAI/project_code_chunks/chunk_0258_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3399-3763
-- `indexAI/project_code_chunks/chunk_0259_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3764-4115
-- `indexAI/project_code_chunks/chunk_0260_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4116-4490
-- `indexAI/project_code_chunks/chunk_0261_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4491-4877
-- `indexAI/project_code_chunks/chunk_0262_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4878-5268
-- `indexAI/project_code_chunks/chunk_0263_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5269-5650
-- `indexAI/project_code_chunks/chunk_0264_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5651-5966
-- `indexAI/project_code_chunks/chunk_0265_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5967-6252
-- `indexAI/project_code_chunks/chunk_0266_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6253-6536
-- `indexAI/project_code_chunks/chunk_0267_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6537-6795
-- `indexAI/project_code_chunks/chunk_0268_Tools_npu_npu_music_manifest_json.md` -> `Tools/npu/npu_music_manifest.json` lines 1-301
-- `indexAI/project_code_chunks/chunk_0269_Tools_npu_npu_music_manifest_json.md` -> `Tools/npu/npu_music_manifest.json` lines 302-567
-- `indexAI/project_code_chunks/chunk_0270_Tools_npu_npu_runtime_py.md` -> `Tools/npu/npu_runtime.py` lines 1-95
-- `indexAI/project_code_chunks/chunk_0271_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 1-302
-- `indexAI/project_code_chunks/chunk_0272_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 303-351
-- `indexAI/project_code_chunks/chunk_0273_Tools_npu_README_md.md` -> `Tools/npu/README.md` lines 1-37
-- `indexAI/project_code_chunks/chunk_0274_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1-245
-- `indexAI/project_code_chunks/chunk_0275_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 246-508
-- `indexAI/project_code_chunks/chunk_0276_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 509-743
-- `indexAI/project_code_chunks/chunk_0277_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 744-992
-- `indexAI/project_code_chunks/chunk_0278_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 993-1212
-- `indexAI/project_code_chunks/chunk_0279_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1213-1453
-- `indexAI/project_code_chunks/chunk_0280_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1454-1664
-- `indexAI/project_code_chunks/chunk_0281_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1665-1704
-- `indexAI/project_code_chunks/chunk_0282_Tools_npu_run_npu_artifact_reviewer_py.md` -> `Tools/npu/run_npu_artifact_reviewer.py` lines 1-127
-- `indexAI/project_code_chunks/chunk_0283_Tools_npu_run_npu_context_ps1.md` -> `Tools/npu/run_npu_context.ps1` lines 1-238
-- `indexAI/project_code_chunks/chunk_0284_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 1-326
-- `indexAI/project_code_chunks/chunk_0285_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 327-565
-- `indexAI/project_code_chunks/chunk_0286_Tools_npu_run_ollama_music_agent_py.md` -> `Tools/npu/run_ollama_music_agent.py` lines 1-238
-- `indexAI/project_code_chunks/chunk_0287_Tools_repo_patch_runner_apply_repo_mods_py.md` -> `Tools/repo_patch_runner/apply_repo_mods.py` lines 1-300
-- `indexAI/project_code_chunks/chunk_0288_Tools_repo_patch_runner_apply_repo_mods_py.md` -> `Tools/repo_patch_runner/apply_repo_mods.py` lines 301-443
-- `indexAI/project_code_chunks/chunk_0289_Tools_repo_patch_runner_example_fix_blender_51_musgrave_json.md` -> `Tools/repo_patch_runner/example_fix_blender_51_musgrave.json` lines 1-40
-- `indexAI/project_code_chunks/chunk_0290_Tools_repo_patch_runner_README_md.md` -> `Tools/repo_patch_runner/README.md` lines 1-111
-- `indexAI/project_code_chunks/chunk_0291_Tools_workflow_ai_runtime_diagnostics_py.md` -> `Tools/workflow/ai_runtime_diagnostics.py` lines 1-233
-- `indexAI/project_code_chunks/chunk_0292_Tools_workflow_ai_runtime_diagnostics_py.md` -> `Tools/workflow/ai_runtime_diagnostics.py` lines 234-267
-- `indexAI/project_code_chunks/chunk_0293_Tools_workflow_artifact_consult_py.md` -> `Tools/workflow/artifact_consult.py` lines 1-144
-- `indexAI/project_code_chunks/chunk_0294_Tools_workflow_asset_inventory_py.md` -> `Tools/workflow/asset_inventory.py` lines 1-110
-- `indexAI/project_code_chunks/chunk_0295_Tools_workflow_git_auto_push_py.md` -> `Tools/workflow/git_auto_push.py` lines 1-186
-- `indexAI/project_code_chunks/chunk_0296_Tools_workflow_gui_components_init_py.md` -> `Tools/workflow/gui/components/__init__.py` lines 1-1
-- `indexAI/project_code_chunks/chunk_0297_Tools_workflow_gui_components_action_panel_py.md` -> `Tools/workflow/gui/components/action_panel.py` lines 1-183
-- `indexAI/project_code_chunks/chunk_0298_Tools_workflow_gui_components_artifact_browser_py.md` -> `Tools/workflow/gui/components/artifact_browser.py` lines 1-276
-- `indexAI/project_code_chunks/chunk_0299_Tools_workflow_gui_components_artifact_browser_py.md` -> `Tools/workflow/gui/components/artifact_browser.py` lines 277-390
-- `indexAI/project_code_chunks/chunk_0300_Tools_workflow_gui_components_live_output_panel_py.md` -> `Tools/workflow/gui/components/live_output_panel.py` lines 1-182
-- `indexAI/project_code_chunks/chunk_0301_Tools_workflow_gui_components_session_overview_py.md` -> `Tools/workflow/gui/components/session_overview.py` lines 1-245
-- `indexAI/project_code_chunks/chunk_0302_Tools_workflow_gui_components_session_overview_py.md` -> `Tools/workflow/gui/components/session_overview.py` lines 246-278
-- `indexAI/project_code_chunks/chunk_0303_Tools_workflow_gui_components_st_theme_py.md` -> `Tools/workflow/gui/components/st_theme.py` lines 1-92
-- `indexAI/project_code_chunks/chunk_0304_Tools_workflow_gui_components_storage_dashboard_py.md` -> `Tools/workflow/gui/components/storage_dashboard.py` lines 1-258
-- `indexAI/project_code_chunks/chunk_0305_Tools_workflow_gui_components_storage_dashboard_py.md` -> `Tools/workflow/gui/components/storage_dashboard.py` lines 259-422
-- `indexAI/project_code_chunks/chunk_0306_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 1-265
-- `indexAI/project_code_chunks/chunk_0307_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 266-475
-- `indexAI/project_code_chunks/chunk_0308_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 476-713
-- `indexAI/project_code_chunks/chunk_0309_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 714-738
-- `indexAI/project_code_chunks/chunk_0310_Tools_workflow_gui_workflow_gui_modern_py.md` -> `Tools/workflow/gui/workflow_gui_modern.py` lines 1-218
-- `indexAI/project_code_chunks/chunk_0311_Tools_workflow_gui_workflow_gui_modern_py.md` -> `Tools/workflow/gui/workflow_gui_modern.py` lines 219-319
-- `indexAI/project_code_chunks/chunk_0312_Tools_workflow_gui_workflow_gui_with_push_py.md` -> `Tools/workflow/gui/workflow_gui_with_push.py` lines 1-181
-- `indexAI/project_code_chunks/chunk_0313_Tools_workflow_project_awareness_py.md` -> `Tools/workflow/project_awareness.py` lines 1-249
-- `indexAI/project_code_chunks/chunk_0314_Tools_workflow_project_awareness_py.md` -> `Tools/workflow/project_awareness.py` lines 250-353
-- `indexAI/project_code_chunks/chunk_0315_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 1-258
-- `indexAI/project_code_chunks/chunk_0316_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 259-460
-- `indexAI/project_code_chunks/chunk_0317_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 461-526
-- `indexAI/project_code_chunks/chunk_0318_Tools_workflow_startup_check_py.md` -> `Tools/workflow/startup_check.py` lines 1-264
-- `indexAI/project_code_chunks/chunk_0319_Tools_workflow_startup_check_py.md` -> `Tools/workflow/startup_check.py` lines 265-284
-- `indexAI/project_code_chunks/chunk_0320_Tools_workflow_startup_preflight_ps1.md` -> `Tools/workflow/startup_preflight.ps1` lines 1-281
-- `indexAI/project_code_chunks/chunk_0321_Tools_workflow_startup_preflight_ps1.md` -> `Tools/workflow/startup_preflight.ps1` lines 282-337
-- `indexAI/project_code_chunks/chunk_0322_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 1-271
-- `indexAI/project_code_chunks/chunk_0323_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 272-505
-- `indexAI/project_code_chunks/chunk_0324_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 506-607
-- `indexAI/project_code_chunks/chunk_0325_Tools_workflow_workflow_shell_py.md` -> `Tools/workflow/workflow_shell.py` lines 1-268
-- `indexAI/project_code_chunks/chunk_0326_Tools_workflow_workflow_shell_py.md` -> `Tools/workflow/workflow_shell.py` lines 269-324
-- `indexAI/project_code_chunks/chunk_0327_Tools_workflow_workflow_shell_with_push_py.md` -> `Tools/workflow/workflow_shell_with_push.py` lines 1-117
-- `indexAI/project_code_chunks/chunk_0328_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 1-265
-- `indexAI/project_code_chunks/chunk_0329_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 266-573
-- `indexAI/project_code_chunks/chunk_0330_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 574-855
-- `indexAI/project_code_chunks/chunk_0331_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 856-1102
-- `indexAI/project_code_chunks/chunk_0332_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 1103-1230
-- `indexAI/project_code_chunks/chunk_0333_workflow_gui_ps1.md` -> `workflow_gui.ps1` lines 1-35
-- `indexAI/project_code_chunks/chunk_0334_workflow_shell_ps1.md` -> `workflow_shell.ps1` lines 1-35
+- `indexAI/project_code_chunks/chunk_0223_Tools_npu_generated_blender_script_candidate_py.md` -> `Tools/npu/generated_blender_script_candidate.py` lines 1-243
+- `indexAI/project_code_chunks/chunk_0224_Tools_npu_generated_blender_script_candidate_py.md` -> `Tools/npu/generated_blender_script_candidate.py` lines 244-369
+- `indexAI/project_code_chunks/chunk_0225_Tools_npu_generated_blender_script_candidate_FristNear_py.md` -> `Tools/npu/generated_blender_script_candidate_FristNear.py` lines 1-244
+- `indexAI/project_code_chunks/chunk_0226_Tools_npu_generated_blender_script_candidate_FristNear_py.md` -> `Tools/npu/generated_blender_script_candidate_FristNear.py` lines 245-369
+- `indexAI/project_code_chunks/chunk_0227_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 1-77
+- `indexAI/project_code_chunks/chunk_0228_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 78-130
+- `indexAI/project_code_chunks/chunk_0229_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 131-182
+- `indexAI/project_code_chunks/chunk_0230_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 183-236
+- `indexAI/project_code_chunks/chunk_0231_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 237-289
+- `indexAI/project_code_chunks/chunk_0232_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 290-344
+- `indexAI/project_code_chunks/chunk_0233_Tools_npu_npu_blender_manual_index_md.md` -> `Tools/npu/npu_blender_manual_index.md` lines 345-383
+- `indexAI/project_code_chunks/chunk_0234_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1-231
+- `indexAI/project_code_chunks/chunk_0235_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 232-449
+- `indexAI/project_code_chunks/chunk_0236_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 450-661
+- `indexAI/project_code_chunks/chunk_0237_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 662-881
+- `indexAI/project_code_chunks/chunk_0238_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 882-1100
+- `indexAI/project_code_chunks/chunk_0239_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1101-1311
+- `indexAI/project_code_chunks/chunk_0240_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1312-1525
+- `indexAI/project_code_chunks/chunk_0241_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1526-1745
+- `indexAI/project_code_chunks/chunk_0242_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1746-1968
+- `indexAI/project_code_chunks/chunk_0243_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 1969-2181
+- `indexAI/project_code_chunks/chunk_0244_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2182-2399
+- `indexAI/project_code_chunks/chunk_0245_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2400-2619
+- `indexAI/project_code_chunks/chunk_0246_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2620-2839
+- `indexAI/project_code_chunks/chunk_0247_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2840-3059
+- `indexAI/project_code_chunks/chunk_0248_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 3060-3273
+- `indexAI/project_code_chunks/chunk_0249_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 3274-3339
+- `indexAI/project_code_chunks/chunk_0250_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1-382
+- `indexAI/project_code_chunks/chunk_0251_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 383-753
+- `indexAI/project_code_chunks/chunk_0252_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 754-1110
+- `indexAI/project_code_chunks/chunk_0253_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1111-1389
+- `indexAI/project_code_chunks/chunk_0254_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1390-1631
+- `indexAI/project_code_chunks/chunk_0255_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1632-1975
+- `indexAI/project_code_chunks/chunk_0256_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1976-2293
+- `indexAI/project_code_chunks/chunk_0257_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2294-2680
+- `indexAI/project_code_chunks/chunk_0258_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2681-3022
+- `indexAI/project_code_chunks/chunk_0259_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3023-3403
+- `indexAI/project_code_chunks/chunk_0260_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3404-3769
+- `indexAI/project_code_chunks/chunk_0261_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3770-4124
+- `indexAI/project_code_chunks/chunk_0262_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4125-4494
+- `indexAI/project_code_chunks/chunk_0263_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4495-4879
+- `indexAI/project_code_chunks/chunk_0264_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4880-5270
+- `indexAI/project_code_chunks/chunk_0265_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5271-5652
+- `indexAI/project_code_chunks/chunk_0266_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5653-6021
+- `indexAI/project_code_chunks/chunk_0267_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6022-6310
+- `indexAI/project_code_chunks/chunk_0268_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6311-6594
+- `indexAI/project_code_chunks/chunk_0269_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6595-6874
+- `indexAI/project_code_chunks/chunk_0270_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6875-7024
+- `indexAI/project_code_chunks/chunk_0271_Tools_npu_npu_music_manifest_json.md` -> `Tools/npu/npu_music_manifest.json` lines 1-198
+- `indexAI/project_code_chunks/chunk_0272_Tools_npu_npu_music_manifest_json.md` -> `Tools/npu/npu_music_manifest.json` lines 199-483
+- `indexAI/project_code_chunks/chunk_0273_Tools_npu_npu_music_manifest_json.md` -> `Tools/npu/npu_music_manifest.json` lines 484-784
+- `indexAI/project_code_chunks/chunk_0274_Tools_npu_npu_music_manifest_json.md` -> `Tools/npu/npu_music_manifest.json` lines 785-795
+- `indexAI/project_code_chunks/chunk_0275_Tools_npu_npu_runtime_py.md` -> `Tools/npu/npu_runtime.py` lines 1-95
+- `indexAI/project_code_chunks/chunk_0276_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 1-304
+- `indexAI/project_code_chunks/chunk_0277_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 305-386
+- `indexAI/project_code_chunks/chunk_0278_Tools_npu_README_md.md` -> `Tools/npu/README.md` lines 1-37
+- `indexAI/project_code_chunks/chunk_0279_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1-245
+- `indexAI/project_code_chunks/chunk_0280_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 246-508
+- `indexAI/project_code_chunks/chunk_0281_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 509-743
+- `indexAI/project_code_chunks/chunk_0282_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 744-992
+- `indexAI/project_code_chunks/chunk_0283_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 993-1212
+- `indexAI/project_code_chunks/chunk_0284_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1213-1453
+- `indexAI/project_code_chunks/chunk_0285_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1454-1664
+- `indexAI/project_code_chunks/chunk_0286_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1665-1704
+- `indexAI/project_code_chunks/chunk_0287_Tools_npu_run_npu_artifact_reviewer_py.md` -> `Tools/npu/run_npu_artifact_reviewer.py` lines 1-127
+- `indexAI/project_code_chunks/chunk_0288_Tools_npu_run_npu_context_ps1.md` -> `Tools/npu/run_npu_context.ps1` lines 1-238
+- `indexAI/project_code_chunks/chunk_0289_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 1-326
+- `indexAI/project_code_chunks/chunk_0290_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 327-565
+- `indexAI/project_code_chunks/chunk_0291_Tools_npu_run_ollama_music_agent_py.md` -> `Tools/npu/run_ollama_music_agent.py` lines 1-238
+- `indexAI/project_code_chunks/chunk_0292_Tools_repo_patch_runner_apply_repo_mods_py.md` -> `Tools/repo_patch_runner/apply_repo_mods.py` lines 1-300
+- `indexAI/project_code_chunks/chunk_0293_Tools_repo_patch_runner_apply_repo_mods_py.md` -> `Tools/repo_patch_runner/apply_repo_mods.py` lines 301-443
+- `indexAI/project_code_chunks/chunk_0294_Tools_repo_patch_runner_example_fix_blender_51_musgrave_json.md` -> `Tools/repo_patch_runner/example_fix_blender_51_musgrave.json` lines 1-40
+- `indexAI/project_code_chunks/chunk_0295_Tools_repo_patch_runner_README_md.md` -> `Tools/repo_patch_runner/README.md` lines 1-111
+- `indexAI/project_code_chunks/chunk_0296_Tools_workflow_ai_runtime_diagnostics_py.md` -> `Tools/workflow/ai_runtime_diagnostics.py` lines 1-233
+- `indexAI/project_code_chunks/chunk_0297_Tools_workflow_ai_runtime_diagnostics_py.md` -> `Tools/workflow/ai_runtime_diagnostics.py` lines 234-267
+- `indexAI/project_code_chunks/chunk_0298_Tools_workflow_artifact_consult_py.md` -> `Tools/workflow/artifact_consult.py` lines 1-144
+- `indexAI/project_code_chunks/chunk_0299_Tools_workflow_asset_inventory_py.md` -> `Tools/workflow/asset_inventory.py` lines 1-110
+- `indexAI/project_code_chunks/chunk_0300_Tools_workflow_git_auto_push_py.md` -> `Tools/workflow/git_auto_push.py` lines 1-186
+- `indexAI/project_code_chunks/chunk_0301_Tools_workflow_gui_components_init_py.md` -> `Tools/workflow/gui/components/__init__.py` lines 1-1
+- `indexAI/project_code_chunks/chunk_0302_Tools_workflow_gui_components_action_panel_py.md` -> `Tools/workflow/gui/components/action_panel.py` lines 1-183
+- `indexAI/project_code_chunks/chunk_0303_Tools_workflow_gui_components_artifact_browser_py.md` -> `Tools/workflow/gui/components/artifact_browser.py` lines 1-276
+- `indexAI/project_code_chunks/chunk_0304_Tools_workflow_gui_components_artifact_browser_py.md` -> `Tools/workflow/gui/components/artifact_browser.py` lines 277-390
+- `indexAI/project_code_chunks/chunk_0305_Tools_workflow_gui_components_live_output_panel_py.md` -> `Tools/workflow/gui/components/live_output_panel.py` lines 1-182
+- `indexAI/project_code_chunks/chunk_0306_Tools_workflow_gui_components_session_overview_py.md` -> `Tools/workflow/gui/components/session_overview.py` lines 1-245
+- `indexAI/project_code_chunks/chunk_0307_Tools_workflow_gui_components_session_overview_py.md` -> `Tools/workflow/gui/components/session_overview.py` lines 246-278
+- `indexAI/project_code_chunks/chunk_0308_Tools_workflow_gui_components_st_theme_py.md` -> `Tools/workflow/gui/components/st_theme.py` lines 1-92
+- `indexAI/project_code_chunks/chunk_0309_Tools_workflow_gui_components_storage_dashboard_py.md` -> `Tools/workflow/gui/components/storage_dashboard.py` lines 1-258
+- `indexAI/project_code_chunks/chunk_0310_Tools_workflow_gui_components_storage_dashboard_py.md` -> `Tools/workflow/gui/components/storage_dashboard.py` lines 259-422
+- `indexAI/project_code_chunks/chunk_0311_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 1-265
+- `indexAI/project_code_chunks/chunk_0312_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 266-475
+- `indexAI/project_code_chunks/chunk_0313_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 476-713
+- `indexAI/project_code_chunks/chunk_0314_Tools_workflow_gui_workflow_gui_py.md` -> `Tools/workflow/gui/workflow_gui.py` lines 714-738
+- `indexAI/project_code_chunks/chunk_0315_Tools_workflow_gui_workflow_gui_modern_py.md` -> `Tools/workflow/gui/workflow_gui_modern.py` lines 1-218
+- `indexAI/project_code_chunks/chunk_0316_Tools_workflow_gui_workflow_gui_modern_py.md` -> `Tools/workflow/gui/workflow_gui_modern.py` lines 219-319
+- `indexAI/project_code_chunks/chunk_0317_Tools_workflow_gui_workflow_gui_with_push_py.md` -> `Tools/workflow/gui/workflow_gui_with_push.py` lines 1-181
+- `indexAI/project_code_chunks/chunk_0318_Tools_workflow_project_awareness_py.md` -> `Tools/workflow/project_awareness.py` lines 1-249
+- `indexAI/project_code_chunks/chunk_0319_Tools_workflow_project_awareness_py.md` -> `Tools/workflow/project_awareness.py` lines 250-353
+- `indexAI/project_code_chunks/chunk_0320_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 1-258
+- `indexAI/project_code_chunks/chunk_0321_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 259-460
+- `indexAI/project_code_chunks/chunk_0322_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 461-526
+- `indexAI/project_code_chunks/chunk_0323_Tools_workflow_startup_check_py.md` -> `Tools/workflow/startup_check.py` lines 1-264
+- `indexAI/project_code_chunks/chunk_0324_Tools_workflow_startup_check_py.md` -> `Tools/workflow/startup_check.py` lines 265-284
+- `indexAI/project_code_chunks/chunk_0325_Tools_workflow_startup_preflight_ps1.md` -> `Tools/workflow/startup_preflight.ps1` lines 1-281
+- `indexAI/project_code_chunks/chunk_0326_Tools_workflow_startup_preflight_ps1.md` -> `Tools/workflow/startup_preflight.ps1` lines 282-337
+- `indexAI/project_code_chunks/chunk_0327_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 1-271
+- `indexAI/project_code_chunks/chunk_0328_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 272-505
+- `indexAI/project_code_chunks/chunk_0329_Tools_workflow_workflow_debug_py.md` -> `Tools/workflow/workflow_debug.py` lines 506-607
+- `indexAI/project_code_chunks/chunk_0330_Tools_workflow_workflow_shell_py.md` -> `Tools/workflow/workflow_shell.py` lines 1-268
+- `indexAI/project_code_chunks/chunk_0331_Tools_workflow_workflow_shell_py.md` -> `Tools/workflow/workflow_shell.py` lines 269-324
+- `indexAI/project_code_chunks/chunk_0332_Tools_workflow_workflow_shell_with_push_py.md` -> `Tools/workflow/workflow_shell_with_push.py` lines 1-117
+- `indexAI/project_code_chunks/chunk_0333_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 1-265
+- `indexAI/project_code_chunks/chunk_0334_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 266-573
+- `indexAI/project_code_chunks/chunk_0335_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 574-855
+- `indexAI/project_code_chunks/chunk_0336_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 856-1102
+- `indexAI/project_code_chunks/chunk_0337_Tools_workflow_workflow_state_py.md` -> `Tools/workflow/workflow_state.py` lines 1103-1230
+- `indexAI/project_code_chunks/chunk_0338_workflow_gui_ps1.md` -> `workflow_gui.ps1` lines 1-35
+- `indexAI/project_code_chunks/chunk_0339_workflow_shell_ps1.md` -> `workflow_shell.ps1` lines 1-35

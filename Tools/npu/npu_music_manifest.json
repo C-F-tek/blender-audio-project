@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-04-28T22:22:02",
+  "created_at": "2026-04-28T22:38:23",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "analysis_json": "output/Parameters-Luca Vera Premaster_Master_analysis.json",
   "blender_keyframes_json": "output/Parameters-Luca Vera Premaster_Master_analysis_blender_keyframes.json",
@@ -25,7 +25,7 @@
       "free_notes": "fammi vedere di cosa è capace un arct blender python specialist direct della tua natura"
     },
     "conversation_memory": {
-      "updated_at": "2026-04-28T22:20:53",
+      "updated_at": "2026-04-28T22:37:35",
       "memory_version": 3,
       "message_count": 2,
       "preference_summary": [
@@ -45,7 +45,7 @@
       ],
       "recent_user_questions": [],
       "recent_assistant_notes": [
-        "Errore chiamando Ollama: cannot import name 'ollama_runtime_log_path' from 'ollama_runtime' (C:\\Users\\carmi\\blender\\blender-audio-project\\Tools\\npu\\ollama_runtime.py) Il tuo messaggio e' comunque salvato nel brief; puoi generare lo script anche senza risposta chat."
+        "Ollama non ha restituito testo. Il messaggio utente e' comunque salvato nel brief. Diagnostica: modello=gpt-oss:20b, prompt_chars=35945, log=C:\\Users\\carmi\\blender\\blender-audio-project\\output\\workflow_logs\\ollama_runtime_events.jsonl"
       ],
       "durable_constraints": [
         "fammi vedere di cosa è capace un arct blender python specialist direct della tua natura"
@@ -106,7 +106,7 @@
     },
     "project_awareness": {
       "format": "SPAZIOTEMPO_PROJECT_AWARENESS_V1",
-      "generated_at": "2026-04-28T22:20:53",
+      "generated_at": "2026-04-28T22:37:21",
       "track_identity": {
         "track_stem": "Parameters-Luca Vera Premaster_Master",
         "title": "Parameters",
@@ -228,7 +228,7 @@
             "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\Parameters-Luca Vera Premaster_Master_analysis_blender_keyframes.json",
             "exists": true,
             "bytes": 2166394,
-            "updated": "2026-04-28T22:19:14"
+            "updated": "2026-04-28T22:22:02"
           }
         },
         {
@@ -518,8 +518,8 @@
       "index": 1,
       "kind": "overview",
       "path": "Tools/npu/npu_music_chunks/chunk_001_music_overview.md",
-      "chars": 26655,
-      "sha256": "2707aeae84fa37fce2773d72133a0d75e32898300972fcbf6ea362e4cb7d4055"
+      "chars": 26624,
+      "sha256": "b451849c6408a1ab0b06d1f41c6205e48fe507e0e61df352e6cbafd88ad250da"
     },
     {
       "index": 2,

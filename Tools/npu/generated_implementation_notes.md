@@ -6,7 +6,7 @@ This file is an AI draft. Review before loading in Blender.
 {
   "ok": true,
   "issues": [],
-  "indexed_file_count": 202,
+  "indexed_file_count": 203,
   "allowed_new_prefixes": [
     "indexAI/scene_scripts/",
     "indexAI/patch_library/"
