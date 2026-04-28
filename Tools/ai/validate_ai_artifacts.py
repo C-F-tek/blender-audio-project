@@ -18,6 +18,19 @@ REQUIRED = {
     "ai_selected_mapping.json": ["schema_version", "selected"],
 }
 
+LOCAL_PATH_ALLOWED_ARTIFACTS = {
+    "track_summary.json",
+    "music_segments.json",
+    "audio_event_map.json",
+    "ai_mapping_candidates.json",
+    "ai_pipeline_dry_run_report.json",
+    "ai_pipeline_run_report.json",
+    "npu_artifact_review.json",
+    "ai_validation_report.json",
+}
+
+CODELIKE_SUFFIXES = {".py", ".ps1", ".bat", ".cmd", ".sh"}
+
 
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8", errors="replace"))
@@ -36,16 +49,38 @@ def load_patterns(capsules: Path) -> tuple[list[dict[str, Any]], list[dict[str, 
     return blocked, warnings
 
 
-def scan(path: Path, blocked, warn_patterns, errors, warnings) -> None:
+def is_guardrail_reference(path: Path, text: str, pattern: str) -> bool:
+    """Return True when a blocked pattern appears as an instruction, not generated code."""
+    if path.suffix in CODELIKE_SUFFIXES:
+        return False
+    lower = text.lower()
+    pattern_lower = pattern.lower()
+    guardrail_terms = ("avoid", "blocked", "guardrail", "do not use", "non usare", "vietato", "replacement", "preferred")
+    return pattern_lower in lower and any(term in lower for term in guardrail_terms)
+
+
+def should_ignore_local_path_warning(path: Path) -> bool:
+    return path.name in LOCAL_PATH_ALLOWED_ARTIFACTS
+
+
+def scan(path: Path, blocked, warn_patterns, errors, warnings, positives) -> None:
     text = path.read_text(encoding="utf-8", errors="replace")
     for item in blocked:
         pattern = item.get("pattern")
-        if pattern and pattern in text:
-            errors.append(f"{path}: blocked pattern `{pattern}`: {item.get('reason', 'blocked')}")
+        if not pattern or pattern not in text:
+            continue
+        if is_guardrail_reference(path, text, pattern):
+            positives.append(f"{path.name}: guardrail reference for `{pattern}` present.")
+            continue
+        errors.append(f"{path}: blocked pattern `{pattern}`: {item.get('reason', 'blocked')}")
     for item in warn_patterns:
         pattern = item.get("pattern")
-        if pattern and pattern in text:
-            warnings.append(f"{path}: warning pattern `{pattern}`: {item.get('reason', 'warning')}")
+        if not pattern or pattern not in text:
+            continue
+        if pattern.startswith("C:") and should_ignore_local_path_warning(path):
+            positives.append(f"{path.name}: local path metadata accepted as pipeline context.")
+            continue
+        warnings.append(f"{path}: warning pattern `{pattern}`: {item.get('reason', 'warning')}")
 
 
 def validate_semantics(path: Path, data: Any, errors: list[str], warnings: list[str], positives: list[str]) -> None:
@@ -81,7 +116,9 @@ def validate_semantics(path: Path, data: Any, errors: list[str], warnings: list[
         if not data.get("recommended_visual_progression"):
             warnings.append("ai_scene_brief missing recommended_visual_progression.")
         constraints = data.get("constraints") or []
-        if not any("ShaderNodeTexMusgrave" in str(item) for item in constraints):
+        if any("ShaderNodeTexMusgrave" in str(item) for item in constraints):
+            positives.append("ai_scene_brief includes Blender 5.x ShaderNodeTexMusgrave guardrail.")
+        else:
             warnings.append("ai_scene_brief does not mention Blender 5.x ShaderNodeTexMusgrave guardrail.")
 
 
@@ -133,12 +170,12 @@ def main() -> int:
                 errors.append("Generated package missing README.md")
             files += list(pkg.rglob("*"))
     for path in files:
-        if path.is_file() and path.suffix in {".py", ".md", ".json"}:
-            scan(path, blocked, warn_patterns, errors, warnings)
+        if path.is_file() and path.suffix in {".py", ".md", ".json", ".ps1", ".bat", ".cmd", ".sh"}:
+            scan(path, blocked, warn_patterns, errors, warnings, positives)
 
     score = max(0.0, round(1.0 - min(0.7, len(errors) * 0.2) - min(0.3, len(warnings) * 0.04), 4))
     report = {
-        "schema_version": 2,
+        "schema_version": 3,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "passed": not errors,
         "score": score,

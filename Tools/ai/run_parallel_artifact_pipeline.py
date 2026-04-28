@@ -180,7 +180,7 @@ def main() -> int:
     pf = preflight(repo, out, args)
     if not pf["passed"] and not args.continue_on_error:
         report = {
-            "schema_version": 2,
+            "schema_version": 3,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "repo_root": str(repo),
             "output_dir": str(out),
@@ -243,7 +243,7 @@ def main() -> int:
                 results.append(res)
 
     report = {
-        "schema_version": 2,
+        "schema_version": 3,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "repo_root": str(repo),
         "output_dir": str(out),
@@ -257,8 +257,13 @@ def main() -> int:
             "GPU": [r["name"] for r in results if r.get("lane") == "GPU"],
         },
         "steps": results,
-        "post_run_expected_outputs": planned_outputs(repo, out, args),
+        "post_run_expected_outputs": [],
     }
+    if not args.dry_run:
+        (out / "ai_pipeline_run_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    elif args.write_dry_run_report:
+        (out / "ai_pipeline_dry_run_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    report["post_run_expected_outputs"] = planned_outputs(repo, out, args)
     if not args.dry_run:
         (out / "ai_pipeline_run_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     elif args.write_dry_run_report:
