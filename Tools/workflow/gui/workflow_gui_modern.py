@@ -5,6 +5,8 @@ from tkinter import ttk
 
 import workflow_state as wf
 from components.action_panel import ActionGroup, ActionSpec, GroupedActionPanel
+from components.st_theme import STTheme, apply_spaziotempo_theme
+from components.storage_dashboard import StorageDashboardWindow
 from workflow_gui import WorkflowGui as LegacyWorkflowGui
 
 
@@ -17,17 +19,7 @@ class ModernWorkflowGui(LegacyWorkflowGui):
     """
 
     def configure_style(self) -> None:
-        style = ttk.Style(self)
-        try:
-            style.theme_use("clam")
-        except tk.TclError:
-            pass
-        style.configure("TFrame", padding=0)
-        style.configure("TLabelframe", padding=8)
-        style.configure("TLabelframe.Label", font=("TkDefaultFont", 10, "bold"))
-        style.configure("TButton", padding=(8, 5))
-        style.configure("Header.TLabel", font=("TkDefaultFont", 15, "bold"))
-        style.configure("SubHeader.TLabel", foreground="#555555")
+        apply_spaziotempo_theme(self)
 
     def build_layout(self) -> None:
         self.configure_style()
@@ -106,14 +98,38 @@ class ModernWorkflowGui(LegacyWorkflowGui):
         notebook.add(output_tab, text="Live Output")
         notebook.add(help_tab, text="Workflow Guide")
 
-        self.session_box = tk.Text(status_tab, height=16, wrap="word", borderwidth=1, relief="solid")
+        self.session_box = tk.Text(
+            status_tab,
+            height=16,
+            wrap="word",
+            borderwidth=1,
+            relief="solid",
+            background=STTheme.panel,
+            foreground=STTheme.text,
+            insertbackground=STTheme.cyan,
+        )
         self.session_box.pack(fill="both", expand=True)
         self.session_box.configure(state="disabled")
 
-        self.output = tk.Text(output_tab, wrap="word", borderwidth=1, relief="solid")
+        self.output = tk.Text(
+            output_tab,
+            wrap="word",
+            borderwidth=1,
+            relief="solid",
+            background=STTheme.panel,
+            foreground=STTheme.text,
+            insertbackground=STTheme.cyan,
+        )
         self.output.pack(fill="both", expand=True)
 
-        help_text = tk.Text(help_tab, wrap="word", borderwidth=0)
+        help_text = tk.Text(
+            help_tab,
+            wrap="word",
+            borderwidth=0,
+            background=STTheme.panel,
+            foreground=STTheme.text,
+            insertbackground=STTheme.cyan,
+        )
         help_text.pack(fill="both", expand=True)
         help_text.insert(
             "1.0",
@@ -124,12 +140,25 @@ class ModernWorkflowGui(LegacyWorkflowGui):
             "4. Dual AI scene script per generare lo script Blender.\n"
             "5. Artifact browser per controllare JSON, immagini, output audio/video e script prodotti.\n"
             "6. Push generated data solo dopo avere completato e verificato i dati strutturati.\n\n"
+            "Statistiche:\n"
+            "- Project stats apre una dashboard dedicata alla cartella blender.\n"
+            "- La dashboard distingue blender-audio-project dal resto dei contenuti nella root blender.\n"
+            "- Doppio click su cartelle/file per aprirli nel sistema.\n\n"
             "Estensione GUI:\n"
             "- aggiungi una nuova ActionSpec dentro build_action_groups();\n"
             "- scegli il gruppo corretto o creane uno nuovo;\n"
             "- la GUI gestisce automaticamente scroll, spacing e abilitazione pulsanti.\n",
         )
         help_text.configure(state="disabled")
+
+    def open_project_stats_window(self) -> None:
+        if self.project_stats_window is None or not self.project_stats_window.winfo_exists():
+            self.project_stats_window = StorageDashboardWindow(
+                self,
+                session_loader=lambda: wf.load_session(create=True),
+                workflow_state_module=wf,
+            )
+        self.project_stats_window.show()
 
     def build_action_groups(self) -> tuple[ActionGroup, ...]:
         return (
@@ -195,7 +224,7 @@ class ModernWorkflowGui(LegacyWorkflowGui):
                     ActionSpec("Open log panel", self.open_log_window, always_enabled=True, description="Consulta log workflow."),
                     ActionSpec("Advanced debug check", self.open_advanced_debug_window, always_enabled=True, description="Diagnostica avanzata."),
                     ActionSpec("Startup service check", self.startup_service_check, always_enabled=True, description="Verifica servizi locali."),
-                    ActionSpec("Project stats", self.open_project_stats_window, always_enabled=True, description="Statistiche dimensioni progetto."),
+                    ActionSpec("Project stats", self.open_project_stats_window, always_enabled=True, description="Dashboard spazio occupato e contenuto cartella blender."),
                     ActionSpec("Debug monitor shell", self.open_debug_monitor_shell, always_enabled=True, description="Monitor debug in shell separata."),
                 ),
             ),
