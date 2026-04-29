@@ -1,6 +1,6 @@
 # NPU Code Index
 
-Generated: `2026-04-28T23:07:48`
+Generated: `2026-04-29T13:19:33`
 
 Purpose: long-context index for the local NPU musical/technical agent.
 Use `npu_code_chunks/chunk_*.md` for full file context.
@@ -9,7 +9,7 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `analyze_wav.py`: 258 lines, 10299 chars, sha256 `f32673c8b1b1da5df82885235ad6be93a15ca36eb2adb924dac73a4e5a3c8ff8`
 - `build_track_summary.py`: 114 lines, 4062 chars, sha256 `7dfbac89818d9b1903ae6828e502ec8b9965c84ce6097a5e049e551c95d3286a`
 - `normalize_scene_spec.py`: 470 lines, 14431 chars, sha256 `af12b708bf2b6aff49d87872a79fa883a7c32b299a54b6cceb7182bacc1341b9`
-- `Tools/npu/npu_runtime.py`: 96 lines, 3199 chars, sha256 `8e0b1328626cb202c8f7a47bcf159df0725c7370a631440ce11989cca5be58bb`
+- `Tools/npu/npu_runtime.py`: 161 lines, 5903 chars, sha256 `38dc29da6ba1c564c68a29c0c5de7e4b38787aa6a0c17607c8d2ae03fe89f182`
 - `Tools/npu/ollama_runtime.py`: 387 lines, 13260 chars, sha256 `bd594cc34384f89d7f8ba42c9441d3df85413efee7b4df9d2f0b43da17991cce`
 - `Tools/npu/build_blender_manual_context.py`: 327 lines, 10493 chars, sha256 `5516f84a1f112607a51f93aa7dbe52631a7e834353a0b98c71706e33b152719c`
 - `Tools/npu/run_dual_ai_pipeline.py`: 1705 lines, 72162 chars, sha256 `a6a3d187992b5d66d4d8edb064e2a04cc303c5f685b05b0a698efd953f636bbb`
@@ -35,7 +35,7 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `Scripting/v61b/io_utils.py`: 81 lines, 2234 chars, sha256 `6f0db21475f14dff120a5cc57d748b2178b75fbc4f60fdb6d16b8e438513dd2d`
 - `Scripting/v61b/reload_utils.py`: 52 lines, 1325 chars, sha256 `757b7f5af331ec38e1063072f70fcfc50edae48cf9dd8fbbff1706090bed8e49`
 - `Scripting/v61b/scene_utils.py`: 98 lines, 2463 chars, sha256 `98780b6455aae7c8857bf8698e8e4b57feceec9187a04a8850f87bad2bb4d295`
-- `Scripting/v61b/README.md`: 95 lines, 3138 chars, sha256 `c34a4cc32e8ba7b0098790df7131734425f37ec069e4097384113b125458987f`
+- `Scripting/v61b/README.md`: 119 lines, 4894 chars, sha256 `d671cdb59f58ecee67ebdc2accd6591cb9f54d50a10091b8abc239ae5d883b6a`
 - `Scripting/v61b/hotpatch/__init__.py`: 4 lines, 51 chars, sha256 `90be9d97c6b8230b5cabf560b23404b9a3b2699f8df93b89605425c5cf164147`
 - `Scripting/v61b/hotpatch/accent_patch.py`: 302 lines, 12916 chars, sha256 `0e7166fd48278eaeab80e30d9b45d5b04c43c1c4a6f4b34a0d2ecf17b5745f94`
 - `Scripting/v61b/hotpatch/common.py`: 92 lines, 2201 chars, sha256 `81758e52dae24735b45e08524292be5d1a6d0f820c15526514518e1e2e5c6662`
@@ -57,7 +57,9 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `Tools/npu/build_npu_code_context.py`: 390 lines, 12139 chars, sha256 `45037f46cd073bdc0d191828f75224d1d8726bf519620bc3ba7f795b687922b0`
 - `Tools/npu/build_project_ai_index.py`: 420 lines, 14905 chars, sha256 `5d0e447d5d77e945f831b80e31a0f0ccdd224276d30fe452a85293c99251e7c7`
 - `Tools/npu/build_semantic_code_chunks.py`: 92 lines, 5773 chars, sha256 `c95155adaba9dbffa80174feb6e7ee16ac23346d70a437cd75aa89138ff1dffb`
+- `Tools/npu/generated_blender_script_candidate.py`: 370 lines, 16456 chars, sha256 `3a8ea9bf92440e5a773b0973809156580c87ceebba3b62cda85a4c4133567d86`
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
+- `Tools/npu/npu_guardrail_service.py`: 491 lines, 20211 chars, sha256 `5829724c35b7fccef62481ca8efc7290b63ef4d552e441fcf51a59009a4cc84a`
 - `Tools/npu/run_npu_artifact_reviewer.py`: 128 lines, 5173 chars, sha256 `37e7c4d9016bcff4e4ff8ce7219bffb7a743dd537da7928a7d077a01865a9b75`
 - `Tools/npu/run_npu_review.py`: 566 lines, 18230 chars, sha256 `d13f94b1d0c5c586cc63177f44f022f33f3e19a926fc675a1540e4d24cc524ed`
 - `Tools/npu/run_ollama_music_agent.py`: 239 lines, 8218 chars, sha256 `e5c78a8bdd345b4b4a638f9b0482a039fe7b990c31465c780b2359009bb1157c`
@@ -69,7 +71,7 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `Tools/npu/npu_code_chunks/chunk_003_build_track_summary_py.md` -> `build_track_summary.py` lines 1-113
 - `Tools/npu/npu_code_chunks/chunk_004_normalize_scene_spec_py.md` -> `normalize_scene_spec.py` lines 1-273
 - `Tools/npu/npu_code_chunks/chunk_005_normalize_scene_spec_py.md` -> `normalize_scene_spec.py` lines 274-469
-- `Tools/npu/npu_code_chunks/chunk_006_Tools_npu_npu_runtime_py.md` -> `Tools/npu/npu_runtime.py` lines 1-95
+- `Tools/npu/npu_code_chunks/chunk_006_Tools_npu_npu_runtime_py.md` -> `Tools/npu/npu_runtime.py` lines 1-160
 - `Tools/npu/npu_code_chunks/chunk_007_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 1-270
 - `Tools/npu/npu_code_chunks/chunk_008_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 271-386
 - `Tools/npu/npu_code_chunks/chunk_009_Tools_npu_build_blender_manual_context_py.md` -> `Tools/npu/build_blender_manual_context.py` lines 1-268
@@ -127,7 +129,7 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `Tools/npu/npu_code_chunks/chunk_061_Scripting_v61b_io_utils_py.md` -> `Scripting/v61b/io_utils.py` lines 1-81
 - `Tools/npu/npu_code_chunks/chunk_062_Scripting_v61b_reload_utils_py.md` -> `Scripting/v61b/reload_utils.py` lines 1-51
 - `Tools/npu/npu_code_chunks/chunk_063_Scripting_v61b_scene_utils_py.md` -> `Scripting/v61b/scene_utils.py` lines 1-97
-- `Tools/npu/npu_code_chunks/chunk_064_Scripting_v61b_README_md.md` -> `Scripting/v61b/README.md` lines 1-94
+- `Tools/npu/npu_code_chunks/chunk_064_Scripting_v61b_README_md.md` -> `Scripting/v61b/README.md` lines 1-118
 - `Tools/npu/npu_code_chunks/chunk_065_Scripting_v61b_hotpatch_init_py.md` -> `Scripting/v61b/hotpatch/__init__.py` lines 1-3
 - `Tools/npu/npu_code_chunks/chunk_066_Scripting_v61b_hotpatch_accent_patch_py.md` -> `Scripting/v61b/hotpatch/accent_patch.py` lines 1-211
 - `Tools/npu/npu_code_chunks/chunk_067_Scripting_v61b_hotpatch_accent_patch_py.md` -> `Scripting/v61b/hotpatch/accent_patch.py` lines 212-301
@@ -158,11 +160,16 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `Tools/npu/npu_code_chunks/chunk_092_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 1-266
 - `Tools/npu/npu_code_chunks/chunk_093_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 267-419
 - `Tools/npu/npu_code_chunks/chunk_094_Tools_npu_build_semantic_code_chunks_py.md` -> `Tools/npu/build_semantic_code_chunks.py` lines 1-91
-- `Tools/npu/npu_code_chunks/chunk_095_Tools_npu_generated_blender_script_candidate_FristNear_py.md` -> `Tools/npu/generated_blender_script_candidate_FristNear.py` lines 1-213
-- `Tools/npu/npu_code_chunks/chunk_096_Tools_npu_generated_blender_script_candidate_FristNear_py.md` -> `Tools/npu/generated_blender_script_candidate_FristNear.py` lines 214-369
-- `Tools/npu/npu_code_chunks/chunk_097_Tools_npu_run_npu_artifact_reviewer_py.md` -> `Tools/npu/run_npu_artifact_reviewer.py` lines 1-127
-- `Tools/npu/npu_code_chunks/chunk_098_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 1-287
-- `Tools/npu/npu_code_chunks/chunk_099_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 288-520
-- `Tools/npu/npu_code_chunks/chunk_100_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 521-565
-- `Tools/npu/npu_code_chunks/chunk_101_Tools_npu_run_ollama_music_agent_py.md` -> `Tools/npu/run_ollama_music_agent.py` lines 1-238
-- `Tools/npu/npu_code_chunks/chunk_102_Tools_npu_run_npu_context_ps1.md` -> `Tools/npu/run_npu_context.ps1` lines 1-238
+- `Tools/npu/npu_code_chunks/chunk_095_Tools_npu_generated_blender_script_candidate_py.md` -> `Tools/npu/generated_blender_script_candidate.py` lines 1-214
+- `Tools/npu/npu_code_chunks/chunk_096_Tools_npu_generated_blender_script_candidate_py.md` -> `Tools/npu/generated_blender_script_candidate.py` lines 215-369
+- `Tools/npu/npu_code_chunks/chunk_097_Tools_npu_generated_blender_script_candidate_FristNear_py.md` -> `Tools/npu/generated_blender_script_candidate_FristNear.py` lines 1-213
+- `Tools/npu/npu_code_chunks/chunk_098_Tools_npu_generated_blender_script_candidate_FristNear_py.md` -> `Tools/npu/generated_blender_script_candidate_FristNear.py` lines 214-369
+- `Tools/npu/npu_code_chunks/chunk_099_Tools_npu_npu_guardrail_service_py.md` -> `Tools/npu/npu_guardrail_service.py` lines 1-227
+- `Tools/npu/npu_code_chunks/chunk_100_Tools_npu_npu_guardrail_service_py.md` -> `Tools/npu/npu_guardrail_service.py` lines 228-428
+- `Tools/npu/npu_code_chunks/chunk_101_Tools_npu_npu_guardrail_service_py.md` -> `Tools/npu/npu_guardrail_service.py` lines 429-490
+- `Tools/npu/npu_code_chunks/chunk_102_Tools_npu_run_npu_artifact_reviewer_py.md` -> `Tools/npu/run_npu_artifact_reviewer.py` lines 1-127
+- `Tools/npu/npu_code_chunks/chunk_103_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 1-287
+- `Tools/npu/npu_code_chunks/chunk_104_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 288-520
+- `Tools/npu/npu_code_chunks/chunk_105_Tools_npu_run_npu_review_py.md` -> `Tools/npu/run_npu_review.py` lines 521-565
+- `Tools/npu/npu_code_chunks/chunk_106_Tools_npu_run_ollama_music_agent_py.md` -> `Tools/npu/run_ollama_music_agent.py` lines 1-238
+- `Tools/npu/npu_code_chunks/chunk_107_Tools_npu_run_npu_context_ps1.md` -> `Tools/npu/run_npu_context.ps1` lines 1-238
