@@ -21,27 +21,32 @@ This file provides operating context for AI assistants and automated code-review
 5. Mark unverified information as `not specified`.
 6. Use `Scripting/v61b/` as the quality reference for complex generated packages.
 7. Keep shared utility extraction non-destructive.
-8. Treat the modular AI artifact pipeline as complete pending workstation dry-run validation, not as an abandoned partial refactor.
+8. Treat the modular AI artifact pipeline as validated after workstation dry-run matrix unless a newer validation fails.
+9. Use `WORKFLOW.md`, execution plans and the tech debt tracker for durable task control.
 
 ## Required reading order
 
 Before creating or editing a package or pipeline module, read:
 
 1. `README.md`
-2. `docs/README.md`
-3. `docs/PROJECT_AI_CONSCIOUSNESS.md`
-4. `docs/AI_ONBOARDING.md`
-5. `docs/AI_PIPELINE_REFACTOR_STATUS.md`
-6. `docs/AI_PIPELINE_ARCHITECTURE.md`
-7. `docs/AI_EXTERNAL_KNOWLEDGE.md`
-8. `docs/MODULE_MAP.md`
-9. `docs/DATA_FLOW.md`
-10. `docs/REFACTORING_AND_REUSE_PLAN.md`
-11. `docs/QUALITY_GATE.md`
-12. `docs/SHARED_SCRIPTING_UTILITIES.md`
-13. `docs/PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits
-14. the README of the target package under `Scripting/`
-15. the target Python file before modifying it
+2. `WORKFLOW.md`
+3. `docs/README.md`
+4. `docs/PROJECT_AI_CONSCIOUSNESS.md`
+5. `docs/AI_ONBOARDING.md`
+6. `docs/AI_PIPELINE_REFACTOR_STATUS.md`
+7. `docs/AI_PIPELINE_ARCHITECTURE.md`
+8. `docs/AI_EXTERNAL_KNOWLEDGE.md`
+9. `docs/OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`
+10. `docs/EXECUTION_PLANS/README.md`
+11. `docs/TECH_DEBT_TRACKER.md`
+12. `docs/MODULE_MAP.md`
+13. `docs/DATA_FLOW.md`
+14. `docs/REFACTORING_AND_REUSE_PLAN.md`
+15. `docs/QUALITY_GATE.md`
+16. `docs/SHARED_SCRIPTING_UTILITIES.md`
+17. `docs/PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits
+18. the README of the target package under `Scripting/`
+19. the target Python file before modifying it
 
 ## Important folders
 
@@ -54,14 +59,16 @@ Before creating or editing a package or pipeline module, read:
 | `Tools/ai/pipeline/` | Modular AI artifact pipeline implementation. Read `docs/AI_PIPELINE_ARCHITECTURE.md` first. |
 | `Tools/npu/` | Local AI, NPU, context-building and review tooling. |
 | `Tools/validation/` | Non-invasive repository validation scripts. |
+| `Tools/workflow/` | Local workflow runners and unattended validation scripts. |
 | `Tools/repo_patch_runner/` | Safe JSON patch-spec runner for small reviewable edits. |
+| `docs/EXECUTION_PLANS/` | Durable task records for multi-step work. |
 | `patch_specs/` | Patch-spec queue and applied patch history. |
 | `indexAI/` | Generated indexes, manifests, context and patch artifacts. Do not hand-refactor as source. |
 | `docs/` | Stable documentation and project contracts. |
 
 ## Current AI pipeline state
 
-The AI artifact pipeline has been modularized.
+The AI artifact pipeline has been modularized and locally validated.
 
 Machine-readable status:
 
@@ -76,19 +83,14 @@ docs/AI_PIPELINE_REFACTOR_STATUS.md
 docs/AI_PIPELINE_ARCHITECTURE.md
 ```
 
-Current state marker:
+Operational validation now includes:
 
 ```text
-modular_schedule_complete_pending_local_validation
-```
-
-This means:
-
-```text
-architecture split: complete
-schema-v6 compatibility intent: preserved
-local dry-run matrix: required after pull
-Blender runtime changes: not part of this refactor
+AI module smoke validator: PASS
+AI dry-run matrix: PASS
+JSON artifact validation: PASS
+package structure validation: PASS
+index regeneration: PASS
 ```
 
 ## Fast validation commands
@@ -121,16 +123,10 @@ AI pipeline dry-run matrix:
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
 ```
 
-Single AI artifact dry run:
+Unattended local validation:
 
 ```powershell
-python .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --dry-run --write-dry-run-report
-```
-
-Full AI artifact dry run with common stages:
-
-```powershell
-python .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run --write-dry-run-report
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
 ```
 
 Regenerate indexes after structural or documentation changes:
@@ -138,6 +134,29 @@ Regenerate indexes after structural or documentation changes:
 ```powershell
 python .\Tools\npu\build_project_ai_index.py
 python .\Tools\npu\build_npu_code_context.py
+```
+
+## Execution plan workflow
+
+For multi-step work, create a plan under:
+
+```text
+docs/EXECUTION_PLANS/active/
+```
+
+Move it to:
+
+```text
+docs/EXECUTION_PLANS/completed/
+docs/EXECUTION_PLANS/abandoned/
+```
+
+when the task is finished or intentionally stopped.
+
+See:
+
+```text
+docs/EXECUTION_PLANS/README.md
 ```
 
 ## Patch-spec workflow
@@ -172,12 +191,13 @@ When editing this repository:
 
 1. Identify the target package or folder.
 2. Read the nearest README and relevant docs.
-3. Inspect the target Python file before modifying it.
-4. Produce small, reviewable changes.
-5. Keep working packages stable.
-6. Document every new assumption.
-7. Run the smallest relevant validation.
-8. Report changed files, purpose, risks, tests and line counts.
+3. Check active execution plans and the tech debt tracker.
+4. Inspect the target Python file before modifying it.
+5. Produce small, reviewable changes.
+6. Keep working packages stable.
+7. Document every new assumption.
+8. Run the smallest relevant validation.
+9. Report changed files, purpose, risks, tests and line counts.
 
 For AI pipeline changes specifically:
 
