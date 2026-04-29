@@ -38,9 +38,12 @@ def ensure_sequence_editor(scene: Any | None = None) -> Any:
 def clear_sequence_editor(scene: Any | None = None) -> int:
     """Remove all strips from the scene sequence editor and return removed count."""
     editor = ensure_sequence_editor(scene)
-    sequences = list(getattr(editor, "sequences_all", []) or [])
+    sequences = list(getattr(editor, "sequences_all", None) or getattr(editor, "strips_all", []) or [])
+    strip_collection = getattr(editor, "sequences", None) or getattr(editor, "strips", None)
+    if strip_collection is None:
+        return 0
     for strip in sequences:
-        editor.sequences.remove(strip)
+        strip_collection.remove(strip)
     return len(sequences)
 
 
@@ -62,7 +65,7 @@ def create_sound_strip(
     editor = ensure_sequence_editor(active_scene)
     audio_file = str(Path(audio_path))
 
-    sequences = getattr(editor, "sequences", None)
+    sequences = getattr(editor, "sequences", None) or getattr(editor, "strips", None)
     if sequences is not None and hasattr(sequences, "new_sound"):
         return sequences.new_sound(name=name, filepath=audio_file, channel=channel, frame_start=frame_start)
 

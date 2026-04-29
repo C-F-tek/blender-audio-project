@@ -82,6 +82,8 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | `Tools/npu/build_ai_service_packet.py` | AI service packet generation | Keep as artifact builder; extract common JSON/path helpers later. |
 | `Tools/ai/agent_state.py` | Generic memory records and microtask packet model | Keep package-neutral; connect to app workers only through explicit packet contracts. |
 | `Tools/ai/build_agent_state_packet.py` | CLI for task-local agent state packets | Keep non-invasive; no Blender, GPU, NPU or FFmpeg execution. |
+| `Tools/ai/agent_memory_policy.py` | Memory retention, quarantine and promotion-candidate rules | Keep deterministic and non-destructive. |
+| `Tools/ai/review_agent_memory.py` | CLI for memory policy reports | Writes reports only; promotion into docs remains manual. |
 
 ## Generated package model
 

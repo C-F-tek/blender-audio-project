@@ -120,6 +120,8 @@ try {
     Invoke-Step -Name "ai pipeline module smoke validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_pipeline_modules.py", "--repo-root", ".", "--output", ".\output\validation\ai_pipeline_modules.json")
     Invoke-Step -Name "refactor status consistency validation" -Command "python" -Arguments @(".\Tools\validation\check_refactor_status_consistency.py", "--repo-root", ".", "--output", ".\output\validation\refactor_status_consistency.json")
     Invoke-Step -Name "documentation links validation" -Command "python" -Arguments @(".\Tools\validation\check_docs_links.py", "--repo-root", ".", "--output", ".\output\validation\docs_links.json")
+    Invoke-Step -Name "agent memory policy validation" -Command "python" -Arguments @(".\Tools\validation\check_agent_memory_policy.py", "--repo-root", ".", "--output", ".\output\validation\agent_memory_policy.json")
+    Invoke-Step -Name "blender shared compatibility smoke" -Command "python" -Arguments @(".\Tools\validation\check_blender_shared_compat_smoke.py", "--repo-root", ".", "--output", ".\output\validation\blender_shared_compat_smoke.json")
     Invoke-Step -Name "ai pipeline dry-run matrix" -Command "python" -Arguments @(".\Tools\ai\run_pipeline_dry_run_matrix.py", "--repo-root", ".", "--continue-on-error")
     Invoke-Step -Name "package structure validation" -Command "python" -Arguments @(".\Tools\validation\check_package_structure.py", "--repo-root", ".")
     Invoke-Step -Name "json artifact validation" -Command "python" -Arguments @(".\Tools\validation\check_json_artifacts.py", "--repo-root", ".")
@@ -146,6 +148,8 @@ $summary = [pscustomobject]@{
     ai_pipeline_modules_report = (Join-Path $repo "output\validation\ai_pipeline_modules.json")
     refactor_status_consistency_report = (Join-Path $repo "output\validation\refactor_status_consistency.json")
     docs_links_report = (Join-Path $repo "output\validation\docs_links.json")
+    agent_memory_policy_report = (Join-Path $repo "output\validation\agent_memory_policy.json")
+    blender_shared_compat_smoke_report = (Join-Path $repo "output\validation\blender_shared_compat_smoke.json")
     dry_run_matrix_json = (Join-Path $repo "output\ai_pipeline\dry_run_matrix_report.json")
     dry_run_matrix_markdown = (Join-Path $repo "output\ai_pipeline\dry_run_matrix_report.md")
     steps = $script:Results
@@ -163,6 +167,8 @@ $md += ("- Log: {0}" -f $script:MainLog)
 $md += ("- AI module report: {0}" -f $summary.ai_pipeline_modules_report)
 $md += ("- Refactor status consistency report: {0}" -f $summary.refactor_status_consistency_report)
 $md += ("- Docs links report: {0}" -f $summary.docs_links_report)
+$md += ("- Agent memory policy report: {0}" -f $summary.agent_memory_policy_report)
+$md += ("- Blender shared compatibility smoke report: {0}" -f $summary.blender_shared_compat_smoke_report)
 $md += ("- Dry-run matrix JSON: {0}" -f $summary.dry_run_matrix_json)
 $md += ("- Dry-run matrix Markdown: {0}" -f $summary.dry_run_matrix_markdown)
 $md += ""
@@ -183,6 +189,8 @@ $md += "    git diff --stat"
 $md += "    Get-Content .\output\validation\ai_pipeline_modules.json -Raw"
 $md += "    Get-Content .\output\validation\refactor_status_consistency.json -Raw"
 $md += "    Get-Content .\output\validation\docs_links.json -Raw"
+$md += "    Get-Content .\output\validation\agent_memory_policy.json -Raw"
+$md += "    Get-Content .\output\validation\blender_shared_compat_smoke.json -Raw"
 $md += "    Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw"
 $md | Set-Content -LiteralPath $summaryMd -Encoding UTF8
 

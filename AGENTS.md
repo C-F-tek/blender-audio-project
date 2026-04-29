@@ -35,18 +35,19 @@ Before creating or editing a package or pipeline module, read:
 5. `docs/AI_ONBOARDING.md`
 6. `docs/AI_PIPELINE_REFACTOR_STATUS.md`
 7. `docs/AI_PIPELINE_ARCHITECTURE.md`
-8. `docs/AI_EXTERNAL_KNOWLEDGE.md`
-9. `docs/OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`
-10. `docs/EXECUTION_PLANS/README.md`
-11. `docs/TECH_DEBT_TRACKER.md`
-12. `docs/MODULE_MAP.md`
-13. `docs/DATA_FLOW.md`
-14. `docs/REFACTORING_AND_REUSE_PLAN.md`
-15. `docs/QUALITY_GATE.md`
-16. `docs/SHARED_SCRIPTING_UTILITIES.md`
-17. `docs/PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits
-18. the README of the target package under `Scripting/`
-19. the target Python file before modifying it
+8. `docs/AI_MEMORY_POLICY.md`
+9. `docs/AI_EXTERNAL_KNOWLEDGE.md`
+10. `docs/OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`
+11. `docs/EXECUTION_PLANS/README.md`
+12. `docs/TECH_DEBT_TRACKER.md`
+13. `docs/MODULE_MAP.md`
+14. `docs/DATA_FLOW.md`
+15. `docs/REFACTORING_AND_REUSE_PLAN.md`
+16. `docs/QUALITY_GATE.md`
+17. `docs/SHARED_SCRIPTING_UTILITIES.md`
+18. `docs/PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits
+19. the README of the target package under `Scripting/`
+20. the target Python file before modifying it
 
 ## Important folders
 
@@ -88,6 +89,8 @@ Operational validation now includes:
 ```text
 AI module smoke validator: PASS
 AI dry-run matrix: PASS
+agent memory policy validation: PASS when no quarantined local memory exists
+Blender shared compatibility smoke: PASS in Blender 5.1.1 for frame range, noise node and VSE audio strip creation
 JSON artifact validation: PASS
 package structure validation: PASS
 index regeneration: PASS
@@ -101,6 +104,7 @@ Use focused checks before broad test runs:
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
+python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
 ```
 
 Optional report output:

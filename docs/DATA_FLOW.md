@@ -24,7 +24,8 @@ Audio file
 | Analysis JSON | audio analysis script or AI pipeline | Blender scene script | Schema is not fully specified yet. |
 | Music context JSON | AI-assisted music analysis workflow | AI planning and Blender script generation | Used as semantic context. |
 | Agent state packet | `Tools/ai/build_agent_state_packet.py` | app workers, AI agents and guardrail reviewers | Generic packet with selected memory, constraints, budgets and planned CPU/NPU/GPU/validation microtasks. |
-| Persistent memory DB | app or agent workflow | agent state packet builder | Optional SQLite store under generated data; do not commit local memory records. |
+| Persistent memory DB | app or agent workflow | agent state packet builder and memory policy reviewer | Optional SQLite store under generated data; do not commit local memory records. |
+| Memory policy report | `Tools/ai/review_agent_memory.py` | human review, app policy and validators | Non-destructive retention, quarantine and promotion-candidate report. |
 | Blender Python script | developer or AI-assisted generator | Blender | Must be inspected before execution. |
 | Render frames | Blender render process | FFmpeg or video workflow | Output folder should be configurable. |
 | Final video | FFmpeg workflow | publication or review | Codec and settings are workflow-specific. |

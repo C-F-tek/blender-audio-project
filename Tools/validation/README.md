@@ -13,6 +13,7 @@ python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
 python .\Tools\validation\check_docs_links.py --repo-root .
+python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root .
 ```
 
 AI artifact pipeline smoke and consistency checks:
@@ -20,6 +21,7 @@ AI artifact pipeline smoke and consistency checks:
 ```powershell
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
+python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
 ```
 
 The AI pipeline smoke check imports the modular pipeline, builds representative steps, checks preflight/report helpers and verifies the thin entrypoint is importable. It does not execute NPU, GPU, Blender or FFmpeg workloads.
@@ -27,6 +29,10 @@ The AI pipeline smoke check imports the modular pipeline, builds representative 
 The refactor status consistency check verifies that the machine-readable status marker and the primary Markdown documents agree on the pipeline state and expected modules.
 
 The docs link checker validates local Markdown links and ignores external URLs.
+
+The agent memory policy check validates retention, quarantine and promotion-candidate rules. If the local SQLite memory DB exists, it also checks that no quarantined record is present.
+
+The Blender shared compatibility smoke check imports `Scripting/shared/blender_compat.py` safely. Outside Blender it passes with the runtime portion marked skipped; inside Blender it performs a no-render smoke of frame range, noise node creation and audio strip creation.
 
 ## Optional reports
 
@@ -37,6 +43,8 @@ python .\Tools\validation\check_json_artifacts.py --repo-root . --output output\
 python .\Tools\validation\check_docs_links.py --repo-root . --output output\validation\docs_links.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output output\validation\ai_pipeline_modules.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output output\validation\refactor_status_consistency.json
+python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output output\validation\agent_memory_policy.json
+python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output output\validation\blender_shared_compat_smoke.json
 ```
 
 ## AI pipeline dry-run matrix
@@ -91,6 +99,8 @@ python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
+python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
+python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
@@ -119,4 +129,6 @@ git push origin master
 - `check_docs_links.py` checks repository-local Markdown links.
 - `check_ai_pipeline_modules.py` is a smoke validator for the modular AI artifact pipeline.
 - `check_refactor_status_consistency.py` checks status marker and documentation consistency.
+- `check_agent_memory_policy.py` checks generic memory retention and promotion guardrails.
+- `check_blender_shared_compat_smoke.py` verifies shared Blender compatibility helpers without requiring a render.
 - Validation helpers should not launch Blender renders, GPU generation, NPU model execution or FFmpeg encodes.

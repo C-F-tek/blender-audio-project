@@ -97,6 +97,10 @@ branch aligned with origin/master
 ```powershell
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
+python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
+python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
+python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
@@ -240,6 +244,14 @@ safe_create_noise_texture_node
 ```
 
 Do not migrate runtime package code to `blender_compat.py` before this manual Blender validation.
+
+A non-invasive smoke helper is available:
+
+```powershell
+python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
+```
+
+Outside Blender it only validates import safety and marks runtime checks as skipped. Run the same script with Blender Python or `blender --background --python` to validate audio-strip and node behavior.
 
 ## Troubleshooting
 

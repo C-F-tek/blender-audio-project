@@ -115,6 +115,7 @@ python .\Tools\npu\build_npu_code_context.py
 - Explicit logging of generated files.
 - Explicit memory packet or state packet when a task spans multiple steps.
 - Optional persistent memory through JSONL or SQLite, with SQLite preferred before external database dependencies.
+- Periodic memory review through `Tools/ai/review_agent_memory.py`; persistent memory must have retention, promotion and quarantine reports before broad reuse.
 - Manual review for major scene-generation changes.
 - Dry-run reports for pipeline or patch generation.
 

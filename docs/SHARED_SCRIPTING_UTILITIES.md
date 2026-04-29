@@ -175,7 +175,7 @@ Package-specific visual decisions should remain in the package.
 |---|---|
 | Pure Python utility | `python -m py_compile` and a small fixture test. |
 | FFmpeg utility | command preview plus a short encode test. |
-| Blender compatibility wrapper | Blender manual run or headless import where possible. |
+| Blender compatibility wrapper | `check_blender_shared_compat_smoke.py`; run outside Blender for import safety and inside Blender for VSE/node smoke. |
 | Render profile helper | verify output settings in Blender and generated command. |
 | Hotpatch helper | run on a copied scene or controlled test scene. |
 

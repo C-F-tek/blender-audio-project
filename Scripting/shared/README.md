@@ -74,11 +74,17 @@ set_frame_range_from_seconds
 set_render_fps
 ```
 
+Validated smoke:
+
+```text
+Blender 5.1.1 background no-render smoke passed for frame range, FPS, noise node, VSE audio strip creation and audio sync toggle.
+```
+
 Recommended adoption order:
 
 ```text
 compile validation
-  -> manual Blender test in a disposable scene
+  -> Blender smoke test in a disposable scene
   -> optional package adapter
   -> one call-site migration
   -> package-specific Blender test
@@ -106,7 +112,7 @@ Scripting/shared/
 - Keep shared utilities configurable and package-agnostic.
 - Do not break the original v61b workflow during extraction.
 - Prefer adding wrappers first, then migrating package code after Blender tests.
-- Treat `blender_compat.py` as available but not yet adopted by runtime packages until validated inside Blender.
+- Treat `blender_compat.py` as available for package adapters, but do not migrate runtime packages until each target call site has its own Blender test.
 
 ## Current status
 

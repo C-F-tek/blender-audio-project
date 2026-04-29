@@ -29,10 +29,11 @@ audio file
 | Root audio tools | usable | `analyze_wav.py`, `build_track_summary.py`, `normalize_scene_spec.py`. |
 | `Scripting/v61b/` | stable reference | Current high-quality reference package. Do not destructively refactor. |
 | Ready To Jazz package | usable but monolithic | Good production/generation experiment; not yet reusable architecture. |
-| `Scripting/shared/` | active foundation | Pure Python helpers exist for path, JSON, image sequence, FFmpeg commands and render profiles; `blender_compat.py` exists but still needs Blender runtime validation. |
+| `Scripting/shared/` | active foundation | Pure Python helpers exist for path, JSON, image sequence, FFmpeg commands and render profiles; `blender_compat.py` passed a Blender 5.1.1 no-render smoke for frame range, noise node and VSE audio strip creation. |
 | `Tools/validation/` | active foundation | Non-invasive validation scripts exist, including AI pipeline module smoke validation. |
 | `Tools/ai/pipeline/` | modularized and locally validated | AI artifact pipeline is split into focused modules with a thin entrypoint, dry-run matrix, Markdown report and machine-readable status marker. |
 | `Tools/ai/agent_state.py` | initial foundation | Generic memory and microtask packet model for task-local agent state, persistent memory inputs and non-blocking CPU/NPU/GPU lane planning. |
+| `Tools/ai/agent_memory_policy.py` | initial foundation | Deterministic retention, quarantine and promotion-candidate policy for generic agent memory. |
 | `Tools/workflow/` | active foundation | Contains unattended local validation runner. |
 | `Tools/ai/` and `Tools/npu/` | active pipeline | AI/NPU context, review and artifact generation tooling. |
 | `indexAI/` | generated context | Regenerate after structural changes. Do not hand-refactor as source. |
@@ -237,6 +238,19 @@ Optional persistent memory can use SQLite without external dependencies:
 
 ```powershell
 python .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan Blender/audio app smoke tests" --memory-db .\indexAI\agent_memory\agent_memory.sqlite --save-inputs-to-memory-db --memory-note "Keep Blender runtime unchanged until smoke tests pass."
+```
+
+Memory retention and promotion review:
+
+```powershell
+python .\Tools\ai\review_agent_memory.py --repo-root .
+python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
+```
+
+Blender shared compatibility smoke:
+
+```powershell
+python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
 ```
 
 Unattended validation runner:

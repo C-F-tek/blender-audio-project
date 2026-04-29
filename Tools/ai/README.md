@@ -30,6 +30,12 @@ Use optional SQLite persistent memory:
 py .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan Blender/audio app smoke tests" --memory-db .\indexAI\agent_memory\agent_memory.sqlite --save-inputs-to-memory-db --memory-note "Keep NPU guardrails non-blocking."
 ```
 
+Review memory retention and promotion candidates:
+
+```powershell
+py .\Tools\ai\review_agent_memory.py --repo-root .
+```
+
 Run the safe orchestrator:
 
 ```powershell
@@ -47,3 +53,5 @@ py .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --analysis-json .\
 `build_agent_state_packet.py` creates a generic JSON/Markdown packet for app or agent use. It combines included files, persistent JSONL or SQLite memory records and recent CLI notes, then emits planned microtasks for CPU, NPU, GPU and validation lanes.
 
 The tool is non-invasive: it does not run Blender, model inference, FFmpeg, GPU work or NPU work. It only writes packet artifacts under the selected output folder.
+
+`review_agent_memory.py` applies retention, quarantine and promotion-candidate policy. It never deletes memory and never promotes records into documentation automatically.

@@ -30,6 +30,7 @@ AI phases that build or consume context should produce AI-readable intermediates
 - `*_repair_packet.json` when a retry is needed
 - `*_promotion_decision.json` when an artifact is accepted or blocked
 - `*_agent_state_packet.json` or `agent_state_packet.json` when the app or an agent needs explicit memory and microtask state
+- `agent_memory_policy_report.json` when persistent memory is reviewed for retention, quarantine and promotion candidates
 
 ## NPU role
 
@@ -103,3 +104,12 @@ indexAI/agent_memory/agent_memory.sqlite
 ```
 
 External vector databases or embedding stores should remain optional providers until the project has a stable schema for memory records, privacy policy, backup behavior and index regeneration.
+
+Review memory regularly with:
+
+```powershell
+python .\Tools\ai\review_agent_memory.py --repo-root .
+python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
+```
+
+See `docs/AI_MEMORY_POLICY.md` for retention actions and promotion rules.
