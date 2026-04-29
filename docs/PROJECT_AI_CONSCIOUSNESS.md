@@ -8,9 +8,18 @@ It describes what the project is, what must be preserved, what is currently matu
 
 ## Project identity
 
-`blender-audio-project` is an audio-reactive Blender production workspace.
+`blender-audio-project` is currently an audio-reactive Blender production workspace, but its AI tooling is being shaped toward a more general pattern:
 
-The project transforms music/audio analysis into Blender visuals through this flow:
+```text
+input data or project context
+  -> technical/context analysis
+  -> AI plan, scene brief, spec or implementation draft
+  -> generated artifact for a target application/runtime
+  -> validation/reporting
+  -> controlled execution/export only when explicitly validated
+```
+
+Current main concrete flow:
 
 ```text
 audio file
@@ -22,16 +31,19 @@ audio file
   -> FFmpeg encoded video
 ```
 
+Do not confuse the current concrete flow with the architectural boundary. The validation and policy work must stay input-agnostic and output-application-agnostic wherever possible.
+
 ## Current technical state
 
 | Area | Status | Notes |
 |---|---|---|
-| Root audio tools | usable | `analyze_wav.py`, `build_track_summary.py`, `normalize_scene_spec.py`. |
-| `Scripting/v61b/` | stable reference | Current high-quality reference package. Do not destructively refactor. |
+| Root audio tools | usable | `analyze_wav.py`, `build_track_summary.py`, `normalize_scene_spec.py`. These are current input-domain tools, not the architectural limit. |
+| `Scripting/v61b/` | stable reference | Current high-quality Blender reference package. Do not destructively refactor. |
 | Ready To Jazz package | usable but monolithic | Good production/generation experiment; not yet reusable architecture. |
 | `Scripting/shared/` | active foundation | Pure Python helpers exist for path, JSON, image sequence, FFmpeg commands and render profiles; `blender_compat.py` passed a Blender 5.1.1 no-render smoke for frame range, noise node and VSE audio strip creation. |
 | `Tools/validation/` | active foundation | Non-invasive validators exist for syntax, docs, JSON artifacts, AI pipeline, model JSON parsing, agent memory, Blender shared compatibility and generated Blender script policy. |
-| `Tools/validation/generated_file_policy.py` | active foundation | Generic generated-file policy engine reusable beyond Blender for other file/application contexts. |
+| `Tools/validation/generated_file_policy.py` | active foundation | Generic generated-file policy engine. It must remain independent from WAV/audio input and independent from the output application. |
+| `Tools/validation/check_generated_blender_script_policy.py` | first adapter | First application-specific adapter for generated Python scripts executed by Blender. Blender is not the generic boundary. |
 | `Tools/ai/model_json.py` | active foundation | Reusable deterministic parser for JSON-like model outputs. Ollama response parsing delegates to it while preserving legacy `json.JSONDecodeError` behavior. |
 | `Tools/ai/pipeline/` | modularized and locally validated | AI artifact pipeline is split into focused modules with a thin entrypoint, dry-run matrix, Markdown report and machine-readable status marker. |
 | `Tools/ai/agent_state.py` | initial foundation | Generic memory and microtask packet model for task-local agent state, persistent memory inputs and non-blocking CPU/NPU/GPU lane planning. |
@@ -105,12 +117,14 @@ working package code
 
 Do not start by rewriting working Blender packages.
 
-When a concept may be reused outside Blender, split it into:
+When a concept may be reused outside Blender or outside audio/WAV inputs, split it into:
 
 ```text
 generic core
+  -> generated Python/script policy concepts when applicable
   -> application-specific adapter
-  -> validator/report
+  -> optional input-domain validator
+  -> report
 ```
 
 Current example:
@@ -118,6 +132,14 @@ Current example:
 ```text
 Tools/validation/generated_file_policy.py
   -> Tools/validation/check_generated_blender_script_policy.py
+```
+
+This means:
+
+```text
+WAV/audio analysis is one input-domain adapter family
+Blender is one output-application adapter family
+Python scripting is the first generated-output execution style
 ```
 
 ## Durable task control
@@ -233,15 +255,16 @@ Current AI/generic validation foundations:
 | Module | Role |
 |---|---|
 | `Tools/ai/model_json.py` | Deterministic parser for JSON-like model output. |
-| `Tools/validation/generated_file_policy.py` | Generic policy primitives for generated file validation. |
-| `Tools/validation/check_generated_blender_script_policy.py` | Blender-specific generated script policy adapter. |
+| `Tools/validation/generated_file_policy.py` | Generic policy primitives for generated file validation. Input-agnostic and application-agnostic. |
+| `Tools/validation/check_generated_blender_script_policy.py` | Blender-specific generated Python script policy adapter. |
 
 Next shared candidates:
 
 ```text
 Scripting/shared/config_model.py
 Scripting/shared/diagnostics.py
-additional generated-file policy adapters only after one-at-a-time validation
+additional generated Python script policy adapters only after one-at-a-time validation
+input-domain validators separate from output-application validators
 ```
 
 ## Implemented validation foundation
@@ -259,7 +282,7 @@ Current validators:
 | `Tools/validation/check_docs_links.py` | Checks internal documentation links after doc changes. |
 | `Tools/validation/check_agent_memory_policy.py` | Checks local agent memory policy and optional generated memory DB state. |
 | `Tools/validation/check_blender_shared_compat_smoke.py` | Runs a Blender no-render compatibility smoke when Blender is available. |
-| `Tools/validation/check_generated_blender_script_policy.py` | Validates generated Blender script policy using reusable generated-file rules. |
+| `Tools/validation/check_generated_blender_script_policy.py` | Validates the first generated Python script policy adapter for Blender using reusable generated-file rules. |
 
 Preferred local validation:
 
@@ -279,13 +302,13 @@ python .\Tools\validation\check_json_artifacts.py --repo-root .
 Generic agent state packet smoke:
 
 ```powershell
-python .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan Blender/audio app smoke tests" --include-file .\docs\AI_SMART_POLICY.md --include-file .\docs\LOCAL_AI_WORKFLOW.md
+python .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan generic generated Python validation" --include-file .\docs\QUALITY_GATE.md --include-file .\Tools\validation\README.md
 ```
 
 Optional persistent memory can use SQLite without external dependencies:
 
 ```powershell
-python .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan Blender/audio app smoke tests" --memory-db .\indexAI\agent_memory\agent_memory.sqlite --save-inputs-to-memory-db --memory-note "Keep Blender runtime unchanged until smoke tests pass."
+python .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan generic generated Python validation" --memory-db .\indexAI\agent_memory\agent_memory.sqlite --save-inputs-to-memory-db --memory-note "Keep input-domain policy separate from output-application policy."
 ```
 
 Memory retention and promotion review:
@@ -365,13 +388,14 @@ Capabilities:
 ## High-priority next tasks
 
 1. Validate the newly aligned documentation and regenerate AI/NPU indexes.
-2. Add generated Blender script policy documentation to the local workflow only after another stable validation cycle.
-3. Continue `TD-006` with dry-run matrix report contract validation.
-4. Continue `TD-010` only after schema/report contracts remain stable; do not inject agent packets into prompts yet.
-5. Select one non-critical `Scripting/shared/blender_compat.py` call-site pilot only after confirming the no-render smoke result on the workstation.
-6. Open the `TD-007` NPU pipeline decomposition plan before splitting orchestration files into config, context builder, prompts, provider adapter, validators, artifact writer and runner.
-7. Keep `TD-001` PowerShell runner compatibility under review when changing validation commands.
-8. Evaluate CI/GitHub Actions only after the local runner remains stable and the intended checks are cheap, deterministic and non-rendering.
+2. Keep generated Python script policy input-agnostic and application-agnostic; Blender remains only the first adapter.
+3. Add generated Blender script policy to the local workflow only after another stable validation cycle.
+4. Continue `TD-006` with dry-run matrix report contract validation.
+5. Continue `TD-010` only after schema/report contracts remain stable; do not inject agent packets into prompts yet.
+6. Select one non-critical `Scripting/shared/blender_compat.py` call-site pilot only after confirming the no-render smoke result on the workstation.
+7. Open the `TD-007` NPU pipeline decomposition plan before splitting orchestration files into config, context builder, prompts, provider adapter, validators, artifact writer and runner.
+8. Keep `TD-001` PowerShell runner compatibility under review when changing validation commands.
+9. Evaluate CI/GitHub Actions only after the local runner remains stable and the intended checks are cheap, deterministic and non-rendering.
 
 ## Avoid now
 
@@ -390,6 +414,8 @@ change AI pipeline schema-v6 field meanings without local dry-run matrix validat
 mass-migrate runtime packages to Scripting/shared/blender_compat.py
 add AI GitHub Actions that call paid or external model APIs automatically
 use prompt-based repair for JSON parsing as a default path
+turn generic generated-file policy into Blender-only or WAV-only logic
+mix input-domain validators with output-application validators without a clear adapter boundary
 ```
 
 ## Reporting format for AI agents
@@ -416,6 +442,7 @@ Correct posture:
 stability first
 small patches
 generic utility before adapter
+input-domain logic separate from output-application logic
 shared utilities before migration
 validation before commit
 indexes regenerated after structure changes
