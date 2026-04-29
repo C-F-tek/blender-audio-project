@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 from .artifact_contracts import planned_outputs, slugify
 from .defaults import DRY_RUN_REPORT_NAME, PIPELINE_SCHEMA_VERSION, RUN_REPORT_NAME
@@ -41,11 +42,20 @@ def empty_failed_report(repo: Path, out: Path, dry_run: bool, pf: dict) -> dict:
         "preflight": pf,
         "step_count": 0,
         "summary": summarize_results([]),
+        "schedule": {},
         "steps": [],
     }
 
 
-def build_report(repo: Path, out: Path, args: argparse.Namespace, pf: dict, results: list[dict], remediation_loop: dict) -> dict:
+def build_report(
+    repo: Path,
+    out: Path,
+    args: argparse.Namespace,
+    pf: dict,
+    results: list[dict],
+    remediation_loop: dict,
+    schedule: dict[str, Any] | None = None,
+) -> dict:
     """Build the schema-v6 pipeline report."""
     track_slug = slugify(args.track_stem)
     return {
@@ -58,6 +68,7 @@ def build_report(repo: Path, out: Path, args: argparse.Namespace, pf: dict, resu
         "preflight": pf,
         "step_count": len(results),
         "summary": summarize_results(results),
+        "schedule": schedule or {},
         "lanes": {
             "CPU": [item["name"] for item in results if item.get("lane") == "CPU"],
             "NPU": [item["name"] for item in results if item.get("lane") == "NPU"],
