@@ -30,8 +30,14 @@ class MatrixCase:
     purpose: str
 
 
-def default_cases() -> tuple[MatrixCase, ...]:
-    return (
+def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
+    agent_state_packet = None
+    if repo_root is not None:
+        candidate = repo_root / "output" / "ai_pipeline" / "agent_state" / "validate_agent_state_memory_integration_plan.json"
+        if candidate.exists():
+            agent_state_packet = candidate
+
+    cases = [
         MatrixCase(
             name="base",
             args=("--dry-run", "--write-dry-run-report"),
@@ -57,7 +63,16 @@ def default_cases() -> tuple[MatrixCase, ...]:
             args=("--dry-run", "--write-dry-run-report", "--build-chunks"),
             purpose="Verify semantic code chunk stage planning.",
         ),
-    )
+    ]
+    if agent_state_packet is not None:
+        cases.append(
+            MatrixCase(
+                name="with_agent_state_packet",
+                args=("--dry-run", "--write-dry-run-report", "--agent-state-packet", str(agent_state_packet)),
+                purpose="Verify optional agent state packet metadata without changing planned steps.",
+            )
+        )
+    return tuple(cases)
 
 
 def run_case(repo_root: Path, output_dir: Path, case: MatrixCase) -> dict[str, Any]:
@@ -107,6 +122,7 @@ def run_case(repo_root: Path, output_dir: Path, case: MatrixCase) -> dict[str, A
         "lanes": report_payload.get("lanes") if isinstance(report_payload, dict) else None,
         "summary": report_payload.get("summary") if isinstance(report_payload, dict) else None,
         "schedule": report_payload.get("schedule") if isinstance(report_payload, dict) else None,
+        "agent_state_packet": report_payload.get("agent_state_packet") if isinstance(report_payload, dict) else None,
     }
 
 
@@ -124,7 +140,7 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     results: list[dict[str, Any]] = []
-    for case in default_cases():
+    for case in default_cases(repo_root):
         result = run_case(repo_root, output_dir, case)
         results.append(result)
         if result["returncode"] != 0 and not args.continue_on_error:

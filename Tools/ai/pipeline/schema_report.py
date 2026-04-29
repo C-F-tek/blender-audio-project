@@ -47,6 +47,23 @@ def empty_failed_report(repo: Path, out: Path, dry_run: bool, pf: dict) -> dict:
     }
 
 
+def agent_state_packet_report(repo: Path, args: argparse.Namespace, pf: dict) -> dict[str, Any]:
+    """Return report metadata for the optional agent state packet touchpoint."""
+    raw = getattr(args, "agent_state_packet", None)
+    meta = dict(pf.get("agent_state_packet") or {})
+    if not raw:
+        return {"enabled": False, "path": None, "exists": False, "source": "disabled"}
+    meta.setdefault("enabled", True)
+    meta.setdefault("path", str(Path(raw).resolve()))
+    meta.setdefault("exists", Path(raw).resolve().exists())
+    meta["source"] = "cli"
+    try:
+        meta["repo_relative_path"] = Path(raw).resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError:
+        meta["repo_relative_path"] = str(Path(raw).resolve())
+    return meta
+
+
 def build_report(
     repo: Path,
     out: Path,
@@ -83,6 +100,7 @@ def build_report(
             "task": args.smart_task,
             "packet": str(out / "smart_context" / f"{track_slug}_smart_context_packet.json") if args.smart_context else None,
         },
+        "agent_state_packet": agent_state_packet_report(repo, args, pf),
         "guardrail_remediation_loop": remediation_loop,
         "steps": results,
         "post_run_expected_outputs": planned_outputs(repo, out, args),
