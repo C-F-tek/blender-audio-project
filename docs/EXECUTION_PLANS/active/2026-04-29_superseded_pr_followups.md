@@ -67,16 +67,21 @@ These should be reintroduced only after reading current files, not by merging th
 
 Contains useful architectural ideas but should not be merged directly.
 
-Recoverable ideas:
+Recovered ideas:
+
+```text
+robust model JSON parsing concept -> Tools/ai/model_json.py
+validator primitive concept -> Tools/validation/generated_file_policy.py
+Blender generated script policy -> Tools/validation/check_generated_blender_script_policy.py as first adapter
+```
+
+Still recoverable ideas:
 
 ```text
 Tools/ai_core-style reusable primitives
 artifact store concept
 model client interface concept
-robust model JSON parsing concept
-validator primitive concept
-AI adapters split between generic core, audio and Blender
-Blender generated script policy
+AI adapters split between generic core, input-domain adapters and output-application adapters
 implementation draft validator bridge
 aggregated smoke-test runner concept
 rollback/checklist docs
@@ -93,47 +98,81 @@ Create a short design decision document comparing:
 ```text
 existing Tools/ai/pipeline/
 existing Tools/ai/agent_state.py
-proposed Tools/ai_core/
-proposed Tools/ai_adapters/
+existing Tools/ai/model_json.py
+existing Tools/validation/generated_file_policy.py
+possible Tools/ai_core/
+possible Tools/ai_adapters/
+possible Tools/ai/common/
 ```
 
 Outcome required before code:
 
 ```text
 reuse existing Tools/ai/pipeline only
-or create Tools/ai_core as lower-level generic library
+create Tools/ai_core as lower-level generic library
 or extract selected utilities into Tools/ai/common
+```
+
+The decision must explicitly separate:
+
+```text
+input-domain adapters
+output-application adapters
+generated Python script policy adapters
 ```
 
 Risk: medium, because duplicate abstractions are likely.
 
 ### Follow-up B — JSON parser utility review
 
-Review whether a reusable robust JSON parser is still missing.
+Status: absorbed.
 
-Candidate source idea from PR #19:
+Result:
 
 ```text
-Tools/ai_core/json_utils.py
+Tools/ai/model_json.py
+Tools/validation/check_ai_model_json.py
+Tools/npu/ollama_runtime.py delegates parse_json_response() to model_json
 ```
 
-Current target must be decided after checking existing parsing helpers.
+The old PR #19 `Tools/ai_core/json_utils.py` idea is considered recovered in a smaller, safer form.
 
-Risk: low if additive and tested.
+### Follow-up C — generated Python script policy
 
-### Follow-up C — generated Blender script policy
+Status: partially absorbed.
 
-Recover the policy idea only if current validators do not already cover it.
+Recovered now:
 
-Candidate checks:
+```text
+Tools/validation/generated_file_policy.py
+Tools/validation/check_generated_blender_script_policy.py
+```
+
+Important architectural decision:
+
+```text
+The policy model is input-agnostic and output-application-agnostic.
+Blender is only the first generated Python script adapter.
+WAV/audio is only one possible input-domain family and must not be embedded in the generic policy layer.
+```
+
+Current Blender adapter checks:
 
 ```text
 forbid ShaderNodeTexMusgrave
-forbid unsafe open/save project operators
+forbid unsafe open project operator
+forbid quit Blender operator
 require import bpy
-require keyframe_insert
-require reference to full keyframes/frame data
-restrict generated files to safe output prefixes
+warn on save_as_mainfile
+warn on eval/exec
+```
+
+Deferred checks:
+
+```text
+require keyframe_insert only for animation-oriented generated scripts
+require reference to full keyframes/frame data only for frame-data-driven generated scripts
+restrict generated files to safe output prefixes only after implementation draft path policy is defined
 ```
 
 Risk: low/medium. Do not block legitimate generated scripts too early.
@@ -168,26 +207,58 @@ Recover only the concept of a single summary report if not already covered.
 
 Risk: low if wrapper-only.
 
+### Follow-up F — non-Blender Python-scriptable app adapter
+
+Create only after identifying a real target application/runtime.
+
+The adapter should reuse:
+
+```text
+Tools/validation/generated_file_policy.py
+```
+
+It must not inherit Blender assumptions such as `bpy`, scenes, render settings or Blender file operations.
+
+Risk: low if sample-only and isolated.
+
+### Follow-up G — input-domain validator family
+
+Create separately from output-application policy.
+
+Potential future input domains:
+
+```text
+WAV/audio analysis artifacts
+JSON scene specs
+CSV/TSV datasets
+images or image-sequence manifests
+text/context bundles
+application configuration files
+```
+
+Risk: medium if mixed with application-output validators. Keep boundaries explicit.
+
 ## Guardrails
 
 - Do not reopen or rebase old PRs directly.
 - Do not copy large old branches wholesale.
-- Do not create `Tools/ai_core` until a decision document explains why it is not duplicating `Tools/ai/pipeline`.
+- Do not create `Tools/ai_core` until a decision document explains why it is not duplicating `Tools/ai/pipeline`, `Tools/ai/model_json` or `Tools/validation/generated_file_policy`.
 - Do not touch runtime Blender packages from this cleanup.
 - Do not change FFmpeg behavior.
 - Do not change schema-v6 meanings while validating additive fields.
+- Do not make generic generated-file policy Blender-only.
+- Do not make generic generated-file policy WAV/audio-only.
+- Keep input-domain validators separate from output-application validators.
 - Every recovered idea must be its own small PR with local validation.
 
 ## Immediate priority
 
-Finish the already-started `TD-006` micro-task:
+Validate documentation alignment and regenerate AI/NPU indexes.
 
-```text
-validate agent_state_packet report contract
-```
-
-Then review this follow-up backlog and choose the next lowest-risk recovery task.
+Then choose the next lowest-risk recovery task.
 
 ## Progress log
 
 - 2026-04-29: PR #10, #15 and #19 evaluated as stale/superseded. Useful ideas captured here as future micro-tasks.
+- 2026-04-29: JSON model parser idea recovered through `Tools/ai/model_json.py` and `check_ai_model_json.py`.
+- 2026-04-29: Generated policy idea recovered as an input-agnostic/application-agnostic policy engine with Blender as first Python-scriptable app adapter.

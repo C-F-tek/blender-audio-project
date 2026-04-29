@@ -1,6 +1,6 @@
 # NPU Code Index
 
-Generated: `2026-04-29T22:07:52`
+Generated: `2026-04-29T23:39:35`
 
 Purpose: long-context index for the local NPU musical/technical agent.
 Use `npu_code_chunks/chunk_*.md` for full file context.
@@ -10,7 +10,7 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `build_track_summary.py`: 114 lines, 4062 chars, sha256 `7dfbac89818d9b1903ae6828e502ec8b9965c84ce6097a5e049e551c95d3286a`
 - `normalize_scene_spec.py`: 470 lines, 14431 chars, sha256 `af12b708bf2b6aff49d87872a79fa883a7c32b299a54b6cceb7182bacc1341b9`
 - `Tools/npu/npu_runtime.py`: 161 lines, 5903 chars, sha256 `38dc29da6ba1c564c68a29c0c5de7e4b38787aa6a0c17607c8d2ae03fe89f182`
-- `Tools/npu/ollama_runtime.py`: 387 lines, 13260 chars, sha256 `bd594cc34384f89d7f8ba42c9441d3df85413efee7b4df9d2f0b43da17991cce`
+- `Tools/npu/ollama_runtime.py`: 390 lines, 13678 chars, sha256 `a5db8a9f0d0111595e34f284bf8ba3ce2f3d7867e6e761a55fe8ebc952d87ec6`
 - `Tools/npu/build_blender_manual_context.py`: 327 lines, 10493 chars, sha256 `5516f84a1f112607a51f93aa7dbe52631a7e834353a0b98c71706e33b152719c`
 - `Tools/npu/run_dual_ai_pipeline.py`: 1705 lines, 72162 chars, sha256 `a6a3d187992b5d66d4d8edb064e2a04cc303c5f685b05b0a698efd953f636bbb`
 - `Scripting/v61b/config.py`: 440 lines, 15700 chars, sha256 `98836c3a51657ef0934410486d649d34d1faf3ba260d692b73c39741ab6c7c4e`
@@ -72,8 +72,8 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `Tools/npu/npu_code_chunks/chunk_004_normalize_scene_spec_py.md` -> `normalize_scene_spec.py` lines 1-273
 - `Tools/npu/npu_code_chunks/chunk_005_normalize_scene_spec_py.md` -> `normalize_scene_spec.py` lines 274-469
 - `Tools/npu/npu_code_chunks/chunk_006_Tools_npu_npu_runtime_py.md` -> `Tools/npu/npu_runtime.py` lines 1-160
-- `Tools/npu/npu_code_chunks/chunk_007_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 1-270
-- `Tools/npu/npu_code_chunks/chunk_008_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 271-386
+- `Tools/npu/npu_code_chunks/chunk_007_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 1-263
+- `Tools/npu/npu_code_chunks/chunk_008_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 264-389
 - `Tools/npu/npu_code_chunks/chunk_009_Tools_npu_build_blender_manual_context_py.md` -> `Tools/npu/build_blender_manual_context.py` lines 1-268
 - `Tools/npu/npu_code_chunks/chunk_010_Tools_npu_build_blender_manual_context_py.md` -> `Tools/npu/build_blender_manual_context.py` lines 269-326
 - `Tools/npu/npu_code_chunks/chunk_011_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1-213
