@@ -10,15 +10,17 @@ The repository contains working Blender packages, generated AI artifacts, local 
 
 1. Pull the latest `master` branch.
 2. Read `README.md` and `AGENTS.md`.
-3. Read `docs/README.md`, `docs/MODULE_MAP.md` and `docs/DATA_FLOW.md`.
-4. Read `docs/REFACTORING_AND_REUSE_PLAN.md` when touching reusable logic.
-5. Identify the target area: root tool, Blender package, shared utility, AI/NPU tool, generated artifact or documentation.
-6. Inspect the target file before editing.
-7. Make a focused change.
-8. Run the smallest relevant validation.
-9. Test inside Blender when the change touches Blender runtime behavior.
-10. Document assumptions, results, risks and line counts for scripts.
-11. Commit with a clear message.
+3. Read `docs/README.md`, `docs/PROJECT_AI_CONSCIOUSNESS.md` and `docs/AI_ONBOARDING.md`.
+4. Read `docs/AI_PIPELINE_REFACTOR_STATUS.md` and `docs/AI_PIPELINE_ARCHITECTURE.md` before changing AI pipeline code.
+5. Read `docs/MODULE_MAP.md` and `docs/DATA_FLOW.md`.
+6. Read `docs/REFACTORING_AND_REUSE_PLAN.md` when touching reusable logic.
+7. Identify the target area: root tool, Blender package, shared utility, AI/NPU tool, generated artifact or documentation.
+8. Inspect the target file before editing.
+9. Make a focused change.
+10. Run the smallest relevant validation.
+11. Test inside Blender when the change touches Blender runtime behavior.
+12. Document assumptions, results, risks and line counts for scripts.
+13. Commit with a clear message.
 
 ## Working with Blender scripts
 
@@ -64,6 +66,62 @@ create shared utility
   -> test package
   -> migrate one call site
 ```
+
+## Working with the AI artifact pipeline
+
+The AI artifact pipeline entrypoint is:
+
+```text
+Tools/ai/run_parallel_artifact_pipeline.py
+```
+
+It should remain thin. Implementation belongs under:
+
+```text
+Tools/ai/pipeline/
+```
+
+Current status marker:
+
+```text
+modular_schedule_complete_pending_local_validation
+```
+
+Read before editing:
+
+```text
+docs/AI_PIPELINE_REFACTOR_STATUS.md
+docs/AI_PIPELINE_ARCHITECTURE.md
+Tools/ai/pipeline/refactor_status.py
+```
+
+Module responsibilities:
+
+| Module | Role |
+|---|---|
+| `defaults.py` | Central constants and defaults. |
+| `models.py` | Pipeline dataclasses and lane enum. |
+| `runner.py` | Low-level subprocess execution. |
+| `compat.py` | Schema-v6 compatibility adapters. |
+| `artifact_contracts.py` | Expected artifacts and planned outputs. |
+| `cli.py` | CLI parser. |
+| `preflight.py` | Pre-run checks. |
+| `steps.py` | Step and command builders. |
+| `scheduler.py` | Serial/parallel scheduling policy. |
+| `orchestrator.py` | Concrete serial/parallel execution helpers. |
+| `schema_report.py` | Report generation. |
+| `guardrail_models.py` | Typed guardrail queue models. |
+| `remediation.py` | Auto-safe remediation loop. |
+| `refactor_status.py` | Machine-readable status marker. |
+
+AI pipeline validation:
+
+```powershell
+python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+```
+
+Important rule: do not change schema-v6 field meanings without running the dry-run matrix locally.
 
 ## Working with root tools
 
@@ -119,11 +177,12 @@ When code structure changes, update the nearest documentation:
 |---|---|
 | New package under `Scripting/` | package `README.md`, `Scripting/README.md`, `docs/MODULE_MAP.md` |
 | New shared utility | `Scripting/shared/README.md`, `docs/SHARED_SCRIPTING_UTILITIES.md`, `docs/REFACTORING_AND_REUSE_PLAN.md` |
-| New entry point | `docs/BLENDER_SCRIPT_ENTRYPOINTS.md` |
+| New AI pipeline module | `docs/AI_PIPELINE_ARCHITECTURE.md`, `docs/AI_PIPELINE_REFACTOR_STATUS.md`, `docs/PROJECT_AI_CONSCIOUSNESS.md` |
+| New entry point | `docs/BLENDER_SCRIPT_ENTRYPOINTS.md` or the closest workflow document. |
 | New JSON contract | `docs/JSON_SCHEMAS.md` |
 | New render or encode workflow | `docs/RENDER_WORKFLOW.md`, `docs/FFMPEG_WORKFLOW.md` |
 | New AI/NPU workflow | `docs/LOCAL_AI_WORKFLOW.md`, `docs/AI_PIPELINE_OPTIMIZATION.md` |
-| New validation workflow | `docs/QUALITY_GATE.md` |
+| New validation workflow | `docs/QUALITY_GATE.md`, `Tools/validation/README.md` |
 
 ## Commit style
 
@@ -134,6 +193,8 @@ docs: refresh repository readmes
 docs: add refactoring and reuse plan
 feat(shared): add json io helpers
 feat(shared): add ffmpeg profile builder
+feat(ai): add artifact pipeline dry-run matrix
+refactor(ai): slim artifact pipeline orchestrator
 refactor(npu): split prompt builders
 fix(blender): add node compatibility fallback
 test: add package structure validation
@@ -156,12 +217,25 @@ When reporting a change, include:
 | Change type | Minimum validation |
 |---|---|
 | Markdown/docs only | Review paths and links. |
-| Pure Python utility | `python -m py_compile <file>`. |
+| Pure Python utility | `python .\Tools\validation\check_python_syntax.py --repo-root .`. |
 | Root CLI | Run with a small input or dry-run mode if available. |
+| AI artifact pipeline | `check_ai_pipeline_modules.py` plus `run_pipeline_dry_run_matrix.py`. |
 | Blender module | Import/run inside Blender, or run a controlled manual test. |
 | FFmpeg utility | Print command and run a short encode test. |
 | NPU/Ollama pipeline | Dry-run or deterministic fallback path. |
 | Generated package | Open target package, verify inputs, frame range, audio strip and output path. |
+
+## Standard local validation block
+
+```powershell
+python .\Tools\validation\check_python_syntax.py --repo-root .
+python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+python .\Tools\validation\check_package_structure.py --repo-root .
+python .\Tools\validation\check_json_artifacts.py --repo-root .
+python .\Tools\npu\build_project_ai_index.py
+python .\Tools\npu\build_npu_code_context.py
+```
 
 ## Not specified
 
