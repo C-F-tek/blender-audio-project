@@ -13,13 +13,18 @@ import os
 import platform
 import re
 import shlex
-import subprocess
 import sys
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+try:
+    from pipeline.models import PipelineLane, PipelineStep
+    from pipeline.runner import run_step
+except ImportError:  # Allows package-style imports during external checks.
+    from Tools.ai.pipeline.models import PipelineLane, PipelineStep  # type: ignore
+    from Tools.ai.pipeline.runner import run_step  # type: ignore
 
 EXPECTED_WAVE_REVIEW_ARTIFACTS = ["wave_entrypoint_review.json"]
 EXPECTED_MUSIC_ARTIFACTS = ["track_summary.json", "music_segments.json", "audio_event_map.json", "ai_scene_brief.json", "ai_resource_budget.json"]
@@ -33,11 +38,29 @@ def slugify(value: str) -> str:
 
 
 def run(cmd: list[str], cwd: Path, dry: bool) -> dict[str, Any]:
-    start = time.perf_counter()
-    if dry:
-        return {"command": cmd, "dry_run": True, "returncode": 0, "duration_sec": 0.0, "stdout": "", "stderr": "", "planned_only": True}
-    done = subprocess.run(cmd, cwd=str(cwd), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-    return {"command": cmd, "dry_run": False, "returncode": done.returncode, "duration_sec": round(time.perf_counter() - start, 4), "stdout": done.stdout[-8000:], "stderr": done.stderr[-8000:], "planned_only": False}
+    """Run a command through the reusable pipeline runner.
+
+    This preserves the legacy dictionary shape used by the existing artifact
+    pipeline while routing execution through ``Tools/ai/pipeline/runner.py``.
+    """
+    step = PipelineStep.from_command(
+        name="legacy_command",
+        command=cmd,
+        lane=PipelineLane.CPU,
+    )
+    result = run_step(step, cwd=cwd, dry_run=dry)
+    payload = {
+        "command": cmd,
+        "dry_run": result.dry_run,
+        "returncode": result.returncode,
+        "duration_sec": result.duration_sec,
+        "stdout": result.stdout,
+        "stderr": result.stderr,
+        "planned_only": result.planned_only,
+    }
+    if result.error:
+        payload["error"] = result.error
+    return payload
 
 
 def rel(path: Path, root: Path) -> str:
