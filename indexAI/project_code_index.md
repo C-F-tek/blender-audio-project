@@ -1,8 +1,8 @@
 # Spaziotempo Primary Project Code Index
 
-Generated: `2026-04-29T14:31:14`
+Generated: `2026-04-29T14:34:39`
 
-Source fingerprint: `dde32b8648818127b7deafaa93d291cd71be174ad1b9c98edf5a946e37c0167c`
+Source fingerprint: `5191ab62f1aa6385e598c43e939ad635dfde95da9ccc6ffcc0e79f9511d157c7`
 
 Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.
 
@@ -199,7 +199,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
 - `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `53c55cc95abf776b330776e3bdee74319dbe3cc9e3e89bfbe385e621b9a410d6`
 - `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `ae496412a40745840615966bb12e0e7f2f2064610bd21622cb4642ed772441e1`
-- `Tools/npu/npu_code_manifest.json`: 7339 lines, 198048 chars, sha256 `5ab2575d2e6be4072da25ffd738b863c6a8e84f8d9ed772c0dcb6cba7a289116`
+- `Tools/npu/npu_code_manifest.json`: 7339 lines, 198048 chars, sha256 `b63ead770e4139bd06fd19dbdd78ae77b00f09f7caa00495c690595202c50988`
 - `Tools/npu/npu_guardrail_service.py`: 491 lines, 20211 chars, sha256 `5829724c35b7fccef62481ca8efc7290b63ef4d552e441fcf51a59009a4cc84a`
 - `Tools/npu/npu_music_manifest.json`: 703 lines, 27216 chars, sha256 `e5cb8facca90680775a3ab5a525cfb2b0ef1f0f7c0ecd5c61e2f1570082f2045`
 - `Tools/npu/npu_runtime.py`: 161 lines, 5903 chars, sha256 `38dc29da6ba1c564c68a29c0c5de7e4b38787aa6a0c17607c8d2ae03fe89f182`
