@@ -28,13 +28,16 @@ Before creating or editing a package, read:
 
 1. `README.md`
 2. `docs/README.md`
-3. `docs/MODULE_MAP.md`
-4. `docs/DATA_FLOW.md`
-5. `docs/REFACTORING_AND_REUSE_PLAN.md`
-6. `docs/QUALITY_GATE.md`
-7. `docs/SHARED_SCRIPTING_UTILITIES.md`
-8. the README of the target package under `Scripting/`
-9. the target Python file before modifying it
+3. `docs/PROJECT_AI_CONSCIOUSNESS.md`
+4. `docs/AI_EXTERNAL_KNOWLEDGE.md`
+5. `docs/MODULE_MAP.md`
+6. `docs/DATA_FLOW.md`
+7. `docs/REFACTORING_AND_REUSE_PLAN.md`
+8. `docs/QUALITY_GATE.md`
+9. `docs/SHARED_SCRIPTING_UTILITIES.md`
+10. `docs/PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits
+11. the README of the target package under `Scripting/`
+12. the target Python file before modifying it
 
 ## Important folders
 
@@ -46,6 +49,8 @@ Before creating or editing a package, read:
 | `Tools/ai/` | AI artifact pipeline and validation helpers. |
 | `Tools/npu/` | Local AI, NPU, context-building and review tooling. |
 | `Tools/validation/` | Non-invasive repository validation scripts. |
+| `Tools/repo_patch_runner/` | Safe JSON patch-spec runner for small reviewable edits. |
+| `patch_specs/` | Patch-spec queue and applied patch history. |
 | `indexAI/` | Generated indexes, manifests, context and patch artifacts. Do not hand-refactor as source. |
 | `docs/` | Stable documentation and project contracts. |
 
@@ -80,6 +85,32 @@ python .\Tools\npu\build_project_ai_index.py
 python .\Tools\npu\build_npu_code_context.py
 ```
 
+## Patch-spec workflow
+
+For small mechanical edits, prefer a JSON patch spec when it improves reviewability.
+
+Dry-run:
+
+```powershell
+python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_specs\inbox\example.json --dry-run
+```
+
+Apply locally with diff:
+
+```powershell
+python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_specs\inbox\example.json --write --show-diff
+```
+
+Queue for GitHub Action only after human review:
+
+```powershell
+git add patch_specs/inbox/example.json
+git commit -m "queue repo patch spec"
+git push origin master
+```
+
+See `docs/PATCH_SPEC_WORKFLOW.md`.
+
 ## Expected AI workflow
 
 When editing this repository:
@@ -101,7 +132,8 @@ Allowed without extra confirmation:
 - create additive documentation;
 - create additive shared utilities;
 - create non-invasive validation scripts;
-- run focused validation commands when execution is available.
+- run focused validation commands when execution is available;
+- create patch specs for human review.
 
 Require explicit confirmation first:
 
@@ -112,7 +144,8 @@ Require explicit confirmation first:
 - adding external dependencies;
 - running destructive git operations;
 - running long Blender renders;
-- changing CI/CD workflows in a way that affects repository automation.
+- changing CI/CD workflows in a way that affects repository automation;
+- pushing queued patch specs to trigger GitHub Actions.
 
 ## Refactoring rules
 
