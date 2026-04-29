@@ -126,7 +126,8 @@ try {
     Invoke-Step -Name "git diff stat after validation" -Command "git" -Arguments @("diff", "--stat")
     Invoke-Step -Name "git status after validation" -Command "git" -Arguments @("status")
 
-    $passed = ($script:Results | Where-Object { -not $_.passed }).Count -eq 0
+    $failedSteps = @($script:Results | Where-Object { -not $_.passed })
+    $passed = ($failedSteps.Count -eq 0)
 }
 catch {
     $passed = $false
