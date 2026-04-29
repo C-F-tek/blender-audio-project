@@ -2,6 +2,29 @@
 
 Questa guida elenca i file prodotti dagli smoke test che possono essere condivisi per analisi successiva.
 
+## Runner unico consigliato
+
+Esecuzione PowerShell:
+
+```powershell
+.\Tools\smoke_tests\run_all_refactor_smoke_tests.ps1
+```
+
+Esecuzione Python diretta:
+
+```powershell
+python Tools/smoke_tests/run_all_refactor_smoke_tests.py --output-dir output/smoke_tests
+```
+
+Output principali:
+
+```text
+output/smoke_tests/refactor_summary/refactor_smoke_summary.json
+output/smoke_tests/refactor_summary/refactor_smoke_summary.md
+```
+
+Questi sono i primi file da condividere per una revisione.
+
 ## AI core smoke test
 
 Esecuzione PowerShell:
@@ -55,15 +78,17 @@ output/smoke_tests/npu_validation_bridge/npu_validation_bridge_smoke_report.md
 Per una revisione rapida condividere:
 
 ```text
-output/smoke_tests/ai_core/ai_core_smoke_report.json
-output/smoke_tests/ai_core/ai_core_smoke_report.md
-output/smoke_tests/npu_validation_bridge/npu_validation_bridge_smoke_report.json
-output/smoke_tests/npu_validation_bridge/npu_validation_bridge_smoke_report.md
+output/smoke_tests/refactor_summary/refactor_smoke_summary.json
+output/smoke_tests/refactor_summary/refactor_smoke_summary.md
 ```
 
 Per una revisione piu dettagliata condividere anche:
 
 ```text
+output/smoke_tests/ai_core/ai_core_smoke_report.json
+output/smoke_tests/ai_core/ai_core_smoke_report.md
+output/smoke_tests/npu_validation_bridge/npu_validation_bridge_smoke_report.json
+output/smoke_tests/npu_validation_bridge/npu_validation_bridge_smoke_report.md
 output/smoke_tests/ai_core/core_pipeline_smoke/manifest.json
 output/smoke_tests/ai_core/core_pipeline_smoke/pipeline_result.json
 ```
@@ -91,7 +116,17 @@ Nel file JSON cercare:
 }
 ```
 
-Se `passed` e `false`, condividere il JSON completo per analisi. Il dettaglio degli errori si trova in:
+Nel report aggregato il dettaglio e in:
+
+```text
+commands[].passed
+commands[].stdout
+commands[].stderr
+embedded_reports.ai_core
+embedded_reports.npu_validation_bridge
+```
+
+Se `passed` e `false`, condividere il JSON completo per analisi. Il dettaglio degli errori individuali si trova in:
 
 ```text
 checks.blender_validator.invalid_report.issues
@@ -119,6 +154,13 @@ Il comando:
 - sostituisce solo il blocco `validate_implementation_draft()`;
 - mantiene la shape legacy `{ "passed": bool, "issues": list[str] }`;
 - stampa il nuovo numero di righe del file patchato.
+
+## Note operative
+
+- Prima eseguire sempre il runner unico.
+- Applicare il patch helper solo dopo smoke test verdi.
+- Dopo ogni patch legacy rieseguire il runner unico.
+- In caso di problemi, seguire `docs/REFACTOR_ROLLBACK_GUIDE.md`.
 
 ## Nota architetturale
 
