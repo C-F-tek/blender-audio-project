@@ -25,7 +25,7 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | `Scripting/_template_audio_reactive_package/` | Template package | Starting point for future generated packages. Should evolve with the shared utility strategy. |
 | `Scripting/shared/` | Shared utility target | Package-neutral path, JSON, FFmpeg, Blender compatibility, render profile, diagnostics and panel helpers should live here. |
 | `Tools/npu/` | AI/NPU/Ollama support tooling | Contains context builders, dual-AI pipeline, NPU review and runtime utilities. |
-| `Tools/ai/` | AI artifact validation | Validates AI-produced artifacts. |
+| `Tools/ai/` | AI artifact validation and state packets | Validates AI-produced artifacts and builds generic agent state/memory packets. |
 | `Tools/repo_patch_runner/` | Structured patch runner tooling | Supports repository modification workflows. |
 | `indexAI/` | Generated AI-oriented project index | Generated context and patch material. Do not hand-refactor as source. |
 | `patch_specs/` | Patch specification artifacts | Structured patch records and applied patch metadata. |
@@ -80,6 +80,8 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | `Tools/npu/npu_runtime.py` | NPU preflight | Provider/preflight module. |
 | `Tools/npu/build_project_ai_index.py` | Project index generation | Keep as generator; generated output remains non-source. |
 | `Tools/npu/build_ai_service_packet.py` | AI service packet generation | Keep as artifact builder; extract common JSON/path helpers later. |
+| `Tools/ai/agent_state.py` | Generic memory records and microtask packet model | Keep package-neutral; connect to app workers only through explicit packet contracts. |
+| `Tools/ai/build_agent_state_packet.py` | CLI for task-local agent state packets | Keep non-invasive; no Blender, GPU, NPU or FFmpeg execution. |
 
 ## Generated package model
 

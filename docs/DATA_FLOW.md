@@ -23,6 +23,8 @@ Audio file
 | WAV audio | User or audio production workflow | analysis tools and Blender/VSE | Exact location is local and configurable. |
 | Analysis JSON | audio analysis script or AI pipeline | Blender scene script | Schema is not fully specified yet. |
 | Music context JSON | AI-assisted music analysis workflow | AI planning and Blender script generation | Used as semantic context. |
+| Agent state packet | `Tools/ai/build_agent_state_packet.py` | app workers, AI agents and guardrail reviewers | Generic packet with selected memory, constraints, budgets and planned CPU/NPU/GPU/validation microtasks. |
+| Persistent memory DB | app or agent workflow | agent state packet builder | Optional SQLite store under generated data; do not commit local memory records. |
 | Blender Python script | developer or AI-assisted generator | Blender | Must be inspected before execution. |
 | Render frames | Blender render process | FFmpeg or video workflow | Output folder should be configurable. |
 | Final video | FFmpeg workflow | publication or review | Codec and settings are workflow-specific. |
@@ -31,6 +33,7 @@ Audio file
 
 - `Scripting/v61b/` contains the current Blender scripting workflow.
 - `Tools/npu/` contains AI/NPU tooling for analysis, review, or implementation support.
+- `Tools/ai/` contains AI artifact validation and generic agent state packet tooling.
 - `indexAI/` contains indexed context and patch/task artifacts.
 
 ## Rules for AI systems
@@ -38,6 +41,7 @@ Audio file
 - Do not overwrite large analysis JSON files unless explicitly requested.
 - Treat JSON files as input data unless their generator is known.
 - Treat `indexAI/` and `Tools/npu/` files as context or pipeline artifacts.
+- Treat local agent memory stores as generated data unless a human promotes a distilled record into documentation.
 - Preserve local path configurability.
 - Document every new expected input and output.
 

@@ -50,6 +50,7 @@ Candidate local components:
 
 - local project indexing;
 - local compact context generation;
+- generic agent state packet generation;
 - local JSON summarization;
 - local Blender-aware code planning;
 - local patch planning;
@@ -76,6 +77,7 @@ Candidate local components:
 WAV/audio data
   -> analysis JSON
   -> compact music and technical context
+  -> agent state packet with memory, constraints and lane microtasks
   -> modular AI artifact pipeline
   -> local AI planner/reviewer
   -> implementation plan
@@ -111,6 +113,8 @@ python .\Tools\npu\build_npu_code_context.py
 - Patch validation before writing files.
 - No destructive overwrite of source or analysis data.
 - Explicit logging of generated files.
+- Explicit memory packet or state packet when a task spans multiple steps.
+- Optional persistent memory through JSONL or SQLite, with SQLite preferred before external database dependencies.
 - Manual review for major scene-generation changes.
 - Dry-run reports for pipeline or patch generation.
 

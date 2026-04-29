@@ -31,6 +31,10 @@ Tools/npu/npu_music_chunks/
 indexAI/project_code_chunks/
 indexAI/project_code_index.md
 indexAI/project_code_manifest.json
+indexAI/agent_memory/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
 
 # Generated scene bundles / AI packets
 indexAI/scene_scripts/*_scene_bundle/

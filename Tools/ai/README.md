@@ -18,6 +18,18 @@ Build semantic chunks:
 py .\Tools\npu\build_semantic_code_chunks.py --repo-root .
 ```
 
+Build a generic agent state packet:
+
+```powershell
+py .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan Blender/audio app smoke tests" --include-file .\docs\AI_SMART_POLICY.md --include-file .\docs\LOCAL_AI_WORKFLOW.md
+```
+
+Use optional SQLite persistent memory:
+
+```powershell
+py .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan Blender/audio app smoke tests" --memory-db .\indexAI\agent_memory\agent_memory.sqlite --save-inputs-to-memory-db --memory-note "Keep NPU guardrails non-blocking."
+```
+
 Run the safe orchestrator:
 
 ```powershell
@@ -29,3 +41,9 @@ py .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --analysis-json .\
 - CPU: parsing, JSON generation, validation, orchestration.
 - NPU: short artifact review and scoring lane.
 - GPU: optional external heavy generator passed through `--gpu-command`.
+
+## Agent state packets
+
+`build_agent_state_packet.py` creates a generic JSON/Markdown packet for app or agent use. It combines included files, persistent JSONL or SQLite memory records and recent CLI notes, then emits planned microtasks for CPU, NPU, GPU and validation lanes.
+
+The tool is non-invasive: it does not run Blender, model inference, FFmpeg, GPU work or NPU work. It only writes packet artifacts under the selected output folder.

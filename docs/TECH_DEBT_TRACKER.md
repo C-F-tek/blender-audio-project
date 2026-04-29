@@ -38,6 +38,7 @@ P3 low
 | TD-007 | NPU pipeline decomposition | P2 | open | Some NPU orchestration files remain large. | Harder testing and provider replacement. | Split later into config, context builder, prompts, providers, validators, artifact writer and runner. | 2026-04-29 |
 | TD-008 | Documentation link validation | P3 | resolved | Many docs reference other docs, but no link checker existed. | Broken AI onboarding path. | `Tools/validation/check_docs_links.py` added; run after documentation changes. | 2026-04-29 |
 | TD-009 | Refactor status consistency | P2 | resolved | Pipeline status is duplicated across docs and `refactor_status.py`. | Future inconsistency can confuse agents. | `Tools/validation/check_refactor_status_consistency.py` added; run after AI pipeline/status docs changes. | 2026-04-29 |
+| TD-010 | Agent state memory integration | P2 | open | Generic state packets exist, but app integration and retention policy are not validated yet. | Persistent memory could become stale, noisy or too project-specific. | Validate packets on Blender/audio smoke tasks, keep SQLite generated/untracked, then document retention and promotion rules. | 2026-04-29 |
 
 ## Add a new item
 
@@ -51,7 +52,7 @@ Template:
 
 | ID | Area | Priority | Status | Symptom | Risk | Recommended action | Last reviewed |
 |---|---|---:|---|---|---|---|---|
-| TD-010 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
+| TD-011 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
 
 ## Rules
 

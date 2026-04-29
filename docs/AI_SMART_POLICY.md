@@ -16,6 +16,7 @@ Every AI-facing workflow should prefer:
 4. **Manifests**: complete lists of available capsules that can be expanded by `capsule_id`.
 5. **Guardrails**: deterministic and NPU-light checks before promoting an artifact.
 6. **Repair loops**: if checks fail, create a repair packet and rerun only the failing slice.
+7. **Agent state packets**: task-local state that combines selected memory, durable constraints, file references, hardware lane policy and planned microtasks.
 
 ## Required generated artifacts
 
@@ -28,6 +29,7 @@ AI phases that build or consume context should produce AI-readable intermediates
 - `*_guardrail_report.md`
 - `*_repair_packet.json` when a retry is needed
 - `*_promotion_decision.json` when an artifact is accepted or blocked
+- `*_agent_state_packet.json` or `agent_state_packet.json` when the app or an agent needs explicit memory and microtask state
 
 ## NPU role
 
@@ -75,3 +77,29 @@ If an artifact fails validation:
 5. Repeat up to the configured retry count.
 
 Default maximum repair attempts: `2`.
+
+## Agent state rule
+
+Agent state packets should remain generic. They may describe audio files, Blender packages, documentation, source code, future media types or multiple files at once, but the structure should stay stable:
+
+```text
+objective
+selected_memory
+memory_manifest
+microtasks
+policy
+budgets
+assumptions
+```
+
+The packet is a planning and awareness artifact. It should not directly run heavy GPU work, NPU inference, Blender renders or source-code rewrites. Those actions must remain explicit pipeline steps or app-controlled tasks.
+
+## Persistent memory rule
+
+Persistent memory may use JSONL for reviewable append-only records or SQLite for faster local lookup. SQLite is preferred as the first local memory database because it requires no external dependency and can live under an app-controlled generated-data folder such as:
+
+```text
+indexAI/agent_memory/agent_memory.sqlite
+```
+
+External vector databases or embedding stores should remain optional providers until the project has a stable schema for memory records, privacy policy, backup behavior and index regeneration.
