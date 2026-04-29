@@ -8,7 +8,7 @@ It is intentionally tool-neutral. It should guide local AI agents, remote coding
 
 ## Source material
 
-This file summarizes knowledge extracted from externally supplied Markdown references and from the latest technical audit report.
+This file summarizes knowledge extracted from externally supplied Markdown references, the latest technical audit report, and OpenAI official engineering articles adapted for this repository.
 
 Source groups:
 
@@ -17,6 +17,38 @@ Source groups:
 | `agents-md-best-practices.md` | Rules for machine-readable repository guidance, command-first instructions, permission boundaries, validation commands and keeping AI docs short and actionable. |
 | `Tool-AI-Reference.md` | General AI-assisted coding workflow: task decomposition, PRD/task lists, prompt logs, testing and validation loops. |
 | `deep-research-report.md` | External technical audit of `blender-audio-project`: infrastructure risks, packaging, path handling, broad exception handling, import/reload risks and suggested remediation. |
+| `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | OpenAI Harness Engineering and Symphony concepts adapted to this repo: agent-first repositories, task/workspace orchestration, proof-of-work reports, guardrails and workflow versioning. |
+
+## OpenAI Harness Engineering and Symphony notes
+
+Dedicated note file:
+
+```text
+docs/OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md
+```
+
+Main adopted concepts:
+
+| Concept | Project translation |
+|---|---|
+| Repository agent-first | Keep `AGENTS.md`, `docs/`, validators, status markers and reports synchronized. |
+| AGENTS.md as index | Keep `AGENTS.md` concise and point to structured docs rather than making it an encyclopedia. |
+| Knowledge in repo | Store workflow, architecture, status, validation and task context in versioned Markdown/JSON. |
+| Mechanical guardrails | Use validators, dry-run matrix, schema reports and status consistency checks. |
+| Task tracker as control plane | Use GitHub issues, patch specs, execution plans or checklist docs for complex work. |
+| Workspace per task | Prefer branch/output-folder/task-scope isolation for larger automated work. |
+| Proof of work | Require JSON/Markdown reports, git diff summaries and validation logs. |
+| Technical drift cleanup | Maintain docs, shared utilities, validators and tech debt tracker as recurring work. |
+
+Recommended future additions derived from those notes:
+
+```text
+WORKFLOW.md
+docs/EXECUTION_PLANS/README.md
+docs/TECH_DEBT_TRACKER.md
+Tools/validation/check_refactor_status_consistency.py
+Tools/validation/check_docs_links.py
+```
 
 ## Core principles adopted
 
@@ -60,6 +92,13 @@ Preferred quick checks:
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
+```
+
+AI pipeline checks:
+
+```powershell
+python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
 ```
 
 Heavy Blender renders, full AI generation and long GPU workloads should be explicit human decisions.
@@ -114,7 +153,9 @@ Recommended repository-friendly locations:
 ```text
 indexAI/patch_library/
 output/ai_pipeline/
+output/local_validation/
 docs/PROJECT_STATUS_POINT.md
+docs/EXECUTION_PLANS/
 ```
 
 Do not store secrets or private credentials in prompt logs.
@@ -167,7 +208,8 @@ Use this priority order:
 4. keep AI context compact;
 5. report changed files and line counts;
 6. keep patches small and reversible;
-7. prefer patch specs when a change is mechanical and reviewable.
+7. prefer patch specs when a change is mechanical and reviewable;
+8. treat workflow, status and proof-of-work reports as first-class repository artifacts.
 
 ## Not adopted
 
@@ -177,6 +219,8 @@ The external files mention several tool-specific integrations. This repository c
 AGENTS.md
 docs/
 Tools/validation/
+Tools/workflow/
+Tools/ai/pipeline/
 Scripting/shared/
 patch_specs/
 ```
