@@ -89,12 +89,14 @@ For most repository changes:
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
+python .\Tools\validation\check_docs_links.py --repo-root .
 ```
 
 For AI pipeline changes:
 
 ```powershell
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
 ```
 
@@ -130,6 +132,7 @@ Use concise commit messages:
 docs: add execution planning workflow
 docs: add tech debt tracker
 feat(shared): add blender compatibility helper
+feat(validation): add markdown local link checker
 fix(validation): accept utf-8 bom json artifacts
 chore: regenerate ai and npu indexes
 ```
@@ -149,6 +152,8 @@ git status
 git log --oneline -n 20
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
+Get-Content .\output\validation\refactor_status_consistency.json -Raw
+Get-Content .\output\validation\docs_links.json -Raw
 ```
 
 For workflow-run validation, also share:
