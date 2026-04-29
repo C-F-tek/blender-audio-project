@@ -2,7 +2,7 @@
 
 ## Status
 
-active
+implementation started
 
 ## Goal
 
@@ -127,30 +127,50 @@ Failure should raise a dedicated exception:
 ModelJsonParseError
 ```
 
-## Validation target
+## Implementation status
 
-Add a small validator or extend an existing validator with deterministic samples:
+Initial additive implementation branch:
 
 ```text
-plain object: PASS
-markdown fenced object: PASS
-text before/after object: PASS
-trailing comma: PASS when allow_repair=true
-JSON array: PASS for parse_model_json
-array rejected by parse_model_json_object: PASS
-invalid text: FAIL with ModelJsonParseError
+ai-model-json-parser
 ```
 
-Preferred validator:
+Files added:
+
+```text
+Tools/ai/model_json.py
+Tools/validation/check_ai_model_json.py
+```
+
+Implementation notes:
+
+```text
+no caller migration yet
+no change to Scripting/shared/json_io.py
+no change to Tools/npu/ollama_runtime.py yet
+no prompt injection changes
+no runtime Blender changes
+```
+
+## Validation target
+
+Validator:
 
 ```text
 Tools/validation/check_ai_model_json.py
 ```
 
-Alternative:
+Deterministic samples:
 
 ```text
-extend Tools/validation/check_ai_pipeline_modules.py only if keeping the surface tiny
+plain object: PASS expected
+markdown fenced object: PASS expected
+text before/after object: PASS expected
+trailing comma: PASS when allow_repair=true
+line-only // comment: PASS when allow_repair=true
+JSON array: PASS for parse_model_json
+array rejected by parse_model_json_object: PASS
+invalid text: FAIL with ModelJsonParseError
 ```
 
 ## Migration policy
@@ -193,3 +213,4 @@ Do not import old PR #19 wholesale. Reuse only the minimal concept of robust mod
 ## Progress log
 
 - 2026-04-29: Reviewed current JSON helpers and confirmed the gap is model-output parsing, not normal JSON file IO.
+- 2026-04-29: Started additive implementation with `Tools/ai/model_json.py` and `Tools/validation/check_ai_model_json.py`.
