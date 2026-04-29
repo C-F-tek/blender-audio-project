@@ -37,6 +37,11 @@ def iter_json_files(repo_root: Path, excludes: set[str], include_index_ai: bool)
     return sorted(files)
 
 
+def read_json_text(path: Path) -> str:
+    """Read JSON text, accepting UTF-8 files with or without BOM."""
+    return path.read_text(encoding="utf-8-sig", errors="replace")
+
+
 def inspect_json(path: Path, repo_root: Path, max_size_mb: float) -> dict[str, Any]:
     rel = path.relative_to(repo_root).as_posix()
     size = path.stat().st_size
@@ -51,7 +56,7 @@ def inspect_json(path: Path, repo_root: Path, max_size_mb: float) -> dict[str, A
         }
 
     try:
-        data = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+        data = json.loads(read_json_text(path))
         return {
             "path": rel,
             "ok": True,
