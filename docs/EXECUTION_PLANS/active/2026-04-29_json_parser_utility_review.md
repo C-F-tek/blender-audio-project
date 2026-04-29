@@ -2,7 +2,7 @@
 
 ## Status
 
-implementation started
+completed
 
 ## Goal
 
@@ -10,14 +10,14 @@ Review whether the project needs a reusable JSON parser utility for AI/model out
 
 ## Current finding
 
-The repository already has two different JSON use cases:
+The repository has two different JSON use cases:
 
 ```text
 clean JSON files
 model/LLM JSON-like responses
 ```
 
-These should remain separate because they have different failure modes.
+These remain separate because they have different failure modes.
 
 ## Existing clean JSON file helper
 
@@ -43,55 +43,18 @@ Assessment:
 ```text
 keep as-is for trusted project files and generated artifacts
 not suitable as-is for raw model output
-should not be made tolerant of malformed LLM output because file JSON should fail loudly
+must continue to fail loudly when project artifact JSON is invalid
 ```
 
-## Existing model-response parser
+## Implemented model-response parser
 
-Current helper:
-
-```text
-Tools/npu/ollama_runtime.py
-```
-
-Current relevant functions:
-
-```text
-strip_json_fence(text)
-parse_json_response(text)
-```
-
-Assessment:
-
-```text
-useful behavior already exists
-scope is currently tied to Ollama runtime
-only handles fenced JSON and object extraction
-should not become the only parser for all model providers
-```
-
-## Gap
-
-A reusable AI/model-output parser is still useful, but it should not live in `Scripting/shared/` and should not require introducing the full old `Tools/ai_core/` package yet.
-
-Candidate target:
+Implemented helper:
 
 ```text
 Tools/ai/model_json.py
 ```
 
-Reason:
-
-```text
-belongs to AI tooling, not Blender scripting
-avoids premature Tools/ai_core architecture
-can be reused by Ollama/NPU/pipeline validators later
-small and independently testable
-```
-
-## Proposed utility contract
-
-Initial module should be minimal:
+Implemented contract:
 
 ```text
 strip_markdown_json_fence(text: str) -> str
@@ -99,6 +62,7 @@ extract_json_candidate(text: str) -> str
 repair_common_model_json(text: str) -> str
 parse_model_json(text: str, allow_repair: bool = True) -> Any
 parse_model_json_object(text: str, allow_repair: bool = True) -> dict[str, Any]
+ModelJsonParseError
 ```
 
 Allowed repair behavior:
@@ -111,7 +75,7 @@ remove trailing commas before } or ]
 remove line-only // comments
 ```
 
-Explicitly not allowed initially:
+Explicitly not allowed:
 
 ```text
 semantic repair of missing fields
@@ -121,38 +85,23 @@ fixing arbitrary unquoted keys
 silently returning empty dict on failure
 ```
 
-Failure should raise a dedicated exception:
+## Ollama migration
+
+Completed migration:
 
 ```text
-ModelJsonParseError
+Tools/npu/ollama_runtime.py::parse_json_response()
 ```
 
-## Implementation status
-
-Initial additive implementation branch:
+Current behavior:
 
 ```text
-ai-model-json-parser
+parse_json_response() delegates to Tools.ai.model_json.parse_model_json_object()
+strip_json_fence() remains as a backward-compatible wrapper
+ModelJsonParseError is converted back to json.JSONDecodeError for legacy callers
 ```
 
-Files added:
-
-```text
-Tools/ai/model_json.py
-Tools/validation/check_ai_model_json.py
-```
-
-Implementation notes:
-
-```text
-no caller migration yet
-no change to Scripting/shared/json_io.py
-no change to Tools/npu/ollama_runtime.py yet
-no prompt injection changes
-no runtime Blender changes
-```
-
-## Validation target
+## Validation
 
 Validator:
 
@@ -160,31 +109,44 @@ Validator:
 Tools/validation/check_ai_model_json.py
 ```
 
-Deterministic samples:
+Reported local result:
 
 ```text
-plain object: PASS expected
-markdown fenced object: PASS expected
-text before/after object: PASS expected
-trailing comma: PASS when allow_repair=true
-line-only // comment: PASS when allow_repair=true
+check_ai_model_json.py: PASS
+errors: []
+case_count: 12
+```
+
+Validated cases:
+
+```text
+plain object: PASS
+markdown fenced object: PASS
+text before/after object: PASS
+trailing comma: PASS
+line-only // comment: PASS
 JSON array: PASS for parse_model_json
-array rejected by parse_model_json_object: PASS
-invalid text: FAIL with ModelJsonParseError
+array rejected by parse_model_json_object: PASS with ModelJsonParseError
+invalid text: PASS with ModelJsonParseError
+ollama parse_json_response plain: PASS
+ollama parse_json_response fenced: PASS
+ollama parse_json_response surrounding text: PASS
+ollama parse_json_response invalid: PASS with JSONDecodeError
 ```
 
 ## Migration policy
 
-Do not immediately refactor all callers.
+Further caller migration is intentionally deferred.
 
-Recommended sequence:
+Future migrations should happen only after reading the current caller and adding a focused validator case.
+
+Recommended future sequence:
 
 ```text
-1. add Tools/ai/model_json.py
-2. add check_ai_model_json.py
-3. validate locally
-4. optionally update Tools/npu/ollama_runtime.py parse_json_response to delegate to the new utility
-5. only then inspect other JSON model-output consumers
+1. inspect one model-output JSON caller
+2. migrate only that caller to Tools.ai.model_json
+3. add one deterministic validation case
+4. run syntax, model JSON, pipeline module and JSON artifact validators
 ```
 
 ## Out of scope
@@ -200,17 +162,16 @@ FFmpeg changes
 
 ## Risk
 
-low if introduced as additive utility and validator only.
-
-medium if existing runtime callers are migrated immediately.
+low after validation.
 
 ## Decision
 
-Proceed with an additive utility PR after the current `agent_state_packet` contract PR is merged.
+The project now has a reusable model-output JSON parser. The old PR #19 `Tools/ai_core/json_utils.py` idea is considered absorbed in a smaller, safer form.
 
-Do not import old PR #19 wholesale. Reuse only the minimal concept of robust model-output JSON parsing.
+Do not import old PR #19 wholesale. Continue recovering only focused concepts through small PRs.
 
 ## Progress log
 
 - 2026-04-29: Reviewed current JSON helpers and confirmed the gap is model-output parsing, not normal JSON file IO.
-- 2026-04-29: Started additive implementation with `Tools/ai/model_json.py` and `Tools/validation/check_ai_model_json.py`.
+- 2026-04-29: Implemented additive parser with `Tools/ai/model_json.py` and `Tools/validation/check_ai_model_json.py`.
+- 2026-04-29: Delegated `Tools/npu/ollama_runtime.py::parse_json_response()` to the reusable parser while preserving the legacy `json.JSONDecodeError` failure type.
