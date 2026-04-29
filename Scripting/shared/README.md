@@ -1,6 +1,6 @@
 # Scripting/shared
 
-This folder is reserved for shared Blender scripting utilities that can be reused by multiple generated packages under `Scripting/`.
+This folder contains shared Blender scripting utilities that can be reused by multiple generated packages under `Scripting/`.
 
 ## Purpose
 
@@ -46,20 +46,51 @@ They should accept:
 
 ## Current modules
 
-| Module | Status |
-|---|---|
-| `path_utils.py` | Initial pure Python helper for project-root and path checks. |
-| `json_io.py` | Initial pure Python helper for UTF-8 JSON reads/writes and small validation helpers. |
-| `image_sequence.py` | Initial pure Python helper for frame sequence discovery and FFmpeg pattern generation. |
-| `ffmpeg_encoder.py` | Initial pure Python FFmpeg command builder, dry-run by default. |
-| `render_profiles.py` | Initial reusable encode profile definitions. |
+| Module | Status | Role |
+|---|---|---|
+| `path_utils.py` | Initial pure Python helper | Project-root and path checks. |
+| `json_io.py` | Initial pure Python helper | UTF-8 JSON reads/writes and small validation helpers. |
+| `image_sequence.py` | Initial pure Python helper | Frame sequence discovery and FFmpeg pattern generation. |
+| `ffmpeg_encoder.py` | Initial pure Python helper | FFmpeg command builder, dry-run by default. |
+| `render_profiles.py` | Initial pure Python helper | Reusable encode profile definitions. |
+| `blender_compat.py` | Initial Blender-aware helper | Defensive wrappers for VSE audio strips, frame range, FPS and Blender node compatibility. |
+
+## Blender compatibility helpers
+
+`blender_compat.py` is intentionally additive and should not import `bpy` at module import time. It can be compiled by normal Python validators, but functions that require Blender call `require_bpy()` internally.
+
+Initial functions:
+
+```text
+require_bpy
+get_scene
+ensure_sequence_editor
+clear_sequence_editor
+create_sound_strip
+safe_set_scene_sync_audio
+safe_create_node
+safe_create_noise_texture_node
+set_frame_range_from_seconds
+set_render_fps
+```
+
+Recommended adoption order:
+
+```text
+compile validation
+  -> manual Blender test in a disposable scene
+  -> optional package adapter
+  -> one call-site migration
+  -> package-specific Blender test
+```
+
+Do not replace package-specific audio or node code blindly. In particular, validate node creation and VSE audio strip behavior inside the target Blender version.
 
 ## Suggested future modules
 
 ```text
 Scripting/shared/
   README.md
-  blender_compat.py
   config_model.py
   panel_base.py
   scene_update.py
@@ -75,7 +106,8 @@ Scripting/shared/
 - Keep shared utilities configurable and package-agnostic.
 - Do not break the original v61b workflow during extraction.
 - Prefer adding wrappers first, then migrating package code after Blender tests.
+- Treat `blender_compat.py` as available but not yet adopted by runtime packages until validated inside Blender.
 
 ## Current status
 
-Initial package-agnostic utilities have been extracted, but package migration is still incomplete. Existing working packages should remain unchanged until each shared replacement has independent validation and an optional adapter.
+Initial package-agnostic utilities have been extracted, including a first Blender-aware compatibility helper. Package migration is still incomplete. Existing working packages should remain unchanged until each shared replacement has independent validation and an optional adapter.
