@@ -31,6 +31,10 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--smart-task", default=DEFAULT_SMART_TASK)
     ap.add_argument("--smart-max-packet-chars", type=int, default=DEFAULT_SMART_MAX_PACKET_CHARS)
     ap.add_argument("--smart-max-capsule-chars", type=int, default=DEFAULT_SMART_MAX_CAPSULE_CHARS)
+    ap.add_argument(
+        "--agent-state-packet",
+        help="Optional prebuilt agent state packet JSON to expose in reports without changing pipeline behavior.",
+    )
     ap.add_argument("--use-npu", action="store_true")
     ap.add_argument("--npu-guardrail", dest="npu_guardrail", action="store_true", default=True)
     ap.add_argument("--no-npu-guardrail", dest="npu_guardrail", action="store_false")
