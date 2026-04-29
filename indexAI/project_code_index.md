@@ -1,8 +1,8 @@
 # Spaziotempo Primary Project Code Index
 
-Generated: `2026-04-29T19:38:20`
+Generated: `2026-04-29T19:40:36`
 
-Source fingerprint: `f46d62bdb7a717d6210b815c88cdea585599dbb45b656bc6aeacd4f21c40f86b`
+Source fingerprint: `b88bdd05c8dc54f963f64cdff294b197e659ce8cf050f43bd5356a8ef0fe0311`
 
 Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.
 
@@ -218,7 +218,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
 - `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `53c55cc95abf776b330776e3bdee74319dbe3cc9e3e89bfbe385e621b9a410d6`
 - `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `ae496412a40745840615966bb12e0e7f2f2064610bd21622cb4642ed772441e1`
-- `Tools/npu/npu_code_manifest.json`: 7339 lines, 198048 chars, sha256 `a78686d00d8433e4036ad84612783021eb2a46a46e2b883fcfc8a8329ffea40c`
+- `Tools/npu/npu_code_manifest.json`: 7339 lines, 198048 chars, sha256 `2ad751a3c2f702bfd2cf11433b315b0fb12bc259c2c616d5ff80ac1b4893abaa`
 - `Tools/npu/npu_guardrail_service.py`: 491 lines, 20211 chars, sha256 `5829724c35b7fccef62481ca8efc7290b63ef4d552e441fcf51a59009a4cc84a`
 - `Tools/npu/npu_music_manifest.json`: 703 lines, 27216 chars, sha256 `e5cb8facca90680775a3ab5a525cfb2b0ef1f0f7c0ecd5c61e2f1570082f2045`
 - `Tools/npu/npu_runtime.py`: 161 lines, 5903 chars, sha256 `38dc29da6ba1c564c68a29c0c5de7e4b38787aa6a0c17607c8d2ae03fe89f182`
@@ -252,7 +252,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/workflow/gui/workflow_gui_modern.py`: 320 lines, 16586 chars, sha256 `87f65430327acbb217d9e556dea8b9cb36e653e0f34f20f0dc8455e960bb88dc`
 - `Tools/workflow/gui/workflow_gui_with_push.py`: 182 lines, 7145 chars, sha256 `bb961946809cb4426957710cec75f7e87519f25ff749f50cc9b591c32b8083bb`
 - `Tools/workflow/project_awareness.py`: 354 lines, 16475 chars, sha256 `c734994d90d95af74aebc3053ad6faf1eb24045bbbd5596caaf793ab162da70e`
-- `Tools/workflow/run_local_validation_after_refactor.ps1`: 191 lines, 7004 chars, sha256 `2a529f1799ef87292af8f42aa517f6a4173b722d00a20213b5dea3a47a4dcc38`
+- `Tools/workflow/run_local_validation_after_refactor.ps1`: 192 lines, 7039 chars, sha256 `a426de7d152c4042f8580ca00c3d813b1bd828475bec40204a45c591668ea473`
 - `Tools/workflow/scene_brief.py`: 420 lines, 22212 chars, sha256 `97afd3a2803151e531c00ba3b4ec3c1d554a974a30b9fe441ea9a03761ca6c92`
 - `Tools/workflow/smart_ai_context.py`: 220 lines, 10961 chars, sha256 `69eb7215126f2aa37225f6c2e7d8146a09dd72851a477617704cc8562e3fd088`
 - `Tools/workflow/startup_check.py`: 285 lines, 10524 chars, sha256 `1096a57973628a44876bec0b0639bc9ce909d02f1568f741ae0946d31e00ff4f`
@@ -635,7 +635,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI/project_code_chunks/chunk_0368_Tools_workflow_gui_workflow_gui_with_push_py.md` -> `Tools/workflow/gui/workflow_gui_with_push.py` lines 1-181
 - `indexAI/project_code_chunks/chunk_0369_Tools_workflow_project_awareness_py.md` -> `Tools/workflow/project_awareness.py` lines 1-249
 - `indexAI/project_code_chunks/chunk_0370_Tools_workflow_project_awareness_py.md` -> `Tools/workflow/project_awareness.py` lines 250-353
-- `indexAI/project_code_chunks/chunk_0371_Tools_workflow_run_local_validation_after_refactor_ps1.md` -> `Tools/workflow/run_local_validation_after_refactor.ps1` lines 1-190
+- `indexAI/project_code_chunks/chunk_0371_Tools_workflow_run_local_validation_after_refactor_ps1.md` -> `Tools/workflow/run_local_validation_after_refactor.ps1` lines 1-191
 - `indexAI/project_code_chunks/chunk_0372_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 1-197
 - `indexAI/project_code_chunks/chunk_0373_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 198-388
 - `indexAI/project_code_chunks/chunk_0374_Tools_workflow_scene_brief_py.md` -> `Tools/workflow/scene_brief.py` lines 389-419

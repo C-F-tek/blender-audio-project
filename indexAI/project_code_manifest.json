@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-04-29T19:38:20",
+  "created_at": "2026-04-29T19:40:36",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "index_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI",
   "primary_library": true,
-  "source_fingerprint": "f46d62bdb7a717d6210b815c88cdea585599dbb45b656bc6aeacd4f21c40f86b",
+  "source_fingerprint": "b88bdd05c8dc54f963f64cdff294b197e659ce8cf050f43bd5356a8ef0fe0311",
   "excluded_dirs": [
     ".git",
     ".mypy_cache",
@@ -10596,7 +10596,7 @@
       "suffix": ".json",
       "lines": 7339,
       "chars": 198048,
-      "sha256": "a78686d00d8433e4036ad84612783021eb2a46a46e2b883fcfc8a8329ffea40c"
+      "sha256": "2ad751a3c2f702bfd2cf11433b315b0fb12bc259c2c616d5ff80ac1b4893abaa"
     },
     {
       "file": "Tools/npu/npu_guardrail_service.py",
@@ -13835,9 +13835,9 @@
     {
       "file": "Tools/workflow/run_local_validation_after_refactor.ps1",
       "suffix": ".ps1",
-      "lines": 191,
-      "chars": 7004,
-      "sha256": "2a529f1799ef87292af8f42aa517f6a4173b722d00a20213b5dea3a47a4dcc38"
+      "lines": 192,
+      "chars": 7039,
+      "sha256": "a426de7d152c4042f8580ca00c3d813b1bd828475bec40204a45c591668ea473"
     },
     {
       "file": "Tools/workflow/scene_brief.py",
@@ -18114,7 +18114,7 @@
       "start_line": 1,
       "end_line": 382,
       "chars": 11708,
-      "sha256": "4ee904dafa2cd5026bf87b72e50e6ee9acd19b3e58fc5f8c735c5adf69694e87"
+      "sha256": "9afee8ce88d0ed831b0297885564051d7ac49f6d6d16419577c53784b9191cc9"
     },
     {
       "index": 294,
@@ -18892,9 +18892,9 @@
       "path": "indexAI/project_code_chunks/chunk_0371_Tools_workflow_run_local_validation_after_refactor_ps1.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 190,
-      "chars": 8481,
-      "sha256": "d80aff4281c37d35cd16fada29d154d0da8d9fc15e984e39072c21fb5899da32"
+      "end_line": 191,
+      "chars": 8523,
+      "sha256": "83ee7f3c4d8f21b21cd0da413733e1f11e221448c8edd3fab0609714855dba07"
     },
     {
       "index": 372,
