@@ -12,15 +12,21 @@ Core repository checks:
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
+python .\Tools\validation\check_docs_links.py --repo-root .
 ```
 
-AI artifact pipeline smoke check:
+AI artifact pipeline smoke and consistency checks:
 
 ```powershell
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 ```
 
 The AI pipeline smoke check imports the modular pipeline, builds representative steps, checks preflight/report helpers and verifies the thin entrypoint is importable. It does not execute NPU, GPU, Blender or FFmpeg workloads.
+
+The refactor status consistency check verifies that the machine-readable status marker and the primary Markdown documents agree on the pipeline state and expected modules.
+
+The docs link checker validates local Markdown links and ignores external URLs.
 
 ## Optional reports
 
@@ -28,7 +34,9 @@ The AI pipeline smoke check imports the modular pipeline, builds representative 
 python .\Tools\validation\check_python_syntax.py --repo-root . --output output\validation\python_syntax.json
 python .\Tools\validation\check_package_structure.py --repo-root . --output output\validation\package_structure.json
 python .\Tools\validation\check_json_artifacts.py --repo-root . --output output\validation\json_artifacts.json
+python .\Tools\validation\check_docs_links.py --repo-root . --output output\validation\docs_links.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output output\validation\refactor_status_consistency.json
 ```
 
 ## AI pipeline dry-run matrix
@@ -43,6 +51,7 @@ Expected matrix output:
 
 ```text
 output/ai_pipeline/dry_run_matrix_report.json
+output/ai_pipeline/dry_run_matrix_report.md
 ```
 
 Important fields to inspect:
@@ -80,6 +89,8 @@ Use this block after structural refactors, documentation changes, or AI pipeline
 ```powershell
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
+python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
@@ -104,6 +115,8 @@ git push origin master
 
 - `check_python_syntax.py` compiles Python files without importing project modules.
 - `check_package_structure.py` reports package-level warnings under `Scripting/`.
-- `check_json_artifacts.py` checks JSON parseability and skips very large files by default.
+- `check_json_artifacts.py` checks JSON parseability, accepts UTF-8 with or without BOM and skips very large files by default.
+- `check_docs_links.py` checks repository-local Markdown links.
 - `check_ai_pipeline_modules.py` is a smoke validator for the modular AI artifact pipeline.
+- `check_refactor_status_consistency.py` checks status marker and documentation consistency.
 - Validation helpers should not launch Blender renders, GPU generation, NPU model execution or FFmpeg encodes.
