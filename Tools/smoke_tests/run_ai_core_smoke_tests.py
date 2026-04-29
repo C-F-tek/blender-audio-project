@@ -13,8 +13,21 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from Tools.ai_core import ArtifactStore, PipelineContext, PipelineResult, PipelineStage, SequentialPipeline, StaticModelClient, parse_model_json
+from Tools.ai_core import (
+    ArtifactStore,
+    BuildPromptStage,
+    ParseModelJsonStage,
+    PipelineContext,
+    PipelineResult,
+    RunModelStage,
+    SequentialPipeline,
+    StaticModelClient,
+    ValidatePayloadStage,
+    parse_model_json,
+)
 from Tools.ai_core.io_utils import file_meta, write_json, write_text
+from Tools.ai_core.validators import RequiredKeysValidator
+from Tools.ai_adapters.audio import build_audio_ai_summary
 from Tools.ai_adapters.blender import BlenderGeneratedScriptPolicy, BlenderImplementationDraftValidator
 
 
@@ -57,6 +70,56 @@ def smoke_pipeline(out_dir: Path) -> dict[str, Any]:
     context = PipelineContext(job={"name": "core_pipeline_smoke"}, artifacts=store)
     result: PipelineResult = SequentialPipeline([AddValueStage(), PersistValueStage()]).run(context)
     return {"passed": result.passed and context.data.get("value") == 42, "result": result.to_dict()}
+
+
+def smoke_generic_stages(out_dir: Path) -> dict[str, Any]:
+    store = ArtifactStore(out_dir, run_id="generic_stages_smoke")
+    model = StaticModelClient('{"result": "ok", "answer": 42}', model="stage-static")
+    context = PipelineContext(job={"name": "generic_stages_smoke"}, artifacts=store)
+    pipeline = SequentialPipeline([
+        BuildPromptStage(name="build_prompt", builder=lambda ctx: "Return JSON with result and answer."),
+        RunModelStage(name="run_model", model_client=model),
+        ParseModelJsonStage(name="parse_json"),
+        ValidatePayloadStage(name="validate_payload", validator=RequiredKeysValidator(["result", "answer"])),
+    ])
+    result = pipeline.run(context)
+    parsed = context.data.get("parsed_json") or {}
+    return {
+        "passed": result.passed and parsed.get("result") == "ok" and parsed.get("answer") == 42,
+        "result": result.to_dict(),
+        "parsed": parsed,
+    }
+
+
+def smoke_audio_adapter() -> dict[str, Any]:
+    analysis = {
+        "analysis_summary": {
+            "duration_sec": 258.46,
+            "sample_rate": 44100,
+            "estimated_tempo_bpm": 120.19,
+            "fps": 30,
+        },
+        "segments": [
+            {
+                "index": 0,
+                "start_sec": 0.0,
+                "end_sec": 16.0,
+                "dominant_band": "low",
+                "intensity": "medium",
+                "intensity_score": 0.55,
+                "controls": {"fog": 0.3},
+                "top_events": ["beat", "onset"],
+            }
+        ],
+    }
+    summary = build_audio_ai_summary(analysis)
+    passed = (
+        summary.get("schema_version") == 1
+        and summary.get("analysis_summary", {}).get("duration_sec") == 258.46
+        and summary.get("segment_count") == 1
+        and summary.get("segments", [{}])[0].get("dominant_band") == "low"
+    )
+    return {"passed": passed, "summary": summary}
 
 
 def sample_valid_blender_draft() -> dict[str, Any]:
@@ -183,15 +246,18 @@ def main() -> int:
         "parse_model_json": smoke_parse_model_json(),
         "static_model_client": smoke_static_model_client(),
         "sequential_pipeline": smoke_pipeline(out_dir),
+        "generic_stages": smoke_generic_stages(out_dir),
+        "audio_adapter": smoke_audio_adapter(),
         "blender_validator": smoke_blender_validator(),
     }
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "repo_root": str(ROOT),
         "runtime": {"python": sys.version, "platform": platform.platform()},
         "inputs": {
             "ai_core": file_meta(ROOT / "Tools" / "ai_core", root=ROOT),
+            "audio_adapter": file_meta(ROOT / "Tools" / "ai_adapters" / "audio", root=ROOT),
             "blender_adapter": file_meta(ROOT / "Tools" / "ai_adapters" / "blender", root=ROOT),
         },
         "checks": checks,
