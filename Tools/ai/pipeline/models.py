@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from enum import StrEnum
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
 
-class PipelineLane(StrEnum):
-    """Execution lane for a pipeline step."""
+class PipelineLane(str, Enum):
+    """Execution lane for a pipeline step.
+
+    This intentionally uses ``str, Enum`` instead of ``StrEnum`` so the module
+    remains compatible with Python 3.10+.
+    """
 
     CPU = "CPU"
     NPU = "NPU"
