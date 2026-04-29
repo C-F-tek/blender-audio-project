@@ -12,17 +12,17 @@ from pathlib import Path
 try:
     from pipeline.artifact_contracts import slugify
     from pipeline.cli import build_parser
-    from pipeline.orchestrator import run_parallel_steps, run_serial_steps
     from pipeline.preflight import preflight
     from pipeline.remediation import execute_remediation_loop
+    from pipeline.scheduler import build_schedule, execute_schedule
     from pipeline.schema_report import build_report, empty_failed_report, write_report_if_requested
     from pipeline.steps import build_parallel_steps, build_serial_steps, build_step_commands
 except ImportError:  # Allows package-style imports during external checks.
     from Tools.ai.pipeline.artifact_contracts import slugify  # type: ignore
     from Tools.ai.pipeline.cli import build_parser  # type: ignore
-    from Tools.ai.pipeline.orchestrator import run_parallel_steps, run_serial_steps  # type: ignore
     from Tools.ai.pipeline.preflight import preflight  # type: ignore
     from Tools.ai.pipeline.remediation import execute_remediation_loop  # type: ignore
+    from Tools.ai.pipeline.scheduler import build_schedule, execute_schedule  # type: ignore
     from Tools.ai.pipeline.schema_report import build_report, empty_failed_report, write_report_if_requested  # type: ignore
     from Tools.ai.pipeline.steps import build_parallel_steps, build_serial_steps, build_step_commands  # type: ignore
 
@@ -43,15 +43,19 @@ def main() -> int:
 
     commands = build_step_commands(repo, out, args)
     track_slug = slugify(args.track_stem)
-    serial = build_serial_steps(commands, track_slug)
-    parallel = build_parallel_steps(commands, out, args)
+    schedule = build_schedule(
+        build_serial_steps(commands, track_slug),
+        build_parallel_steps(commands, out, args),
+    )
 
-    results = run_serial_steps(serial, repo, args.dry_run, args.continue_on_error)
-    if parallel and all(item["returncode"] == 0 for item in results):
-        results.extend(run_parallel_steps(parallel, repo, args.dry_run))
-
+    results = execute_schedule(
+        schedule,
+        repo=repo,
+        dry_run=args.dry_run,
+        continue_on_error=args.continue_on_error,
+    )
     remediation_loop = execute_remediation_loop(repo, out, args, results)
-    report = build_report(repo, out, args, pf, results, remediation_loop)
+    report = build_report(repo, out, args, pf, results, remediation_loop, schedule=schedule.to_dict())
     write_report_if_requested(out, args, report)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2
