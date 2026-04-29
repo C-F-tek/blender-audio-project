@@ -118,6 +118,8 @@ try {
     Invoke-Step -Name "git status before validation" -Command "git" -Arguments @("status")
     Invoke-Step -Name "python syntax validation" -Command "python" -Arguments @(".\Tools\validation\check_python_syntax.py", "--repo-root", ".")
     Invoke-Step -Name "ai pipeline module smoke validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_pipeline_modules.py", "--repo-root", ".", "--output", ".\output\validation\ai_pipeline_modules.json")
+    Invoke-Step -Name "refactor status consistency validation" -Command "python" -Arguments @(".\Tools\validation\check_refactor_status_consistency.py", "--repo-root", ".", "--output", ".\output\validation\refactor_status_consistency.json")
+    Invoke-Step -Name "documentation links validation" -Command "python" -Arguments @(".\Tools\validation\check_docs_links.py", "--repo-root", ".", "--output", ".\output\validation\docs_links.json")
     Invoke-Step -Name "ai pipeline dry-run matrix" -Command "python" -Arguments @(".\Tools\ai\run_pipeline_dry_run_matrix.py", "--repo-root", ".", "--continue-on-error")
     Invoke-Step -Name "package structure validation" -Command "python" -Arguments @(".\Tools\validation\check_package_structure.py", "--repo-root", ".")
     Invoke-Step -Name "json artifact validation" -Command "python" -Arguments @(".\Tools\validation\check_json_artifacts.py", "--repo-root", ".")
@@ -142,6 +144,8 @@ $summary = [pscustomobject]@{
     passed = $passed
     log_path = $script:MainLog
     ai_pipeline_modules_report = (Join-Path $repo "output\validation\ai_pipeline_modules.json")
+    refactor_status_consistency_report = (Join-Path $repo "output\validation\refactor_status_consistency.json")
+    docs_links_report = (Join-Path $repo "output\validation\docs_links.json")
     dry_run_matrix_json = (Join-Path $repo "output\ai_pipeline\dry_run_matrix_report.json")
     dry_run_matrix_markdown = (Join-Path $repo "output\ai_pipeline\dry_run_matrix_report.md")
     steps = $script:Results
@@ -157,6 +161,8 @@ $md += ("- Passed: {0}" -f $passed)
 $md += ("- Repo: {0}" -f $repo)
 $md += ("- Log: {0}" -f $script:MainLog)
 $md += ("- AI module report: {0}" -f $summary.ai_pipeline_modules_report)
+$md += ("- Refactor status consistency report: {0}" -f $summary.refactor_status_consistency_report)
+$md += ("- Docs links report: {0}" -f $summary.docs_links_report)
 $md += ("- Dry-run matrix JSON: {0}" -f $summary.dry_run_matrix_json)
 $md += ("- Dry-run matrix Markdown: {0}" -f $summary.dry_run_matrix_markdown)
 $md += ""
@@ -175,6 +181,8 @@ $md += ""
 $md += "    git status"
 $md += "    git diff --stat"
 $md += "    Get-Content .\output\validation\ai_pipeline_modules.json -Raw"
+$md += "    Get-Content .\output\validation\refactor_status_consistency.json -Raw"
+$md += "    Get-Content .\output\validation\docs_links.json -Raw"
 $md += "    Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw"
 $md | Set-Content -LiteralPath $summaryMd -Encoding UTF8
 
