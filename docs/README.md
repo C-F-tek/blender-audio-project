@@ -9,30 +9,31 @@ The documentation is intended for both human developers and AI agents. It should
 1. `../AGENTS.md`
 2. `PROJECT_OVERVIEW.md`
 3. `PROJECT_AI_CONSCIOUSNESS.md`
-4. `AI_EXTERNAL_KNOWLEDGE.md`
-5. `MODULE_MAP.md`
-6. `DATA_FLOW.md`
-7. `REFACTORING_AND_REUSE_PLAN.md`
-8. `PATCH_SPEC_WORKFLOW.md`
-9. `SHARED_SCRIPTING_UTILITIES.md`
-10. `BLENDER_SCRIPT_ENTRYPOINTS.md`
-11. `AI_GENERATED_PACKAGE_STANDARD.md`
-12. `PACKAGE_CREATION_WORKFLOW.md`
-13. `QUALITY_GATE.md`
-14. `AUDIO_ANALYSIS_PIPELINE.md`
-15. `JSON_SCHEMAS.md`
-16. `RENDER_WORKFLOW.md`
-17. `FFMPEG_WORKFLOW.md`
-18. `LOCAL_AI_WORKFLOW.md`
-19. `NPU_GPU_PARALLELISM_PLAN.md`
-20. `AI_PIPELINE_OPTIMIZATION.md`
-21. `INSTALLATION.md`
-22. `USAGE.md`
-23. `COMPATIBILITY.md`
-24. `KNOWN_LIMITATIONS.md`
-25. `DEVELOPER_GUIDE.md`
-26. `PROJECT_AUDIT.md`
-27. `PROJECT_STATUS_POINT.md`
+4. `AI_ONBOARDING.md`
+5. `AI_EXTERNAL_KNOWLEDGE.md`
+6. `MODULE_MAP.md`
+7. `DATA_FLOW.md`
+8. `REFACTORING_AND_REUSE_PLAN.md`
+9. `PATCH_SPEC_WORKFLOW.md`
+10. `SHARED_SCRIPTING_UTILITIES.md`
+11. `BLENDER_SCRIPT_ENTRYPOINTS.md`
+12. `AI_GENERATED_PACKAGE_STANDARD.md`
+13. `PACKAGE_CREATION_WORKFLOW.md`
+14. `QUALITY_GATE.md`
+15. `AUDIO_ANALYSIS_PIPELINE.md`
+16. `JSON_SCHEMAS.md`
+17. `RENDER_WORKFLOW.md`
+18. `FFMPEG_WORKFLOW.md`
+19. `LOCAL_AI_WORKFLOW.md`
+20. `NPU_GPU_PARALLELISM_PLAN.md`
+21. `AI_PIPELINE_OPTIMIZATION.md`
+22. `INSTALLATION.md`
+23. `USAGE.md`
+24. `COMPATIBILITY.md`
+25. `KNOWN_LIMITATIONS.md`
+26. `DEVELOPER_GUIDE.md`
+27. `PROJECT_AUDIT.md`
+28. `PROJECT_STATUS_POINT.md`
 
 ## Documentation groups
 
@@ -42,6 +43,7 @@ The documentation is intended for both human developers and AI agents. It should
 |---|---|
 | `PROJECT_OVERVIEW.md` | High-level project identity and goals. |
 | `PROJECT_AI_CONSCIOUSNESS.md` | Compact operational memory for AI agents and future development sessions. |
+| `AI_ONBOARDING.md` | First-session guide for AI agents entering the project. |
 | `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this project. |
 | `MODULE_MAP.md` | Repository areas, source packages, generated artifacts and navigation order. |
 | `DATA_FLOW.md` | Data movement from audio input to Blender scene and encoded video. |
@@ -126,13 +128,14 @@ Before editing code, an AI system should:
 1. read `../AGENTS.md`;
 2. read this documentation index;
 3. read `PROJECT_AI_CONSCIOUSNESS.md`;
-4. read `MODULE_MAP.md`;
-5. read `DATA_FLOW.md`;
-6. read `REFACTORING_AND_REUSE_PLAN.md`;
-7. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
-8. read `QUALITY_GATE.md`;
-9. read the README of the target package;
-10. inspect the target source file before producing a patch.
+4. read `AI_ONBOARDING.md`;
+5. read `MODULE_MAP.md`;
+6. read `DATA_FLOW.md`;
+7. read `REFACTORING_AND_REUSE_PLAN.md`;
+8. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
+9. read `QUALITY_GATE.md`;
+10. read the README of the target package;
+11. inspect the target source file before producing a patch.
 
 ## Refactoring note
 

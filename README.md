@@ -67,13 +67,14 @@ For developers and AI agents:
 
 1. `AGENTS.md`
 2. `docs/README.md`
-3. `docs/MODULE_MAP.md`
-4. `docs/DATA_FLOW.md`
-5. `docs/REFACTORING_AND_REUSE_PLAN.md`
-6. `docs/SHARED_SCRIPTING_UTILITIES.md`
-7. `docs/QUALITY_GATE.md`
-8. `Scripting/README.md`
-9. the README of the target package under `Scripting/`
+3. `docs/AI_ONBOARDING.md`
+4. `docs/MODULE_MAP.md`
+5. `docs/DATA_FLOW.md`
+6. `docs/REFACTORING_AND_REUSE_PLAN.md`
+7. `docs/SHARED_SCRIPTING_UTILITIES.md`
+8. `docs/QUALITY_GATE.md`
+9. `Scripting/README.md`
+10. the README of the target package under `Scripting/`
 
 ## Reference Blender package
 

@@ -93,12 +93,12 @@ Current shared modules:
 | `Scripting/shared/path_utils.py` | Project root, file/directory checks, relative path helpers. |
 | `Scripting/shared/json_io.py` | UTF-8 JSON read/write and small validation helpers. |
 | `Scripting/shared/image_sequence.py` | Frame scan, contiguous sequence detection, FFmpeg pattern generation. |
+| `Scripting/shared/ffmpeg_encoder.py` | Package-agnostic FFmpeg command building and dry-run execution helper. |
+| `Scripting/shared/render_profiles.py` | Reusable encode profile definitions for YouTube-oriented output. |
 
 Next shared candidates:
 
 ```text
-Scripting/shared/ffmpeg_encoder.py
-Scripting/shared/render_profiles.py
 Scripting/shared/blender_compat.py
 Scripting/shared/config_model.py
 Scripting/shared/diagnostics.py
@@ -197,9 +197,9 @@ Capabilities:
 1. Commit regenerated AI/NPU indexes after validation.
 2. Add `.gitattributes` line-ending policy in a separate commit.
 3. Update docs index to include new AI knowledge and project consciousness files.
-4. Implement `Scripting/shared/ffmpeg_encoder.py` and `render_profiles.py`.
+4. Validate and document the new shared FFmpeg/render profile helpers before package migration.
 5. Add a small validation tweak to ignore backup folders like `v61b_backgood`.
-6. Later: add `Scripting/shared/blender_compat.py`.
+6. Add `Scripting/shared/blender_compat.py`.
 7. Later: split large AI/NPU orchestrator modules.
 
 ## Avoid now

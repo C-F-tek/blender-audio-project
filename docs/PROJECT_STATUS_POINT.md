@@ -27,7 +27,7 @@ The next correct move is not a broad rewrite. The next correct move is **control
 | Audio analysis | usable | Existing root tools can generate analysis and summary data. |
 | Blender reference package | strong | `Scripting/v61b/` is the reference architecture. |
 | Generated Blender package | usable but heavy | `ready_to_jazz_wow_youtube_profiles_audio_sync` works as a standalone package but is monolithic. |
-| Shared utilities | planned | Policy exists; code extraction is still the next implementation step. |
+| Shared utilities | active foundation | Initial path, JSON, image-sequence, FFmpeg and render-profile helpers exist; migration is still incomplete. |
 | AI/NPU pipeline | active | There is an additive orchestrator and guardrail direction. |
 | NPU/GPU parallelism | conceptually correct | Task-level lanes are defined: CPU parsing, NPU review, GPU heavy generation. |
 | Documentation | strong | Current docs now define project direction and safe modification rules. |
@@ -52,7 +52,7 @@ The next correct move is not a broad rewrite. The next correct move is **control
 | `Scripting/v61b/` | stable reference | Do not destructively refactor. Add adapters only after shared utilities exist. |
 | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/` | large standalone package | Good candidate for future split and extraction. |
 | `Scripting/_template_audio_reactive_package/` | useful template | Update progressively as shared utilities become real. |
-| `Scripting/shared/` | target layer | Implement first shared modules here. |
+| `Scripting/shared/` | active shared layer | Validate existing helpers, document contracts and add missing Blender compatibility/config/diagnostics modules. |
 
 ### AI/NPU tooling
 
@@ -78,24 +78,26 @@ This is the right shape for a reference package. It should not be rewritten whol
 
 The right treatment is not immediate splitting. First extract shared infrastructure such as FFmpeg profiles, image sequence handling and path/config helpers.
 
-### 3. Shared utilities are now the critical missing layer
+### 3. Shared utilities are now the critical migration layer
 
-The project has documentation for `Scripting/shared/`, but the actual implementation is still incomplete.
+The project has both documentation and an initial implementation under `Scripting/shared/`.
 
-First shared modules should be pure Python:
+Implemented pure Python helpers:
 
 ```text
 Scripting/shared/path_utils.py
 Scripting/shared/json_io.py
 Scripting/shared/image_sequence.py
+Scripting/shared/ffmpeg_encoder.py
+Scripting/shared/render_profiles.py
 ```
 
-Then Blender/FFmpeg modules:
+Next missing shared modules:
 
 ```text
 Scripting/shared/blender_compat.py
-Scripting/shared/ffmpeg_encoder.py
-Scripting/shared/render_profiles.py
+Scripting/shared/config_model.py
+Scripting/shared/diagnostics.py
 ```
 
 ### 4. AI/NPU pipeline direction is technically sound
@@ -129,7 +131,7 @@ Later, add Blender-specific validation where feasible.
 
 | Blocker | Impact | Recommendation |
 |---|---|---|
-| Shared utilities not implemented | New packages still duplicate logic | Implement pure Python shared modules first. |
+| Shared utilities not fully adopted | New packages can still duplicate logic | Validate existing helpers, then add optional package adapters. |
 | Large monolithic generated script | Harder to maintain and patch | Extract infrastructure before artistic scene logic. |
 | AI/NPU pipeline scripts are large | Harder to test and evolve | Split providers, prompts, validators and artifact writers. |
 | JSON contracts partial | AI-generated artifacts can drift | Strengthen schema docs and validators. |
@@ -156,21 +158,23 @@ Tools/npu/npu_code_index.md
 Tools/npu/npu_code_manifest.json
 ```
 
-### Phase 2: implement pure shared utilities
+### Phase 2: validate and extend shared utilities
 
-Create:
+Existing:
 
 ```text
 Scripting/shared/path_utils.py
 Scripting/shared/json_io.py
 Scripting/shared/image_sequence.py
+Scripting/shared/ffmpeg_encoder.py
+Scripting/shared/render_profiles.py
 ```
 
-These should not import `bpy` and should be testable with normal Python.
+These do not import `bpy` and should remain testable with normal Python. Next, add focused tests or fixtures before migrating package code.
 
-### Phase 3: add validation tools
+### Phase 3: extend validation tools
 
-Create:
+Existing:
 
 ```text
 Tools/validation/check_python_syntax.py
@@ -178,18 +182,11 @@ Tools/validation/check_package_structure.py
 Tools/validation/check_json_artifacts.py
 ```
 
-These will protect the repository before bigger refactors.
+Next validation value is a docs-link check and schema-oriented checks for confirmed JSON contracts.
 
-### Phase 4: implement FFmpeg/render shared layer
+### Phase 4: prepare FFmpeg/render adapters
 
-Create:
-
-```text
-Scripting/shared/ffmpeg_encoder.py
-Scripting/shared/render_profiles.py
-```
-
-Initial target: reproduce command-building behavior without changing existing package encoders.
+Initial target: compare shared command-building behavior with existing package encoders without changing existing package execution.
 
 ### Phase 5: add Blender compatibility layer
 
@@ -239,10 +236,9 @@ Recommended commit order:
 
 ```text
 chore: regenerate ai project indexes
-feat(shared): add path and json helpers
-feat(shared): add image sequence scanner
+docs: add first-session ai onboarding
+test(shared): add fixtures for path, json and image sequence helpers
 test: add repository validation scripts
-feat(shared): add ffmpeg profile models
 feat(shared): add blender compatibility wrappers
 refactor(v61b): add optional shared utility adapters
 refactor(npu): split dual ai pipeline modules

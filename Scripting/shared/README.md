@@ -44,18 +44,28 @@ They should accept:
 - render profile name;
 - optional Blender context.
 
+## Current modules
+
+| Module | Status |
+|---|---|
+| `path_utils.py` | Initial pure Python helper for project-root and path checks. |
+| `json_io.py` | Initial pure Python helper for UTF-8 JSON reads/writes and small validation helpers. |
+| `image_sequence.py` | Initial pure Python helper for frame sequence discovery and FFmpeg pattern generation. |
+| `ffmpeg_encoder.py` | Initial pure Python FFmpeg command builder, dry-run by default. |
+| `render_profiles.py` | Initial reusable encode profile definitions. |
+
 ## Suggested future modules
 
 ```text
 Scripting/shared/
   README.md
-  ffmpeg_encoder.py
-  image_sequence_encoder.py
-  render_profiles.py
-  path_utils.py
+  blender_compat.py
+  config_model.py
   panel_base.py
   scene_update.py
   diagnostics.py
+  hotpatch_base.py
+  scene_registry.py
 ```
 
 ## AI rules
@@ -68,4 +78,4 @@ Scripting/shared/
 
 ## Current status
 
-Shared utility code is not yet extracted. This folder currently defines the target structure and extraction policy.
+Initial package-agnostic utilities have been extracted, but package migration is still incomplete. Existing working packages should remain unchanged until each shared replacement has independent validation and an optional adapter.

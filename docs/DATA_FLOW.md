@@ -43,7 +43,7 @@ Audio file
 
 ## Missing formal schemas
 
-The following schemas are not specified yet:
+`docs/JSON_SCHEMAS.md` exists as a schema-notes file, but the following production schemas are still not fully specified:
 
 - audio analysis JSON schema;
 - music context JSON schema;
@@ -53,4 +53,4 @@ The following schemas are not specified yet:
 
 ## Recommended next improvement
 
-Create `docs/JSON_SCHEMAS.md` after inspecting representative JSON files from `output/`, `Tools/npu/`, and `indexAI/patch_library/`.
+Strengthen `docs/JSON_SCHEMAS.md` after inspecting representative JSON files from `output/`, `Tools/npu/`, and `indexAI/patch_library/`, then add non-destructive validators for the confirmed fields.

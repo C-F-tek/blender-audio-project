@@ -30,7 +30,7 @@ It now contains:
 | AI orientation | good | AI navigation, quality gate, package standards and generated indexes exist. |
 | Blender reference workflow | strong | `Scripting/v61b/` is modular and suitable as the reference model. |
 | Generated package workflow | good | Template and generated package structures exist. |
-| Shared utilities | planned | Policy is documented; full utility extraction is not complete. |
+| Shared utilities | active foundation | Initial path, JSON, image-sequence, FFmpeg and render-profile helpers exist; full migration is not complete. |
 | Local AI workflow | active/planned | NPU/Ollama tooling exists, but orchestration should be decomposed. |
 | JSON schemas | partial | Schema notes exist, but real production schemas still need stronger validation. |
 | Automated validation | partial/weak | Tooling exists, but CI-style validation and Blender checks are still limited. |
@@ -82,9 +82,9 @@ The repository records the current external AI workflow and the intended local A
 
 ## Risks and gaps
 
-### 1. Shared utility code is not fully implemented
+### 1. Shared utility code is not fully implemented or adopted
 
-`Scripting/shared/` currently defines direction and policy. Production-ready shared modules such as `ffmpeg_encoder.py`, `render_profiles.py`, `path_utils.py`, `json_io.py` and `blender_compat.py` still need to be implemented or completed.
+`Scripting/shared/` now contains initial package-agnostic helpers for paths, JSON, image sequences, FFmpeg command building and render profiles. Missing or incomplete areas still include Blender compatibility wrappers, config models, diagnostics and package adapters.
 
 ### 2. Large scripts concentrate too many responsibilities
 
@@ -118,30 +118,21 @@ The project needs non-invasive checks for Python syntax, package structure, docs
 
 ## Recommended next actions
 
-### Priority 1: implement first shared utilities
+### Priority 1: validate and complete shared utilities
 
-Create pure Python shared modules first:
+Existing pure Python shared modules should be validated and documented before package migration:
 
 ```text
 Scripting/shared/path_utils.py
 Scripting/shared/json_io.py
 Scripting/shared/image_sequence.py
-```
-
-These can be tested without Blender.
-
-### Priority 2: extract FFmpeg profiles additively
-
-Create:
-
-```text
 Scripting/shared/ffmpeg_encoder.py
 Scripting/shared/render_profiles.py
 ```
 
 Keep existing package encoders unchanged at first.
 
-### Priority 3: add Blender compatibility wrappers
+### Priority 2: add Blender compatibility wrappers
 
 Create:
 
@@ -151,7 +142,7 @@ Scripting/shared/blender_compat.py
 
 Use it for sound-strip creation, sequencer cleanup, safe node creation and safe scene property setting.
 
-### Priority 4: split NPU pipeline orchestration
+### Priority 3: split NPU pipeline orchestration
 
 Refactor `Tools/npu/run_dual_ai_pipeline.py` into:
 
@@ -167,18 +158,18 @@ Tools/npu/pipeline/runner.py
 
 The split should preserve current CLI behavior.
 
-### Priority 5: add validation scripts
+### Priority 4: extend validation scripts
 
-Add lightweight validation helpers:
+Existing lightweight validation helpers should be extended with docs-link and schema-oriented checks:
 
 ```text
 Tools/validation/check_python_syntax.py
 Tools/validation/check_package_structure.py
-Tools/validation/check_docs_links.py
 Tools/validation/check_json_artifacts.py
+Tools/validation/check_docs_links.py
 ```
 
-### Priority 6: regenerate indexes after structural changes
+### Priority 5: regenerate indexes after structural changes
 
 Regenerate:
 

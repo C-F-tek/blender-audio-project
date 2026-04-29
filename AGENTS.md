@@ -29,15 +29,16 @@ Before creating or editing a package, read:
 1. `README.md`
 2. `docs/README.md`
 3. `docs/PROJECT_AI_CONSCIOUSNESS.md`
-4. `docs/AI_EXTERNAL_KNOWLEDGE.md`
-5. `docs/MODULE_MAP.md`
-6. `docs/DATA_FLOW.md`
-7. `docs/REFACTORING_AND_REUSE_PLAN.md`
-8. `docs/QUALITY_GATE.md`
-9. `docs/SHARED_SCRIPTING_UTILITIES.md`
-10. `docs/PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits
-11. the README of the target package under `Scripting/`
-12. the target Python file before modifying it
+4. `docs/AI_ONBOARDING.md`
+5. `docs/AI_EXTERNAL_KNOWLEDGE.md`
+6. `docs/MODULE_MAP.md`
+7. `docs/DATA_FLOW.md`
+8. `docs/REFACTORING_AND_REUSE_PLAN.md`
+9. `docs/QUALITY_GATE.md`
+10. `docs/SHARED_SCRIPTING_UTILITIES.md`
+11. `docs/PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits
+12. the README of the target package under `Scripting/`
+13. the target Python file before modifying it
 
 ## Important folders
 

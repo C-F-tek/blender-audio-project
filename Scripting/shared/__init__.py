@@ -8,4 +8,6 @@ __all__ = [
     "path_utils",
     "json_io",
     "image_sequence",
+    "ffmpeg_encoder",
+    "render_profiles",
 ]
