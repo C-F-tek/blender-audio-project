@@ -16,6 +16,44 @@ push results
 share reports for review
 ```
 
+## One-command unattended workflow
+
+For a longer unattended run, use the local runner:
+
+```powershell
+cd C:\Users\carmi\blender\blender-audio-project
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
+```
+
+This script runs:
+
+```text
+git pull --rebase
+python syntax validation
+AI pipeline module smoke validation
+AI pipeline dry-run matrix
+package structure validation
+JSON artifact validation
+project AI index regeneration
+NPU code context regeneration
+git diff --stat
+git status
+```
+
+It writes logs and summaries under:
+
+```text
+output/local_validation/
+```
+
+It does not commit or push automatically.
+
+Use this variant when the repository is already pulled and you do not want the script to call Git:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError
+```
+
 ## When to use this workflow
 
 Use it after changes to:
@@ -173,6 +211,7 @@ git log --oneline -n 20
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.json -Raw
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
+Get-ChildItem .\output\local_validation -File | Sort-Object LastWriteTime -Descending | Select-Object -First 5
 ```
 
 If any dry-run failed, also share the failed case report:
