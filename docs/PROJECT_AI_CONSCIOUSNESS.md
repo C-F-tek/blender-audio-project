@@ -31,23 +31,29 @@ audio file
 | Ready To Jazz package | usable but monolithic | Good production/generation experiment; not yet reusable architecture. |
 | `Scripting/shared/` | active foundation | Pure Python helpers exist for path, JSON, image sequence, FFmpeg commands and render profiles; `blender_compat.py` exists but still needs Blender runtime validation. |
 | `Tools/validation/` | active foundation | Non-invasive validation scripts exist, including AI pipeline module smoke validation. |
-| `Tools/ai/pipeline/` | modularized, pending local dry-run validation | AI artifact pipeline is split into focused modules with a thin entrypoint and machine-readable status marker. |
+| `Tools/ai/pipeline/` | modularized and locally validated | AI artifact pipeline is split into focused modules with a thin entrypoint, dry-run matrix, Markdown report and machine-readable status marker. |
+| `Tools/workflow/` | active foundation | Contains unattended local validation runner. |
 | `Tools/ai/` and `Tools/npu/` | active pipeline | AI/NPU context, review and artifact generation tooling. |
 | `indexAI/` | generated context | Regenerate after structural changes. Do not hand-refactor as source. |
 | `patch_specs/` | advanced patch queue | JSON patch specs can be applied manually or by GitHub Action. |
+| `docs/EXECUTION_PLANS/` | active foundation | Durable task records for multi-step work. |
 | Documentation | strong | Use docs as project contract. |
 
 ## Files and folders to understand first
 
 ```text
 AGENTS.md
+WORKFLOW.md
 README.md
 docs/README.md
+docs/PROJECT_AI_CONSCIOUSNESS.md
 docs/AI_PIPELINE_REFACTOR_STATUS.md
 docs/AI_PIPELINE_ARCHITECTURE.md
 docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md
 docs/AI_EXTERNAL_KNOWLEDGE.md
 docs/OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md
+docs/EXECUTION_PLANS/README.md
+docs/TECH_DEBT_TRACKER.md
 docs/MODULE_MAP.md
 docs/DATA_FLOW.md
 docs/REFACTORING_AND_REUSE_PLAN.md
@@ -89,6 +95,23 @@ working package code
 
 Do not start by rewriting working Blender packages.
 
+## Durable task control
+
+The project now uses explicit workflow and task-control files:
+
+```text
+WORKFLOW.md
+docs/EXECUTION_PLANS/README.md
+docs/EXECUTION_PLANS/active/
+docs/EXECUTION_PLANS/completed/
+docs/EXECUTION_PLANS/abandoned/
+docs/TECH_DEBT_TRACKER.md
+```
+
+Use execution plans for multi-step work involving source code, shared utilities, AI pipeline behavior, Blender package migration, GitHub workflow changes or validation/debug cycles.
+
+Use the technical debt tracker when a known issue is real but not fixed immediately.
+
 ## External AI engineering knowledge
 
 OpenAI Harness Engineering and Symphony concepts have been adapted into:
@@ -107,26 +130,12 @@ validators and dry-runs as mechanical guardrails
 Markdown/JSON reports as proof of work
 workflow files as operational control plane
 small scoped tasks over broad rewrites
-execution plans and tech-debt tracking as future drift control
-```
-
-Recommended future additions from this knowledge:
-
-```text
-WORKFLOW.md
-docs/EXECUTION_PLANS/README.md
-docs/TECH_DEBT_TRACKER.md
-Tools/validation/check_refactor_status_consistency.py
-Tools/validation/check_docs_links.py
+execution plans and tech-debt tracking as drift control
 ```
 
 ## AI artifact pipeline status
 
-The AI artifact pipeline refactor is marked as:
-
-```text
-modular_schedule_complete_pending_local_validation
-```
+The AI artifact pipeline refactor is locally validated.
 
 Read before changing pipeline code:
 
@@ -158,15 +167,19 @@ Tools/ai/pipeline/remediation.py
 Tools/ai/pipeline/refactor_status.py
 ```
 
-Validation required after pulling latest pipeline changes:
+Validated locally:
 
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+```text
+Python syntax validation: PASS
+AI pipeline module smoke validation: PASS
+AI pipeline dry-run matrix: PASS
+Package structure validation: PASS
+JSON artifact validation: PASS
+Project AI index generation: PASS
+NPU code context generation: PASS
 ```
 
-The dry-run matrix now writes both JSON and Markdown:
+The dry-run matrix writes both JSON and Markdown:
 
 ```text
 output/ai_pipeline/dry_run_matrix_report.json
@@ -201,7 +214,7 @@ Current validators:
 |---|---|
 | `Tools/validation/check_python_syntax.py` | Compiles Python files without importing them. |
 | `Tools/validation/check_package_structure.py` | Inspects Blender package folders under `Scripting/`. |
-| `Tools/validation/check_json_artifacts.py` | Checks JSON parseability without rewriting artifacts. |
+| `Tools/validation/check_json_artifacts.py` | Checks JSON parseability without rewriting artifacts; accepts UTF-8 with or without BOM. |
 | `Tools/validation/check_ai_pipeline_modules.py` | Smoke-checks modular AI pipeline imports, step builders, preflight and report generation without heavy workloads. |
 
 Preferred local validation:
@@ -218,31 +231,6 @@ Unattended validation runner:
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
 ```
-
-## Known local validation result
-
-Recent local validation before the final modular AI pipeline split found:
-
-```text
-Python syntax: passed
-Package structure: passed with non-blocking warnings
-JSON artifacts: passed
-AI/NPU index generation: passed
-```
-
-The current modular AI pipeline split still requires local dry-run validation on the workstation.
-
-Known non-blocking warnings:
-
-```text
-Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync -> no config.py because it is standalone/monolithic
-Scripting/v61b_backgood -> backup folder without README
-```
-
-Recommended action:
-
-- optionally exclude backup-style folders from package-structure validation;
-- do not force a `config.py` into Ready To Jazz yet.
 
 ## Generated index policy
 
@@ -294,13 +282,11 @@ Capabilities:
 ## High-priority next tasks
 
 1. Pull latest remote changes on the workstation.
-2. Run Python syntax validation and AI pipeline module smoke validation.
-3. Run the AI pipeline dry-run matrix.
-4. Regenerate AI/NPU indexes after validation.
-5. Commit regenerated AI/NPU indexes only.
-6. Review dry-run report `summary`, `schedule` and Markdown output.
-7. Continue only after resolving any local validation failures.
-8. Consider adding `WORKFLOW.md`, execution plans and a tech debt tracker.
+2. Regenerate AI/NPU indexes after these documentation additions.
+3. Commit regenerated AI/NPU indexes only.
+4. Add `Tools/validation/check_refactor_status_consistency.py`.
+5. Add `Tools/validation/check_docs_links.py`.
+6. Create manual Blender smoke test for `Scripting/shared/blender_compat.py`.
 
 ## Avoid now
 
@@ -346,4 +332,6 @@ shared utilities before migration
 validation before commit
 indexes regenerated after structure changes
 proof-of-work reports for agentic work
+execution plans for multi-step work
+technical debt tracked instead of rediscovered
 ```
