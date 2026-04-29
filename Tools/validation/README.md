@@ -14,6 +14,7 @@ repository/package structure checks
 JSON artifact checks
 documentation link checks
 AI pipeline smoke checks
+AI dry-run matrix report contract checks
 agent memory policy checks
 Blender compatibility smokes
 generated-file policy checks
@@ -63,11 +64,12 @@ python .\Tools\validation\check_json_artifacts.py --repo-root .
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
 ```
 
-AI pipeline, model-output and memory checks:
+AI pipeline, model-output, report-contract and memory checks:
 
 ```powershell
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
 python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
+python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
 ```
@@ -89,6 +91,7 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_docs_links.py` | Validates repository-local Markdown links and ignores external URLs. | No |
 | `check_ai_pipeline_modules.py` | Imports modular AI pipeline code, builds representative steps, checks preflight/report helpers and verifies the thin entrypoint. | No |
 | `check_ai_model_json.py` | Validates deterministic parsing of JSON-like model output and the legacy Ollama parser wrapper. | No |
+| `check_ai_dry_run_matrix_contract.py` | Validates the machine-readable dry-run matrix report contract without running the matrix. | No |
 | `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and main docs agree on pipeline state and expected modules. | No |
 | `check_agent_memory_policy.py` | Checks generic memory retention, quarantine and promotion guardrails; also inspects local SQLite memory DB when present. | No |
 | `check_blender_shared_compat_smoke.py` | Imports `Scripting/shared/blender_compat.py`; outside Blender it marks runtime checks skipped, inside Blender it performs no-render compatibility smoke. | No render |
@@ -200,6 +203,20 @@ output/ai_pipeline/dry_run_matrix_report.json
 output/ai_pipeline/dry_run_matrix_report.md
 ```
 
+Contract validation command:
+
+```powershell
+python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
+```
+
+Explicit report path:
+
+```powershell
+python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --matrix-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\ai_dry_run_matrix_contract.json
+```
+
+The contract validator does not execute the dry-run matrix and does not modify artifacts. If the matrix report is missing, run the matrix first and then validate the report.
+
 Important fields to inspect:
 
 ```text
@@ -244,6 +261,7 @@ python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\va
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
 python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
 python .\Tools\npu\build_project_ai_index.py
@@ -271,6 +289,7 @@ git push origin master
 - `check_docs_links.py` checks repository-local Markdown links.
 - `check_ai_pipeline_modules.py` is a smoke validator for the modular AI artifact pipeline and schema-v6 report metadata.
 - `check_ai_model_json.py` checks reusable model-output JSON parsing and the Ollama parser compatibility wrapper.
+- `check_ai_dry_run_matrix_contract.py` checks the dry-run matrix report contract without running the matrix.
 - `check_refactor_status_consistency.py` checks status marker and documentation consistency.
 - `check_agent_memory_policy.py` checks generic memory retention and promotion guardrails.
 - `check_blender_shared_compat_smoke.py` verifies shared Blender compatibility helpers without requiring a render.
