@@ -31,7 +31,7 @@ Tools/validation/
 Tools/npu/
 ```
 
-Use it especially after changes to the modular AI artifact pipeline.
+Use it especially after changes to the modular AI artifact pipeline or shared Blender compatibility helpers.
 
 ## Step 1: update local repository
 
@@ -69,7 +69,10 @@ python .\Tools\validation\check_json_artifacts.py --repo-root .
 ```powershell
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.json -Raw
+Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
 ```
+
+The Markdown report is intended for quick human review. The JSON report remains the machine-readable source.
 
 For individual dry-run cases:
 
@@ -169,6 +172,7 @@ git status
 git log --oneline -n 20
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.json -Raw
+Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
 ```
 
 If any dry-run failed, also share the failed case report:
@@ -176,6 +180,27 @@ If any dry-run failed, also share the failed case report:
 ```powershell
 Get-Content .\output\ai_pipeline\dry_run_matrix\<case>\ai_pipeline_dry_run_report.json -Raw
 ```
+
+## Optional Blender compatibility smoke check
+
+`Scripting/shared/blender_compat.py` is intentionally import-safe outside Blender, but its Blender-facing functions require `bpy`.
+
+Normal Python validation should compile it:
+
+```powershell
+python .\Tools\validation\check_python_syntax.py --repo-root .
+```
+
+Manual Blender validation can be done later in a disposable scene by testing:
+
+```text
+create_sound_strip
+clear_sequence_editor
+set_frame_range_from_seconds
+safe_create_noise_texture_node
+```
+
+Do not migrate runtime package code to `blender_compat.py` before this manual Blender validation.
 
 ## Troubleshooting
 
@@ -202,6 +227,7 @@ Then inspect:
 
 ```powershell
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.json -Raw
+Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
 ```
 
 ### Pipeline module smoke validator fails
