@@ -11,6 +11,7 @@ from .artifact_contracts import (
     EXPECTED_WAVE_REVIEW_ARTIFACTS,
 )
 from .compat import pipeline_step, run_pipeline_step
+from .guardrail_models import GuardrailPassResult, GuardrailPlan
 from .models import PipelineStep
 from .steps import build_step_commands
 
@@ -35,32 +36,29 @@ def guardrail_queue(out: Path) -> dict[str, Any]:
 
 def auto_safe_requests(out: Path) -> list[dict[str, Any]]:
     """Return auto-safe remediation requests from the guardrail queue."""
-    queue = guardrail_queue(out).get("queue") or []
-    return [item for item in queue if isinstance(item, dict) and item.get("auto_safe")]
+    return [item.raw for item in auto_safe_plan(out).requests]
+
+
+def auto_safe_plan(out: Path) -> GuardrailPlan:
+    """Return a typed plan for auto-safe requests from the guardrail queue."""
+    return GuardrailPlan.from_queue(guardrail_queue(out).get("queue") or [])
 
 
 def remediation_plan_from_requests(requests: list[dict[str, Any]]) -> dict[str, Any]:
     """Summarize guardrail remediation requests by stage and action type."""
-    by_stage: dict[str, int] = {}
-    by_type: dict[str, int] = {}
-    for item in requests:
-        stage = str(item.get("suggested_stage") or "unknown")
-        action = str(item.get("action_type") or "unknown")
-        by_stage[stage] = by_stage.get(stage, 0) + 1
-        by_type[action] = by_type.get(action, 0) + 1
-    return {"request_count": len(requests), "by_stage": by_stage, "by_type": by_type, "requests": requests}
+    return GuardrailPlan.from_raw_requests(list(requests)).to_dict()
 
 
 def remedial_steps(
     repo: Path,
     out: Path,
     args: Any,
-    requests: list[dict[str, Any]],
+    plan: GuardrailPlan,
     pass_index: int,
 ) -> list[PipelineStep]:
     """Build PipelineStep remediation commands requested by the guardrail."""
     commands = build_step_commands(repo, out, args)
-    stages = {str(item.get("suggested_stage") or "") for item in requests}
+    stages = plan.stages
     todo: list[PipelineStep] = []
 
     if "wave_entrypoint_review" in stages and "review_wave_entrypoints" in commands:
@@ -142,20 +140,19 @@ def execute_remediation_loop(repo: Path, out: Path, args: Any, results: list[dic
     passes: list[dict[str, Any]] = []
     seen_signatures: set[str] = set()
     for pass_index in range(1, max(1, args.guardrail_max_passes) + 1):
-        requests = auto_safe_requests(out)
-        plan = remediation_plan_from_requests(requests)
-        signature = json.dumps(plan.get("by_stage", {}), sort_keys=True)
-        if not requests:
-            passes.append({"pass_index": pass_index, "status": "no_auto_safe_requests", "plan": plan, "steps": []})
+        plan = auto_safe_plan(out)
+        signature = plan.signature()
+        if not plan.requests:
+            passes.append(GuardrailPassResult(pass_index, "no_auto_safe_requests", plan, []).to_dict())
             break
         if signature in seen_signatures:
-            passes.append({"pass_index": pass_index, "status": "repeated_plan_stopped", "plan": plan, "steps": []})
+            passes.append(GuardrailPassResult(pass_index, "repeated_plan_stopped", plan, []).to_dict())
             break
         seen_signatures.add(signature)
 
-        todo = remedial_steps(repo, out, args, requests, pass_index)
+        todo = remedial_steps(repo, out, args, plan, pass_index)
         if not todo:
-            passes.append({"pass_index": pass_index, "status": "no_supported_remediation_commands", "plan": plan, "steps": []})
+            passes.append(GuardrailPassResult(pass_index, "no_supported_remediation_commands", plan, []).to_dict())
             break
 
         step_results = []
@@ -165,7 +162,7 @@ def execute_remediation_loop(repo: Path, out: Path, args: Any, results: list[dic
             results.append(res)
             if res["returncode"] and not args.continue_on_error:
                 break
-        passes.append({"pass_index": pass_index, "status": "executed", "plan": plan, "steps": step_results})
+        passes.append(GuardrailPassResult(pass_index, "executed", plan, step_results).to_dict())
         if any(item["returncode"] for item in step_results) and not args.continue_on_error:
             break
     return {"enabled": True, "max_passes": args.guardrail_max_passes, "passes": passes}
