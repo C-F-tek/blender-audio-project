@@ -6,9 +6,18 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
+
+try:
+    from Tools.ai.model_json import ModelJsonParseError, parse_model_json_object, strip_markdown_json_fence
+except ImportError:  # Allows direct script-style imports from Tools/npu during diagnostics.
+    repo_root = Path(__file__).resolve().parents[2]
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+    from Tools.ai.model_json import ModelJsonParseError, parse_model_json_object, strip_markdown_json_fence  # type: ignore
 
 
 def normalize_base_url(value: str | None) -> str:
@@ -197,27 +206,21 @@ def choose_model(preferred_model: str | None, available_models: list[str]) -> st
 
 
 def strip_json_fence(text: str) -> str:
-    stripped = text.strip()
-    if stripped.startswith("```"):
-        lines = stripped.splitlines()
-        if lines and lines[0].strip().startswith("```"):
-            lines = lines[1:]
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-        stripped = "\n".join(lines).strip()
-    return stripped
+    """Backward-compatible wrapper around the shared model JSON fence stripper."""
+    return strip_markdown_json_fence(text)
 
 
 def parse_json_response(text: str) -> dict:
-    stripped = strip_json_fence(text)
+    """Parse a JSON object from an Ollama model response.
+
+    This keeps the legacy public function name while delegating parsing to the
+    reusable AI model-output parser. Parse failures are converted back to
+    ``json.JSONDecodeError`` for compatibility with older callers.
+    """
     try:
-        return json.loads(stripped)
-    except json.JSONDecodeError:
-        start = stripped.find("{")
-        end = stripped.rfind("}")
-        if start >= 0 and end > start:
-            return json.loads(stripped[start : end + 1])
-        raise
+        return parse_model_json_object(text)
+    except ModelJsonParseError as exc:
+        raise json.JSONDecodeError(str(exc), text, 0) from exc
 
 
 class OllamaModelManager:
