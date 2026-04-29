@@ -12,30 +12,31 @@ The documentation is intended for both human developers and AI agents. It should
 4. `AI_ONBOARDING.md`
 5. `AI_PIPELINE_REFACTOR_STATUS.md`
 6. `AI_PIPELINE_ARCHITECTURE.md`
-7. `AI_EXTERNAL_KNOWLEDGE.md`
-8. `MODULE_MAP.md`
-9. `DATA_FLOW.md`
-10. `REFACTORING_AND_REUSE_PLAN.md`
-11. `PATCH_SPEC_WORKFLOW.md`
-12. `SHARED_SCRIPTING_UTILITIES.md`
-13. `BLENDER_SCRIPT_ENTRYPOINTS.md`
-14. `AI_GENERATED_PACKAGE_STANDARD.md`
-15. `PACKAGE_CREATION_WORKFLOW.md`
-16. `QUALITY_GATE.md`
-17. `AUDIO_ANALYSIS_PIPELINE.md`
-18. `JSON_SCHEMAS.md`
-19. `RENDER_WORKFLOW.md`
-20. `FFMPEG_WORKFLOW.md`
-21. `LOCAL_AI_WORKFLOW.md`
-22. `NPU_GPU_PARALLELISM_PLAN.md`
-23. `AI_PIPELINE_OPTIMIZATION.md`
-24. `INSTALLATION.md`
-25. `USAGE.md`
-26. `COMPATIBILITY.md`
-27. `KNOWN_LIMITATIONS.md`
-28. `DEVELOPER_GUIDE.md`
-29. `PROJECT_AUDIT.md`
-30. `PROJECT_STATUS_POINT.md`
+7. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
+8. `AI_EXTERNAL_KNOWLEDGE.md`
+9. `MODULE_MAP.md`
+10. `DATA_FLOW.md`
+11. `REFACTORING_AND_REUSE_PLAN.md`
+12. `PATCH_SPEC_WORKFLOW.md`
+13. `SHARED_SCRIPTING_UTILITIES.md`
+14. `BLENDER_SCRIPT_ENTRYPOINTS.md`
+15. `AI_GENERATED_PACKAGE_STANDARD.md`
+16. `PACKAGE_CREATION_WORKFLOW.md`
+17. `QUALITY_GATE.md`
+18. `AUDIO_ANALYSIS_PIPELINE.md`
+19. `JSON_SCHEMAS.md`
+20. `RENDER_WORKFLOW.md`
+21. `FFMPEG_WORKFLOW.md`
+22. `LOCAL_AI_WORKFLOW.md`
+23. `NPU_GPU_PARALLELISM_PLAN.md`
+24. `AI_PIPELINE_OPTIMIZATION.md`
+25. `INSTALLATION.md`
+26. `USAGE.md`
+27. `COMPATIBILITY.md`
+28. `KNOWN_LIMITATIONS.md`
+29. `DEVELOPER_GUIDE.md`
+30. `PROJECT_AUDIT.md`
+31. `PROJECT_STATUS_POINT.md`
 
 ## Documentation groups
 
@@ -48,6 +49,7 @@ The documentation is intended for both human developers and AI agents. It should
 | `AI_ONBOARDING.md` | First-session guide for AI agents entering the project. |
 | `AI_PIPELINE_REFACTOR_STATUS.md` | Stable marker for the current modular AI pipeline refactor state and validation requirements. |
 | `AI_PIPELINE_ARCHITECTURE.md` | Map of the modular AI artifact pipeline, module responsibilities and validation commands. |
+| `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local Git/GitHub validation, index regeneration, commit and push workflow after AI-assisted changes. |
 | `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this project. |
 | `MODULE_MAP.md` | Repository areas, source packages, generated artifacts and navigation order. |
 | `DATA_FLOW.md` | Data movement from audio input to Blender scene and encoded video. |
@@ -65,11 +67,13 @@ The documentation is intended for both human developers and AI agents. It should
 | `AI_PIPELINE_REFACTOR_STATUS.md` | Current refactor status marker to avoid inconsistent AI interpretation. |
 | `MODULE_MAP.md` | Source-to-target mapping for package modules and extraction candidates. |
 
-### Patch and automation workflow
+### Patch, GitHub and automation workflow
 
 | File | Purpose |
 |---|---|
 | `PATCH_SPEC_WORKFLOW.md` | Safe JSON patch-spec workflow, dry-run/apply commands, diff display and GitHub Action queue. |
+| `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local pull/validate/dry-run/index-regeneration/commit/push workflow. |
+| `INDEX_REGEN_POLICY.md` | Regeneration policy for AI indexes and manifests. |
 | `../patch_specs/README.md` | Patch spec inbox/applied folder convention. |
 | `../Tools/validation/README.md` | Local non-invasive validation commands. |
 
@@ -137,13 +141,14 @@ Before editing code, an AI system should:
 4. read `AI_ONBOARDING.md`;
 5. read `AI_PIPELINE_REFACTOR_STATUS.md`;
 6. read `AI_PIPELINE_ARCHITECTURE.md`;
-7. read `MODULE_MAP.md`;
-8. read `DATA_FLOW.md`;
-9. read `REFACTORING_AND_REUSE_PLAN.md`;
-10. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
-11. read `QUALITY_GATE.md`;
-12. read the README of the target package;
-13. inspect the target source file before producing a patch.
+7. read `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`;
+8. read `MODULE_MAP.md`;
+9. read `DATA_FLOW.md`;
+10. read `REFACTORING_AND_REUSE_PLAN.md`;
+11. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
+12. read `QUALITY_GATE.md`;
+13. read the README of the target package;
+14. inspect the target source file before producing a patch.
 
 ## Refactoring note
 
