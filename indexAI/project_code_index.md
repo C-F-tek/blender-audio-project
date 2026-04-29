@@ -1,8 +1,8 @@
 # Spaziotempo Primary Project Code Index
 
-Generated: `2026-04-29T14:03:36`
+Generated: `2026-04-29T14:09:37`
 
-Source fingerprint: `b596073963f0e35941afe9ab81e8a999882f333e0cbc244deda6223e29519e8f`
+Source fingerprint: `7925035e3ee6200ec6cd411ca802c1c432eda9833af4edac99499eef02b52e43`
 
 Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.
 
@@ -187,14 +187,14 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/npu/build_ai_service_packet.py`: 356 lines, 15673 chars, sha256 `0906bc0f6df6c0da50221ca38e0cce89d78afea243278b5f396225c6eb38af1d`
 - `Tools/npu/build_blender_manual_context.py`: 327 lines, 10493 chars, sha256 `5516f84a1f112607a51f93aa7dbe52631a7e834353a0b98c71706e33b152719c`
 - `Tools/npu/build_music_context.py`: 712 lines, 27167 chars, sha256 `dedb206a9a9e8d6f554be7d0a70ab29fe3d27ec81ffb133130e12b61b2a5d97b`
-- `Tools/npu/build_npu_code_context.py`: 390 lines, 12139 chars, sha256 `45037f46cd073bdc0d191828f75224d1d8726bf519620bc3ba7f795b687922b0`
-- `Tools/npu/build_project_ai_index.py`: 420 lines, 14905 chars, sha256 `5d0e447d5d77e945f831b80e31a0f0ccdd224276d30fe452a85293c99251e7c7`
+- `Tools/npu/build_npu_code_context.py`: 403 lines, 12828 chars, sha256 `e6a494d2b32fc355ef11174f91a3f7a0518cc74632a600d24b74c0813a2aa681`
+- `Tools/npu/build_project_ai_index.py`: 437 lines, 15632 chars, sha256 `6cbf28642535d7fc61b0f8509afcc168581b2cdd8459b74ffa5a8de2db3a3864`
 - `Tools/npu/build_semantic_code_chunks.py`: 92 lines, 5773 chars, sha256 `c95155adaba9dbffa80174feb6e7ee16ac23346d70a437cd75aa89138ff1dffb`
 - `Tools/npu/generated_blender_script_candidate.py`: 370 lines, 16456 chars, sha256 `3a8ea9bf92440e5a773b0973809156580c87ceebba3b62cda85a4c4133567d86`
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
 - `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `53c55cc95abf776b330776e3bdee74319dbe3cc9e3e89bfbe385e621b9a410d6`
 - `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `ae496412a40745840615966bb12e0e7f2f2064610bd21622cb4642ed772441e1`
-- `Tools/npu/npu_code_manifest.json`: 7265 lines, 195911 chars, sha256 `577e1a39dd248d3e57a341a480387fff4dea97b729e6877ac18e6854be9ccc7f`
+- `Tools/npu/npu_code_manifest.json`: 7265 lines, 195911 chars, sha256 `b3eebeeee63861fce5ef88c377b1dd72fe5c155360b001e0325df3df77ffcafd`
 - `Tools/npu/npu_guardrail_service.py`: 491 lines, 20211 chars, sha256 `5829724c35b7fccef62481ca8efc7290b63ef4d552e441fcf51a59009a4cc84a`
 - `Tools/npu/npu_music_manifest.json`: 703 lines, 27216 chars, sha256 `e5cb8facca90680775a3ab5a525cfb2b0ef1f0f7c0ecd5c61e2f1570082f2045`
 - `Tools/npu/npu_runtime.py`: 161 lines, 5903 chars, sha256 `38dc29da6ba1c564c68a29c0c5de7e4b38787aa6a0c17607c8d2ae03fe89f182`
@@ -475,10 +475,10 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI/project_code_chunks/chunk_0234_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 1-285
 - `indexAI/project_code_chunks/chunk_0235_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 286-547
 - `indexAI/project_code_chunks/chunk_0236_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 548-711
-- `indexAI/project_code_chunks/chunk_0237_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 1-306
-- `indexAI/project_code_chunks/chunk_0238_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 307-389
-- `indexAI/project_code_chunks/chunk_0239_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 1-300
-- `indexAI/project_code_chunks/chunk_0240_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 301-419
+- `indexAI/project_code_chunks/chunk_0237_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 1-299
+- `indexAI/project_code_chunks/chunk_0238_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 300-402
+- `indexAI/project_code_chunks/chunk_0239_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 1-297
+- `indexAI/project_code_chunks/chunk_0240_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 298-436
 - `indexAI/project_code_chunks/chunk_0241_Tools_npu_build_semantic_code_chunks_py.md` -> `Tools/npu/build_semantic_code_chunks.py` lines 1-91
 - `indexAI/project_code_chunks/chunk_0242_Tools_npu_generated_blender_script_candidate_py.md` -> `Tools/npu/generated_blender_script_candidate.py` lines 1-245
 - `indexAI/project_code_chunks/chunk_0243_Tools_npu_generated_blender_script_candidate_py.md` -> `Tools/npu/generated_blender_script_candidate.py` lines 246-369

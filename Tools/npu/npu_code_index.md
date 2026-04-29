@@ -1,6 +1,6 @@
 # NPU Code Index
 
-Generated: `2026-04-29T14:03:39`
+Generated: `2026-04-29T14:09:38`
 
 Purpose: long-context index for the local NPU musical/technical agent.
 Use `npu_code_chunks/chunk_*.md` for full file context.
@@ -54,8 +54,8 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `Tools/npu/ai_memory_context.py`: 112 lines, 4815 chars, sha256 `4febdeb28cc24886e60e547d4cb1097a0928f17283ecd58ba22db9fd3c12f9a7`
 - `Tools/npu/build_ai_service_packet.py`: 356 lines, 15673 chars, sha256 `0906bc0f6df6c0da50221ca38e0cce89d78afea243278b5f396225c6eb38af1d`
 - `Tools/npu/build_music_context.py`: 712 lines, 27167 chars, sha256 `dedb206a9a9e8d6f554be7d0a70ab29fe3d27ec81ffb133130e12b61b2a5d97b`
-- `Tools/npu/build_npu_code_context.py`: 390 lines, 12139 chars, sha256 `45037f46cd073bdc0d191828f75224d1d8726bf519620bc3ba7f795b687922b0`
-- `Tools/npu/build_project_ai_index.py`: 420 lines, 14905 chars, sha256 `5d0e447d5d77e945f831b80e31a0f0ccdd224276d30fe452a85293c99251e7c7`
+- `Tools/npu/build_npu_code_context.py`: 403 lines, 12828 chars, sha256 `e6a494d2b32fc355ef11174f91a3f7a0518cc74632a600d24b74c0813a2aa681`
+- `Tools/npu/build_project_ai_index.py`: 437 lines, 15632 chars, sha256 `6cbf28642535d7fc61b0f8509afcc168581b2cdd8459b74ffa5a8de2db3a3864`
 - `Tools/npu/build_semantic_code_chunks.py`: 92 lines, 5773 chars, sha256 `c95155adaba9dbffa80174feb6e7ee16ac23346d70a437cd75aa89138ff1dffb`
 - `Tools/npu/generated_blender_script_candidate.py`: 370 lines, 16456 chars, sha256 `3a8ea9bf92440e5a773b0973809156580c87ceebba3b62cda85a4c4133567d86`
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
@@ -155,10 +155,10 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `Tools/npu/npu_code_chunks/chunk_087_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 256-491
 - `Tools/npu/npu_code_chunks/chunk_088_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 492-682
 - `Tools/npu/npu_code_chunks/chunk_089_Tools_npu_build_music_context_py.md` -> `Tools/npu/build_music_context.py` lines 683-711
-- `Tools/npu/npu_code_chunks/chunk_090_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 1-270
-- `Tools/npu/npu_code_chunks/chunk_091_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 271-389
-- `Tools/npu/npu_code_chunks/chunk_092_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 1-266
-- `Tools/npu/npu_code_chunks/chunk_093_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 267-419
+- `Tools/npu/npu_code_chunks/chunk_090_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 1-262
+- `Tools/npu/npu_code_chunks/chunk_091_Tools_npu_build_npu_code_context_py.md` -> `Tools/npu/build_npu_code_context.py` lines 263-402
+- `Tools/npu/npu_code_chunks/chunk_092_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 1-262
+- `Tools/npu/npu_code_chunks/chunk_093_Tools_npu_build_project_ai_index_py.md` -> `Tools/npu/build_project_ai_index.py` lines 263-436
 - `Tools/npu/npu_code_chunks/chunk_094_Tools_npu_build_semantic_code_chunks_py.md` -> `Tools/npu/build_semantic_code_chunks.py` lines 1-91
 - `Tools/npu/npu_code_chunks/chunk_095_Tools_npu_generated_blender_script_candidate_py.md` -> `Tools/npu/generated_blender_script_candidate.py` lines 1-214
 - `Tools/npu/npu_code_chunks/chunk_096_Tools_npu_generated_blender_script_candidate_py.md` -> `Tools/npu/generated_blender_script_candidate.py` lines 215-369

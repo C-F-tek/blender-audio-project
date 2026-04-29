@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-04-29T14:03:36",
+  "created_at": "2026-04-29T14:09:37",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "index_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI",
   "primary_library": true,
-  "source_fingerprint": "b596073963f0e35941afe9ab81e8a999882f333e0cbc244deda6223e29519e8f",
+  "source_fingerprint": "7925035e3ee6200ec6cd411ca802c1c432eda9833af4edac99499eef02b52e43",
   "excluded_dirs": [
     ".git",
     ".mypy_cache",
@@ -175,7 +175,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -241,7 +242,8 @@
           "OUTPUT_DIR",
           "ANALYSIS_JSON",
           "OUT_JSON"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -648,7 +650,8 @@
           "DEFAULT_VISUAL_CONCEPT",
           "PALETTE_MAP",
           "CAMERA_PRESETS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -765,7 +768,8 @@
             "methods": []
           }
         ],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -791,7 +795,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -834,7 +839,8 @@
           "FFMPEG_AUDIO_BITRATE",
           "FFMPEG_AUDIO_SAMPLE_RATE",
           "ALLOW_DESTRUCTIVE_SCENE_CLEAR"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -886,7 +892,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -946,7 +953,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -994,7 +1002,8 @@
         "classes": [],
         "assignments": [
           "PACKAGE_DIR"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -1028,7 +1037,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -1081,7 +1091,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -1113,7 +1124,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -1235,6 +1247,9 @@
           "ENCODER_PROFILE",
           "CPU_THREADS",
           "PROFILES"
+        ],
+        "syntax_warnings": [
+          "line 6: \"\\e\" is an invalid escape sequence. Such sequences will not work in the future. Did you mean \"\\\\e\"? A raw string is also an option."
         ]
       }
     },
@@ -1263,7 +1278,8 @@
         "functions": [],
         "classes": [],
         "assignments": [],
-        "syntax_error": "invalid non-printable character U+FEFF (<unknown>, line 1)"
+        "syntax_warnings": [],
+        "syntax_error": "Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py: invalid non-printable character U+FEFF (Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py, line 1)"
       }
     },
     {
@@ -1291,7 +1307,8 @@
           "OUTPUT_PROJECT_SLUG",
           "OUTPUT_FRAME_PREFIX",
           "AVAILABLE_PROFILES"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -1306,7 +1323,8 @@
         "classes": [],
         "assignments": [
           "__all__"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -1374,7 +1392,8 @@
             "methods": []
           }
         ],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -1457,7 +1476,8 @@
         ],
         "assignments": [
           "IMAGE_EXTENSIONS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -1543,7 +1563,8 @@
             "methods": []
           }
         ],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -1640,7 +1661,8 @@
         "classes": [],
         "assignments": [
           "PROJECT_MARKERS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -1700,7 +1722,8 @@
           "CPU_SVT_AV1_YOUTUBE_12_THREADS",
           "GPU_AV1_NVENC_YOUTUBE",
           "PROFILES"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -1713,7 +1736,8 @@
         "imports": [],
         "functions": [],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -1788,7 +1812,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -2008,7 +2033,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -2121,7 +2147,8 @@
         "classes": [],
         "assignments": [
           "AURA_AUDIO_PROPS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -2145,7 +2172,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -2468,7 +2496,8 @@
           "MIST_BEAT_BOOST",
           "PEACE_PALETTE",
           "PALETTE_LIST"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -2629,7 +2658,8 @@
           "AUDIO_ZERO_FRAME",
           "SKIP_PLACEHOLDERS",
           "LAUNCH_VISIBLE_SHELL"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -2780,7 +2810,8 @@
           "ENCODE_SEQUENCE_AUDIO_ZERO_FRAME",
           "ENCODE_SEQUENCE_SKIP_PLACEHOLDERS",
           "ENCODE_SEQUENCE_SWITCH_TO_SEQUENCER"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -2881,7 +2912,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -2960,7 +2992,8 @@
           "ROOT_NAME",
           "OBJECT_PREFIX",
           "MATERIAL_NAME"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -2998,7 +3031,8 @@
         "classes": [],
         "assignments": [
           "SCRIPT_DIR"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -3015,7 +3049,8 @@
         "classes": [],
         "assignments": [
           "__all__"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -3118,7 +3153,8 @@
           "TURB_STRENGTH_MAX",
           "VORTEX_STRENGTH_MIN",
           "VORTEX_STRENGTH_MAX"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -3219,7 +3255,8 @@
           "ANALYSIS_JSON_PATH",
           "OUTPUT_MP4",
           "PALETTE_LIST"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -3330,7 +3367,8 @@
         "classes": [],
         "assignments": [
           "STRUCTURAL_OBJECTS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -3373,7 +3411,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -3507,7 +3546,8 @@
           "HERO_MATERIAL_NOISE_SCALE_MAX",
           "HERO_MATERIAL_MAPPING_DRIFT",
           "PEACE_PALETTE"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -3575,7 +3615,8 @@
           "BACKDROP_ROT_X",
           "FLOOR_RENDER_VISIBLE",
           "FLOOR_VIEWPORT_VISIBLE"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -3634,7 +3675,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -3680,7 +3722,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -3743,7 +3786,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -3812,7 +3856,8 @@
         "classes": [],
         "assignments": [
           "SCRIPT_DIR"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -3905,7 +3950,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -4073,7 +4119,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -4123,7 +4170,8 @@
         "assignments": [
           "MODULES_TO_RELOAD",
           "PACKAGE_PREFIXES_TO_RELOAD"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -4175,7 +4223,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -4602,7 +4651,8 @@
           "ENCODE_SEQUENCE_PATH",
           "ENCODE_FFMPEG_PATH",
           "classes"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -4666,7 +4716,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -4682,7 +4733,8 @@
         "assignments": [
           "PROJECT_SLUG",
           "PROJECT_VERSION"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -4695,7 +4747,8 @@
         "imports": [],
         "functions": [],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -4797,7 +4850,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -4828,7 +4882,8 @@
           "PARENT_LAYER_HINTS",
           "TYPE_FALLBACK_LAYERS",
           "FEATURE_CATALOG"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -4841,7 +4896,8 @@
         "imports": [],
         "functions": [],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -4873,7 +4929,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -4913,7 +4970,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -4926,7 +4984,8 @@
         "imports": [],
         "functions": [],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -5001,7 +5060,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -5221,7 +5281,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -5331,7 +5392,8 @@
         "classes": [],
         "assignments": [
           "AURA_AUDIO_PROPS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -5355,7 +5417,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -5617,7 +5680,8 @@
           "MIST_BEAT_BOOST",
           "PEACE_PALETTE",
           "PALETTE_LIST"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -5761,7 +5825,8 @@
           "ENCODE_SEQUENCE_SYNC_AUDIO_TO_FRAME_NUMBER",
           "ENCODE_SEQUENCE_SKIP_PLACEHOLDERS",
           "ENCODE_SEQUENCE_SWITCH_TO_SEQUENCER"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -5837,7 +5902,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -5875,7 +5941,8 @@
         "classes": [],
         "assignments": [
           "SCRIPT_DIR"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -5892,7 +5959,8 @@
         "classes": [],
         "assignments": [
           "__all__"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -5944,7 +6012,8 @@
           "PHYSICS_ACCENT_EMISSION_MAX",
           "PHYSICS_ACCENT_MIX_MIN",
           "PHYSICS_ACCENT_MIX_MAX"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -6045,7 +6114,8 @@
           "ANALYSIS_JSON_PATH",
           "OUTPUT_MP4",
           "PALETTE_LIST"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -6087,7 +6157,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -6221,7 +6292,8 @@
           "HERO_MATERIAL_NOISE_SCALE_MAX",
           "HERO_MATERIAL_MAPPING_DRIFT",
           "PEACE_PALETTE"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -6272,7 +6344,8 @@
           "WORLD_STRENGTH",
           "BACKDROP_EMISSION_MIN",
           "BACKDROP_EMISSION_MAX"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -6331,7 +6404,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -6359,7 +6433,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -6422,7 +6497,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -6474,7 +6550,8 @@
         "classes": [],
         "assignments": [
           "SCRIPT_DIR"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -6559,7 +6636,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -6727,7 +6805,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -6779,7 +6858,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -7153,7 +7233,8 @@
           "GUIDE_PATH",
           "HOT_UPDATE_PATH",
           "classes"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -7217,7 +7298,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -7257,7 +7339,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -7417,7 +7500,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -7467,7 +7551,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -7585,7 +7670,8 @@
         "classes": [],
         "assignments": [
           "DEFAULT_TARGETS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -7780,7 +7866,8 @@
           "EXPECTED_MUSIC_ARTIFACTS",
           "EXPECTED_CHUNK_ARTIFACTS",
           "EXPECTED_SMART_CONTEXT_ARTIFACTS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -7896,7 +7983,8 @@
         "assignments": [
           "BLOCKING_PATTERNS",
           "SCRIPT_REQUIRED_PATTERNS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -7986,7 +8074,8 @@
           "REQUIRED",
           "LOCAL_PATH_ALLOWED_ARTIFACTS",
           "CODELIKE_SUFFIXES"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -8068,7 +8157,8 @@
           "ROOT",
           "OUTPUT_DIR",
           "INDEX_AI_DIR"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -8189,7 +8279,8 @@
           "PATCH_LIBRARY_DIR",
           "SCENE_SCRIPTS_DIR",
           "PROJECT_MANIFEST_JSON"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -8348,7 +8439,8 @@
           "HTML_EXTENSIONS",
           "KEYWORDS",
           "README_TEXT"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -8656,15 +8748,16 @@
           "DEFAULT_SEGMENT_SECONDS",
           "SAMPLE_ROWS_PER_SEGMENT",
           "TOP_EVENTS_PER_SEGMENT"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
       "file": "Tools/npu/build_npu_code_context.py",
       "suffix": ".py",
-      "lines": 390,
-      "chars": 12139,
-      "sha256": "45037f46cd073bdc0d191828f75224d1d8726bf519620bc3ba7f795b687922b0",
+      "lines": 403,
+      "chars": 12828,
+      "sha256": "e6a494d2b32fc355ef11174f91a3f7a0518cc74632a600d24b74c0813a2aa681",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -8673,12 +8766,13 @@
           "hashlib",
           "json",
           "re",
+          "warnings",
           "from datetime import datetime"
         ],
         "functions": [
           {
             "name": "sha256_text",
-            "line": 56,
+            "line": 57,
             "args": [
               "text"
             ],
@@ -8686,7 +8780,7 @@
           },
           {
             "name": "rel_to_root",
-            "line": 60,
+            "line": 61,
             "args": [
               "path"
             ],
@@ -8694,7 +8788,7 @@
           },
           {
             "name": "slugify",
-            "line": 64,
+            "line": 65,
             "args": [
               "value",
               "max_len"
@@ -8703,7 +8797,7 @@
           },
           {
             "name": "is_usable_text_file",
-            "line": 69,
+            "line": 70,
             "args": [
               "path"
             ],
@@ -8711,29 +8805,38 @@
           },
           {
             "name": "collect_files",
-            "line": 75,
+            "line": 76,
             "args": [],
             "async": false
           },
           {
             "name": "target_name",
-            "line": 99,
+            "line": 100,
             "args": [
               "target"
             ],
             "async": false
           },
           {
-            "name": "extract_symbols",
-            "line": 107,
+            "name": "format_syntax_warning",
+            "line": 108,
             "args": [
-              "source"
+              "message"
+            ],
+            "async": false
+          },
+          {
+            "name": "extract_symbols",
+            "line": 113,
+            "args": [
+              "source",
+              "filename"
             ],
             "async": false
           },
           {
             "name": "file_record",
-            "line": 169,
+            "line": 179,
             "args": [
               "path",
               "source"
@@ -8742,7 +8845,7 @@
           },
           {
             "name": "format_symbol_summary",
-            "line": 184,
+            "line": 194,
             "args": [
               "record"
             ],
@@ -8750,7 +8853,7 @@
           },
           {
             "name": "numbered_lines",
-            "line": 225,
+            "line": 238,
             "args": [
               "lines",
               "start_line"
@@ -8759,7 +8862,7 @@
           },
           {
             "name": "split_source",
-            "line": 229,
+            "line": 242,
             "args": [
               "source",
               "max_chars"
@@ -8768,7 +8871,7 @@
           },
           {
             "name": "write_context_chunks",
-            "line": 255,
+            "line": 268,
             "args": [
               "files",
               "sources"
@@ -8777,7 +8880,7 @@
           },
           {
             "name": "write_index",
-            "line": 325,
+            "line": 338,
             "args": [
               "files",
               "chunks",
@@ -8787,7 +8890,7 @@
           },
           {
             "name": "main",
-            "line": 348,
+            "line": 361,
             "args": [],
             "async": false
           }
@@ -8806,15 +8909,16 @@
           "DISCOVERY_GLOBS",
           "EXCLUDE_PARTS",
           "TEXT_SUFFIXES"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
       "file": "Tools/npu/build_project_ai_index.py",
       "suffix": ".py",
-      "lines": 420,
-      "chars": 14905,
-      "sha256": "5d0e447d5d77e945f831b80e31a0f0ccdd224276d30fe452a85293c99251e7c7",
+      "lines": 437,
+      "chars": 15632,
+      "sha256": "6cbf28642535d7fc61b0f8509afcc168581b2cdd8459b74ffa5a8de2db3a3864",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -8824,12 +8928,13 @@
           "ast",
           "hashlib",
           "json",
-          "re"
+          "re",
+          "warnings"
         ],
         "functions": [
           {
             "name": "sha256_text",
-            "line": 74,
+            "line": 75,
             "args": [
               "text"
             ],
@@ -8837,7 +8942,7 @@
           },
           {
             "name": "sha256_file",
-            "line": 78,
+            "line": 79,
             "args": [
               "path"
             ],
@@ -8845,7 +8950,7 @@
           },
           {
             "name": "rel_to_root",
-            "line": 86,
+            "line": 87,
             "args": [
               "path"
             ],
@@ -8853,7 +8958,7 @@
           },
           {
             "name": "slugify",
-            "line": 90,
+            "line": 91,
             "args": [
               "value",
               "max_len"
@@ -8862,7 +8967,7 @@
           },
           {
             "name": "should_exclude",
-            "line": 95,
+            "line": 96,
             "args": [
               "path"
             ],
@@ -8870,29 +8975,38 @@
           },
           {
             "name": "collect_project_files",
-            "line": 116,
+            "line": 117,
             "args": [],
             "async": false
           },
           {
             "name": "target_name",
-            "line": 131,
+            "line": 132,
             "args": [
               "target"
             ],
             "async": false
           },
           {
-            "name": "extract_symbols",
-            "line": 139,
+            "name": "format_syntax_warning",
+            "line": 140,
             "args": [
-              "source"
+              "message"
+            ],
+            "async": false
+          },
+          {
+            "name": "extract_symbols",
+            "line": 145,
+            "args": [
+              "source",
+              "filename"
             ],
             "async": false
           },
           {
             "name": "file_record",
-            "line": 182,
+            "line": 197,
             "args": [
               "path"
             ],
@@ -8900,7 +9014,7 @@
           },
           {
             "name": "format_symbol_summary",
-            "line": 196,
+            "line": 211,
             "args": [
               "record"
             ],
@@ -8908,7 +9022,7 @@
           },
           {
             "name": "numbered_lines",
-            "line": 223,
+            "line": 240,
             "args": [
               "lines",
               "start_line"
@@ -8917,7 +9031,7 @@
           },
           {
             "name": "split_source",
-            "line": 227,
+            "line": 244,
             "args": [
               "source",
               "max_chars"
@@ -8926,7 +9040,7 @@
           },
           {
             "name": "source_fingerprint",
-            "line": 249,
+            "line": 266,
             "args": [
               "records"
             ],
@@ -8934,7 +9048,7 @@
           },
           {
             "name": "existing_cache_valid",
-            "line": 258,
+            "line": 275,
             "args": [
               "fingerprint"
             ],
@@ -8942,13 +9056,13 @@
           },
           {
             "name": "write_readme",
-            "line": 272,
+            "line": 289,
             "args": [],
             "async": false
           },
           {
             "name": "write_chunks",
-            "line": 293,
+            "line": 310,
             "args": [
               "records",
               "max_chunk_chars"
@@ -8957,7 +9071,7 @@
           },
           {
             "name": "write_index",
-            "line": 347,
+            "line": 364,
             "args": [
               "records",
               "chunks",
@@ -8968,7 +9082,7 @@
           },
           {
             "name": "build_project_ai_index",
-            "line": 367,
+            "line": 384,
             "args": [
               "force",
               "max_chunk_chars"
@@ -8977,7 +9091,7 @@
           },
           {
             "name": "main",
-            "line": 410,
+            "line": 427,
             "args": [],
             "async": false
           }
@@ -8997,7 +9111,8 @@
           "EXCLUDE_PARTS",
           "EXCLUDE_FILE_PREFIXES",
           "MEDIA_SUFFIXES"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -9108,7 +9223,8 @@
           "EXCLUDE",
           "RISK",
           "DOMAINS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -9288,7 +9404,8 @@
           "BLENDER_KEYFRAMES_JSON",
           "ASSET_INVENTORY_JSON",
           "USE_DUAL_FOCUS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -9468,7 +9585,8 @@
           "BLENDER_KEYFRAMES_JSON",
           "ASSET_INVENTORY_JSON",
           "USE_DUAL_FOCUS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -9490,7 +9608,7 @@
       "suffix": ".json",
       "lines": 7265,
       "chars": 195911,
-      "sha256": "577e1a39dd248d3e57a341a480387fff4dea97b729e6877ac18e6854be9ccc7f"
+      "sha256": "b3eebeeee63861fce5ef88c377b1dd72fe5c155360b001e0325df3df77ffcafd"
     },
     {
       "file": "Tools/npu/npu_guardrail_service.py",
@@ -9672,7 +9790,8 @@
           "REQUIRED_IDEAS",
           "SMART_CONTEXT_IDEAS",
           "INTERMEDIATE_ENRICHMENT_FIELDS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -9757,7 +9876,8 @@
           "DEFAULT_NPU_PYTHON",
           "DEFAULT_MODEL_DIR",
           "DEFAULT_TIMEOUT_SEC"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -9968,7 +10088,8 @@
         "assignments": [
           "DEFAULT_BASE_URL",
           "DEFAULT_MODELS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -10293,7 +10414,8 @@
           "NPU_IMPLEMENTATION_NOTES",
           "ALLOWED_NEW_PREFIXES",
           "PREFERRED_IMPLEMENTATION_FILES"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -10356,7 +10478,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -10572,7 +10695,8 @@
           "DEFAULT_MUSIC_CHUNK_DIR",
           "DEFAULT_MUSIC_OUT",
           "DEFAULT_MUSIC_NOTES_OUT"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -10659,7 +10783,8 @@
           "DEFAULT_MUSIC_CONTEXT_JSON",
           "DEFAULT_OUT_JSON",
           "DEFAULT_OUT_MD"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -10870,7 +10995,8 @@
             "methods": []
           }
         ],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -10942,7 +11068,8 @@
         "classes": [],
         "assignments": [
           "DEFAULT_EXCLUDES"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -11004,7 +11131,8 @@
         "assignments": [
           "SKIP_DIRS",
           "SKIP_NAME_PARTS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -11061,7 +11189,8 @@
         "classes": [],
         "assignments": [
           "DEFAULT_EXCLUDES"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -11213,7 +11342,8 @@
           "OLLAMA_LOG_PATH",
           "DIAG_JSON",
           "DIAG_MD"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -11295,7 +11425,8 @@
           "IMAGE_EXTENSIONS",
           "VIDEO_EXTENSIONS",
           "AUDIO_EXTENSIONS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -11334,7 +11465,8 @@
         "classes": [],
         "assignments": [
           "SUPPORTED_ASSET_EXTENSIONS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -11407,7 +11539,8 @@
           "ROOT",
           "PROJECT_DIR",
           "AUTO_PUSH_SCRIPT"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -11420,7 +11553,8 @@
         "imports": [],
         "functions": [],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -11528,7 +11662,8 @@
             ]
           }
         ],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -11681,7 +11816,8 @@
           "IMAGE_EXTENSIONS",
           "VIDEO_EXTENSIONS",
           "AUDIO_EXTENSIONS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -11759,7 +11895,8 @@
             ]
           }
         ],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -11859,7 +11996,8 @@
             ]
           }
         ],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -11917,7 +12055,8 @@
             "methods": []
           }
         ],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -12073,7 +12212,8 @@
             ]
           }
         ],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -12375,7 +12515,8 @@
         "assignments": [
           "THIS_DIR",
           "WORKFLOW_DIR"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -12465,7 +12606,8 @@
         ],
         "assignments": [
           "WorkflowGui"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -12532,7 +12674,8 @@
         "assignments": [
           "THIS_DIR",
           "WORKFLOW_DIR"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -12645,7 +12788,8 @@
           "OUTPUT_DIR",
           "NPU_DIR",
           "INDEX_AI_DIR"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -12832,7 +12976,8 @@
           "MEMORY_VERSION",
           "MAX_SCENE_CHAT_PROMPT_CHARS",
           "QUESTION_FIELDS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -13018,7 +13163,8 @@
         "assignments": [
           "DEFAULT_MAX_PACKET_CHARS",
           "DEFAULT_MAX_CAPSULE_CHARS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -13176,7 +13322,8 @@
           "LOG_DIR",
           "REPORT_JSON",
           "REPORT_TXT"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -13354,7 +13501,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -13430,7 +13578,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -13479,7 +13628,8 @@
           }
         ],
         "classes": [],
-        "assignments": []
+        "assignments": [],
+        "syntax_warnings": []
       }
     },
     {
@@ -13969,7 +14119,8 @@
           "DEFAULT_TECHNICAL_MODEL",
           "DEFAULT_CHAT_MODEL",
           "DEFAULT_SCRIPT_TOKENS"
-        ]
+        ],
+        "syntax_warnings": []
       }
     },
     {
@@ -14855,8 +15006,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 203,
-      "chars": 9240,
-      "sha256": "e3f69a7e9c41778d6ccdc9acdf8b4675e3fc9be592f2fb1479d8d3c088762dd0"
+      "chars": 9401,
+      "sha256": "eaa27cddf89dd9f63d3a6efc66aad11aa487ff03bc26e012a3d20351d59c7711"
     },
     {
       "index": 88,
@@ -14885,8 +15036,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 261,
-      "chars": 11951,
-      "sha256": "1c50142c945d11b3c0f7f695a08038d12ad797cc77226c1e770ea10c29c3f210"
+      "chars": 12122,
+      "sha256": "083e057caeaa453b411589b08cfc425748158f634990f96fab1142177a27a6c2"
     },
     {
       "index": 91,
@@ -14895,8 +15046,8 @@
       "part": 2,
       "start_line": 262,
       "end_line": 538,
-      "chars": 11960,
-      "sha256": "883cb42b2e3dad6ee0b5f53bd65ed8afcc05b764bb271bbc56a514ac0216cad3"
+      "chars": 12131,
+      "sha256": "6417a30a82c3cc4c0198cbdf7d2dc1ff89981005471006049f5fac323fa1f35b"
     },
     {
       "index": 92,
@@ -14905,8 +15056,8 @@
       "part": 3,
       "start_line": 539,
       "end_line": 763,
-      "chars": 12025,
-      "sha256": "c0ca1980a77b55e78d18e615ceb55dae7d324639f9336fd761bf6a100ccce3b3"
+      "chars": 12196,
+      "sha256": "2f22dbe2179e09b14d82d7db7e426e6a9f138c9e74eeb15323470d565a46c711"
     },
     {
       "index": 93,
@@ -14915,8 +15066,8 @@
       "part": 4,
       "start_line": 764,
       "end_line": 1033,
-      "chars": 11966,
-      "sha256": "83f8148f0e26ff00d54769484077badcc4d6d558691d8fe5cef66607b8075e42"
+      "chars": 12137,
+      "sha256": "9ddacc8ef9348fbaa17b09ac15a88a27b9cbd7b11a45b275e028faf47afa594d"
     },
     {
       "index": 94,
@@ -14925,8 +15076,8 @@
       "part": 5,
       "start_line": 1034,
       "end_line": 1299,
-      "chars": 11991,
-      "sha256": "e65e7ba446331f01b66ae8e19a5409bb94af251ac4846d51bd913ddcf1a4f514"
+      "chars": 12162,
+      "sha256": "cb51efa7463df20bf292bbda9bbef0092bfe76ea7c0deaee0b949eab1de480d0"
     },
     {
       "index": 95,
@@ -14935,8 +15086,8 @@
       "part": 6,
       "start_line": 1300,
       "end_line": 1548,
-      "chars": 12026,
-      "sha256": "48d81fa149820509b21b0e48a1ad4486c1b48916a5f90302cddb62e9b04343c6"
+      "chars": 12197,
+      "sha256": "d97908d9d5343394003c9b2031e491f01eb27429ff5e2ae1cc6a82bdb24ce84a"
     },
     {
       "index": 96,
@@ -14945,8 +15096,8 @@
       "part": 7,
       "start_line": 1549,
       "end_line": 1756,
-      "chars": 12040,
-      "sha256": "7304f548127955185a4d7a649476a09bba0a4cc1159341f43833e4bca61a1708"
+      "chars": 12211,
+      "sha256": "d0e43ccedae5a1f7bcf3d930688259953d8b2693959dd55a7cdd18180f7073e8"
     },
     {
       "index": 97,
@@ -14955,8 +15106,8 @@
       "part": 8,
       "start_line": 1757,
       "end_line": 1971,
-      "chars": 11967,
-      "sha256": "8ebbc79c4c36ff408e5426ff78359606b16a66e5a35ec50eff828c9abb4b412e"
+      "chars": 12138,
+      "sha256": "104e6fd93fac7a82d578b91b7e128c41092da4fe8ea24700d5bfbe0bc960699b"
     },
     {
       "index": 98,
@@ -14965,8 +15116,8 @@
       "part": 9,
       "start_line": 1972,
       "end_line": 2165,
-      "chars": 12045,
-      "sha256": "8345272f2d3cc4b4d2688caa854515285fc09af1bd3bcf734947fa6b738aafc6"
+      "chars": 12216,
+      "sha256": "518088d01d31da4f3a15310597d26013777912046b0d698ff8108fbe345c8f94"
     },
     {
       "index": 99,
@@ -14975,8 +15126,8 @@
       "part": 10,
       "start_line": 2166,
       "end_line": 2197,
-      "chars": 2609,
-      "sha256": "9cbdd4574ec20840f424b3eeb6029fd8e72413846b75b453c5cee66bacc683c3"
+      "chars": 2780,
+      "sha256": "857dc1ebb7c1de43e8cb09bb3fc37084d79ddd14f7445f6834b20a59333fac2c"
     },
     {
       "index": 100,
@@ -16354,19 +16505,19 @@
       "path": "indexAI/project_code_chunks/chunk_0237_Tools_npu_build_npu_code_context_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 306,
-      "chars": 12659,
-      "sha256": "0c62c9e50e63de7bd1c7fdd32011afa00c6f64d16baa17d9ecc1de32855484d6"
+      "end_line": 299,
+      "chars": 12750,
+      "sha256": "45b4c15c0043dd6a4896a9b744d73aa2d5f7082f3bde4205d17f19eb30bdff37"
     },
     {
       "index": 238,
       "file": "Tools/npu/build_npu_code_context.py",
       "path": "indexAI/project_code_chunks/chunk_0238_Tools_npu_build_npu_code_context_py.md",
       "part": 2,
-      "start_line": 307,
-      "end_line": 389,
-      "chars": 4197,
-      "sha256": "762287102d61b04f1883d2cbb8e8aa5ba5efb34ba5a08c14cb8e432901d7941c"
+      "start_line": 300,
+      "end_line": 402,
+      "chars": 5018,
+      "sha256": "4310930bf8a414cd02c9c8ed14e526af1060445d3639e2073c5119723f8365bb"
     },
     {
       "index": 239,
@@ -16374,19 +16525,19 @@
       "path": "indexAI/project_code_chunks/chunk_0239_Tools_npu_build_project_ai_index_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 300,
-      "chars": 12959,
-      "sha256": "e8ed548b303b783b97e0b41740e5c21455b55f8f6286e333e6b74c33933a3181"
+      "end_line": 297,
+      "chars": 12969,
+      "sha256": "ee87e9e796e005182311a696b38eab378dfe7a3912940d298415581dfe44a3db"
     },
     {
       "index": 240,
       "file": "Tools/npu/build_project_ai_index.py",
       "path": "indexAI/project_code_chunks/chunk_0240_Tools_npu_build_project_ai_index_py.md",
       "part": 2,
-      "start_line": 301,
-      "end_line": 419,
-      "chars": 7461,
-      "sha256": "ae60d70b7b6c75bcfc89442795c0112d497eaa6f55222f0ed1d0a1061add41e4"
+      "start_line": 298,
+      "end_line": 436,
+      "chars": 8427,
+      "sha256": "189aec2ac685707a328bac9044ef90bdd49c66026110ab872018a6fa6338d35f"
     },
     {
       "index": 241,
@@ -16676,7 +16827,7 @@
       "start_line": 1,
       "end_line": 384,
       "chars": 11742,
-      "sha256": "f9b3f55dbcff7ee9234097803f58ba454094b01691d2b615b48e932c32d7efd3"
+      "sha256": "ff94c405bce9671ca4e077bedd10e32570a073cf744483af01def003c2a0a8b9"
     },
     {
       "index": 270,
