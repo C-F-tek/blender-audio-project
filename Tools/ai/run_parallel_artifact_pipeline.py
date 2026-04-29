@@ -20,10 +20,10 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from pipeline.models import PipelineLane, PipelineStep
+    from pipeline.models import PipelineLane, PipelineResult, PipelineStep
     from pipeline.runner import run_step
 except ImportError:  # Allows package-style imports during external checks.
-    from Tools.ai.pipeline.models import PipelineLane, PipelineStep  # type: ignore
+    from Tools.ai.pipeline.models import PipelineLane, PipelineResult, PipelineStep  # type: ignore
     from Tools.ai.pipeline.runner import run_step  # type: ignore
 
 EXPECTED_WAVE_REVIEW_ARTIFACTS = ["wave_entrypoint_review.json"]
@@ -37,20 +37,10 @@ def slugify(value: str) -> str:
     return re.sub(r"_+", "_", value).strip("_") or "track"
 
 
-def run(cmd: list[str], cwd: Path, dry: bool) -> dict[str, Any]:
-    """Run a command through the reusable pipeline runner.
-
-    This preserves the legacy dictionary shape used by the existing artifact
-    pipeline while routing execution through ``Tools/ai/pipeline/runner.py``.
-    """
-    step = PipelineStep.from_command(
-        name="legacy_command",
-        command=cmd,
-        lane=PipelineLane.CPU,
-    )
-    result = run_step(step, cwd=cwd, dry_run=dry)
-    payload = {
-        "command": cmd,
+def legacy_result_payload(result: PipelineResult) -> dict[str, Any]:
+    """Return the legacy result shape used by schema v6 pipeline reports."""
+    payload: dict[str, Any] = {
+        "command": list(result.step.command),
         "dry_run": result.dry_run,
         "returncode": result.returncode,
         "duration_sec": result.duration_sec,
@@ -61,6 +51,59 @@ def run(cmd: list[str], cwd: Path, dry: bool) -> dict[str, Any]:
     if result.error:
         payload["error"] = result.error
     return payload
+
+
+def step_result_payload(result: PipelineResult) -> dict[str, Any]:
+    """Return a report-compatible payload for a named pipeline step."""
+    payload = legacy_result_payload(result)
+    payload.update(
+        {
+            "name": result.step.name,
+            "lane": result.step.lane.value,
+            "purpose": result.step.purpose,
+            "expected_outputs": list(result.step.expected_outputs),
+            "pass_index": result.step.pass_index,
+        }
+    )
+    return payload
+
+
+def pipeline_step(
+    name: str,
+    lane: str,
+    purpose: str,
+    expected_outputs: list[str],
+    command: list[str],
+    pass_index: int = 0,
+) -> PipelineStep:
+    """Build a reusable pipeline step while preserving the legacy call shape."""
+    return PipelineStep.from_command(
+        name=name,
+        lane=PipelineLane(lane),
+        purpose=purpose,
+        expected_outputs=expected_outputs,
+        command=command,
+        pass_index=pass_index,
+    )
+
+
+def run_pipeline_step(step: PipelineStep, cwd: Path, dry: bool) -> dict[str, Any]:
+    """Execute a PipelineStep and return the existing schema-v6 step payload."""
+    return step_result_payload(run_step(step, cwd=cwd, dry_run=dry))
+
+
+def run(cmd: list[str], cwd: Path, dry: bool) -> dict[str, Any]:
+    """Run a command through the reusable pipeline runner.
+
+    This preserves the legacy dictionary shape used by the remediation loop
+    while routing execution through ``Tools/ai/pipeline/runner.py``.
+    """
+    step = PipelineStep.from_command(
+        name="legacy_command",
+        command=cmd,
+        lane=PipelineLane.CPU,
+    )
+    return legacy_result_payload(run_step(step, cwd=cwd, dry_run=dry))
 
 
 def rel(path: Path, root: Path) -> str:
@@ -311,41 +354,39 @@ def main() -> int:
         return 2
 
     commands = build_step_commands(repo, out, args)
-    serial: list[tuple[dict[str, Any], list[str]]] = []
-    parallel: list[tuple[dict[str, Any], list[str]]] = []
+    serial: list[PipelineStep] = []
+    parallel: list[PipelineStep] = []
     track_slug = slugify(args.track_stem)
 
     if "review_wave_entrypoints" in commands:
-        serial.append((step_meta("review_wave_entrypoints", "CPU", "Review first-wave WAV artifact scripts and emit future guardrail flags.", EXPECTED_WAVE_REVIEW_ARTIFACTS), commands["review_wave_entrypoints"]))
+        serial.append(pipeline_step("review_wave_entrypoints", "CPU", "Review first-wave WAV artifact scripts and emit future guardrail flags.", EXPECTED_WAVE_REVIEW_ARTIFACTS, commands["review_wave_entrypoints"]))
     if "build_semantic_code_chunks" in commands:
-        serial.append((step_meta("build_semantic_code_chunks", "CPU", "Build symbol-aware repository context for AI retrieval.", EXPECTED_CHUNK_ARTIFACTS), commands["build_semantic_code_chunks"]))
+        serial.append(pipeline_step("build_semantic_code_chunks", "CPU", "Build symbol-aware repository context for AI retrieval.", EXPECTED_CHUNK_ARTIFACTS, commands["build_semantic_code_chunks"]))
     if "build_music_intermediates" in commands:
-        serial.append((step_meta("build_music_intermediates", "CPU", "Build compact AI-friendly music artifacts from the full analysis JSON.", EXPECTED_MUSIC_ARTIFACTS), commands["build_music_intermediates"]))
+        serial.append(pipeline_step("build_music_intermediates", "CPU", "Build compact AI-friendly music artifacts from the full analysis JSON.", EXPECTED_MUSIC_ARTIFACTS, commands["build_music_intermediates"]))
     if "build_smart_ai_context" in commands:
-        serial.append((step_meta("build_smart_ai_context", "CPU", "Build hierarchical capsules and ranked smart context packet for central AI.", [item.format(track_slug=track_slug) for item in EXPECTED_SMART_CONTEXT_ARTIFACTS]), commands["build_smart_ai_context"]))
+        serial.append(pipeline_step("build_smart_ai_context", "CPU", "Build hierarchical capsules and ranked smart context packet for central AI.", [item.format(track_slug=track_slug) for item in EXPECTED_SMART_CONTEXT_ARTIFACTS], commands["build_smart_ai_context"]))
     if "npu_artifact_review" in commands:
-        parallel.append((step_meta("npu_artifact_review", "NPU", "Review compact artifacts for schema, size, blocked patterns, and obvious risks.", [str(out / "npu_artifact_review.json")]), commands["npu_artifact_review"]))
+        parallel.append(pipeline_step("npu_artifact_review", "NPU", "Review compact artifacts for schema, size, blocked patterns, and obvious risks.", [str(out / "npu_artifact_review.json")], commands["npu_artifact_review"]))
     if "npu_guardrail" in commands:
-        parallel.append((step_meta("npu_guardrail", "NPU", "Always-on guardrail/preflight plus action queue for corrections and enrichment.", [str(out / "npu_guardrail_report.json"), str(out / "npu_guardrail_action_queue.json")]), commands["npu_guardrail"]))
+        parallel.append(pipeline_step("npu_guardrail", "NPU", "Always-on guardrail/preflight plus action queue for corrections and enrichment.", [str(out / "npu_guardrail_report.json"), str(out / "npu_guardrail_action_queue.json")], commands["npu_guardrail"]))
     if args.gpu_command:
-        parallel.append((step_meta("gpu_command", "GPU", "Run optional heavy planner/generator command.", [str(out / "gpu_planner_output.json")]), shlex.split(args.gpu_command.format(brief=str(out / "ai_scene_brief.json"), output=str(out / "gpu_planner_output.json")))))
+        gpu_command = shlex.split(args.gpu_command.format(brief=str(out / "ai_scene_brief.json"), output=str(out / "gpu_planner_output.json")))
+        parallel.append(pipeline_step("gpu_command", "GPU", "Run optional heavy planner/generator command.", [str(out / "gpu_planner_output.json")], gpu_command))
     if "validate_ai_artifacts" in commands:
-        serial.append((step_meta("validate_ai_artifacts", "CPU", "Validate generated artifacts and apply task-capsule guardrails.", [str(out / "ai_validation_report.json")]), commands["validate_ai_artifacts"]))
+        serial.append(pipeline_step("validate_ai_artifacts", "CPU", "Validate generated artifacts and apply task-capsule guardrails.", [str(out / "ai_validation_report.json")], commands["validate_ai_artifacts"]))
 
     results: list[dict[str, Any]] = []
-    for meta, cmd in serial:
-        res = run(cmd, repo, args.dry_run)
-        res.update(meta)
+    for step in serial:
+        res = run_pipeline_step(step, repo, args.dry_run)
         results.append(res)
         if res["returncode"] and not args.continue_on_error:
             break
     if parallel and all(r["returncode"] == 0 for r in results):
         with ThreadPoolExecutor(max_workers=len(parallel)) as pool:
-            futs = {pool.submit(run, cmd, repo, args.dry_run): meta for meta, cmd in parallel}
+            futs = {pool.submit(run_pipeline_step, step, repo, args.dry_run): step for step in parallel}
             for fut in as_completed(futs):
-                res = fut.result()
-                res.update(futs[fut])
-                results.append(res)
+                results.append(fut.result())
 
     remediation_loop = execute_remediation_loop(repo, out, args, results)
 
