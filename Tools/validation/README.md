@@ -21,6 +21,37 @@ generated-file policy checks
 
 Validators should remain cheap, reviewable and safe to run locally. They must not launch long Blender renders, GPU generation, NPU model execution or FFmpeg encodes.
 
+## Architecture Boundary — Input-Agnostic / Output-Application-Agnostic
+
+Generated-file validation must not be treated as Blender-only or WAV/audio-only.
+
+Fixed rule:
+
+```text
+not Blender-only
+not WAV/audio-only
+input-agnostic
+output-application-agnostic
+current execution assumption: target applications accept generated Python scripts
+future extension: other runtimes, other application APIs and other input data families
+```
+
+Reason:
+
+```text
+Blender is the current real application target, but it is not the architectural limit.
+WAV/audio is the current real input family, but it is not the architectural limit.
+```
+
+Keep these validation layers separate:
+
+```text
+input-domain validators
+output-application validators
+generated Python script policy adapters
+artifact/report contract validators
+```
+
 ## Available checks
 
 Core repository checks:

@@ -33,6 +33,43 @@ audio file
 
 Do not confuse the current concrete flow with the architectural boundary. The validation and policy work must stay input-agnostic and output-application-agnostic wherever possible.
 
+## Architecture Boundary — Input-Agnostic / Output-Application-Agnostic
+
+This is a fixed project rule for the reusable AI pipeline and generated-artifact validation work:
+
+```text
+not Blender-only
+not WAV/audio-only
+input-agnostic
+output-application-agnostic
+current execution assumption: target applications accept generated Python scripts
+future extension: other runtimes, other application APIs and other input data families
+```
+
+Reason:
+
+```text
+Blender is the current real application target, but it is not the architectural limit.
+WAV/audio is the current real input family, but it is not the architectural limit.
+```
+
+Interpretation:
+
+```text
+input-domain logic answers: what kind of data is being analyzed?
+output-application logic answers: which app/runtime will execute or consume the generated artifact?
+generated Python script policy answers: is the generated Python safe/compatible for that target app?
+```
+
+Current concrete adapter:
+
+```text
+Tools/validation/generated_file_policy.py
+  -> Tools/validation/check_generated_blender_script_policy.py
+```
+
+Future adapters must preserve this boundary. Do not bake WAV/audio assumptions into generic policy, and do not bake Blender assumptions into non-Blender application adapters.
+
 ## Current technical state
 
 | Area | Status | Notes |
