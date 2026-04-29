@@ -29,7 +29,7 @@ audio file
 | Root audio tools | usable | `analyze_wav.py`, `build_track_summary.py`, `normalize_scene_spec.py`. |
 | `Scripting/v61b/` | stable reference | Current high-quality reference package. Do not destructively refactor. |
 | Ready To Jazz package | usable but monolithic | Good production/generation experiment; not yet reusable architecture. |
-| `Scripting/shared/` | active foundation | Pure Python helpers exist for path, JSON, image sequence, FFmpeg commands and render profiles. |
+| `Scripting/shared/` | active foundation | Pure Python helpers exist for path, JSON, image sequence, FFmpeg commands and render profiles; `blender_compat.py` exists but still needs Blender runtime validation. |
 | `Tools/validation/` | active foundation | Non-invasive validation scripts exist, including AI pipeline module smoke validation. |
 | `Tools/ai/pipeline/` | modularized, pending local dry-run validation | AI artifact pipeline is split into focused modules with a thin entrypoint and machine-readable status marker. |
 | `Tools/ai/` and `Tools/npu/` | active pipeline | AI/NPU context, review and artifact generation tooling. |
@@ -45,11 +45,13 @@ README.md
 docs/README.md
 docs/AI_PIPELINE_REFACTOR_STATUS.md
 docs/AI_PIPELINE_ARCHITECTURE.md
+docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md
+docs/AI_EXTERNAL_KNOWLEDGE.md
+docs/OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md
 docs/MODULE_MAP.md
 docs/DATA_FLOW.md
 docs/REFACTORING_AND_REUSE_PLAN.md
 docs/PROJECT_STATUS_POINT.md
-docs/AI_EXTERNAL_KNOWLEDGE.md
 docs/PATCH_SPEC_WORKFLOW.md
 Scripting/README.md
 Scripting/v61b/README.md
@@ -87,6 +89,37 @@ working package code
 
 Do not start by rewriting working Blender packages.
 
+## External AI engineering knowledge
+
+OpenAI Harness Engineering and Symphony concepts have been adapted into:
+
+```text
+docs/OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md
+docs/AI_EXTERNAL_KNOWLEDGE.md
+```
+
+Adopted principles:
+
+```text
+AGENTS.md as short index, not encyclopedia
+docs/ as versioned project knowledge
+validators and dry-runs as mechanical guardrails
+Markdown/JSON reports as proof of work
+workflow files as operational control plane
+small scoped tasks over broad rewrites
+execution plans and tech-debt tracking as future drift control
+```
+
+Recommended future additions from this knowledge:
+
+```text
+WORKFLOW.md
+docs/EXECUTION_PLANS/README.md
+docs/TECH_DEBT_TRACKER.md
+Tools/validation/check_refactor_status_consistency.py
+Tools/validation/check_docs_links.py
+```
+
 ## AI artifact pipeline status
 
 The AI artifact pipeline refactor is marked as:
@@ -107,6 +140,7 @@ Current module family:
 
 ```text
 Tools/ai/run_parallel_artifact_pipeline.py
+Tools/ai/run_pipeline_dry_run_matrix.py
 Tools/ai/pipeline/defaults.py
 Tools/ai/pipeline/models.py
 Tools/ai/pipeline/runner.py
@@ -118,6 +152,7 @@ Tools/ai/pipeline/steps.py
 Tools/ai/pipeline/scheduler.py
 Tools/ai/pipeline/orchestrator.py
 Tools/ai/pipeline/schema_report.py
+Tools/ai/pipeline/markdown_report.py
 Tools/ai/pipeline/guardrail_models.py
 Tools/ai/pipeline/remediation.py
 Tools/ai/pipeline/refactor_status.py
@@ -131,6 +166,13 @@ python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
 ```
 
+The dry-run matrix now writes both JSON and Markdown:
+
+```text
+output/ai_pipeline/dry_run_matrix_report.json
+output/ai_pipeline/dry_run_matrix_report.md
+```
+
 ## Implemented shared foundation
 
 Current shared modules:
@@ -142,11 +184,11 @@ Current shared modules:
 | `Scripting/shared/image_sequence.py` | Frame scan, contiguous sequence detection, FFmpeg pattern generation. |
 | `Scripting/shared/ffmpeg_encoder.py` | Package-agnostic FFmpeg command building and dry-run execution helper. |
 | `Scripting/shared/render_profiles.py` | Reusable encode profile definitions for YouTube-oriented output. |
+| `Scripting/shared/blender_compat.py` | Blender-aware compatibility wrappers for VSE strips, frame range, FPS and node compatibility; not yet adopted by runtime packages. |
 
 Next shared candidates:
 
 ```text
-Scripting/shared/blender_compat.py
 Scripting/shared/config_model.py
 Scripting/shared/diagnostics.py
 ```
@@ -169,6 +211,12 @@ python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+```
+
+Unattended validation runner:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
 ```
 
 ## Known local validation result
@@ -250,8 +298,9 @@ Capabilities:
 3. Run the AI pipeline dry-run matrix.
 4. Regenerate AI/NPU indexes after validation.
 5. Commit regenerated AI/NPU indexes only.
-6. Review dry-run report `summary` and `schedule` fields.
+6. Review dry-run report `summary`, `schedule` and Markdown output.
 7. Continue only after resolving any local validation failures.
+8. Consider adding `WORKFLOW.md`, execution plans and a tech debt tracker.
 
 ## Avoid now
 
@@ -267,6 +316,7 @@ add dependencies without validation
 modify generated full analysis JSON files
 run long Blender renders or GPU generation automatically
 change AI pipeline schema-v6 field meanings without local dry-run matrix validation
+migrate runtime packages to Scripting/shared/blender_compat.py before Blender validation
 ```
 
 ## Reporting format for AI agents
@@ -295,4 +345,5 @@ small patches
 shared utilities before migration
 validation before commit
 indexes regenerated after structure changes
+proof-of-work reports for agentic work
 ```
