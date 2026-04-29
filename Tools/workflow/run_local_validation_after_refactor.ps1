@@ -58,8 +58,24 @@ function Invoke-Step {
     Add-Content -LiteralPath $script:MainLog -Value ("Started: " + $started.ToString("o"))
     Add-Content -LiteralPath $script:MainLog -Value ("Command: " + $Command + " " + ($Arguments -join " "))
 
-    & $Command @Arguments 2>&1 | Tee-Object -FilePath $script:MainLog -Append
-    $exitCode = $LASTEXITCODE
+    $oldErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        & $Command @Arguments 2>&1 | ForEach-Object {
+            $line = $_.ToString()
+            Write-Host $line
+            Add-Content -LiteralPath $script:MainLog -Value $line
+        }
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $oldErrorActionPreference
+    }
+
+    if ($null -eq $exitCode) {
+        $exitCode = 0
+    }
+
     $ended = Get-Date
     Add-Content -LiteralPath $script:MainLog -Value ("Ended: " + $ended.ToString("o"))
     Add-Content -LiteralPath $script:MainLog -Value ("ExitCode: " + $exitCode)
