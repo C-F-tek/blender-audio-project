@@ -135,20 +135,20 @@ $summary | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $summaryJson -Enco
 $md = @()
 $md += "# Local Validation After Refactor"
 $md += ""
-$md += "- Generated at: `$($summary.generated_at)`"
-$md += "- Passed: `$passed`"
-$md += "- Repo: `$repo`"
-$md += "- Log: `$script:MainLog`"
-$md += "- AI module report: `$($summary.ai_pipeline_modules_report)`"
-$md += "- Dry-run matrix JSON: `$($summary.dry_run_matrix_json)`"
-$md += "- Dry-run matrix Markdown: `$($summary.dry_run_matrix_markdown)`"
+$md += ("- Generated at: ``{0}``" -f $summary.generated_at)
+$md += ("- Passed: ``{0}``" -f $passed)
+$md += ("- Repo: ``{0}``" -f $repo)
+$md += ("- Log: ``{0}``" -f $script:MainLog)
+$md += ("- AI module report: ``{0}``" -f $summary.ai_pipeline_modules_report)
+$md += ("- Dry-run matrix JSON: ``{0}``" -f $summary.dry_run_matrix_json)
+$md += ("- Dry-run matrix Markdown: ``{0}``" -f $summary.dry_run_matrix_markdown)
 $md += ""
 $md += "## Steps"
 $md += ""
 $md += "| Step | Passed | Exit code |"
 $md += "|---|---:|---:|"
 foreach ($step in $script:Results) {
-    $md += "| $($step.name) | $($step.passed) | $($step.exit_code) |"
+    $md += ("| {0} | {1} | {2} |" -f $step.name, $step.passed, $step.exit_code)
 }
 $md += ""
 $md += "## Next manual commands"
