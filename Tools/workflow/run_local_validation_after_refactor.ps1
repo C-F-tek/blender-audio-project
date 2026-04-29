@@ -135,13 +135,13 @@ $summary | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $summaryJson -Enco
 $md = @()
 $md += "# Local Validation After Refactor"
 $md += ""
-$md += ("- Generated at: ``{0}``" -f $summary.generated_at)
-$md += ("- Passed: ``{0}``" -f $passed)
-$md += ("- Repo: ``{0}``" -f $repo)
-$md += ("- Log: ``{0}``" -f $script:MainLog)
-$md += ("- AI module report: ``{0}``" -f $summary.ai_pipeline_modules_report)
-$md += ("- Dry-run matrix JSON: ``{0}``" -f $summary.dry_run_matrix_json)
-$md += ("- Dry-run matrix Markdown: ``{0}``" -f $summary.dry_run_matrix_markdown)
+$md += ("- Generated at: {0}" -f $summary.generated_at)
+$md += ("- Passed: {0}" -f $passed)
+$md += ("- Repo: {0}" -f $repo)
+$md += ("- Log: {0}" -f $script:MainLog)
+$md += ("- AI module report: {0}" -f $summary.ai_pipeline_modules_report)
+$md += ("- Dry-run matrix JSON: {0}" -f $summary.dry_run_matrix_json)
+$md += ("- Dry-run matrix Markdown: {0}" -f $summary.dry_run_matrix_markdown)
 $md += ""
 $md += "## Steps"
 $md += ""
@@ -153,15 +153,16 @@ foreach ($step in $script:Results) {
 $md += ""
 $md += "## Next manual commands"
 $md += ""
-$md += "```powershell"
-$md += "git status"
-$md += "git diff --stat"
-$md += "Get-Content .\output\validation\ai_pipeline_modules.json -Raw"
-$md += "Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw"
-$md += "```"
+$md += "Run these commands from the repository root:"
+$md += ""
+$md += "    git status"
+$md += "    git diff --stat"
+$md += "    Get-Content .\output\validation\ai_pipeline_modules.json -Raw"
+$md += "    Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw"
 $md | Set-Content -LiteralPath $summaryMd -Encoding UTF8
 
-Write-Host "`nValidation completed." -ForegroundColor Green
+Write-Host ""
+Write-Host "Validation completed." -ForegroundColor Green
 Write-Host "Passed: $passed"
 Write-Host "Log: $script:MainLog"
 Write-Host "Summary JSON: $summaryJson"
