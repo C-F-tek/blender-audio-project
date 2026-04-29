@@ -1,8 +1,8 @@
 # Spaziotempo Primary Project Code Index
 
-Generated: `2026-04-29T14:09:37`
+Generated: `2026-04-29T14:12:05`
 
-Source fingerprint: `7925035e3ee6200ec6cd411ca802c1c432eda9833af4edac99499eef02b52e43`
+Source fingerprint: `4c1b9f5e6f2999ef2713b3fb28b7e2b23c75ed560d64f55ff66652f64134a873`
 
 Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.
 
@@ -194,7 +194,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
 - `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `53c55cc95abf776b330776e3bdee74319dbe3cc9e3e89bfbe385e621b9a410d6`
 - `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `ae496412a40745840615966bb12e0e7f2f2064610bd21622cb4642ed772441e1`
-- `Tools/npu/npu_code_manifest.json`: 7265 lines, 195911 chars, sha256 `b3eebeeee63861fce5ef88c377b1dd72fe5c155360b001e0325df3df77ffcafd`
+- `Tools/npu/npu_code_manifest.json`: 7339 lines, 198048 chars, sha256 `cac469b6ef2e8832eb7eb4168cfc902532706d72cffda008f8243923c4bbf894`
 - `Tools/npu/npu_guardrail_service.py`: 491 lines, 20211 chars, sha256 `5829724c35b7fccef62481ca8efc7290b63ef4d552e441fcf51a59009a4cc84a`
 - `Tools/npu/npu_music_manifest.json`: 703 lines, 27216 chars, sha256 `e5cb8facca90680775a3ab5a525cfb2b0ef1f0f7c0ecd5c61e2f1570082f2045`
 - `Tools/npu/npu_runtime.py`: 161 lines, 5903 chars, sha256 `38dc29da6ba1c564c68a29c0c5de7e4b38787aa6a0c17607c8d2ae03fe89f182`
@@ -507,28 +507,28 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI/project_code_chunks/chunk_0266_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 2840-3059
 - `indexAI/project_code_chunks/chunk_0267_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 3060-3273
 - `indexAI/project_code_chunks/chunk_0268_Tools_npu_npu_blender_manual_manifest_json.md` -> `Tools/npu/npu_blender_manual_manifest.json` lines 3274-3339
-- `indexAI/project_code_chunks/chunk_0269_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1-384
-- `indexAI/project_code_chunks/chunk_0270_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 385-767
-- `indexAI/project_code_chunks/chunk_0271_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 768-1117
-- `indexAI/project_code_chunks/chunk_0272_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1118-1396
-- `indexAI/project_code_chunks/chunk_0273_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1397-1652
-- `indexAI/project_code_chunks/chunk_0274_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1653-1961
-- `indexAI/project_code_chunks/chunk_0275_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1962-2279
-- `indexAI/project_code_chunks/chunk_0276_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2280-2665
-- `indexAI/project_code_chunks/chunk_0277_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2666-3015
-- `indexAI/project_code_chunks/chunk_0278_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3016-3370
-- `indexAI/project_code_chunks/chunk_0279_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3371-3741
-- `indexAI/project_code_chunks/chunk_0280_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3742-4092
-- `indexAI/project_code_chunks/chunk_0281_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4093-4466
-- `indexAI/project_code_chunks/chunk_0282_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4467-4844
-- `indexAI/project_code_chunks/chunk_0283_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4845-5236
-- `indexAI/project_code_chunks/chunk_0284_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5237-5622
-- `indexAI/project_code_chunks/chunk_0285_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5623-5999
-- `indexAI/project_code_chunks/chunk_0286_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6000-6335
-- `indexAI/project_code_chunks/chunk_0287_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6336-6621
-- `indexAI/project_code_chunks/chunk_0288_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6622-6905
-- `indexAI/project_code_chunks/chunk_0289_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6906-7180
-- `indexAI/project_code_chunks/chunk_0290_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 7181-7265
+- `indexAI/project_code_chunks/chunk_0269_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1-382
+- `indexAI/project_code_chunks/chunk_0270_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 383-767
+- `indexAI/project_code_chunks/chunk_0271_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 768-1116
+- `indexAI/project_code_chunks/chunk_0272_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1117-1395
+- `indexAI/project_code_chunks/chunk_0273_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1396-1661
+- `indexAI/project_code_chunks/chunk_0274_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1662-1970
+- `indexAI/project_code_chunks/chunk_0275_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 1971-2287
+- `indexAI/project_code_chunks/chunk_0276_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2288-2675
+- `indexAI/project_code_chunks/chunk_0277_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 2676-3037
+- `indexAI/project_code_chunks/chunk_0278_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3038-3391
+- `indexAI/project_code_chunks/chunk_0279_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3392-3760
+- `indexAI/project_code_chunks/chunk_0280_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 3761-4116
+- `indexAI/project_code_chunks/chunk_0281_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4117-4480
+- `indexAI/project_code_chunks/chunk_0282_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4481-4860
+- `indexAI/project_code_chunks/chunk_0283_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 4861-5246
+- `indexAI/project_code_chunks/chunk_0284_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5247-5636
+- `indexAI/project_code_chunks/chunk_0285_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 5637-6014
+- `indexAI/project_code_chunks/chunk_0286_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6015-6364
+- `indexAI/project_code_chunks/chunk_0287_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6365-6651
+- `indexAI/project_code_chunks/chunk_0288_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6652-6935
+- `indexAI/project_code_chunks/chunk_0289_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 6936-7213
+- `indexAI/project_code_chunks/chunk_0290_Tools_npu_npu_code_manifest_json.md` -> `Tools/npu/npu_code_manifest.json` lines 7214-7339
 - `indexAI/project_code_chunks/chunk_0291_Tools_npu_npu_guardrail_service_py.md` -> `Tools/npu/npu_guardrail_service.py` lines 1-255
 - `indexAI/project_code_chunks/chunk_0292_Tools_npu_npu_guardrail_service_py.md` -> `Tools/npu/npu_guardrail_service.py` lines 256-484
 - `indexAI/project_code_chunks/chunk_0293_Tools_npu_npu_guardrail_service_py.md` -> `Tools/npu/npu_guardrail_service.py` lines 485-490

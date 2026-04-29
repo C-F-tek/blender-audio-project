@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-04-29T14:09:37",
+  "created_at": "2026-04-29T14:12:05",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "index_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI",
   "primary_library": true,
-  "source_fingerprint": "7925035e3ee6200ec6cd411ca802c1c432eda9833af4edac99499eef02b52e43",
+  "source_fingerprint": "4c1b9f5e6f2999ef2713b3fb28b7e2b23c75ed560d64f55ff66652f64134a873",
   "excluded_dirs": [
     ".git",
     ".mypy_cache",
@@ -9606,9 +9606,9 @@
     {
       "file": "Tools/npu/npu_code_manifest.json",
       "suffix": ".json",
-      "lines": 7265,
-      "chars": 195911,
-      "sha256": "b3eebeeee63861fce5ef88c377b1dd72fe5c155360b001e0325df3df77ffcafd"
+      "lines": 7339,
+      "chars": 198048,
+      "sha256": "cac469b6ef2e8832eb7eb4168cfc902532706d72cffda008f8243923c4bbf894"
     },
     {
       "file": "Tools/npu/npu_guardrail_service.py",
@@ -16825,19 +16825,19 @@
       "path": "indexAI/project_code_chunks/chunk_0269_Tools_npu_npu_code_manifest_json.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 384,
-      "chars": 11742,
-      "sha256": "ff94c405bce9671ca4e077bedd10e32570a073cf744483af01def003c2a0a8b9"
+      "end_line": 382,
+      "chars": 11708,
+      "sha256": "4b710b115d9c7d183442c6ae074328403dbc066d553f7f7a0ae374f603747260"
     },
     {
       "index": 270,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0270_Tools_npu_npu_code_manifest_json.md",
       "part": 2,
-      "start_line": 385,
+      "start_line": 383,
       "end_line": 767,
-      "chars": 11711,
-      "sha256": "f082abf506094e6a397ca80963860615db16db474400a2ef87ca2820da4a296a"
+      "chars": 11716,
+      "sha256": "04a39a7bea6f6bbb9ff77c61e8b8c4291e4c3001e639b6e351727bf94adc7cdb"
     },
     {
       "index": 271,
@@ -16845,199 +16845,199 @@
       "path": "indexAI/project_code_chunks/chunk_0271_Tools_npu_npu_code_manifest_json.md",
       "part": 3,
       "start_line": 768,
-      "end_line": 1117,
-      "chars": 11756,
-      "sha256": "b2f49a603a784def93a2202698532afb5f0dc98b8d63af296184ab4c8b7bca75"
+      "end_line": 1116,
+      "chars": 11759,
+      "sha256": "01301b5e56087759c6aa534e6755bb57c1c3003d950ca3d42f81e4347853aa13"
     },
     {
       "index": 272,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0272_Tools_npu_npu_code_manifest_json.md",
       "part": 4,
-      "start_line": 1118,
-      "end_line": 1396,
-      "chars": 11849,
-      "sha256": "f77e3a96c21c7b4eb2835c965318a3dfe0f0becffb13a543a7dee974128f3c9f"
+      "start_line": 1117,
+      "end_line": 1395,
+      "chars": 11828,
+      "sha256": "03fc5e0df3b68756ad3c0d1d66266a426e7047f25618dfbde8348aabe0c2fd68"
     },
     {
       "index": 273,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0273_Tools_npu_npu_code_manifest_json.md",
       "part": 5,
-      "start_line": 1397,
-      "end_line": 1652,
-      "chars": 11428,
-      "sha256": "ad2548e322f36eddd0d13402b018c2c8e580b238a4500beaddf99a7cf724444c"
+      "start_line": 1396,
+      "end_line": 1661,
+      "chars": 11841,
+      "sha256": "2314aca4c0ccb93ac583bae3bb8f4c9a8afbc9cf595605168fde83d4a957e077"
     },
     {
       "index": 274,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0274_Tools_npu_npu_code_manifest_json.md",
       "part": 6,
-      "start_line": 1653,
-      "end_line": 1961,
-      "chars": 11804,
-      "sha256": "0f4177b48d6c89bd4d67cc68eab873c246ea40e693d52ff8a37536d70f86ca91"
+      "start_line": 1662,
+      "end_line": 1970,
+      "chars": 11817,
+      "sha256": "88b6ec7cecf5655152d74a38fb42de69d101c838b2384d9f5103f3bfce187058"
     },
     {
       "index": 275,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0275_Tools_npu_npu_code_manifest_json.md",
       "part": 7,
-      "start_line": 1962,
-      "end_line": 2279,
-      "chars": 11783,
-      "sha256": "2d5d656dfd1d1327f7f4805ae459e02cba2425d2c2e82e2799df22890f6c6956"
+      "start_line": 1971,
+      "end_line": 2287,
+      "chars": 11805,
+      "sha256": "52d800012fe2825314017dc20374306e770ca4278543ab5e5704dabb7ba48c64"
     },
     {
       "index": 276,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0276_Tools_npu_npu_code_manifest_json.md",
       "part": 8,
-      "start_line": 2280,
-      "end_line": 2665,
-      "chars": 11653,
-      "sha256": "0bd8178e6b7892e4b57acc04a38806230e544af9c9e26222ac6f9884ca7fe70f"
+      "start_line": 2288,
+      "end_line": 2675,
+      "chars": 11711,
+      "sha256": "9bd2a6a160c9c57dfb414e00f9b07210a739d8953e20d10e8e2ad75f5384cae5"
     },
     {
       "index": 277,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0277_Tools_npu_npu_code_manifest_json.md",
       "part": 9,
-      "start_line": 2666,
-      "end_line": 3015,
-      "chars": 11224,
-      "sha256": "de841827122ea43733ae13032c258eb0057071d8f25c01f0ff4bbbeea2e72f24"
+      "start_line": 2676,
+      "end_line": 3037,
+      "chars": 11601,
+      "sha256": "cfbaae32498e17fd4f95d7df816ee9f28247baea5b6f3ae9e1525d04dce4bd87"
     },
     {
       "index": 278,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0278_Tools_npu_npu_code_manifest_json.md",
       "part": 10,
-      "start_line": 3016,
-      "end_line": 3370,
-      "chars": 11765,
-      "sha256": "060aafc9b0a4cdb5aefcffa87711ce4f5a243e9296731346aab9cb28f7429456"
+      "start_line": 3038,
+      "end_line": 3391,
+      "chars": 11770,
+      "sha256": "1e5c58900e6c420fe1833c805cacf72402c0dd9527ce3e908450014d2d580d3e"
     },
     {
       "index": 279,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0279_Tools_npu_npu_code_manifest_json.md",
       "part": 11,
-      "start_line": 3371,
-      "end_line": 3741,
-      "chars": 11755,
-      "sha256": "2f4118bb7388cb1ef41f5abd19f4e565a26e173633b7e21a0d7956116fba9a29"
+      "start_line": 3392,
+      "end_line": 3760,
+      "chars": 11749,
+      "sha256": "35c0753620e76b348208960191abce83e64766e86d10e5b546071285ea0d6349"
     },
     {
       "index": 280,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0280_Tools_npu_npu_code_manifest_json.md",
       "part": 12,
-      "start_line": 3742,
-      "end_line": 4092,
-      "chars": 11764,
-      "sha256": "52f62b51817eb1525a6c4e4a2685cf2ea146b5b401bb844cdfb226e966564f1f"
+      "start_line": 3761,
+      "end_line": 4116,
+      "chars": 11721,
+      "sha256": "01b6e8f99a5a6d3b48c34717234b9a2a4f5c41d8dea920c83984c18d2c72ef2f"
     },
     {
       "index": 281,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0281_Tools_npu_npu_code_manifest_json.md",
       "part": 13,
-      "start_line": 4093,
-      "end_line": 4466,
-      "chars": 11755,
-      "sha256": "c7017d8e3984cca1d2867e8eda60b5795fdd2599f39789d1fe9f33880fa92a33"
+      "start_line": 4117,
+      "end_line": 4480,
+      "chars": 11743,
+      "sha256": "7495e2725f928c355866cc76b335a7448b7fdfaf4c7d5f5987ff173f2a5e6ac4"
     },
     {
       "index": 282,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0282_Tools_npu_npu_code_manifest_json.md",
       "part": 14,
-      "start_line": 4467,
-      "end_line": 4844,
-      "chars": 11722,
-      "sha256": "e704fa28b674f840c5b9dd5ed6f61835345c98ff03da79f0aeafbcbfc7ada809"
+      "start_line": 4481,
+      "end_line": 4860,
+      "chars": 11725,
+      "sha256": "920e4dc5000f7312d05169060027098785de2eff746773bed4df966e09fe6876"
     },
     {
       "index": 283,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0283_Tools_npu_npu_code_manifest_json.md",
       "part": 15,
-      "start_line": 4845,
-      "end_line": 5236,
-      "chars": 11713,
-      "sha256": "8a6339626b606fc2cc9edb2406428f98ba7d481feb98619d405cfad698d049f6"
+      "start_line": 4861,
+      "end_line": 5246,
+      "chars": 11726,
+      "sha256": "94f2e7cbaf72c812f060f17c2cb0804b352e5982fddc10a860c3618ee959e8b0"
     },
     {
       "index": 284,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0284_Tools_npu_npu_code_manifest_json.md",
       "part": 16,
-      "start_line": 5237,
-      "end_line": 5622,
-      "chars": 11726,
-      "sha256": "9515f3be28817997a5880c41da8682db28edf70a8bf8482f2093dde3ba0a7111"
+      "start_line": 5247,
+      "end_line": 5636,
+      "chars": 11737,
+      "sha256": "dda3e3788f1b6155fe3b910499c22e4705fffeb00482f8992703576cee945eed"
     },
     {
       "index": 285,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0285_Tools_npu_npu_code_manifest_json.md",
       "part": 17,
-      "start_line": 5623,
-      "end_line": 5999,
-      "chars": 11735,
-      "sha256": "3568bcd3c6f95c9b18c954e7726bccbf14766403ea1897d44e9652c8728bf262"
+      "start_line": 5637,
+      "end_line": 6014,
+      "chars": 11746,
+      "sha256": "1c0e481f4dbf48ebc5dc6d53399002c0ebfcd03bcf3bb5baf7a948850c665aa7"
     },
     {
       "index": 286,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0286_Tools_npu_npu_code_manifest_json.md",
       "part": 18,
-      "start_line": 6000,
-      "end_line": 6335,
-      "chars": 11751,
-      "sha256": "0deaa8a6bc9541dae7dab3c869279a0c0d36d16cbd9aff3f3ef25faffdd0ca45"
+      "start_line": 6015,
+      "end_line": 6364,
+      "chars": 11767,
+      "sha256": "2adb8bee9d6ea2677998c6f46efbcc5c1f47c3601d33e344fc19fc7add9fb6dc"
     },
     {
       "index": 287,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0287_Tools_npu_npu_code_manifest_json.md",
       "part": 19,
-      "start_line": 6336,
-      "end_line": 6621,
-      "chars": 11764,
-      "sha256": "e43fc6115b9bab033764651fd2836ddca2d750a34ac8e4a6dd9ed32578747f45"
+      "start_line": 6365,
+      "end_line": 6651,
+      "chars": 11827,
+      "sha256": "5d46e5b2f5c0aec93a1a2dd00e880737b81aee14f3ef391e3f76ac83bfc88435"
     },
     {
       "index": 288,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0288_Tools_npu_npu_code_manifest_json.md",
       "part": 20,
-      "start_line": 6622,
-      "end_line": 6905,
-      "chars": 11841,
-      "sha256": "2fb39ccfaa77abfd22208532d4be3bdd57be2ea7375e12fd70befc65836dab40"
+      "start_line": 6652,
+      "end_line": 6935,
+      "chars": 11788,
+      "sha256": "16f5b460a9d336a648220ffb06e33a233cf3377dacbca2f726ca1e8ea6504a6d"
     },
     {
       "index": 289,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0289_Tools_npu_npu_code_manifest_json.md",
       "part": 21,
-      "start_line": 6906,
-      "end_line": 7180,
-      "chars": 11835,
-      "sha256": "4bde3d266c266d201c7d78ab520ba99b87df097f2867b91c5faeb3c57d121667"
+      "start_line": 6936,
+      "end_line": 7213,
+      "chars": 11842,
+      "sha256": "a76e7954def1e7cc314ea2a954b2d87fe43d54d6cc1eb5c3a7274d4392c321c5"
     },
     {
       "index": 290,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0290_Tools_npu_npu_code_manifest_json.md",
       "part": 22,
-      "start_line": 7181,
-      "end_line": 7265,
-      "chars": 3557,
-      "sha256": "38e21f9a93d5c2b1441f65c666668a85df5b2c4fe4219c76f13d3379c933678d"
+      "start_line": 7214,
+      "end_line": 7339,
+      "chars": 5361,
+      "sha256": "ec059d48bbacd680a32742016cd1f38639212bab9023368369cc0d7ae95f3c6f"
     },
     {
       "index": 291,
