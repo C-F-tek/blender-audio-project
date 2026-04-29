@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-04-29T13:47:12",
+  "created_at": "2026-04-29T14:03:36",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "index_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI",
   "primary_library": true,
-  "source_fingerprint": "214e1c363323ddffaf7b7a5a28aee0baf01dc8bd602fa13a9b88d0bf73d48e01",
+  "source_fingerprint": "b596073963f0e35941afe9ab81e8a999882f333e0cbc244deda6223e29519e8f",
   "excluded_dirs": [
     ".git",
     ".mypy_cache",
@@ -39,8 +39,8 @@
     "npu_music_context_for_aider",
     "ollama_music_insights"
   ],
-  "file_count": 222,
-  "chunk_count": 365,
+  "file_count": 224,
+  "chunk_count": 367,
   "index_md": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI\\project_code_index.md",
   "chunk_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI\\project_code_chunks",
   "patch_library_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI\\patch_library",
@@ -1310,6 +1310,74 @@
       }
     },
     {
+      "file": "Scripting/shared/ffmpeg_encoder.py",
+      "suffix": ".py",
+      "lines": 135,
+      "chars": 4096,
+      "sha256": "8b559974799c3a13a60115dfd0061b421cb0dd8bd31582fd254a822f52114a4e",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "shlex",
+          "shutil",
+          "subprocess",
+          "from dataclasses import dataclass",
+          "from pathlib import Path",
+          "from typing import Sequence"
+        ],
+        "functions": [
+          {
+            "name": "find_ffmpeg",
+            "line": 37,
+            "args": [
+              "explicit_path"
+            ],
+            "async": false
+          },
+          {
+            "name": "validate_encode_job",
+            "line": 51,
+            "args": [
+              "job"
+            ],
+            "async": false
+          },
+          {
+            "name": "build_ffmpeg_command",
+            "line": 66,
+            "args": [
+              "job"
+            ],
+            "async": false
+          },
+          {
+            "name": "format_command",
+            "line": 95,
+            "args": [
+              "command"
+            ],
+            "async": false
+          },
+          {
+            "name": "run_ffmpeg_command",
+            "line": 115,
+            "args": [
+              "command"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [
+          {
+            "name": "EncodeJob",
+            "line": 23,
+            "methods": []
+          }
+        ],
+        "assignments": []
+      }
+    },
+    {
       "file": "Scripting/shared/image_sequence.py",
       "suffix": ".py",
       "lines": 162,
@@ -1581,6 +1649,59 @@
       "lines": 72,
       "chars": 2763,
       "sha256": "4148f3599f6921eb63f46cf1edec75b21e9c7d3a2fe6c2077cb1fe3ee8768097"
+    },
+    {
+      "file": "Scripting/shared/render_profiles.py",
+      "suffix": ".py",
+      "lines": 134,
+      "chars": 3206,
+      "sha256": "a14da557dbc48485de3e8cf734ef7373f8a4dcca14d0b150dacac596ae934dfb",
+      "symbols": {
+        "imports": [
+          "from __future__ import annotations",
+          "from dataclasses import dataclass"
+        ],
+        "functions": [
+          {
+            "name": "list_profiles",
+            "line": 112,
+            "args": [],
+            "async": false
+          },
+          {
+            "name": "get_profile",
+            "line": 117,
+            "args": [
+              "name"
+            ],
+            "async": false
+          },
+          {
+            "name": "profile_to_args",
+            "line": 126,
+            "args": [
+              "profile"
+            ],
+            "async": false
+          }
+        ],
+        "classes": [
+          {
+            "name": "EncodeProfile",
+            "line": 13,
+            "methods": []
+          }
+        ],
+        "assignments": [
+          "YOUTUBE_BT709_COLOR_ARGS",
+          "AAC_320K_AUDIO_ARGS",
+          "FASTSTART_MP4_ARGS",
+          "CPU_SVT_AV1_YOUTUBE",
+          "CPU_SVT_AV1_YOUTUBE_12_THREADS",
+          "GPU_AV1_NVENC_YOUTUBE",
+          "PROFILES"
+        ]
+      }
     },
     {
       "file": "Scripting/v61b/__init__.py",
@@ -9369,7 +9490,7 @@
       "suffix": ".json",
       "lines": 7265,
       "chars": 195911,
-      "sha256": "42c22340aac924d707039e46467374c71e6890bd19f0436d219df05f38115e01"
+      "sha256": "577e1a39dd248d3e57a341a480387fff4dea97b729e6877ac18e6854be9ccc7f"
     },
     {
       "file": "Tools/npu/npu_guardrail_service.py",
@@ -10827,9 +10948,9 @@
     {
       "file": "Tools/validation/check_package_structure.py",
       "suffix": ".py",
-      "lines": 114,
-      "chars": 3728,
-      "sha256": "448f07c1ebfa7b61d9003a4d2e7a7361a2981245ca33cc4c07b32b65af1120d2",
+      "lines": 128,
+      "chars": 4083,
+      "sha256": "c699d6ae862857f7f3850f8250a1395a63aa3ab2995480af223935e0f8b44f42",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -10841,7 +10962,7 @@
         "functions": [
           {
             "name": "count_lines",
-            "line": 17,
+            "line": 23,
             "args": [
               "path"
             ],
@@ -10849,7 +10970,7 @@
           },
           {
             "name": "inspect_package",
-            "line": 24,
+            "line": 30,
             "args": [
               "path",
               "scripting_root"
@@ -10857,8 +10978,16 @@
             "async": false
           },
           {
+            "name": "should_skip_package_dir",
+            "line": 67,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
             "name": "iter_packages",
-            "line": 61,
+            "line": 75,
             "args": [
               "scripting_root"
             ],
@@ -10866,14 +10995,15 @@
           },
           {
             "name": "main",
-            "line": 73,
+            "line": 87,
             "args": [],
             "async": false
           }
         ],
         "classes": [],
         "assignments": [
-          "SKIP_DIRS"
+          "SKIP_DIRS",
+          "SKIP_NAME_PARTS"
         ]
       }
     },
@@ -13866,7 +13996,7 @@
       "start_line": 1,
       "end_line": 43,
       "chars": 887,
-      "sha256": "8b85ef19396027fe8c0b2ff7b27443ff3914f62a3cc24292a78ec272c7f1c240"
+      "sha256": "f0b5e5ae8c422bf55d7f8dd6fe6f92282d65b14ed50e35cb24f52a5c8b3da4cc"
     },
     {
       "index": 2,
@@ -13876,7 +14006,7 @@
       "start_line": 1,
       "end_line": 36,
       "chars": 843,
-      "sha256": "21f5d84f05f6c61b53f32bfc3d1e115f96a410e8cc7028a2512be325db231cf4"
+      "sha256": "ac1d325f1a3185c055a37ac7eddb267203a7863bab7687a5de4c56ae6a41ee0d"
     },
     {
       "index": 3,
@@ -13886,7 +14016,7 @@
       "start_line": 1,
       "end_line": 25,
       "chars": 652,
-      "sha256": "6b88486c74baa9535376e1cb5aee84f493d30adad6155cf91248b42c0d50b1b5"
+      "sha256": "0869d09e646b331afe5197d2140988f8d290eb658a6ac2e2ae865a3e384ec41d"
     },
     {
       "index": 4,
@@ -13896,7 +14026,7 @@
       "start_line": 1,
       "end_line": 115,
       "chars": 4370,
-      "sha256": "6bbc0e51d1ea566287087705792e2658e6384a98050ebde2aa11757edc63ca00"
+      "sha256": "145590458234b83c833d8fa76f2cc82d5bfcc85bf37070ad562ae362611e9d4a"
     },
     {
       "index": 5,
@@ -13906,7 +14036,7 @@
       "start_line": 1,
       "end_line": 173,
       "chars": 7184,
-      "sha256": "872e4d4ab7564ab0924673662f63dea9c5e7646654cfb0fd6a951969bd0c3ecb"
+      "sha256": "46e9a56111ed2afae8875b2395f8367f0135e7e7ccb1b42f77aabe131de22f0a"
     },
     {
       "index": 6,
@@ -13916,7 +14046,7 @@
       "start_line": 1,
       "end_line": 245,
       "chars": 12426,
-      "sha256": "0877e43c1d267741e473bec129396de667ca763939d6b520f5c26f9f7d4b8c52"
+      "sha256": "f64dee81bb831ea051b9ea34f8b7d9ff7a333fd01d3bf0d6985acb5e76f52c78"
     },
     {
       "index": 7,
@@ -13926,7 +14056,7 @@
       "start_line": 246,
       "end_line": 257,
       "chars": 1030,
-      "sha256": "6fe253299d44ad4bb72266af5cebd9168daf3fb53f6b6b4db25cd3498b083340"
+      "sha256": "f11c645ea9e82f61ad51f446f521d0b19b3ae473d2e5ba46a002df7a4e6640e5"
     },
     {
       "index": 8,
@@ -13936,7 +14066,7 @@
       "start_line": 1,
       "end_line": 56,
       "chars": 3139,
-      "sha256": "e22d3a5fd83b1098a0a0776c5f0a83792b9fb41095b6bd87b41346fcb4fc3e37"
+      "sha256": "d128c6af55e4b40ba859af94a2d15409f7c344e3d5711b0a00a30f7f9ca716b6"
     },
     {
       "index": 9,
@@ -13946,7 +14076,7 @@
       "start_line": 1,
       "end_line": 113,
       "chars": 5321,
-      "sha256": "39e6b4efb67eab1641febee008dce5424a56fd7f654bca84bb253a5cf4fa560c"
+      "sha256": "cada4206a5408a62986ea690f41f1853a3b8e2ed207cf90e09b6003529cb51d6"
     },
     {
       "index": 10,
@@ -13956,7 +14086,7 @@
       "start_line": 1,
       "end_line": 24,
       "chars": 717,
-      "sha256": "98f20e0e6d4b04f6e47f9f8013071b9cd7fcf35f3fb25a12bd7b5eabe4c44342"
+      "sha256": "67e2f7ec78f1446ddfe099fa92344859ff6b1d9d236ef974f24bb687dd0f67de"
     },
     {
       "index": 11,
@@ -13966,7 +14096,7 @@
       "start_line": 1,
       "end_line": 44,
       "chars": 1601,
-      "sha256": "fd5b985b29e0f666e9aecf7d13a14e0a72b85d8723dada4f44d812d233558763"
+      "sha256": "c565b4ab3115a1403305aa3683430f01501152de827a8bf75296daba0456b106"
     },
     {
       "index": 12,
@@ -13976,7 +14106,7 @@
       "start_line": 1,
       "end_line": 21,
       "chars": 1010,
-      "sha256": "410888db1b96711cf86c34ec32c545a3fa459c8c23fff522b42405cedb9a04c8"
+      "sha256": "a99dbffab97710bb2c0c1fe2d1e91446cf8414a7d28f1120806de98902211857"
     },
     {
       "index": 13,
@@ -13986,7 +14116,7 @@
       "start_line": 1,
       "end_line": 28,
       "chars": 1026,
-      "sha256": "4df8e88795ac6b965e7ef5e4ae3dad38413ee6ae71b085d7a57f890b00b6df34"
+      "sha256": "d88b6db74d5f7682b9e13eee51608ca0ebc62388e21bfd33fa5c7db21e250a68"
     },
     {
       "index": 14,
@@ -13996,7 +14126,7 @@
       "start_line": 1,
       "end_line": 182,
       "chars": 7417,
-      "sha256": "5c020cd85660aa4eaae495b0b5d0c41e1a86068ec112e0c9d699382cf8188933"
+      "sha256": "316d8690b92c38618e35ebee68f6eff2e48e1e034d941933fc1e3151b61ccac3"
     },
     {
       "index": 15,
@@ -14006,7 +14136,7 @@
       "start_line": 1,
       "end_line": 126,
       "chars": 5019,
-      "sha256": "05ee93e88edc5991a61de21b31fd1881b27dbff9cbf5e2f1d1859df0d92c0ba6"
+      "sha256": "1f088eb214d99afc4235a26ae6a80d1fedd4c2c4b99e6d1662bac0d0c3af572c"
     },
     {
       "index": 16,
@@ -14016,7 +14146,7 @@
       "start_line": 1,
       "end_line": 79,
       "chars": 3132,
-      "sha256": "40080b1c1ef10692e614ec449009483630e7c22ef96aab8beaff59ad77fe8d06"
+      "sha256": "f7f8ec07eb3c322aae5677f92994714a5dca39c4abd12f3fe2ec8945796376ea"
     },
     {
       "index": 17,
@@ -14026,7 +14156,7 @@
       "start_line": 1,
       "end_line": 77,
       "chars": 3595,
-      "sha256": "10ab86f153f8556e01e539d11e26692c03d7293fe896dae8a74d9a21b8861563"
+      "sha256": "f9cc649e03c0547e44dc8fa425ca934b3ed2ce949f69f9609092b6137cd32a15"
     },
     {
       "index": 18,
@@ -14036,7 +14166,7 @@
       "start_line": 1,
       "end_line": 61,
       "chars": 2301,
-      "sha256": "8332778c5803053679288566b0fd216c9f696cd75930cf28dd5e84c036255abe"
+      "sha256": "2713310d4788389236d60647f385177a625f7d90ed71282fc1568941264f003c"
     },
     {
       "index": 19,
@@ -14046,7 +14176,7 @@
       "start_line": 1,
       "end_line": 135,
       "chars": 4357,
-      "sha256": "85d87918cc7f617c4c6371cf58f53559cf36e9e96242a2b775a232407b78b7de"
+      "sha256": "35dfed9acc5644513688e6e5db859c0f4d91bd8c58eb319eb4b678e83c90f5ce"
     },
     {
       "index": 20,
@@ -14056,7 +14186,7 @@
       "start_line": 1,
       "end_line": 54,
       "chars": 2227,
-      "sha256": "a2668a9b6ee2120fa8bd553d9c426bb21f6189e8bc282f4b48667bafcfbfa300"
+      "sha256": "0af60acd065b6a6fd00a0f6fb180e07f01c9268ba2b16a39cc15580a07a4e2d9"
     },
     {
       "index": 21,
@@ -14066,7 +14196,7 @@
       "start_line": 1,
       "end_line": 267,
       "chars": 10865,
-      "sha256": "dc7deb44b32efac1a8140397336ac228ac4e60e2480f5890867fb9344c0695e9"
+      "sha256": "12f9209e9ecb713ae08426f5955ce862900a61507ee7228ac492439038d2d27d"
     },
     {
       "index": 22,
@@ -14076,7 +14206,7 @@
       "start_line": 1,
       "end_line": 30,
       "chars": 1188,
-      "sha256": "5c3a54773fb015d94bcc110d051911bfa9e165b59125d90c0468c68a4744cba2"
+      "sha256": "ce3dacac1d59cc71aa00ae0800f2935abc454e1ae89175fd59bb909aa62dd5b3"
     },
     {
       "index": 23,
@@ -14086,7 +14216,7 @@
       "start_line": 1,
       "end_line": 56,
       "chars": 2590,
-      "sha256": "9043c88f483cf5fd3c9122c253bc273d7cc146e112586265233237d77aa7f3c2"
+      "sha256": "311a5c29fc5493eb960fc9ceab644c88b9615b0fa1b9d47ee4a0bf2f197f9a98"
     },
     {
       "index": 24,
@@ -14096,7 +14226,7 @@
       "start_line": 1,
       "end_line": 171,
       "chars": 6775,
-      "sha256": "578a112b6fcd5320a395d8bf236be9ed0d5a86f38bd2e73649083097dc53b272"
+      "sha256": "ef7de410db5721731ee4bd021f85dc1cb8b2958f5e56d2abc92957f32241a5d1"
     },
     {
       "index": 25,
@@ -14106,7 +14236,7 @@
       "start_line": 1,
       "end_line": 75,
       "chars": 2208,
-      "sha256": "200496940794b0ad16751e209b01e4922a084eaa1b97e98ee09475877bbb5bd3"
+      "sha256": "e31620d19018cec1963fa95cc8866145bc2e6d6d85c1f17a3caf949a4e6a3624"
     },
     {
       "index": 26,
@@ -14116,7 +14246,7 @@
       "start_line": 1,
       "end_line": 154,
       "chars": 5931,
-      "sha256": "5e3a7598b9607521cb1ff3ad59ff7ece627717b64fe429e55165e2e8076470db"
+      "sha256": "97933fab387e9c26bf45e85a7a81cab7d067bc8cbdf9a88e1a15af20ec43a85e"
     },
     {
       "index": 27,
@@ -14126,7 +14256,7 @@
       "start_line": 1,
       "end_line": 38,
       "chars": 1241,
-      "sha256": "9ce7374f1537839ffe0c2b3944a754ae78398e2395fa3d7d52d8cc9f3e153bfd"
+      "sha256": "7920b00672e0271a0014aeffbbcaee03476123bac608bf94edc3b7bffe675748"
     },
     {
       "index": 28,
@@ -14136,7 +14266,7 @@
       "start_line": 1,
       "end_line": 51,
       "chars": 2245,
-      "sha256": "90485c6d844e1077c2720f8542f057b601b450a21d7df378562c35b93c338871"
+      "sha256": "a4f5d7c6f0b2410238a6c77e8a6a64c0ab4888953057ef636be92a5edd660a72"
     },
     {
       "index": 29,
@@ -14146,7 +14276,7 @@
       "start_line": 1,
       "end_line": 27,
       "chars": 1232,
-      "sha256": "aad60569752b97fe81df7ede964871655a2ffa081361851f9a5f6c5524fb338b"
+      "sha256": "cd79f9b45b516c2405713cac77f09d7662063445d99ce4795e533a77adcdf6b1"
     },
     {
       "index": 30,
@@ -14156,7 +14286,7 @@
       "start_line": 1,
       "end_line": 86,
       "chars": 3233,
-      "sha256": "e972cbe4fc192b06a0bdccd592d1586d38bafd60a251ef2dbd7e2072c36fc58e"
+      "sha256": "4b36745f6cafb5eecb9a0a2c6f8c9aff813372a9680815000f34915cf4d9aa7c"
     },
     {
       "index": 31,
@@ -14166,7 +14296,7 @@
       "start_line": 1,
       "end_line": 33,
       "chars": 1381,
-      "sha256": "a66c544617fbf54a4d6c72945fc4674901a22fcc3bc40853d8350fd682d6f207"
+      "sha256": "aeab4317388844c7436b1f68e8038e5d2bbf6db8d363d2725275d4656f109a61"
     },
     {
       "index": 32,
@@ -14176,7 +14306,7 @@
       "start_line": 1,
       "end_line": 144,
       "chars": 8966,
-      "sha256": "3492444ce977ba435a6c195250505ded91b5e25506646648b4681c68f7689621"
+      "sha256": "6a052223fa4107b7834dbbd4b015d715cb975ee6172de353415f07165f425fbc"
     },
     {
       "index": 33,
@@ -14186,7 +14316,7 @@
       "start_line": 1,
       "end_line": 25,
       "chars": 1117,
-      "sha256": "ea12f49b1b598206c0d8b32af78fcd1f71a63223a65d576b86abb52e8fb05a23"
+      "sha256": "6f55b01dbbe73acfa5ad5f0c428914df680cadd664933e47b109684cec48f327"
     },
     {
       "index": 34,
@@ -14196,7 +14326,7 @@
       "start_line": 1,
       "end_line": 160,
       "chars": 4730,
-      "sha256": "71a9be6d18dfeaf4c08b5d5f0b2d75730e0e6f6871b26f97225753c35358f8be"
+      "sha256": "9aef3359eddd82e1aacb632a836ecbce47e1de72d3220217889fa86e9d43cf00"
     },
     {
       "index": 35,
@@ -14206,7 +14336,7 @@
       "start_line": 1,
       "end_line": 237,
       "chars": 7601,
-      "sha256": "f1a39338b4855a2b9e2b7475e4ed17f2d16a9f267bf7b3f6bb716a28d78d8581"
+      "sha256": "80d348346b8c17528f1b31d226e675cc9de33451b657670f1fdf8f09af92d087"
     },
     {
       "index": 36,
@@ -14216,7 +14346,7 @@
       "start_line": 1,
       "end_line": 246,
       "chars": 8618,
-      "sha256": "61ad8d72677fa3e461d413485e559963c1fe94ccdb69f272d1665ba752046c72"
+      "sha256": "cfe428bb0790cf42ae8aeb03b9ea29efde8b8e90e479af101b4e449a6119ae56"
     },
     {
       "index": 37,
@@ -14226,7 +14356,7 @@
       "start_line": 1,
       "end_line": 196,
       "chars": 9696,
-      "sha256": "ac3c62b3659b2e93643226506e0e6c184bb355466fbc2da32dc71e2f17aa15c6"
+      "sha256": "86e198d4d58eed1ad67dbffd9eda53b4e769592f341e632c482d210e52ccb82e"
     },
     {
       "index": 38,
@@ -14236,7 +14366,7 @@
       "start_line": 1,
       "end_line": 38,
       "chars": 1458,
-      "sha256": "cbe49f2a9ea907ffebdd7ad75706521fdf3814b7cbbc93794ceec152b86acbe4"
+      "sha256": "01e3dae8da0250e0e8ad9f5139014cf78c571840ba02bd96c8e284f7ae29b3b4"
     },
     {
       "index": 39,
@@ -14246,7 +14376,7 @@
       "start_line": 1,
       "end_line": 273,
       "chars": 11789,
-      "sha256": "959a75961dbab59abd3879eb0e35c9ac08bfa02207664b7a399a2a71f17a94e6"
+      "sha256": "29e969920dddaccdaa28df3e9396cfc1d4b103aab8b37bff85bbdb1eb921e7be"
     },
     {
       "index": 40,
@@ -14256,7 +14386,7 @@
       "start_line": 274,
       "end_line": 274,
       "chars": 248,
-      "sha256": "99849e9beda92210deefda025b4f0aee95ff1b983a5ae23d7a1d77c5ee4b6181"
+      "sha256": "ccef62d2c2635df08fd0c25297e53f1654aa1b243db561907b782769ced5583a"
     },
     {
       "index": 41,
@@ -14266,7 +14396,7 @@
       "start_line": 1,
       "end_line": 122,
       "chars": 4924,
-      "sha256": "db85dc031870cd87b7c016b6fd4db6fe94f1a90c6fa60249467dcfb388abfc50"
+      "sha256": "5d4d6ce5a06e48d7f05f9997f8e839a1f8e1e9e89e37413f50605b4bdb9e7c9e"
     },
     {
       "index": 42,
@@ -14276,7 +14406,7 @@
       "start_line": 1,
       "end_line": 139,
       "chars": 6460,
-      "sha256": "73cdec71cb58e604041e32982aea903bade306bf55df9f9199a6ef574df4d4f9"
+      "sha256": "cd9c3107c3cdd2d145caa73c7e69c0ff750130210e29264a766723a003eb8e2a"
     },
     {
       "index": 43,
@@ -14286,7 +14416,7 @@
       "start_line": 1,
       "end_line": 316,
       "chars": 11802,
-      "sha256": "a6a941a00bbd8a3f07509325499309827f2e6dbd391a9f1d939bb3f1eeddcd4a"
+      "sha256": "50db163a04ed0199d2e0ca78cb42af8bcd4ac7db0dec6db62f09285a2ce9aae4"
     },
     {
       "index": 44,
@@ -14296,7 +14426,7 @@
       "start_line": 317,
       "end_line": 349,
       "chars": 2000,
-      "sha256": "790909e08479712ef480294fa1aad36f9a78d9a31daaf4c3e6a51b3cf8385768"
+      "sha256": "bf94d6ecb27bd802b6fe820e9a1180955dff29d618f971029d6a6d8997948444"
     },
     {
       "index": 45,
@@ -14306,7 +14436,7 @@
       "start_line": 1,
       "end_line": 51,
       "chars": 1753,
-      "sha256": "045ce66d86858da1427d47ee72272de0707b37f72f2792e350ca02996d12c8d8"
+      "sha256": "3792b7d51dfc7ca7f8b2500f72c2526c3a9fe27071aeafadb979bb0f44227f66"
     },
     {
       "index": 46,
@@ -14316,7 +14446,7 @@
       "start_line": 1,
       "end_line": 184,
       "chars": 8780,
-      "sha256": "798be60d3e85b1de0c69d69e974db986557b3a06772e89c95f4e5bd99b3cf0ba"
+      "sha256": "b4f1b1bf160b8dd6b9fec1e7c048978e0e263fdddef797c8a417347356b0bb38"
     },
     {
       "index": 47,
@@ -14326,7 +14456,7 @@
       "start_line": 1,
       "end_line": 95,
       "chars": 3584,
-      "sha256": "15fc1ad357601788b8685cb9c171d277a2ad1d9b854e0f99c5ebcec2d8500507"
+      "sha256": "61cecd9781eadd20061279629be85297f558df17b5e30ff8b20453fe8779971e"
     },
     {
       "index": 48,
@@ -14336,7 +14466,7 @@
       "start_line": 1,
       "end_line": 57,
       "chars": 1705,
-      "sha256": "f2b4a80d01fd04e8dc46f3b10afeb10a39b566b55b761053a47c7cad0d85b236"
+      "sha256": "558d3553df5aae672e26976897b4efec57ad0d5dd46e417de547f5e1dc092dd2"
     },
     {
       "index": 49,
@@ -14346,7 +14476,7 @@
       "start_line": 1,
       "end_line": 14,
       "chars": 486,
-      "sha256": "824e92b0300d66a5eb0f3a3461e233fdccdc3972a2d9f0743c358b70f817e535"
+      "sha256": "43b01bacd635032382704c3bf7be91d3573e257dfdcd3d240d1cafe9ebb68e52"
     },
     {
       "index": 50,
@@ -14356,7 +14486,7 @@
       "start_line": 1,
       "end_line": 450,
       "chars": 11682,
-      "sha256": "3ffb213cb08ea5089aabd4e66278373047e43335efd9149ad68f7d36a6c9d4d4"
+      "sha256": "115d174db6e7bc4bbbc499b38ec979d64f0c212d9429f28fc0cc7dcb7d3ad162"
     },
     {
       "index": 51,
@@ -14366,7 +14496,7 @@
       "start_line": 451,
       "end_line": 535,
       "chars": 2803,
-      "sha256": "cd4d70affe33a2de5983665280a5eb9f69cf4a1af8603b64913797c3947dc598"
+      "sha256": "8c1fea78a3fd4c5ce4b82ac0812d861ec9351cd29e8c9b7aa62f88e89981fa80"
     },
     {
       "index": 52,
@@ -14376,7 +14506,7 @@
       "start_line": 1,
       "end_line": 315,
       "chars": 12489,
-      "sha256": "64357f1c874204615f0fa2c7097aa2c96a3aeb6c5cba0fbff97b1576ead9897f"
+      "sha256": "4a490c3e4c8033957383256ba79adc7fcaf1640d0ffd08bccd0dcbbf812a59d8"
     },
     {
       "index": 53,
@@ -14386,7 +14516,7 @@
       "start_line": 316,
       "end_line": 469,
       "chars": 6877,
-      "sha256": "e6be5ec2487bcc3a4fe4ce6620fe8f1969c25a48270b4a318caac55f2f4f2d82"
+      "sha256": "d0f53c8754e239324bcfe7c50863f81ea51b6b8ab292432bfcd9d1acda7173d1"
     },
     {
       "index": 54,
@@ -14396,7 +14526,7 @@
       "start_line": 1,
       "end_line": 76,
       "chars": 6542,
-      "sha256": "075d3ab1a22678961a474e9c9dca3eb0e98b3034228b5c939a759a288e409991"
+      "sha256": "880c819407eb960c39342e46b0e61892b0f7296f23b78e209568844b807b3bc9"
     },
     {
       "index": 55,
@@ -14406,7 +14536,7 @@
       "start_line": 1,
       "end_line": 96,
       "chars": 5503,
-      "sha256": "ea7ec4e45789727d79e7aa90fedb343e7cdb65b531121c4968f9893b7e78e7af"
+      "sha256": "03ef33189d3a5bccbca72ae7594a676aefa712ff316ae13495e6ee5a7ea4ebd1"
     },
     {
       "index": 56,
@@ -14416,7 +14546,7 @@
       "start_line": 1,
       "end_line": 33,
       "chars": 1224,
-      "sha256": "9a498b1a00e0f69c20495e3bcf5ef07924e70129f446135623bda30c1a101fc3"
+      "sha256": "12a91b8aaaef310cd30ee759aeceac7356994014d6035fcd67b250184a781f95"
     },
     {
       "index": 57,
@@ -14426,7 +14556,7 @@
       "start_line": 1,
       "end_line": 66,
       "chars": 1954,
-      "sha256": "6ef7f1617580147ba437e39942911916431fc6e1a10490fbb934b9830fd4a2de"
+      "sha256": "7ed5d4747d654cd73ae6ab9f1d23975107f64f8baaf6d7355117b83e7034e829"
     },
     {
       "index": 58,
@@ -14436,7 +14566,7 @@
       "start_line": 1,
       "end_line": 213,
       "chars": 8225,
-      "sha256": "78d04e61f4cc84c9e159b3dae7e1bde3c79a51756f36cd2996036edc5061f7cb"
+      "sha256": "dd890d23e584874b50b51a2c85ae87bacdae9cc9be0046d2937bf3d14ab89ea6"
     },
     {
       "index": 59,
@@ -14446,7 +14576,7 @@
       "start_line": 1,
       "end_line": 76,
       "chars": 2428,
-      "sha256": "895f39bb57ffc1ddca5ac93c1fcc8546e80ab245e094dcd919ceea512f78bd63"
+      "sha256": "32af61fcf42b0dab7e9527ea7de59447ce16341dfc7428e2981eddfd7f768b14"
     },
     {
       "index": 60,
@@ -14456,7 +14586,7 @@
       "start_line": 1,
       "end_line": 325,
       "chars": 9749,
-      "sha256": "ce970534be205bcc86f0bd72d6be7ff999e0b7ac3ff06e4f2200d52e3b01d028"
+      "sha256": "a4819a7f26aaf994f7b97dfc9ba960eb5e9d3cb2c5f2608fd3a90518a164ef11"
     },
     {
       "index": 61,
@@ -14466,7 +14596,7 @@
       "start_line": 1,
       "end_line": 1,
       "chars": 1448,
-      "sha256": "ab1b4e0eb0905436ffed567e34edaa106fc1a71e6baf68a5e19a948fc7cf6eea"
+      "sha256": "13fb4b55ac804ae6682be83e1275ecd08b549778a8a687baaf35dac4ba464f2b"
     },
     {
       "index": 62,
@@ -14476,7 +14606,7 @@
       "start_line": 1,
       "end_line": 65,
       "chars": 1565,
-      "sha256": "95ee1493bbd2ef1aa786ce4b2456d9deedd991cd75eaa8219aa7b83c67243cbe"
+      "sha256": "bc2081fa34ab692111651feed696d19c1168834edd44189d59f4555790fb3499"
     },
     {
       "index": 63,
@@ -14486,7 +14616,7 @@
       "start_line": 1,
       "end_line": 53,
       "chars": 1504,
-      "sha256": "f302f7901242ad795b1a83e56d6aa062ce0897edfb6d9e1ac48f0c26134dc718"
+      "sha256": "c75941f223616384af5738357706813024d69d36690c4f4c020451bc7766be86"
     },
     {
       "index": 64,
@@ -14496,7 +14626,7 @@
       "start_line": 1,
       "end_line": 51,
       "chars": 1919,
-      "sha256": "d6d0c06d9fc75cd9e3352cb815f4d9bc3f9dd891da8577a7c37d92288293c396"
+      "sha256": "e036b43320b5ebb2bb1cd6b4cad4a55f875c38e67830c1cc59b5644b48acd0e1"
     },
     {
       "index": 65,
@@ -14506,7 +14636,7 @@
       "start_line": 1,
       "end_line": 51,
       "chars": 2540,
-      "sha256": "44f43068242d79952aba292cbe1899cf5e9374311578890634a0504291c0fb1a"
+      "sha256": "e3588648a30c314a2aa7321c9a50a8c9bdeffebb047abf680a35db00eedc04d4"
     },
     {
       "index": 66,
@@ -14516,7 +14646,7 @@
       "start_line": 1,
       "end_line": 26,
       "chars": 1072,
-      "sha256": "3eb18fc144b142613876fd2e5d0f42fa80ed95f30f71dabcf95f1270e1e07d04"
+      "sha256": "527ca283677a9476916abd2e687099e7a750bac2bc159c8c02d1c1f3c769ed3e"
     },
     {
       "index": 67,
@@ -14526,7 +14656,7 @@
       "start_line": 1,
       "end_line": 49,
       "chars": 2292,
-      "sha256": "eb4bc742672aa3084c0ba22596ad07fbd80ed7a7572bd3a35dff64ea75340518"
+      "sha256": "27fcf781d0178a5acda3b09e9bfa2904527aca036a54f901778e96b12d283606"
     },
     {
       "index": 68,
@@ -14536,7 +14666,7 @@
       "start_line": 1,
       "end_line": 56,
       "chars": 1505,
-      "sha256": "5315561e872b478f2b60966bdbfbed7994c5a36f61252ee5103115520cacc7f9"
+      "sha256": "db3b4c24936b58be3cf66cc463e38b59a5630920935da711e4d4c1bed5cbe5fe"
     },
     {
       "index": 69,
@@ -14546,7 +14676,7 @@
       "start_line": 1,
       "end_line": 75,
       "chars": 2732,
-      "sha256": "d60c45ef86b99d4acaf8ed60c8579900f90278c13d661a6d3913a98c28af1c86"
+      "sha256": "7c6a70572f171bedf91b80128b44eed944e47d7f312588a3045f4fb27a5c3010"
     },
     {
       "index": 70,
@@ -14556,7 +14686,7 @@
       "start_line": 1,
       "end_line": 58,
       "chars": 1963,
-      "sha256": "8c771766984b9cf8238a3130929542bfd92e5884700ca574dc79c69fe4f359b1"
+      "sha256": "60fbe6f028ed21adfdf664669e2d066a9ba265fb36c2d6b2fd63813a0f0d69dd"
     },
     {
       "index": 71,
@@ -14566,7 +14696,7 @@
       "start_line": 1,
       "end_line": 28,
       "chars": 1139,
-      "sha256": "5171e331d5835214a9e356c38437617291bec478e7da034bf90d7260c9dd4ea0"
+      "sha256": "6445f3ad63f136a87137a1f4e01f65bad18b0aa57f46ac0670932e1074f6a2ff"
     },
     {
       "index": 72,
@@ -14576,7 +14706,7 @@
       "start_line": 1,
       "end_line": 10,
       "chars": 467,
-      "sha256": "609f928a7ed2ee01d7293af4ed218774e1ff023a9a5d250b4c64b8ed1e1828c7"
+      "sha256": "dd2376e928cfc0b44c554c9bf934da4cc19b061dba9b4cd4089d9ad8f1ed1f04"
     },
     {
       "index": 73,
@@ -14586,7 +14716,7 @@
       "start_line": 1,
       "end_line": 18,
       "chars": 894,
-      "sha256": "9329311895525b8223c62808a4371f63798b50134e0df8fe0e0513b6a4526246"
+      "sha256": "2e0c47d30c1113b076e64631af74bd180e92e9e602057db64e5fa6c52f1c441d"
     },
     {
       "index": 74,
@@ -14596,7 +14726,7 @@
       "start_line": 1,
       "end_line": 19,
       "chars": 623,
-      "sha256": "7593fa7badfa0b187f2ab1b1890883754b3d8a6651f5808e7420a2b0b850ca47"
+      "sha256": "a40092aa7e205daaad443cb407649e3a8e2ede90a77eaf11d6bac8d5b82f770b"
     },
     {
       "index": 75,
@@ -14606,7 +14736,7 @@
       "start_line": 1,
       "end_line": 23,
       "chars": 1045,
-      "sha256": "9e6465cbbdc2cc20a02ca60f971776d89f94f7f3d17e20eae2ef02575e01fcdf"
+      "sha256": "d192686b60abc0fa00f650463494e4370db9d04127968bd452dabb47aad4466d"
     },
     {
       "index": 76,
@@ -14616,7 +14746,7 @@
       "start_line": 1,
       "end_line": 79,
       "chars": 3370,
-      "sha256": "7ca5ed91e17caed472eda8fa9bc9be143f9210ed3299ca895836b7b735fe09b3"
+      "sha256": "55c6360df9fb0c5030f023ebe5030a3e8c92ad2417cfd81d537b0e1e8074c45e"
     },
     {
       "index": 77,
@@ -14626,7 +14756,7 @@
       "start_line": 1,
       "end_line": 35,
       "chars": 1689,
-      "sha256": "01d6bcc9008679598228bfae86001e26c4bb41e16777b517b693fab1b2cdfb65"
+      "sha256": "d22fb9e77dbdb9c68d6a28ef3c560405c5d52facfd273e58f0eda94636292687"
     },
     {
       "index": 78,
@@ -14636,7 +14766,7 @@
       "start_line": 1,
       "end_line": 15,
       "chars": 435,
-      "sha256": "ebf29f8520c4e608e1dbcd89e9a48339a68f47c700b49b0cff8dd8fdffe7801b"
+      "sha256": "402db875df5282be549c38273cb742bdc18ba2e7f35d6a7dd4cec115e46d6714"
     },
     {
       "index": 79,
@@ -14646,7 +14776,7 @@
       "start_line": 1,
       "end_line": 20,
       "chars": 550,
-      "sha256": "7b3b060a9f41175fbc7db0821fb83439fa7034fc8d63e1b3b02401f9aa62fdf5"
+      "sha256": "8ad77aafb050af664c5a9b39d3c1aa0df49f77bebf8a0457dea29c1240cb6ed0"
     },
     {
       "index": 80,
@@ -14656,7 +14786,7 @@
       "start_line": 1,
       "end_line": 14,
       "chars": 533,
-      "sha256": "bdad4d48fefef6ec2836521d0d0a6e5c0acfb5c88b9b5d3ceddc25c5d62d8be8"
+      "sha256": "da0670c49d6d0050b8daf8d48fd2b6a60104e6098d09fd88f8f6d16d57bc3aa4"
     },
     {
       "index": 81,
@@ -14666,7 +14796,7 @@
       "start_line": 1,
       "end_line": 71,
       "chars": 2760,
-      "sha256": "fb86159d386fad56d9dd6862287b44ea93a273739f2000fbf790f5291ec20e6b"
+      "sha256": "70da765cbdc0012637631c75572caa0a681c718ae4adf127d373dc8e53f3bf9e"
     },
     {
       "index": 82,
@@ -14676,7 +14806,7 @@
       "start_line": 1,
       "end_line": 26,
       "chars": 1245,
-      "sha256": "fb11fa87f5d5b82fc19a6c43857cfd8e83ebaa31baf55d267a49b1e25f26bbe2"
+      "sha256": "50416d99e179a7a17be33e530fb0c6d28cc826c68b9b7ccf27194a7e0ab7d07e"
     },
     {
       "index": 83,
@@ -14686,7 +14816,7 @@
       "start_line": 1,
       "end_line": 46,
       "chars": 1058,
-      "sha256": "3982f6d92f88820668e4bc85ec05f60b2725b1aa99baa6a03783b655ba496808"
+      "sha256": "175a3020552f725d34a211106e10529e0690afd6cc1f4544b9e69be50eea097b"
     },
     {
       "index": 84,
@@ -14696,7 +14826,7 @@
       "start_line": 1,
       "end_line": 21,
       "chars": 1008,
-      "sha256": "799e1d96d08e6d800a1ec26c6311a2f1a3889bfe7d2f9ba7522feb40cbecd89c"
+      "sha256": "4233233dbdabe8815e79ecf8635f0bf866dd327798ae519ead52ba52bdedfdad"
     },
     {
       "index": 85,
@@ -14706,7 +14836,7 @@
       "start_line": 1,
       "end_line": 45,
       "chars": 1649,
-      "sha256": "edfdd781f617a6705ec0c4ef057f4c622cf771dd26295a67df12340f28b7a082"
+      "sha256": "d3123daeaf99fb77e8c96723d5a3d37f7978c7a5c20239702afdaeeb5f8293a8"
     },
     {
       "index": 86,
@@ -14716,7 +14846,7 @@
       "start_line": 1,
       "end_line": 119,
       "chars": 4766,
-      "sha256": "fbfcbdfd5cc888dd51a673e6efd051e4f1222f2b84082bbb8a580b946c037ab4"
+      "sha256": "08ebfebb147aada52617f27fdf190c0b793f25dccd146f0ec6df21ba7231774f"
     },
     {
       "index": 87,
@@ -14726,7 +14856,7 @@
       "start_line": 1,
       "end_line": 203,
       "chars": 9240,
-      "sha256": "ce25b399283cfc0e4e668c052b5d4b4971ddbc2565921cb3b92b5f4e44da6efb"
+      "sha256": "e3f69a7e9c41778d6ccdc9acdf8b4675e3fc9be592f2fb1479d8d3c088762dd0"
     },
     {
       "index": 88,
@@ -14736,7 +14866,7 @@
       "start_line": 1,
       "end_line": 13,
       "chars": 518,
-      "sha256": "1e98e366cb2903bd99f481499673ddd1f6e8b95a49d361e24d2728b8c9cd5de1"
+      "sha256": "d35e85799efccd7e1c6cd149ef45413c920c05c3adeaba88b93feef6cca702b1"
     },
     {
       "index": 89,
@@ -14746,7 +14876,7 @@
       "start_line": 1,
       "end_line": 9,
       "chars": 469,
-      "sha256": "6c91f21a1f1f982e657113b1a3b60fc6ca36ba1a69b397abba51775a0af29611"
+      "sha256": "fb4834b9bf98aade42ad3bfb5cffe73a49db82ef59f3815f507b3a42d99bbd17"
     },
     {
       "index": 90,
@@ -14756,7 +14886,7 @@
       "start_line": 1,
       "end_line": 261,
       "chars": 11951,
-      "sha256": "d2fcad6167a405a97ba78d620f5139b3ce991fb854d6b98046b559f94cb0b3a8"
+      "sha256": "1c50142c945d11b3c0f7f695a08038d12ad797cc77226c1e770ea10c29c3f210"
     },
     {
       "index": 91,
@@ -14766,7 +14896,7 @@
       "start_line": 262,
       "end_line": 538,
       "chars": 11960,
-      "sha256": "6a1315121cf7b512d80de68fa3bb3b2ec45282d7794ad6e482572968712725c9"
+      "sha256": "883cb42b2e3dad6ee0b5f53bd65ed8afcc05b764bb271bbc56a514ac0216cad3"
     },
     {
       "index": 92,
@@ -14776,7 +14906,7 @@
       "start_line": 539,
       "end_line": 763,
       "chars": 12025,
-      "sha256": "1024ff82adbf88c7b6d0475d946571018221479bcc3f0af3f7b488a3ebd27eb5"
+      "sha256": "c0ca1980a77b55e78d18e615ceb55dae7d324639f9336fd761bf6a100ccce3b3"
     },
     {
       "index": 93,
@@ -14786,7 +14916,7 @@
       "start_line": 764,
       "end_line": 1033,
       "chars": 11966,
-      "sha256": "72a33ec530475905bc157bd1deebf3f037c4453f5d958c288762f563dd5edb40"
+      "sha256": "83f8148f0e26ff00d54769484077badcc4d6d558691d8fe5cef66607b8075e42"
     },
     {
       "index": 94,
@@ -14796,7 +14926,7 @@
       "start_line": 1034,
       "end_line": 1299,
       "chars": 11991,
-      "sha256": "8cf5b7e3fada64c563fb2a53fdeeda1c44243e0afa5f7157031db5a899a21e7d"
+      "sha256": "e65e7ba446331f01b66ae8e19a5409bb94af251ac4846d51bd913ddcf1a4f514"
     },
     {
       "index": 95,
@@ -14806,7 +14936,7 @@
       "start_line": 1300,
       "end_line": 1548,
       "chars": 12026,
-      "sha256": "38f0f1c8b01fc65f502ec34ca06ed25d9846a3eee706042fa4cab8821581848d"
+      "sha256": "48d81fa149820509b21b0e48a1ad4486c1b48916a5f90302cddb62e9b04343c6"
     },
     {
       "index": 96,
@@ -14816,7 +14946,7 @@
       "start_line": 1549,
       "end_line": 1756,
       "chars": 12040,
-      "sha256": "2a410b3e7827ab124d42a3e48784a5fa14bbc79c74fd6b43bf86271c7ba2a61f"
+      "sha256": "7304f548127955185a4d7a649476a09bba0a4cc1159341f43833e4bca61a1708"
     },
     {
       "index": 97,
@@ -14826,7 +14956,7 @@
       "start_line": 1757,
       "end_line": 1971,
       "chars": 11967,
-      "sha256": "7b4736dbdd6e814d44d9e0faaed4d4e08824bf1e6bd245d2001163b789ef05be"
+      "sha256": "8ebbc79c4c36ff408e5426ff78359606b16a66e5a35ec50eff828c9abb4b412e"
     },
     {
       "index": 98,
@@ -14836,7 +14966,7 @@
       "start_line": 1972,
       "end_line": 2165,
       "chars": 12045,
-      "sha256": "62c3fe9d37319976f459115edeb4483bbf9e65bdc660317a6ab9c8130d674976"
+      "sha256": "8345272f2d3cc4b4d2688caa854515285fc09af1bd3bcf734947fa6b738aafc6"
     },
     {
       "index": 99,
@@ -14846,7 +14976,7 @@
       "start_line": 2166,
       "end_line": 2197,
       "chars": 2609,
-      "sha256": "ea7c38308b6c6b1fb8b99269c01d8efac9c8a39aa7e845bb797215a86551685d"
+      "sha256": "9cbdd4574ec20840f424b3eeb6029fd8e72413846b75b453c5cee66bacc683c3"
     },
     {
       "index": 100,
@@ -14856,7 +14986,7 @@
       "start_line": 1,
       "end_line": 87,
       "chars": 3292,
-      "sha256": "20e1036a111dba9739ab92eb8f8d47b69dcfd9e439e97cf8581f7d4adabbf206"
+      "sha256": "c88d614dbe77453f9fb9074261cf0f6bedc7a32acd505c1e5e538eb1f787ff04"
     },
     {
       "index": 101,
@@ -14866,7 +14996,7 @@
       "start_line": 1,
       "end_line": 20,
       "chars": 1055,
-      "sha256": "3e958f9631344a6275167f32452a337ba42fff16e9ebf2499f62cd4c261a401d"
+      "sha256": "0b1444c425e88f2ad806f0d5571cbd08892e6b77040af6ddd63ec4e11b5e1779"
     },
     {
       "index": 102,
@@ -14876,2637 +15006,2657 @@
       "start_line": 1,
       "end_line": 11,
       "chars": 508,
-      "sha256": "f2faedb9a1836e0df2ada18ed5423393ef95bd8b7c0bdcdd46fe280ef1f0c36d"
+      "sha256": "643a9d85387c26f256731856c369f2f75a316e5f8bdb6c1bc64ce1f92b7d6154"
     },
     {
       "index": 103,
+      "file": "Scripting/shared/ffmpeg_encoder.py",
+      "path": "indexAI/project_code_chunks/chunk_0103_Scripting_shared_ffmpeg_encoder_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 134,
+      "chars": 5581,
+      "sha256": "08da01a00a48e9cf96c0d4f7eb15fd0d2d1de890448f3d50f024940e0c47fad0"
+    },
+    {
+      "index": 104,
       "file": "Scripting/shared/image_sequence.py",
-      "path": "indexAI/project_code_chunks/chunk_0103_Scripting_shared_image_sequence_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0104_Scripting_shared_image_sequence_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 161,
       "chars": 7031,
-      "sha256": "e8a395f4aad81fa339c39f81f100fc1379084e3cf0292f47162f0467a825de8d"
+      "sha256": "8d6d1d0e897ea449923d4981009c3fefca26370b88489290e6b679278249291a"
     },
     {
-      "index": 104,
+      "index": 105,
       "file": "Scripting/shared/json_io.py",
-      "path": "indexAI/project_code_chunks/chunk_0104_Scripting_shared_json_io_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0105_Scripting_shared_json_io_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 88,
       "chars": 4357,
-      "sha256": "3777410f0def191a4407916c8d13161487cef0b798f38e70926e82bc1a821957"
+      "sha256": "ae4b1cd16c7b0e26775d116407f52e5b998aaa47e068c163a19f0c57061b244c"
     },
     {
-      "index": 105,
+      "index": 106,
       "file": "Scripting/shared/path_utils.py",
-      "path": "indexAI/project_code_chunks/chunk_0105_Scripting_shared_path_utils_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0106_Scripting_shared_path_utils_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 102,
       "chars": 4650,
-      "sha256": "29b19a471ec035246d45220e0c06e59f39d7d21e46f436b038586c2840950c1a"
+      "sha256": "2222ad42093143c336e08b5a81bced57c200fbc9b9a530568cf8308d908701fd"
     },
     {
-      "index": 106,
+      "index": 107,
       "file": "Scripting/shared/README.md",
-      "path": "indexAI/project_code_chunks/chunk_0106_Scripting_shared_README_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0107_Scripting_shared_README_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 71,
       "chars": 3377,
-      "sha256": "176d45b1ae0da5b98b577bac459f00d604fbe5eb154bb44b3e5386b47a96f0a0"
+      "sha256": "921bf89b084763df9754a41f94b46353ec54bb166907c78bcefe6859d7931273"
     },
     {
-      "index": 107,
+      "index": 108,
+      "file": "Scripting/shared/render_profiles.py",
+      "path": "indexAI/project_code_chunks/chunk_0108_Scripting_shared_render_profiles_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 133,
+      "chars": 4687,
+      "sha256": "fe2850abbe2bddf7ea2f0c8bf7bbd3e580e6b4e7264c804db90cebd1aed50025"
+    },
+    {
+      "index": 109,
       "file": "Scripting/v61b/__init__.py",
-      "path": "indexAI/project_code_chunks/chunk_0107_Scripting_v61b_init_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0109_Scripting_v61b_init_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 1,
       "chars": 140,
-      "sha256": "9257211fd65e1fe6d7b46661f7afcfd952a59bcaa1d62d0c83337dd70ffbef8f"
-    },
-    {
-      "index": 108,
-      "file": "Scripting/v61b/animation.py",
-      "path": "indexAI/project_code_chunks/chunk_0108_Scripting_v61b_animation_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 280,
-      "chars": 14586,
-      "sha256": "66655d364f2f2510237ababbebacd266408e95fe4cd0e616e6802373b0407246"
-    },
-    {
-      "index": 109,
-      "file": "Scripting/v61b/animation.py",
-      "path": "indexAI/project_code_chunks/chunk_0109_Scripting_v61b_animation_py.md",
-      "part": 2,
-      "start_line": 281,
-      "end_line": 476,
-      "chars": 14633,
-      "sha256": "b4d9435b5e64bc0069a31b13db17e803a823740780b08ff4e3429b2ea22a49d6"
+      "sha256": "8ed1e075a77d254bdbf9a3cb76ae37f03e14f76728aa06c61baa9ef3c265f73d"
     },
     {
       "index": 110,
       "file": "Scripting/v61b/animation.py",
       "path": "indexAI/project_code_chunks/chunk_0110_Scripting_v61b_animation_py.md",
-      "part": 3,
-      "start_line": 477,
-      "end_line": 682,
-      "chars": 14673,
-      "sha256": "077433deece57dfbafa711411f7b0554d86984f0bd2ca574d218466704b3da22"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 280,
+      "chars": 14586,
+      "sha256": "b3e5aac96d2385fc43386e7ec5ac129ce5e40e42fc63fff13fc7e308d23d0546"
     },
     {
       "index": 111,
       "file": "Scripting/v61b/animation.py",
       "path": "indexAI/project_code_chunks/chunk_0111_Scripting_v61b_animation_py.md",
-      "part": 4,
-      "start_line": 683,
-      "end_line": 893,
-      "chars": 14609,
-      "sha256": "b2903854665dd09d2cf063846cebbd0f40f985204c5e1a2797b96c3409bc0c98"
+      "part": 2,
+      "start_line": 281,
+      "end_line": 476,
+      "chars": 14633,
+      "sha256": "ce5055ef560c427a420ebf8ca9139b26a62e868593ed29661b85eb323c52021b"
     },
     {
       "index": 112,
       "file": "Scripting/v61b/animation.py",
       "path": "indexAI/project_code_chunks/chunk_0112_Scripting_v61b_animation_py.md",
+      "part": 3,
+      "start_line": 477,
+      "end_line": 682,
+      "chars": 14673,
+      "sha256": "9f642dc6f7dc91fc0840f0e342529aa0ae0d67f7507ff77366dbf01b703a9fcc"
+    },
+    {
+      "index": 113,
+      "file": "Scripting/v61b/animation.py",
+      "path": "indexAI/project_code_chunks/chunk_0113_Scripting_v61b_animation_py.md",
+      "part": 4,
+      "start_line": 683,
+      "end_line": 893,
+      "chars": 14609,
+      "sha256": "e2247873691b373a966dceb2a4b034f89e1a3df746f3435016e739301dca849b"
+    },
+    {
+      "index": 114,
+      "file": "Scripting/v61b/animation.py",
+      "path": "indexAI/project_code_chunks/chunk_0114_Scripting_v61b_animation_py.md",
       "part": 5,
       "start_line": 894,
       "end_line": 1079,
       "chars": 13749,
-      "sha256": "5a424ffc2864f96132c0c5d6a9825ae1c9e5a48654eb89ccfa72fe7588f8a88a"
-    },
-    {
-      "index": 113,
-      "file": "Scripting/v61b/asset_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0113_Scripting_v61b_asset_setup_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 316,
-      "chars": 13948,
-      "sha256": "97af349aee93423040b2b977ae7a15856d65f4cfcac3e14df1e06b2d334b5d0a"
-    },
-    {
-      "index": 114,
-      "file": "Scripting/v61b/asset_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0114_Scripting_v61b_asset_setup_py.md",
-      "part": 2,
-      "start_line": 317,
-      "end_line": 580,
-      "chars": 14017,
-      "sha256": "ffadfe4afde46ee0396566418e176291b8dffc6bdf4053fa69411b6abaae6f43"
+      "sha256": "bcbb91c8230267e795bfe540ba2199302d67a996287cab8c9cb6793f76519588"
     },
     {
       "index": 115,
       "file": "Scripting/v61b/asset_setup.py",
       "path": "indexAI/project_code_chunks/chunk_0115_Scripting_v61b_asset_setup_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 316,
+      "chars": 13948,
+      "sha256": "5c54ab720a596238b10ee30b532ec04f83b2a2503ff29228e63bbca3e5124905"
+    },
+    {
+      "index": 116,
+      "file": "Scripting/v61b/asset_setup.py",
+      "path": "indexAI/project_code_chunks/chunk_0116_Scripting_v61b_asset_setup_py.md",
+      "part": 2,
+      "start_line": 317,
+      "end_line": 580,
+      "chars": 14017,
+      "sha256": "bf7564fd4079d5e27335c994da2d3e9ec4741875e3759ae7c25b6872ac0ab867"
+    },
+    {
+      "index": 117,
+      "file": "Scripting/v61b/asset_setup.py",
+      "path": "indexAI/project_code_chunks/chunk_0117_Scripting_v61b_asset_setup_py.md",
       "part": 3,
       "start_line": 581,
       "end_line": 725,
       "chars": 7852,
-      "sha256": "7f2429e35f4bb067289afb8a3716e65bcdd58b0d7097fe210b8c7fcaa31c5f43"
+      "sha256": "592d6bde0cfec615cba6df99c0835ddd8a5295f5998edda552fcb08b52fc32f3"
     },
     {
-      "index": 116,
+      "index": 118,
       "file": "Scripting/v61b/atmosphere_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0116_Scripting_v61b_atmosphere_setup_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0118_Scripting_v61b_atmosphere_setup_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 346,
       "chars": 13310,
-      "sha256": "4b778a1b5fef62b5ee7a3b63f8ab144a0f061886edf0c08d8a5d131de4d6b0db"
+      "sha256": "1c2addc417b03cb612a69d5cefbb336e61bc0e5ddec0f634ffa6ddc19d4258a3"
     },
     {
-      "index": 117,
+      "index": 119,
       "file": "Scripting/v61b/atmosphere_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0117_Scripting_v61b_atmosphere_setup_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0119_Scripting_v61b_atmosphere_setup_py.md",
       "part": 2,
       "start_line": 347,
       "end_line": 554,
       "chars": 10033,
-      "sha256": "28469a99b157599f1b5ef323f8ca6bc382867c017eedfa15f3c44ab5b9a75290"
+      "sha256": "de0aad8d3b521753c9e0e8198df4df5bdf2c15eb67933a165fe5d13098b5b051"
     },
     {
-      "index": 118,
+      "index": 120,
       "file": "Scripting/v61b/camera_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0118_Scripting_v61b_camera_setup_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0120_Scripting_v61b_camera_setup_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 29,
       "chars": 1300,
-      "sha256": "97cdd793d4c77cf236da3341430f4a9351f1ea1269c86c402dc9c863c285b230"
+      "sha256": "43eaa96f585e45fbee778a910c39a237123da680c69adb81eea56d18289dd314"
     },
     {
-      "index": 119,
+      "index": 121,
       "file": "Scripting/v61b/config.py",
-      "path": "indexAI/project_code_chunks/chunk_0119_Scripting_v61b_config_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0121_Scripting_v61b_config_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 261,
       "chars": 13768,
-      "sha256": "ab760d3489fdf510efa5c67ecffd9ee5abcce885b287ac16fe89f213b62cd727"
+      "sha256": "d2ccd8d3022d46e312e0381cb5426d6c4e41085a45d0207b0390b5fb4bf59420"
     },
     {
-      "index": 120,
+      "index": 122,
       "file": "Scripting/v61b/config.py",
-      "path": "indexAI/project_code_chunks/chunk_0120_Scripting_v61b_config_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0122_Scripting_v61b_config_py.md",
       "part": 2,
       "start_line": 262,
       "end_line": 439,
       "chars": 9173,
-      "sha256": "7af713bf1ba941c55a151f8dad149d4a2faa4b387fd16c2a1cb66e40a90af187"
+      "sha256": "e0bbba823f778e479ff21c3e66d42f1f8eed1a17dfb6a382d9cc1b7e99c2981c"
     },
     {
-      "index": 121,
+      "index": 123,
       "file": "Scripting/v61b/encode_ffmpeg_v61b.py",
-      "path": "indexAI/project_code_chunks/chunk_0121_Scripting_v61b_encode_ffmpeg_v61b_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0123_Scripting_v61b_encode_ffmpeg_v61b_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 322,
       "chars": 13146,
-      "sha256": "80aea880456e850ba4a49d04b0344dd90451814a061cd55788bed9cd11c00c39"
+      "sha256": "f62ae5c3cbffd2ff0c0488e1ad50e2d77053719245c876f31a5e1944922423f7"
     },
     {
-      "index": 122,
+      "index": 124,
       "file": "Scripting/v61b/encode_ffmpeg_v61b.py",
-      "path": "indexAI/project_code_chunks/chunk_0122_Scripting_v61b_encode_ffmpeg_v61b_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0124_Scripting_v61b_encode_ffmpeg_v61b_py.md",
       "part": 2,
       "start_line": 323,
       "end_line": 399,
       "chars": 4942,
-      "sha256": "e0328b654640706ad9af5d17f73c4bd5662ad0722f159597ebdf7d5eddf968bd"
+      "sha256": "3aac07e963998d6ecfc08235d6262a99e06fbe9622512dd8c7bc0b2416b9d4e3"
     },
     {
-      "index": 123,
+      "index": 125,
       "file": "Scripting/v61b/encode_image_sequence_v61b.py",
-      "path": "indexAI/project_code_chunks/chunk_0123_Scripting_v61b_encode_image_sequence_v61b_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0125_Scripting_v61b_encode_image_sequence_v61b_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 329,
       "chars": 12919,
-      "sha256": "bd59e26473ba431ed2f82070557214caab61b6ce3f64658b3b04550e13981ad8"
+      "sha256": "dd55ef41926c82a5f483bbabb4853858a3455d6b1fe3ed94ad3360997d086963"
     },
     {
-      "index": 124,
+      "index": 126,
       "file": "Scripting/v61b/encode_image_sequence_v61b.py",
-      "path": "indexAI/project_code_chunks/chunk_0124_Scripting_v61b_encode_image_sequence_v61b_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0126_Scripting_v61b_encode_image_sequence_v61b_py.md",
       "part": 2,
       "start_line": 330,
       "end_line": 395,
       "chars": 4260,
-      "sha256": "f75be1f0d2959a62a6af7f04a834bf3e679610453e0e821f397da189b2d1c161"
+      "sha256": "3f5c0f71250ae615dda51cc345d948e791d4ac6c24f5728222662bc0832e3101"
     },
     {
-      "index": 125,
+      "index": 127,
       "file": "Scripting/v61b/fog_dynamics.py",
-      "path": "indexAI/project_code_chunks/chunk_0125_Scripting_v61b_fog_dynamics_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0127_Scripting_v61b_fog_dynamics_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 271,
       "chars": 13291,
-      "sha256": "6f7e333ba517fe61bbc6bd96ef1490baa9d84d085ecffc952028fc26b0421d64"
+      "sha256": "766727b431f0dc0dbba985c9b0addb3d21c1a5c07e8d3d9058bd73c239d75d7f"
     },
     {
-      "index": 126,
+      "index": 128,
       "file": "Scripting/v61b/fog_dynamics.py",
-      "path": "indexAI/project_code_chunks/chunk_0126_Scripting_v61b_fog_dynamics_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0128_Scripting_v61b_fog_dynamics_py.md",
       "part": 2,
       "start_line": 272,
       "end_line": 392,
       "chars": 8122,
-      "sha256": "94a04d18a2c1fff6e0490e13340f76ed2785ec0499ffc43df96081297adf3ba4"
+      "sha256": "0765866a225e81770140e3b940cee0e61bd00528ab2cfc3699f91680abfd3019"
     },
     {
-      "index": 127,
+      "index": 129,
       "file": "Scripting/v61b/fog_filaments.py",
-      "path": "indexAI/project_code_chunks/chunk_0127_Scripting_v61b_fog_filaments_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0129_Scripting_v61b_fog_filaments_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 159,
       "chars": 6639,
-      "sha256": "ac1fa5858e2c2a67d06e000465d116daa6cd92c393b0d9d240bf327ce2067a92"
+      "sha256": "3f06c37f17bbe88e7064350af14979ecb6f19e788cb97a9b11e623dcc14a8386"
     },
     {
-      "index": 128,
+      "index": 130,
       "file": "Scripting/v61b/hot_update_scene_v61b.py",
-      "path": "indexAI/project_code_chunks/chunk_0128_Scripting_v61b_hot_update_scene_v61b_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0130_Scripting_v61b_hot_update_scene_v61b_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 63,
       "chars": 2235,
-      "sha256": "80f3833b4d965e8d7663fe7ffe2f66135fa79e56d37a70537faebd7aab267c8b"
+      "sha256": "424ee8ba19c543540760b1e146abd5e329dd24a750bd2bbe8e525e69a6438335"
     },
     {
-      "index": 129,
+      "index": 131,
       "file": "Scripting/v61b/hotpatch/__init__.py",
-      "path": "indexAI/project_code_chunks/chunk_0129_Scripting_v61b_hotpatch_init_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0131_Scripting_v61b_hotpatch_init_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 3,
       "chars": 277,
-      "sha256": "07cf61003b9cfbcffebd22cfcaedb200c996262cfd2e8d031e24f0cc2df39de8"
+      "sha256": "884c43401016d6bd2b5b5fb10cfca17160daecdb7f6deebf04ce1e889dedf2a2"
     },
     {
-      "index": 130,
+      "index": 132,
       "file": "Scripting/v61b/hotpatch/accent_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0130_Scripting_v61b_hotpatch_accent_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0132_Scripting_v61b_hotpatch_accent_patch_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 244,
       "chars": 12989,
-      "sha256": "9c0ae9d574f6a565579f7956f6e679806804593c458e945d3853ee528380a728"
+      "sha256": "21c5941e993e9fe267eb198ddef2339aba135d5f0e7961b505a399a298b1e2fb"
     },
     {
-      "index": 131,
+      "index": 133,
       "file": "Scripting/v61b/hotpatch/accent_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0131_Scripting_v61b_hotpatch_accent_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0133_Scripting_v61b_hotpatch_accent_patch_py.md",
       "part": 2,
       "start_line": 245,
       "end_line": 301,
       "chars": 4584,
-      "sha256": "7e3b964871d31bcc8d59db329a83afdbf968dbcc4fdd5ac9017b36c4b229aa4a"
+      "sha256": "95c0eb1c302743890a25755f89c2bdd23a4caaedcbc61c8e00efeb9ae0581e0d"
     },
     {
-      "index": 132,
+      "index": 134,
       "file": "Scripting/v61b/hotpatch/common.py",
-      "path": "indexAI/project_code_chunks/chunk_0132_Scripting_v61b_hotpatch_common_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0134_Scripting_v61b_hotpatch_common_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 91,
       "chars": 3507,
-      "sha256": "5f4127fd9185038f3ee36231cbe8a90e33df64a6217eaf2831cff362d29e6374"
+      "sha256": "867d01a31806ef6a1217b971388d5223e53fdc279785cd055221abe714f1310f"
     },
     {
-      "index": 133,
+      "index": 135,
       "file": "Scripting/v61b/hotpatch/diagnostics.py",
-      "path": "indexAI/project_code_chunks/chunk_0133_Scripting_v61b_hotpatch_diagnostics_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0135_Scripting_v61b_hotpatch_diagnostics_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 276,
       "chars": 12487,
-      "sha256": "c80e6cebc47fdb0129d778c0dad49861165ae0a75417b34013b9343ed9388ab8"
+      "sha256": "8fb52c9d45dc89cbc2c73b79170f5b3f55c9a890db5ccf40015d92528c464f8d"
     },
     {
-      "index": 134,
+      "index": 136,
       "file": "Scripting/v61b/hotpatch/diagnostics.py",
-      "path": "indexAI/project_code_chunks/chunk_0134_Scripting_v61b_hotpatch_diagnostics_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0136_Scripting_v61b_hotpatch_diagnostics_py.md",
       "part": 2,
       "start_line": 277,
       "end_line": 286,
       "chars": 1142,
-      "sha256": "a91e207e3da7a592a7313c29431036c58e013644fd98fac3892de7ce21778af0"
+      "sha256": "741aceb39694d1d134af320f96e0c449e5c0c3829caca089fda6eca005533090"
     },
     {
-      "index": 135,
+      "index": 137,
       "file": "Scripting/v61b/hotpatch/fog_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0135_Scripting_v61b_hotpatch_fog_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0137_Scripting_v61b_hotpatch_fog_patch_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 133,
       "chars": 6529,
-      "sha256": "19428e6b1587f62d6eced6dcc4d8000f4c6f51e623736096203c134ad25c7d0c"
+      "sha256": "207e45bf10d36cba143fb0494e8e46f9c5752e23cce9c878b498bfe145b19c19"
     },
     {
-      "index": 136,
+      "index": 138,
       "file": "Scripting/v61b/hotpatch/hero_material_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0136_Scripting_v61b_hotpatch_hero_material_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0138_Scripting_v61b_hotpatch_hero_material_patch_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 291,
       "chars": 12904,
-      "sha256": "4917aa55b9520c7a4386991b039735323c7a8ae994c0232d6d634b02e8a03540"
+      "sha256": "c1dda95c9cc7362fda839d7453ad93fea7bf92d6f98be3f9040039286d831cb2"
     },
     {
-      "index": 137,
+      "index": 139,
       "file": "Scripting/v61b/hotpatch/hero_material_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0137_Scripting_v61b_hotpatch_hero_material_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0139_Scripting_v61b_hotpatch_hero_material_patch_py.md",
       "part": 2,
       "start_line": 292,
       "end_line": 395,
       "chars": 6696,
-      "sha256": "7f22eb186ed0368f4b4cbb45431d3525258e138cac52402fc85b966c4ba01517"
+      "sha256": "02c07182d7d545b8584cbd62ba549d447568fdf874fc6cfed42109f2d3a5424f"
     },
     {
-      "index": 138,
+      "index": 140,
       "file": "Scripting/v61b/hotpatch/lighting_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0138_Scripting_v61b_hotpatch_lighting_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0140_Scripting_v61b_hotpatch_lighting_patch_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 150,
       "chars": 7283,
-      "sha256": "cd7c94b5a03a00f1008b3aa81a5abe0bcfd8ab226ba6bff9c609255c275f21c0"
+      "sha256": "fc8ac4f6e4e270a709a0736a81ed4912284101af8fc758ff3257e8d4179fb229"
     },
     {
-      "index": 139,
+      "index": 141,
       "file": "Scripting/v61b/hotpatch/render_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0139_Scripting_v61b_hotpatch_render_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0141_Scripting_v61b_hotpatch_render_patch_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 206,
       "chars": 8843,
-      "sha256": "088090741046192392f34d06b69e13c9f8e5281906be21874cee802f1cc2aa58"
+      "sha256": "f39b25ab74d199f70ae5d1f0862fffe8c5fdc36e77238478d124dbc77f4bd46a"
     },
     {
-      "index": 140,
+      "index": 142,
       "file": "Scripting/v61b/hotpatch/runner.py",
-      "path": "indexAI/project_code_chunks/chunk_0140_Scripting_v61b_hotpatch_runner_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0142_Scripting_v61b_hotpatch_runner_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 103,
       "chars": 4444,
-      "sha256": "4fa226bc163e6af3ca51c00ebdae8e110d5477c63e2dcaa2a2c10c0b54ead244"
+      "sha256": "b2e91fc360d2814e87182927743201da8ce7ebf665fece0327615ac3d528f576"
     },
     {
-      "index": 141,
+      "index": 143,
       "file": "Scripting/v61b/io_utils.py",
-      "path": "indexAI/project_code_chunks/chunk_0141_Scripting_v61b_io_utils_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0143_Scripting_v61b_io_utils_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 81,
       "chars": 3234,
-      "sha256": "fd18f1c4a3f3ee00771bb36ef166531ebf8d4d50c68cd9e61e19426a6ebd5128"
+      "sha256": "543f9b64f77f8469d6bd4a4561375f092009634c3a89cdf6077d43ff6f9fb827"
     },
     {
-      "index": 142,
+      "index": 144,
       "file": "Scripting/v61b/main_v61b.py",
-      "path": "indexAI/project_code_chunks/chunk_0142_Scripting_v61b_main_v61b_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0144_Scripting_v61b_main_v61b_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 200,
       "chars": 9740,
-      "sha256": "2b902e1243d0d43459844f4ee906c010519c03a9668fdeac3031860d51d5ba63"
-    },
-    {
-      "index": 143,
-      "file": "Scripting/v61b/materials.py",
-      "path": "indexAI/project_code_chunks/chunk_0143_Scripting_v61b_materials_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 308,
-      "chars": 12706,
-      "sha256": "d9d97824b669fadad9ed25507716384468e5d0a3caf5aacb57a637d4b1f564fd"
-    },
-    {
-      "index": 144,
-      "file": "Scripting/v61b/materials.py",
-      "path": "indexAI/project_code_chunks/chunk_0144_Scripting_v61b_materials_py.md",
-      "part": 2,
-      "start_line": 309,
-      "end_line": 562,
-      "chars": 12774,
-      "sha256": "f74617da06e8faae1ce49ba018f501c070c0e261c95974f0d26e82699c38b3f3"
+      "sha256": "723f8f2503bea9cbecf2d5760841b63284ced79dc3b0355c71219ec2c4c626aa"
     },
     {
       "index": 145,
       "file": "Scripting/v61b/materials.py",
       "path": "indexAI/project_code_chunks/chunk_0145_Scripting_v61b_materials_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 308,
+      "chars": 12706,
+      "sha256": "5dd9f476caa6b7828ded1088638c0f07168e8e15f86a8a5dc9da104b60622b7d"
+    },
+    {
+      "index": 146,
+      "file": "Scripting/v61b/materials.py",
+      "path": "indexAI/project_code_chunks/chunk_0146_Scripting_v61b_materials_py.md",
+      "part": 2,
+      "start_line": 309,
+      "end_line": 562,
+      "chars": 12774,
+      "sha256": "90a0661342e82dbdc396528261a3d400bd2a280e9cb9574332f1c66d51ad1a0d"
+    },
+    {
+      "index": 147,
+      "file": "Scripting/v61b/materials.py",
+      "path": "indexAI/project_code_chunks/chunk_0147_Scripting_v61b_materials_py.md",
       "part": 3,
       "start_line": 563,
       "end_line": 657,
       "chars": 5396,
-      "sha256": "b74a6ced34dddf60f641115c859f80e969301e88f99585e4374c8b0c61530c8b"
-    },
-    {
-      "index": 146,
-      "file": "Scripting/v61b/physics_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0146_Scripting_v61b_physics_setup_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 323,
-      "chars": 13936,
-      "sha256": "9bc54a7756246d499f556166182ef36ff3a5b98fcc264dd4d5b6f6f1a655f13c"
-    },
-    {
-      "index": 147,
-      "file": "Scripting/v61b/physics_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0147_Scripting_v61b_physics_setup_py.md",
-      "part": 2,
-      "start_line": 324,
-      "end_line": 614,
-      "chars": 13992,
-      "sha256": "7d7fdad8bbc773ee7da7b556389fb5643e6bf5eaa11e16ca59747b7aa34944c8"
+      "sha256": "397bdaa59f686aca668843bf0b239b38e4de94378052f6fe36f003efdbe9d14c"
     },
     {
       "index": 148,
       "file": "Scripting/v61b/physics_setup.py",
       "path": "indexAI/project_code_chunks/chunk_0148_Scripting_v61b_physics_setup_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 323,
+      "chars": 13936,
+      "sha256": "8fc322212f29aacba28c5ec95daa7b4155b97ad8e953338bcb56e7a379533884"
+    },
+    {
+      "index": 149,
+      "file": "Scripting/v61b/physics_setup.py",
+      "path": "indexAI/project_code_chunks/chunk_0149_Scripting_v61b_physics_setup_py.md",
+      "part": 2,
+      "start_line": 324,
+      "end_line": 614,
+      "chars": 13992,
+      "sha256": "13edc19706ab3ab1898564fa969175e6d36862b6ff2d4d81b8b1f832870b0e46"
+    },
+    {
+      "index": 150,
+      "file": "Scripting/v61b/physics_setup.py",
+      "path": "indexAI/project_code_chunks/chunk_0150_Scripting_v61b_physics_setup_py.md",
       "part": 3,
       "start_line": 615,
       "end_line": 737,
       "chars": 7772,
-      "sha256": "1e596c4818d7378dfa4e9da73c24e2da0f1b1b62d50b9e6eb1c23d15575249e4"
+      "sha256": "684a99a6a03590c1d5e37ff877c23a4b410003cbe8d337969275d716a9abf55d"
     },
     {
-      "index": 149,
+      "index": 151,
       "file": "Scripting/v61b/PROJECT_STRUCTURE.md",
-      "path": "indexAI/project_code_chunks/chunk_0149_Scripting_v61b_PROJECT_STRUCTURE_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0151_Scripting_v61b_PROJECT_STRUCTURE_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 43,
       "chars": 2924,
-      "sha256": "5b8e66bfe1ce385a5653928447f96875f232caee3bacc48c0fde6a26ad3c4618"
+      "sha256": "8925d2e3156f588d3e9527bedd3ced6b4a9a06f065e646748b71108498b86f93"
     },
     {
-      "index": 150,
+      "index": 152,
       "file": "Scripting/v61b/README.md",
-      "path": "indexAI/project_code_chunks/chunk_0150_Scripting_v61b_README_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0152_Scripting_v61b_README_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 118,
       "chars": 5836,
-      "sha256": "fdcb727b3c4b287962105a0da740b594f054bd1d1020ea87b30d43753451e5cb"
+      "sha256": "eacce7618b48c6725b9378fdc4c882cc67c3405d3af1857bf84ad6547bcab49e"
     },
     {
-      "index": 151,
+      "index": 153,
       "file": "Scripting/v61b/reload_utils.py",
-      "path": "indexAI/project_code_chunks/chunk_0151_Scripting_v61b_reload_utils_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0153_Scripting_v61b_reload_utils_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 51,
       "chars": 2074,
-      "sha256": "f31063b7d9b5e9985cdb3609f6d7f46467200c038552a5c116775168e5ccf961"
+      "sha256": "97f8d6f01e82368579df37de22c6c10378c18687c9ab94d92698e2ca554348bc"
     },
     {
-      "index": 152,
+      "index": 154,
       "file": "Scripting/v61b/render_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0152_Scripting_v61b_render_setup_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0154_Scripting_v61b_render_setup_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 270,
       "chars": 10953,
-      "sha256": "62449e8c314d2fde4ad431d8ffbe0fa424b14b68db4f7bdbbe6e4a23dc5e1ee1"
+      "sha256": "efee348fa0c89bfc0f5ed5bcdde3249fcd60bc8827a4038890c3170c87559d19"
     },
     {
-      "index": 153,
+      "index": 155,
       "file": "Scripting/v61b/SCENE_TUNING_GUIDE.md",
-      "path": "indexAI/project_code_chunks/chunk_0153_Scripting_v61b_SCENE_TUNING_GUIDE_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0155_Scripting_v61b_SCENE_TUNING_GUIDE_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 213,
       "chars": 11876,
-      "sha256": "11f212f4c198e4a448afd279dfaa040254f9df92133534f4c030cc4e34d359a9"
+      "sha256": "bf451ba650540835af611a95b3d84d5d421354d44a930eeebf03904f4694544b"
     },
     {
-      "index": 154,
+      "index": 156,
       "file": "Scripting/v61b/SCENE_TUNING_GUIDE.md",
-      "path": "indexAI/project_code_chunks/chunk_0154_Scripting_v61b_SCENE_TUNING_GUIDE_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0156_Scripting_v61b_SCENE_TUNING_GUIDE_md.md",
       "part": 2,
       "start_line": 214,
       "end_line": 304,
       "chars": 3840,
-      "sha256": "d3eab42b9d0ab975b94325751f958bede53c499a7381b47b26473c63960eda0a"
-    },
-    {
-      "index": 155,
-      "file": "Scripting/v61b/scene_tuning_panel.py",
-      "path": "indexAI/project_code_chunks/chunk_0155_Scripting_v61b_scene_tuning_panel_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 323,
-      "chars": 14158,
-      "sha256": "0c09f34aeba0b5efa02c82ff7e4b671baf1203e16849a32ce3425b5cc816c4aa"
-    },
-    {
-      "index": 156,
-      "file": "Scripting/v61b/scene_tuning_panel.py",
-      "path": "indexAI/project_code_chunks/chunk_0156_Scripting_v61b_scene_tuning_panel_py.md",
-      "part": 2,
-      "start_line": 324,
-      "end_line": 574,
-      "chars": 14232,
-      "sha256": "5e256b2b0f2fa17dbf794e5afa8eb74b49ff39e3cd832cf166e0e22008ae325b"
+      "sha256": "7e25bf676a735d6c3ac69da188a41aa7b8ebdf4b29cdede2e73af455e02b039e"
     },
     {
       "index": 157,
       "file": "Scripting/v61b/scene_tuning_panel.py",
       "path": "indexAI/project_code_chunks/chunk_0157_Scripting_v61b_scene_tuning_panel_py.md",
-      "part": 3,
-      "start_line": 575,
-      "end_line": 792,
-      "chars": 14170,
-      "sha256": "43e00369903cf1472deff312763a1dbb42acbf4f8d17fa3a76f8af8fe01df643"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 323,
+      "chars": 14158,
+      "sha256": "5cd821461c018912df9f41470074f777bbe4d6a05df29b7456765fbea48dd60d"
     },
     {
       "index": 158,
       "file": "Scripting/v61b/scene_tuning_panel.py",
       "path": "indexAI/project_code_chunks/chunk_0158_Scripting_v61b_scene_tuning_panel_py.md",
-      "part": 4,
-      "start_line": 793,
-      "end_line": 1037,
-      "chars": 14244,
-      "sha256": "5c701292472a27ed10d0325797dc9e78d70adc119d9d9fa20df5b6cb46928338"
+      "part": 2,
+      "start_line": 324,
+      "end_line": 574,
+      "chars": 14232,
+      "sha256": "d11d8c2a0ac487ddb6c7f2b705b75fddf5cc918e1ae1edc327d1fd00390fd85b"
     },
     {
       "index": 159,
       "file": "Scripting/v61b/scene_tuning_panel.py",
       "path": "indexAI/project_code_chunks/chunk_0159_Scripting_v61b_scene_tuning_panel_py.md",
+      "part": 3,
+      "start_line": 575,
+      "end_line": 792,
+      "chars": 14170,
+      "sha256": "c68b0316a87c205f06716e65e32f52e2729be75ba5ee2619fb532105d65fd69c"
+    },
+    {
+      "index": 160,
+      "file": "Scripting/v61b/scene_tuning_panel.py",
+      "path": "indexAI/project_code_chunks/chunk_0160_Scripting_v61b_scene_tuning_panel_py.md",
+      "part": 4,
+      "start_line": 793,
+      "end_line": 1037,
+      "chars": 14244,
+      "sha256": "f57e144c5f8e76dc8eb9304aaf7628af0094261414ebddd3b49395885e582335"
+    },
+    {
+      "index": 161,
+      "file": "Scripting/v61b/scene_tuning_panel.py",
+      "path": "indexAI/project_code_chunks/chunk_0161_Scripting_v61b_scene_tuning_panel_py.md",
       "part": 5,
       "start_line": 1038,
       "end_line": 1262,
       "chars": 12297,
-      "sha256": "503844f9c9a9a682779884116b6a626dc1fc0693c79092bfaa4359105e91458c"
+      "sha256": "09fcddd0904d6dc608431b910c74b24025d228719a0240d13bab593e1142075c"
     },
     {
-      "index": 160,
+      "index": 162,
       "file": "Scripting/v61b/scene_utils.py",
-      "path": "indexAI/project_code_chunks/chunk_0160_Scripting_v61b_scene_utils_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0162_Scripting_v61b_scene_utils_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 97,
       "chars": 3560,
-      "sha256": "193b4cf0c749628abc806f73df0fcfcff4f3a14f7448bca239568ba882fd808a"
+      "sha256": "f1e1aad67ad4896b7e3d1814e2c4fa4aebeb5a0948b9a2c88768df5c9c8f3b37"
     },
     {
-      "index": 161,
+      "index": 163,
       "file": "Scripting/v61b/spaziotempo/__init__.py",
-      "path": "indexAI/project_code_chunks/chunk_0161_Scripting_v61b_spaziotempo_init_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0163_Scripting_v61b_spaziotempo_init_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 4,
       "chars": 348,
-      "sha256": "3e7ea95e0b370b3366734ee91ee3dd68dbc959f3b773dd653354f24294745ac8"
+      "sha256": "ba0ed3ad7c5290d1d659008b14b5179df3f42a49d72cdb23224e983cff9c2055"
     },
     {
-      "index": 162,
+      "index": 164,
       "file": "Scripting/v61b/spaziotempo/core/__init__.py",
-      "path": "indexAI/project_code_chunks/chunk_0162_Scripting_v61b_spaziotempo_core_init_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0164_Scripting_v61b_spaziotempo_core_init_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 1,
       "chars": 181,
-      "sha256": "3967e72f7682739825733c852a9a1b0911961f65eda86bdbcd88faa3886ee9f6"
+      "sha256": "9ed9a18a4afef296711db1ecdec1a0ea3d7e8be75b5259e4396a0e444083d503"
     },
     {
-      "index": 163,
+      "index": 165,
       "file": "Scripting/v61b/spaziotempo/core/collections.py",
-      "path": "indexAI/project_code_chunks/chunk_0163_Scripting_v61b_spaziotempo_core_collections_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0165_Scripting_v61b_spaziotempo_core_collections_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 132,
       "chars": 5694,
-      "sha256": "65e1c5c022455f1181fc9940ffdd94fe09b73f42033734c6e636583d2fa18cd1"
+      "sha256": "dd814ebfb0ccd0cb4495fa569bf8683d83d1bff22d1174ba8db55696730740ea"
     },
     {
-      "index": 164,
+      "index": 166,
       "file": "Scripting/v61b/spaziotempo/core/registry.py",
-      "path": "indexAI/project_code_chunks/chunk_0164_Scripting_v61b_spaziotempo_core_registry_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0166_Scripting_v61b_spaziotempo_core_registry_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 221,
       "chars": 8546,
-      "sha256": "6d39fecf317efd1d0d3da1bf002fba40df11a54b4b5a4e0c71bb25f48c7b43c3"
+      "sha256": "5ec0111e8cae5d0a714ad6bdf486338b428f59cfffadd1b4f3a04c09e1fe3d9d"
     },
     {
-      "index": 165,
+      "index": 167,
       "file": "Scripting/v61b/spaziotempo/features/__init__.py",
-      "path": "indexAI/project_code_chunks/chunk_0165_Scripting_v61b_spaziotempo_features_init_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0167_Scripting_v61b_spaziotempo_features_init_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 1,
       "chars": 193,
-      "sha256": "37df012a69c6ac6c4091f4cf446e9ce6ce96a4f520913a64eef13a396d15522e"
+      "sha256": "69892804026af95d2c3e8f5240c9339055af3d549e5f7c71e0183337c0fa9911"
     },
     {
-      "index": 166,
+      "index": 168,
       "file": "Scripting/v61b/spaziotempo/features/catalog.py",
-      "path": "indexAI/project_code_chunks/chunk_0166_Scripting_v61b_spaziotempo_features_catalog_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0168_Scripting_v61b_spaziotempo_features_catalog_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 19,
       "chars": 903,
-      "sha256": "030a97bbd614fb783b2cbb3fe71aedac9530742f84509ad30f3479a7b293774c"
+      "sha256": "bd0bbb9eb968cfc1edb6b87029c00b3f47a7d9c9c7b33749b55ccb202dff9275"
     },
     {
-      "index": 167,
+      "index": 169,
       "file": "Scripting/v61b/world_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0167_Scripting_v61b_world_setup_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0169_Scripting_v61b_world_setup_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 198,
       "chars": 8830,
-      "sha256": "83c606bb451ed96e1aea9037723402c62abfcb0077e6a5e92f7452503bdd2b00"
+      "sha256": "268fa082cd85e5088caef903d51e860b32f5a616c1a1cbd7e30e6e381b5af1f3"
     },
     {
-      "index": 168,
+      "index": 170,
       "file": "Scripting/v61b_backgood/__init__.py",
-      "path": "indexAI/project_code_chunks/chunk_0168_Scripting_v61b_backgood_init_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0170_Scripting_v61b_backgood_init_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 1,
       "chars": 149,
-      "sha256": "5e5d99c5f22a30ae1c3600c61f01ebac1233b43a0c4a79c5a33c319e557b8454"
-    },
-    {
-      "index": 169,
-      "file": "Scripting/v61b_backgood/animation.py",
-      "path": "indexAI/project_code_chunks/chunk_0169_Scripting_v61b_backgood_animation_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 280,
-      "chars": 14392,
-      "sha256": "5bd61d160889b838e399dcba7633a1e779a2362413e1a475b42163d20034ea27"
-    },
-    {
-      "index": 170,
-      "file": "Scripting/v61b_backgood/animation.py",
-      "path": "indexAI/project_code_chunks/chunk_0170_Scripting_v61b_backgood_animation_py.md",
-      "part": 2,
-      "start_line": 281,
-      "end_line": 476,
-      "chars": 14473,
-      "sha256": "3267a20539e070a85d4e7e782127326d4019f09567b9d1943d7311d8e3322286"
+      "sha256": "763dd720df748aa86ac69a7350d24f29825c6dbd6e32e0268e7d6ed3adbd5b72"
     },
     {
       "index": 171,
       "file": "Scripting/v61b_backgood/animation.py",
       "path": "indexAI/project_code_chunks/chunk_0171_Scripting_v61b_backgood_animation_py.md",
-      "part": 3,
-      "start_line": 477,
-      "end_line": 682,
-      "chars": 14483,
-      "sha256": "21bd7fee500a17a81f9ea352bd7119d681219bb788d8542d1d6b8cb7ff1eb27e"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 280,
+      "chars": 14392,
+      "sha256": "c10817091b187256322f34ef43aba10e0313987c335fba4525e7b5725fbe8839"
     },
     {
       "index": 172,
       "file": "Scripting/v61b_backgood/animation.py",
       "path": "indexAI/project_code_chunks/chunk_0172_Scripting_v61b_backgood_animation_py.md",
-      "part": 4,
-      "start_line": 683,
-      "end_line": 882,
-      "chars": 14436,
-      "sha256": "6acc15b55e79eb71abbbab73fdd9aacd8c07d388181e721d9b90a532541b6eaa"
+      "part": 2,
+      "start_line": 281,
+      "end_line": 476,
+      "chars": 14473,
+      "sha256": "8c6ebba9241f46080b15672fcfd1d4d2b17a07e8a43df980525acbb355054812"
     },
     {
       "index": 173,
       "file": "Scripting/v61b_backgood/animation.py",
       "path": "indexAI/project_code_chunks/chunk_0173_Scripting_v61b_backgood_animation_py.md",
+      "part": 3,
+      "start_line": 477,
+      "end_line": 682,
+      "chars": 14483,
+      "sha256": "6ed7f8b97d263266d4379cd50ca84d1a1037631788df25567abe90b362bb3494"
+    },
+    {
+      "index": 174,
+      "file": "Scripting/v61b_backgood/animation.py",
+      "path": "indexAI/project_code_chunks/chunk_0174_Scripting_v61b_backgood_animation_py.md",
+      "part": 4,
+      "start_line": 683,
+      "end_line": 882,
+      "chars": 14436,
+      "sha256": "674cb9c2b6962f1f49e2ce66aa2b619b8cc29fcd0b552152e87aabfe4cdaa7cb"
+    },
+    {
+      "index": 175,
+      "file": "Scripting/v61b_backgood/animation.py",
+      "path": "indexAI/project_code_chunks/chunk_0175_Scripting_v61b_backgood_animation_py.md",
       "part": 5,
       "start_line": 883,
       "end_line": 1019,
       "chars": 10115,
-      "sha256": "e1263ae99a38df431ca2e7c01a2c793403b6906940634a97e641fa19c657fff0"
-    },
-    {
-      "index": 174,
-      "file": "Scripting/v61b_backgood/asset_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0174_Scripting_v61b_backgood_asset_setup_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 316,
-      "chars": 13957,
-      "sha256": "0b1277c7a50d810483e9b26f33de486928c3fde7f5e38b67b0a9b3cd61fe6e65"
-    },
-    {
-      "index": 175,
-      "file": "Scripting/v61b_backgood/asset_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0175_Scripting_v61b_backgood_asset_setup_py.md",
-      "part": 2,
-      "start_line": 317,
-      "end_line": 580,
-      "chars": 14026,
-      "sha256": "c9f7df40db402c32e140b5813a6ce6c0cf64b19b852761830b14f0b4d0e62c37"
+      "sha256": "4e6a3aeb29a40e27882b63d7831c92dacc4aec68163fa79505ea54557f132e9a"
     },
     {
       "index": 176,
       "file": "Scripting/v61b_backgood/asset_setup.py",
       "path": "indexAI/project_code_chunks/chunk_0176_Scripting_v61b_backgood_asset_setup_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 316,
+      "chars": 13957,
+      "sha256": "3301a02f5d600de34bff3e106e92ed806ef09189b336db143319ebbcc561696e"
+    },
+    {
+      "index": 177,
+      "file": "Scripting/v61b_backgood/asset_setup.py",
+      "path": "indexAI/project_code_chunks/chunk_0177_Scripting_v61b_backgood_asset_setup_py.md",
+      "part": 2,
+      "start_line": 317,
+      "end_line": 580,
+      "chars": 14026,
+      "sha256": "886220807da6c8bb6d948a116e2123e90ee0bec6c6aebe8ddb0158557e827304"
+    },
+    {
+      "index": 178,
+      "file": "Scripting/v61b_backgood/asset_setup.py",
+      "path": "indexAI/project_code_chunks/chunk_0178_Scripting_v61b_backgood_asset_setup_py.md",
       "part": 3,
       "start_line": 581,
       "end_line": 725,
       "chars": 7861,
-      "sha256": "3116b8f40dbebbb9800ceedab4ba3e4e4567f0488b792c5498990fbdb60c5d43"
+      "sha256": "de6323095aeac33855f9a8d3dc4fa59e345167c9cefe881773e63b0dc5030b6a"
     },
     {
-      "index": 177,
+      "index": 179,
       "file": "Scripting/v61b_backgood/atmosphere_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0177_Scripting_v61b_backgood_atmosphere_setup_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0179_Scripting_v61b_backgood_atmosphere_setup_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 348,
       "chars": 13249,
-      "sha256": "ff4d7b1b6c0a698d64dce837a73c6347ee2840a4cecdab9189869e22c7241766"
+      "sha256": "97133378778cc8494d2a05eee809936b3e26f4a309218efdc0c9f6fdd979773f"
     },
     {
-      "index": 178,
+      "index": 180,
       "file": "Scripting/v61b_backgood/atmosphere_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0178_Scripting_v61b_backgood_atmosphere_setup_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0180_Scripting_v61b_backgood_atmosphere_setup_py.md",
       "part": 2,
       "start_line": 349,
       "end_line": 543,
       "chars": 9463,
-      "sha256": "45231a71092c72891c8d521e3e86830e08c61882bb4224691b4da24cd05d449f"
+      "sha256": "bdbf39cdb808e6be27dfd62c30468d863e9da9bc0867b9c19984c35c7edebb4c"
     },
     {
-      "index": 179,
+      "index": 181,
       "file": "Scripting/v61b_backgood/camera_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0179_Scripting_v61b_backgood_camera_setup_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0181_Scripting_v61b_backgood_camera_setup_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 29,
       "chars": 1309,
-      "sha256": "9cfab6e21ce91afa0f90481f7ed5a75b7e0ebd961586fc057d28a9572052897f"
+      "sha256": "fbe416fecbe947e209e29e216087c5bc8a23ced6127ceb6be2987e72887f11d8"
     },
     {
-      "index": 180,
+      "index": 182,
       "file": "Scripting/v61b_backgood/config.py",
-      "path": "indexAI/project_code_chunks/chunk_0180_Scripting_v61b_backgood_config_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0182_Scripting_v61b_backgood_config_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 287,
       "chars": 13689,
-      "sha256": "2f4ac18b042fee7f3f55256da058ffadd85a40a34e71fe2e8d3bdd9571658baa"
+      "sha256": "be91a9c85fba78209f6f23bd62cc65aaa2588a7a5552386a59acc86cf9ecc824"
     },
     {
-      "index": 181,
+      "index": 183,
       "file": "Scripting/v61b_backgood/config.py",
-      "path": "indexAI/project_code_chunks/chunk_0181_Scripting_v61b_backgood_config_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0183_Scripting_v61b_backgood_config_py.md",
       "part": 2,
       "start_line": 288,
       "end_line": 358,
       "chars": 4805,
-      "sha256": "8914672eb3ced3582a43f6d98b9ec43f5b56bc797d5cd979914b21455be8b552"
+      "sha256": "dee03a6e9effe39352cefa10149a43fa4600dd84b91688cebad0c1ae49b82cdc"
     },
     {
-      "index": 182,
+      "index": 184,
       "file": "Scripting/v61b_backgood/encode_image_sequence_v61b.py",
-      "path": "indexAI/project_code_chunks/chunk_0182_Scripting_v61b_backgood_encode_image_sequence_v61b_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0184_Scripting_v61b_backgood_encode_image_sequence_v61b_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 327,
       "chars": 12836,
-      "sha256": "c0ed7713900a463dd890843a057ce451df0240a5767380c17108d9529c9d94fe"
+      "sha256": "eda32908d35b3f1b59fb76312d2b74beb42f40be207627702248dd725b85d970"
     },
     {
-      "index": 183,
+      "index": 185,
       "file": "Scripting/v61b_backgood/encode_image_sequence_v61b.py",
-      "path": "indexAI/project_code_chunks/chunk_0183_Scripting_v61b_backgood_encode_image_sequence_v61b_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0185_Scripting_v61b_backgood_encode_image_sequence_v61b_py.md",
       "part": 2,
       "start_line": 328,
       "end_line": 376,
       "chars": 3417,
-      "sha256": "3943df5b4d9eefaf618d7ab8ecc1f91f6ff9b19456157545693f1f0a936e4169"
+      "sha256": "a0a34a1b989652f934372514fecf226d83c0c9bc2c3a9c4e1a212783e9313aa5"
     },
     {
-      "index": 184,
+      "index": 186,
       "file": "Scripting/v61b_backgood/fog_dynamics.py",
-      "path": "indexAI/project_code_chunks/chunk_0184_Scripting_v61b_backgood_fog_dynamics_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0186_Scripting_v61b_backgood_fog_dynamics_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 240,
       "chars": 12236,
-      "sha256": "8597b2e2b796826870294d22b325d652799cca496d390d1de81c32b0d2a1fd45"
+      "sha256": "b16a6da5d82ffb5f1bdd85aac4f04db46cfaf18632662c84dca3277f26bf1ec1"
     },
     {
-      "index": 185,
+      "index": 187,
       "file": "Scripting/v61b_backgood/hot_update_scene_v61b.py",
-      "path": "indexAI/project_code_chunks/chunk_0185_Scripting_v61b_backgood_hot_update_scene_v61b_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0187_Scripting_v61b_backgood_hot_update_scene_v61b_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 61,
       "chars": 2128,
-      "sha256": "d54a8f958376a2b6a727b577da77b45c202ad97a1cf6f01d6784da1812e95f56"
+      "sha256": "ee41a614aaa04c089a54ce9530d413e5b20acdbdee1af6018ae1dbb4c86d9d62"
     },
     {
-      "index": 186,
+      "index": 188,
       "file": "Scripting/v61b_backgood/hotpatch/__init__.py",
-      "path": "indexAI/project_code_chunks/chunk_0186_Scripting_v61b_backgood_hotpatch_init_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0188_Scripting_v61b_backgood_hotpatch_init_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 3,
       "chars": 286,
-      "sha256": "dd092b54d85035745aad1e9fd71f37a939cf9a547fc1d1cf15872602cc631fb2"
+      "sha256": "a94764ea08766a2fb466605c8fe72f66067c69c3f5234c41e337f1edc32f4bad"
     },
     {
-      "index": 187,
+      "index": 189,
       "file": "Scripting/v61b_backgood/hotpatch/accent_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0187_Scripting_v61b_backgood_hotpatch_accent_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0189_Scripting_v61b_backgood_hotpatch_accent_patch_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 125,
       "chars": 6305,
-      "sha256": "06951bde9c5b7ce33753cd81d30ddd9d7c05f7cc78f8e050400f54093f92046e"
+      "sha256": "3d81ebba6c860e869a36d1c7fd73bb664dc14629f7c205160033220c23fd0256"
     },
     {
-      "index": 188,
+      "index": 190,
       "file": "Scripting/v61b_backgood/hotpatch/common.py",
-      "path": "indexAI/project_code_chunks/chunk_0188_Scripting_v61b_backgood_hotpatch_common_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0190_Scripting_v61b_backgood_hotpatch_common_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 91,
       "chars": 3516,
-      "sha256": "0407a3e5d940d0ac2fbf2ce229e4cdbbfaa0cc4fbf328c87c7117263793f9d34"
+      "sha256": "bd951290e293f27b89e326f0d142c494ccddafb6bc6916a769f746932e4ffe27"
     },
     {
-      "index": 189,
+      "index": 191,
       "file": "Scripting/v61b_backgood/hotpatch/fog_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0189_Scripting_v61b_backgood_hotpatch_fog_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0191_Scripting_v61b_backgood_hotpatch_fog_patch_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 124,
       "chars": 5902,
-      "sha256": "1a56967244d1a83b57cdc0ced5a465e3755bd7c55d53c5777d197684f8a57b90"
+      "sha256": "416fecd8baf419def90b57b446383a1fe9f4e1f09fed547229637b54044b9d48"
     },
     {
-      "index": 190,
+      "index": 192,
       "file": "Scripting/v61b_backgood/hotpatch/hero_material_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0190_Scripting_v61b_backgood_hotpatch_hero_material_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0192_Scripting_v61b_backgood_hotpatch_hero_material_patch_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 291,
       "chars": 12913,
-      "sha256": "1b9f57059a6a8b980df867d58ca93b170f05e5bc6798159e7604e9e5471b65c2"
+      "sha256": "6d3caa61a05be3c66df10ba362f3b9a19e9f51bef700f952c73a0326ab022330"
     },
     {
-      "index": 191,
+      "index": 193,
       "file": "Scripting/v61b_backgood/hotpatch/hero_material_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0191_Scripting_v61b_backgood_hotpatch_hero_material_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0193_Scripting_v61b_backgood_hotpatch_hero_material_patch_py.md",
       "part": 2,
       "start_line": 292,
       "end_line": 395,
       "chars": 6705,
-      "sha256": "57d4c9b13ef87b68f8cb13f223492c2808b6b9732109edfe971c165e89671e2b"
+      "sha256": "9aab6804f3c543623f8944171164b3ba7b507d767840b72a3fc724fad7344ab9"
     },
     {
-      "index": 192,
+      "index": 194,
       "file": "Scripting/v61b_backgood/hotpatch/lighting_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0192_Scripting_v61b_backgood_hotpatch_lighting_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0194_Scripting_v61b_backgood_hotpatch_lighting_patch_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 85,
       "chars": 3965,
-      "sha256": "6b843c4435c0778a4ff468a54237cc45dc9d56b0aae147bd30b5f034319f881d"
+      "sha256": "dcf46a7ffd03a0bbd4d7e86b2b713fe21ad0c4b32030a034139250fb65542369"
     },
     {
-      "index": 193,
+      "index": 195,
       "file": "Scripting/v61b_backgood/hotpatch/render_patch.py",
-      "path": "indexAI/project_code_chunks/chunk_0193_Scripting_v61b_backgood_hotpatch_render_patch_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0195_Scripting_v61b_backgood_hotpatch_render_patch_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 206,
       "chars": 8852,
-      "sha256": "ee89faef0dbd25e616f457a9768ff2d4e5abd4a99cfb817957456d127fca7762"
+      "sha256": "154ed58664bb7e035bdcc5f1b7e1440e1543c46ff165ac95ea7abee4f6f605c6"
     },
     {
-      "index": 194,
+      "index": 196,
       "file": "Scripting/v61b_backgood/hotpatch/runner.py",
-      "path": "indexAI/project_code_chunks/chunk_0194_Scripting_v61b_backgood_hotpatch_runner_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0196_Scripting_v61b_backgood_hotpatch_runner_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 60,
       "chars": 2709,
-      "sha256": "283fd246280e42be91dc6caba3a2c064fc3564a22ff5227a1b0e390ec2b7e5dc"
+      "sha256": "e56b3587d39673e7060189f8e795827a26bb0263104e8bd1caad62468bc04918"
     },
     {
-      "index": 195,
+      "index": 197,
       "file": "Scripting/v61b_backgood/io_utils.py",
-      "path": "indexAI/project_code_chunks/chunk_0195_Scripting_v61b_backgood_io_utils_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0197_Scripting_v61b_backgood_io_utils_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 81,
       "chars": 3243,
-      "sha256": "2d4992a0c8cd0d4810e37f8adf8f9036e538a3107dbecd388ff2a2b1ca725f80"
+      "sha256": "0110592a789df4042c8846939f97cdfa3d062543ae1aff45c3ea9c33e8f958b1"
     },
     {
-      "index": 196,
+      "index": 198,
       "file": "Scripting/v61b_backgood/main_v61b.py",
-      "path": "indexAI/project_code_chunks/chunk_0196_Scripting_v61b_backgood_main_v61b_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0198_Scripting_v61b_backgood_main_v61b_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 181,
       "chars": 8210,
-      "sha256": "2a3d0dcf51fc9bb0a3a920100522fb7f05f7c3975fcb4551834696899fff4e0f"
+      "sha256": "edcfde843c48f16951e5b422ca26e6f0beb974c8ca12fe123d9d6dc528ad76d7"
     },
     {
-      "index": 197,
+      "index": 199,
       "file": "Scripting/v61b_backgood/materials.py",
-      "path": "indexAI/project_code_chunks/chunk_0197_Scripting_v61b_backgood_materials_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0199_Scripting_v61b_backgood_materials_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 307,
       "chars": 12541,
-      "sha256": "fc6805be73d1244ac1aaea107ef33f8db9877cc9491f8d976f5a29915a83d84a"
+      "sha256": "278c9d2a2b9bf93633d1f8a719d1310541b189e87e5d0923f8019b00bc236099"
     },
     {
-      "index": 198,
+      "index": 200,
       "file": "Scripting/v61b_backgood/materials.py",
-      "path": "indexAI/project_code_chunks/chunk_0198_Scripting_v61b_backgood_materials_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0200_Scripting_v61b_backgood_materials_py.md",
       "part": 2,
       "start_line": 308,
       "end_line": 513,
       "chars": 10657,
-      "sha256": "9882441e11c58831aa9ee242e2b05689d7b61015e87cfbfea77387e5a4fa349d"
-    },
-    {
-      "index": 199,
-      "file": "Scripting/v61b_backgood/physics_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0199_Scripting_v61b_backgood_physics_setup_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 323,
-      "chars": 13852,
-      "sha256": "cedd6e457df24127fe7a3dff332ee37c5a05b634d1ec4f6c6f80138ade024340"
-    },
-    {
-      "index": 200,
-      "file": "Scripting/v61b_backgood/physics_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0200_Scripting_v61b_backgood_physics_setup_py.md",
-      "part": 2,
-      "start_line": 324,
-      "end_line": 614,
-      "chars": 13856,
-      "sha256": "1b4ae03048f7a3f1980e52a42db188c848e9b72eb1254e1d8f0dc2917fd8a4e5"
+      "sha256": "01fd1f6290e3308c1f51c553ce35cbb9065298dd0d08755ef894a5faf6389273"
     },
     {
       "index": 201,
       "file": "Scripting/v61b_backgood/physics_setup.py",
       "path": "indexAI/project_code_chunks/chunk_0201_Scripting_v61b_backgood_physics_setup_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 323,
+      "chars": 13852,
+      "sha256": "4f1b20c724bd09f5a5cbd9f5b0e29dc336f812df9e2e629fee1f43e0909b01c2"
+    },
+    {
+      "index": 202,
+      "file": "Scripting/v61b_backgood/physics_setup.py",
+      "path": "indexAI/project_code_chunks/chunk_0202_Scripting_v61b_backgood_physics_setup_py.md",
+      "part": 2,
+      "start_line": 324,
+      "end_line": 614,
+      "chars": 13856,
+      "sha256": "8a62a1ff46aaf59ab9ed6b70336573edc713a52ce09ce0132099d0fff004444c"
+    },
+    {
+      "index": 203,
+      "file": "Scripting/v61b_backgood/physics_setup.py",
+      "path": "indexAI/project_code_chunks/chunk_0203_Scripting_v61b_backgood_physics_setup_py.md",
       "part": 3,
       "start_line": 615,
       "end_line": 720,
       "chars": 6733,
-      "sha256": "00212eb5e12b27202766eae3d73dfd5cdfe558caa5b550e0f98e4e80788a9db4"
+      "sha256": "b2ef6ab68468069ca116960f977ade6e551c4085de50b9f2797a28702ee9fd61"
     },
     {
-      "index": 202,
+      "index": 204,
       "file": "Scripting/v61b_backgood/render_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0202_Scripting_v61b_backgood_render_setup_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0204_Scripting_v61b_backgood_render_setup_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 267,
       "chars": 10795,
-      "sha256": "05b8206eeba7970986760e3270f75e96160d104da198501f6b27b41c54ee4c34"
+      "sha256": "c3487e946ae51ac34a1661039ce431329ed54b52ba71035a78154c75e6083f09"
     },
     {
-      "index": 203,
+      "index": 205,
       "file": "Scripting/v61b_backgood/SCENE_TUNING_GUIDE.md",
-      "path": "indexAI/project_code_chunks/chunk_0203_Scripting_v61b_backgood_SCENE_TUNING_GUIDE_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0205_Scripting_v61b_backgood_SCENE_TUNING_GUIDE_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 223,
       "chars": 11559,
-      "sha256": "0cf5ad999500936fc22e69eae9623316c5c67d19becf15c25ab85d892acd649c"
-    },
-    {
-      "index": 204,
-      "file": "Scripting/v61b_backgood/scene_tuning_panel.py",
-      "path": "indexAI/project_code_chunks/chunk_0204_Scripting_v61b_backgood_scene_tuning_panel_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 323,
-      "chars": 13829,
-      "sha256": "f0cded019699d983b6eccaf73d6c0508fb602e259834a1dfc3de64dec3688429"
-    },
-    {
-      "index": 205,
-      "file": "Scripting/v61b_backgood/scene_tuning_panel.py",
-      "path": "indexAI/project_code_chunks/chunk_0205_Scripting_v61b_backgood_scene_tuning_panel_py.md",
-      "part": 2,
-      "start_line": 324,
-      "end_line": 575,
-      "chars": 13919,
-      "sha256": "a484b4504367c1830fea6e7b59670661c22fdb2ccc2b0c90c3bcbbf560acf742"
+      "sha256": "8c5ca0c086b3fb717c88476332c63836250ee3579ed60d5548b9af35cd1fbafd"
     },
     {
       "index": 206,
       "file": "Scripting/v61b_backgood/scene_tuning_panel.py",
       "path": "indexAI/project_code_chunks/chunk_0206_Scripting_v61b_backgood_scene_tuning_panel_py.md",
-      "part": 3,
-      "start_line": 576,
-      "end_line": 785,
-      "chars": 13919,
-      "sha256": "ac17c7ade63b28aa8926bdb91d34d7cbf2ef695172c877a2a1f73f76fb2e46f4"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 323,
+      "chars": 13829,
+      "sha256": "37afc26026705309ea282d7fac7179955522099ab7ebd8336149b466b39f2c04"
     },
     {
       "index": 207,
       "file": "Scripting/v61b_backgood/scene_tuning_panel.py",
       "path": "indexAI/project_code_chunks/chunk_0207_Scripting_v61b_backgood_scene_tuning_panel_py.md",
-      "part": 4,
-      "start_line": 786,
-      "end_line": 1038,
-      "chars": 13918,
-      "sha256": "b48ad3c9798c974d9f0d3261a5b1815a49bf6ad575f7adebb9ac04210b7b62c8"
+      "part": 2,
+      "start_line": 324,
+      "end_line": 575,
+      "chars": 13919,
+      "sha256": "53f90adba47a7869c7483ed0837c4b49a9c7df0f19790b60f83bebb372c651ec"
     },
     {
       "index": 208,
       "file": "Scripting/v61b_backgood/scene_tuning_panel.py",
       "path": "indexAI/project_code_chunks/chunk_0208_Scripting_v61b_backgood_scene_tuning_panel_py.md",
+      "part": 3,
+      "start_line": 576,
+      "end_line": 785,
+      "chars": 13919,
+      "sha256": "c5296ffa4c849c44fc2c8193180079a57991325e2b7bf0e5b942a1d162e95fbb"
+    },
+    {
+      "index": 209,
+      "file": "Scripting/v61b_backgood/scene_tuning_panel.py",
+      "path": "indexAI/project_code_chunks/chunk_0209_Scripting_v61b_backgood_scene_tuning_panel_py.md",
+      "part": 4,
+      "start_line": 786,
+      "end_line": 1038,
+      "chars": 13918,
+      "sha256": "b567819f398bb52c5c7cc096fe7e9c4ea2988be94d96759c0cf2be47ca03ddc4"
+    },
+    {
+      "index": 210,
+      "file": "Scripting/v61b_backgood/scene_tuning_panel.py",
+      "path": "indexAI/project_code_chunks/chunk_0210_Scripting_v61b_backgood_scene_tuning_panel_py.md",
       "part": 5,
       "start_line": 1039,
       "end_line": 1097,
       "chars": 4216,
-      "sha256": "fd948be8105928a3409719f0f14dd035cc01af28e3a10776c3180fa399240250"
+      "sha256": "b1913e028e37bb5b230dcb4297b5a01dc4fe454fa1e43812a651119cc5150ff2"
     },
     {
-      "index": 209,
+      "index": 211,
       "file": "Scripting/v61b_backgood/scene_utils.py",
-      "path": "indexAI/project_code_chunks/chunk_0209_Scripting_v61b_backgood_scene_utils_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0211_Scripting_v61b_backgood_scene_utils_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 97,
       "chars": 3569,
-      "sha256": "5b91335a9004b06eeeeb2f2f6b735c3518ac5b338d7e41a890ec9d1cc5211573"
+      "sha256": "bdb524dbae5a707ff221991235854cec48ed661493b9822acffc16f82725c7da"
     },
     {
-      "index": 210,
+      "index": 212,
       "file": "Scripting/v61b_backgood/world_setup.py",
-      "path": "indexAI/project_code_chunks/chunk_0210_Scripting_v61b_backgood_world_setup_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0212_Scripting_v61b_backgood_world_setup_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 174,
       "chars": 7614,
-      "sha256": "f460c9ce5621969c78785c8b136a0af6d2aa26b5faa2b030db0b3f3b8b938fac"
+      "sha256": "189e19c9c4879d7e99332b4bd1be3025d274d532d5f288671048f573dbec3200"
     },
     {
-      "index": 211,
+      "index": 213,
       "file": "SECURITY.md",
-      "path": "indexAI/project_code_chunks/chunk_0211_SECURITY_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0213_SECURITY_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 22,
       "chars": 936,
-      "sha256": "38e63cb06e2f09f92e5730afe703fe1fbb0c03dee65f50983ee132f24f85ab12"
+      "sha256": "95926d7a818fc65a7194d5c0b5a4fdaffd5c861c6e7939c13a7bb6fba97357da"
     },
     {
-      "index": 212,
+      "index": 214,
       "file": "SUPPORT.md",
-      "path": "indexAI/project_code_chunks/chunk_0212_SUPPORT_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0214_SUPPORT_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 33,
       "chars": 864,
-      "sha256": "fa5925517bbf0d2946ad0048cff88b2bcaee1c2f9a6a878df5a2d6bf9a39e671"
+      "sha256": "fdcc055216d1441629fe91cc65f04790946611ba86783f99912d8aa01db632bc"
     },
     {
-      "index": 213,
+      "index": 215,
       "file": "Tools/ai/build_music_intermediates.py",
-      "path": "indexAI/project_code_chunks/chunk_0213_Tools_ai_build_music_intermediates_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0215_Tools_ai_build_music_intermediates_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 250,
       "chars": 12617,
-      "sha256": "d7748c74d64a5e10e7bfc77d7ea19d172ef483c3569c16c215270fb49ff9895d"
+      "sha256": "7f775675bc2d59ac610df572601d25286791f185b14838281c9b21848293e0e6"
     },
     {
-      "index": 214,
+      "index": 216,
       "file": "Tools/ai/build_music_intermediates.py",
-      "path": "indexAI/project_code_chunks/chunk_0214_Tools_ai_build_music_intermediates_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0216_Tools_ai_build_music_intermediates_py.md",
       "part": 2,
       "start_line": 251,
       "end_line": 314,
       "chars": 4570,
-      "sha256": "5b0344cf857bc168bd2e8ecd9fe6cf0fbb0ea63daf529194b42222b9680db06c"
+      "sha256": "983df6d7ddf8e2e9b2ac9a9f84bf096429cc12832305a1a6aa455f8fd3923ead"
     },
     {
-      "index": 215,
+      "index": 217,
       "file": "Tools/ai/merge_ai_candidates.py",
-      "path": "indexAI/project_code_chunks/chunk_0215_Tools_ai_merge_ai_candidates_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0217_Tools_ai_merge_ai_candidates_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 53,
       "chars": 2849,
-      "sha256": "89910c39c0d00fe6f76d16189f635f9cbb5c8663d894fe64e8f99cc9d808c4d6"
+      "sha256": "86c91a7e74f6644a84c4e956e95608d0fb706c1979d192789de20b01780acc47"
     },
     {
-      "index": 216,
+      "index": 218,
       "file": "Tools/ai/README.md",
-      "path": "indexAI/project_code_chunks/chunk_0216_Tools_ai_README_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0218_Tools_ai_README_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 31,
       "chars": 1187,
-      "sha256": "31bb322c5e551f6a3a9feb27578edc6fa3250debf24eeb8cfd5009c927bc25b8"
+      "sha256": "213558cc09e734dfee83fe243a1855117b894fa574723d127d27db34f517ffad"
     },
     {
-      "index": 217,
+      "index": 219,
       "file": "Tools/ai/review_wave_entrypoints.py",
-      "path": "indexAI/project_code_chunks/chunk_0217_Tools_ai_review_wave_entrypoints_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0219_Tools_ai_review_wave_entrypoints_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 240,
       "chars": 12074,
-      "sha256": "40dfe3147fdae173b98f3ecfeb8d1735e228073e4c6a799040e334dfd0fbf403"
-    },
-    {
-      "index": 218,
-      "file": "Tools/ai/run_parallel_artifact_pipeline.py",
-      "path": "indexAI/project_code_chunks/chunk_0218_Tools_ai_run_parallel_artifact_pipeline_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 193,
-      "chars": 13086,
-      "sha256": "484cfe58bf930283163913d2afdc3985bd016a03cc40e63a7c430a56faa7c720"
-    },
-    {
-      "index": 219,
-      "file": "Tools/ai/run_parallel_artifact_pipeline.py",
-      "path": "indexAI/project_code_chunks/chunk_0219_Tools_ai_run_parallel_artifact_pipeline_py.md",
-      "part": 2,
-      "start_line": 194,
-      "end_line": 346,
-      "chars": 13140,
-      "sha256": "c5ad5753e5318fce046db0d05c404d5e639023dd1d9be027d37b4864f5d00a4e"
+      "sha256": "7814789bb9fdb91ed491689c81ed2fa8ea0a4e14781553bce14f7cdffa1565f5"
     },
     {
       "index": 220,
       "file": "Tools/ai/run_parallel_artifact_pipeline.py",
       "path": "indexAI/project_code_chunks/chunk_0220_Tools_ai_run_parallel_artifact_pipeline_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 193,
+      "chars": 13086,
+      "sha256": "294d684ecbb6c731eba02a2c79ad9be361c990c9595488d2e148b0d4fc2e5eea"
+    },
+    {
+      "index": 221,
+      "file": "Tools/ai/run_parallel_artifact_pipeline.py",
+      "path": "indexAI/project_code_chunks/chunk_0221_Tools_ai_run_parallel_artifact_pipeline_py.md",
+      "part": 2,
+      "start_line": 194,
+      "end_line": 346,
+      "chars": 13140,
+      "sha256": "182755cfdf3accd395c18728cf0dd3fd944b1172ded9013e1262b50bd14514f4"
+    },
+    {
+      "index": 222,
+      "file": "Tools/ai/run_parallel_artifact_pipeline.py",
+      "path": "indexAI/project_code_chunks/chunk_0222_Tools_ai_run_parallel_artifact_pipeline_py.md",
       "part": 3,
       "start_line": 347,
       "end_line": 354,
       "chars": 1712,
-      "sha256": "e1b4d4df01d5135984b731dca838105b70da260d2b89fd4034590db99d52b116"
+      "sha256": "0bf86f0c33f0e72a36dc4487b6520ba175fed2122c15a0f0161a09fde13b4b5c"
     },
     {
-      "index": 221,
+      "index": 223,
       "file": "Tools/ai/smart_ai_gatekeeper.py",
-      "path": "indexAI/project_code_chunks/chunk_0221_Tools_ai_smart_ai_gatekeeper_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0223_Tools_ai_smart_ai_gatekeeper_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 225,
       "chars": 12506,
-      "sha256": "09a69d112f114b0c85f23083f0a8bfd2e1aa34a307bdf5236450c137f5d83763"
+      "sha256": "572ac3eddc375b46ad0be804a5e32cda6d6740bb816e78db6c2f86bb2ac5e626"
     },
     {
-      "index": 222,
+      "index": 224,
       "file": "Tools/ai/smart_ai_gatekeeper.py",
-      "path": "indexAI/project_code_chunks/chunk_0222_Tools_ai_smart_ai_gatekeeper_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0224_Tools_ai_smart_ai_gatekeeper_py.md",
       "part": 2,
       "start_line": 226,
       "end_line": 232,
       "chars": 1205,
-      "sha256": "da4b61b6eb0cae69a87a2f9b0711a8d29eaf7b5f280b3aef9925df318ebc13fc"
+      "sha256": "c4e0e3011a85610530b1b056b973bdb92f5cc1d626f486f2cd5f4d0f96ec93ea"
     },
     {
-      "index": 223,
+      "index": 225,
       "file": "Tools/ai/validate_ai_artifacts.py",
-      "path": "indexAI/project_code_chunks/chunk_0223_Tools_ai_validate_ai_artifacts_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0225_Tools_ai_validate_ai_artifacts_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 200,
       "chars": 10788,
-      "sha256": "1adcef5f159aa8ce04c786bee299d407ec09650f0d9dc5ec1e70f15d48b27afe"
+      "sha256": "a3f013a9d0ee9ec0aef6ff5f3c2c6e0a4bccb371671f2ad04394ba4ad5ae2654"
     },
     {
-      "index": 224,
+      "index": 226,
       "file": "Tools/git/auto_push_generated_artifacts.ps1",
-      "path": "indexAI/project_code_chunks/chunk_0224_Tools_git_auto_push_generated_artifacts_ps1.md",
+      "path": "indexAI/project_code_chunks/chunk_0226_Tools_git_auto_push_generated_artifacts_ps1.md",
       "part": 1,
       "start_line": 1,
       "end_line": 135,
       "chars": 4972,
-      "sha256": "68bf6c66ee2082f1401239d192bf9ba4a57754f06232903f53eb04da6619b985"
+      "sha256": "744f9b626f6fa2d12f98608cf59e49efffc4f5f8b105a2c040348145bc0bcfbc"
     },
     {
-      "index": 225,
+      "index": 227,
       "file": "Tools/git/auto_push_generated_data.ps1",
-      "path": "indexAI/project_code_chunks/chunk_0225_Tools_git_auto_push_generated_data_ps1.md",
+      "path": "indexAI/project_code_chunks/chunk_0227_Tools_git_auto_push_generated_data_ps1.md",
       "part": 1,
       "start_line": 1,
       "end_line": 228,
       "chars": 8325,
-      "sha256": "ac46d65449a71e3aac9de56b31ee1919c0966a71e0f3b0c562b4e5c246b988b0"
+      "sha256": "9c988f01b27d34f70d56e1e798ceae258bdab553240de3588afb6cf9c5bddd74"
     },
     {
-      "index": 226,
+      "index": 228,
       "file": "Tools/git/README.md",
-      "path": "indexAI/project_code_chunks/chunk_0226_Tools_git_README_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0228_Tools_git_README_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 75,
       "chars": 2481,
-      "sha256": "0ad57f281fd1317ceec8ea362b4ac0563eb14d934cb9fd140fb3934befcbd018"
+      "sha256": "ede47691efd09b58470b060b87226ee2cf3cff2a4c39898ca66259e5f50d8e16"
     },
     {
-      "index": 227,
+      "index": 229,
       "file": "Tools/npu/ai_memory_context.py",
-      "path": "indexAI/project_code_chunks/chunk_0227_Tools_npu_ai_memory_context_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0229_Tools_npu_ai_memory_context_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 111,
       "chars": 6094,
-      "sha256": "4ac0c50bd5de13df528c51af9554c1c92d09b8e30c390daf462aaf17442b8cee"
+      "sha256": "5b1810ad97c81ea232aa19132a15f46ba15edd18cc9218230fcd93fb6883cb74"
     },
     {
-      "index": 228,
+      "index": 230,
       "file": "Tools/npu/build_ai_service_packet.py",
-      "path": "indexAI/project_code_chunks/chunk_0228_Tools_npu_build_ai_service_packet_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0230_Tools_npu_build_ai_service_packet_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 235,
       "chars": 12740,
-      "sha256": "c650b8f9c1ace7741c22c51b89dbb72ae5ca723a5d6933bf8f2ab3fb5cb52f87"
+      "sha256": "8a6aa497519ce05e26ebb5b083ea1455d33dbe103e5d22951fe20e02fad7d05d"
     },
     {
-      "index": 229,
+      "index": 231,
       "file": "Tools/npu/build_ai_service_packet.py",
-      "path": "indexAI/project_code_chunks/chunk_0229_Tools_npu_build_ai_service_packet_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0231_Tools_npu_build_ai_service_packet_py.md",
       "part": 2,
       "start_line": 236,
       "end_line": 355,
       "chars": 7382,
-      "sha256": "06a174fdba52a84b4b38f81183ba32488e208eb8055a60519caa2eba608000c1"
+      "sha256": "8141abd82263bdd9f0be73eb66d0e81b79475223c527fb5ebc512f3705dc81cf"
     },
     {
-      "index": 230,
+      "index": 232,
       "file": "Tools/npu/build_blender_manual_context.py",
-      "path": "indexAI/project_code_chunks/chunk_0230_Tools_npu_build_blender_manual_context_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0232_Tools_npu_build_blender_manual_context_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 301,
       "chars": 12741,
-      "sha256": "f326bb23e9762d6a22b4fe67952435d1df3c99e0e13de1a8360c72494108ed9d"
+      "sha256": "e4edae001997ec9d646d1a2e6c6f26bc75df92f586f9108765ea4c97622cc02d"
     },
     {
-      "index": 231,
+      "index": 233,
       "file": "Tools/npu/build_blender_manual_context.py",
-      "path": "indexAI/project_code_chunks/chunk_0231_Tools_npu_build_blender_manual_context_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0233_Tools_npu_build_blender_manual_context_py.md",
       "part": 2,
       "start_line": 302,
       "end_line": 326,
       "chars": 2132,
-      "sha256": "610a583e3583c6b7ef7f7993a9ed549dfa04b7b9897924987f7c09b4ba98ea17"
-    },
-    {
-      "index": 232,
-      "file": "Tools/npu/build_music_context.py",
-      "path": "indexAI/project_code_chunks/chunk_0232_Tools_npu_build_music_context_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 285,
-      "chars": 13831,
-      "sha256": "48468dcdb83678a364908d08da70c88b32296c4bc9576a15ddcb98e2213c9781"
-    },
-    {
-      "index": 233,
-      "file": "Tools/npu/build_music_context.py",
-      "path": "indexAI/project_code_chunks/chunk_0233_Tools_npu_build_music_context_py.md",
-      "part": 2,
-      "start_line": 286,
-      "end_line": 547,
-      "chars": 13847,
-      "sha256": "6af6974a9fa934f4cb63705191688b7eee2834815d5d0acaf55a1fa0ad82fd24"
+      "sha256": "cc380fff597baa09dedf3f46b820a11066a5a4a76ef3ecb77a598287b708ff07"
     },
     {
       "index": 234,
       "file": "Tools/npu/build_music_context.py",
       "path": "indexAI/project_code_chunks/chunk_0234_Tools_npu_build_music_context_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 285,
+      "chars": 13831,
+      "sha256": "18918399fa5e2db40b2bb83a3f32121b06c77dab1e27b2c891bd36f83d92c22e"
+    },
+    {
+      "index": 235,
+      "file": "Tools/npu/build_music_context.py",
+      "path": "indexAI/project_code_chunks/chunk_0235_Tools_npu_build_music_context_py.md",
+      "part": 2,
+      "start_line": 286,
+      "end_line": 547,
+      "chars": 13847,
+      "sha256": "e16a628e59525ed51bbaf2d0b44ebe32898d4a3ba51ad6fb52e3360c4b632b49"
+    },
+    {
+      "index": 236,
+      "file": "Tools/npu/build_music_context.py",
+      "path": "indexAI/project_code_chunks/chunk_0236_Tools_npu_build_music_context_py.md",
       "part": 3,
       "start_line": 548,
       "end_line": 711,
       "chars": 10863,
-      "sha256": "ea8a4b37d64a798fe310d40cff721ba1c32a6c0876b186dcf7792a8e04f388ba"
+      "sha256": "578edfa07adca01da9da2fcae6bfbae911969dc5ff78181e332f35121c36ef31"
     },
     {
-      "index": 235,
+      "index": 237,
       "file": "Tools/npu/build_npu_code_context.py",
-      "path": "indexAI/project_code_chunks/chunk_0235_Tools_npu_build_npu_code_context_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0237_Tools_npu_build_npu_code_context_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 306,
       "chars": 12659,
-      "sha256": "ed3c1a74b5ef6d1733cabdf6966f18cc6c907945de813b4ec8abaffdcb5c2de7"
+      "sha256": "0c62c9e50e63de7bd1c7fdd32011afa00c6f64d16baa17d9ecc1de32855484d6"
     },
     {
-      "index": 236,
+      "index": 238,
       "file": "Tools/npu/build_npu_code_context.py",
-      "path": "indexAI/project_code_chunks/chunk_0236_Tools_npu_build_npu_code_context_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0238_Tools_npu_build_npu_code_context_py.md",
       "part": 2,
       "start_line": 307,
       "end_line": 389,
       "chars": 4197,
-      "sha256": "c75e6645d0c8c721b12220ec3aee0ecca7d1a28c81d857800d0db2ca0b518c1d"
+      "sha256": "762287102d61b04f1883d2cbb8e8aa5ba5efb34ba5a08c14cb8e432901d7941c"
     },
     {
-      "index": 237,
+      "index": 239,
       "file": "Tools/npu/build_project_ai_index.py",
-      "path": "indexAI/project_code_chunks/chunk_0237_Tools_npu_build_project_ai_index_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0239_Tools_npu_build_project_ai_index_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 300,
       "chars": 12959,
-      "sha256": "80af5200c84fd85f2f3118b75472a432a4e0502ef48be215c3c008dcdca46026"
+      "sha256": "e8ed548b303b783b97e0b41740e5c21455b55f8f6286e333e6b74c33933a3181"
     },
     {
-      "index": 238,
+      "index": 240,
       "file": "Tools/npu/build_project_ai_index.py",
-      "path": "indexAI/project_code_chunks/chunk_0238_Tools_npu_build_project_ai_index_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0240_Tools_npu_build_project_ai_index_py.md",
       "part": 2,
       "start_line": 301,
       "end_line": 419,
       "chars": 7461,
-      "sha256": "a9b80241283abb412fc7fb0f4e216da3ac82af31f6b4259eb80ad8ce89b92844"
+      "sha256": "ae60d70b7b6c75bcfc89442795c0112d497eaa6f55222f0ed1d0a1061add41e4"
     },
     {
-      "index": 239,
+      "index": 241,
       "file": "Tools/npu/build_semantic_code_chunks.py",
-      "path": "indexAI/project_code_chunks/chunk_0239_Tools_npu_build_semantic_code_chunks_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0241_Tools_npu_build_semantic_code_chunks_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 91,
       "chars": 7052,
-      "sha256": "3980da7971c312e8400d5f65ec6fbf2a2837e9875d4ea36b8e8c1885e3a2e6b9"
+      "sha256": "5400893619a2edbce93f2bbbbe20aed6e61523c5d17506c17479587c1d1a5cba"
     },
     {
-      "index": 240,
+      "index": 242,
       "file": "Tools/npu/generated_blender_script_candidate.py",
-      "path": "indexAI/project_code_chunks/chunk_0240_Tools_npu_generated_blender_script_candidate_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0242_Tools_npu_generated_blender_script_candidate_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 245,
       "chars": 13024,
-      "sha256": "77440bd24cecfb32dec873a007f5f956ff6e1f7c768764aa89c107bdb67a8c11"
+      "sha256": "380a7051b03217e17163f339b3ca256f917d188549b56e986e463d9732ab5520"
     },
     {
-      "index": 241,
+      "index": 243,
       "file": "Tools/npu/generated_blender_script_candidate.py",
-      "path": "indexAI/project_code_chunks/chunk_0241_Tools_npu_generated_blender_script_candidate_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0243_Tools_npu_generated_blender_script_candidate_py.md",
       "part": 2,
       "start_line": 246,
       "end_line": 369,
       "chars": 8571,
-      "sha256": "3995bc7772c443f4953c653a3c6675110e5daeda9c4e42b632aa10b087bfef9a"
+      "sha256": "d78f804fb63d875ee7db3cd5ca06eedde157ce919c6e9218a707787a79f21324"
     },
     {
-      "index": 242,
+      "index": 244,
       "file": "Tools/npu/generated_blender_script_candidate_FristNear.py",
-      "path": "indexAI/project_code_chunks/chunk_0242_Tools_npu_generated_blender_script_candidate_FristNear_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0244_Tools_npu_generated_blender_script_candidate_FristNear_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 244,
       "chars": 13036,
-      "sha256": "87eaf7c84ad3baccc97e613309b094e668172d1dc3a812a1cfd5542613d76a91"
+      "sha256": "0d4f51c6fca4c27825a9c14d514d5b04b2156d38d45f881c4b2620d52a37eb43"
     },
     {
-      "index": 243,
+      "index": 245,
       "file": "Tools/npu/generated_blender_script_candidate_FristNear.py",
-      "path": "indexAI/project_code_chunks/chunk_0243_Tools_npu_generated_blender_script_candidate_FristNear_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0245_Tools_npu_generated_blender_script_candidate_FristNear_py.md",
       "part": 2,
       "start_line": 245,
       "end_line": 369,
       "chars": 8630,
-      "sha256": "30b8fe7dc9d07b613b71652dce84abc0955c720ef38d5b442196305d398d77c2"
-    },
-    {
-      "index": 244,
-      "file": "Tools/npu/npu_blender_manual_index.md",
-      "path": "indexAI/project_code_chunks/chunk_0244_Tools_npu_npu_blender_manual_index_md.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 77,
-      "chars": 11940,
-      "sha256": "04a7f3c816e4b90e987f4f96a2d5b861af5d7ee8525b6f38f7938203f8a92b26"
-    },
-    {
-      "index": 245,
-      "file": "Tools/npu/npu_blender_manual_index.md",
-      "path": "indexAI/project_code_chunks/chunk_0245_Tools_npu_npu_blender_manual_index_md.md",
-      "part": 2,
-      "start_line": 78,
-      "end_line": 130,
-      "chars": 11967,
-      "sha256": "668b073e5387f14cbb9d6f4182fb0d479da9bb354b98bc1696f55a42c60db089"
+      "sha256": "0e629568c9c5f71d37f63cdd2ff048a8f4353c4542546d9c125ea5f387f92b09"
     },
     {
       "index": 246,
       "file": "Tools/npu/npu_blender_manual_index.md",
       "path": "indexAI/project_code_chunks/chunk_0246_Tools_npu_npu_blender_manual_index_md.md",
-      "part": 3,
-      "start_line": 131,
-      "end_line": 182,
-      "chars": 12012,
-      "sha256": "4474deecb00fbcefb83fdb00bcd8e307c9047eef2b4570cdca3770eeefb8d985"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 77,
+      "chars": 11940,
+      "sha256": "182094e4bde69a302a56b659c7d8394376bd75478d1ce01308a9d4cfdb811da3"
     },
     {
       "index": 247,
       "file": "Tools/npu/npu_blender_manual_index.md",
       "path": "indexAI/project_code_chunks/chunk_0247_Tools_npu_npu_blender_manual_index_md.md",
-      "part": 4,
-      "start_line": 183,
-      "end_line": 236,
-      "chars": 11974,
-      "sha256": "dbd5e933c231af21ed9df2562f51438bd030173fc4c2f852962dad05ca070af6"
+      "part": 2,
+      "start_line": 78,
+      "end_line": 130,
+      "chars": 11967,
+      "sha256": "b0865bb249c26a2984fb5deda23b730bb239fbd0b4eacab316babf233ebdc119"
     },
     {
       "index": 248,
       "file": "Tools/npu/npu_blender_manual_index.md",
       "path": "indexAI/project_code_chunks/chunk_0248_Tools_npu_npu_blender_manual_index_md.md",
-      "part": 5,
-      "start_line": 237,
-      "end_line": 289,
-      "chars": 12063,
-      "sha256": "d0d8414074a33d9d20af9a7538dbff210204e1d58719cadb8718f674c4bd9a02"
+      "part": 3,
+      "start_line": 131,
+      "end_line": 182,
+      "chars": 12012,
+      "sha256": "1c5fb96550208dea4ff8eb573a43bf3989e5fa5bf4c1a3269878fd66c5bfebd7"
     },
     {
       "index": 249,
       "file": "Tools/npu/npu_blender_manual_index.md",
       "path": "indexAI/project_code_chunks/chunk_0249_Tools_npu_npu_blender_manual_index_md.md",
-      "part": 6,
-      "start_line": 290,
-      "end_line": 344,
-      "chars": 11948,
-      "sha256": "68cf4438a873d248b3881ef44750f5603dc902d90ad1926bc30f7796f7866c9a"
+      "part": 4,
+      "start_line": 183,
+      "end_line": 236,
+      "chars": 11974,
+      "sha256": "ab9db138a6114ad0ff574037fcddc4b5436ef283a239596822602f19186b1608"
     },
     {
       "index": 250,
       "file": "Tools/npu/npu_blender_manual_index.md",
       "path": "indexAI/project_code_chunks/chunk_0250_Tools_npu_npu_blender_manual_index_md.md",
+      "part": 5,
+      "start_line": 237,
+      "end_line": 289,
+      "chars": 12063,
+      "sha256": "83d046ed7589c20342a532d660496c986a0b81c2366ece3be06c667841d48bf0"
+    },
+    {
+      "index": 251,
+      "file": "Tools/npu/npu_blender_manual_index.md",
+      "path": "indexAI/project_code_chunks/chunk_0251_Tools_npu_npu_blender_manual_index_md.md",
+      "part": 6,
+      "start_line": 290,
+      "end_line": 344,
+      "chars": 11948,
+      "sha256": "20dd985edac288995332faa45a5d76a2c5625c74af86e31c69036e54d275d630"
+    },
+    {
+      "index": 252,
+      "file": "Tools/npu/npu_blender_manual_index.md",
+      "path": "indexAI/project_code_chunks/chunk_0252_Tools_npu_npu_blender_manual_index_md.md",
       "part": 7,
       "start_line": 345,
       "end_line": 383,
       "chars": 8882,
-      "sha256": "42061010798cf6e38f5ea4fec18a4da310b51bf526282d7d7819e7ae31b6860f"
-    },
-    {
-      "index": 251,
-      "file": "Tools/npu/npu_blender_manual_manifest.json",
-      "path": "indexAI/project_code_chunks/chunk_0251_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 231,
-      "chars": 11836,
-      "sha256": "7ecdc3f8a1aa67beec5212f49a6c409ea89c0e57d481e4dc177192c1c40d2a76"
-    },
-    {
-      "index": 252,
-      "file": "Tools/npu/npu_blender_manual_manifest.json",
-      "path": "indexAI/project_code_chunks/chunk_0252_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 2,
-      "start_line": 232,
-      "end_line": 449,
-      "chars": 11787,
-      "sha256": "1041327cb1bf81e7bfdbda9011366f80078d3b11b7745801d345d800067dd6cd"
+      "sha256": "c56e87842c0da232c9ba671c94077d974ced5e0be72ba795c1da165c60334987"
     },
     {
       "index": 253,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0253_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 3,
-      "start_line": 450,
-      "end_line": 661,
-      "chars": 11855,
-      "sha256": "c5ec6243b7a3749d4a18d016c292cd1ec30fa91371655c6c73e1cc8c98952589"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 231,
+      "chars": 11836,
+      "sha256": "3a635f1bcb50171bc874fd281f6683f73fc1117cb60d5d8918ad2cf5dd3c19d3"
     },
     {
       "index": 254,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0254_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 4,
-      "start_line": 662,
-      "end_line": 881,
-      "chars": 11866,
-      "sha256": "c75025d1e564d7109a7c828f0bc7222e88c9875206fab2529435fc7f090eb4a4"
+      "part": 2,
+      "start_line": 232,
+      "end_line": 449,
+      "chars": 11787,
+      "sha256": "7bac5a4beb42b3fc03b32096d8c6a3c728c988e14863e27774734aa55af8c4e7"
     },
     {
       "index": 255,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0255_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 5,
-      "start_line": 882,
-      "end_line": 1100,
-      "chars": 11904,
-      "sha256": "e922fea6040eca1b897900dfe7791045eb6b579ddd4263270c5a16e4573f932f"
+      "part": 3,
+      "start_line": 450,
+      "end_line": 661,
+      "chars": 11855,
+      "sha256": "d0155e70b8441f46dd0a8c6f892cc7d4b5d8d7a3b1650589c497714c80a2c2b5"
     },
     {
       "index": 256,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0256_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 6,
-      "start_line": 1101,
-      "end_line": 1311,
-      "chars": 11883,
-      "sha256": "98606b49fb81c3baccc9c764e70a647a8b0b022dc853ca92301528ca39cac55e"
+      "part": 4,
+      "start_line": 662,
+      "end_line": 881,
+      "chars": 11866,
+      "sha256": "1b704a1305fd202d8e0bb7a4662b1fec1f3dd849f33dca65dd429ddee0d1737a"
     },
     {
       "index": 257,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0257_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 7,
-      "start_line": 1312,
-      "end_line": 1525,
-      "chars": 11888,
-      "sha256": "d50b2814fe35a1cbd400e6d79fa5c2953cb235fef4103c4e633b40f451544204"
+      "part": 5,
+      "start_line": 882,
+      "end_line": 1100,
+      "chars": 11904,
+      "sha256": "5517b2b87bd1b97443d9f0bdec695e12d63a6ff1792a62fc7d8d24fb2b991550"
     },
     {
       "index": 258,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0258_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 8,
-      "start_line": 1526,
-      "end_line": 1745,
-      "chars": 11860,
-      "sha256": "2429ee0f3a0779015d2d80c60f74d9a743ef58dfd71dce995137e7ca3f46db40"
+      "part": 6,
+      "start_line": 1101,
+      "end_line": 1311,
+      "chars": 11883,
+      "sha256": "fc7ac16ec20410fafd53c9e7de18657c1e799505f8c57f2b67c6efec544c2d5f"
     },
     {
       "index": 259,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0259_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 9,
-      "start_line": 1746,
-      "end_line": 1968,
-      "chars": 11907,
-      "sha256": "5034088d8462d2a3e4d278a72f4fa8822cc3b41efdd29bbc9f0dc99b694fae6b"
+      "part": 7,
+      "start_line": 1312,
+      "end_line": 1525,
+      "chars": 11888,
+      "sha256": "fed8358633640b2a874593b4bc28b3246128ecaebcd4cddadf1176781994a5b1"
     },
     {
       "index": 260,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0260_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 10,
-      "start_line": 1969,
-      "end_line": 2181,
-      "chars": 11918,
-      "sha256": "a92248326716619cff26a3d55898096cd8d04c2c6ad175f4503494245d98f805"
+      "part": 8,
+      "start_line": 1526,
+      "end_line": 1745,
+      "chars": 11860,
+      "sha256": "33539197e83df1263ad9c46756e7320d0cf6f0dbdf1fd4c5f58d05cb557c06d7"
     },
     {
       "index": 261,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0261_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 11,
-      "start_line": 2182,
-      "end_line": 2399,
-      "chars": 11826,
-      "sha256": "a1ea67d67fed1dda74f38ce025e6b56c23b0070266217161a5b91cc39ed22cc0"
+      "part": 9,
+      "start_line": 1746,
+      "end_line": 1968,
+      "chars": 11907,
+      "sha256": "c3af15327be936ca822e72ee50d6c14f15108d3198658a3e57322d8218ebe0d2"
     },
     {
       "index": 262,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0262_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 12,
-      "start_line": 2400,
-      "end_line": 2619,
-      "chars": 11782,
-      "sha256": "ec38917c21159a5dafcfd9ca8092c232bc0bad93094eef48d85677d8832d026c"
+      "part": 10,
+      "start_line": 1969,
+      "end_line": 2181,
+      "chars": 11918,
+      "sha256": "c7a60edd3d008cde897b7b64c073f08ff61f406bad1a4d946a2a404a0845799e"
     },
     {
       "index": 263,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0263_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 13,
-      "start_line": 2620,
-      "end_line": 2839,
-      "chars": 11896,
-      "sha256": "9b5c8cde9067c99aae2eb25f46abcc53493ac8de345057b02d452a03a6aae060"
+      "part": 11,
+      "start_line": 2182,
+      "end_line": 2399,
+      "chars": 11826,
+      "sha256": "536a452f848358c29c87b82adf60ca7b2f94cb6fdcd4f453c29c8575dc23fca7"
     },
     {
       "index": 264,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0264_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 14,
-      "start_line": 2840,
-      "end_line": 3059,
-      "chars": 11877,
-      "sha256": "3ac5896515a0a0b8591844fa8c525585806524383ffbf5d7df6090cb389a5942"
+      "part": 12,
+      "start_line": 2400,
+      "end_line": 2619,
+      "chars": 11782,
+      "sha256": "405e51a8eb50a82fa85b44d5ce7178dc554ff79977cc8b6d5285cb65bd28ea92"
     },
     {
       "index": 265,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0265_Tools_npu_npu_blender_manual_manifest_json.md",
-      "part": 15,
-      "start_line": 3060,
-      "end_line": 3273,
-      "chars": 11925,
-      "sha256": "3c66680eb615f73a93d0b1c15ee730d7d6c0c50edfcbd7606369f985362d2840"
+      "part": 13,
+      "start_line": 2620,
+      "end_line": 2839,
+      "chars": 11896,
+      "sha256": "47365205a01063251881ef1ae34da940a7fccfd2ca51698d43ea172b4305e00c"
     },
     {
       "index": 266,
       "file": "Tools/npu/npu_blender_manual_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0266_Tools_npu_npu_blender_manual_manifest_json.md",
+      "part": 14,
+      "start_line": 2840,
+      "end_line": 3059,
+      "chars": 11877,
+      "sha256": "f24880fba617d2d69d5919003803733687ff9469586556597afdae16a6cd81e8"
+    },
+    {
+      "index": 267,
+      "file": "Tools/npu/npu_blender_manual_manifest.json",
+      "path": "indexAI/project_code_chunks/chunk_0267_Tools_npu_npu_blender_manual_manifest_json.md",
+      "part": 15,
+      "start_line": 3060,
+      "end_line": 3273,
+      "chars": 11925,
+      "sha256": "b40b681adf56b94d03c57c470e10d1f405721f2569d5eeb95769c186e29d42b8"
+    },
+    {
+      "index": 268,
+      "file": "Tools/npu/npu_blender_manual_manifest.json",
+      "path": "indexAI/project_code_chunks/chunk_0268_Tools_npu_npu_blender_manual_manifest_json.md",
       "part": 16,
       "start_line": 3274,
       "end_line": 3339,
       "chars": 3653,
-      "sha256": "afbc69cbc87189ffa3d2ce802d583ca4bce736ad92ec100b9d771348213feca5"
-    },
-    {
-      "index": 267,
-      "file": "Tools/npu/npu_code_manifest.json",
-      "path": "indexAI/project_code_chunks/chunk_0267_Tools_npu_npu_code_manifest_json.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 384,
-      "chars": 11742,
-      "sha256": "8bcfeb167ca5451ccec5615aa105505a62f6a46f4b84f746b827bc97bdb38cb2"
-    },
-    {
-      "index": 268,
-      "file": "Tools/npu/npu_code_manifest.json",
-      "path": "indexAI/project_code_chunks/chunk_0268_Tools_npu_npu_code_manifest_json.md",
-      "part": 2,
-      "start_line": 385,
-      "end_line": 767,
-      "chars": 11711,
-      "sha256": "6f0ce3589c42636bb0de333611299924776200c5e82d0e87e92790287ec3ad16"
+      "sha256": "e220ff9f4825b9943132d57dca1fad722f4259b553901963a969e64a536a5099"
     },
     {
       "index": 269,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0269_Tools_npu_npu_code_manifest_json.md",
-      "part": 3,
-      "start_line": 768,
-      "end_line": 1117,
-      "chars": 11756,
-      "sha256": "382a474bc06b11308c0cd05b4c5086f86202896981f65aa738e3e3f6a9bfbba7"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 384,
+      "chars": 11742,
+      "sha256": "f9b3f55dbcff7ee9234097803f58ba454094b01691d2b615b48e932c32d7efd3"
     },
     {
       "index": 270,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0270_Tools_npu_npu_code_manifest_json.md",
-      "part": 4,
-      "start_line": 1118,
-      "end_line": 1396,
-      "chars": 11849,
-      "sha256": "c66fc217e96d9fd080937a18d2ade14682a93d781f5a1a0862446c0091408fad"
+      "part": 2,
+      "start_line": 385,
+      "end_line": 767,
+      "chars": 11711,
+      "sha256": "f082abf506094e6a397ca80963860615db16db474400a2ef87ca2820da4a296a"
     },
     {
       "index": 271,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0271_Tools_npu_npu_code_manifest_json.md",
-      "part": 5,
-      "start_line": 1397,
-      "end_line": 1652,
-      "chars": 11428,
-      "sha256": "c099bd13d970589d56c59e70d25c67216f5573354ec4b1b922c12ce3795a2aee"
+      "part": 3,
+      "start_line": 768,
+      "end_line": 1117,
+      "chars": 11756,
+      "sha256": "b2f49a603a784def93a2202698532afb5f0dc98b8d63af296184ab4c8b7bca75"
     },
     {
       "index": 272,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0272_Tools_npu_npu_code_manifest_json.md",
-      "part": 6,
-      "start_line": 1653,
-      "end_line": 1961,
-      "chars": 11804,
-      "sha256": "13eaf4d10b0481e61a22b74d9321cfaaff6f806754630559cf01ac125d4c249c"
+      "part": 4,
+      "start_line": 1118,
+      "end_line": 1396,
+      "chars": 11849,
+      "sha256": "f77e3a96c21c7b4eb2835c965318a3dfe0f0becffb13a543a7dee974128f3c9f"
     },
     {
       "index": 273,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0273_Tools_npu_npu_code_manifest_json.md",
-      "part": 7,
-      "start_line": 1962,
-      "end_line": 2279,
-      "chars": 11783,
-      "sha256": "6ec2dd8e4be209644d70c0ae9160bc2fc7dba7463534e27a6bd67b467a347cb8"
+      "part": 5,
+      "start_line": 1397,
+      "end_line": 1652,
+      "chars": 11428,
+      "sha256": "ad2548e322f36eddd0d13402b018c2c8e580b238a4500beaddf99a7cf724444c"
     },
     {
       "index": 274,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0274_Tools_npu_npu_code_manifest_json.md",
-      "part": 8,
-      "start_line": 2280,
-      "end_line": 2665,
-      "chars": 11653,
-      "sha256": "aecabea962851c89835a9257f5495d8af682766b3b9683c756980ec655ad952c"
+      "part": 6,
+      "start_line": 1653,
+      "end_line": 1961,
+      "chars": 11804,
+      "sha256": "0f4177b48d6c89bd4d67cc68eab873c246ea40e693d52ff8a37536d70f86ca91"
     },
     {
       "index": 275,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0275_Tools_npu_npu_code_manifest_json.md",
-      "part": 9,
-      "start_line": 2666,
-      "end_line": 3015,
-      "chars": 11224,
-      "sha256": "730e42b80af8a13d66268177fc5f09a38ea369ba361c224103fd1b570882c027"
+      "part": 7,
+      "start_line": 1962,
+      "end_line": 2279,
+      "chars": 11783,
+      "sha256": "2d5d656dfd1d1327f7f4805ae459e02cba2425d2c2e82e2799df22890f6c6956"
     },
     {
       "index": 276,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0276_Tools_npu_npu_code_manifest_json.md",
-      "part": 10,
-      "start_line": 3016,
-      "end_line": 3370,
-      "chars": 11765,
-      "sha256": "3e2e572dd887d710d80e2701e063e5447c43971ac8a209faec411135f46a0280"
+      "part": 8,
+      "start_line": 2280,
+      "end_line": 2665,
+      "chars": 11653,
+      "sha256": "0bd8178e6b7892e4b57acc04a38806230e544af9c9e26222ac6f9884ca7fe70f"
     },
     {
       "index": 277,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0277_Tools_npu_npu_code_manifest_json.md",
-      "part": 11,
-      "start_line": 3371,
-      "end_line": 3741,
-      "chars": 11755,
-      "sha256": "5f3245325ada5b808579f6debf53d13e9c54713ebe6fc1972795f127e44d17f5"
+      "part": 9,
+      "start_line": 2666,
+      "end_line": 3015,
+      "chars": 11224,
+      "sha256": "de841827122ea43733ae13032c258eb0057071d8f25c01f0ff4bbbeea2e72f24"
     },
     {
       "index": 278,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0278_Tools_npu_npu_code_manifest_json.md",
-      "part": 12,
-      "start_line": 3742,
-      "end_line": 4092,
-      "chars": 11764,
-      "sha256": "013cb2fdb7a86954d1c6cc4e9892505c1d0320f71c4e1ac253287990d8b61a31"
+      "part": 10,
+      "start_line": 3016,
+      "end_line": 3370,
+      "chars": 11765,
+      "sha256": "060aafc9b0a4cdb5aefcffa87711ce4f5a243e9296731346aab9cb28f7429456"
     },
     {
       "index": 279,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0279_Tools_npu_npu_code_manifest_json.md",
-      "part": 13,
-      "start_line": 4093,
-      "end_line": 4466,
+      "part": 11,
+      "start_line": 3371,
+      "end_line": 3741,
       "chars": 11755,
-      "sha256": "72c4d198495efa9600c28ae3669b02a166d791a22463a1e2465d19b7ab54f7dc"
+      "sha256": "2f4118bb7388cb1ef41f5abd19f4e565a26e173633b7e21a0d7956116fba9a29"
     },
     {
       "index": 280,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0280_Tools_npu_npu_code_manifest_json.md",
-      "part": 14,
-      "start_line": 4467,
-      "end_line": 4844,
-      "chars": 11722,
-      "sha256": "12ddbc5a2e47610095c03ae512c6fd0039b98f74389119cc70a5d71274da7644"
+      "part": 12,
+      "start_line": 3742,
+      "end_line": 4092,
+      "chars": 11764,
+      "sha256": "52f62b51817eb1525a6c4e4a2685cf2ea146b5b401bb844cdfb226e966564f1f"
     },
     {
       "index": 281,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0281_Tools_npu_npu_code_manifest_json.md",
-      "part": 15,
-      "start_line": 4845,
-      "end_line": 5236,
-      "chars": 11713,
-      "sha256": "f27bfee12c4a4824629df035ee14da8359b31d5bfe65a136bf6b08abc3285ea0"
+      "part": 13,
+      "start_line": 4093,
+      "end_line": 4466,
+      "chars": 11755,
+      "sha256": "c7017d8e3984cca1d2867e8eda60b5795fdd2599f39789d1fe9f33880fa92a33"
     },
     {
       "index": 282,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0282_Tools_npu_npu_code_manifest_json.md",
-      "part": 16,
-      "start_line": 5237,
-      "end_line": 5622,
-      "chars": 11726,
-      "sha256": "ee0bc2710d8362cfeda53e2fff825af82ad4db1c9d5908263200c12e8385d11b"
+      "part": 14,
+      "start_line": 4467,
+      "end_line": 4844,
+      "chars": 11722,
+      "sha256": "e704fa28b674f840c5b9dd5ed6f61835345c98ff03da79f0aeafbcbfc7ada809"
     },
     {
       "index": 283,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0283_Tools_npu_npu_code_manifest_json.md",
-      "part": 17,
-      "start_line": 5623,
-      "end_line": 5999,
-      "chars": 11735,
-      "sha256": "89af91ce885351e6956aa277cb3f08b95170760ca354dde795e4704e9b813805"
+      "part": 15,
+      "start_line": 4845,
+      "end_line": 5236,
+      "chars": 11713,
+      "sha256": "8a6339626b606fc2cc9edb2406428f98ba7d481feb98619d405cfad698d049f6"
     },
     {
       "index": 284,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0284_Tools_npu_npu_code_manifest_json.md",
-      "part": 18,
-      "start_line": 6000,
-      "end_line": 6335,
-      "chars": 11751,
-      "sha256": "76dc12f77de735fcfc15ab4a4629f4fe4d6d25e214a722f973a3a1bd39566487"
+      "part": 16,
+      "start_line": 5237,
+      "end_line": 5622,
+      "chars": 11726,
+      "sha256": "9515f3be28817997a5880c41da8682db28edf70a8bf8482f2093dde3ba0a7111"
     },
     {
       "index": 285,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0285_Tools_npu_npu_code_manifest_json.md",
-      "part": 19,
-      "start_line": 6336,
-      "end_line": 6621,
-      "chars": 11764,
-      "sha256": "8dbe7368feb7ea5e08dbd4e643800b7df887aa0c06708c32d838c3c61b5dc810"
+      "part": 17,
+      "start_line": 5623,
+      "end_line": 5999,
+      "chars": 11735,
+      "sha256": "3568bcd3c6f95c9b18c954e7726bccbf14766403ea1897d44e9652c8728bf262"
     },
     {
       "index": 286,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0286_Tools_npu_npu_code_manifest_json.md",
-      "part": 20,
-      "start_line": 6622,
-      "end_line": 6905,
-      "chars": 11841,
-      "sha256": "c29ca7ee46dde8e103e59203599d12f2bb946764d1ee12ca635bdb5825eb6148"
+      "part": 18,
+      "start_line": 6000,
+      "end_line": 6335,
+      "chars": 11751,
+      "sha256": "0deaa8a6bc9541dae7dab3c869279a0c0d36d16cbd9aff3f3ef25faffdd0ca45"
     },
     {
       "index": 287,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0287_Tools_npu_npu_code_manifest_json.md",
-      "part": 21,
-      "start_line": 6906,
-      "end_line": 7180,
-      "chars": 11835,
-      "sha256": "6698ff7732878c49c7d4dc0d6fe823805870cd9ce4c89b1a3284b71989c1b0af"
+      "part": 19,
+      "start_line": 6336,
+      "end_line": 6621,
+      "chars": 11764,
+      "sha256": "e43fc6115b9bab033764651fd2836ddca2d750a34ac8e4a6dd9ed32578747f45"
     },
     {
       "index": 288,
       "file": "Tools/npu/npu_code_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0288_Tools_npu_npu_code_manifest_json.md",
+      "part": 20,
+      "start_line": 6622,
+      "end_line": 6905,
+      "chars": 11841,
+      "sha256": "2fb39ccfaa77abfd22208532d4be3bdd57be2ea7375e12fd70befc65836dab40"
+    },
+    {
+      "index": 289,
+      "file": "Tools/npu/npu_code_manifest.json",
+      "path": "indexAI/project_code_chunks/chunk_0289_Tools_npu_npu_code_manifest_json.md",
+      "part": 21,
+      "start_line": 6906,
+      "end_line": 7180,
+      "chars": 11835,
+      "sha256": "4bde3d266c266d201c7d78ab520ba99b87df097f2867b91c5faeb3c57d121667"
+    },
+    {
+      "index": 290,
+      "file": "Tools/npu/npu_code_manifest.json",
+      "path": "indexAI/project_code_chunks/chunk_0290_Tools_npu_npu_code_manifest_json.md",
       "part": 22,
       "start_line": 7181,
       "end_line": 7265,
       "chars": 3557,
-      "sha256": "f971f432d94e7466da8514ee167144cfa43f017b53a4d36fe923945d21f69e50"
-    },
-    {
-      "index": 289,
-      "file": "Tools/npu/npu_guardrail_service.py",
-      "path": "indexAI/project_code_chunks/chunk_0289_Tools_npu_npu_guardrail_service_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 255,
-      "chars": 13079,
-      "sha256": "318d70ffc268e5a0db3a768b954a58dcd335abd11dc9281ce2d64949b08fee83"
-    },
-    {
-      "index": 290,
-      "file": "Tools/npu/npu_guardrail_service.py",
-      "path": "indexAI/project_code_chunks/chunk_0290_Tools_npu_npu_guardrail_service_py.md",
-      "part": 2,
-      "start_line": 256,
-      "end_line": 484,
-      "chars": 13119,
-      "sha256": "dffb368f7561fae736a321d5ea2a670fe01a40982b7fdb70194b00f6d9420271"
+      "sha256": "38e21f9a93d5c2b1441f65c666668a85df5b2c4fe4219c76f13d3379c933678d"
     },
     {
       "index": 291,
       "file": "Tools/npu/npu_guardrail_service.py",
       "path": "indexAI/project_code_chunks/chunk_0291_Tools_npu_npu_guardrail_service_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 255,
+      "chars": 13079,
+      "sha256": "e2fe3b1b9d56cf6efc1748cf893f016ad9482c8ac4d72ba69be078586388ac00"
+    },
+    {
+      "index": 292,
+      "file": "Tools/npu/npu_guardrail_service.py",
+      "path": "indexAI/project_code_chunks/chunk_0292_Tools_npu_npu_guardrail_service_py.md",
+      "part": 2,
+      "start_line": 256,
+      "end_line": 484,
+      "chars": 13119,
+      "sha256": "40283061b6f4fae9d327c4c9657580887a51447dab0148fa20e4008ae061aa42"
+    },
+    {
+      "index": 293,
+      "file": "Tools/npu/npu_guardrail_service.py",
+      "path": "indexAI/project_code_chunks/chunk_0293_Tools_npu_npu_guardrail_service_py.md",
       "part": 3,
       "start_line": 485,
       "end_line": 490,
       "chars": 1596,
-      "sha256": "60fe62abf80d482de29aced7effa7a4194949892280d08b03e3f6ac0cdcae9ba"
-    },
-    {
-      "index": 292,
-      "file": "Tools/npu/npu_music_manifest.json",
-      "path": "indexAI/project_code_chunks/chunk_0292_Tools_npu_npu_music_manifest_json.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 193,
-      "chars": 11924,
-      "sha256": "2aa734ac6a02b51ecf2e5e32445a0ae4ef37ff86ddb069902c365bf9ffef5cb7"
-    },
-    {
-      "index": 293,
-      "file": "Tools/npu/npu_music_manifest.json",
-      "path": "indexAI/project_code_chunks/chunk_0293_Tools_npu_npu_music_manifest_json.md",
-      "part": 2,
-      "start_line": 194,
-      "end_line": 474,
-      "chars": 11828,
-      "sha256": "ee34895d7f86ca2bfc340555eccd4e3e8b99dbe9ef5e19b09997702aaf801a22"
+      "sha256": "f1237665ab85346e22894ee61ad14b0a34de167834b4d09c0c7e880a53200250"
     },
     {
       "index": 294,
       "file": "Tools/npu/npu_music_manifest.json",
       "path": "indexAI/project_code_chunks/chunk_0294_Tools_npu_npu_music_manifest_json.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 193,
+      "chars": 11924,
+      "sha256": "5dfbccab7d72dcaf6ac3d487294f57736e14de1116b087469f00531a194f634b"
+    },
+    {
+      "index": 295,
+      "file": "Tools/npu/npu_music_manifest.json",
+      "path": "indexAI/project_code_chunks/chunk_0295_Tools_npu_npu_music_manifest_json.md",
+      "part": 2,
+      "start_line": 194,
+      "end_line": 474,
+      "chars": 11828,
+      "sha256": "fefd88afb51957fb667cbcf5571afc28d67a7a15cf3c604172daaf2f1d143d1b"
+    },
+    {
+      "index": 296,
+      "file": "Tools/npu/npu_music_manifest.json",
+      "path": "indexAI/project_code_chunks/chunk_0296_Tools_npu_npu_music_manifest_json.md",
       "part": 3,
       "start_line": 475,
       "end_line": 703,
       "chars": 8771,
-      "sha256": "2186a64dc16a97c5d27f64d39a7b75676e980bf2efb250f7ba074d2133fd9b8e"
+      "sha256": "f598ef4330d1ce30e47a6af28522936925d569c20f34c49c284700ed2678cb6f"
     },
     {
-      "index": 295,
+      "index": 297,
       "file": "Tools/npu/npu_runtime.py",
-      "path": "indexAI/project_code_chunks/chunk_0295_Tools_npu_npu_runtime_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0297_Tools_npu_npu_runtime_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 160,
       "chars": 7697,
-      "sha256": "a2ab00132dde86c7d0088fd4b44640ac35ac17ea2a3aff6d1429b91746d1cbad"
+      "sha256": "0d72759b4cdbd050c1e019df8ac4eedd8cc4fe1dd05ef9eae2b174b648b6150f"
     },
     {
-      "index": 296,
+      "index": 298,
       "file": "Tools/npu/ollama_runtime.py",
-      "path": "indexAI/project_code_chunks/chunk_0296_Tools_npu_ollama_runtime_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0298_Tools_npu_ollama_runtime_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 304,
       "chars": 12869,
-      "sha256": "5a2bce494227cd970287594fa87c69c9a83e1105bdfb76fc69c8dc1a51ab74c8"
+      "sha256": "57e3223bebd3059abce9c87aec72304171131c0fcb5d99fe04d9bbd5d1f754e8"
     },
     {
-      "index": 297,
+      "index": 299,
       "file": "Tools/npu/ollama_runtime.py",
-      "path": "indexAI/project_code_chunks/chunk_0297_Tools_npu_ollama_runtime_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0299_Tools_npu_ollama_runtime_py.md",
       "part": 2,
       "start_line": 305,
       "end_line": 386,
       "chars": 5529,
-      "sha256": "2a9c2b5eedc34d667965c946be006dd4a5e4a32435ba44979892d48b922d12a5"
+      "sha256": "ef3cacf58c97153e07b9625ca9438cd90072c75625fae25ea2dc8f1fcbca6e34"
     },
     {
-      "index": 298,
+      "index": 300,
       "file": "Tools/npu/README.md",
-      "path": "indexAI/project_code_chunks/chunk_0298_Tools_npu_README_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0300_Tools_npu_README_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 37,
       "chars": 1600,
-      "sha256": "2e210dfcd3fe30dbc688b7098c9f0a121f91f1dd9d9a27c48393ec9e17a54d83"
-    },
-    {
-      "index": 299,
-      "file": "Tools/npu/run_dual_ai_pipeline.py",
-      "path": "indexAI/project_code_chunks/chunk_0299_Tools_npu_run_dual_ai_pipeline_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 245,
-      "chars": 14909,
-      "sha256": "f4321722d75f2e049861c7f8eeb29e49f8a0d8d17fc7fdeb3cb05b6123a265d6"
-    },
-    {
-      "index": 300,
-      "file": "Tools/npu/run_dual_ai_pipeline.py",
-      "path": "indexAI/project_code_chunks/chunk_0300_Tools_npu_run_dual_ai_pipeline_py.md",
-      "part": 2,
-      "start_line": 246,
-      "end_line": 508,
-      "chars": 14876,
-      "sha256": "e6de34edad410da9db8a3b4b977c5ac24de22e0b33a50f992d3d37dadacd4426"
+      "sha256": "46c5b591e0e4525570a2400c105b9eef0fc5cafbb0a12cade55ce7fad057deb3"
     },
     {
       "index": 301,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "indexAI/project_code_chunks/chunk_0301_Tools_npu_run_dual_ai_pipeline_py.md",
-      "part": 3,
-      "start_line": 509,
-      "end_line": 743,
-      "chars": 14845,
-      "sha256": "a3d826e97827990a0fd9c769839946ae7c2dd52b7984286757eff94a85497a1d"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 245,
+      "chars": 14909,
+      "sha256": "a118fa9c4c42658766697f69bfc27bb6406e6daf08b946cad3b296d2e10bd396"
     },
     {
       "index": 302,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "indexAI/project_code_chunks/chunk_0302_Tools_npu_run_dual_ai_pipeline_py.md",
-      "part": 4,
-      "start_line": 744,
-      "end_line": 992,
-      "chars": 14853,
-      "sha256": "990474a504b6224c8a1d934d763984e82e9b57c033e386e29697a4b26dde3dfd"
+      "part": 2,
+      "start_line": 246,
+      "end_line": 508,
+      "chars": 14876,
+      "sha256": "bd2d6e435a1ef9626afa47ef099ca22606ae23020e993695e9e42e9aa0eca7bc"
     },
     {
       "index": 303,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "indexAI/project_code_chunks/chunk_0303_Tools_npu_run_dual_ai_pipeline_py.md",
-      "part": 5,
-      "start_line": 993,
-      "end_line": 1212,
-      "chars": 14854,
-      "sha256": "4459236499c602b5fd56d7823c2f5063025ad71fe09e09370391244a700ae91b"
+      "part": 3,
+      "start_line": 509,
+      "end_line": 743,
+      "chars": 14845,
+      "sha256": "5bfdafff21c64365325abd370b719b5f227452e36db32d58522b549da7d0e85e"
     },
     {
       "index": 304,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "indexAI/project_code_chunks/chunk_0304_Tools_npu_run_dual_ai_pipeline_py.md",
-      "part": 6,
-      "start_line": 1213,
-      "end_line": 1453,
-      "chars": 14860,
-      "sha256": "0414884280b9241be7386f12a1936560f64b80e8cf95ae39a9efc45aeda55951"
+      "part": 4,
+      "start_line": 744,
+      "end_line": 992,
+      "chars": 14853,
+      "sha256": "4df43fa91e2465be10304302c7e7c17dd6b9c61f85fd642c0ac4d6c5e75b0e09"
     },
     {
       "index": 305,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "indexAI/project_code_chunks/chunk_0305_Tools_npu_run_dual_ai_pipeline_py.md",
-      "part": 7,
-      "start_line": 1454,
-      "end_line": 1664,
-      "chars": 14877,
-      "sha256": "16442b081da37d1a1b366543ebd915f28630a69a87eb62a6cfa546fd07caca01"
+      "part": 5,
+      "start_line": 993,
+      "end_line": 1212,
+      "chars": 14854,
+      "sha256": "34736e5617debd6e6bcb118c051cdca5159f1fb8a0cb4ec4425206dc33da37f6"
     },
     {
       "index": 306,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "indexAI/project_code_chunks/chunk_0306_Tools_npu_run_dual_ai_pipeline_py.md",
+      "part": 6,
+      "start_line": 1213,
+      "end_line": 1453,
+      "chars": 14860,
+      "sha256": "f0b4ea2056aff5c249d4efd02b15a2e6002d074d87b6ce102f9c38166897d437"
+    },
+    {
+      "index": 307,
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "path": "indexAI/project_code_chunks/chunk_0307_Tools_npu_run_dual_ai_pipeline_py.md",
+      "part": 7,
+      "start_line": 1454,
+      "end_line": 1664,
+      "chars": 14877,
+      "sha256": "6d541c77a0279970e25649d723e00ea8eb478025c39fc0947829605e055acefa"
+    },
+    {
+      "index": 308,
+      "file": "Tools/npu/run_dual_ai_pipeline.py",
+      "path": "indexAI/project_code_chunks/chunk_0308_Tools_npu_run_dual_ai_pipeline_py.md",
       "part": 8,
       "start_line": 1665,
       "end_line": 1704,
       "chars": 5349,
-      "sha256": "1abfd42afa891e072336ef0fb18c68d45284c355ccc9917b32adb43abaee77dc"
+      "sha256": "7c5d2ef9a06a675c8f9b420d0bcb9a652e707bda6f1120e5f736e9b1407d35a0"
     },
     {
-      "index": 307,
+      "index": 309,
       "file": "Tools/npu/run_npu_artifact_reviewer.py",
-      "path": "indexAI/project_code_chunks/chunk_0307_Tools_npu_run_npu_artifact_reviewer_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0309_Tools_npu_run_npu_artifact_reviewer_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 127,
       "chars": 6560,
-      "sha256": "b85d2d2ad3d753634141bcb5d867e5c405bb4b7fd14619faa26126303296c307"
+      "sha256": "b4071bc2ece1cff03610d65341eb408db0f42b1769d9a9c9945f1fc5bdb329d9"
     },
     {
-      "index": 308,
+      "index": 310,
       "file": "Tools/npu/run_npu_context.ps1",
-      "path": "indexAI/project_code_chunks/chunk_0308_Tools_npu_run_npu_context_ps1.md",
+      "path": "indexAI/project_code_chunks/chunk_0310_Tools_npu_run_npu_context_ps1.md",
       "part": 1,
       "start_line": 1,
       "end_line": 238,
       "chars": 9001,
-      "sha256": "239fb91b754132b25e6af7c7dc828942f890f3f6399f8a79acf9bdf9c2af546e"
+      "sha256": "f625c584a0904e7f7d44d3c42e24b29a1deccb8efc334fff5fcf0ed5b6f81da6"
     },
     {
-      "index": 309,
+      "index": 311,
       "file": "Tools/npu/run_npu_review.py",
-      "path": "indexAI/project_code_chunks/chunk_0309_Tools_npu_run_npu_review_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0311_Tools_npu_run_npu_review_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 326,
       "chars": 13194,
-      "sha256": "c53a2e25b3d0543a19f661d81790dd3288a54613e68f5a39e475d61bfaa70481"
+      "sha256": "9154bc5d0ee02adf232362aa4eaa1df63de2a2c24caf179c2b6153dddbe79ad5"
     },
     {
-      "index": 310,
+      "index": 312,
       "file": "Tools/npu/run_npu_review.py",
-      "path": "indexAI/project_code_chunks/chunk_0310_Tools_npu_run_npu_review_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0312_Tools_npu_run_npu_review_py.md",
       "part": 2,
       "start_line": 327,
       "end_line": 565,
       "chars": 12041,
-      "sha256": "8db917df373a12a8ea7c8939f01f2cf71bab5350c72e0c2376f69e1e14ed0ac0"
+      "sha256": "f4a33ead4b286cdf03b39f50d815f383409f4fd3b992003bad4c869130218b2a"
     },
     {
-      "index": 311,
+      "index": 313,
       "file": "Tools/npu/run_ollama_music_agent.py",
-      "path": "indexAI/project_code_chunks/chunk_0311_Tools_npu_run_ollama_music_agent_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0313_Tools_npu_run_ollama_music_agent_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 238,
       "chars": 10742,
-      "sha256": "2da1d8ba4c9fa96696cf9274e942768709ea158b3f05d28fee22ef80f97b25d5"
+      "sha256": "4c7ed22127ac667700360d4b536d15c14f20dc5ebe4351b6ecfddd8f2bc12aa6"
     },
     {
-      "index": 312,
+      "index": 314,
       "file": "Tools/repo_patch_runner/apply_repo_mods.py",
-      "path": "indexAI/project_code_chunks/chunk_0312_Tools_repo_patch_runner_apply_repo_mods_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0314_Tools_repo_patch_runner_apply_repo_mods_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 300,
       "chars": 12887,
-      "sha256": "14d4b34f101e4793d6e20a4c57e8a7191a0e71066847549e2f6199d390b6a388"
+      "sha256": "efadfa33328c0af965ab5a5065a6476a9739f080a613a3b3181b95ebacea9e35"
     },
     {
-      "index": 313,
+      "index": 315,
       "file": "Tools/repo_patch_runner/apply_repo_mods.py",
-      "path": "indexAI/project_code_chunks/chunk_0313_Tools_repo_patch_runner_apply_repo_mods_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0315_Tools_repo_patch_runner_apply_repo_mods_py.md",
       "part": 2,
       "start_line": 301,
       "end_line": 443,
       "chars": 7972,
-      "sha256": "01d3500276bc7bafcfcaaea6b6f6439ee625b809e70199ada381efc673f18990"
+      "sha256": "0b32e5459bdbab34e5dc1e62d293ce8512c57cbe62b6a46ad766306c3cd43275"
     },
     {
-      "index": 314,
+      "index": 316,
       "file": "Tools/repo_patch_runner/example_fix_blender_51_musgrave.json",
-      "path": "indexAI/project_code_chunks/chunk_0314_Tools_repo_patch_runner_example_fix_blender_51_musgrave_json.md",
+      "path": "indexAI/project_code_chunks/chunk_0316_Tools_repo_patch_runner_example_fix_blender_51_musgrave_json.md",
       "part": 1,
       "start_line": 1,
       "end_line": 40,
       "chars": 2412,
-      "sha256": "c5bfcc753d8a3c8cdca423b211897f48cb6eb86c6d696f25d8b828d853cda4dd"
+      "sha256": "3d59d4f27b74f05550a9f3d0a5c746477892f1ddf05588293d6f1890b65f41c3"
     },
     {
-      "index": 315,
+      "index": 317,
       "file": "Tools/repo_patch_runner/README.md",
-      "path": "indexAI/project_code_chunks/chunk_0315_Tools_repo_patch_runner_README_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0317_Tools_repo_patch_runner_README_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 111,
       "chars": 3271,
-      "sha256": "f9597b77992c43705011c0aafcb8a140460bf8f34bc78f88ac858da29b5c7e93"
+      "sha256": "3dfb8e8172b69eedef7b2157e516638c708086a1c02647677177dc4f43ebc1f7"
     },
     {
-      "index": 316,
+      "index": 318,
       "file": "Tools/validation/check_json_artifacts.py",
-      "path": "indexAI/project_code_chunks/chunk_0316_Tools_validation_check_json_artifacts_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0318_Tools_validation_check_json_artifacts_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 122,
       "chars": 5171,
-      "sha256": "b2e5d69b28a79ca12db22c6a5dfd1b6fecafa9fd5ddfd6a710452dceed0b9545"
+      "sha256": "84c74644c13ac20520e9d0af8cc706fdfbef6ebec69a12381a1142ec58b9cf40"
     },
     {
-      "index": 317,
+      "index": 319,
       "file": "Tools/validation/check_package_structure.py",
-      "path": "indexAI/project_code_chunks/chunk_0317_Tools_validation_check_package_structure_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0319_Tools_validation_check_package_structure_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 113,
-      "chars": 4967,
-      "sha256": "78624cd2f6b6e2077c53663dd35463987bf2be48e16206ee9b6bc4c27a49c725"
+      "end_line": 127,
+      "chars": 5480,
+      "sha256": "20e42dfb10974a7bc1e5e40a63ebf92a64630a2d3ed0dbd784cbf2052c0979f3"
     },
     {
-      "index": 318,
+      "index": 320,
       "file": "Tools/validation/check_python_syntax.py",
-      "path": "indexAI/project_code_chunks/chunk_0318_Tools_validation_check_python_syntax_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0320_Tools_validation_check_python_syntax_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 101,
       "chars": 3844,
-      "sha256": "88f76777960f97540930fe04de9c088694cbe1c32ab86e7d89e98e3dfd53e29c"
+      "sha256": "5ea843dc1b9f33f1b484ff87236543100e5b395c484ec61b2c0b5d8b29bc7f36"
     },
     {
-      "index": 319,
+      "index": 321,
       "file": "Tools/validation/README.md",
-      "path": "indexAI/project_code_chunks/chunk_0319_Tools_validation_README_md.md",
+      "path": "indexAI/project_code_chunks/chunk_0321_Tools_validation_README_md.md",
       "part": 1,
       "start_line": 1,
       "end_line": 28,
       "chars": 1427,
-      "sha256": "146a8a90939bccb10e9aaf579171d8159d7ea6a0762eb0f247e0139024f700db"
+      "sha256": "ebbc81f3bd30f00c2945e10d395a5790230a3ddb999e30d1198f6b2831dc8916"
     },
     {
-      "index": 320,
+      "index": 322,
       "file": "Tools/workflow/ai_runtime_diagnostics.py",
-      "path": "indexAI/project_code_chunks/chunk_0320_Tools_workflow_ai_runtime_diagnostics_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0322_Tools_workflow_ai_runtime_diagnostics_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 233,
       "chars": 12700,
-      "sha256": "66d7aab2ee3c072c2e9652ccc3c8bf96e8fc7fe7fac5cd565a3c37a469df3df3"
+      "sha256": "229a64ac800c672f6ae97d9c5d88b0f6466d96f7db9c9fb47bf547849dc1d598"
     },
     {
-      "index": 321,
+      "index": 323,
       "file": "Tools/workflow/ai_runtime_diagnostics.py",
-      "path": "indexAI/project_code_chunks/chunk_0321_Tools_workflow_ai_runtime_diagnostics_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0323_Tools_workflow_ai_runtime_diagnostics_py.md",
       "part": 2,
       "start_line": 234,
       "end_line": 267,
       "chars": 2500,
-      "sha256": "63e356a7090810c7420ee487c8f08261333abd2d8cda5ba927eae9d9a2e59c55"
+      "sha256": "a6404e38319420fa41ce26ff61ecef91bfb46ae11384ce1583e6e3dbfbab78e6"
     },
     {
-      "index": 322,
+      "index": 324,
       "file": "Tools/workflow/artifact_consult.py",
-      "path": "indexAI/project_code_chunks/chunk_0322_Tools_workflow_artifact_consult_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0324_Tools_workflow_artifact_consult_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 144,
       "chars": 6109,
-      "sha256": "804717bb033ceb8a7fc65f41819f313e8379145df1101cf750368acf20c71880"
+      "sha256": "68a8e836240ea657c259edc6801364656eff60e5430717d34b6612f25651af8f"
     },
     {
-      "index": 323,
+      "index": 325,
       "file": "Tools/workflow/asset_inventory.py",
-      "path": "indexAI/project_code_chunks/chunk_0323_Tools_workflow_asset_inventory_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0325_Tools_workflow_asset_inventory_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 110,
       "chars": 4832,
-      "sha256": "4a059e4a9ca7e70017786f3b33066922ababa73d1e1642422bdd0340c9f462b0"
+      "sha256": "12cec7fe01572a278bf60a4fdaabaadd2e22e00fdbd4d72f43f7f2076b99db4a"
     },
     {
-      "index": 324,
+      "index": 326,
       "file": "Tools/workflow/git_auto_push.py",
-      "path": "indexAI/project_code_chunks/chunk_0324_Tools_workflow_git_auto_push_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0326_Tools_workflow_git_auto_push_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 186,
       "chars": 7150,
-      "sha256": "f954f890782278f526f527bf35e46e8ab1a09bd1c38f00285620fcfbed759e56"
+      "sha256": "0d5fb20ff5d19e8f0e1e0d5a4740031b20b696b4b3c691d12971d724f0ec77d5"
     },
     {
-      "index": 325,
+      "index": 327,
       "file": "Tools/workflow/gui/components/__init__.py",
-      "path": "indexAI/project_code_chunks/chunk_0325_Tools_workflow_gui_components_init_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0327_Tools_workflow_gui_components_init_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 1,
       "chars": 210,
-      "sha256": "07a2b921b5f9d3c1bc2582cf819a03ce47b49ecde495597623ea71e1d6faca6e"
+      "sha256": "b16eb27620e5a8172419429ddcc8627b51a8b94b611aa8f27b5faf45a0228e4d"
     },
     {
-      "index": 326,
+      "index": 328,
       "file": "Tools/workflow/gui/components/action_panel.py",
-      "path": "indexAI/project_code_chunks/chunk_0326_Tools_workflow_gui_components_action_panel_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0328_Tools_workflow_gui_components_action_panel_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 183,
       "chars": 8671,
-      "sha256": "0f20c58823ddb3b7f68dcc5a2e90f545fa16cef86e9d7a71f7d88b9fb5c2491e"
+      "sha256": "5db57bee2b0ff0a35844f66b3429828667a3bd0445171cb0ef9e42dbf084248f"
     },
     {
-      "index": 327,
+      "index": 329,
       "file": "Tools/workflow/gui/components/artifact_browser.py",
-      "path": "indexAI/project_code_chunks/chunk_0327_Tools_workflow_gui_components_artifact_browser_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0329_Tools_workflow_gui_components_artifact_browser_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 276,
       "chars": 12593,
-      "sha256": "d638d523e03494ede13922da9fbede248cc9fbfe59fdc32a70fd253032260d3d"
+      "sha256": "023994c5465a927f6ee2f18cfeecb0ea578e7017a6e13bf039bae1306269768a"
     },
     {
-      "index": 328,
+      "index": 330,
       "file": "Tools/workflow/gui/components/artifact_browser.py",
-      "path": "indexAI/project_code_chunks/chunk_0328_Tools_workflow_gui_components_artifact_browser_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0330_Tools_workflow_gui_components_artifact_browser_py.md",
       "part": 2,
       "start_line": 277,
       "end_line": 390,
       "chars": 6691,
-      "sha256": "f3a053831fbc1fee37cfbd4f5bed8eedb40f86e2a5fc54aa9601b855d6844de5"
+      "sha256": "f3de3da58372359db314a4ac35ece7195c7f29af6b8e218a4d8da806f9de1ecb"
     },
     {
-      "index": 329,
+      "index": 331,
       "file": "Tools/workflow/gui/components/live_output_panel.py",
-      "path": "indexAI/project_code_chunks/chunk_0329_Tools_workflow_gui_components_live_output_panel_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0331_Tools_workflow_gui_components_live_output_panel_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 182,
       "chars": 9252,
-      "sha256": "969f2dedf1498a9273e42a50c39b76de660f78e76a5d22d1206e050f823a278e"
+      "sha256": "2cb6cfc82aed35dc70400624497f320d385d92635cd603f1fecddc67c27a56d6"
     },
     {
-      "index": 330,
+      "index": 332,
       "file": "Tools/workflow/gui/components/session_overview.py",
-      "path": "indexAI/project_code_chunks/chunk_0330_Tools_workflow_gui_components_session_overview_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0332_Tools_workflow_gui_components_session_overview_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 245,
       "chars": 12310,
-      "sha256": "ae5fa767f80fab6dc075e0ce092c9704e1b1f232439d0e96cdfcee0091fb8d36"
+      "sha256": "f186d3efc986639a8c2441e7a32ffc51dfb0cea3efc5ebbffef29fb4ca6fa2bc"
     },
     {
-      "index": 331,
+      "index": 333,
       "file": "Tools/workflow/gui/components/session_overview.py",
-      "path": "indexAI/project_code_chunks/chunk_0331_Tools_workflow_gui_components_session_overview_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0333_Tools_workflow_gui_components_session_overview_py.md",
       "part": 2,
       "start_line": 246,
       "end_line": 278,
       "chars": 2289,
-      "sha256": "8e15d5f7c987b323618e699300a31b23d3e12c7bf71ecc4a2c5dcf73d44dea51"
+      "sha256": "a513f4b9f9d9a63a788b786854b3150a20192d77873d033279eb427abefb273e"
     },
     {
-      "index": 332,
+      "index": 334,
       "file": "Tools/workflow/gui/components/st_theme.py",
-      "path": "indexAI/project_code_chunks/chunk_0332_Tools_workflow_gui_components_st_theme_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0334_Tools_workflow_gui_components_st_theme_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 92,
       "chars": 4484,
-      "sha256": "bd1f2555edc13d58070f4dd5ff539d186ad740428e8e0e81b88e2a459921ef28"
+      "sha256": "84d3138cb8e6b7a14e5af0fdd38b08335820218e991a31d0f7c0c10b1bd99ff0"
     },
     {
-      "index": 333,
+      "index": 335,
       "file": "Tools/workflow/gui/components/storage_dashboard.py",
-      "path": "indexAI/project_code_chunks/chunk_0333_Tools_workflow_gui_components_storage_dashboard_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0335_Tools_workflow_gui_components_storage_dashboard_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 258,
       "chars": 12487,
-      "sha256": "0d6373412554f426302e0f49599027ec476c04fcfb0fcf83f8702f8337186ef3"
+      "sha256": "deaf1196338595fe6ffa4dc92fc9f72231d0152453e8e15c5d2105c609704f75"
     },
     {
-      "index": 334,
+      "index": 336,
       "file": "Tools/workflow/gui/components/storage_dashboard.py",
-      "path": "indexAI/project_code_chunks/chunk_0334_Tools_workflow_gui_components_storage_dashboard_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0336_Tools_workflow_gui_components_storage_dashboard_py.md",
       "part": 2,
       "start_line": 259,
       "end_line": 422,
       "chars": 9357,
-      "sha256": "87625aaf0e586ee21854f461aa8333637a484bdb7e59d91e62f1c179adfdb1c3"
-    },
-    {
-      "index": 335,
-      "file": "Tools/workflow/gui/workflow_gui.py",
-      "path": "indexAI/project_code_chunks/chunk_0335_Tools_workflow_gui_workflow_gui_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 265,
-      "chars": 13044,
-      "sha256": "e948430c92a28d7fdbac7f5bb6a6f38843794c3a7ccd0a5b7735fc448aac6f28"
-    },
-    {
-      "index": 336,
-      "file": "Tools/workflow/gui/workflow_gui.py",
-      "path": "indexAI/project_code_chunks/chunk_0336_Tools_workflow_gui_workflow_gui_py.md",
-      "part": 2,
-      "start_line": 266,
-      "end_line": 475,
-      "chars": 13071,
-      "sha256": "a1afb9518ba5011b97d4f5c903d353061a433679f5145bb412202b3cecd160a7"
+      "sha256": "c384ef556e17a41953ae3008f21d0183883e423fd1f4f67d86b625d986dced91"
     },
     {
       "index": 337,
       "file": "Tools/workflow/gui/workflow_gui.py",
       "path": "indexAI/project_code_chunks/chunk_0337_Tools_workflow_gui_workflow_gui_py.md",
-      "part": 3,
-      "start_line": 476,
-      "end_line": 713,
-      "chars": 13041,
-      "sha256": "dbb1bedecb869b3a4a74c2ac2bb64292d1b522c0f6e1da2c91db4a391413e254"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 265,
+      "chars": 13044,
+      "sha256": "ad0f705ba1ff2238b994e1d17fd42f3d3302ce79a7202eb5bf414f678b82d52f"
     },
     {
       "index": 338,
       "file": "Tools/workflow/gui/workflow_gui.py",
       "path": "indexAI/project_code_chunks/chunk_0338_Tools_workflow_gui_workflow_gui_py.md",
+      "part": 2,
+      "start_line": 266,
+      "end_line": 475,
+      "chars": 13071,
+      "sha256": "eaf9a9bfe710c247db713c0167b7c421924e5791255e19197ce83bdb99943ee6"
+    },
+    {
+      "index": 339,
+      "file": "Tools/workflow/gui/workflow_gui.py",
+      "path": "indexAI/project_code_chunks/chunk_0339_Tools_workflow_gui_workflow_gui_py.md",
+      "part": 3,
+      "start_line": 476,
+      "end_line": 713,
+      "chars": 13041,
+      "sha256": "c2add766f6ce64c82449394701661963896b67ee751dd27fb10387d4c5beb2ec"
+    },
+    {
+      "index": 340,
+      "file": "Tools/workflow/gui/workflow_gui.py",
+      "path": "indexAI/project_code_chunks/chunk_0340_Tools_workflow_gui_workflow_gui_py.md",
       "part": 4,
       "start_line": 714,
       "end_line": 738,
       "chars": 2326,
-      "sha256": "d88e376a65780c6ec36654490845cbcc0c988ef8b41cc882e3bcbe3fb02d8cdf"
+      "sha256": "0c9b67d7e7ff8948b6526ae11961aff4d68ce1144371f9478aa085d903de8761"
     },
     {
-      "index": 339,
+      "index": 341,
       "file": "Tools/workflow/gui/workflow_gui_modern.py",
-      "path": "indexAI/project_code_chunks/chunk_0339_Tools_workflow_gui_workflow_gui_modern_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0341_Tools_workflow_gui_workflow_gui_modern_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 218,
       "chars": 12714,
-      "sha256": "e2aeaa5e6fbc2f50530ec4ded2454a78553cf3411e72afda6ac5a2846d02d830"
+      "sha256": "ae253ddde1830d2cbbdb23e6c6726b29873ea14d66518a6a28fe8cfb02851d30"
     },
     {
-      "index": 340,
+      "index": 342,
       "file": "Tools/workflow/gui/workflow_gui_modern.py",
-      "path": "indexAI/project_code_chunks/chunk_0340_Tools_workflow_gui_workflow_gui_modern_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0342_Tools_workflow_gui_workflow_gui_modern_py.md",
       "part": 2,
       "start_line": 219,
       "end_line": 319,
       "chars": 8101,
-      "sha256": "cb5bea5e03c67cfd4b5205be4ccfd9762db24301e60adf169816de01e2cb3a17"
+      "sha256": "ab69223b04415d9171acab3a2fdb131912fe9f7f8fe3951aa5e8580c7d489488"
     },
     {
-      "index": 341,
+      "index": 343,
       "file": "Tools/workflow/gui/workflow_gui_with_push.py",
-      "path": "indexAI/project_code_chunks/chunk_0341_Tools_workflow_gui_workflow_gui_with_push_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0343_Tools_workflow_gui_workflow_gui_with_push_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 181,
       "chars": 9218,
-      "sha256": "72f63a8edc357f4b0819408d219bad5cdc6065fbb83b12542203e312436bb450"
+      "sha256": "ed32368c3a18f7dbdd7b7754a48f0543246c066f40414e5e6280c3877ba20b2b"
     },
     {
-      "index": 342,
+      "index": 344,
       "file": "Tools/workflow/project_awareness.py",
-      "path": "indexAI/project_code_chunks/chunk_0342_Tools_workflow_project_awareness_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0344_Tools_workflow_project_awareness_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 249,
       "chars": 12600,
-      "sha256": "a1eeb499874274e40b6fd61cb3cba989391f12ad57eac1cdb385a78f9b2fc3a3"
+      "sha256": "45cbd8d40f6201dbb5ccda83281539995dff8d24f7f69f487c7689c51fae67e9"
     },
     {
-      "index": 343,
+      "index": 345,
       "file": "Tools/workflow/project_awareness.py",
-      "path": "indexAI/project_code_chunks/chunk_0343_Tools_workflow_project_awareness_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0345_Tools_workflow_project_awareness_py.md",
       "part": 2,
       "start_line": 250,
       "end_line": 353,
       "chars": 8094,
-      "sha256": "b6bbabcb2b2cca8879dff6d8f18cde40617f1bf7bff962e200260bb986e1176e"
-    },
-    {
-      "index": 344,
-      "file": "Tools/workflow/scene_brief.py",
-      "path": "indexAI/project_code_chunks/chunk_0344_Tools_workflow_scene_brief_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 197,
-      "chars": 13182,
-      "sha256": "6f7f9b73b8fb8eb1e476a8730c97a20fc5f08b9ada0ee920044db81e404e7fa5"
-    },
-    {
-      "index": 345,
-      "file": "Tools/workflow/scene_brief.py",
-      "path": "indexAI/project_code_chunks/chunk_0345_Tools_workflow_scene_brief_py.md",
-      "part": 2,
-      "start_line": 198,
-      "end_line": 388,
-      "chars": 13255,
-      "sha256": "2abd10645ed6822d9ef5c4db00d466f82650c5665374a33175c99f19ca5c8818"
+      "sha256": "e00faf7dd6274e7b29bac01882a85fd21322eff8d9189f8d1b209013faab6569"
     },
     {
       "index": 346,
       "file": "Tools/workflow/scene_brief.py",
       "path": "indexAI/project_code_chunks/chunk_0346_Tools_workflow_scene_brief_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 197,
+      "chars": 13182,
+      "sha256": "9edc11d3bff3d5d66160b7393242708552654349cf79f7bc913ee8e4f26994cf"
+    },
+    {
+      "index": 347,
+      "file": "Tools/workflow/scene_brief.py",
+      "path": "indexAI/project_code_chunks/chunk_0347_Tools_workflow_scene_brief_py.md",
+      "part": 2,
+      "start_line": 198,
+      "end_line": 388,
+      "chars": 13255,
+      "sha256": "26f7d6a01a3de13db118387aa80874f52af64c93ad5b85a74d3ba502900d7f38"
+    },
+    {
+      "index": 348,
+      "file": "Tools/workflow/scene_brief.py",
+      "path": "indexAI/project_code_chunks/chunk_0348_Tools_workflow_scene_brief_py.md",
       "part": 3,
       "start_line": 389,
       "end_line": 419,
       "chars": 3080,
-      "sha256": "a1c7b34b418a86a12a173d6f3343b7fe5c248dcd396ac3c8d35631b946074ac5"
+      "sha256": "d064603bf65a7d5d7329d045e2949ed68b04945eebfe098a7c85ab9d4f5a4996"
     },
     {
-      "index": 347,
+      "index": 349,
       "file": "Tools/workflow/smart_ai_context.py",
-      "path": "indexAI/project_code_chunks/chunk_0347_Tools_workflow_smart_ai_context_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0349_Tools_workflow_smart_ai_context_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 209,
       "chars": 12837,
-      "sha256": "407b38b474e61b710c2dbd8b67f3f9a4375f1782419a900dbb6de93f663e3683"
+      "sha256": "8e6e401f34bef28718191c70bf361f06e36fa3036cce9d087d59b5f89cadfa32"
     },
     {
-      "index": 348,
+      "index": 350,
       "file": "Tools/workflow/smart_ai_context.py",
-      "path": "indexAI/project_code_chunks/chunk_0348_Tools_workflow_smart_ai_context_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0350_Tools_workflow_smart_ai_context_py.md",
       "part": 2,
       "start_line": 210,
       "end_line": 219,
       "chars": 1819,
-      "sha256": "a4b1d13d0f0e65deac955201cd7d404657cc7713d55f05d135bdcf910893ae80"
+      "sha256": "285a194d1f29b2197bd017ddb38a1617d9b0812baf357dc8c641951da519a3ef"
     },
     {
-      "index": 349,
+      "index": 351,
       "file": "Tools/workflow/startup_check.py",
-      "path": "indexAI/project_code_chunks/chunk_0349_Tools_workflow_startup_check_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0351_Tools_workflow_startup_check_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 264,
       "chars": 12768,
-      "sha256": "47a60dcee9205fecca2623eb8fc442ea61c312e56a7d890f0dcf2d80d234695f"
+      "sha256": "fea07079fc66b6ae4c23453452d2d9e42c6d189c9f723bdb730b8911606bac24"
     },
     {
-      "index": 350,
+      "index": 352,
       "file": "Tools/workflow/startup_check.py",
-      "path": "indexAI/project_code_chunks/chunk_0350_Tools_workflow_startup_check_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0352_Tools_workflow_startup_check_py.md",
       "part": 2,
       "start_line": 265,
       "end_line": 284,
       "chars": 1820,
-      "sha256": "2ec5de483d843426961d563132f6fa46b9aedecf6df8149432473df7596ccd71"
+      "sha256": "83df8f9ceaa154b119cba2bed9d7bb6a6324cef507ca7d5c72780cd5652a4add"
     },
     {
-      "index": 351,
+      "index": 353,
       "file": "Tools/workflow/startup_preflight.ps1",
-      "path": "indexAI/project_code_chunks/chunk_0351_Tools_workflow_startup_preflight_ps1.md",
+      "path": "indexAI/project_code_chunks/chunk_0353_Tools_workflow_startup_preflight_ps1.md",
       "part": 1,
       "start_line": 1,
       "end_line": 281,
       "chars": 11776,
-      "sha256": "316fb231b89a58e85fa61f88c5a8d50d201423c519cfedb3383f12871c46e8fc"
+      "sha256": "c3b3f5472d9cbe3c6971786571455cfcba8ef07e9d090c9db8daec0f72c0fdff"
     },
     {
-      "index": 352,
+      "index": 354,
       "file": "Tools/workflow/startup_preflight.ps1",
-      "path": "indexAI/project_code_chunks/chunk_0352_Tools_workflow_startup_preflight_ps1.md",
+      "path": "indexAI/project_code_chunks/chunk_0354_Tools_workflow_startup_preflight_ps1.md",
       "part": 2,
       "start_line": 282,
       "end_line": 337,
       "chars": 3341,
-      "sha256": "b592e56b41b001c9707f9e181ae6677367585ebd5d80f80d1d38e4582b186744"
-    },
-    {
-      "index": 353,
-      "file": "Tools/workflow/workflow_debug.py",
-      "path": "indexAI/project_code_chunks/chunk_0353_Tools_workflow_workflow_debug_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 271,
-      "chars": 12754,
-      "sha256": "370c7f2f4d46e38d11fdc6785cf859331a0d226e1da1cce08c26a069598fe7a8"
-    },
-    {
-      "index": 354,
-      "file": "Tools/workflow/workflow_debug.py",
-      "path": "indexAI/project_code_chunks/chunk_0354_Tools_workflow_workflow_debug_py.md",
-      "part": 2,
-      "start_line": 272,
-      "end_line": 505,
-      "chars": 12776,
-      "sha256": "403f5c08d5221a13229e5db3ef5f894b9c84c19e6aebb008b4b080b575d5e865"
+      "sha256": "f468b028b864b6652e1ae785337a07e8d3980aae12f02413060a6fd2c59c0a59"
     },
     {
       "index": 355,
       "file": "Tools/workflow/workflow_debug.py",
       "path": "indexAI/project_code_chunks/chunk_0355_Tools_workflow_workflow_debug_py.md",
+      "part": 1,
+      "start_line": 1,
+      "end_line": 271,
+      "chars": 12754,
+      "sha256": "fcaa644fe2b772496f6d7f1b639c795878727a659b432c185c5d2f25a9c44490"
+    },
+    {
+      "index": 356,
+      "file": "Tools/workflow/workflow_debug.py",
+      "path": "indexAI/project_code_chunks/chunk_0356_Tools_workflow_workflow_debug_py.md",
+      "part": 2,
+      "start_line": 272,
+      "end_line": 505,
+      "chars": 12776,
+      "sha256": "df7140c5c966d6fc06275eb973329e3fa464bb01a4b1e3deec7057ea64e3dae2"
+    },
+    {
+      "index": 357,
+      "file": "Tools/workflow/workflow_debug.py",
+      "path": "indexAI/project_code_chunks/chunk_0357_Tools_workflow_workflow_debug_py.md",
       "part": 3,
       "start_line": 506,
       "end_line": 607,
       "chars": 5478,
-      "sha256": "ae96d0e33ae76f821727b5295b0bdb01342d450e3b40e12cdb85862dd5783b47"
+      "sha256": "b0c9be8c2a1b972d1cada3d71b9b26b41ecc1eacdc8159afcdc5219f8e6e958d"
     },
     {
-      "index": 356,
+      "index": 358,
       "file": "Tools/workflow/workflow_shell.py",
-      "path": "indexAI/project_code_chunks/chunk_0356_Tools_workflow_workflow_shell_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0358_Tools_workflow_workflow_shell_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 268,
       "chars": 12981,
-      "sha256": "8c453c2a2b68ec70a1059b5771314a812e5b9a0dbb20519891ad40e38ad20991"
+      "sha256": "a549d6658e9f60d2f13aa5cfd2f3188a3c02ba54b5a66cb39e7c6b0970eb82cb"
     },
     {
-      "index": 357,
+      "index": 359,
       "file": "Tools/workflow/workflow_shell.py",
-      "path": "indexAI/project_code_chunks/chunk_0357_Tools_workflow_workflow_shell_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0359_Tools_workflow_workflow_shell_py.md",
       "part": 2,
       "start_line": 269,
       "end_line": 324,
       "chars": 3958,
-      "sha256": "8a5987d84928235569657ae828d7e47ca4401a655ec6219f93d845ce7095cb3a"
+      "sha256": "c482526a8362c5a26cc99c02c12e4c619e8ea7c0c6ab5e4871c703919307a953"
     },
     {
-      "index": 358,
+      "index": 360,
       "file": "Tools/workflow/workflow_shell_with_push.py",
-      "path": "indexAI/project_code_chunks/chunk_0358_Tools_workflow_workflow_shell_with_push_py.md",
+      "path": "indexAI/project_code_chunks/chunk_0360_Tools_workflow_workflow_shell_with_push_py.md",
       "part": 1,
       "start_line": 1,
       "end_line": 117,
       "chars": 5101,
-      "sha256": "38fbb1269dcb0de64bba7199b32ca78423e79fd667fef863a8d50f6961c31edc"
-    },
-    {
-      "index": 359,
-      "file": "Tools/workflow/workflow_state.py",
-      "path": "indexAI/project_code_chunks/chunk_0359_Tools_workflow_workflow_state_py.md",
-      "part": 1,
-      "start_line": 1,
-      "end_line": 265,
-      "chars": 14669,
-      "sha256": "b4d4b52c4abd7f87f5578042b63ce36264256960a76ae935243be85b898103d6"
-    },
-    {
-      "index": 360,
-      "file": "Tools/workflow/workflow_state.py",
-      "path": "indexAI/project_code_chunks/chunk_0360_Tools_workflow_workflow_state_py.md",
-      "part": 2,
-      "start_line": 266,
-      "end_line": 573,
-      "chars": 14635,
-      "sha256": "03e2882e9e1b5d73ac29b7753918eb07f5a331a961e5f5a820fd8b5d33d7e6b3"
+      "sha256": "ac87a1fd4c915c1cd9b513c5ed7fa5a6008c39f6228271034061c898f24618e6"
     },
     {
       "index": 361,
       "file": "Tools/workflow/workflow_state.py",
       "path": "indexAI/project_code_chunks/chunk_0361_Tools_workflow_workflow_state_py.md",
-      "part": 3,
-      "start_line": 574,
-      "end_line": 855,
-      "chars": 14651,
-      "sha256": "75ce2a14e94d7d840fc1fa750e2a7785aa581b328a33291567b52958b1d256b8"
+      "part": 1,
+      "start_line": 1,
+      "end_line": 265,
+      "chars": 14669,
+      "sha256": "8123e901dee1e21a97ca0df46d640390c7db5f887f75c63f6cbadce82f0ff843"
     },
     {
       "index": 362,
       "file": "Tools/workflow/workflow_state.py",
       "path": "indexAI/project_code_chunks/chunk_0362_Tools_workflow_workflow_state_py.md",
-      "part": 4,
-      "start_line": 856,
-      "end_line": 1102,
-      "chars": 14652,
-      "sha256": "d3861d5029eb70185b1517ca8b88389f2eae7f09b85491a92f60012bf9b01f1b"
+      "part": 2,
+      "start_line": 266,
+      "end_line": 573,
+      "chars": 14635,
+      "sha256": "293e04598e3f4063e9f42e8a5977f424a159cec06aab03aba8b5f069ee8f927a"
     },
     {
       "index": 363,
       "file": "Tools/workflow/workflow_state.py",
       "path": "indexAI/project_code_chunks/chunk_0363_Tools_workflow_workflow_state_py.md",
+      "part": 3,
+      "start_line": 574,
+      "end_line": 855,
+      "chars": 14651,
+      "sha256": "ee388115fb6dd35eed616f81e33a3514d7f2aa74c0c520fd3c14c8b190d05782"
+    },
+    {
+      "index": 364,
+      "file": "Tools/workflow/workflow_state.py",
+      "path": "indexAI/project_code_chunks/chunk_0364_Tools_workflow_workflow_state_py.md",
+      "part": 4,
+      "start_line": 856,
+      "end_line": 1102,
+      "chars": 14652,
+      "sha256": "b5454286a52fcfb945a6184f7dbc451d6fab1cb5712d262fe26fa3903932e290"
+    },
+    {
+      "index": 365,
+      "file": "Tools/workflow/workflow_state.py",
+      "path": "indexAI/project_code_chunks/chunk_0365_Tools_workflow_workflow_state_py.md",
       "part": 5,
       "start_line": 1103,
       "end_line": 1230,
       "chars": 9284,
-      "sha256": "f9fc524d122851c849124f031be66ba82b1899f57677cc832ae643ef407b23d6"
+      "sha256": "f631fa03bebf3fbd3c35e866905504705a662c6eceb331fb1fd44bf740b73c79"
     },
     {
-      "index": 364,
+      "index": 366,
       "file": "workflow_gui.ps1",
-      "path": "indexAI/project_code_chunks/chunk_0364_workflow_gui_ps1.md",
+      "path": "indexAI/project_code_chunks/chunk_0366_workflow_gui_ps1.md",
       "part": 1,
       "start_line": 1,
       "end_line": 35,
       "chars": 1430,
-      "sha256": "494198519359c1d117bf15111f7afdc226e933962ee06c5dbfe6b49f058cc674"
+      "sha256": "7892a17b90ee15d31b856906d2a9f7b6996d6fc1785340ceea90351d1db94326"
     },
     {
-      "index": 365,
+      "index": 367,
       "file": "workflow_shell.ps1",
-      "path": "indexAI/project_code_chunks/chunk_0365_workflow_shell_ps1.md",
+      "path": "indexAI/project_code_chunks/chunk_0367_workflow_shell_ps1.md",
       "part": 1,
       "start_line": 1,
       "end_line": 35,
       "chars": 1431,
-      "sha256": "f6cc78b4d7ec0ddf24e1376e7d442f4f6d251962b2b55e428d4cd1d2d0556484"
+      "sha256": "6e709075a70cd81ba73b0677bf3724aa336598851ebdc0daa11cff91db7a12be"
     }
   ],
   "cache_hit": false
