@@ -2,7 +2,24 @@
 
 This folder contains lightweight repository validation helpers.
 
-The tools are intentionally non-invasive: they inspect files and write optional reports, but they do not rewrite source code or generated artifacts.
+The tools are intentionally non-invasive: they inspect files and write optional reports, but they do not rewrite source code, generated scripts, generated JSON artifacts, Blender packages, render outputs or FFmpeg outputs.
+
+## Validation model
+
+Validation is split into small deterministic checks:
+
+```text
+source/code syntax checks
+repository/package structure checks
+JSON artifact checks
+documentation link checks
+AI pipeline smoke checks
+agent memory policy checks
+Blender compatibility smokes
+generated-file policy checks
+```
+
+Validators should remain cheap, reviewable and safe to run locally. They must not launch long Blender renders, GPU generation, NPU model execution or FFmpeg encodes.
 
 ## Available checks
 
@@ -12,39 +29,116 @@ Core repository checks:
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
-python .\Tools\validation\check_docs_links.py --repo-root .
-python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root .
+python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
 ```
 
-AI artifact pipeline smoke and consistency checks:
+AI pipeline, model-output and memory checks:
 
 ```powershell
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
 ```
 
-The AI pipeline smoke check imports the modular pipeline, builds representative steps, checks preflight/report helpers and verifies the thin entrypoint is importable. It does not execute NPU, GPU, Blender or FFmpeg workloads.
-
-The refactor status consistency check verifies that the machine-readable status marker and the primary Markdown documents agree on the pipeline state and expected modules.
-
-The docs link checker validates local Markdown links and ignores external URLs.
-
-The agent memory policy check validates retention, quarantine and promotion-candidate rules. If the local SQLite memory DB exists, it also checks that no quarantined record is present.
-
-The Blender shared compatibility smoke check imports `Scripting/shared/blender_compat.py` safely. Outside Blender it passes with the runtime portion marked skipped; inside Blender it performs a no-render smoke of frame range, noise node creation and audio strip creation.
-
-## Optional reports
+Blender and generated-file checks:
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output output\validation\python_syntax.json
-python .\Tools\validation\check_package_structure.py --repo-root . --output output\validation\package_structure.json
-python .\Tools\validation\check_json_artifacts.py --repo-root . --output output\validation\json_artifacts.json
-python .\Tools\validation\check_docs_links.py --repo-root . --output output\validation\docs_links.json
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output output\validation\ai_pipeline_modules.json
-python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output output\validation\refactor_status_consistency.json
-python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output output\validation\agent_memory_policy.json
-python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output output\validation\blender_shared_compat_smoke.json
+python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
+python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
+```
+
+## What each check does
+
+| Tool | Role | Heavy workloads |
+|---|---|---|
+| `check_python_syntax.py` | Compiles Python files without importing project modules. | No |
+| `check_package_structure.py` | Reports package-level structure and warnings under `Scripting/`. | No |
+| `check_json_artifacts.py` | Checks JSON parseability; accepts UTF-8 with or without BOM and skips very large files by default. | No |
+| `check_docs_links.py` | Validates repository-local Markdown links and ignores external URLs. | No |
+| `check_ai_pipeline_modules.py` | Imports modular AI pipeline code, builds representative steps, checks preflight/report helpers and verifies the thin entrypoint. | No |
+| `check_ai_model_json.py` | Validates deterministic parsing of JSON-like model output and the legacy Ollama parser wrapper. | No |
+| `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and main docs agree on pipeline state and expected modules. | No |
+| `check_agent_memory_policy.py` | Checks generic memory retention, quarantine and promotion guardrails; also inspects local SQLite memory DB when present. | No |
+| `check_blender_shared_compat_smoke.py` | Imports `Scripting/shared/blender_compat.py`; outside Blender it marks runtime checks skipped, inside Blender it performs no-render compatibility smoke. | No render |
+| `check_generated_blender_script_policy.py` | Applies reusable generated-file policy rules to Blender Python scripts and deterministic in-memory samples. | No |
+
+## Generated-file policy
+
+The generated-file policy has two layers:
+
+```text
+Tools/validation/generated_file_policy.py
+Tools/validation/check_generated_blender_script_policy.py
+```
+
+`generated_file_policy.py` is domain-neutral and reusable. It provides:
+
+```text
+PolicyRule
+PolicyFinding
+PolicyResult
+evaluate_text()
+evaluate_paths()
+```
+
+`check_generated_blender_script_policy.py` is the first adapter. It validates generated Blender Python scripts before execution.
+
+Current Blender policy rules:
+
+```text
+requires_bpy_import              error
+forbid_musgrave_node             error
+forbid_open_mainfile             error
+forbid_quit_blender              error
+warn_save_as_mainfile            warning
+warn_python_eval_exec            warning
+```
+
+The `forbid_musgrave_node` rule protects against the known Blender 5.x failure:
+
+```text
+ShaderNodeTexMusgrave undefined
+```
+
+Default sample-only validation:
+
+```powershell
+python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
+```
+
+Explicit generated script validation:
+
+```powershell
+python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --path .\output\some_generated_scene.py --output .\output\validation\generated_blender_script_policy.json
+```
+
+## AI model JSON parser validation
+
+The reusable model-output parser lives at:
+
+```text
+Tools/ai/model_json.py
+```
+
+The validator checks:
+
+```text
+plain JSON object
+Markdown fenced JSON object
+JSON surrounded by prose
+trailing comma repair
+line-only // comment repair
+JSON array parsing
+object-only parser rejection for arrays
+invalid text failure
+legacy Tools/npu/ollama_runtime.py::parse_json_response() wrapper behavior
+```
+
+Command:
+
+```powershell
+python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 ```
 
 ## AI pipeline dry-run matrix
@@ -71,6 +165,7 @@ results[].returncode
 results[].report_passed
 results[].step_count
 results[].lanes
+results[].agent_state_packet
 ```
 
 Each matrix case also writes an individual dry-run report under:
@@ -86,17 +181,20 @@ passed
 summary
 schedule
 lanes
+agent_state_packet
 guardrail_remediation_loop
 steps
 ```
 
 ## Standard local validation block
 
-Use this block after structural refactors, documentation changes, or AI pipeline changes:
+Use this block after structural refactors, documentation changes, AI pipeline changes, model-output parser changes or generated-file policy changes:
 
 ```powershell
 python .\Tools\validation\check_python_syntax.py --repo-root .
+python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
@@ -127,8 +225,10 @@ git push origin master
 - `check_package_structure.py` reports package-level warnings under `Scripting/`.
 - `check_json_artifacts.py` checks JSON parseability, accepts UTF-8 with or without BOM and skips very large files by default.
 - `check_docs_links.py` checks repository-local Markdown links.
-- `check_ai_pipeline_modules.py` is a smoke validator for the modular AI artifact pipeline.
+- `check_ai_pipeline_modules.py` is a smoke validator for the modular AI artifact pipeline and schema-v6 report metadata.
+- `check_ai_model_json.py` checks reusable model-output JSON parsing and the Ollama parser compatibility wrapper.
 - `check_refactor_status_consistency.py` checks status marker and documentation consistency.
 - `check_agent_memory_policy.py` checks generic memory retention and promotion guardrails.
 - `check_blender_shared_compat_smoke.py` verifies shared Blender compatibility helpers without requiring a render.
+- `check_generated_blender_script_policy.py` validates generated Blender Python script policy using a reusable generated-file policy engine.
 - Validation helpers should not launch Blender renders, GPU generation, NPU model execution or FFmpeg encodes.
