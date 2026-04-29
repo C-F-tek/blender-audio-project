@@ -29,8 +29,9 @@ audio file
 | Root audio tools | usable | `analyze_wav.py`, `build_track_summary.py`, `normalize_scene_spec.py`. |
 | `Scripting/v61b/` | stable reference | Current high-quality reference package. Do not destructively refactor. |
 | Ready To Jazz package | usable but monolithic | Good production/generation experiment; not yet reusable architecture. |
-| `Scripting/shared/` | active foundation | First pure Python helpers exist: path, JSON, image sequence. |
-| `Tools/validation/` | active foundation | Non-invasive validation scripts exist. |
+| `Scripting/shared/` | active foundation | Pure Python helpers exist for path, JSON, image sequence, FFmpeg commands and render profiles. |
+| `Tools/validation/` | active foundation | Non-invasive validation scripts exist, including AI pipeline module smoke validation. |
+| `Tools/ai/pipeline/` | modularized, pending local dry-run validation | AI artifact pipeline is split into focused modules with a thin entrypoint and machine-readable status marker. |
 | `Tools/ai/` and `Tools/npu/` | active pipeline | AI/NPU context, review and artifact generation tooling. |
 | `indexAI/` | generated context | Regenerate after structural changes. Do not hand-refactor as source. |
 | `patch_specs/` | advanced patch queue | JSON patch specs can be applied manually or by GitHub Action. |
@@ -42,6 +43,8 @@ audio file
 AGENTS.md
 README.md
 docs/README.md
+docs/AI_PIPELINE_REFACTOR_STATUS.md
+docs/AI_PIPELINE_ARCHITECTURE.md
 docs/MODULE_MAP.md
 docs/DATA_FLOW.md
 docs/REFACTORING_AND_REUSE_PLAN.md
@@ -84,6 +87,50 @@ working package code
 
 Do not start by rewriting working Blender packages.
 
+## AI artifact pipeline status
+
+The AI artifact pipeline refactor is marked as:
+
+```text
+modular_schedule_complete_pending_local_validation
+```
+
+Read before changing pipeline code:
+
+```text
+docs/AI_PIPELINE_REFACTOR_STATUS.md
+docs/AI_PIPELINE_ARCHITECTURE.md
+Tools/ai/pipeline/refactor_status.py
+```
+
+Current module family:
+
+```text
+Tools/ai/run_parallel_artifact_pipeline.py
+Tools/ai/pipeline/defaults.py
+Tools/ai/pipeline/models.py
+Tools/ai/pipeline/runner.py
+Tools/ai/pipeline/compat.py
+Tools/ai/pipeline/artifact_contracts.py
+Tools/ai/pipeline/cli.py
+Tools/ai/pipeline/preflight.py
+Tools/ai/pipeline/steps.py
+Tools/ai/pipeline/scheduler.py
+Tools/ai/pipeline/orchestrator.py
+Tools/ai/pipeline/schema_report.py
+Tools/ai/pipeline/guardrail_models.py
+Tools/ai/pipeline/remediation.py
+Tools/ai/pipeline/refactor_status.py
+```
+
+Validation required after pulling latest pipeline changes:
+
+```powershell
+python .\Tools\validation\check_python_syntax.py --repo-root .
+python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+```
+
 ## Implemented shared foundation
 
 Current shared modules:
@@ -113,6 +160,7 @@ Current validators:
 | `Tools/validation/check_python_syntax.py` | Compiles Python files without importing them. |
 | `Tools/validation/check_package_structure.py` | Inspects Blender package folders under `Scripting/`. |
 | `Tools/validation/check_json_artifacts.py` | Checks JSON parseability without rewriting artifacts. |
+| `Tools/validation/check_ai_pipeline_modules.py` | Smoke-checks modular AI pipeline imports, step builders, preflight and report generation without heavy workloads. |
 
 Preferred local validation:
 
@@ -120,11 +168,12 @@ Preferred local validation:
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
+python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
 ```
 
 ## Known local validation result
 
-Recent local validation found:
+Recent local validation before the final modular AI pipeline split found:
 
 ```text
 Python syntax: passed
@@ -132,6 +181,8 @@ Package structure: passed with non-blocking warnings
 JSON artifacts: passed
 AI/NPU index generation: passed
 ```
+
+The current modular AI pipeline split still requires local dry-run validation on the workstation.
 
 Known non-blocking warnings:
 
@@ -194,13 +245,13 @@ Capabilities:
 
 ## High-priority next tasks
 
-1. Commit regenerated AI/NPU indexes after validation.
-2. Add `.gitattributes` line-ending policy in a separate commit.
-3. Update docs index to include new AI knowledge and project consciousness files.
-4. Validate and document the new shared FFmpeg/render profile helpers before package migration.
-5. Add a small validation tweak to ignore backup folders like `v61b_backgood`.
-6. Add `Scripting/shared/blender_compat.py`.
-7. Later: split large AI/NPU orchestrator modules.
+1. Pull latest remote changes on the workstation.
+2. Run Python syntax validation and AI pipeline module smoke validation.
+3. Run the AI pipeline dry-run matrix.
+4. Regenerate AI/NPU indexes after validation.
+5. Commit regenerated AI/NPU indexes only.
+6. Review dry-run report `summary` and `schedule` fields.
+7. Continue only after resolving any local validation failures.
 
 ## Avoid now
 
@@ -215,6 +266,7 @@ change final FFmpeg output behavior
 add dependencies without validation
 modify generated full analysis JSON files
 run long Blender renders or GPU generation automatically
+change AI pipeline schema-v6 field meanings without local dry-run matrix validation
 ```
 
 ## Reporting format for AI agents
@@ -224,7 +276,7 @@ Every implementation response should include:
 ```text
 changed files
 purpose
-resulting line counts for scripts
+resulting line count for every created or modified script
 validation commands run
 validation result
 risks
