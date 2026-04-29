@@ -61,7 +61,7 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and main docs agree on pipeline state and expected modules. | No |
 | `check_agent_memory_policy.py` | Checks generic memory retention, quarantine and promotion guardrails; also inspects local SQLite memory DB when present. | No |
 | `check_blender_shared_compat_smoke.py` | Imports `Scripting/shared/blender_compat.py`; outside Blender it marks runtime checks skipped, inside Blender it performs no-render compatibility smoke. | No render |
-| `check_generated_blender_script_policy.py` | Applies reusable generated-file policy rules to Blender Python scripts and deterministic in-memory samples. | No |
+| `check_generated_blender_script_policy.py` | Applies reusable generated-file policy rules to generated Blender Python scripts and deterministic in-memory samples. | No |
 
 ## Generated-file policy
 
@@ -72,7 +72,9 @@ Tools/validation/generated_file_policy.py
 Tools/validation/check_generated_blender_script_policy.py
 ```
 
-`generated_file_policy.py` is domain-neutral and reusable. It provides:
+`generated_file_policy.py` is input-agnostic and application-agnostic. It does not know whether the source data is WAV, JSON, text, image, CSV, project context or another file type. It also does not know whether the output application is Blender, another Python-scriptable tool, an automation runtime or a custom application.
+
+It provides reusable primitives:
 
 ```text
 PolicyRule
@@ -82,7 +84,16 @@ evaluate_text()
 evaluate_paths()
 ```
 
-`check_generated_blender_script_policy.py` is the first adapter. It validates generated Blender Python scripts before execution.
+The current policy pattern is:
+
+```text
+generic generated-file policy engine
+  -> generated Python script policy concepts
+  -> application-specific adapter
+  -> optional input-domain checks only when needed
+```
+
+`check_generated_blender_script_policy.py` is the first adapter. It validates generated Blender Python scripts before execution. Blender is not the architectural boundary; it is the first concrete Python-scriptable application target.
 
 Current Blender policy rules:
 
@@ -112,6 +123,8 @@ Explicit generated script validation:
 ```powershell
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --path .\output\some_generated_scene.py --output .\output\validation\generated_blender_script_policy.json
 ```
+
+Future generated Python script adapters should use a new application-specific validator and reuse `generated_file_policy.py`, instead of adding Blender-specific assumptions to the generic layer.
 
 ## AI model JSON parser validation
 
@@ -230,5 +243,5 @@ git push origin master
 - `check_refactor_status_consistency.py` checks status marker and documentation consistency.
 - `check_agent_memory_policy.py` checks generic memory retention and promotion guardrails.
 - `check_blender_shared_compat_smoke.py` verifies shared Blender compatibility helpers without requiring a render.
-- `check_generated_blender_script_policy.py` validates generated Blender Python script policy using a reusable generated-file policy engine.
+- `check_generated_blender_script_policy.py` validates the first generated Python script policy adapter for Blender using the reusable generated-file policy engine.
 - Validation helpers should not launch Blender renders, GPU generation, NPU model execution or FFmpeg encodes.
