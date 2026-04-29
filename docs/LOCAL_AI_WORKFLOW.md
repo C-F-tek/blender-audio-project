@@ -2,7 +2,9 @@
 
 ## Purpose
 
-This document records the intended direction for moving parts of the Blender script-generation workflow from external AI assistance toward a local AI-assisted pipeline.
+This document records the intended direction for moving parts of the Blender script-generation workflow toward a local AI-assisted pipeline.
+
+The local workflow should be deterministic where possible, explicit about generated artifacts, and safe for repeated dry-runs.
 
 ## Current workflow
 
@@ -12,22 +14,44 @@ At the current stage, the workflow is generally:
 Audio input
   -> technical analysis
   -> JSON files and compact context
-  -> external AI assistance such as Codex or GPT
-  -> generated Blender script package
-  -> stored under Scripting/
+  -> modular AI artifact pipeline
+  -> local or external model-assisted planning/review
+  -> generated Blender script package or patch plan
+  -> stored under Scripting/ or indexAI/patch_library/
   -> manual or assisted refinement
 ```
 
+## Current AI artifact pipeline status
+
+Status marker:
+
+```text
+modular_schedule_complete_pending_local_validation
+```
+
+Key files:
+
+```text
+Tools/ai/run_parallel_artifact_pipeline.py
+Tools/ai/run_pipeline_dry_run_matrix.py
+Tools/ai/pipeline/
+Tools/validation/check_ai_pipeline_modules.py
+docs/AI_PIPELINE_REFACTOR_STATUS.md
+docs/AI_PIPELINE_ARCHITECTURE.md
+```
+
+The current entrypoint is intentionally thin. Implementation belongs under `Tools/ai/pipeline/`.
+
 ## Target direction
 
-The future objective is to perform more of the script-generation and review loop locally, when hardware and model quality allow it.
+The objective is to perform more of the script-generation and review loop locally, when hardware and model quality allow it.
 
 Candidate local components:
 
 - local project indexing;
 - local compact context generation;
 - local JSON summarization;
-- local Blender-aware code generation;
+- local Blender-aware code planning;
 - local patch planning;
 - local patch validation;
 - NPU-assisted review where useful;
@@ -38,6 +62,9 @@ Candidate local components:
 | Area | Role |
 |---|---|
 | `Scripting/` | Destination for generated Blender script packages. |
+| `Scripting/shared/` | Shared reusable helpers used before package migration. |
+| `Tools/ai/` | Modular artifact pipeline entrypoints and dry-run matrix. |
+| `Tools/ai/pipeline/` | Modular AI artifact pipeline implementation. |
 | `Tools/npu/` | Local AI, NPU, context-building, and review tooling. |
 | `indexAI/` | Project index, manifests, compact context, and patch materials. |
 | `indexAI/patch_library/` | Generated plans, service capsules, and task packets. |
@@ -49,13 +76,31 @@ Candidate local components:
 WAV/audio data
   -> analysis JSON
   -> compact music and technical context
-  -> local AI planner
+  -> modular AI artifact pipeline
+  -> local AI planner/reviewer
   -> implementation plan
-  -> patch generator
+  -> patch generator or package generator
   -> validation against repo index
   -> generated Blender package under Scripting/
   -> Blender test run
   -> render and FFmpeg workflow
+```
+
+## Required validation after pipeline changes
+
+```powershell
+python .\Tools\validation\check_python_syntax.py --repo-root .
+python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+python .\Tools\validation\check_package_structure.py --repo-root .
+python .\Tools\validation\check_json_artifacts.py --repo-root .
+```
+
+After validation:
+
+```powershell
+python .\Tools\npu\build_project_ai_index.py
+python .\Tools\npu\build_npu_code_context.py
 ```
 
 ## Requirements for safe local generation
@@ -67,6 +112,7 @@ WAV/audio data
 - No destructive overwrite of source or analysis data.
 - Explicit logging of generated files.
 - Manual review for major scene-generation changes.
+- Dry-run reports for pipeline or patch generation.
 
 ## AI rules
 
@@ -76,6 +122,7 @@ WAV/audio data
 - Preserve full analysis JSON files.
 - Prefer compact summaries for model input.
 - Record assumptions in generated implementation notes.
+- Do not interpret the modular pipeline split as incomplete unless local validation fails.
 
 ## Not specified
 
@@ -83,4 +130,4 @@ WAV/audio data
 - Final NPU or GPU runtime.
 - Final prompt format.
 - Final patch schema.
-- Final validation command.
+- Final validation command for Blender runtime.
