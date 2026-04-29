@@ -1,8 +1,8 @@
 # Spaziotempo Primary Project Code Index
 
-Generated: `2026-04-29T14:34:39`
+Generated: `2026-04-29T14:42:03`
 
-Source fingerprint: `5191ab62f1aa6385e598c43e939ad635dfde95da9ccc6ffcc0e79f9511d157c7`
+Source fingerprint: `730688848b168eb726102bfe5042995affe7fe3cc7ec5ab8d23d54d8d2c0ba5a`
 
 Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.
 
@@ -182,7 +182,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/ai/pipeline/runner.py`: 103 lines, 2901 chars, sha256 `2f1d528cdc817f6811325a50acd3a576e67a275d46d7df1b3d92176bb497ccfb`
 - `Tools/ai/README.md`: 32 lines, 861 chars, sha256 `9aede5bf9b08c6c5ec0791627df7fca71fea8c2eaafa2e229ae6d529fc422ad9`
 - `Tools/ai/review_wave_entrypoints.py`: 241 lines, 9712 chars, sha256 `ddee5cc83e012d59e05a02e0457882abb4f049824dbda0bb6785a79d2405a1f2`
-- `Tools/ai/run_parallel_artifact_pipeline.py`: 378 lines, 22029 chars, sha256 `d05cfb6a0b334d19d302b65f7e6eacc08d36a3acff8df71ed206a1ab632a542f`
+- `Tools/ai/run_parallel_artifact_pipeline.py`: 419 lines, 23399 chars, sha256 `8c9baa33f4b12fd2bedcd3585fb64c369269ddc8c3d9e933bd9c1698cc554cb6`
 - `Tools/ai/smart_ai_gatekeeper.py`: 233 lines, 10409 chars, sha256 `8a9b3d1a2a4b59afc45a920e973e36526885e67060fbe2854f1297624af737a1`
 - `Tools/ai/validate_ai_artifacts.py`: 201 lines, 8660 chars, sha256 `b5f5da7831718465e262131a0bd7ef5fd59aaa4362c6f9545c28daef3bb34353`
 - `Tools/git/auto_push_generated_artifacts.ps1`: 136 lines, 3891 chars, sha256 `cd65aa2cd41cfc5b8205efd92c7b71d9967498bd8e3e71d92853e0b166782d2d`
@@ -199,7 +199,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
 - `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `53c55cc95abf776b330776e3bdee74319dbe3cc9e3e89bfbe385e621b9a410d6`
 - `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `ae496412a40745840615966bb12e0e7f2f2064610bd21622cb4642ed772441e1`
-- `Tools/npu/npu_code_manifest.json`: 7339 lines, 198048 chars, sha256 `b63ead770e4139bd06fd19dbdd78ae77b00f09f7caa00495c690595202c50988`
+- `Tools/npu/npu_code_manifest.json`: 7339 lines, 198048 chars, sha256 `8846e3c2830353170939c4d204cb370bf68ba4c300d7d37afaf40e452c1bbd01`
 - `Tools/npu/npu_guardrail_service.py`: 491 lines, 20211 chars, sha256 `5829724c35b7fccef62481ca8efc7290b63ef4d552e441fcf51a59009a4cc84a`
 - `Tools/npu/npu_music_manifest.json`: 703 lines, 27216 chars, sha256 `e5cb8facca90680775a3ab5a525cfb2b0ef1f0f7c0ecd5c61e2f1570082f2045`
 - `Tools/npu/npu_runtime.py`: 161 lines, 5903 chars, sha256 `38dc29da6ba1c564c68a29c0c5de7e4b38787aa6a0c17607c8d2ae03fe89f182`
@@ -468,9 +468,9 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI/project_code_chunks/chunk_0222_Tools_ai_pipeline_runner_py.md` -> `Tools/ai/pipeline/runner.py` lines 1-102
 - `indexAI/project_code_chunks/chunk_0223_Tools_ai_README_md.md` -> `Tools/ai/README.md` lines 1-31
 - `indexAI/project_code_chunks/chunk_0224_Tools_ai_review_wave_entrypoints_py.md` -> `Tools/ai/review_wave_entrypoints.py` lines 1-240
-- `indexAI/project_code_chunks/chunk_0225_Tools_ai_run_parallel_artifact_pipeline_py.md` -> `Tools/ai/run_parallel_artifact_pipeline.py` lines 1-204
-- `indexAI/project_code_chunks/chunk_0226_Tools_ai_run_parallel_artifact_pipeline_py.md` -> `Tools/ai/run_parallel_artifact_pipeline.py` lines 205-361
-- `indexAI/project_code_chunks/chunk_0227_Tools_ai_run_parallel_artifact_pipeline_py.md` -> `Tools/ai/run_parallel_artifact_pipeline.py` lines 362-377
+- `indexAI/project_code_chunks/chunk_0225_Tools_ai_run_parallel_artifact_pipeline_py.md` -> `Tools/ai/run_parallel_artifact_pipeline.py` lines 1-223
+- `indexAI/project_code_chunks/chunk_0226_Tools_ai_run_parallel_artifact_pipeline_py.md` -> `Tools/ai/run_parallel_artifact_pipeline.py` lines 224-374
+- `indexAI/project_code_chunks/chunk_0227_Tools_ai_run_parallel_artifact_pipeline_py.md` -> `Tools/ai/run_parallel_artifact_pipeline.py` lines 375-418
 - `indexAI/project_code_chunks/chunk_0228_Tools_ai_smart_ai_gatekeeper_py.md` -> `Tools/ai/smart_ai_gatekeeper.py` lines 1-225
 - `indexAI/project_code_chunks/chunk_0229_Tools_ai_smart_ai_gatekeeper_py.md` -> `Tools/ai/smart_ai_gatekeeper.py` lines 226-232
 - `indexAI/project_code_chunks/chunk_0230_Tools_ai_validate_ai_artifacts_py.md` -> `Tools/ai/validate_ai_artifacts.py` lines 1-200

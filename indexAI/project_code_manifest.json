@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-04-29T14:34:39",
+  "created_at": "2026-04-29T14:42:03",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "index_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI",
   "primary_library": true,
-  "source_fingerprint": "5191ab62f1aa6385e598c43e939ad635dfde95da9ccc6ffcc0e79f9511d157c7",
+  "source_fingerprint": "730688848b168eb726102bfe5042995affe7fe3cc7ec5ab8d23d54d8d2c0ba5a",
   "excluded_dirs": [
     ".git",
     ".mypy_cache",
@@ -7903,9 +7903,9 @@
     {
       "file": "Tools/ai/run_parallel_artifact_pipeline.py",
       "suffix": ".py",
-      "lines": 378,
-      "chars": 22029,
-      "sha256": "d05cfb6a0b334d19d302b65f7e6eacc08d36a3acff8df71ed206a1ab632a542f",
+      "lines": 419,
+      "chars": 23399,
+      "sha256": "8c9baa33f4b12fd2bedcd3585fb64c369269ddc8c3d9e933bd9c1698cc554cb6",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -7931,8 +7931,47 @@
             "async": false
           },
           {
-            "name": "run",
+            "name": "legacy_result_payload",
             "line": 40,
+            "args": [
+              "result"
+            ],
+            "async": false
+          },
+          {
+            "name": "step_result_payload",
+            "line": 56,
+            "args": [
+              "result"
+            ],
+            "async": false
+          },
+          {
+            "name": "pipeline_step",
+            "line": 71,
+            "args": [
+              "name",
+              "lane",
+              "purpose",
+              "expected_outputs",
+              "command",
+              "pass_index"
+            ],
+            "async": false
+          },
+          {
+            "name": "run_pipeline_step",
+            "line": 90,
+            "args": [
+              "step",
+              "cwd",
+              "dry"
+            ],
+            "async": false
+          },
+          {
+            "name": "run",
+            "line": 95,
             "args": [
               "cmd",
               "cwd",
@@ -7942,7 +7981,7 @@
           },
           {
             "name": "rel",
-            "line": 66,
+            "line": 109,
             "args": [
               "path",
               "root"
@@ -7951,7 +7990,7 @@
           },
           {
             "name": "read_text_if_exists",
-            "line": 73,
+            "line": 116,
             "args": [
               "path",
               "limit"
@@ -7960,7 +7999,7 @@
           },
           {
             "name": "load_json_if_exists",
-            "line": 79,
+            "line": 122,
             "args": [
               "path"
             ],
@@ -7968,7 +8007,7 @@
           },
           {
             "name": "file_meta",
-            "line": 88,
+            "line": 131,
             "args": [
               "path",
               "root"
@@ -7977,7 +8016,7 @@
           },
           {
             "name": "planned_outputs",
-            "line": 97,
+            "line": 140,
             "args": [
               "repo",
               "out",
@@ -7987,13 +8026,13 @@
           },
           {
             "name": "python_runtime",
-            "line": 121,
+            "line": 164,
             "args": [],
             "async": false
           },
           {
             "name": "workstation_context",
-            "line": 125,
+            "line": 168,
             "args": [
               "repo"
             ],
@@ -8001,7 +8040,7 @@
           },
           {
             "name": "preflight",
-            "line": 131,
+            "line": 174,
             "args": [
               "repo",
               "out",
@@ -8011,7 +8050,7 @@
           },
           {
             "name": "step_meta",
-            "line": 162,
+            "line": 205,
             "args": [
               "name",
               "lane",
@@ -8023,7 +8062,7 @@
           },
           {
             "name": "build_step_commands",
-            "line": 166,
+            "line": 209,
             "args": [
               "repo",
               "out",
@@ -8033,7 +8072,7 @@
           },
           {
             "name": "guardrail_queue",
-            "line": 192,
+            "line": 235,
             "args": [
               "out"
             ],
@@ -8041,7 +8080,7 @@
           },
           {
             "name": "auto_safe_requests",
-            "line": 199,
+            "line": 242,
             "args": [
               "out"
             ],
@@ -8049,7 +8088,7 @@
           },
           {
             "name": "remediation_plan_from_requests",
-            "line": 204,
+            "line": 247,
             "args": [
               "requests"
             ],
@@ -8057,7 +8096,7 @@
           },
           {
             "name": "remedial_commands",
-            "line": 215,
+            "line": 258,
             "args": [
               "repo",
               "out",
@@ -8068,7 +8107,7 @@
           },
           {
             "name": "execute_remediation_loop",
-            "line": 237,
+            "line": 280,
             "args": [
               "repo",
               "out",
@@ -8079,7 +8118,7 @@
           },
           {
             "name": "main",
-            "line": 275,
+            "line": 318,
             "args": [],
             "async": false
           }
@@ -9832,7 +9871,7 @@
       "suffix": ".json",
       "lines": 7339,
       "chars": 198048,
-      "sha256": "b63ead770e4139bd06fd19dbdd78ae77b00f09f7caa00495c690595202c50988"
+      "sha256": "8846e3c2830353170939c4d204cb370bf68ba4c300d7d37afaf40e452c1bbd01"
     },
     {
       "file": "Tools/npu/npu_guardrail_service.py",
@@ -16609,29 +16648,29 @@
       "path": "indexAI/project_code_chunks/chunk_0225_Tools_ai_run_parallel_artifact_pipeline_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 204,
-      "chars": 13059,
-      "sha256": "7d879b10ffe9e6a1b350fb4b14b9006281ec1b9994f169c64614aeaf91bf6546"
+      "end_line": 223,
+      "chars": 13165,
+      "sha256": "4cc64f67a79f1ec303c44d9889948378bf13c1988fa6e719b8f96c58fc299c7e"
     },
     {
       "index": 226,
       "file": "Tools/ai/run_parallel_artifact_pipeline.py",
       "path": "indexAI/project_code_chunks/chunk_0226_Tools_ai_run_parallel_artifact_pipeline_py.md",
       "part": 2,
-      "start_line": 205,
-      "end_line": 361,
-      "chars": 13091,
-      "sha256": "c91dfcb01f0e73094b2ec868901ee53c94452017d39b771323616d2049a64065"
+      "start_line": 224,
+      "end_line": 374,
+      "chars": 13273,
+      "sha256": "754bc09bd841728cc3b698a49bf2ed63145ef3ad709ee6fd1b133685608ce795"
     },
     {
       "index": 227,
       "file": "Tools/ai/run_parallel_artifact_pipeline.py",
       "path": "indexAI/project_code_chunks/chunk_0227_Tools_ai_run_parallel_artifact_pipeline_py.md",
       "part": 3,
-      "start_line": 362,
-      "end_line": 377,
-      "chars": 2431,
-      "sha256": "4038141ed0776365d571140b873c2f8df4c238fe1e9762d9d06818ebde934d1b"
+      "start_line": 375,
+      "end_line": 418,
+      "chars": 4445,
+      "sha256": "8c77cccb7339dedffef35f7831ae44aff4585a91257899126fa1c56243d05b22"
     },
     {
       "index": 228,
@@ -17101,7 +17140,7 @@
       "start_line": 1,
       "end_line": 382,
       "chars": 11708,
-      "sha256": "576944be09148f3ad7dab9b5e4926d67655bf7be629af3359864959dba238cf9"
+      "sha256": "1fc0720c920a4530f30af3e3153de068b03189f22394a4928ebaf5d628801540"
     },
     {
       "index": 275,
