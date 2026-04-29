@@ -8,6 +8,28 @@ active
 
 Introduce a reusable policy model for generated files, starting with generated Python scripts executed by an application.
 
+## Architecture Boundary — Input-Agnostic / Output-Application-Agnostic
+
+This policy family must be understood as a generic generated-artifact validation model, not as a Blender-only or WAV/audio-only feature.
+
+Fixed architectural rule:
+
+```text
+not Blender-only
+not WAV/audio-only
+input-agnostic
+output-application-agnostic
+current execution assumption: target applications accept generated Python scripts
+future extension: other runtimes, other application APIs and other input data families
+```
+
+Reason:
+
+```text
+Blender is the current real application target, but it is not the architectural limit.
+WAV/audio is the current real input family, but it is not the architectural limit.
+```
+
 This model must remain independent from:
 
 ```text
@@ -182,3 +204,4 @@ After local validation passes:
 
 - 2026-04-29: Started with reusable policy engine plus Blender-specific adapter.
 - 2026-04-29: Clarified that the model is input-agnostic and output-application-agnostic. Blender is only the first Python-scriptable application adapter.
+- 2026-04-29: Added explicit architecture-boundary wording: not Blender-only, not WAV/audio-only, current Python-scriptable application assumption, future extension to other runtimes and data families.
