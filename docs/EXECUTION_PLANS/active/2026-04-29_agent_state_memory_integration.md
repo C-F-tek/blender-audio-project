@@ -82,10 +82,43 @@ The initial plan is non-runtime and documentation/validation focused. Risk becom
 
 ### Phase 1 — packet smoke
 
+Status: completed locally on 2026-04-29.
+
 - Generate one packet without SQLite.
 - Generate one packet with SQLite.
 - Review memory state.
 - Confirm validator output.
+
+Observed local result:
+
+```text
+packet without SQLite: PASS
+  selected_memory: 1
+  microtasks: 4
+  selected_memory_chars: 3059
+  memory_db: null
+  memory_db_saved: 0
+
+packet with SQLite: PASS
+  selected_memory: 4
+  microtasks: 4
+  selected_memory_chars: 8535
+  memory_db: indexAI/agent_memory/agent_memory.sqlite
+  memory_db_saved: 1
+
+review_agent_memory.py: PASS
+  record_count: 4
+  promotion_candidate_count: 0
+  review_count: 0
+  risk_count: 0
+
+check_agent_memory_policy.py: PASS
+  memory_db_exists: true
+  actual record_count: 4
+  actual action_counts: keep=4
+
+git status: clean
+```
 
 ### Phase 2 — pipeline touchpoint design
 
@@ -108,11 +141,14 @@ The initial plan is non-runtime and documentation/validation focused. Risk becom
 ## Progress log
 
 - 2026-04-29: Plan created from handoff state after agent memory foundation was added and marked `TD-010` in progress.
+- 2026-04-29: Phase 1 packet smoke completed locally. Packet generation worked with and without SQLite; memory review passed; memory policy validator passed; working tree remained clean.
 
 ## Result
 
-not completed yet
+Phase 1 completed. The packet model and local SQLite path are usable for controlled follow-up work.
+
+The execution plan remains active because pipeline touchpoint design and controlled integration are not implemented yet.
 
 ## Follow-up
 
-After Phase 1 passes, create or update a focused implementation task for the first optional pipeline touchpoint.
+Create or update a focused implementation task for Phase 2: optional state-packet input design for the AI artifact pipeline. Do not wire it into real generation until the dry-run matrix proves that schema-v6 meanings and runtime Blender behavior remain unchanged.
