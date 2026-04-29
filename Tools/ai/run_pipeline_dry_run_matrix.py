@@ -2,8 +2,9 @@
 """Run a matrix of safe dry-run checks for the AI artifact pipeline.
 
 The matrix invokes ``Tools/ai/run_parallel_artifact_pipeline.py`` with several
-non-invasive configurations and writes a compact JSON summary. It does not run
-NPU/GPU/Blender workloads because every invocation includes ``--dry-run``.
+non-invasive configurations and writes compact JSON and Markdown summaries.
+It does not run NPU/GPU/Blender workloads because every invocation includes
+``--dry-run``.
 """
 from __future__ import annotations
 
@@ -15,6 +16,11 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+try:
+    from pipeline.markdown_report import write_dry_run_matrix_markdown
+except ImportError:  # Allows package-style imports during external checks.
+    from Tools.ai.pipeline.markdown_report import write_dry_run_matrix_markdown  # type: ignore
 
 
 @dataclass(frozen=True)
@@ -99,6 +105,8 @@ def run_case(repo_root: Path, output_dir: Path, case: MatrixCase) -> dict[str, A
         "report_passed": report_payload.get("passed") if isinstance(report_payload, dict) else None,
         "step_count": report_payload.get("step_count") if isinstance(report_payload, dict) else None,
         "lanes": report_payload.get("lanes") if isinstance(report_payload, dict) else None,
+        "summary": report_payload.get("summary") if isinstance(report_payload, dict) else None,
+        "schedule": report_payload.get("schedule") if isinstance(report_payload, dict) else None,
     }
 
 
@@ -107,6 +115,7 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output-dir", default="output/ai_pipeline/dry_run_matrix")
     parser.add_argument("--output", default="output/ai_pipeline/dry_run_matrix_report.json")
+    parser.add_argument("--markdown-output", default="output/ai_pipeline/dry_run_matrix_report.md")
     parser.add_argument("--continue-on-error", action="store_true")
     args = parser.parse_args()
 
@@ -133,6 +142,9 @@ def main() -> int:
 
     output = Path(args.output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    markdown_output = write_dry_run_matrix_markdown(args.markdown_output, report)
+    report["markdown_output"] = str(markdown_output)
     output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if passed else 2
