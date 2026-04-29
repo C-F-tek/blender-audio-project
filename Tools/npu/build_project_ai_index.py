@@ -7,6 +7,7 @@ import ast
 import hashlib
 import json
 import re
+import warnings
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -136,12 +137,26 @@ def target_name(target: ast.expr) -> str | None:
     return None
 
 
-def extract_symbols(source: str) -> dict:
-    symbols = {"imports": [], "functions": [], "classes": [], "assignments": []}
+def format_syntax_warning(message: warnings.WarningMessage) -> str:
+    """Return a compact warning string for manifest/index output."""
+    return f"line {message.lineno}: {message.message}"
+
+
+def extract_symbols(source: str, filename: str = "<unknown>") -> dict:
+    symbols = {
+        "imports": [],
+        "functions": [],
+        "classes": [],
+        "assignments": [],
+        "syntax_warnings": [],
+    }
     try:
-        tree = ast.parse(source)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", SyntaxWarning)
+            tree = ast.parse(source, filename=filename)
+        symbols["syntax_warnings"] = [format_syntax_warning(item) for item in caught]
     except SyntaxError as exc:
-        symbols["syntax_error"] = str(exc)
+        symbols["syntax_error"] = f"{filename}: {exc}"
         return symbols
 
     for node in tree.body:
@@ -189,7 +204,7 @@ def file_record(path: Path) -> dict:
         "sha256": sha256_text(source),
     }
     if path.suffix.lower() == ".py":
-        record["symbols"] = extract_symbols(source)
+        record["symbols"] = extract_symbols(source, filename=record["file"])
     return record
 
 
@@ -200,6 +215,8 @@ def format_symbol_summary(record: dict) -> str:
     lines: list[str] = []
     if symbols.get("syntax_error"):
         lines.append(f"- Syntax error: `{symbols['syntax_error']}`")
+    if symbols.get("syntax_warnings"):
+        lines.append("- Syntax warnings: " + "; ".join(f"`{item}`" for item in symbols["syntax_warnings"][:12]))
     if symbols.get("imports"):
         lines.append("- Imports: " + ", ".join(f"`{item}`" for item in symbols["imports"][:24]))
     if symbols.get("classes"):
