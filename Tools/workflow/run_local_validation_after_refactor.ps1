@@ -1,0 +1,173 @@
+<#
+.SYNOPSIS
+  Run the local validation workflow after AI-assisted refactors.
+
+.DESCRIPTION
+  This script is intentionally local and non-destructive. It pulls the latest
+  repository state, runs validation checks, runs the AI pipeline dry-run matrix,
+  regenerates AI/NPU indexes, and writes a compact execution log.
+
+  It does not commit or push automatically.
+
+.USAGE
+  powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1
+
+  powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull
+
+  powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
+#>
+
+param(
+    [switch]$SkipPull,
+    [switch]$ContinueOnError,
+    [string]$RepoRoot = ".",
+    [string]$LogDir = "output/local_validation"
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+function Resolve-RepoRoot {
+    param([string]$Path)
+    return (Resolve-Path -LiteralPath $Path).Path
+}
+
+function New-LogDirectory {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) {
+        New-Item -ItemType Directory -Force -Path $Path | Out-Null
+    }
+}
+
+function Write-Section {
+    param([string]$Title)
+    $line = "`n=== $Title ==="
+    Write-Host $line -ForegroundColor Cyan
+    Add-Content -LiteralPath $script:MainLog -Value $line
+}
+
+function Invoke-Step {
+    param(
+        [string]$Name,
+        [string]$Command,
+        [string[]]$Args
+    )
+
+    Write-Section $Name
+    $started = Get-Date
+    Add-Content -LiteralPath $script:MainLog -Value ("Started: " + $started.ToString("o"))
+    Add-Content -LiteralPath $script:MainLog -Value ("Command: " + $Command + " " + ($Args -join " "))
+
+    & $Command @Args 2>&1 | Tee-Object -FilePath $script:MainLog -Append
+    $exitCode = $LASTEXITCODE
+    $ended = Get-Date
+    Add-Content -LiteralPath $script:MainLog -Value ("Ended: " + $ended.ToString("o"))
+    Add-Content -LiteralPath $script:MainLog -Value ("ExitCode: " + $exitCode)
+
+    $script:Results += [pscustomobject]@{
+        name = $Name
+        command = $Command
+        args = $Args
+        started = $started.ToString("o")
+        ended = $ended.ToString("o")
+        exit_code = $exitCode
+        passed = ($exitCode -eq 0)
+    }
+
+    if (($exitCode -ne 0) -and (-not $ContinueOnError)) {
+        throw "Step failed: $Name with exit code $exitCode"
+    }
+}
+
+$repo = Resolve-RepoRoot $RepoRoot
+Set-Location $repo
+
+$logPath = Join-Path $repo $LogDir
+New-LogDirectory $logPath
+
+$stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+$script:MainLog = Join-Path $logPath "local_validation_$stamp.log"
+$summaryJson = Join-Path $logPath "local_validation_$stamp.json"
+$summaryMd = Join-Path $logPath "local_validation_$stamp.md"
+$script:Results = @()
+
+Add-Content -LiteralPath $script:MainLog -Value "Local validation started: $(Get-Date -Format o)"
+Add-Content -LiteralPath $script:MainLog -Value "Repo: $repo"
+
+try {
+    if (-not $SkipPull) {
+        Invoke-Step -Name "git pull --rebase" -Command "git" -Args @("pull", "--rebase", "origin", "master")
+    }
+
+    Invoke-Step -Name "git status before validation" -Command "git" -Args @("status")
+    Invoke-Step -Name "python syntax validation" -Command "python" -Args @(".\Tools\validation\check_python_syntax.py", "--repo-root", ".")
+    Invoke-Step -Name "ai pipeline module smoke validation" -Command "python" -Args @(".\Tools\validation\check_ai_pipeline_modules.py", "--repo-root", ".", "--output", ".\output\validation\ai_pipeline_modules.json")
+    Invoke-Step -Name "ai pipeline dry-run matrix" -Command "python" -Args @(".\Tools\ai\run_pipeline_dry_run_matrix.py", "--repo-root", ".", "--continue-on-error")
+    Invoke-Step -Name "package structure validation" -Command "python" -Args @(".\Tools\validation\check_package_structure.py", "--repo-root", ".")
+    Invoke-Step -Name "json artifact validation" -Command "python" -Args @(".\Tools\validation\check_json_artifacts.py", "--repo-root", ".")
+    Invoke-Step -Name "build project ai index" -Command "python" -Args @(".\Tools\npu\build_project_ai_index.py")
+    Invoke-Step -Name "build npu code context" -Command "python" -Args @(".\Tools\npu\build_npu_code_context.py")
+    Invoke-Step -Name "git diff stat after validation" -Command "git" -Args @("diff", "--stat")
+    Invoke-Step -Name "git status after validation" -Command "git" -Args @("status")
+
+    $passed = ($script:Results | Where-Object { -not $_.passed }).Count -eq 0
+}
+catch {
+    $passed = $false
+    Add-Content -LiteralPath $script:MainLog -Value ("ERROR: " + $_.Exception.Message)
+    Write-Host ("ERROR: " + $_.Exception.Message) -ForegroundColor Red
+}
+
+$summary = [pscustomobject]@{
+    schema_version = 1
+    generated_at = (Get-Date).ToString("o")
+    repo_root = $repo
+    passed = $passed
+    log_path = $script:MainLog
+    ai_pipeline_modules_report = (Join-Path $repo "output\validation\ai_pipeline_modules.json")
+    dry_run_matrix_json = (Join-Path $repo "output\ai_pipeline\dry_run_matrix_report.json")
+    dry_run_matrix_markdown = (Join-Path $repo "output\ai_pipeline\dry_run_matrix_report.md")
+    steps = $script:Results
+}
+
+$summary | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $summaryJson -Encoding UTF8
+
+$md = @()
+$md += "# Local Validation After Refactor"
+$md += ""
+$md += "- Generated at: `$($summary.generated_at)`"
+$md += "- Passed: `$passed`"
+$md += "- Repo: `$repo`"
+$md += "- Log: `$script:MainLog`"
+$md += "- AI module report: `$($summary.ai_pipeline_modules_report)`"
+$md += "- Dry-run matrix JSON: `$($summary.dry_run_matrix_json)`"
+$md += "- Dry-run matrix Markdown: `$($summary.dry_run_matrix_markdown)`"
+$md += ""
+$md += "## Steps"
+$md += ""
+$md += "| Step | Passed | Exit code |"
+$md += "|---|---:|---:|"
+foreach ($step in $script:Results) {
+    $md += "| $($step.name) | $($step.passed) | $($step.exit_code) |"
+}
+$md += ""
+$md += "## Next manual commands"
+$md += ""
+$md += "```powershell"
+$md += "git status"
+$md += "git diff --stat"
+$md += "Get-Content .\output\validation\ai_pipeline_modules.json -Raw"
+$md += "Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw"
+$md += "```"
+$md | Set-Content -LiteralPath $summaryMd -Encoding UTF8
+
+Write-Host "`nValidation completed." -ForegroundColor Green
+Write-Host "Passed: $passed"
+Write-Host "Log: $script:MainLog"
+Write-Host "Summary JSON: $summaryJson"
+Write-Host "Summary MD: $summaryMd"
+
+if ($passed) {
+    exit 0
+}
+exit 2
