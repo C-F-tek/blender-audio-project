@@ -88,29 +88,64 @@ Risk is medium because schemas can accidentally harden unstable fields or reject
 
 ### Phase 1 — inventory
 
-- List existing JSON artifact families.
-- Mark each as stable, evolving or generated diagnostic.
-- Select only stable/evolving contracts for initial validation.
+Status: in progress.
+
+Known initial contract families:
+
+```text
+AI pipeline report schema-v6
+AI pipeline dry-run matrix report
+agent_state_packet report metadata
+agent state packet JSON
+music summary
+scene specification
+```
 
 ### Phase 2 — contract docs
 
-- Document required and optional fields for the first targets.
-- Define version behavior and forward-compatible unknown-field policy.
+Status: in progress.
+
+Initial `agent_state_packet` report metadata contract:
+
+```text
+agent_state_packet.enabled: bool
+agent_state_packet.path: string|null
+agent_state_packet.exists: bool
+agent_state_packet.source: "disabled"|"cli"
+agent_state_packet.repo_relative_path: string, required only when enabled=true and path is inside repo
+```
+
+This contract is additive to schema-v6 and must not change existing report field meanings.
 
 ### Phase 3 — validators
 
-- Add focused validators or extend existing validators in a non-destructive way.
-- Write machine-readable validation reports under `output/validation/`.
+Status: in progress.
+
+Current validator target:
+
+```text
+Tools/validation/check_ai_pipeline_modules.py
+```
+
+The validator should check both disabled and enabled `agent_state_packet` states without running NPU, GPU, Blender, FFmpeg or long-running artifact jobs.
 
 ### Phase 4 — dry-run proof
 
-- Run the AI pipeline dry-run matrix.
-- Confirm schema checks do not modify artifacts.
-- Update `TD-006` only after passing validation.
+Status: pending local validation.
+
+Required proof:
+
+```text
+check_python_syntax.py: PASS
+check_ai_pipeline_modules.py: PASS
+run_pipeline_dry_run_matrix.py: PASS
+check_json_artifacts.py: PASS
+```
 
 ## Progress log
 
 - 2026-04-29: Plan created from handoff state for `TD-006`.
+- 2026-04-29: Started first concrete schema/contract validator target for `agent_state_packet` report metadata after passive pipeline touchpoint was merged.
 
 ## Result
 
@@ -118,4 +153,4 @@ not completed yet
 
 ## Follow-up
 
-Start with the dry-run matrix report and agent state packet because they are compact, generated and directly relevant to pipeline guardrails.
+First complete local validation of the `agent_state_packet` report contract. After this passes, update the plan and then proceed to the dry-run matrix report contract.
