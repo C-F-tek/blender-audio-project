@@ -95,8 +95,8 @@ def run_pipeline_step(step: PipelineStep, cwd: Path, dry: bool) -> dict[str, Any
 def run(cmd: list[str], cwd: Path, dry: bool) -> dict[str, Any]:
     """Run a command through the reusable pipeline runner.
 
-    This preserves the legacy dictionary shape used by the remediation loop
-    while routing execution through ``Tools/ai/pipeline/runner.py``.
+    This preserves the legacy dictionary shape for any external caller while
+    routing execution through ``Tools/ai/pipeline/runner.py``.
     """
     step = PipelineStep.from_command(
         name="legacy_command",
@@ -202,10 +202,6 @@ def preflight(repo: Path, out: Path, args: argparse.Namespace) -> dict[str, Any]
     return {"passed": not errors, "errors": errors, "warnings": warnings, "input_files": input_files, "planned_outputs": planned_outputs(repo, out, args), "python_runtime": python_runtime(), "workstation_context": workstation_context(repo), "environment": {"cwd": os.getcwd(), "dry_run": args.dry_run}}
 
 
-def step_meta(name: str, lane: str, purpose: str, expected_outputs: list[str], pass_index: int = 0) -> dict[str, Any]:
-    return {"name": name, "lane": lane, "purpose": purpose, "expected_outputs": expected_outputs, "pass_index": pass_index}
-
-
 def build_step_commands(repo: Path, out: Path, args: argparse.Namespace) -> dict[str, list[str]]:
     py = sys.executable
     track_slug = slugify(args.track_stem)
@@ -255,24 +251,30 @@ def remediation_plan_from_requests(requests: list[dict[str, Any]]) -> dict[str, 
     return {"request_count": len(requests), "by_stage": by_stage, "by_type": by_type, "requests": requests}
 
 
-def remedial_commands(repo: Path, out: Path, args: argparse.Namespace, requests: list[dict[str, Any]]) -> list[tuple[dict[str, Any], list[str]]]:
+def remedial_commands(
+    repo: Path,
+    out: Path,
+    args: argparse.Namespace,
+    requests: list[dict[str, Any]],
+    pass_index: int,
+) -> list[PipelineStep]:
     commands = build_step_commands(repo, out, args)
     stages = {str(item.get("suggested_stage") or "") for item in requests}
-    todo: list[tuple[dict[str, Any], list[str]]] = []
+    todo: list[PipelineStep] = []
 
     if "wave_entrypoint_review" in stages and "review_wave_entrypoints" in commands:
-        todo.append((step_meta("remediate_review_wave_entrypoints", "CPU", "Repeat first-wave script review requested by guardrail.", EXPECTED_WAVE_REVIEW_ARTIFACTS), commands["review_wave_entrypoints"]))
+        todo.append(pipeline_step("remediate_review_wave_entrypoints", "CPU", "Repeat first-wave script review requested by guardrail.", EXPECTED_WAVE_REVIEW_ARTIFACTS, commands["review_wave_entrypoints"], pass_index))
     if "enrich_intermediates" in stages and "build_music_intermediates" in commands:
-        todo.append((step_meta("remediate_build_music_intermediates", "CPU", "Auto-safe enrichment pass requested by NPU guardrail.", EXPECTED_MUSIC_ARTIFACTS), commands["build_music_intermediates"]))
+        todo.append(pipeline_step("remediate_build_music_intermediates", "CPU", "Auto-safe enrichment pass requested by NPU guardrail.", EXPECTED_MUSIC_ARTIFACTS, commands["build_music_intermediates"], pass_index))
     if "compact_context_generation" in stages and "build_smart_ai_context" in commands:
-        todo.append((step_meta("remediate_build_smart_ai_context_compact", "CPU", "Auto-safe compact context rebuild requested by NPU guardrail.", EXPECTED_SMART_CONTEXT_ARTIFACTS), commands["build_smart_ai_context"]))
+        todo.append(pipeline_step("remediate_build_smart_ai_context_compact", "CPU", "Auto-safe compact context rebuild requested by NPU guardrail.", EXPECTED_SMART_CONTEXT_ARTIFACTS, commands["build_smart_ai_context"], pass_index))
     if "smart_context_generation" in stages and "build_smart_ai_context" in commands:
-        todo.append((step_meta("remediate_build_smart_ai_context", "CPU", "Auto-safe smart context rebuild requested by NPU guardrail.", EXPECTED_SMART_CONTEXT_ARTIFACTS), commands["build_smart_ai_context"]))
+        todo.append(pipeline_step("remediate_build_smart_ai_context", "CPU", "Auto-safe smart context rebuild requested by NPU guardrail.", EXPECTED_SMART_CONTEXT_ARTIFACTS, commands["build_smart_ai_context"], pass_index))
     if "guardrail_second_pass" in stages and "npu_guardrail" in commands:
-        todo.append((step_meta("remediate_npu_guardrail_second_pass", "NPU", "Second guardrail pass requested by NPU guardrail.", [str(out / "npu_guardrail_report.json")]), commands["npu_guardrail"]))
+        todo.append(pipeline_step("remediate_npu_guardrail_second_pass", "NPU", "Second guardrail pass requested by NPU guardrail.", [str(out / "npu_guardrail_report.json")], commands["npu_guardrail"], pass_index))
 
-    if todo and "npu_guardrail" in commands and all(meta["name"] != "remediate_npu_guardrail_second_pass" for meta, _ in todo):
-        todo.append((step_meta("remediate_npu_guardrail_verify", "NPU", "Verify artifact state after auto-safe remediation passes.", [str(out / "npu_guardrail_report.json")]), commands["npu_guardrail"]))
+    if todo and "npu_guardrail" in commands and all(step.name != "remediate_npu_guardrail_second_pass" for step in todo):
+        todo.append(pipeline_step("remediate_npu_guardrail_verify", "NPU", "Verify artifact state after auto-safe remediation passes.", [str(out / "npu_guardrail_report.json")], commands["npu_guardrail"], pass_index))
 
     return todo
 
@@ -295,16 +297,14 @@ def execute_remediation_loop(repo: Path, out: Path, args: argparse.Namespace, re
             break
         seen_signatures.add(signature)
 
-        todo = remedial_commands(repo, out, args, requests)
+        todo = remedial_commands(repo, out, args, requests, pass_index)
         if not todo:
             passes.append({"pass_index": pass_index, "status": "no_supported_remediation_commands", "plan": plan, "steps": []})
             break
 
         step_results = []
-        for meta, cmd in todo:
-            meta["pass_index"] = pass_index
-            res = run(cmd, repo, args.dry_run)
-            res.update(meta)
+        for step in todo:
+            res = run_pipeline_step(step, repo, args.dry_run)
             step_results.append(res)
             results.append(res)
             if res["returncode"] and not args.continue_on_error:
