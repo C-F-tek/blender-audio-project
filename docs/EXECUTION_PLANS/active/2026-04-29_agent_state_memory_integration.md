@@ -122,13 +122,51 @@ git status: clean
 
 ### Phase 2 — pipeline touchpoint design
 
-- Identify where the AI artifact pipeline can accept an optional state packet.
-- Keep the entrypoint thin.
-- Avoid changing schema-v6 report meanings.
+Status: completed and merged on 2026-04-29.
+
+Implemented as a passive optional pipeline touchpoint:
+
+```text
+--agent-state-packet <path>
+```
+
+Implementation result:
+
+```text
+Tools/ai/pipeline/cli.py
+  added optional CLI argument
+
+Tools/ai/pipeline/preflight.py
+  validates the optional packet path
+  adds packet metadata to preflight
+
+Tools/ai/pipeline/schema_report.py
+  exposes agent_state_packet metadata in schema-v6 reports
+
+Tools/ai/run_pipeline_dry_run_matrix.py
+  adds with_agent_state_packet case when a local packet exists
+```
+
+Observed local validation result:
+
+```text
+git status: clean
+check_ai_pipeline_modules.py: PASS
+run_pipeline_dry_run_matrix.py: PASS
+case_count: 6
+with_agent_state_packet: PASS
+agent_state_packet.enabled: true
+agent_state_packet.exists: true
+agent_state_packet.source: cli
+step_count for with_agent_state_packet: 3
+lanes unchanged: CPU review_wave_entrypoints/build_smart_ai_context, NPU npu_guardrail
+```
+
+Important: Phase 2 is still passive. The packet is not injected into prompts and does not modify scheduler, runner, Blender runtime or FFmpeg behavior.
 
 ### Phase 3 — controlled integration
 
-- Add optional, disabled-by-default packet input to the pipeline.
+- Add optional, disabled-by-default packet input to a real context-building stage only after schema validation proves the report contract.
 - Validate dry-run matrix.
 - Confirm no runtime Blender behavior changes.
 
@@ -142,13 +180,16 @@ git status: clean
 
 - 2026-04-29: Plan created from handoff state after agent memory foundation was added and marked `TD-010` in progress.
 - 2026-04-29: Phase 1 packet smoke completed locally. Packet generation worked with and without SQLite; memory review passed; memory policy validator passed; working tree remained clean.
+- 2026-04-29: Phase 2 passive pipeline touchpoint merged. Local validation confirmed the optional packet appears in reports and does not change planned steps or lanes.
 
 ## Result
 
 Phase 1 completed. The packet model and local SQLite path are usable for controlled follow-up work.
 
-The execution plan remains active because pipeline touchpoint design and controlled integration are not implemented yet.
+Phase 2 completed. The pipeline can now accept an optional `--agent-state-packet` argument and report its metadata without using it for generation.
+
+The execution plan remains active because controlled integration and promotion policy are not implemented yet.
 
 ## Follow-up
 
-Create or update a focused implementation task for Phase 2: optional state-packet input design for the AI artifact pipeline. Do not wire it into real generation until the dry-run matrix proves that schema-v6 meanings and runtime Blender behavior remain unchanged.
+Next safest task: add schema/contract validation for the new `agent_state_packet` report section under the existing formal JSON schema validation plan. Do not inject the packet into prompts until this contract is validated by the dry-run matrix.
