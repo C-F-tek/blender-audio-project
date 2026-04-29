@@ -36,8 +36,8 @@ P3 low
 | TD-005 | `v61b_backgood` backup folder | P3 | open | Backup-style folder appears in package validation context. | Validator noise and AI confusion. | Decide whether to archive, exclude, or document it after checking for unique fixes. | 2026-04-29 |
 | TD-006 | Formal JSON schemas | P2 | open | JSON contracts are documented but not fully enforced. | AI artifacts can drift. | Add schema validators gradually for AI pipeline reports, scene specs and music summaries. | 2026-04-29 |
 | TD-007 | NPU pipeline decomposition | P2 | open | Some NPU orchestration files remain large. | Harder testing and provider replacement. | Split later into config, context builder, prompts, providers, validators, artifact writer and runner. | 2026-04-29 |
-| TD-008 | Documentation link validation | P3 | open | Many docs reference other docs, but no link checker exists. | Broken AI onboarding path. | Add `Tools/validation/check_docs_links.py`. | 2026-04-29 |
-| TD-009 | Refactor status consistency | P2 | open | Pipeline status is duplicated across docs and `refactor_status.py`. | Future inconsistency can confuse agents. | Add `Tools/validation/check_refactor_status_consistency.py`. | 2026-04-29 |
+| TD-008 | Documentation link validation | P3 | resolved | Many docs reference other docs, but no link checker existed. | Broken AI onboarding path. | `Tools/validation/check_docs_links.py` added; run after documentation changes. | 2026-04-29 |
+| TD-009 | Refactor status consistency | P2 | resolved | Pipeline status is duplicated across docs and `refactor_status.py`. | Future inconsistency can confuse agents. | `Tools/validation/check_refactor_status_consistency.py` added; run after AI pipeline/status docs changes. | 2026-04-29 |
 
 ## Add a new item
 
