@@ -50,15 +50,15 @@ function Invoke-Step {
     param(
         [string]$Name,
         [string]$Command,
-        [string[]]$Args
+        [string[]]$Arguments
     )
 
     Write-Section $Name
     $started = Get-Date
     Add-Content -LiteralPath $script:MainLog -Value ("Started: " + $started.ToString("o"))
-    Add-Content -LiteralPath $script:MainLog -Value ("Command: " + $Command + " " + ($Args -join " "))
+    Add-Content -LiteralPath $script:MainLog -Value ("Command: " + $Command + " " + ($Arguments -join " "))
 
-    & $Command @Args 2>&1 | Tee-Object -FilePath $script:MainLog -Append
+    & $Command @Arguments 2>&1 | Tee-Object -FilePath $script:MainLog -Append
     $exitCode = $LASTEXITCODE
     $ended = Get-Date
     Add-Content -LiteralPath $script:MainLog -Value ("Ended: " + $ended.ToString("o"))
@@ -67,7 +67,7 @@ function Invoke-Step {
     $script:Results += [pscustomobject]@{
         name = $Name
         command = $Command
-        args = $Args
+        args = $Arguments
         started = $started.ToString("o")
         ended = $ended.ToString("o")
         exit_code = $exitCode
@@ -96,19 +96,19 @@ Add-Content -LiteralPath $script:MainLog -Value "Repo: $repo"
 
 try {
     if (-not $SkipPull) {
-        Invoke-Step -Name "git pull --rebase" -Command "git" -Args @("pull", "--rebase", "origin", "master")
+        Invoke-Step -Name "git pull --rebase" -Command "git" -Arguments @("pull", "--rebase", "origin", "master")
     }
 
-    Invoke-Step -Name "git status before validation" -Command "git" -Args @("status")
-    Invoke-Step -Name "python syntax validation" -Command "python" -Args @(".\Tools\validation\check_python_syntax.py", "--repo-root", ".")
-    Invoke-Step -Name "ai pipeline module smoke validation" -Command "python" -Args @(".\Tools\validation\check_ai_pipeline_modules.py", "--repo-root", ".", "--output", ".\output\validation\ai_pipeline_modules.json")
-    Invoke-Step -Name "ai pipeline dry-run matrix" -Command "python" -Args @(".\Tools\ai\run_pipeline_dry_run_matrix.py", "--repo-root", ".", "--continue-on-error")
-    Invoke-Step -Name "package structure validation" -Command "python" -Args @(".\Tools\validation\check_package_structure.py", "--repo-root", ".")
-    Invoke-Step -Name "json artifact validation" -Command "python" -Args @(".\Tools\validation\check_json_artifacts.py", "--repo-root", ".")
-    Invoke-Step -Name "build project ai index" -Command "python" -Args @(".\Tools\npu\build_project_ai_index.py")
-    Invoke-Step -Name "build npu code context" -Command "python" -Args @(".\Tools\npu\build_npu_code_context.py")
-    Invoke-Step -Name "git diff stat after validation" -Command "git" -Args @("diff", "--stat")
-    Invoke-Step -Name "git status after validation" -Command "git" -Args @("status")
+    Invoke-Step -Name "git status before validation" -Command "git" -Arguments @("status")
+    Invoke-Step -Name "python syntax validation" -Command "python" -Arguments @(".\Tools\validation\check_python_syntax.py", "--repo-root", ".")
+    Invoke-Step -Name "ai pipeline module smoke validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_pipeline_modules.py", "--repo-root", ".", "--output", ".\output\validation\ai_pipeline_modules.json")
+    Invoke-Step -Name "ai pipeline dry-run matrix" -Command "python" -Arguments @(".\Tools\ai\run_pipeline_dry_run_matrix.py", "--repo-root", ".", "--continue-on-error")
+    Invoke-Step -Name "package structure validation" -Command "python" -Arguments @(".\Tools\validation\check_package_structure.py", "--repo-root", ".")
+    Invoke-Step -Name "json artifact validation" -Command "python" -Arguments @(".\Tools\validation\check_json_artifacts.py", "--repo-root", ".")
+    Invoke-Step -Name "build project ai index" -Command "python" -Arguments @(".\Tools\npu\build_project_ai_index.py")
+    Invoke-Step -Name "build npu code context" -Command "python" -Arguments @(".\Tools\npu\build_npu_code_context.py")
+    Invoke-Step -Name "git diff stat after validation" -Command "git" -Arguments @("diff", "--stat")
+    Invoke-Step -Name "git status after validation" -Command "git" -Arguments @("status")
 
     $passed = ($script:Results | Where-Object { -not $_.passed }).Count -eq 0
 }
