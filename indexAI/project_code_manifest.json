@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-04-29T20:33:14",
+  "created_at": "2026-04-29T20:38:55",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "index_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI",
   "primary_library": true,
-  "source_fingerprint": "9992aa1df67cc8053aa77193a0f667aa6530963a053ecee4000bb7ebacccc532",
+  "source_fingerprint": "a9fedec08f49c367d2b7cd332c93fa62a140b01ac112502d8cdf4767d54d8351",
   "excluded_dirs": [
     ".git",
     ".mypy_cache",
@@ -8251,9 +8251,9 @@
     {
       "file": "Tools/ai/pipeline/refactor_status.py",
       "suffix": ".py",
-      "lines": 67,
-      "chars": 2516,
-      "sha256": "476e782a4195d0aecb8d5fb6f0b84a19b2a07b2a27fa8c4c11bae07efd9d58e4",
+      "lines": 71,
+      "chars": 2890,
+      "sha256": "bd7163f73f3342ded7268d20b1735b3a01ef6ef7b4e60af7fa2d28325228262d",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -8263,7 +8263,7 @@
         "functions": [
           {
             "name": "get_pipeline_refactor_status",
-            "line": 64,
+            "line": 68,
             "args": [],
             "async": false
           }
@@ -10638,7 +10638,7 @@
       "suffix": ".json",
       "lines": 7339,
       "chars": 198048,
-      "sha256": "7e3945e76ba1265846d23be0939d5a08a472a361e03b74951c40f480243da548"
+      "sha256": "d4d898ce378d68616cfa7933d7bf1ac1fb9ac94cd5d65a5165def39e9fb049af"
     },
     {
       "file": "Tools/npu/npu_guardrail_service.py",
@@ -14030,9 +14030,9 @@
     {
       "file": "Tools/workflow/run_local_validation_after_refactor.ps1",
       "suffix": ".ps1",
-      "lines": 192,
-      "chars": 7039,
-      "sha256": "a426de7d152c4042f8580ca00c3d813b1bd828475bec40204a45c591668ea473"
+      "lines": 200,
+      "chars": 7984,
+      "sha256": "afb711c068845c98aebc1b9075a80a1b945074ac2ecc04715be8ed859c26497b"
     },
     {
       "file": "Tools/workflow/scene_brief.py",
@@ -17814,9 +17814,9 @@
       "path": "indexAI/project_code_chunks/chunk_0243_Tools_ai_pipeline_refactor_status_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 66,
-      "chars": 3394,
-      "sha256": "9f780be1a2fd754b184416ff3acee0b821989d6f1a2b64eae48fb8896ffcd97e"
+      "end_line": 70,
+      "chars": 3796,
+      "sha256": "9e5d2936e096247885bc5c0b58a25ed7daa182a7752a203cd0efac996dcca6cd"
     },
     {
       "index": 244,
@@ -18386,7 +18386,7 @@
       "start_line": 1,
       "end_line": 382,
       "chars": 11708,
-      "sha256": "6f5fa25da79c71d95eaac3e7ba6713d5592af3fdac70179ba92f35b4b3e7083e"
+      "sha256": "c8780b24660492f897da9f737e1a8bc478fc6ab6d55e91cd0d8ab2a8d2a191dc"
     },
     {
       "index": 301,
@@ -19184,9 +19184,9 @@
       "path": "indexAI/project_code_chunks/chunk_0380_Tools_workflow_run_local_validation_after_refactor_ps1.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 191,
-      "chars": 8523,
-      "sha256": "b6de6d445cab53b2c44a210facf298090bfc79d2ad5357aad11f4339eac0ec25"
+      "end_line": 199,
+      "chars": 9524,
+      "sha256": "4c4a0c036d925a0495703492dc7512aabe844477183305f2c3770f2965c60edf"
     },
     {
       "index": 381,
