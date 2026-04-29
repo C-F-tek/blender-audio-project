@@ -15,6 +15,37 @@ The goal is to keep generated work useful, testable, maintainable and safe to re
 | Candidate | Structured package/script with documented inputs and validators | Acceptable for application-level validation. |
 | Stable reference | Tested workflow used as a reference | Example: `Scripting/v61b/`. |
 
+## Architecture Boundary — Input-Agnostic / Output-Application-Agnostic
+
+Reusable generated-artifact policy must not be tied to the current concrete Blender/audio workflow.
+
+Fixed architectural rule:
+
+```text
+not Blender-only
+not WAV/audio-only
+input-agnostic
+output-application-agnostic
+current execution assumption: target applications accept generated Python scripts
+future extension: other runtimes, other application APIs and other input data families
+```
+
+Reason:
+
+```text
+Blender is the current real application target, but it is not the architectural limit.
+WAV/audio is the current real input family, but it is not the architectural limit.
+```
+
+Quality gates must keep these layers separate:
+
+```text
+input-domain validation
+output-application validation
+generated Python script policy
+artifact/report contract validation
+```
+
 ## Minimum quality gate for a new package
 
 A new package under `Scripting/` should include:
