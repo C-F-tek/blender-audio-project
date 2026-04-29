@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-04-29T19:40:36",
+  "created_at": "2026-04-29T20:01:02",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "index_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI",
   "primary_library": true,
-  "source_fingerprint": "b88bdd05c8dc54f963f64cdff294b197e659ce8cf050f43bd5356a8ef0fe0311",
+  "source_fingerprint": "ad15ce0938384e19c57fb2c1f1b67cf5fd4667802a08c60e1c85c95c1544950d",
   "excluded_dirs": [
     ".git",
     ".mypy_cache",
@@ -10596,7 +10596,7 @@
       "suffix": ".json",
       "lines": 7339,
       "chars": 198048,
-      "sha256": "2ad751a3c2f702bfd2cf11433b315b0fb12bc259c2c616d5ff80ac1b4893abaa"
+      "sha256": "b5584d431e1d3b4fa51c6cba55aff8a611e517315a5c833cb4e2f4afbf534c78"
     },
     {
       "file": "Tools/npu/npu_guardrail_service.py",
@@ -12056,9 +12056,9 @@
     {
       "file": "Tools/validation/check_json_artifacts.py",
       "suffix": ".py",
-      "lines": 123,
-      "chars": 3814,
-      "sha256": "3629d26221be2f307e3e874f363f8043624423bf458fb0502e29271d1786391f",
+      "lines": 128,
+      "chars": 3960,
+      "sha256": "f590b5968264fb7c480b6a8379d51d138dd517f50317027c89e5febaddff4a52",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -12089,8 +12089,16 @@
             "async": false
           },
           {
-            "name": "inspect_json",
+            "name": "read_json_text",
             "line": 40,
+            "args": [
+              "path"
+            ],
+            "async": false
+          },
+          {
+            "name": "inspect_json",
+            "line": 45,
             "args": [
               "path",
               "repo_root",
@@ -12100,7 +12108,7 @@
           },
           {
             "name": "main",
-            "line": 82,
+            "line": 87,
             "args": [],
             "async": false
           }
@@ -18114,7 +18122,7 @@
       "start_line": 1,
       "end_line": 382,
       "chars": 11708,
-      "sha256": "9afee8ce88d0ed831b0297885564051d7ac49f6d6d16419577c53784b9191cc9"
+      "sha256": "18eadcd521f00130e02d6608b80d9af28909b3cc2e9830ed639d988d050452cc"
     },
     {
       "index": 294,
@@ -18612,9 +18620,9 @@
       "path": "indexAI/project_code_chunks/chunk_0343_Tools_validation_check_json_artifacts_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 122,
-      "chars": 5171,
-      "sha256": "07908898fa03d703543e802984df034dde80849dacf829f2c50e25da99ab9ce0"
+      "end_line": 127,
+      "chars": 5384,
+      "sha256": "1c6a7a6c6bacf9e6b8f4056680daff261797de07d92e3ddbeea283ab90b4d779"
     },
     {
       "index": 344,

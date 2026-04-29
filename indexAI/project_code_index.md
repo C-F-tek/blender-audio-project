@@ -1,8 +1,8 @@
 # Spaziotempo Primary Project Code Index
 
-Generated: `2026-04-29T19:40:36`
+Generated: `2026-04-29T20:01:02`
 
-Source fingerprint: `b88bdd05c8dc54f963f64cdff294b197e659ce8cf050f43bd5356a8ef0fe0311`
+Source fingerprint: `ad15ce0938384e19c57fb2c1f1b67cf5fd4667802a08c60e1c85c95c1544950d`
 
 Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.
 
@@ -218,7 +218,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
 - `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `53c55cc95abf776b330776e3bdee74319dbe3cc9e3e89bfbe385e621b9a410d6`
 - `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `ae496412a40745840615966bb12e0e7f2f2064610bd21622cb4642ed772441e1`
-- `Tools/npu/npu_code_manifest.json`: 7339 lines, 198048 chars, sha256 `2ad751a3c2f702bfd2cf11433b315b0fb12bc259c2c616d5ff80ac1b4893abaa`
+- `Tools/npu/npu_code_manifest.json`: 7339 lines, 198048 chars, sha256 `b5584d431e1d3b4fa51c6cba55aff8a611e517315a5c833cb4e2f4afbf534c78`
 - `Tools/npu/npu_guardrail_service.py`: 491 lines, 20211 chars, sha256 `5829724c35b7fccef62481ca8efc7290b63ef4d552e441fcf51a59009a4cc84a`
 - `Tools/npu/npu_music_manifest.json`: 703 lines, 27216 chars, sha256 `e5cb8facca90680775a3ab5a525cfb2b0ef1f0f7c0ecd5c61e2f1570082f2045`
 - `Tools/npu/npu_runtime.py`: 161 lines, 5903 chars, sha256 `38dc29da6ba1c564c68a29c0c5de7e4b38787aa6a0c17607c8d2ae03fe89f182`
@@ -233,7 +233,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/repo_patch_runner/example_fix_blender_51_musgrave.json`: 41 lines, 1979 chars, sha256 `6a6cc0f592252664ac99b71434b852b97bdb32ae0b447a59a2eb780d0cfb486a`
 - `Tools/repo_patch_runner/README.md`: 112 lines, 2369 chars, sha256 `84a16a0cc3ea9c612998d7b6b411e9b4a34a406b8a7732d5fdf50da28a53e460`
 - `Tools/validation/check_ai_pipeline_modules.py`: 180 lines, 7118 chars, sha256 `112a7a0abc83babae45792409ad89e569eab28d7e8350b033ce264abbde0c5ca`
-- `Tools/validation/check_json_artifacts.py`: 123 lines, 3814 chars, sha256 `3629d26221be2f307e3e874f363f8043624423bf458fb0502e29271d1786391f`
+- `Tools/validation/check_json_artifacts.py`: 128 lines, 3960 chars, sha256 `f590b5968264fb7c480b6a8379d51d138dd517f50317027c89e5febaddff4a52`
 - `Tools/validation/check_package_structure.py`: 128 lines, 4083 chars, sha256 `c699d6ae862857f7f3850f8250a1395a63aa3ab2995480af223935e0f8b44f42`
 - `Tools/validation/check_python_syntax.py`: 102 lines, 2652 chars, sha256 `aac726574393618c2212d5a0ff2a3d8be7278ff122e688e86d9529bf47931ddd`
 - `Tools/validation/README.md`: 110 lines, 3619 chars, sha256 `59be5228e37f45203879308ff786820ae9beae60eba42ad385392a26489227dc`
@@ -607,7 +607,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI/project_code_chunks/chunk_0340_Tools_repo_patch_runner_example_fix_blender_51_musgrave_json.md` -> `Tools/repo_patch_runner/example_fix_blender_51_musgrave.json` lines 1-40
 - `indexAI/project_code_chunks/chunk_0341_Tools_repo_patch_runner_README_md.md` -> `Tools/repo_patch_runner/README.md` lines 1-111
 - `indexAI/project_code_chunks/chunk_0342_Tools_validation_check_ai_pipeline_modules_py.md` -> `Tools/validation/check_ai_pipeline_modules.py` lines 1-179
-- `indexAI/project_code_chunks/chunk_0343_Tools_validation_check_json_artifacts_py.md` -> `Tools/validation/check_json_artifacts.py` lines 1-122
+- `indexAI/project_code_chunks/chunk_0343_Tools_validation_check_json_artifacts_py.md` -> `Tools/validation/check_json_artifacts.py` lines 1-127
 - `indexAI/project_code_chunks/chunk_0344_Tools_validation_check_package_structure_py.md` -> `Tools/validation/check_package_structure.py` lines 1-127
 - `indexAI/project_code_chunks/chunk_0345_Tools_validation_check_python_syntax_py.md` -> `Tools/validation/check_python_syntax.py` lines 1-101
 - `indexAI/project_code_chunks/chunk_0346_Tools_validation_README_md.md` -> `Tools/validation/README.md` lines 1-109
