@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-04-29T22:07:52",
+  "created_at": "2026-04-29T23:39:35",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "script_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\Scripting\\v61b",
   "long_context": {
@@ -391,9 +391,9 @@
       "file": "Tools/npu/ollama_runtime.py",
       "exists": true,
       "suffix": ".py",
-      "lines": 387,
-      "chars": 13260,
-      "sha256": "bd594cc34384f89d7f8ba42c9441d3df85413efee7b4df9d2f0b43da17991cce",
+      "lines": 390,
+      "chars": 13678,
+      "sha256": "a5db8a9f0d0111595e34f284bf8ba3ce2f3d7867e6e761a55fe8ebc952d87ec6",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -403,6 +403,7 @@
           "os",
           "shutil",
           "subprocess",
+          "sys",
           "time",
           "urllib.error",
           "urllib.request"
@@ -410,7 +411,7 @@
         "functions": [
           {
             "name": "normalize_base_url",
-            "line": 14,
+            "line": 23,
             "args": [
               "value"
             ],
@@ -418,25 +419,25 @@
           },
           {
             "name": "now_iso",
-            "line": 25,
+            "line": 34,
             "args": [],
             "async": false
           },
           {
             "name": "project_root",
-            "line": 29,
+            "line": 38,
             "args": [],
             "async": false
           },
           {
             "name": "ollama_runtime_log_path",
-            "line": 33,
+            "line": 42,
             "args": [],
             "async": false
           },
           {
             "name": "append_ollama_runtime_event",
-            "line": 37,
+            "line": 46,
             "args": [
               "event",
               "payload"
@@ -445,25 +446,25 @@
           },
           {
             "name": "ollama_home",
-            "line": 48,
+            "line": 57,
             "args": [],
             "async": false
           },
           {
             "name": "manifest_root",
-            "line": 55,
+            "line": 64,
             "args": [],
             "async": false
           },
           {
             "name": "find_ollama_exe",
-            "line": 60,
+            "line": 69,
             "args": [],
             "async": false
           },
           {
             "name": "_json_request",
-            "line": 98,
+            "line": 107,
             "args": [
               "base_url",
               "path",
@@ -474,7 +475,7 @@
           },
           {
             "name": "is_server_ready",
-            "line": 115,
+            "line": 124,
             "args": [
               "base_url",
               "timeout"
@@ -483,7 +484,7 @@
           },
           {
             "name": "list_models",
-            "line": 123,
+            "line": 132,
             "args": [
               "base_url"
             ],
@@ -491,13 +492,13 @@
           },
           {
             "name": "list_models_from_disk",
-            "line": 134,
+            "line": 143,
             "args": [],
             "async": false
           },
           {
             "name": "start_server",
-            "line": 163,
+            "line": 172,
             "args": [
               "ollama_exe",
               "base_url",
@@ -507,7 +508,7 @@
           },
           {
             "name": "choose_model",
-            "line": 184,
+            "line": 193,
             "args": [
               "preferred_model",
               "available_models"
@@ -516,7 +517,7 @@
           },
           {
             "name": "strip_json_fence",
-            "line": 199,
+            "line": 208,
             "args": [
               "text"
             ],
@@ -524,7 +525,7 @@
           },
           {
             "name": "parse_json_response",
-            "line": 211,
+            "line": 213,
             "args": [
               "text"
             ],
@@ -534,61 +535,61 @@
         "classes": [
           {
             "name": "OllamaModelManager",
-            "line": 223,
+            "line": 226,
             "methods": [
               {
                 "name": "__init__",
-                "line": 224
+                "line": 227
               },
               {
                 "name": "generate",
-                "line": 238
+                "line": 241
               },
               {
                 "name": "close",
-                "line": 264
+                "line": 267
               },
               {
                 "name": "__enter__",
-                "line": 270
+                "line": 273
               },
               {
                 "name": "__exit__",
-                "line": 273
+                "line": 276
               }
             ]
           },
           {
             "name": "OllamaSession",
-            "line": 277,
+            "line": 280,
             "methods": [
               {
                 "name": "__init__",
-                "line": 278
+                "line": 281
               },
               {
                 "name": "start",
-                "line": 299
+                "line": 302
               },
               {
                 "name": "generate",
-                "line": 318
+                "line": 321
               },
               {
                 "name": "unload_model",
-                "line": 342
+                "line": 345
               },
               {
                 "name": "close",
-                "line": 370
+                "line": 373
               },
               {
                 "name": "__enter__",
-                "line": 382
+                "line": 385
               },
               {
                 "name": "__exit__",
-                "line": 385
+                "line": 388
               }
             ]
           }
@@ -6331,19 +6332,19 @@
       "path": "Tools/npu/npu_code_chunks/chunk_007_Tools_npu_ollama_runtime_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 270,
-      "chars": 11440,
-      "sha256": "f63dfe1f4969cb3ae89cf50ffd9d279bc583e314ebf8836aaed65201b81181eb"
+      "end_line": 263,
+      "chars": 11463,
+      "sha256": "100c379cf7901ae53b650d160b580a5b6b3906302d1291726cec1add11cc0dab"
     },
     {
       "index": 8,
       "file": "Tools/npu/ollama_runtime.py",
       "path": "Tools/npu/npu_code_chunks/chunk_008_Tools_npu_ollama_runtime_py.md",
       "part": 2,
-      "start_line": 271,
-      "end_line": 386,
-      "chars": 6962,
-      "sha256": "f91ddb1f42aacc196633409969ca744da77519401a43d80a34b474727c6b63bb"
+      "start_line": 264,
+      "end_line": 389,
+      "chars": 7394,
+      "sha256": "de649d0765497ad191a7c708a5283cd3c55bc80a2fab6f30dbd3453495d607e5"
     },
     {
       "index": 9,
