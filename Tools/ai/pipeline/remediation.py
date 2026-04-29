@@ -44,6 +44,22 @@ def auto_safe_plan(out: Path) -> GuardrailPlan:
     return GuardrailPlan.from_queue(guardrail_queue(out).get("queue") or [])
 
 
+def normalize_guardrail_plan(plan: GuardrailPlan | list[Any] | tuple[Any, ...] | dict[str, Any]) -> GuardrailPlan:
+    """Normalize typed or legacy remediation plan payloads.
+
+    This keeps older callers and smoke validators compatible after the internal
+    migration from raw dictionaries to GuardrailPlan.
+    """
+    if isinstance(plan, GuardrailPlan):
+        return plan
+    if isinstance(plan, dict):
+        raw_requests = plan.get("requests") or []
+        return GuardrailPlan.from_raw_requests(list(raw_requests) if isinstance(raw_requests, list) else [])
+    if isinstance(plan, (list, tuple)):
+        return GuardrailPlan.from_raw_requests(list(plan))
+    return GuardrailPlan.from_raw_requests([])
+
+
 def remediation_plan_from_requests(requests: list[dict[str, Any]]) -> dict[str, Any]:
     """Summarize guardrail remediation requests by stage and action type."""
     return GuardrailPlan.from_raw_requests(list(requests)).to_dict()
@@ -53,12 +69,13 @@ def remedial_steps(
     repo: Path,
     out: Path,
     args: Any,
-    plan: GuardrailPlan,
+    plan: GuardrailPlan | list[Any] | tuple[Any, ...] | dict[str, Any],
     pass_index: int,
 ) -> list[PipelineStep]:
     """Build PipelineStep remediation commands requested by the guardrail."""
+    normalized_plan = normalize_guardrail_plan(plan)
     commands = build_step_commands(repo, out, args)
-    stages = plan.stages
+    stages = normalized_plan.stages
     todo: list[PipelineStep] = []
 
     if "wave_entrypoint_review" in stages and "review_wave_entrypoints" in commands:
