@@ -14,29 +14,30 @@ The documentation is intended for both human developers and AI agents. It should
 6. `AI_PIPELINE_ARCHITECTURE.md`
 7. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
 8. `AI_EXTERNAL_KNOWLEDGE.md`
-9. `MODULE_MAP.md`
-10. `DATA_FLOW.md`
-11. `REFACTORING_AND_REUSE_PLAN.md`
-12. `PATCH_SPEC_WORKFLOW.md`
-13. `SHARED_SCRIPTING_UTILITIES.md`
-14. `BLENDER_SCRIPT_ENTRYPOINTS.md`
-15. `AI_GENERATED_PACKAGE_STANDARD.md`
-16. `PACKAGE_CREATION_WORKFLOW.md`
-17. `QUALITY_GATE.md`
-18. `AUDIO_ANALYSIS_PIPELINE.md`
-19. `JSON_SCHEMAS.md`
-20. `RENDER_WORKFLOW.md`
-21. `FFMPEG_WORKFLOW.md`
-22. `LOCAL_AI_WORKFLOW.md`
-23. `NPU_GPU_PARALLELISM_PLAN.md`
-24. `AI_PIPELINE_OPTIMIZATION.md`
-25. `INSTALLATION.md`
-26. `USAGE.md`
-27. `COMPATIBILITY.md`
-28. `KNOWN_LIMITATIONS.md`
-29. `DEVELOPER_GUIDE.md`
-30. `PROJECT_AUDIT.md`
-31. `PROJECT_STATUS_POINT.md`
+9. `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`
+10. `MODULE_MAP.md`
+11. `DATA_FLOW.md`
+12. `REFACTORING_AND_REUSE_PLAN.md`
+13. `PATCH_SPEC_WORKFLOW.md`
+14. `SHARED_SCRIPTING_UTILITIES.md`
+15. `BLENDER_SCRIPT_ENTRYPOINTS.md`
+16. `AI_GENERATED_PACKAGE_STANDARD.md`
+17. `PACKAGE_CREATION_WORKFLOW.md`
+18. `QUALITY_GATE.md`
+19. `AUDIO_ANALYSIS_PIPELINE.md`
+20. `JSON_SCHEMAS.md`
+21. `RENDER_WORKFLOW.md`
+22. `FFMPEG_WORKFLOW.md`
+23. `LOCAL_AI_WORKFLOW.md`
+24. `NPU_GPU_PARALLELISM_PLAN.md`
+25. `AI_PIPELINE_OPTIMIZATION.md`
+26. `INSTALLATION.md`
+27. `USAGE.md`
+28. `COMPATIBILITY.md`
+29. `KNOWN_LIMITATIONS.md`
+30. `DEVELOPER_GUIDE.md`
+31. `PROJECT_AUDIT.md`
+32. `PROJECT_STATUS_POINT.md`
 
 ## Documentation groups
 
@@ -51,6 +52,7 @@ The documentation is intended for both human developers and AI agents. It should
 | `AI_PIPELINE_ARCHITECTURE.md` | Map of the modular AI artifact pipeline, module responsibilities and validation commands. |
 | `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local Git/GitHub validation, index regeneration, commit and push workflow after AI-assisted changes. |
 | `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this project. |
+| `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | OpenAI Harness Engineering and Symphony concepts adapted to this repository. |
 | `MODULE_MAP.md` | Repository areas, source packages, generated artifacts and navigation order. |
 | `DATA_FLOW.md` | Data movement from audio input to Blender scene and encoded video. |
 | `PROJECT_STATUS_POINT.md` | Current state checkpoint and next recommended tasks. |
@@ -65,6 +67,7 @@ The documentation is intended for both human developers and AI agents. It should
 | `SHARED_SCRIPTING_UTILITIES.md` | Policy and target modules for reusable package-agnostic code. |
 | `AI_PIPELINE_ARCHITECTURE.md` | Current modularization map for the AI artifact pipeline. |
 | `AI_PIPELINE_REFACTOR_STATUS.md` | Current refactor status marker to avoid inconsistent AI interpretation. |
+| `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | External agent-first engineering patterns mapped into project actions. |
 | `MODULE_MAP.md` | Source-to-target mapping for package modules and extraction candidates. |
 
 ### Patch, GitHub and automation workflow
@@ -142,13 +145,15 @@ Before editing code, an AI system should:
 5. read `AI_PIPELINE_REFACTOR_STATUS.md`;
 6. read `AI_PIPELINE_ARCHITECTURE.md`;
 7. read `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`;
-8. read `MODULE_MAP.md`;
-9. read `DATA_FLOW.md`;
-10. read `REFACTORING_AND_REUSE_PLAN.md`;
-11. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
-12. read `QUALITY_GATE.md`;
-13. read the README of the target package;
-14. inspect the target source file before producing a patch.
+8. read `AI_EXTERNAL_KNOWLEDGE.md`;
+9. read `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`;
+10. read `MODULE_MAP.md`;
+11. read `DATA_FLOW.md`;
+12. read `REFACTORING_AND_REUSE_PLAN.md`;
+13. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
+14. read `QUALITY_GATE.md`;
+15. read the README of the target package;
+16. inspect the target source file before producing a patch.
 
 ## Refactoring note
 
