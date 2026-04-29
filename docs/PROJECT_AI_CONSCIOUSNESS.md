@@ -17,7 +17,7 @@ audio file
   -> technical analysis JSON
   -> compact track/music context
   -> AI scene brief or scene specification
-  -> Blender Python package
+  -> Blender Python package or generated Blender script
   -> rendered frame sequence
   -> FFmpeg encoded video
 ```
@@ -30,7 +30,9 @@ audio file
 | `Scripting/v61b/` | stable reference | Current high-quality reference package. Do not destructively refactor. |
 | Ready To Jazz package | usable but monolithic | Good production/generation experiment; not yet reusable architecture. |
 | `Scripting/shared/` | active foundation | Pure Python helpers exist for path, JSON, image sequence, FFmpeg commands and render profiles; `blender_compat.py` passed a Blender 5.1.1 no-render smoke for frame range, noise node and VSE audio strip creation. |
-| `Tools/validation/` | active foundation | Non-invasive validation scripts exist, including AI pipeline, documentation, refactor-status, agent-memory and Blender shared compatibility checks. |
+| `Tools/validation/` | active foundation | Non-invasive validators exist for syntax, docs, JSON artifacts, AI pipeline, model JSON parsing, agent memory, Blender shared compatibility and generated Blender script policy. |
+| `Tools/validation/generated_file_policy.py` | active foundation | Generic generated-file policy engine reusable beyond Blender for other file/application contexts. |
+| `Tools/ai/model_json.py` | active foundation | Reusable deterministic parser for JSON-like model outputs. Ollama response parsing delegates to it while preserving legacy `json.JSONDecodeError` behavior. |
 | `Tools/ai/pipeline/` | modularized and locally validated | AI artifact pipeline is split into focused modules with a thin entrypoint, dry-run matrix, Markdown report and machine-readable status marker. |
 | `Tools/ai/agent_state.py` | initial foundation | Generic memory and microtask packet model for task-local agent state, persistent memory inputs and non-blocking CPU/NPU/GPU lane planning. |
 | `Tools/ai/agent_memory_policy.py` | initial foundation | Deterministic retention, quarantine and promotion-candidate policy for generic agent memory. |
@@ -64,6 +66,9 @@ docs/QUALITY_GATE.md
 docs/SHARED_SCRIPTING_UTILITIES.md
 docs/PROJECT_STATUS_POINT.md
 docs/PATCH_SPEC_WORKFLOW.md
+docs/EXECUTION_PLANS/active/2026-04-29_json_parser_utility_review.md
+docs/EXECUTION_PLANS/active/2026-04-29_generated_file_policy_blender_first.md
+docs/EXECUTION_PLANS/active/2026-04-29_superseded_pr_followups.md
 Scripting/README.md
 Scripting/v61b/README.md
 Scripting/shared/README.md
@@ -92,13 +97,28 @@ The active architectural direction is:
 
 ```text
 working package code
-  -> additive shared utility
+  -> additive shared utility or generic validator
   -> local validation
   -> optional adapter
   -> controlled migration
 ```
 
 Do not start by rewriting working Blender packages.
+
+When a concept may be reused outside Blender, split it into:
+
+```text
+generic core
+  -> application-specific adapter
+  -> validator/report
+```
+
+Current example:
+
+```text
+Tools/validation/generated_file_policy.py
+  -> Tools/validation/check_generated_blender_script_policy.py
+```
 
 ## Durable task control
 
@@ -113,7 +133,7 @@ docs/EXECUTION_PLANS/abandoned/
 docs/TECH_DEBT_TRACKER.md
 ```
 
-Use execution plans for multi-step work involving source code, shared utilities, AI pipeline behavior, Blender package migration, GitHub workflow changes or validation/debug cycles.
+Use execution plans for multi-step work involving source code, shared utilities, generic policy engines, AI pipeline behavior, Blender package migration, GitHub workflow changes or validation/debug cycles.
 
 Use the technical debt tracker when a known issue is real but not fixed immediately.
 
@@ -155,6 +175,7 @@ Current module family:
 ```text
 Tools/ai/run_parallel_artifact_pipeline.py
 Tools/ai/run_pipeline_dry_run_matrix.py
+Tools/ai/model_json.py
 Tools/ai/pipeline/defaults.py
 Tools/ai/pipeline/models.py
 Tools/ai/pipeline/runner.py
@@ -176,8 +197,11 @@ Validated locally:
 
 ```text
 Python syntax validation: PASS
+AI model JSON parser validation: PASS
 AI pipeline module smoke validation: PASS
 AI pipeline dry-run matrix: PASS
+Agent memory policy validation: PASS
+Generated Blender script policy sample validation: PASS
 Package structure validation: PASS
 JSON artifact validation: PASS
 Project AI index generation: PASS
@@ -198,17 +222,26 @@ Current shared modules:
 | Module | Role |
 |---|---|
 | `Scripting/shared/path_utils.py` | Project root, file/directory checks, relative path helpers. |
-| `Scripting/shared/json_io.py` | UTF-8 JSON read/write and small validation helpers. |
+| `Scripting/shared/json_io.py` | UTF-8 JSON read/write and small validation helpers for clean project JSON files. |
 | `Scripting/shared/image_sequence.py` | Frame scan, contiguous sequence detection, FFmpeg pattern generation. |
 | `Scripting/shared/ffmpeg_encoder.py` | Package-agnostic FFmpeg command building and dry-run execution helper. |
 | `Scripting/shared/render_profiles.py` | Reusable encode profile definitions for YouTube-oriented output. |
 | `Scripting/shared/blender_compat.py` | Blender-aware compatibility wrappers for VSE strips, frame range, FPS and node compatibility; validated by no-render smoke but not yet adopted by runtime packages. |
+
+Current AI/generic validation foundations:
+
+| Module | Role |
+|---|---|
+| `Tools/ai/model_json.py` | Deterministic parser for JSON-like model output. |
+| `Tools/validation/generated_file_policy.py` | Generic policy primitives for generated file validation. |
+| `Tools/validation/check_generated_blender_script_policy.py` | Blender-specific generated script policy adapter. |
 
 Next shared candidates:
 
 ```text
 Scripting/shared/config_model.py
 Scripting/shared/diagnostics.py
+additional generated-file policy adapters only after one-at-a-time validation
 ```
 
 ## Implemented validation foundation
@@ -221,22 +254,26 @@ Current validators:
 | `Tools/validation/check_package_structure.py` | Inspects Blender package folders under `Scripting/`. |
 | `Tools/validation/check_json_artifacts.py` | Checks JSON parseability without rewriting artifacts; accepts UTF-8 with or without BOM. |
 | `Tools/validation/check_ai_pipeline_modules.py` | Smoke-checks modular AI pipeline imports, step builders, preflight and report generation without heavy workloads. |
+| `Tools/validation/check_ai_model_json.py` | Validates reusable model-output JSON parser and Ollama legacy wrapper behavior. |
 | `Tools/validation/check_refactor_status_consistency.py` | Checks that duplicated AI pipeline refactor status remains consistent across docs and code. |
 | `Tools/validation/check_docs_links.py` | Checks internal documentation links after doc changes. |
 | `Tools/validation/check_agent_memory_policy.py` | Checks local agent memory policy and optional generated memory DB state. |
 | `Tools/validation/check_blender_shared_compat_smoke.py` | Runs a Blender no-render compatibility smoke when Blender is available. |
+| `Tools/validation/check_generated_blender_script_policy.py` | Validates generated Blender script policy using reusable generated-file rules. |
 
 Preferred local validation:
 
 ```powershell
 python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_package_structure.py --repo-root .
-python .\Tools\validation\check_json_artifacts.py --repo-root .
+python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+python .\Tools\validation\check_package_structure.py --repo-root .
+python .\Tools\validation\check_json_artifacts.py --repo-root .
 ```
 
 Generic agent state packet smoke:
@@ -264,11 +301,19 @@ Blender shared compatibility smoke:
 python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
 ```
 
+Generated Blender script policy smoke:
+
+```powershell
+python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
+```
+
 Unattended validation runner:
 
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
 ```
+
+Do not add new validators to the unattended runner until they have remained cheap and deterministic across at least one local validation cycle.
 
 ## Generated index policy
 
@@ -319,13 +364,14 @@ Capabilities:
 
 ## High-priority next tasks
 
-1. Refresh docs/task state when completed work has moved faster than durable docs.
-2. Use the active execution plan for `TD-010` Agent State Memory integration before wiring memory packets into the real pipeline.
-3. Add a formal JSON schema execution plan for `TD-006`, starting with AI pipeline report schema v6, dry-run matrix report, agent state packet, music summary and scene spec.
-4. Select one non-critical `Scripting/shared/blender_compat.py` call-site pilot only after confirming the no-render smoke result on the workstation.
-5. Open the `TD-007` NPU pipeline decomposition plan before splitting orchestration files into config, context builder, prompts, provider adapter, validators, artifact writer and runner.
-6. Keep `TD-001` PowerShell runner compatibility under review when changing validation commands.
-7. Evaluate CI/GitHub Actions only after the local runner remains stable and the intended checks are cheap, deterministic and non-rendering.
+1. Validate the newly aligned documentation and regenerate AI/NPU indexes.
+2. Add generated Blender script policy documentation to the local workflow only after another stable validation cycle.
+3. Continue `TD-006` with dry-run matrix report contract validation.
+4. Continue `TD-010` only after schema/report contracts remain stable; do not inject agent packets into prompts yet.
+5. Select one non-critical `Scripting/shared/blender_compat.py` call-site pilot only after confirming the no-render smoke result on the workstation.
+6. Open the `TD-007` NPU pipeline decomposition plan before splitting orchestration files into config, context builder, prompts, provider adapter, validators, artifact writer and runner.
+7. Keep `TD-001` PowerShell runner compatibility under review when changing validation commands.
+8. Evaluate CI/GitHub Actions only after the local runner remains stable and the intended checks are cheap, deterministic and non-rendering.
 
 ## Avoid now
 
@@ -342,6 +388,8 @@ modify generated full analysis JSON files
 run long Blender renders or GPU generation automatically
 change AI pipeline schema-v6 field meanings without local dry-run matrix validation
 mass-migrate runtime packages to Scripting/shared/blender_compat.py
+add AI GitHub Actions that call paid or external model APIs automatically
+use prompt-based repair for JSON parsing as a default path
 ```
 
 ## Reporting format for AI agents
@@ -367,6 +415,7 @@ Correct posture:
 ```text
 stability first
 small patches
+generic utility before adapter
 shared utilities before migration
 validation before commit
 indexes regenerated after structure changes
