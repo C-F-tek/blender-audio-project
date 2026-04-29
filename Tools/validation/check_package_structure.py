@@ -13,6 +13,12 @@ SKIP_DIRS = {
     "__pycache__",
 }
 
+SKIP_NAME_PARTS = (
+    "_backup",
+    "_backgood",
+    "_bak",
+)
+
 
 def count_lines(path: Path) -> int:
     try:
@@ -58,12 +64,20 @@ def inspect_package(path: Path, scripting_root: Path) -> dict[str, Any]:
     }
 
 
+def should_skip_package_dir(path: Path) -> bool:
+    """Return True when a Scripting/ child folder should not be treated as a package."""
+    name = path.name.lower()
+    if path.name in SKIP_DIRS or path.name.startswith("."):
+        return True
+    return any(marker in name for marker in SKIP_NAME_PARTS)
+
+
 def iter_packages(scripting_root: Path) -> list[Path]:
     packages: list[Path] = []
     for item in sorted(scripting_root.iterdir()):
         if not item.is_dir():
             continue
-        if item.name in SKIP_DIRS or item.name.startswith("."):
+        if should_skip_package_dir(item):
             continue
         if any(item.glob("*.py")) or (item / "README.md").exists():
             packages.append(item)
