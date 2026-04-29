@@ -24,13 +24,16 @@ def import_model_json(repo_root: Path) -> dict[str, Any]:
         repair_common_model_json,
         strip_markdown_json_fence,
     )
+    from Tools.npu.ollama_runtime import parse_json_response, strip_json_fence  # type: ignore
 
     return {
         "ModelJsonParseError": ModelJsonParseError,
         "extract_json_candidate": extract_json_candidate,
+        "parse_json_response": parse_json_response,
         "parse_model_json": parse_model_json,
         "parse_model_json_object": parse_model_json_object,
         "repair_common_model_json": repair_common_model_json,
+        "strip_json_fence": strip_json_fence,
         "strip_markdown_json_fence": strip_markdown_json_fence,
     }
 
@@ -51,8 +54,10 @@ def check_model_json(repo_root: Path) -> dict[str, Any]:
     mod = import_model_json(repo_root)
     parse_model_json = mod["parse_model_json"]
     parse_model_json_object = mod["parse_model_json_object"]
+    parse_json_response = mod["parse_json_response"]
     extract_json_candidate = mod["extract_json_candidate"]
     strip_markdown_json_fence = mod["strip_markdown_json_fence"]
+    strip_json_fence = mod["strip_json_fence"]
     repair_common_model_json = mod["repair_common_model_json"]
 
     cases = [
@@ -64,10 +69,15 @@ def check_model_json(repo_root: Path) -> dict[str, Any]:
         run_case("array_allowed", parse_model_json, '[{"a": 1}, {"a": 2}]', [{"a": 1}, {"a": 2}]),
         run_case("array_rejected_by_object_parser", parse_model_json_object, '[1, 2, 3]', expect_error=True),
         run_case("invalid_text_fails", parse_model_json, 'not json at all', expect_error=True),
+        run_case("ollama_parse_json_response_plain", parse_json_response, '{"ok": true}', {"ok": True}),
+        run_case("ollama_parse_json_response_fenced", parse_json_response, '```json\n{"ok": true}\n```', {"ok": True}),
+        run_case("ollama_parse_json_response_surrounding_text", parse_json_response, 'prefix {"ok": true} suffix', {"ok": True}),
+        run_case("ollama_parse_json_response_invalid_raises_jsondecode", parse_json_response, 'not json at all', expect_error=True),
     ]
 
     direct_checks = {
         "strip_markdown_json_fence": strip_markdown_json_fence('```json\n{"a": 1}\n```') == '{"a": 1}',
+        "strip_json_fence_legacy_wrapper": strip_json_fence('```json\n{"a": 1}\n```') == '{"a": 1}',
         "extract_json_candidate": extract_json_candidate('prefix {"a": [1, 2]} suffix') == '{"a": [1, 2]}',
         "repair_common_model_json": repair_common_model_json('{"a": 1,}') == '{"a": 1}',
     }
