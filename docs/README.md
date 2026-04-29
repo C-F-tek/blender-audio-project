@@ -7,37 +7,40 @@ The documentation is intended for both human developers and AI agents. It should
 ## Recommended reading order
 
 1. `../AGENTS.md`
-2. `PROJECT_OVERVIEW.md`
-3. `PROJECT_AI_CONSCIOUSNESS.md`
-4. `AI_ONBOARDING.md`
-5. `AI_PIPELINE_REFACTOR_STATUS.md`
-6. `AI_PIPELINE_ARCHITECTURE.md`
-7. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
-8. `AI_EXTERNAL_KNOWLEDGE.md`
-9. `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`
-10. `MODULE_MAP.md`
-11. `DATA_FLOW.md`
-12. `REFACTORING_AND_REUSE_PLAN.md`
-13. `PATCH_SPEC_WORKFLOW.md`
-14. `SHARED_SCRIPTING_UTILITIES.md`
-15. `BLENDER_SCRIPT_ENTRYPOINTS.md`
-16. `AI_GENERATED_PACKAGE_STANDARD.md`
-17. `PACKAGE_CREATION_WORKFLOW.md`
-18. `QUALITY_GATE.md`
-19. `AUDIO_ANALYSIS_PIPELINE.md`
-20. `JSON_SCHEMAS.md`
-21. `RENDER_WORKFLOW.md`
-22. `FFMPEG_WORKFLOW.md`
-23. `LOCAL_AI_WORKFLOW.md`
-24. `NPU_GPU_PARALLELISM_PLAN.md`
-25. `AI_PIPELINE_OPTIMIZATION.md`
-26. `INSTALLATION.md`
-27. `USAGE.md`
-28. `COMPATIBILITY.md`
-29. `KNOWN_LIMITATIONS.md`
-30. `DEVELOPER_GUIDE.md`
-31. `PROJECT_AUDIT.md`
-32. `PROJECT_STATUS_POINT.md`
+2. `../WORKFLOW.md`
+3. `PROJECT_OVERVIEW.md`
+4. `PROJECT_AI_CONSCIOUSNESS.md`
+5. `AI_ONBOARDING.md`
+6. `AI_PIPELINE_REFACTOR_STATUS.md`
+7. `AI_PIPELINE_ARCHITECTURE.md`
+8. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
+9. `AI_EXTERNAL_KNOWLEDGE.md`
+10. `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`
+11. `EXECUTION_PLANS/README.md`
+12. `TECH_DEBT_TRACKER.md`
+13. `MODULE_MAP.md`
+14. `DATA_FLOW.md`
+15. `REFACTORING_AND_REUSE_PLAN.md`
+16. `PATCH_SPEC_WORKFLOW.md`
+17. `SHARED_SCRIPTING_UTILITIES.md`
+18. `BLENDER_SCRIPT_ENTRYPOINTS.md`
+19. `AI_GENERATED_PACKAGE_STANDARD.md`
+20. `PACKAGE_CREATION_WORKFLOW.md`
+21. `QUALITY_GATE.md`
+22. `AUDIO_ANALYSIS_PIPELINE.md`
+23. `JSON_SCHEMAS.md`
+24. `RENDER_WORKFLOW.md`
+25. `FFMPEG_WORKFLOW.md`
+26. `LOCAL_AI_WORKFLOW.md`
+27. `NPU_GPU_PARALLELISM_PLAN.md`
+28. `AI_PIPELINE_OPTIMIZATION.md`
+29. `INSTALLATION.md`
+30. `USAGE.md`
+31. `COMPATIBILITY.md`
+32. `KNOWN_LIMITATIONS.md`
+33. `DEVELOPER_GUIDE.md`
+34. `PROJECT_AUDIT.md`
+35. `PROJECT_STATUS_POINT.md`
 
 ## Documentation groups
 
@@ -45,6 +48,7 @@ The documentation is intended for both human developers and AI agents. It should
 
 | File | Purpose |
 |---|---|
+| `../WORKFLOW.md` | Root operational workflow for humans and AI agents. |
 | `PROJECT_OVERVIEW.md` | High-level project identity and goals. |
 | `PROJECT_AI_CONSCIOUSNESS.md` | Compact operational memory for AI agents and future development sessions. |
 | `AI_ONBOARDING.md` | First-session guide for AI agents entering the project. |
@@ -53,6 +57,8 @@ The documentation is intended for both human developers and AI agents. It should
 | `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local Git/GitHub validation, index regeneration, commit and push workflow after AI-assisted changes. |
 | `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this project. |
 | `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | OpenAI Harness Engineering and Symphony concepts adapted to this repository. |
+| `EXECUTION_PLANS/README.md` | Durable task-plan workflow for multi-step work. |
+| `TECH_DEBT_TRACKER.md` | Known technical debt, status and recommended remediation. |
 | `MODULE_MAP.md` | Repository areas, source packages, generated artifacts and navigation order. |
 | `DATA_FLOW.md` | Data movement from audio input to Blender scene and encoded video. |
 | `PROJECT_STATUS_POINT.md` | Current state checkpoint and next recommended tasks. |
@@ -68,12 +74,15 @@ The documentation is intended for both human developers and AI agents. It should
 | `AI_PIPELINE_ARCHITECTURE.md` | Current modularization map for the AI artifact pipeline. |
 | `AI_PIPELINE_REFACTOR_STATUS.md` | Current refactor status marker to avoid inconsistent AI interpretation. |
 | `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | External agent-first engineering patterns mapped into project actions. |
+| `EXECUTION_PLANS/README.md` | Plan format for larger refactors or migration work. |
+| `TECH_DEBT_TRACKER.md` | Queue of known debt to avoid repeated rediscovery. |
 | `MODULE_MAP.md` | Source-to-target mapping for package modules and extraction candidates. |
 
 ### Patch, GitHub and automation workflow
 
 | File | Purpose |
 |---|---|
+| `../WORKFLOW.md` | End-to-end operational flow from task to proof of work. |
 | `PATCH_SPEC_WORKFLOW.md` | Safe JSON patch-spec workflow, dry-run/apply commands, diff display and GitHub Action queue. |
 | `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local pull/validate/dry-run/index-regeneration/commit/push workflow. |
 | `INDEX_REGEN_POLICY.md` | Regeneration policy for AI indexes and manifests. |
@@ -139,21 +148,24 @@ AI systems should treat this folder as the contract layer for the repository.
 Before editing code, an AI system should:
 
 1. read `../AGENTS.md`;
-2. read this documentation index;
-3. read `PROJECT_AI_CONSCIOUSNESS.md`;
-4. read `AI_ONBOARDING.md`;
-5. read `AI_PIPELINE_REFACTOR_STATUS.md`;
-6. read `AI_PIPELINE_ARCHITECTURE.md`;
-7. read `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`;
-8. read `AI_EXTERNAL_KNOWLEDGE.md`;
-9. read `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`;
-10. read `MODULE_MAP.md`;
-11. read `DATA_FLOW.md`;
-12. read `REFACTORING_AND_REUSE_PLAN.md`;
-13. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
-14. read `QUALITY_GATE.md`;
-15. read the README of the target package;
-16. inspect the target source file before producing a patch.
+2. read `../WORKFLOW.md`;
+3. read this documentation index;
+4. read `PROJECT_AI_CONSCIOUSNESS.md`;
+5. read `AI_ONBOARDING.md`;
+6. read `AI_PIPELINE_REFACTOR_STATUS.md`;
+7. read `AI_PIPELINE_ARCHITECTURE.md`;
+8. read `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`;
+9. read `AI_EXTERNAL_KNOWLEDGE.md`;
+10. read `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`;
+11. read `EXECUTION_PLANS/README.md`;
+12. read `TECH_DEBT_TRACKER.md`;
+13. read `MODULE_MAP.md`;
+14. read `DATA_FLOW.md`;
+15. read `REFACTORING_AND_REUSE_PLAN.md`;
+16. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
+17. read `QUALITY_GATE.md`;
+18. read the README of the target package;
+19. inspect the target source file before producing a patch.
 
 ## Refactoring note
 
