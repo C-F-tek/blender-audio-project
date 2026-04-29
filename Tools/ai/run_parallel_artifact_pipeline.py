@@ -1,321 +1,39 @@
 #!/usr/bin/env python3
 """Safe additive orchestrator for the AI artifact pipeline.
 
-Schema v6 adds first-wave WAV entrypoint review. The pipeline can now review the
-scripts that generate the earliest WAV-derived artifacts and feed their notes,
-attention flags, and remediation requests into future guardrail decisions.
+The heavy implementation details are intentionally split into reusable modules
+under ``Tools/ai/pipeline/`` so each area can be validated and dry-run tested
+independently.
 """
 from __future__ import annotations
 
 import argparse
 import json
-import os
-import platform
-import re
-import shlex
-import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 try:
-    from pipeline.models import PipelineLane, PipelineResult, PipelineStep
-    from pipeline.runner import run_step
+    from pipeline.artifact_contracts import planned_outputs, slugify
+    from pipeline.compat import run_pipeline_step
+    from pipeline.models import PipelineStep
+    from pipeline.preflight import preflight
+    from pipeline.remediation import execute_remediation_loop
+    from pipeline.steps import build_parallel_steps, build_serial_steps, build_step_commands
 except ImportError:  # Allows package-style imports during external checks.
-    from Tools.ai.pipeline.models import PipelineLane, PipelineResult, PipelineStep  # type: ignore
-    from Tools.ai.pipeline.runner import run_step  # type: ignore
-
-EXPECTED_WAVE_REVIEW_ARTIFACTS = ["wave_entrypoint_review.json"]
-EXPECTED_MUSIC_ARTIFACTS = ["track_summary.json", "music_segments.json", "audio_event_map.json", "ai_scene_brief.json", "ai_resource_budget.json"]
-EXPECTED_CHUNK_ARTIFACTS = ["indexAI/code_chunks/semantic_code_chunks.json", "indexAI/code_chunks/semantic_code_chunks_manifest.json"]
-EXPECTED_SMART_CONTEXT_ARTIFACTS = ["smart_context/{track_slug}_smart_context_packet.json", "smart_context/{track_slug}_smart_context_manifest.json", "smart_context/{track_slug}_smart_context_packet.md"]
-
-
-def slugify(value: str) -> str:
-    value = re.sub(r"[^a-z0-9]+", "_", value.strip().lower())
-    return re.sub(r"_+", "_", value).strip("_") or "track"
+    from Tools.ai.pipeline.artifact_contracts import planned_outputs, slugify  # type: ignore
+    from Tools.ai.pipeline.compat import run_pipeline_step  # type: ignore
+    from Tools.ai.pipeline.models import PipelineStep  # type: ignore
+    from Tools.ai.pipeline.preflight import preflight  # type: ignore
+    from Tools.ai.pipeline.remediation import execute_remediation_loop  # type: ignore
+    from Tools.ai.pipeline.steps import build_parallel_steps, build_serial_steps, build_step_commands  # type: ignore
 
 
-def legacy_result_payload(result: PipelineResult) -> dict[str, Any]:
-    """Return the legacy result shape used by schema v6 pipeline reports."""
-    payload: dict[str, Any] = {
-        "command": list(result.step.command),
-        "dry_run": result.dry_run,
-        "returncode": result.returncode,
-        "duration_sec": result.duration_sec,
-        "stdout": result.stdout,
-        "stderr": result.stderr,
-        "planned_only": result.planned_only,
-    }
-    if result.error:
-        payload["error"] = result.error
-    return payload
+SCHEMA_VERSION = 6
 
 
-def step_result_payload(result: PipelineResult) -> dict[str, Any]:
-    """Return a report-compatible payload for a named pipeline step."""
-    payload = legacy_result_payload(result)
-    payload.update(
-        {
-            "name": result.step.name,
-            "lane": result.step.lane.value,
-            "purpose": result.step.purpose,
-            "expected_outputs": list(result.step.expected_outputs),
-            "pass_index": result.step.pass_index,
-        }
-    )
-    return payload
-
-
-def pipeline_step(
-    name: str,
-    lane: str,
-    purpose: str,
-    expected_outputs: list[str],
-    command: list[str],
-    pass_index: int = 0,
-) -> PipelineStep:
-    """Build a reusable pipeline step while preserving the legacy call shape."""
-    return PipelineStep.from_command(
-        name=name,
-        lane=PipelineLane(lane),
-        purpose=purpose,
-        expected_outputs=expected_outputs,
-        command=command,
-        pass_index=pass_index,
-    )
-
-
-def run_pipeline_step(step: PipelineStep, cwd: Path, dry: bool) -> dict[str, Any]:
-    """Execute a PipelineStep and return the existing schema-v6 step payload."""
-    return step_result_payload(run_step(step, cwd=cwd, dry_run=dry))
-
-
-def run(cmd: list[str], cwd: Path, dry: bool) -> dict[str, Any]:
-    """Run a command through the reusable pipeline runner.
-
-    This preserves the legacy dictionary shape for any external caller while
-    routing execution through ``Tools/ai/pipeline/runner.py``.
-    """
-    step = PipelineStep.from_command(
-        name="legacy_command",
-        command=cmd,
-        lane=PipelineLane.CPU,
-    )
-    return legacy_result_payload(run_step(step, cwd=cwd, dry_run=dry))
-
-
-def rel(path: Path, root: Path) -> str:
-    try:
-        return path.resolve().relative_to(root.resolve()).as_posix()
-    except ValueError:
-        return str(path)
-
-
-def read_text_if_exists(path: Path, limit: int = 6000) -> str | None:
-    if not path.exists():
-        return None
-    return path.read_text(encoding="utf-8", errors="replace")[:limit]
-
-
-def load_json_if_exists(path: Path) -> Any | None:
-    if not path.exists():
-        return None
-    try:
-        return json.loads(path.read_text(encoding="utf-8", errors="replace"))
-    except Exception:
-        return None
-
-
-def file_meta(path: Path, root: Path) -> dict[str, Any]:
-    exists = path.exists()
-    meta: dict[str, Any] = {"path": rel(path, root), "exists": exists}
-    if exists and path.is_file():
-        stat = path.stat()
-        meta.update({"size_bytes": stat.st_size, "modified_time": datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat()})
-    return meta
-
-
-def planned_outputs(repo: Path, out: Path, args: argparse.Namespace) -> list[dict[str, Any]]:
-    outputs: list[Path] = []
-    track_slug = slugify(args.track_stem)
-    if args.review_wave_entrypoints:
-        outputs += [out / item for item in EXPECTED_WAVE_REVIEW_ARTIFACTS]
-    if args.build_chunks:
-        outputs += [repo / item for item in EXPECTED_CHUNK_ARTIFACTS]
-    if args.build_music_summary:
-        outputs += [out / item for item in EXPECTED_MUSIC_ARTIFACTS]
-    if args.smart_context:
-        outputs += [out / item.format(track_slug=track_slug) for item in EXPECTED_SMART_CONTEXT_ARTIFACTS]
-    if args.use_npu:
-        outputs.append(out / "npu_artifact_review.json")
-    if args.npu_guardrail:
-        outputs += [out / "npu_guardrail_report.json", out / "npu_guardrail_report.md", out / "npu_guardrail_preflight.json", out / "npu_guardrail_action_queue.json"]
-    if args.gpu_command:
-        outputs.append(out / "gpu_planner_output.json")
-    if args.validate:
-        outputs.append(out / "ai_validation_report.json")
-    if not args.dry_run:
-        outputs.append(out / "ai_pipeline_run_report.json")
-    return [file_meta(path, repo) for path in outputs]
-
-
-def python_runtime() -> dict[str, Any]:
-    return {"executable": sys.executable, "version": sys.version.split()[0], "implementation": platform.python_implementation(), "platform": platform.platform()}
-
-
-def workstation_context(repo: Path) -> dict[str, Any]:
-    doc = repo / "docs" / "LOCAL_WORKSTATION_TARGET.md"
-    text = read_text_if_exists(doc)
-    return {"source": rel(doc, repo), "available": text is not None, "summary": text[:1200] if text else None}
-
-
-def preflight(repo: Path, out: Path, args: argparse.Namespace) -> dict[str, Any]:
-    warnings: list[str] = []
-    errors: list[str] = []
-    analysis = Path(args.analysis_json).resolve() if args.analysis_json else None
-    if args.build_music_summary and not analysis:
-        errors.append("--build-music-summary requires --analysis-json")
-    if analysis and not analysis.exists():
-        errors.append(f"Analysis JSON not found: {analysis}")
-    if args.npu_workers > 4:
-        warnings.append("npu_workers is greater than 4; local workstation policy recommends 4 or fewer.")
-    if args.npu_guardrail and not args.smart_context:
-        warnings.append("NPU guardrail works best with smart context; falling back to artifact directory review.")
-    if args.guardrail_auto_remediate and not args.npu_guardrail:
-        warnings.append("Guardrail auto-remediation was requested but npu_guardrail is disabled.")
-    if args.review_wave_entrypoints and not (repo / "analyze_wav.py").exists():
-        warnings.append("Wave entrypoint review enabled but analyze_wav.py was not found at repository root.")
-    if args.gpu_command and "{brief}" not in args.gpu_command:
-        warnings.append("GPU command does not include {brief}; planner may not receive ai_scene_brief.json.")
-    if args.gpu_command and "{output}" not in args.gpu_command:
-        warnings.append("GPU command does not include {output}; planner output may not be captured consistently.")
-    blender_doc = repo / "docs" / "LOCAL_WORKSTATION_TARGET.md"
-    if blender_doc.exists() and "blender command is not currently available in PATH" in blender_doc.read_text(encoding="utf-8", errors="replace"):
-        warnings.append("Local workstation profile says blender is not in PATH; use full Blender executable path for CLI tests.")
-    input_files = []
-    if analysis:
-        input_files.append(file_meta(analysis, repo))
-    for item in ["analyze_wav.py", "build_track_summary.py", "docs/LOCAL_WORKSTATION_TARGET.md", "indexAI/task_capsules/blender_51_compat.json", "indexAI/task_capsules/resource_budget.json"]:
-        input_files.append(file_meta(repo / item, repo))
-    return {"passed": not errors, "errors": errors, "warnings": warnings, "input_files": input_files, "planned_outputs": planned_outputs(repo, out, args), "python_runtime": python_runtime(), "workstation_context": workstation_context(repo), "environment": {"cwd": os.getcwd(), "dry_run": args.dry_run}}
-
-
-def build_step_commands(repo: Path, out: Path, args: argparse.Namespace) -> dict[str, list[str]]:
-    py = sys.executable
-    track_slug = slugify(args.track_stem)
-
-    def script(path: str) -> str:
-        return str((repo / path).resolve())
-
-    commands: dict[str, list[str]] = {}
-    if args.review_wave_entrypoints:
-        commands["review_wave_entrypoints"] = [py, script("Tools/ai/review_wave_entrypoints.py"), "--repo-root", str(repo), "--output", str(out / "wave_entrypoint_review.json")]
-    if args.build_chunks:
-        commands["build_semantic_code_chunks"] = [py, script("Tools/npu/build_semantic_code_chunks.py"), "--repo-root", str(repo)]
-    if args.build_music_summary:
-        commands["build_music_intermediates"] = [py, script("Tools/ai/build_music_intermediates.py"), "--analysis-json", str(Path(args.analysis_json).resolve()), "--output-dir", str(out)]
-    if args.smart_context:
-        commands["build_smart_ai_context"] = [py, script("Tools/workflow/smart_ai_context.py"), "--repo-root", str(repo), "--track-stem", args.track_stem, "--task", args.smart_task, "--output-dir", str(out / "smart_context"), "--max-packet-chars", str(args.smart_max_packet_chars), "--max-capsule-chars", str(args.smart_max_capsule_chars)]
-    if args.use_npu:
-        commands["npu_artifact_review"] = [py, script("Tools/npu/run_npu_artifact_reviewer.py"), "--input", str(out), "--output", str(out / "npu_artifact_review.json"), "--max-workers", str(args.npu_workers)]
-    if args.npu_guardrail:
-        guardrail_input = out / "smart_context" / f"{track_slug}_smart_context_packet.json" if args.smart_context else out
-        commands["npu_guardrail"] = [py, script("Tools/npu/npu_guardrail_service.py"), "--input", str(guardrail_input), "--output", str(out / "npu_guardrail_report.json")]
-    if args.validate:
-        commands["validate_ai_artifacts"] = [py, script("Tools/ai/validate_ai_artifacts.py"), "--repo-root", str(repo), "--artifact-dir", str(out), "--output", str(out / "ai_validation_report.json"), "--allow-errors"]
-    return commands
-
-
-def guardrail_queue(out: Path) -> dict[str, Any]:
-    payload = load_json_if_exists(out / "npu_guardrail_action_queue.json")
-    if isinstance(payload, dict):
-        return payload
-    return {"schema_version": 1, "queue": []}
-
-
-def auto_safe_requests(out: Path) -> list[dict[str, Any]]:
-    queue = guardrail_queue(out).get("queue") or []
-    return [item for item in queue if isinstance(item, dict) and item.get("auto_safe")]
-
-
-def remediation_plan_from_requests(requests: list[dict[str, Any]]) -> dict[str, Any]:
-    by_stage: dict[str, int] = {}
-    by_type: dict[str, int] = {}
-    for item in requests:
-        stage = str(item.get("suggested_stage") or "unknown")
-        action = str(item.get("action_type") or "unknown")
-        by_stage[stage] = by_stage.get(stage, 0) + 1
-        by_type[action] = by_type.get(action, 0) + 1
-    return {"request_count": len(requests), "by_stage": by_stage, "by_type": by_type, "requests": requests}
-
-
-def remedial_commands(
-    repo: Path,
-    out: Path,
-    args: argparse.Namespace,
-    requests: list[dict[str, Any]],
-    pass_index: int,
-) -> list[PipelineStep]:
-    commands = build_step_commands(repo, out, args)
-    stages = {str(item.get("suggested_stage") or "") for item in requests}
-    todo: list[PipelineStep] = []
-
-    if "wave_entrypoint_review" in stages and "review_wave_entrypoints" in commands:
-        todo.append(pipeline_step("remediate_review_wave_entrypoints", "CPU", "Repeat first-wave script review requested by guardrail.", EXPECTED_WAVE_REVIEW_ARTIFACTS, commands["review_wave_entrypoints"], pass_index))
-    if "enrich_intermediates" in stages and "build_music_intermediates" in commands:
-        todo.append(pipeline_step("remediate_build_music_intermediates", "CPU", "Auto-safe enrichment pass requested by NPU guardrail.", EXPECTED_MUSIC_ARTIFACTS, commands["build_music_intermediates"], pass_index))
-    if "compact_context_generation" in stages and "build_smart_ai_context" in commands:
-        todo.append(pipeline_step("remediate_build_smart_ai_context_compact", "CPU", "Auto-safe compact context rebuild requested by NPU guardrail.", EXPECTED_SMART_CONTEXT_ARTIFACTS, commands["build_smart_ai_context"], pass_index))
-    if "smart_context_generation" in stages and "build_smart_ai_context" in commands:
-        todo.append(pipeline_step("remediate_build_smart_ai_context", "CPU", "Auto-safe smart context rebuild requested by NPU guardrail.", EXPECTED_SMART_CONTEXT_ARTIFACTS, commands["build_smart_ai_context"], pass_index))
-    if "guardrail_second_pass" in stages and "npu_guardrail" in commands:
-        todo.append(pipeline_step("remediate_npu_guardrail_second_pass", "NPU", "Second guardrail pass requested by NPU guardrail.", [str(out / "npu_guardrail_report.json")], commands["npu_guardrail"], pass_index))
-
-    if todo and "npu_guardrail" in commands and all(step.name != "remediate_npu_guardrail_second_pass" for step in todo):
-        todo.append(pipeline_step("remediate_npu_guardrail_verify", "NPU", "Verify artifact state after auto-safe remediation passes.", [str(out / "npu_guardrail_report.json")], commands["npu_guardrail"], pass_index))
-
-    return todo
-
-
-def execute_remediation_loop(repo: Path, out: Path, args: argparse.Namespace, results: list[dict[str, Any]]) -> dict[str, Any]:
-    if not args.guardrail_auto_remediate or not args.npu_guardrail:
-        return {"enabled": False, "reason": "disabled", "passes": []}
-
-    passes: list[dict[str, Any]] = []
-    seen_signatures: set[str] = set()
-    for pass_index in range(1, max(1, args.guardrail_max_passes) + 1):
-        requests = auto_safe_requests(out)
-        plan = remediation_plan_from_requests(requests)
-        signature = json.dumps(plan.get("by_stage", {}), sort_keys=True)
-        if not requests:
-            passes.append({"pass_index": pass_index, "status": "no_auto_safe_requests", "plan": plan, "steps": []})
-            break
-        if signature in seen_signatures:
-            passes.append({"pass_index": pass_index, "status": "repeated_plan_stopped", "plan": plan, "steps": []})
-            break
-        seen_signatures.add(signature)
-
-        todo = remedial_commands(repo, out, args, requests, pass_index)
-        if not todo:
-            passes.append({"pass_index": pass_index, "status": "no_supported_remediation_commands", "plan": plan, "steps": []})
-            break
-
-        step_results = []
-        for step in todo:
-            res = run_pipeline_step(step, repo, args.dry_run)
-            step_results.append(res)
-            results.append(res)
-            if res["returncode"] and not args.continue_on_error:
-                break
-        passes.append({"pass_index": pass_index, "status": "executed", "plan": plan, "steps": step_results})
-        if any(item["returncode"] for item in step_results) and not args.continue_on_error:
-            break
-    return {"enabled": True, "max_passes": args.guardrail_max_passes, "passes": passes}
-
-
-def main() -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """Build CLI parser for the AI artifact pipeline."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-root", default=".")
     ap.add_argument("--analysis-json")
@@ -342,74 +60,115 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--write-dry-run-report", action="store_true", help="Write ai_pipeline_dry_run_report.json even in dry-run mode.")
     ap.add_argument("--continue-on-error", action="store_true")
-    args = ap.parse_args()
+    return ap
 
-    repo = Path(args.repo_root).resolve()
-    out = Path(args.output_dir).resolve()
-    out.mkdir(parents=True, exist_ok=True)
-    pf = preflight(repo, out, args)
-    if not pf["passed"] and not args.continue_on_error:
-        report = {"schema_version": 6, "generated_at": datetime.now(timezone.utc).isoformat(), "repo_root": str(repo), "output_dir": str(out), "dry_run": args.dry_run, "passed": False, "preflight": pf, "step_count": 0, "steps": []}
-        print(json.dumps(report, indent=2, ensure_ascii=False))
-        return 2
 
-    commands = build_step_commands(repo, out, args)
-    serial: list[PipelineStep] = []
-    parallel: list[PipelineStep] = []
-    track_slug = slugify(args.track_stem)
+def empty_failed_report(repo: Path, out: Path, dry_run: bool, pf: dict) -> dict:
+    """Return a schema-compatible report when preflight fails."""
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "repo_root": str(repo),
+        "output_dir": str(out),
+        "dry_run": dry_run,
+        "passed": False,
+        "preflight": pf,
+        "step_count": 0,
+        "steps": [],
+    }
 
-    if "review_wave_entrypoints" in commands:
-        serial.append(pipeline_step("review_wave_entrypoints", "CPU", "Review first-wave WAV artifact scripts and emit future guardrail flags.", EXPECTED_WAVE_REVIEW_ARTIFACTS, commands["review_wave_entrypoints"]))
-    if "build_semantic_code_chunks" in commands:
-        serial.append(pipeline_step("build_semantic_code_chunks", "CPU", "Build symbol-aware repository context for AI retrieval.", EXPECTED_CHUNK_ARTIFACTS, commands["build_semantic_code_chunks"]))
-    if "build_music_intermediates" in commands:
-        serial.append(pipeline_step("build_music_intermediates", "CPU", "Build compact AI-friendly music artifacts from the full analysis JSON.", EXPECTED_MUSIC_ARTIFACTS, commands["build_music_intermediates"]))
-    if "build_smart_ai_context" in commands:
-        serial.append(pipeline_step("build_smart_ai_context", "CPU", "Build hierarchical capsules and ranked smart context packet for central AI.", [item.format(track_slug=track_slug) for item in EXPECTED_SMART_CONTEXT_ARTIFACTS], commands["build_smart_ai_context"]))
-    if "npu_artifact_review" in commands:
-        parallel.append(pipeline_step("npu_artifact_review", "NPU", "Review compact artifacts for schema, size, blocked patterns, and obvious risks.", [str(out / "npu_artifact_review.json")], commands["npu_artifact_review"]))
-    if "npu_guardrail" in commands:
-        parallel.append(pipeline_step("npu_guardrail", "NPU", "Always-on guardrail/preflight plus action queue for corrections and enrichment.", [str(out / "npu_guardrail_report.json"), str(out / "npu_guardrail_action_queue.json")], commands["npu_guardrail"]))
-    if args.gpu_command:
-        gpu_command = shlex.split(args.gpu_command.format(brief=str(out / "ai_scene_brief.json"), output=str(out / "gpu_planner_output.json")))
-        parallel.append(pipeline_step("gpu_command", "GPU", "Run optional heavy planner/generator command.", [str(out / "gpu_planner_output.json")], gpu_command))
-    if "validate_ai_artifacts" in commands:
-        serial.append(pipeline_step("validate_ai_artifacts", "CPU", "Validate generated artifacts and apply task-capsule guardrails.", [str(out / "ai_validation_report.json")], commands["validate_ai_artifacts"]))
 
-    results: list[dict[str, Any]] = []
-    for step in serial:
-        res = run_pipeline_step(step, repo, args.dry_run)
-        results.append(res)
-        if res["returncode"] and not args.continue_on_error:
+def run_serial_steps(steps: list[PipelineStep], repo: Path, dry_run: bool, continue_on_error: bool) -> list[dict]:
+    """Run ordered pipeline steps and stop on failure unless configured otherwise."""
+    results: list[dict] = []
+    for step in steps:
+        result = run_pipeline_step(step, repo, dry_run)
+        results.append(result)
+        if result["returncode"] and not continue_on_error:
             break
-    if parallel and all(r["returncode"] == 0 for r in results):
-        with ThreadPoolExecutor(max_workers=len(parallel)) as pool:
-            futs = {pool.submit(run_pipeline_step, step, repo, args.dry_run): step for step in parallel}
-            for fut in as_completed(futs):
-                results.append(fut.result())
+    return results
 
-    remediation_loop = execute_remediation_loop(repo, out, args, results)
 
-    report = {
-        "schema_version": 6,
+def run_parallel_steps(steps: list[PipelineStep], repo: Path, dry_run: bool) -> list[dict]:
+    """Run independent pipeline steps concurrently."""
+    if not steps:
+        return []
+    results: list[dict] = []
+    with ThreadPoolExecutor(max_workers=len(steps)) as pool:
+        futures = {pool.submit(run_pipeline_step, step, repo, dry_run): step for step in steps}
+        for future in as_completed(futures):
+            results.append(future.result())
+    return results
+
+
+def build_report(repo: Path, out: Path, args: argparse.Namespace, pf: dict, results: list[dict], remediation_loop: dict) -> dict:
+    """Build the schema-v6 pipeline report."""
+    track_slug = slugify(args.track_stem)
+    return {
+        "schema_version": SCHEMA_VERSION,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "repo_root": str(repo),
         "output_dir": str(out),
         "dry_run": args.dry_run,
-        "passed": pf["passed"] and all(r["returncode"] == 0 for r in results),
+        "passed": pf["passed"] and all(item["returncode"] == 0 for item in results),
         "preflight": pf,
         "step_count": len(results),
-        "lanes": {"CPU": [r["name"] for r in results if r.get("lane") == "CPU"], "NPU": [r["name"] for r in results if r.get("lane") == "NPU"], "GPU": [r["name"] for r in results if r.get("lane") == "GPU"]},
-        "wave_entrypoint_review": {"enabled": args.review_wave_entrypoints, "report": str(out / "wave_entrypoint_review.json") if args.review_wave_entrypoints else None},
-        "smart_context": {"enabled": args.smart_context, "task": args.smart_task, "packet": str(out / "smart_context" / f"{track_slug}_smart_context_packet.json") if args.smart_context else None},
+        "lanes": {
+            "CPU": [item["name"] for item in results if item.get("lane") == "CPU"],
+            "NPU": [item["name"] for item in results if item.get("lane") == "NPU"],
+            "GPU": [item["name"] for item in results if item.get("lane") == "GPU"],
+        },
+        "wave_entrypoint_review": {
+            "enabled": args.review_wave_entrypoints,
+            "report": str(out / "wave_entrypoint_review.json") if args.review_wave_entrypoints else None,
+        },
+        "smart_context": {
+            "enabled": args.smart_context,
+            "task": args.smart_task,
+            "packet": str(out / "smart_context" / f"{track_slug}_smart_context_packet.json") if args.smart_context else None,
+        },
         "guardrail_remediation_loop": remediation_loop,
         "steps": results,
         "post_run_expected_outputs": planned_outputs(repo, out, args),
     }
+
+
+def write_report_if_requested(out: Path, args: argparse.Namespace, report: dict) -> None:
+    """Write final or dry-run report when requested by the invocation mode."""
     if not args.dry_run:
-        (out / "ai_pipeline_run_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        target = out / "ai_pipeline_run_report.json"
     elif args.write_dry_run_report:
-        (out / "ai_pipeline_dry_run_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        target = out / "ai_pipeline_dry_run_report.json"
+    else:
+        return
+    target.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+
+    repo = Path(args.repo_root).resolve()
+    out = Path(args.output_dir).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+
+    pf = preflight(repo, out, args)
+    if not pf["passed"] and not args.continue_on_error:
+        report = empty_failed_report(repo, out, args.dry_run, pf)
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return 2
+
+    commands = build_step_commands(repo, out, args)
+    track_slug = slugify(args.track_stem)
+    serial = build_serial_steps(commands, track_slug)
+    parallel = build_parallel_steps(commands, out, args)
+
+    results = run_serial_steps(serial, repo, args.dry_run, args.continue_on_error)
+    if parallel and all(item["returncode"] == 0 for item in results):
+        results.extend(run_parallel_steps(parallel, repo, args.dry_run))
+
+    remediation_loop = execute_remediation_loop(repo, out, args, results)
+    report = build_report(repo, out, args, pf, results, remediation_loop)
+    write_report_if_requested(out, args, report)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2
 
