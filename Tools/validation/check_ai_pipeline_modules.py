@@ -69,6 +69,7 @@ def make_args(repo_root: Path) -> SimpleNamespace:
         smart_task="Smoke test task",
         smart_max_packet_chars=22000,
         smart_max_capsule_chars=3200,
+        agent_state_packet=None,
         use_npu=False,
         npu_guardrail=True,
         npu_workers=4,
@@ -82,6 +83,56 @@ def make_args(repo_root: Path) -> SimpleNamespace:
     )
 
 
+def write_smoke_agent_state_packet(out: Path) -> Path:
+    """Write a minimal local packet used only for report contract validation."""
+    packet = out / "agent_state_packet_smoke.json"
+    packet.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "objective": "AI pipeline module smoke validation",
+                "selected_memory": [],
+                "microtasks": [],
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return packet
+
+
+def check_agent_state_packet_contract(report: dict[str, Any], *, enabled: bool) -> list[str]:
+    """Validate the additive agent_state_packet report contract."""
+    errors: list[str] = []
+    packet = report.get("agent_state_packet")
+    if not isinstance(packet, dict):
+        return ["report.agent_state_packet is missing or is not an object"]
+
+    for field in ["enabled", "path", "exists", "source"]:
+        if field not in packet:
+            errors.append(f"report.agent_state_packet.{field} is missing")
+
+    if packet.get("enabled") is not enabled:
+        errors.append(f"report.agent_state_packet.enabled expected {enabled!r}, got {packet.get('enabled')!r}")
+
+    if enabled:
+        if packet.get("exists") is not True:
+            errors.append("enabled agent_state_packet should exist in smoke contract")
+        if packet.get("source") != "cli":
+            errors.append("enabled agent_state_packet should have source='cli'")
+        if not packet.get("repo_relative_path"):
+            errors.append("enabled agent_state_packet should expose repo_relative_path")
+    else:
+        if packet.get("exists") is not False:
+            errors.append("disabled agent_state_packet should have exists=false")
+        if packet.get("source") != "disabled":
+            errors.append("disabled agent_state_packet should have source='disabled'")
+
+    return errors
+
+
 def check_modules(repo_root: Path) -> dict[str, Any]:
     modules = import_pipeline_modules(repo_root)
     args = make_args(repo_root)
@@ -90,6 +141,9 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
 
     parser = modules["build_parser"]()
     parsed = parser.parse_args(["--repo-root", str(repo_root), "--dry-run"])
+    parsed_with_packet = parser.parse_args(
+        ["--repo-root", str(repo_root), "--dry-run", "--agent-state-packet", "output/ai_pipeline_smoke/agent_state_packet_smoke.json"]
+    )
 
     step = modules["pipeline_step"](
         "smoke_step",
@@ -119,9 +173,24 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
     failed_report = modules["empty_failed_report"](repo_root, out, True, {"passed": False, "errors": ["smoke"], "warnings": []})
     planned = modules["planned_outputs"](repo_root, out, args)
 
+    smoke_packet = write_smoke_agent_state_packet(out)
+    packet_args = make_args(repo_root)
+    packet_args.agent_state_packet = str(smoke_packet)
+    packet_pf = modules["preflight"](repo_root, out, packet_args)
+    packet_report = modules["build_report"](
+        repo_root,
+        out,
+        packet_args,
+        packet_pf,
+        [dry_result],
+        {"enabled": False, "reason": "smoke", "passes": []},
+    )
+
     checks = {
         "parser_type": type(parser).__name__,
         "parsed_dry_run": bool(parsed.dry_run),
+        "parsed_agent_state_packet_default": parsed.agent_state_packet,
+        "parsed_agent_state_packet_value": parsed_with_packet.agent_state_packet,
         "step_lane": step_payload["lane"],
         "dry_result_returncode": dry_result["returncode"],
         "dry_result_planned_only": dry_result["planned_only"],
@@ -129,6 +198,9 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
         "serial_step_count": len(serial),
         "parallel_step_count": len(parallel),
         "preflight_passed": pf["passed"],
+        "agent_state_packet_contract_disabled": report.get("agent_state_packet"),
+        "agent_state_packet_contract_enabled": packet_report.get("agent_state_packet"),
+        "agent_state_packet_preflight_enabled": packet_pf.get("agent_state_packet"),
         "remediation_request_count": plan["request_count"],
         "remediation_step_count": len(remediation),
         "report_schema_version": report["schema_version"],
@@ -146,6 +218,14 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
         errors.append("serial step builder produced no steps for smoke configuration")
     if checks["report_schema_version"] != 6:
         errors.append("build_report did not produce schema version 6")
+    if parsed.agent_state_packet is not None:
+        errors.append("--agent-state-packet should default to None")
+    if not parsed_with_packet.agent_state_packet:
+        errors.append("--agent-state-packet parser did not preserve provided path")
+    if not packet_pf["passed"]:
+        errors.append("preflight failed for smoke agent_state_packet")
+    errors.extend(check_agent_state_packet_contract(report, enabled=False))
+    errors.extend(check_agent_state_packet_contract(packet_report, enabled=True))
     if not checks["entrypoint_imported"]:
         errors.append("artifact pipeline entrypoint was not importable")
 
