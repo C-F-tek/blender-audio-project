@@ -10,30 +10,32 @@ The documentation is intended for both human developers and AI agents. It should
 2. `PROJECT_OVERVIEW.md`
 3. `PROJECT_AI_CONSCIOUSNESS.md`
 4. `AI_ONBOARDING.md`
-5. `AI_EXTERNAL_KNOWLEDGE.md`
-6. `MODULE_MAP.md`
-7. `DATA_FLOW.md`
-8. `REFACTORING_AND_REUSE_PLAN.md`
-9. `PATCH_SPEC_WORKFLOW.md`
-10. `SHARED_SCRIPTING_UTILITIES.md`
-11. `BLENDER_SCRIPT_ENTRYPOINTS.md`
-12. `AI_GENERATED_PACKAGE_STANDARD.md`
-13. `PACKAGE_CREATION_WORKFLOW.md`
-14. `QUALITY_GATE.md`
-15. `AUDIO_ANALYSIS_PIPELINE.md`
-16. `JSON_SCHEMAS.md`
-17. `RENDER_WORKFLOW.md`
-18. `FFMPEG_WORKFLOW.md`
-19. `LOCAL_AI_WORKFLOW.md`
-20. `NPU_GPU_PARALLELISM_PLAN.md`
-21. `AI_PIPELINE_OPTIMIZATION.md`
-22. `INSTALLATION.md`
-23. `USAGE.md`
-24. `COMPATIBILITY.md`
-25. `KNOWN_LIMITATIONS.md`
-26. `DEVELOPER_GUIDE.md`
-27. `PROJECT_AUDIT.md`
-28. `PROJECT_STATUS_POINT.md`
+5. `AI_PIPELINE_REFACTOR_STATUS.md`
+6. `AI_PIPELINE_ARCHITECTURE.md`
+7. `AI_EXTERNAL_KNOWLEDGE.md`
+8. `MODULE_MAP.md`
+9. `DATA_FLOW.md`
+10. `REFACTORING_AND_REUSE_PLAN.md`
+11. `PATCH_SPEC_WORKFLOW.md`
+12. `SHARED_SCRIPTING_UTILITIES.md`
+13. `BLENDER_SCRIPT_ENTRYPOINTS.md`
+14. `AI_GENERATED_PACKAGE_STANDARD.md`
+15. `PACKAGE_CREATION_WORKFLOW.md`
+16. `QUALITY_GATE.md`
+17. `AUDIO_ANALYSIS_PIPELINE.md`
+18. `JSON_SCHEMAS.md`
+19. `RENDER_WORKFLOW.md`
+20. `FFMPEG_WORKFLOW.md`
+21. `LOCAL_AI_WORKFLOW.md`
+22. `NPU_GPU_PARALLELISM_PLAN.md`
+23. `AI_PIPELINE_OPTIMIZATION.md`
+24. `INSTALLATION.md`
+25. `USAGE.md`
+26. `COMPATIBILITY.md`
+27. `KNOWN_LIMITATIONS.md`
+28. `DEVELOPER_GUIDE.md`
+29. `PROJECT_AUDIT.md`
+30. `PROJECT_STATUS_POINT.md`
 
 ## Documentation groups
 
@@ -44,6 +46,8 @@ The documentation is intended for both human developers and AI agents. It should
 | `PROJECT_OVERVIEW.md` | High-level project identity and goals. |
 | `PROJECT_AI_CONSCIOUSNESS.md` | Compact operational memory for AI agents and future development sessions. |
 | `AI_ONBOARDING.md` | First-session guide for AI agents entering the project. |
+| `AI_PIPELINE_REFACTOR_STATUS.md` | Stable marker for the current modular AI pipeline refactor state and validation requirements. |
+| `AI_PIPELINE_ARCHITECTURE.md` | Map of the modular AI artifact pipeline, module responsibilities and validation commands. |
 | `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this project. |
 | `MODULE_MAP.md` | Repository areas, source packages, generated artifacts and navigation order. |
 | `DATA_FLOW.md` | Data movement from audio input to Blender scene and encoded video. |
@@ -57,6 +61,8 @@ The documentation is intended for both human developers and AI agents. It should
 |---|---|
 | `REFACTORING_AND_REUSE_PLAN.md` | Main roadmap for encapsulation, shared utilities and non-destructive migration. |
 | `SHARED_SCRIPTING_UTILITIES.md` | Policy and target modules for reusable package-agnostic code. |
+| `AI_PIPELINE_ARCHITECTURE.md` | Current modularization map for the AI artifact pipeline. |
+| `AI_PIPELINE_REFACTOR_STATUS.md` | Current refactor status marker to avoid inconsistent AI interpretation. |
 | `MODULE_MAP.md` | Source-to-target mapping for package modules and extraction candidates. |
 
 ### Patch and automation workflow
@@ -129,13 +135,15 @@ Before editing code, an AI system should:
 2. read this documentation index;
 3. read `PROJECT_AI_CONSCIOUSNESS.md`;
 4. read `AI_ONBOARDING.md`;
-5. read `MODULE_MAP.md`;
-6. read `DATA_FLOW.md`;
-7. read `REFACTORING_AND_REUSE_PLAN.md`;
-8. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
-9. read `QUALITY_GATE.md`;
-10. read the README of the target package;
-11. inspect the target source file before producing a patch.
+5. read `AI_PIPELINE_REFACTOR_STATUS.md`;
+6. read `AI_PIPELINE_ARCHITECTURE.md`;
+7. read `MODULE_MAP.md`;
+8. read `DATA_FLOW.md`;
+9. read `REFACTORING_AND_REUSE_PLAN.md`;
+10. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
+11. read `QUALITY_GATE.md`;
+12. read the README of the target package;
+13. inspect the target source file before producing a patch.
 
 ## Refactoring note
 
