@@ -48,6 +48,7 @@ PROFILE_CONTEXT_FILES: dict[str, tuple[str, ...]] = {
         "Tools/validation/README.md",
         "Tools/npu/run_dual_ai_pipeline.py",
         "Tools/npu/build_runtime_output_manifest.py",
+        "Tools/npu/build_provider_result_report.py",
         "Tools/ai/run_local_provider_probe.py",
     ),
     "docs": (
@@ -70,6 +71,7 @@ PROFILE_REPORTS: dict[str, tuple[str, ...]] = {
         "output/validation/npu_pipeline_helper_tests.json",
         "output/validation/npu_pipeline_docs.json",
         "output/validation/provider_result_parsing.json",
+        "output/validation/provider_result_report.json",
         "output/validation/npu_runtime_output_manifest.json",
         "output/validation/local_ai_resource_lanes.json",
         "output/validation/local_provider_probe.json",
@@ -83,6 +85,7 @@ PROFILE_REPORTS: dict[str, tuple[str, ...]] = {
         "output/validation/npu_pipeline_helper_tests.json",
         "output/validation/npu_pipeline_docs.json",
         "output/validation/provider_result_parsing.json",
+        "output/validation/provider_result_report.json",
         "output/validation/npu_runtime_output_manifest.json",
         "output/validation/local_ai_resource_lanes.json",
         "output/validation/local_provider_probe.json",
