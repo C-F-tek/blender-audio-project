@@ -190,8 +190,10 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "output_chars": len(text),
             "provider_envelope": provider_envelope,
             "raw_text_output_path": str(Path(args.text_output)) if args.text_output else None,
+            "raw_text_preview": text[:500],
             "promotion_gate": "classification == usable_text and provider_execution_performed == true",
         },
+        "raw_text": text,
     }
 
 
@@ -218,16 +220,7 @@ def main() -> int:
     if args.text_output and report["provider_execution_performed"]:
         text_output = resolve_output_path(repo_root, args.text_output)
         text_output.parent.mkdir(parents=True, exist_ok=True)
-        # Store only raw diagnostic text, never legacy runtime output.
-        text = ""
-        provider_env = report.get("checks", {}).get("provider_envelope", {})
-        if provider_env.get("text_chars", 0):
-            # Re-run parsing is not needed; the raw text is intentionally not stored
-            # in the provider envelope to keep reports compact. Read from local var by
-            # rebuilding from run output is avoided, so use a small marker file when
-            # no raw text was captured by this report shape.
-            text = "NPU decode smoke produced text. See JSON metrics for details.\n"
-        text_output.write_text(text, encoding="utf-8")
+        text_output.write_text(str(report.get("raw_text") or "") + "\n", encoding="utf-8")
     rendered = write_json_report(report, output)
     print(rendered, end="")
     return 0 if report["passed"] else 2
