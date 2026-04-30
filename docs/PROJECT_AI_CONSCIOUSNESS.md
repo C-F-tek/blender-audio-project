@@ -65,6 +65,7 @@ Current concrete adapter:
 
 ```text
 Tools/validation/generated_file_policy.py
+  -> Tools/validation/check_generated_artifact_path_policy.py
   -> Tools/validation/check_generated_blender_script_policy.py
 ```
 
@@ -78,8 +79,9 @@ Future adapters must preserve this boundary. Do not bake WAV/audio assumptions i
 | `Scripting/v61b/` | stable reference | Current high-quality Blender reference package. Do not destructively refactor. |
 | Ready To Jazz package | usable but monolithic | Good production/generation experiment; not yet reusable architecture. |
 | `Scripting/shared/` | active foundation | Pure Python helpers exist for path, JSON, image sequence, FFmpeg commands and render profiles; `blender_compat.py` passed a Blender 5.1.1 no-render smoke for frame range, noise node and VSE audio strip creation. |
-| `Tools/validation/` | active foundation | Non-invasive validators exist for syntax, docs, JSON artifacts, AI pipeline, dry-run matrix report contract, model JSON parsing, agent memory, Blender shared compatibility and generated Blender script policy. |
+| `Tools/validation/` | active foundation | Non-invasive validators exist for syntax, docs, JSON artifacts, AI pipeline, dry-run matrix report contract, model JSON parsing, agent memory, generated artifact path policy, Blender shared compatibility and generated Blender script policy. |
 | `Tools/validation/generated_file_policy.py` | active foundation | Generic generated-file policy engine. It must remain independent from WAV/audio input and independent from the output application. |
+| `Tools/validation/check_generated_artifact_path_policy.py` | generic artifact destination guardrail | Validates proposed generated artifact destinations without knowing the input domain or output application. |
 | `Tools/validation/check_generated_blender_script_policy.py` | first adapter | First application-specific adapter for generated Python scripts executed by Blender. Blender is not the generic boundary. |
 | `Tools/validation/check_ai_dry_run_matrix_contract.py` | report contract validator | Validates `output/ai_pipeline/dry_run_matrix_report.json` without running the matrix or modifying generated artifacts. |
 | `Tools/ai/model_json.py` | active foundation | Reusable deterministic parser for JSON-like model outputs. Ollama response parsing delegates to it while preserving legacy `json.JSONDecodeError` behavior. |
@@ -170,6 +172,7 @@ Current example:
 
 ```text
 Tools/validation/generated_file_policy.py
+  -> Tools/validation/check_generated_artifact_path_policy.py
   -> Tools/validation/check_generated_blender_script_policy.py
 ```
 
@@ -303,6 +306,7 @@ Current AI/generic validation foundations:
 |---|---|
 | `Tools/ai/model_json.py` | Deterministic parser for JSON-like model output. |
 | `Tools/validation/generated_file_policy.py` | Generic policy primitives for generated file validation. Input-agnostic and application-agnostic. |
+| `Tools/validation/check_generated_artifact_path_policy.py` | Generic destination validator for generated artifact paths. |
 | `Tools/validation/check_generated_blender_script_policy.py` | Blender-specific generated Python script policy adapter. |
 | `Tools/validation/check_ai_dry_run_matrix_contract.py` | Dry-run matrix report contract validator. Does not execute matrix cases. |
 

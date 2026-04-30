@@ -18,6 +18,7 @@ AI dry-run matrix report contract checks
 agent memory policy checks
 Blender compatibility smokes
 generated-file policy checks
+generated artifact path policy checks
 ```
 
 Validators should remain cheap, reviewable and safe to run locally. They must not launch long Blender renders, GPU generation, NPU model execution or FFmpeg encodes.
@@ -78,6 +79,7 @@ Blender and generated-file checks:
 
 ```powershell
 python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 ```
 
@@ -95,6 +97,7 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and main docs agree on pipeline state and expected modules. | No |
 | `check_agent_memory_policy.py` | Checks generic memory retention, quarantine and promotion guardrails; also inspects local SQLite memory DB when present. | No |
 | `check_blender_shared_compat_smoke.py` | Imports `Scripting/shared/blender_compat.py`; outside Blender it marks runtime checks skipped, inside Blender it performs no-render compatibility smoke. | No render |
+| `check_generated_artifact_path_policy.py` | Validates that proposed generated artifact destinations stay inside allowed repository paths. | No |
 | `check_generated_blender_script_policy.py` | Applies reusable generated-file policy rules to generated Blender Python scripts and deterministic in-memory samples. | No |
 
 ## Generated-file policy
@@ -114,8 +117,12 @@ It provides reusable primitives:
 PolicyRule
 PolicyFinding
 PolicyResult
+PathPolicy
+PathPolicyResult
 evaluate_text()
 evaluate_paths()
+evaluate_generated_artifact_path()
+evaluate_generated_artifact_paths()
 ```
 
 The current policy pattern is:
@@ -159,6 +166,56 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 ```
 
 Future generated Python script adapters should use a new application-specific validator and reuse `generated_file_policy.py`, instead of adding Blender-specific assumptions to the generic layer.
+
+## Generated artifact path policy
+
+Generated artifact destination validation is separate from generated Python content validation.
+
+It answers only:
+
+```text
+May a generated artifact be written to this repository path?
+```
+
+It does not answer:
+
+```text
+which input domain produced the artifact
+which output application will consume it
+whether the artifact content is valid for Blender, FFmpeg or any other runtime
+```
+
+Default safe destinations are intentionally narrow and reviewable:
+
+```text
+output/
+indexAI/
+patch_specs/inbox/
+patch_specs/applied/
+Scripting/v61b/hotpatch/
+Tools/npu/npu_code_chunks/
+Tools/npu/npu_code_context.md
+Tools/npu/npu_code_index.md
+Tools/npu/npu_code_manifest.json
+```
+
+Sample-only validation:
+
+```powershell
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
+```
+
+Explicit generated artifact destination validation:
+
+```powershell
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --path .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
+```
+
+Workflow-specific extensions should be explicit:
+
+```powershell
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --path .\custom_safe_output\artifact.json --allowed-prefix .\custom_safe_output\ --output .\output\validation\generated_artifact_path_policy.json
+```
 
 ## AI model JSON parser validation
 
@@ -255,6 +312,7 @@ Use this block after structural refactors, documentation changes, AI pipeline ch
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json

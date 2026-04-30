@@ -30,7 +30,11 @@ This script runs:
 ```text
 git pull --rebase
 python syntax validation
+AI model JSON validation
 AI pipeline module smoke validation
+generated artifact path policy validation
+generated Blender script policy validation
+AI dry-run matrix contract validation
 AI pipeline dry-run matrix
 package structure validation
 JSON artifact validation
@@ -96,12 +100,16 @@ branch aligned with origin/master
 
 ```powershell
 python .\Tools\validation\check_python_syntax.py --repo-root .
+python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
+python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
 python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
 ```
@@ -110,6 +118,9 @@ python .\Tools\validation\check_json_artifacts.py --repo-root .
 
 ```powershell
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
+Get-Content .\output\validation\generated_artifact_path_policy.json -Raw
+Get-Content .\output\validation\generated_blender_script_policy.json -Raw
+Get-Content .\output\validation\ai_dry_run_matrix_contract.json -Raw
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.json -Raw
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
 ```

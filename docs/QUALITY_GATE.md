@@ -79,6 +79,7 @@ For Blender/audio packages, additionally document:
 - Use `Tools/ai/model_json.py` for JSON-like model outputs instead of ad-hoc LLM response parsing.
 - Use `Scripting/shared/json_io.py` for clean project JSON files and keep it strict.
 - Use `Tools/validation/generated_file_policy.py` for reusable generated-file policy checks.
+- Use `Tools/validation/check_generated_artifact_path_policy.py` before accepting proposed generated artifact destinations outside the current safe prefixes.
 - Do not perform broad refactoring of working packages without explicit validation.
 
 ## Minimum documentation quality
@@ -181,6 +182,44 @@ When adding policy for another file/application context:
 6. avoid broad, ambiguous regex rules that block legitimate generated output;
 7. add explicit validation commands and report paths to documentation;
 8. avoid running external tools unless the validator is explicitly a smoke test.
+
+## Generic generated artifact path policy checklist
+
+Generated artifact path policy is not an input-domain validator and not an output-application adapter. It validates only whether a generated file destination is allowed.
+
+Current validator:
+
+```text
+Tools/validation/check_generated_artifact_path_policy.py
+```
+
+Default command:
+
+```powershell
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
+```
+
+Explicit destination check:
+
+```powershell
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --path .\output\some_generated_artifact.json --output .\output\validation\generated_artifact_path_policy.json
+```
+
+Default allowed destinations:
+
+```text
+output/
+indexAI/
+patch_specs/inbox/
+patch_specs/applied/
+Scripting/v61b/hotpatch/
+Tools/npu/npu_code_chunks/
+Tools/npu/npu_code_context.md
+Tools/npu/npu_code_index.md
+Tools/npu/npu_code_manifest.json
+```
+
+Do not broaden these defaults casually. Use `--allowed-prefix` or `--allowed-exact-path` for deliberate workflow-specific extensions, then document why the destination is safe.
 
 ## AI model-output JSON checklist
 

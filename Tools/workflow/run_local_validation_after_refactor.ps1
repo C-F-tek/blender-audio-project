@@ -117,12 +117,16 @@ try {
 
     Invoke-Step -Name "git status before validation" -Command "git" -Arguments @("status")
     Invoke-Step -Name "python syntax validation" -Command "python" -Arguments @(".\Tools\validation\check_python_syntax.py", "--repo-root", ".")
+    Invoke-Step -Name "ai model json validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_model_json.py", "--repo-root", ".", "--output", ".\output\validation\ai_model_json.json")
     Invoke-Step -Name "ai pipeline module smoke validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_pipeline_modules.py", "--repo-root", ".", "--output", ".\output\validation\ai_pipeline_modules.json")
+    Invoke-Step -Name "generated artifact path policy validation" -Command "python" -Arguments @(".\Tools\validation\check_generated_artifact_path_policy.py", "--repo-root", ".", "--output", ".\output\validation\generated_artifact_path_policy.json")
+    Invoke-Step -Name "generated blender script policy validation" -Command "python" -Arguments @(".\Tools\validation\check_generated_blender_script_policy.py", "--repo-root", ".", "--output", ".\output\validation\generated_blender_script_policy.json")
     Invoke-Step -Name "refactor status consistency validation" -Command "python" -Arguments @(".\Tools\validation\check_refactor_status_consistency.py", "--repo-root", ".", "--output", ".\output\validation\refactor_status_consistency.json")
     Invoke-Step -Name "documentation links validation" -Command "python" -Arguments @(".\Tools\validation\check_docs_links.py", "--repo-root", ".", "--output", ".\output\validation\docs_links.json")
     Invoke-Step -Name "agent memory policy validation" -Command "python" -Arguments @(".\Tools\validation\check_agent_memory_policy.py", "--repo-root", ".", "--output", ".\output\validation\agent_memory_policy.json")
     Invoke-Step -Name "blender shared compatibility smoke" -Command "python" -Arguments @(".\Tools\validation\check_blender_shared_compat_smoke.py", "--repo-root", ".", "--output", ".\output\validation\blender_shared_compat_smoke.json")
     Invoke-Step -Name "ai pipeline dry-run matrix" -Command "python" -Arguments @(".\Tools\ai\run_pipeline_dry_run_matrix.py", "--repo-root", ".", "--continue-on-error")
+    Invoke-Step -Name "ai dry-run matrix contract validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_dry_run_matrix_contract.py", "--repo-root", ".", "--output", ".\output\validation\ai_dry_run_matrix_contract.json")
     Invoke-Step -Name "package structure validation" -Command "python" -Arguments @(".\Tools\validation\check_package_structure.py", "--repo-root", ".")
     Invoke-Step -Name "json artifact validation" -Command "python" -Arguments @(".\Tools\validation\check_json_artifacts.py", "--repo-root", ".")
     Invoke-Step -Name "build project ai index" -Command "python" -Arguments @(".\Tools\npu\build_project_ai_index.py")
@@ -145,11 +149,15 @@ $summary = [pscustomobject]@{
     repo_root = $repo
     passed = $passed
     log_path = $script:MainLog
+    ai_model_json_report = (Join-Path $repo "output\validation\ai_model_json.json")
     ai_pipeline_modules_report = (Join-Path $repo "output\validation\ai_pipeline_modules.json")
+    generated_artifact_path_policy_report = (Join-Path $repo "output\validation\generated_artifact_path_policy.json")
+    generated_blender_script_policy_report = (Join-Path $repo "output\validation\generated_blender_script_policy.json")
     refactor_status_consistency_report = (Join-Path $repo "output\validation\refactor_status_consistency.json")
     docs_links_report = (Join-Path $repo "output\validation\docs_links.json")
     agent_memory_policy_report = (Join-Path $repo "output\validation\agent_memory_policy.json")
     blender_shared_compat_smoke_report = (Join-Path $repo "output\validation\blender_shared_compat_smoke.json")
+    ai_dry_run_matrix_contract_report = (Join-Path $repo "output\validation\ai_dry_run_matrix_contract.json")
     dry_run_matrix_json = (Join-Path $repo "output\ai_pipeline\dry_run_matrix_report.json")
     dry_run_matrix_markdown = (Join-Path $repo "output\ai_pipeline\dry_run_matrix_report.md")
     steps = $script:Results
@@ -164,11 +172,15 @@ $md += ("- Generated at: {0}" -f $summary.generated_at)
 $md += ("- Passed: {0}" -f $passed)
 $md += ("- Repo: {0}" -f $repo)
 $md += ("- Log: {0}" -f $script:MainLog)
+$md += ("- AI model JSON report: {0}" -f $summary.ai_model_json_report)
 $md += ("- AI module report: {0}" -f $summary.ai_pipeline_modules_report)
+$md += ("- Generated artifact path policy report: {0}" -f $summary.generated_artifact_path_policy_report)
+$md += ("- Generated Blender script policy report: {0}" -f $summary.generated_blender_script_policy_report)
 $md += ("- Refactor status consistency report: {0}" -f $summary.refactor_status_consistency_report)
 $md += ("- Docs links report: {0}" -f $summary.docs_links_report)
 $md += ("- Agent memory policy report: {0}" -f $summary.agent_memory_policy_report)
 $md += ("- Blender shared compatibility smoke report: {0}" -f $summary.blender_shared_compat_smoke_report)
+$md += ("- AI dry-run matrix contract report: {0}" -f $summary.ai_dry_run_matrix_contract_report)
 $md += ("- Dry-run matrix JSON: {0}" -f $summary.dry_run_matrix_json)
 $md += ("- Dry-run matrix Markdown: {0}" -f $summary.dry_run_matrix_markdown)
 $md += ""
@@ -186,11 +198,15 @@ $md += "Run these commands from the repository root:"
 $md += ""
 $md += "    git status"
 $md += "    git diff --stat"
+$md += "    Get-Content .\output\validation\ai_model_json.json -Raw"
 $md += "    Get-Content .\output\validation\ai_pipeline_modules.json -Raw"
+$md += "    Get-Content .\output\validation\generated_artifact_path_policy.json -Raw"
+$md += "    Get-Content .\output\validation\generated_blender_script_policy.json -Raw"
 $md += "    Get-Content .\output\validation\refactor_status_consistency.json -Raw"
 $md += "    Get-Content .\output\validation\docs_links.json -Raw"
 $md += "    Get-Content .\output\validation\agent_memory_policy.json -Raw"
 $md += "    Get-Content .\output\validation\blender_shared_compat_smoke.json -Raw"
+$md += "    Get-Content .\output\validation\ai_dry_run_matrix_contract.json -Raw"
 $md += "    Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw"
 $md | Set-Content -LiteralPath $summaryMd -Encoding UTF8
 
