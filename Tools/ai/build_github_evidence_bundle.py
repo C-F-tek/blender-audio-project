@@ -24,8 +24,6 @@ DEFAULT_REPORTS = (
     "output/validation/local_provider_probe.json",
     "output/validation/npu_runtime_output_manifest.json",
     "output/validation/provider_result_report.json",
-    "output/ai_packets/npu_ollama_primary_after_routing.json",
-    "output/ai_packets/npu_ollama_primary_routing_proposals.json",
 )
 
 
@@ -87,6 +85,7 @@ def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
         "policy",
         "mode",
         "provider",
+        "python_exe",
         "device",
         "model_dir",
         "proposal_count",
@@ -174,13 +173,19 @@ def build_bundle(repo_root: Path, report_paths: list[str], basename: str, output
             "ollama_gpu_primary_advisory": any(
                 (item.get("summary", {}).get("primary_advisory_provider", {}) or {}).get("provider") == "ollama"
                 or (item.get("summary", {}).get("routing", {}).get("primary_advisory_provider", {}) or {}).get("provider") == "ollama"
+                or (item.get("summary", {}).get("ollama", {}) or {}).get("used") is True
                 for item in reports
             ),
             "npu_excluded_when_unusable": any(
                 any((ctx.get("lane") == "npu" and ctx.get("trusted") is False) for ctx in item.get("summary", {}).get("routing", {}).get("excluded_context_files", []) if isinstance(ctx, dict))
+                or "output/ai_packets/npu_real_workload_report.md" in (item.get("summary", {}).get("context", {}).get("excluded_context_files") or [])
                 for item in reports
             ),
             "provider_execution_seen": any(item.get("summary", {}).get("provider_execution_performed") is True for item in reports),
+            "npu_decode_smoke_passed": any(
+                item.get("kind") == "npu_decode_smoke_diagnostic" and item.get("passed") is True and item.get("summary", {}).get("provider_execution_performed") is True
+                for item in reports
+            ),
         },
     }
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -218,6 +223,8 @@ def render_markdown(bundle: dict[str, Any]) -> str:
             lines.append(f"- Unusable lanes: `{summary.get('unusable_lanes')}`")
         if summary.get("primary_advisory_provider"):
             lines.append(f"- Primary advisory provider: `{summary.get('primary_advisory_provider')}`")
+        if summary.get("python_exe"):
+            lines.append(f"- Python executable: `{summary.get('python_exe')}`")
         errors = summary.get("errors") or []
         warnings = summary.get("warnings") or []
         if errors:
