@@ -2,7 +2,7 @@
 
 ## Status
 
-active
+completed
 
 ## Goal
 
@@ -69,6 +69,7 @@ The target is a runtime orchestrator. The mitigation is to wire only determinist
 - 2026-04-30: Extended NPU helper smoke validation to prove runtime prompt builders embed helper-built payloads.
 - 2026-04-30: Full local validation passed with `-MatrixWorkers 12 -RepeatCases 2`; report `output/local_validation/local_validation_20260430_202306.json`.
 - 2026-04-30: Updated the tech debt tracker so NPU runtime wiring reflects current incremental progress rather than the old PR #41 boundary.
+- 2026-04-30: PR #44 merged; plan marked completed.
 
 ## Future task notes
 
@@ -79,7 +80,7 @@ The target is a runtime orchestrator. The mitigation is to wire only determinist
 
 ## Result
 
-implemented and locally validated
+implemented, locally validated and merged
 
 ## Follow-up
 
