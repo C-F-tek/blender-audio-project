@@ -23,12 +23,24 @@ DEFAULT_REPORTS = (
     "output/validation/npu_pipeline_modules.json",
     "output/validation/npu_pipeline_helper_tests.json",
     "output/validation/npu_pipeline_docs.json",
+    "output/validation/provider_result_parsing.json",
     "output/validation/npu_runtime_output_manifest.json",
     "output/validation/local_ai_resource_lanes.json",
+    "output/validation/local_provider_probe.json",
     "output/validation/execution_plan_status.json",
     "output/validation/validation_report_contract.json",
     "output/ai_pipeline/repository_update_suggestions.json",
 )
+
+
+def split_path_values(items: list[str]) -> list[str]:
+    out: list[str] = []
+    for item in items:
+        for part in str(item).split(","):
+            normalized = part.strip().strip("'\"")
+            if normalized:
+                out.append(normalized)
+    return out
 
 
 def read_json_if_exists(path: Path) -> dict[str, Any]:
@@ -48,6 +60,28 @@ def report_by_kind(reports: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
             kind = str(data.get("kind") or Path(report["path"]).stem)
             by_kind[kind] = data
     return by_kind
+
+
+def report_passed(report: dict[str, Any] | None) -> bool:
+    return isinstance(report, dict) and report.get("passed") is True
+
+
+def all_provider_observability_green(by_kind: dict[str, dict[str, Any]]) -> bool:
+    resource_lanes = by_kind.get("local_ai_resource_lanes")
+    npu_manifest = by_kind.get("npu_runtime_output_manifest")
+    provider_parsing = by_kind.get("provider_result_parsing")
+    provider_probe = by_kind.get("local_provider_probe")
+
+    ready_lanes = set(resource_lanes.get("ready_lanes") or []) if isinstance(resource_lanes, dict) else set()
+    return (
+        report_passed(resource_lanes)
+        and {"gpu", "npu", "ollama"}.issubset(ready_lanes)
+        and report_passed(npu_manifest)
+        and int(npu_manifest.get("blocked_count") or 0) == 0
+        and report_passed(provider_parsing)
+        and report_passed(provider_probe)
+        and provider_probe.get("provider_execution_performed") is True
+    )
 
 
 def proposal(
@@ -85,6 +119,49 @@ def proposal(
             "provider execution behavior unless explicitly scoped",
         ],
     }
+
+
+def provider_report_adoption_proposal() -> dict[str, Any]:
+    return proposal(
+        proposal_id="P-RUNTIME-SAFE-PROVIDER-REPORT-ADOPTION",
+        priority="P2",
+        area="npu_backend",
+        title="Adopt provider result reports in runtime-safe observability",
+        rationale=(
+            "Resource lanes, runtime-output manifest, provider-result parsing and explicit local provider probes are green. "
+            "The next safe step is to let runtime-adjacent tooling consume already-produced provider results as reports, "
+            "without executing providers or changing legacy runtime behavior."
+        ),
+        target_files=[
+            "Tools/npu/run_dual_ai_pipeline.py",
+            "Tools/npu/pipeline/providers.py",
+            "Tools/npu/pipeline/reports.py",
+            "Tools/validation/check_provider_result_parsing.py",
+            "Tools/validation/check_npu_pipeline_modules.py",
+            "Tools/npu/pipeline/README.md",
+            "docs/JSON_SCHEMAS.md",
+        ],
+        change_type="runtime_safe_report_adoption",
+        sketch=[
+            "Add a runtime-safe helper that turns already-obtained provider payloads into provider_result_report JSON.",
+            "Do not call Ollama, NPU, GPU, OpenVINO generation or provider sessions from the legacy runtime path.",
+            "Write reports under output/validation or an explicitly report-only output path.",
+            "Expose provider_execution_performed accurately: false for parsed legacy/simulated payloads, true only for explicit probe tools.",
+            "Add smoke/unit validation that proves report adoption does not modify prompt prose, model selection, temperature or legacy outputs.",
+        ],
+        validation=[
+            "python .\\Tools\\validation\\check_provider_result_parsing.py --repo-root . --output .\\output\\validation\\provider_result_parsing.json",
+            "python .\\Tools\\ai\\run_local_provider_probe.py --repo-root . --run-ollama --run-npu --output .\\output\\validation\\local_provider_probe.json",
+            "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_npu_pipeline_helper_validation.ps1",
+            "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_post_validation_ai_packet.ps1 -Profile npu -OutputDir output/ai_packets -Basename npu_provider_after_tests -ProposalBasename npu_provider_change_proposals -ReportFile output/validation/provider_result_parsing.json,output/validation/local_provider_probe.json,output/validation/npu_runtime_output_manifest.json,output/validation/local_ai_resource_lanes.json",
+        ],
+        stop_conditions=[
+            "Any change would execute providers from the legacy runtime path.",
+            "Any change would alter prompt prose, model, temperature or provider orchestration.",
+            "Any change would touch Blender runtime, Ready To Jazz, full analysis JSON or generated indexes by hand.",
+            "Any report cannot distinguish parsed existing payloads from explicit provider execution.",
+        ],
+    )
 
 
 def build_proposals(reports: list[dict[str, Any]], *, profile: str) -> list[dict[str, Any]]:
@@ -192,34 +269,37 @@ def build_proposals(reports: list[dict[str, Any]], *, profile: str) -> list[dict
         )
 
     if not proposals:
-        proposals.append(
-            proposal(
-                proposal_id="P-NEXT-NPU-OBSERVABILITY",
-                priority="P2",
-                area="npu_backend",
-                title="Add additive NPU observability before provider execution changes",
-                rationale="Current reports do not indicate blocking failures. The next safe app-agnostic step is deeper observability, not provider behavior changes.",
-                target_files=[
-                    "Tools/npu/build_runtime_output_manifest.py",
-                    "Tools/ai/check_local_resource_lanes.py",
-                    "Tools/ai/suggest_repository_updates.py",
-                    "docs/JSON_SCHEMAS.md",
-                    "Tools/validation/README.md",
-                ],
-                change_type="observability_extension",
-                sketch=[
-                    "Include runtime-output manifest and resource-lane reports in the default NPU packet profile.",
-                    "Add proposal generation output next to packet JSON/Markdown.",
-                    "Keep every output advisory and generated under output/.",
-                ],
-                validation=[
-                    "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_npu_pipeline_helper_validation.ps1",
-                    "python .\\Tools\\ai\\check_local_resource_lanes.py --repo-root . --parallel --output .\\output\\validation\\local_ai_resource_lanes.json --markdown-output .\\output\\validation\\local_ai_resource_lanes.md",
-                    "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_post_validation_ai_packet.ps1 -Profile npu -OutputDir output/ai_packets -Basename npu_after_tests -ReportFile output/validation/local_ai_resource_lanes.json -ReportFile output/validation/npu_runtime_output_manifest.json",
-                ],
-                stop_conditions=["Any change requires modifying provider execution, prompt prose, Blender runtime or generated indexes manually."],
+        if all_provider_observability_green(by_kind):
+            proposals.append(provider_report_adoption_proposal())
+        else:
+            proposals.append(
+                proposal(
+                    proposal_id="P-NEXT-NPU-OBSERVABILITY",
+                    priority="P2",
+                    area="npu_backend",
+                    title="Add additive NPU observability before provider execution changes",
+                    rationale="Current reports do not indicate blocking failures. The next safe app-agnostic step is deeper observability, not provider behavior changes.",
+                    target_files=[
+                        "Tools/npu/build_runtime_output_manifest.py",
+                        "Tools/ai/check_local_resource_lanes.py",
+                        "Tools/ai/suggest_repository_updates.py",
+                        "docs/JSON_SCHEMAS.md",
+                        "Tools/validation/README.md",
+                    ],
+                    change_type="observability_extension",
+                    sketch=[
+                        "Include runtime-output manifest and resource-lane reports in the default NPU packet profile.",
+                        "Add proposal generation output next to packet JSON/Markdown.",
+                        "Keep every output advisory and generated under output/.",
+                    ],
+                    validation=[
+                        "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_npu_pipeline_helper_validation.ps1",
+                        "python .\\Tools\\ai\\check_local_resource_lanes.py --repo-root . --parallel --output .\\output\\validation\\local_ai_resource_lanes.json --markdown-output .\\output\\validation\\local_ai_resource_lanes.md",
+                        "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_post_validation_ai_packet.ps1 -Profile npu -OutputDir output/ai_packets -Basename npu_after_tests -ReportFile output/validation/local_ai_resource_lanes.json -ReportFile output/validation/npu_runtime_output_manifest.json",
+                    ],
+                    stop_conditions=["Any change requires modifying provider execution, prompt prose, Blender runtime or generated indexes manually."],
+                )
             )
-        )
 
     return proposals
 
@@ -272,7 +352,7 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    report_paths = list(DEFAULT_REPORTS) + list(args.report_file or [])
+    report_paths = list(DEFAULT_REPORTS) + split_path_values(list(args.report_file or []))
     loaded_reports = [read_json_if_exists(repo_root / path) for path in dict.fromkeys(report_paths)]
     proposals = build_proposals(loaded_reports, profile=args.profile)
 
