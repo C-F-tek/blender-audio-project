@@ -38,6 +38,12 @@ from .prompts import (
     build_merge_prompt_payload,
     compact_segments_for_prompt,
 )
+from .providers import (
+    ProviderRequest,
+    ProviderResult,
+    planned_provider_result,
+    validate_provider_request,
+)
 from .runner import (
     PipelineStagePlan,
     build_default_stage_plan,
@@ -58,6 +64,8 @@ __all__ = [
     "NpuPipelineConfig",
     "PipelineStagePlan",
     "PlannedArtifactWrite",
+    "ProviderRequest",
+    "ProviderResult",
     "REQUIRED_IMPLEMENTATION_DRAFT_KEYS",
     "build_context_bundle",
     "build_creative_scene_prompt_payload",
@@ -68,6 +76,7 @@ __all__ = [
     "context_bundle_metrics",
     "is_allowed_generated_artifact_path",
     "normalize_repo_relative_path",
+    "planned_provider_result",
     "read_json_object",
     "read_optional_json_object",
     "read_text",
@@ -77,6 +86,7 @@ __all__ = [
     "validate_implementation_draft_contract",
     "validate_json_object",
     "validate_planned_artifact_writes",
+    "validate_provider_request",
     "validate_required_keys",
     "write_json_object",
     "write_planned_artifact",
