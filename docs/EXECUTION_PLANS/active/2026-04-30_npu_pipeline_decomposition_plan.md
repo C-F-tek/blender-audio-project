@@ -133,6 +133,9 @@ add pure artifact writer helpers
 add pure contract validators
 add NPU pipeline module smoke validator
 wire that smoke validator into the local PowerShell validation runner
+add deterministic context builder helpers
+add deterministic runner plan helpers
+expand smoke validation to cover the full app-agnostic helper boundary
 do not modify Tools/npu/run_dual_ai_pipeline.py
 do not modify provider/runtime behavior
 do not edit generated indexes until maintainer local regeneration
@@ -142,7 +145,7 @@ Batch rationale:
 
 ```text
 The maintainer is away from the workstation, so this batch intentionally stops before runtime wiring.
-It prepares multiple pure-helper improvements plus one focused validator, then waits for one final local validation cycle.
+It prepares multiple pure-helper improvements plus focused validators, then waits for one final local validation cycle.
 ```
 
 Validation required before merge:
