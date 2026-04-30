@@ -25,6 +25,7 @@ DEFAULT_REPORTS = (
     "output/validation/npu_pipeline_docs.json",
     "output/validation/provider_result_parsing.json",
     "output/validation/provider_result_report.json",
+    "output/validation/ai_workload_report_quality.json",
     "output/validation/npu_runtime_output_manifest.json",
     "output/validation/local_ai_resource_lanes.json",
     "output/validation/local_provider_probe.json",
@@ -97,6 +98,11 @@ def provider_report_adoption_green(by_kind: dict[str, dict[str, Any]]) -> bool:
     )
 
 
+def ai_workload_quality_has_unusable_output(by_kind: dict[str, dict[str, Any]]) -> bool:
+    report = by_kind.get("ai_workload_report_quality")
+    return isinstance(report, dict) and bool(report.get("unusable_lanes"))
+
+
 def proposal(
     *,
     proposal_id: str,
@@ -132,6 +138,46 @@ def proposal(
             "provider execution behavior unless explicitly scoped",
         ],
     }
+
+
+def ai_workload_quality_remediation_proposal(by_kind: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    quality = by_kind.get("ai_workload_report_quality") or {}
+    usable = ", ".join(quality.get("usable_lanes") or []) or "none"
+    unusable = ", ".join(quality.get("unusable_lanes") or []) or "none"
+    return proposal(
+        proposal_id="P-AI-WORKLOAD-REPORT-QUALITY-GATE",
+        priority="P1",
+        area="local_ai_workloads",
+        title="Gate AI workload reports before using them as advisory context",
+        rationale=(
+            f"AI workload report quality found usable lanes: {usable}; unusable lanes: {unusable}. "
+            "Downstream packets and proposals should trust only usable workload reports and keep unusable lanes limited to probes until their decoding/configuration is fixed."
+        ),
+        target_files=[
+            "Tools/validation/check_ai_workload_report_quality.py",
+            "Tools/npu/run_npu_review.py",
+            "Tools/ai/suggest_repository_updates.py",
+            "Tools/ai/build_repository_change_proposals.py",
+            "Tools/validation/README.md",
+            "docs/JSON_SCHEMAS.md",
+        ],
+        change_type="workload_quality_gate",
+        sketch=[
+            "Keep Ollama/GPU workload reports as primary advisory context when classified usable.",
+            "Exclude or clearly mark NPU/OpenVINO generated reports as unusable when they are numeric/hex-like or non-linguistic.",
+            "Do not disable NPU preflight/probe; only prevent low-quality NPU generation output from influencing suggestions.",
+            "Add report metadata that distinguishes availability, execution and output usability.",
+        ],
+        validation=[
+            "python .\\Tools\\validation\\check_ai_workload_report_quality.py --repo-root . --output .\\output\\validation\\ai_workload_report_quality.json",
+            "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_post_validation_ai_packet.ps1 -Profile npu -OutputDir output/ai_packets -Basename npu_ollama_real_workload_after_tests -ProposalBasename npu_ollama_real_workload_proposals -ContextFile output/ai_packets/npu_real_workload_report.md,output/ai_packets/ollama_gpu_real_workload_report.md -ReportFile output/validation/ai_workload_report_quality.json,output/validation/local_ai_resource_lanes.json,output/validation/provider_result_report.json,output/validation/local_provider_probe.json,output/validation/npu_runtime_output_manifest.json",
+        ],
+        stop_conditions=[
+            "Any change would execute providers implicitly or by default.",
+            "Any change would hide a failing/unusable AI workload report instead of reporting it.",
+            "Any change would alter NPU/Ollama model configuration, prompt prose or provider orchestration.",
+        ],
+    )
 
 
 def provider_report_adoption_proposal() -> dict[str, Any]:
@@ -327,7 +373,9 @@ def build_proposals(reports: list[dict[str, Any]], *, profile: str) -> list[dict
         )
 
     if not proposals:
-        if provider_report_adoption_green(by_kind):
+        if ai_workload_quality_has_unusable_output(by_kind):
+            proposals.append(ai_workload_quality_remediation_proposal(by_kind))
+        elif provider_report_adoption_green(by_kind):
             proposals.append(post_validation_loop_hardening_proposal())
         elif all_provider_observability_green(by_kind):
             proposals.append(provider_report_adoption_proposal())
