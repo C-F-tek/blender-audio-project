@@ -24,6 +24,7 @@ DEFAULT_REPORTS = (
     "output/validation/npu_pipeline_helper_tests.json",
     "output/validation/npu_pipeline_docs.json",
     "output/validation/provider_result_parsing.json",
+    "output/validation/provider_result_report.json",
     "output/validation/npu_runtime_output_manifest.json",
     "output/validation/local_ai_resource_lanes.json",
     "output/validation/local_provider_probe.json",
@@ -80,6 +81,18 @@ def all_provider_observability_green(by_kind: dict[str, dict[str, Any]]) -> bool
         and int(npu_manifest.get("blocked_count") or 0) == 0
         and report_passed(provider_parsing)
         and report_passed(provider_probe)
+        and provider_probe.get("provider_execution_performed") is True
+    )
+
+
+def provider_report_adoption_green(by_kind: dict[str, dict[str, Any]]) -> bool:
+    provider_result_report = by_kind.get("provider_result_report")
+    provider_probe = by_kind.get("local_provider_probe")
+    return (
+        all_provider_observability_green(by_kind)
+        and report_passed(provider_result_report)
+        and provider_result_report.get("provider_execution_performed") is False
+        and provider_result_report.get("mode") == "runtime_safe_report_only"
         and provider_probe.get("provider_execution_performed") is True
     )
 
@@ -151,15 +164,60 @@ def provider_report_adoption_proposal() -> dict[str, Any]:
         ],
         validation=[
             "python .\\Tools\\validation\\check_provider_result_parsing.py --repo-root . --output .\\output\\validation\\provider_result_parsing.json",
+            "python .\\Tools\\npu\\build_provider_result_report.py --repo-root . --use-samples --output .\\output\\validation\\provider_result_report.json",
             "python .\\Tools\\ai\\run_local_provider_probe.py --repo-root . --run-ollama --run-npu --output .\\output\\validation\\local_provider_probe.json",
             "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_npu_pipeline_helper_validation.ps1",
-            "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_post_validation_ai_packet.ps1 -Profile npu -OutputDir output/ai_packets -Basename npu_provider_after_tests -ProposalBasename npu_provider_change_proposals -ReportFile output/validation/provider_result_parsing.json,output/validation/local_provider_probe.json,output/validation/npu_runtime_output_manifest.json,output/validation/local_ai_resource_lanes.json",
         ],
         stop_conditions=[
             "Any change would execute providers from the legacy runtime path.",
             "Any change would alter prompt prose, model, temperature or provider orchestration.",
             "Any change would touch Blender runtime, Ready To Jazz, full analysis JSON or generated indexes by hand.",
             "Any report cannot distinguish parsed existing payloads from explicit provider execution.",
+        ],
+    )
+
+
+def post_validation_loop_hardening_proposal() -> dict[str, Any]:
+    return proposal(
+        proposal_id="P-POST-VALIDATION-LOOP-HARDENING",
+        priority="P2",
+        area="workflow_core",
+        title="Harden the post-validation report/packet/proposal loop",
+        rationale=(
+            "Resource lanes, runtime-output manifest, provider parsing, explicit provider probes and runtime-safe provider report adoption are green. "
+            "The next safe milestone is consolidating the internal loop so future coding/test cycles produce stable reports, packets, proposals and stop conditions without adding new runtime features."
+        ),
+        target_files=[
+            "Tools/workflow/run_local_validation_after_refactor.ps1",
+            "Tools/workflow/run_npu_pipeline_helper_validation.ps1",
+            "Tools/workflow/run_post_validation_ai_packet.ps1",
+            "Tools/ai/suggest_repository_updates.py",
+            "Tools/ai/build_repository_change_proposals.py",
+            "Tools/validation/README.md",
+            "WORKFLOW.md",
+            "docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md",
+            "docs/JSON_SCHEMAS.md",
+        ],
+        change_type="post_validation_loop_hardening",
+        sketch=[
+            "Include provider_result_report in standard NPU packet/proposal validation commands everywhere it is relevant.",
+            "Ensure local full validation summaries point to packet and proposal outputs consistently.",
+            "Add a compact loop-health report that states which reports are missing, stale, passing or blocking.",
+            "Keep generated outputs under output/ and keep source changes separate from local report generation.",
+            "Document the canonical order: validation -> resource/probe reports -> runtime-safe provider report -> packet -> proposals -> reindex.",
+        ],
+        validation=[
+            "python .\\Tools\\validation\\check_provider_result_parsing.py --repo-root . --output .\\output\\validation\\provider_result_parsing.json",
+            "python .\\Tools\\npu\\build_provider_result_report.py --repo-root . --use-samples --output .\\output\\validation\\provider_result_report.json",
+            "python .\\Tools\\ai\\check_local_resource_lanes.py --repo-root . --parallel --output .\\output\\validation\\local_ai_resource_lanes.json --markdown-output .\\output\\validation\\local_ai_resource_lanes.md",
+            "python .\\Tools\\ai\\run_local_provider_probe.py --repo-root . --run-ollama --run-npu --output .\\output\\validation\\local_provider_probe.json",
+            "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2",
+        ],
+        stop_conditions=[
+            "Any change would add new provider execution to default validation without an explicit flag.",
+            "Any change would auto-apply proposal patches or commit generated reports.",
+            "Any change would mix local generated outputs with source files or generated indexes.",
+            "Any change would broaden permissions, network access, secrets or authentication behavior.",
         ],
     )
 
@@ -269,7 +327,9 @@ def build_proposals(reports: list[dict[str, Any]], *, profile: str) -> list[dict
         )
 
     if not proposals:
-        if all_provider_observability_green(by_kind):
+        if provider_report_adoption_green(by_kind):
+            proposals.append(post_validation_loop_hardening_proposal())
+        elif all_provider_observability_green(by_kind):
             proposals.append(provider_report_adoption_proposal())
         else:
             proposals.append(
