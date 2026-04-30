@@ -30,12 +30,19 @@ class MatrixCase:
     purpose: str
 
 
+def _planned_gpu_command() -> str:
+    """Return a harmless command string used only for dry-run GPU planning."""
+    return f"{sys.executable} -c \"print('gpu planner dry run only')\""
+
+
 def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
     agent_state_packet = None
+    missing_analysis_json = Path("output/ai_pipeline/dry_run_matrix_inputs/missing_analysis.json")
     if repo_root is not None:
         candidate = repo_root / "output" / "ai_pipeline" / "agent_state" / "validate_agent_state_memory_integration_plan.json"
         if candidate.exists():
             agent_state_packet = candidate
+        missing_analysis_json = repo_root / missing_analysis_json
 
     cases = [
         MatrixCase(
@@ -54,6 +61,27 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
             purpose="Verify pipeline when NPU guardrail is disabled.",
         ),
         MatrixCase(
+            name="no_smart_context",
+            args=("--dry-run", "--write-dry-run-report", "--no-smart-context"),
+            purpose="Verify planning when smart context is disabled and guardrail input falls back to the output directory.",
+        ),
+        MatrixCase(
+            name="no_wave_review",
+            args=("--dry-run", "--write-dry-run-report", "--no-review-wave-entrypoints"),
+            purpose="Verify planning when first-wave WAV entrypoint review is disabled.",
+        ),
+        MatrixCase(
+            name="minimal_no_context_no_guardrail",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--no-review-wave-entrypoints",
+                "--no-smart-context",
+                "--no-npu-guardrail",
+            ),
+            purpose="Verify the smallest no-op planning shape remains reportable.",
+        ),
+        MatrixCase(
             name="with_validation",
             args=("--dry-run", "--write-dry-run-report", "--validate"),
             purpose="Verify validate_ai_artifacts stage planning.",
@@ -62,6 +90,45 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
             name="with_chunks",
             args=("--dry-run", "--write-dry-run-report", "--build-chunks"),
             purpose="Verify semantic code chunk stage planning.",
+        ),
+        MatrixCase(
+            name="with_music_summary_planned",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--build-music-summary",
+                "--analysis-json",
+                str(missing_analysis_json),
+            ),
+            purpose="Verify music intermediate stage planning without requiring the analysis JSON to exist during dry-run.",
+        ),
+        MatrixCase(
+            name="with_npu_review_planned",
+            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--npu-workers", "1"),
+            purpose="Verify optional NPU artifact review stage planning without executing NPU workloads.",
+        ),
+        MatrixCase(
+            name="with_gpu_command_planned",
+            args=("--dry-run", "--write-dry-run-report", "--gpu-command", _planned_gpu_command()),
+            purpose="Verify optional GPU command planning without executing GPU workloads.",
+        ),
+        MatrixCase(
+            name="full_planning_surface",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--build-chunks",
+                "--build-music-summary",
+                "--analysis-json",
+                str(missing_analysis_json),
+                "--validate",
+                "--use-npu",
+                "--npu-workers",
+                "2",
+                "--gpu-command",
+                _planned_gpu_command(),
+            ),
+            purpose="Verify the widest planned CPU/NPU/GPU dry-run surface without executing heavy workloads.",
         ),
     ]
     if agent_state_packet is not None:
