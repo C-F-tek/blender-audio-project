@@ -20,17 +20,20 @@ if str(REPO_ROOT) not in sys.path:
 from Tools.npu.pipeline import (  # noqa: E402
     DEFAULT_ALLOWED_ARTIFACT_PREFIXES,
     DualPipelinePaths,
+    MigrationReadinessCheck,
     NpuPipelineConfig,
     PlannedArtifactWrite,
     ProviderRequest,
     build_context_bundle,
     build_default_stage_plan,
     build_helper_boundary_report,
+    build_migration_readiness_report,
     compact_segments_for_prompt,
     compare_json_readers,
     compare_optional_json_readers,
     compare_text_readers,
     context_bundle_metrics,
+    default_runtime_wiring_readiness,
     helper_boundary_passed,
     is_allowed_generated_artifact_path,
     planned_provider_result,
@@ -211,6 +214,27 @@ class NpuPipelineHelperTests(unittest.TestCase):
             checks={"syntax": False},
         )
         self.assertFalse(helper_boundary_passed(failed))
+
+    def test_migration_readiness_blocks_runtime_by_default(self) -> None:
+        readiness = default_runtime_wiring_readiness(
+            local_validation_passed=True,
+            indexes_regenerated=True,
+        )
+        self.assertFalse(readiness["allowed_to_modify_runtime"])
+        self.assertFalse(readiness["ready"])
+        report = build_migration_readiness_report(
+            target_file="Tools/npu/run_dual_ai_pipeline.py",
+            checks=[MigrationReadinessCheck("local_validation_passed", True, "green")],
+            allowed_to_modify_runtime=True,
+        )
+        self.assertTrue(report["ready"])
+        blocked = build_migration_readiness_report(
+            target_file="Tools/npu/run_dual_ai_pipeline.py",
+            checks=[MigrationReadinessCheck("local_validation_passed", False, "red")],
+            allowed_to_modify_runtime=True,
+        )
+        self.assertFalse(blocked["ready"])
+        self.assertEqual(blocked["failed_count"], 1)
 
 
 if __name__ == "__main__":
