@@ -48,6 +48,7 @@ Repository context and local reports
   -> parallel provider probes / NPU decode smoke
   -> primary advisory packet through Ollama/GPU when explicitly requested
   -> repository proposals
+  -> proposal-derived draft patch specs
   -> compact evidence bundle
   -> GitHub review
 ```
@@ -89,6 +90,8 @@ This runner performs:
 | `Tools/ai/suggest_repository_updates.py` | Builds advisory packet using quality-approved context only. |
 | `Tools/ai/build_repository_change_proposals.py` | Builds manual-review proposals with code/MD/JSON suggestion descriptors. |
 | `Tools/validation/check_repository_change_proposals.py` | Validates proposal reports before they are used as future patch work items. |
+| `Tools/ai/build_patch_specs_from_proposals.py` | Converts validated proposals into inert draft patch specs under `output/patch_specs/`. |
+| `Tools/validation/check_patch_spec_drafts.py` | Validates draft patch-spec contracts and blocks queued/concrete replacements. |
 | `Tools/ai/build_github_evidence_bundle.py` | Summarizes long ignored `output/` reports into tracked docs evidence. |
 | `Tools/workflow/run_post_validation_ai_packet.ps1` | Builds packet/proposals and supports primary advisory provider mode. |
 | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | Main current parallel GPU/NPU multistep runner. |
@@ -111,6 +114,7 @@ git push
 - NPU promotion to advisory requires workload quality evidence, not just decode smoke.
 - Generated evidence belongs under `docs/LOCAL_VALIDATION_EVIDENCE/`.
 - Full local reports remain in ignored `output/`.
+- Proposal-derived patch specs remain draft-only under `output/patch_specs/` until reviewed and dry-run.
 - No destructive overwrite of source or analysis data.
 - No Blender runtime changes unless explicitly scoped.
 - Manual review remains required for source patches and proposals.
@@ -146,5 +150,5 @@ However, this is now a downstream application domain, not the core local AI arch
 - Final repository rename.
 - Final NPU general advisory promotion gate beyond current quality report shape.
 - Final provider orchestration beyond explicit workflow flags.
-- Final patch schema for fully automated application.
+- Final promotion flow from draft patch spec to queued/applied patch.
 - Final validation command for Blender runtime.
