@@ -8,6 +8,7 @@ param(
     [string[]]$ContextFile = @(),
     [string[]]$ReportFile = @(),
     [switch]$UseOllama,
+    [switch]$UsePrimaryAdvisoryProvider,
     [string]$Model = "",
     [int]$MaxContextChars = 6000
 )
@@ -28,6 +29,10 @@ $QualityReport = "output/validation/ai_workload_report_quality.json"
 $LaneRoutingReport = "output/validation/ai_workload_quality_lane_routing.json"
 $LaneRoutingMarkdown = "output/validation/ai_workload_quality_lane_routing.md"
 $NpuDecodeRemediationReport = "output/validation/npu_decode_quality_remediation.json"
+$NpuDecodeSmokeReport = "output/validation/npu_decode_smoke_diagnostic.json"
+$UseResolvedOllama = [bool]$UseOllama
+$PrimaryAdvisoryProvider = "none"
+$PrimaryAdvisoryComputeLane = "none"
 
 if (Test-Path $QualityReport) {
     Write-Host ""
@@ -44,6 +49,22 @@ if (Test-Path $QualityReport) {
     }
     python @RoutingArgs
 
+    if (Test-Path $LaneRoutingReport) {
+        $RoutingJson = Get-Content $LaneRoutingReport -Raw | ConvertFrom-Json
+        if ($null -ne $RoutingJson.primary_advisory_provider) {
+            $PrimaryAdvisoryProvider = [string]$RoutingJson.primary_advisory_provider.provider
+            $PrimaryAdvisoryComputeLane = [string]$RoutingJson.primary_advisory_provider.compute_lane
+        }
+        if ($UsePrimaryAdvisoryProvider) {
+            if ($PrimaryAdvisoryProvider -eq "ollama" -and $PrimaryAdvisoryComputeLane -eq "gpu_cuda") {
+                $UseResolvedOllama = $true
+                Write-Host "Primary advisory provider enabled: ollama on gpu_cuda"
+            } else {
+                Write-Warning "Primary advisory provider was requested, but no usable Ollama/GPU lane is available. Provider execution remains disabled."
+            }
+        }
+    }
+
     Write-Host ""
     Write-Host "=== Build NPU decode remediation report ==="
     python .\Tools\validation\check_npu_decode_quality_remediation.py `
@@ -53,6 +74,9 @@ if (Test-Path $QualityReport) {
 } else {
     Write-Host ""
     Write-Warning "Skipping workload quality routing/remediation: $QualityReport not found."
+    if ($UsePrimaryAdvisoryProvider) {
+        Write-Warning "Primary advisory provider was requested, but quality routing is unavailable. Provider execution remains disabled."
+    }
 }
 
 $ArgsList = @(
@@ -80,7 +104,11 @@ if (Test-Path $NpuDecodeRemediationReport) {
     $ArgsList += @("--report-file", $NpuDecodeRemediationReport)
 }
 
-if ($UseOllama) {
+if (Test-Path $NpuDecodeSmokeReport) {
+    $ArgsList += @("--report-file", $NpuDecodeSmokeReport)
+}
+
+if ($UseResolvedOllama) {
     $ArgsList += "--use-ollama"
 }
 
@@ -110,6 +138,10 @@ if (Test-Path $NpuDecodeRemediationReport) {
     $ProposalArgs += @("--report-file", $NpuDecodeRemediationReport)
 }
 
+if (Test-Path $NpuDecodeSmokeReport) {
+    $ProposalArgs += @("--report-file", $NpuDecodeSmokeReport)
+}
+
 python @ProposalArgs
 
 Write-Host ""
@@ -126,5 +158,11 @@ if (Test-Path $LaneRoutingReport) {
 if (Test-Path $NpuDecodeRemediationReport) {
     Write-Host "  $NpuDecodeRemediationReport"
 }
+if (Test-Path $NpuDecodeSmokeReport) {
+    Write-Host "  $NpuDecodeSmokeReport"
+}
 Write-Host ""
+Write-Host "Primary advisory provider: $PrimaryAdvisoryProvider / $PrimaryAdvisoryComputeLane"
+Write-Host "Primary advisory provider execution requested: $UsePrimaryAdvisoryProvider"
+Write-Host "Ollama advisory execution used: $UseResolvedOllama"
 Write-Host "These reports are advisory only. Review before applying changes."
