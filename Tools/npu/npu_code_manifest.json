@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-04-30T20:13:37",
+  "created_at": "2026-04-30T20:24:57",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "script_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\Scripting\\v61b",
   "long_context": {
@@ -766,9 +766,9 @@
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "exists": true,
       "suffix": ".py",
-      "lines": 1697,
-      "chars": 72768,
-      "sha256": "2d775a7803a12774377b5eb99a0a13234cc734374ec9f3309ad171e7dbfffd3e",
+      "lines": 1679,
+      "chars": 71565,
+      "sha256": "d4d8fe166dd64734b548ad86ef4e6c6bafe20c5a65077e25fab096d04e4c1c87",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -791,7 +791,7 @@
         "functions": [
           {
             "name": "update_track_paths",
-            "line": 62,
+            "line": 72,
             "args": [
               "track_stem",
               "analysis_ai_context"
@@ -800,7 +800,7 @@
           },
           {
             "name": "apply_default_input_paths",
-            "line": 74,
+            "line": 84,
             "args": [
               "args"
             ],
@@ -808,7 +808,7 @@
           },
           {
             "name": "validate_input_files",
-            "line": 87,
+            "line": 97,
             "args": [
               "args"
             ],
@@ -816,7 +816,7 @@
           },
           {
             "name": "looks_degraded_text",
-            "line": 107,
+            "line": 117,
             "args": [
               "text"
             ],
@@ -824,7 +824,7 @@
           },
           {
             "name": "deterministic_technical_notes",
-            "line": 123,
+            "line": 133,
             "args": [
               "music_context",
               "project_manifest",
@@ -834,7 +834,7 @@
           },
           {
             "name": "run_npu_technical_pass",
-            "line": 172,
+            "line": 182,
             "args": [
               "args"
             ],
@@ -842,7 +842,7 @@
           },
           {
             "name": "build_creative_scene_prompt",
-            "line": 216,
+            "line": 226,
             "args": [
               "music_context",
               "npu_notes",
@@ -852,7 +852,7 @@
           },
           {
             "name": "build_merge_prompt",
-            "line": 298,
+            "line": 287,
             "args": [
               "music_context",
               "npu_notes",
@@ -863,7 +863,7 @@
           },
           {
             "name": "build_implementation_prompt",
-            "line": 360,
+            "line": 343,
             "args": [
               "plan",
               "npu_notes",
@@ -876,7 +876,7 @@
           },
           {
             "name": "build_implementation_retry_prompt",
-            "line": 472,
+            "line": 455,
             "args": [
               "plan",
               "invalid_draft",
@@ -886,7 +886,7 @@
           },
           {
             "name": "safe_parse_json",
-            "line": 561,
+            "line": 543,
             "args": [
               "text",
               "fallback_key"
@@ -895,7 +895,7 @@
           },
           {
             "name": "extract_python_script",
-            "line": 569,
+            "line": 551,
             "args": [
               "text"
             ],
@@ -903,7 +903,7 @@
           },
           {
             "name": "draft_from_raw_python_script",
-            "line": 589,
+            "line": 571,
             "args": [
               "text",
               "model",
@@ -913,13 +913,13 @@
           },
           {
             "name": "get_indexed_project_files",
-            "line": 640,
+            "line": 622,
             "args": [],
             "async": false
           },
           {
             "name": "validate_implementation_draft",
-            "line": 645,
+            "line": 627,
             "args": [
               "draft"
             ],
@@ -927,19 +927,19 @@
           },
           {
             "name": "generated_scene_script_relpath",
-            "line": 750,
+            "line": 732,
             "args": [],
             "async": false
           },
           {
             "name": "generated_scene_script_abspath",
-            "line": 754,
+            "line": 736,
             "args": [],
             "async": false
           },
           {
             "name": "deterministic_scene_builder_script",
-            "line": 758,
+            "line": 740,
             "args": [
               "track_stem",
               "analysis_json",
@@ -953,7 +953,7 @@
           },
           {
             "name": "deterministic_support_files",
-            "line": 1141,
+            "line": 1123,
             "args": [
               "track_stem",
               "scene_brief"
@@ -962,7 +962,7 @@
           },
           {
             "name": "build_fallback_implementation_draft",
-            "line": 1194,
+            "line": 1176,
             "args": [
               "reason",
               "model",
@@ -974,7 +974,7 @@
           },
           {
             "name": "normalize_implementation_draft",
-            "line": 1281,
+            "line": 1263,
             "args": [
               "draft",
               "model",
@@ -986,7 +986,7 @@
           },
           {
             "name": "generate_implementation_draft_with_retry",
-            "line": 1302,
+            "line": 1284,
             "args": [
               "manager",
               "model_name",
@@ -1001,7 +1001,7 @@
           },
           {
             "name": "write_brief",
-            "line": 1365,
+            "line": 1347,
             "args": [
               "plan",
               "creative",
@@ -1012,7 +1012,7 @@
           },
           {
             "name": "write_implementation_draft",
-            "line": 1388,
+            "line": 1370,
             "args": [
               "draft"
             ],
@@ -1020,7 +1020,7 @@
           },
           {
             "name": "main",
-            "line": 1445,
+            "line": 1427,
             "args": [],
             "async": false
           }
@@ -6339,89 +6339,89 @@
       "path": "Tools/npu/npu_code_chunks/chunk_011_Tools_npu_run_dual_ai_pipeline_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 202,
-      "chars": 13303,
-      "sha256": "eb3a521af5db1a67c845aff596762712494d1473a1510de3ea32ffaefded43c5"
+      "end_line": 200,
+      "chars": 13314,
+      "sha256": "4f50997a77a85911e781ea4553862d71d001fa5e82a583f6208c82fc43dd0271"
     },
     {
       "index": 12,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "Tools/npu/npu_code_chunks/chunk_012_Tools_npu_run_dual_ai_pipeline_py.md",
       "part": 2,
-      "start_line": 203,
-      "end_line": 420,
-      "chars": 13316,
-      "sha256": "d94855fca8eb8dc6f7db17bdf698d509a5663f144d64afb9f52994d067503723"
+      "start_line": 201,
+      "end_line": 435,
+      "chars": 13225,
+      "sha256": "5c30c52722d2420987739bb5310698747d7ebdf7859810eecb2df646e14c0c28"
     },
     {
       "index": 13,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "Tools/npu/npu_code_chunks/chunk_013_Tools_npu_run_dual_ai_pipeline_py.md",
       "part": 3,
-      "start_line": 421,
-      "end_line": 660,
-      "chars": 13301,
-      "sha256": "3f4d206b9d8efb9d870da4ad534d0abf38195d2f3e29eec5b7a280d8b6642d03"
+      "start_line": 436,
+      "end_line": 664,
+      "chars": 13311,
+      "sha256": "b442914e05a8fb18f67ca919686d69b53534061ec86c8bef1846a6051861ccd9"
     },
     {
       "index": 14,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "Tools/npu/npu_code_chunks/chunk_014_Tools_npu_run_dual_ai_pipeline_py.md",
       "part": 4,
-      "start_line": 661,
-      "end_line": 853,
-      "chars": 13345,
-      "sha256": "e83195a2108c1b5ece6ac5accd48b0befe71e5e84ce5d4ac37f0e610fb287fb2"
+      "start_line": 665,
+      "end_line": 860,
+      "chars": 13348,
+      "sha256": "1d4f2c90b814280d4e37f4e1bb2c100c2d70d71570ca53f0b578bc07f6b1078a"
     },
     {
       "index": 15,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "Tools/npu/npu_code_chunks/chunk_015_Tools_npu_run_dual_ai_pipeline_py.md",
       "part": 5,
-      "start_line": 854,
-      "end_line": 1057,
-      "chars": 13298,
-      "sha256": "3bebf53dcc00f465fc3854d922b93458a7682cde4f1cbde940af7c933193bab7"
+      "start_line": 861,
+      "end_line": 1058,
+      "chars": 13340,
+      "sha256": "8b76a23edeb2f58ae84409cd6b227e3189c5e2a021e0921996fe8730b7c6ce16"
     },
     {
       "index": 16,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "Tools/npu/npu_code_chunks/chunk_016_Tools_npu_run_dual_ai_pipeline_py.md",
       "part": 6,
-      "start_line": 1058,
-      "end_line": 1256,
-      "chars": 13287,
-      "sha256": "1bfc9c91420914160e779580f0f844e20bf828f51370d40b715dcdb0fae5fe3f"
+      "start_line": 1059,
+      "end_line": 1265,
+      "chars": 13289,
+      "sha256": "ee37253dadf083b3d718f0a9df36b8082730897a4a4be4fa73b8e3935c4df609"
     },
     {
       "index": 17,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "Tools/npu/npu_code_chunks/chunk_017_Tools_npu_run_dual_ai_pipeline_py.md",
       "part": 7,
-      "start_line": 1257,
-      "end_line": 1459,
-      "chars": 13282,
-      "sha256": "a07e4bc90ddfac6b76d7228890cdc50490bd67274bb7028f8c025cc682f56cf0"
+      "start_line": 1266,
+      "end_line": 1460,
+      "chars": 13313,
+      "sha256": "d4196383ad01003a632befcd963e143521334726d38333ad300df590ca80a0f3"
     },
     {
       "index": 18,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "Tools/npu/npu_code_chunks/chunk_018_Tools_npu_run_dual_ai_pipeline_py.md",
       "part": 8,
-      "start_line": 1460,
-      "end_line": 1648,
-      "chars": 13301,
-      "sha256": "d586dad54f2eaa467475f66effeeb3f02b8b341660c06af5c50d9d1d0ecf8026"
+      "start_line": 1461,
+      "end_line": 1650,
+      "chars": 13279,
+      "sha256": "d0548450ba629a709ca0dca4eeb8b898b07d398477902bb75460a2578043b877"
     },
     {
       "index": 19,
       "file": "Tools/npu/run_dual_ai_pipeline.py",
       "path": "Tools/npu/npu_code_chunks/chunk_019_Tools_npu_run_dual_ai_pipeline_py.md",
       "part": 9,
-      "start_line": 1649,
-      "end_line": 1696,
-      "chars": 5610,
-      "sha256": "35377978b54cb59ae6d81f547af6e6c5fb69bcb227ebd3ba2a50d9f4d33b982c"
+      "start_line": 1651,
+      "end_line": 1678,
+      "chars": 4295,
+      "sha256": "8d5e74ad7801acaea56c80e3bb468311687996491074428064d2f662d7786431"
     },
     {
       "index": 20,
