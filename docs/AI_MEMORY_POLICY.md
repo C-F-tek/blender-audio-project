@@ -55,6 +55,7 @@ Do not create Blender-only, audio-only or app-only memory schemas. Use `kind`, `
 | `expire_review` | Old or explicitly expired; do not rely on it without review. |
 | `quarantine` | Potential secret or blocked content; do not select into context. |
 | `promote_candidate` | Good candidate for human promotion into stable docs or curated memory. |
+| `drop_candidate` | Safe to ignore or delete after human review because it is obsolete, duplicate, noisy or not useful. |
 
 The review tool is non-destructive. It never deletes records or writes promoted docs by itself.
 
@@ -90,6 +91,128 @@ docs/TECH_DEBT_TRACKER.md
 docs/PROJECT_STATUS_POINT.md
 docs/EXECUTION_PLANS/
 curated JSONL memory selected by the app
+```
+
+## Generic examples
+
+These examples are intentionally input-agnostic and output-application-agnostic. They can apply to Blender/audio work, non-Blender generated Python, report contracts or future adapters.
+
+### Retain / keep
+
+Use `keep` when a record is validated, scoped and still useful.
+
+Example record summary:
+
+```text
+Generated Python policy warnings do not fail validation; syntax errors fail. Application adapters should compose the generic policy instead of duplicating parser logic.
+```
+
+Suggested metadata:
+
+```json
+{
+  "kind": "architecture_rule",
+  "scope": "Tools/validation",
+  "tags": ["generated-python-policy", "validator", "adapter-boundary"],
+  "confidence": "high"
+}
+```
+
+Reason:
+
+```text
+The rule is durable, has a clear scope and is useful for future validators.
+```
+
+### Quarantine
+
+Use `quarantine` when a record may contain secrets, private local data, unsafe instructions or blocked content.
+
+Example record summary:
+
+```text
+Local command note includes an API token, private path with credentials or pasted environment values.
+```
+
+Suggested metadata:
+
+```json
+{
+  "kind": "security_review",
+  "scope": "local-only",
+  "tags": ["secret-risk", "do-not-select"],
+  "confidence": "high"
+}
+```
+
+Reason:
+
+```text
+The memory selector must not place the content back into prompts or generated docs.
+```
+
+### Promote
+
+Use `promote_candidate` when a memory is stable enough to become durable documentation.
+
+Example record summary:
+
+```text
+PR #31, #32 and #33 established the generated artifact path policy, artifact report scanning and generic generated Python policy. Local runtime validation remains workstation-owned.
+```
+
+Suggested promotion target:
+
+```text
+docs/PROJECT_STATUS_POINT.md
+docs/TECH_DEBT_TRACKER.md
+```
+
+Reason:
+
+```text
+This is project state, not temporary chat context.
+```
+
+### Drop
+
+Use `drop_candidate` for records that should not continue to influence agents after review.
+
+Example record summary:
+
+```text
+Temporary branch name from a completed GitHub-only PR, duplicated by the merged PR body and no longer needed.
+```
+
+Suggested metadata:
+
+```json
+{
+  "kind": "temporary_workflow_note",
+  "scope": "completed-branch",
+  "tags": ["duplicate", "obsolete"],
+  "confidence": "medium"
+}
+```
+
+Reason:
+
+```text
+The durable source is the merged PR or stable documentation; retaining the duplicate note increases noise.
+```
+
+## GitHub-only handling
+
+GitHub-only agents cannot inspect the local SQLite database, local `output/` reports, Blender runtime logs, GPU/NPU activity or workstation audio files.
+
+When working from GitHub-only access:
+
+```text
+document memory policy examples
+update stable docs with clearly sourced merged-PR facts
+mark local validation pending
+avoid claiming runtime validation without logs
+leave SQLite DB and generated indexes untouched
 ```
 
 ## Commands
