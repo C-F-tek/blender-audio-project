@@ -44,6 +44,30 @@ class ProviderResult:
         }
 
 
+@dataclass(frozen=True)
+class ProviderParsedResult:
+    """Parsed provider result summary without executing the provider."""
+
+    provider: str
+    ok: bool
+    text: str
+    parsed_json: Any | None = None
+    json_ok: bool = False
+    error: str | None = None
+    metadata: dict[str, Any] | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "provider": self.provider,
+            "ok": self.ok,
+            "text_chars": len(self.text),
+            "json_ok": self.json_ok,
+            "parsed_json_type": type(self.parsed_json).__name__ if self.parsed_json is not None else None,
+            "error": self.error,
+            "metadata": self.metadata or {},
+        }
+
+
 def validate_provider_request(request: ProviderRequest) -> dict[str, object]:
     """Validate a provider request without executing it."""
 
@@ -72,6 +96,115 @@ def _string_list(value: Any) -> list[str]:
     if isinstance(value, tuple):
         return [str(item) for item in value]
     return [str(value)]
+
+
+def _first_text_value(raw: Any) -> str:
+    if raw is None:
+        return ""
+    if isinstance(raw, str):
+        return raw
+    if isinstance(raw, dict):
+        for key in ("text", "response", "content", "output"):
+            value = raw.get(key)
+            if isinstance(value, str):
+                return value
+        message = raw.get("message")
+        if isinstance(message, dict) and isinstance(message.get("content"), str):
+            return message["content"]
+        choices = raw.get("choices")
+        if isinstance(choices, list) and choices:
+            first = choices[0]
+            if isinstance(first, dict):
+                message = first.get("message")
+                if isinstance(message, dict) and isinstance(message.get("content"), str):
+                    return message["content"]
+                if isinstance(first.get("text"), str):
+                    return first["text"]
+    return str(raw)
+
+
+def _extract_usage(raw: Any) -> dict[str, Any]:
+    if not isinstance(raw, dict):
+        return {}
+    usage = raw.get("usage")
+    if isinstance(usage, dict):
+        return dict(usage)
+    out: dict[str, Any] = {}
+    for key in ("prompt_eval_count", "eval_count", "total_duration", "load_duration", "prompt_tokens", "completion_tokens", "total_tokens"):
+        if key in raw:
+            out[key] = raw[key]
+    return out
+
+
+def parse_provider_result(
+    raw_result: Any,
+    *,
+    provider: str,
+    model: str | None = None,
+    executed: bool = False,
+    allow_json: bool = True,
+) -> ProviderParsedResult:
+    """Parse an already-obtained or simulated provider result.
+
+    This helper does not execute providers. It only normalizes an existing
+    payload into text/JSON/metadata fields.
+    """
+
+    text = _first_text_value(raw_result)
+    errors: list[str] = []
+    parsed_json: Any | None = None
+    json_ok = False
+    if allow_json and text.strip():
+        try:
+            import json
+
+            parsed_json = json.loads(text)
+            json_ok = True
+        except Exception as exc:  # noqa: BLE001 - parse report only.
+            errors.append(f"json_parse_failed: {type(exc).__name__}: {exc}")
+    raw_error = raw_result.get("error") if isinstance(raw_result, dict) else None
+    if raw_error:
+        errors.append(str(raw_error))
+    metadata = {
+        "model": model,
+        "executed": executed,
+        "usage": _extract_usage(raw_result),
+        "raw_type": type(raw_result).__name__,
+    }
+    return ProviderParsedResult(
+        provider=provider,
+        ok=not raw_error and bool(text.strip()),
+        text=text,
+        parsed_json=parsed_json,
+        json_ok=json_ok,
+        error="; ".join(errors) if errors else None,
+        metadata=metadata,
+    )
+
+
+def build_provider_result_report(
+    *,
+    provider: str,
+    model: str | None,
+    results: list[ProviderParsedResult],
+    provider_execution_performed: bool = False,
+) -> dict[str, Any]:
+    """Build a deterministic report for parsed provider results."""
+
+    errors = [result.error for result in results if result.error]
+    return {
+        "schema_version": 1,
+        "kind": "provider_result_report",
+        "provider": provider,
+        "model": model,
+        "provider_execution_performed": provider_execution_performed,
+        "passed": not errors,
+        "errors": errors,
+        "warnings": [],
+        "result_count": len(results),
+        "json_ok_count": sum(1 for result in results if result.json_ok),
+        "results": [result.to_dict() for result in results],
+    }
 
 
 def normalize_provider_preflight_report(
