@@ -35,6 +35,11 @@ from .io_utils import (
     write_json,
     write_json_object,
 )
+from .legacy_compat import (
+    compare_json_readers,
+    compare_optional_json_readers,
+    compare_text_readers,
+)
 from .prompts import (
     build_creative_scene_prompt_payload,
     build_implementation_retry_payload,
@@ -81,6 +86,9 @@ __all__ = [
     "build_implementation_retry_payload",
     "build_merge_prompt_payload",
     "compact_segments_for_prompt",
+    "compare_json_readers",
+    "compare_optional_json_readers",
+    "compare_text_readers",
     "context_bundle_metrics",
     "helper_boundary_passed",
     "is_allowed_generated_artifact_path",
