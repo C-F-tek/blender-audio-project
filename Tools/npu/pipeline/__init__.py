@@ -44,6 +44,10 @@ from .providers import (
     planned_provider_result,
     validate_provider_request,
 )
+from .reports import (
+    build_helper_boundary_report,
+    helper_boundary_passed,
+)
 from .runner import (
     PipelineStagePlan,
     build_default_stage_plan,
@@ -70,10 +74,12 @@ __all__ = [
     "build_context_bundle",
     "build_creative_scene_prompt_payload",
     "build_default_stage_plan",
+    "build_helper_boundary_report",
     "build_implementation_retry_payload",
     "build_merge_prompt_payload",
     "compact_segments_for_prompt",
     "context_bundle_metrics",
+    "helper_boundary_passed",
     "is_allowed_generated_artifact_path",
     "normalize_repo_relative_path",
     "planned_provider_result",
