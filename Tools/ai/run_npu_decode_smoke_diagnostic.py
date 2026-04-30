@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import string
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -34,6 +35,16 @@ def _ensure_repo_imports(repo_root: Path) -> None:
     npu_text = str(repo_root / "Tools" / "npu")
     if npu_text not in sys.path:
         sys.path.insert(0, npu_text)
+
+
+def _default_npu_python(repo_root: Path) -> Path:
+    _ensure_repo_imports(repo_root)
+    try:
+        from Tools.npu.npu_runtime import DEFAULT_NPU_PYTHON  # noqa: PLC0415
+
+        return Path(DEFAULT_NPU_PYTHON)
+    except Exception:
+        return Path(sys.executable)
 
 
 def text_metrics(text: str) -> dict[str, Any]:
@@ -78,20 +89,78 @@ def classify_text(text: str) -> tuple[str, list[str], list[str], dict[str, Any]]
     return ("usable_text" if not errors else "unusable_output", errors, warnings, metrics)
 
 
-def run_openvino_npu_smoke(model_dir: Path, device: str, prompt: str, max_new_tokens: int, max_prompt_len: int, min_response_len: int) -> str:
-    import openvino_genai as ov_genai  # noqa: PLC0415
+def run_openvino_npu_smoke(
+    *,
+    python_exe: Path,
+    model_dir: Path,
+    device: str,
+    prompt: str,
+    max_new_tokens: int,
+    max_prompt_len: int,
+    min_response_len: int,
+    timeout: float,
+) -> tuple[str, str | None, int | None]:
+    """Run NPU smoke in the dedicated NPU Python environment."""
 
+    code = r'''
+import json
+import sys
+
+payload = json.loads(sys.stdin.read())
+try:
+    import openvino_genai as ov_genai
     pipe = ov_genai.LLMPipeline(
-        str(model_dir),
-        device,
-        MAX_PROMPT_LEN=max_prompt_len,
-        MIN_RESPONSE_LEN=min_response_len,
+        payload["model_dir"],
+        payload["device"],
+        MAX_PROMPT_LEN=int(payload["max_prompt_len"]),
+        MIN_RESPONSE_LEN=int(payload["min_response_len"]),
     )
     try:
-        return str(pipe.generate(prompt, max_new_tokens=max_new_tokens)).strip()
+        text = str(pipe.generate(payload["prompt"], max_new_tokens=int(payload["max_new_tokens"]))).strip()
     finally:
         if hasattr(pipe, "close"):
             pipe.close()
+    print(json.dumps({"ok": True, "text": text}, ensure_ascii=False))
+except Exception as exc:
+    print(json.dumps({"ok": False, "error": f"{type(exc).__name__}: {exc}"}, ensure_ascii=False))
+    raise
+'''
+    payload = {
+        "model_dir": str(model_dir),
+        "device": device,
+        "prompt": prompt,
+        "max_new_tokens": max_new_tokens,
+        "max_prompt_len": max_prompt_len,
+        "min_response_len": min_response_len,
+    }
+    try:
+        result = subprocess.run(
+            [str(python_exe), "-c", code],
+            input=json.dumps(payload, ensure_ascii=False),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+    except Exception as exc:
+        return "", f"{type(exc).__name__}: {exc}", None
+
+    stdout = (result.stdout or "").strip()
+    stderr = (result.stderr or "").strip()
+    parsed: dict[str, Any] = {}
+    for line in reversed(stdout.splitlines()):
+        try:
+            candidate = json.loads(line)
+        except Exception:
+            continue
+        if isinstance(candidate, dict):
+            parsed = candidate
+            break
+    if result.returncode != 0:
+        return "", str(parsed.get("error") or stderr or stdout or f"exit code {result.returncode}"), result.returncode
+    if parsed.get("ok") is True:
+        return str(parsed.get("text") or ""), None, result.returncode
+    return "", str(parsed.get("error") or stderr or stdout or "unknown NPU decode smoke error"), result.returncode
 
 
 def build_provider_envelope(
@@ -118,34 +187,44 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     _ensure_repo_imports(repo_root)
     model_dir = Path(args.model_dir).expanduser()
     prompt = args.prompt if args.prompt is not None else DEFAULT_PROMPT
+    python_exe = Path(args.python_exe).expanduser() if args.python_exe else _default_npu_python(repo_root)
 
     provider_execution_performed = False
     text = ""
     execution_error: str | None = None
+    raw_exit_code: int | None = None
     executed_at: str | None = None
 
     if args.run_npu:
         provider_execution_performed = True
         executed_at = datetime.now().isoformat(timespec="seconds")
-        try:
-            text = run_openvino_npu_smoke(
-                model_dir=model_dir,
-                device=args.device,
-                prompt=prompt,
-                max_new_tokens=args.max_new_tokens,
-                max_prompt_len=args.max_prompt_len,
-                min_response_len=args.min_response_len,
-            )
-        except Exception as exc:  # noqa: BLE001 - report diagnostic.
-            execution_error = f"{type(exc).__name__}: {exc}"
-            text = ""
+        text, execution_error, raw_exit_code = run_openvino_npu_smoke(
+            python_exe=python_exe,
+            model_dir=model_dir,
+            device=args.device,
+            prompt=prompt,
+            max_new_tokens=args.max_new_tokens,
+            max_prompt_len=args.max_prompt_len,
+            min_response_len=args.min_response_len,
+            timeout=args.timeout,
+        )
 
-    classification, quality_errors, quality_warnings, metrics = classify_text(text) if text else (
-        "planned_only",
-        [],
-        ["NPU execution was not requested; run with --run-npu for a real decode smoke."],
-        text_metrics(text),
-    )
+    if text:
+        classification, quality_errors, quality_warnings, metrics = classify_text(text)
+    elif args.run_npu:
+        classification, quality_errors, quality_warnings, metrics = (
+            "execution_failed",
+            [],
+            [],
+            text_metrics(text),
+        )
+    else:
+        classification, quality_errors, quality_warnings, metrics = (
+            "planned_only",
+            [],
+            ["NPU execution was not requested; run with --run-npu for a real decode smoke."],
+            text_metrics(text),
+        )
     errors = list(quality_errors)
     warnings = list(quality_warnings)
     if execution_error:
@@ -160,12 +239,14 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         executed=provider_execution_performed,
         error=execution_error,
         metadata={
+            "python_exe": str(python_exe),
             "device": args.device,
             "max_new_tokens": args.max_new_tokens,
             "max_prompt_len": args.max_prompt_len,
             "min_response_len": args.min_response_len,
             "prompt_chars": len(prompt),
             "executed_at": executed_at,
+            "raw_exit_code": raw_exit_code,
         },
     )
 
@@ -180,6 +261,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "mode": "explicit_npu_decode_smoke" if args.run_npu else "planned_report_only",
         "policy": "explicit_provider_execution_only_no_runtime_changes",
         "provider": "openvino_npu",
+        "python_exe": str(python_exe),
         "device": args.device,
         "model_dir": str(model_dir),
         "checks": {
@@ -201,12 +283,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--model-dir", default=str(DEFAULT_MODEL_DIR))
+    parser.add_argument("--python-exe", default="", help="Optional dedicated NPU Python executable. Defaults to Tools.npu.npu_runtime.DEFAULT_NPU_PYTHON.")
     parser.add_argument("--device", default="NPU")
     parser.add_argument("--prompt", default=None)
     parser.add_argument("--run-npu", action="store_true", help="Explicitly execute OpenVINO GenAI on NPU.")
     parser.add_argument("--max-new-tokens", type=int, default=96)
     parser.add_argument("--max-prompt-len", type=int, default=1024)
     parser.add_argument("--min-response-len", type=int, default=16)
+    parser.add_argument("--timeout", type=float, default=90.0)
     parser.add_argument("--output", default="output/validation/npu_decode_smoke_diagnostic.json")
     parser.add_argument("--text-output", default="output/ai_packets/npu_decode_smoke_output.md")
     args = parser.parse_args()
