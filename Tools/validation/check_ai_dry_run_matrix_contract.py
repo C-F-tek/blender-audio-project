@@ -15,6 +15,11 @@ import json
 from pathlib import Path
 from typing import Any
 
+try:
+    from ai_pipeline_report_contracts import validate_ai_pipeline_report_file
+except ImportError:  # Allows package-style imports during external checks.
+    from Tools.validation.ai_pipeline_report_contracts import validate_ai_pipeline_report_file  # type: ignore
+
 
 def is_non_empty_string(value: Any) -> bool:
     """Return True when value is a non-empty string after trimming whitespace."""
@@ -64,7 +69,7 @@ def validate_agent_state_packet(packet: Any, path: str, errors: list[str], warni
         if packet_path is not None and not is_non_empty_string(packet_path):
             add_error(errors, f"{path}.path", "must be null/absent or a non-empty string")
 
-    extra_fields = sorted(set(packet) - {"enabled", "path", "exists", "source", "repo_relative_path"})
+    extra_fields = sorted(set(packet) - {"enabled", "path", "exists", "source", "repo_relative_path", "size_bytes", "modified_time"})
     if extra_fields:
         warnings.append(f"{path}: accepted extra fields: {', '.join(extra_fields)}")
 
@@ -86,12 +91,14 @@ def validate_result(result: Any, index: int, errors: list[str], warnings: list[s
     command = result.get("command")
     if not isinstance(command, list) or not command:
         add_error(errors, f"{path}.command", "must be a non-empty list")
+    elif not all(isinstance(part, str) for part in command):
+        add_error(errors, f"{path}.command", "must contain only strings")
 
     if not isinstance(result.get("returncode"), int) or isinstance(result.get("returncode"), bool):
         add_error(errors, f"{path}.returncode", "must be int")
 
-    if not is_number(result.get("duration_sec")):
-        add_error(errors, f"{path}.duration_sec", "must be int or float")
+    if not is_number(result.get("duration_sec")) or result.get("duration_sec") < 0:
+        add_error(errors, f"{path}.duration_sec", "must be int or float >= 0")
 
     for optional_tail in ("stdout_tail", "stderr_tail"):
         if optional_tail in result and result.get(optional_tail) is not None and not isinstance(result.get(optional_tail), str):
@@ -127,11 +134,61 @@ def validate_result(result: Any, index: int, errors: list[str], warnings: list[s
     return str(name) if is_non_empty_string(name) else None
 
 
+def _resolve_report_path(repo_root: Path, value: str) -> Path:
+    path = Path(value)
+    if not path.is_absolute():
+        path = repo_root / path
+    return path.resolve()
+
+
+def validate_case_report_contract(
+    repo_root: Path,
+    result: dict[str, Any],
+    index: int,
+    errors: list[str],
+    warnings: list[str],
+) -> dict[str, Any]:
+    """Validate the per-case schema-v6 report referenced by one matrix result."""
+    report_path = result.get("report_path")
+    summary: dict[str, Any] = {
+        "index": index,
+        "name": result.get("name"),
+        "report_path": report_path,
+        "checked": False,
+        "passed": None,
+        "schema_version": None,
+        "dry_run": None,
+        "step_count": None,
+    }
+    if result.get("report_exists") is not True:
+        return summary
+    if not is_non_empty_string(report_path):
+        return summary
+
+    resolved = _resolve_report_path(repo_root, report_path)
+    contract = validate_ai_pipeline_report_file(resolved, require_dry_run=True)
+    summary.update(
+        {
+            "checked": True,
+            "passed": contract["passed"],
+            "schema_version": contract["checks"].get("schema_version"),
+            "dry_run": contract["checks"].get("dry_run"),
+            "step_count": contract["checks"].get("step_count"),
+        }
+    )
+    for error in contract["errors"]:
+        errors.append(f"results[{index}].case_report: {error}")
+    for warning in contract["warnings"]:
+        warnings.append(f"results[{index}].case_report: {warning}")
+    return summary
+
+
 def validate_matrix_report(repo_root: Path, matrix_report: Path) -> dict[str, Any]:
     """Validate the dry-run matrix report JSON file."""
     errors: list[str] = []
     warnings: list[str] = []
     names: list[str] = []
+    case_report_contracts: list[dict[str, Any]] = []
     payload: dict[str, Any] | None = None
 
     matrix_report_exists = matrix_report.exists()
@@ -174,21 +231,65 @@ def validate_matrix_report(repo_root: Path, matrix_report: Path) -> dict[str, An
                 name = validate_result(result, index, errors, warnings)
                 if name is not None:
                     names.append(name)
+                if isinstance(result, dict):
+                    case_report_contracts.append(validate_case_report_contract(repo_root, result, index, errors, warnings))
 
         case_count = payload.get("case_count")
         if not isinstance(case_count, int) or isinstance(case_count, bool):
             add_error(errors, "case_count", "must be int")
         elif isinstance(results, list) and case_count != len(results):
             add_error(errors, "case_count", f"must equal len(results), got {case_count} != {len(results)}")
+
+        planned_case_count = payload.get("planned_case_count")
+        if not isinstance(planned_case_count, int) or isinstance(planned_case_count, bool) or planned_case_count < 0:
+            add_error(errors, "planned_case_count", "must be int >= 0")
+        elif isinstance(results, list) and planned_case_count < len(results):
+            add_error(errors, "planned_case_count", "must be >= len(results)")
+
+        base_case_count = payload.get("base_case_count")
+        repeat_cases = payload.get("repeat_cases")
+        if not isinstance(base_case_count, int) or isinstance(base_case_count, bool) or base_case_count <= 0:
+            add_error(errors, "base_case_count", "must be int > 0")
+        if not isinstance(repeat_cases, int) or isinstance(repeat_cases, bool) or repeat_cases <= 0:
+            add_error(errors, "repeat_cases", "must be int > 0")
+        if isinstance(base_case_count, int) and isinstance(repeat_cases, int) and isinstance(planned_case_count, int):
+            if not isinstance(base_case_count, bool) and not isinstance(repeat_cases, bool) and planned_case_count != base_case_count * repeat_cases:
+                add_error(errors, "planned_case_count", "must equal base_case_count * repeat_cases")
+
+        matrix_workers = payload.get("matrix_workers")
+        if not isinstance(matrix_workers, int) or isinstance(matrix_workers, bool) or matrix_workers <= 0:
+            add_error(errors, "matrix_workers", "must be int > 0")
+
+        markdown_output = payload.get("markdown_output")
+        if markdown_output is not None and not is_non_empty_string(markdown_output):
+            add_error(errors, "markdown_output", "must be a non-empty string when present")
+
+        duplicate_names = sorted({name for name in names if names.count(name) > 1})
+        if duplicate_names:
+            add_error(errors, "results", f"duplicate case names: {', '.join(duplicate_names)}")
+
+        if payload.get("passed") is True and isinstance(results, list):
+            failed_results = [
+                str(item.get("name") or f"results[{index}]")
+                for index, item in enumerate(results)
+                if isinstance(item, dict) and (item.get("returncode") != 0 or item.get("report_passed") is not True)
+            ]
+            if failed_results:
+                add_error(errors, "passed", f"true but failed case results exist: {', '.join(failed_results)}")
     else:
         result_count = 0
         case_count = None
 
     checks = {
         "case_count": payload.get("case_count") if payload else None,
+        "planned_case_count": payload.get("planned_case_count") if payload else None,
+        "base_case_count": payload.get("base_case_count") if payload else None,
+        "repeat_cases": payload.get("repeat_cases") if payload else None,
+        "matrix_workers": payload.get("matrix_workers") if payload else None,
         "result_count": result_count,
         "passed": payload.get("passed") if payload else None,
         "names": names,
+        "case_report_contracts": case_report_contracts,
     }
 
     return {

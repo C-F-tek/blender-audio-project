@@ -15,35 +15,36 @@ The documentation is intended for both human developers and AI agents. It should
 7. `AI_PIPELINE_ARCHITECTURE.md`
 8. `AI_MEMORY_POLICY.md`
 9. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
-10. `AI_EXTERNAL_KNOWLEDGE.md`
-11. `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`
-12. `EXECUTION_PLANS/README.md`
-13. `TECH_DEBT_TRACKER.md`
-14. `MODULE_MAP.md`
-15. `DATA_FLOW.md`
-16. `REFACTORING_AND_REUSE_PLAN.md`
-17. `PATCH_SPEC_WORKFLOW.md`
-18. `SHARED_SCRIPTING_UTILITIES.md`
-19. `BLENDER_SCRIPT_ENTRYPOINTS.md`
-20. `AI_GENERATED_PACKAGE_STANDARD.md`
-21. `GENERATED_PYTHON_ADAPTER_TEMPLATE.md`
-22. `PACKAGE_CREATION_WORKFLOW.md`
-23. `QUALITY_GATE.md`
-24. `AUDIO_ANALYSIS_PIPELINE.md`
-25. `JSON_SCHEMAS.md`
-26. `AI_ARTIFACT_SCHEMAS.md`
-27. `RENDER_WORKFLOW.md`
-28. `FFMPEG_WORKFLOW.md`
-29. `LOCAL_AI_WORKFLOW.md`
-30. `NPU_GPU_PARALLELISM_PLAN.md`
-31. `AI_PIPELINE_OPTIMIZATION.md`
-32. `INSTALLATION.md`
-33. `USAGE.md`
-34. `COMPATIBILITY.md`
-35. `KNOWN_LIMITATIONS.md`
-36. `DEVELOPER_GUIDE.md`
-37. `PROJECT_AUDIT.md`
-38. `PROJECT_STATUS_POINT.md`
+10. `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`
+11. `AI_EXTERNAL_KNOWLEDGE.md`
+12. `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`
+13. `EXECUTION_PLANS/README.md`
+14. `TECH_DEBT_TRACKER.md`
+15. `MODULE_MAP.md`
+16. `DATA_FLOW.md`
+17. `REFACTORING_AND_REUSE_PLAN.md`
+18. `PATCH_SPEC_WORKFLOW.md`
+19. `SHARED_SCRIPTING_UTILITIES.md`
+20. `BLENDER_SCRIPT_ENTRYPOINTS.md`
+21. `AI_GENERATED_PACKAGE_STANDARD.md`
+22. `GENERATED_PYTHON_ADAPTER_TEMPLATE.md`
+23. `PACKAGE_CREATION_WORKFLOW.md`
+24. `QUALITY_GATE.md`
+25. `AUDIO_ANALYSIS_PIPELINE.md`
+26. `JSON_SCHEMAS.md`
+27. `AI_ARTIFACT_SCHEMAS.md`
+28. `RENDER_WORKFLOW.md`
+29. `FFMPEG_WORKFLOW.md`
+30. `LOCAL_AI_WORKFLOW.md`
+31. `NPU_GPU_PARALLELISM_PLAN.md`
+32. `AI_PIPELINE_OPTIMIZATION.md`
+33. `INSTALLATION.md`
+34. `USAGE.md`
+35. `COMPATIBILITY.md`
+36. `KNOWN_LIMITATIONS.md`
+37. `DEVELOPER_GUIDE.md`
+38. `PROJECT_AUDIT.md`
+39. `PROJECT_STATUS_POINT.md`
 
 ## Documentation groups
 
@@ -59,6 +60,7 @@ The documentation is intended for both human developers and AI agents. It should
 | `AI_PIPELINE_ARCHITECTURE.md` | Map of the modular AI artifact pipeline, module responsibilities and validation commands. |
 | `AI_MEMORY_POLICY.md` | Retention, promotion and quarantine policy for generic agent memory. |
 | `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local Git/GitHub validation, index regeneration, commit and push workflow after AI-assisted changes. |
+| `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | Handoff thread for agents that can work on GitHub but must ask the maintainer for local validation and index regeneration. |
 | `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this project. |
 | `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | OpenAI Harness Engineering and Symphony concepts adapted to this repository. |
 | `EXECUTION_PLANS/README.md` | Durable task-plan workflow for multi-step work. |
@@ -90,6 +92,7 @@ The documentation is intended for both human developers and AI agents. It should
 | `../WORKFLOW.md` | End-to-end operational flow from task to proof of work. |
 | `PATCH_SPEC_WORKFLOW.md` | Safe JSON patch-spec workflow, dry-run/apply commands, diff display and GitHub Action queue. |
 | `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local pull/validate/dry-run/index-regeneration/commit/push workflow. |
+| `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | GitHub-only continuation mode, local-validation handoff and fallback rules. |
 | `INDEX_REGEN_POLICY.md` | Regeneration policy for AI indexes and manifests. |
 | `../patch_specs/README.md` | Patch spec inbox/applied folder convention. |
 | `../Tools/validation/README.md` | Local non-invasive validation commands. |
@@ -162,17 +165,18 @@ Before editing code, an AI system should:
 7. read `AI_PIPELINE_ARCHITECTURE.md`;
 8. read `AI_MEMORY_POLICY.md`;
 9. read `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`;
-10. read `AI_EXTERNAL_KNOWLEDGE.md`;
-11. read `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`;
-12. read `EXECUTION_PLANS/README.md`;
-13. read `TECH_DEBT_TRACKER.md`;
-14. read `MODULE_MAP.md`;
-15. read `DATA_FLOW.md`;
-16. read `REFACTORING_AND_REUSE_PLAN.md`;
-17. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
-18. read `QUALITY_GATE.md`;
-19. read the README of the target package;
-20. inspect the target source file before producing a patch.
+10. read `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`;
+11. read `AI_EXTERNAL_KNOWLEDGE.md`;
+12. read `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`;
+13. read `EXECUTION_PLANS/README.md`;
+14. read `TECH_DEBT_TRACKER.md`;
+15. read `MODULE_MAP.md`;
+16. read `DATA_FLOW.md`;
+17. read `REFACTORING_AND_REUSE_PLAN.md`;
+18. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
+19. read `QUALITY_GATE.md`;
+20. read the README of the target package;
+21. inspect the target source file before producing a patch.
 
 ## Refactoring note
 

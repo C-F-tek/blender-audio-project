@@ -285,6 +285,7 @@ output/ai_pipeline/dry_run_matrix_report.md
 Validate the JSON contract after running the matrix:
 
 ```powershell
+python .\Tools\validation\check_ai_pipeline_report_contract.py --repo-root . --report .\output\ai_pipeline\dry_run_matrix\base\ai_pipeline_dry_run_report.json --require-dry-run --output .\output\validation\ai_pipeline_report_contract.json
 python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 ```
 
@@ -330,6 +331,36 @@ Quality rules:
 - do not run the dry-run matrix from the contract validator;
 - do not rewrite generated artifacts from the contract validator;
 - validate `agent_state_packet` metadata only when present.
+- validate referenced per-case schema-v6 reports without changing their field meanings.
+
+Minimum schema-v6 report fields for per-case dry-run reports:
+
+```text
+schema_version
+generated_at
+repo_root
+output_dir
+dry_run
+passed
+preflight
+step_count
+summary
+schedule
+lanes
+wave_entrypoint_review
+smart_context
+agent_state_packet
+guardrail_remediation_loop
+steps
+post_run_expected_outputs
+```
+
+For `--require-dry-run`, every step must keep:
+
+```text
+dry_run=true
+planned_only=true
+```
 
 ## FFmpeg validation checklist
 
