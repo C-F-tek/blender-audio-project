@@ -111,5 +111,6 @@ Recommended order:
 4. Wire only IO helpers.
 5. Wire only artifact path/contract helpers.
 6. Wire only prompt/context payload helpers.
-7. Move provider adapters last.
-8. Compare local outputs after every wiring step.
+7. Wire only context summary and generated-artifact write-planning helpers.
+8. Move provider adapters last.
+9. Compare local outputs after every wiring step.

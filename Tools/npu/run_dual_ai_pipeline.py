@@ -19,6 +19,8 @@ from run_ollama_music_agent import markdown_from_insights
 
 try:
     from pipeline.artifact_paths import is_allowed_generated_artifact_path, normalize_repo_relative_path
+    from pipeline.artifact_writer import PlannedArtifactWrite, write_planned_artifact
+    from pipeline.context_builder import summarize_music_context
     from pipeline.io_utils import read_json, read_optional_json, read_text, write_json
     from pipeline.prompts import (
         build_creative_scene_prompt_payload,
@@ -28,6 +30,8 @@ try:
     from pipeline.validators import validate_implementation_draft_contract
 except ImportError:  # Allows package-style imports from repo-root validation.
     from Tools.npu.pipeline.artifact_paths import is_allowed_generated_artifact_path, normalize_repo_relative_path  # type: ignore
+    from Tools.npu.pipeline.artifact_writer import PlannedArtifactWrite, write_planned_artifact  # type: ignore
+    from Tools.npu.pipeline.context_builder import summarize_music_context  # type: ignore
     from Tools.npu.pipeline.io_utils import read_json, read_optional_json, read_text, write_json  # type: ignore
     from Tools.npu.pipeline.prompts import (  # type: ignore
         build_creative_scene_prompt_payload,
@@ -131,9 +135,9 @@ def looks_degraded_text(text: str) -> bool:
 
 
 def deterministic_technical_notes(music_context: dict[str, Any], project_manifest: dict[str, Any], reason: str) -> str:
-    summary = music_context.get("analysis_summary") or {}
-    track_summary = music_context.get("track_summary") or {}
-    segments = music_context.get("segments") or []
+    music_summary = summarize_music_context(music_context)
+    summary = music_summary["analysis_summary"]
+    track_summary = music_summary["track_summary"]
     files = project_manifest.get("files") or []
     priority_files = [
         item.get("file")
@@ -156,7 +160,7 @@ def deterministic_technical_notes(music_context: dict[str, Any], project_manifes
         f"- Duration: `{summary.get('duration_sec', track_summary.get('duration_sec', '?'))}` seconds.\n",
         f"- FPS: `{summary.get('fps', track_summary.get('fps', '?'))}`.\n",
         f"- BPM: `{summary.get('estimated_tempo_bpm', track_summary.get('estimated_tempo_bpm', '?'))}`.\n",
-        f"- Segment count: `{len(segments)}`.\n\n",
+        f"- Segment count: `{music_summary['segment_count']}`.\n\n",
         "## Project Primary Files\n",
     ]
     for file_name in priority_files[:20]:
@@ -1382,7 +1386,7 @@ def write_implementation_draft(draft: dict[str, Any]) -> None:
     scene_path.parent.mkdir(parents=True, exist_ok=True)
     scene_path.write_text(str(script).rstrip() + "\n", encoding="utf-8")
 
-    written_support_files: list[str] = []
+    planned_support_writes: list[PlannedArtifactWrite] = []
     for item in draft.get("support_files", []) or []:
         if not isinstance(item, dict):
             continue
@@ -1392,9 +1396,21 @@ def write_implementation_draft(draft: dict[str, Any]) -> None:
         relpath = normalize_repo_relative_path(raw_relpath)
         if not is_allowed_generated_artifact_path(relpath, allowed_prefixes=ALLOWED_NEW_PREFIXES):
             continue
-        support_path = ROOT / relpath
-        support_path.parent.mkdir(parents=True, exist_ok=True)
-        support_path.write_text(str(item.get("content", "")).rstrip() + "\n", encoding="utf-8")
+        planned_support_writes.append(
+            PlannedArtifactWrite(
+                repo_relative_path=relpath,
+                kind=str(item.get("kind") or "support_file"),
+                content=str(item.get("content", "")).rstrip() + "\n",
+            )
+        )
+
+    written_support_files: list[str] = []
+    for planned_write in planned_support_writes:
+        support_path = write_planned_artifact(
+            ROOT,
+            planned_write,
+            allowed_prefixes=ALLOWED_NEW_PREFIXES,
+        )
         written_support_files.append(str(support_path))
     if written_support_files:
         draft["written_support_files"] = written_support_files

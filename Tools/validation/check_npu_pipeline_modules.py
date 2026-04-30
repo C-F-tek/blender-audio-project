@@ -264,6 +264,83 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             in runtime_retry_prompt
         ),
     }
+    runtime_context_notes = runtime_pipeline.deterministic_technical_notes(
+        music_context,
+        {"files": [{"file": "Scripting/v61b/materials.py"}]},
+        "smoke_context",
+    )
+    runtime_context_report = {
+        "segment_count": (
+            f"- Segment count: `{summarize_music_context(music_context)['segment_count']}`."
+            in runtime_context_notes
+        ),
+        "duration": "- Duration: `12.5` seconds." in runtime_context_notes,
+        "priority_file": "`Scripting/v61b/materials.py`" in runtime_context_notes,
+    }
+    old_runtime_paths = {
+        "root": runtime_pipeline.ROOT,
+        "track_stem": runtime_pipeline.TRACK_STEM,
+        "implementation_draft_json": runtime_pipeline.IMPLEMENTATION_DRAFT_JSON,
+        "implementation_script": runtime_pipeline.IMPLEMENTATION_SCRIPT,
+        "implementation_notes": runtime_pipeline.IMPLEMENTATION_NOTES,
+    }
+    runtime_artifact_write_report = {
+        "support_exists": False,
+        "support_content": False,
+        "draft_records_support": False,
+    }
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime_root = Path(tmp)
+            runtime_pipeline.ROOT = runtime_root
+            runtime_pipeline.TRACK_STEM = "Smoke Track"
+            runtime_pipeline.IMPLEMENTATION_DRAFT_JSON = runtime_root / "output" / "draft.json"
+            runtime_pipeline.IMPLEMENTATION_SCRIPT = runtime_root / "Tools" / "npu" / "candidate.py"
+            runtime_pipeline.IMPLEMENTATION_NOTES = runtime_root / "Tools" / "npu" / "notes.md"
+            runtime_pipeline.IMPLEMENTATION_SCRIPT.parent.mkdir(parents=True, exist_ok=True)
+            runtime_pipeline.write_implementation_draft(
+                {
+                    "implementation_kind": "new_blender_scene_script_from_json",
+                    "safety": {"requires_manual_review": True},
+                    "reference_files": [{"file": "Scripting/v61b/materials.py"}],
+                    "proposed_files": [{"file": "indexAI/scene_scripts/smoke_candidate.py"}],
+                    "implementation_plan": [{"change": "smoke"}],
+                    "scene_script": (
+                        "import bpy\n"
+                        "import json\n"
+                        "def load_json(path): return {}\n"
+                        "keyframes = {'frames': []}\n"
+                        "frames = keyframes.get(\"frames\", [])\n"
+                        "obj = bpy.data.objects.new('Smoke', None)\n"
+                        "obj.keyframe_insert(data_path='location')\n"
+                        "obj.modifiers.new('Smoke', 'BEVEL')\n"
+                        "bpy.data.materials.new('Smoke')\n"
+                        + "# smoke\n" * 500
+                    ),
+                    "support_files": [
+                        {
+                            "file": "indexAI/scene_scripts/smoke_bundle/README.md",
+                            "kind": "notes",
+                            "content": "support",
+                        }
+                    ],
+                    "notes": ["smoke"],
+                    "files_to_review_before_applying": [],
+                }
+            )
+            support_path = runtime_root / "indexAI" / "scene_scripts" / "smoke_bundle" / "README.md"
+            written_draft = runtime_pipeline.read_json(runtime_pipeline.IMPLEMENTATION_DRAFT_JSON)
+            runtime_artifact_write_report = {
+                "support_exists": support_path.exists(),
+                "support_content": support_path.read_text(encoding="utf-8") == "support\n",
+                "draft_records_support": str(support_path) in written_draft.get("written_support_files", []),
+            }
+    finally:
+        runtime_pipeline.ROOT = old_runtime_paths["root"]
+        runtime_pipeline.TRACK_STEM = old_runtime_paths["track_stem"]
+        runtime_pipeline.IMPLEMENTATION_DRAFT_JSON = old_runtime_paths["implementation_draft_json"]
+        runtime_pipeline.IMPLEMENTATION_SCRIPT = old_runtime_paths["implementation_script"]
+        runtime_pipeline.IMPLEMENTATION_NOTES = old_runtime_paths["implementation_notes"]
     boundary_report = build_helper_boundary_report(
         package_name="Tools.npu.pipeline",
         modules=[
@@ -289,6 +366,8 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "runtime_io_wiring": runtime_reader_report.get("ok") is True and runtime_optional_report.get("ok") is True,
             "runtime_contract_wiring": runtime_draft_contract.get("contract_validation", {}).get("ok") is True,
             "runtime_prompt_payload_wiring": all(runtime_prompt_payload_report.values()),
+            "runtime_context_summary_wiring": all(runtime_context_report.values()),
+            "runtime_artifact_write_planning": all(runtime_artifact_write_report.values()),
             "migration_gate_blocks_runtime": migration_readiness.get("ready") is False,
         },
     )
@@ -346,6 +425,10 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("runtime implementation draft validation should include passing helper contract validation")
     if not all(runtime_prompt_payload_report.values()):
         errors.append("runtime prompt builders should embed helper-built payloads")
+    if not all(runtime_context_report.values()):
+        errors.append("runtime deterministic notes should use helper-compatible context summary fields")
+    if not all(runtime_artifact_write_report.values()):
+        errors.append("runtime support-file writes should use planned artifact writes under allowed prefixes")
     if migration_readiness.get("ready") is not False:
         errors.append("default migration readiness should block runtime wiring")
     if forced_migration_readiness.get("ready") is not True:
@@ -376,6 +459,8 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "runtime_optional_report": runtime_optional_report,
             "runtime_draft_contract": runtime_draft_contract.get("contract_validation"),
             "runtime_prompt_payload_report": runtime_prompt_payload_report,
+            "runtime_context_report": runtime_context_report,
+            "runtime_artifact_write_report": runtime_artifact_write_report,
             "migration_readiness": migration_readiness,
             "forced_migration_readiness": forced_migration_readiness,
             "boundary_report": boundary_report,
