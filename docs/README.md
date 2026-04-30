@@ -1,136 +1,112 @@
 # Documentation
 
-This folder contains the stable technical documentation for `blender-audio-project`.
+This folder contains the stable technical documentation for `IA-Carmine Local AI Orchestration Workbench`.
 
-The documentation is intended for both human developers and AI agents. It should describe the current repository structure, the expected workflow, safe modification rules, and the roadmap for refactoring the project into reusable components.
+The GitHub repository slug is still `C-F-tek/blender-audio-project`, but the current project identity is broader than Blender/audio. The active architecture centers on local AI orchestration, provider-lane routing, quality gates, NPU/GPU diagnostics, validation reports, memory/guardrail contracts and compact GitHub evidence bundles.
+
+Blender/audio-reactive generation remains the first application domain and legacy production target. It is not the current architectural boundary.
 
 ## Recommended reading order
 
 1. `../AGENTS.md`
 2. `../WORKFLOW.md`
-3. `PROJECT_OVERVIEW.md`
-4. `PROJECT_AI_CONSCIOUSNESS.md`
-5. `AI_ONBOARDING.md`
-6. `AI_PIPELINE_REFACTOR_STATUS.md`
-7. `AI_PIPELINE_ARCHITECTURE.md`
-8. `AI_MEMORY_POLICY.md`
-9. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
-10. `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`
-11. `AI_EXTERNAL_KNOWLEDGE.md`
-12. `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`
-13. `EXECUTION_PLANS/README.md`
-14. `TECH_DEBT_TRACKER.md`
-15. `MODULE_MAP.md`
-16. `DATA_FLOW.md`
-17. `REFACTORING_AND_REUSE_PLAN.md`
-18. `PATCH_SPEC_WORKFLOW.md`
-19. `SHARED_SCRIPTING_UTILITIES.md`
-20. `../Tools/npu/pipeline/README.md` when working on NPU helper modules
-21. `../Tools/validation/README.md` when changing validators or workflows
-22. `BLENDER_SCRIPT_ENTRYPOINTS.md`
-23. `AI_GENERATED_PACKAGE_STANDARD.md`
-24. `GENERATED_PYTHON_ADAPTER_TEMPLATE.md`
-25. `PACKAGE_CREATION_WORKFLOW.md`
-26. `QUALITY_GATE.md`
-27. `AUDIO_ANALYSIS_PIPELINE.md`
-28. `JSON_SCHEMAS.md`
-29. `AI_ARTIFACT_SCHEMAS.md`
-30. `RENDER_WORKFLOW.md`
-31. `FFMPEG_WORKFLOW.md`
-32. `LOCAL_AI_WORKFLOW.md`
-33. `NPU_GPU_PARALLELISM_PLAN.md`
-34. `AI_PIPELINE_OPTIMIZATION.md`
-35. `INSTALLATION.md`
-36. `USAGE.md`
-37. `COMPATIBILITY.md`
-38. `KNOWN_LIMITATIONS.md`
-39. `DEVELOPER_GUIDE.md`
-40. `PROJECT_AUDIT.md`
-41. `PROJECT_STATUS_POINT.md`
+3. `PROJECT_STATUS_POINT.md`
+4. `DATA_FLOW.md`
+5. `LOCAL_AI_WORKFLOW.md`
+6. `JSON_SCHEMAS.md`
+7. `../Tools/npu/pipeline/README.md`
+8. `../Tools/validation/README.md`
+9. `LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md` when reviewing the validated GPU/NPU workflow
+10. `EXECUTION_PLANS/README.md`
+11. `TECH_DEBT_TRACKER.md`
+12. `MODULE_MAP.md`
+13. `REFACTORING_AND_REUSE_PLAN.md`
+14. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
+15. `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`
+16. `AI_MEMORY_POLICY.md`
+17. `AI_PIPELINE_ARCHITECTURE.md`
+18. `AI_PIPELINE_REFACTOR_STATUS.md`
+19. `LOCAL_WORKSTATION_TARGET.md`
+20. Blender/audio docs only when entering that application domain.
+
+## Current validated provider posture
+
+```text
+Ollama -> GPU/CUDA -> primary advisory provider
+OpenVINO -> NPU -> probe / guardrail / decode diagnostic
+```
+
+Validated evidence:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
+```
+
+Confirmed decisions:
+
+```text
+ollama_gpu_primary_advisory: true
+npu_excluded_when_unusable: true
+provider_execution_seen: true
+npu_decode_smoke_passed: true
+```
 
 ## Documentation groups
 
-### Project context
+### Core AI orchestration and validation
 
 | File | Purpose |
 |---|---|
-| `../WORKFLOW.md` | Root operational workflow for humans and AI agents. |
-| `PROJECT_OVERVIEW.md` | High-level project identity and goals. |
-| `PROJECT_AI_CONSCIOUSNESS.md` | Compact operational memory for AI agents and future development sessions. |
-| `AI_ONBOARDING.md` | First-session guide for AI agents entering the project. |
-| `AI_PIPELINE_REFACTOR_STATUS.md` | Stable marker for the current modular AI pipeline refactor state and validation requirements. |
-| `AI_PIPELINE_ARCHITECTURE.md` | Map of the modular AI artifact pipeline, module responsibilities and validation commands. |
+| `../README.md` | Current project identity, provider-lane architecture and main workflows. |
+| `../AGENTS.md` | Operating contract for AI agents and automated reviewers. |
+| `../WORKFLOW.md` | Root operational workflow from task selection to evidence bundle. |
+| `PROJECT_STATUS_POINT.md` | Current status checkpoint and next recommended tasks. |
+| `DATA_FLOW.md` | Current app-agnostic data/report/provider flow. |
+| `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow, GPU/NPU parallelism and evidence handling. |
+| `JSON_SCHEMAS.md` | JSON/report contract notes and current schema gap index. |
+| `LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable local validation evidence. |
+| `../Tools/validation/README.md` | Local validation commands and report contracts. |
+| `../Tools/npu/pipeline/README.md` | App-agnostic NPU/provider helper package. |
+
+### Provider, guardrail and memory workflow
+
+| File | Purpose |
+|---|---|
 | `AI_MEMORY_POLICY.md` | Retention, promotion and quarantine policy for generic agent memory. |
-| `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local Git/GitHub validation, index regeneration, commit and push workflow after AI-assisted changes. |
-| `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | Handoff thread for agents that can work on GitHub but must ask the maintainer for local validation and index regeneration. |
-| `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this project. |
-| `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | OpenAI Harness Engineering and Symphony concepts adapted to this repository. |
-| `EXECUTION_PLANS/README.md` | Durable task-plan workflow for multi-step work. |
-| `TECH_DEBT_TRACKER.md` | Known technical debt, status and recommended remediation. |
-| `MODULE_MAP.md` | Repository areas, source packages, generated artifacts and navigation order. |
-| `DATA_FLOW.md` | Data movement from audio input to Blender scene and encoded video. |
-| `PROJECT_STATUS_POINT.md` | Current state checkpoint and next recommended tasks. |
-| `PROJECT_AUDIT.md` | Current technical assessment, maturity, risks and next actions. |
-| `DEVELOPER_GUIDE.md` | Practical workflow for development and review. |
-
-### Refactoring and reuse
-
-| File | Purpose |
-|---|---|
-| `REFACTORING_AND_REUSE_PLAN.md` | Main roadmap for encapsulation, shared utilities and non-destructive migration. |
-| `SHARED_SCRIPTING_UTILITIES.md` | Policy and target modules for reusable package-agnostic code. |
-| `AI_PIPELINE_ARCHITECTURE.md` | Current modularization map for the AI artifact pipeline. |
-| `AI_PIPELINE_REFACTOR_STATUS.md` | Current refactor status marker to avoid inconsistent AI interpretation. |
-| `../Tools/npu/pipeline/README.md` | Current app-agnostic NPU helper package scope, module map, validation workflow and migration policy. |
-| `GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | Template for future non-Blender generated Python policy adapters. |
+| `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local Git/GitHub validation, evidence, index regeneration, commit and push workflow. |
+| `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | GitHub-only continuation mode and local-validation handoff. |
+| `EXECUTION_PLANS/README.md` | Durable task-plan workflow for larger or staged work. |
+| `TECH_DEBT_TRACKER.md` | Known debt and remediation queue. |
+| `MODULE_MAP.md` | Repository areas and navigation map. |
 | `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | External agent-first engineering patterns mapped into project actions. |
-| `EXECUTION_PLANS/README.md` | Plan format for larger refactors or migration work. |
-| `TECH_DEBT_TRACKER.md` | Queue of known debt to avoid repeated rediscovery. |
-| `MODULE_MAP.md` | Source-to-target mapping for package modules and extraction candidates. |
+| `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this project. |
 
-### Patch, GitHub and automation workflow
+### AI artifact pipeline and generated policy
 
 | File | Purpose |
 |---|---|
-| `../WORKFLOW.md` | End-to-end operational flow from task to proof of work. |
-| `PATCH_SPEC_WORKFLOW.md` | Safe JSON patch-spec workflow, dry-run/apply commands, diff display and GitHub Action queue. |
-| `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local pull/validate/dry-run/index-regeneration/commit/push workflow. |
-| `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | GitHub-only continuation mode, local-validation handoff and fallback rules. |
-| `INDEX_REGEN_POLICY.md` | Regeneration policy for AI indexes and manifests. |
-| `../patch_specs/README.md` | Patch spec inbox/applied folder convention. |
-| `../Tools/validation/README.md` | Local non-invasive validation commands. |
-| `../Tools/workflow/run_npu_pipeline_helper_validation.ps1` | Focused NPU helper validation workflow for smoke, unit, docs and syntax checks. |
+| `AI_PIPELINE_ARCHITECTURE.md` | Modular AI artifact pipeline map. |
+| `AI_PIPELINE_REFACTOR_STATUS.md` | Stable refactor status marker. |
+| `AI_ARTIFACT_SCHEMAS.md` | AI artifact schema notes and validation report contracts. |
+| `GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | Template for future generated Python application adapters. |
+| `PATCH_SPEC_WORKFLOW.md` | Safe JSON patch-spec workflow and dry-run/apply commands. |
 
-### AI-generated package workflow
+### Legacy Blender/audio application domain
 
-| File | Purpose |
-|---|---|
-| `AI_GENERATED_PACKAGE_STANDARD.md` | Expected structure of generated Blender packages. |
-| `GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | Composition pattern for future generated Python application adapters. |
-| `PACKAGE_CREATION_WORKFLOW.md` | Operational workflow for creating future packages. |
-| `QUALITY_GATE.md` | Acceptance checks before a package is considered usable. |
-| `LOCAL_AI_WORKFLOW.md` | Direction for local AI/NPU/GPU-assisted generation and review. |
-| `AI_PIPELINE_OPTIMIZATION.md` | Optimization notes for AI artifact production. |
-| `NPU_GPU_PARALLELISM_PLAN.md` | Parallel execution plan for NPU and GPU workloads. |
-
-### Blender workflow
+These docs remain relevant when working on Blender/audio outputs, but are not the current core architecture:
 
 | File | Purpose |
 |---|---|
-| `BLENDER_SCRIPT_ENTRYPOINTS.md` | Known script entry points and execution notes. |
+| `PROJECT_OVERVIEW.md` | Historical/high-level project overview. |
+| `BLENDER_SCRIPT_ENTRYPOINTS.md` | Known Blender script entry points and execution notes. |
 | `AUDIO_ANALYSIS_PIPELINE.md` | Audio analysis workflow and generated data. |
+| `AI_GENERATED_PACKAGE_STANDARD.md` | Expected structure of generated Blender packages. |
+| `PACKAGE_CREATION_WORKFLOW.md` | Operational workflow for creating future Blender packages. |
+| `QUALITY_GATE.md` | Acceptance checks for generated packages. |
 | `RENDER_WORKFLOW.md` | Blender rendering workflow. |
 | `FFMPEG_WORKFLOW.md` | Final video encoding workflow. |
-| `COMPATIBILITY.md` | Known compatibility notes, especially Blender-version-sensitive behavior. |
-
-### Data and schemas
-
-| File | Purpose |
-|---|---|
-| `JSON_SCHEMAS.md` | Current JSON schema notes, report producer map and missing formal contracts. |
-| `AI_ARTIFACT_SCHEMAS.md` | AI artifact schema notes and related validation report contracts. |
-| `AI_CHUNKING_STRATEGY.md` | Chunking strategy for AI-readable project context. |
-| `INDEX_REGEN_POLICY.md` | Regeneration policy for AI indexes and manifests. |
+| `COMPATIBILITY.md` | Blender/version compatibility notes. |
+| `SHARED_SCRIPTING_UTILITIES.md` | Shared Blender utility policy and modules. |
 
 ### Setup and operations
 
@@ -140,6 +116,32 @@ The documentation is intended for both human developers and AI agents. It should
 | `USAGE.md` | Common usage notes. |
 | `KNOWN_LIMITATIONS.md` | Known gaps and incomplete areas. |
 | `LOCAL_WORKSTATION_TARGET.md` | Local workstation target notes. |
+| `DEVELOPER_GUIDE.md` | Practical workflow for development and review. |
+| `PROJECT_AUDIT.md` | Technical assessment, risks and next actions. |
+
+## Current workflow summary
+
+Preferred current validation workflow:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
+  -Profile npu `
+  -RunOllamaProbe `
+  -RunNpuProbe `
+  -RunNpuDecodeSmoke `
+  -UsePrimaryAdvisoryProvider `
+  -Basename parallel_gpu_npu_multistep_real_npu_v2 `
+  -ProposalBasename parallel_gpu_npu_multistep_real_npu_v2_proposals `
+  -EvidenceBasename parallel_gpu_npu_multistep_real_npu_v2_evidence
+```
+
+Evidence push workflow:
+
+```powershell
+git add docs/LOCAL_VALIDATION_EVIDENCE/
+git commit -m "test: add local ai workflow evidence bundle"
+git push
+```
 
 ## Documentation style
 
@@ -149,8 +151,9 @@ Rules:
 
 - Mark unverified information as `not specified`.
 - Prefer tables for file maps and contracts.
-- Keep package-specific instructions near the package.
-- Keep global project rules in `docs/` and `AGENTS.md`.
+- Keep provider execution modes explicit.
+- Keep package-specific Blender instructions near the package.
+- Keep global AI/provider/validation rules in `docs/`, `README.md`, `AGENTS.md` and `WORKFLOW.md`.
 - Do not document generated artifacts as manually maintained source.
 - Update this index when adding a new stable documentation file.
 
@@ -163,32 +166,14 @@ Before editing code, an AI system should:
 1. read `../AGENTS.md`;
 2. read `../WORKFLOW.md`;
 3. read this documentation index;
-4. read `PROJECT_AI_CONSCIOUSNESS.md`;
-5. read `AI_ONBOARDING.md`;
-6. read `AI_PIPELINE_REFACTOR_STATUS.md`;
-7. read `AI_PIPELINE_ARCHITECTURE.md`;
-8. read `AI_MEMORY_POLICY.md`;
-9. read `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`;
-10. read `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`;
-11. read `AI_EXTERNAL_KNOWLEDGE.md`;
-12. read `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`;
-13. read `EXECUTION_PLANS/README.md`;
-14. read `TECH_DEBT_TRACKER.md`;
-15. read `MODULE_MAP.md`;
-16. read `DATA_FLOW.md`;
-17. read `REFACTORING_AND_REUSE_PLAN.md`;
-18. read `PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits;
-19. read `QUALITY_GATE.md`;
-20. read the README of the target package;
-21. inspect the target source file before producing a patch.
-
-For NPU helper work, also read:
-
-```text
-../Tools/npu/pipeline/README.md
-../Tools/validation/README.md
-```
+4. read `PROJECT_STATUS_POINT.md`;
+5. read `DATA_FLOW.md`;
+6. read `LOCAL_AI_WORKFLOW.md`;
+7. read `JSON_SCHEMAS.md`;
+8. read `../Tools/npu/pipeline/README.md` for NPU/provider work;
+9. read `../Tools/validation/README.md` for validation/report work;
+10. inspect the target source file before producing a patch.
 
 ## Refactoring note
 
-The repository should move toward reusable modules, but not by breaking working packages. Shared utility extraction must be additive first, then validated, then adopted by package adapters.
+The repository should move toward reusable AI/backend modules first. Legacy Blender package reuse remains valuable, but shared utility extraction must not break working packages and must stay outside the current GPU/NPU orchestration milestone unless explicitly scoped.

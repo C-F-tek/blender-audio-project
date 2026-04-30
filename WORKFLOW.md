@@ -2,9 +2,9 @@
 
 ## Purpose
 
-This file is the root operational workflow for `blender-audio-project`.
+This file is the root operational workflow for `IA-Carmine Local AI Orchestration Workbench`.
 
-It is intended for human maintainers and AI agents. It defines the standard path from task selection to validation, post-validation AI work-packet generation, index regeneration, commit and review.
+The GitHub repository slug is still `C-F-tek/blender-audio-project`, but the operational project is now broader than Blender/audio. The current workflow centers on local AI provider orchestration, validation, quality routing, compact evidence, and guarded multistep execution.
 
 ## Core principle
 
@@ -15,12 +15,22 @@ read context
   -> choose one task
   -> define scope
   -> change minimal files
-  -> run focused validation
+  -> run focused validation or explicit provider probes
   -> build post-validation AI work packet when useful
+  -> build compact GitHub evidence bundle
   -> regenerate indexes when needed
   -> commit clear result
-  -> share proof-of-work reports
+  -> share proof-of-work evidence
 ```
+
+## Current provider-lane policy
+
+```text
+Ollama -> GPU/CUDA -> primary advisory provider
+OpenVINO -> NPU -> probe / guardrail / decode diagnostic
+```
+
+Provider execution must be explicit. The preferred local workflow uses `-UsePrimaryAdvisoryProvider`, which activates Ollama/GPU only when the workload quality routing report confirms it as a usable primary advisory provider.
 
 ## Required reading before work
 
@@ -29,17 +39,10 @@ Read in this order:
 ```text
 AGENTS.md
 docs/README.md
-docs/PROJECT_AI_CONSCIOUSNESS.md
-docs/AI_PIPELINE_REFACTOR_STATUS.md
-docs/AI_PIPELINE_ARCHITECTURE.md
-docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md
-docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md
-docs/OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md
-```
-
-For NPU helper/backend work, also read:
-
-```text
+docs/PROJECT_STATUS_POINT.md
+docs/DATA_FLOW.md
+docs/LOCAL_AI_WORKFLOW.md
+docs/JSON_SCHEMAS.md
 Tools/npu/pipeline/README.md
 Tools/validation/README.md
 docs/EXECUTION_PLANS/README.md
@@ -60,6 +63,7 @@ files likely touched
 validation commands
 expected output
 risk level
+provider execution mode if any
 ```
 
 For non-trivial tasks, create an execution plan under:
@@ -101,7 +105,7 @@ no unrelated formatting
 no destructive rewrite of stable Blender packages
 no generated full-analysis JSON edits
 no runtime package migration without validation
-no provider/model execution behavior changes unless explicitly scoped
+no implicit provider/model execution behavior changes
 ```
 
 ### 4. Run focused validation
@@ -110,43 +114,52 @@ For most repository changes:
 
 ```powershell
 python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
 python .\Tools\validation\check_docs_links.py --repo-root .
 python .\Tools\validation\check_execution_plan_status.py --repo-root . --output .\output\validation\execution_plan_status.json
 ```
 
-For AI pipeline changes:
-
-```powershell
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
-```
-
-For NPU helper/backend changes:
+For NPU/helper/backend changes:
 
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
 ```
 
-For generated Python or generated-file policy changes:
+For quality-based provider routing:
 
 ```powershell
-python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
-python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
+python .\Tools\validation\check_ai_workload_report_quality.py --repo-root . --output .\output\validation\ai_workload_report_quality.json
+python .\Tools\ai\build_workload_quality_lane_routing.py --repo-root . --output .\output\validation\ai_workload_quality_lane_routing.json --markdown-output .\output\validation\ai_workload_quality_lane_routing.md
+python .\Tools\validation\check_npu_decode_quality_remediation.py --repo-root . --output .\output\validation\npu_decode_quality_remediation.json
 ```
 
-For longer local validation:
+### 5. Run the parallel GPU/NPU multistep workflow
+
+Preferred full workflow for current core AI/backend work:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
+  -Profile npu `
+  -RunOllamaProbe `
+  -RunNpuProbe `
+  -RunNpuDecodeSmoke `
+  -UsePrimaryAdvisoryProvider `
+  -Basename parallel_gpu_npu_multistep_real_npu_v2 `
+  -ProposalBasename parallel_gpu_npu_multistep_real_npu_v2_proposals `
+  -EvidenceBasename parallel_gpu_npu_multistep_real_npu_v2_evidence
 ```
 
-The full runner now builds an advisory post-validation AI work packet by default.
+This workflow performs:
 
-### 5. Build post-validation AI work packet
+```text
+Step 1 -> workload quality gate
+Step 2 -> parallel provider probes / NPU decode smoke
+Step 3 -> quality-based routing and NPU remediation report
+Step 4 -> primary advisory packet/proposals using Ollama/GPU when confirmed
+Step 5 -> compact GitHub evidence bundle
+```
+
+### 6. Build post-validation AI work packet directly
 
 For a standalone advisory packet after manual tests:
 
@@ -154,17 +167,16 @@ For a standalone advisory packet after manual tests:
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1
 ```
 
-Optional local Ollama draft:
+Explicit primary advisory provider mode:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1 -UsePrimaryAdvisoryProvider
+```
+
+Legacy direct Ollama flag:
 
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1 -UseOllama
-```
-
-Generated files:
-
-```text
-output/ai_pipeline/repository_update_suggestions.json
-output/ai_pipeline/repository_update_suggestions.md
 ```
 
 Policy:
@@ -173,10 +185,26 @@ Policy:
 advisory only
 no auto-apply
 no source modification
-no provider execution unless -UseOllama is explicitly passed
+no provider execution unless explicitly requested
 ```
 
-### 6. Regenerate indexes when needed
+### 7. Build compact evidence instead of pasting long output
+
+`output/` is ignored by Git. Use evidence bundles for review:
+
+```powershell
+python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename latest_ai_workflow_evidence
+```
+
+Then push:
+
+```powershell
+git add docs/LOCAL_VALIDATION_EVIDENCE/
+git commit -m "test: add local ai workflow evidence bundle"
+git push
+```
+
+### 8. Regenerate indexes when needed
 
 Regenerate after source, docs, workflow, validation or pipeline changes:
 
@@ -185,7 +213,7 @@ python .\Tools\npu\build_project_ai_index.py
 python .\Tools\npu\build_npu_code_context.py
 ```
 
-### 7. Inspect changes
+### 9. Inspect changes
 
 ```powershell
 git status
@@ -194,21 +222,19 @@ git diff --stat
 
 If generated indexes changed, commit them intentionally.
 
-### 8. Commit
+### 10. Commit
 
 Use concise commit messages:
 
 ```text
-docs: add execution planning workflow
-docs: add tech debt tracker
-feat(shared): add blender compatibility helper
-feat(validation): add markdown local link checker
-fix(validation): accept utf-8 bom json artifacts
-test(npu): validate helper package locally
+docs: update local ai orchestration workflow
+feat(ai): add quality-based advisory routing
+feat(workflow): add parallel gpu npu multistep runner
+test: add real npu smoke evidence bundle
 chore: regenerate ai and npu indexes
 ```
 
-### 9. Push
+### 11. Push
 
 For master:
 
@@ -220,31 +246,6 @@ For a PR branch:
 
 ```powershell
 git push origin <branch>
-```
-
-### 10. Share proof of work
-
-For local validation, share:
-
-```powershell
-git status
-git log --oneline -n 20
-Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
-Get-Content .\output\ai_pipeline\repository_update_suggestions.md -Raw
-Get-Content .\output\validation\ai_pipeline_modules.json -Raw
-Get-Content .\output\validation\npu_pipeline_modules.json -Raw
-Get-Content .\output\validation\npu_pipeline_helper_tests.json -Raw
-Get-Content .\output\validation\execution_plan_status.json -Raw
-Get-Content .\output\validation\npu_pipeline_docs.json -Raw
-Get-Content .\output\validation\generated_python_policy.json -Raw
-Get-Content .\output\validation\refactor_status_consistency.json -Raw
-Get-Content .\output\validation\docs_links.json -Raw
-```
-
-For workflow-run validation, also share:
-
-```powershell
-Get-ChildItem .\output\local_validation -File | Sort-Object LastWriteTime -Descending | Select-Object -First 5
 ```
 
 ## Execution plans
@@ -271,23 +272,6 @@ Folder/status consistency is enforced by:
 python .\Tools\validation\check_execution_plan_status.py --repo-root . --output .\output\validation\execution_plan_status.json
 ```
 
-## Tech debt tracking
-
-Use:
-
-```text
-docs/TECH_DEBT_TRACKER.md
-```
-
-Track technical debt when:
-
-```text
-there is a known problem
-it is not fixed immediately
-it affects future agents or maintainers
-it requires validation or migration later
-```
-
 ## AI-agent operating rule
 
 AI agents should not treat conversation history as the only source of truth.
@@ -299,16 +283,16 @@ docs/
 WORKFLOW.md
 Tools/validation/
 Tools/workflow/
-indexAI/
-output/*_report.md
+docs/LOCAL_VALIDATION_EVIDENCE/
 ```
 
-The post-validation AI work packet is the preferred local handoff artifact after tests.
+The compact evidence bundle is the preferred local handoff artifact after tests.
 
 ## Do not do without explicit approval
 
 ```text
 delete files
+rename the GitHub repository
 rewrite Scripting/v61b/main_v61b.py
 split Ready To Jazz monolith
 change render output behavior
@@ -317,5 +301,5 @@ add dependencies
 modify full frame-level analysis JSON
 run heavy Blender/GPU workloads automatically
 change schema-v6 report meanings
-change NPU/Ollama provider execution behavior
+change NPU/Ollama provider execution behavior from explicit to implicit
 ```
