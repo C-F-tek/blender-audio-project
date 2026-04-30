@@ -23,6 +23,7 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         DualPipelinePaths,
         NpuPipelineConfig,
         PlannedArtifactWrite,
+        ProviderRequest,
         build_context_bundle,
         build_creative_scene_prompt_payload,
         build_default_stage_plan,
@@ -31,6 +32,7 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         compact_segments_for_prompt,
         context_bundle_metrics,
         is_allowed_generated_artifact_path,
+        planned_provider_result,
         read_optional_json_object,
         stage_plan_report,
         summarize_music_context,
@@ -38,6 +40,7 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         validate_implementation_draft_contract,
         validate_json_object,
         validate_planned_artifact_writes,
+        validate_provider_request,
     )
 
     music_context = {
@@ -69,6 +72,18 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
     context_metrics = context_bundle_metrics(context_bundle)
     stage_plan = build_default_stage_plan(include_provider_stages=False)
     stage_report = stage_plan_report(stage_plan)
+    provider_request = ProviderRequest(
+        provider="ollama",
+        model="smoke-model",
+        prompt="smoke prompt",
+        max_tokens=128,
+        metadata={"dry_run": True},
+    )
+    provider_validation = validate_provider_request(provider_request)
+    provider_result = planned_provider_result(provider_request)
+    invalid_provider_result = planned_provider_result(
+        ProviderRequest(provider="", model="", prompt="", max_tokens=0)
+    )
     creative_payload = build_creative_scene_prompt_payload(
         music_context,
         npu_notes="technical smoke notes",
@@ -131,6 +146,12 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("default stage plan should include five stages")
     if stage_report.get("enabled_stage_count") != 4:
         errors.append("provider stage should be disabled by default in smoke plan")
+    if provider_validation.get("ok") is not True:
+        errors.append("valid provider request should pass validation")
+    if provider_result.ok is not True or provider_result.metadata.get("executed") is not False:
+        errors.append("planned provider result should be ok and non-executed")
+    if invalid_provider_result.ok is not False or not invalid_provider_result.error:
+        errors.append("invalid provider request should produce failed planned result")
     if creative_payload.get("npu_technical_notes") != "technical smoke notes":
         errors.append("creative payload did not preserve NPU notes")
     if merge_payload.get("ollama_creative") != {"ok": True}:
@@ -168,6 +189,9 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "music_summary": music_summary,
             "context_metrics": context_metrics,
             "stage_report": stage_report,
+            "provider_validation": provider_validation,
+            "provider_result": provider_result.to_dict(),
+            "invalid_provider_result": invalid_provider_result.to_dict(),
             "creative_payload_keys": sorted(creative_payload.keys()),
             "merge_payload_keys": sorted(merge_payload.keys()),
             "retry_payload_keys": sorted(retry_payload.keys()),
