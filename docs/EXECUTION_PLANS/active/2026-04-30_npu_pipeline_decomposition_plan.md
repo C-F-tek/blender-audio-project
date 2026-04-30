@@ -118,6 +118,45 @@ git status
 git diff --stat
 ```
 
+## Away batch implementation
+
+Branch:
+
+```text
+codex/npu-pipeline-decomposition-away-batch
+```
+
+Scope:
+
+```text
+add pure artifact writer helpers
+add pure contract validators
+add NPU pipeline module smoke validator
+wire that smoke validator into the local PowerShell validation runner
+do not modify Tools/npu/run_dual_ai_pipeline.py
+do not modify provider/runtime behavior
+do not edit generated indexes until maintainer local regeneration
+```
+
+Batch rationale:
+
+```text
+The maintainer is away from the workstation, so this batch intentionally stops before runtime wiring.
+It prepares multiple pure-helper improvements plus one focused validator, then waits for one final local validation cycle.
+```
+
+Validation required before merge:
+
+```powershell
+python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+python .\Tools\npu\build_project_ai_index.py
+python .\Tools\npu\build_npu_code_context.py
+git status
+git diff --stat
+```
+
 ## Proposed module responsibilities
 
 | Future module | Responsibility | Notes |
