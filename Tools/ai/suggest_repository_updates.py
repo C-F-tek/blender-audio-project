@@ -21,6 +21,7 @@ from typing import Any
 DEFAULT_OUTPUT_DIR = "output/ai_pipeline"
 DEFAULT_PACKET_BASENAME = "repository_update_suggestions"
 DEFAULT_MAX_CHARS = 6000
+IGNORED_PLAN_FILENAMES = {"README.md"}
 
 PROFILE_CONTEXT_FILES: dict[str, tuple[str, ...]] = {
     "core": (
@@ -46,6 +47,7 @@ PROFILE_CONTEXT_FILES: dict[str, tuple[str, ...]] = {
         "Tools/npu/pipeline/README.md",
         "Tools/validation/README.md",
         "Tools/npu/run_dual_ai_pipeline.py",
+        "Tools/npu/build_runtime_output_manifest.py",
     ),
     "docs": (
         "AGENTS.md",
@@ -66,6 +68,8 @@ PROFILE_REPORTS: dict[str, tuple[str, ...]] = {
         "output/validation/npu_pipeline_modules.json",
         "output/validation/npu_pipeline_helper_tests.json",
         "output/validation/npu_pipeline_docs.json",
+        "output/validation/npu_runtime_output_manifest.json",
+        "output/validation/local_ai_resource_lanes.json",
         "output/validation/execution_plan_status.json",
         "output/validation/validation_report_contract.json",
         "output/validation/docs_links.json",
@@ -75,6 +79,8 @@ PROFILE_REPORTS: dict[str, tuple[str, ...]] = {
         "output/validation/npu_pipeline_modules.json",
         "output/validation/npu_pipeline_helper_tests.json",
         "output/validation/npu_pipeline_docs.json",
+        "output/validation/npu_runtime_output_manifest.json",
+        "output/validation/local_ai_resource_lanes.json",
         "output/validation/execution_plan_status.json",
         "output/validation/validation_report_contract.json",
     ),
@@ -87,10 +93,22 @@ PROFILE_REPORTS: dict[str, tuple[str, ...]] = {
 }
 
 
+def split_path_values(items: list[str]) -> list[str]:
+    """Accept repeated args and comma-separated PowerShell values."""
+
+    out: list[str] = []
+    for item in items:
+        for part in str(item).split(","):
+            normalized = part.strip().strip("'\"")
+            if normalized:
+                out.append(normalized)
+    return out
+
+
 def unique_items(items: list[str]) -> list[str]:
     seen: set[str] = set()
     out: list[str] = []
-    for item in items:
+    for item in split_path_values(items):
         normalized = item.replace("\\", "/")
         if normalized in seen:
             continue
@@ -150,15 +168,21 @@ def collect_context(
     all_context_files = unique_items(list(PROFILE_CONTEXT_FILES.get(profile, ())) + context_files + extra_context)
     all_report_files = unique_items(list(PROFILE_REPORTS.get(profile, ())) + report_files + extra_reports)
 
-    docs = [
-        read_text_if_exists(repo_root / rel, max_chars=max_chars) for rel in all_context_files
-    ]
+    docs = [read_text_if_exists(repo_root / rel, max_chars=max_chars) for rel in all_context_files]
     reports_raw = [read_json_if_exists(repo_root / rel) for rel in all_report_files]
 
     active_dir = repo_root / "docs" / "EXECUTION_PLANS" / "active"
     completed_dir = repo_root / "docs" / "EXECUTION_PLANS" / "completed"
-    active_plans = sorted(active_dir.glob("*.md")) if active_dir.exists() else []
-    completed_plans = sorted(completed_dir.glob("*.md")) if completed_dir.exists() else []
+    active_plans = [
+        path
+        for path in sorted(active_dir.glob("*.md"))
+        if path.name not in IGNORED_PLAN_FILENAMES
+    ] if active_dir.exists() else []
+    completed_plans = [
+        path
+        for path in sorted(completed_dir.glob("*.md"))
+        if path.name not in IGNORED_PLAN_FILENAMES
+    ] if completed_dir.exists() else []
 
     return {
         "schema_version": 1,
