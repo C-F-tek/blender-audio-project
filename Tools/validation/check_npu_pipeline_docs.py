@@ -28,8 +28,9 @@ EXPECTED_README_TERMS = (
     "legacy-compatible IO aliases",
     "legacy/new helper equivalence checks",
     "migration readiness reports",
+    "common validation report envelopes",
+    "runtime-output manifest helpers",
     "NPU/Ollama provider calls",
-    "default_runtime_wiring_readiness()",
 )
 
 
