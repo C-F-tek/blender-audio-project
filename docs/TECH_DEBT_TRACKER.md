@@ -35,7 +35,7 @@ P3 low
 | TD-004 | Ready To Jazz package | P2 | open | Large standalone/monolithic script. | Harder patching and reuse. | Do not split yet; finish the app-agnostic AI/NPU/backend core first, then migrate one call site at a time after workstation validation. | 2026-04-30 |
 | TD-005 | `v61b_backgood` backup folder | P3 | open | Backup-style folder appears in package validation context. | Validator noise and AI confusion. | Decide whether to archive, exclude, or document it after checking for unique fixes locally. | 2026-04-30 |
 | TD-006 | Formal JSON schemas | P2 | in_progress | JSON contracts are documented but not fully enforced. | AI artifacts can drift. | AI pipeline matrix and per-case report contracts are being formalized first; continue with scene specs and music summaries after report contracts remain stable. | 2026-04-30 |
-| TD-007 | NPU pipeline decomposition | P2 | open | Some NPU orchestration files remain large. | Harder testing and provider replacement. | Split into focused app-agnostic modules/functions for config, context, prompts, providers, validators, memory, guardrails, artifact writing and runner; preserve CLI behavior and validate locally. | 2026-04-30 |
+| TD-007 | NPU pipeline decomposition | P2 | in_progress | Some NPU orchestration files remain large. | Harder testing and provider replacement. | Helper package work is active under `Tools/npu/pipeline/`; validate PR #41 locally, regenerate indexes, then wire one helper group at a time into `Tools/npu/run_dual_ai_pipeline.py`. | 2026-04-30 |
 | TD-008 | Documentation link validation | P3 | resolved | Many docs reference other docs, but no link checker existed. | Broken AI onboarding path. | `Tools/validation/check_docs_links.py` added; run after documentation changes. | 2026-04-29 |
 | TD-009 | Refactor status consistency | P2 | resolved | Pipeline status is duplicated across docs and `refactor_status.py`. | Future inconsistency can confuse agents. | `Tools/validation/check_refactor_status_consistency.py` added; run after AI pipeline/status docs changes. | 2026-04-29 |
 | TD-010 | Agent state memory integration | P2 | in_progress | Generic state packets and retention policy exist, but app integration is not validated yet. | Persistent memory could become stale, noisy or too project-specific. | Run memory policy validator locally, keep SQLite generated/untracked, and promote only distilled facts into docs. | 2026-04-30 |
@@ -44,20 +44,21 @@ P3 low
 | TD-013 | Generated artifact path policy scope | P2 | open | Artifact path policy and report scanning exist, but safe destinations may need workflow-specific extension later. | Overly broad prefixes can allow generated files into source areas; overly narrow prefixes can block legitimate reports. | Keep defaults narrow; require explicit `--allowed-prefix` or `--allowed-exact-path` and document any extension. | 2026-04-30 |
 | TD-014 | GitHub-only validation boundary | P1 | open | GitHub-only agents can edit docs and plans but cannot inspect local outputs or run workstation validation. | PRs may overclaim Blender/audio/GPU/NPU validation or hand-edit generated indexes. | Mark GitHub-only PRs with `Local workstation validation pending.`, avoid runtime claims, and leave index regeneration to local owner batch. | 2026-04-30 |
 | TD-015 | Validator report consistency | P2 | open | Validators do not yet have one explicitly documented common report contract. | Downstream automation may need per-validator special cases. | Review common fields (`schema_version`, `repo_root`, `passed`, `errors`) and create small follow-up PRs only after documenting current differences. | 2026-04-30 |
+| TD-016 | NPU runtime wiring | P2 | blocked | `Tools/npu/pipeline/` helpers are not yet consumed by `Tools/npu/run_dual_ai_pipeline.py`. | Duplicated helper behavior can drift until runtime wiring happens. | Blocked on focused NPU helper validation, full local validation and regenerated indexes. Start later with IO helper aliases only. | 2026-04-30 |
 
 ## Add a new item
 
 Use the next ID:
 
 ```text
-TD-016
+TD-017
 ```
 
 Template:
 
 | ID | Area | Priority | Status | Symptom | Risk | Recommended action | Last reviewed |
 |---|---|---:|---|---|---|---|---|
-| TD-016 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
+| TD-017 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
 
 ## Rules
 
