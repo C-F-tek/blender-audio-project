@@ -2,7 +2,7 @@
 
 This package contains app-agnostic helper modules for the local NPU/Ollama pipeline.
 
-The package is intentionally additive. Existing CLI entrypoints continue to own orchestration until a later validated migration wires these helpers in one group at a time.
+The package is intentionally additive. Existing CLI entrypoints own orchestration while validated migration phases wire selected helpers in one group at a time.
 
 ## Current scope
 
@@ -13,7 +13,7 @@ pure configuration objects
 path and generated-artifact validation
 legacy dual-AI runtime output policy helpers
 UTF-8 text and JSON-object IO helpers
-legacy-compatible IO aliases for later wiring
+legacy-compatible IO aliases
 legacy/new helper equivalence checks
 deterministic fixtures for tests and dry-runs
 prompt payload builders
@@ -24,9 +24,11 @@ planned-only runner stage reports
 contract validators
 artifact write planning helpers
 migration readiness reports
+common validation report envelopes
+runtime-output manifest helpers for additive observability
 ```
 
-Forbidden in this package until explicitly validated:
+Forbidden in this package unless explicitly validated:
 
 ```text
 Blender runtime execution
@@ -36,6 +38,7 @@ FFmpeg jobs
 Ready To Jazz migration
 full analysis JSON mutation
 hand-edited generated indexes
+provider execution behavior changes
 ```
 
 ## Module map
@@ -54,7 +57,7 @@ hand-edited generated indexes
 | `validators.py` | Contract-level validators that preserve unknown future fields. |
 | `artifact_writer.py` | Validated generated-artifact write helpers. |
 | `migration_readiness.py` | Deterministic gates for future runtime wiring readiness. |
-| `reports.py` | Helper-boundary report utilities. |
+| `reports.py` | Helper-boundary reports, common validation report envelopes and runtime-output manifests. |
 
 ## Validation
 
@@ -105,16 +108,30 @@ python .\Tools\npu\build_npu_code_context.py
 
 Do not migrate `Tools/npu/run_dual_ai_pipeline.py` all at once.
 
-Recommended order:
+Completed validated runtime-helper adoption:
 
-1. Validate this helper package.
-2. Regenerate AI/NPU indexes.
-3. Use `default_runtime_wiring_readiness()` as a conservative runtime-wiring gate.
-4. Wire only IO helpers.
-5. Wire only artifact path/contract helpers.
-6. Wire only prompt/context payload helpers.
-7. Wire only context summary and generated-artifact write-planning helpers.
-8. Wire exact legacy runtime output policy helpers.
-9. Wire provider preflight normalization without provider execution.
-10. Move provider execution adapters last.
-11. Compare local outputs after every wiring step.
+1. IO helpers.
+2. Artifact path and implementation draft contract helpers.
+3. Prompt payload helpers.
+4. Context summary and generated support-file write-planning helpers.
+5. Exact legacy runtime output policy helpers.
+6. Provider preflight normalization without provider execution.
+
+Current safe next layer:
+
+```text
+NPU validator/report contract consistency
+runtime-output manifest/reporting as additive observability
+```
+
+Still future work:
+
+```text
+provider execution adapters
+provider result parsing/reporting
+prompt prose extraction
+full artifact writer runtime migration
+memory/guardrail runtime integration
+```
+
+Every runtime bridge phase must keep provider/model execution behavior stable unless a later execution plan explicitly scopes and validates that behavior change.
