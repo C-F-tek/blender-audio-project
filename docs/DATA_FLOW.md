@@ -2,20 +2,100 @@
 
 ## Purpose
 
-This document describes expected data movement across the current Blender audio-reactive workflow and the reusable AI/NPU artifact workflow.
+This document describes the current data movement across `IA-Carmine Local AI Orchestration Workbench`.
 
-The current concrete production target is Blender, and the current concrete input family is audio/WAV analysis. The reusable pipeline boundary is broader:
+The project still contains Blender/audio-reactive workflows, but the active architectural flow is now app-agnostic local AI orchestration: reports, provider lanes, quality gates, explicit probes, advisory packets and compact GitHub evidence.
+
+## Current core AI orchestration flow
 
 ```text
-input-domain data
-  -> context or technical analysis
-  -> AI/helper planning payload
-  -> generated artifact contract
+local source/docs/context
   -> validation reports
-  -> controlled runtime execution only after explicit validation
+  -> workload report quality gate
+  -> advisory lane routing
+  -> trusted/excluded context selection
+  -> explicit provider probes or primary advisory generation
+  -> post-validation AI packet and proposals
+  -> compact evidence bundle under docs/LOCAL_VALIDATION_EVIDENCE/
+  -> manual review / PR / merge
 ```
 
-## High-level current Blender flow
+## Provider-lane flow
+
+```text
+Ollama/GPU workload report
+  -> quality gate: usable_text
+  -> advisory lane: ollama
+  -> provider mapping: GPU/CUDA
+  -> primary advisory packet generation when explicitly requested
+```
+
+```text
+NPU/OpenVINO workload report
+  -> quality gate: unusable_output for old real workload report
+  -> excluded from advisory context
+  -> remediation report
+  -> explicit NPU probe / decode smoke diagnostic
+  -> possible future promotion only after quality-gated usable workload output
+```
+
+Current mapping:
+
+```text
+Ollama -> GPU/CUDA
+OpenVINO -> NPU
+```
+
+OpenVINO GPU is not a primary lane.
+
+## Parallel multistep workflow flow
+
+`Tools/workflow/run_parallel_ai_provider_multistep.ps1` coordinates:
+
+```text
+Step 1: workload quality gate
+Step 2: parallel provider probes / NPU decode smoke
+Step 3: quality-based routing and NPU remediation
+Step 4: primary advisory packet/proposals
+Step 5: GitHub evidence bundle
+```
+
+Primary evidence:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
+```
+
+Validated decisions from that evidence:
+
+```text
+ollama_gpu_primary_advisory: true
+npu_excluded_when_unusable: true
+provider_execution_seen: true
+npu_decode_smoke_passed: true
+```
+
+## Main data categories
+
+| Data | Producer | Consumer | Notes |
+|---|---|---|---|
+| Source/docs context | repository files | advisory packet builder | Non-workload files are trusted unless normal file read fails. |
+| Workload reports | local provider workload scripts | quality gate | Generated text reports from provider lanes. |
+| Workload quality report | `Tools/validation/check_ai_workload_report_quality.py` | lane routing, remediation, packet builder | Determines `usable_lanes` and `unusable_lanes`. |
+| Lane routing report | `Tools/ai/build_workload_quality_lane_routing.py` | packet builder, evidence bundle | Declares trusted/excluded context and primary advisory provider. |
+| NPU remediation report | `Tools/validation/check_npu_decode_quality_remediation.py` | maintainer, proposals, evidence | Explains why NPU is excluded and what must happen before promotion. |
+| NPU decode smoke report | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | evidence bundle and future promotion gates | Explicit-run diagnostic; does not imply NPU general advisory quality. |
+| Local provider probe report | `Tools/ai/run_local_provider_probe.py` | evidence bundle | Explicit GPU/Ollama and NPU/OpenVINO probe evidence. |
+| Post-validation AI packet | `Tools/ai/suggest_repository_updates.py` | maintainer / proposal builder | Uses quality-approved advisory context only. |
+| Repository change proposals | `Tools/ai/build_repository_change_proposals.py` | maintainer | Advisory only; no auto-apply. |
+| Evidence bundle | `Tools/ai/build_github_evidence_bundle.py` | GitHub review and future AI agents | Compact tracked summary of ignored `output/` reports. |
+| NPU runtime output manifest | `Tools/npu/build_runtime_output_manifest.py` | validation/evidence | Observability only. |
+| Provider result envelope | `Tools/npu/pipeline/providers.py` | result reports, diagnostics and evidence | Normalizes provider output and metadata. |
+| AI/NPU indexes | `Tools/npu/build_project_ai_index.py`, `Tools/npu/build_npu_code_context.py` | AI agents and future sessions | Generated context; do not hand-edit. |
+
+## Legacy Blender/audio flow
+
+The historical Blender application flow remains:
 
 ```text
 Audio file
@@ -28,89 +108,34 @@ Audio file
   -> encoded video
 ```
 
-## High-level reusable AI/NPU helper flow
-
-```text
-Project context and optional domain data
-  -> bounded context bundle
-  -> prompt payload or provider request descriptor
-  -> model/provider result envelope or planned-only result
-  -> implementation draft / generated artifact plan
-  -> contract validation
-  -> generated artifact path validation
-  -> local validation report
-  -> index regeneration after accepted structural changes
-```
-
-Current PR #41 keeps this flow helper-only. It does not execute NPU/Ollama providers and does not wire helpers into `Tools/npu/run_dual_ai_pipeline.py`.
-
-## Main data categories
-
-| Data | Producer | Consumer | Notes |
-|---|---|---|---|
-| WAV audio | User or audio production workflow | analysis tools and Blender/VSE | Exact location is local and configurable. |
-| Analysis JSON | audio analysis script or AI pipeline | Blender scene script and music context builders | Full frame-level JSON must not be overwritten casually. |
-| Music context JSON | AI-assisted music analysis workflow or fixture/helper builder | AI planning, prompt payloads and Blender script generation | Used as semantic context; schema remains partially specified. |
-| Bounded context bundle | `Tools/npu/pipeline/context_builder.py` | prompt payload builders and future NPU/Ollama orchestration | Clips large text inputs deterministically before provider execution. |
-| Prompt payload | `Tools/npu/pipeline/prompts.py` | future provider adapters or dry-run tests | Pure data structure; does not call providers. |
-| Provider request descriptor | `Tools/npu/pipeline/providers.py` | future provider adapters and validator tests | Planned-only envelope in current helper package. |
-| Provider result envelope | `Tools/npu/pipeline/providers.py` | future response parsing, validators and artifact writers | Current helper can produce non-executed planned results only. |
-| Implementation draft JSON | AI/NPU pipeline or fixture helpers | validators and artifact planners | Unknown future fields should be preserved unless a contract says otherwise. |
-| Generated artifact plan | `Tools/npu/pipeline/artifact_writer.py` or AI pipeline | generated artifact validators and human review | Writes must stay inside allowed generated destinations. |
-| Legacy dual-AI runtime output policy | `Tools/npu/pipeline/artifact_paths.py` | `Tools/npu/run_dual_ai_pipeline.py` and helper validators | Exact known legacy outputs are allowed without broadening generated-file prefixes into source folders. |
-| Provider preflight report | `Tools/npu/pipeline/providers.py` | dual-AI runtime and validation reports | Normalized report only; provider/model execution remains a later adapter phase. |
-| NPU helper validation reports | `Tools/validation/check_npu_pipeline_*.py` | maintainer, PR review and future runtime-wiring gates | No Blender, NPU, GPU, Ollama, FFmpeg or provider execution. |
-| Agent state packet | `Tools/ai/build_agent_state_packet.py` | app workers, AI agents and guardrail reviewers | Generic packet with selected memory, constraints, budgets and planned CPU/NPU/GPU/validation microtasks. |
-| Persistent memory DB | app or agent workflow | agent state packet builder and memory policy reviewer | Optional SQLite store under generated data; do not commit local memory records. |
-| Memory policy report | `Tools/ai/review_agent_memory.py` | human review, app policy and validators | Non-destructive retention, quarantine and promotion-candidate report. |
-| Blender Python script | developer or AI-assisted generator | Blender | Must be inspected before execution. |
-| Render frames | Blender render process | FFmpeg or video workflow | Output folder should be configurable. |
-| Final video | FFmpeg workflow | publication or review | Codec and settings are workflow-specific. |
-| AI/NPU indexes | `Tools/npu/build_project_ai_index.py`, `Tools/npu/build_npu_code_context.py` | AI agents and future development sessions | Generated context; do not hand-edit as source. |
-
-## Current known workflow areas
-
-- `Scripting/v61b/` contains the current Blender scripting workflow.
-- `Scripting/shared/` contains package-agnostic shared scripting utilities.
-- `Tools/ai/` contains AI artifact validation and generic agent state packet tooling.
-- `Tools/ai/pipeline/` contains the modular AI artifact pipeline.
-- `Tools/npu/` contains AI/NPU tooling for analysis, review, or implementation support.
-- `Tools/npu/pipeline/` contains app-agnostic NPU helper contracts and validation fixtures; runtime wiring is pending.
-- `Tools/validation/` contains non-invasive validators.
-- `Tools/workflow/` contains local validation runners.
-- `indexAI/` contains indexed context and patch/task artifacts.
+This is now one application domain over the local AI orchestration workbench, not the project boundary.
 
 ## Rules for AI systems
 
+- Exclude unusable workload reports from advisory context before reading their content.
+- Treat NPU short smoke success as diagnostic evidence, not as general advisory promotion.
+- Keep provider execution explicit and report-bound.
 - Do not overwrite large analysis JSON files unless explicitly requested.
-- Treat JSON files as input data unless their generator is known.
-- Treat `indexAI/` and generated `Tools/npu/*_index.md` / manifest files as generated context.
-- Treat local agent memory stores as generated data unless a human promotes a distilled record into documentation.
+- Treat `indexAI/` and generated manifests as generated context.
 - Preserve local path configurability.
 - Keep input-domain validators separate from output-application adapters.
-- Keep NPU/Ollama provider execution out of helper-contract validators.
+- Keep Blender runtime out of core provider orchestration work unless explicitly scoped.
 - Document every new expected input and output.
 
 ## Missing formal schemas
 
-`docs/JSON_SCHEMAS.md` exists as a schema-notes file, but the following production schemas are still not fully specified:
+`docs/JSON_SCHEMAS.md` exists as a schema-notes file, but the following contracts still need more formal treatment:
 
-- audio analysis JSON schema;
-- music context JSON schema;
-- implementation draft JSON schema;
-- generated artifact plan/manifest schema;
-- patch library task packet schema;
-- render output manifest schema;
-- NPU helper validation report schemas beyond common validator root fields.
+- `ai_workload_quality_lane_routing`;
+- `npu_decode_quality_remediation`;
+- `npu_decode_smoke_diagnostic`;
+- `github_validation_evidence_bundle`;
+- provider probe report;
+- repository proposal report;
+- legacy audio analysis JSON;
+- music context JSON;
+- generated artifact plan/manifest schema.
 
 ## Recommended next improvement
 
-Strengthen `docs/JSON_SCHEMAS.md` after inspecting representative JSON files from `output/`, `Tools/npu/`, and `indexAI/patch_library/`, then add non-destructive validators for the confirmed fields.
-
-For the active NPU helper batch, first run:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
-```
-
-Then run full local validation and regenerate indexes before any runtime wiring.
+Strengthen `docs/JSON_SCHEMAS.md` for the new AI orchestration reports, then add non-destructive validators for the confirmed fields.
