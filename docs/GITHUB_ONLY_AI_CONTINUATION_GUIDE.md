@@ -8,7 +8,7 @@ Use this guide to keep project work moving without pretending that GitHub-only a
 
 ## Current collaboration mode
 
-As of 2026-04-30, the maintainer can still run local workstation validation and regenerate indexes when at home.
+As of 2026-04-30, the maintainer can run local workstation validation and regenerate indexes when at home.
 
 That means a GitHub-only agent should:
 
@@ -38,6 +38,30 @@ index regeneration
 
 Do not move to Ready To Jazz or broad `blender_compat.py` adoption until the core layers are stable and the maintainer explicitly asks for that phase.
 
+## Current baseline
+
+PR #41 through PR #47 are merged on `master`.
+
+Current NPU/backend state:
+
+```text
+Tools/npu/pipeline/ helper contracts exist
+Tools/npu/run_dual_ai_pipeline.py has already adopted helper groups incrementally
+IO helpers are wired
+contract/path helpers are wired
+prompt payload helpers are wired
+context-summary/support-file write helpers are wired
+legacy output guards and provider-preflight normalization are wired
+provider/model execution behavior is not the next default target unless explicitly scoped
+```
+
+Current docs state:
+
+```text
+docs/AI_DOCS_ENTRYPOINT.md and AI reference guides exist after PR #47
+some older status documents may still need reconciliation after fast PR chains
+```
+
 ## What a GitHub-only agent may do
 
 Safe work:
@@ -64,16 +88,32 @@ Do not do these from GitHub-only mode:
 - do not hand-edit generated indexes under `indexAI/` or generated NPU context/index files;
 - do not claim Blender runtime compatibility without a local Blender smoke report;
 - do not begin Ready To Jazz migration or broad `blender_compat.py` adoption;
-- do not wire `Tools/npu/pipeline/` helpers into `Tools/npu/run_dual_ai_pipeline.py` until local validation and generated index regeneration pass;
+- do not change NPU/Ollama provider execution behavior without an explicit narrow scope and local validation plan;
 - do not split large Blender runtime scripts in a single PR;
 - do not add external dependencies, CI workflows or heavy automation without explicit maintainer approval;
 - do not mark local validation as passing unless the report is committed or the maintainer provides its contents.
 
 ## Current next sequence
 
-1. Finish the active NPU helper-contract batch PR if it is still open.
+1. Reconcile state documents after the merged PR #41-#47 chain.
 
-   PR target: app-agnostic NPU helper package contracts, validators, fixture helpers and focused validation workflow.
+   Check at minimum:
+
+   ```text
+   docs/PROJECT_STATUS_POINT.md
+   docs/TECH_DEBT_TRACKER.md
+   docs/MODULE_MAP.md
+   docs/REFACTORING_AND_REUSE_PLAN.md
+   docs/DATA_FLOW.md
+   docs/JSON_SCHEMAS.md
+   docs/AI_ARTIFACT_SCHEMAS.md
+   docs/AI_ONBOARDING.md
+   docs/PROJECT_AI_CONSCIOUSNESS.md
+   ```
+
+   Goal: no document should still describe PR #41 as active/pending or claim runtime wiring has not started.
+
+2. Run local validation on `master` before starting another code milestone.
 
    Required focused proof:
 
@@ -81,7 +121,7 @@ Do not do these from GitHub-only mode:
    powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
    ```
 
-   Required full proof:
+   Required full proof for validation-sensitive work:
 
    ```powershell
    powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
@@ -91,22 +131,19 @@ Do not do these from GitHub-only mode:
    git diff --stat
    ```
 
-   Ask the maintainer for focused validator pass/fail, full local validation pass/fail, generated index diff summary and `git status`.
+3. Continue with one narrow NPU/backend milestone only after state docs are aligned.
 
-2. After merge, continue with a narrow NPU pipeline runtime-wiring phase.
-
-   Keep entrypoints compatible. Start with the already prepared IO helper aliases only:
+   Candidate next targets:
 
    ```text
-   read_text
-   read_json / read_json_object
-   write_json / write_json_object
-   read_optional_json / read_optional_json_object
+   provider result parsing/reporting without changing provider execution behavior
+   runtime-output manifest/reporting without changing generated artifacts
+   validator report contract consistency
+   guardrail/memory report contracts
+   execution-plan cleanup and completion-state hygiene
    ```
 
-   Do not wire provider calls, prompts, context building or artifact writing in the same PR. Compare local outputs after the wiring step.
-
-3. Continue formal contracts after the NPU helper package and AI pipeline report layer are stable.
+4. Continue formal contracts after the NPU helper package and AI pipeline report layer are stable.
 
    Good follow-up targets:
 
@@ -119,20 +156,6 @@ Do not do these from GitHub-only mode:
    ```
 
    Preserve unknown future fields unless a field is explicitly part of a documented contract.
-
-4. Keep app-agnostic guardrails moving.
-
-   Useful work:
-
-   ```text
-   memory retention checks
-   quarantine and promotion rules
-   generated artifact path safety
-   dry-run-only semantics
-   no-runtime-execution validators
-   PR-local validation handoff templates
-   migration readiness gates
-   ```
 
 5. Only later, with explicit maintainer approval, begin Ready To Jazz / `blender_compat.py` adoption.
 
@@ -161,7 +184,7 @@ git status
 git diff --stat
 ```
 
-For focused NPU helper package changes, ask for this first:
+For focused NPU helper/runtime-helper changes, ask for this first:
 
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
@@ -254,5 +277,5 @@ Only update status documents when there is evidence in committed code, validatio
 ## Short prompt for future GitHub-only agents
 
 ```text
-You are working GitHub-only on blender-audio-project. Read AGENTS.md, docs/README.md, docs/AI_ONBOARDING.md and docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md first. Continue core/backend/AI/NPU/guardrail/memory work before Ready To Jazz or blender_compat adoption. Do not hand-edit generated indexes or full analysis JSON. Make small PRs, state local validation needed, and ask Carmine to run the focused NPU helper validation, the local runner and regenerated indexes while he is available.
+You are working GitHub-only on blender-audio-project. Read AGENTS.md, WORKFLOW.md, docs/README.md, docs/AI_ONBOARDING.md, docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md and docs/AI_DOCS_ENTRYPOINT.md first. Continue core/backend/AI/NPU/guardrail/memory work before Ready To Jazz or blender_compat adoption. PR #41-#47 are merged; do not restart from helper-contract assumptions. Do not hand-edit generated indexes or full analysis JSON. Make small PRs, state local validation needed, and ask Carmine to run the focused NPU helper validation, the local runner and regenerated indexes while he is available.
 ```
