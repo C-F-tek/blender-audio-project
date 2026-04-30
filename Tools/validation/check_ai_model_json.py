@@ -87,9 +87,11 @@ def check_model_json(repo_root: Path) -> dict[str, Any]:
 
     return {
         "schema_version": 1,
+        "kind": "ai_model_json",
         "repo_root": str(repo_root),
         "passed": not errors,
         "errors": errors,
+        "warnings": [],
         "case_count": len(cases),
         "cases": cases,
         "direct_checks": direct_checks,

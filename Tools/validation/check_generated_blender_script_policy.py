@@ -126,12 +126,20 @@ def check_policy(repo_root: Path, paths: list[str]) -> dict[str, Any]:
 
     path_errors = [item.to_dict() for item in path_results if not item.passed]
     errors = sample_errors + [f"path policy failed: {item['label']}" for item in path_errors]
+    warnings = [
+        f"{item['label']}: {finding['message']}"
+        for item in [*samples, *[result.to_dict() for result in path_results]]
+        for finding in item["findings"]
+        if finding["severity"] == "warning"
+    ]
 
     return {
         "schema_version": 1,
+        "kind": "generated_blender_script_policy",
         "repo_root": str(repo_root),
         "passed": not errors,
         "errors": errors,
+        "warnings": warnings,
         "generic_python_policy": True,
         "generic_python_rule_count": len(generated_python_rule_dicts()),
         "adapter_rule_count": len(BLENDER_GENERATED_SCRIPT_RULES),

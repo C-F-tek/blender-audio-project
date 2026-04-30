@@ -117,6 +117,7 @@ def main() -> int:
         "failed_count": len(failed),
         "passed": not failed,
         "errors": errors,
+        "warnings": [],
         "include_index_ai": args.include_index_ai,
         "max_size_mb": args.max_size_mb,
         "results": results,

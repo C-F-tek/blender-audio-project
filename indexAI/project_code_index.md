@@ -1,8 +1,8 @@
 # Spaziotempo Primary Project Code Index
 
-Generated: `2026-04-30T13:38:05`
+Generated: `2026-04-30T13:48:25`
 
-Source fingerprint: `d6487805e173609ffdde721857fad1a2755dd4f504bb31284216972b5a395b56`
+Source fingerprint: `023e6e728e8c53cff52113e7395d81f25e1a9472a93f3229d98d41be0f24c115`
 
 Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.
 
@@ -226,7 +226,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/ai/review_agent_memory.py`: 70 lines, 2719 chars, sha256 `c6f1e7d74194eaaba557c995bc450be567eece87abc1e15b066b9f28fe2c948d`
 - `Tools/ai/review_wave_entrypoints.py`: 241 lines, 9712 chars, sha256 `ddee5cc83e012d59e05a02e0457882abb4f049824dbda0bb6785a79d2405a1f2`
 - `Tools/ai/run_parallel_artifact_pipeline.py`: 66 lines, 2717 chars, sha256 `720da371d1633dfd482e72049239835b12d6cc4aa7d871be432515459099f40e`
-- `Tools/ai/run_pipeline_dry_run_matrix.py`: 574 lines, 23621 chars, sha256 `e929e5356ad0a44c466483358db7f02e97e082ffc0c77d8bdbeeffde265da3b6`
+- `Tools/ai/run_pipeline_dry_run_matrix.py`: 574 lines, 23675 chars, sha256 `579314990fc4462c92dc244c59cc5b81ef2d0f795f0cb7ad93664315cb18b728`
 - `Tools/ai/smart_ai_gatekeeper.py`: 233 lines, 10409 chars, sha256 `8a9b3d1a2a4b59afc45a920e973e36526885e67060fbe2854f1297624af737a1`
 - `Tools/ai/validate_ai_artifacts.py`: 201 lines, 8660 chars, sha256 `b5f5da7831718465e262131a0bd7ef5fd59aaa4362c6f9545c28daef3bb34353`
 - `Tools/git/auto_push_generated_artifacts.ps1`: 136 lines, 3891 chars, sha256 `cd65aa2cd41cfc5b8205efd92c7b71d9967498bd8e3e71d92853e0b166782d2d`
@@ -243,7 +243,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
 - `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `53c55cc95abf776b330776e3bdee74319dbe3cc9e3e89bfbe385e621b9a410d6`
 - `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `ae496412a40745840615966bb12e0e7f2f2064610bd21622cb4642ed772441e1`
-- `Tools/npu/npu_code_manifest.json`: 7340 lines, 198066 chars, sha256 `77519af21889d8aaa9087caa03e383703add7e3d017ddad4f51998b668645c21`
+- `Tools/npu/npu_code_manifest.json`: 7340 lines, 198066 chars, sha256 `516a9d9b825a7ab856fc4b9b26e5a15d027371bc544e9ae6b99547a9f6a23c02`
 - `Tools/npu/npu_guardrail_service.py`: 491 lines, 20211 chars, sha256 `5829724c35b7fccef62481ca8efc7290b63ef4d552e441fcf51a59009a4cc84a`
 - `Tools/npu/npu_music_manifest.json`: 703 lines, 27216 chars, sha256 `e5cb8facca90680775a3ab5a525cfb2b0ef1f0f7c0ecd5c61e2f1570082f2045`
 - `Tools/npu/npu_runtime.py`: 161 lines, 5903 chars, sha256 `38dc29da6ba1c564c68a29c0c5de7e4b38787aa6a0c17607c8d2ae03fe89f182`
@@ -257,21 +257,21 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/repo_patch_runner/apply_repo_mods.py`: 444 lines, 15286 chars, sha256 `64307a6f42dddbb2363773954311fae7fc1dd76855e1f056b3c92c1cfc5a37fb`
 - `Tools/repo_patch_runner/example_fix_blender_51_musgrave.json`: 41 lines, 1979 chars, sha256 `6a6cc0f592252664ac99b71434b852b97bdb32ae0b447a59a2eb780d0cfb486a`
 - `Tools/repo_patch_runner/README.md`: 112 lines, 2369 chars, sha256 `84a16a0cc3ea9c612998d7b6b411e9b4a34a406b8a7732d5fdf50da28a53e460`
-- `Tools/validation/check_agent_memory_policy.py`: 124 lines, 4738 chars, sha256 `4a744a3ff23c89fac495ae1c902d2ebc0e146d169c5bdbadd8ff5f5237fe16d2`
+- `Tools/validation/check_agent_memory_policy.py`: 126 lines, 4801 chars, sha256 `453c8029bd8d1b828a2d421950f4bdd165f70d80ca326813b2f256faccdf8e37`
 - `Tools/validation/check_ai_dry_run_matrix_cases.py`: 184 lines, 7291 chars, sha256 `4eebfc561d7692ebbdb1327d70acd9c205f5c259b04656fab0e14ef8c95327db`
-- `Tools/validation/check_ai_dry_run_matrix_contract.py`: 240 lines, 9828 chars, sha256 `8290b9ab7c23e981cc0fc384ad7c3a5a10f455ff5004b77a42ad29dfe269f793`
+- `Tools/validation/check_ai_dry_run_matrix_contract.py`: 241 lines, 9874 chars, sha256 `c66eaa8bb0f5109d5a9fa5704372763dfe0cacc3b3c0c38387fbfbe3be83a8bf`
 - `Tools/validation/check_ai_dry_run_matrix_outputs.py`: 231 lines, 8954 chars, sha256 `0c152ba7ff7f0319c24ae972ed76b2c9909264754860da28eb502e451d0bfa46`
-- `Tools/validation/check_ai_model_json.py`: 118 lines, 5301 chars, sha256 `e693b4b618cd2566903d9ea95074a115e557a1894fe86f7a4a0271a89e91ad3e`
-- `Tools/validation/check_ai_pipeline_modules.py`: 260 lines, 10621 chars, sha256 `788e65148de9c9a894a868880ab8efc6260fceeb040b05716c6ffd951aacb77d`
-- `Tools/validation/check_blender_shared_compat_smoke.py`: 144 lines, 5092 chars, sha256 `6cd7b810fedc60d378ee394aaf44ca344e87fe4545198912c1a7349483582778`
-- `Tools/validation/check_docs_links.py`: 134 lines, 3930 chars, sha256 `323b44cbecd58375b3bdab87f1a261dc5bfbad758fc17c80d3aa6c2c58bb8fe5`
-- `Tools/validation/check_generated_artifact_path_policy.py`: 222 lines, 9083 chars, sha256 `a51a039c9063fc8ca5d2b91a4a37081e4d5c87e3ed2fd8526a242015148d8553`
-- `Tools/validation/check_generated_blender_script_policy.py`: 166 lines, 6449 chars, sha256 `afeb7b121a3aa19322d52db6a3405b0b9026039d8b8c3baf1e1b7fbf0ab2acb9`
-- `Tools/validation/check_generated_python_policy.py`: 119 lines, 4704 chars, sha256 `8a74680164a00ded4fc8edf17632bd3b70ef47e707fa30d7b98eb6a61f8f4749`
-- `Tools/validation/check_json_artifacts.py`: 132 lines, 4230 chars, sha256 `10880adcd7223364f9bee9c7780a519fbc8d1d3d4669ecb6ef2c84753b1933a8`
+- `Tools/validation/check_ai_model_json.py`: 120 lines, 5358 chars, sha256 `02c08b16adf29936bba361b7cd2f3cecf26d0b1dc380d0a793f004a049afbba2`
+- `Tools/validation/check_ai_pipeline_modules.py`: 262 lines, 10684 chars, sha256 `7297dd05d59cd89a458ace6ab458f176d0dbd71d92bcc5672ec6bcd05c9182fc`
+- `Tools/validation/check_blender_shared_compat_smoke.py`: 148 lines, 5242 chars, sha256 `2f0de4c9b366cb8d25bbdc2af8d3bb5d7705349d6ecbf9629bd338e58a30e4af`
+- `Tools/validation/check_docs_links.py`: 142 lines, 4168 chars, sha256 `9ae60ae1855ed2a970c22a6ebdeef0bfbce15be39e1aca254a9554f449a05927`
+- `Tools/validation/check_generated_artifact_path_policy.py`: 223 lines, 9107 chars, sha256 `9729a41206ed7f331a2d0df3e5da5b34f5a6c77e49f41f39a9c19fe53c1ff5f0`
+- `Tools/validation/check_generated_blender_script_policy.py`: 174 lines, 6765 chars, sha256 `170127645f4b2189d9b1080daeaae1adf454ac4a835d526658b6a280bce99c1a`
+- `Tools/validation/check_generated_python_policy.py`: 126 lines, 4969 chars, sha256 `8a8c03680ae3a556526aa25f92dcdfe79226702db85c5e644e6a215180536fe3`
+- `Tools/validation/check_json_artifacts.py`: 133 lines, 4254 chars, sha256 `4fb738ef5e71387a18ae9ab3bc192b1b66bb6dc2906f70bae8592fc1e65b3ed2`
 - `Tools/validation/check_package_structure.py`: 118 lines, 4117 chars, sha256 `0092db850c0b215dfc0482e2ce49cbf0d241e48c0bd9af9f11940f18f6b4d2fc`
-- `Tools/validation/check_python_syntax.py`: 105 lines, 2909 chars, sha256 `7f880d7d89a6cfd2fec95d1b17b6ffdc3da9a522168813b839e38961d7626a3d`
-- `Tools/validation/check_refactor_status_consistency.py`: 148 lines, 5459 chars, sha256 `f4b1625fdbb14d3a750d5b098254708060b2174f40198e2c04a469618328619e`
+- `Tools/validation/check_python_syntax.py`: 106 lines, 2933 chars, sha256 `6679a37bd182b54647f045617e6ebc6ed13499f2f3d6674678d1b415c6aa40a2`
+- `Tools/validation/check_refactor_status_consistency.py`: 150 lines, 5557 chars, sha256 `134777bfd28761938bab387c9cbee6f53f66f5f0088f84e67b3e9e99096b44a8`
 - `Tools/validation/check_validation_report_contract.py`: 187 lines, 6966 chars, sha256 `7b3eb47dc2b05d76463bb85faa4d4cced27efa380f5d037f164e306e3d64ec74`
 - `Tools/validation/generated_file_policy.py`: 218 lines, 7425 chars, sha256 `69df1934a28af14e6211bd61256a713cb43c817387becf27c53692302a30de1b`
 - `Tools/validation/generated_python_policy.py`: 198 lines, 6923 chars, sha256 `64b271390c35cf4e39905b7c0f3a26be3281f1c59e118c8ac70e79720b20d5ae`
@@ -679,22 +679,22 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI/project_code_chunks/chunk_0371_Tools_repo_patch_runner_apply_repo_mods_py.md` -> `Tools/repo_patch_runner/apply_repo_mods.py` lines 301-443
 - `indexAI/project_code_chunks/chunk_0372_Tools_repo_patch_runner_example_fix_blender_51_musgrave_json.md` -> `Tools/repo_patch_runner/example_fix_blender_51_musgrave.json` lines 1-40
 - `indexAI/project_code_chunks/chunk_0373_Tools_repo_patch_runner_README_md.md` -> `Tools/repo_patch_runner/README.md` lines 1-111
-- `indexAI/project_code_chunks/chunk_0374_Tools_validation_check_agent_memory_policy_py.md` -> `Tools/validation/check_agent_memory_policy.py` lines 1-123
+- `indexAI/project_code_chunks/chunk_0374_Tools_validation_check_agent_memory_policy_py.md` -> `Tools/validation/check_agent_memory_policy.py` lines 1-125
 - `indexAI/project_code_chunks/chunk_0375_Tools_validation_check_ai_dry_run_matrix_cases_py.md` -> `Tools/validation/check_ai_dry_run_matrix_cases.py` lines 1-183
-- `indexAI/project_code_chunks/chunk_0376_Tools_validation_check_ai_dry_run_matrix_contract_py.md` -> `Tools/validation/check_ai_dry_run_matrix_contract.py` lines 1-239
+- `indexAI/project_code_chunks/chunk_0376_Tools_validation_check_ai_dry_run_matrix_contract_py.md` -> `Tools/validation/check_ai_dry_run_matrix_contract.py` lines 1-240
 - `indexAI/project_code_chunks/chunk_0377_Tools_validation_check_ai_dry_run_matrix_outputs_py.md` -> `Tools/validation/check_ai_dry_run_matrix_outputs.py` lines 1-230
-- `indexAI/project_code_chunks/chunk_0378_Tools_validation_check_ai_model_json_py.md` -> `Tools/validation/check_ai_model_json.py` lines 1-117
-- `indexAI/project_code_chunks/chunk_0379_Tools_validation_check_ai_pipeline_modules_py.md` -> `Tools/validation/check_ai_pipeline_modules.py` lines 1-242
-- `indexAI/project_code_chunks/chunk_0380_Tools_validation_check_ai_pipeline_modules_py.md` -> `Tools/validation/check_ai_pipeline_modules.py` lines 243-259
-- `indexAI/project_code_chunks/chunk_0381_Tools_validation_check_blender_shared_compat_smoke_py.md` -> `Tools/validation/check_blender_shared_compat_smoke.py` lines 1-143
-- `indexAI/project_code_chunks/chunk_0382_Tools_validation_check_docs_links_py.md` -> `Tools/validation/check_docs_links.py` lines 1-133
-- `indexAI/project_code_chunks/chunk_0383_Tools_validation_check_generated_artifact_path_policy_py.md` -> `Tools/validation/check_generated_artifact_path_policy.py` lines 1-221
-- `indexAI/project_code_chunks/chunk_0384_Tools_validation_check_generated_blender_script_policy_py.md` -> `Tools/validation/check_generated_blender_script_policy.py` lines 1-165
-- `indexAI/project_code_chunks/chunk_0385_Tools_validation_check_generated_python_policy_py.md` -> `Tools/validation/check_generated_python_policy.py` lines 1-118
-- `indexAI/project_code_chunks/chunk_0386_Tools_validation_check_json_artifacts_py.md` -> `Tools/validation/check_json_artifacts.py` lines 1-131
+- `indexAI/project_code_chunks/chunk_0378_Tools_validation_check_ai_model_json_py.md` -> `Tools/validation/check_ai_model_json.py` lines 1-119
+- `indexAI/project_code_chunks/chunk_0379_Tools_validation_check_ai_pipeline_modules_py.md` -> `Tools/validation/check_ai_pipeline_modules.py` lines 1-243
+- `indexAI/project_code_chunks/chunk_0380_Tools_validation_check_ai_pipeline_modules_py.md` -> `Tools/validation/check_ai_pipeline_modules.py` lines 244-261
+- `indexAI/project_code_chunks/chunk_0381_Tools_validation_check_blender_shared_compat_smoke_py.md` -> `Tools/validation/check_blender_shared_compat_smoke.py` lines 1-147
+- `indexAI/project_code_chunks/chunk_0382_Tools_validation_check_docs_links_py.md` -> `Tools/validation/check_docs_links.py` lines 1-141
+- `indexAI/project_code_chunks/chunk_0383_Tools_validation_check_generated_artifact_path_policy_py.md` -> `Tools/validation/check_generated_artifact_path_policy.py` lines 1-222
+- `indexAI/project_code_chunks/chunk_0384_Tools_validation_check_generated_blender_script_policy_py.md` -> `Tools/validation/check_generated_blender_script_policy.py` lines 1-173
+- `indexAI/project_code_chunks/chunk_0385_Tools_validation_check_generated_python_policy_py.md` -> `Tools/validation/check_generated_python_policy.py` lines 1-125
+- `indexAI/project_code_chunks/chunk_0386_Tools_validation_check_json_artifacts_py.md` -> `Tools/validation/check_json_artifacts.py` lines 1-132
 - `indexAI/project_code_chunks/chunk_0387_Tools_validation_check_package_structure_py.md` -> `Tools/validation/check_package_structure.py` lines 1-117
-- `indexAI/project_code_chunks/chunk_0388_Tools_validation_check_python_syntax_py.md` -> `Tools/validation/check_python_syntax.py` lines 1-104
-- `indexAI/project_code_chunks/chunk_0389_Tools_validation_check_refactor_status_consistency_py.md` -> `Tools/validation/check_refactor_status_consistency.py` lines 1-147
+- `indexAI/project_code_chunks/chunk_0388_Tools_validation_check_python_syntax_py.md` -> `Tools/validation/check_python_syntax.py` lines 1-105
+- `indexAI/project_code_chunks/chunk_0389_Tools_validation_check_refactor_status_consistency_py.md` -> `Tools/validation/check_refactor_status_consistency.py` lines 1-149
 - `indexAI/project_code_chunks/chunk_0390_Tools_validation_check_validation_report_contract_py.md` -> `Tools/validation/check_validation_report_contract.py` lines 1-186
 - `indexAI/project_code_chunks/chunk_0391_Tools_validation_generated_file_policy_py.md` -> `Tools/validation/generated_file_policy.py` lines 1-217
 - `indexAI/project_code_chunks/chunk_0392_Tools_validation_generated_python_policy_py.md` -> `Tools/validation/generated_python_policy.py` lines 1-197

@@ -73,6 +73,12 @@ def check_policy(repo_root: Path, paths: list[str]) -> dict[str, Any]:
                 "got passed={passed} warnings={warning_count}".format(**item)
             )
     errors.extend(f"path policy failed: {item.label}" for item in path_results if not item.passed)
+    warnings = [
+        f"{item['label']}: {finding['message']}"
+        for item in [*samples, *[result.to_dict() for result in path_results]]
+        for finding in item["findings"]
+        if finding["severity"] == "warning"
+    ]
 
     return {
         "schema_version": 1,
@@ -80,6 +86,7 @@ def check_policy(repo_root: Path, paths: list[str]) -> dict[str, Any]:
         "repo_root": str(repo_root),
         "passed": not errors,
         "errors": errors,
+        "warnings": warnings,
         "rule_count": len(generated_python_rule_dicts()),
         "rules": generated_python_rule_dicts(),
         "sample_results": samples,
