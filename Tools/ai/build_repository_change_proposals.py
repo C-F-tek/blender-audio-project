@@ -34,6 +34,16 @@ DEFAULT_REPORTS = (
     "output/ai_pipeline/repository_update_suggestions.json",
 )
 
+SUPPORTED_SUGGESTION_OUTPUT_KINDS = (
+    "python_code",
+    "markdown",
+    "json",
+    "powershell",
+    "workflow_yaml",
+    "path_group",
+    "text_or_config",
+)
+
 
 def split_path_values(items: list[str]) -> list[str]:
     out: list[str] = []
@@ -66,6 +76,37 @@ def report_by_kind(reports: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
 
 def report_passed(report: dict[str, Any] | None) -> bool:
     return isinstance(report, dict) and report.get("passed") is True
+
+
+def classify_target_path(path: str) -> str:
+    normalized = path.replace("\\", "/")
+    if normalized.endswith("/") or "*" in normalized:
+        return "path_group"
+    suffix = Path(normalized).suffix.lower()
+    if suffix == ".py":
+        return "python_code"
+    if suffix == ".md":
+        return "markdown"
+    if suffix == ".json":
+        return "json"
+    if suffix == ".ps1":
+        return "powershell"
+    if suffix in {".yml", ".yaml"}:
+        return "workflow_yaml"
+    return "text_or_config"
+
+
+def build_suggestion_outputs(target_files: list[str]) -> list[dict[str, str]]:
+    return [
+        {
+            "path": path,
+            "artifact_kind": classify_target_path(path),
+            "operation": "manual_patch_suggestion",
+            "content_status": "proposal_only",
+            "write_policy": "manual_review_only",
+        }
+        for path in target_files
+    ]
 
 
 def all_provider_observability_green(by_kind: dict[str, dict[str, Any]]) -> bool:
@@ -115,6 +156,7 @@ def proposal(
     sketch: list[str],
     validation: list[str],
     stop_conditions: list[str],
+    suggestion_outputs: list[dict[str, str]] | None = None,
     do_not_touch: list[str] | None = None,
 ) -> dict[str, Any]:
     return {
@@ -127,6 +169,7 @@ def proposal(
         "change_type": change_type,
         "apply_mode": "manual_review_only",
         "patch_sketch": sketch,
+        "suggestion_outputs": suggestion_outputs if suggestion_outputs is not None else build_suggestion_outputs(target_files),
         "validation_commands": validation,
         "stop_conditions": stop_conditions,
         "do_not_touch": do_not_touch
@@ -436,6 +479,14 @@ def render_markdown(report: dict[str, Any]) -> str:
         for step in item["patch_sketch"]:
             lines.append(f"- {step}")
         lines.append("")
+        if item.get("suggestion_outputs"):
+            lines.append("### Suggestion outputs")
+            for output in item["suggestion_outputs"]:
+                lines.append(
+                    f"- `{output.get('artifact_kind')}` `{output.get('path')}` "
+                    f"({output.get('operation')}, {output.get('write_policy')})"
+                )
+            lines.append("")
         lines.append("### Validation")
         for command in item["validation_commands"]:
             lines.append(f"- `{command}`")
@@ -479,6 +530,13 @@ def main() -> int:
         "errors": [],
         "warnings": [],
         "apply_mode": "manual_review_only",
+        "suggestion_contract": {
+            "schema_version": 1,
+            "supported_output_kinds": list(SUPPORTED_SUGGESTION_OUTPUT_KINDS),
+            "default_operation": "manual_patch_suggestion",
+            "default_write_policy": "manual_review_only",
+            "provider_execution_performed": False,
+        },
         "reports_read": [item["path"] for item in loaded_reports],
         "proposals": proposals,
     }

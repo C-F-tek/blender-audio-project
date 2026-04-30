@@ -87,7 +87,7 @@ npu_decode_smoke_passed: true
 | NPU decode smoke report | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | evidence bundle and future promotion gates | Explicit-run diagnostic; does not imply NPU general advisory quality. |
 | Local provider probe report | `Tools/ai/run_local_provider_probe.py` | evidence bundle | Explicit GPU/Ollama and NPU/OpenVINO probe evidence. |
 | Post-validation AI packet | `Tools/ai/suggest_repository_updates.py` | maintainer / proposal builder | Uses quality-approved advisory context only. |
-| Repository change proposals | `Tools/ai/build_repository_change_proposals.py` | maintainer | Advisory only; no auto-apply. |
+| Repository change proposals | `Tools/ai/build_repository_change_proposals.py` | maintainer, future trusted patch builders | Advisory only; no auto-apply. Includes `suggestion_outputs` descriptors for code/MD/JSON/PowerShell targets. |
 | Evidence bundle | `Tools/ai/build_github_evidence_bundle.py` | GitHub review and future AI agents | Compact tracked summary of ignored `output/` reports. |
 | NPU runtime output manifest | `Tools/npu/build_runtime_output_manifest.py` | validation/evidence | Observability only. |
 | Provider result envelope | `Tools/npu/pipeline/providers.py` | result reports, diagnostics and evidence | Normalizes provider output and metadata. |
@@ -126,16 +126,11 @@ This is now one application domain over the local AI orchestration workbench, no
 
 `docs/JSON_SCHEMAS.md` exists as a schema-notes file, but the following contracts still need more formal treatment:
 
-- `ai_workload_quality_lane_routing`;
-- `npu_decode_quality_remediation`;
-- `npu_decode_smoke_diagnostic`;
-- `github_validation_evidence_bundle`;
 - provider probe report;
-- repository proposal report;
 - legacy audio analysis JSON;
 - music context JSON;
 - generated artifact plan/manifest schema.
 
 ## Recommended next improvement
 
-Strengthen `docs/JSON_SCHEMAS.md` for the new AI orchestration reports, then add non-destructive validators for the confirmed fields.
+Add direct raw-output validators for provider probe reports and continue shaping the suggestion/proposal loop toward reviewable code/Markdown/JSON patch candidates.
