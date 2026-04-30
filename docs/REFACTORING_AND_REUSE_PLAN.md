@@ -18,13 +18,13 @@ Observed structure:
 
 | Area | Current role | Refactoring meaning |
 |---|---|---|
-| Root Python tools | Audio analysis, summary building, scene-spec normalization | Convert into importable services plus CLI wrappers. |
-| `Scripting/v61b/` | Main qualitative Blender reference implementation | Keep stable; extract reusable behavior additively. |
-| `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/` | Large generated/refined package | Treat as extraction candidate, especially for encoding/render profiles. |
-| `Scripting/shared/` | Target area for cross-package utilities | Promote path, render, encoding, JSON, diagnostics, and Blender compatibility helpers here. |
-| `Tools/npu/` | Local AI, NPU, context, and implementation-draft workflow | Split orchestration, prompts, validators, and providers. |
-| `Tools/npu/pipeline/` | App-agnostic NPU helper package | Helper contracts, fixtures, validators and readiness gates exist; runtime wiring is still pending local validation. |
-| `Tools/validation/` | Non-invasive validation layer | Includes generic policy validators, AI pipeline validators and focused NPU helper validators. |
+| Root Python tools | Audio analysis, summary building, scene-spec normalization | Convert into importable services plus CLI wrappers later. |
+| `Scripting/v61b/` | Main qualitative Blender reference implementation | Keep stable; extract reusable behavior additively only after core/backend work is stable. |
+| `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/` | Large generated/refined package | Treat as future extraction candidate; not current scope. |
+| `Scripting/shared/` | Target area for cross-package utilities | Existing helper area; broad adoption remains future work. |
+| `Tools/npu/` | Local AI, NPU, context, and implementation-draft workflow | Runtime helper adoption has started in narrow validated phases. |
+| `Tools/npu/pipeline/` | App-agnostic NPU helper package | Helper contracts, fixtures, validators, readiness gates and planned provider descriptors exist; selected helper groups are now consumed by `Tools/npu/run_dual_ai_pipeline.py`. |
+| `Tools/validation/` | Non-invasive validation layer | Includes generic policy validators, AI pipeline validators and focused NPU helper/runtime bridge validators. |
 | `indexAI/` | Generated indexes and AI context | Keep generated; do not treat as hand-edited source. |
 | `docs/` | Stable human and AI documentation | Use as the contract for package creation and refactoring. |
 
@@ -41,22 +41,6 @@ project module/service
   -> pure functions and dataclasses
 CLI wrapper
   -> argparse, path defaults, console output
-```
-
-Target result:
-
-```text
-src/spaziotempo_audio/
-  analysis.py
-  summary.py
-  scene_spec.py
-  schemas.py
-
-Tools/
-  cli/
-    analyze_wav.py
-    build_track_summary.py
-    normalize_scene_spec.py
 ```
 
 This can be staged without moving files immediately by first adding importable wrappers under `Scripting/shared/` or `Tools/lib/`.
@@ -76,45 +60,48 @@ PromptBuilder
 ResponseParser
 DraftValidator
 ArtifactWriter
+RuntimeOutputManifest
 ```
 
 This makes NPU/GPU/Ollama steps easier to run in parallel and easier to test without Blender.
 
-Current NPU decomposition status:
+Current NPU decomposition status after PR #41-#47:
 
 ```text
 Tools/npu/pipeline/ helper package exists
-runtime orchestration in Tools/npu/run_dual_ai_pipeline.py is not yet wired to it
-focused helper validation and index regeneration must pass before wiring
+Tools/npu/run_dual_ai_pipeline.py has already adopted helper groups incrementally
+IO helper aliases are wired
+contract/path helpers are wired
+prompt payload helpers are wired
+context-summary and generated support-file write-planning helpers are wired
+exact legacy output policy and provider-preflight normalization are wired
+provider execution adapters remain future work and should stay separately scoped
 ```
 
 ### 3. Repeated path and JSON handling
 
 Several areas load JSON, resolve local workstation paths, create output directories, and write manifests.
 
-Recommended shared modules:
+Current state:
 
 ```text
-Scripting/shared/path_utils.py
-Scripting/shared/json_io.py
-Scripting/shared/artifact_manifest.py
-Tools/npu/pipeline/io_utils.py for NPU pipeline helper wiring
+Tools/npu/pipeline/io_utils.py exists and selected legacy-compatible aliases are consumed by the NPU runtime orchestrator.
+Scripting/shared/json_io.py exists for package/shared code.
 ```
 
-Minimum shared API:
+Future direction:
 
-```python
-resolve_project_root(start: Path | None = None) -> Path
-read_json(path: Path) -> dict
-write_json(path: Path, data: dict) -> None
-ensure_file(path: Path, label: str) -> Path
+```text
+keep IO helpers app-agnostic
+avoid hand-editing generated indexes
+avoid broad Blender package migration until core validation remains stable
 ```
 
 ### 4. Encoding logic duplicated across packages
 
 The v61b encoder and the generated package encoder both implement FFmpeg command building and output profile selection.
 
-Recommended shared modules:
+Recommended future shared modules:
 
 ```text
 Scripting/shared/ffmpeg_encoder.py
@@ -122,27 +109,7 @@ Scripting/shared/render_profiles.py
 Scripting/shared/image_sequence.py
 ```
 
-Suggested objects:
-
-```python
-@dataclass(frozen=True)
-class EncodeProfile:
-    name: str
-    video_codec: str
-    audio_codec: str
-    pixel_format: str
-    color_flags: list[str]
-    extra_args: list[str]
-
-@dataclass(frozen=True)
-class ImageSequence:
-    directory: Path
-    prefix: str
-    extension: str
-    first_frame: int
-    frame_count: int
-    pattern: str
-```
+This remains below NPU/backend stabilization in priority.
 
 ### 5. Blender API compatibility should be isolated
 
@@ -154,16 +121,12 @@ Recommended shared module:
 Scripting/shared/blender_compat.py
 ```
 
-Candidate functions:
+Current rule:
 
-```python
-create_sound_strip(scene, audio_path: Path, frame_start: int = 1)
-clear_sequence_editor(scene)
-create_noise_or_voronoi_texture(nodes, preferred: str)
-safe_set_property(obj, attr: str, value)
+```text
+helper existence and smoke validation are not permission for broad runtime adoption.
+Ready To Jazz and blender_compat adoption stay out of the current NPU/backend phase.
 ```
-
-This directly reduces risk from issues such as renamed or removed Blender node types.
 
 ### 6. Configuration is currently global-heavy
 
@@ -172,54 +135,25 @@ This directly reduces risk from issues such as renamed or removed Blender node t
 Recommended staged approach:
 
 1. Keep current `config.py` for compatibility.
-2. Add `Scripting/shared/config_model.py`.
-3. Add adapters that build dataclasses from the existing module.
-4. New packages consume dataclasses directly.
-
-Example target model:
-
-```python
-@dataclass(frozen=True)
-class RenderConfig:
-    fps: float
-    resolution_x: int
-    resolution_y: int
-    engine: str
-    output_mode: str
-
-@dataclass(frozen=True)
-class AudioReactiveConfig:
-    analysis_json: Path
-    audio_path: Path
-    output_dir: Path
-    render: RenderConfig
-```
+2. Add structured config adapters later.
+3. New packages consume dataclasses directly only after validation.
 
 ### 7. Scene construction needs stronger object registries
 
 The `spaziotempo/core/registry.py` direction is correct: scene layers, object naming, feature ownership, and hotpatch targeting should be data-first.
 
-Recommended expansion:
-
-```text
-Scripting/shared/scene_registry.py
-Scripting/shared/collections.py
-Scripting/shared/feature_registry.py
-```
-
-Migration rule: leave `v61b` registry as-is first; new packages should reuse the shared registry pattern.
+Migration rule: leave `v61b` registry as-is first; new packages should reuse the shared registry pattern later.
 
 ## Priority refactoring roadmap
 
 ### Phase 1: documentation and contracts
 
-Status: largely implemented and now maintained as an ongoing practice.
+Status: active maintenance.
 
-- Keep refactoring plans current.
+- Keep status docs current after fast PR chains.
+- Keep execution plans stateful and move/mark completed plans after merge.
 - Update README files to show actual repository areas.
-- Document extraction candidates and priority order.
 - Mark `indexAI/` as generated context.
-- Add or update root-tool docs when root CLI behavior changes.
 
 ### Phase 2: app-agnostic core contracts
 
@@ -234,7 +168,7 @@ dry-run matrix contract and output consistency
 generated artifact path policy
 agent memory policy
 guardrail/remediation report contracts
-NPU helper contract smoke/unit/docs validation
+NPU helper/runtime bridge report contract consistency
 ```
 
 This phase should reduce warning noise and make downstream automation rely on common root fields such as:
@@ -246,13 +180,14 @@ repo_root
 passed
 errors
 warnings
+checks
 ```
 
 ### Phase 3: service-oriented AI/NPU core
 
-Status: active for helper contracts; runtime wiring pending.
+Status: active; helper adoption is partially completed; provider execution adapters remain future work.
 
-The helper package currently being built is:
+Current helper package:
 
 ```text
 Tools/npu/pipeline/
@@ -271,34 +206,43 @@ Tools/npu/pipeline/
   reports.py
 ```
 
+Already adopted by runtime in narrow validated phases:
+
+```text
+IO helper aliases
+implementation draft contract/path helpers
+prompt payload helpers
+context summary helper
+support-file write-planning helper
+legacy output policy guard
+provider-preflight normalization helper
+```
+
+Still future work:
+
+```text
+provider execution adapters
+provider result parsing/reporting
+runtime-output manifest/reporting
+prompt prose extraction
+full artifact writer runtime migration
+memory/guardrail runtime integration
+```
+
 Current rule:
 
 ```text
-helper package work is allowed while runtime-free
-runtime wiring into Tools/npu/run_dual_ai_pipeline.py requires focused validation, full validation and AI/NPU index regeneration first
+continue one helper group at a time
+preserve provider/model execution behavior unless explicitly scoped
+run focused NPU validation and full local validation before merge
+regenerate AI/NPU indexes after structural changes
 ```
-
-The core should remain independent from any one Blender package. Provider adapters, multistep scheduling, guardrail handling, memory policy and artifact writing should be testable with dry-runs and generated report contracts.
-
-This module list is a starting map, not a ceiling. Add focused modules or functions when they remove duplication or make the pipeline easier to validate, for example:
-
-```text
-typed path/report helpers
-JSON/model-output normalization helpers
-guardrail scoring and remediation functions
-memory filtering and promotion functions
-provider capability/preflight helpers
-artifact manifest builders
-dry-run fixture builders
-```
-
-Avoid catch-all utility bags. A new helper should have a clear owner, a narrow responsibility and at least one validation path.
 
 ### Phase 4: additive shared utilities
 
-Status: low risk.
+Status: lower priority than NPU/backend stabilization.
 
-Create shared modules without changing existing consumers:
+Shared modules may be added without changing existing consumers, but broad package adoption is deferred:
 
 ```text
 Scripting/shared/path_utils.py
@@ -308,40 +252,21 @@ Scripting/shared/render_profiles.py
 Scripting/shared/blender_compat.py
 ```
 
-No existing working package should be modified in this phase. Blender compatibility helpers may exist and be validated, but adoption by Ready To Jazz or other runtime packages belongs to the application migration phase.
-
 ### Phase 5: application adapters and controlled migration
 
-Status: requires core completion and Blender validation.
+Status: future phase requiring explicit approval and Blender validation.
 
-Only after the app-agnostic backend/pipeline/AI/NPU/multistep/guardrail/memory core is complete enough to validate locally, add small adapters inside packages:
+Only after the app-agnostic backend/pipeline/AI/NPU/multistep/guardrail/memory core is complete enough to validate locally, add small adapters inside packages.
 
-```text
-Scripting/v61b/adapters/
-Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/adapters/
-```
-
-Adapters can call shared utilities while preserving current package APIs.
-
-Migrate one concern at a time:
-
-1. Path and JSON utilities.
-2. FFmpeg command generation.
-3. Image sequence scanning.
-4. Blender sequencer compatibility.
-5. Render profile selection.
-6. Diagnostics and hotpatch helpers.
-
-Ready To Jazz and `blender_compat.py` package adoption should not begin until these core completion criteria are met:
+Ready To Jazz and `blender_compat.py` package adoption should not begin until these core criteria are met:
 
 ```text
 validation report contract warnings are either resolved or explicitly tracked
 AI dry-run matrix passes after relevant changes
-AI pipeline report contracts are validated without schema-v6 drift
-NPU/provider decomposition preserves existing CLI behavior
+NPU runtime helper bridge remains green
+provider execution changes, if any, are separately scoped and validated
 guardrail and memory policies have deterministic validation
 generated artifact path policy protects all planned writes
-new reusable core functions have focused tests or validator coverage
 AI/NPU indexes are regenerated by scripts after structural changes
 ```
 
@@ -349,44 +274,12 @@ AI/NPU indexes are regenerated by scripts after structural changes
 
 | Source | Candidate extraction | Target shared module |
 |---|---|---|
-| `Scripting/v61b/io_utils.py` | JSON loading, input checks, sequencer helpers | `json_io.py`, `blender_compat.py` |
-| `Scripting/v61b/encode_ffmpeg_v61b.py` | FFmpeg discovery, frame scanning, profile command builder | `ffmpeg_encoder.py`, `image_sequence.py`, `render_profiles.py` |
-| `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/encode_final_youtube.py` | YouTube CPU/GPU encoding presets | `render_profiles.py`, `ffmpeg_encoder.py` |
-| `Scripting/v61b/render_setup.py` | render configuration patterns | `render_profiles.py` |
-| `Scripting/v61b/scene_tuning_panel.py` | panel registration, profile normalization | `panel_base.py`, `render_profiles.py` |
-| `Scripting/v61b/hotpatch/common.py` | patch discovery and diagnostics helpers | `diagnostics.py`, `hotpatch_base.py` |
-| `Tools/npu/ollama_runtime.py` | model runtime provider | `Tools/npu/pipeline/providers.py`, later runtime wiring only. |
-| `Tools/npu/run_dual_ai_pipeline.py` | orchestration, prompt, validation, fallback writing | `Tools/npu/pipeline/*`, one helper group at a time after validation. |
-| `normalize_scene_spec.py` | scene spec model and validators | `src/spaziotempo_audio/scene_spec.py` or `Tools/lib/scene_spec.py`. |
-
-## Proposed package architecture for future generated scenes
-
-```text
-Scripting/<package_name>/
-  README.md
-  main.py
-  config.py
-  pipeline.py
-  audio_mapping.py
-  scene_objects.py
-  materials.py
-  lighting.py
-  camera.py
-  animation.py
-  render_settings.py
-  encode.py
-  diagnostics.py
-  inputs/
-    README.md
-    input_schema.json
-  outputs/
-    README.md
-  notes/
-    known_issues.md
-    tuning_notes.md
-```
-
-Package-specific code should only contain artistic and scene-specific decisions. Generic IO, FFmpeg, render profiles, JSON parsing, and compatibility wrappers should come from `Scripting/shared/`.
+| `Scripting/v61b/io_utils.py` | JSON loading, input checks, sequencer helpers | `json_io.py`, `blender_compat.py` later. |
+| `Scripting/v61b/encode_ffmpeg_v61b.py` | FFmpeg discovery, frame scanning, profile command builder | `ffmpeg_encoder.py`, `image_sequence.py`, `render_profiles.py` later. |
+| `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/encode_final_youtube.py` | YouTube CPU/GPU encoding presets | `render_profiles.py`, `ffmpeg_encoder.py` later. |
+| `Tools/npu/ollama_runtime.py` | model runtime provider | Provider execution adapter phase, not current default. |
+| `Tools/npu/run_dual_ai_pipeline.py` | orchestration, prompt, validation, fallback writing | Continue `Tools/npu/pipeline/*` adoption one helper group at a time. |
+| `normalize_scene_spec.py` | scene spec model and validators | `src/spaziotempo_audio/scene_spec.py` or `Tools/lib/scene_spec.py` later. |
 
 ## Encapsulation rules
 
@@ -398,17 +291,15 @@ Package-specific code should only contain artistic and scene-specific decisions.
 6. Keep model-runtime providers separate from orchestration.
 7. Keep local workstation defaults outside package-neutral shared modules.
 8. Keep generated indexes out of source-level refactors.
-9. Keep runtime wiring separate from helper-contract PRs.
+9. Keep provider execution changes separate from helper-contract/runtime bridge PRs.
 
 ## Testing strategy before migration
-
-A refactor is acceptable only when it passes at least one relevant check:
 
 | Refactor type | Required check |
 |---|---|
 | Python utility extraction | `python -m py_compile` on changed modules or `check_python_syntax.py`. |
-| NPU helper package change | `run_npu_pipeline_helper_validation.ps1`. |
-| NPU/Ollama runtime wiring | Focused NPU helper validation, full local validation, regenerated indexes and output comparison. |
+| NPU helper/runtime bridge change | `run_npu_pipeline_helper_validation.ps1` plus full local runner. |
+| NPU/Ollama provider execution change | Separate execution plan, focused tests, full local validation and explicit maintainer approval. |
 | Blender compatibility wrapper | Headless Blender import or manual Blender run. |
 | Encoding utility | Command preview plus one short frame-sequence encode. |
 | Scene package migration | Open in Blender, create scene, add audio strip, verify frame range. |
@@ -418,10 +309,10 @@ A refactor is acceptable only when it passes at least one relevant check:
 
 Current immediate sequence:
 
-1. `test(npu): validate helper package locally`
-2. `chore(index): regenerate ai and npu indexes for npu helper contracts`
-3. `refactor(npu): wire pipeline io helpers into dual ai pipeline`
-4. `test(npu): compare dual ai pipeline outputs after io helper wiring`
+1. `docs: reconcile post 47 npu state`
+2. `test(npu): normalize helper report contract checks`
+3. `feat(npu): add runtime output manifest report`
+4. `test(npu): validate runtime output manifest without provider changes`
 
 Historical/general commit examples:
 
@@ -430,11 +321,10 @@ docs: add refactoring and reuse plan
 docs: refresh repository readmes
 feat(shared): add path and json utility module
 feat(shared): add ffmpeg encode profile builder
-refactor(v61b): add optional shared encoder adapter
-refactor(npu): split dual ai pipeline prompts and validation
+refactor(npu): wire pipeline helper group into dual ai pipeline
 test: add syntax and package structure checks
 ```
 
 ## Current conclusion
 
-The project is ready for reuse-oriented refactoring, but only through additive extraction. The safest immediate value is to finish the app-agnostic validation and AI/NPU core first, then migrate working Blender packages one component at a time after Blender validation.
+The project is ready for continued reuse-oriented refactoring, but only through additive extraction and narrow runtime bridge phases. The safest immediate value is to finish post-PR #47 documentation/status reconciliation, then normalize NPU report contracts, then add runtime-output observability before touching provider execution behavior.
