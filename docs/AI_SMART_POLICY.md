@@ -31,6 +31,7 @@ AI phases that build or consume context should produce AI-readable intermediates
 - `*_promotion_decision.json` when an artifact is accepted or blocked
 - `*_agent_state_packet.json` or `agent_state_packet.json` when the app or an agent needs explicit memory and microtask state
 - `agent_memory_policy_report.json` when persistent memory is reviewed for retention, quarantine and promotion candidates
+- `generated_python_policy.json` when generated Python syntax and generic warning policy need a deterministic safety check
 - `generated_artifact_path_policy.json` when proposed generated output destinations need a deterministic safety check
 
 When a workflow already produces a machine-readable report, prefer scanning the report rather than manually retyping every output path:
@@ -68,6 +69,7 @@ An artifact should only be considered ready for the next stage when:
 
 - required files exist;
 - generated output destinations are inside approved artifact paths or have an explicit accepted-risk reason;
+- generated Python parses and only contains generic Python hazard warnings with explicit review;
 - schema is readable;
 - blocked patterns are absent;
 - key Blender constraints are present;

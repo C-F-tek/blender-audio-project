@@ -18,6 +18,7 @@ AI dry-run matrix report contract checks
 agent memory policy checks
 Blender compatibility smokes
 generated-file policy checks
+generated Python policy checks
 generated artifact path policy checks
 ```
 
@@ -79,6 +80,7 @@ Blender and generated-file checks:
 
 ```powershell
 python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
+python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
 python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 ```
@@ -97,15 +99,18 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and main docs agree on pipeline state and expected modules. | No |
 | `check_agent_memory_policy.py` | Checks generic memory retention, quarantine and promotion guardrails; also inspects local SQLite memory DB when present. | No |
 | `check_blender_shared_compat_smoke.py` | Imports `Scripting/shared/blender_compat.py`; outside Blender it marks runtime checks skipped, inside Blender it performs no-render compatibility smoke. | No render |
+| `check_generated_python_policy.py` | Validates generic generated Python syntax and hazard policy with deterministic in-memory samples and optional script paths. | No |
 | `check_generated_artifact_path_policy.py` | Validates that proposed generated artifact destinations stay inside allowed repository paths. | No |
 | `check_generated_blender_script_policy.py` | Applies reusable generated-file policy rules to generated Blender Python scripts and deterministic in-memory samples. | No |
 
 ## Generated-file policy
 
-The generated-file policy has two layers:
+The generated-file policy has layered components:
 
 ```text
 Tools/validation/generated_file_policy.py
+Tools/validation/generated_python_policy.py
+Tools/validation/check_generated_python_policy.py
 Tools/validation/check_generated_blender_script_policy.py
 ```
 
@@ -134,9 +139,32 @@ generic generated-file policy engine
   -> optional input-domain checks only when needed
 ```
 
-`check_generated_blender_script_policy.py` is the first adapter. It validates generated Blender Python scripts before execution. Blender is not the architectural boundary; it is the first concrete Python-scriptable application target.
+`generated_python_policy.py` is the first language-level layer. It validates generated Python syntax and common generated-code hazards without knowing the input domain or target application.
 
-Current Blender policy rules:
+Current generic Python policy rules:
+
+```text
+python_syntax_error              error
+warn_python_eval_exec            warning
+warn_os_system                   warning
+warn_subprocess_shell_true       warning
+```
+
+Default sample-only validation:
+
+```powershell
+python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
+```
+
+Explicit generated Python validation:
+
+```powershell
+python .\Tools\validation\check_generated_python_policy.py --repo-root . --path .\output\some_generated_script.py --output .\output\validation\generated_python_policy.json
+```
+
+`check_generated_blender_script_policy.py` is the first application-specific adapter. It validates generated Blender Python scripts before execution by composing the generic Python policy with Blender-specific rules. Blender is not the architectural boundary; it is the first concrete Python-scriptable application target.
+
+Current Blender-specific policy rules:
 
 ```text
 requires_bpy_import              error
@@ -144,7 +172,6 @@ forbid_musgrave_node             error
 forbid_open_mainfile             error
 forbid_quit_blender              error
 warn_save_as_mainfile            warning
-warn_python_eval_exec            warning
 ```
 
 The `forbid_musgrave_node` rule protects against the known Blender 5.x failure:
@@ -331,6 +358,7 @@ Use this block after structural refactors, documentation changes, AI pipeline ch
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
 python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
@@ -370,5 +398,6 @@ git push origin master
 - `check_refactor_status_consistency.py` checks status marker and documentation consistency.
 - `check_agent_memory_policy.py` checks generic memory retention and promotion guardrails.
 - `check_blender_shared_compat_smoke.py` verifies shared Blender compatibility helpers without requiring a render.
-- `check_generated_blender_script_policy.py` validates the first generated Python script policy adapter for Blender using the reusable generated-file policy engine.
+- `check_generated_python_policy.py` validates the reusable generated Python policy layer before application-specific adapters.
+- `check_generated_blender_script_policy.py` validates the first application-specific adapter for Blender by composing generic Python rules with Blender rules.
 - Validation helpers should not launch Blender renders, GPU generation, NPU model execution or FFmpeg encodes.

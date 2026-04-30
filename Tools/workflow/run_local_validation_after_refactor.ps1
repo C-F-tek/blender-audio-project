@@ -119,6 +119,7 @@ try {
     Invoke-Step -Name "python syntax validation" -Command "python" -Arguments @(".\Tools\validation\check_python_syntax.py", "--repo-root", ".")
     Invoke-Step -Name "ai model json validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_model_json.py", "--repo-root", ".", "--output", ".\output\validation\ai_model_json.json")
     Invoke-Step -Name "ai pipeline module smoke validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_pipeline_modules.py", "--repo-root", ".", "--output", ".\output\validation\ai_pipeline_modules.json")
+    Invoke-Step -Name "generated python policy validation" -Command "python" -Arguments @(".\Tools\validation\check_generated_python_policy.py", "--repo-root", ".", "--output", ".\output\validation\generated_python_policy.json")
     Invoke-Step -Name "generated blender script policy validation" -Command "python" -Arguments @(".\Tools\validation\check_generated_blender_script_policy.py", "--repo-root", ".", "--output", ".\output\validation\generated_blender_script_policy.json")
     Invoke-Step -Name "refactor status consistency validation" -Command "python" -Arguments @(".\Tools\validation\check_refactor_status_consistency.py", "--repo-root", ".", "--output", ".\output\validation\refactor_status_consistency.json")
     Invoke-Step -Name "documentation links validation" -Command "python" -Arguments @(".\Tools\validation\check_docs_links.py", "--repo-root", ".", "--output", ".\output\validation\docs_links.json")
@@ -151,6 +152,7 @@ $summary = [pscustomobject]@{
     log_path = $script:MainLog
     ai_model_json_report = (Join-Path $repo "output\validation\ai_model_json.json")
     ai_pipeline_modules_report = (Join-Path $repo "output\validation\ai_pipeline_modules.json")
+    generated_python_policy_report = (Join-Path $repo "output\validation\generated_python_policy.json")
     generated_artifact_path_policy_report = (Join-Path $repo "output\validation\generated_artifact_path_policy.json")
     generated_blender_script_policy_report = (Join-Path $repo "output\validation\generated_blender_script_policy.json")
     refactor_status_consistency_report = (Join-Path $repo "output\validation\refactor_status_consistency.json")
@@ -174,6 +176,7 @@ $md += ("- Repo: {0}" -f $repo)
 $md += ("- Log: {0}" -f $script:MainLog)
 $md += ("- AI model JSON report: {0}" -f $summary.ai_model_json_report)
 $md += ("- AI module report: {0}" -f $summary.ai_pipeline_modules_report)
+$md += ("- Generated Python policy report: {0}" -f $summary.generated_python_policy_report)
 $md += ("- Generated artifact path policy report: {0}" -f $summary.generated_artifact_path_policy_report)
 $md += ("- Generated Blender script policy report: {0}" -f $summary.generated_blender_script_policy_report)
 $md += ("- Refactor status consistency report: {0}" -f $summary.refactor_status_consistency_report)
@@ -200,6 +203,7 @@ $md += "    git status"
 $md += "    git diff --stat"
 $md += "    Get-Content .\output\validation\ai_model_json.json -Raw"
 $md += "    Get-Content .\output\validation\ai_pipeline_modules.json -Raw"
+$md += "    Get-Content .\output\validation\generated_python_policy.json -Raw"
 $md += "    Get-Content .\output\validation\generated_artifact_path_policy.json -Raw"
 $md += "    Get-Content .\output\validation\generated_blender_script_policy.json -Raw"
 $md += "    Get-Content .\output\validation\refactor_status_consistency.json -Raw"

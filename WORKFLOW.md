@@ -100,6 +100,14 @@ python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --o
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
 ```
 
+For generated Python or generated-file policy changes:
+
+```powershell
+python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
+python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
+```
+
 For longer local validation:
 
 ```powershell
@@ -152,6 +160,7 @@ git status
 git log --oneline -n 20
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
+Get-Content .\output\validation\generated_python_policy.json -Raw
 Get-Content .\output\validation\refactor_status_consistency.json -Raw
 Get-Content .\output\validation\docs_links.json -Raw
 ```

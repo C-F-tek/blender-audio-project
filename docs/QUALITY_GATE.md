@@ -79,6 +79,7 @@ For Blender/audio packages, additionally document:
 - Use `Tools/ai/model_json.py` for JSON-like model outputs instead of ad-hoc LLM response parsing.
 - Use `Scripting/shared/json_io.py` for clean project JSON files and keep it strict.
 - Use `Tools/validation/generated_file_policy.py` for reusable generated-file policy checks.
+- Use `Tools/validation/generated_python_policy.py` for reusable generated Python syntax and hazard checks before application-specific adapters.
 - Use `Tools/validation/check_generated_artifact_path_policy.py` before accepting proposed generated artifact destinations outside the current safe prefixes.
 - Do not perform broad refactoring of working packages without explicit validation.
 
@@ -138,6 +139,8 @@ The current generic reference is:
 
 ```text
 Tools/validation/generated_file_policy.py
+Tools/validation/generated_python_policy.py
+Tools/validation/check_generated_python_policy.py
 ```
 
 The first application-specific adapter is Blender:
@@ -149,14 +152,32 @@ Tools/validation/check_generated_blender_script_policy.py
 Before running an AI-generated Blender Python script, use:
 
 ```powershell
+python .\Tools\validation\check_generated_python_policy.py --repo-root . --path .\output\some_generated_scene.py --output .\output\validation\generated_python_policy.json
+```
+
+```powershell
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --path .\output\some_generated_scene.py --output .\output\validation\generated_blender_script_policy.json
 ```
 
 Sample-only smoke:
 
 ```powershell
+python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
+```
+
+```powershell
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 ```
+
+Current generic Python blocking rules:
+
+- generated Python must parse successfully before adapter validation.
+
+Current generic Python warning rules:
+
+- dynamic `eval()` / `exec()` should be reviewed unless explicitly justified;
+- `os.system()` should be reviewed unless explicitly justified;
+- `subprocess` calls with `shell=True` should be reviewed unless explicitly justified.
 
 Current Blender blocking rules:
 
@@ -168,7 +189,7 @@ Current Blender blocking rules:
 Current Blender warning rules:
 
 - `bpy.ops.wm.save_as_mainfile()` should be reviewed unless explicitly requested;
-- dynamic `eval()` / `exec()` should be reviewed unless explicitly justified.
+- generic Python warning rules also apply through the Blender adapter.
 
 ## Generic generated-file policy checklist
 
@@ -373,6 +394,8 @@ The current generated-file policy reference is:
 
 ```text
 Tools/validation/generated_file_policy.py
+Tools/validation/generated_python_policy.py
+Tools/validation/check_generated_python_policy.py
 Tools/validation/check_generated_blender_script_policy.py
 ```
 

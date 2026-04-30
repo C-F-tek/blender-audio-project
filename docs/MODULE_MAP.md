@@ -90,8 +90,10 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | File | Main responsibility | Refactor target |
 |---|---|---|
 | `Tools/validation/generated_file_policy.py` | Generic generated-file and generated-artifact path policy primitives | Keep input-agnostic and output-application-agnostic. |
+| `Tools/validation/generated_python_policy.py` | Generic generated Python syntax and hazard policy | Keep independent from input domains and target applications. |
+| `Tools/validation/check_generated_python_policy.py` | CLI validator for generic generated Python policy | Keep as the language-level layer before application adapters. |
 | `Tools/validation/check_generated_artifact_path_policy.py` | Generic safe-destination validator for generated artifact paths | Use before allowing generated outputs outside existing safe prefixes. |
-| `Tools/validation/check_generated_blender_script_policy.py` | Blender-specific generated Python script policy adapter | Keep Blender assumptions here, not in the generic policy engine. |
+| `Tools/validation/check_generated_blender_script_policy.py` | Blender-specific generated Python script policy adapter | Compose generic Python rules with Blender assumptions here, not in the generic policy engine. |
 | `Tools/validation/check_ai_dry_run_matrix_contract.py` | Dry-run matrix report contract validator | Keep as report-contract validation, not runtime execution. |
 
 ## Generated package model
