@@ -26,22 +26,24 @@ The documentation is intended for both human developers and AI agents. It should
 18. `SHARED_SCRIPTING_UTILITIES.md`
 19. `BLENDER_SCRIPT_ENTRYPOINTS.md`
 20. `AI_GENERATED_PACKAGE_STANDARD.md`
-21. `PACKAGE_CREATION_WORKFLOW.md`
-22. `QUALITY_GATE.md`
-23. `AUDIO_ANALYSIS_PIPELINE.md`
-24. `JSON_SCHEMAS.md`
-25. `RENDER_WORKFLOW.md`
-26. `FFMPEG_WORKFLOW.md`
-27. `LOCAL_AI_WORKFLOW.md`
-28. `NPU_GPU_PARALLELISM_PLAN.md`
-29. `AI_PIPELINE_OPTIMIZATION.md`
-30. `INSTALLATION.md`
-31. `USAGE.md`
-32. `COMPATIBILITY.md`
-33. `KNOWN_LIMITATIONS.md`
-34. `DEVELOPER_GUIDE.md`
-35. `PROJECT_AUDIT.md`
-36. `PROJECT_STATUS_POINT.md`
+21. `GENERATED_PYTHON_ADAPTER_TEMPLATE.md`
+22. `PACKAGE_CREATION_WORKFLOW.md`
+23. `QUALITY_GATE.md`
+24. `AUDIO_ANALYSIS_PIPELINE.md`
+25. `JSON_SCHEMAS.md`
+26. `AI_ARTIFACT_SCHEMAS.md`
+27. `RENDER_WORKFLOW.md`
+28. `FFMPEG_WORKFLOW.md`
+29. `LOCAL_AI_WORKFLOW.md`
+30. `NPU_GPU_PARALLELISM_PLAN.md`
+31. `AI_PIPELINE_OPTIMIZATION.md`
+32. `INSTALLATION.md`
+33. `USAGE.md`
+34. `COMPATIBILITY.md`
+35. `KNOWN_LIMITATIONS.md`
+36. `DEVELOPER_GUIDE.md`
+37. `PROJECT_AUDIT.md`
+38. `PROJECT_STATUS_POINT.md`
 
 ## Documentation groups
 
@@ -75,6 +77,7 @@ The documentation is intended for both human developers and AI agents. It should
 | `SHARED_SCRIPTING_UTILITIES.md` | Policy and target modules for reusable package-agnostic code. |
 | `AI_PIPELINE_ARCHITECTURE.md` | Current modularization map for the AI artifact pipeline. |
 | `AI_PIPELINE_REFACTOR_STATUS.md` | Current refactor status marker to avoid inconsistent AI interpretation. |
+| `GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | Template for future non-Blender generated Python policy adapters. |
 | `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | External agent-first engineering patterns mapped into project actions. |
 | `EXECUTION_PLANS/README.md` | Plan format for larger refactors or migration work. |
 | `TECH_DEBT_TRACKER.md` | Queue of known debt to avoid repeated rediscovery. |
@@ -96,6 +99,7 @@ The documentation is intended for both human developers and AI agents. It should
 | File | Purpose |
 |---|---|
 | `AI_GENERATED_PACKAGE_STANDARD.md` | Expected structure of generated Blender packages. |
+| `GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | Composition pattern for future generated Python application adapters. |
 | `PACKAGE_CREATION_WORKFLOW.md` | Operational workflow for creating future packages. |
 | `QUALITY_GATE.md` | Acceptance checks before a package is considered usable. |
 | `LOCAL_AI_WORKFLOW.md` | Direction for local AI/NPU/GPU-assisted generation and review. |
@@ -116,8 +120,8 @@ The documentation is intended for both human developers and AI agents. It should
 
 | File | Purpose |
 |---|---|
-| `JSON_SCHEMAS.md` | Current JSON schema notes and missing formal contracts. |
-| `AI_ARTIFACT_SCHEMAS.md` | AI artifact schema notes. |
+| `JSON_SCHEMAS.md` | Current JSON schema notes, report producer map and missing formal contracts. |
+| `AI_ARTIFACT_SCHEMAS.md` | AI artifact schema notes and related validation report contracts. |
 | `AI_CHUNKING_STRATEGY.md` | Chunking strategy for AI-readable project context. |
 | `INDEX_REGEN_POLICY.md` | Regeneration policy for AI indexes and manifests. |
 
