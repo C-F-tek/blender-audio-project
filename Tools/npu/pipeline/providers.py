@@ -95,7 +95,7 @@ def _string_list(value: Any) -> list[str]:
     if isinstance(value, list):
         return [str(item) for item in value]
     if isinstance(value, tuple):
-        return [str(value) for value in value]
+        return [str(item) for item in value]
     return [str(value)]
 
 
