@@ -97,13 +97,13 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | File | Main responsibility | Runtime scope |
 |---|---|---|
 | `Tools/npu/pipeline/config.py` | Repository paths, track defaults and data-only pipeline configuration. | No runtime execution. |
-| `Tools/npu/pipeline/artifact_paths.py` | Generated artifact path normalization and allowed-prefix validation. | No runtime execution. |
+| `Tools/npu/pipeline/artifact_paths.py` | Generated artifact path normalization, allowed-prefix validation and exact legacy runtime output policy. | No provider/runtime execution. |
 | `Tools/npu/pipeline/io_utils.py` | UTF-8 text and JSON-object IO helpers plus legacy-compatible aliases. | Filesystem IO only. |
 | `Tools/npu/pipeline/legacy_compat.py` | Compare legacy helper behavior against new helpers before wiring. | No runtime execution. |
 | `Tools/npu/pipeline/fixtures.py` | Deterministic fixture payloads for tests and dry-runs. | No runtime execution. |
 | `Tools/npu/pipeline/prompts.py` | Deterministic prompt payload builders. | No provider execution. |
 | `Tools/npu/pipeline/context_builder.py` | Bounded context slices and compact context bundle metrics. | No model/provider execution. |
-| `Tools/npu/pipeline/providers.py` | Planned-only provider request/result envelopes. | Does not call providers. |
+| `Tools/npu/pipeline/providers.py` | Planned-only provider request/result envelopes and provider preflight report normalization. | Does not call providers. |
 | `Tools/npu/pipeline/runner.py` | Planned-only stage-plan reports. | Does not orchestrate runtime. |
 | `Tools/npu/pipeline/validators.py` | Contract-level validators preserving unknown future fields. | No runtime execution. |
 | `Tools/npu/pipeline/artifact_writer.py` | Validated generated-artifact write helpers. | Writes only explicitly allowed generated artifact paths. |

@@ -19,6 +19,7 @@ from run_ollama_music_agent import markdown_from_insights
 
 try:
     from pipeline.artifact_paths import is_allowed_generated_artifact_path, normalize_repo_relative_path
+    from pipeline.artifact_paths import validate_legacy_runtime_output_paths
     from pipeline.artifact_writer import PlannedArtifactWrite, write_planned_artifact
     from pipeline.context_builder import summarize_music_context
     from pipeline.io_utils import read_json, read_optional_json, read_text, write_json
@@ -27,9 +28,11 @@ try:
         build_implementation_retry_payload,
         build_merge_prompt_payload,
     )
+    from pipeline.providers import normalize_provider_preflight_report
     from pipeline.validators import validate_implementation_draft_contract
 except ImportError:  # Allows package-style imports from repo-root validation.
     from Tools.npu.pipeline.artifact_paths import is_allowed_generated_artifact_path, normalize_repo_relative_path  # type: ignore
+    from Tools.npu.pipeline.artifact_paths import validate_legacy_runtime_output_paths  # type: ignore
     from Tools.npu.pipeline.artifact_writer import PlannedArtifactWrite, write_planned_artifact  # type: ignore
     from Tools.npu.pipeline.context_builder import summarize_music_context  # type: ignore
     from Tools.npu.pipeline.io_utils import read_json, read_optional_json, read_text, write_json  # type: ignore
@@ -38,6 +41,7 @@ except ImportError:  # Allows package-style imports from repo-root validation.
         build_implementation_retry_payload,
         build_merge_prompt_payload,
     )
+    from Tools.npu.pipeline.providers import normalize_provider_preflight_report  # type: ignore
     from Tools.npu.pipeline.validators import validate_implementation_draft_contract  # type: ignore
 
 
@@ -71,6 +75,69 @@ PREFERRED_IMPLEMENTATION_FILES = (
     "Scripting/v61b/render_setup.py",
     "Scripting/v61b/hot_update_scene_v61b.py",
 )
+
+
+def legacy_runtime_output_policy_report(extra_paths: list[Path] | None = None) -> dict[str, object]:
+    paths = [
+        DUAL_PLAN_JSON,
+        DUAL_BRIEF_MD,
+        OLLAMA_INSIGHTS_JSON,
+        OLLAMA_INSIGHTS_MD,
+        NPU_TECH_MD,
+        NPU_PREFLIGHT_JSON,
+        IMPLEMENTATION_DRAFT_JSON,
+        IMPLEMENTATION_SCRIPT,
+        IMPLEMENTATION_NOTES,
+        NPU_IMPLEMENTATION_NOTES,
+    ]
+    if extra_paths:
+        paths.extend(extra_paths)
+    return validate_legacy_runtime_output_paths(
+        paths,
+        repo_root=ROOT,
+        track_stem=TRACK_STEM,
+    )
+
+
+def assert_legacy_runtime_output(path: Path) -> None:
+    report = validate_legacy_runtime_output_paths(
+        [path],
+        repo_root=ROOT,
+        track_stem=TRACK_STEM,
+    )
+    if not report["ok"]:
+        raise ValueError(f"Refusing legacy runtime write outside exact output policy: {report}")
+
+
+def write_legacy_text_output(path: Path, text: str) -> None:
+    assert_legacy_runtime_output(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def write_legacy_json_output(path: Path, payload: dict[str, Any]) -> None:
+    assert_legacy_runtime_output(path)
+    write_json(path, payload)
+
+
+def normalize_npu_preflight_report(
+    raw_report: dict[str, Any],
+    *,
+    npu_python: str | Path,
+    npu_model_dir: str | Path,
+) -> dict[str, Any]:
+    return normalize_provider_preflight_report(
+        raw_report,
+        provider="openvino_npu",
+        model=Path(npu_model_dir).name,
+        executable=str(npu_python),
+        model_dir=str(npu_model_dir),
+    )
+
+
+def write_legacy_npu_preflight_report(report: dict[str, Any], path: Path) -> None:
+    assert_legacy_runtime_output(path)
+    write_npu_preflight_report(report, path)
 
 
 def update_track_paths(track_stem: str, analysis_ai_context: str | None = None) -> None:
@@ -1368,12 +1435,12 @@ def write_brief(plan: dict[str, Any], creative: dict[str, Any], technical: dict[
         npu_notes[:12000],
         "\n",
     ]
-    DUAL_BRIEF_MD.write_text("".join(lines), encoding="utf-8")
+    write_legacy_text_output(DUAL_BRIEF_MD, "".join(lines))
 
 
 def write_implementation_draft(draft: dict[str, Any]) -> None:
     draft["validation"] = validate_implementation_draft(draft)
-    write_json(IMPLEMENTATION_DRAFT_JSON, draft)
+    write_legacy_json_output(IMPLEMENTATION_DRAFT_JSON, draft)
 
     script = draft.get("scene_script", draft.get("hotpatch_candidate_script", draft.get("script", "")))
     if not script:
@@ -1381,10 +1448,16 @@ def write_implementation_draft(draft: dict[str, Any]) -> None:
             "# AI implementation draft did not contain a scene script.\n"
             "# Review the JSON draft for reference_files, proposed_files, validation and notes.\n"
         )
-    IMPLEMENTATION_SCRIPT.write_text(str(script).rstrip() + "\n", encoding="utf-8")
-    scene_path = generated_scene_script_abspath()
-    scene_path.parent.mkdir(parents=True, exist_ok=True)
-    scene_path.write_text(str(script).rstrip() + "\n", encoding="utf-8")
+    write_legacy_text_output(IMPLEMENTATION_SCRIPT, str(script).rstrip() + "\n")
+    scene_path = write_planned_artifact(
+        ROOT,
+        PlannedArtifactWrite(
+            repo_relative_path=generated_scene_script_relpath(),
+            kind="standalone_blender_scene_builder",
+            content=str(script).rstrip() + "\n",
+        ),
+        allowed_prefixes=ALLOWED_NEW_PREFIXES,
+    )
 
     planned_support_writes: list[PlannedArtifactWrite] = []
     for item in draft.get("support_files", []) or []:
@@ -1414,7 +1487,7 @@ def write_implementation_draft(draft: dict[str, Any]) -> None:
         written_support_files.append(str(support_path))
     if written_support_files:
         draft["written_support_files"] = written_support_files
-        write_json(IMPLEMENTATION_DRAFT_JSON, draft)
+        write_legacy_json_output(IMPLEMENTATION_DRAFT_JSON, draft)
 
     notes = [
         "# Generated Implementation Notes\n\n",
@@ -1437,7 +1510,7 @@ def write_implementation_draft(draft: dict[str, Any]) -> None:
         notes.append("\n## Generated Support Files\n")
         for path in written_support_files:
             notes.append(f"- `{path}`\n")
-    IMPLEMENTATION_NOTES.write_text("".join(notes), encoding="utf-8")
+    write_legacy_text_output(IMPLEMENTATION_NOTES, "".join(notes))
 
 
 def main() -> None:
@@ -1501,17 +1574,22 @@ def main() -> None:
             npu_notes = read_text(NPU_TECH_MD)
             print(f"[NPU] Reusing plan technical notes: {NPU_TECH_MD}")
         else:
-            report = npu_preflight(args.npu_python, args.npu_model_dir)
-            write_npu_preflight_report(report, NPU_PREFLIGHT_JSON)
+            raw_report = npu_preflight(args.npu_python, args.npu_model_dir)
+            report = normalize_npu_preflight_report(
+                raw_report,
+                npu_python=args.npu_python,
+                npu_model_dir=args.npu_model_dir,
+            )
+            write_legacy_npu_preflight_report(report, NPU_PREFLIGHT_JSON)
             if report.get("ready"):
                 try:
                     npu_notes = run_npu_technical_pass(args)
                 except Exception as exc:
                     npu_notes = f"NPU technical pass unavailable after ready preflight: {exc}"
-                    NPU_TECH_MD.write_text(npu_notes, encoding="utf-8")
+                    write_legacy_text_output(NPU_TECH_MD, npu_notes)
             else:
                 npu_notes = "NPU not ready. Preflight:\n" + json.dumps(report, indent=2, ensure_ascii=False)
-                NPU_TECH_MD.write_text(npu_notes, encoding="utf-8")
+                write_legacy_text_output(NPU_TECH_MD, npu_notes)
 
         if looks_degraded_text(npu_notes):
             npu_notes = deterministic_technical_notes(
@@ -1519,9 +1597,9 @@ def main() -> None:
                 project_manifest=project_manifest,
                 reason="degraded_or_too_short_npu_output",
             )
-            NPU_TECH_MD.write_text(npu_notes, encoding="utf-8")
+            write_legacy_text_output(NPU_TECH_MD, npu_notes)
             if args.phase == "implementation":
-                NPU_IMPLEMENTATION_NOTES.write_text(npu_notes, encoding="utf-8")
+                write_legacy_text_output(NPU_IMPLEMENTATION_NOTES, npu_notes)
             print("[WARN] NPU notes looked degraded; deterministic technical notes were used.")
     else:
         npu_notes = deterministic_technical_notes(
@@ -1529,7 +1607,7 @@ def main() -> None:
             project_manifest=project_manifest,
             reason="npu_skipped_gpu_heavy_mode",
         )
-        NPU_TECH_MD.write_text(npu_notes, encoding="utf-8")
+        write_legacy_text_output(NPU_TECH_MD, npu_notes)
 
     service_packet_info = build_ai_service_packet(
         track_stem=TRACK_STEM,
@@ -1659,6 +1737,7 @@ def main() -> None:
             "asset_inventory_json": str(Path(args.asset_inventory)) if args.asset_inventory else None,
             "implementation_draft_json": str(IMPLEMENTATION_DRAFT_JSON) if args.phase in {"implementation", "full"} else None,
             "implementation_script": str(IMPLEMENTATION_SCRIPT) if args.phase in {"implementation", "full"} else None,
+            "legacy_runtime_output_policy": legacy_runtime_output_policy_report(),
         },
         "npu_preflight_json": str(NPU_PREFLIGHT_JSON),
         "npu_technical_notes_md": str(NPU_TECH_MD),
@@ -1673,11 +1752,11 @@ def main() -> None:
         "final_plan": plan,
     }
 
-    write_json(DUAL_PLAN_JSON, output)
-    write_json(OLLAMA_INSIGHTS_JSON, technical)
-    OLLAMA_INSIGHTS_MD.write_text(
+    write_legacy_json_output(DUAL_PLAN_JSON, output)
+    write_legacy_json_output(OLLAMA_INSIGHTS_JSON, technical)
+    write_legacy_text_output(
+        OLLAMA_INSIGHTS_MD,
         markdown_from_insights(technical, technical.get("model", args.technical_model)),
-        encoding="utf-8",
     )
     write_brief(plan, creative, technical, npu_notes)
 

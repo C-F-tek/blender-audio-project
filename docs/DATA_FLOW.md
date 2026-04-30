@@ -57,6 +57,8 @@ Current PR #41 keeps this flow helper-only. It does not execute NPU/Ollama provi
 | Provider result envelope | `Tools/npu/pipeline/providers.py` | future response parsing, validators and artifact writers | Current helper can produce non-executed planned results only. |
 | Implementation draft JSON | AI/NPU pipeline or fixture helpers | validators and artifact planners | Unknown future fields should be preserved unless a contract says otherwise. |
 | Generated artifact plan | `Tools/npu/pipeline/artifact_writer.py` or AI pipeline | generated artifact validators and human review | Writes must stay inside allowed generated destinations. |
+| Legacy dual-AI runtime output policy | `Tools/npu/pipeline/artifact_paths.py` | `Tools/npu/run_dual_ai_pipeline.py` and helper validators | Exact known legacy outputs are allowed without broadening generated-file prefixes into source folders. |
+| Provider preflight report | `Tools/npu/pipeline/providers.py` | dual-AI runtime and validation reports | Normalized report only; provider/model execution remains a later adapter phase. |
 | NPU helper validation reports | `Tools/validation/check_npu_pipeline_*.py` | maintainer, PR review and future runtime-wiring gates | No Blender, NPU, GPU, Ollama, FFmpeg or provider execution. |
 | Agent state packet | `Tools/ai/build_agent_state_packet.py` | app workers, AI agents and guardrail reviewers | Generic packet with selected memory, constraints, budgets and planned CPU/NPU/GPU/validation microtasks. |
 | Persistent memory DB | app or agent workflow | agent state packet builder and memory policy reviewer | Optional SQLite store under generated data; do not commit local memory records. |

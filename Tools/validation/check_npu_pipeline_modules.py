@@ -42,8 +42,11 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         compare_optional_json_readers,
         context_bundle_metrics,
         default_runtime_wiring_readiness,
+        dual_ai_legacy_runtime_output_paths,
         helper_boundary_passed,
+        is_allowed_legacy_runtime_output_path,
         is_allowed_generated_artifact_path,
+        normalize_provider_preflight_report,
         planned_provider_result,
         read_json,
         read_optional_json,
@@ -53,6 +56,7 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         validate_generated_artifact_paths,
         validate_implementation_draft_contract,
         validate_json_object,
+        validate_legacy_runtime_output_paths,
         validate_planned_artifact_writes,
         validate_provider_request,
         write_json,
@@ -100,6 +104,31 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
     invalid_provider_result = planned_provider_result(
         ProviderRequest(provider="", model="", prompt="", max_tokens=0)
     )
+    raw_preflight = {
+        "schema_version": 2,
+        "ready": True,
+        "mode": "npu_ready",
+        "python_exe": "C:/npu/python.exe",
+        "model_dir": "C:/npu/model",
+        "python_exists": True,
+        "model_dir_exists": True,
+        "python_starts": True,
+        "python_version": "3.13.0",
+        "openvino_import": True,
+        "openvino_genai_import": True,
+        "openvino_available_devices": ["CPU", "NPU"],
+        "npu_device_available": True,
+        "recommended_workers": 4,
+        "errors": [],
+        "warnings": ["smoke"],
+    }
+    provider_preflight = normalize_provider_preflight_report(
+        raw_preflight,
+        provider="openvino_npu",
+        model="smoke-model",
+        executable="C:/npu/python.exe",
+        model_dir="C:/npu/model",
+    )
     creative_payload = build_creative_scene_prompt_payload(
         music_context,
         npu_notes="technical smoke notes",
@@ -130,6 +159,16 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
     path_report = validate_generated_artifact_paths(
         [planned_write.repo_relative_path, "output/not_allowed.json"],
         allowed_prefixes=DEFAULT_ALLOWED_ARTIFACT_PREFIXES,
+    )
+    legacy_runtime_paths = dual_ai_legacy_runtime_output_paths("Smoke Track")
+    legacy_runtime_path_report = validate_legacy_runtime_output_paths(
+        [
+            repo_root / "output" / "Smoke Track_dual_ai_scene_plan.json",
+            "Tools/npu/npu_preflight_report.json",
+            "Tools/npu/not_a_runtime_output.md",
+        ],
+        repo_root=repo_root,
+        track_stem="Smoke Track",
     )
     planned_write_report = validate_planned_artifact_writes(
         [planned_write],
@@ -277,6 +316,12 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         "duration": "- Duration: `12.5` seconds." in runtime_context_notes,
         "priority_file": "`Scripting/v61b/materials.py`" in runtime_context_notes,
     }
+    runtime_policy_report = runtime_pipeline.legacy_runtime_output_policy_report()
+    runtime_preflight_report = runtime_pipeline.normalize_npu_preflight_report(
+        raw_preflight,
+        npu_python="C:/npu/python.exe",
+        npu_model_dir="C:/npu/model",
+    )
     old_runtime_paths = {
         "root": runtime_pipeline.ROOT,
         "track_stem": runtime_pipeline.TRACK_STEM,
@@ -294,9 +339,9 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             runtime_root = Path(tmp)
             runtime_pipeline.ROOT = runtime_root
             runtime_pipeline.TRACK_STEM = "Smoke Track"
-            runtime_pipeline.IMPLEMENTATION_DRAFT_JSON = runtime_root / "output" / "draft.json"
-            runtime_pipeline.IMPLEMENTATION_SCRIPT = runtime_root / "Tools" / "npu" / "candidate.py"
-            runtime_pipeline.IMPLEMENTATION_NOTES = runtime_root / "Tools" / "npu" / "notes.md"
+            runtime_pipeline.IMPLEMENTATION_DRAFT_JSON = runtime_root / "output" / "Smoke Track_ai_implementation_draft.json"
+            runtime_pipeline.IMPLEMENTATION_SCRIPT = runtime_root / "Tools" / "npu" / "generated_blender_script_candidate.py"
+            runtime_pipeline.IMPLEMENTATION_NOTES = runtime_root / "Tools" / "npu" / "generated_implementation_notes.md"
             runtime_pipeline.IMPLEMENTATION_SCRIPT.parent.mkdir(parents=True, exist_ok=True)
             runtime_pipeline.write_implementation_draft(
                 {
@@ -362,12 +407,16 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "planned_write": planned_write_report.get("ok") is True,
             "draft_contract": draft_report.get("ok") is True,
             "provider_boundary": provider_result.ok is True,
+            "provider_preflight_normalization": provider_preflight.get("kind") == "provider_preflight",
+            "legacy_runtime_output_policy": legacy_runtime_path_report.get("invalid_paths") == ["Tools/npu/not_a_runtime_output.md"],
             "legacy_compat": optional_alias_report.get("ok") is True and reader_alias_report.get("ok") is True,
             "runtime_io_wiring": runtime_reader_report.get("ok") is True and runtime_optional_report.get("ok") is True,
             "runtime_contract_wiring": runtime_draft_contract.get("contract_validation", {}).get("ok") is True,
             "runtime_prompt_payload_wiring": all(runtime_prompt_payload_report.values()),
             "runtime_context_summary_wiring": all(runtime_context_report.values()),
             "runtime_artifact_write_planning": all(runtime_artifact_write_report.values()),
+            "runtime_legacy_output_policy": runtime_policy_report.get("ok") is True,
+            "runtime_provider_preflight_normalization": runtime_preflight_report.get("provider") == "openvino_npu",
             "migration_gate_blocks_runtime": migration_readiness.get("ready") is False,
         },
     )
@@ -393,6 +442,12 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("planned provider result should be ok and non-executed")
     if invalid_provider_result.ok is not False or not invalid_provider_result.error:
         errors.append("invalid provider request should produce failed planned result")
+    if provider_preflight.get("provider") != "openvino_npu":
+        errors.append("provider preflight normalization did not preserve provider")
+    if provider_preflight.get("provider_execution_performed") is not False:
+        errors.append("provider preflight normalization must not claim provider execution")
+    if provider_preflight.get("runtime", {}).get("recommended_workers") != 4:
+        errors.append("provider preflight normalization did not preserve recommended workers")
     if creative_payload.get("npu_technical_notes") != "technical smoke notes":
         errors.append("creative payload did not preserve NPU notes")
     if merge_payload.get("ollama_creative") != {"ok": True}:
@@ -407,6 +462,16 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("allowed artifact path was rejected")
     if is_allowed_generated_artifact_path("output/smoke.json"):
         errors.append("disallowed artifact path was accepted")
+    if "Tools/npu/npu_preflight_report.json" not in legacy_runtime_paths:
+        errors.append("legacy runtime output policy should include the NPU preflight report")
+    if not is_allowed_legacy_runtime_output_path(
+        repo_root / "Tools" / "npu" / "npu_preflight_report.json",
+        repo_root=repo_root,
+        track_stem="Smoke Track",
+    ):
+        errors.append("legacy runtime output policy rejected a known exact output")
+    if legacy_runtime_path_report.get("ok") is not False:
+        errors.append("legacy runtime output policy should reject unknown Tools/npu outputs")
     if path_report.get("ok") is not False:
         errors.append("mixed path report should fail when one path is outside allowed prefixes")
     if planned_write_report.get("ok") is not True:
@@ -429,6 +494,10 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("runtime deterministic notes should use helper-compatible context summary fields")
     if not all(runtime_artifact_write_report.values()):
         errors.append("runtime support-file writes should use planned artifact writes under allowed prefixes")
+    if runtime_policy_report.get("ok") is not True:
+        errors.append("runtime legacy output policy should pass for known dual-AI outputs")
+    if runtime_preflight_report.get("kind") != "provider_preflight":
+        errors.append("runtime NPU preflight report should use provider preflight normalization")
     if migration_readiness.get("ready") is not False:
         errors.append("default migration readiness should block runtime wiring")
     if forced_migration_readiness.get("ready") is not True:
@@ -453,6 +522,8 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "provider_validation": provider_validation,
             "provider_result": provider_result.to_dict(),
             "invalid_provider_result": invalid_provider_result.to_dict(),
+            "provider_preflight": provider_preflight,
+            "legacy_runtime_path_report": legacy_runtime_path_report,
             "optional_alias_report": optional_alias_report,
             "reader_alias_report": reader_alias_report,
             "runtime_reader_report": runtime_reader_report,
@@ -461,6 +532,8 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "runtime_prompt_payload_report": runtime_prompt_payload_report,
             "runtime_context_report": runtime_context_report,
             "runtime_artifact_write_report": runtime_artifact_write_report,
+            "runtime_policy_report": runtime_policy_report,
+            "runtime_preflight_report": runtime_preflight_report,
             "migration_readiness": migration_readiness,
             "forced_migration_readiness": forced_migration_readiness,
             "boundary_report": boundary_report,
