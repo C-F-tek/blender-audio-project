@@ -30,6 +30,7 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         NpuPipelineConfig,
         PlannedArtifactWrite,
         ProviderRequest,
+        RuntimeOutputManifestEntry,
         build_context_bundle,
         build_creative_scene_prompt_payload,
         build_default_stage_plan,
@@ -37,6 +38,8 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         build_implementation_retry_payload,
         build_merge_prompt_payload,
         build_migration_readiness_report,
+        build_runtime_output_manifest,
+        build_validation_report,
         compact_segments_for_prompt,
         compare_json_readers,
         compare_optional_json_readers,
@@ -51,6 +54,7 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         read_json,
         read_optional_json,
         read_optional_json_object,
+        runtime_output_manifest_passed,
         stage_plan_report,
         summarize_music_context,
         validate_generated_artifact_paths,
@@ -59,6 +63,7 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         validate_legacy_runtime_output_paths,
         validate_planned_artifact_writes,
         validate_provider_request,
+        validation_report_has_common_keys,
         write_json,
     )
     import run_dual_ai_pipeline as runtime_pipeline  # noqa: PLC0415
@@ -92,6 +97,12 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
     context_metrics = context_bundle_metrics(context_bundle)
     stage_plan = build_default_stage_plan(include_provider_stages=False)
     stage_report = stage_plan_report(stage_plan)
+    common_validation_report = build_validation_report(
+        kind="npu_pipeline_modules",
+        repo_root=repo_root,
+        passed=True,
+        checks={"sample": True},
+    )
     provider_request = ProviderRequest(
         provider="ollama",
         model="smoke-model",
@@ -169,6 +180,41 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         ],
         repo_root=repo_root,
         track_stem="Smoke Track",
+    )
+    runtime_output_manifest = build_runtime_output_manifest(
+        repo_root=repo_root,
+        entries=[
+            RuntimeOutputManifestEntry(
+                path="Tools/npu/npu_preflight_report.json",
+                kind="provider_preflight_report",
+                policy_source="legacy_runtime_output_policy",
+                allowed=True,
+                legacy=True,
+                provider_execution_performed=False,
+            ),
+            RuntimeOutputManifestEntry(
+                path="Tools/npu/not_a_runtime_output.md",
+                kind="unknown",
+                policy_source="legacy_runtime_output_policy",
+                allowed=False,
+                reason="not in exact legacy output allowlist",
+            ),
+        ],
+        provider_execution_performed=False,
+    )
+    runtime_output_manifest_allowed = build_runtime_output_manifest(
+        repo_root=repo_root,
+        entries=[
+            RuntimeOutputManifestEntry(
+                path="Tools/npu/npu_preflight_report.json",
+                kind="provider_preflight_report",
+                policy_source="legacy_runtime_output_policy",
+                allowed=True,
+                legacy=True,
+                provider_execution_performed=False,
+            )
+        ],
+        provider_execution_performed=False,
     )
     planned_write_report = validate_planned_artifact_writes(
         [planned_write],
@@ -409,6 +455,9 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "provider_boundary": provider_result.ok is True,
             "provider_preflight_normalization": provider_preflight.get("kind") == "provider_preflight",
             "legacy_runtime_output_policy": legacy_runtime_path_report.get("invalid_paths") == ["Tools/npu/not_a_runtime_output.md"],
+            "common_validation_report": validation_report_has_common_keys(common_validation_report),
+            "runtime_output_manifest_allowed": runtime_output_manifest_passed(runtime_output_manifest_allowed),
+            "runtime_output_manifest_blocks_unknown": runtime_output_manifest.get("blocked_count") == 1,
             "legacy_compat": optional_alias_report.get("ok") is True and reader_alias_report.get("ok") is True,
             "runtime_io_wiring": runtime_reader_report.get("ok") is True and runtime_optional_report.get("ok") is True,
             "runtime_contract_wiring": runtime_draft_contract.get("contract_validation", {}).get("ok") is True,
@@ -432,6 +481,8 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("context bundle metrics should report two slices")
     if context_metrics.get("clipped_chars") != 210:
         errors.append("context bundle did not apply deterministic clipping limits")
+    if validation_report_has_common_keys(common_validation_report) is not True:
+        errors.append("common validation report should expose the standard NPU report keys")
     if stage_report.get("stage_count") != 5:
         errors.append("default stage plan should include five stages")
     if stage_report.get("enabled_stage_count") != 4:
@@ -472,6 +523,12 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("legacy runtime output policy rejected a known exact output")
     if legacy_runtime_path_report.get("ok") is not False:
         errors.append("legacy runtime output policy should reject unknown Tools/npu outputs")
+    if runtime_output_manifest_passed(runtime_output_manifest_allowed) is not True:
+        errors.append("runtime output manifest should pass when all entries are allowed")
+    if runtime_output_manifest.get("blocked_count") != 1:
+        errors.append("runtime output manifest should count blocked entries")
+    if runtime_output_manifest.get("provider_execution_performed") is not False:
+        errors.append("runtime output manifest must not claim provider execution in smoke validation")
     if path_report.get("ok") is not False:
         errors.append("mixed path report should fail when one path is outside allowed prefixes")
     if planned_write_report.get("ok") is not True:
@@ -519,11 +576,14 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "music_summary": music_summary,
             "context_metrics": context_metrics,
             "stage_report": stage_report,
+            "common_validation_report": common_validation_report,
             "provider_validation": provider_validation,
             "provider_result": provider_result.to_dict(),
             "invalid_provider_result": invalid_provider_result.to_dict(),
             "provider_preflight": provider_preflight,
             "legacy_runtime_path_report": legacy_runtime_path_report,
+            "runtime_output_manifest": runtime_output_manifest,
+            "runtime_output_manifest_allowed": runtime_output_manifest_allowed,
             "optional_alias_report": optional_alias_report,
             "reader_alias_report": reader_alias_report,
             "runtime_reader_report": runtime_reader_report,
