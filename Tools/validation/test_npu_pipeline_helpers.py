@@ -27,11 +27,16 @@ from Tools.npu.pipeline import (  # noqa: E402
     build_default_stage_plan,
     build_helper_boundary_report,
     compact_segments_for_prompt,
+    compare_json_readers,
+    compare_optional_json_readers,
+    compare_text_readers,
     context_bundle_metrics,
     helper_boundary_passed,
     is_allowed_generated_artifact_path,
     planned_provider_result,
+    read_json,
     read_json_object,
+    read_optional_json,
     read_optional_json_object,
     read_text,
     stage_plan_report,
@@ -41,6 +46,7 @@ from Tools.npu.pipeline import (  # noqa: E402
     validate_json_object,
     validate_planned_artifact_writes,
     validate_provider_request,
+    write_json,
     write_json_object,
     write_planned_artifact,
 )
@@ -82,11 +88,27 @@ class NpuPipelineHelperTests(unittest.TestCase):
             json_path = root / "nested" / "data.json"
             write_json_object(json_path, {"ok": True})
             self.assertEqual(read_json_object(json_path), {"ok": True})
+            self.assertEqual(read_json(json_path), {"ok": True})
             self.assertIn('"ok"', read_text(json_path))
             self.assertEqual(read_optional_json_object(root / "missing.json"), {})
+            self.assertEqual(read_optional_json(root / "missing.json"), {})
+            alias_path = root / "nested" / "alias.json"
+            write_json(alias_path, {"alias": True})
+            self.assertEqual(json.loads(alias_path.read_text(encoding="utf-8")), {"alias": True})
             bad_path = root / "bad.json"
             bad_path.write_text("not json", encoding="utf-8")
             self.assertEqual(read_optional_json_object(bad_path), {})
+
+    def test_legacy_compat_helpers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            json_path = root / "data.json"
+            write_json_object(json_path, {"b": 2, "a": 1})
+            text_path = root / "text.txt"
+            text_path.write_text("hello", encoding="utf-8")
+            self.assertTrue(compare_json_readers(json_path, read_json_object, read_json)["ok"])
+            self.assertTrue(compare_optional_json_readers(json_path, read_optional_json_object, read_optional_json)["ok"])
+            self.assertTrue(compare_text_readers(text_path, read_text, read_text)["ok"])
 
     def test_artifact_path_policy(self) -> None:
         self.assertTrue(is_allowed_generated_artifact_path("indexAI/scene_scripts/a.py"))
