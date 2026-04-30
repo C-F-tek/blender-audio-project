@@ -8,16 +8,8 @@ from pathlib import Path
 from typing import Any
 
 
-SKIP_DIRS = {
-    "shared",
-    "__pycache__",
-}
-
-SKIP_NAME_PARTS = (
-    "_backup",
-    "_backgood",
-    "_bak",
-)
+SKIP_DIRS = {"shared", "__pycache__"}
+SKIP_NAME_PARTS = ("_backup", "_backgood", "_bak")
 
 
 def count_lines(path: Path) -> int:
@@ -31,14 +23,8 @@ def inspect_package(path: Path, scripting_root: Path) -> dict[str, Any]:
     python_files = sorted(path.glob("*.py"))
     readme = path / "README.md"
     config = path / "config.py"
-    main_candidates = [
-        item for item in python_files
-        if item.name == "main.py" or item.name.startswith("main_")
-    ]
-    encode_candidates = [
-        item for item in python_files
-        if "encode" in item.name.lower() or "ffmpeg" in item.name.lower()
-    ]
+    main_candidates = [item for item in python_files if item.name == "main.py" or item.name.startswith("main_")]
+    encode_candidates = [item for item in python_files if "encode" in item.name.lower() or "ffmpeg" in item.name.lower()]
 
     warnings: list[str] = []
     if not readme.exists():
@@ -48,7 +34,7 @@ def inspect_package(path: Path, scripting_root: Path) -> dict[str, Any]:
     if not config.exists() and path.name not in {"v61b"}:
         warnings.append("missing config.py or documented equivalent")
     if not encode_candidates:
-        warnings.append("no local encode/ffmpeg helper detected")
+        warnings.append("no local encode helper detected")
 
     return {
         "package": path.relative_to(scripting_root).as_posix(),
@@ -65,7 +51,6 @@ def inspect_package(path: Path, scripting_root: Path) -> dict[str, Any]:
 
 
 def should_skip_package_dir(path: Path) -> bool:
-    """Return True when a Scripting/ child folder should not be treated as a package."""
     name = path.name.lower()
     if path.name in SKIP_DIRS or path.name.startswith("."):
         return True
@@ -75,13 +60,19 @@ def should_skip_package_dir(path: Path) -> bool:
 def iter_packages(scripting_root: Path) -> list[Path]:
     packages: list[Path] = []
     for item in sorted(scripting_root.iterdir()):
-        if not item.is_dir():
-            continue
-        if should_skip_package_dir(item):
+        if not item.is_dir() or should_skip_package_dir(item):
             continue
         if any(item.glob("*.py")) or (item / "README.md").exists():
             packages.append(item)
     return packages
+
+
+def flatten_warnings(packages: list[dict[str, Any]]) -> list[str]:
+    items: list[str] = []
+    for package in packages:
+        for warning in package.get("warnings", []):
+            items.append(f"{package['package']}: {warning}")
+    return items
 
 
 def main() -> int:
@@ -97,20 +88,19 @@ def main() -> int:
         raise SystemExit(f"Scripting directory not found: {scripting_root}")
 
     packages = [inspect_package(path, scripting_root) for path in iter_packages(scripting_root)]
-    warnings = [
-        {"package": item["package"], "warnings": item["warnings"]}
-        for item in packages
-        if item["warnings"]
-    ]
-
+    warnings = flatten_warnings(packages)
+    errors = warnings if args.strict else []
     report = {
         "schema_version": 1,
+        "kind": "package_structure",
         "repo_root": repo_root.as_posix(),
         "scripting_root": scripting_root.as_posix(),
         "package_count": len(packages),
-        "warning_count": sum(len(item["warnings"]) for item in packages),
-        "passed": not warnings or not args.strict,
+        "warning_count": len(warnings),
+        "passed": not errors,
         "strict": args.strict,
+        "errors": errors,
+        "warnings": warnings,
         "packages": packages,
     }
 
