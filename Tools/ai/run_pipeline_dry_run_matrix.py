@@ -118,7 +118,7 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
         MatrixCase(
             name="no_npu_guardrail",
             args=("--dry-run", "--write-dry-run-report", "--no-npu-guardrail"),
-            purpose="Verify pipeline when NPU guardrail is disabled.",
+            purpose="Verify dry-run planning when NPU guardrail is disabled without executing NPU workloads.",
         ),
         MatrixCase(
             name="no_smart_context",
@@ -314,7 +314,7 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
         MatrixCase(
             name="with_gpu_placeholder_command_planned",
             args=("--dry-run", "--write-dry-run-report", "--gpu-command", _planned_gpu_placeholder_command()),
-            purpose="Verify GPU command placeholder formatting for {brief} and {output} without execution.",
+            purpose="Verify GPU command placeholder formatting for {brief} and {output} without executing GPU workloads.",
         ),
         MatrixCase(
             name="gpu_command_missing_output_warning",
