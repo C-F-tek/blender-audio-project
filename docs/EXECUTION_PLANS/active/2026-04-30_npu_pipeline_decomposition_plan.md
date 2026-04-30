@@ -53,6 +53,35 @@ no hand-edited generated indexes
 no local output report claims
 ```
 
+## Phase 1 GitHub-only implementation
+
+Branch:
+
+```text
+codex/npu-pipeline-decomposition-phase-1
+```
+
+Scope:
+
+```text
+add Tools/npu/pipeline/ package scaffold
+add pure config/path/prompt payload helpers
+do not wire helpers into Tools/npu/run_dual_ai_pipeline.py yet
+do not change provider/runtime behavior
+do not edit generated indexes
+```
+
+Validation required locally before merge:
+
+```powershell
+python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+python .\Tools\npu\build_project_ai_index.py
+python .\Tools\npu\build_npu_code_context.py
+git status
+git diff --stat
+```
+
 ## Proposed module responsibilities
 
 | Future module | Responsibility | Notes |
