@@ -110,6 +110,7 @@ python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\
 python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
 python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
 ```

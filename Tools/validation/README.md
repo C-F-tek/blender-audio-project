@@ -211,6 +211,25 @@ Explicit generated artifact destination validation:
 python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --path .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
 ```
 
+Artifact report validation:
+
+```powershell
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
+```
+
+`--artifact-report` scans JSON reports for known generated-artifact destination fields such as:
+
+```text
+markdown_output
+output_dir
+packet
+path
+report
+report_path
+```
+
+The collector ignores command argv arrays and only accepts path-like strings. It does not inspect input domains or output applications.
+
 Workflow-specific extensions should be explicit:
 
 ```powershell
