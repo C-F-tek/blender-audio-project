@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Any
 
@@ -94,7 +95,7 @@ def _string_list(value: Any) -> list[str]:
     if isinstance(value, list):
         return [str(item) for item in value]
     if isinstance(value, tuple):
-        return [str(item) for item in value]
+        return [str(value) for value in value]
     return [str(value)]
 
 
@@ -136,6 +137,24 @@ def _extract_usage(raw: Any) -> dict[str, Any]:
     return out
 
 
+def _strip_markdown_json_fence(text: str) -> str:
+    stripped = text.strip()
+    if not stripped.startswith("```"):
+        return stripped
+    lines = stripped.splitlines()
+    if len(lines) >= 3 and lines[0].startswith("```") and lines[-1].strip() == "```":
+        return "\n".join(lines[1:-1]).strip()
+    return stripped
+
+
+def _parse_json_candidate(text: str) -> tuple[Any | None, bool, str | None]:
+    candidate = _strip_markdown_json_fence(text)
+    try:
+        return json.loads(candidate), True, None
+    except Exception as exc:  # noqa: BLE001 - parse report only.
+        return None, False, f"json_parse_failed: {type(exc).__name__}: {exc}"
+
+
 def parse_provider_result(
     raw_result: Any,
     *,
@@ -147,7 +166,8 @@ def parse_provider_result(
     """Parse an already-obtained or simulated provider result.
 
     This helper does not execute providers. It only normalizes an existing
-    payload into text/JSON/metadata fields.
+    payload into text/JSON/metadata fields. Markdown JSON fences are tolerated
+    because some local models return fenced JSON even when asked not to.
     """
 
     text = _first_text_value(raw_result)
@@ -155,13 +175,9 @@ def parse_provider_result(
     parsed_json: Any | None = None
     json_ok = False
     if allow_json and text.strip():
-        try:
-            import json
-
-            parsed_json = json.loads(text)
-            json_ok = True
-        except Exception as exc:  # noqa: BLE001 - parse report only.
-            errors.append(f"json_parse_failed: {type(exc).__name__}: {exc}")
+        parsed_json, json_ok, parse_error = _parse_json_candidate(text)
+        if parse_error:
+            errors.append(parse_error)
     raw_error = raw_result.get("error") if isinstance(raw_result, dict) else None
     if raw_error:
         errors.append(str(raw_error))
