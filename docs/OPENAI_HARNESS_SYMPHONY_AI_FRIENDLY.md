@@ -42,7 +42,9 @@ Per `blender-audio-project` questo conferma la direzione già intrapresa:
 ```text
 AGENTS.md come indice
 docs/ come fonte di verità
+WORKFLOW.md come workflow operativo
 Tools/ai/pipeline/ modulare
+Tools/npu/pipeline/ come helper package app-agnostico in decomposizione staged
 dry-run matrix
 report Markdown/JSON
 status marker machine-readable
@@ -116,6 +118,7 @@ docs/PROJECT_AI_CONSCIOUSNESS.md
 docs/AI_PIPELINE_REFACTOR_STATUS.md
 docs/AI_PIPELINE_ARCHITECTURE.md
 docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md
+Tools/npu/pipeline/README.md
 ```
 
 ### 2.3 Rendere il repository leggibile dall'agente
@@ -147,6 +150,7 @@ docs/PROJECT_STATUS_POINT.md
 output/ai_pipeline/dry_run_matrix_report.md
 indexAI/project_code_manifest.json
 Tools/npu/npu_code_manifest.json
+Tools/npu/pipeline/README.md
 ```
 
 ### 2.4 Architettura e gusto devono essere codificati
@@ -169,6 +173,9 @@ Applicazione diretta:
 
 ```text
 Tools/validation/check_ai_pipeline_modules.py
+Tools/validation/check_npu_pipeline_modules.py
+Tools/validation/check_npu_pipeline_helper_tests.py
+Tools/validation/check_npu_pipeline_docs.py
 Tools/validation/check_package_structure.py
 Tools/ai/run_pipeline_dry_run_matrix.py
 Tools/ai/pipeline/schema_report.py
@@ -198,6 +205,7 @@ docs/REFACTORING_AND_REUSE_PLAN.md
 docs/QUALITY_GATE.md
 Scripting/shared/
 Tools/validation/
+Tools/npu/pipeline/
 output/local_validation/
 ```
 
@@ -230,10 +238,13 @@ ticket aperto
   -> merge o follow-up task
 ```
 
-Per il progetto, un equivalente leggero può essere:
+Per il progetto, un equivalente leggero è:
 
 ```text
+WORKFLOW.md
 docs/PROJECT_STATUS_POINT.md
+docs/EXECUTION_PLANS/
+docs/TECH_DEBT_TRACKER.md
 patch_specs/inbox/
 output/local_validation/
 GitHub issues o checklist Markdown
@@ -256,6 +267,8 @@ task: migrare un call-site v61b
 task: generare report markdown
 task: correggere dry-run matrix
 task: rigenerare indexAI
+task: validare NPU helper package
+task: wire IO helper in run_dual_ai_pipeline.py dopo validazione
 ```
 
 Ogni task dovrebbe avere:
@@ -273,32 +286,19 @@ stato finale
 
 Symphony evidenzia che il workflow deve essere scritto nel repository, non nella testa delle persone.
 
-Nel progetto, file equivalenti già presenti o consigliati:
+Nel progetto, file equivalenti già presenti:
 
 ```text
+WORKFLOW.md
 docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md
 docs/PATCH_SPEC_WORKFLOW.md
 docs/QUALITY_GATE.md
 docs/AI_PIPELINE_REFACTOR_STATUS.md
 Tools/workflow/run_local_validation_after_refactor.ps1
+Tools/workflow/run_npu_pipeline_helper_validation.ps1
 ```
 
-Possibile file futuro:
-
-```text
-WORKFLOW.md
-```
-
-contenente:
-
-```text
-come scegliere task
-come aprire branch
-come validare
-come rigenerare indici
-come decidere merge
-come archiviare report
-```
+`WORKFLOW.md` è l'entrypoint operativo root; i documenti in `docs/` e i runner in `Tools/workflow/` sono i dettagli eseguibili.
 
 ### 3.5 Orchestrazione minimale, non prodotto monolitico
 
@@ -323,19 +323,22 @@ Il progetto ha già molte componenti allineate:
 ```text
 AGENTS.md come guida iniziale
 docs/ come fonte di verità
+WORKFLOW.md come processo operativo root
 PROJECT_AI_CONSCIOUSNESS.md come memoria operativa
 AI_PIPELINE_REFACTOR_STATUS.md come status marker
 AI_PIPELINE_ARCHITECTURE.md come mappa architetturale
 GITHUB_LOCAL_VALIDATION_WORKFLOW.md come workflow versionato
 Tools/ai/pipeline/ come architettura modulare
+Tools/npu/pipeline/ come helper package app-agnostico in staged decomposition
 run_pipeline_dry_run_matrix.py come validazione ripetibile
 run_local_validation_after_refactor.ps1 come runner unattended
+run_npu_pipeline_helper_validation.ps1 come runner focalizzato NPU helper
 Scripting/shared/ come libreria condivisa
 ```
 
 ### 4.2 Cosa migliorare subito
 
-#### A. Creare `WORKFLOW.md`
+#### A. Mantenere `WORKFLOW.md` aggiornato
 
 Scopo:
 
@@ -343,23 +346,24 @@ Scopo:
 root-level workflow per umani e agenti
 ```
 
-Contenuti consigliati:
+Contenuti da mantenere coerenti:
 
 ```text
 1. Pull/rebase
 2. Read docs
 3. Pick task
 4. Modify small scope
-5. Run validation
-6. Regenerate indexes
-7. Commit
-8. Push
-9. Share reports
+5. Run focused validation
+6. Run full validation when needed
+7. Regenerate indexes
+8. Commit
+9. Push
+10. Share reports
 ```
 
-#### B. Creare `docs/EXECUTION_PLANS/`
+#### B. Usare `docs/EXECUTION_PLANS/`
 
-Struttura consigliata:
+Struttura:
 
 ```text
 docs/EXECUTION_PLANS/
@@ -382,7 +386,7 @@ decision log
 result
 ```
 
-#### C. Creare `docs/TECH_DEBT_TRACKER.md`
+#### C. Mantenere `docs/TECH_DEBT_TRACKER.md`
 
 Per evitare deriva:
 
@@ -396,15 +400,17 @@ status
 last reviewed
 ```
 
-#### D. Aggiungere checks agent-friendly
+#### D. Mantenere checks agent-friendly
 
 Esempi:
 
 ```text
 check_docs_links.py
-check_pipeline_architecture_docs.py
 check_refactor_status_consistency.py
-check_shared_module_imports.py
+check_ai_pipeline_modules.py
+check_npu_pipeline_modules.py
+check_npu_pipeline_helper_tests.py
+check_npu_pipeline_docs.py
 ```
 
 ---
@@ -413,7 +419,7 @@ check_shared_module_imports.py
 
 | Concetto OpenAI | Traduzione nel progetto |
 |---|---|
-| Harness engineering | `Tools/ai/pipeline/`, `Tools/validation/`, `Tools/workflow/` |
+| Harness engineering | `Tools/ai/pipeline/`, `Tools/npu/pipeline/`, `Tools/validation/`, `Tools/workflow/` |
 | AGENTS.md come indice | `AGENTS.md` breve + `docs/README.md` |
 | Knowledge base versionata | `docs/`, `indexAI/`, manifest JSON |
 | Agent readability | moduli piccoli, status marker, report Markdown |
@@ -422,7 +428,7 @@ check_shared_module_imports.py
 | Worktree/workspace isolato | branch o cartella output per task |
 | Proof of work | JSON/MD report, dry-run output, git diff |
 | Garbage collection del debito | TECH_DEBT_TRACKER + refactor ricorrenti |
-| WORKFLOW.md | da aggiungere come entrypoint operativo |
+| WORKFLOW.md | root operational workflow already present |
 
 ---
 
@@ -431,32 +437,27 @@ check_shared_module_imports.py
 ### Da fare sul repository
 
 ```text
-[ ] Creare WORKFLOW.md root
-[ ] Creare docs/EXECUTION_PLANS/README.md
-[ ] Creare docs/EXECUTION_PLANS/active/
-[ ] Creare docs/EXECUTION_PLANS/completed/
-[ ] Creare docs/TECH_DEBT_TRACKER.md
-[ ] Aggiungere check_refactor_status_consistency.py
-[ ] Aggiungere check_docs_links.py
-[ ] Aggiornare docs/README.md con Execution Plans e Tech Debt Tracker
-[ ] Rigenerare indexAI/NPU context
+[ ] Validare la PR/batch NPU helper con runner focalizzato
+[ ] Validare la PR/batch NPU helper con full local validation runner
+[ ] Rigenerare indexAI/NPU context dopo validazione
+[ ] Se verde, mergeare la PR/batch NPU helper
+[ ] Aprire una nuova fase stretta per wiring IO helper in Tools/npu/run_dual_ai_pipeline.py
+[ ] Continuare a mantenere docs/README.md, AGENTS.md e PROJECT_AI_CONSCIOUSNESS.md coerenti con lo stato reale
 ```
 
 ### Da fare sul PC locale
 
 ```powershell
 cd C:\Users\carmi\blender\blender-audio-project
-git pull --rebase origin master
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
-```
-
-Poi:
-
-```powershell
+git fetch origin
+git checkout codex/npu-pipeline-decomposition-away-batch
+git pull --ff-only
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+python .\Tools\npu\build_project_ai_index.py
+python .\Tools\npu\build_npu_code_context.py
 git status
 git diff --stat
-Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
-Get-Content .\output\validation\ai_pipeline_modules.json -Raw
 ```
 
 ---
@@ -470,6 +471,7 @@ docs = conoscenza
 Tools/validation = guardrail
 Tools/workflow = automazione locale
 Tools/ai/pipeline = orchestrazione
+Tools/npu/pipeline = helper contracts per pipeline locale AI/NPU
 Scripting/shared = infrastruttura riusabile
 indexAI = memoria generata
 patch_specs = coda modifiche meccaniche
@@ -505,4 +507,5 @@ recommended_target_docs:
   - docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md
   - docs/AI_PIPELINE_ARCHITECTURE.md
   - docs/REFACTORING_AND_REUSE_PLAN.md
+  - Tools/npu/pipeline/README.md
 ```
