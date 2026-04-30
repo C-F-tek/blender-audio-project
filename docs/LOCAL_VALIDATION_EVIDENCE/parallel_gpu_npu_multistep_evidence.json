@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "github_validation_evidence_bundle",
-  "generated_at": "2026-05-01T00:40:16",
+  "generated_at": "2026-05-01T00:43:20",
   "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "source_reports": [
     "output/validation/ai_workload_report_quality.json",
