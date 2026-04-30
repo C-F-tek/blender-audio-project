@@ -131,10 +131,17 @@ Scope:
 ```text
 add pure artifact writer helpers
 add pure contract validators
+add deterministic fixtures for tests and dry-runs
 add NPU pipeline module smoke validator
-wire that smoke validator into the local PowerShell validation runner
+add NPU helper unit tests
+add NPU pipeline documentation alignment validator
+add focused NPU helper validation workflow
+wire NPU smoke/unit-test validators into the local PowerShell validation runner
 add deterministic context builder helpers
 add deterministic runner plan helpers
+add planned-only provider descriptors
+add legacy compatibility helpers for future runtime wiring
+add migration readiness gates that block runtime wiring by default
 expand smoke validation to cover the full app-agnostic helper boundary
 do not modify Tools/npu/run_dual_ai_pipeline.py
 do not modify provider/runtime behavior
@@ -151,7 +158,10 @@ It prepares multiple pure-helper improvements plus focused validators, then wait
 Validation required before merge:
 
 ```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
 python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
+python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
 python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
 python .\Tools\npu\build_project_ai_index.py
@@ -172,6 +182,9 @@ git diff --stat
 | `artifact_writer.py` | Write generated JSON/Markdown/script artifacts | Keep writes inside allowed generated destinations. |
 | `runner.py` | Orchestrate the staged flow and preserve CLI behavior | Should remain thin after split. |
 | `io_utils.py` | UTF-8 text and JSON-object read/write helpers | Pure helpers; no provider, Blender or model loading. |
+| `fixtures.py` | Deterministic test and dry-run fixture payloads | Pure helpers; no filesystem writes. |
+| `legacy_compat.py` | Compare legacy helper behavior against new helpers before wiring | Pure comparison helpers only. |
+| `migration_readiness.py` | Gate future runtime wiring on validation/index readiness | Blocks runtime wiring by default. |
 
 ## Core function policy
 
