@@ -2,137 +2,148 @@
 
 ## Purpose
 
-This document records the intended direction for moving parts of the Blender script-generation workflow toward a local AI-assisted pipeline.
+This document records the current local AI workflow for `IA-Carmine Local AI Orchestration Workbench`.
 
-The local workflow should be deterministic where possible, explicit about generated artifacts, and safe for repeated dry-runs.
+The workflow is no longer only about generating Blender scripts. It now covers local provider orchestration, GPU/NPU parallelism, workload quality gates, advisory context filtering, explicit provider diagnostics and compact evidence for GitHub review.
+
+## Current provider mapping
+
+```text
+Ollama -> GPU/CUDA -> primary advisory provider
+OpenVINO -> NPU -> probe / guardrail / decode diagnostic
+```
+
+The mapping is intentional. Do not introduce OpenVINO GPU as the primary lane.
+
+## Current validated state
+
+Evidence:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
+```
+
+Validated decisions:
+
+```text
+ollama_gpu_primary_advisory: true
+npu_excluded_when_unusable: true
+provider_execution_seen: true
+npu_decode_smoke_passed: true
+```
+
+Operational meaning:
+
+- Ollama/GPU is usable as primary advisory provider when explicitly enabled.
+- The old NPU workload report remains excluded from advisory context because it is numeric/hex-like.
+- NPU/OpenVINO can execute a short decode smoke successfully through the dedicated NPU Python.
+- NPU is not yet promoted to a general advisory lane.
 
 ## Current workflow
 
-At the current stage, the workflow is generally:
+```text
+Repository context and local reports
+  -> workload quality gate
+  -> quality-based advisory routing
+  -> parallel provider probes / NPU decode smoke
+  -> primary advisory packet through Ollama/GPU when explicitly requested
+  -> repository proposals
+  -> compact evidence bundle
+  -> GitHub review
+```
+
+## Primary multistep runner
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
+  -Profile npu `
+  -RunOllamaProbe `
+  -RunNpuProbe `
+  -RunNpuDecodeSmoke `
+  -UsePrimaryAdvisoryProvider `
+  -Basename parallel_gpu_npu_multistep_real_npu_v2 `
+  -ProposalBasename parallel_gpu_npu_multistep_real_npu_v2_proposals `
+  -EvidenceBasename parallel_gpu_npu_multistep_real_npu_v2_evidence
+```
+
+This runner performs:
+
+| Step | Action | Output family |
+|---|---|---|
+| 1 | Workload quality gate | `output/validation/ai_workload_report_quality.json` |
+| 2 | Parallel provider probes / diagnostics | `output/validation/local_provider_probe.json`, `output/validation/npu_decode_smoke_diagnostic.json` |
+| 3 | Quality-based routing and NPU remediation | `output/validation/ai_workload_quality_lane_routing.json`, `output/validation/npu_decode_quality_remediation.json` |
+| 4 | Primary advisory packet/proposals | `output/ai_packets/*` |
+| 5 | Pushable evidence bundle | `docs/LOCAL_VALIDATION_EVIDENCE/*` |
+
+## Key tools
+
+| File | Role |
+|---|---|
+| `Tools/validation/check_ai_workload_report_quality.py` | Classifies workload reports into usable/unusable lanes. |
+| `Tools/ai/workload_quality.py` | Shared routing helper for trusted/excluded advisory context. |
+| `Tools/ai/build_workload_quality_lane_routing.py` | Builds routing report and declares primary advisory provider. |
+| `Tools/ai/run_local_provider_probe.py` | Explicit local provider probes for Ollama/GPU and NPU/OpenVINO. |
+| `Tools/ai/run_npu_decode_smoke_diagnostic.py` | Explicit OpenVINO/NPU decode smoke through dedicated NPU Python. |
+| `Tools/validation/check_npu_decode_quality_remediation.py` | NPU remediation report from quality metrics. |
+| `Tools/ai/suggest_repository_updates.py` | Builds advisory packet using quality-approved context only. |
+| `Tools/ai/build_repository_change_proposals.py` | Builds manual-review proposals. |
+| `Tools/ai/build_github_evidence_bundle.py` | Summarizes long ignored `output/` reports into tracked docs evidence. |
+| `Tools/workflow/run_post_validation_ai_packet.ps1` | Builds packet/proposals and supports primary advisory provider mode. |
+| `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | Main current parallel GPU/NPU multistep runner. |
+
+## Evidence workflow
+
+Because `output/` is ignored, use compact evidence bundles:
+
+```powershell
+python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename latest_ai_workflow_evidence
+git add docs/LOCAL_VALIDATION_EVIDENCE/
+git commit -m "test: add local ai workflow evidence bundle"
+git push
+```
+
+## Requirements for safe local generation
+
+- Provider execution must be explicit.
+- Advisory context must be quality-filtered before content is read.
+- NPU promotion to advisory requires workload quality evidence, not just decode smoke.
+- Generated evidence belongs under `docs/LOCAL_VALIDATION_EVIDENCE/`.
+- Full local reports remain in ignored `output/`.
+- No destructive overwrite of source or analysis data.
+- No Blender runtime changes unless explicitly scoped.
+- Manual review remains required for source patches and proposals.
+
+## AI rules
+
+- Treat local AI output as draft material until validated.
+- Keep generated packages or workflow outputs separated by task/version.
+- Do not merge unrelated generated packages automatically.
+- Preserve full analysis JSON files.
+- Prefer compact summaries for model input.
+- Record assumptions in generated implementation notes or evidence summaries.
+- Do not interpret NPU smoke success as full NPU advisory readiness.
+
+## Legacy Blender/audio workflow
+
+The historical workflow remains available:
 
 ```text
 Audio input
   -> technical analysis
   -> JSON files and compact context
-  -> modular AI artifact pipeline
-  -> local or external model-assisted planning/review
+  -> AI planning/review
   -> generated Blender script package or patch plan
   -> stored under Scripting/ or indexAI/patch_library/
   -> manual or assisted refinement
 ```
 
-## Current AI artifact pipeline status
-
-Status marker:
-
-```text
-modular_schedule_complete_pending_local_validation
-```
-
-Key files:
-
-```text
-Tools/ai/run_parallel_artifact_pipeline.py
-Tools/ai/run_pipeline_dry_run_matrix.py
-Tools/ai/pipeline/
-Tools/validation/check_ai_pipeline_modules.py
-docs/AI_PIPELINE_REFACTOR_STATUS.md
-docs/AI_PIPELINE_ARCHITECTURE.md
-```
-
-The current entrypoint is intentionally thin. Implementation belongs under `Tools/ai/pipeline/`.
-
-## Target direction
-
-The objective is to perform more of the script-generation and review loop locally, when hardware and model quality allow it.
-
-Candidate local components:
-
-- local project indexing;
-- local compact context generation;
-- generic agent state packet generation;
-- local JSON summarization;
-- local Blender-aware code planning;
-- local patch planning;
-- local patch validation;
-- NPU-assisted review where useful;
-- GPU-assisted model execution where required.
-
-## Repository areas involved
-
-| Area | Role |
-|---|---|
-| `Scripting/` | Destination for generated Blender script packages. |
-| `Scripting/shared/` | Shared reusable helpers used before package migration. |
-| `Tools/ai/` | Modular artifact pipeline entrypoints and dry-run matrix. |
-| `Tools/ai/pipeline/` | Modular AI artifact pipeline implementation. |
-| `Tools/npu/` | Local AI, NPU, context-building, and review tooling. |
-| `indexAI/` | Project index, manifests, compact context, and patch materials. |
-| `indexAI/patch_library/` | Generated plans, service capsules, and task packets. |
-| `docs/` | Stable documentation for human and AI orientation. |
-
-## Desired local pipeline
-
-```text
-WAV/audio data
-  -> analysis JSON
-  -> compact music and technical context
-  -> agent state packet with memory, constraints and lane microtasks
-  -> modular AI artifact pipeline
-  -> local AI planner/reviewer
-  -> implementation plan
-  -> patch generator or package generator
-  -> validation against repo index
-  -> generated Blender package under Scripting/
-  -> Blender test run
-  -> render and FFmpeg workflow
-```
-
-## Required validation after pipeline changes
-
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
-python .\Tools\validation\check_package_structure.py --repo-root .
-python .\Tools\validation\check_json_artifacts.py --repo-root .
-```
-
-After validation:
-
-```powershell
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
-```
-
-## Requirements for safe local generation
-
-- A reliable project index.
-- Clear target files.
-- Clear JSON schema or documented assumptions.
-- Patch validation before writing files.
-- No destructive overwrite of source or analysis data.
-- Explicit logging of generated files.
-- Explicit memory packet or state packet when a task spans multiple steps.
-- Optional persistent memory through JSONL or SQLite, with SQLite preferred before external database dependencies.
-- Periodic memory review through `Tools/ai/review_agent_memory.py`; persistent memory must have retention, promotion and quarantine reports before broad reuse.
-- Manual review for major scene-generation changes.
-- Dry-run reports for pipeline or patch generation.
-
-## AI rules
-
-- Treat local AI output as draft material until validated.
-- Keep generated packages separated by track, concept, or version.
-- Do not merge unrelated generated packages automatically.
-- Preserve full analysis JSON files.
-- Prefer compact summaries for model input.
-- Record assumptions in generated implementation notes.
-- Do not interpret the modular pipeline split as incomplete unless local validation fails.
+However, this is now a downstream application domain, not the core local AI architecture.
 
 ## Not specified
 
-- Final local model choice.
-- Final NPU or GPU runtime.
-- Final prompt format.
-- Final patch schema.
+- Final repository rename.
+- Final NPU general advisory promotion gate beyond current quality report shape.
+- Final provider orchestration beyond explicit workflow flags.
+- Final patch schema for fully automated application.
 - Final validation command for Blender runtime.
