@@ -4,7 +4,8 @@
 
 .DESCRIPTION
   This workflow is intentionally local and safe. It runs only deterministic
-  helper smoke checks, unit tests and documentation alignment checks.
+  helper smoke checks, unit tests, documentation alignment checks and
+  observability-only runtime-output manifest generation.
 
   It does not execute Blender, NPU, GPU, Ollama, FFmpeg or provider calls.
   It does not commit or push automatically.
@@ -12,7 +13,8 @@
 
 param(
     [string]$RepoRoot = ".",
-    [string]$OutputDir = "output/validation"
+    [string]$OutputDir = "output/validation",
+    [string]$TrackStem = "Feel The Light-Luca Vera_Master"
 )
 
 Set-StrictMode -Version Latest
@@ -61,6 +63,13 @@ Invoke-ValidationStep -Name "NPU pipeline documentation alignment" -Arguments @(
     "--output", ".\output\validation\npu_pipeline_docs.json"
 )
 
+Invoke-ValidationStep -Name "NPU runtime output manifest" -Arguments @(
+    ".\Tools\npu\build_runtime_output_manifest.py",
+    "--repo-root", ".",
+    "--track-stem", $TrackStem,
+    "--output", ".\output\validation\npu_runtime_output_manifest.json"
+)
+
 Invoke-ValidationStep -Name "Python syntax validation" -Arguments @(
     ".\Tools\validation\check_python_syntax.py",
     "--repo-root", ".",
@@ -72,4 +81,5 @@ Write-Host "Reports:"
 Write-Host "- .\output\validation\npu_pipeline_modules.json"
 Write-Host "- .\output\validation\npu_pipeline_helper_tests.json"
 Write-Host "- .\output\validation\npu_pipeline_docs.json"
+Write-Host "- .\output\validation\npu_runtime_output_manifest.json"
 Write-Host "- .\output\validation\python_syntax.json"
