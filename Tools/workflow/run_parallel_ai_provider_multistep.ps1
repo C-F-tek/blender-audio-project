@@ -130,11 +130,12 @@ $PacketArgs = @(
     "-ProposalBasename", $ProposalBasename,
     "-MaxContextChars", "$MaxContextChars"
 )
-foreach ($Path in $ContextFile) {
-    $PacketArgs += @("-ContextFile", $Path)
+
+if ($ContextFile.Count -gt 0) {
+    $PacketArgs += @("-ContextFile", ($ContextFile -join ","))
 }
-foreach ($Path in $ReportFile) {
-    $PacketArgs += @("-ReportFile", $Path)
+if ($ReportFile.Count -gt 0) {
+    $PacketArgs += @("-ReportFile", ($ReportFile -join ","))
 }
 if ($UsePrimaryAdvisoryProvider) {
     $PacketArgs += "-UsePrimaryAdvisoryProvider"
