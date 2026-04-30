@@ -2,11 +2,11 @@
 
 This folder contains lightweight repository validation helpers.
 
-The tools are intentionally non-invasive: they inspect files and write optional reports, but they do not rewrite source code, generated scripts, generated JSON artifacts, Blender packages, render outputs or FFmpeg outputs.
+The tools are intentionally non-invasive: they inspect files and write optional reports. They must not rewrite source code, generated scripts, generated JSON artifacts, Blender packages, render outputs or FFmpeg outputs.
 
 ## Validation model
 
-Validation is split into small deterministic checks:
+Validation is split into deterministic checks:
 
 ```text
 source/code syntax checks
@@ -17,6 +17,7 @@ AI pipeline smoke checks
 AI dry-run matrix case-definition checks
 AI dry-run matrix output consistency checks
 AI dry-run matrix report contract checks
+validation report contract checks
 agent memory policy checks
 Blender compatibility smokes
 generated-file policy checks
@@ -24,29 +25,46 @@ generated Python policy checks
 generated artifact path policy checks
 ```
 
-Validators should remain cheap, reviewable and safe to run locally. They must not launch long Blender renders, GPU generation, NPU model execution or FFmpeg encodes.
+Validators should remain cheap, reviewable and safe to run locally.
 
-## Architecture Boundary — Input-Agnostic / Output-Application-Agnostic
+## Common validation report contract
 
-Generated-file validation must not be treated as Blender-only or WAV/audio-only.
-
-Fixed rule:
+Validation reports should converge toward these root fields:
 
 ```text
-not Blender-only
-not WAV/audio-only
-input-agnostic
-output-application-agnostic
-current execution assumption: target applications accept generated Python scripts
-future extension: other runtimes, other application APIs and other input data families
+schema_version
+kind
+repo_root
+passed
+errors
+warnings, when applicable
 ```
 
-Reason:
+Rules:
 
-```text
-Blender is the current real application target, but it is not the architectural limit.
-WAV/audio is the current real input family, but it is not the architectural limit.
+- `schema_version` should be an integer.
+- `kind` should identify the validator/report family.
+- `repo_root` should be a string.
+- `passed` should be a boolean.
+- `errors` should be a list.
+- `warnings` should be a list when present.
+- Adding these fields must be additive and should not remove validator-specific fields.
+
+Meta-validator:
+
+```powershell
+python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
 ```
+
+Optional stricter mode after more reports are aligned:
+
+```powershell
+python .\Tools\validation\check_validation_report_contract.py --repo-root . --require-recommended --output .\output\validation\validation_report_contract.json
+```
+
+## Architecture boundary
+
+Generated-file validation is not Blender-only and not WAV/audio-only.
 
 Keep these validation layers separate:
 
@@ -62,13 +80,13 @@ artifact/report contract validators
 Core repository checks:
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_package_structure.py --repo-root .
-python .\Tools\validation\check_json_artifacts.py --repo-root .
+python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
+python .\Tools\validation\check_package_structure.py --repo-root . --output .\output\validation\package_structure.json
+python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\output\validation\json_artifacts.json
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
 ```
 
-AI pipeline, model-output, report-contract and memory checks:
+AI pipeline, report-contract and memory checks:
 
 ```powershell
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
@@ -76,6 +94,7 @@ python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output
 python .\Tools\validation\check_ai_dry_run_matrix_cases.py --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
 python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
+python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
 ```
@@ -89,7 +108,7 @@ python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . 
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 ```
 
-## What each check does
+## Tool map
 
 | Tool | Role | Heavy workloads |
 |---|---|---|
@@ -97,19 +116,20 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_package_structure.py` | Reports package-level structure and warnings under `Scripting/`. | No |
 | `check_json_artifacts.py` | Checks JSON parseability; accepts UTF-8 with or without BOM and skips very large files by default. | No |
 | `check_docs_links.py` | Validates repository-local Markdown links and ignores external URLs. | No |
-| `check_ai_pipeline_modules.py` | Imports modular AI pipeline code, builds representative steps, checks preflight/report helpers and verifies the thin entrypoint. | No |
-| `check_ai_model_json.py` | Validates deterministic parsing of JSON-like model output and the legacy Ollama parser wrapper. | No |
+| `check_ai_pipeline_modules.py` | Imports modular AI pipeline code and validates representative planning/report helpers. | No |
+| `check_ai_model_json.py` | Validates deterministic parsing of JSON-like model output and legacy wrapper behavior. | No |
 | `check_ai_dry_run_matrix_cases.py` | Validates dry-run matrix case definitions without executing the matrix. | No |
-| `check_ai_dry_run_matrix_outputs.py` | Validates generated dry-run matrix outputs against per-case reports without rerunning the matrix. | No |
-| `check_ai_dry_run_matrix_contract.py` | Validates the machine-readable dry-run matrix report contract without running the matrix. | No |
-| `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and main docs agree on pipeline state and expected modules. | No |
-| `check_agent_memory_policy.py` | Checks generic memory retention, quarantine and promotion guardrails; also inspects local SQLite memory DB when present. | No |
-| `check_blender_shared_compat_smoke.py` | Imports `Scripting/shared/blender_compat.py`; outside Blender it marks runtime checks skipped, inside Blender it performs no-render compatibility smoke. | No render |
-| `check_generated_python_policy.py` | Validates generic generated Python syntax and hazard policy with deterministic in-memory samples and optional script paths. | No |
-| `check_generated_artifact_path_policy.py` | Validates that proposed generated artifact destinations stay inside allowed repository paths. | No |
-| `check_generated_blender_script_policy.py` | Applies reusable generated-file policy rules to generated Blender Python scripts and deterministic in-memory samples. | No |
+| `check_ai_dry_run_matrix_outputs.py` | Validates generated dry-run matrix outputs against per-case reports. | No |
+| `check_ai_dry_run_matrix_contract.py` | Validates the machine-readable dry-run matrix report contract. | No |
+| `check_validation_report_contract.py` | Validates generated reports in `output/validation/` for common root fields. | No |
+| `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and docs agree. | No |
+| `check_agent_memory_policy.py` | Checks generic memory retention and promotion guardrails. | No |
+| `check_blender_shared_compat_smoke.py` | Imports shared Blender compatibility helpers; performs no render. | No render |
+| `check_generated_python_policy.py` | Validates generic generated Python syntax and hazard policy. | No |
+| `check_generated_artifact_path_policy.py` | Validates generated artifact destination paths. | No |
+| `check_generated_blender_script_policy.py` | Validates generated Blender Python scripts before execution. | No |
 
-## Generated-file policy
+## Generated Python and Blender script policy
 
 The generated-file policy has layered components:
 
@@ -120,34 +140,7 @@ Tools/validation/check_generated_python_policy.py
 Tools/validation/check_generated_blender_script_policy.py
 ```
 
-`generated_file_policy.py` is input-agnostic and application-agnostic. It does not know whether the source data is WAV, JSON, text, image, CSV, project context or another file type. It also does not know whether the output application is Blender, another Python-scriptable tool, an automation runtime or a custom application.
-
-It provides reusable primitives:
-
-```text
-PolicyRule
-PolicyFinding
-PolicyResult
-PathPolicy
-PathPolicyResult
-evaluate_text()
-evaluate_paths()
-evaluate_generated_artifact_path()
-evaluate_generated_artifact_paths()
-```
-
-The current policy pattern is:
-
-```text
-generic generated-file policy engine
-  -> generated Python script policy concepts
-  -> application-specific adapter
-  -> optional input-domain checks only when needed
-```
-
-`generated_python_policy.py` is the first language-level layer. It validates generated Python syntax and common generated-code hazards without knowing the input domain or target application.
-
-Current generic Python policy rules:
+Generic Python policy rules:
 
 ```text
 python_syntax_error              error
@@ -156,21 +149,7 @@ warn_os_system                   warning
 warn_subprocess_shell_true       warning
 ```
 
-Default sample-only validation:
-
-```powershell
-python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
-```
-
-Explicit generated Python validation:
-
-```powershell
-python .\Tools\validation\check_generated_python_policy.py --repo-root . --path .\output\some_generated_script.py --output .\output\validation\generated_python_policy.json
-```
-
-`check_generated_blender_script_policy.py` is the first application-specific adapter. It validates generated Blender Python scripts before execution by composing the generic Python policy with Blender-specific rules. Blender is not the architectural boundary; it is the first concrete Python-scriptable application target.
-
-Current Blender-specific policy rules:
+Blender adapter rules:
 
 ```text
 requires_bpy_import              error
@@ -180,42 +159,18 @@ forbid_quit_blender              error
 warn_save_as_mainfile            warning
 ```
 
-The `forbid_musgrave_node` rule protects against the known Blender 5.x failure:
+The Blender adapter protects against the known Blender 5.x failure:
 
 ```text
 ShaderNodeTexMusgrave undefined
 ```
 
-Default sample-only validation:
-
-```powershell
-python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
-```
-
-Explicit generated script validation:
-
-```powershell
-python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --path .\output\some_generated_scene.py --output .\output\validation\generated_blender_script_policy.json
-```
-
-Future generated Python script adapters should use a new application-specific validator and reuse `generated_file_policy.py`, instead of adding Blender-specific assumptions to the generic layer.
-
 ## Generated artifact path policy
 
-Generated artifact destination validation is separate from generated Python content validation.
-
-It answers only:
+Generated artifact destination validation answers only:
 
 ```text
 May a generated artifact be written to this repository path?
-```
-
-It does not answer:
-
-```text
-which input domain produced the artifact
-which output application will consume it
-whether the artifact content is valid for Blender, FFmpeg or any other runtime
 ```
 
 Default safe destinations are intentionally narrow and reviewable:
@@ -232,12 +187,6 @@ Tools/npu/npu_code_index.md
 Tools/npu/npu_code_manifest.json
 ```
 
-Sample-only validation:
-
-```powershell
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
-```
-
 Explicit generated artifact destination validation:
 
 ```powershell
@@ -250,53 +199,6 @@ Artifact report validation:
 python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
 ```
 
-`--artifact-report` scans JSON reports for known generated-artifact destination fields such as:
-
-```text
-markdown_output
-output_dir
-packet
-path
-report
-report_path
-```
-
-The collector ignores command argv arrays and only accepts path-like strings. It does not inspect input domains or output applications.
-
-Workflow-specific extensions should be explicit:
-
-```powershell
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --path .\custom_safe_output\artifact.json --allowed-prefix .\custom_safe_output\ --output .\output\validation\generated_artifact_path_policy.json
-```
-
-## AI model JSON parser validation
-
-The reusable model-output parser lives at:
-
-```text
-Tools/ai/model_json.py
-```
-
-The validator checks:
-
-```text
-plain JSON object
-Markdown fenced JSON object
-JSON surrounded by prose
-trailing comma repair
-line-only // comment repair
-JSON array parsing
-object-only parser rejection for arrays
-invalid text failure
-legacy Tools/npu/ollama_runtime.py::parse_json_response() wrapper behavior
-```
-
-Command:
-
-```powershell
-python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
-```
-
 ## AI pipeline dry-run matrix
 
 Static case-definition validator:
@@ -305,33 +207,13 @@ Static case-definition validator:
 python .\Tools\validation\check_ai_dry_run_matrix_cases.py --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
 ```
 
-This validator imports matrix case definitions and checks that:
-
-```text
-case names are unique and path-safe
-every case includes --dry-run
-every case includes --write-dry-run-report
-music-summary cases include --analysis-json
-GPU/NPU cases remain clearly planned-only
-coverage exists for validation, chunks, music-summary, NPU and GPU buckets
-matrix worker defaults are sane
-```
-
-It does not run the matrix.
-
-The dry-run matrix itself is located outside this folder because it invokes the pipeline entrypoint multiple times:
+Dry-run matrix:
 
 ```powershell
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 8
+python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 8 --repeat-cases 1
 ```
 
-Use serial mode for conservative debugging:
-
-```powershell
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 1
-```
-
-Use repeat mode for stress testing:
+Stress mode for the workstation:
 
 ```powershell
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 2
@@ -344,78 +226,26 @@ output/ai_pipeline/dry_run_matrix_report.json
 output/ai_pipeline/dry_run_matrix_report.md
 ```
 
-Contract validation command:
+Post-run validators:
 
 ```powershell
 python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
-```
-
-Output consistency validation command:
-
-```powershell
 python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
-```
-
-Explicit report path:
-
-```powershell
-python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --matrix-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\ai_dry_run_matrix_contract.json
-python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --matrix-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\ai_dry_run_matrix_outputs.json
-```
-
-The contract and output validators do not execute the dry-run matrix and do not modify artifacts. If the matrix report is missing, run the matrix first and then validate the report.
-
-Important fields to inspect:
-
-```text
-passed
-matrix_workers
-repeat_cases
-case_count
-planned_case_count
-base_case_count
-results[].name
-results[].returncode
-results[].report_passed
-results[].step_count
-results[].lanes
-results[].agent_state_packet
-```
-
-Each matrix case also writes an individual dry-run report under:
-
-```text
-output/ai_pipeline/dry_run_matrix/<case>/ai_pipeline_dry_run_report.json
-```
-
-Important fields in individual reports:
-
-```text
-passed
-summary
-schedule
-lanes
-agent_state_packet
-guardrail_remediation_loop
-steps
-```
-
-`check_ai_dry_run_matrix_outputs.py` compares the aggregate report to those per-case reports and verifies:
-
-```text
-case report exists
-case report has dry_run=true
-all case steps are planned_only
-summary, schedule, lanes and step_count match the aggregate report
-matrix passed=true does not hide failed cases
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
 ```
 
 ## Standard local validation block
 
-Use this block after structural refactors, documentation changes, AI pipeline changes, model-output parser changes or generated-file policy changes:
+Use the PowerShell runner for the full local batch:
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+```
+
+Manual core block:
+
+```powershell
+python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
 python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
 python .\Tools\validation\check_ai_dry_run_matrix_cases.py --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
@@ -429,8 +259,10 @@ python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --o
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 8 --repeat-cases 1
 python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
-python .\Tools\validation\check_package_structure.py --repo-root .
-python .\Tools\validation\check_json_artifacts.py --repo-root .
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
+python .\Tools\validation\check_package_structure.py --repo-root . --output .\output\validation\package_structure.json
+python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\output\validation\json_artifacts.json
+python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
 python .\Tools\npu\build_project_ai_index.py
 python .\Tools\npu\build_npu_code_context.py
 ```
@@ -447,21 +279,3 @@ git add Tools/npu/npu_code_context.md `
 git commit -m "chore: regenerate ai and npu indexes"
 git push origin master
 ```
-
-## Notes
-
-- `check_python_syntax.py` compiles Python files without importing project modules.
-- `check_package_structure.py` reports package-level warnings under `Scripting/`.
-- `check_json_artifacts.py` checks JSON parseability, accepts UTF-8 with or without BOM and skips very large files by default.
-- `check_docs_links.py` checks repository-local Markdown links.
-- `check_ai_pipeline_modules.py` is a smoke validator for the modular AI artifact pipeline and schema-v6 report metadata.
-- `check_ai_model_json.py` checks reusable model-output JSON parsing and the Ollama parser compatibility wrapper.
-- `check_ai_dry_run_matrix_cases.py` checks dry-run matrix case definitions without executing pipeline cases.
-- `check_ai_dry_run_matrix_outputs.py` checks generated dry-run matrix report consistency without executing pipeline cases.
-- `check_ai_dry_run_matrix_contract.py` checks the dry-run matrix report contract without running the matrix.
-- `check_refactor_status_consistency.py` checks status marker and documentation consistency.
-- `check_agent_memory_policy.py` checks generic memory retention and promotion guardrails.
-- `check_blender_shared_compat_smoke.py` verifies shared Blender compatibility helpers without requiring a render.
-- `check_generated_python_policy.py` validates the reusable generated Python policy layer before application-specific adapters.
-- `check_generated_blender_script_policy.py` validates the first application-specific adapter for Blender by composing generic Python rules with Blender rules.
-- Validation helpers should not launch Blender renders, GPU generation, NPU model execution or FFmpeg encodes.
