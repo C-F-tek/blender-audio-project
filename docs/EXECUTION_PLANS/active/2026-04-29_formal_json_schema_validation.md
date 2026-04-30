@@ -7,7 +7,7 @@ active
 ## Current phase
 
 Phase: dry-run matrix report contract validation
-Status: implementation started
+Status: completed after local validation
 
 ## Goal
 
@@ -175,19 +175,19 @@ Tools/validation/check_ai_dry_run_matrix_contract.py
 
 ### Phase 4 — dry-run proof
 
-Status: pending local validation.
+Status: completed.
 
 Required proof:
 
 ```text
-check_python_syntax.py: pending
-run_pipeline_dry_run_matrix.py: pending
-check_ai_dry_run_matrix_contract.py: pending
-check_ai_pipeline_modules.py: pending
-check_ai_model_json.py: pending
-check_generated_blender_script_policy.py: pending
-check_docs_links.py: pending
-check_json_artifacts.py: pending
+check_python_syntax.py: PASS, checked 166 Python files
+run_pipeline_dry_run_matrix.py: PASS, case_count 6
+check_ai_dry_run_matrix_contract.py: PASS, result_count 6
+check_ai_pipeline_modules.py: PASS
+check_ai_model_json.py: PASS, case_count 12
+check_generated_blender_script_policy.py: PASS, rule_count 6
+check_docs_links.py: PASS, failed_count 0
+check_json_artifacts.py: PASS, checked_count 82
 ```
 
 ## Progress log
@@ -195,11 +195,21 @@ check_json_artifacts.py: pending
 - 2026-04-29: Plan created from handoff state for `TD-006`.
 - 2026-04-29: Started first concrete schema/contract validator target for `agent_state_packet` report metadata after passive pipeline touchpoint was merged.
 - 2026-04-30: Started dry-run matrix report contract validation with `Tools/validation/check_ai_dry_run_matrix_contract.py`.
+- 2026-04-30: Ran local TD-006 validation suite on branch `validation-dry-run-matrix-contract`; all required checks passed.
+- 2026-04-30: Verified dry-run matrix report has 6 cases: `base`, `no_auto_remediation`, `no_npu_guardrail`, `with_validation`, `with_chunks`, `with_agent_state_packet`.
+- 2026-04-30: Contract validator passed with one forward-compatibility warning for accepted extra `agent_state_packet` fields: `modified_time`, `size_bytes`.
 
 ## Result
 
-not completed yet
+Dry-run matrix report contract validation is completed for the current PR branch.
 
 ## Follow-up
 
-Run the dry-run matrix locally, then run the contract validator against `output/ai_pipeline/dry_run_matrix_report.json`. Mark this phase completed only after the local validation report is coherent.
+After PR #30 is merged, keep future validators split by responsibility:
+
+```text
+artifact/report contract validators
+generated Python policy adapters
+output-application validators
+input-domain validators
+```
