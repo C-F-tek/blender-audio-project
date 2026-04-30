@@ -5,7 +5,8 @@
 .DESCRIPTION
   This script is intentionally local and non-destructive. It pulls the latest
   repository state, runs validation checks, runs the AI pipeline dry-run matrix,
-  regenerates AI/NPU indexes, and writes a compact execution log.
+  regenerates AI/NPU indexes, writes a compact execution log, and builds an
+  advisory post-validation AI work packet.
 
   It does not commit or push automatically.
 
@@ -17,11 +18,18 @@
   powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
 
   powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+
+  Optional local Ollama advisory packet:
+
+  powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -BuildAiPacket -UseOllama
 #>
 
 param(
     [switch]$SkipPull,
     [switch]$ContinueOnError,
+    [switch]$BuildAiPacket = $true,
+    [switch]$UseOllama,
+    [string]$OllamaModel = "",
     [string]$RepoRoot = ".",
     [string]$LogDir = "output/local_validation",
     [int]$MatrixWorkers = 8,
@@ -115,6 +123,8 @@ Add-Content -LiteralPath $script:MainLog -Value "Local validation started: $(Get
 Add-Content -LiteralPath $script:MainLog -Value "Repo: $repo"
 Add-Content -LiteralPath $script:MainLog -Value "MatrixWorkers: $MatrixWorkers"
 Add-Content -LiteralPath $script:MainLog -Value "RepeatCases: $RepeatCases"
+Add-Content -LiteralPath $script:MainLog -Value "BuildAiPacket: $BuildAiPacket"
+Add-Content -LiteralPath $script:MainLog -Value "UseOllama: $UseOllama"
 
 try {
     if (-not $SkipPull) {
@@ -127,6 +137,8 @@ try {
     Invoke-Step -Name "ai pipeline module smoke validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_pipeline_modules.py", "--repo-root", ".", "--output", ".\output\validation\ai_pipeline_modules.json")
     Invoke-Step -Name "npu pipeline module smoke validation" -Command "python" -Arguments @(".\Tools\validation\check_npu_pipeline_modules.py", "--repo-root", ".", "--output", ".\output\validation\npu_pipeline_modules.json")
     Invoke-Step -Name "npu pipeline helper unit tests" -Command "python" -Arguments @(".\Tools\validation\check_npu_pipeline_helper_tests.py", "--repo-root", ".", "--output", ".\output\validation\npu_pipeline_helper_tests.json")
+    Invoke-Step -Name "npu pipeline docs validation" -Command "python" -Arguments @(".\Tools\validation\check_npu_pipeline_docs.py", "--repo-root", ".", "--output", ".\output\validation\npu_pipeline_docs.json")
+    Invoke-Step -Name "execution plan status validation" -Command "python" -Arguments @(".\Tools\validation\check_execution_plan_status.py", "--repo-root", ".", "--output", ".\output\validation\execution_plan_status.json")
     Invoke-Step -Name "ai dry-run matrix case definition validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_dry_run_matrix_cases.py", "--repo-root", ".", "--output", ".\output\validation\ai_dry_run_matrix_cases.json")
     Invoke-Step -Name "generated python policy validation" -Command "python" -Arguments @(".\Tools\validation\check_generated_python_policy.py", "--repo-root", ".", "--output", ".\output\validation\generated_python_policy.json")
     Invoke-Step -Name "generated blender script policy validation" -Command "python" -Arguments @(".\Tools\validation\check_generated_blender_script_policy.py", "--repo-root", ".", "--output", ".\output\validation\generated_blender_script_policy.json")
@@ -144,6 +156,18 @@ try {
     Invoke-Step -Name "validation report contract validation" -Command "python" -Arguments @(".\Tools\validation\check_validation_report_contract.py", "--repo-root", ".", "--output", ".\output\validation\validation_report_contract.json")
     Invoke-Step -Name "build project ai index" -Command "python" -Arguments @(".\Tools\npu\build_project_ai_index.py")
     Invoke-Step -Name "build npu code context" -Command "python" -Arguments @(".\Tools\npu\build_npu_code_context.py")
+
+    if ($BuildAiPacket) {
+        $packetArgs = @(".\Tools\workflow\run_post_validation_ai_packet.ps1", "-RepoRoot", ".")
+        if ($UseOllama) {
+            $packetArgs += "-UseOllama"
+        }
+        if ($OllamaModel -ne "") {
+            $packetArgs += @("-Model", $OllamaModel)
+        }
+        Invoke-Step -Name "post-validation ai work packet" -Command "powershell.exe" -Arguments (@("-ExecutionPolicy", "Bypass", "-File") + $packetArgs)
+    }
+
     Invoke-Step -Name "git diff stat after validation" -Command "git" -Arguments @("diff", "--stat")
     Invoke-Step -Name "git status after validation" -Command "git" -Arguments @("status")
 
@@ -163,11 +187,15 @@ $summary = [pscustomobject]@{
     passed = $passed
     matrix_workers = $MatrixWorkers
     repeat_cases = $RepeatCases
+    build_ai_packet = [bool]$BuildAiPacket
+    use_ollama = [bool]$UseOllama
     log_path = $script:MainLog
     ai_model_json_report = (Join-Path $repo "output\validation\ai_model_json.json")
     ai_pipeline_modules_report = (Join-Path $repo "output\validation\ai_pipeline_modules.json")
     npu_pipeline_modules_report = (Join-Path $repo "output\validation\npu_pipeline_modules.json")
     npu_pipeline_helper_tests_report = (Join-Path $repo "output\validation\npu_pipeline_helper_tests.json")
+    npu_pipeline_docs_report = (Join-Path $repo "output\validation\npu_pipeline_docs.json")
+    execution_plan_status_report = (Join-Path $repo "output\validation\execution_plan_status.json")
     ai_dry_run_matrix_cases_report = (Join-Path $repo "output\validation\ai_dry_run_matrix_cases.json")
     ai_pipeline_report_contract_report = (Join-Path $repo "output\validation\ai_pipeline_report_contract.json")
     ai_dry_run_matrix_outputs_report = (Join-Path $repo "output\validation\ai_dry_run_matrix_outputs.json")
@@ -182,6 +210,8 @@ $summary = [pscustomobject]@{
     ai_dry_run_matrix_contract_report = (Join-Path $repo "output\validation\ai_dry_run_matrix_contract.json")
     dry_run_matrix_json = (Join-Path $repo "output\ai_pipeline\dry_run_matrix_report.json")
     dry_run_matrix_markdown = (Join-Path $repo "output\ai_pipeline\dry_run_matrix_report.md")
+    repository_update_suggestions_json = (Join-Path $repo "output\ai_pipeline\repository_update_suggestions.json")
+    repository_update_suggestions_markdown = (Join-Path $repo "output\ai_pipeline\repository_update_suggestions.md")
     steps = $script:Results
 }
 
@@ -195,11 +225,15 @@ $md += ("- Passed: {0}" -f $passed)
 $md += ("- Repo: {0}" -f $repo)
 $md += ("- Matrix workers: {0}" -f $MatrixWorkers)
 $md += ("- Repeat cases: {0}" -f $RepeatCases)
+$md += ("- Build AI packet: {0}" -f $BuildAiPacket)
+$md += ("- Use Ollama: {0}" -f $UseOllama)
 $md += ("- Log: {0}" -f $script:MainLog)
 $md += ("- AI model JSON report: {0}" -f $summary.ai_model_json_report)
 $md += ("- AI module report: {0}" -f $summary.ai_pipeline_modules_report)
 $md += ("- NPU module report: {0}" -f $summary.npu_pipeline_modules_report)
 $md += ("- NPU helper tests report: {0}" -f $summary.npu_pipeline_helper_tests_report)
+$md += ("- NPU docs report: {0}" -f $summary.npu_pipeline_docs_report)
+$md += ("- Execution plan status report: {0}" -f $summary.execution_plan_status_report)
 $md += ("- AI dry-run matrix cases report: {0}" -f $summary.ai_dry_run_matrix_cases_report)
 $md += ("- AI pipeline schema-v6 report contract report: {0}" -f $summary.ai_pipeline_report_contract_report)
 $md += ("- AI dry-run matrix outputs report: {0}" -f $summary.ai_dry_run_matrix_outputs_report)
@@ -214,6 +248,8 @@ $md += ("- Blender shared compatibility smoke report: {0}" -f $summary.blender_s
 $md += ("- AI dry-run matrix contract report: {0}" -f $summary.ai_dry_run_matrix_contract_report)
 $md += ("- Dry-run matrix JSON: {0}" -f $summary.dry_run_matrix_json)
 $md += ("- Dry-run matrix Markdown: {0}" -f $summary.dry_run_matrix_markdown)
+$md += ("- Repository update suggestions JSON: {0}" -f $summary.repository_update_suggestions_json)
+$md += ("- Repository update suggestions Markdown: {0}" -f $summary.repository_update_suggestions_markdown)
 $md += ""
 $md += "## Steps"
 $md += ""
@@ -233,6 +269,8 @@ $md += "    Get-Content .\output\validation\ai_model_json.json -Raw"
 $md += "    Get-Content .\output\validation\ai_pipeline_modules.json -Raw"
 $md += "    Get-Content .\output\validation\npu_pipeline_modules.json -Raw"
 $md += "    Get-Content .\output\validation\npu_pipeline_helper_tests.json -Raw"
+$md += "    Get-Content .\output\validation\npu_pipeline_docs.json -Raw"
+$md += "    Get-Content .\output\validation\execution_plan_status.json -Raw"
 $md += "    Get-Content .\output\validation\ai_dry_run_matrix_cases.json -Raw"
 $md += "    Get-Content .\output\validation\ai_pipeline_report_contract.json -Raw"
 $md += "    Get-Content .\output\validation\ai_dry_run_matrix_outputs.json -Raw"
@@ -246,6 +284,7 @@ $md += "    Get-Content .\output\validation\agent_memory_policy.json -Raw"
 $md += "    Get-Content .\output\validation\blender_shared_compat_smoke.json -Raw"
 $md += "    Get-Content .\output\validation\ai_dry_run_matrix_contract.json -Raw"
 $md += "    Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw"
+$md += "    Get-Content .\output\ai_pipeline\repository_update_suggestions.md -Raw"
 $md | Set-Content -LiteralPath $summaryMd -Encoding UTF8
 
 Write-Host ""
