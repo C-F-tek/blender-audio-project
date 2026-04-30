@@ -63,6 +63,7 @@ files likely touched
 validation commands
 risk level
 progress log
+future task notes
 result
 follow-up
 ```
@@ -131,6 +132,10 @@ low | medium | high
 
 - YYYY-MM-DD: <note>
 
+## Future task notes
+
+- <Useful follow-up discovered while changing code, intentionally left out of this task.>
+
 ## Result
 
 not completed yet
@@ -144,6 +149,7 @@ not completed yet
 
 - Read active execution plans before starting related work.
 - Update the plan when scope changes.
+- When code changes reveal a useful future capability, record it under `Future task notes` instead of expanding the current scope silently.
 - Record validation commands and results.
 - Do not treat a plan as completed without proof of work.
 - Do not silently abandon a plan; move it to `abandoned/` with a reason.
