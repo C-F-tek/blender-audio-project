@@ -14,14 +14,24 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.generated_file_policy import PolicyRule, evaluate_paths, evaluate_text
+    from Tools.validation.generated_file_policy import PolicyRule
+    from Tools.validation.generated_python_policy import (
+        evaluate_python_paths,
+        evaluate_python_text,
+        generated_python_rule_dicts,
+    )
 except ImportError:  # Allows direct execution from Tools/validation.
     import sys
 
     repo_root = Path(__file__).resolve().parents[2]
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from Tools.validation.generated_file_policy import PolicyRule, evaluate_paths, evaluate_text  # type: ignore
+    from Tools.validation.generated_file_policy import PolicyRule  # type: ignore
+    from Tools.validation.generated_python_policy import (  # type: ignore
+        evaluate_python_paths,
+        evaluate_python_text,
+        generated_python_rule_dicts,
+    )
 
 
 BLENDER_GENERATED_SCRIPT_RULES: tuple[PolicyRule, ...] = (
@@ -60,13 +70,6 @@ BLENDER_GENERATED_SCRIPT_RULES: tuple[PolicyRule, ...] = (
         kind="forbidden",
         severity="warning",
     ),
-    PolicyRule(
-        rule_id="warn_python_eval_exec",
-        description="generated scripts should avoid dynamic eval/exec unless explicitly justified",
-        pattern=r"(^|\n)\s*(eval|exec)\s*\(",
-        kind="forbidden",
-        severity="warning",
-    ),
 )
 
 
@@ -87,16 +90,24 @@ def sample_results() -> list[dict[str, Any]]:
         "blocked_musgrave_node": "import bpy\nnode = nodes.new('ShaderNodeTexMusgrave')\n",
         "blocked_open_file": "import bpy\nbpy.ops.wm.open_mainfile(filepath='other.blend')\n",
         "warning_save_file": "import bpy\nbpy.ops.wm.save_as_mainfile(filepath='scene.blend')\n",
+        "warning_python_eval_exec": "import bpy\nvalue = eval('1 + 1')\n",
         "missing_bpy_import": "print('not a Blender script')\n",
     }
-    return [evaluate_text(name, text, BLENDER_GENERATED_SCRIPT_RULES).to_dict() for name, text in samples.items()]
+    return [evaluate_python_text(name, text, BLENDER_GENERATED_SCRIPT_RULES).to_dict() for name, text in samples.items()]
+
+
+def _repo_path(repo_root: Path, value: str) -> Path:
+    path = Path(value)
+    if not path.is_absolute():
+        path = repo_root / path
+    return path.resolve()
 
 
 def check_policy(repo_root: Path, paths: list[str]) -> dict[str, Any]:
     """Evaluate generated Blender script policy."""
-    explicit_paths = [Path(item).resolve() for item in paths]
+    explicit_paths = [_repo_path(repo_root, item) for item in paths]
     target_paths = explicit_paths or default_candidate_paths(repo_root)
-    path_results = evaluate_paths(target_paths, BLENDER_GENERATED_SCRIPT_RULES) if target_paths else []
+    path_results = evaluate_python_paths(target_paths, BLENDER_GENERATED_SCRIPT_RULES) if target_paths else []
     samples = sample_results()
 
     sample_expectations = {
@@ -104,6 +115,7 @@ def check_policy(repo_root: Path, paths: list[str]) -> dict[str, Any]:
         "blocked_musgrave_node": False,
         "blocked_open_file": False,
         "warning_save_file": True,
+        "warning_python_eval_exec": True,
         "missing_bpy_import": False,
     }
     sample_errors = []
@@ -120,8 +132,11 @@ def check_policy(repo_root: Path, paths: list[str]) -> dict[str, Any]:
         "repo_root": str(repo_root),
         "passed": not errors,
         "errors": errors,
-        "rule_count": len(BLENDER_GENERATED_SCRIPT_RULES),
-        "rules": [rule.__dict__ for rule in BLENDER_GENERATED_SCRIPT_RULES],
+        "generic_python_policy": True,
+        "generic_python_rule_count": len(generated_python_rule_dicts()),
+        "adapter_rule_count": len(BLENDER_GENERATED_SCRIPT_RULES),
+        "rule_count": len(generated_python_rule_dicts(BLENDER_GENERATED_SCRIPT_RULES)),
+        "rules": generated_python_rule_dicts(BLENDER_GENERATED_SCRIPT_RULES),
         "sample_results": samples,
         "path_count": len(path_results),
         "path_results": [item.to_dict() for item in path_results],
