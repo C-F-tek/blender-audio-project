@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-04-30T13:16:55",
+  "created_at": "2026-04-30T13:38:05",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "index_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI",
   "primary_library": true,
-  "source_fingerprint": "ccaf0daebb73d60efc01fa9f72a1b39aef9a9d75b37fc77af147ec92e3a9db86",
+  "source_fingerprint": "d6487805e173609ffdde721857fad1a2755dd4f504bb31284216972b5a395b56",
   "excluded_dirs": [
     ".git",
     ".mypy_cache",
@@ -305,9 +305,9 @@
     {
       "file": "docs/AI_PIPELINE_ARCHITECTURE.md",
       "suffix": ".md",
-      "lines": 184,
-      "chars": 5089,
-      "sha256": "00589f118bfce3ec3ab9679beac1d7928b264818120f66f34dae9aa2638ea8c0"
+      "lines": 201,
+      "chars": 5805,
+      "sha256": "aaf4483db21b75681338a9b256ac0e72194be1ca7f00c1de2a79540d3bcec84d"
     },
     {
       "file": "docs/AI_PIPELINE_OPTIMIZATION.md",
@@ -438,9 +438,9 @@
     {
       "file": "docs/EXECUTION_PLANS/active/2026-04-30_npu_pipeline_decomposition_plan.md",
       "suffix": ".md",
-      "lines": 102,
-      "chars": 3244,
-      "sha256": "aca9b8b5c4d626554da07b53efc50fc1069318fef66d81b5bbee0a48f1a73aec"
+      "lines": 120,
+      "chars": 4227,
+      "sha256": "9d7ca7f3440ae91e53b385138f988da9fb41bd0ae9678f38546559ed27aa8e53"
     },
     {
       "file": "docs/EXECUTION_PLANS/active/2026-04-30_validator_report_consistency_review.md",
@@ -641,9 +641,9 @@
     {
       "file": "docs/REFACTORING_AND_REUSE_PLAN.md",
       "suffix": ".md",
-      "lines": 350,
-      "chars": 11107,
-      "sha256": "a5c0d2d8353956418e595eea34cc4968124990da450909fe6b414c65cdd353cf"
+      "lines": 405,
+      "chars": 14013,
+      "sha256": "506eff8bdb3d9a544ca6513e8ca201e10c008cf449b68e8a44aec33bc0538895"
     },
     {
       "file": "docs/RENDER_WORKFLOW.md",
@@ -670,8 +670,8 @@
       "file": "docs/TECH_DEBT_TRACKER.md",
       "suffix": ".md",
       "lines": 70,
-      "chars": 5935,
-      "sha256": "9b11f280e9b8b227b468dcc26993839df4eb2447d2739ac899bf03556f9ae0ff"
+      "chars": 6008,
+      "sha256": "47f3d5dde989f96ff5443b1e32e6a0c7e33f88d5a5d4aa9b91be51acc5e8f634"
     },
     {
       "file": "docs/USAGE.md",
@@ -11303,7 +11303,7 @@
       "suffix": ".json",
       "lines": 7340,
       "chars": 198066,
-      "sha256": "fa22ff85a4564678b8a479c921bc4b5b56b36cfeb85b208671697f994c0a548c"
+      "sha256": "77519af21889d8aaa9087caa03e383703add7e3d017ddad4f51998b668645c21"
     },
     {
       "file": "Tools/npu/npu_guardrail_service.py",
@@ -17221,9 +17221,9 @@
       "path": "indexAI/project_code_chunks/chunk_0018_docs_AI_PIPELINE_ARCHITECTURE_md.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 183,
-      "chars": 6493,
-      "sha256": "58b417514e9811b35c3a31be2c2b9608b87667e4d5845ae03c44af4cace380b2"
+      "end_line": 200,
+      "chars": 7328,
+      "sha256": "73ce2029251f0ac8467a629581ee17512c56b18de8d8fd894061ea59e9d02f47"
     },
     {
       "index": 19,
@@ -17421,9 +17421,9 @@
       "path": "indexAI/project_code_chunks/chunk_0038_docs_EXECUTION_PLANS_active_2026_04_30_npu_pipeline_decomposition_plan_md.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 101,
-      "chars": 4115,
-      "sha256": "1515d689ff78df1105d70a67521bf86b55cf815c1ce09f0fa024a65c02734b0f"
+      "end_line": 119,
+      "chars": 5224,
+      "sha256": "90f7abb5ad8d6275766b2f3300a071526e8f59b1cfc0bf1cc138b458f981bfcc"
     },
     {
       "index": 39,
@@ -17751,19 +17751,19 @@
       "path": "indexAI/project_code_chunks/chunk_0071_docs_REFACTORING_AND_REUSE_PLAN_md.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 316,
-      "chars": 11802,
-      "sha256": "7b205cb3bea68c7e2a29f617bd3b8d1cfc1eaf59b83b6b4b01933a2065fcb2eb"
+      "end_line": 305,
+      "chars": 11817,
+      "sha256": "ec09de67e3e39bb3954188a0ea915de86b7168eeb236299b3923b0cde0ae7735"
     },
     {
       "index": 72,
       "file": "docs/REFACTORING_AND_REUSE_PLAN.md",
       "path": "indexAI/project_code_chunks/chunk_0072_docs_REFACTORING_AND_REUSE_PLAN_md.md",
       "part": 2,
-      "start_line": 317,
-      "end_line": 349,
-      "chars": 2000,
-      "sha256": "fb76134d6b0870b1ecfcf326dadee159c2983425482b8df0436762084443a359"
+      "start_line": 306,
+      "end_line": 404,
+      "chars": 5276,
+      "sha256": "1677a4ed24424b7266d03ae9c6b7495eecd593f83b8652fde906c386327e4820"
     },
     {
       "index": 73,
@@ -17802,8 +17802,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 69,
-      "chars": 6533,
-      "sha256": "823c764da2ae2ddc8d3f468527df5e741c43be7b7e90a2be389faad490a85023"
+      "chars": 6606,
+      "sha256": "427b3fdaff697d3141e623c0a7aac72052689f74ca7607e7e8f8fc856f0a4aad"
     },
     {
       "index": 77,
@@ -20293,7 +20293,7 @@
       "start_line": 1,
       "end_line": 382,
       "chars": 11708,
-      "sha256": "821301ea45c85665b2ac03c565fb7340687b82f2bf4d89a79a9000cc38230983"
+      "sha256": "2ecf4a43163624107eb19fde849eecbad76085e59416bfb0fc6e77335c8a54e4"
     },
     {
       "index": 326,
