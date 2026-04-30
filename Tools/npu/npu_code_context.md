@@ -1,6 +1,6 @@
 # NPU Code Index
 
-Generated: `2026-04-30T19:48:54`
+Generated: `2026-04-30T19:57:13`
 
 Purpose: long-context index for the local NPU musical/technical agent.
 Use `npu_code_chunks/chunk_*.md` for full file context.
@@ -12,7 +12,7 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `Tools/npu/npu_runtime.py`: 161 lines, 5903 chars, sha256 `38dc29da6ba1c564c68a29c0c5de7e4b38787aa6a0c17607c8d2ae03fe89f182`
 - `Tools/npu/ollama_runtime.py`: 390 lines, 13678 chars, sha256 `a5db8a9f0d0111595e34f284bf8ba3ce2f3d7867e6e761a55fe8ebc952d87ec6`
 - `Tools/npu/build_blender_manual_context.py`: 327 lines, 10493 chars, sha256 `5516f84a1f112607a51f93aa7dbe52631a7e834353a0b98c71706e33b152719c`
-- `Tools/npu/run_dual_ai_pipeline.py`: 1705 lines, 72162 chars, sha256 `a6a3d187992b5d66d4d8edb064e2a04cc303c5f685b05b0a698efd953f636bbb`
+- `Tools/npu/run_dual_ai_pipeline.py`: 1682 lines, 71599 chars, sha256 `8db53c831e3b5acb5001629054eb265cf90de79ef8e3d52df6f03b1088ddffb7`
 - `Scripting/v61b/config.py`: 440 lines, 15700 chars, sha256 `98836c3a51657ef0934410486d649d34d1faf3ba260d692b73c39741ab6c7c4e`
 - `Scripting/v61b/main_v61b.py`: 201 lines, 6896 chars, sha256 `e8bfc826b8fcf9071a8ef48f7bdfb973cb0f908d99eed4f2de4390a4b3f051c4`
 - `Scripting/v61b/animation.py`: 1080 lines, 50253 chars, sha256 `8e08e656c5fdf65cf95d2d6c4c24df4b5d2e5b17ea47f7ab7b12034f970461ce`
@@ -76,15 +76,15 @@ Use `npu_code_chunks/chunk_*.md` for full file context.
 - `Tools/npu/npu_code_chunks/chunk_008_Tools_npu_ollama_runtime_py.md` -> `Tools/npu/ollama_runtime.py` lines 264-389
 - `Tools/npu/npu_code_chunks/chunk_009_Tools_npu_build_blender_manual_context_py.md` -> `Tools/npu/build_blender_manual_context.py` lines 1-268
 - `Tools/npu/npu_code_chunks/chunk_010_Tools_npu_build_blender_manual_context_py.md` -> `Tools/npu/build_blender_manual_context.py` lines 269-326
-- `Tools/npu/npu_code_chunks/chunk_011_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1-213
-- `Tools/npu/npu_code_chunks/chunk_012_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 214-432
-- `Tools/npu/npu_code_chunks/chunk_013_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 433-671
-- `Tools/npu/npu_code_chunks/chunk_014_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 672-866
-- `Tools/npu/npu_code_chunks/chunk_015_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 867-1068
-- `Tools/npu/npu_code_chunks/chunk_016_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1069-1267
-- `Tools/npu/npu_code_chunks/chunk_017_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1268-1470
-- `Tools/npu/npu_code_chunks/chunk_018_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1471-1662
-- `Tools/npu/npu_code_chunks/chunk_019_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1663-1704
+- `Tools/npu/npu_code_chunks/chunk_011_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1-211
+- `Tools/npu/npu_code_chunks/chunk_012_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 212-426
+- `Tools/npu/npu_code_chunks/chunk_013_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 427-661
+- `Tools/npu/npu_code_chunks/chunk_014_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 662-859
+- `Tools/npu/npu_code_chunks/chunk_015_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 860-1060
+- `Tools/npu/npu_code_chunks/chunk_016_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1061-1261
+- `Tools/npu/npu_code_chunks/chunk_017_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1262-1460
+- `Tools/npu/npu_code_chunks/chunk_018_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1461-1651
+- `Tools/npu/npu_code_chunks/chunk_019_Tools_npu_run_dual_ai_pipeline_py.md` -> `Tools/npu/run_dual_ai_pipeline.py` lines 1652-1681
 - `Tools/npu/npu_code_chunks/chunk_020_Scripting_v61b_config_py.md` -> `Scripting/v61b/config.py` lines 1-228
 - `Tools/npu/npu_code_chunks/chunk_021_Scripting_v61b_config_py.md` -> `Scripting/v61b/config.py` lines 229-439
 - `Tools/npu/npu_code_chunks/chunk_022_Scripting_v61b_main_v61b_py.md` -> `Scripting/v61b/main_v61b.py` lines 1-200
