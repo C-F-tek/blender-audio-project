@@ -3,6 +3,8 @@
 
 The active folder must not contain plans whose top-level status is completed or
 abandoned. Completed and abandoned plans should live in their matching folders.
+
+Folder README files are documentation, not execution plans, and are ignored.
 """
 from __future__ import annotations
 
@@ -17,6 +19,7 @@ STATUS_RE = re.compile(r"^## Status\s*\n\s*\n(?P<status>[a-zA-Z_ -]+)\s*$", re.M
 
 TERMINAL_STATUSES = {"completed", "abandoned", "wont_fix", "won't_fix"}
 ALLOWED_ACTIVE_STATUSES = {"active", "in_progress", "blocked", "planned"}
+IGNORED_PLAN_FILENAMES = {"README.md"}
 
 
 def read_top_level_status(path: Path) -> str:
@@ -25,6 +28,10 @@ def read_top_level_status(path: Path) -> str:
     if not match:
         return "missing"
     return match.group("status").strip().lower().replace(" ", "_")
+
+
+def iter_plan_files(folder: Path) -> list[Path]:
+    return [path for path in sorted(folder.glob("*.md")) if path.name not in IGNORED_PLAN_FILENAMES]
 
 
 def check_execution_plan_status(repo_root: Path) -> dict[str, object]:
@@ -36,6 +43,7 @@ def check_execution_plan_status(repo_root: Path) -> dict[str, object]:
     results: list[dict[str, object]] = []
     errors: list[str] = []
     warnings: list[str] = []
+    ignored_files: list[str] = []
 
     for folder_name, folder in (
         ("active", active_root),
@@ -45,7 +53,12 @@ def check_execution_plan_status(repo_root: Path) -> dict[str, object]:
         if not folder.exists():
             warnings.append(f"missing execution-plan folder: {folder.relative_to(repo_root)}")
             continue
-        for path in sorted(folder.glob("*.md")):
+        ignored_files.extend(
+            path.relative_to(repo_root).as_posix()
+            for path in sorted(folder.glob("*.md"))
+            if path.name in IGNORED_PLAN_FILENAMES
+        )
+        for path in iter_plan_files(folder):
             status = read_top_level_status(path)
             rel_path = path.relative_to(repo_root).as_posix()
             ok = True
@@ -83,6 +96,7 @@ def check_execution_plan_status(repo_root: Path) -> dict[str, object]:
         "warnings": warnings,
         "checks": {
             "plan_count": len(results),
+            "ignored_files": ignored_files,
             "active_terminal_status_count": sum(
                 1 for item in results if item["folder"] == "active" and item["status"] in TERMINAL_STATUSES
             ),
