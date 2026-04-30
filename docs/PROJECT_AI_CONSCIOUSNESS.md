@@ -65,6 +65,8 @@ Current concrete adapter:
 
 ```text
 Tools/validation/generated_file_policy.py
+  -> Tools/validation/generated_python_policy.py
+  -> Tools/validation/check_generated_python_policy.py
   -> Tools/validation/check_generated_artifact_path_policy.py
   -> Tools/validation/check_generated_blender_script_policy.py
 ```
@@ -79,10 +81,12 @@ Future adapters must preserve this boundary. Do not bake WAV/audio assumptions i
 | `Scripting/v61b/` | stable reference | Current high-quality Blender reference package. Do not destructively refactor. |
 | Ready To Jazz package | usable but monolithic | Good production/generation experiment; not yet reusable architecture. |
 | `Scripting/shared/` | active foundation | Pure Python helpers exist for path, JSON, image sequence, FFmpeg commands and render profiles; `blender_compat.py` passed a Blender 5.1.1 no-render smoke for frame range, noise node and VSE audio strip creation. |
-| `Tools/validation/` | active foundation | Non-invasive validators exist for syntax, docs, JSON artifacts, AI pipeline, dry-run matrix report contract, model JSON parsing, agent memory, generated artifact path policy, Blender shared compatibility and generated Blender script policy. |
+| `Tools/validation/` | active foundation | Non-invasive validators exist for syntax, docs, JSON artifacts, AI pipeline, dry-run matrix report contract, model JSON parsing, agent memory, generated Python policy, generated artifact path policy, Blender shared compatibility and generated Blender script policy. |
 | `Tools/validation/generated_file_policy.py` | active foundation | Generic generated-file policy engine. It must remain independent from WAV/audio input and independent from the output application. |
+| `Tools/validation/generated_python_policy.py` | active foundation | Generic generated Python syntax and hazard policy. It stays independent from input domains and target applications. |
+| `Tools/validation/check_generated_python_policy.py` | generic generated Python guardrail | Validates generated Python concepts with deterministic samples and optional script paths before application-specific adapters. |
 | `Tools/validation/check_generated_artifact_path_policy.py` | generic artifact destination guardrail | Validates proposed generated artifact destinations and can scan JSON reports with `--artifact-report` without knowing the input domain or output application. |
-| `Tools/validation/check_generated_blender_script_policy.py` | first adapter | First application-specific adapter for generated Python scripts executed by Blender. Blender is not the generic boundary. |
+| `Tools/validation/check_generated_blender_script_policy.py` | first application adapter | Composes generic generated Python policy with Blender-specific generated-script rules. Blender is not the generic boundary. |
 | `Tools/validation/check_ai_dry_run_matrix_contract.py` | report contract validator | Validates `output/ai_pipeline/dry_run_matrix_report.json` without running the matrix or modifying generated artifacts. |
 | `Tools/ai/model_json.py` | active foundation | Reusable deterministic parser for JSON-like model outputs. Ollama response parsing delegates to it while preserving legacy `json.JSONDecodeError` behavior. |
 | `Tools/ai/pipeline/` | modularized and locally validated | AI artifact pipeline is split into focused modules with a thin entrypoint, dry-run matrix, Markdown report and machine-readable status marker. |
@@ -172,6 +176,7 @@ Current example:
 
 ```text
 Tools/validation/generated_file_policy.py
+  -> Tools/validation/generated_python_policy.py
   -> Tools/validation/check_generated_artifact_path_policy.py
   -> Tools/validation/check_generated_blender_script_policy.py
 ```
@@ -306,8 +311,10 @@ Current AI/generic validation foundations:
 |---|---|
 | `Tools/ai/model_json.py` | Deterministic parser for JSON-like model output. |
 | `Tools/validation/generated_file_policy.py` | Generic policy primitives for generated file validation. Input-agnostic and application-agnostic. |
+| `Tools/validation/generated_python_policy.py` | Generic generated Python syntax and hazard policy for application adapters. |
+| `Tools/validation/check_generated_python_policy.py` | CLI smoke for the generic generated Python policy layer. |
 | `Tools/validation/check_generated_artifact_path_policy.py` | Generic destination validator for generated artifact paths. |
-| `Tools/validation/check_generated_blender_script_policy.py` | Blender-specific generated Python script policy adapter. |
+| `Tools/validation/check_generated_blender_script_policy.py` | Blender-specific generated Python script policy adapter composed over the generic Python layer. |
 | `Tools/validation/check_ai_dry_run_matrix_contract.py` | Dry-run matrix report contract validator. Does not execute matrix cases. |
 
 Next shared candidates:
@@ -335,7 +342,8 @@ Current validators:
 | `Tools/validation/check_docs_links.py` | Checks internal documentation links after doc changes. |
 | `Tools/validation/check_agent_memory_policy.py` | Checks local agent memory policy and optional generated memory DB state. |
 | `Tools/validation/check_blender_shared_compat_smoke.py` | Runs a Blender no-render compatibility smoke when Blender is available. |
-| `Tools/validation/check_generated_blender_script_policy.py` | Validates the first generated Python script policy adapter for Blender using reusable generated-file rules. |
+| `Tools/validation/check_generated_python_policy.py` | Validates generic generated Python syntax and warning policy without application assumptions. |
+| `Tools/validation/check_generated_blender_script_policy.py` | Validates the first generated Python script policy adapter for Blender by composing generic Python rules with Blender rules. |
 
 Preferred local validation:
 
@@ -345,6 +353,7 @@ python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-err
 python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
@@ -381,6 +390,10 @@ python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --o
 Generated Blender script policy smoke:
 
 ```powershell
+python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
+```
+
+```powershell
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 ```
 
@@ -390,7 +403,7 @@ Unattended validation runner:
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
 ```
 
-Do not add new validators to the unattended runner until they have remained cheap and deterministic across at least one local validation cycle.
+Add new validators to the unattended runner only after focused smoke validation shows they are cheap, deterministic and non-rendering.
 
 ## Generated index policy
 
@@ -443,7 +456,7 @@ Capabilities:
 
 1. Validate the newly aligned documentation and regenerate AI/NPU indexes.
 2. Keep generated Python script policy input-agnostic and application-agnostic; Blender remains only the first adapter.
-3. Add generated Blender script policy to the local workflow only after another stable validation cycle.
+3. Continue expanding generated Python policy through small adapters, while keeping Blender and input-domain assumptions outside the generic layer.
 4. Complete `TD-006` with local dry-run matrix report contract validation.
 5. Continue `TD-010` only after schema/report contracts remain stable; do not inject agent packets into prompts yet.
 6. Select one non-critical `Scripting/shared/blender_compat.py` call-site pilot only after confirming the no-render smoke result on the workstation.

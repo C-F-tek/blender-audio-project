@@ -90,6 +90,7 @@ Operational validation now includes:
 AI module smoke validator: PASS
 AI dry-run matrix: PASS
 agent memory policy validation: PASS when no quarantined local memory exists
+generated Python policy validation: PASS
 generated artifact path policy validation: PASS
 Blender shared compatibility smoke: PASS in Blender 5.1.1 for frame range, noise node and VSE audio strip creation
 JSON artifact validation: PASS
@@ -106,6 +107,7 @@ python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
+python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
 python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
 ```
 

@@ -32,6 +32,7 @@ git pull --rebase
 python syntax validation
 AI model JSON validation
 AI pipeline module smoke validation
+generated Python policy validation
 generated artifact path policy validation
 generated Blender script policy validation
 AI dry-run matrix contract validation
@@ -102,6 +103,7 @@ branch aligned with origin/master
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
 python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
@@ -119,6 +121,7 @@ python .\Tools\validation\check_json_artifacts.py --repo-root .
 
 ```powershell
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
+Get-Content .\output\validation\generated_python_policy.json -Raw
 Get-Content .\output\validation\generated_artifact_path_policy.json -Raw
 Get-Content .\output\validation\generated_blender_script_policy.json -Raw
 Get-Content .\output\validation\ai_dry_run_matrix_contract.json -Raw
