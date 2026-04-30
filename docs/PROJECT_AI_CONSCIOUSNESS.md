@@ -78,9 +78,10 @@ Future adapters must preserve this boundary. Do not bake WAV/audio assumptions i
 | `Scripting/v61b/` | stable reference | Current high-quality Blender reference package. Do not destructively refactor. |
 | Ready To Jazz package | usable but monolithic | Good production/generation experiment; not yet reusable architecture. |
 | `Scripting/shared/` | active foundation | Pure Python helpers exist for path, JSON, image sequence, FFmpeg commands and render profiles; `blender_compat.py` passed a Blender 5.1.1 no-render smoke for frame range, noise node and VSE audio strip creation. |
-| `Tools/validation/` | active foundation | Non-invasive validators exist for syntax, docs, JSON artifacts, AI pipeline, model JSON parsing, agent memory, Blender shared compatibility and generated Blender script policy. |
+| `Tools/validation/` | active foundation | Non-invasive validators exist for syntax, docs, JSON artifacts, AI pipeline, dry-run matrix report contract, model JSON parsing, agent memory, Blender shared compatibility and generated Blender script policy. |
 | `Tools/validation/generated_file_policy.py` | active foundation | Generic generated-file policy engine. It must remain independent from WAV/audio input and independent from the output application. |
 | `Tools/validation/check_generated_blender_script_policy.py` | first adapter | First application-specific adapter for generated Python scripts executed by Blender. Blender is not the generic boundary. |
+| `Tools/validation/check_ai_dry_run_matrix_contract.py` | report contract validator | Validates `output/ai_pipeline/dry_run_matrix_report.json` without running the matrix or modifying generated artifacts. |
 | `Tools/ai/model_json.py` | active foundation | Reusable deterministic parser for JSON-like model outputs. Ollama response parsing delegates to it while preserving legacy `json.JSONDecodeError` behavior. |
 | `Tools/ai/pipeline/` | modularized and locally validated | AI artifact pipeline is split into focused modules with a thin entrypoint, dry-run matrix, Markdown report and machine-readable status marker. |
 | `Tools/ai/agent_state.py` | initial foundation | Generic memory and microtask packet model for task-local agent state, persistent memory inputs and non-blocking CPU/NPU/GPU lane planning. |
@@ -116,6 +117,7 @@ docs/SHARED_SCRIPTING_UTILITIES.md
 docs/PROJECT_STATUS_POINT.md
 docs/PATCH_SPEC_WORKFLOW.md
 docs/EXECUTION_PLANS/active/2026-04-29_json_parser_utility_review.md
+docs/EXECUTION_PLANS/active/2026-04-29_formal_json_schema_validation.md
 docs/EXECUTION_PLANS/active/2026-04-29_generated_file_policy_blender_first.md
 docs/EXECUTION_PLANS/active/2026-04-29_superseded_pr_followups.md
 Scripting/README.md
@@ -252,7 +254,7 @@ Tools/ai/pipeline/remediation.py
 Tools/ai/pipeline/refactor_status.py
 ```
 
-Validated locally:
+Validated locally before this TD-006 branch:
 
 ```text
 Python syntax validation: PASS
@@ -267,11 +269,19 @@ Project AI index generation: PASS
 NPU code context generation: PASS
 ```
 
+TD-006 adds a new report-contract validator. Its local validation remains pending until the dry-run matrix report exists in the workstation workspace.
+
 The dry-run matrix writes both JSON and Markdown:
 
 ```text
 output/ai_pipeline/dry_run_matrix_report.json
 output/ai_pipeline/dry_run_matrix_report.md
+```
+
+The dry-run matrix contract validator reads the JSON report only:
+
+```powershell
+python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 ```
 
 ## Implemented shared foundation
@@ -294,6 +304,7 @@ Current AI/generic validation foundations:
 | `Tools/ai/model_json.py` | Deterministic parser for JSON-like model output. |
 | `Tools/validation/generated_file_policy.py` | Generic policy primitives for generated file validation. Input-agnostic and application-agnostic. |
 | `Tools/validation/check_generated_blender_script_policy.py` | Blender-specific generated Python script policy adapter. |
+| `Tools/validation/check_ai_dry_run_matrix_contract.py` | Dry-run matrix report contract validator. Does not execute matrix cases. |
 
 Next shared candidates:
 
@@ -315,6 +326,7 @@ Current validators:
 | `Tools/validation/check_json_artifacts.py` | Checks JSON parseability without rewriting artifacts; accepts UTF-8 with or without BOM. |
 | `Tools/validation/check_ai_pipeline_modules.py` | Smoke-checks modular AI pipeline imports, step builders, preflight and report generation without heavy workloads. |
 | `Tools/validation/check_ai_model_json.py` | Validates reusable model-output JSON parser and Ollama legacy wrapper behavior. |
+| `Tools/validation/check_ai_dry_run_matrix_contract.py` | Validates the AI dry-run matrix report contract without running the matrix. |
 | `Tools/validation/check_refactor_status_consistency.py` | Checks that duplicated AI pipeline refactor status remains consistent across docs and code. |
 | `Tools/validation/check_docs_links.py` | Checks internal documentation links after doc changes. |
 | `Tools/validation/check_agent_memory_policy.py` | Checks local agent memory policy and optional generated memory DB state. |
@@ -325,13 +337,14 @@ Preferred local validation:
 
 ```powershell
 python .\Tools\validation\check_python_syntax.py --repo-root .
+python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
 ```
@@ -427,7 +440,7 @@ Capabilities:
 1. Validate the newly aligned documentation and regenerate AI/NPU indexes.
 2. Keep generated Python script policy input-agnostic and application-agnostic; Blender remains only the first adapter.
 3. Add generated Blender script policy to the local workflow only after another stable validation cycle.
-4. Continue `TD-006` with dry-run matrix report contract validation.
+4. Complete `TD-006` with local dry-run matrix report contract validation.
 5. Continue `TD-010` only after schema/report contracts remain stable; do not inject agent packets into prompts yet.
 6. Select one non-critical `Scripting/shared/blender_compat.py` call-site pilot only after confirming the no-render smoke result on the workstation.
 7. Open the `TD-007` NPU pipeline decomposition plan before splitting orchestration files into config, context builder, prompts, provider adapter, validators, artifact writer and runner.
