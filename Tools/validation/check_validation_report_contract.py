@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ except ImportError:  # Allows package-style imports during external checks.
 DEFAULT_REPORT_DIR = "output/validation"
 REQUIRED_COMMON_FIELDS = ("schema_version", "repo_root", "passed")
 RECOMMENDED_COMMON_FIELDS = ("kind", "errors")
+NON_REPORT_FILE_PATTERNS = ("*_stdout.json",)
 
 
 EXPECTED_REPORT_KINDS = {
@@ -43,10 +45,17 @@ def load_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     return data, None
 
 
-def iter_report_files(report_dir: Path) -> list[Path]:
+def is_report_candidate(path: Path) -> bool:
+    return not any(fnmatch.fnmatch(path.name, pattern) for pattern in NON_REPORT_FILE_PATTERNS)
+
+
+def collect_report_files(report_dir: Path) -> tuple[list[Path], list[Path]]:
     if not report_dir.exists():
-        return []
-    return sorted(path for path in report_dir.glob("*.json") if path.is_file())
+        return [], []
+    files = sorted(path for path in report_dir.glob("*.json") if path.is_file())
+    reports = [path for path in files if is_report_candidate(path)]
+    ignored = [path for path in files if not is_report_candidate(path)]
+    return reports, ignored
 
 
 def relative_or_absolute(path: Path, repo_root: Path) -> str:
@@ -119,7 +128,7 @@ def validate_report_file(path: Path, repo_root: Path, require_recommended: bool)
 
 
 def validate_reports(repo_root: Path, report_dir: Path, require_recommended: bool) -> dict[str, Any]:
-    files = iter_report_files(report_dir)
+    files, ignored_files = collect_report_files(report_dir)
     results = [validate_report_file(path, repo_root, require_recommended) for path in files]
     errors: list[str] = []
     warnings: list[str] = []
@@ -141,6 +150,9 @@ def validate_reports(repo_root: Path, report_dir: Path, require_recommended: boo
         "errors": errors,
         "warnings": warnings,
         "report_count": len(results),
+        "ignored_count": len(ignored_files),
+        "ignored_files": [relative_or_absolute(path, repo_root) for path in ignored_files],
+        "ignored_patterns": list(NON_REPORT_FILE_PATTERNS),
         "require_recommended": require_recommended,
         "required_common_fields": list(REQUIRED_COMMON_FIELDS),
         "recommended_common_fields": list(RECOMMENDED_COMMON_FIELDS),
