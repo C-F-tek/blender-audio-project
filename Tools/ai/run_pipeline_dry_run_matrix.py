@@ -9,7 +9,9 @@ It does not run NPU/GPU/Blender workloads because every invocation includes
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
+import os
 import subprocess
 import sys
 import time
@@ -30,19 +32,58 @@ class MatrixCase:
     purpose: str
 
 
+def default_matrix_workers() -> int:
+    """Return a conservative default for matrix-level parallel dry-run execution."""
+    cpu_count = os.cpu_count() or 1
+    return max(1, min(8, cpu_count))
+
+
 def _planned_gpu_command() -> str:
     """Return a harmless command string used only for dry-run GPU planning."""
-    return f"{sys.executable} -c \"print('gpu planner dry run only')\""
+    return "python -c \"print('gpu planner dry run only')\""
+
+
+def _planned_gpu_placeholder_command() -> str:
+    """Return a harmless placeholder-aware GPU command used only for dry-run planning."""
+    return "python -c \"import sys; print(sys.argv[1]); print(sys.argv[2])\" {brief} {output}"
+
+
+def ensure_sample_analysis_json(repo_root: Path) -> Path:
+    """Create a tiny deterministic analysis JSON so music-summary dry-runs pass preflight."""
+    sample = repo_root / "output" / "ai_pipeline" / "dry_run_matrix_inputs" / "sample_analysis.json"
+    sample.parent.mkdir(parents=True, exist_ok=True)
+    if not sample.exists():
+        payload = {
+            "schema_version": 1,
+            "source": "dry_run_matrix_sample",
+            "duration_sec": 1.0,
+            "sample_rate": 44100,
+            "bpm": 120.0,
+            "segments": [
+                {
+                    "start_sec": 0.0,
+                    "end_sec": 1.0,
+                    "label": "dry_run_sample",
+                    "energy": 0.5,
+                }
+            ],
+            "notes": [
+                "Synthetic sample used only to satisfy preflight during dry-run matrix planning.",
+                "Do not treat this as real audio analysis output.",
+            ],
+        }
+        sample.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return sample
 
 
 def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
     agent_state_packet = None
-    missing_analysis_json = Path("output/ai_pipeline/dry_run_matrix_inputs/missing_analysis.json")
+    sample_analysis_json = Path("output/ai_pipeline/dry_run_matrix_inputs/sample_analysis.json")
     if repo_root is not None:
         candidate = repo_root / "output" / "ai_pipeline" / "agent_state" / "validate_agent_state_memory_integration_plan.json"
         if candidate.exists():
             agent_state_packet = candidate
-        missing_analysis_json = repo_root / missing_analysis_json
+        sample_analysis_json = ensure_sample_analysis_json(repo_root)
 
     cases = [
         MatrixCase(
@@ -87,9 +128,19 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
             purpose="Verify validate_ai_artifacts stage planning.",
         ),
         MatrixCase(
+            name="validation_no_guardrail",
+            args=("--dry-run", "--write-dry-run-report", "--validate", "--no-npu-guardrail"),
+            purpose="Verify validation planning when NPU guardrail is disabled.",
+        ),
+        MatrixCase(
             name="with_chunks",
             args=("--dry-run", "--write-dry-run-report", "--build-chunks"),
             purpose="Verify semantic code chunk stage planning.",
+        ),
+        MatrixCase(
+            name="chunks_no_smart_context",
+            args=("--dry-run", "--write-dry-run-report", "--build-chunks", "--no-smart-context"),
+            purpose="Verify chunk planning without smart context.",
         ),
         MatrixCase(
             name="with_music_summary_planned",
@@ -98,19 +149,124 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
                 "--write-dry-run-report",
                 "--build-music-summary",
                 "--analysis-json",
-                str(missing_analysis_json),
+                str(sample_analysis_json),
             ),
-            purpose="Verify music intermediate stage planning without requiring the analysis JSON to exist during dry-run.",
+            purpose="Verify music intermediate stage planning using a deterministic synthetic analysis JSON.",
         ),
         MatrixCase(
-            name="with_npu_review_planned",
+            name="music_no_smart_context",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--build-music-summary",
+                "--analysis-json",
+                str(sample_analysis_json),
+                "--no-smart-context",
+            ),
+            purpose="Verify music intermediate planning when smart context is disabled.",
+        ),
+        MatrixCase(
+            name="smart_context_small_budget",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--smart-max-packet-chars",
+                "2048",
+                "--smart-max-capsule-chars",
+                "512",
+            ),
+            purpose="Verify smart-context planning with a small packet/capsule budget.",
+        ),
+        MatrixCase(
+            name="smart_context_large_budget",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--smart-max-packet-chars",
+                "64000",
+                "--smart-max-capsule-chars",
+                "8192",
+            ),
+            purpose="Verify smart-context planning with a larger packet/capsule budget.",
+        ),
+        MatrixCase(
+            name="custom_track_stem_ascii",
+            args=("--dry-run", "--write-dry-run-report", "--track-stem", "dry_run_track_120bpm"),
+            purpose="Verify planning with a custom ASCII track stem.",
+        ),
+        MatrixCase(
+            name="custom_track_stem_spaces",
+            args=("--dry-run", "--write-dry-run-report", "--track-stem", "Dry Run Track With Spaces"),
+            purpose="Verify slug/path planning with spaces in track stem.",
+        ),
+        MatrixCase(
+            name="custom_smart_task_short",
+            args=("--dry-run", "--write-dry-run-report", "--smart-task", "dry-run short planning task"),
+            purpose="Verify planning with a short custom smart-context task.",
+        ),
+        MatrixCase(
+            name="guardrail_max_passes_zero",
+            args=("--dry-run", "--write-dry-run-report", "--guardrail-max-passes", "0"),
+            purpose="Verify report planning when guardrail remediation max passes is zero.",
+        ),
+        MatrixCase(
+            name="guardrail_max_passes_one_no_auto",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--guardrail-max-passes",
+                "1",
+                "--no-guardrail-auto-remediate",
+            ),
+            purpose="Verify guardrail planning with one max pass and auto-remediation disabled.",
+        ),
+        MatrixCase(
+            name="guardrail_max_passes_four",
+            args=("--dry-run", "--write-dry-run-report", "--guardrail-max-passes", "4"),
+            purpose="Verify report planning with a larger remediation pass budget.",
+        ),
+        MatrixCase(
+            name="with_npu_review_workers_1",
             args=("--dry-run", "--write-dry-run-report", "--use-npu", "--npu-workers", "1"),
-            purpose="Verify optional NPU artifact review stage planning without executing NPU workloads.",
+            purpose="Verify optional NPU artifact review stage planning with one worker and no NPU execution.",
+        ),
+        MatrixCase(
+            name="with_npu_review_workers_4",
+            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--npu-workers", "4"),
+            purpose="Verify optional NPU artifact review stage planning with the recommended local worker cap.",
+        ),
+        MatrixCase(
+            name="with_npu_review_workers_8_warning",
+            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--npu-workers", "8"),
+            purpose="Verify high NPU worker planning emits warnings without executing NPU workloads.",
+        ),
+        MatrixCase(
+            name="npu_review_without_guardrail",
+            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--no-npu-guardrail"),
+            purpose="Verify NPU review planning when NPU guardrail is disabled.",
         ),
         MatrixCase(
             name="with_gpu_command_planned",
             args=("--dry-run", "--write-dry-run-report", "--gpu-command", _planned_gpu_command()),
             purpose="Verify optional GPU command planning without executing GPU workloads.",
+        ),
+        MatrixCase(
+            name="with_gpu_placeholder_command_planned",
+            args=("--dry-run", "--write-dry-run-report", "--gpu-command", _planned_gpu_placeholder_command()),
+            purpose="Verify GPU command placeholder formatting for {brief} and {output} without execution.",
+        ),
+        MatrixCase(
+            name="validation_chunks_music",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--validate",
+                "--build-chunks",
+                "--build-music-summary",
+                "--analysis-json",
+                str(sample_analysis_json),
+            ),
+            purpose="Verify combined validation, chunk and music-summary planning.",
         ),
         MatrixCase(
             name="full_planning_surface",
@@ -120,15 +276,34 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
                 "--build-chunks",
                 "--build-music-summary",
                 "--analysis-json",
-                str(missing_analysis_json),
+                str(sample_analysis_json),
                 "--validate",
                 "--use-npu",
                 "--npu-workers",
-                "2",
+                "4",
                 "--gpu-command",
-                _planned_gpu_command(),
+                _planned_gpu_placeholder_command(),
             ),
             purpose="Verify the widest planned CPU/NPU/GPU dry-run surface without executing heavy workloads.",
+        ),
+        MatrixCase(
+            name="full_planning_no_auto_remediation",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--build-chunks",
+                "--build-music-summary",
+                "--analysis-json",
+                str(sample_analysis_json),
+                "--validate",
+                "--use-npu",
+                "--npu-workers",
+                "4",
+                "--gpu-command",
+                _planned_gpu_placeholder_command(),
+                "--no-guardrail-auto-remediate",
+            ),
+            purpose="Verify widest planned dry-run surface with guardrail auto-remediation disabled.",
         ),
     ]
     if agent_state_packet is not None:
@@ -193,6 +368,50 @@ def run_case(repo_root: Path, output_dir: Path, case: MatrixCase) -> dict[str, A
     }
 
 
+def run_cases(repo_root: Path, output_dir: Path, cases: tuple[MatrixCase, ...], matrix_workers: int, continue_on_error: bool) -> list[dict[str, Any]]:
+    """Run matrix cases, preserving deterministic report order."""
+    if matrix_workers <= 1:
+        results: list[dict[str, Any]] = []
+        for case in cases:
+            result = run_case(repo_root, output_dir, case)
+            results.append(result)
+            if result["returncode"] != 0 and not continue_on_error:
+                break
+        return results
+
+    results_by_index: dict[int, dict[str, Any]] = {}
+    with ThreadPoolExecutor(max_workers=matrix_workers) as pool:
+        futures = {
+            pool.submit(run_case, repo_root, output_dir, case): index
+            for index, case in enumerate(cases)
+        }
+        for future in as_completed(futures):
+            index = futures[future]
+            try:
+                results_by_index[index] = future.result()
+            except Exception as exc:
+                case = cases[index]
+                results_by_index[index] = {
+                    "name": case.name,
+                    "purpose": case.purpose,
+                    "command": None,
+                    "returncode": 1,
+                    "duration_sec": 0.0,
+                    "stdout_tail": "",
+                    "stderr_tail": "",
+                    "report_path": None,
+                    "report_exists": False,
+                    "report_passed": False,
+                    "step_count": None,
+                    "lanes": None,
+                    "summary": None,
+                    "schedule": None,
+                    "agent_state_packet": None,
+                    "matrix_error": f"{type(exc).__name__}: {exc}",
+                }
+    return [results_by_index[index] for index in sorted(results_by_index)]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
@@ -200,18 +419,20 @@ def main() -> int:
     parser.add_argument("--output", default="output/ai_pipeline/dry_run_matrix_report.json")
     parser.add_argument("--markdown-output", default="output/ai_pipeline/dry_run_matrix_report.md")
     parser.add_argument("--continue-on-error", action="store_true")
+    parser.add_argument(
+        "--matrix-workers",
+        type=int,
+        default=default_matrix_workers(),
+        help="Number of matrix cases to execute concurrently. Default: min(8, CPU count). Use 1 for serial execution.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
-
-    results: list[dict[str, Any]] = []
-    for case in default_cases(repo_root):
-        result = run_case(repo_root, output_dir, case)
-        results.append(result)
-        if result["returncode"] != 0 and not args.continue_on_error:
-            break
+    matrix_workers = max(1, args.matrix_workers)
+    cases = default_cases(repo_root)
+    results = run_cases(repo_root, output_dir, cases, matrix_workers, args.continue_on_error)
 
     passed = all(item["returncode"] == 0 and item.get("report_passed") is True for item in results)
     report = {
@@ -219,6 +440,8 @@ def main() -> int:
         "repo_root": str(repo_root),
         "output_dir": str(output_dir),
         "case_count": len(results),
+        "planned_case_count": len(cases),
+        "matrix_workers": matrix_workers,
         "passed": passed,
         "results": results,
     }
