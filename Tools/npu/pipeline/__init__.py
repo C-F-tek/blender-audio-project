@@ -61,9 +61,12 @@ from .prompts import (
     compact_segments_for_prompt,
 )
 from .providers import (
+    ProviderParsedResult,
     ProviderRequest,
     ProviderResult,
+    build_provider_result_report,
     normalize_provider_preflight_report,
+    parse_provider_result,
     planned_provider_result,
     validate_provider_request,
 )
@@ -99,6 +102,7 @@ __all__ = [
     "NpuPipelineConfig",
     "PipelineStagePlan",
     "PlannedArtifactWrite",
+    "ProviderParsedResult",
     "ProviderRequest",
     "ProviderResult",
     "REQUIRED_IMPLEMENTATION_DRAFT_KEYS",
@@ -110,6 +114,7 @@ __all__ = [
     "build_implementation_retry_payload",
     "build_merge_prompt_payload",
     "build_migration_readiness_report",
+    "build_provider_result_report",
     "build_runtime_output_manifest",
     "build_validation_report",
     "compact_segments_for_prompt",
@@ -124,6 +129,7 @@ __all__ = [
     "is_allowed_generated_artifact_path",
     "normalize_provider_preflight_report",
     "normalize_repo_relative_path",
+    "parse_provider_result",
     "planned_provider_result",
     "read_json",
     "read_json_object",
