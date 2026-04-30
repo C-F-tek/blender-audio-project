@@ -43,14 +43,39 @@ def _default_context_files(report: dict[str, Any] | None) -> list[str]:
     return [str(item.get("path")) for item in results if isinstance(item, dict) and item.get("path")]
 
 
+def _primary_advisory_provider(advisory_lanes: list[str]) -> dict[str, Any]:
+    """Map usable workload lanes to the primary advisory provider contract."""
+
+    if "ollama" in advisory_lanes:
+        return {
+            "provider": "ollama",
+            "compute_lane": "gpu_cuda",
+            "role": "primary_advisory",
+            "execution_mode": "explicit_only",
+            "enabled_by_flag": "--use-primary-advisory-provider / -UsePrimaryAdvisoryProvider",
+            "provider_execution_performed": False,
+        }
+    return {
+        "provider": None,
+        "compute_lane": None,
+        "role": "none",
+        "execution_mode": "unavailable_no_usable_lane",
+        "enabled_by_flag": None,
+        "provider_execution_performed": False,
+    }
+
+
 def _render_markdown(report: dict[str, Any]) -> str:
     routing = report["routing"]
+    provider = report.get("primary_advisory_provider", {})
     lines = ["# AI Workload Quality Lane Routing", ""]
     lines.append(f"- Mode: `{report['mode']}`")
     lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
     lines.append(f"- Quality report present: `{routing['quality_report_present']}`")
     lines.append(f"- Advisory lanes: `{', '.join(routing['advisory_lanes']) or 'none'}`")
     lines.append(f"- Excluded advisory lanes: `{', '.join(routing['excluded_advisory_lanes']) or 'none'}`")
+    lines.append(f"- Primary advisory provider: `{provider.get('provider') or 'none'}`")
+    lines.append(f"- Primary compute lane: `{provider.get('compute_lane') or 'none'}`")
     lines.append("")
     lines.append("## Trusted context files")
     lines.append("")
@@ -90,6 +115,9 @@ def build_lane_routing_report(repo_root: Path, quality_report_path: Path, contex
     candidates = context_files or _default_context_files(quality_report)
     routing = route_context_files_by_quality(candidates, quality_report)
     summary = build_quality_routing_summary(quality_report)
+    primary_provider = _primary_advisory_provider(list(summary.get("advisory_lanes") or []))
+    routing["primary_advisory_provider"] = primary_provider
+    summary["primary_advisory_provider"] = primary_provider
 
     errors: list[str] = []
     warnings: list[str] = []
@@ -109,6 +137,7 @@ def build_lane_routing_report(repo_root: Path, quality_report_path: Path, contex
         "mode": "report_only_quality_based_lane_routing",
         "policy": "usable_text_lanes_only_for_advisory_context",
         "quality_report": str(quality_report_path),
+        "primary_advisory_provider": primary_provider,
         "routing": routing,
         "summary": summary,
         "stop_conditions": [
