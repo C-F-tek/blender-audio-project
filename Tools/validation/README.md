@@ -189,17 +189,41 @@ After local validation and index regeneration, a local advisory work packet can 
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1
 ```
 
-Optional local Ollama drafting:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1 -UseOllama
-```
-
-Generated reports:
+The default output path is only a convenience, not an architectural binding:
 
 ```text
 output/ai_pipeline/repository_update_suggestions.json
 output/ai_pipeline/repository_update_suggestions.md
+output/ai_pipeline/repository_update_suggestions_manifest.json
+```
+
+Profiles:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1 -Profile core
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1 -Profile npu
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1 -Profile docs
+```
+
+Custom output name/location:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1 -Profile npu -OutputDir output/ai_packets -Basename npu_after_tests
+```
+
+Extra context and report inputs:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1 `
+  -ContextFile docs/PROJECT_STATUS_POINT.md `
+  -ContextFile Tools/npu/run_dual_ai_pipeline.py `
+  -ReportFile output/validation/npu_pipeline_modules.json
+```
+
+Optional local Ollama drafting:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1 -UseOllama
 ```
 
 The packet is advisory only. It must not auto-apply edits. Use it as broader local context for the next AI task after tests.
