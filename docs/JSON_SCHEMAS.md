@@ -59,12 +59,111 @@ Tools/npu/pipeline/reports.py
 
 The helper does not force older repository validators to change shape immediately. It provides a consistent target for new NPU/backend report contracts.
 
+## AI orchestration report contracts
+
+These contracts describe report artifacts used by the local AI/provider orchestration workflow. They are not Blender runtime schemas and must not be used to change prompt prose, model settings, provider execution behavior or generated analysis JSON.
+
+### AI workload quality lane routing
+
+```text
+File pattern:
+output/validation/ai_workload_quality_lane_routing.json
+Producer:
+Tools/ai/build_workload_quality_lane_routing.py
+Consumer:
+Tools/ai/suggest_repository_updates.py
+Tools/ai/build_github_evidence_bundle.py
+Required fields:
+schema_version, kind, passed, provider_execution_performed, errors, warnings, primary_advisory_provider, policy, mode, routing
+Required kind:
+ai_workload_quality_lane_routing
+Provider semantics:
+Ollama/GPU/CUDA remains the primary advisory provider when quality routing allows it.
+OpenVINO/NPU reports may be excluded from advisory context when workload quality is unusable.
+provider_execution_performed=false means this report selected lanes from existing quality reports and did not execute a provider.
+Current validator:
+Tools/validation/check_github_evidence_bundle.py validates the summarized copy stored in GitHub evidence bundles.
+Missing checks:
+Direct validation of the raw output/validation report can be added after more local samples are reviewed.
+```
+
+### NPU decode quality remediation
+
+```text
+File pattern:
+output/validation/npu_decode_quality_remediation.json
+Producer:
+Tools/validation/check_npu_decode_quality_remediation.py
+Consumer:
+Tools/ai/build_github_evidence_bundle.py
+Required fields:
+schema_version, kind, passed, provider_execution_performed, errors, warnings, policy, mode, checks
+Required kind:
+npu_decode_quality_remediation
+Provider semantics:
+Report-only remediation planning must not execute OpenVINO/NPU and must not promote NPU output to advisory context.
+Current validator:
+Tools/validation/check_github_evidence_bundle.py validates the summarized copy stored in GitHub evidence bundles.
+Missing checks:
+Direct raw-report validation should remain warning-first until representative workstation reports are stable.
+```
+
+### NPU decode smoke diagnostic
+
+```text
+File pattern:
+output/validation/npu_decode_smoke_diagnostic.json
+Producer:
+Tools/ai/run_npu_decode_smoke_diagnostic.py
+Consumer:
+Tools/ai/build_github_evidence_bundle.py
+Required fields:
+schema_version, kind, passed, provider_execution_performed, errors, warnings, policy, mode, provider, checks
+Required kind:
+npu_decode_smoke_diagnostic
+Provider semantics:
+This is an explicit OpenVINO/NPU probe/guardrail/decode diagnostic. Passing it does not make NPU a primary advisory provider.
+Current validator:
+Tools/validation/check_github_evidence_bundle.py validates the summarized copy stored in GitHub evidence bundles.
+Missing checks:
+Future direct checks can validate `provider=openvino_npu` and `device=NPU` when local samples are present.
+```
+
+### GitHub validation evidence bundle
+
+```text
+File pattern:
+docs/LOCAL_VALIDATION_EVIDENCE/*_evidence.json
+Producer:
+Tools/ai/build_github_evidence_bundle.py
+Consumer:
+GitHub-only review agents, local validation handoffs and PR summaries.
+Required fields:
+schema_version, kind, generated_at, repo_root, source_reports, reports, decision
+Required kind:
+github_validation_evidence_bundle
+Required decision fields:
+ollama_gpu_primary_advisory, npu_excluded_when_unusable, provider_execution_seen
+Optional provider decision fields:
+npu_decode_smoke_passed
+Required report summary fields:
+path, exists, json_ok, kind, passed, summary
+Current validator:
+Tools/validation/check_github_evidence_bundle.py
+Notes:
+Historical bundles that predate `npu_decode_smoke_passed` should warn instead of failing. Unknown future report kinds remain accepted when the common summary envelope is intact.
+```
+
 ## Report / artifact contract gap index
 
 | Report / artifact | Typical path | Producer | Current validator | Current required fields | Missing checks / notes |
 |---|---|---|---|---|---|
 | AI dry-run matrix report | `output/ai_pipeline/dry_run_matrix_report.json` | `Tools/ai/run_pipeline_dry_run_matrix.py` | `Tools/validation/check_ai_dry_run_matrix_contract.py` | `schema_version`, `repo_root`, `output_dir`, `case_count`, `passed`, `results` | Future additive checks should remain warning-first until local samples are reviewed. |
 | Individual AI pipeline dry-run report | `output/ai_pipeline/dry_run_matrix/<case>/ai_pipeline_dry_run_report.json` | `Tools/ai/run_parallel_artifact_pipeline.py` through matrix cases | `Tools/validation/check_ai_pipeline_report_contract.py`; also invoked by `check_ai_dry_run_matrix_contract.py` for referenced case reports | schema-v6 root fields plus `summary`, `schedule`, `lanes`, `agent_state_packet`, `steps`, `post_run_expected_outputs` | Unknown future fields remain accepted; `--require-dry-run` enforces `dry_run=true` and planned-only steps for dry-run reports. |
+| AI workload quality lane routing report | `output/validation/ai_workload_quality_lane_routing.json` | `Tools/ai/build_workload_quality_lane_routing.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `primary_advisory_provider`, `policy`, `mode`, `routing` | Direct raw-output validator remains future work; evidence copies preserve the current provider-lane decision. |
+| NPU decode quality remediation report | `output/validation/npu_decode_quality_remediation.json` | `Tools/validation/check_npu_decode_quality_remediation.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `policy`, `mode`, `checks` | Report-only; must not promote unusable NPU workload output to advisory context. |
+| NPU decode smoke diagnostic report | `output/validation/npu_decode_smoke_diagnostic.json` | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `policy`, `mode`, `provider`, `checks` | Explicit NPU diagnostic only; passing smoke does not make OpenVINO/NPU the primary advisory lane. |
+| GitHub validation evidence bundle | `docs/LOCAL_VALIDATION_EVIDENCE/*_evidence.json` | `Tools/ai/build_github_evidence_bundle.py` | `Tools/validation/check_github_evidence_bundle.py` | `schema_version`, `kind`, `generated_at`, `repo_root`, `source_reports`, `reports`, `decision`; each report has `path`, `exists`, `json_ok`, `kind`, `passed`, `summary` | Compact Git-trackable proof for GitHub-only agents; older bundles may warn for missing optional provider decision fields. |
 | NPU helper module smoke report | `output/validation/npu_pipeline_modules.json` | `Tools/validation/check_npu_pipeline_modules.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | Contract is helper-focused and provider-free; do not use it as provider execution proof. |
 | NPU helper unit-test report | `output/validation/npu_pipeline_helper_tests.json` | `Tools/validation/check_npu_pipeline_helper_tests.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks.tests_run`, `checks.error_count`, `checks.failure_count` | Wraps deterministic `unittest`; no Blender/NPU/Ollama/provider execution. |
 | NPU helper docs report | `output/validation/npu_pipeline_docs.json` | `Tools/validation/check_npu_pipeline_docs.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | Checks `Tools/npu/pipeline/README.md` against expected helper modules/terms. |
