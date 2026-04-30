@@ -37,8 +37,11 @@ from Tools.npu.pipeline import (  # noqa: E402
     compare_text_readers,
     context_bundle_metrics,
     default_runtime_wiring_readiness,
+    dual_ai_legacy_runtime_output_paths,
     helper_boundary_passed,
+    is_allowed_legacy_runtime_output_path,
     is_allowed_generated_artifact_path,
+    normalize_provider_preflight_report,
     planned_provider_result,
     read_json,
     read_json_object,
@@ -53,6 +56,7 @@ from Tools.npu.pipeline import (  # noqa: E402
     validate_generated_artifact_paths,
     validate_implementation_draft_contract,
     validate_json_object,
+    validate_legacy_runtime_output_paths,
     validate_planned_artifact_writes,
     validate_provider_request,
     write_json,
@@ -124,6 +128,29 @@ class NpuPipelineHelperTests(unittest.TestCase):
         )
         self.assertFalse(report["ok"])
         self.assertEqual(report["invalid_paths"], ["output/a.json"])
+
+    def test_legacy_runtime_output_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            allowed = dual_ai_legacy_runtime_output_paths("Track A")
+            self.assertIn("Tools/npu/npu_preflight_report.json", allowed)
+            self.assertTrue(
+                is_allowed_legacy_runtime_output_path(
+                    root / "Tools" / "npu" / "npu_preflight_report.json",
+                    repo_root=root,
+                    track_stem="Track A",
+                )
+            )
+            report = validate_legacy_runtime_output_paths(
+                [
+                    root / "output" / "Track A_dual_ai_scene_plan.json",
+                    "Tools/npu/not_allowed.md",
+                ],
+                repo_root=root,
+                track_stem="Track A",
+            )
+            self.assertFalse(report["ok"])
+            self.assertEqual(report["invalid_paths"], ["Tools/npu/not_allowed.md"])
 
     def test_artifact_writer_validates_destination(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -208,6 +235,31 @@ class NpuPipelineHelperTests(unittest.TestCase):
         invalid = planned_provider_result(ProviderRequest(provider="", model="", prompt="", max_tokens=0))
         self.assertFalse(invalid.ok)
         self.assertIn("provider is required", invalid.error or "")
+
+    def test_provider_preflight_normalization_is_non_executing(self) -> None:
+        report = normalize_provider_preflight_report(
+            {
+                "schema_version": 2,
+                "ready": True,
+                "mode": "npu_ready",
+                "python_starts": True,
+                "openvino_import": True,
+                "openvino_genai_import": True,
+                "openvino_available_devices": ["CPU", "NPU"],
+                "npu_device_available": True,
+                "recommended_workers": 4,
+                "errors": [],
+                "warnings": ["sample"],
+            },
+            provider="openvino_npu",
+            model="model",
+            executable="python.exe",
+            model_dir="models/model",
+        )
+        self.assertEqual(report["kind"], "provider_preflight")
+        self.assertTrue(report["ready"])
+        self.assertFalse(report["provider_execution_performed"])
+        self.assertEqual(report["runtime"]["recommended_workers"], 4)
 
     def test_runner_stage_plan_and_boundary_report(self) -> None:
         stages = build_default_stage_plan(include_provider_stages=False)

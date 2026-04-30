@@ -11,6 +11,7 @@ Allowed:
 ```text
 pure configuration objects
 path and generated-artifact validation
+legacy dual-AI runtime output policy helpers
 UTF-8 text and JSON-object IO helpers
 legacy-compatible IO aliases for later wiring
 legacy/new helper equivalence checks
@@ -18,6 +19,7 @@ deterministic fixtures for tests and dry-runs
 prompt payload builders
 context bundle helpers
 planned-only provider descriptors
+provider preflight report normalizers
 planned-only runner stage reports
 contract validators
 artifact write planning helpers
@@ -41,13 +43,13 @@ hand-edited generated indexes
 | Module | Responsibility |
 |---|---|
 | `config.py` | Repository paths, track defaults and data-only pipeline configuration. |
-| `artifact_paths.py` | Generated artifact path normalization and allowed-prefix validation. |
+| `artifact_paths.py` | Generated artifact path normalization, allowed-prefix validation and exact legacy runtime output policy. |
 | `io_utils.py` | UTF-8 text and JSON-object read/write helpers plus legacy-compatible aliases. |
 | `legacy_compat.py` | Equivalence helpers for comparing legacy functions with new helpers before runtime wiring. |
 | `fixtures.py` | Deterministic fixture payloads for tests, dry-runs and contract examples. |
 | `prompts.py` | Deterministic prompt payload builders. |
 | `context_builder.py` | Bounded context slices and compact context bundle metrics. |
-| `providers.py` | Planned-only provider request/result envelopes. |
+| `providers.py` | Planned-only provider request/result envelopes and provider preflight report normalization. |
 | `runner.py` | Planned-only stage-plan reports. |
 | `validators.py` | Contract-level validators that preserve unknown future fields. |
 | `artifact_writer.py` | Validated generated-artifact write helpers. |
@@ -112,5 +114,7 @@ Recommended order:
 5. Wire only artifact path/contract helpers.
 6. Wire only prompt/context payload helpers.
 7. Wire only context summary and generated-artifact write-planning helpers.
-8. Move provider adapters last.
-9. Compare local outputs after every wiring step.
+8. Wire exact legacy runtime output policy helpers.
+9. Wire provider preflight normalization without provider execution.
+10. Move provider execution adapters last.
+11. Compare local outputs after every wiring step.

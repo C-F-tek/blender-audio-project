@@ -5,9 +5,13 @@ phases wire these helpers in one group at a time.
 """
 
 from .artifact_paths import (
+    dual_ai_legacy_runtime_output_paths,
+    is_allowed_legacy_runtime_output_path,
     is_allowed_generated_artifact_path,
     normalize_repo_relative_path,
+    repo_relative_path,
     validate_generated_artifact_paths,
+    validate_legacy_runtime_output_paths,
 )
 from .artifact_writer import (
     PlannedArtifactWrite,
@@ -59,6 +63,7 @@ from .prompts import (
 from .providers import (
     ProviderRequest,
     ProviderResult,
+    normalize_provider_preflight_report,
     planned_provider_result,
     validate_provider_request,
 )
@@ -103,8 +108,11 @@ __all__ = [
     "compare_text_readers",
     "context_bundle_metrics",
     "default_runtime_wiring_readiness",
+    "dual_ai_legacy_runtime_output_paths",
     "helper_boundary_passed",
+    "is_allowed_legacy_runtime_output_path",
     "is_allowed_generated_artifact_path",
+    "normalize_provider_preflight_report",
     "normalize_repo_relative_path",
     "planned_provider_result",
     "read_json",
@@ -112,6 +120,7 @@ __all__ = [
     "read_optional_json",
     "read_optional_json_object",
     "read_text",
+    "repo_relative_path",
     "sample_implementation_draft_fixture",
     "sample_music_context_fixture",
     "sample_provider_request_fixture",
@@ -120,6 +129,7 @@ __all__ = [
     "validate_generated_artifact_paths",
     "validate_implementation_draft_contract",
     "validate_json_object",
+    "validate_legacy_runtime_output_paths",
     "validate_planned_artifact_writes",
     "validate_provider_request",
     "validate_required_keys",
