@@ -25,26 +25,28 @@ The documentation is intended for both human developers and AI agents. It should
 17. `REFACTORING_AND_REUSE_PLAN.md`
 18. `PATCH_SPEC_WORKFLOW.md`
 19. `SHARED_SCRIPTING_UTILITIES.md`
-20. `BLENDER_SCRIPT_ENTRYPOINTS.md`
-21. `AI_GENERATED_PACKAGE_STANDARD.md`
-22. `GENERATED_PYTHON_ADAPTER_TEMPLATE.md`
-23. `PACKAGE_CREATION_WORKFLOW.md`
-24. `QUALITY_GATE.md`
-25. `AUDIO_ANALYSIS_PIPELINE.md`
-26. `JSON_SCHEMAS.md`
-27. `AI_ARTIFACT_SCHEMAS.md`
-28. `RENDER_WORKFLOW.md`
-29. `FFMPEG_WORKFLOW.md`
-30. `LOCAL_AI_WORKFLOW.md`
-31. `NPU_GPU_PARALLELISM_PLAN.md`
-32. `AI_PIPELINE_OPTIMIZATION.md`
-33. `INSTALLATION.md`
-34. `USAGE.md`
-35. `COMPATIBILITY.md`
-36. `KNOWN_LIMITATIONS.md`
-37. `DEVELOPER_GUIDE.md`
-38. `PROJECT_AUDIT.md`
-39. `PROJECT_STATUS_POINT.md`
+20. `../Tools/npu/pipeline/README.md` when working on NPU helper modules
+21. `../Tools/validation/README.md` when changing validators or workflows
+22. `BLENDER_SCRIPT_ENTRYPOINTS.md`
+23. `AI_GENERATED_PACKAGE_STANDARD.md`
+24. `GENERATED_PYTHON_ADAPTER_TEMPLATE.md`
+25. `PACKAGE_CREATION_WORKFLOW.md`
+26. `QUALITY_GATE.md`
+27. `AUDIO_ANALYSIS_PIPELINE.md`
+28. `JSON_SCHEMAS.md`
+29. `AI_ARTIFACT_SCHEMAS.md`
+30. `RENDER_WORKFLOW.md`
+31. `FFMPEG_WORKFLOW.md`
+32. `LOCAL_AI_WORKFLOW.md`
+33. `NPU_GPU_PARALLELISM_PLAN.md`
+34. `AI_PIPELINE_OPTIMIZATION.md`
+35. `INSTALLATION.md`
+36. `USAGE.md`
+37. `COMPATIBILITY.md`
+38. `KNOWN_LIMITATIONS.md`
+39. `DEVELOPER_GUIDE.md`
+40. `PROJECT_AUDIT.md`
+41. `PROJECT_STATUS_POINT.md`
 
 ## Documentation groups
 
@@ -79,6 +81,7 @@ The documentation is intended for both human developers and AI agents. It should
 | `SHARED_SCRIPTING_UTILITIES.md` | Policy and target modules for reusable package-agnostic code. |
 | `AI_PIPELINE_ARCHITECTURE.md` | Current modularization map for the AI artifact pipeline. |
 | `AI_PIPELINE_REFACTOR_STATUS.md` | Current refactor status marker to avoid inconsistent AI interpretation. |
+| `../Tools/npu/pipeline/README.md` | Current app-agnostic NPU helper package scope, module map, validation workflow and migration policy. |
 | `GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | Template for future non-Blender generated Python policy adapters. |
 | `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | External agent-first engineering patterns mapped into project actions. |
 | `EXECUTION_PLANS/README.md` | Plan format for larger refactors or migration work. |
@@ -96,6 +99,7 @@ The documentation is intended for both human developers and AI agents. It should
 | `INDEX_REGEN_POLICY.md` | Regeneration policy for AI indexes and manifests. |
 | `../patch_specs/README.md` | Patch spec inbox/applied folder convention. |
 | `../Tools/validation/README.md` | Local non-invasive validation commands. |
+| `../Tools/workflow/run_npu_pipeline_helper_validation.ps1` | Focused NPU helper validation workflow for smoke, unit, docs and syntax checks. |
 
 ### AI-generated package workflow
 
@@ -177,6 +181,13 @@ Before editing code, an AI system should:
 19. read `QUALITY_GATE.md`;
 20. read the README of the target package;
 21. inspect the target source file before producing a patch.
+
+For NPU helper work, also read:
+
+```text
+../Tools/npu/pipeline/README.md
+../Tools/validation/README.md
+```
 
 ## Refactoring note
 
