@@ -15,6 +15,7 @@ JSON artifact checks
 documentation link checks
 AI pipeline smoke checks
 AI dry-run matrix case-definition checks
+AI dry-run matrix output consistency checks
 AI dry-run matrix report contract checks
 agent memory policy checks
 Blender compatibility smokes
@@ -74,6 +75,7 @@ python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\
 python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_dry_run_matrix_cases.py --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
 python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
+python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
 ```
@@ -98,6 +100,7 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_ai_pipeline_modules.py` | Imports modular AI pipeline code, builds representative steps, checks preflight/report helpers and verifies the thin entrypoint. | No |
 | `check_ai_model_json.py` | Validates deterministic parsing of JSON-like model output and the legacy Ollama parser wrapper. | No |
 | `check_ai_dry_run_matrix_cases.py` | Validates dry-run matrix case definitions without executing the matrix. | No |
+| `check_ai_dry_run_matrix_outputs.py` | Validates generated dry-run matrix outputs against per-case reports without rerunning the matrix. | No |
 | `check_ai_dry_run_matrix_contract.py` | Validates the machine-readable dry-run matrix report contract without running the matrix. | No |
 | `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and main docs agree on pipeline state and expected modules. | No |
 | `check_agent_memory_policy.py` | Checks generic memory retention, quarantine and promotion guardrails; also inspects local SQLite memory DB when present. | No |
@@ -328,6 +331,12 @@ Use serial mode for conservative debugging:
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 1
 ```
 
+Use repeat mode for stress testing:
+
+```powershell
+python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 2
+```
+
 Expected matrix output:
 
 ```text
@@ -341,21 +350,30 @@ Contract validation command:
 python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 ```
 
+Output consistency validation command:
+
+```powershell
+python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
+```
+
 Explicit report path:
 
 ```powershell
 python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --matrix-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\ai_dry_run_matrix_contract.json
+python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --matrix-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\ai_dry_run_matrix_outputs.json
 ```
 
-The contract validator does not execute the dry-run matrix and does not modify artifacts. If the matrix report is missing, run the matrix first and then validate the report.
+The contract and output validators do not execute the dry-run matrix and do not modify artifacts. If the matrix report is missing, run the matrix first and then validate the report.
 
 Important fields to inspect:
 
 ```text
 passed
 matrix_workers
+repeat_cases
 case_count
 planned_case_count
+base_case_count
 results[].name
 results[].returncode
 results[].report_passed
@@ -382,6 +400,16 @@ guardrail_remediation_loop
 steps
 ```
 
+`check_ai_dry_run_matrix_outputs.py` compares the aggregate report to those per-case reports and verifies:
+
+```text
+case report exists
+case report has dry_run=true
+all case steps are planned_only
+summary, schedule, lanes and step_count match the aggregate report
+matrix passed=true does not hide failed cases
+```
+
 ## Standard local validation block
 
 Use this block after structural refactors, documentation changes, AI pipeline changes, model-output parser changes or generated-file policy changes:
@@ -398,8 +426,9 @@ python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --o
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
 python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 8
+python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 8 --repeat-cases 1
 python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
+python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
 python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
 python .\Tools\npu\build_project_ai_index.py
@@ -428,6 +457,7 @@ git push origin master
 - `check_ai_pipeline_modules.py` is a smoke validator for the modular AI artifact pipeline and schema-v6 report metadata.
 - `check_ai_model_json.py` checks reusable model-output JSON parsing and the Ollama parser compatibility wrapper.
 - `check_ai_dry_run_matrix_cases.py` checks dry-run matrix case definitions without executing pipeline cases.
+- `check_ai_dry_run_matrix_outputs.py` checks generated dry-run matrix report consistency without executing pipeline cases.
 - `check_ai_dry_run_matrix_contract.py` checks the dry-run matrix report contract without running the matrix.
 - `check_refactor_status_consistency.py` checks status marker and documentation consistency.
 - `check_agent_memory_policy.py` checks generic memory retention and promotion guardrails.
