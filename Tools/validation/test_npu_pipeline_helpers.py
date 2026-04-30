@@ -25,8 +25,11 @@ from Tools.npu.pipeline import (  # noqa: E402
     PlannedArtifactWrite,
     ProviderRequest,
     build_context_bundle,
+    build_creative_scene_prompt_payload,
     build_default_stage_plan,
     build_helper_boundary_report,
+    build_implementation_retry_payload,
+    build_merge_prompt_payload,
     build_migration_readiness_report,
     compact_segments_for_prompt,
     compare_json_readers,
@@ -42,6 +45,9 @@ from Tools.npu.pipeline import (  # noqa: E402
     read_optional_json,
     read_optional_json_object,
     read_text,
+    sample_implementation_draft_fixture,
+    sample_music_context_fixture,
+    sample_provider_request_fixture,
     stage_plan_report,
     summarize_music_context,
     validate_generated_artifact_paths,
@@ -57,23 +63,7 @@ from Tools.npu.pipeline import (  # noqa: E402
 
 class NpuPipelineHelperTests(unittest.TestCase):
     def sample_music_context(self) -> dict[str, object]:
-        return {
-            "analysis_summary": {"duration_sec": 60.0, "fps": 30},
-            "track_summary": {"estimated_tempo_bpm": 120.0},
-            "scene_summaries": [{"name": "intro"}],
-            "segments": [
-                {
-                    "index": 1,
-                    "start_sec": 0.0,
-                    "end_sec": 8.0,
-                    "dominant_band": "low",
-                    "intensity": "medium",
-                    "intensity_score": 0.55,
-                    "controls": {"low": 0.7},
-                    "top_events": list(range(20)),
-                }
-            ],
-        }
+        return sample_music_context_fixture()
 
     def test_config_paths_are_data_only(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -84,6 +74,16 @@ class NpuPipelineHelperTests(unittest.TestCase):
             self.assertEqual(paths.tools_dir, root / "Tools" / "npu")
             self.assertEqual(config.paths.track_stem, "Track A")
             self.assertEqual(config.allowed_artifact_prefixes, DEFAULT_ALLOWED_ARTIFACT_PREFIXES)
+
+    def test_fixtures_match_contracts(self) -> None:
+        music_context = sample_music_context_fixture()
+        draft = sample_implementation_draft_fixture()
+        provider_payload = sample_provider_request_fixture()
+        self.assertEqual(len(music_context["segments"]), 2)
+        self.assertTrue(validate_implementation_draft_contract(draft)["ok"])
+        provider_request = ProviderRequest(**provider_payload)
+        self.assertTrue(validate_provider_request(provider_request)["ok"])
+        self.assertFalse(provider_request.metadata["executed"])
 
     def test_io_helpers(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -151,10 +151,10 @@ class NpuPipelineHelperTests(unittest.TestCase):
     def test_context_and_prompt_payload_helpers(self) -> None:
         music_context = self.sample_music_context()
         compact = compact_segments_for_prompt(music_context)
-        self.assertEqual(len(compact), 1)
+        self.assertEqual(len(compact), 2)
         self.assertEqual(len(compact[0]["top_events"]), 6)
         summary = summarize_music_context(music_context)
-        self.assertEqual(summary["segment_count"], 1)
+        self.assertEqual(summary["segment_count"], 2)
         bundle = build_context_bundle(
             music_context=music_context,
             project_index="p" * 500,
@@ -165,20 +165,32 @@ class NpuPipelineHelperTests(unittest.TestCase):
         metrics = context_bundle_metrics(bundle)
         self.assertEqual(metrics["slice_count"], 2)
         self.assertEqual(metrics["clipped_chars"], 90)
+        creative = build_creative_scene_prompt_payload(
+            music_context,
+            npu_notes="npu notes",
+            project_index="project index",
+        )
+        merge = build_merge_prompt_payload(
+            music_context,
+            npu_notes="npu notes",
+            project_index="project index",
+            creative={"creative": True},
+            technical={"technical": True},
+        )
+        retry = build_implementation_retry_payload(
+            {"plan": True},
+            preferred_existing_files=["Scripting/v61b/materials.py"],
+            allowed_new_prefixes=DEFAULT_ALLOWED_ARTIFACT_PREFIXES,
+            validation={"issues": ["x"]},
+        )
+        self.assertEqual(len(creative["segments"]), 2)
+        self.assertEqual(merge["ollama_technical"], {"technical": True})
+        self.assertTrue(retry["previous_response_was_invalid"])
 
     def test_validator_contracts_are_permissive(self) -> None:
         object_report = validate_json_object({"future": True}, label="future")
         self.assertTrue(object_report["ok"])
-        draft_report = validate_implementation_draft_contract(
-            {
-                "implementation_kind": "new_blender_scene_script_from_json",
-                "safety": {"requires_manual_review": True},
-                "reference_files": [],
-                "proposed_files": [{"file": "indexAI/scene_scripts/generated.py"}],
-                "implementation_plan": [],
-                "future_field": {"kept": True},
-            }
-        )
+        draft_report = validate_implementation_draft_contract(sample_implementation_draft_fixture())
         self.assertTrue(draft_report["ok"])
         missing_report = validate_implementation_draft_contract({})
         self.assertFalse(missing_report["ok"])
