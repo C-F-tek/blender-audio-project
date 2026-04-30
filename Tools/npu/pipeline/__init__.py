@@ -1,7 +1,7 @@
 """App-agnostic helpers for the local NPU/Ollama pipeline.
 
-Existing CLI entrypoints continue to own orchestration until validated migration
-phases wire these helpers in one group at a time.
+Existing CLI entrypoints own orchestration while validated migration phases wire
+selected helpers in one group at a time.
 """
 
 from .artifact_paths import (
@@ -68,8 +68,14 @@ from .providers import (
     validate_provider_request,
 )
 from .reports import (
+    COMMON_VALIDATION_REPORT_KEYS,
+    RuntimeOutputManifestEntry,
     build_helper_boundary_report,
+    build_runtime_output_manifest,
+    build_validation_report,
     helper_boundary_passed,
+    runtime_output_manifest_passed,
+    validation_report_has_common_keys,
 )
 from .runner import (
     PipelineStagePlan,
@@ -84,6 +90,7 @@ from .validators import (
 )
 
 __all__ = [
+    "COMMON_VALIDATION_REPORT_KEYS",
     "DEFAULT_ALLOWED_ARTIFACT_PREFIXES",
     "DEFAULT_PREFERRED_REFERENCE_FILES",
     "ContextSlice",
@@ -95,6 +102,7 @@ __all__ = [
     "ProviderRequest",
     "ProviderResult",
     "REQUIRED_IMPLEMENTATION_DRAFT_KEYS",
+    "RuntimeOutputManifestEntry",
     "build_context_bundle",
     "build_creative_scene_prompt_payload",
     "build_default_stage_plan",
@@ -102,6 +110,8 @@ __all__ = [
     "build_implementation_retry_payload",
     "build_merge_prompt_payload",
     "build_migration_readiness_report",
+    "build_runtime_output_manifest",
+    "build_validation_report",
     "compact_segments_for_prompt",
     "compare_json_readers",
     "compare_optional_json_readers",
@@ -121,6 +131,7 @@ __all__ = [
     "read_optional_json_object",
     "read_text",
     "repo_relative_path",
+    "runtime_output_manifest_passed",
     "sample_implementation_draft_fixture",
     "sample_music_context_fixture",
     "sample_provider_request_fixture",
@@ -133,6 +144,7 @@ __all__ = [
     "validate_planned_artifact_writes",
     "validate_provider_request",
     "validate_required_keys",
+    "validation_report_has_common_keys",
     "write_json",
     "write_json_object",
     "write_planned_artifact",
