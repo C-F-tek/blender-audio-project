@@ -17,6 +17,11 @@ from ollama_runtime import OllamaModelManager, parse_json_response
 from run_ollama_music_agent import build_prompt as build_music_prompt
 from run_ollama_music_agent import markdown_from_insights
 
+try:
+    from pipeline.io_utils import read_json, read_optional_json, read_text, write_json
+except ImportError:  # Allows package-style imports from repo-root validation.
+    from Tools.npu.pipeline.io_utils import read_json, read_optional_json, read_text, write_json  # type: ignore
+
 
 ROOT = Path(__file__).resolve().parents[2]
 TOOLS_DIR = ROOT / "Tools" / "npu"
@@ -48,34 +53,6 @@ PREFERRED_IMPLEMENTATION_FILES = (
     "Scripting/v61b/render_setup.py",
     "Scripting/v61b/hot_update_scene_v61b.py",
 )
-
-
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="replace") if path.exists() else ""
-
-
-def read_json(path: Path) -> dict[str, Any]:
-    with open(path, "r", encoding="utf-8") as handle:
-        data = json.load(handle)
-    return data if isinstance(data, dict) else {}
-
-
-def write_json(path: Path, data: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-
-
-def read_optional_json(path: str | Path | None) -> dict[str, Any]:
-    if not path:
-        return {}
-    candidate = Path(path)
-    if not candidate.exists():
-        return {}
-    try:
-        data = json.loads(candidate.read_text(encoding="utf-8"))
-    except Exception:
-        return {}
-    return data if isinstance(data, dict) else {}
 
 
 def update_track_paths(track_stem: str, analysis_ai_context: str | None = None) -> None:
