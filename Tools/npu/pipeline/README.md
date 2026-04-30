@@ -14,6 +14,7 @@ path and generated-artifact validation
 UTF-8 text and JSON-object IO helpers
 legacy-compatible IO aliases for later wiring
 legacy/new helper equivalence checks
+deterministic fixtures for tests and dry-runs
 prompt payload builders
 context bundle helpers
 planned-only provider descriptors
@@ -43,6 +44,7 @@ hand-edited generated indexes
 | `artifact_paths.py` | Generated artifact path normalization and allowed-prefix validation. |
 | `io_utils.py` | UTF-8 text and JSON-object read/write helpers plus legacy-compatible aliases. |
 | `legacy_compat.py` | Equivalence helpers for comparing legacy functions with new helpers before runtime wiring. |
+| `fixtures.py` | Deterministic fixture payloads for tests, dry-runs and contract examples. |
 | `prompts.py` | Deterministic prompt payload builders. |
 | `context_builder.py` | Bounded context slices and compact context bundle metrics. |
 | `providers.py` | Planned-only provider request/result envelopes. |
@@ -54,6 +56,12 @@ hand-edited generated indexes
 
 ## Validation
 
+Focused helper validation workflow:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+```
+
 Focused smoke validation:
 
 ```powershell
@@ -64,6 +72,12 @@ Focused unit-test validation:
 
 ```powershell
 python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
+```
+
+Documentation/module alignment validation:
+
+```powershell
+python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
 ```
 
 Direct unittest mode:
