@@ -15,6 +15,8 @@
   powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull
 
   powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
+
+  powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
 #>
 
 param(
@@ -22,7 +24,8 @@ param(
     [switch]$ContinueOnError,
     [string]$RepoRoot = ".",
     [string]$LogDir = "output/local_validation",
-    [int]$MatrixWorkers = 8
+    [int]$MatrixWorkers = 8,
+    [int]$RepeatCases = 1
 )
 
 Set-StrictMode -Version Latest
@@ -111,6 +114,7 @@ $script:Results = @()
 Add-Content -LiteralPath $script:MainLog -Value "Local validation started: $(Get-Date -Format o)"
 Add-Content -LiteralPath $script:MainLog -Value "Repo: $repo"
 Add-Content -LiteralPath $script:MainLog -Value "MatrixWorkers: $MatrixWorkers"
+Add-Content -LiteralPath $script:MainLog -Value "RepeatCases: $RepeatCases"
 
 try {
     if (-not $SkipPull) {
@@ -128,8 +132,9 @@ try {
     Invoke-Step -Name "documentation links validation" -Command "python" -Arguments @(".\Tools\validation\check_docs_links.py", "--repo-root", ".", "--output", ".\output\validation\docs_links.json")
     Invoke-Step -Name "agent memory policy validation" -Command "python" -Arguments @(".\Tools\validation\check_agent_memory_policy.py", "--repo-root", ".", "--output", ".\output\validation\agent_memory_policy.json")
     Invoke-Step -Name "blender shared compatibility smoke" -Command "python" -Arguments @(".\Tools\validation\check_blender_shared_compat_smoke.py", "--repo-root", ".", "--output", ".\output\validation\blender_shared_compat_smoke.json")
-    Invoke-Step -Name "ai pipeline dry-run matrix" -Command "python" -Arguments @(".\Tools\ai\run_pipeline_dry_run_matrix.py", "--repo-root", ".", "--continue-on-error", "--matrix-workers", $MatrixWorkers.ToString())
+    Invoke-Step -Name "ai pipeline dry-run matrix" -Command "python" -Arguments @(".\Tools\ai\run_pipeline_dry_run_matrix.py", "--repo-root", ".", "--continue-on-error", "--matrix-workers", $MatrixWorkers.ToString(), "--repeat-cases", $RepeatCases.ToString())
     Invoke-Step -Name "ai dry-run matrix contract validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_dry_run_matrix_contract.py", "--repo-root", ".", "--output", ".\output\validation\ai_dry_run_matrix_contract.json")
+    Invoke-Step -Name "ai dry-run matrix output consistency validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_dry_run_matrix_outputs.py", "--repo-root", ".", "--output", ".\output\validation\ai_dry_run_matrix_outputs.json")
     Invoke-Step -Name "generated artifact path policy validation" -Command "python" -Arguments @(".\Tools\validation\check_generated_artifact_path_policy.py", "--repo-root", ".", "--artifact-report", ".\output\ai_pipeline\dry_run_matrix_report.json", "--output", ".\output\validation\generated_artifact_path_policy.json")
     Invoke-Step -Name "package structure validation" -Command "python" -Arguments @(".\Tools\validation\check_package_structure.py", "--repo-root", ".")
     Invoke-Step -Name "json artifact validation" -Command "python" -Arguments @(".\Tools\validation\check_json_artifacts.py", "--repo-root", ".")
@@ -153,10 +158,12 @@ $summary = [pscustomobject]@{
     repo_root = $repo
     passed = $passed
     matrix_workers = $MatrixWorkers
+    repeat_cases = $RepeatCases
     log_path = $script:MainLog
     ai_model_json_report = (Join-Path $repo "output\validation\ai_model_json.json")
     ai_pipeline_modules_report = (Join-Path $repo "output\validation\ai_pipeline_modules.json")
     ai_dry_run_matrix_cases_report = (Join-Path $repo "output\validation\ai_dry_run_matrix_cases.json")
+    ai_dry_run_matrix_outputs_report = (Join-Path $repo "output\validation\ai_dry_run_matrix_outputs.json")
     generated_python_policy_report = (Join-Path $repo "output\validation\generated_python_policy.json")
     generated_artifact_path_policy_report = (Join-Path $repo "output\validation\generated_artifact_path_policy.json")
     generated_blender_script_policy_report = (Join-Path $repo "output\validation\generated_blender_script_policy.json")
@@ -179,10 +186,12 @@ $md += ("- Generated at: {0}" -f $summary.generated_at)
 $md += ("- Passed: {0}" -f $passed)
 $md += ("- Repo: {0}" -f $repo)
 $md += ("- Matrix workers: {0}" -f $MatrixWorkers)
+$md += ("- Repeat cases: {0}" -f $RepeatCases)
 $md += ("- Log: {0}" -f $script:MainLog)
 $md += ("- AI model JSON report: {0}" -f $summary.ai_model_json_report)
 $md += ("- AI module report: {0}" -f $summary.ai_pipeline_modules_report)
 $md += ("- AI dry-run matrix cases report: {0}" -f $summary.ai_dry_run_matrix_cases_report)
+$md += ("- AI dry-run matrix outputs report: {0}" -f $summary.ai_dry_run_matrix_outputs_report)
 $md += ("- Generated Python policy report: {0}" -f $summary.generated_python_policy_report)
 $md += ("- Generated artifact path policy report: {0}" -f $summary.generated_artifact_path_policy_report)
 $md += ("- Generated Blender script policy report: {0}" -f $summary.generated_blender_script_policy_report)
@@ -211,6 +220,7 @@ $md += "    git diff --stat"
 $md += "    Get-Content .\output\validation\ai_model_json.json -Raw"
 $md += "    Get-Content .\output\validation\ai_pipeline_modules.json -Raw"
 $md += "    Get-Content .\output\validation\ai_dry_run_matrix_cases.json -Raw"
+$md += "    Get-Content .\output\validation\ai_dry_run_matrix_outputs.json -Raw"
 $md += "    Get-Content .\output\validation\generated_python_policy.json -Raw"
 $md += "    Get-Content .\output\validation\generated_artifact_path_policy.json -Raw"
 $md += "    Get-Content .\output\validation\generated_blender_script_policy.json -Raw"
