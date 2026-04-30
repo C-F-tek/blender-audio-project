@@ -14,6 +14,7 @@ repository/package structure checks
 JSON artifact checks
 documentation link checks
 AI pipeline smoke checks
+NPU pipeline helper smoke and unit tests
 AI dry-run matrix case-definition checks
 AI dry-run matrix output consistency checks
 AI dry-run matrix report contract checks
@@ -87,10 +88,12 @@ python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\outpu
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
 ```
 
-AI pipeline, report-contract and memory checks:
+AI pipeline, NPU helper, report-contract and memory checks:
 
 ```powershell
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
 python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_dry_run_matrix_cases.py --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
 python .\Tools\validation\check_ai_pipeline_report_contract.py --repo-root . --report .\output\ai_pipeline\dry_run_matrix\base\ai_pipeline_dry_run_report.json --require-dry-run --output .\output\validation\ai_pipeline_report_contract.json
@@ -119,6 +122,9 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_json_artifacts.py` | Checks JSON parseability; accepts UTF-8 with or without BOM and skips very large files by default. | No |
 | `check_docs_links.py` | Validates repository-local Markdown links and ignores external URLs. | No |
 | `check_ai_pipeline_modules.py` | Imports modular AI pipeline code and validates representative planning/report helpers. | No |
+| `check_npu_pipeline_modules.py` | Imports app-agnostic NPU pipeline helpers and validates representative contract, provider-planning and boundary helpers. | No |
+| `check_npu_pipeline_helper_tests.py` | Runs deterministic `unittest` coverage for app-agnostic NPU helper modules and emits a JSON validation report. | No |
+| `test_npu_pipeline_helpers.py` | Unit test module used by `check_npu_pipeline_helper_tests.py`. | No |
 | `check_ai_model_json.py` | Validates deterministic parsing of JSON-like model output and legacy wrapper behavior. | No |
 | `check_ai_dry_run_matrix_cases.py` | Validates dry-run matrix case definitions without executing the matrix. | No |
 | `check_ai_dry_run_matrix_outputs.py` | Validates generated dry-run matrix outputs against per-case reports. | No |
@@ -131,6 +137,28 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_generated_python_policy.py` | Validates generic generated Python syntax and hazard policy. | No |
 | `check_generated_artifact_path_policy.py` | Validates generated artifact destination paths. | No |
 | `check_generated_blender_script_policy.py` | Validates generated Blender Python scripts before execution. | No |
+
+## NPU pipeline helper validation
+
+Focused import/contract smoke:
+
+```powershell
+python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
+```
+
+Focused unit-test report:
+
+```powershell
+python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
+```
+
+Direct unittest mode, useful while debugging locally:
+
+```powershell
+python .\Tools\validation\test_npu_pipeline_helpers.py
+```
+
+These tests must remain provider-free and runtime-free. They may use temporary directories, but they must not invoke Blender, NPU, GPU, Ollama, FFmpeg or modify project source files.
 
 ## Generated Python and Blender script policy
 
@@ -252,6 +280,8 @@ Manual core block:
 python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
 python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
 python .\Tools\validation\check_ai_dry_run_matrix_cases.py --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
 python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
 python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
