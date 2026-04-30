@@ -41,3 +41,21 @@ def read_optional_json_object(path: str | Path | None) -> dict[str, Any]:
     except Exception:
         return {}
     return data if isinstance(data, dict) else {}
+
+
+def read_json(path: str | Path) -> dict[str, Any]:
+    """Compatibility alias for future wiring from legacy pipeline helpers."""
+
+    return read_json_object(path)
+
+
+def write_json(path: str | Path, data: dict[str, Any]) -> None:
+    """Compatibility alias for future wiring from legacy pipeline helpers."""
+
+    write_json_object(path, data)
+
+
+def read_optional_json(path: str | Path | None) -> dict[str, Any]:
+    """Compatibility alias for future wiring from legacy pipeline helpers."""
+
+    return read_optional_json_object(path)
