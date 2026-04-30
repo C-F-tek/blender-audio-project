@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import tempfile
 from pathlib import Path
 
 from report_utils import resolve_output_path, write_json_report
@@ -17,6 +18,9 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
     root_text = str(repo_root)
     if root_text not in sys.path:
         sys.path.insert(0, root_text)
+    npu_tools_text = str(repo_root / "Tools" / "npu")
+    if npu_tools_text not in sys.path:
+        sys.path.insert(0, npu_tools_text)
 
     from Tools.npu.pipeline import (  # noqa: PLC0415
         DEFAULT_ALLOWED_ARTIFACT_PREFIXES,
@@ -50,7 +54,9 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         validate_json_object,
         validate_planned_artifact_writes,
         validate_provider_request,
+        write_json,
     )
+    import run_dual_ai_pipeline as runtime_pipeline  # noqa: PLC0415
 
     music_context = {
         "analysis_summary": {"duration_sec": 12.5, "fps": 30},
@@ -158,6 +164,40 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         lambda _path: {},
         lambda _path: {},
     )
+    with tempfile.TemporaryDirectory() as tmp:
+        runtime_smoke_path = Path(tmp) / "runtime_smoke.json"
+        write_json(runtime_smoke_path, {"runtime": True})
+        runtime_reader_report = compare_json_readers(
+            runtime_smoke_path,
+            runtime_pipeline.read_json,
+            read_json,
+        )
+        runtime_optional_report = compare_optional_json_readers(
+            Path(tmp) / "missing_optional.json",
+            runtime_pipeline.read_optional_json,
+            read_optional_json,
+        )
+    runtime_draft_contract = runtime_pipeline.validate_implementation_draft(
+        {
+            "implementation_kind": "new_blender_scene_script_from_json",
+            "safety": {"requires_manual_review": True},
+            "reference_files": [{"file": "Scripting/v61b/materials.py"}],
+            "proposed_files": [{"file": "indexAI/scene_scripts/smoke_candidate.py"}],
+            "implementation_plan": [{"change": "smoke"}],
+            "scene_script": (
+                "import bpy\n"
+                "import json\n"
+                "def load_json(path): return {}\n"
+                "keyframes = {'frames': []}\n"
+                "frames = keyframes.get(\"frames\", [])\n"
+                "obj = bpy.data.objects.new('Smoke', None)\n"
+                "obj.keyframe_insert(data_path='location')\n"
+                "obj.modifiers.new('Smoke', 'BEVEL')\n"
+                "bpy.data.materials.new('Smoke')\n"
+                + "# smoke\n" * 500
+            ),
+        }
+    )
     boundary_report = build_helper_boundary_report(
         package_name="Tools.npu.pipeline",
         modules=[
@@ -180,6 +220,8 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "draft_contract": draft_report.get("ok") is True,
             "provider_boundary": provider_result.ok is True,
             "legacy_compat": optional_alias_report.get("ok") is True and reader_alias_report.get("ok") is True,
+            "runtime_io_wiring": runtime_reader_report.get("ok") is True and runtime_optional_report.get("ok") is True,
+            "runtime_contract_wiring": runtime_draft_contract.get("contract_validation", {}).get("ok") is True,
             "migration_gate_blocks_runtime": migration_readiness.get("ready") is False,
         },
     )
@@ -231,6 +273,10 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("missing optional JSON should return empty object")
     if optional_alias_report.get("ok") is not True or reader_alias_report.get("ok") is not True:
         errors.append("legacy compatibility alias checks should pass")
+    if runtime_reader_report.get("ok") is not True or runtime_optional_report.get("ok") is not True:
+        errors.append("runtime IO helper wiring should preserve helper behavior")
+    if runtime_draft_contract.get("contract_validation", {}).get("ok") is not True:
+        errors.append("runtime implementation draft validation should include passing helper contract validation")
     if migration_readiness.get("ready") is not False:
         errors.append("default migration readiness should block runtime wiring")
     if forced_migration_readiness.get("ready") is not True:
@@ -257,6 +303,9 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "invalid_provider_result": invalid_provider_result.to_dict(),
             "optional_alias_report": optional_alias_report,
             "reader_alias_report": reader_alias_report,
+            "runtime_reader_report": runtime_reader_report,
+            "runtime_optional_report": runtime_optional_report,
+            "runtime_draft_contract": runtime_draft_contract.get("contract_validation"),
             "migration_readiness": migration_readiness,
             "forced_migration_readiness": forced_migration_readiness,
             "boundary_report": boundary_report,
