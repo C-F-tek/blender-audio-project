@@ -205,6 +205,66 @@ python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output
 
 Do not use prompt/model-based JSON repair as the default path. It is slower, non-deterministic and can invent fields. Use deterministic local parsing first.
 
+## AI dry-run matrix report contract checklist
+
+The dry-run matrix report is a report contract, not an output-application adapter and not an input-domain validator.
+
+Current generated report:
+
+```text
+output/ai_pipeline/dry_run_matrix_report.json
+output/ai_pipeline/dry_run_matrix_report.md
+```
+
+Validate the JSON contract after running the matrix:
+
+```powershell
+python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
+```
+
+Explicit report validation:
+
+```powershell
+python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --matrix-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\ai_dry_run_matrix_contract.json
+```
+
+Minimum root fields:
+
+```text
+schema_version
+repo_root
+output_dir
+case_count
+passed
+results
+```
+
+Minimum per-case fields:
+
+```text
+name
+purpose
+command
+returncode
+duration_sec
+report_path
+report_exists
+report_passed
+step_count
+lanes
+summary
+schedule
+agent_state_packet
+```
+
+Quality rules:
+
+- accept unknown future fields;
+- keep warnings separate from blocking errors;
+- do not run the dry-run matrix from the contract validator;
+- do not rewrite generated artifacts from the contract validator;
+- validate `agent_state_packet` metadata only when present.
+
 ## FFmpeg validation checklist
 
 - Frame sequence path is explicit.
@@ -257,7 +317,8 @@ Reject or review carefully when a generated change:
 - mixes input analysis, output application control, rendering and encoding in one oversized function;
 - deletes generated context or analysis data;
 - adds paid or external AI GitHub Actions without explicit opt-in;
-- uses prompt-based repair where deterministic parsing is available.
+- uses prompt-based repair where deterministic parsing is available;
+- hardens report schemas so much that additive future fields fail validation.
 
 ## Current reference
 
@@ -268,6 +329,12 @@ The current generated-file policy reference is:
 ```text
 Tools/validation/generated_file_policy.py
 Tools/validation/check_generated_blender_script_policy.py
+```
+
+The current report-contract validator reference is:
+
+```text
+Tools/validation/check_ai_dry_run_matrix_contract.py
 ```
 
 The generated-file policy architecture is intended to outgrow Blender and audio/WAV inputs through small, validated adapters.
