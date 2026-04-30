@@ -45,7 +45,7 @@ def _planned_gpu_command() -> str:
 
 def _planned_gpu_placeholder_command() -> str:
     """Return a harmless placeholder-aware GPU command used only for dry-run planning."""
-    return "python -c \"import sys; print(sys.argv[1]); print(sys.argv[2])\" {brief} {output}"
+    return "python -c \"import sys; print('gpu placeholder dry run only'); print(sys.argv[1]); print(sys.argv[2])\" {brief} {output}"
 
 
 def ensure_sample_analysis_json(repo_root: Path) -> Path:
@@ -74,6 +74,25 @@ def ensure_sample_analysis_json(repo_root: Path) -> Path:
         }
         sample.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return sample
+
+
+def repeat_cases(cases: tuple[MatrixCase, ...], repeat_count: int) -> tuple[MatrixCase, ...]:
+    """Repeat matrix cases for stress testing while keeping output directories unique."""
+    repeat_count = max(1, repeat_count)
+    if repeat_count == 1:
+        return cases
+    repeated: list[MatrixCase] = []
+    for round_index in range(1, repeat_count + 1):
+        suffix = f"_r{round_index:02d}"
+        for case in cases:
+            repeated.append(
+                MatrixCase(
+                    name=f"{case.name}{suffix}",
+                    args=case.args,
+                    purpose=f"Repeat {round_index}/{repeat_count}: {case.purpose}",
+                )
+            )
+    return tuple(repeated)
 
 
 def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
@@ -166,6 +185,18 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
             purpose="Verify music intermediate planning when smart context is disabled.",
         ),
         MatrixCase(
+            name="smart_context_tiny_budget",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--smart-max-packet-chars",
+                "512",
+                "--smart-max-capsule-chars",
+                "128",
+            ),
+            purpose="Verify smart-context planning with a tiny packet/capsule budget.",
+        ),
+        MatrixCase(
             name="smart_context_small_budget",
             args=(
                 "--dry-run",
@@ -200,9 +231,24 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
             purpose="Verify slug/path planning with spaces in track stem.",
         ),
         MatrixCase(
+            name="custom_track_stem_symbols",
+            args=("--dry-run", "--write-dry-run-report", "--track-stem", "Dry_Run-Track_120 BPM!"),
+            purpose="Verify slug/path planning with punctuation in track stem.",
+        ),
+        MatrixCase(
             name="custom_smart_task_short",
             args=("--dry-run", "--write-dry-run-report", "--smart-task", "dry-run short planning task"),
             purpose="Verify planning with a short custom smart-context task.",
+        ),
+        MatrixCase(
+            name="custom_smart_task_multiclause",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--smart-task",
+                "dry-run plan: preserve audio timing; review generated paths; keep runtime packages unchanged",
+            ),
+            purpose="Verify planning with a multi-clause custom smart-context task.",
         ),
         MatrixCase(
             name="guardrail_max_passes_zero",
@@ -226,6 +272,11 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
             purpose="Verify report planning with a larger remediation pass budget.",
         ),
         MatrixCase(
+            name="continue_on_error_planned",
+            args=("--dry-run", "--write-dry-run-report", "--continue-on-error"),
+            purpose="Verify inner pipeline continue-on-error planning remains reportable.",
+        ),
+        MatrixCase(
             name="with_npu_review_workers_1",
             args=("--dry-run", "--write-dry-run-report", "--use-npu", "--npu-workers", "1"),
             purpose="Verify optional NPU artifact review stage planning with one worker and no NPU execution.",
@@ -241,9 +292,19 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
             purpose="Verify high NPU worker planning emits warnings without executing NPU workloads.",
         ),
         MatrixCase(
+            name="with_npu_review_workers_16_warning",
+            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--npu-workers", "16"),
+            purpose="Verify very high NPU worker planning emits warnings without executing NPU workloads.",
+        ),
+        MatrixCase(
             name="npu_review_without_guardrail",
             args=("--dry-run", "--write-dry-run-report", "--use-npu", "--no-npu-guardrail"),
             purpose="Verify NPU review planning when NPU guardrail is disabled.",
+        ),
+        MatrixCase(
+            name="npu_review_no_smart_context",
+            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--no-smart-context"),
+            purpose="Verify NPU review planning with smart context disabled.",
         ),
         MatrixCase(
             name="with_gpu_command_planned",
@@ -254,6 +315,16 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
             name="with_gpu_placeholder_command_planned",
             args=("--dry-run", "--write-dry-run-report", "--gpu-command", _planned_gpu_placeholder_command()),
             purpose="Verify GPU command placeholder formatting for {brief} and {output} without execution.",
+        ),
+        MatrixCase(
+            name="gpu_command_missing_output_warning",
+            args=("--dry-run", "--write-dry-run-report", "--gpu-command", "python -c \"print('gpu dry run without output placeholder')\" {brief}"),
+            purpose="Verify GPU command warning when {output} placeholder is missing without executing GPU workloads.",
+        ),
+        MatrixCase(
+            name="gpu_command_missing_brief_warning",
+            args=("--dry-run", "--write-dry-run-report", "--gpu-command", "python -c \"print('gpu dry run without brief placeholder')\" {output}"),
+            purpose="Verify GPU command warning when {brief} placeholder is missing without executing GPU workloads.",
         ),
         MatrixCase(
             name="validation_chunks_music",
@@ -267,6 +338,19 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
                 str(sample_analysis_json),
             ),
             purpose="Verify combined validation, chunk and music-summary planning.",
+        ),
+        MatrixCase(
+            name="validation_music_no_smart_context",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--validate",
+                "--build-music-summary",
+                "--analysis-json",
+                str(sample_analysis_json),
+                "--no-smart-context",
+            ),
+            purpose="Verify validation and music-summary planning with smart context disabled.",
         ),
         MatrixCase(
             name="full_planning_surface",
@@ -304,6 +388,25 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
                 "--no-guardrail-auto-remediate",
             ),
             purpose="Verify widest planned dry-run surface with guardrail auto-remediation disabled.",
+        ),
+        MatrixCase(
+            name="full_planning_no_smart_context",
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--build-chunks",
+                "--build-music-summary",
+                "--analysis-json",
+                str(sample_analysis_json),
+                "--validate",
+                "--use-npu",
+                "--npu-workers",
+                "4",
+                "--gpu-command",
+                _planned_gpu_placeholder_command(),
+                "--no-smart-context",
+            ),
+            purpose="Verify widest planned dry-run surface with smart context disabled.",
         ),
     ]
     if agent_state_packet is not None:
@@ -425,13 +528,21 @@ def main() -> int:
         default=default_matrix_workers(),
         help="Number of matrix cases to execute concurrently. Default: min(8, CPU count). Use 1 for serial execution.",
     )
+    parser.add_argument(
+        "--repeat-cases",
+        type=int,
+        default=1,
+        help="Repeat the full case matrix N times with unique output directories for stress testing. Default: 1.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     matrix_workers = max(1, args.matrix_workers)
-    cases = default_cases(repo_root)
+    repeat_count = max(1, args.repeat_cases)
+    base_cases = default_cases(repo_root)
+    cases = repeat_cases(base_cases, repeat_count)
     results = run_cases(repo_root, output_dir, cases, matrix_workers, args.continue_on_error)
 
     passed = all(item["returncode"] == 0 and item.get("report_passed") is True for item in results)
@@ -441,6 +552,8 @@ def main() -> int:
         "output_dir": str(output_dir),
         "case_count": len(results),
         "planned_case_count": len(cases),
+        "base_case_count": len(base_cases),
+        "repeat_cases": repeat_count,
         "matrix_workers": matrix_workers,
         "passed": passed,
         "results": results,
