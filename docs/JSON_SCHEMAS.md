@@ -154,6 +154,36 @@ Notes:
 Historical bundles that predate `npu_decode_smoke_passed` should warn instead of failing. Unknown future report kinds remain accepted when the common summary envelope is intact.
 ```
 
+### Repository change proposals
+
+```text
+File pattern:
+output/ai_pipeline/*proposals.json
+output/ai_packets/*proposals.json
+Producer:
+Tools/ai/build_repository_change_proposals.py
+Consumer:
+Maintainer review, future trusted patch builders and GitHub-only agents.
+Required fields:
+schema_version, kind, generated_at, repo_root, profile, passed, errors, warnings, apply_mode, reports_read, proposals
+Required kind:
+repository_change_proposals
+Required apply mode:
+manual_review_only
+Required proposal fields:
+id, priority, area, title, rationale, target_files, change_type, apply_mode, patch_sketch, validation_commands, stop_conditions
+Suggestion descriptor fields:
+path, artifact_kind, operation, content_status, write_policy
+Supported artifact kinds:
+python_code, markdown, json, powershell, workflow_yaml, path_group, text_or_config
+Provider semantics:
+Proposal building does not execute providers. Provider/GPU/NPU evidence is read only from reports that were produced by explicit workflow steps.
+Current validator:
+Tools/validation/check_repository_change_proposals.py
+Notes:
+Suggestion descriptors describe code/MD/JSON/PowerShell targets for future manual patches. They are not source writes and must not auto-apply.
+```
+
 ## Report / artifact contract gap index
 
 | Report / artifact | Typical path | Producer | Current validator | Current required fields | Missing checks / notes |
@@ -164,6 +194,7 @@ Historical bundles that predate `npu_decode_smoke_passed` should warn instead of
 | NPU decode quality remediation report | `output/validation/npu_decode_quality_remediation.json` | `Tools/validation/check_npu_decode_quality_remediation.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `policy`, `mode`, `checks` | Report-only; must not promote unusable NPU workload output to advisory context. |
 | NPU decode smoke diagnostic report | `output/validation/npu_decode_smoke_diagnostic.json` | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `policy`, `mode`, `provider`, `checks` | Explicit NPU diagnostic only; passing smoke does not make OpenVINO/NPU the primary advisory lane. |
 | GitHub validation evidence bundle | `docs/LOCAL_VALIDATION_EVIDENCE/*_evidence.json` | `Tools/ai/build_github_evidence_bundle.py` | `Tools/validation/check_github_evidence_bundle.py` | `schema_version`, `kind`, `generated_at`, `repo_root`, `source_reports`, `reports`, `decision`; each report has `path`, `exists`, `json_ok`, `kind`, `passed`, `summary` | Compact Git-trackable proof for GitHub-only agents; older bundles may warn for missing optional provider decision fields. |
+| Repository change proposal report | `output/ai_pipeline/*proposals.json`, `output/ai_packets/*proposals.json` | `Tools/ai/build_repository_change_proposals.py` | `Tools/validation/check_repository_change_proposals.py` | root report fields plus per-proposal `id`, `priority`, `area`, `title`, `target_files`, `patch_sketch`, `validation_commands`, `stop_conditions`, `suggestion_outputs` | Advisory manual-review suggestions for code/MD/JSON/PowerShell targets; no auto-apply. |
 | NPU helper module smoke report | `output/validation/npu_pipeline_modules.json` | `Tools/validation/check_npu_pipeline_modules.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | Contract is helper-focused and provider-free; do not use it as provider execution proof. |
 | NPU helper unit-test report | `output/validation/npu_pipeline_helper_tests.json` | `Tools/validation/check_npu_pipeline_helper_tests.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks.tests_run`, `checks.error_count`, `checks.failure_count` | Wraps deterministic `unittest`; no Blender/NPU/Ollama/provider execution. |
 | NPU helper docs report | `output/validation/npu_pipeline_docs.json` | `Tools/validation/check_npu_pipeline_docs.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | Checks `Tools/npu/pipeline/README.md` against expected helper modules/terms. |

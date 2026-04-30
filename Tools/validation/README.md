@@ -21,6 +21,7 @@ AI dry-run matrix output consistency checks
 AI dry-run matrix report contract checks
 AI pipeline schema-v6 report contract checks
 GitHub evidence bundle contract checks
+repository change proposal contract checks
 validation report contract checks
 agent memory policy checks
 Blender compatibility smokes
@@ -103,6 +104,7 @@ python .\Tools\validation\check_ai_pipeline_report_contract.py --repo-root . --r
 python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
 python .\Tools\validation\check_github_evidence_bundle.py --repo-root . --output .\output\validation\github_evidence_bundle.json
+python .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output .\output\validation\repository_change_proposals_contract.json
 python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
@@ -136,6 +138,7 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_ai_dry_run_matrix_contract.py` | Validates the machine-readable dry-run matrix report contract. | No |
 | `check_ai_pipeline_report_contract.py` | Validates one schema-v6 AI pipeline report, including dry-run-only semantics when requested. | No |
 | `check_github_evidence_bundle.py` | Validates Git-trackable AI/provider evidence bundle shape and decision fields without reading ignored `output/` contents. | No |
+| `check_repository_change_proposals.py` | Validates manual-review repository proposal reports and their code/Markdown/JSON suggestion descriptors. | No |
 | `check_validation_report_contract.py` | Validates generated reports in `output/validation/` for common root fields. | No |
 | `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and docs agree. | No |
 | `check_agent_memory_policy.py` | Checks generic memory retention and promotion guardrails. | No |
@@ -182,6 +185,28 @@ per-report summary fields: path, exists, json_ok, kind, passed, summary
 ```
 
 Missing provider-specific optional fields are warnings, not blocking errors, so older evidence bundles remain readable while newer bundles can add richer diagnostic decisions such as `npu_decode_smoke_passed`.
+
+## Repository change proposal validation
+
+Repository proposal reports are generated suggestion artifacts. They may describe future code, Markdown, JSON, PowerShell or workflow changes, but they must remain manual-review-only.
+
+Run after generating proposals:
+
+```powershell
+python .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output .\output\validation\repository_change_proposals_contract.json
+```
+
+The validator checks:
+
+```text
+kind == repository_change_proposals
+apply_mode == manual_review_only
+proposal patch sketches, validation commands and stop conditions are present
+suggestion_outputs describe target file kind and write policy
+forbidden runtime/generated-index/full-analysis targets are not proposed
+```
+
+This validator does not execute providers, apply patches, run Blender or write suggestion targets.
 
 ## NPU pipeline helper validation
 
@@ -391,6 +416,7 @@ python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . 
 python .\Tools\validation\check_package_structure.py --repo-root . --output .\output\validation\package_structure.json
 python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\output\validation\json_artifacts.json
 python .\Tools\validation\check_github_evidence_bundle.py --repo-root . --output .\output\validation\github_evidence_bundle.json
+python .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output .\output\validation\repository_change_proposals_contract.json
 python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
 python .\Tools\npu\build_project_ai_index.py
 python .\Tools\npu\build_npu_code_context.py

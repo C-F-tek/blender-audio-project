@@ -87,7 +87,8 @@ This runner performs:
 | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | Explicit OpenVINO/NPU decode smoke through dedicated NPU Python. |
 | `Tools/validation/check_npu_decode_quality_remediation.py` | NPU remediation report from quality metrics. |
 | `Tools/ai/suggest_repository_updates.py` | Builds advisory packet using quality-approved context only. |
-| `Tools/ai/build_repository_change_proposals.py` | Builds manual-review proposals. |
+| `Tools/ai/build_repository_change_proposals.py` | Builds manual-review proposals with code/MD/JSON suggestion descriptors. |
+| `Tools/validation/check_repository_change_proposals.py` | Validates proposal reports before they are used as future patch work items. |
 | `Tools/ai/build_github_evidence_bundle.py` | Summarizes long ignored `output/` reports into tracked docs evidence. |
 | `Tools/workflow/run_post_validation_ai_packet.ps1` | Builds packet/proposals and supports primary advisory provider mode. |
 | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | Main current parallel GPU/NPU multistep runner. |
