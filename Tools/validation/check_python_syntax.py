@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import argparse
-import json
 import py_compile
 from pathlib import Path
 from typing import Any
+
+try:
+    from report_utils import failed_result_errors, resolve_output_path, write_json_report
+except ImportError:  # Allows package-style imports during external checks.
+    from Tools.validation.report_utils import failed_result_errors, resolve_output_path, write_json_report  # type: ignore
 
 
 DEFAULT_EXCLUDES = {
@@ -77,23 +81,22 @@ def main() -> int:
     files = iter_python_files(repo_root, excludes)
     results = [check_file(path, repo_root) for path in files]
     failed = [item for item in results if not item["ok"]]
+    errors = failed_result_errors(results)
 
     report = {
         "schema_version": 1,
+        "kind": "python_syntax",
         "repo_root": repo_root.as_posix(),
         "checked_count": len(results),
         "failed_count": len(failed),
         "passed": not failed,
+        "errors": errors,
         "excluded": sorted(excludes),
         "results": results,
     }
 
-    text = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
-    if args.output:
-        output = Path(args.output).resolve()
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(text, encoding="utf-8")
-    print(text, end="")
+    output = resolve_output_path(repo_root, args.output) if args.output else None
+    print(write_json_report(report, output), end="")
     return 0 if report["passed"] else 2
 
 
