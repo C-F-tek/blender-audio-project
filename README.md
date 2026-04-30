@@ -1,299 +1,166 @@
-# Blender Audio Project
+# IA-Carmine Local AI Orchestration Workbench
 
-`blender-audio-project` is a production-oriented workspace for generating, refining, and rendering audio-reactive Blender visuals.
+`blender-audio-project` is now primarily a local AI orchestration, validation and guardrail workbench for app-agnostic AI workflows.
 
-The repository combines:
+The historical Blender/audio-reactive production code remains in the repository and is still valuable, but it is no longer the architectural center of gravity. The current core is the local AI backend layer that coordinates provider lanes, quality gates, advisory packets, validation reports, memory/guardrail contracts and pushable evidence bundles.
 
-- audio analysis tools;
-- compact music/context generation;
-- Blender Python scene packages;
-- FFmpeg render/encoding workflows;
-- AI-assisted planning and implementation artifacts;
-- modular AI artifact pipeline orchestration;
-- local NPU/GPU/Ollama support utilities;
-- GitHub- and AI-friendly documentation.
+## Current project identity
 
-The main technical goal is to turn an audio track and its derived JSON context into a controllable Blender scene with synchronized objects, materials, lighting, fog, camera motion, physics accents, and final video output.
-
-## Current project status
-
-This is an active work-in-progress repository. It already contains a mature Blender reference workflow under `Scripting/v61b/` and at least one additional generated/refined package under `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/`.
-
-The current architectural direction is **progressive refactoring for reuse**:
-
-1. keep working scene packages stable;
-2. extract reusable utilities additively into `Scripting/shared/`;
-3. modularize AI/NPU pipeline code into focused components;
-4. use shared adapters only after validation;
-5. preserve generated indexes and large JSON artifacts as pipeline context, not as hand-edited source.
-
-The AI artifact pipeline has been modularized and is currently marked as:
+Working title:
 
 ```text
-modular_schedule_complete_pending_local_validation
+IA-Carmine Local AI Orchestration Workbench
 ```
 
-Read:
-
-- `docs/AI_PIPELINE_REFACTOR_STATUS.md`
-- `docs/AI_PIPELINE_ARCHITECTURE.md`
-- `Tools/ai/pipeline/refactor_status.py`
-
-See also `docs/REFACTORING_AND_REUSE_PLAN.md`.
-
-## High-level workflow
+Repository slug:
 
 ```text
-Audio file
-  -> audio analysis
-  -> analysis JSON
-  -> compact summary / music context
-  -> AI artifact pipeline
-  -> scene specification or AI implementation plan
-  -> Blender scene package
-  -> rendered frame sequence
-  -> FFmpeg encoded video
+C-F-tek/blender-audio-project
+```
+
+The repository has not been renamed yet. Renaming the GitHub repository would change URLs/remotes and should be done only with explicit maintainer confirmation.
+
+## Current primary architecture
+
+```text
+local context / reports / generated artifacts
+  -> validation and quality gates
+  -> provider lane classification
+  -> GPU/CUDA advisory lane through Ollama
+  -> NPU/OpenVINO probe, guardrail and decode diagnostics
+  -> multistep workflow reports
+  -> compact GitHub evidence bundles
+  -> manual review / PR / merge
+```
+
+Current provider mapping:
+
+| Lane | Provider | Role | Current status |
+|---|---|---|---|
+| GPU/CUDA | Ollama | Primary advisory provider | Active when quality routing confirms `ollama` as usable and workflow is run with explicit primary-advisory flag. |
+| NPU/OpenVINO | OpenVINO GenAI | Probe, guardrail and decode diagnostic lane | Available for explicit smoke/probe execution. Promotion to advisory requires quality-gate evidence. |
+| Blender runtime | Blender Python | Legacy application target | Frozen for the current core/backend work. Do not touch unless a task explicitly enters a Blender-runtime milestone. |
+
+## Validated state on PR #48 branch
+
+Local evidence pushed under `docs/LOCAL_VALIDATION_EVIDENCE/` confirms:
+
+```text
+ollama_gpu_primary_advisory: true
+npu_excluded_when_unusable: true
+provider_execution_seen: true
+npu_decode_smoke_passed: true
+```
+
+The important evidence bundle is:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
+```
+
+Validated facts:
+
+- workload quality gate still rejects the old corrupted NPU workload report;
+- routing keeps Ollama/GPU as trusted advisory context;
+- routing excludes the corrupted NPU workload report from advisory context;
+- NPU decode smoke now runs through the dedicated NPU Python executable;
+- NPU decode smoke returns readable text and passes its smoke classification;
+- provider execution remains explicit and report-bound.
+
+## Main active workflows
+
+### Quality-based advisory routing
+
+```powershell
+python .\Tools\validation\check_ai_workload_report_quality.py --repo-root . --output .\output\validation\ai_workload_report_quality.json
+python .\Tools\ai\build_workload_quality_lane_routing.py --repo-root . --output .\output\validation\ai_workload_quality_lane_routing.json --markdown-output .\output\validation\ai_workload_quality_lane_routing.md
+```
+
+### Parallel GPU/NPU multistep workflow
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
+  -Profile npu `
+  -RunOllamaProbe `
+  -RunNpuProbe `
+  -RunNpuDecodeSmoke `
+  -UsePrimaryAdvisoryProvider `
+  -Basename parallel_gpu_npu_multistep_real_npu_v2 `
+  -ProposalBasename parallel_gpu_npu_multistep_real_npu_v2_proposals `
+  -EvidenceBasename parallel_gpu_npu_multistep_real_npu_v2_evidence
+```
+
+### Pushable evidence bundle
+
+`output/` is intentionally ignored. Push compact evidence instead:
+
+```powershell
+python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename latest_ai_workflow_evidence
+git add docs/LOCAL_VALIDATION_EVIDENCE/
+git commit -m "test: add local ai workflow evidence bundle"
+git push
 ```
 
 ## Main repository layout
 
 | Path | Role |
 |---|---|
-| `analyze_wav.py` | Root CLI/script for extracting audio features and frame-level analysis data. |
-| `build_track_summary.py` | Builds compact summaries from full analysis JSON data. |
-| `normalize_scene_spec.py` | Normalizes scene specifications into a safer downstream format. |
-| `Scripting/` | Blender script/package workspace. |
-| `Scripting/v61b/` | Current quality reference package for complex audio-reactive Blender scenes. |
-| `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/` | Large generated/refined scene package with YouTube-oriented output workflow. |
-| `Scripting/shared/` | Reusable package-agnostic helpers. |
-| `Scripting/_template_audio_reactive_package/` | Template for future generated packages. |
-| `Tools/ai/` | AI artifact pipeline entrypoints, dry-run matrix and validation utilities. |
-| `Tools/ai/pipeline/` | Modular AI artifact pipeline implementation. |
-| `Tools/npu/` | Local AI/NPU/Ollama tooling, code indexing, context generation, review and implementation support. |
-| `Tools/validation/` | Non-invasive validation scripts. |
-| `Tools/repo_patch_runner/` | Structured repository patch tooling. |
-| `indexAI/` | Generated AI indexes, code context, manifests, task packets and patch-library material. |
-| `docs/` | Stable project documentation for developers and AI systems. |
-| `examples/` | Placeholder area for reproducible examples. |
-| `patch_specs/` | Structured repository modification specifications. |
+| `Tools/ai/` | AI orchestration entrypoints, workload quality routing, provider probes, evidence bundles and advisory packet generation. |
+| `Tools/workflow/` | Local workflow runners, including post-validation packet generation and parallel GPU/NPU multistep workflows. |
+| `Tools/npu/` | NPU/OpenVINO runtime checks, local AI support, context building and legacy dual-AI support. |
+| `Tools/npu/pipeline/` | App-agnostic helper package for contracts, provider result envelopes, reports, paths, prompts and validation fixtures. |
+| `Tools/validation/` | Non-invasive validators for syntax, docs, reports, generated policies and AI/NPU contracts. |
+| `docs/LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable summaries of long local reports from `output/`. |
+| `docs/EXECUTION_PLANS/` | Durable task planning and follow-up tracking. |
+| `docs/` | Stable contract and orientation layer for humans and AI agents. |
+| `Scripting/` | Legacy/current Blender application packages. Frozen unless explicitly targeted. |
+| `indexAI/` | Generated AI indexes and patch/task materials. Do not hand-edit. |
+
+## Guardrails
+
+Current core/backend work must not:
+
+- modify Blender runtime packages;
+- start from Ready To Jazz;
+- perform broad `blender_compat` adoption;
+- modify full analysis JSON files;
+- modify legacy output artifacts;
+- hand-edit generated indexes;
+- change prompt prose legacy, model selection, temperature or provider orchestration without a separate milestone;
+- introduce OpenVINO GPU as the primary lane.
+
+Current mapping remains:
+
+```text
+Ollama -> GPU/CUDA -> primary advisory provider
+OpenVINO -> NPU -> probe / guardrail / decode diagnostic
+```
+
+## Legacy Blender/audio role
+
+The repository still contains mature Blender/audio-reactive assets and workflows, including `Scripting/v61b/`, `Scripting/shared/`, audio analysis scripts and FFmpeg/render documentation.
+
+Those assets are now treated as the first application domain that benefits from the local AI orchestration layer, not as the boundary of the project.
 
 ## Recommended reading order
 
-For developers and AI agents:
-
 1. `AGENTS.md`
-2. `docs/README.md`
-3. `docs/PROJECT_AI_CONSCIOUSNESS.md`
-4. `docs/AI_ONBOARDING.md`
-5. `docs/AI_PIPELINE_REFACTOR_STATUS.md`
-6. `docs/AI_PIPELINE_ARCHITECTURE.md`
-7. `docs/MODULE_MAP.md`
-8. `docs/DATA_FLOW.md`
-9. `docs/REFACTORING_AND_REUSE_PLAN.md`
-10. `docs/SHARED_SCRIPTING_UTILITIES.md`
-11. `docs/QUALITY_GATE.md`
-12. `Scripting/README.md`
-13. the README of the target package under `Scripting/`
+2. `WORKFLOW.md`
+3. `docs/README.md`
+4. `docs/PROJECT_STATUS_POINT.md`
+5. `docs/DATA_FLOW.md`
+6. `docs/LOCAL_AI_WORKFLOW.md`
+7. `docs/JSON_SCHEMAS.md`
+8. `Tools/npu/pipeline/README.md`
+9. `Tools/validation/README.md`
+10. `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md`
 
-## Reference Blender package
-
-`Scripting/v61b/` is the current reference implementation.
-
-It contains:
-
-- `main_v61b.py` as the main entry point;
-- `config.py` for workflow configuration;
-- scene, camera, world, render, material, fog, physics and animation modules;
-- hotpatch and diagnostics helpers;
-- FFmpeg and image-sequence encoding helpers;
-- a scene registry under `spaziotempo/core/`.
-
-Do not destructively refactor `Scripting/v61b/` just to create shared utilities. Shared extraction should be additive first.
-
-## Modular AI artifact pipeline
-
-The AI artifact pipeline entrypoint is:
+## Current operational decision
 
 ```text
-Tools/ai/run_parallel_artifact_pipeline.py
+Proceed with PR #48 after documentation review.
+Treat Ollama/GPU as the primary advisory lane.
+Treat NPU/OpenVINO as a validated smoke/probe lane, not yet a general advisory lane.
+Use compact evidence bundles instead of pasting long local output reports.
+Keep Blender runtime out of this milestone.
 ```
-
-It is intentionally thin. Implementation details live under:
-
-```text
-Tools/ai/pipeline/
-```
-
-Key modules:
-
-| Module | Role |
-|---|---|
-| `defaults.py` | Pipeline constants and report filenames. |
-| `models.py` | Pipeline dataclasses and lane enum. |
-| `runner.py` | Low-level command execution. |
-| `compat.py` | Adapter layer for schema-v6 compatible report payloads. |
-| `artifact_contracts.py` | Expected artifacts and path metadata. |
-| `cli.py` | CLI parser. |
-| `preflight.py` | Input/environment checks. |
-| `steps.py` | Command and step construction. |
-| `scheduler.py` | Serial/parallel scheduling policy. |
-| `orchestrator.py` | Concrete serial/parallel execution helpers. |
-| `schema_report.py` | Schema-v6 report generation and summary fields. |
-| `guardrail_models.py` | Typed guardrail remediation request models. |
-| `remediation.py` | Guardrail action queue and remediation loop. |
-| `refactor_status.py` | Machine-readable refactor state marker. |
-
-Pipeline smoke validation:
-
-```powershell
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-```
-
-Dry-run matrix:
-
-```powershell
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
-```
-
-## Refactoring direction
-
-The recommended encapsulation strategy is:
-
-```text
-working package code
-  -> copied/adapted shared utility
-  -> isolated validation
-  -> optional adapter
-  -> controlled package migration
-```
-
-Current reusable modules include:
-
-```text
-Scripting/shared/path_utils.py
-Scripting/shared/json_io.py
-Scripting/shared/image_sequence.py
-Scripting/shared/ffmpeg_encoder.py
-Scripting/shared/render_profiles.py
-```
-
-Next shared candidates:
-
-```text
-Scripting/shared/blender_compat.py
-Scripting/shared/config_model.py
-Scripting/shared/diagnostics.py
-```
-
-## Installation
-
-Minimum Python-side requirements are defined in `pyproject.toml`.
-
-Typical Python dependencies include:
-
-```text
-numpy
-matplotlib
-librosa
-```
-
-Blender execution requires a compatible Blender Python environment. FFmpeg is required for final video encoding workflows.
-
-Detailed setup notes are in:
-
-- `docs/INSTALLATION.md`
-- `docs/COMPATIBILITY.md`
-- `docs/FFMPEG_WORKFLOW.md`
-
-## Basic usage
-
-Audio analysis:
-
-```bash
-python analyze_wav.py path/to/audio.wav
-```
-
-Track summary:
-
-```bash
-python build_track_summary.py path/to/analysis.json
-```
-
-Scene specification normalization:
-
-```bash
-python normalize_scene_spec.py
-```
-
-Blender package execution depends on the target package. For `v61b`, open the package in Blender and run:
-
-```text
-Scripting/v61b/main_v61b.py
-```
-
-After rendering an image sequence, use the package encoding helper or the documented FFmpeg workflow.
-
-## Validation
-
-General validation:
-
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_package_structure.py --repo-root .
-python .\Tools\validation\check_json_artifacts.py --repo-root .
-```
-
-AI pipeline validation:
-
-```powershell
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
-```
-
-Regenerate AI/NPU indexes after documentation or structural changes:
-
-```powershell
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
-```
-
-## AI-generated package rules
-
-When generating or modifying Blender packages:
-
-- read the target package README first;
-- keep paths configurable;
-- do not overwrite full analysis JSON files unless explicitly requested;
-- do not collapse independent generated packages into one folder;
-- keep package-specific artistic logic inside the package;
-- move reusable operational logic into `Scripting/shared/` only through additive extraction;
-- report changed files, risks, tests and line counts for scripts.
-
-## Documentation map
-
-Start from `docs/README.md`.
-
-Key files:
-
-- `docs/PROJECT_OVERVIEW.md`
-- `docs/PROJECT_AI_CONSCIOUSNESS.md`
-- `docs/AI_PIPELINE_REFACTOR_STATUS.md`
-- `docs/AI_PIPELINE_ARCHITECTURE.md`
-- `docs/MODULE_MAP.md`
-- `docs/DATA_FLOW.md`
-- `docs/REFACTORING_AND_REUSE_PLAN.md`
-- `docs/SHARED_SCRIPTING_UTILITIES.md`
-- `docs/AI_GENERATED_PACKAGE_STANDARD.md`
-- `docs/PACKAGE_CREATION_WORKFLOW.md`
-- `docs/QUALITY_GATE.md`
-- `docs/LOCAL_AI_WORKFLOW.md`
-- `docs/DEVELOPER_GUIDE.md`
-
-## Current limitations
-
-- Formal JSON schemas are still partial.
-- Automated Blender validation is not complete.
-- Some large scripts are still intentionally package-specific.
-- The modular AI artifact pipeline still requires local workstation dry-run validation after the latest refactor.
-- `indexAI/` and NPU code indexes must be regenerated after structural changes.
-- Shared utility extraction is planned but not fully migrated across packages.
