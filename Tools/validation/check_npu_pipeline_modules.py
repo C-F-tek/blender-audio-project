@@ -21,6 +21,7 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
     from Tools.npu.pipeline import (  # noqa: PLC0415
         DEFAULT_ALLOWED_ARTIFACT_PREFIXES,
         DualPipelinePaths,
+        MigrationReadinessCheck,
         NpuPipelineConfig,
         PlannedArtifactWrite,
         ProviderRequest,
@@ -30,11 +31,17 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         build_helper_boundary_report,
         build_implementation_retry_payload,
         build_merge_prompt_payload,
+        build_migration_readiness_report,
         compact_segments_for_prompt,
+        compare_json_readers,
+        compare_optional_json_readers,
         context_bundle_metrics,
+        default_runtime_wiring_readiness,
         helper_boundary_passed,
         is_allowed_generated_artifact_path,
         planned_provider_result,
+        read_json,
+        read_optional_json,
         read_optional_json_object,
         stage_plan_report,
         summarize_music_context,
@@ -132,6 +139,25 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
     )
     json_object_report = validate_json_object({"ok": True}, label="smoke_object")
     missing_optional = read_optional_json_object(repo_root / "not_existing_optional_smoke.json")
+    optional_alias_report = compare_optional_json_readers(
+        repo_root / "not_existing_optional_smoke.json",
+        read_optional_json_object,
+        read_optional_json,
+    )
+    migration_readiness = default_runtime_wiring_readiness(
+        local_validation_passed=True,
+        indexes_regenerated=True,
+    )
+    forced_migration_readiness = build_migration_readiness_report(
+        target_file="Tools/npu/run_dual_ai_pipeline.py",
+        checks=[MigrationReadinessCheck("smoke", True, "smoke check")],
+        allowed_to_modify_runtime=True,
+    )
+    reader_alias_report = compare_json_readers(
+        repo_root / "not_existing_required_smoke.json",
+        lambda _path: {},
+        lambda _path: {},
+    )
     boundary_report = build_helper_boundary_report(
         package_name="Tools.npu.pipeline",
         modules=[
@@ -140,6 +166,8 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "config",
             "context_builder",
             "io_utils",
+            "legacy_compat",
+            "migration_readiness",
             "prompts",
             "providers",
             "reports",
@@ -151,6 +179,8 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "planned_write": planned_write_report.get("ok") is True,
             "draft_contract": draft_report.get("ok") is True,
             "provider_boundary": provider_result.ok is True,
+            "legacy_compat": optional_alias_report.get("ok") is True and reader_alias_report.get("ok") is True,
+            "migration_gate_blocks_runtime": migration_readiness.get("ready") is False,
         },
     )
 
@@ -199,8 +229,14 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("JSON object validator rejected an object")
     if missing_optional != {}:
         errors.append("missing optional JSON should return empty object")
-    if boundary_report.get("module_count") != 10:
-        errors.append("helper boundary report should list ten modules")
+    if optional_alias_report.get("ok") is not True or reader_alias_report.get("ok") is not True:
+        errors.append("legacy compatibility alias checks should pass")
+    if migration_readiness.get("ready") is not False:
+        errors.append("default migration readiness should block runtime wiring")
+    if forced_migration_readiness.get("ready") is not True:
+        errors.append("explicit positive migration readiness should pass")
+    if boundary_report.get("module_count") != 12:
+        errors.append("helper boundary report should list twelve modules")
     if helper_boundary_passed(boundary_report) is not True:
         errors.append("helper boundary report should pass all boolean checks")
 
@@ -219,6 +255,10 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "provider_validation": provider_validation,
             "provider_result": provider_result.to_dict(),
             "invalid_provider_result": invalid_provider_result.to_dict(),
+            "optional_alias_report": optional_alias_report,
+            "reader_alias_report": reader_alias_report,
+            "migration_readiness": migration_readiness,
+            "forced_migration_readiness": forced_migration_readiness,
             "boundary_report": boundary_report,
             "creative_payload_keys": sorted(creative_payload.keys()),
             "merge_payload_keys": sorted(merge_payload.keys()),
