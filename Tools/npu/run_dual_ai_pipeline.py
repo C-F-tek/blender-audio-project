@@ -18,9 +18,13 @@ from run_ollama_music_agent import build_prompt as build_music_prompt
 from run_ollama_music_agent import markdown_from_insights
 
 try:
+    from pipeline.artifact_paths import is_allowed_generated_artifact_path, normalize_repo_relative_path
     from pipeline.io_utils import read_json, read_optional_json, read_text, write_json
+    from pipeline.validators import validate_implementation_draft_contract
 except ImportError:  # Allows package-style imports from repo-root validation.
+    from Tools.npu.pipeline.artifact_paths import is_allowed_generated_artifact_path, normalize_repo_relative_path  # type: ignore
     from Tools.npu.pipeline.io_utils import read_json, read_optional_json, read_text, write_json  # type: ignore
+    from Tools.npu.pipeline.validators import validate_implementation_draft_contract  # type: ignore
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -640,8 +644,12 @@ def get_indexed_project_files() -> set[str]:
 
 def validate_implementation_draft(draft: dict[str, Any]) -> dict[str, Any]:
     indexed_files = get_indexed_project_files()
+    contract_validation = validate_implementation_draft_contract(
+        draft,
+        allowed_prefixes=ALLOWED_NEW_PREFIXES,
+    )
 
-    issues: list[str] = []
+    issues: list[str] = list(contract_validation.get("required_key_report", {}).get("issues", []))
     reference_files = draft.get("reference_files") or []
     proposed_files = draft.get("proposed_files") or []
     implementation_plan = draft.get("implementation_plan") or []
@@ -661,10 +669,11 @@ def validate_implementation_draft(draft: dict[str, Any]) -> dict[str, Any]:
             if not isinstance(item, dict):
                 issues.append("A reference_files entry is not an object.")
                 continue
-            file_name = str(item.get("file") or "").replace("\\", "/")
-            if not file_name:
+            raw_file_name = str(item.get("file") or "").replace("\\", "/").strip()
+            if not raw_file_name:
                 issues.append("A reference_files entry has no file.")
                 continue
+            file_name = normalize_repo_relative_path(raw_file_name)
             if file_name not in indexed_files:
                 issues.append(f"Reference file is not in project index: {file_name}")
 
@@ -673,13 +682,14 @@ def validate_implementation_draft(draft: dict[str, Any]) -> dict[str, Any]:
             if not isinstance(item, dict):
                 issues.append("A proposed_files entry is not an object.")
                 continue
-            file_name = str(item.get("file") or "").replace("\\", "/")
-            if not file_name:
+            raw_file_name = str(item.get("file") or "").replace("\\", "/").strip()
+            if not raw_file_name:
                 issues.append("A proposed_files entry has no file.")
                 continue
+            file_name = normalize_repo_relative_path(raw_file_name)
             if file_name in indexed_files:
                 issues.append(f"Proposed file must not be an existing source file: {file_name}")
-            if not file_name.startswith(ALLOWED_NEW_PREFIXES):
+            if not is_allowed_generated_artifact_path(file_name, allowed_prefixes=ALLOWED_NEW_PREFIXES):
                 issues.append(f"Proposed file is not under an allowed generated-output prefix: {file_name}")
 
     support_files = draft.get("support_files") or []
@@ -690,13 +700,14 @@ def validate_implementation_draft(draft: dict[str, Any]) -> dict[str, Any]:
             if not isinstance(item, dict):
                 issues.append("A support_files entry is not an object.")
                 continue
-            file_name = str(item.get("file") or "").replace("\\", "/")
-            if not file_name:
+            raw_file_name = str(item.get("file") or "").replace("\\", "/").strip()
+            if not raw_file_name:
                 issues.append("A support_files entry has no file.")
                 continue
+            file_name = normalize_repo_relative_path(raw_file_name)
             if file_name in indexed_files:
                 issues.append(f"Support file must not be an existing source file: {file_name}")
-            if not file_name.startswith(ALLOWED_NEW_PREFIXES):
+            if not is_allowed_generated_artifact_path(file_name, allowed_prefixes=ALLOWED_NEW_PREFIXES):
                 issues.append(f"Support file is not under an allowed generated-output prefix: {file_name}")
             if "content" not in item:
                 issues.append(f"Support file has no content: {file_name}")
@@ -732,6 +743,7 @@ def validate_implementation_draft(draft: dict[str, Any]) -> dict[str, Any]:
         "issues": issues,
         "indexed_file_count": len(indexed_files),
         "allowed_new_prefixes": list(ALLOWED_NEW_PREFIXES),
+        "contract_validation": contract_validation,
     }
 
 
@@ -1392,8 +1404,11 @@ def write_implementation_draft(draft: dict[str, Any]) -> None:
     for item in draft.get("support_files", []) or []:
         if not isinstance(item, dict):
             continue
-        relpath = str(item.get("file") or "").replace("\\", "/")
-        if not relpath.startswith(ALLOWED_NEW_PREFIXES):
+        raw_relpath = str(item.get("file") or "").replace("\\", "/").strip()
+        if not raw_relpath:
+            continue
+        relpath = normalize_repo_relative_path(raw_relpath)
+        if not is_allowed_generated_artifact_path(relpath, allowed_prefixes=ALLOWED_NEW_PREFIXES):
             continue
         support_path = ROOT / relpath
         support_path.parent.mkdir(parents=True, exist_ok=True)
