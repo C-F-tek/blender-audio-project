@@ -27,10 +27,12 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         build_context_bundle,
         build_creative_scene_prompt_payload,
         build_default_stage_plan,
+        build_helper_boundary_report,
         build_implementation_retry_payload,
         build_merge_prompt_payload,
         compact_segments_for_prompt,
         context_bundle_metrics,
+        helper_boundary_passed,
         is_allowed_generated_artifact_path,
         planned_provider_result,
         read_optional_json_object,
@@ -130,6 +132,27 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
     )
     json_object_report = validate_json_object({"ok": True}, label="smoke_object")
     missing_optional = read_optional_json_object(repo_root / "not_existing_optional_smoke.json")
+    boundary_report = build_helper_boundary_report(
+        package_name="Tools.npu.pipeline",
+        modules=[
+            "artifact_paths",
+            "artifact_writer",
+            "config",
+            "context_builder",
+            "io_utils",
+            "prompts",
+            "providers",
+            "reports",
+            "runner",
+            "validators",
+        ],
+        checks={
+            "paths": path_report.get("ok") is False,
+            "planned_write": planned_write_report.get("ok") is True,
+            "draft_contract": draft_report.get("ok") is True,
+            "provider_boundary": provider_result.ok is True,
+        },
+    )
 
     errors: list[str] = []
     if len(compact_segments) != 1:
@@ -176,6 +199,10 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("JSON object validator rejected an object")
     if missing_optional != {}:
         errors.append("missing optional JSON should return empty object")
+    if boundary_report.get("module_count") != 10:
+        errors.append("helper boundary report should list ten modules")
+    if helper_boundary_passed(boundary_report) is not True:
+        errors.append("helper boundary report should pass all boolean checks")
 
     return {
         "schema_version": 1,
@@ -192,6 +219,7 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "provider_validation": provider_validation,
             "provider_result": provider_result.to_dict(),
             "invalid_provider_result": invalid_provider_result.to_dict(),
+            "boundary_report": boundary_report,
             "creative_payload_keys": sorted(creative_payload.keys()),
             "merge_payload_keys": sorted(merge_payload.keys()),
             "retry_payload_keys": sorted(retry_payload.keys()),
