@@ -50,6 +50,7 @@ PROFILE_CONTEXT_FILES: dict[str, tuple[str, ...]] = {
         "Tools/npu/build_runtime_output_manifest.py",
         "Tools/npu/build_provider_result_report.py",
         "Tools/ai/run_local_provider_probe.py",
+        "Tools/validation/check_ai_workload_report_quality.py",
     ),
     "docs": (
         "AGENTS.md",
@@ -72,6 +73,7 @@ PROFILE_REPORTS: dict[str, tuple[str, ...]] = {
         "output/validation/npu_pipeline_docs.json",
         "output/validation/provider_result_parsing.json",
         "output/validation/provider_result_report.json",
+        "output/validation/ai_workload_report_quality.json",
         "output/validation/npu_runtime_output_manifest.json",
         "output/validation/local_ai_resource_lanes.json",
         "output/validation/local_provider_probe.json",
@@ -86,6 +88,7 @@ PROFILE_REPORTS: dict[str, tuple[str, ...]] = {
         "output/validation/npu_pipeline_docs.json",
         "output/validation/provider_result_parsing.json",
         "output/validation/provider_result_report.json",
+        "output/validation/ai_workload_report_quality.json",
         "output/validation/npu_runtime_output_manifest.json",
         "output/validation/local_ai_resource_lanes.json",
         "output/validation/local_provider_probe.json",
