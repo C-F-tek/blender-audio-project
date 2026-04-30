@@ -1,8 +1,8 @@
 # Spaziotempo Primary Project Code Index
 
-Generated: `2026-04-30T13:16:55`
+Generated: `2026-04-30T13:38:05`
 
-Source fingerprint: `ccaf0daebb73d60efc01fa9f72a1b39aef9a9d75b37fc77af147ec92e3a9db86`
+Source fingerprint: `d6487805e173609ffdde721857fad1a2755dd4f504bb31284216972b5a395b56`
 
 Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.
 
@@ -29,7 +29,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `docs/AI_GENERATED_PACKAGE_STANDARD.md`: 127 lines, 4009 chars, sha256 `330f12198136fc62938a66b8036c23d48869f290aaec58d43fe3f5c1ced452cf`
 - `docs/AI_MEMORY_POLICY.md`: 243 lines, 5993 chars, sha256 `a6ba5e835e29ef3ee49ce3db1059cf83d87fa38201a760c55cb365502ed7163d`
 - `docs/AI_ONBOARDING.md`: 108 lines, 4465 chars, sha256 `f10f82d54113f7507c01f5856c4a8f629503c42662999373088e7bb8baf08e55`
-- `docs/AI_PIPELINE_ARCHITECTURE.md`: 184 lines, 5089 chars, sha256 `00589f118bfce3ec3ab9679beac1d7928b264818120f66f34dae9aa2638ea8c0`
+- `docs/AI_PIPELINE_ARCHITECTURE.md`: 201 lines, 5805 chars, sha256 `aaf4483db21b75681338a9b256ac0e72194be1ca7f00c1de2a79540d3bcec84d`
 - `docs/AI_PIPELINE_OPTIMIZATION.md`: 173 lines, 4084 chars, sha256 `6aa03c27d5168082ce8b623e78a37d68edec0b4185ae6ab3a65d1c40360da56f`
 - `docs/AI_PIPELINE_REFACTOR_STATUS.md`: 126 lines, 3001 chars, sha256 `b88bce533417da74f08969c23539f3a428a143b56e492caa06b8370c01298abb`
 - `docs/AI_SMART_POLICY.md`: 126 lines, 5554 chars, sha256 `e944ab0fde40a77ebcdaf65bc42f4b2a3a8de78c4a604dfc952b9819c87e68c6`
@@ -48,7 +48,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `docs/EXECUTION_PLANS/active/2026-04-29_json_parser_utility_review.md`: 178 lines, 4128 chars, sha256 `c77cb309c7297915e0ef444bc4903f5ea3ea7e5cd2e393c76272432291963899`
 - `docs/EXECUTION_PLANS/active/2026-04-29_superseded_pr_followups.md`: 265 lines, 7213 chars, sha256 `cc7bfa7e87baaa74d3e18bb210c6eb4dd9a6c47c8224e77716b34bb47b3f6884`
 - `docs/EXECUTION_PLANS/active/2026-04-30_dry_run_matrix_contract_followups.md`: 181 lines, 9067 chars, sha256 `6627c3845d341a31bd5e367fe418afef97cd437955f82576d942f0e730cdfb66`
-- `docs/EXECUTION_PLANS/active/2026-04-30_npu_pipeline_decomposition_plan.md`: 102 lines, 3244 chars, sha256 `aca9b8b5c4d626554da07b53efc50fc1069318fef66d81b5bbee0a48f1a73aec`
+- `docs/EXECUTION_PLANS/active/2026-04-30_npu_pipeline_decomposition_plan.md`: 120 lines, 4227 chars, sha256 `9d7ca7f3440ae91e53b385138f988da9fb41bd0ae9678f38546559ed27aa8e53`
 - `docs/EXECUTION_PLANS/active/2026-04-30_validator_report_consistency_review.md`: 69 lines, 3749 chars, sha256 `389c1bf19ca24ae87bc7d374ab3ba596cc9859ef69cdcfed9e76e417242e54df`
 - `docs/EXECUTION_PLANS/active/README.md`: 8 lines, 260 chars, sha256 `f28a4492bf9be279074df8a69c272704c14f91a73703c556610f26e20a9bb5e4`
 - `docs/EXECUTION_PLANS/completed/2026-04-29_generated_file_policy_blender_first.md`: 106 lines, 2773 chars, sha256 `4386705c29f41343cd309aecc5c7cbd236d61a6f85547061dfe3291890b27ed6`
@@ -77,11 +77,11 @@ Priority: this is the primary library for project structure. AI patches must res
 - `docs/PROJECT_STATUS_POINT.md`: 156 lines, 6910 chars, sha256 `632254dbcdbc1ab1f2110c74a38fa0d03a03fd7d7da2c3c54d9c3572f4acef2b`
 - `docs/QUALITY_GATE.md`: 409 lines, 13774 chars, sha256 `27b9b7185bd0225120ed8ff2d028bd4a300fb97f166fcf92820d2632c593b4b7`
 - `docs/README.md`: 180 lines, 8124 chars, sha256 `6d161decd89b8c911efdd9fc82d1e9cc7069d59b9cd12b2ecda848ed4705128f`
-- `docs/REFACTORING_AND_REUSE_PLAN.md`: 350 lines, 11107 chars, sha256 `a5c0d2d8353956418e595eea34cc4968124990da450909fe6b414c65cdd353cf`
+- `docs/REFACTORING_AND_REUSE_PLAN.md`: 405 lines, 14013 chars, sha256 `506eff8bdb3d9a544ca6513e8ca201e10c008cf449b68e8a44aec33bc0538895`
 - `docs/RENDER_WORKFLOW.md`: 52 lines, 1283 chars, sha256 `def05a0c6564b32e2b5cd913ee2f4bd67a6b3e39a09df5639b9d7c9741f5c72d`
 - `docs/SHARED_SCRIPTING_UTILITIES.md`: 185 lines, 7430 chars, sha256 `29499c3cd16ed7bdf2f094dcf9089889f63ffa2de2369b04b2a4a5c83bfb5915`
 - `docs/SMART_GUARDRAIL_APP.md`: 96 lines, 2802 chars, sha256 `b43fa12f7e71bb22e926df86ca2e05f44f5e8102cf0b821dc6747e1c024bd9b7`
-- `docs/TECH_DEBT_TRACKER.md`: 70 lines, 5935 chars, sha256 `9b11f280e9b8b227b468dcc26993839df4eb2447d2739ac899bf03556f9ae0ff`
+- `docs/TECH_DEBT_TRACKER.md`: 70 lines, 6008 chars, sha256 `47f3d5dde989f96ff5443b1e32e6a0c7e33f88d5a5d4aa9b91be51acc5e8f634`
 - `docs/USAGE.md`: 58 lines, 1203 chars, sha256 `e253584611273d0c7e8170be97c074f6105bc51065d9f528d7a1473d209dda98`
 - `examples/README.md`: 15 lines, 280 chars, sha256 `330f4a3a4445bbe353232cb1d6d829e78a802f3d8b3dc71a5936eaa38c31d2f3`
 - `guida_git_github_blender_audio_project.md`: 536 lines, 10474 chars, sha256 `1fd5cc5ab5e275f0ee6376ca6e9d0a3a9429e6223e1f6053520b44aee27e2751`
@@ -243,7 +243,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `Tools/npu/generated_blender_script_candidate_FristNear.py`: 370 lines, 16507 chars, sha256 `c51bbc873468bc622b65d39565578f2b499215dc5f9035c47e8630221d769432`
 - `Tools/npu/npu_blender_manual_index.md`: 384 lines, 77192 chars, sha256 `53c55cc95abf776b330776e3bdee74319dbe3cc9e3e89bfbe385e621b9a410d6`
 - `Tools/npu/npu_blender_manual_manifest.json`: 3339 lines, 156053 chars, sha256 `ae496412a40745840615966bb12e0e7f2f2064610bd21622cb4642ed772441e1`
-- `Tools/npu/npu_code_manifest.json`: 7340 lines, 198066 chars, sha256 `fa22ff85a4564678b8a479c921bc4b5b56b36cfeb85b208671697f994c0a548c`
+- `Tools/npu/npu_code_manifest.json`: 7340 lines, 198066 chars, sha256 `77519af21889d8aaa9087caa03e383703add7e3d017ddad4f51998b668645c21`
 - `Tools/npu/npu_guardrail_service.py`: 491 lines, 20211 chars, sha256 `5829724c35b7fccef62481ca8efc7290b63ef4d552e441fcf51a59009a4cc84a`
 - `Tools/npu/npu_music_manifest.json`: 703 lines, 27216 chars, sha256 `e5cb8facca90680775a3ab5a525cfb2b0ef1f0f7c0ecd5c61e2f1570082f2045`
 - `Tools/npu/npu_runtime.py`: 161 lines, 5903 chars, sha256 `38dc29da6ba1c564c68a29c0c5de7e4b38787aa6a0c17607c8d2ae03fe89f182`
@@ -323,7 +323,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI/project_code_chunks/chunk_0015_docs_AI_GENERATED_PACKAGE_STANDARD_md.md` -> `docs/AI_GENERATED_PACKAGE_STANDARD.md` lines 1-126
 - `indexAI/project_code_chunks/chunk_0016_docs_AI_MEMORY_POLICY_md.md` -> `docs/AI_MEMORY_POLICY.md` lines 1-242
 - `indexAI/project_code_chunks/chunk_0017_docs_AI_ONBOARDING_md.md` -> `docs/AI_ONBOARDING.md` lines 1-107
-- `indexAI/project_code_chunks/chunk_0018_docs_AI_PIPELINE_ARCHITECTURE_md.md` -> `docs/AI_PIPELINE_ARCHITECTURE.md` lines 1-183
+- `indexAI/project_code_chunks/chunk_0018_docs_AI_PIPELINE_ARCHITECTURE_md.md` -> `docs/AI_PIPELINE_ARCHITECTURE.md` lines 1-200
 - `indexAI/project_code_chunks/chunk_0019_docs_AI_PIPELINE_OPTIMIZATION_md.md` -> `docs/AI_PIPELINE_OPTIMIZATION.md` lines 1-172
 - `indexAI/project_code_chunks/chunk_0020_docs_AI_PIPELINE_REFACTOR_STATUS_md.md` -> `docs/AI_PIPELINE_REFACTOR_STATUS.md` lines 1-125
 - `indexAI/project_code_chunks/chunk_0021_docs_AI_SMART_POLICY_md.md` -> `docs/AI_SMART_POLICY.md` lines 1-125
@@ -343,7 +343,7 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI/project_code_chunks/chunk_0035_docs_EXECUTION_PLANS_active_2026_04_29_json_parser_utility_review_md.md` -> `docs/EXECUTION_PLANS/active/2026-04-29_json_parser_utility_review.md` lines 1-177
 - `indexAI/project_code_chunks/chunk_0036_docs_EXECUTION_PLANS_active_2026_04_29_superseded_pr_followups_md.md` -> `docs/EXECUTION_PLANS/active/2026-04-29_superseded_pr_followups.md` lines 1-264
 - `indexAI/project_code_chunks/chunk_0037_docs_EXECUTION_PLANS_active_2026_04_30_dry_run_matrix_contract_followups_md.md` -> `docs/EXECUTION_PLANS/active/2026-04-30_dry_run_matrix_contract_followups.md` lines 1-180
-- `indexAI/project_code_chunks/chunk_0038_docs_EXECUTION_PLANS_active_2026_04_30_npu_pipeline_decomposition_plan_md.md` -> `docs/EXECUTION_PLANS/active/2026-04-30_npu_pipeline_decomposition_plan.md` lines 1-101
+- `indexAI/project_code_chunks/chunk_0038_docs_EXECUTION_PLANS_active_2026_04_30_npu_pipeline_decomposition_plan_md.md` -> `docs/EXECUTION_PLANS/active/2026-04-30_npu_pipeline_decomposition_plan.md` lines 1-119
 - `indexAI/project_code_chunks/chunk_0039_docs_EXECUTION_PLANS_active_2026_04_30_validator_report_consistency_review_md.md` -> `docs/EXECUTION_PLANS/active/2026-04-30_validator_report_consistency_review.md` lines 1-68
 - `indexAI/project_code_chunks/chunk_0040_docs_EXECUTION_PLANS_active_README_md.md` -> `docs/EXECUTION_PLANS/active/README.md` lines 1-7
 - `indexAI/project_code_chunks/chunk_0041_docs_EXECUTION_PLANS_completed_2026_04_29_generated_file_policy_blender_first_md.md` -> `docs/EXECUTION_PLANS/completed/2026-04-29_generated_file_policy_blender_first.md` lines 1-105
@@ -376,8 +376,8 @@ Priority: this is the primary library for project structure. AI patches must res
 - `indexAI/project_code_chunks/chunk_0068_docs_QUALITY_GATE_md.md` -> `docs/QUALITY_GATE.md` lines 1-268
 - `indexAI/project_code_chunks/chunk_0069_docs_QUALITY_GATE_md.md` -> `docs/QUALITY_GATE.md` lines 269-408
 - `indexAI/project_code_chunks/chunk_0070_docs_README_md.md` -> `docs/README.md` lines 1-179
-- `indexAI/project_code_chunks/chunk_0071_docs_REFACTORING_AND_REUSE_PLAN_md.md` -> `docs/REFACTORING_AND_REUSE_PLAN.md` lines 1-316
-- `indexAI/project_code_chunks/chunk_0072_docs_REFACTORING_AND_REUSE_PLAN_md.md` -> `docs/REFACTORING_AND_REUSE_PLAN.md` lines 317-349
+- `indexAI/project_code_chunks/chunk_0071_docs_REFACTORING_AND_REUSE_PLAN_md.md` -> `docs/REFACTORING_AND_REUSE_PLAN.md` lines 1-305
+- `indexAI/project_code_chunks/chunk_0072_docs_REFACTORING_AND_REUSE_PLAN_md.md` -> `docs/REFACTORING_AND_REUSE_PLAN.md` lines 306-404
 - `indexAI/project_code_chunks/chunk_0073_docs_RENDER_WORKFLOW_md.md` -> `docs/RENDER_WORKFLOW.md` lines 1-51
 - `indexAI/project_code_chunks/chunk_0074_docs_SHARED_SCRIPTING_UTILITIES_md.md` -> `docs/SHARED_SCRIPTING_UTILITIES.md` lines 1-184
 - `indexAI/project_code_chunks/chunk_0075_docs_SMART_GUARDRAIL_APP_md.md` -> `docs/SMART_GUARDRAIL_APP.md` lines 1-95
