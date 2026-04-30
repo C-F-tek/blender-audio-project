@@ -13,6 +13,7 @@ source/code syntax checks
 repository/package structure checks
 JSON artifact checks
 documentation link checks
+execution-plan folder/status checks
 AI pipeline smoke checks
 NPU pipeline helper smoke and unit tests
 AI dry-run matrix case-definition checks
@@ -86,6 +87,7 @@ python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output
 python .\Tools\validation\check_package_structure.py --repo-root . --output .\output\validation\package_structure.json
 python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\output\validation\json_artifacts.json
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
+python .\Tools\validation\check_execution_plan_status.py --repo-root . --output .\output\validation\execution_plan_status.json
 ```
 
 AI pipeline, NPU helper, report-contract and memory checks:
@@ -121,6 +123,7 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_package_structure.py` | Reports package-level structure and warnings under `Scripting/`. | No |
 | `check_json_artifacts.py` | Checks JSON parseability; accepts UTF-8 with or without BOM and skips very large files by default. | No |
 | `check_docs_links.py` | Validates repository-local Markdown links and ignores external URLs. | No |
+| `check_execution_plan_status.py` | Ensures terminal execution plans are not left under `docs/EXECUTION_PLANS/active/`. | No |
 | `check_ai_pipeline_modules.py` | Imports modular AI pipeline code and validates representative planning/report helpers. | No |
 | `check_npu_pipeline_modules.py` | Imports app-agnostic NPU pipeline helpers and validates representative contract, provider-planning and boundary helpers. | No |
 | `check_npu_pipeline_helper_tests.py` | Runs deterministic `unittest` coverage for app-agnostic NPU helper modules and emits a JSON validation report. | No |
@@ -137,6 +140,24 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_generated_python_policy.py` | Validates generic generated Python syntax and hazard policy. | No |
 | `check_generated_artifact_path_policy.py` | Validates generated artifact destination paths. | No |
 | `check_generated_blender_script_policy.py` | Validates generated Blender Python scripts before execution. | No |
+
+## Execution plan status validation
+
+Completed plans must live under:
+
+```text
+docs/EXECUTION_PLANS/completed/
+```
+
+Active plans must not have top-level status `completed`, `abandoned` or `wont_fix`.
+
+Run:
+
+```powershell
+python .\Tools\validation\check_execution_plan_status.py --repo-root . --output .\output\validation\execution_plan_status.json
+```
+
+This check exists because completed plans left under `active/` confuse future AI task selection.
 
 ## NPU pipeline helper validation
 
@@ -159,6 +180,29 @@ python .\Tools\validation\test_npu_pipeline_helpers.py
 ```
 
 These tests must remain provider-free and runtime-free. They may use temporary directories, but they must not invoke Blender, NPU, GPU, Ollama, FFmpeg or modify project source files.
+
+## Post-validation AI work packet
+
+After local validation and index regeneration, a local advisory work packet can be generated for ChatGPT/Codex:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1
+```
+
+Optional local Ollama drafting:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1 -UseOllama
+```
+
+Generated reports:
+
+```text
+output/ai_pipeline/repository_update_suggestions.json
+output/ai_pipeline/repository_update_suggestions.md
+```
+
+The packet is advisory only. It must not auto-apply edits. Use it as broader local context for the next AI task after tests.
 
 ## Generated Python and Blender script policy
 
@@ -282,6 +326,7 @@ python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
 python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
 python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
+python .\Tools\validation\check_execution_plan_status.py --repo-root . --output .\output\validation\execution_plan_status.json
 python .\Tools\validation\check_ai_dry_run_matrix_cases.py --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
 python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
 python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
