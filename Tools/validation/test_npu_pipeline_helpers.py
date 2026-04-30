@@ -18,12 +18,14 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from Tools.npu.pipeline import (  # noqa: E402
+    COMMON_VALIDATION_REPORT_KEYS,
     DEFAULT_ALLOWED_ARTIFACT_PREFIXES,
     DualPipelinePaths,
     MigrationReadinessCheck,
     NpuPipelineConfig,
     PlannedArtifactWrite,
     ProviderRequest,
+    RuntimeOutputManifestEntry,
     build_context_bundle,
     build_creative_scene_prompt_payload,
     build_default_stage_plan,
@@ -31,6 +33,8 @@ from Tools.npu.pipeline import (  # noqa: E402
     build_implementation_retry_payload,
     build_merge_prompt_payload,
     build_migration_readiness_report,
+    build_runtime_output_manifest,
+    build_validation_report,
     compact_segments_for_prompt,
     compare_json_readers,
     compare_optional_json_readers,
@@ -48,6 +52,7 @@ from Tools.npu.pipeline import (  # noqa: E402
     read_optional_json,
     read_optional_json_object,
     read_text,
+    runtime_output_manifest_passed,
     sample_implementation_draft_fixture,
     sample_music_context_fixture,
     sample_provider_request_fixture,
@@ -59,6 +64,7 @@ from Tools.npu.pipeline import (  # noqa: E402
     validate_legacy_runtime_output_paths,
     validate_planned_artifact_writes,
     validate_provider_request,
+    validation_report_has_common_keys,
     write_json,
     write_json_object,
     write_planned_artifact,
@@ -222,6 +228,54 @@ class NpuPipelineHelperTests(unittest.TestCase):
         missing_report = validate_implementation_draft_contract({})
         self.assertFalse(missing_report["ok"])
         self.assertTrue(missing_report["issues"])
+
+    def test_common_validation_report_helpers(self) -> None:
+        report = build_validation_report(
+            kind="npu_test_report",
+            repo_root=REPO_ROOT,
+            passed=True,
+            checks={"sample": True},
+        )
+        self.assertEqual(tuple(COMMON_VALIDATION_REPORT_KEYS), tuple(COMMON_VALIDATION_REPORT_KEYS))
+        self.assertTrue(validation_report_has_common_keys(report))
+        self.assertTrue(report["passed"])
+        self.assertEqual(report["errors"], [])
+        self.assertEqual(report["warnings"], [])
+        self.assertEqual(report["checks"], {"sample": True})
+        self.assertFalse(validation_report_has_common_keys({"passed": True}))
+
+    def test_runtime_output_manifest_helpers_are_observability_only(self) -> None:
+        allowed_entry = RuntimeOutputManifestEntry(
+            path="output/Track_dual_ai_scene_plan.json",
+            kind="scene_plan",
+            policy_source="legacy_runtime_output_policy",
+            allowed=True,
+            legacy=True,
+            generated=False,
+            provider_execution_performed=False,
+        )
+        blocked_entry = RuntimeOutputManifestEntry(
+            path="Tools/npu/unknown.md",
+            kind="notes",
+            policy_source="legacy_runtime_output_policy",
+            allowed=False,
+            reason="not in exact legacy output allowlist",
+        )
+        allowed_manifest = build_runtime_output_manifest(
+            repo_root=REPO_ROOT,
+            entries=[allowed_entry],
+            provider_execution_performed=False,
+        )
+        blocked_manifest = build_runtime_output_manifest(
+            repo_root=REPO_ROOT,
+            entries=[allowed_entry, blocked_entry],
+            provider_execution_performed=False,
+        )
+        self.assertTrue(runtime_output_manifest_passed(allowed_manifest))
+        self.assertFalse(runtime_output_manifest_passed(blocked_manifest))
+        self.assertEqual(blocked_manifest["blocked_count"], 1)
+        self.assertFalse(blocked_manifest["provider_execution_performed"])
+        self.assertIn("blocked runtime output", blocked_manifest["errors"][0])
 
     def test_provider_descriptors_are_planned_only(self) -> None:
         request = ProviderRequest(provider="ollama", model="model", prompt="hello", max_tokens=32)
