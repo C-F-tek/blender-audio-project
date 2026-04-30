@@ -20,10 +20,20 @@ from run_ollama_music_agent import markdown_from_insights
 try:
     from pipeline.artifact_paths import is_allowed_generated_artifact_path, normalize_repo_relative_path
     from pipeline.io_utils import read_json, read_optional_json, read_text, write_json
+    from pipeline.prompts import (
+        build_creative_scene_prompt_payload,
+        build_implementation_retry_payload,
+        build_merge_prompt_payload,
+    )
     from pipeline.validators import validate_implementation_draft_contract
 except ImportError:  # Allows package-style imports from repo-root validation.
     from Tools.npu.pipeline.artifact_paths import is_allowed_generated_artifact_path, normalize_repo_relative_path  # type: ignore
     from Tools.npu.pipeline.io_utils import read_json, read_optional_json, read_text, write_json  # type: ignore
+    from Tools.npu.pipeline.prompts import (  # type: ignore
+        build_creative_scene_prompt_payload,
+        build_implementation_retry_payload,
+        build_merge_prompt_payload,
+    )
     from Tools.npu.pipeline.validators import validate_implementation_draft_contract  # type: ignore
 
 
@@ -214,33 +224,12 @@ def run_npu_technical_pass(args: argparse.Namespace) -> str:
 
 
 def build_creative_scene_prompt(music_context: dict[str, Any], npu_notes: str, project_index: str) -> str:
-    compact = {
-        "analysis_summary": music_context.get("analysis_summary"),
-        "track_summary": music_context.get("track_summary"),
-        "scene_summaries": music_context.get("scene_summaries"),
-        "ai_operating_contract": {
-            "memory_first": "Use director memory and user corrections before generic defaults.",
-            "chunk_first": "Use compact chunks for reasoning and refs for exact data.",
-            "full_keyframes": "Never summarize or discard full Blender keyframes; scripts must read the full frames list.",
-            "answer_shape": "Return only the requested JSON schema during pipeline calls.",
-        },
-        "segments": [
-            {
-                "index": segment.get("index"),
-                "start_sec": segment.get("start_sec"),
-                "end_sec": segment.get("end_sec"),
-                "dominant_band": segment.get("dominant_band"),
-                "intensity": segment.get("intensity"),
-                "intensity_score": segment.get("intensity_score"),
-                "controls": segment.get("controls"),
-                "top_events": segment.get("top_events", [])[:6],
-            }
-            for segment in music_context.get("segments", [])
-        ],
-        "npu_technical_notes": npu_notes[:18000],
-        "primary_project_index": project_index[:14000],
-    }
-    payload = json.dumps(compact, indent=2, ensure_ascii=False)
+    payload_data = build_creative_scene_prompt_payload(
+        music_context,
+        npu_notes=npu_notes,
+        project_index=project_index,
+    )
+    payload = json.dumps(payload_data, indent=2, ensure_ascii=False)
     return f"""
 Sei il generatore creativo locale per una scena Blender audio-reactive.
 
@@ -301,19 +290,13 @@ def build_merge_prompt(
     creative: dict[str, Any],
     technical: dict[str, Any],
 ) -> str:
-    payload = {
-        "music_summary": music_context.get("analysis_summary"),
-        "ai_operating_contract": {
-            "memory_first": True,
-            "use_director_brief": True,
-            "use_assets_by_role": True,
-            "full_keyframes_json_is_authoritative": True,
-        },
-        "npu_technical_notes": npu_notes[:14000],
-        "primary_project_index": read_text(PROJECT_INDEX_MD)[:12000],
-        "ollama_creative": creative,
-        "ollama_technical": technical,
-    }
+    payload = build_merge_prompt_payload(
+        music_context,
+        npu_notes=npu_notes,
+        project_index=read_text(PROJECT_INDEX_MD),
+        creative=creative,
+        technical=technical,
+    )
     return f"""
 Sei l'orchestratore finale NPU+Ollama per Blender.
 
@@ -484,13 +467,12 @@ def build_implementation_retry_prompt(
     )
     preferred_files = [file_name for file_name in indexed_files if file_name in PREFERRED_IMPLEMENTATION_FILES]
 
-    payload = {
-        "dual_ai_plan": plan,
-        "preferred_existing_files": preferred_files,
-        "allowed_new_prefixes": list(ALLOWED_NEW_PREFIXES),
-        "previous_validation_errors": validation.get("issues", []),
-        "previous_response_was_invalid": True,
-    }
+    payload = build_implementation_retry_payload(
+        plan,
+        preferred_existing_files=preferred_files,
+        allowed_new_prefixes=ALLOWED_NEW_PREFIXES,
+        validation=validation,
+    )
 
     return f"""
 Rispondi esclusivamente con un singolo oggetto JSON valido.

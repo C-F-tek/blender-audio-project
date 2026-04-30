@@ -7,6 +7,7 @@ helpers. It does not run Blender, NPU, GPU, Ollama, FFmpeg or provider calls.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import tempfile
 from pathlib import Path
@@ -198,6 +199,71 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             ),
         }
     )
+    runtime_project_index = runtime_pipeline.read_text(runtime_pipeline.PROJECT_INDEX_MD)
+    runtime_creative_expected_payload = build_creative_scene_prompt_payload(
+        music_context,
+        npu_notes="technical smoke notes",
+        project_index="project smoke index",
+    )
+    runtime_creative_prompt = runtime_pipeline.build_creative_scene_prompt(
+        music_context,
+        "technical smoke notes",
+        "project smoke index",
+    )
+    runtime_merge_expected_payload = build_merge_prompt_payload(
+        music_context,
+        npu_notes="technical smoke notes",
+        project_index=runtime_project_index,
+        creative={"ok": True},
+        technical={"ok": True},
+    )
+    runtime_merge_prompt = runtime_pipeline.build_merge_prompt(
+        music_context,
+        "technical smoke notes",
+        {"ok": True},
+        {"ok": True},
+    )
+    runtime_manifest = (
+        runtime_pipeline.read_json(runtime_pipeline.PROJECT_MANIFEST_JSON)
+        if runtime_pipeline.PROJECT_MANIFEST_JSON.exists()
+        else {}
+    )
+    runtime_indexed_files = sorted(
+        item.get("file")
+        for item in runtime_manifest.get("files", [])
+        if item.get("file")
+    )
+    runtime_preferred_files = [
+        file_name
+        for file_name in runtime_indexed_files
+        if file_name in runtime_pipeline.PREFERRED_IMPLEMENTATION_FILES
+    ]
+    runtime_retry_validation = {"issues": ["smoke"]}
+    runtime_retry_expected_payload = build_implementation_retry_payload(
+        {"plan": True},
+        preferred_existing_files=runtime_preferred_files,
+        allowed_new_prefixes=runtime_pipeline.ALLOWED_NEW_PREFIXES,
+        validation=runtime_retry_validation,
+    )
+    runtime_retry_prompt = runtime_pipeline.build_implementation_retry_prompt(
+        {"plan": True},
+        {"ignored": True},
+        runtime_retry_validation,
+    )
+    runtime_prompt_payload_report = {
+        "creative": (
+            json.dumps(runtime_creative_expected_payload, indent=2, ensure_ascii=False)
+            in runtime_creative_prompt
+        ),
+        "merge": (
+            json.dumps(runtime_merge_expected_payload, indent=2, ensure_ascii=False)
+            in runtime_merge_prompt
+        ),
+        "retry": (
+            json.dumps(runtime_retry_expected_payload, indent=2, ensure_ascii=False)
+            in runtime_retry_prompt
+        ),
+    }
     boundary_report = build_helper_boundary_report(
         package_name="Tools.npu.pipeline",
         modules=[
@@ -222,6 +288,7 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "legacy_compat": optional_alias_report.get("ok") is True and reader_alias_report.get("ok") is True,
             "runtime_io_wiring": runtime_reader_report.get("ok") is True and runtime_optional_report.get("ok") is True,
             "runtime_contract_wiring": runtime_draft_contract.get("contract_validation", {}).get("ok") is True,
+            "runtime_prompt_payload_wiring": all(runtime_prompt_payload_report.values()),
             "migration_gate_blocks_runtime": migration_readiness.get("ready") is False,
         },
     )
@@ -277,6 +344,8 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("runtime IO helper wiring should preserve helper behavior")
     if runtime_draft_contract.get("contract_validation", {}).get("ok") is not True:
         errors.append("runtime implementation draft validation should include passing helper contract validation")
+    if not all(runtime_prompt_payload_report.values()):
+        errors.append("runtime prompt builders should embed helper-built payloads")
     if migration_readiness.get("ready") is not False:
         errors.append("default migration readiness should block runtime wiring")
     if forced_migration_readiness.get("ready") is not True:
@@ -306,6 +375,7 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
             "runtime_reader_report": runtime_reader_report,
             "runtime_optional_report": runtime_optional_report,
             "runtime_draft_contract": runtime_draft_contract.get("contract_validation"),
+            "runtime_prompt_payload_report": runtime_prompt_payload_report,
             "migration_readiness": migration_readiness,
             "forced_migration_readiness": forced_migration_readiness,
             "boundary_report": boundary_report,
