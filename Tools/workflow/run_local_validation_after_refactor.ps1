@@ -122,7 +122,7 @@ try {
     }
 
     Invoke-Step -Name "git status before validation" -Command "git" -Arguments @("status")
-    Invoke-Step -Name "python syntax validation" -Command "python" -Arguments @(".\Tools\validation\check_python_syntax.py", "--repo-root", ".")
+    Invoke-Step -Name "python syntax validation" -Command "python" -Arguments @(".\Tools\validation\check_python_syntax.py", "--repo-root", ".", "--output", ".\output\validation\python_syntax.json")
     Invoke-Step -Name "ai model json validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_model_json.py", "--repo-root", ".", "--output", ".\output\validation\ai_model_json.json")
     Invoke-Step -Name "ai pipeline module smoke validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_pipeline_modules.py", "--repo-root", ".", "--output", ".\output\validation\ai_pipeline_modules.json")
     Invoke-Step -Name "ai dry-run matrix case definition validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_dry_run_matrix_cases.py", "--repo-root", ".", "--output", ".\output\validation\ai_dry_run_matrix_cases.json")
@@ -136,8 +136,9 @@ try {
     Invoke-Step -Name "ai dry-run matrix contract validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_dry_run_matrix_contract.py", "--repo-root", ".", "--output", ".\output\validation\ai_dry_run_matrix_contract.json")
     Invoke-Step -Name "ai dry-run matrix output consistency validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_dry_run_matrix_outputs.py", "--repo-root", ".", "--output", ".\output\validation\ai_dry_run_matrix_outputs.json")
     Invoke-Step -Name "generated artifact path policy validation" -Command "python" -Arguments @(".\Tools\validation\check_generated_artifact_path_policy.py", "--repo-root", ".", "--artifact-report", ".\output\ai_pipeline\dry_run_matrix_report.json", "--output", ".\output\validation\generated_artifact_path_policy.json")
-    Invoke-Step -Name "package structure validation" -Command "python" -Arguments @(".\Tools\validation\check_package_structure.py", "--repo-root", ".")
-    Invoke-Step -Name "json artifact validation" -Command "python" -Arguments @(".\Tools\validation\check_json_artifacts.py", "--repo-root", ".")
+    Invoke-Step -Name "package structure validation" -Command "python" -Arguments @(".\Tools\validation\check_package_structure.py", "--repo-root", ".", "--output", ".\output\validation\package_structure.json")
+    Invoke-Step -Name "json artifact validation" -Command "python" -Arguments @(".\Tools\validation\check_json_artifacts.py", "--repo-root", ".", "--output", ".\output\validation\json_artifacts.json")
+    Invoke-Step -Name "validation report contract validation" -Command "python" -Arguments @(".\Tools\validation\check_validation_report_contract.py", "--repo-root", ".", "--output", ".\output\validation\validation_report_contract.json")
     Invoke-Step -Name "build project ai index" -Command "python" -Arguments @(".\Tools\npu\build_project_ai_index.py")
     Invoke-Step -Name "build npu code context" -Command "python" -Arguments @(".\Tools\npu\build_npu_code_context.py")
     Invoke-Step -Name "git diff stat after validation" -Command "git" -Arguments @("diff", "--stat")
@@ -164,6 +165,7 @@ $summary = [pscustomobject]@{
     ai_pipeline_modules_report = (Join-Path $repo "output\validation\ai_pipeline_modules.json")
     ai_dry_run_matrix_cases_report = (Join-Path $repo "output\validation\ai_dry_run_matrix_cases.json")
     ai_dry_run_matrix_outputs_report = (Join-Path $repo "output\validation\ai_dry_run_matrix_outputs.json")
+    validation_report_contract_report = (Join-Path $repo "output\validation\validation_report_contract.json")
     generated_python_policy_report = (Join-Path $repo "output\validation\generated_python_policy.json")
     generated_artifact_path_policy_report = (Join-Path $repo "output\validation\generated_artifact_path_policy.json")
     generated_blender_script_policy_report = (Join-Path $repo "output\validation\generated_blender_script_policy.json")
@@ -192,6 +194,7 @@ $md += ("- AI model JSON report: {0}" -f $summary.ai_model_json_report)
 $md += ("- AI module report: {0}" -f $summary.ai_pipeline_modules_report)
 $md += ("- AI dry-run matrix cases report: {0}" -f $summary.ai_dry_run_matrix_cases_report)
 $md += ("- AI dry-run matrix outputs report: {0}" -f $summary.ai_dry_run_matrix_outputs_report)
+$md += ("- Validation report contract report: {0}" -f $summary.validation_report_contract_report)
 $md += ("- Generated Python policy report: {0}" -f $summary.generated_python_policy_report)
 $md += ("- Generated artifact path policy report: {0}" -f $summary.generated_artifact_path_policy_report)
 $md += ("- Generated Blender script policy report: {0}" -f $summary.generated_blender_script_policy_report)
@@ -221,6 +224,7 @@ $md += "    Get-Content .\output\validation\ai_model_json.json -Raw"
 $md += "    Get-Content .\output\validation\ai_pipeline_modules.json -Raw"
 $md += "    Get-Content .\output\validation\ai_dry_run_matrix_cases.json -Raw"
 $md += "    Get-Content .\output\validation\ai_dry_run_matrix_outputs.json -Raw"
+$md += "    Get-Content .\output\validation\validation_report_contract.json -Raw"
 $md += "    Get-Content .\output\validation\generated_python_policy.json -Raw"
 $md += "    Get-Content .\output\validation\generated_artifact_path_policy.json -Raw"
 $md += "    Get-Content .\output\validation\generated_blender_script_policy.json -Raw"
