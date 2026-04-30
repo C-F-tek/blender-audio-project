@@ -2,198 +2,200 @@
 
 ## Purpose
 
-This document records the current technical status of `blender-audio-project` for GitHub-only AI work and local continuation.
+This document records the current technical status of `IA-Carmine Local AI Orchestration Workbench` for GitHub-assisted and local continuation work.
 
-It is a handoff checkpoint for agents that can read and edit GitHub files and for the maintainer when local workstation validation is available.
+The current GitHub repository slug is still `C-F-tek/blender-audio-project`, but the project identity has moved beyond Blender/audio. The repository is now centered on local AI orchestration, provider-lane routing, quality-gated advisory context, NPU/GPU diagnostics, validation reports and compact GitHub evidence bundles.
 
-## Current baseline on `master`
+## Current validated baseline on PR #48 branch
 
-The repository is now a structured audio-reactive Blender production workspace with reusable AI-pipeline and NPU/backend guardrails.
+Validated evidence:
 
-Current known baseline after PR #38 through PR #47:
-
-| Area | Current status | Evidence / operational meaning |
-|---|---|---|
-| AI artifact pipeline dry-run matrix | locally validated in prior cycles | Treat the dry-run matrix as validated unless a newer local run fails. Re-run locally before validation-sensitive merges. |
-| AI pipeline report contracts | merged and locally validated | PR #38 added schema-v6 report-contract work and regenerated indexes after local validation. |
-| NPU helper package | merged and locally validated | PR #41 created the app-agnostic helper-contract layer under `Tools/npu/pipeline/`. |
-| NPU runtime IO wiring | merged and locally validated | PR #42 wired legacy-compatible IO helper aliases into `Tools/npu/run_dual_ai_pipeline.py`. |
-| NPU runtime contract/path wiring | merged and locally validated | PR #43 wired implementation draft contract validation and generated artifact path helpers. |
-| NPU runtime prompt payload wiring | merged and locally validated | PR #44 wired deterministic prompt payload helpers while preserving prompt prose and provider behavior. |
-| NPU runtime context/artifact helper wiring | merged and locally validated | PR #45 wired context-summary helper usage and generated support-file write planning. |
-| NPU runtime output/preflight guardrails | merged and locally validated | PR #46 added exact legacy output policy, generated scene script write guards and provider-preflight normalization without provider execution changes. |
-| AI reference documentation layer | merged | PR #47 added curated AI reference onboarding guides under `docs/`. |
-| Generated Python policy | locally validated | Generic generated Python syntax and hazard policy exists before application adapters. |
-| Generated Blender script policy | locally validated | Blender remains the first application-specific adapter, not the generic boundary. |
-| Generated artifact path policy | locally validated | Generated destinations can be checked without Blender/audio assumptions. |
-| SQLite local memory policy | ready with retention/promotion guardrails | Local DB is generated/untracked; GitHub-only agents must document examples but not inspect workstation DB state. |
-| Blender runtime packages | frozen for current core/backend work | Do not modify runtime packages as part of NPU/backend continuation. |
-| `Scripting/shared/blender_compat.py` | validated as a helper but not migrated broadly | Do not migrate runtime call sites until explicitly entering that phase. |
-
-## Active PR / branch status
-
-There is no active NPU helper-contract PR in this status point. PR #41 through PR #47 are merged.
-
-Before starting the next task, inspect current GitHub PRs and local state:
-
-```powershell
-git checkout master
-git pull --ff-only
-git status
-git log --oneline -12
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
 ```
 
-## Recent merged PRs
+Evidence decision summary:
 
-| PR | Title | Scope | Runtime scope |
-|---:|---|---|---|
-| #38 | AI pipeline report contracts | Added/validated schema-v6 report-contract work and regenerated indexes after maintainer local run. | No Blender runtime package changes. |
-| #39 | `[codex] Add NPU pipeline decomposition scaffold` | Added app-agnostic NPU helper package scaffold. | No runtime behavior changes. |
-| #40 | `[codex] Add NPU pipeline IO helpers` | Added pure NPU pipeline IO helpers. | No runtime orchestrator wiring yet. |
-| #41 | `[codex] Extend NPU pipeline helper contracts` | Added helper contracts, fixtures, planned-only provider descriptors, readiness gates, validators and docs. | No runtime orchestrator wiring in this PR. |
-| #42 | `[codex] Wire NPU runtime IO helpers` | Replaced duplicate runtime IO helpers with imports from `Tools/npu/pipeline/io_utils.py`. | Narrow runtime wiring; no provider behavior change. |
-| #43 | `[codex] Wire NPU runtime contract path helpers` | Wired implementation draft contract/path helpers and generated artifact path checks. | Narrow runtime wiring; no provider behavior change. |
-| #44 | `[codex] Wire NPU runtime prompt payload helpers` | Wired deterministic prompt payload helpers. | Runtime prompt assembly helper wiring; prompt prose/provider behavior unchanged. |
-| #45 | `[codex] Wire NPU runtime context and artifact helpers` | Wired context summary helper usage and generated support-file write planning. | Narrow runtime helper wiring; provider behavior unchanged. |
-| #46 | `[codex] Guard NPU runtime outputs and preflight reports` | Added exact legacy output policy, scene-script write guards and provider-preflight normalization. | Runtime output/preflight guardrails; provider execution adapters unchanged. |
-| #47 | `Add AI reference onboarding documentation layer` | Added curated AI reference docs under `docs/`. | Documentation-only. |
+```text
+ollama_gpu_primary_advisory: true
+npu_excluded_when_unusable: true
+provider_execution_seen: true
+npu_decode_smoke_passed: true
+```
 
-Older guardrail PRs remain part of the baseline:
+## Current provider-lane status
 
-| PR | Scope |
-|---:|---|
-| #31 | Generic artifact destination policy and validator. |
-| #32 | `--artifact-report` scanning for AI pipeline machine-readable reports. |
-| #33 | Generic generated Python policy and Blender adapter over it. |
+| Lane | Provider | Role | Evidence / meaning |
+|---|---|---|---|
+| GPU/CUDA | Ollama | Primary advisory provider | Quality routing declares `ollama` usable and primary; advisory packet execution used Ollama when explicitly requested. |
+| NPU/OpenVINO | OpenVINO GenAI | Probe / guardrail / decode diagnostic | Real NPU decode smoke passed through dedicated NPU Python and produced readable text. |
+| Historical NPU workload report | OpenVINO/NPU generated report | Excluded advisory input | The old `npu_real_workload_report.md` remains numeric/hex-like and is correctly excluded from advisory context. |
+| Blender runtime | Blender Python | Legacy application domain | Frozen for this milestone. No runtime package work belongs to PR #48. |
 
-## Fixed guardrails for GitHub-only work
+## PR #48 status
 
-Allowed from GitHub-only access:
+PR #48 implements the current local AI orchestration milestone:
+
+```text
+P-AI-WORKLOAD-QUALITY-BASED-LANE-ROUTING
+P-NPU-DECODE-QUALITY-REMEDIATION
+P-NPU-DECODE-SMOKE-DIAGNOSTIC
+P-ADVISORY-CONTEXT-FILTER-ENFORCEMENT
+parallel GPU/NPU multistep workflow
+github evidence bundle generation
+```
+
+Important source additions:
+
+| File | Role |
+|---|---|
+| `Tools/ai/workload_quality.py` | Shared helper for quality-based advisory context routing. |
+| `Tools/ai/build_workload_quality_lane_routing.py` | Builds lane routing report and declares Ollama/GPU primary advisory provider. |
+| `Tools/ai/run_npu_decode_smoke_diagnostic.py` | Explicit NPU/OpenVINO decode smoke diagnostic through dedicated NPU Python. |
+| `Tools/ai/build_github_evidence_bundle.py` | Builds compact Git-trackable evidence from ignored `output/` reports. |
+| `Tools/validation/check_npu_decode_quality_remediation.py` | Builds NPU decode remediation plan from quality metrics. |
+| `Tools/workflow/run_post_validation_ai_packet.ps1` | Supports primary advisory provider mode. |
+| `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | Coordinates workload quality gate, parallel probes, routing, packet/proposals and evidence. |
+
+Important local evidence additions:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
+```
+
+## Current architectural boundary
+
+The current app-agnostic boundary is:
+
+```text
+local context and validation reports
+  -> workload quality analysis
+  -> advisory context routing
+  -> provider lane selection
+  -> explicit provider probes or advisory generation
+  -> compact evidence bundle
+  -> manual review and PR merge
+```
+
+The correct provider mapping is:
+
+```text
+Ollama -> GPU/CUDA
+OpenVINO -> NPU
+```
+
+Do not introduce OpenVINO GPU as the primary lane.
+
+## Fixed guardrails
+
+Allowed from GitHub-assisted work:
 
 ```text
 docs updates
 execution plans
 tech-debt tracker updates
 static validators using Python stdlib only
-deterministic in-memory samples
-schema/report contract planning
-small PRs marked local validation pending
+report/evidence summarizers
+explicit-run provider diagnostic scripts
+workflow runners that keep provider execution explicit
+small PRs with local evidence bundles
 ```
 
-Forbidden from GitHub-only access:
+Forbidden without explicit scope approval:
 
 ```text
 no Blender runtime package edits
 no Ready To Jazz split
-no Scripting/shared/blender_compat.py migration
+no Scripting/shared/blender_compat.py broad migration
 no full analysis JSON edits
 no hand-edited AI/NPU indexes
-no claims of Blender/audio/GPU/NPU validation without logs
-no provider/model execution behavior changes without local validation and explicit scope
+no implicit provider execution
+no provider/model/temperature/prompt prose changes outside a dedicated milestone
+no OpenVINO GPU primary lane
+no repository rename without explicit maintainer confirmation
 ```
 
-Every GitHub-only PR must include:
+Every GitHub-assisted PR should include:
 
 ```text
 scope
 changed files
-GitHub-only validation
-local validation still pending, unless local reports are supplied
+provider execution mode
+local evidence bundle path if available
 runtime scope
 risks
 ```
-
-## Current architectural boundary
-
-The generated-artifact policy family remains:
-
-```text
-input-agnostic
-output-application-agnostic
-not Blender-only
-not WAV/audio-only
-```
-
-Current concrete layers:
-
-```text
-Tools/validation/generated_file_policy.py
-  -> Tools/validation/generated_python_policy.py
-  -> Tools/validation/check_generated_python_policy.py
-  -> Tools/validation/check_generated_artifact_path_policy.py
-  -> Tools/validation/check_generated_blender_script_policy.py
-```
-
-Current NPU/backend boundary:
-
-```text
-Tools/npu/pipeline/
-  -> helper contracts, validators, fixtures, output policy and planned provider descriptors
-  -> focused smoke/unit/docs validation
-  -> runtime helper adoption in Tools/npu/run_dual_ai_pipeline.py for IO, paths/contracts, prompt payloads, context summary, support-file writes, output guards and preflight normalization
-  -> future provider execution adapter work must remain separately scoped and locally validated
-```
-
-Blender is the first real application target. WAV/audio is the first real input family. Neither is the architectural limit.
-
-## Active task queue status
-
-| ID | Status | Notes |
-|---|---|---|
-| GHO-001 | updated | Baseline now records PR #38 through PR #47. |
-| GHO-002 | in progress | Only completed execution plans should be moved from `active/` to `completed/`. |
-| GHO-003 | in progress | Tech debt needs periodic refresh for generated Python policy, artifact path policy, NPU runtime wiring and GitHub-only limits. |
-| GHO-004 | in progress | JSON/schema docs need report-producer-validator gap tables kept current with NPU reports. |
-| GHO-005 | mostly addressed | Dry-run matrix contract checks exist; keep strictness tied to locally available report samples. |
-| GHO-006 | planned | Future non-Blender Python adapter template should compose `generated_python_policy.py`. |
-| GHO-007 | in progress | Memory policy examples should cover retain, quarantine, promote and drop. |
-| GHO-008 | in progress | NPU pipeline decomposition has moved from helper contracts into incremental runtime helper adoption; provider execution adapters remain future work. |
-| GHO-009 | in progress | PR template should expose GitHub-only and local-validation-pending checkboxes. |
-| GHO-010 | in progress | Validator report consistency should be reviewed before follow-up PRs. |
 
 ## Current blockers and limits
 
 | Blocker / limit | Impact | Correct handling |
 |---|---|---|
-| Local output reports are not committed | GitHub-only agents cannot inspect full local validation detail unless pasted or committed. | Use PR bodies and maintainer-provided summaries as evidence; ask for local reports when needed. |
-| Runtime packages frozen | Prevents accidental breakage of known working Blender packages. | Keep current core/backend work out of Blender runtime packages. |
-| Generated indexes are app-owned | Hand-editing indexes would corrupt generated context. | Regenerate with project scripts locally after structural/doc changes. |
-| Schema contracts still partial | AI artifacts can drift. | Document missing checks first; add strict validators only after local report samples are available. |
-| NPU runtime orchestrator still owns provider execution | Provider execution changes can affect local model behavior. | Keep provider/model execution adapter work in a separate narrow phase with local validation. |
+| Repository slug still says `blender-audio-project` | Name no longer reflects the active architecture. | Documentation now uses `IA-Carmine Local AI Orchestration Workbench`; repository rename requires explicit confirmation. |
+| Historical NPU workload output is corrupt/non-linguistic | Cannot use that report as advisory context. | Keep excluded until a future quality-gated workload proves NPU advisory quality. |
+| NPU smoke passes only for short diagnostic | Does not yet prove NPU is a general advisory model lane. | Keep NPU as probe/guardrail/diagnostic until broader quality gates pass. |
+| `output/` is ignored | Long local reports cannot be reviewed directly on GitHub. | Use `docs/LOCAL_VALIDATION_EVIDENCE/` bundles. |
+| Blender runtime packages are frozen | Prevents accidental breakage of known working scene packages. | Keep current work in core AI/backend layers. |
+
+## Active task queue status
+
+| ID | Status | Notes |
+|---|---|---|
+| GHO-001 | updated | Project identity updated to local AI orchestration workbench. |
+| GHO-002 | in progress | Active execution plans should be reconciled after PR #48 merge. |
+| GHO-003 | in progress | Tech debt should record NPU advisory promotion and repository rename decision. |
+| GHO-004 | in progress | JSON/schema docs should include new evidence/routing/smoke report contracts. |
+| GHO-005 | addressed for current milestone | Compact evidence bundle now replaces pasted long local reports. |
+| GHO-006 | planned | Future provider adapter work should remain explicit and quality-gated. |
+| GHO-007 | in progress | Memory policy remains separate but should use the same evidence/report pattern. |
+| GHO-008 | in progress | NPU is validated for decode smoke, not yet for general advisory lane. |
 
 ## Next local owner batch
 
-For the next task on `master`, start with:
+For the next task on this branch:
 
 ```powershell
-git checkout master
+git fetch origin
+git checkout ai/workload-quality-routing-npu-remediation
 git pull --ff-only
 git status
-git log --oneline -12
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
 ```
 
-For validation-sensitive changes, run the full local runner:
+Recommended verification:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
+  -Profile npu `
+  -RunOllamaProbe `
+  -RunNpuProbe `
+  -RunNpuDecodeSmoke `
+  -UsePrimaryAdvisoryProvider `
+  -Basename parallel_gpu_npu_multistep_real_npu_v2 `
+  -ProposalBasename parallel_gpu_npu_multistep_real_npu_v2_proposals `
+  -EvidenceBasename parallel_gpu_npu_multistep_real_npu_v2_evidence
+```
+
+After documentation/source changes:
+
+```powershell
 python .\Tools\npu\build_project_ai_index.py
 python .\Tools\npu\build_npu_code_context.py
 git status
 git diff --stat
 ```
 
-If indexes change after local validation, commit only the intentional generated index refresh.
-
 ## Recommended next technical directions
 
-Preferred next work should stay in core/backend/AI/NPU layers:
-
-1. Reconcile documentation and execution-plan state after PR #41-#47.
-2. Review validator/report contract consistency for the NPU helper and runtime wiring reports.
-3. Consider a narrow provider-result parsing/reporting phase without changing provider execution behavior.
-4. Consider a runtime-output manifest/report phase if it improves observability without changing generated artifacts.
-5. Continue memory/guardrail integration only through deterministic validators and report contracts.
+1. Merge PR #48 after documentation and evidence review.
+2. Open a follow-up milestone for NPU advisory promotion only if a real workload quality gate can classify NPU output as `usable_text`.
+3. Add formal schema notes for:
+   - `ai_workload_quality_lane_routing`;
+   - `npu_decode_quality_remediation`;
+   - `npu_decode_smoke_diagnostic`;
+   - `github_validation_evidence_bundle`.
+4. Decide whether to rename the GitHub repository to match the new working title.
+5. Keep Blender runtime out of core provider orchestration work.
 
 ## Do not do yet
 
@@ -202,14 +204,24 @@ Do not do these without explicit scope approval:
 - rewrite `Scripting/v61b/main_v61b.py`;
 - split the Ready To Jazz monolith;
 - migrate package imports to `Scripting/shared/blender_compat.py`;
-- change NPU/Ollama provider execution behavior;
+- change provider execution from explicit to implicit;
 - edit full frame-level analysis JSON files;
 - hand-edit generated AI/NPU indexes;
-- claim Blender/audio/GPU/NPU validation without local logs;
-- make dry-run matrix contract stricter before reviewing current local report samples.
+- claim NPU is a general advisory lane based only on short smoke success;
+- rename the GitHub repository.
 
 ## Final technical position
 
-The correct immediate posture is stabilization and small core/backend continuation.
+The repository has crossed from Blender/audio project into a local AI orchestration workbench.
 
-The repository has moved beyond helper scaffolding: NPU helper adoption has begun inside `Tools/npu/run_dual_ai_pipeline.py`, but provider execution changes remain a separate future phase. The next useful changes are state/docs reconciliation, report-contract consistency, and one narrowly scoped NPU/backend milestone at a time.
+The active architecture is now validated around:
+
+```text
+Ollama/GPU primary advisory
+NPU/OpenVINO explicit probe and decode-smoke diagnostics
+quality-based advisory context filtering
+parallel provider workflow
+compact GitHub evidence bundles
+```
+
+Blender/audio remains important as a legacy/current application domain, but not as the project identity or architecture boundary.
