@@ -59,6 +59,7 @@ Before creating or editing a package or pipeline module, read:
 | `Tools/ai/` | AI artifact pipeline, dry-run matrix and validation helpers. |
 | `Tools/ai/pipeline/` | Modular AI artifact pipeline implementation. Read `docs/AI_PIPELINE_ARCHITECTURE.md` first. |
 | `Tools/npu/` | Local AI, NPU, context-building and review tooling. |
+| `Tools/npu/pipeline/` | App-agnostic NPU helper package under staged decomposition; do not wire it into runtime orchestrators without local validation and regenerated indexes. |
 | `Tools/validation/` | Non-invasive repository validation scripts. |
 | `Tools/workflow/` | Local workflow runners and unattended validation scripts. |
 | `Tools/repo_patch_runner/` | Safe JSON patch-spec runner for small reviewable edits. |
@@ -98,6 +99,36 @@ package structure validation: PASS
 index regeneration: PASS
 ```
 
+## Current NPU helper package state
+
+`Tools/npu/pipeline/` is being built as an additive app-agnostic helper package.
+
+Current intended scope:
+
+```text
+pure config/path/context helpers
+JSON/text IO helpers and legacy-compatible aliases
+artifact path and write planning helpers
+contract validators
+planned-only provider descriptors
+planned-only runner stage reports
+fixtures, helper-boundary reports and migration-readiness gates
+```
+
+Current exclusion:
+
+```text
+no runtime wiring into Tools/npu/run_dual_ai_pipeline.py until local validation and index regeneration pass
+no NPU/Ollama provider execution from helper validators
+no Blender runtime behavior changes
+```
+
+Focused validation:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+```
+
 ## Fast validation commands
 
 Use focused checks before broad test runs:
@@ -123,6 +154,15 @@ AI pipeline module smoke validation:
 
 ```powershell
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+```
+
+NPU helper package validation:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
+python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
 ```
 
 AI pipeline dry-run matrix:
@@ -215,6 +255,13 @@ For AI pipeline changes specifically:
 4. run `check_ai_pipeline_modules.py` and the dry-run matrix when local execution is available;
 5. regenerate AI/NPU indexes after structural changes.
 
+For NPU helper package changes specifically:
+
+1. read `Tools/npu/pipeline/README.md`;
+2. keep helpers provider-free and runtime-free unless a later validated phase explicitly wires runtime behavior;
+3. run `run_npu_pipeline_helper_validation.ps1` when local execution is available;
+4. regenerate AI/NPU indexes after structural or documentation changes.
+
 ## Safe modification rules
 
 Allowed without extra confirmation:
@@ -247,6 +294,7 @@ Require explicit confirmation first:
 - Keep artistic scene behavior separate from infrastructure refactors.
 - Keep generated indexes out of source-level refactors.
 - Keep `Tools/ai/run_parallel_artifact_pipeline.py` as a thin entrypoint; add behavior to focused modules under `Tools/ai/pipeline/`.
+- Keep `Tools/npu/run_dual_ai_pipeline.py` behavior stable until helper contracts, local validation and index regeneration are green.
 
 ## Output expectations
 

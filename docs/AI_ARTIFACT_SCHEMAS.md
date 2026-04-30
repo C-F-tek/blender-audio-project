@@ -30,6 +30,9 @@ AI artifacts are separate from validation reports. Do not mix input-domain artif
 |---|---|---|---|---|
 | `dry_run_matrix_report.json` | `Tools/ai/run_pipeline_dry_run_matrix.py` | `Tools/validation/check_ai_dry_run_matrix_contract.py` | `schema_version`, `repo_root`, `output_dir`, `case_count`, `passed`, `results` | Report contract, not Blender/audio adapter. |
 | `ai_pipeline_dry_run_report.json` | `Tools/ai/run_parallel_artifact_pipeline.py` | `Tools/validation/check_ai_pipeline_report_contract.py` | schema-v6 fields: `schema_version`, `generated_at`, `repo_root`, `output_dir`, `dry_run`, `passed`, `preflight`, `step_count`, `summary`, `schedule`, `lanes`, `steps` | Per-case report contract; use `--require-dry-run` for matrix case reports. |
+| `npu_pipeline_modules.json` | `Tools/validation/check_npu_pipeline_modules.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | NPU helper import/contract smoke; not runtime proof. |
+| `npu_pipeline_helper_tests.json` | `Tools/validation/check_npu_pipeline_helper_tests.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | JSON wrapper around deterministic unit tests for helper modules. |
+| `npu_pipeline_docs.json` | `Tools/validation/check_npu_pipeline_docs.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | Documentation/module alignment for `Tools/npu/pipeline/`. |
 | `generated_python_policy.json` | `Tools/validation/check_generated_python_policy.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `rules`, `sample_results` | Generic generated Python layer. |
 | `generated_artifact_path_policy.json` | `Tools/validation/check_generated_artifact_path_policy.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `path_results` | Destination-policy layer only. |
 | `generated_blender_script_policy.json` | `Tools/validation/check_generated_blender_script_policy.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `rules`, `sample_results` | Blender-specific adapter composed over generic Python policy. |
@@ -41,6 +44,7 @@ AI artifacts are separate from validation reports. Do not mix input-domain artif
 - Keep warnings separate from blocking errors.
 - Do not enforce Blender-specific rules in generic AI artifact schemas.
 - Do not enforce WAV/audio-specific rules in generic generated-file validators.
+- Do not use NPU helper validation reports as proof of provider/runtime execution.
 - Do not hand-edit generated index manifests to satisfy schema notes.
 - Add strict checks only after representative local artifacts are available.
 

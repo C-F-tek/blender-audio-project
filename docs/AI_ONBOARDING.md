@@ -22,15 +22,16 @@ If a status document says a file is missing but the file exists, treat the file 
 
 ## Current baseline
 
-As of 2026-04-29:
+As of 2026-04-30:
 
 | Area | Baseline |
 |---|---|
 | `Scripting/v61b/` | Stable reference package. Do not destructively refactor. |
 | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/` | Usable standalone package, still monolithic. |
 | `Scripting/shared/` | Initial package-agnostic utilities exist: path, JSON, image sequence, FFmpeg command building and render profiles. |
-| `Tools/validation/` | Lightweight non-invasive validators exist. |
+| `Tools/validation/` | Lightweight non-invasive validators exist, including NPU helper smoke/unit/docs validators on active NPU decomposition branches. |
 | `Tools/npu/` | Active AI/NPU/Ollama context and review tooling, with large orchestrators still needing staged decomposition. |
+| `Tools/npu/pipeline/` | Additive app-agnostic helper package exists on the NPU decomposition branch; it is not wired into the runtime orchestrator until local validation and index regeneration pass. |
 | `indexAI/` | Generated AI context. Regenerate after structural or documentation changes; do not hand-refactor as source. |
 | JSON schemas | Documented as partial. Preserve unknown fields and avoid destructive normalization. |
 
@@ -40,7 +41,7 @@ Not yet complete:
 Scripting/shared/blender_compat.py
 Scripting/shared/config_model.py
 Scripting/shared/diagnostics.py
-Tools/npu/pipeline/
+runtime adoption of Tools/npu/pipeline/ helpers inside Tools/npu/run_dual_ai_pipeline.py
 full production JSON schemas
 automated Blender runtime validation
 ```
@@ -65,6 +66,12 @@ python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
 ```
 
+For NPU helper work, run the focused helper validation before the full runner:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+```
+
 For documentation-only changes, a path/link review and `git diff` may be enough unless generated indexes must be refreshed.
 
 ## Common traps
@@ -77,6 +84,7 @@ For documentation-only changes, a path/link review and `git diff` may be enough 
 - Do not push patch specs that trigger GitHub Actions without explicit human approval.
 - Do not add dependencies, CI changes, long Blender renders or GPU-heavy jobs without explicit approval.
 - Do not assume Blender version compatibility unless it is documented or tested; mark it `not specified`.
+- Do not wire `Tools/npu/pipeline/` helpers into `Tools/npu/run_dual_ai_pipeline.py` until local validation, index regeneration and migration readiness gates are green.
 
 ## Task routing
 
@@ -87,6 +95,7 @@ For documentation-only changes, a path/link review and `git diff` may be enough 
 | v61b runtime issue | Read `Scripting/v61b/README.md` and target source; patch one concern only. |
 | New generated package | Start from `Scripting/_template_audio_reactive_package/` and `docs/QUALITY_GATE.md`. |
 | NPU/AI pipeline refactor | Split provider, prompt, validation and artifact-writing concerns without changing CLI behavior. |
+| NPU helper package work | Keep helpers app-agnostic, run focused helper validation, and defer runtime wiring to a later proven phase. |
 | GitHub or parallel AI work | Inspect local git state first; coordinate branch or PR scope before changing overlapping files. |
 
 ## Reporting template
@@ -104,4 +113,3 @@ recommended next step
 ```
 
 For documentation-only changes, script line counts can be reported as `not applicable`.
-

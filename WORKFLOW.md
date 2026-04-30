@@ -32,7 +32,16 @@ docs/PROJECT_AI_CONSCIOUSNESS.md
 docs/AI_PIPELINE_REFACTOR_STATUS.md
 docs/AI_PIPELINE_ARCHITECTURE.md
 docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md
+docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md
 docs/OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md
+```
+
+For NPU helper work, also read:
+
+```text
+Tools/npu/pipeline/README.md
+Tools/validation/README.md
+docs/EXECUTION_PLANS/active/2026-04-30_npu_pipeline_decomposition_plan.md
 ```
 
 For code changes, also read the nearest package/tool README and the target source file.
@@ -60,10 +69,22 @@ docs/EXECUTION_PLANS/active/
 
 ### 2. Prepare repository
 
+For master work:
+
 ```powershell
 cd C:\Users\carmi\blender\blender-audio-project
 git status
 git pull --rebase origin master
+git status
+```
+
+For PR branch work:
+
+```powershell
+cd C:\Users\carmi\blender\blender-audio-project
+git fetch origin
+git checkout <branch>
+git pull --ff-only
 git status
 ```
 
@@ -79,6 +100,7 @@ no unrelated formatting
 no destructive rewrite of stable Blender packages
 no generated full-analysis JSON edits
 no runtime package migration without validation
+no Tools/npu/run_dual_ai_pipeline.py runtime wiring before NPU helper validation and index regeneration
 ```
 
 ### 4. Run focused validation
@@ -98,6 +120,12 @@ For AI pipeline changes:
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+```
+
+For NPU helper package changes:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
 ```
 
 For generated Python or generated-file policy changes:
@@ -142,13 +170,22 @@ docs: add tech debt tracker
 feat(shared): add blender compatibility helper
 feat(validation): add markdown local link checker
 fix(validation): accept utf-8 bom json artifacts
+test(npu): validate helper package locally
 chore: regenerate ai and npu indexes
 ```
 
 ### 8. Push
 
+For master:
+
 ```powershell
 git push origin master
+```
+
+For a PR branch:
+
+```powershell
+git push origin <branch>
 ```
 
 ### 9. Share proof of work
@@ -160,6 +197,9 @@ git status
 git log --oneline -n 20
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
+Get-Content .\output\validation\npu_pipeline_modules.json -Raw
+Get-Content .\output\validation\npu_pipeline_helper_tests.json -Raw
+Get-Content .\output\validation\npu_pipeline_docs.json -Raw
 Get-Content .\output\validation\generated_python_policy.json -Raw
 Get-Content .\output\validation\refactor_status_consistency.json -Raw
 Get-Content .\output\validation\docs_links.json -Raw
@@ -233,4 +273,5 @@ add dependencies
 modify full frame-level analysis JSON
 run heavy Blender/GPU workloads automatically
 change schema-v6 report meanings
+wire Tools/npu/pipeline/ helpers into Tools/npu/run_dual_ai_pipeline.py before focused validation, full local validation and index regeneration
 ```

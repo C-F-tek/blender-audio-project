@@ -34,13 +34,13 @@ Main adopted concepts:
 | Repository agent-first | Keep `AGENTS.md`, `docs/`, validators, status markers and reports synchronized. |
 | AGENTS.md as index | Keep `AGENTS.md` concise and point to structured docs rather than making it an encyclopedia. |
 | Knowledge in repo | Store workflow, architecture, status, validation and task context in versioned Markdown/JSON. |
-| Mechanical guardrails | Use validators, dry-run matrix, schema reports and status consistency checks. |
+| Mechanical guardrails | Use validators, dry-run matrix, schema reports, status consistency checks and NPU helper smoke/unit/docs validators. |
 | Task tracker as control plane | Use GitHub issues, patch specs, execution plans or checklist docs for complex work. |
 | Workspace per task | Prefer branch/output-folder/task-scope isolation for larger automated work. |
 | Proof of work | Require JSON/Markdown reports, git diff summaries and validation logs. |
 | Technical drift cleanup | Maintain docs, shared utilities, validators and tech debt tracker as recurring work. |
 
-Recommended future additions derived from those notes:
+Adopted repository assets derived from those notes:
 
 ```text
 WORKFLOW.md
@@ -48,6 +48,17 @@ docs/EXECUTION_PLANS/README.md
 docs/TECH_DEBT_TRACKER.md
 Tools/validation/check_refactor_status_consistency.py
 Tools/validation/check_docs_links.py
+Tools/workflow/run_local_validation_after_refactor.ps1
+Tools/workflow/run_npu_pipeline_helper_validation.ps1
+```
+
+Current active extension of these concepts:
+
+```text
+Tools/npu/pipeline/                  app-agnostic NPU helper contracts
+Tools/validation/check_npu_pipeline_modules.py
+Tools/validation/check_npu_pipeline_helper_tests.py
+Tools/validation/check_npu_pipeline_docs.py
 ```
 
 ## Core principles adopted
@@ -64,7 +75,7 @@ Tools/validation/check_docs_links.py
 - refactoring rules;
 - expected reporting format.
 
-Keep it short enough to stay useful in AI context windows.
+Keep it short enough to stay useful in AI context windows. Keep detailed task state in `docs/`, execution plans and package-level README files.
 
 ### 2. Commands must be concrete
 
@@ -101,6 +112,12 @@ python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
 ```
 
+NPU helper checks:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+```
+
 Heavy Blender renders, full AI generation and long GPU workloads should be explicit human decisions.
 
 ### 4. Work in small tasks
@@ -127,6 +144,8 @@ The external references strongly support the same architectural direction alread
 ```text
 reusable engine code
   -> Scripting/shared/
+  -> Tools/ai/pipeline/
+  -> Tools/npu/pipeline/
 
 package-specific artistic policy
   -> Scripting/<package>/
@@ -134,9 +153,10 @@ package-specific artistic policy
 
 For this project, that means:
 
-- JSON/path/image-sequence/FFmpeg helpers should become shared infrastructure.
+- JSON/path/image-sequence/FFmpeg helpers should remain shared infrastructure.
 - Scene-specific visual choices remain inside the Blender package.
 - AI prompts, providers, validators and artifact writers should be separate.
+- NPU/Ollama provider execution remains a runtime adapter concern, not a helper-contract concern.
 
 ### 6. Keep a prompt/history trail where useful
 
@@ -174,7 +194,7 @@ The external audit report identified several issues. Some are already resolved o
 | Broad `except Exception` handling | active technical debt | Replace gradually in touched modules, with logging and explicit failure modes. |
 | `v61b_backgood` duplicate/backup folder | active cleanup candidate | Exclude from package validation or archive intentionally. |
 | Legacy Blender add-on packaging | deferred | Keep current workflow until Blender runtime validation is stable. |
-| Need smoke tests/validation | partially resolved | `Tools/validation/` now provides non-invasive checks. Blender runtime checks still manual. |
+| Need smoke tests/validation | partially resolved | `Tools/validation/` now provides non-invasive checks, including NPU helper package validation. Blender runtime checks still manual. |
 
 ## Project-specific AI operating policy
 
@@ -197,6 +217,7 @@ The external audit report identified several issues. Some are already resolved o
 - Long Blender renders.
 - GPU-heavy generation.
 - Any operation that modifies full frame-by-frame analysis data.
+- Wiring staged NPU helper modules into runtime orchestrators before local validation and regenerated indexes are green.
 
 ## How external knowledge should influence future work
 
@@ -209,7 +230,8 @@ Use this priority order:
 5. report changed files and line counts;
 6. keep patches small and reversible;
 7. prefer patch specs when a change is mechanical and reviewable;
-8. treat workflow, status and proof-of-work reports as first-class repository artifacts.
+8. treat workflow, status and proof-of-work reports as first-class repository artifacts;
+9. prefer focused helper validation before broad full-run validation.
 
 ## Not adopted
 
@@ -221,6 +243,7 @@ docs/
 Tools/validation/
 Tools/workflow/
 Tools/ai/pipeline/
+Tools/npu/pipeline/
 Scripting/shared/
 patch_specs/
 ```

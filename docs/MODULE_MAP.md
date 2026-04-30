@@ -25,7 +25,11 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | `Scripting/_template_audio_reactive_package/` | Template package | Starting point for future generated packages. Should evolve with the shared utility strategy. |
 | `Scripting/shared/` | Shared utility target | Package-neutral path, JSON, FFmpeg, Blender compatibility, render profile, diagnostics and panel helpers should live here. |
 | `Tools/npu/` | AI/NPU/Ollama support tooling | Contains context builders, dual-AI pipeline, NPU review and runtime utilities. |
+| `Tools/npu/pipeline/` | App-agnostic NPU helper package | Staged helper contracts, validators, fixtures and readiness gates. Not wired into runtime orchestrator until local validation/index regeneration pass. |
 | `Tools/ai/` | AI artifact validation and state packets | Validates AI-produced artifacts and builds generic agent state/memory packets. |
+| `Tools/ai/pipeline/` | Modular AI artifact pipeline | Focused modules for defaults, models, preflight, scheduling, reports, guardrails and orchestration. |
+| `Tools/validation/` | Repository validators | Non-invasive syntax, docs, AI pipeline, NPU helper, generated artifact and policy validators. |
+| `Tools/workflow/` | Local workflow runners | Full local validation runner and focused NPU helper validation runner. |
 | `Tools/repo_patch_runner/` | Structured patch runner tooling | Supports repository modification workflows. |
 | `indexAI/` | Generated AI-oriented project index | Generated context and patch material. Do not hand-refactor as source. |
 | `patch_specs/` | Patch specification artifacts | Structured patch records and applied patch metadata. |
@@ -37,14 +41,17 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 1. Read `README.md`.
 2. Read `AGENTS.md`.
 3. Read `docs/README.md`.
-4. Read this file.
-5. Read `docs/DATA_FLOW.md`.
-6. Read `docs/REFACTORING_AND_REUSE_PLAN.md`.
-7. Read `docs/SHARED_SCRIPTING_UTILITIES.md`.
-8. Read `docs/QUALITY_GATE.md`.
-9. Read `Scripting/README.md`.
-10. Read the README of the target package under `Scripting/`.
-11. Inspect the actual script before editing.
+4. Read `docs/PROJECT_AI_CONSCIOUSNESS.md`.
+5. Read this file.
+6. Read `docs/DATA_FLOW.md`.
+7. Read `docs/REFACTORING_AND_REUSE_PLAN.md`.
+8. Read `docs/SHARED_SCRIPTING_UTILITIES.md`.
+9. Read `docs/QUALITY_GATE.md`.
+10. For NPU helper work, read `Tools/npu/pipeline/README.md`.
+11. Read `Tools/validation/README.md` when changing validators/workflows.
+12. Read `Scripting/README.md` for Blender package work.
+13. Read the README of the target package under `Scripting/`.
+14. Inspect the actual script before editing.
 
 ## Current code organization
 
@@ -75,15 +82,33 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 
 | File | Main responsibility | Refactor target |
 |---|---|---|
-| `Tools/npu/run_dual_ai_pipeline.py` | End-to-end local/AI orchestration | Split into `Tools/npu/pipeline/` modules. |
-| `Tools/npu/ollama_runtime.py` | Ollama runtime/session helpers | Provider module under `Tools/npu/pipeline/providers.py`. |
-| `Tools/npu/npu_runtime.py` | NPU preflight | Provider/preflight module. |
+| `Tools/npu/run_dual_ai_pipeline.py` | End-to-end local/AI orchestration | Split gradually into `Tools/npu/pipeline/` modules after focused validation and index regeneration. |
+| `Tools/npu/ollama_runtime.py` | Ollama runtime/session helpers | Provider module under `Tools/npu/pipeline/providers.py` in a later runtime-wiring phase. |
+| `Tools/npu/npu_runtime.py` | NPU preflight | Provider/preflight module in a later runtime-wiring phase. |
 | `Tools/npu/build_project_ai_index.py` | Project index generation | Keep as generator; generated output remains non-source. |
 | `Tools/npu/build_ai_service_packet.py` | AI service packet generation | Keep as artifact builder; extract common JSON/path helpers later. |
 | `Tools/ai/agent_state.py` | Generic memory records and microtask packet model | Keep package-neutral; connect to app workers only through explicit packet contracts. |
 | `Tools/ai/build_agent_state_packet.py` | CLI for task-local agent state packets | Keep non-invasive; no Blender, GPU, NPU or FFmpeg execution. |
 | `Tools/ai/agent_memory_policy.py` | Memory retention, quarantine and promotion-candidate rules | Keep deterministic and non-destructive. |
 | `Tools/ai/review_agent_memory.py` | CLI for memory policy reports | Writes reports only; promotion into docs remains manual. |
+
+### NPU helper package
+
+| File | Main responsibility | Runtime scope |
+|---|---|---|
+| `Tools/npu/pipeline/config.py` | Repository paths, track defaults and data-only pipeline configuration. | No runtime execution. |
+| `Tools/npu/pipeline/artifact_paths.py` | Generated artifact path normalization and allowed-prefix validation. | No runtime execution. |
+| `Tools/npu/pipeline/io_utils.py` | UTF-8 text and JSON-object IO helpers plus legacy-compatible aliases. | Filesystem IO only. |
+| `Tools/npu/pipeline/legacy_compat.py` | Compare legacy helper behavior against new helpers before wiring. | No runtime execution. |
+| `Tools/npu/pipeline/fixtures.py` | Deterministic fixture payloads for tests and dry-runs. | No runtime execution. |
+| `Tools/npu/pipeline/prompts.py` | Deterministic prompt payload builders. | No provider execution. |
+| `Tools/npu/pipeline/context_builder.py` | Bounded context slices and compact context bundle metrics. | No model/provider execution. |
+| `Tools/npu/pipeline/providers.py` | Planned-only provider request/result envelopes. | Does not call providers. |
+| `Tools/npu/pipeline/runner.py` | Planned-only stage-plan reports. | Does not orchestrate runtime. |
+| `Tools/npu/pipeline/validators.py` | Contract-level validators preserving unknown future fields. | No runtime execution. |
+| `Tools/npu/pipeline/artifact_writer.py` | Validated generated-artifact write helpers. | Writes only explicitly allowed generated artifact paths. |
+| `Tools/npu/pipeline/migration_readiness.py` | Runtime-wiring readiness gates. | Blocks runtime wiring by default. |
+| `Tools/npu/pipeline/reports.py` | Helper-boundary report utilities. | No runtime execution. |
 
 ### Validation tooling
 
@@ -95,6 +120,17 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | `Tools/validation/check_generated_artifact_path_policy.py` | Generic safe-destination validator for generated artifact paths | Use before allowing generated outputs outside existing safe prefixes. |
 | `Tools/validation/check_generated_blender_script_policy.py` | Blender-specific generated Python script policy adapter | Compose generic Python rules with Blender assumptions here, not in the generic policy engine. |
 | `Tools/validation/check_ai_dry_run_matrix_contract.py` | Dry-run matrix report contract validator | Keep as report-contract validation, not runtime execution. |
+| `Tools/validation/check_npu_pipeline_modules.py` | NPU helper import/contract smoke validator | Keep provider-free, Blender-free and runtime-free. |
+| `Tools/validation/check_npu_pipeline_helper_tests.py` | JSON-report wrapper for NPU helper unit tests | Keep deterministic and temporary-directory only. |
+| `Tools/validation/check_npu_pipeline_docs.py` | NPU helper README/module alignment validator | Keep as docs consistency check. |
+| `Tools/validation/test_npu_pipeline_helpers.py` | Unit tests for app-agnostic NPU helper modules | No provider, Blender, GPU, NPU, Ollama or FFmpeg execution. |
+
+### Workflow tooling
+
+| File | Main responsibility |
+|---|---|
+| `Tools/workflow/run_local_validation_after_refactor.ps1` | Full local validation workflow after AI-assisted refactors. |
+| `Tools/workflow/run_npu_pipeline_helper_validation.ps1` | Focused NPU helper validation workflow for smoke, unit, docs and syntax checks. |
 
 ## Generated package model
 
@@ -140,6 +176,7 @@ Scripting/<package_name>/
 - For package-specific issues, inspect that package README and installation notes first.
 - For AI context or generated implementation packets, inspect `Tools/npu/` and `indexAI/` first.
 - For reusable behavior, add a shared module first and migrate package usage only after validation.
+- For NPU helper work, keep `Tools/npu/pipeline/` runtime-free until local validation and index regeneration are green.
 
 ## Refactoring guidance
 
@@ -151,6 +188,15 @@ Use this order:
 4. Test in Blender or with a dry-run.
 5. Migrate one package call site.
 6. Document result and risks.
+
+For NPU pipeline decomposition:
+
+1. Add or validate helper contracts under `Tools/npu/pipeline/`.
+2. Run focused NPU helper validation.
+3. Run full local validation.
+4. Regenerate AI/NPU indexes.
+5. Wire one helper group into `Tools/npu/run_dual_ai_pipeline.py` in a later PR.
+6. Compare local outputs after the wiring step.
 
 Do not combine broad code motion, behavior changes, and artistic scene changes in the same patch.
 
