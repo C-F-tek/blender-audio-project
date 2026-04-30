@@ -41,6 +41,83 @@ DEFAULT_ALLOWED_EXACT_PATHS: tuple[str, ...] = (
     "Tools/npu/npu_code_manifest.json",
 )
 
+ARTIFACT_PATH_KEYS: tuple[str, ...] = (
+    "markdown_output",
+    "output",
+    "output_dir",
+    "packet",
+    "path",
+    "report",
+    "report_path",
+)
+
+
+def load_json_report(path: Path) -> Any:
+    """Load a JSON report with tolerant UTF-8 BOM handling."""
+    return json.loads(path.read_text(encoding="utf-8-sig"))
+
+
+def looks_like_artifact_path(value: str) -> bool:
+    """Return True when a report string looks like a filesystem destination."""
+    text = value.strip()
+    if not text or "\n" in text or "\r" in text:
+        return False
+    if "/" in text or "\\" in text:
+        return True
+    return bool(Path(text).suffix)
+
+
+def collect_artifact_paths_from_report(value: Any) -> list[str]:
+    """Collect generated artifact destinations from known report path fields.
+
+    The collector is deliberately structural rather than domain-specific. It
+    walks JSON report objects and captures values of known artifact path keys,
+    while ignoring command argv arrays and prose-only fields.
+    """
+    paths: list[str] = []
+
+    def walk(node: Any, key: str | None = None) -> None:
+        if isinstance(node, dict):
+            for child_key, child_value in node.items():
+                if child_key in ARTIFACT_PATH_KEYS and isinstance(child_value, str) and looks_like_artifact_path(child_value):
+                    paths.append(child_value)
+                else:
+                    walk(child_value, child_key)
+        elif isinstance(node, list):
+            if key == "command":
+                return
+            for item in node:
+                walk(item, key)
+
+    walk(value)
+    return list(dict.fromkeys(paths))
+
+
+def collect_artifact_paths_from_reports(repo_root: Path, report_paths: list[str]) -> tuple[list[str], list[dict[str, Any]], list[str]]:
+    """Load JSON reports and return collected artifact paths plus metadata."""
+    collected: list[str] = []
+    reports: list[dict[str, Any]] = []
+    errors: list[str] = []
+    for item in report_paths:
+        report_path = Path(item)
+        if not report_path.is_absolute():
+            report_path = repo_root / report_path
+        report_path = report_path.resolve()
+        if not report_path.exists():
+            errors.append(f"artifact report not found: {report_path}")
+            reports.append({"path": str(report_path), "exists": False, "path_count": 0})
+            continue
+        try:
+            payload = load_json_report(report_path)
+        except Exception as exc:
+            errors.append(f"artifact report parse failed: {report_path}: {type(exc).__name__}: {exc}")
+            reports.append({"path": str(report_path), "exists": True, "path_count": 0})
+            continue
+        paths = collect_artifact_paths_from_report(payload)
+        collected.extend(paths)
+        reports.append({"path": str(report_path), "exists": True, "path_count": len(paths)})
+    return list(dict.fromkeys(collected)), reports, errors
+
 
 def sample_results(repo_root: Path, policy: PathPolicy) -> list[dict[str, Any]]:
     """Run deterministic path-policy samples."""
@@ -73,14 +150,21 @@ def build_policy(allowed_prefixes: list[str], allowed_exact_paths: list[str]) ->
     )
 
 
-def check_policy(repo_root: Path, paths: list[str], allowed_prefixes: list[str], allowed_exact_paths: list[str]) -> dict[str, Any]:
+def check_policy(
+    repo_root: Path,
+    paths: list[str],
+    artifact_reports: list[str],
+    allowed_prefixes: list[str],
+    allowed_exact_paths: list[str],
+) -> dict[str, Any]:
     """Evaluate sample and explicit generated artifact destinations."""
     policy = build_policy(allowed_prefixes, allowed_exact_paths)
     samples = sample_results(repo_root, policy)
-    explicit_paths = [Path(item) for item in paths]
+    report_paths, report_inputs, report_errors = collect_artifact_paths_from_reports(repo_root, artifact_reports)
+    explicit_paths = [Path(item) for item in [*paths, *report_paths]]
     path_results = evaluate_generated_artifact_paths(repo_root, explicit_paths, policy) if explicit_paths else []
 
-    errors = []
+    errors = list(report_errors)
     for item in samples:
         if not item["sample_passed"]:
             errors.append(f"sample {item['label']} expected passed={item['expected_passed']}, got {item['passed']}")
@@ -96,6 +180,8 @@ def check_policy(repo_root: Path, paths: list[str], allowed_prefixes: list[str],
         "errors": errors,
         "allowed_prefixes": list(policy.allowed_prefixes),
         "allowed_exact_paths": list(policy.allowed_exact_paths),
+        "artifact_reports": report_inputs,
+        "artifact_report_path_count": len(report_paths),
         "sample_results": samples,
         "path_count": len(path_results),
         "path_results": [item.to_dict() for item in path_results],
@@ -111,13 +197,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--path", action="append", default=[], help="Generated artifact destination path to validate. Can be repeated.")
+    parser.add_argument("--artifact-report", action="append", default=[], help="JSON report to scan for generated artifact destination fields. Can be repeated.")
     parser.add_argument("--allowed-prefix", action="append", default=[], help="Additional allowed repo-relative prefix.")
     parser.add_argument("--allowed-exact-path", action="append", default=[], help="Additional allowed repo-relative exact path.")
     parser.add_argument("--output", help="Optional JSON report path.")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    report = check_policy(repo_root, args.path, args.allowed_prefix, args.allowed_exact_path)
+    report = check_policy(repo_root, args.path, args.artifact_report, args.allowed_prefix, args.allowed_exact_path)
     text = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
     if args.output:
         output = Path(args.output)

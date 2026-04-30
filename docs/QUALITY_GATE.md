@@ -205,6 +205,12 @@ Explicit destination check:
 python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --path .\output\some_generated_artifact.json --output .\output\validation\generated_artifact_path_policy.json
 ```
 
+Generated report scan:
+
+```powershell
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
+```
+
 Default allowed destinations:
 
 ```text

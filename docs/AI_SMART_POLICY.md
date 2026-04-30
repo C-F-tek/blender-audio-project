@@ -33,6 +33,12 @@ AI phases that build or consume context should produce AI-readable intermediates
 - `agent_memory_policy_report.json` when persistent memory is reviewed for retention, quarantine and promotion candidates
 - `generated_artifact_path_policy.json` when proposed generated output destinations need a deterministic safety check
 
+When a workflow already produces a machine-readable report, prefer scanning the report rather than manually retyping every output path:
+
+```powershell
+python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
+```
+
 ## NPU role
 
 The NPU lane is not the main heavy generator. It should be used as an always-available helper where it does not slow the central process:
