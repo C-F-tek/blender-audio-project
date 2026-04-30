@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-04-30T13:38:05",
+  "created_at": "2026-04-30T13:48:25",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "index_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI",
   "primary_library": true,
-  "source_fingerprint": "d6487805e173609ffdde721857fad1a2755dd4f504bb31284216972b5a395b56",
+  "source_fingerprint": "023e6e728e8c53cff52113e7395d81f25e1a9472a93f3229d98d41be0f24c115",
   "excluded_dirs": [
     ".git",
     ".mypy_cache",
@@ -9465,8 +9465,8 @@
       "file": "Tools/ai/run_pipeline_dry_run_matrix.py",
       "suffix": ".py",
       "lines": 574,
-      "chars": 23621,
-      "sha256": "e929e5356ad0a44c466483358db7f02e97e082ffc0c77d8bdbeeffde265da3b6",
+      "chars": 23675,
+      "sha256": "579314990fc4462c92dc244c59cc5b81ef2d0f795f0cb7ad93664315cb18b728",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -11303,7 +11303,7 @@
       "suffix": ".json",
       "lines": 7340,
       "chars": 198066,
-      "sha256": "77519af21889d8aaa9087caa03e383703add7e3d017ddad4f51998b668645c21"
+      "sha256": "516a9d9b825a7ab856fc4b9b26e5a15d027371bc544e9ae6b99547a9f6a23c02"
     },
     {
       "file": "Tools/npu/npu_guardrail_service.py",
@@ -12712,9 +12712,9 @@
     {
       "file": "Tools/validation/check_agent_memory_policy.py",
       "suffix": ".py",
-      "lines": 124,
-      "chars": 4738,
-      "sha256": "4a744a3ff23c89fac495ae1c902d2ebc0e146d169c5bdbadd8ff5f5237fe16d2",
+      "lines": 126,
+      "chars": 4801,
+      "sha256": "453c8029bd8d1b828a2d421950f4bdd165f70d80ca326813b2f256faccdf8e37",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -12745,7 +12745,7 @@
           },
           {
             "name": "main",
-            "line": 101,
+            "line": 103,
             "args": [],
             "async": false
           }
@@ -12833,9 +12833,9 @@
     {
       "file": "Tools/validation/check_ai_dry_run_matrix_contract.py",
       "suffix": ".py",
-      "lines": 240,
-      "chars": 9828,
-      "sha256": "8290b9ab7c23e981cc0fc384ad7c3a5a10f455ff5004b77a42ad29dfe269f793",
+      "lines": 241,
+      "chars": 9874,
+      "sha256": "c66eaa8bb0f5109d5a9fa5704372763dfe0cacc3b3c0c38387fbfbe3be83a8bf",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -12904,7 +12904,7 @@
           },
           {
             "name": "main",
-            "line": 206,
+            "line": 207,
             "args": [],
             "async": false
           }
@@ -12973,9 +12973,9 @@
     {
       "file": "Tools/validation/check_ai_model_json.py",
       "suffix": ".py",
-      "lines": 118,
-      "chars": 5301,
-      "sha256": "e693b4b618cd2566903d9ea95074a115e557a1894fe86f7a4a0271a89e91ad3e",
+      "lines": 120,
+      "chars": 5358,
+      "sha256": "02c08b16adf29936bba361b7cd2f3cecf26d0b1dc380d0a793f004a049afbba2",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -13014,7 +13014,7 @@
           },
           {
             "name": "main",
-            "line": 99,
+            "line": 101,
             "args": [],
             "async": false
           }
@@ -13027,9 +13027,9 @@
     {
       "file": "Tools/validation/check_ai_pipeline_modules.py",
       "suffix": ".py",
-      "lines": 260,
-      "chars": 10621,
-      "sha256": "788e65148de9c9a894a868880ab8efc6260fceeb040b05716c6ffd951aacb77d",
+      "lines": 262,
+      "chars": 10684,
+      "sha256": "7297dd05d59cd89a458ace6ab458f176d0dbd71d92bcc5672ec6bcd05c9182fc",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -13082,7 +13082,7 @@
           },
           {
             "name": "main",
-            "line": 241,
+            "line": 243,
             "args": [],
             "async": false
           }
@@ -13095,9 +13095,9 @@
     {
       "file": "Tools/validation/check_blender_shared_compat_smoke.py",
       "suffix": ".py",
-      "lines": 144,
-      "chars": 5092,
-      "sha256": "6cd7b810fedc60d378ee394aaf44ca344e87fe4545198912c1a7349483582778",
+      "lines": 148,
+      "chars": 5242,
+      "sha256": "2f0de4c9b366cb8d25bbdc2af8d3bb5d7705349d6ecbf9629bd338e58a30e4af",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -13139,7 +13139,7 @@
           },
           {
             "name": "main",
-            "line": 119,
+            "line": 123,
             "args": [],
             "async": false
           }
@@ -13154,9 +13154,9 @@
     {
       "file": "Tools/validation/check_docs_links.py",
       "suffix": ".py",
-      "lines": 134,
-      "chars": 3930,
-      "sha256": "323b44cbecd58375b3bdab87f1a261dc5bfbad758fc17c80d3aa6c2c58bb8fe5",
+      "lines": 142,
+      "chars": 4168,
+      "sha256": "9ae60ae1855ed2a970c22a6ebdeef0bfbce15be39e1aca254a9554f449a05927",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -13230,9 +13230,9 @@
     {
       "file": "Tools/validation/check_generated_artifact_path_policy.py",
       "suffix": ".py",
-      "lines": 222,
-      "chars": 9083,
-      "sha256": "a51a039c9063fc8ca5d2b91a4a37081e4d5c87e3ed2fd8526a242015148d8553",
+      "lines": 223,
+      "chars": 9107,
+      "sha256": "9729a41206ed7f331a2d0df3e5da5b34f5a6c77e49f41f39a9c19fe53c1ff5f0",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -13307,7 +13307,7 @@
           },
           {
             "name": "main",
-            "line": 196,
+            "line": 197,
             "args": [],
             "async": false
           }
@@ -13324,9 +13324,9 @@
     {
       "file": "Tools/validation/check_generated_blender_script_policy.py",
       "suffix": ".py",
-      "lines": 166,
-      "chars": 6449,
-      "sha256": "afeb7b121a3aa19322d52db6a3405b0b9026039d8b8c3baf1e1b7fbf0ab2acb9",
+      "lines": 174,
+      "chars": 6765,
+      "sha256": "170127645f4b2189d9b1080daeaae1adf454ac4a835d526658b6a280bce99c1a",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -13370,7 +13370,7 @@
           },
           {
             "name": "main",
-            "line": 146,
+            "line": 154,
             "args": [],
             "async": false
           }
@@ -13385,9 +13385,9 @@
     {
       "file": "Tools/validation/check_generated_python_policy.py",
       "suffix": ".py",
-      "lines": 119,
-      "chars": 4704,
-      "sha256": "8a74680164a00ded4fc8edf17632bd3b70ef47e707fa30d7b98eb6a61f8f4749",
+      "lines": 126,
+      "chars": 4969,
+      "sha256": "8a8c03680ae3a556526aa25f92dcdfe79226702db85c5e644e6a215180536fe3",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -13423,7 +13423,7 @@
           },
           {
             "name": "main",
-            "line": 96,
+            "line": 103,
             "args": [],
             "async": false
           }
@@ -13436,9 +13436,9 @@
     {
       "file": "Tools/validation/check_json_artifacts.py",
       "suffix": ".py",
-      "lines": 132,
-      "chars": 4230,
-      "sha256": "10880adcd7223364f9bee9c7780a519fbc8d1d3d4669ecb6ef2c84753b1933a8",
+      "lines": 133,
+      "chars": 4254,
+      "sha256": "4fb738ef5e71387a18ae9ab3bc192b1b66bb6dc2906f70bae8592fc1e65b3ed2",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -13574,9 +13574,9 @@
     {
       "file": "Tools/validation/check_python_syntax.py",
       "suffix": ".py",
-      "lines": 105,
-      "chars": 2909,
-      "sha256": "7f880d7d89a6cfd2fec95d1b17b6ffdc3da9a522168813b839e38961d7626a3d",
+      "lines": 106,
+      "chars": 2933,
+      "sha256": "6679a37bd182b54647f045617e6ebc6ed13499f2f3d6674678d1b415c6aa40a2",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -13631,9 +13631,9 @@
     {
       "file": "Tools/validation/check_refactor_status_consistency.py",
       "suffix": ".py",
-      "lines": 148,
-      "chars": 5459,
-      "sha256": "f4b1625fdbb14d3a750d5b098254708060b2174f40198e2c04a469618328619e",
+      "lines": 150,
+      "chars": 5557,
+      "sha256": "134777bfd28761938bab387c9cbee6f53f66f5f0088f84e67b3e9e99096b44a8",
       "symbols": {
         "imports": [
           "from __future__ import annotations",
@@ -13681,7 +13681,7 @@
           },
           {
             "name": "main",
-            "line": 129,
+            "line": 131,
             "args": [],
             "async": false
           }
@@ -19802,8 +19802,8 @@
       "part": 1,
       "start_line": 1,
       "end_line": 253,
-      "chars": 12559,
-      "sha256": "92e665ceee990259e834952e44de6d93fd60acc11a47b5a2c20f0010d55d1164"
+      "chars": 12599,
+      "sha256": "fc326d58d7962b94868fba300bfe3104462aeff474b19bfcb7c063ccb75f24ac"
     },
     {
       "index": 277,
@@ -19812,8 +19812,8 @@
       "part": 2,
       "start_line": 254,
       "end_line": 487,
-      "chars": 12595,
-      "sha256": "9661fed7277a6421240e0e8ba63c2f29f0e5e0dbe7c65d1462798bf2abc80a1f"
+      "chars": 12609,
+      "sha256": "cbf471dc57b1f751e8c922f5f0525a022bcb4cd08529ac74f3e9c4524af21819"
     },
     {
       "index": 278,
@@ -20293,7 +20293,7 @@
       "start_line": 1,
       "end_line": 382,
       "chars": 11708,
-      "sha256": "2ecf4a43163624107eb19fde849eecbad76085e59416bfb0fc6e77335c8a54e4"
+      "sha256": "e454bf334985ae300ba1e7032e72daba1e888320e62609596e1c41e8c84e2087"
     },
     {
       "index": 326,
@@ -20781,9 +20781,9 @@
       "path": "indexAI/project_code_chunks/chunk_0374_Tools_validation_check_agent_memory_policy_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 123,
-      "chars": 6055,
-      "sha256": "0454f977ef88cb00672d2625527c1af39a3f898b8391656f5fd06808ebc59d9b"
+      "end_line": 125,
+      "chars": 6132,
+      "sha256": "2dccf8e2c39e502f2e117df2aedea4590fd8b6a184b75c0c407394e43b7e2c65"
     },
     {
       "index": 375,
@@ -20801,9 +20801,9 @@
       "path": "indexAI/project_code_chunks/chunk_0376_Tools_validation_check_ai_dry_run_matrix_contract_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 239,
-      "chars": 12115,
-      "sha256": "a3a200af1c8f42c81633f22023db53d1edd72335852deb2ddb149b80483653e8"
+      "end_line": 240,
+      "chars": 12168,
+      "sha256": "fb8d5b4b0b61cf7f14e662728e56d2f23987f3c7aa2ac410b0eed1625c2e45db"
     },
     {
       "index": 377,
@@ -20821,9 +20821,9 @@
       "path": "indexAI/project_code_chunks/chunk_0378_Tools_validation_check_ai_model_json_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 117,
-      "chars": 6545,
-      "sha256": "666e5bcdb3c2594d8c984a441134a795c333b05ced4a6e530188266015990980"
+      "end_line": 119,
+      "chars": 6617,
+      "sha256": "f1d7c9cd50c238764e831d623188e074c7177999a11a64d77a401f19bab0a4c7"
     },
     {
       "index": 379,
@@ -20831,19 +20831,19 @@
       "path": "indexAI/project_code_chunks/chunk_0379_Tools_validation_check_ai_pipeline_modules_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 242,
-      "chars": 12272,
-      "sha256": "b758bd15645ef8d3088839881341ea418918b56dd4ebd60bbbc2ad205295423d"
+      "end_line": 243,
+      "chars": 12303,
+      "sha256": "169984d77568b9876976caa79db0349af38e638f493718819efd731fdaa2ea64"
     },
     {
       "index": 380,
       "file": "Tools/validation/check_ai_pipeline_modules.py",
       "path": "indexAI/project_code_chunks/chunk_0380_Tools_validation_check_ai_pipeline_modules_py.md",
       "part": 2,
-      "start_line": 243,
-      "end_line": 259,
-      "chars": 1280,
-      "sha256": "20be4c388fc43e56357d5b48f3f3bfc744d453efd27956c395cc7aab70b94114"
+      "start_line": 244,
+      "end_line": 261,
+      "chars": 1326,
+      "sha256": "0d2d8441273cff11cad065c13ad9dd736b187f606b1d31b57b4fe8ad856c55bf"
     },
     {
       "index": 381,
@@ -20851,9 +20851,9 @@
       "path": "indexAI/project_code_chunks/chunk_0381_Tools_validation_check_blender_shared_compat_smoke_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 143,
-      "chars": 6627,
-      "sha256": "5efd8eb0faf26cfeaa46b4ff1f35f47168ec40ea8bec57dc57cbc94f382bf669"
+      "end_line": 147,
+      "chars": 6805,
+      "sha256": "3e3644e9ef94004780bd125e5dbc689968d519b6b797c29a4e46211aef776e93"
     },
     {
       "index": 382,
@@ -20861,9 +20861,9 @@
       "path": "indexAI/project_code_chunks/chunk_0382_Tools_validation_check_docs_links_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 133,
-      "chars": 5460,
-      "sha256": "f581d690de958ccc3b27e3239d6492d5faed8554de8d6b21dc9502bea2db069b"
+      "end_line": 141,
+      "chars": 5754,
+      "sha256": "cea7697ed5824197fb00c84cc6e78499a0b9806badc1783848818cc977676ea9"
     },
     {
       "index": 383,
@@ -20871,9 +20871,9 @@
       "path": "indexAI/project_code_chunks/chunk_0383_Tools_validation_check_generated_artifact_path_policy_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 221,
-      "chars": 11453,
-      "sha256": "87bd870b28aab865544862ce846bd42d44264b2fdcec92b002450b4ecb5e098d"
+      "end_line": 222,
+      "chars": 11484,
+      "sha256": "5b74d9c6e6b66fb3712e17f68b4a683c2e713e55f642e60eaf6fc80dc8d00257"
     },
     {
       "index": 384,
@@ -20881,9 +20881,9 @@
       "path": "indexAI/project_code_chunks/chunk_0384_Tools_validation_check_generated_blender_script_policy_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 165,
-      "chars": 8126,
-      "sha256": "bc3a1eefaaf5b93c515bab228d690a5cc5dcd477078ae542192ca3117670aace"
+      "end_line": 173,
+      "chars": 8498,
+      "sha256": "d9e30cb7ea754577fbde090d5eafa51fbabdfd1177f1b105c1f749b40e56e171"
     },
     {
       "index": 385,
@@ -20891,9 +20891,9 @@
       "path": "indexAI/project_code_chunks/chunk_0385_Tools_validation_check_generated_python_policy_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 118,
-      "chars": 5948,
-      "sha256": "82cecbadc82fcaf0c85e847d92fb899fe8562c72cdfe8de7ae6f796fc8580ff0"
+      "end_line": 125,
+      "chars": 6263,
+      "sha256": "0b023e187c70bf5e774b7242dfed5b7791b9fb7fa8f13c0fd645c35d3ab5ef71"
     },
     {
       "index": 386,
@@ -20901,9 +20901,9 @@
       "path": "indexAI/project_code_chunks/chunk_0386_Tools_validation_check_json_artifacts_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 131,
-      "chars": 5682,
-      "sha256": "fa80916f5feeb6ba363144e55067e412eb9fd6706afc0418856fbdef0eb3a718"
+      "end_line": 132,
+      "chars": 5713,
+      "sha256": "b0fc8815583cc570dd9abeeca83565ff36a440d2d079a4214bff21edab8f9fb4"
     },
     {
       "index": 387,
@@ -20921,9 +20921,9 @@
       "path": "indexAI/project_code_chunks/chunk_0388_Tools_validation_check_python_syntax_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 104,
-      "chars": 4114,
-      "sha256": "7c9f0f011bc56d2dc1ba71a4025f1d39256661aaba69d7c05ded1f1eacb15c4c"
+      "end_line": 105,
+      "chars": 4145,
+      "sha256": "469659823b1e6d3d39e62340e8c27095627e2be6c2708adc2ffaaabe5b4ab6b7"
     },
     {
       "index": 389,
@@ -20931,9 +20931,9 @@
       "path": "indexAI/project_code_chunks/chunk_0389_Tools_validation_check_refactor_status_consistency_py.md",
       "part": 1,
       "start_line": 1,
-      "end_line": 147,
-      "chars": 7102,
-      "sha256": "ceab3ae9385dbbf0d4c48e3021319a008f3f2f20d3c48b0f9aaa85c940e5215a"
+      "end_line": 149,
+      "chars": 7214,
+      "sha256": "a2fd9fcb72e63cc411b9fb55097930376a38ec45dec0f7faadcfbb56a264b10c"
     },
     {
       "index": 390,
