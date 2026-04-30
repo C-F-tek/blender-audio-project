@@ -133,6 +133,7 @@ try {
     Invoke-Step -Name "agent memory policy validation" -Command "python" -Arguments @(".\Tools\validation\check_agent_memory_policy.py", "--repo-root", ".", "--output", ".\output\validation\agent_memory_policy.json")
     Invoke-Step -Name "blender shared compatibility smoke" -Command "python" -Arguments @(".\Tools\validation\check_blender_shared_compat_smoke.py", "--repo-root", ".", "--output", ".\output\validation\blender_shared_compat_smoke.json")
     Invoke-Step -Name "ai pipeline dry-run matrix" -Command "python" -Arguments @(".\Tools\ai\run_pipeline_dry_run_matrix.py", "--repo-root", ".", "--continue-on-error", "--matrix-workers", $MatrixWorkers.ToString(), "--repeat-cases", $RepeatCases.ToString())
+    Invoke-Step -Name "ai pipeline schema-v6 report contract validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_pipeline_report_contract.py", "--repo-root", ".", "--report", ".\output\ai_pipeline\dry_run_matrix\base\ai_pipeline_dry_run_report.json", "--require-dry-run", "--output", ".\output\validation\ai_pipeline_report_contract.json")
     Invoke-Step -Name "ai dry-run matrix contract validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_dry_run_matrix_contract.py", "--repo-root", ".", "--output", ".\output\validation\ai_dry_run_matrix_contract.json")
     Invoke-Step -Name "ai dry-run matrix output consistency validation" -Command "python" -Arguments @(".\Tools\validation\check_ai_dry_run_matrix_outputs.py", "--repo-root", ".", "--output", ".\output\validation\ai_dry_run_matrix_outputs.json")
     Invoke-Step -Name "generated artifact path policy validation" -Command "python" -Arguments @(".\Tools\validation\check_generated_artifact_path_policy.py", "--repo-root", ".", "--artifact-report", ".\output\ai_pipeline\dry_run_matrix_report.json", "--output", ".\output\validation\generated_artifact_path_policy.json")
@@ -164,6 +165,7 @@ $summary = [pscustomobject]@{
     ai_model_json_report = (Join-Path $repo "output\validation\ai_model_json.json")
     ai_pipeline_modules_report = (Join-Path $repo "output\validation\ai_pipeline_modules.json")
     ai_dry_run_matrix_cases_report = (Join-Path $repo "output\validation\ai_dry_run_matrix_cases.json")
+    ai_pipeline_report_contract_report = (Join-Path $repo "output\validation\ai_pipeline_report_contract.json")
     ai_dry_run_matrix_outputs_report = (Join-Path $repo "output\validation\ai_dry_run_matrix_outputs.json")
     validation_report_contract_report = (Join-Path $repo "output\validation\validation_report_contract.json")
     generated_python_policy_report = (Join-Path $repo "output\validation\generated_python_policy.json")
@@ -193,6 +195,7 @@ $md += ("- Log: {0}" -f $script:MainLog)
 $md += ("- AI model JSON report: {0}" -f $summary.ai_model_json_report)
 $md += ("- AI module report: {0}" -f $summary.ai_pipeline_modules_report)
 $md += ("- AI dry-run matrix cases report: {0}" -f $summary.ai_dry_run_matrix_cases_report)
+$md += ("- AI pipeline schema-v6 report contract report: {0}" -f $summary.ai_pipeline_report_contract_report)
 $md += ("- AI dry-run matrix outputs report: {0}" -f $summary.ai_dry_run_matrix_outputs_report)
 $md += ("- Validation report contract report: {0}" -f $summary.validation_report_contract_report)
 $md += ("- Generated Python policy report: {0}" -f $summary.generated_python_policy_report)
@@ -223,6 +226,7 @@ $md += "    git diff --stat"
 $md += "    Get-Content .\output\validation\ai_model_json.json -Raw"
 $md += "    Get-Content .\output\validation\ai_pipeline_modules.json -Raw"
 $md += "    Get-Content .\output\validation\ai_dry_run_matrix_cases.json -Raw"
+$md += "    Get-Content .\output\validation\ai_pipeline_report_contract.json -Raw"
 $md += "    Get-Content .\output\validation\ai_dry_run_matrix_outputs.json -Raw"
 $md += "    Get-Content .\output\validation\validation_report_contract.json -Raw"
 $md += "    Get-Content .\output\validation\generated_python_policy.json -Raw"

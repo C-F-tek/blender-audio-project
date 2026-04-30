@@ -32,6 +32,7 @@ def import_pipeline_modules(repo_root: Path) -> dict[str, Any]:
     from Tools.ai.pipeline.schema_report import build_report, empty_failed_report
     from Tools.ai.pipeline.steps import build_parallel_steps, build_serial_steps, build_step_commands
     from Tools.ai.run_parallel_artifact_pipeline import main as entrypoint_main
+    from Tools.validation.ai_pipeline_report_contracts import validate_ai_pipeline_report_payload
 
     return {
         "planned_outputs": planned_outputs,
@@ -52,6 +53,7 @@ def import_pipeline_modules(repo_root: Path) -> dict[str, Any]:
         "build_serial_steps": build_serial_steps,
         "build_step_commands": build_step_commands,
         "entrypoint_main": entrypoint_main,
+        "validate_ai_pipeline_report_payload": validate_ai_pipeline_report_payload,
     }
 
 
@@ -169,7 +171,23 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
         ]
     )
     remediation = modules["remedial_steps"](repo_root, out, args, plan["requests"], 1)
-    report = modules["build_report"](repo_root, out, args, pf, [dry_result], {"enabled": False, "reason": "smoke", "passes": []})
+    smoke_schedule = {
+        "serial_count": 1,
+        "parallel_count": 0,
+        "total_count": 1,
+        "serial": ["smoke_step"],
+        "parallel": [],
+        "parallel_lanes": [],
+    }
+    report = modules["build_report"](
+        repo_root,
+        out,
+        args,
+        pf,
+        [dry_result],
+        {"enabled": False, "reason": "smoke", "passes": []},
+        smoke_schedule,
+    )
     failed_report = modules["empty_failed_report"](repo_root, out, True, {"passed": False, "errors": ["smoke"], "warnings": []})
     planned = modules["planned_outputs"](repo_root, out, args)
 
@@ -184,7 +202,11 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
         packet_pf,
         [dry_result],
         {"enabled": False, "reason": "smoke", "passes": []},
+        smoke_schedule,
     )
+    report_contract = modules["validate_ai_pipeline_report_payload"](report, require_dry_run=True)
+    packet_report_contract = modules["validate_ai_pipeline_report_payload"](packet_report, require_dry_run=True)
+    failed_report_contract = modules["validate_ai_pipeline_report_payload"](failed_report, require_dry_run=True)
 
     checks = {
         "parser_type": type(parser).__name__,
@@ -205,6 +227,10 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
         "remediation_step_count": len(remediation),
         "report_schema_version": report["schema_version"],
         "failed_report_schema_version": failed_report["schema_version"],
+        "report_contract_passed": report_contract["passed"],
+        "packet_report_contract_passed": packet_report_contract["passed"],
+        "failed_report_contract_passed": failed_report_contract["passed"],
+        "failed_report_contract_warning_count": len(failed_report_contract["warnings"]),
         "planned_output_count": len(planned),
         "entrypoint_imported": callable(modules["entrypoint_main"]),
     }
@@ -226,6 +252,9 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
         errors.append("preflight failed for smoke agent_state_packet")
     errors.extend(check_agent_state_packet_contract(report, enabled=False))
     errors.extend(check_agent_state_packet_contract(packet_report, enabled=True))
+    errors.extend(f"schema-v6 smoke report contract failed: {error}" for error in report_contract["errors"])
+    errors.extend(f"schema-v6 packet report contract failed: {error}" for error in packet_report_contract["errors"])
+    errors.extend(f"schema-v6 failed report contract failed: {error}" for error in failed_report_contract["errors"])
     if not checks["entrypoint_imported"]:
         errors.append("artifact pipeline entrypoint was not importable")
 

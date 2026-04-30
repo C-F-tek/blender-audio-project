@@ -23,6 +23,7 @@ NON_REPORT_FILE_PATTERNS = ("*_stdout.json",)
 EXPECTED_REPORT_KINDS = {
     "ai_dry_run_matrix_cases.json": "ai_dry_run_matrix_cases",
     "ai_dry_run_matrix_outputs.json": "ai_dry_run_matrix_outputs",
+    "ai_pipeline_report_contract.json": "ai_pipeline_report_contract",
     "generated_python_policy.json": "generated_python_policy",
     "generated_blender_script_policy.json": "generated_blender_script_policy",
     "json_artifacts.json": "json_artifacts",

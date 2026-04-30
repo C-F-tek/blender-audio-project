@@ -34,7 +34,7 @@ GitHub-only agents must not infer local report contents that are not present in 
 | Report / artifact | Typical path | Producer | Current validator | Current required fields | Missing checks / notes |
 |---|---|---|---|---|---|
 | AI dry-run matrix report | `output/ai_pipeline/dry_run_matrix_report.json` | `Tools/ai/run_pipeline_dry_run_matrix.py` | `Tools/validation/check_ai_dry_run_matrix_contract.py` | `schema_version`, `repo_root`, `output_dir`, `case_count`, `passed`, `results` | Future additive checks should remain warning-first until local samples are reviewed. |
-| Individual AI pipeline dry-run report | `output/ai_pipeline/dry_run_matrix/<case>/ai_pipeline_dry_run_report.json` | `Tools/ai/run_parallel_artifact_pipeline.py` through matrix cases | partially covered through matrix contract | `passed`, `summary`, `schedule`, `lanes`, `agent_state_packet`, `steps` | Need explicit per-report contract notes before strict validation. |
+| Individual AI pipeline dry-run report | `output/ai_pipeline/dry_run_matrix/<case>/ai_pipeline_dry_run_report.json` | `Tools/ai/run_parallel_artifact_pipeline.py` through matrix cases | `Tools/validation/check_ai_pipeline_report_contract.py`; also invoked by `check_ai_dry_run_matrix_contract.py` for referenced case reports | schema-v6 root fields plus `summary`, `schedule`, `lanes`, `agent_state_packet`, `steps`, `post_run_expected_outputs` | Unknown future fields remain accepted; `--require-dry-run` enforces `dry_run=true` and planned-only steps for dry-run reports. |
 | Generated artifact path policy report | `output/validation/generated_artifact_path_policy.json` | `Tools/validation/check_generated_artifact_path_policy.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `path_count`, `path_results` | Review common validator report fields with GHO-010. |
 | Generated Python policy report | `output/validation/generated_python_policy.json` | `Tools/validation/check_generated_python_policy.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `rules`, `sample_results` | Document future adapter composition in a separate template. |
 | Generated Blender script policy report | `output/validation/generated_blender_script_policy.json` | `Tools/validation/check_generated_blender_script_policy.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `rules`, `sample_results` | Blender-specific; must not become the generic policy boundary. |
@@ -81,7 +81,7 @@ Notes:
 
 ## Next action
 
-1. Review current local `output/` report samples on the workstation.
-2. Confirm field meanings before creating stricter schema validators.
-3. Start with validator-report consistency: `schema_version`, `repo_root`, `passed`, `errors`.
+1. Keep validating local `output/` report samples on the workstation after report-producer changes.
+2. Extend `check_ai_pipeline_report_contract.py` only when field meanings are already documented.
+3. Continue with domain artifacts such as music summaries and scene specs after report contracts remain stable.
 4. Keep unknown future fields accepted unless a validator has a clear reason to reject them.
