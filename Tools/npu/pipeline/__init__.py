@@ -40,6 +40,11 @@ from .legacy_compat import (
     compare_optional_json_readers,
     compare_text_readers,
 )
+from .migration_readiness import (
+    MigrationReadinessCheck,
+    build_migration_readiness_report,
+    default_runtime_wiring_readiness,
+)
 from .prompts import (
     build_creative_scene_prompt_payload,
     build_implementation_retry_payload,
@@ -73,6 +78,7 @@ __all__ = [
     "DEFAULT_PREFERRED_REFERENCE_FILES",
     "ContextSlice",
     "DualPipelinePaths",
+    "MigrationReadinessCheck",
     "NpuPipelineConfig",
     "PipelineStagePlan",
     "PlannedArtifactWrite",
@@ -85,11 +91,13 @@ __all__ = [
     "build_helper_boundary_report",
     "build_implementation_retry_payload",
     "build_merge_prompt_payload",
+    "build_migration_readiness_report",
     "compact_segments_for_prompt",
     "compare_json_readers",
     "compare_optional_json_readers",
     "compare_text_readers",
     "context_bundle_metrics",
+    "default_runtime_wiring_readiness",
     "helper_boundary_passed",
     "is_allowed_generated_artifact_path",
     "normalize_repo_relative_path",
