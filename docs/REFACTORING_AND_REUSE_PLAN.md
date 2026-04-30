@@ -6,6 +6,10 @@ This document defines the recommended refactoring strategy for `blender-audio-pr
 
 The project already contains working Blender scripts, generated packages, AI/NPU tooling, and GitHub-facing documentation. The next improvement should not be a broad rewrite. The correct direction is **progressive encapsulation**: extract stable, reusable behavior into shared modules while keeping existing production scripts operational.
 
+The app-specific Blender packages are downstream consumers of the core. Ready To Jazz migration and package adoption of `Scripting/shared/blender_compat.py` should wait until the AI/NPU/backend core is app-agnostic, validated and documented.
+
+Core is not limited to a fixed module list. If useful shared functions, pure helpers, dataclasses, report builders, validators, policy checks or provider adapters emerge during implementation, they should be added to the core when they are app-agnostic and locally validated. The boundary is conceptual: reusable infrastructure belongs in the core; package-specific artistic or Blender-scene behavior belongs in application packages.
+
 ## Current technical assessment
 
 The repository is now structured as a production-oriented audio-reactive Blender workspace rather than a single script collection.
@@ -206,7 +210,66 @@ Status: safe to apply immediately.
 - Mark `indexAI/` as generated context.
 - Add `docs/ROOT_TOOLS.md` or equivalent when root CLI behavior is finalized.
 
-### Phase 2: additive shared utilities
+### Phase 2: app-agnostic core contracts
+
+Status: safe to apply before application migration.
+
+Tighten the core validation surface before touching Blender package behavior:
+
+```text
+validator report consistency
+AI pipeline schema/report contracts
+dry-run matrix contract and output consistency
+generated artifact path policy
+agent memory policy
+guardrail/remediation report contracts
+```
+
+This phase should reduce warning noise and make downstream automation rely on common root fields such as:
+
+```text
+schema_version
+kind
+repo_root
+passed
+errors
+warnings
+```
+
+### Phase 3: service-oriented AI/NPU core
+
+Status: medium risk, but still app-agnostic.
+
+Split AI/NPU/backend orchestration before migrating application packages:
+
+```text
+Tools/npu/pipeline/
+  config.py
+  context_builder.py
+  prompts.py
+  providers.py
+  validators.py
+  artifact_writer.py
+  runner.py
+```
+
+The core should remain independent from any one Blender package. Provider adapters, multistep scheduling, guardrail handling, memory policy and artifact writing should be testable with dry-runs and generated report contracts.
+
+This module list is a starting map, not a ceiling. Add focused modules or functions when they remove duplication or make the pipeline easier to validate, for example:
+
+```text
+typed path/report helpers
+JSON/model-output normalization helpers
+guardrail scoring and remediation functions
+memory filtering and promotion functions
+provider capability/preflight helpers
+artifact manifest builders
+dry-run fixture builders
+```
+
+Avoid catch-all utility bags. A new helper should have a clear owner, a narrow responsibility and at least one validation path.
+
+### Phase 4: additive shared utilities
 
 Status: low risk.
 
@@ -220,11 +283,13 @@ Scripting/shared/render_profiles.py
 Scripting/shared/blender_compat.py
 ```
 
-No existing working package should be modified in this phase.
+No existing working package should be modified in this phase. Blender compatibility helpers may exist and be validated, but adoption by Ready To Jazz or other runtime packages belongs to the application migration phase.
 
-### Phase 3: package adapters
+### Phase 5: application adapters and controlled migration
 
-Status: medium risk.
+Status: requires core completion and Blender validation.
+
+Only after the app-agnostic backend/pipeline/AI/NPU/multistep/guardrail/memory core is complete enough to validate locally, add small adapters inside packages:
 
 Add small adapters inside packages:
 
@@ -235,10 +300,6 @@ Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/adapters/
 
 Adapters can call shared utilities while preserving current package APIs.
 
-### Phase 4: controlled migration
-
-Status: requires Blender validation.
-
 Migrate one concern at a time:
 
 1. Path and JSON utilities.
@@ -248,24 +309,18 @@ Migrate one concern at a time:
 5. Render profile selection.
 6. Diagnostics and hotpatch helpers.
 
-### Phase 5: service-oriented AI pipeline
-
-Status: later refactor.
-
-Split `Tools/npu/run_dual_ai_pipeline.py` into:
+Ready To Jazz and `blender_compat.py` package adoption should not begin until these core completion criteria are met:
 
 ```text
-Tools/npu/pipeline/
-  config.py
-  context_builder.py
-  prompts.py
-  providers.py
-  validators.py
-  artifact_writer.py
-  runner.py
+validation report contract warnings are either resolved or explicitly tracked
+AI dry-run matrix passes after relevant changes
+AI pipeline report contracts are validated without schema-v6 drift
+NPU/provider decomposition preserves existing CLI behavior
+guardrail and memory policies have deterministic validation
+generated artifact path policy protects all planned writes
+new reusable core functions have focused tests or validator coverage
+AI/NPU indexes are regenerated by scripts after structural changes
 ```
-
-This improves parallel execution between local NPU technical review and GPU/Ollama creative/implementation passes.
 
 ## Specific extraction candidates
 
@@ -346,4 +401,4 @@ A refactor is acceptable only when it passes at least one relevant check:
 
 ## Current conclusion
 
-The project is ready for reuse-oriented refactoring, but only through additive extraction. The safest immediate value is to create shared utilities and documentation contracts first, then migrate working packages one component at a time after Blender validation.
+The project is ready for reuse-oriented refactoring, but only through additive extraction. The safest immediate value is to finish the app-agnostic validation and AI/NPU core first, then migrate working Blender packages one component at a time after Blender validation.

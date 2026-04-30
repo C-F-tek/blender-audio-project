@@ -30,6 +30,8 @@ Tools/npu/pipeline/artifact_writer.py
 Tools/npu/pipeline/runner.py
 ```
 
+This list is intentionally open. Add focused app-agnostic modules or functions when implementation exposes useful reusable behavior. Examples include provider preflight helpers, JSON/model-output normalization, memory filtering, guardrail scoring, artifact manifest builders and deterministic dry-run fixtures.
+
 ## GitHub-only scope
 
 Allowed now:
@@ -63,16 +65,31 @@ no local output report claims
 | `artifact_writer.py` | Write generated JSON/Markdown/script artifacts | Keep writes inside allowed generated destinations. |
 | `runner.py` | Orchestrate the staged flow and preserve CLI behavior | Should remain thin after split. |
 
+## Core function policy
+
+Reusable functions are part of the core when they satisfy all of these:
+
+```text
+app-agnostic
+deterministic where practical
+owned by a focused module
+validated by syntax checks, dry-runs or a dedicated validator
+free of Ready To Jazz or Blender package assumptions
+```
+
+Do not wait for a large split to add a useful core helper. Add it when it reduces duplication or improves validation, then keep the existing CLI behavior stable.
+
 ## Migration strategy later
 
 1. Read `Tools/npu/run_dual_ai_pipeline.py` and current NPU docs locally.
 2. Add package folder with `__init__.py` and no behavior change.
 3. Move pure config constants first.
 4. Move prompt strings second.
-5. Move context assembly only after tests or deterministic dry-runs exist.
-6. Move provider calls last.
-7. Keep old CLI command behavior stable until local validation passes.
-8. Regenerate AI/NPU indexes locally after the split.
+5. Extract small reusable functions when they are app-agnostic and covered by focused validation.
+6. Move context assembly only after tests or deterministic dry-runs exist.
+7. Move provider calls last.
+8. Keep old CLI command behavior stable until local validation passes.
+9. Regenerate AI/NPU indexes locally after the split.
 
 ## Validation required later
 
@@ -92,6 +109,7 @@ If deterministic NPU pipeline dry-runs exist by then, add them to the local vali
 | Prompt drift | Move prompts without rewriting content first. |
 | Path policy bypass | Route artifact writes through allowed destinations and validate generated paths. |
 | Overfitting to Blender/audio | Keep config/context/provider boundaries generic where practical. |
+| Catch-all core utility drift | Add focused helper modules with clear ownership instead of broad utility dumps. |
 | GitHub-only overclaiming | Mark local validation pending until workstation logs are available. |
 
 ## Local validation status

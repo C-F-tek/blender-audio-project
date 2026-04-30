@@ -57,6 +57,22 @@ return exit code
 | `guardrail_models.py` | Typed normalization of remediation queue requests and pass results. |
 | `remediation.py` | Guardrail action queue loading and auto-safe remediation pass execution. |
 
+## Core Extension Policy
+
+The AI pipeline core is app-agnostic infrastructure, not a closed list of files. Add new reusable functions, dataclasses or focused modules when they make validation, reporting, scheduling, provider integration, guardrails or memory policy clearer.
+
+Good core additions are:
+
+```text
+package-neutral
+deterministic where practical
+small enough to validate directly
+free of Ready To Jazz or Blender-scene assumptions
+compatible with existing schema-v6 report meanings
+```
+
+Avoid broad utility modules. Prefer a focused owner such as report helpers, provider preflight helpers, memory policy helpers, artifact manifest helpers or dry-run fixture builders.
+
 ## Data flow
 
 ```text
@@ -149,6 +165,7 @@ Allowed low-risk changes:
 
 ```text
 additive helper functions
+focused app-agnostic core utilities
 report summary additions
 new dry-run cases
 new validation checks
