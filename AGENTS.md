@@ -4,25 +4,31 @@ This file provides operating context for AI assistants and automated code-review
 
 ## Repository identity
 
-- Name: `blender-audio-project`
+- Working title: `IA-Carmine Local AI Orchestration Workbench`
+- Current GitHub repository slug: `C-F-tek/blender-audio-project`
 - Author: Carmine Faiola
 - Main language: Python
-- Target application: Blender
-- Domain: audio-reactive visual generation and Blender scene automation
+- Primary architecture: local AI orchestration, validation, provider-lane routing and guardrail/evidence workflows
+- Primary provider lane: `Ollama -> GPU/CUDA -> primary advisory`
+- Secondary provider lane: `OpenVINO -> NPU -> probe / guardrail / decode diagnostic`
+- Legacy application domain: Blender audio-reactive scene automation
 - License: MIT
-- Maturity: work in progress
+- Maturity: active work in progress
+
+The repository name is historical. Do not infer that Blender/audio is still the architectural boundary. The current core work is app-agnostic AI/backend orchestration; Blender remains the first application domain and is frozen for this milestone unless explicitly targeted.
 
 ## Core goals
 
-1. Preserve the Blender Python workflow.
-2. Keep versioned script folders readable and traceable.
-3. Avoid overwriting analysis JSON files unless explicitly requested.
-4. Prefer additive documentation, shared utilities and modular patches.
-5. Mark unverified information as `not specified`.
-6. Use `Scripting/v61b/` as the quality reference for complex generated packages.
-7. Keep shared utility extraction non-destructive.
-8. Treat the modular AI artifact pipeline as validated after workstation dry-run matrix unless a newer validation fails.
-9. Use `WORKFLOW.md`, execution plans and the tech debt tracker for durable task control.
+1. Preserve the local AI orchestration workflow and provider-lane contracts.
+2. Use Ollama/GPU as the primary advisory lane only when the quality-routing gate confirms it.
+3. Keep NPU/OpenVINO available for preflight, probe, guardrail and decode-smoke diagnostics.
+4. Exclude unusable workload outputs from advisory context before content is read.
+5. Use compact Git-trackable evidence bundles instead of pasting large `output/` reports.
+6. Preserve historical Blender Python workflows unless a task explicitly enters a Blender-runtime milestone.
+7. Avoid overwriting analysis JSON files unless explicitly requested.
+8. Prefer additive documentation, validators, workflow runners and modular patches.
+9. Mark unverified information as `not specified`.
+10. Use `WORKFLOW.md`, execution plans and the tech debt tracker for durable task control.
 
 ## Required reading order
 
@@ -31,77 +37,57 @@ Before creating or editing a package or pipeline module, read:
 1. `README.md`
 2. `WORKFLOW.md`
 3. `docs/README.md`
-4. `docs/PROJECT_AI_CONSCIOUSNESS.md`
-5. `docs/AI_ONBOARDING.md`
-6. `docs/AI_PIPELINE_REFACTOR_STATUS.md`
-7. `docs/AI_PIPELINE_ARCHITECTURE.md`
-8. `docs/AI_MEMORY_POLICY.md`
-9. `docs/AI_EXTERNAL_KNOWLEDGE.md`
-10. `docs/OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md`
+4. `docs/PROJECT_STATUS_POINT.md`
+5. `docs/DATA_FLOW.md`
+6. `docs/LOCAL_AI_WORKFLOW.md`
+7. `docs/JSON_SCHEMAS.md`
+8. `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md` when reviewing PR #48 or later evidence bundles
+9. `Tools/npu/pipeline/README.md`
+10. `Tools/validation/README.md`
 11. `docs/EXECUTION_PLANS/README.md`
 12. `docs/TECH_DEBT_TRACKER.md`
-13. `docs/MODULE_MAP.md`
-14. `docs/DATA_FLOW.md`
-15. `docs/REFACTORING_AND_REUSE_PLAN.md`
-16. `docs/QUALITY_GATE.md`
-17. `docs/SHARED_SCRIPTING_UTILITIES.md`
-18. `docs/PATCH_SPEC_WORKFLOW.md` when preparing mechanical edits
-19. the README of the target package under `Scripting/`
-20. the target Python file before modifying it
+13. the target source file before modifying it
 
 ## Important folders
 
 | Path | Meaning |
 |---|---|
-| `Scripting/` | Blender script packages generated or refined from audio-analysis data. |
-| `Scripting/v61b/` | Current stable reference package. Do not destructively refactor. |
-| `Scripting/shared/` | Reusable package-agnostic utilities. Prefer additive extraction here. |
-| `Tools/ai/` | AI artifact pipeline, dry-run matrix and validation helpers. |
-| `Tools/ai/pipeline/` | Modular AI artifact pipeline implementation. Read `docs/AI_PIPELINE_ARCHITECTURE.md` first. |
-| `Tools/npu/` | Local AI, NPU, context-building and review tooling. |
-| `Tools/npu/pipeline/` | App-agnostic NPU helper package under staged decomposition; do not wire it into runtime orchestrators without local validation and regenerated indexes. |
+| `Tools/ai/` | AI orchestration entrypoints, workload quality routing, provider probes, evidence bundles and advisory packet generation. |
+| `Tools/workflow/` | Local workflow runners, including post-validation packet generation and parallel GPU/NPU multistep workflows. |
+| `Tools/npu/` | Local AI, OpenVINO/NPU runtime checks, context-building and review tooling. |
+| `Tools/npu/pipeline/` | App-agnostic helper package for contracts, provider envelopes, reports, paths, prompts and validation fixtures. |
 | `Tools/validation/` | Non-invasive repository validation scripts. |
-| `Tools/workflow/` | Local workflow runners and unattended validation scripts. |
-| `Tools/repo_patch_runner/` | Safe JSON patch-spec runner for small reviewable edits. |
+| `docs/LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable summaries of long generated reports from ignored `output/`. |
 | `docs/EXECUTION_PLANS/` | Durable task records for multi-step work. |
-| `patch_specs/` | Patch-spec queue and applied patch history. |
-| `indexAI/` | Generated indexes, manifests, context and patch artifacts. Do not hand-refactor as source. |
 | `docs/` | Stable documentation and project contracts. |
+| `Scripting/` | Legacy/current Blender script packages generated or refined from audio-analysis data. Frozen for core/backend work. |
+| `Scripting/v61b/` | Historical stable Blender reference package. Do not destructively refactor. |
+| `Scripting/shared/` | Reusable package-agnostic Blender helpers. Do not broadly adopt in this milestone. |
+| `indexAI/` | Generated indexes, manifests, context and patch artifacts. Do not hand-refactor as source. |
 
-## Current AI pipeline state
+## Current validated AI/provider state
 
-The AI artifact pipeline has been modularized and locally validated.
-
-Machine-readable status:
-
-```text
-Tools/ai/pipeline/refactor_status.py
-```
-
-Human-readable status and architecture:
+Evidence pushed under `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json` confirms:
 
 ```text
-docs/AI_PIPELINE_REFACTOR_STATUS.md
-docs/AI_PIPELINE_ARCHITECTURE.md
+ollama_gpu_primary_advisory: true
+npu_excluded_when_unusable: true
+provider_execution_seen: true
+npu_decode_smoke_passed: true
 ```
 
-Operational validation now includes:
+Operational interpretation:
 
 ```text
-AI module smoke validator: PASS
-AI dry-run matrix: PASS
-agent memory policy validation: PASS when no quarantined local memory exists
-generated Python policy validation: PASS
-generated artifact path policy validation: PASS
-Blender shared compatibility smoke: PASS in Blender 5.1.1 for frame range, noise node and VSE audio strip creation
-JSON artifact validation: PASS
-package structure validation: PASS
-index regeneration: PASS
+Ollama/GPU is the primary advisory lane.
+NPU/OpenVINO is validated for explicit smoke/probe execution.
+The old NPU workload report remains unusable and must stay excluded from advisory context.
+NPU promotion to general advisory requires a future quality-gated milestone.
 ```
 
-## Current NPU helper package state
+## Current NPU/helper package state
 
-`Tools/npu/pipeline/` is being built as an additive app-agnostic helper package.
+`Tools/npu/pipeline/` is an app-agnostic helper package.
 
 Current intended scope:
 
@@ -110,71 +96,52 @@ pure config/path/context helpers
 JSON/text IO helpers and legacy-compatible aliases
 artifact path and write planning helpers
 contract validators
-planned-only provider descriptors
-planned-only runner stage reports
+provider result parsing and envelopes
+planned-only and explicit provider diagnostics
 fixtures, helper-boundary reports and migration-readiness gates
 ```
 
 Current exclusion:
 
 ```text
-no runtime wiring into Tools/npu/run_dual_ai_pipeline.py until local validation and index regeneration pass
-no NPU/Ollama provider execution from helper validators
-no Blender runtime behavior changes
-```
-
-Focused validation:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+no Blender runtime changes
+no implicit provider execution
+no OpenVINO GPU as primary lane
+no broad migration of legacy Blender packages
 ```
 
 ## Fast validation commands
 
-Use focused checks before broad test runs:
+Focused core/provider workflow:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
+  -Profile npu `
+  -RunOllamaProbe `
+  -RunNpuProbe `
+  -RunNpuDecodeSmoke `
+  -UsePrimaryAdvisoryProvider `
+  -Basename parallel_gpu_npu_multistep_real_npu_v2 `
+  -ProposalBasename parallel_gpu_npu_multistep_real_npu_v2_proposals `
+  -EvidenceBasename parallel_gpu_npu_multistep_real_npu_v2_evidence
+```
+
+Core validation:
 
 ```powershell
 python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
-python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
-python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
+python .\Tools\validation\check_execution_plan_status.py --repo-root . --output .\output\validation\execution_plan_status.json
+python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename latest_ai_workflow_evidence
 ```
 
-Optional report output:
-
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output output\validation\python_syntax.json
-python .\Tools\validation\check_package_structure.py --repo-root . --output output\validation\package_structure.json
-python .\Tools\validation\check_json_artifacts.py --repo-root . --output output\validation\json_artifacts.json
-```
-
-AI pipeline module smoke validation:
-
-```powershell
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-```
-
-NPU helper package validation:
+NPU helper validation:
 
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
 python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
 python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
 python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
-```
-
-AI pipeline dry-run matrix:
-
-```powershell
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
-```
-
-Unattended local validation:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
 ```
 
 Regenerate indexes after structural or documentation changes:
@@ -207,60 +174,20 @@ See:
 docs/EXECUTION_PLANS/README.md
 ```
 
-## Patch-spec workflow
-
-For small mechanical edits, prefer a JSON patch spec when it improves reviewability.
-
-Dry-run:
-
-```powershell
-python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_specs\inbox\example.json --dry-run
-```
-
-Apply locally with diff:
-
-```powershell
-python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_specs\inbox\example.json --write --show-diff
-```
-
-Queue for GitHub Action only after human review:
-
-```powershell
-git add patch_specs/inbox/example.json
-git commit -m "queue repo patch spec"
-git push origin master
-```
-
-See `docs/PATCH_SPEC_WORKFLOW.md`.
-
 ## Expected AI workflow
 
 When editing this repository:
 
-1. Identify the target package or folder.
+1. Identify whether the task is core AI/backend, validation/evidence, NPU/provider diagnostic or legacy Blender runtime.
 2. Read the nearest README and relevant docs.
 3. Check active execution plans and the tech debt tracker.
-4. Inspect the target Python file before modifying it.
+4. Inspect the target Python/PowerShell file before modifying it.
 5. Produce small, reviewable changes.
 6. Keep working packages stable.
 7. Document every new assumption.
 8. Run the smallest relevant validation.
-9. Report changed files, purpose, risks, tests and line counts.
-
-For AI pipeline changes specifically:
-
-1. read `docs/AI_PIPELINE_REFACTOR_STATUS.md`;
-2. read `docs/AI_PIPELINE_ARCHITECTURE.md`;
-3. preserve schema-v6 field meanings;
-4. run `check_ai_pipeline_modules.py` and the dry-run matrix when local execution is available;
-5. regenerate AI/NPU indexes after structural changes.
-
-For NPU helper package changes specifically:
-
-1. read `Tools/npu/pipeline/README.md`;
-2. keep helpers provider-free and runtime-free unless a later validated phase explicitly wires runtime behavior;
-3. run `run_npu_pipeline_helper_validation.ps1` when local execution is available;
-4. regenerate AI/NPU indexes after structural or documentation changes.
+9. Prefer compact evidence bundles under `docs/LOCAL_VALIDATION_EVIDENCE/` for long local outputs.
+10. Report changed files, purpose, risks, tests and line counts.
 
 ## Safe modification rules
 
@@ -268,14 +195,15 @@ Allowed without extra confirmation:
 
 - read files and inspect repository structure;
 - create additive documentation;
-- create additive shared utilities;
-- create non-invasive validation scripts;
+- create additive validators and evidence tooling;
+- create report-only or explicit-run workflow scripts;
 - run focused validation commands when execution is available;
 - create patch specs for human review.
 
 Require explicit confirmation first:
 
 - deleting files;
+- renaming the GitHub repository;
 - rewriting large working Blender scripts;
 - moving package entry points;
 - changing full frame-by-frame analysis JSON files;
@@ -288,13 +216,12 @@ Require explicit confirmation first:
 ## Refactoring rules
 
 - Do not destructively refactor `Scripting/v61b/`.
-- Do not split monolithic generated packages before shared infrastructure exists.
-- Create shared utilities first, test them, then add package adapters.
-- Keep path, JSON, render, FFmpeg and Blender-compatibility logic package-agnostic when practical.
+- Do not split monolithic generated Blender packages in this core/backend milestone.
+- Do not migrate package imports to `Scripting/shared/blender_compat.py` unless explicitly scoped.
+- Keep path, JSON, provider, evidence and validation logic app-agnostic when practical.
 - Keep artistic scene behavior separate from infrastructure refactors.
 - Keep generated indexes out of source-level refactors.
-- Keep `Tools/ai/run_parallel_artifact_pipeline.py` as a thin entrypoint; add behavior to focused modules under `Tools/ai/pipeline/`.
-- Keep `Tools/npu/run_dual_ai_pipeline.py` behavior stable until helper contracts, local validation and index regeneration are green.
+- Keep provider execution explicit and report-bound.
 
 ## Output expectations
 
@@ -310,4 +237,4 @@ For code changes, report:
 
 ## Quality rule
 
-A generated package should not be accepted as complete unless it satisfies `docs/QUALITY_GATE.md` or clearly states which checks are still missing.
+A local AI workflow change should not be accepted as complete unless it produces a compact evidence bundle or clearly states which checks are still missing.
