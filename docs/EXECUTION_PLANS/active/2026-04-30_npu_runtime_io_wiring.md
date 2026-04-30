@@ -2,7 +2,7 @@
 
 ## Status
 
-active
+completed
 
 ## Goal
 
@@ -62,10 +62,11 @@ The target file is a runtime orchestrator, so the change must remain limited to 
 - 2026-04-30: Pre-wiring NPU helper validation passed.
 - 2026-04-30: Replaced local duplicate `read_text`, `read_json`, `write_json` and `read_optional_json` implementations with `pipeline.io_utils` legacy-compatible aliases.
 - 2026-04-30: Post-wiring full local validation passed with `-MatrixWorkers 12 -RepeatCases 2`; report `output/local_validation/local_validation_20260430_195615.json`.
+- 2026-04-30: PR #42 merged; plan marked completed.
 
 ## Result
 
-implemented and locally validated
+implemented, locally validated and merged
 
 ## Follow-up
 
