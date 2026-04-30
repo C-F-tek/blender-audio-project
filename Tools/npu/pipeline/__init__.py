@@ -27,9 +27,12 @@ from .context_builder import (
     summarize_music_context,
 )
 from .io_utils import (
+    read_json,
     read_json_object,
+    read_optional_json,
     read_optional_json_object,
     read_text,
+    write_json,
     write_json_object,
 )
 from .prompts import (
@@ -83,7 +86,9 @@ __all__ = [
     "is_allowed_generated_artifact_path",
     "normalize_repo_relative_path",
     "planned_provider_result",
+    "read_json",
     "read_json_object",
+    "read_optional_json",
     "read_optional_json_object",
     "read_text",
     "stage_plan_report",
@@ -94,6 +99,7 @@ __all__ = [
     "validate_planned_artifact_writes",
     "validate_provider_request",
     "validate_required_keys",
+    "write_json",
     "write_json_object",
     "write_planned_artifact",
 ]
