@@ -26,6 +26,11 @@ from .context_builder import (
     context_bundle_metrics,
     summarize_music_context,
 )
+from .fixtures import (
+    sample_implementation_draft_fixture,
+    sample_music_context_fixture,
+    sample_provider_request_fixture,
+)
 from .io_utils import (
     read_json,
     read_json_object,
@@ -107,6 +112,9 @@ __all__ = [
     "read_optional_json",
     "read_optional_json_object",
     "read_text",
+    "sample_implementation_draft_fixture",
+    "sample_music_context_fixture",
+    "sample_provider_request_fixture",
     "stage_plan_report",
     "summarize_music_context",
     "validate_generated_artifact_paths",
