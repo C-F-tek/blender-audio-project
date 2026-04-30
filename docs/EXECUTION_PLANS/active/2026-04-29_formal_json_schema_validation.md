@@ -4,6 +4,11 @@
 
 active
 
+## Current phase
+
+Phase: dry-run matrix report contract validation
+Status: implementation started
+
 ## Goal
 
 Introduce formal JSON schema validation gradually so generated AI artifacts remain stable, machine-checkable and reusable across future file types and software integrations.
@@ -53,6 +58,7 @@ docs/TECH_DEBT_TRACKER.md
 docs/QUALITY_GATE.md
 Tools/validation/check_json_artifacts.py
 Tools/validation/check_ai_pipeline_modules.py
+Tools/validation/check_ai_dry_run_matrix_contract.py
 Tools/validation/check_agent_memory_policy.py
 Tools/ai/pipeline/schema_report.py
 Tools/ai/pipeline/artifact_contracts.py
@@ -66,6 +72,7 @@ python .\Tools\validation\check_json_artifacts.py --repo-root .
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
 python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
 ```
 
@@ -83,6 +90,7 @@ Risk is medium because schemas can accidentally harden unstable fields or reject
 - Do not change existing schema-v6 semantics during validation work.
 - Keep validators non-destructive.
 - Keep output reports readable as both JSON and Markdown when applicable.
+- Validate report contracts without executing heavy runtime workloads.
 
 ## Proposed phases
 
@@ -117,17 +125,53 @@ agent_state_packet.repo_relative_path: string, required only when enabled=true a
 
 This contract is additive to schema-v6 and must not change existing report field meanings.
 
+Initial dry-run matrix report contract:
+
+```text
+schema_version: int
+repo_root: string
+output_dir: string
+case_count: int
+passed: bool
+results: list
+```
+
+Each matrix result keeps a permissive contract around the current stable fields:
+
+```text
+name: non-empty string
+purpose: non-empty string
+command: non-empty list
+returncode: int
+duration_sec: int|float
+stdout_tail: string, optional
+stderr_tail: string, optional
+report_path: string
+report_exists: bool
+report_passed: bool|null
+step_count: int|null
+lanes: object|null
+summary: object|null
+schedule: object|null
+agent_state_packet: object|null
+```
+
+Unknown future fields must be accepted.
+
 ### Phase 3 — validators
 
 Status: in progress.
 
-Current validator target:
+Current validator targets:
 
 ```text
 Tools/validation/check_ai_pipeline_modules.py
+Tools/validation/check_ai_dry_run_matrix_contract.py
 ```
 
-The validator should check both disabled and enabled `agent_state_packet` states without running NPU, GPU, Blender, FFmpeg or long-running artifact jobs.
+`check_ai_pipeline_modules.py` checks both disabled and enabled `agent_state_packet` states without running NPU, GPU, Blender, FFmpeg or long-running artifact jobs.
+
+`check_ai_dry_run_matrix_contract.py` checks the generated dry-run matrix report without executing the matrix and without modifying generated artifacts.
 
 ### Phase 4 — dry-run proof
 
@@ -136,16 +180,21 @@ Status: pending local validation.
 Required proof:
 
 ```text
-check_python_syntax.py: PASS
-check_ai_pipeline_modules.py: PASS
-run_pipeline_dry_run_matrix.py: PASS
-check_json_artifacts.py: PASS
+check_python_syntax.py: pending
+run_pipeline_dry_run_matrix.py: pending
+check_ai_dry_run_matrix_contract.py: pending
+check_ai_pipeline_modules.py: pending
+check_ai_model_json.py: pending
+check_generated_blender_script_policy.py: pending
+check_docs_links.py: pending
+check_json_artifacts.py: pending
 ```
 
 ## Progress log
 
 - 2026-04-29: Plan created from handoff state for `TD-006`.
 - 2026-04-29: Started first concrete schema/contract validator target for `agent_state_packet` report metadata after passive pipeline touchpoint was merged.
+- 2026-04-30: Started dry-run matrix report contract validation with `Tools/validation/check_ai_dry_run_matrix_contract.py`.
 
 ## Result
 
@@ -153,4 +202,4 @@ not completed yet
 
 ## Follow-up
 
-First complete local validation of the `agent_state_packet` report contract. After this passes, update the plan and then proceed to the dry-run matrix report contract.
+Run the dry-run matrix locally, then run the contract validator against `output/ai_pipeline/dry_run_matrix_report.json`. Mark this phase completed only after the local validation report is coherent.
