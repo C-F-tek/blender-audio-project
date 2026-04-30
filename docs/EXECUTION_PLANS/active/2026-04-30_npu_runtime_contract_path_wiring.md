@@ -2,7 +2,7 @@
 
 ## Status
 
-active
+completed
 
 ## Goal
 
@@ -63,10 +63,11 @@ The target is a runtime orchestrator. The mitigation is to wire only read-only v
 - 2026-04-30: Wired `validate_implementation_draft_contract`, `normalize_repo_relative_path` and `is_allowed_generated_artifact_path` into runtime implementation draft validation.
 - 2026-04-30: Extended `check_npu_pipeline_modules.py` with a runtime bridge smoke for IO aliases and draft contract validation.
 - 2026-04-30: Full local validation passed with `-MatrixWorkers 12 -RepeatCases 2`; report `output/local_validation/local_validation_20260430_201118.json`.
+- 2026-04-30: PR #43 merged; plan marked completed.
 
 ## Result
 
-implemented and locally validated
+implemented, locally validated and merged
 
 ## Follow-up
 
