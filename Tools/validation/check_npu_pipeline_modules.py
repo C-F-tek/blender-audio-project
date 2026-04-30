@@ -23,12 +23,17 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         DualPipelinePaths,
         NpuPipelineConfig,
         PlannedArtifactWrite,
+        build_context_bundle,
         build_creative_scene_prompt_payload,
+        build_default_stage_plan,
         build_implementation_retry_payload,
         build_merge_prompt_payload,
         compact_segments_for_prompt,
+        context_bundle_metrics,
         is_allowed_generated_artifact_path,
         read_optional_json_object,
+        stage_plan_report,
+        summarize_music_context,
         validate_generated_artifact_paths,
         validate_implementation_draft_contract,
         validate_json_object,
@@ -53,6 +58,17 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         ],
     }
     compact_segments = compact_segments_for_prompt(music_context)
+    music_summary = summarize_music_context(music_context)
+    context_bundle = build_context_bundle(
+        music_context=music_context,
+        project_index="project smoke index" * 100,
+        npu_notes="technical smoke notes" * 100,
+        max_project_index_chars=120,
+        max_npu_notes_chars=90,
+    )
+    context_metrics = context_bundle_metrics(context_bundle)
+    stage_plan = build_default_stage_plan(include_provider_stages=False)
+    stage_report = stage_plan_report(stage_plan)
     creative_payload = build_creative_scene_prompt_payload(
         music_context,
         npu_notes="technical smoke notes",
@@ -105,6 +121,16 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         errors.append("compact segment helper did not preserve one valid segment")
     if len(compact_segments[0].get("top_events", [])) != 6:
         errors.append("compact segment helper did not cap top_events to six entries")
+    if music_summary.get("segment_count") != 1:
+        errors.append("music summary did not preserve segment count")
+    if context_metrics.get("slice_count") != 2:
+        errors.append("context bundle metrics should report two slices")
+    if context_metrics.get("clipped_chars") != 210:
+        errors.append("context bundle did not apply deterministic clipping limits")
+    if stage_report.get("stage_count") != 5:
+        errors.append("default stage plan should include five stages")
+    if stage_report.get("enabled_stage_count") != 4:
+        errors.append("provider stage should be disabled by default in smoke plan")
     if creative_payload.get("npu_technical_notes") != "technical smoke notes":
         errors.append("creative payload did not preserve NPU notes")
     if merge_payload.get("ollama_creative") != {"ok": True}:
@@ -139,6 +165,9 @@ def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
         "warnings": [],
         "checks": {
             "compact_segment_count": len(compact_segments),
+            "music_summary": music_summary,
+            "context_metrics": context_metrics,
+            "stage_report": stage_report,
             "creative_payload_keys": sorted(creative_payload.keys()),
             "merge_payload_keys": sorted(merge_payload.keys()),
             "retry_payload_keys": sorted(retry_payload.keys()),
