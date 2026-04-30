@@ -1,7 +1,7 @@
 """App-agnostic helpers for the local NPU/Ollama pipeline.
 
-Phase 1 keeps this package additive. Existing CLI entrypoints continue to own
-orchestration until a later validated migration wires these helpers in.
+Existing CLI entrypoints continue to own orchestration until validated migration
+phases wire these helpers in one group at a time.
 """
 
 from .config import (
@@ -9,6 +9,12 @@ from .config import (
     DEFAULT_PREFERRED_REFERENCE_FILES,
     DualPipelinePaths,
     NpuPipelineConfig,
+)
+from .io_utils import (
+    read_json_object,
+    read_optional_json_object,
+    read_text,
+    write_json_object,
 )
 from .prompts import (
     build_creative_scene_prompt_payload,
@@ -33,5 +39,9 @@ __all__ = [
     "compact_segments_for_prompt",
     "is_allowed_generated_artifact_path",
     "normalize_repo_relative_path",
+    "read_json_object",
+    "read_optional_json_object",
+    "read_text",
     "validate_generated_artifact_paths",
+    "write_json_object",
 ]

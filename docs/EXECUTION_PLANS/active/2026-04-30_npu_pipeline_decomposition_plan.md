@@ -82,6 +82,42 @@ git status
 git diff --stat
 ```
 
+## Phase 2 GitHub-only implementation
+
+Branch:
+
+```text
+codex/npu-pipeline-decomposition-phase-2
+```
+
+Scope:
+
+```text
+add Tools/npu/pipeline/io_utils.py
+export pure IO helpers from Tools/npu/pipeline/__init__.py
+do not wire helpers into Tools/npu/run_dual_ai_pipeline.py yet
+do not change provider/runtime behavior
+do not edit generated indexes until maintainer local regeneration
+```
+
+Rationale:
+
+```text
+IO helpers are app-agnostic, deterministic and easy to validate by syntax/import checks.
+Keeping the existing orchestrator untouched in this phase avoids partial runtime migration while the maintainer is away from the workstation.
+```
+
+Validation required locally before merge:
+
+```powershell
+python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+python .\Tools\npu\build_project_ai_index.py
+python .\Tools\npu\build_npu_code_context.py
+git status
+git diff --stat
+```
+
 ## Proposed module responsibilities
 
 | Future module | Responsibility | Notes |
@@ -93,6 +129,7 @@ git diff --stat
 | `validators.py` | Validate model outputs, required JSON keys and generated artifact destinations | Reuse `Tools/ai/model_json.py` and generated artifact path policy. |
 | `artifact_writer.py` | Write generated JSON/Markdown/script artifacts | Keep writes inside allowed generated destinations. |
 | `runner.py` | Orchestrate the staged flow and preserve CLI behavior | Should remain thin after split. |
+| `io_utils.py` | UTF-8 text and JSON-object read/write helpers | Pure helpers; no provider, Blender or model loading. |
 
 ## Core function policy
 

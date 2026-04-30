@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-04-30T14:30:51",
+  "created_at": "2026-04-30T14:41:42",
   "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "index_dir": "C:\\Users\\carmi\\blender\\blender-audio-project\\indexAI",
   "primary_library": true,
-  "source_fingerprint": "ae230179ac419a28b7e409ff170f1b8c97d6c5434fe5127a92dada905d477435",
+  "source_fingerprint": "8156044c6dc11d23201b0e5ba13a8cf655a125ea1d7f7aac40058a2c05f2749a",
   "excluded_dirs": [
     ".git",
     ".mypy_cache",
@@ -11317,7 +11317,7 @@
       "suffix": ".json",
       "lines": 7340,
       "chars": 198066,
-      "sha256": "b9a470edb0842b32fdff7ca75a47f966fc32275bda5d10c08cdf8c7f5ed92cc7"
+      "sha256": "6afb1cc4bcc1994746c1bc5cde5dcb3dbf6ec924026577ae93d82c6650d18aa1"
     },
     {
       "file": "Tools/npu/npu_guardrail_service.py",
@@ -20776,7 +20776,7 @@
       "start_line": 1,
       "end_line": 382,
       "chars": 11708,
-      "sha256": "7676564a2f9ef3444a37033120b3a0a740e002ac5bc9063e73a3cafb3449c230"
+      "sha256": "21f51c999604cf78390b5dfaef20814a115339623dfba2d1ed0bac575342ad56"
     },
     {
       "index": 328,
