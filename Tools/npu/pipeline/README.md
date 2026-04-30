@@ -12,12 +12,15 @@ Allowed:
 pure configuration objects
 path and generated-artifact validation
 UTF-8 text and JSON-object IO helpers
+legacy-compatible IO aliases for later wiring
+legacy/new helper equivalence checks
 prompt payload builders
 context bundle helpers
 planned-only provider descriptors
 planned-only runner stage reports
 contract validators
 artifact write planning helpers
+migration readiness reports
 ```
 
 Forbidden in this package until explicitly validated:
@@ -38,13 +41,16 @@ hand-edited generated indexes
 |---|---|
 | `config.py` | Repository paths, track defaults and data-only pipeline configuration. |
 | `artifact_paths.py` | Generated artifact path normalization and allowed-prefix validation. |
-| `io_utils.py` | UTF-8 text and JSON-object read/write helpers. |
+| `io_utils.py` | UTF-8 text and JSON-object read/write helpers plus legacy-compatible aliases. |
+| `legacy_compat.py` | Equivalence helpers for comparing legacy functions with new helpers before runtime wiring. |
 | `prompts.py` | Deterministic prompt payload builders. |
 | `context_builder.py` | Bounded context slices and compact context bundle metrics. |
 | `providers.py` | Planned-only provider request/result envelopes. |
 | `runner.py` | Planned-only stage-plan reports. |
 | `validators.py` | Contract-level validators that preserve unknown future fields. |
 | `artifact_writer.py` | Validated generated-artifact write helpers. |
+| `migration_readiness.py` | Deterministic gates for future runtime wiring readiness. |
+| `reports.py` | Helper-boundary report utilities. |
 
 ## Validation
 
@@ -52,6 +58,18 @@ Focused smoke validation:
 
 ```powershell
 python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
+```
+
+Focused unit-test validation:
+
+```powershell
+python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
+```
+
+Direct unittest mode:
+
+```powershell
+python .\Tools\validation\test_npu_pipeline_helpers.py
 ```
 
 Full local validation:
@@ -74,8 +92,10 @@ Do not migrate `Tools/npu/run_dual_ai_pipeline.py` all at once.
 Recommended order:
 
 1. Validate this helper package.
-2. Wire only IO helpers.
-3. Wire only artifact path/contract helpers.
-4. Wire only prompt/context payload helpers.
-5. Move provider adapters last.
-6. Compare local outputs after every wiring step.
+2. Regenerate AI/NPU indexes.
+3. Use `default_runtime_wiring_readiness()` as a conservative runtime-wiring gate.
+4. Wire only IO helpers.
+5. Wire only artifact path/contract helpers.
+6. Wire only prompt/context payload helpers.
+7. Move provider adapters last.
+8. Compare local outputs after every wiring step.
