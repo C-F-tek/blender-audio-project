@@ -6,6 +6,7 @@ The packet is intentionally app-agnostic and non-destructive:
 - no source files are modified;
 - no patches are applied;
 - no provider/model call is made unless `--use-ollama` is explicitly passed;
+- workload report context is quality-filtered before content is read;
 - inputs and outputs are configurable;
 - defaults are only a convenient profile for this repository.
 """
@@ -22,6 +23,11 @@ DEFAULT_OUTPUT_DIR = "output/ai_pipeline"
 DEFAULT_PACKET_BASENAME = "repository_update_suggestions"
 DEFAULT_MAX_CHARS = 6000
 IGNORED_PLAN_FILENAMES = {"README.md"}
+
+WORKLOAD_QUALITY_REPORT = "output/validation/ai_workload_report_quality.json"
+WORKLOAD_QUALITY_ROUTING_REPORT = "output/validation/ai_workload_quality_lane_routing.json"
+NPU_DECODE_REMEDIATION_REPORT = "output/validation/npu_decode_quality_remediation.json"
+NPU_DECODE_SMOKE_REPORT = "output/validation/npu_decode_smoke_diagnostic.json"
 
 PROFILE_CONTEXT_FILES: dict[str, tuple[str, ...]] = {
     "core": (
@@ -51,6 +57,9 @@ PROFILE_CONTEXT_FILES: dict[str, tuple[str, ...]] = {
         "Tools/npu/build_provider_result_report.py",
         "Tools/ai/run_local_provider_probe.py",
         "Tools/validation/check_ai_workload_report_quality.py",
+        "Tools/ai/workload_quality.py",
+        "Tools/ai/build_workload_quality_lane_routing.py",
+        "Tools/validation/check_npu_decode_quality_remediation.py",
     ),
     "docs": (
         "AGENTS.md",
@@ -73,7 +82,10 @@ PROFILE_REPORTS: dict[str, tuple[str, ...]] = {
         "output/validation/npu_pipeline_docs.json",
         "output/validation/provider_result_parsing.json",
         "output/validation/provider_result_report.json",
-        "output/validation/ai_workload_report_quality.json",
+        WORKLOAD_QUALITY_REPORT,
+        WORKLOAD_QUALITY_ROUTING_REPORT,
+        NPU_DECODE_REMEDIATION_REPORT,
+        NPU_DECODE_SMOKE_REPORT,
         "output/validation/npu_runtime_output_manifest.json",
         "output/validation/local_ai_resource_lanes.json",
         "output/validation/local_provider_probe.json",
@@ -88,7 +100,10 @@ PROFILE_REPORTS: dict[str, tuple[str, ...]] = {
         "output/validation/npu_pipeline_docs.json",
         "output/validation/provider_result_parsing.json",
         "output/validation/provider_result_report.json",
-        "output/validation/ai_workload_report_quality.json",
+        WORKLOAD_QUALITY_REPORT,
+        WORKLOAD_QUALITY_ROUTING_REPORT,
+        NPU_DECODE_REMEDIATION_REPORT,
+        NPU_DECODE_SMOKE_REPORT,
         "output/validation/npu_runtime_output_manifest.json",
         "output/validation/local_ai_resource_lanes.json",
         "output/validation/local_provider_probe.json",
@@ -162,8 +177,55 @@ def compact_report_summary(report: dict[str, Any]) -> dict[str, Any]:
         "passed": data.get("passed"),
         "errors": data.get("errors", [])[:10] if isinstance(data.get("errors"), list) else data.get("errors"),
         "warnings": data.get("warnings", [])[:10] if isinstance(data.get("warnings"), list) else data.get("warnings"),
+        "provider_execution_performed": data.get("provider_execution_performed"),
         "checks_keys": sorted((data.get("checks") or {}).keys())[:30] if isinstance(data.get("checks"), dict) else [],
     }
+
+
+def _ensure_repo_imports(repo_root: Path) -> None:
+    root_text = str(repo_root)
+    if root_text not in sys.path:
+        sys.path.insert(0, root_text)
+
+
+def build_advisory_context_routing(repo_root: Path, requested_context_files: list[str]) -> dict[str, Any]:
+    """Filter candidate context files before reading generated workload content."""
+
+    _ensure_repo_imports(repo_root)
+    try:
+        from Tools.ai.workload_quality import (  # noqa: PLC0415
+            load_workload_quality_report,
+            route_context_files_by_quality,
+        )
+
+        quality_report = load_workload_quality_report(repo_root, WORKLOAD_QUALITY_REPORT)
+        routing = route_context_files_by_quality(requested_context_files, quality_report)
+        routing["enforced"] = True
+        routing["policy"] = "quality-approved-workload-context-only"
+        routing["provider_execution_performed"] = False
+        return routing
+    except Exception as exc:  # noqa: BLE001 - fail open for non-workload docs but report the issue.
+        return {
+            "quality_report_present": False,
+            "advisory_lanes": [],
+            "excluded_advisory_lanes": [],
+            "trusted_context_files": [
+                {
+                    "path": path,
+                    "lane": "",
+                    "trusted": True,
+                    "reason": "routing_unavailable_fail_open",
+                    "classification": "",
+                }
+                for path in requested_context_files
+            ],
+            "excluded_context_files": [],
+            "decisions": [],
+            "enforced": False,
+            "policy": "routing_unavailable_fail_open",
+            "provider_execution_performed": False,
+            "error": f"{type(exc).__name__}: {exc}",
+        }
 
 
 def collect_context(
@@ -176,10 +238,13 @@ def collect_context(
     extra_reports: list[str],
     max_chars: int,
 ) -> dict[str, Any]:
-    all_context_files = unique_items(list(PROFILE_CONTEXT_FILES.get(profile, ())) + context_files + extra_context)
+    requested_context_files = unique_items(list(PROFILE_CONTEXT_FILES.get(profile, ())) + context_files + extra_context)
     all_report_files = unique_items(list(PROFILE_REPORTS.get(profile, ())) + report_files + extra_reports)
 
-    docs = [read_text_if_exists(repo_root / rel, max_chars=max_chars) for rel in all_context_files]
+    advisory_routing = build_advisory_context_routing(repo_root, requested_context_files)
+    trusted_context_files = unique_items([str(item.get("path")) for item in advisory_routing.get("trusted_context_files", []) if item.get("path")])
+
+    docs = [read_text_if_exists(repo_root / rel, max_chars=max_chars) for rel in trusted_context_files]
     reports_raw = [read_json_if_exists(repo_root / rel) for rel in all_report_files]
 
     active_dir = repo_root / "docs" / "EXECUTION_PLANS" / "active"
@@ -201,7 +266,10 @@ def collect_context(
         "profile": profile,
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": str(repo_root),
-        "context_files": all_context_files,
+        "requested_context_files": requested_context_files,
+        "context_files": trusted_context_files,
+        "excluded_context_files": [item.get("path") for item in advisory_routing.get("excluded_context_files", []) if item.get("path")],
+        "advisory_context_routing": advisory_routing,
         "report_files": all_report_files,
         "docs": docs,
         "validation_reports": [compact_report_summary(report) for report in reports_raw],
@@ -218,7 +286,22 @@ def deterministic_suggestions(context: dict[str, Any]) -> list[dict[str, str]]:
     failed_reports = [r for r in reports if r.get("passed") is False]
     missing_reports = [r for r in reports if not r.get("exists")]
     active_plans = context.get("execution_plans", {}).get("active", [])
+    routing = context.get("advisory_context_routing", {})
+    excluded_context = routing.get("excluded_context_files", []) if isinstance(routing, dict) else []
 
+    if excluded_context:
+        suggestions.append(
+            {
+                "priority": "P1",
+                "area": "advisory_context",
+                "title": "Use only quality-approved AI workload context files",
+                "details": "; ".join(
+                    f"excluded {item.get('path')} ({item.get('lane')}: {item.get('reason')})"
+                    for item in excluded_context[:8]
+                    if isinstance(item, dict)
+                ),
+            }
+        )
     if failed_reports:
         suggestions.append(
             {
@@ -258,9 +341,18 @@ def deterministic_suggestions(context: dict[str, Any]) -> list[dict[str, str]]:
 
 
 def build_ollama_prompt(context: dict[str, Any], deterministic: list[dict[str, str]]) -> str:
+    routing = context.get("advisory_context_routing", {})
+    compact_routing = {
+        "enforced": routing.get("enforced") if isinstance(routing, dict) else None,
+        "advisory_lanes": routing.get("advisory_lanes") if isinstance(routing, dict) else [],
+        "excluded_advisory_lanes": routing.get("excluded_advisory_lanes") if isinstance(routing, dict) else [],
+        "excluded_context_files": routing.get("excluded_context_files") if isinstance(routing, dict) else [],
+        "provider_execution_performed": routing.get("provider_execution_performed") if isinstance(routing, dict) else False,
+    }
     compact = {
         "profile": context.get("profile"),
         "repo_root": context.get("repo_root"),
+        "advisory_context_routing": compact_routing,
         "validation_reports": context.get("validation_reports"),
         "execution_plans": context.get("execution_plans"),
         "deterministic_suggestions": deterministic,
@@ -269,6 +361,7 @@ def build_ollama_prompt(context: dict[str, Any], deterministic: list[dict[str, s
         "You are a local repository maintenance assistant for blender-audio-project.\n"
         "Return concise Markdown only. Do not propose Blender runtime, Ready To Jazz, "
         "provider execution, full analysis JSON edits, or generated index hand edits.\n"
+        "Use only quality-approved AI workload context files.\n"
         "Prioritize app-agnostic core/backend/AI/NPU/multistep/guardrail/memory.\n\n"
         "Context JSON:\n"
         + json.dumps(compact, indent=2, ensure_ascii=False)
@@ -294,6 +387,15 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Ollama used: `{report['ollama']['used']}`")
     lines.append(f"- Packet manifest: `{report['packet_manifest']['path']}`")
     lines.append("")
+    routing = report["context"].get("advisory_context_routing", {})
+    if isinstance(routing, dict):
+        lines.append("## Advisory context routing")
+        lines.append("")
+        lines.append(f"- Enforced: `{routing.get('enforced')}`")
+        lines.append(f"- Provider execution performed: `{routing.get('provider_execution_performed')}`")
+        lines.append(f"- Advisory lanes: `{', '.join(routing.get('advisory_lanes') or []) or 'none'}`")
+        lines.append(f"- Excluded advisory lanes: `{', '.join(routing.get('excluded_advisory_lanes') or []) or 'none'}`")
+        lines.append("")
     lines.append("## Deterministic suggestions")
     lines.append("")
     for item in report["suggestions"]:
@@ -309,10 +411,17 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("")
     lines.append("## Inputs")
     lines.append("")
-    lines.append("### Context files")
+    lines.append("### Trusted context files")
     for path in report["context"]["context_files"]:
         lines.append(f"- `{path}`")
     lines.append("")
+    excluded = report["context"].get("advisory_context_routing", {}).get("excluded_context_files", [])
+    if excluded:
+        lines.append("### Excluded advisory context files")
+        for item in excluded:
+            if isinstance(item, dict):
+                lines.append(f"- `{item.get('path')}` — lane `{item.get('lane')}`, reason `{item.get('reason')}`")
+        lines.append("")
     lines.append("### Report files")
     for path in report["context"]["report_files"]:
         lines.append(f"- `{path}`")
@@ -384,7 +493,10 @@ def main() -> int:
         },
         "profile": args.profile,
         "input_count": len(context["context_files"]) + len(context["report_files"]),
+        "requested_context_files": context["requested_context_files"],
         "context_files": context["context_files"],
+        "excluded_context_files": context["excluded_context_files"],
+        "advisory_context_routing": context["advisory_context_routing"],
         "report_files": context["report_files"],
     }
 
