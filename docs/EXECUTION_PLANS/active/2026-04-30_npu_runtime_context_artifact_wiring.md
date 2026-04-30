@@ -2,7 +2,7 @@
 
 ## Status
 
-active
+completed
 
 ## Goal
 
@@ -76,6 +76,7 @@ The target is still a runtime orchestrator. The mitigation is to wire only deter
 - 2026-04-30: Wired generated support-file writes through `PlannedArtifactWrite` and `write_planned_artifact`.
 - 2026-04-30: Extended NPU helper smoke validation with runtime context-summary and artifact-write-planning checks using a temporary runtime root.
 - 2026-04-30: Full local validation passed with `-MatrixWorkers 12 -RepeatCases 2`; report `output/local_validation/local_validation_20260430_203213.json`.
+- 2026-04-30: PR #45 merged; plan marked completed.
 
 ## Future task notes
 
@@ -86,7 +87,7 @@ The target is still a runtime orchestrator. The mitigation is to wire only deter
 
 ## Result
 
-implemented and locally validated
+implemented, locally validated and merged
 
 ## Follow-up
 
