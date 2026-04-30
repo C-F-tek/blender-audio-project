@@ -231,9 +231,11 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
 
     return {
         "schema_version": 1,
+        "kind": "ai_pipeline_modules",
         "repo_root": str(repo_root),
         "passed": not errors,
         "errors": errors,
+        "warnings": [],
         "checks": checks,
     }
 

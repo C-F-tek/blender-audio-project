@@ -66,10 +66,12 @@ def run_smoke(repo_root: Path, require_blender: bool, output_dir: Path) -> dict[
             errors.append("Blender bpy runtime is required but unavailable")
         return {
             "schema_version": 1,
+            "kind": "blender_shared_compat_smoke",
             "repo_root": str(repo_root),
             "passed": not errors,
             "skipped_blender_runtime": True,
             "errors": errors,
+            "warnings": [],
             "checks": checks,
         }
 
@@ -108,10 +110,12 @@ def run_smoke(repo_root: Path, require_blender: bool, output_dir: Path) -> dict[
 
     return {
         "schema_version": 1,
+        "kind": "blender_shared_compat_smoke",
         "repo_root": str(repo_root),
         "passed": not errors,
         "skipped_blender_runtime": False,
         "errors": errors,
+        "warnings": [],
         "checks": checks,
     }
 

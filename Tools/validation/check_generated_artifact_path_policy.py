@@ -178,6 +178,7 @@ def check_policy(
         "repo_root": str(repo_root),
         "passed": not errors,
         "errors": errors,
+        "warnings": [],
         "allowed_prefixes": list(policy.allowed_prefixes),
         "allowed_exact_paths": list(policy.allowed_exact_paths),
         "artifact_reports": report_inputs,

@@ -91,6 +91,7 @@ def main() -> int:
         "failed_count": len(failed),
         "passed": not failed,
         "errors": errors,
+        "warnings": [],
         "excluded": sorted(excludes),
         "results": results,
     }

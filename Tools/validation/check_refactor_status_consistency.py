@@ -77,6 +77,7 @@ def check_status(repo_root: Path) -> dict[str, Any]:
     except Exception as exc:
         return {
             "schema_version": 1,
+            "kind": "refactor_status_consistency",
             "repo_root": str(repo_root),
             "passed": False,
             "errors": [f"failed to load status module: {type(exc).__name__}: {exc}"],
@@ -118,6 +119,7 @@ def check_status(repo_root: Path) -> dict[str, Any]:
 
     return {
         "schema_version": 1,
+        "kind": "refactor_status_consistency",
         "repo_root": str(repo_root),
         "passed": not errors,
         "errors": errors,

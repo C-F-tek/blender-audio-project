@@ -193,6 +193,7 @@ def validate_matrix_report(repo_root: Path, matrix_report: Path) -> dict[str, An
 
     return {
         "schema_version": 1,
+        "kind": "ai_dry_run_matrix_contract",
         "repo_root": str(repo_root),
         "matrix_report": str(matrix_report),
         "matrix_report_exists": matrix_report_exists,

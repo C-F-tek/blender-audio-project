@@ -77,11 +77,13 @@ def check_policy(repo_root: Path, memory_db: Path | None) -> dict[str, Any]:
 
     return {
         "schema_version": 1,
+        "kind": "agent_memory_policy",
         "repo_root": str(repo_root),
         "memory_db": str(memory_db) if memory_db else None,
         "memory_db_exists": bool(memory_db and memory_db.exists()),
         "passed": not errors,
         "errors": errors,
+        "warnings": [],
         "synthetic": {
             "record_count": synthetic["record_count"],
             "promotion_candidate_count": synthetic["promotion_candidate_count"],

@@ -112,12 +112,20 @@ def main() -> int:
     files = iter_markdown_files(repo_root, excludes)
     results = [inspect_markdown(path, repo_root) for path in files]
     failed = [item for item in results if not item["ok"]]
+    errors = [
+        f"{item['path']}: {broken['target']} ({broken['reason']})"
+        for item in failed
+        for broken in item["broken_links"]
+    ]
     report = {
         "schema_version": 1,
+        "kind": "docs_links",
         "repo_root": str(repo_root),
         "file_count": len(results),
         "failed_count": len(failed),
         "passed": not failed,
+        "errors": errors,
+        "warnings": [],
         "results": results,
     }
     text = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
