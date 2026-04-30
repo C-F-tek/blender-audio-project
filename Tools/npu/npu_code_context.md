@@ -1,6 +1,6 @@
 # NPU Code Index
 
-Generated: `2026-04-30T14:30:52`
+Generated: `2026-04-30T14:41:43`
 
 Purpose: long-context index for the local NPU musical/technical agent.
 Use `npu_code_chunks/chunk_*.md` for full file context.
