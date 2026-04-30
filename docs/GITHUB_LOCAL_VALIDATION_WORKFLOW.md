@@ -9,7 +9,7 @@ It is optimized for this repository's current workflow:
 ```text
 pull latest
 run focused validation
-run AI pipeline dry-run matrix
+run AI pipeline dry-run matrix when needed
 regenerate AI/NPU indexes
 commit generated indexes only
 push results
@@ -25,25 +25,7 @@ cd C:\Users\carmi\blender\blender-audio-project
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
 ```
 
-This script runs:
-
-```text
-git pull --rebase
-python syntax validation
-AI model JSON validation
-AI pipeline module smoke validation
-generated Python policy validation
-generated artifact path policy validation
-generated Blender script policy validation
-AI dry-run matrix contract validation
-AI pipeline dry-run matrix
-package structure validation
-JSON artifact validation
-project AI index regeneration
-NPU code context regeneration
-git diff --stat
-git status
-```
+This script runs the broad local validation batch, including syntax checks, AI pipeline checks, NPU helper smoke/unit checks, generated artifact policies, dry-run matrix checks, package/JSON checks, index regeneration and Git status/diff reporting.
 
 It writes logs and summaries under:
 
@@ -59,6 +41,34 @@ Use this variant when the repository is already pulled and you do not want the s
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError
 ```
 
+## Focused NPU helper validation
+
+For changes under `Tools/npu/pipeline/`, `Tools/validation/check_npu_pipeline_*.py`, or the NPU decomposition docs, run the focused workflow first:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+```
+
+This workflow runs:
+
+```text
+NPU helper import/contract smoke
+NPU helper unit-test report
+NPU helper documentation/module alignment
+Python syntax validation
+```
+
+Expected reports:
+
+```text
+output/validation/npu_pipeline_modules.json
+output/validation/npu_pipeline_helper_tests.json
+output/validation/npu_pipeline_docs.json
+output/validation/python_syntax.json
+```
+
+It does not execute Blender, NPU, GPU, Ollama, FFmpeg or provider calls.
+
 ## When to use this workflow
 
 Use it after changes to:
@@ -72,15 +82,24 @@ Tools/ai/
 Tools/ai/pipeline/
 Tools/validation/
 Tools/npu/
+Tools/npu/pipeline/
 ```
 
-Use it especially after changes to the modular AI artifact pipeline or shared Blender compatibility helpers.
+Use the focused NPU helper workflow before the full runner when working on NPU helper contracts. Use the full runner especially after changes to the modular AI artifact pipeline, shared Blender compatibility helpers or validation workflows.
 
 ## Step 1: update local repository
 
 ```powershell
 cd C:\Users\carmi\blender\blender-audio-project
 git pull --rebase origin master
+```
+
+For a PR branch:
+
+```powershell
+git fetch origin
+git checkout <branch>
+git pull --ff-only
 ```
 
 Check state:
@@ -94,15 +113,26 @@ Expected before validation:
 
 ```text
 working tree clean
-branch aligned with origin/master
+branch aligned with target remote branch
 ```
 
 ## Step 2: run validation block
+
+Focused NPU helper block when applicable:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+```
+
+Manual full validation block:
 
 ```powershell
 python .\Tools\validation\check_python_syntax.py --repo-root .
 python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
 python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
+python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
 python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
 python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
@@ -117,7 +147,9 @@ python .\Tools\validation\check_package_structure.py --repo-root .
 python .\Tools\validation\check_json_artifacts.py --repo-root .
 ```
 
-## Step 3: inspect AI pipeline reports
+## Step 3: inspect reports
+
+AI pipeline reports:
 
 ```powershell
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
@@ -129,7 +161,15 @@ Get-Content .\output\ai_pipeline\dry_run_matrix_report.json -Raw
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
 ```
 
-The Markdown report is intended for quick human review. The JSON report remains the machine-readable source.
+NPU helper reports:
+
+```powershell
+Get-Content .\output\validation\npu_pipeline_modules.json -Raw
+Get-Content .\output\validation\npu_pipeline_helper_tests.json -Raw
+Get-Content .\output\validation\npu_pipeline_docs.json -Raw
+```
+
+The Markdown reports are intended for quick human review. JSON reports remain the machine-readable source.
 
 For individual dry-run cases:
 
@@ -201,8 +241,16 @@ If chunks are tracked and changed, inspect `git status` and add them intentional
 
 ## Step 7: push
 
+For master:
+
 ```powershell
 git push origin master
+```
+
+For a feature branch or PR branch:
+
+```powershell
+git push origin <branch>
 ```
 
 Confirm:
@@ -216,7 +264,7 @@ Expected final state:
 
 ```text
 working tree clean
-branch up to date with origin/master
+branch up to date with remote
 latest commit is index regeneration or intended documentation/source update
 ```
 
@@ -228,6 +276,9 @@ Share these outputs:
 git status
 git log --oneline -n 20
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
+Get-Content .\output\validation\npu_pipeline_modules.json -Raw
+Get-Content .\output\validation\npu_pipeline_helper_tests.json -Raw
+Get-Content .\output\validation\npu_pipeline_docs.json -Raw
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.json -Raw
 Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
 Get-ChildItem .\output\local_validation -File | Sort-Object LastWriteTime -Descending | Select-Object -First 5
@@ -313,6 +364,32 @@ step builder mismatch
 entrypoint import issue
 ```
 
+### NPU helper validation fails
+
+Run the focused workflow first:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+```
+
+Then inspect:
+
+```powershell
+Get-Content .\output\validation\npu_pipeline_modules.json -Raw
+Get-Content .\output\validation\npu_pipeline_helper_tests.json -Raw
+Get-Content .\output\validation\npu_pipeline_docs.json -Raw
+```
+
+Most likely failure classes:
+
+```text
+helper import/export mismatch
+fixture contract drift
+README/module map drift
+legacy compatibility alias mismatch
+migration readiness gate mismatch
+```
+
 ### Index generation emits warnings
 
 Warnings should be reviewed but are not always blocking. If a syntax warning appears, inspect the generated manifest for `syntax_warnings`.
@@ -323,4 +400,6 @@ Do not push generated indexes before checking validation results.
 
 Do not commit output validation reports unless explicitly needed.
 
-Do not modify Blender runtime packages while validating AI pipeline refactors.
+Do not modify Blender runtime packages while validating AI pipeline or NPU helper refactors.
+
+Do not wire `Tools/npu/pipeline/` helpers into `Tools/npu/run_dual_ai_pipeline.py` until focused NPU helper validation, full local validation and index regeneration pass.
