@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Run an explicit Ollama/GPU deep planning review over repository evidence.
 
 This is the first long-running deliberative layer for IA-Carmine. Unlike smoke
@@ -489,7 +489,7 @@ def build_markdown(report: dict[str, Any]) -> str:
     lines.append("## Recommendations")
     lines.append("")
     for rec in report.get("recommendations", []):
-        lines.append(f"### {rec.get('id', 'recommendation')} â€” {rec.get('area')}")
+        lines.append(f"### {rec.get('id', 'recommendation')} — {rec.get('area')}")
         lines.append(f"- Status: `{rec.get('status')}`")
         lines.append(f"- Risk: `{rec.get('risk')}`")
         lines.append(f"- Target files: `{rec.get('target_files')}`")
