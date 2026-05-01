@@ -26,6 +26,7 @@ import ast
 import json
 import re
 import sys
+import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -141,7 +142,9 @@ def read_text(path: Path, max_chars: int = 0) -> tuple[str, bool, str | None]:
 
 def python_symbols(text: str) -> tuple[str, ...]:
     try:
-        tree = ast.parse(text)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", SyntaxWarning)
+            tree = ast.parse(text)
     except SyntaxError:
         return tuple(sorted(set(re.findall(r"(?m)^\s*(?:def|class)\s+([A-Za-z_][A-Za-z0-9_]*)", text))))
     names: list[str] = []
