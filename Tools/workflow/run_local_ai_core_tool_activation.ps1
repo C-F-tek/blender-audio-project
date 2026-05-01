@@ -87,6 +87,8 @@ $ContextPack = "output/ai_context_packs/full_context_golden_core_ai_backend.json
 $MegalithicReviewJson = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review.json"
 $MegalithicReviewMd = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review.md"
 $MegalithicReviewProposals = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review_proposals.json"
+$MegalithicReviewPrDraft = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_review_pr_draft.json"
+$MegalithicReviewPrDraftMd = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_review_pr_draft.md"
 
 Write-Host "=== IA-Carmine Local AI Core/Tool Activation ===" -ForegroundColor Green
 Write-Host "Repo: $RepoRootPath"
@@ -190,6 +192,15 @@ if (-not $DryRun) {
         Invoke-Checked -Label "Run optional all-resources megalithic repository review" -Block {
             python @MegalithicArgs
         }
+        Invoke-Checked -Label "Build megalithic review PR draft artifact" -Block {
+            python .\Tools\ai\build_megalithic_review_pr_draft.py `
+                --review $MegalithicReviewJson `
+                --proposals $MegalithicReviewProposals `
+                --output $MegalithicReviewPrDraft `
+                --markdown-output $MegalithicReviewPrDraftMd `
+                --base-branch master `
+                --title-prefix "review"
+        }
     }
 
     if ($GenerateMacroPatchDrafts) {
@@ -241,6 +252,8 @@ $Summary = [ordered]@{
         megalithic_review_json = $MegalithicReviewJson
         megalithic_review_markdown = $MegalithicReviewMd
         megalithic_review_proposals = $MegalithicReviewProposals
+        megalithic_review_pr_draft = $MegalithicReviewPrDraft
+        megalithic_review_pr_draft_markdown = $MegalithicReviewPrDraftMd
         macro_patch_manifest = "output/patch_specs/${Basename}_patch_specs_manifest.json"
     }
 }
@@ -266,6 +279,7 @@ New-Item -ItemType Directory -Force -Path "output/ai_pipeline" | Out-Null
     "- GitHub evidence: docs/LOCAL_VALIDATION_EVIDENCE/${EvidenceBasename}.json",
     "- NPU knowledge broker packet: $KnowledgePacket",
     "- Megalithic review: $MegalithicReviewJson",
+    "- Megalithic review PR draft: $MegalithicReviewPrDraft",
     "- Macro patch manifest: output/patch_specs/${Basename}_patch_specs_manifest.json"
 ) | Set-Content -LiteralPath $SummaryMd -Encoding UTF8
 
