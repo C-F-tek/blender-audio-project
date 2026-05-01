@@ -445,7 +445,7 @@ def aggregate_recommendation_diagnostics(rounds: list[dict[str, Any]], evidence:
         "empty_recommendations_reason": reason,
         "evidence_ready_for_manual_patch_count": evidence_ready_count,
         "recommended_next_layer": "build_agent_review_patch_plan.py"
-        if reason == "evidence_ready_but_no_gpu_plan" or filtered_count > 0
+        if evidence_ready_count > 0 or filtered_count > 0
         else "collect_more_evidence",
     }
 
