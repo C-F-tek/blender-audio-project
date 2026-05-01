@@ -26,6 +26,10 @@ DEFAULT_REPORTS = (
     "output/validation/provider_result_report.json",
 )
 
+DEFAULT_SELECTED_CHUNKS_EVIDENCE = (
+    "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json",
+)
+
 
 def split_path_values(items: list[str]) -> list[str]:
     out: list[str] = []
@@ -69,8 +73,19 @@ def list_contains(value: Any, expected: str) -> bool:
     return any(str(item).lower() == expected.lower() for item in as_list(value))
 
 
+def resolve_repo_path(repo_root: Path, raw: str) -> Path:
+    path = Path(raw)
+    return path if path.is_absolute() else repo_root / path
+
+
+def repo_relative(path: Path, repo_root: Path) -> str:
+    if path.is_absolute() and path.is_relative_to(repo_root):
+        return path.relative_to(repo_root).as_posix()
+    return str(path).replace("\\", "/")
+
+
 def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
-    rel = path.relative_to(repo_root).as_posix() if path.is_absolute() and path.is_relative_to(repo_root) else str(path)
+    rel = repo_relative(path, repo_root)
     data = read_json(path)
     if data is None:
         return {
@@ -168,8 +183,104 @@ def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
     }
 
 
+def summarize_selected_chunks_evidence(path: Path, repo_root: Path) -> dict[str, Any]:
+    """Return compact selected-chunks evidence without reading raw context packs."""
+
+    rel = repo_relative(path, repo_root)
+    data = read_json(path)
+    if data is None:
+        return {
+            "path": rel,
+            "exists": path.exists(),
+            "json_ok": False,
+            "kind": None,
+            "passed": None,
+            "summary": {},
+        }
+
+    summary: dict[str, Any] = {
+        "schema_version": data.get("schema_version"),
+        "kind": data.get("kind"),
+        "passed": data.get("passed"),
+        "provider_execution_performed": data.get("provider_execution_performed"),
+        "source_writes_performed": data.get("source_writes_performed"),
+        "selected_count": data.get("selected_count"),
+        "total_selected_chars": data.get("total_selected_chars"),
+        "max_chunks": data.get("max_chunks"),
+        "max_total_chars": data.get("max_total_chars"),
+        "source_bundle": data.get("source_bundle"),
+        "source_chunks": data.get("source_chunks"),
+        "decision": compact_value(data.get("decision") or {}),
+        "errors": compact_value(data.get("errors") or []),
+        "warnings": compact_value(data.get("warnings") or []),
+    }
+    return {
+        "path": rel,
+        "exists": True,
+        "json_ok": True,
+        "kind": data.get("kind"),
+        "passed": data.get("passed"),
+        "summary": summary,
+    }
+
+
+def discover_selected_chunks_evidence(repo_root: Path, explicit_paths: list[str]) -> list[Path]:
+    """Discover compact selected-chunks evidence files if the run produced them.
+
+    Only Git-trackable compact evidence under docs/LOCAL_VALIDATION_EVIDENCE is
+    discovered. Raw output/ai_context_packs bundles stay ignored and are not read
+    unless a caller explicitly passes a path.
+    """
+
+    candidates = split_path_values(explicit_paths)
+    if not candidates:
+        candidates = list(DEFAULT_SELECTED_CHUNKS_EVIDENCE)
+        evidence_dir = repo_root / "docs" / "LOCAL_VALIDATION_EVIDENCE"
+        if evidence_dir.exists():
+            for path in sorted(evidence_dir.glob("*selected_chunks_evidence.json")):
+                rel = repo_relative(path, repo_root)
+                if rel not in candidates:
+                    candidates.append(rel)
+
+    resolved: list[Path] = []
+    seen: set[str] = set()
+    for raw in candidates:
+        path = resolve_repo_path(repo_root, raw)
+        key = path.resolve().as_posix() if path.exists() else path.as_posix()
+        if key not in seen and path.exists():
+            resolved.append(path)
+            seen.add(key)
+    return resolved
+
+
 def report_summaries(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [item.get("summary", {}) for item in reports if isinstance(item.get("summary"), dict)]
+
+
+def selected_chunks_evidence_seen(selected_chunks_evidence: list[dict[str, Any]]) -> bool:
+    return any(item.get("exists") is True and item.get("json_ok") is True for item in selected_chunks_evidence)
+
+
+def selected_chunks_built(selected_chunks_evidence: list[dict[str, Any]]) -> bool:
+    for summary in report_summaries(selected_chunks_evidence):
+        decision = summary.get("decision") if isinstance(summary.get("decision"), dict) else {}
+        if decision.get("selected_chunks_built") is True:
+            return True
+        if isinstance(summary.get("selected_count"), int) and summary.get("selected_count", 0) > 0:
+            return True
+    return False
+
+
+def selected_chunks_budget_respected(selected_chunks_evidence: list[dict[str, Any]]) -> bool:
+    for summary in report_summaries(selected_chunks_evidence):
+        decision = summary.get("decision") if isinstance(summary.get("decision"), dict) else {}
+        if decision.get("budget_respected") is True:
+            return True
+        total_chars = summary.get("total_selected_chars")
+        max_total_chars = summary.get("max_total_chars")
+        if isinstance(total_chars, int) and isinstance(max_total_chars, int) and total_chars <= max_total_chars:
+            return True
+    return False
 
 
 def npu_marked_unusable(reports: list[dict[str, Any]]) -> bool:
@@ -216,19 +327,32 @@ def npu_excluded_when_unusable(reports: list[dict[str, Any]]) -> bool:
     return npu_marked_unusable(reports) and npu_marked_excluded_from_advisory(reports)
 
 
-def build_bundle(repo_root: Path, report_paths: list[str], basename: str, output_dir: Path) -> tuple[dict[str, Any], str]:
+def build_bundle(
+    repo_root: Path,
+    report_paths: list[str],
+    basename: str,
+    output_dir: Path,
+    selected_chunks_paths: list[str],
+) -> tuple[dict[str, Any], str]:
     resolved = []
     for raw in report_paths:
-        path = Path(raw)
-        resolved.append(path if path.is_absolute() else repo_root / path)
+        resolved.append(resolve_repo_path(repo_root, raw))
     reports = [summarize_report(path, repo_root) for path in resolved]
+    selected_paths = discover_selected_chunks_evidence(repo_root, selected_chunks_paths)
+    selected_chunks_evidence = [
+        summarize_selected_chunks_evidence(path, repo_root)
+        for path in selected_paths
+    ]
+
     bundle = {
         "schema_version": 1,
         "kind": "github_validation_evidence_bundle",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": str(repo_root),
         "source_reports": [item["path"] for item in reports],
+        "source_selected_chunks_evidence": [item["path"] for item in selected_chunks_evidence],
         "reports": reports,
+        "selected_chunks_evidence": selected_chunks_evidence,
         "decision": {
             "ollama_gpu_primary_advisory": any(
                 (item.get("summary", {}).get("primary_advisory_provider", {}) or {}).get("provider") == "ollama"
@@ -242,6 +366,9 @@ def build_bundle(repo_root: Path, report_paths: list[str], basename: str, output
                 item.get("kind") == "npu_decode_smoke_diagnostic" and item.get("passed") is True and item.get("summary", {}).get("provider_execution_performed") is True
                 for item in reports
             ),
+            "selected_chunks_evidence_seen": selected_chunks_evidence_seen(selected_chunks_evidence),
+            "selected_chunks_built": selected_chunks_built(selected_chunks_evidence),
+            "budget_respected": selected_chunks_budget_respected(selected_chunks_evidence),
         },
     }
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -250,6 +377,50 @@ def build_bundle(repo_root: Path, report_paths: list[str], basename: str, output
     json_path.write_text(json.dumps(bundle, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     md_path.write_text(render_markdown(bundle), encoding="utf-8")
     return bundle, f"{json_path}\n{md_path}"
+
+
+def render_report_entry(lines: list[str], item: dict[str, Any]) -> None:
+    summary = item.get("summary", {})
+    lines.append(f"### `{item['path']}`")
+    lines.append("")
+    lines.append(f"- Exists: `{item['exists']}`")
+    lines.append(f"- JSON OK: `{item['json_ok']}`")
+    lines.append(f"- Kind: `{item.get('kind')}`")
+    lines.append(f"- Passed: `{item.get('passed')}`")
+    if summary.get("provider_execution_performed") is not None:
+        lines.append(f"- Provider execution performed: `{summary.get('provider_execution_performed')}`")
+    if summary.get("source_writes_performed") is not None:
+        lines.append(f"- Source writes performed: `{summary.get('source_writes_performed')}`")
+    if summary.get("selected_count") is not None:
+        lines.append(f"- Selected count: `{summary.get('selected_count')}`")
+    if summary.get("total_selected_chars") is not None:
+        lines.append(f"- Total selected chars: `{summary.get('total_selected_chars')}`")
+    if summary.get("max_total_chars") is not None:
+        lines.append(f"- Max total chars: `{summary.get('max_total_chars')}`")
+    if summary.get("usable_lanes") is not None:
+        lines.append(f"- Usable lanes: `{summary.get('usable_lanes')}`")
+    if summary.get("unusable_lanes") is not None:
+        lines.append(f"- Unusable lanes: `{summary.get('unusable_lanes')}`")
+    if summary.get("primary_advisory_provider"):
+        lines.append(f"- Primary advisory provider: `{summary.get('primary_advisory_provider')}`")
+    if summary.get("python_exe"):
+        lines.append(f"- Python executable: `{summary.get('python_exe')}`")
+    errors = summary.get("errors") or []
+    warnings = summary.get("warnings") or []
+    if errors:
+        lines.append(f"- Errors: `{errors}`")
+    if warnings:
+        lines.append(f"- Warnings: `{warnings}`")
+    routing = summary.get("routing") or {}
+    if routing:
+        lines.append(f"- Routing: `{routing}`")
+    decision = summary.get("decision") or {}
+    if decision:
+        lines.append(f"- Decision: `{decision}`")
+    ollama = summary.get("ollama") or {}
+    if ollama:
+        lines.append(f"- Ollama: `{ollama}`")
+    lines.append("")
 
 
 def render_markdown(bundle: dict[str, Any]) -> str:
@@ -264,36 +435,15 @@ def render_markdown(bundle: dict[str, Any]) -> str:
     lines.append("## Reports")
     lines.append("")
     for item in bundle["reports"]:
-        summary = item.get("summary", {})
-        lines.append(f"### `{item['path']}`")
+        render_report_entry(lines, item)
+
+    selected = bundle.get("selected_chunks_evidence") or []
+    if selected:
+        lines.append("## Selected chunks evidence")
         lines.append("")
-        lines.append(f"- Exists: `{item['exists']}`")
-        lines.append(f"- JSON OK: `{item['json_ok']}`")
-        lines.append(f"- Kind: `{item.get('kind')}`")
-        lines.append(f"- Passed: `{item.get('passed')}`")
-        if summary.get("provider_execution_performed") is not None:
-            lines.append(f"- Provider execution performed: `{summary.get('provider_execution_performed')}`")
-        if summary.get("usable_lanes") is not None:
-            lines.append(f"- Usable lanes: `{summary.get('usable_lanes')}`")
-        if summary.get("unusable_lanes") is not None:
-            lines.append(f"- Unusable lanes: `{summary.get('unusable_lanes')}`")
-        if summary.get("primary_advisory_provider"):
-            lines.append(f"- Primary advisory provider: `{summary.get('primary_advisory_provider')}`")
-        if summary.get("python_exe"):
-            lines.append(f"- Python executable: `{summary.get('python_exe')}`")
-        errors = summary.get("errors") or []
-        warnings = summary.get("warnings") or []
-        if errors:
-            lines.append(f"- Errors: `{errors}`")
-        if warnings:
-            lines.append(f"- Warnings: `{warnings}`")
-        routing = summary.get("routing") or {}
-        if routing:
-            lines.append(f"- Routing: `{routing}`")
-        ollama = summary.get("ollama") or {}
-        if ollama:
-            lines.append(f"- Ollama: `{ollama}`")
-        lines.append("")
+        for item in selected:
+            render_report_entry(lines, item)
+
     lines.append("## Git push helper")
     lines.append("")
     lines.append("```powershell")
@@ -310,6 +460,16 @@ def main() -> int:
     parser.add_argument("--basename", default="latest_ai_workflow_evidence")
     parser.add_argument("--output-dir", default="docs/LOCAL_VALIDATION_EVIDENCE")
     parser.add_argument("--report", action="append", default=[])
+    parser.add_argument(
+        "--selected-chunks-evidence",
+        action="append",
+        default=[],
+        help=(
+            "Compact selected-chunks evidence JSON path. Repeatable or "
+            "comma-separated. If omitted, docs/LOCAL_VALIDATION_EVIDENCE/"
+            "*selected_chunks_evidence.json is discovered when present."
+        ),
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -317,7 +477,13 @@ def main() -> int:
     if not output_dir.is_absolute():
         output_dir = repo_root / output_dir
     report_paths = split_path_values(args.report) or list(DEFAULT_REPORTS)
-    bundle, outputs = build_bundle(repo_root, report_paths, args.basename, output_dir)
+    bundle, outputs = build_bundle(
+        repo_root,
+        report_paths,
+        args.basename,
+        output_dir,
+        list(args.selected_chunks_evidence or []),
+    )
     print(json.dumps({"passed": True, "outputs": outputs.splitlines(), "decision": bundle["decision"]}, indent=2))
     return 0
 
