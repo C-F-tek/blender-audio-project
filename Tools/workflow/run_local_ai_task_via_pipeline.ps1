@@ -13,13 +13,26 @@
   Blender, does not run FFmpeg and does not edit source files.
 
   Provider execution remains explicit through -UsePrimaryAdvisoryProvider and
-  must remain behind the existing quality gate.
+  -RunMultistepProviderWorkflow. NPU remains probe / guardrail / decode
+  diagnostic. Ollama/GPU remains primary advisory behind the quality gate.
 
 .EXAMPLE
   .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
     -PromptFile .\output\local_ai_runs\run\local_ai_prompt.md `
     -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
     -RunDir .\output\local_ai_runs\run
+
+.EXAMPLE
+  .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
+    -PromptFile .\output\local_ai_runs\run\local_ai_prompt.md `
+    -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
+    -RunDir .\output\local_ai_runs\run `
+    -RunMultistepProviderWorkflow `
+    -RunOllamaProbe `
+    -RunNpuProbe `
+    -RunNpuDecodeSmoke `
+    -UsePrimaryAdvisoryProvider `
+    -BuildEvidence
 #>
 [CmdletBinding()]
 param(
@@ -36,10 +49,17 @@ param(
     [string]$Basename = "local_ai_task_pipeline",
     [string]$ProposalBasename = "local_ai_task_pipeline_proposals",
     [string]$EvidenceBasename = "",
+    [string]$MultistepBasename = "",
+    [string]$MultistepProposalBasename = "",
+    [string]$MultistepEvidenceBasename = "",
     [string]$Model = "",
     [int]$MaxContextChars = 12000,
 
     [switch]$UsePrimaryAdvisoryProvider,
+    [switch]$RunMultistepProviderWorkflow,
+    [switch]$RunOllamaProbe,
+    [switch]$RunNpuProbe,
+    [switch]$RunNpuDecodeSmoke,
     [switch]$BuildEvidence,
     [switch]$GeneratePatchSpecs,
     [switch]$DryRun
@@ -122,6 +142,16 @@ if ($TaskPath -ne "") {
     $TaskRel = Get-RepoRelativePath $RepoRootPath $TaskPath
 }
 
+if ([string]::IsNullOrWhiteSpace($MultistepBasename)) {
+    $MultistepBasename = "${Basename}_multistep"
+}
+if ([string]::IsNullOrWhiteSpace($MultistepProposalBasename)) {
+    $MultistepProposalBasename = "${Basename}_multistep_proposals"
+}
+if ([string]::IsNullOrWhiteSpace($MultistepEvidenceBasename)) {
+    $MultistepEvidenceBasename = "${Basename}_multistep_evidence"
+}
+
 $ContextFiles = @($PromptRel)
 if ($TaskRel -ne "") {
     $ContextFiles += $TaskRel
@@ -141,9 +171,48 @@ Write-Host "Task: $TaskRel"
 Write-Host "Pipeline output: $PipelineRel"
 Write-Host "Profile: $Profile"
 Write-Host "Use primary advisory provider: $UsePrimaryAdvisoryProvider"
+Write-Host "Run multistep provider workflow: $RunMultistepProviderWorkflow"
+Write-Host "Run Ollama probe: $RunOllamaProbe"
+Write-Host "Run NPU probe: $RunNpuProbe"
+Write-Host "Run NPU decode smoke: $RunNpuDecodeSmoke"
 Write-Host "Build evidence: $BuildEvidence"
 Write-Host "Generate patch specs: $GeneratePatchSpecs"
 Write-Host "Dry run: $DryRun"
+
+if ($RunMultistepProviderWorkflow) {
+    $MultistepArgs = @(
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", ".\Tools\workflow\run_parallel_ai_provider_multistep.ps1",
+        "-RepoRoot", ".",
+        "-Profile", $Profile,
+        "-OutputDir", $PipelineRel,
+        "-Basename", $MultistepBasename,
+        "-ProposalBasename", $MultistepProposalBasename,
+        "-EvidenceBasename", $MultistepEvidenceBasename,
+        "-ContextFile", ($ContextFiles -join ","),
+        "-MaxContextChars", "$MaxContextChars"
+    )
+    if ($RunOllamaProbe) {
+        $MultistepArgs += "-RunOllamaProbe"
+    }
+    if ($RunNpuProbe) {
+        $MultistepArgs += "-RunNpuProbe"
+    }
+    if ($RunNpuDecodeSmoke) {
+        $MultistepArgs += "-RunNpuDecodeSmoke"
+    }
+    if ($UsePrimaryAdvisoryProvider) {
+        $MultistepArgs += "-UsePrimaryAdvisoryProvider"
+    }
+    if ($Model -ne "") {
+        $MultistepArgs += @("-Model", $Model)
+    }
+
+    Invoke-CommandChecked -Label "Run explicit multistep provider workflow" -Block {
+        powershell.exe @MultistepArgs
+    }
+}
 
 $PacketArgs = @(
     "-NoProfile",
@@ -226,7 +295,14 @@ $Manifest = [ordered]@{
     profile = $Profile
     basename = $Basename
     proposal_basename = $ProposalBasename
-    provider_execution_requested = [bool]$UsePrimaryAdvisoryProvider
+    multistep_provider_workflow_requested = [bool]$RunMultistepProviderWorkflow
+    multistep_basename = $MultistepBasename
+    multistep_proposal_basename = $MultistepProposalBasename
+    multistep_evidence_basename = $MultistepEvidenceBasename
+    run_ollama_probe = [bool]$RunOllamaProbe
+    run_npu_probe = [bool]$RunNpuProbe
+    run_npu_decode_smoke = [bool]$RunNpuDecodeSmoke
+    provider_execution_requested = [bool]($UsePrimaryAdvisoryProvider -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke)
     patch_application_performed = $false
     provider_execution_performed_by_adapter = $false
     build_evidence_requested = [bool]$BuildEvidence
@@ -237,6 +313,12 @@ $Manifest = [ordered]@{
         proposals_json = "$PipelineRel/$ProposalBasename.json"
         proposals_markdown = "$PipelineRel/$ProposalBasename.md"
         proposal_validation = $ProposalValidationOutput
+        multistep_packet_json = "$PipelineRel/$MultistepBasename.json"
+        multistep_packet_markdown = "$PipelineRel/$MultistepBasename.md"
+        multistep_proposals_json = "$PipelineRel/$MultistepProposalBasename.json"
+        multistep_proposals_markdown = "$PipelineRel/$MultistepProposalBasename.md"
+        multistep_evidence_json = "docs/LOCAL_VALIDATION_EVIDENCE/$MultistepEvidenceBasename.json"
+        evidence_json = "docs/LOCAL_VALIDATION_EVIDENCE/$EvidenceBasename.json"
     }
     warnings = @()
     errors = @()
@@ -248,5 +330,6 @@ Write-Host "[OK] Local pipeline adapter complete" -ForegroundColor Green
 Write-Host "[OK] Manifest: $(Get-RepoRelativePath $RepoRootPath $ManifestPath)"
 Write-Host "[OK] Packet:   $PipelineRel/$Basename.md"
 Write-Host "[OK] Proposal: $PipelineRel/$ProposalBasename.md"
-Write-Host "[OK] Provider execution requested: $UsePrimaryAdvisoryProvider"
+Write-Host "[OK] Multistep requested: $RunMultistepProviderWorkflow"
+Write-Host "[OK] Provider execution requested: $($UsePrimaryAdvisoryProvider -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke)"
 Write-Host "[OK] Patch application performed: False"
