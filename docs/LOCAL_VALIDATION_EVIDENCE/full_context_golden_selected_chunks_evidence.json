@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "kind": "selected_semantic_chunks_evidence",
+  "generated_at": "2026-05-01T11:14:19.656917+00:00",
+  "repo_root": "C:/Users/carmi/blender/blender-audio-project",
+  "source_bundle": "output/ai_context_packs/full_context_golden_selected_chunks.json",
+  "passed": true,
+  "errors": [],
+  "warnings": [],
+  "provider_execution_performed": false,
+  "source_writes_performed": false,
+  "selected_count": 24,
+  "total_selected_chars": 28649,
+  "max_chunks": 24,
+  "max_total_chars": 32000,
+  "source_chunks": "indexAI/code_chunks/semantic_code_chunks.json",
+  "decision": {
+    "selected_chunks_built": true,
+    "budget_respected": true,
+    "provider_execution_seen": false,
+    "source_writes_performed": false,
+    "forbidden_paths_blocked": true
+  }
+}
