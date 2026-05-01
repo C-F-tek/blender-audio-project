@@ -32,6 +32,8 @@ As of 2026-04-30:
 | `Tools/validation/` | Lightweight non-invasive validators exist, including NPU helper smoke/unit/docs validators on active NPU decomposition branches. |
 | `Tools/npu/` | Active AI/NPU/Ollama context and review tooling, with large orchestrators still needing staged decomposition. |
 | `Tools/npu/pipeline/` | Additive app-agnostic helper package exists on the NPU decomposition branch; it is not wired into the runtime orchestrator until local validation and index regeneration pass. |
+| `docs/LOCAL_AI_TASKS/` | Versioned AI-to-AI task entrypoints for local/GitHub handoff. `apply-agent-review-doc-patch-plan.md` is the standard documentation patch-plan task. |
+| `docs/LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable validation evidence. Use task-scoped bundles instead of committing ignored `output/**` reports. |
 | `indexAI/` | Generated AI context. Regenerate after structural or documentation changes; do not hand-refactor as source. |
 | JSON schemas | Documented as partial. Preserve unknown fields and avoid destructive normalization. |
 
@@ -72,7 +74,13 @@ For NPU helper work, run the focused helper validation before the full runner:
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
 ```
 
-For documentation-only changes, a path/link review and `git diff` may be enough unless generated indexes must be refreshed.
+For documentation-only changes, use the task-specific validation block when available. For the agent-review documentation patch-plan lane, run:
+
+```powershell
+python .\Tools\validation\run_agent_review_patch_plan_full_validation.py --repo-root . --min-patch-plans 12 --expect-fallback
+```
+
+This emits a compact Git-trackable evidence bundle under `docs/LOCAL_VALIDATION_EVIDENCE/` and keeps long reports under ignored `output/**`.
 
 ## Common traps
 
@@ -85,12 +93,14 @@ For documentation-only changes, a path/link review and `git diff` may be enough 
 - Do not add dependencies, CI changes, long Blender renders or GPU-heavy jobs without explicit approval.
 - Do not assume Blender version compatibility unless it is documented or tested; mark it `not specified`.
 - Do not wire `Tools/npu/pipeline/` helpers into `Tools/npu/run_dual_ai_pipeline.py` until local validation, index regeneration and migration readiness gates are green.
+- Do not commit ignored `output/**` validation reports; commit only compact task-scoped evidence when a workflow explicitly writes it under `docs/LOCAL_VALIDATION_EVIDENCE/`.
 
 ## Task routing
 
 | Task type | Preferred first move |
 |---|---|
 | Documentation clarity | Patch docs directly, keep edits small, update `docs/README.md` if adding a stable doc. |
+| Documentation patch-plan evidence | Read `docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md`, apply only the allowed doc targets, then run `Tools/validation/run_agent_review_patch_plan_full_validation.py`. |
 | Shared utility extraction | Add package-agnostic module first, validate without Blender, then consider adapters. |
 | v61b runtime issue | Read `Scripting/v61b/README.md` and target source; patch one concern only. |
 | New generated package | Start from `Scripting/_template_audio_reactive_package/` and `docs/QUALITY_GATE.md`. |
