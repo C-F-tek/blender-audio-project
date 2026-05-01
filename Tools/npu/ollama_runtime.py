@@ -29,6 +29,30 @@ def normalize_base_url(value: str | None) -> str:
 
 DEFAULT_BASE_URL = normalize_base_url(os.environ.get("OLLAMA_API_BASE") or os.environ.get("OLLAMA_HOST"))
 DEFAULT_MODELS = ("qwen2.5-coder:14b", "gpt-oss:20b", "autumnzsd/qwen2.5-coder-tools:latest")
+DEFAULT_OLLAMA_THREAD_FRACTION = 0.85
+
+
+def default_ollama_num_thread() -> int:
+    """Return a conservative Ollama CPU thread cap for sustained local reviews.
+
+    Ollama accepts ``num_thread`` as a runtime option.  The default here keeps
+    long planning runs below full CPU saturation while still allowing GPU-backed
+    models to keep good throughput.  Operators can override it with
+    SPAZIOTEMPO_OLLAMA_NUM_THREAD or OLLAMA_NUM_THREAD.
+    """
+    for env_name in ("SPAZIOTEMPO_OLLAMA_NUM_THREAD", "OLLAMA_NUM_THREAD"):
+        value = os.environ.get(env_name)
+        if not value:
+            continue
+        try:
+            parsed = int(value)
+        except ValueError:
+            continue
+        if parsed > 0:
+            return parsed
+
+    logical_cpus = os.cpu_count() or 1
+    return max(1, int(logical_cpus * DEFAULT_OLLAMA_THREAD_FRACTION))
 
 
 def now_iso() -> str:
@@ -230,11 +254,13 @@ class OllamaModelManager:
         keep_alive: str = "5m",
         shutdown_server: bool = True,
         startup_timeout: float = 20.0,
+        num_thread: int | None = None,
     ) -> None:
         self.base_url = normalize_base_url(base_url)
         self.keep_alive = keep_alive
         self.shutdown_server = shutdown_server
         self.startup_timeout = startup_timeout
+        self.num_thread = num_thread if num_thread and num_thread > 0 else default_ollama_num_thread()
         self.session: OllamaSession | None = None
         self.current_model: str | None = None
 
@@ -244,12 +270,14 @@ class OllamaModelManager:
         prompt: str,
         max_new_tokens: int = 900,
         temperature: float = 0.15,
+        num_thread: int | None = None,
     ) -> tuple[str, str]:
         if self.session and self.current_model != model:
             self.session.close()
             self.session = None
             self.current_model = None
 
+        effective_num_thread = num_thread if num_thread and num_thread > 0 else self.num_thread
         if not self.session:
             self.session = OllamaSession(
                 model=model,
@@ -258,10 +286,11 @@ class OllamaModelManager:
                 shutdown_server=False,
                 unload_model=True,
                 startup_timeout=self.startup_timeout,
+                num_thread=effective_num_thread,
             ).start()
             self.current_model = self.session.model
 
-        text = self.session.generate(prompt, max_new_tokens=max_new_tokens, temperature=temperature)
+        text = self.session.generate(prompt, max_new_tokens=max_new_tokens, temperature=temperature, num_thread=effective_num_thread)
         return text, self.session.model or model
 
     def close(self) -> None:
@@ -286,6 +315,7 @@ class OllamaSession:
         shutdown_server: bool = True,
         unload_model: bool = True,
         startup_timeout: float = 20.0,
+        num_thread: int | None = None,
     ) -> None:
         self.base_url = base_url
         self.base_url = normalize_base_url(base_url)
@@ -294,6 +324,7 @@ class OllamaSession:
         self.shutdown_server = shutdown_server
         self.unload_model_on_close = unload_model
         self.startup_timeout = startup_timeout
+        self.num_thread = num_thread if num_thread and num_thread > 0 else default_ollama_num_thread()
         self.ollama_exe = find_ollama_exe()
         self.process: subprocess.Popen | None = None
         self.started_server = False
@@ -315,13 +346,14 @@ class OllamaSession:
         if not available:
             available = list_models_from_disk()
         self.model = choose_model(self.preferred_model, available)
-        append_ollama_runtime_event("session_start", {"preferred_model": self.preferred_model, "selected_model": self.model, "available_model_count": len(available), "started_server": self.started_server, "elapsed_sec": round(time.perf_counter() - start, 4)})
+        append_ollama_runtime_event("session_start", {"preferred_model": self.preferred_model, "selected_model": self.model, "available_model_count": len(available), "started_server": self.started_server, "num_thread": self.num_thread, "elapsed_sec": round(time.perf_counter() - start, 4)})
         return self
 
-    def generate(self, prompt: str, max_new_tokens: int = 900, temperature: float = 0.15) -> str:
+    def generate(self, prompt: str, max_new_tokens: int = 900, temperature: float = 0.15, num_thread: int | None = None) -> str:
         if not self.model:
             self.start()
 
+        effective_num_thread = num_thread if num_thread and num_thread > 0 else self.num_thread
         payload = {
             "model": self.model,
             "prompt": prompt,
@@ -330,16 +362,17 @@ class OllamaSession:
             "options": {
                 "temperature": temperature,
                 "num_predict": max_new_tokens,
+                "num_thread": effective_num_thread,
             },
         }
         start = time.perf_counter()
         try:
             data = _json_request(self.base_url, "/api/generate", payload=payload, timeout=600.0)
         except Exception as exc:
-            append_ollama_runtime_event("generate_error", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "elapsed_sec": round(time.perf_counter() - start, 4), "error_type": type(exc).__name__, "error": str(exc)})
+            append_ollama_runtime_event("generate_error", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "num_thread": effective_num_thread, "elapsed_sec": round(time.perf_counter() - start, 4), "error_type": type(exc).__name__, "error": str(exc)})
             raise
         response = str(data.get("response", "")).strip()
-        append_ollama_runtime_event("generate_result", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "elapsed_sec": round(time.perf_counter() - start, 4), "response_chars": len(response), "empty_response": not bool(response), "done": data.get("done"), "done_reason": data.get("done_reason"), "prompt_eval_count": data.get("prompt_eval_count"), "eval_count": data.get("eval_count"), "response_preview": response[:300]})
+        append_ollama_runtime_event("generate_result", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "num_thread": effective_num_thread, "elapsed_sec": round(time.perf_counter() - start, 4), "response_chars": len(response), "empty_response": not bool(response), "done": data.get("done"), "done_reason": data.get("done_reason"), "prompt_eval_count": data.get("prompt_eval_count"), "eval_count": data.get("eval_count"), "response_preview": response[:300]})
         return response
 
     def unload_model(self) -> None:
@@ -380,7 +413,7 @@ class OllamaSession:
                 self.process.wait(timeout=8.0)
             except subprocess.TimeoutExpired:
                 self.process.kill()
-        append_ollama_runtime_event("session_close", {"model": self.model, "started_server": self.started_server, "unload_model": self.unload_model_on_close})
+        append_ollama_runtime_event("session_close", {"model": self.model, "started_server": self.started_server, "unload_model": self.unload_model_on_close, "num_thread": self.num_thread})
 
     def __enter__(self) -> "OllamaSession":
         return self.start()
