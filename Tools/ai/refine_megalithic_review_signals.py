@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Refine noisy findings from a megalithic repository review.
 
-The first all-resources review intentionally casts a wide net. This post-pass
-keeps the artifact-driven workflow but separates actionable discrepancies from
-expected guardrails, conceptual slash terms, legacy/backup duplicates and other
-low-signal findings.
+The all-resources review intentionally casts a wide net. This post-pass keeps
+that broad coverage but separates actionable discrepancies from expected
+guardrails, normalized path aliases, placeholders, generated/legacy duplicates
+and generic utility-symbol noise.
 
 It is report-only and never applies patches or creates GitHub PRs.
 """
@@ -43,20 +43,55 @@ BACKUP_OR_GENERATED_SEGMENTS = {
     "generated_blender_script_candidate.py",
     "generated_blender_script_candidate_FristNear.py",
 }
+PLACEHOLDER_PATH_REFERENCES = {
+    "Scripting/package_name",
+    "Tools/validation/fixtures",
+    "patch_specs/inbox",
+}
+PATH_ALIAS_PREFIXES = (
+    ("EXECUTION_PLANS/", "docs/EXECUTION_PLANS/"),
+    ("github/workflows/", ".github/workflows/"),
+    (".github/workflows/", ".github/workflows/"),
+)
 ALLOW_DUPLICATE_SYMBOLS = {
     "__init__",
     "main",
     "execute",
     "draw",
-    "build_report",
-    "build_proposals",
+    "add",
+    "add_error",
+    "add_item",
+    "append_output",
+    "apply_filter",
+    "ask_bool",
+    "build_inventory",
+    "build_layout",
     "build_ollama_prompt",
+    "build_packet",
+    "build_plan",
+    "build_proposals",
+    "build_report",
+    "build_steps",
+    "check_policy",
+    "classify_path",
+    "cleanup_intermediates",
+    "cleanup_render_frames",
+    "compact",
+    "compact_text",
+    "configure_headings",
+    "copy_selected_path",
+    "dry_run_spec",
     "ensure_repo_imports",
+    "extract_symbols",
+    "file_meta",
+    "file_record",
+    "format_symbol_summary",
+    "from_mapping",
+    "Get-RepoRelativePath",
+    "Invoke-Step",
     "Resolve-ExistingPath",
     "Resolve-RepoRoot",
-    "Invoke-Step",
     "Write-Step",
-    "Get-RepoRelativePath",
 }
 CONCEPTUAL_SLASH_RE = re.compile(r"^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+$")
 
@@ -74,8 +109,34 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def repo_root_from_review(review: dict[str, Any]) -> Path:
+    raw = review.get("repo_root") or "."
+    return Path(str(raw)).resolve()
+
+
 def normalize_reference(reference: str) -> str:
     return reference.strip().strip("`.,:)];\"").replace("\\", "/").lstrip("/")
+
+
+def candidate_references(reference: str) -> list[str]:
+    ref = normalize_reference(reference)
+    candidates = [ref]
+    if ref in KNOWN_ROOT_FILES:
+        candidates.append(ref)
+    for prefix, replacement in PATH_ALIAS_PREFIXES:
+        if ref.startswith(prefix):
+            candidates.append(replacement + ref[len(prefix):])
+    if ref.startswith("docs/") is False and ref.startswith("EXECUTION_PLANS/"):
+        candidates.append("docs/" + ref)
+    return list(dict.fromkeys(item for item in candidates if item))
+
+
+def existing_candidate(reference: str, repo_root: Path) -> str | None:
+    for candidate in candidate_references(reference):
+        path = repo_root / candidate
+        if path.exists():
+            return candidate
+    return None
 
 
 def has_path_intent(reference: str) -> bool:
@@ -100,6 +161,10 @@ def is_conceptual_slash_term(reference: str) -> bool:
     return bool(CONCEPTUAL_SLASH_RE.match(ref))
 
 
+def is_placeholder_reference(reference: str) -> bool:
+    return normalize_reference(reference) in PLACEHOLDER_PATH_REFERENCES
+
+
 def classify_ai_workload_failure(report: dict[str, Any]) -> dict[str, Any]:
     errors = report.get("errors") or []
     npu_only = bool(errors) and all(str(item).lower().startswith("npu:") for item in errors)
@@ -110,7 +175,7 @@ def classify_ai_workload_failure(report: dict[str, Any]) -> dict[str, Any]:
             "area": "advisory_quality_gate",
             "title": "NPU report excluded by AI workload quality gate",
             "details": [
-                "The ai_workload_report_quality report is failed because the NPU workload text is unusable.",
+                "The ai_workload_report_quality report failed because the NPU workload text is unusable.",
                 "This is expected fail-closed behavior when Ollama/GPU remains the usable advisory lane.",
                 *[str(item) for item in errors],
             ],
@@ -148,21 +213,28 @@ def refine_validation_reports(review: dict[str, Any]) -> tuple[list[dict[str, An
 
 
 def refine_doc_code(review: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    repo_root = repo_root_from_review(review)
     missing = review.get("doc_code_consistency", {}).get("missing_path_references", []) or []
     actionable_refs = []
     ignored_refs = []
+    resolved_refs = []
     for item in missing:
         doc = str(item.get("doc") or "")
         reference = str(item.get("reference") or "")
         normalized = normalize_reference(reference)
+        resolved = existing_candidate(reference, repo_root)
         if doc in LOW_SIGNAL_DOCS:
-            ignored_refs.append({**item, "reason": "low_signal_generated_history"})
+            ignored_refs.append({**item, "normalized_reference": normalized, "reason": "low_signal_generated_history"})
+        elif is_placeholder_reference(reference):
+            ignored_refs.append({**item, "normalized_reference": normalized, "reason": "placeholder_or_template_path"})
+        elif resolved:
+            resolved_refs.append({**item, "normalized_reference": normalized, "resolved_reference": resolved, "reason": "exists_after_normalization_or_alias"})
         elif is_conceptual_slash_term(reference):
-            ignored_refs.append({**item, "reason": "conceptual_slash_term"})
+            ignored_refs.append({**item, "normalized_reference": normalized, "reason": "conceptual_slash_term"})
         elif has_path_intent(reference):
-            actionable_refs.append({**item, "normalized_reference": normalized})
+            actionable_refs.append({**item, "normalized_reference": normalized, "candidate_references": candidate_references(reference)})
         else:
-            ignored_refs.append({**item, "reason": "no_clear_path_intent"})
+            ignored_refs.append({**item, "normalized_reference": normalized, "reason": "no_clear_path_intent"})
     findings = []
     if actionable_refs:
         findings.append(
@@ -173,7 +245,13 @@ def refine_doc_code(review: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[
                 "details": [f"{item.get('doc')} -> {item.get('normalized_reference')}" for item in actionable_refs[:30]],
             }
         )
-    return findings, {"actionable_refs": actionable_refs[:200], "ignored_count": len(ignored_refs), "ignored_sample": ignored_refs[:80]}
+    return findings, {
+        "actionable_refs": actionable_refs[:200],
+        "resolved_count": len(resolved_refs),
+        "resolved_sample": resolved_refs[:80],
+        "ignored_count": len(ignored_refs),
+        "ignored_sample": ignored_refs[:80],
+    }
 
 
 def refine_doc_doc(review: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -185,7 +263,6 @@ def refine_doc_doc(review: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[s
         if not missing:
             continue
         path = str(item.get("path"))
-        # Only dedicated contract docs should be required to mention every contract term.
         if path in {"docs/JSON_SCHEMAS.md", "Tools/validation/README.md", "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md"}:
             actionable.append({"path": path, "missing_terms": missing})
         else:
@@ -207,6 +284,30 @@ def is_backup_or_generated_path(path: str) -> bool:
     return any(segment in path for segment in BACKUP_OR_GENERATED_SEGMENTS)
 
 
+def path_group(path: str) -> str:
+    parts = path.split("/")
+    if len(parts) >= 3 and parts[0] == "Tools":
+        return "/".join(parts[:2])
+    if len(parts) >= 3 and parts[0] == "Scripting":
+        return "/".join(parts[:2])
+    return parts[0] if parts else path
+
+
+def is_low_signal_duplicate(symbol: str, paths: list[str]) -> bool:
+    if symbol in ALLOW_DUPLICATE_SYMBOLS:
+        return True
+    if symbol.startswith("_") and len(paths) <= 4:
+        return True
+    if symbol.startswith(("add_", "build_", "check_", "classify_", "configure_", "create_", "extract_", "find_", "format_")) and len(paths) <= 6:
+        return True
+    if any(is_backup_or_generated_path(path) for path in paths):
+        return True
+    groups = {path_group(path) for path in paths}
+    if len(groups) > 1 and len(paths) <= 6:
+        return True
+    return False
+
+
 def refine_code_code(review: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     duplicates = review.get("code_code_consistency", {}).get("duplicate_symbols", []) or []
     actionable = []
@@ -214,8 +315,8 @@ def refine_code_code(review: dict[str, Any]) -> tuple[list[dict[str, Any]], dict
     for item in duplicates:
         symbol = str(item.get("symbol") or "")
         paths = [str(path) for path in item.get("paths", [])]
-        if symbol in ALLOW_DUPLICATE_SYMBOLS:
-            ignored.append({**item, "reason": "common_utility_or_entrypoint_name"})
+        if is_low_signal_duplicate(symbol, paths):
+            ignored.append({**item, "reason": "generic_generated_or_cross_package_duplicate"})
         elif paths and all(is_backup_or_generated_path(path) for path in paths):
             ignored.append({**item, "reason": "backup_or_generated_only"})
         elif any("Scripting/v61b_backgood/" in path for path in paths) and any("Scripting/v61b/" in path for path in paths):
@@ -228,7 +329,7 @@ def refine_code_code(review: dict[str, Any]) -> tuple[list[dict[str, Any]], dict
             {
                 "severity": "low",
                 "area": "code_code",
-                "title": "Duplicate code symbols remain after backup/generated filtering",
+                "title": "Duplicate code symbols remain after generic/generated filtering",
                 "details": [f"{item.get('symbol')} -> {item.get('paths')}" for item in actionable[:30]],
             }
         )
@@ -337,6 +438,7 @@ def render_markdown(refined: dict[str, Any], proposals: dict[str, Any]) -> str:
             lines.append("")
     lines.append("## Refinement counters")
     lines.append("")
+    lines.append(f"- Resolved doc/code refs: `{refined['refinement']['doc_code'].get('resolved_count', 0)}`")
     lines.append(f"- Ignored doc/code refs: `{refined['refinement']['doc_code']['ignored_count']}`")
     lines.append(f"- Ignored code/code duplicates: `{refined['refinement']['code_code']['ignored_count']}`")
     return "\n".join(lines) + "\n"
