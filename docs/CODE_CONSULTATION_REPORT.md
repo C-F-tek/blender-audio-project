@@ -72,6 +72,8 @@ Important: this index predates the latest documentation and template additions. 
 | `Tools/npu/` | Local AI, NPU, context generation, dual AI pipeline | Rich but complex. Needs validation and clearer CLI documentation. |
 | `Tools/workflow/` | Workflow shell, GUI, state, startup and debugging tools | Large operational layer. Needs its own workflow documentation and validation. |
 | `Tools/repo_patch_runner/` | Structured patch runner | Relevant for safe local patch workflows. |
+| `Tools/ai/build_agent_review_patch_plan.py` | Deterministic manual-review patch-plan builder from GPU/NPU review and evidence sufficiency artifacts | Useful fallback layer when GPU planning produces no actionable recommendation. Report-only; must not apply patches. |
+| `Tools/validation/run_agent_review_patch_plan_full_validation.py` | Standard validation wrapper for documentation patch plans and compact GitHub evidence bundle generation | Provides reusable AI-to-AI handoff through `docs/LOCAL_VALIDATION_EVIDENCE/`. Provider-free and patch-free. |
 | `indexAI/` | Generated index and patch artifacts | Valuable but generated. Must be regenerated after structural changes. |
 
 ## Detailed observations
@@ -200,6 +202,31 @@ Add a non-invasive workflow later for:
 
 Do not require Blender runtime in the first workflow.
 
+### 9. Manual-review patch-plan evidence is now a concrete workflow lane
+
+The repository now has a deterministic route for turning local GPU/NPU/evidence review output into a documentation-only manual-review patch workflow:
+
+```text
+Tools/ai/build_agent_review_patch_plan.py
+Tools/validation/run_agent_review_patch_plan_smoke.py
+Tools/validation/run_agent_review_patch_plan_full_validation.py
+docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
+```
+
+The lane is intentionally conservative:
+
+```text
+provider execution performed: false during full-validation wrapper
+patch application performed: false
+evidence bundle is task-scoped
+long reports stay under ignored output/**
+manual review remains required
+```
+
+This resolves the earlier gap where a GPU planner could run many rounds yet produce zero recommendations: the fallback patch-plan layer can still produce a bounded, reviewable documentation plan from evidence sufficiency artifacts.
+
 ## Risk matrix
 
 | Risk | Level | Reason | Recommended action |
@@ -211,6 +238,7 @@ Do not require Blender runtime in the first workflow.
 | JSON schema drift | Medium | Multiple JSON artifacts and compact/full variants | Document confirmed schemas. |
 | Large script complexity | Medium | Several files exceed hundreds or thousands of lines | Add validation before refactor. |
 | Duplicate helpers in normalize_scene_spec | Low/Medium | Maintainer confusion and possible drift | Clean only with regression check. |
+| Patch-plan over-promotion | Medium | A generated patch plan could be mistaken for an apply queue | Keep patch-plan artifacts manual-review-only and validate with `run_agent_review_patch_plan_full_validation.py`. |
 
 ## Recommended next actions
 
@@ -249,6 +277,16 @@ Scripting/shared/path_utils.py
 Scripting/shared/ffmpeg_encoder.py
 Scripting/shared/render_profiles.py
 ```
+
+### Priority 6
+
+Use the documentation patch-plan lane for bounded docs-only follow-ups:
+
+```powershell
+python .\Tools\validation\run_agent_review_patch_plan_full_validation.py --repo-root . --min-patch-plans 12 --expect-fallback
+```
+
+Commit only the compact evidence bundle under `docs/LOCAL_VALIDATION_EVIDENCE/` together with reviewed documentation edits.
 
 ## Conclusion
 
