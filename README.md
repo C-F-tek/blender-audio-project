@@ -41,9 +41,9 @@ Current provider mapping:
 | NPU/OpenVINO | OpenVINO GenAI | Probe, guardrail and decode diagnostic lane | Available for explicit smoke/probe execution. Promotion to advisory requires quality-gate evidence. |
 | Blender runtime | Blender Python | Legacy application target | Frozen for the current core/backend work. Do not touch unless a task explicitly enters a Blender-runtime milestone. |
 
-## Validated state on PR #48 branch
+## Current validated state
 
-Local evidence pushed under `docs/LOCAL_VALIDATION_EVIDENCE/` confirms:
+Local evidence pushed under `docs/LOCAL_VALIDATION_EVIDENCE/` confirms the current master baseline originally validated in PR #48 and extended by later AI/proposal/patch-spec milestones:
 
 ```text
 ollama_gpu_primary_advisory: true
@@ -158,9 +158,9 @@ Those assets are now treated as the first application domain that benefits from 
 ## Current operational decision
 
 ```text
-Proceed with PR #48 after documentation review.
 Treat Ollama/GPU as the primary advisory lane.
 Treat NPU/OpenVINO as a validated smoke/probe lane, not yet a general advisory lane.
 Use compact evidence bundles instead of pasting long local output reports.
 Keep Blender runtime out of this milestone.
+Continue with follow-up validation, context-pack, proposal and patch-spec work on current master.
 ```

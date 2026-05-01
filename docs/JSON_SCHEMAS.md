@@ -24,6 +24,8 @@ GitHub-only agents must not infer local report contents that are not present in 
 | keyframe JSON | Animation and timing data for Blender | not fully specified |
 | implementation draft JSON | AI-generated implementation plan | partially covered by NPU helper contract validators |
 | generated artifact plan JSON | Proposed generated artifact paths and content descriptors | partially covered by generated artifact path policy and NPU helper validators |
+| AI context pack JSON | Task-scoped source/docs context and validation plan for AI/human continuation | validator exists |
+| AI context pack evidence JSON | Compact tracked summary of a generated context pack | validator exists |
 | proposal patch-spec draft JSON | Reviewable shell for future deterministic patch specs | validator exists |
 | reviewed patch-spec JSON | Dry-run-proven concrete patch candidate | validator exists |
 | provider request/result envelope JSON | Planned or future provider exchange envelopes | partial NPU helper contract only; provider execution adapters remain future work |
@@ -244,6 +246,31 @@ Notes:
 Reviewed specs contain concrete replacements and must pass dry-run. They still remain outside `patch_specs/inbox/` and are not applied by the promotion or validation tools.
 ```
 
+### AI context packs
+
+```text
+File pattern:
+output/ai_context_packs/*.json
+docs/LOCAL_VALIDATION_EVIDENCE/*context_pack_evidence.json
+Producer:
+Tools/ai/build_ai_context_pack.py
+Consumer:
+Human maintainers, AI coding agents, proposal builders and future selective execution planners.
+Required context pack fields:
+schema_version, kind, generated_at, repo_root, profile, apply_mode, provider_execution_performed, passed, errors, warnings, validation_commands, stop_conditions, files
+Required evidence fields:
+schema_version, kind, generated_at, repo_root, profile, source_pack, passed, provider_execution_performed, file_count, included_file_count, required_missing, forbidden_path_count, included_paths, decision
+Required kinds:
+ai_context_pack
+ai_context_pack_evidence
+Provider semantics:
+Context-pack generation does not execute providers and does not modify source files. It only reads bounded repository files and writes ignored local context plus compact tracked evidence.
+Current validator:
+Tools/validation/check_ai_context_pack_contract.py
+Notes:
+Context packs must avoid generated indexes, local output, Ready To Jazz runtime, blender_compat.py and full analysis JSON. The tracked evidence is reviewable on GitHub; the full pack remains local under output/.
+```
+
 ## Report / artifact contract gap index
 
 | Report / artifact | Typical path | Producer | Current validator | Current required fields | Missing checks / notes |
@@ -260,7 +287,9 @@ Reviewed specs contain concrete replacements and must pass dry-run. They still r
 | NPU helper module smoke report | `output/validation/npu_pipeline_modules.json` | `Tools/validation/check_npu_pipeline_modules.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | Contract is helper-focused and provider-free; do not use it as provider execution proof. |
 | NPU helper unit-test report | `output/validation/npu_pipeline_helper_tests.json` | `Tools/validation/check_npu_pipeline_helper_tests.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks.tests_run`, `checks.error_count`, `checks.failure_count` | Wraps deterministic `unittest`; no Blender/NPU/Ollama/provider execution. |
 | NPU helper docs report | `output/validation/npu_pipeline_docs.json` | `Tools/validation/check_npu_pipeline_docs.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | Checks `Tools/npu/pipeline/README.md` against expected helper modules/terms. |
-| NPU runtime output manifest | future `output/validation/npu_runtime_output_manifest.json` or runtime-specific path | future runtime/reporting phase using `Tools/npu/pipeline/reports.py` | helper unit tests and smoke check currently cover construction only | `schema_version`, `kind`, `repo_root`, `provider_execution_performed`, `output_count`, `blocked_count`, `passed`, `errors`, `warnings`, `outputs` | Helper exists for additive observability; current phase does not emit it from runtime. |
+| AI context pack | `output/ai_context_packs/*.json` | `Tools/ai/build_ai_context_pack.py` | `Tools/validation/check_ai_context_pack_contract.py` | `schema_version`, `kind`, `profile`, `provider_execution_performed`, `validation_commands`, `stop_conditions`, `files` | Local context artifact under ignored `output/`; compact evidence belongs under `docs/LOCAL_VALIDATION_EVIDENCE/`. |
+| AI context pack evidence | `docs/LOCAL_VALIDATION_EVIDENCE/*context_pack_evidence.json` | `Tools/ai/build_ai_context_pack.py` | `Tools/validation/check_ai_context_pack_contract.py` | `schema_version`, `kind`, `profile`, `passed`, `provider_execution_performed`, `included_paths`, `decision` | Git-trackable proof that a bounded context pack was built without provider execution or source writes. |
+| NPU runtime output manifest | `output/validation/npu_runtime_output_manifest.json` or runtime-specific path | `Tools/npu/build_runtime_output_manifest.py` and future runtime/reporting phases | helper unit tests, NPU module smoke and evidence summary validation | `schema_version`, `kind`, `repo_root`, `provider_execution_performed`, `output_count`, `blocked_count`, `passed`, `errors`, `warnings`, `outputs` | Current local/evidence copies are observability-only and must not be treated as provider execution proof; runtime-native emission remains future work. |
 | Generated artifact path policy report | `output/validation/generated_artifact_path_policy.json` | `Tools/validation/check_generated_artifact_path_policy.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `path_count`, `path_results` | Review common validator report fields with TD-015. |
 | Generated Python policy report | `output/validation/generated_python_policy.json` | `Tools/validation/check_generated_python_policy.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `rules`, `sample_results` | Document future adapter composition in a separate template. |
 | Generated Blender script policy report | `output/validation/generated_blender_script_policy.json` | `Tools/validation/check_generated_blender_script_policy.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `rules`, `sample_results` | Blender-specific; must not become the generic policy boundary. |

@@ -77,7 +77,12 @@ def repo_relative(path: Path, repo_root: Path) -> str:
 
 def default_bundle_paths(repo_root: Path) -> list[Path]:
     evidence_dir = repo_root / "docs" / "LOCAL_VALIDATION_EVIDENCE"
-    return sorted(evidence_dir.glob("*.json"))
+    paths: list[Path] = []
+    for path in sorted(evidence_dir.glob("*.json")):
+        data, parse_error = read_json_object(path)
+        if parse_error or data is None or data.get("kind") == EXPECTED_KIND:
+            paths.append(path)
+    return paths
 
 
 def split_path_values(items: list[str]) -> list[str]:

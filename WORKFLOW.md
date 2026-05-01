@@ -12,6 +12,7 @@ Work should move through small, explicit, validated tasks.
 
 ```text
 read context
+  -> build task-scoped context pack when useful
   -> choose one task
   -> define scope
   -> change minimal files
@@ -70,6 +71,13 @@ For non-trivial tasks, create an execution plan under:
 
 ```text
 docs/EXECUTION_PLANS/active/
+```
+
+For tasks where the relevant files are unclear, build a bounded context pack first:
+
+```powershell
+python .\Tools\ai\build_ai_context_pack.py --repo-root . --profile project_self_improvement
+python .\Tools\validation\check_ai_context_pack_contract.py --repo-root . --pack .\output\ai_context_packs\project_self_improvement.json --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\project_self_improvement_context_pack_evidence.json --output .\output\validation\ai_context_pack_contract.json
 ```
 
 ### 2. Prepare repository

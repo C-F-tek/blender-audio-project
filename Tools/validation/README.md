@@ -24,6 +24,7 @@ GitHub evidence bundle contract checks
 repository change proposal contract checks
 proposal patch-spec draft contract checks
 reviewed patch-spec dry-run contract checks
+AI context pack contract checks
 validation report contract checks
 agent memory policy checks
 Blender compatibility smokes
@@ -109,6 +110,7 @@ python .\Tools\validation\check_github_evidence_bundle.py --repo-root . --output
 python .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output .\output\validation\repository_change_proposals_contract.json
 python .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest .\output\patch_specs\proposal_patch_specs_manifest.json --output .\output\validation\patch_spec_drafts.json
 python .\Tools\validation\check_reviewed_patch_specs.py --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_manifest.json --output .\output\validation\reviewed_patch_specs.json
+python .\Tools\validation\check_ai_context_pack_contract.py --repo-root . --pack .\output\ai_context_packs\project_self_improvement.json --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\project_self_improvement_context_pack_evidence.json --output .\output\validation\ai_context_pack_contract.json
 python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
@@ -145,6 +147,7 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_repository_change_proposals.py` | Validates manual-review repository proposal reports and their code/Markdown/JSON suggestion descriptors. | No |
 | `check_patch_spec_drafts.py` | Validates proposal-derived draft patch specs under `output/patch_specs/` and rejects queued or concrete replacements. | No |
 | `check_reviewed_patch_specs.py` | Validates reviewed patch specs and reruns dry-run without writing source files. | No |
+| `check_ai_context_pack_contract.py` | Validates AI context packs and compact context-pack evidence without executing providers. | No |
 | `check_validation_report_contract.py` | Validates generated reports in `output/validation/` for common root fields. | No |
 | `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and docs agree. | No |
 | `check_agent_memory_policy.py` | Checks generic memory retention and promotion guardrails. | No |
@@ -191,6 +194,8 @@ per-report summary fields: path, exists, json_ok, kind, passed, summary
 ```
 
 Missing provider-specific optional fields are warnings, not blocking errors, so older evidence bundles remain readable while newer bundles can add richer diagnostic decisions such as `npu_decode_smoke_passed`.
+
+Other compact evidence kinds may also live under `docs/LOCAL_VALIDATION_EVIDENCE/`; this validator only checks `kind == github_validation_evidence_bundle` unless explicit `--bundle` paths are supplied.
 
 ## Repository change proposal validation
 
@@ -258,6 +263,33 @@ Validate the reviewed spec:
 
 ```powershell
 python .\Tools\validation\check_reviewed_patch_specs.py --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_fixture_manifest.json --output .\output\validation\reviewed_patch_specs.json
+```
+
+## AI context-pack validation
+
+AI context packs collect bounded task-scoped repository context, validation commands and stop conditions for human/AI continuation. Full packs live under ignored `output/ai_context_packs/`; compact evidence can be committed under `docs/LOCAL_VALIDATION_EVIDENCE/`.
+
+Build the default self-improvement prototype:
+
+```powershell
+python .\Tools\ai\build_ai_context_pack.py --repo-root . --profile project_self_improvement
+```
+
+Validate the pack and compact evidence:
+
+```powershell
+python .\Tools\validation\check_ai_context_pack_contract.py --repo-root . --pack .\output\ai_context_packs\project_self_improvement.json --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\project_self_improvement_context_pack_evidence.json --output .\output\validation\ai_context_pack_contract.json
+```
+
+The validator checks:
+
+```text
+kind == ai_context_pack / ai_context_pack_evidence
+apply_mode == context_only
+provider_execution_performed == false
+required files are included
+forbidden source/generated/runtime paths are blocked
+validation commands and stop conditions are present
 ```
 
 The validator checks:
