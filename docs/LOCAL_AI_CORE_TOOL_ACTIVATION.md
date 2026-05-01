@@ -93,6 +93,36 @@ commit SQLite DB files
 
 Macro patch promotion remains a separate reviewed step.
 
+## Documentation patch-plan lane
+
+For documentation-only manual-review patch plans, use the narrower task-specific lane rather than the full activation runner.
+
+Canonical task and wrapper:
+
+```text
+docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md
+Tools/validation/run_agent_review_patch_plan_full_validation.py
+```
+
+Expected compact evidence:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
+```
+
+This lane is for already-generated review/evidence reports. It must remain:
+
+```text
+documentation-only
+provider-free
+patch-runner-free
+manual-review-only
+task-scoped evidence only
+```
+
+Use it when a GPU/NPU review has produced a manual-review patch plan and the next step is to apply small documentation corrections, not to run providers again.
+
 ## Combined local activation
 
 For concrete local evidence with providers and macro patch draft specs:
@@ -145,6 +175,13 @@ If `-GenerateMacroPatchDrafts` is used, also expect draft-only patch specs under
 output/patch_specs/
 ```
 
+For the documentation patch-plan lane, expected tracked evidence is instead:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
+```
+
 ## Validation block
 
 ```powershell
@@ -162,6 +199,12 @@ For macro patch drafts:
 python .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest .\output\patch_specs\local_ai_core_tool_activation_patch_specs_manifest.json --output .\output\validation\local_ai_core_tool_activation_macro_patch_drafts.json
 ```
 
+For agent-review documentation patch plans:
+
+```powershell
+python .\Tools\validation\run_agent_review_patch_plan_full_validation.py --repo-root . --min-patch-plans 12 --expect-fallback
+```
+
 ## Commit policy
 
 Allowed tracked outputs:
@@ -169,6 +212,8 @@ Allowed tracked outputs:
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/local_ai_core_tool_activation_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/local_ai_core_tool_activation_evidence.md
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
 ```
 
 Do not commit:
@@ -194,3 +239,5 @@ provider-free by default
 manual-review-only for macro patch
 destructive-operation-free
 ```
+
+The documentation patch-plan lane inherits the same guardrails and additionally stays task-scoped to the explicit patch-plan evidence bundle.
