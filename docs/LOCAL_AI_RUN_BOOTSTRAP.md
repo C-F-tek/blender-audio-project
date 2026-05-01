@@ -19,6 +19,30 @@ forgetting compact evidence bundles
 mixing GitHub-only review with local workstation evidence
 ```
 
+## Non-interactive entrypoint mode
+
+Local AI runners may be launched without an interactive chat.
+
+In that mode, pass a Markdown task file from:
+
+```text
+docs/LOCAL_AI_TASKS/
+```
+
+Current task index:
+
+```text
+docs/LOCAL_AI_TASKS/README.md
+```
+
+Current issue #57 entrypoint:
+
+```text
+docs/LOCAL_AI_TASKS/issue-57-docs-congruence-cleanup.md
+```
+
+A local AI runner started from a task file must still read `AGENTS.md` first, then this bootstrap, then the task file.
+
 ## Phase 0 - Repository sync preflight
 
 Before running an AI task locally, the human or local AI should confirm:
@@ -60,12 +84,13 @@ docs/TECH_DEBT_TRACKER.md
 Then read the active task object:
 
 ```text
-GitHub issue, PR body or execution plan referenced by the user
+GitHub issue, PR body, execution plan or docs/LOCAL_AI_TASKS/*.md file referenced by the runner
 ```
 
 For the current post-PR #55 cleanup task, read:
 
 ```text
+docs/LOCAL_AI_TASKS/issue-57-docs-congruence-cleanup.md
 https://github.com/C-F-tek/blender-audio-project/issues/57
 docs/EXECUTION_PLANS/active/2026-05-01_selective_planner_prototype.md
 docs/AI_SELECTIVE_PLANNER.md
@@ -232,6 +257,7 @@ No runtime files, provider behavior, generated indexes, full analysis JSON or Bl
 The current cleanup task is tracked in:
 
 ```text
+docs/LOCAL_AI_TASKS/issue-57-docs-congruence-cleanup.md
 GitHub issue #57
 ```
 
