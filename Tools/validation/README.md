@@ -22,6 +22,7 @@ AI dry-run matrix report contract checks
 AI dry-run matrix evidence bundle checks
 AI pipeline schema-v6 report contract checks
 GitHub evidence bundle contract checks
+selective execution plan contract checks
 repository change proposal contract checks
 proposal patch-spec draft contract checks
 reviewed patch-spec dry-run contract checks
@@ -109,6 +110,7 @@ python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --ou
 python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
 python .\Tools\validation\check_dry_run_matrix_evidence_bundle.py --repo-root . --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\ai_pipeline_dry_run_matrix_evidence.json --output .\output\validation\dry_run_matrix_evidence_bundle.json
 python .\Tools\validation\check_github_evidence_bundle.py --repo-root . --output .\output\validation\github_evidence_bundle.json
+python .\Tools\validation\check_selective_execution_plan.py --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json
 python .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output .\output\validation\repository_change_proposals_contract.json
 python .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest .\output\patch_specs\proposal_patch_specs_manifest.json --output .\output\validation\patch_spec_drafts.json
 python .\Tools\validation\check_reviewed_patch_specs.py --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_manifest.json --output .\output\validation\reviewed_patch_specs.json
@@ -147,6 +149,7 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_dry_run_matrix_evidence_bundle.py` | Validates compact Git-trackable dry-run matrix evidence bundles. | No |
 | `check_ai_pipeline_report_contract.py` | Validates one schema-v6 AI pipeline report, including dry-run-only semantics when requested. | No |
 | `check_github_evidence_bundle.py` | Validates Git-trackable AI/provider evidence bundle shape and decision fields without reading ignored `output/` contents. | No |
+| `check_selective_execution_plan.py` | Validates report-only selective execution plan recommendations, local-only command sets and patch-spec candidate boundaries. | No |
 | `check_repository_change_proposals.py` | Validates manual-review repository proposal reports and their code/Markdown/JSON suggestion descriptors. | No |
 | `check_patch_spec_drafts.py` | Validates proposal-derived draft patch specs under `output/patch_specs/` and rejects queued or concrete replacements. | No |
 | `check_reviewed_patch_specs.py` | Validates reviewed patch specs and reruns dry-run without writing source files. | No |
@@ -158,6 +161,31 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_generated_python_policy.py` | Validates generic generated Python syntax and hazard policy. | No |
 | `check_generated_artifact_path_policy.py` | Validates generated artifact destination paths. | No |
 | `check_generated_blender_script_policy.py` | Validates generated Blender Python scripts before execution. | No |
+
+## Selective execution plan validation
+
+The selective planner reads compact context/evidence artifacts and recommends the next validators plus candidate patch specs. It remains report-only.
+
+Build and validate:
+
+```powershell
+python .\Tools\ai\build_selective_execution_plan.py --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md
+python .\Tools\validation\check_selective_execution_plan.py --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json
+```
+
+The validator checks:
+
+```text
+kind == selective_execution_plan
+apply_mode == report_only
+provider_execution_performed == false
+patch_application_performed == false
+recommended validators are command-bearing
+recommended patch specs remain manual_review_only
+local-only GPU/NPU evidence commands are present
+```
+
+This validator does not execute providers, run validators from the plan, apply patches, run Blender or write source targets.
 
 ## Execution plan status validation
 
@@ -526,6 +554,8 @@ python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --out
 python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy_from_matrix.json
 python .\Tools\ai\build_dry_run_matrix_evidence_bundle.py --repo-root . --basename ai_pipeline_dry_run_matrix_evidence
 python .\Tools\validation\check_dry_run_matrix_evidence_bundle.py --repo-root . --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\ai_pipeline_dry_run_matrix_evidence.json --output .\output\validation\dry_run_matrix_evidence_bundle.json
+python .\Tools\ai\build_selective_execution_plan.py --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md
+python .\Tools\validation\check_selective_execution_plan.py --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json
 python .\Tools\validation\check_package_structure.py --repo-root . --output .\output\validation\package_structure.json
 python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\output\validation\json_artifacts.json
 python .\Tools\validation\check_github_evidence_bundle.py --repo-root . --output .\output\validation\github_evidence_bundle.json
