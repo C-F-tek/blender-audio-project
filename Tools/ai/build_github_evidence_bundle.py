@@ -57,6 +57,18 @@ def compact_value(value: Any, *, max_string: int = 500) -> Any:
     return value
 
 
+def as_list(value: Any) -> list[Any]:
+    if isinstance(value, list):
+        return value
+    if value is None:
+        return []
+    return [value]
+
+
+def list_contains(value: Any, expected: str) -> bool:
+    return any(str(item).lower() == expected.lower() for item in as_list(value))
+
+
 def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
     rel = path.relative_to(repo_root).as_posix() if path.is_absolute() and path.is_relative_to(repo_root) else str(path)
     data = read_json(path)
@@ -156,6 +168,54 @@ def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
     }
 
 
+def report_summaries(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [item.get("summary", {}) for item in reports if isinstance(item.get("summary"), dict)]
+
+
+def npu_marked_unusable(reports: list[dict[str, Any]]) -> bool:
+    """Return whether validation evidence marks NPU output unusable for advisory.
+
+    Older evidence bundles only checked excluded context files. Current reports can
+    express the same decision through ai_workload_report_quality.unusable_lanes,
+    lane routing excluded_advisory_lanes, or the NPU decode remediation checks.
+    """
+
+    for summary in report_summaries(reports):
+        if list_contains(summary.get("unusable_lanes"), "npu"):
+            return True
+        checks = summary.get("checks") if isinstance(summary.get("checks"), dict) else {}
+        if checks.get("npu_usable_for_advisory") is False:
+            return True
+        if str(checks.get("npu_classification") or "").lower() in {"unusable_output", "unusable"}:
+            return True
+    return False
+
+
+def npu_marked_excluded_from_advisory(reports: list[dict[str, Any]]) -> bool:
+    """Return whether routing/evidence excludes NPU from advisory context."""
+
+    for summary in report_summaries(reports):
+        routing = summary.get("routing") if isinstance(summary.get("routing"), dict) else {}
+        if list_contains(routing.get("excluded_advisory_lanes"), "npu"):
+            return True
+        for ctx in as_list(routing.get("excluded_context_files")):
+            if isinstance(ctx, dict) and ctx.get("lane") == "npu" and ctx.get("trusted") is False:
+                return True
+
+        context = summary.get("context") if isinstance(summary.get("context"), dict) else {}
+        excluded_context = context.get("excluded_context_files") or []
+        if "output/ai_packets/npu_real_workload_report.md" in excluded_context:
+            return True
+        advisory_routing = context.get("advisory_context_routing") if isinstance(context.get("advisory_context_routing"), dict) else {}
+        if list_contains(advisory_routing.get("excluded_advisory_lanes"), "npu"):
+            return True
+    return False
+
+
+def npu_excluded_when_unusable(reports: list[dict[str, Any]]) -> bool:
+    return npu_marked_unusable(reports) and npu_marked_excluded_from_advisory(reports)
+
+
 def build_bundle(repo_root: Path, report_paths: list[str], basename: str, output_dir: Path) -> tuple[dict[str, Any], str]:
     resolved = []
     for raw in report_paths:
@@ -176,11 +236,7 @@ def build_bundle(repo_root: Path, report_paths: list[str], basename: str, output
                 or (item.get("summary", {}).get("ollama", {}) or {}).get("used") is True
                 for item in reports
             ),
-            "npu_excluded_when_unusable": any(
-                any((ctx.get("lane") == "npu" and ctx.get("trusted") is False) for ctx in item.get("summary", {}).get("routing", {}).get("excluded_context_files", []) if isinstance(ctx, dict))
-                or "output/ai_packets/npu_real_workload_report.md" in (item.get("summary", {}).get("context", {}).get("excluded_context_files") or [])
-                for item in reports
-            ),
+            "npu_excluded_when_unusable": npu_excluded_when_unusable(reports),
             "provider_execution_seen": any(item.get("summary", {}).get("provider_execution_performed") is True for item in reports),
             "npu_decode_smoke_passed": any(
                 item.get("kind") == "npu_decode_smoke_diagnostic" and item.get("passed") is True and item.get("summary", {}).get("provider_execution_performed") is True

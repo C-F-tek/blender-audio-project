@@ -1,0 +1,71 @@
+﻿{
+    "schema_version":  1,
+    "kind":  "hybrid_multistep_evidence_fix_validation",
+    "generated_at":  "2026-05-01T11:11:21.9751695+02:00",
+    "branch":  "codex/hybrid-multistep-evidence-fix",
+    "head_sha":  "f9d6e4900f4883f463d8964c94452ee0ca7d9ea0",
+    "pr":  64,
+    "base_pr":  63,
+    "script_line_counts":  {
+                               "Tools/ai/build_github_evidence_bundle.py":  326,
+                               "Tools/workflow/run_local_ai_task_via_pipeline.ps1":  335
+                           },
+    "adapter_dry_run_manifest":  "output/local_ai_runs/issue62_multistep_adapter_dryrun/pipeline/local_ai_task_pipeline_adapter_manifest.json",
+    "multistep_provider_workflow_requested":  true,
+    "provider_execution_requested":  true,
+    "patch_application_performed":  false,
+    "dry_run":  true,
+    "validations":  [
+                        {
+                            "path":  "./output/validation/python_syntax.json",
+                            "exists":  true,
+                            "kind":  "python_syntax",
+                            "passed":  true,
+                            "errors":  [
+
+                                       ],
+                            "warnings":  [
+
+                                         ]
+                        },
+                        {
+                            "path":  "./output/validation/docs_links.json",
+                            "exists":  true,
+                            "kind":  "docs_links",
+                            "passed":  true,
+                            "errors":  [
+
+                                       ],
+                            "warnings":  [
+
+                                         ]
+                        },
+                        {
+                            "path":  "./output/validation/validation_report_contract.json",
+                            "exists":  true,
+                            "kind":  "validation_report_contract",
+                            "passed":  true,
+                            "errors":  [
+
+                                       ],
+                            "warnings":  [
+
+                                         ]
+                        }
+                    ],
+    "expected_fix":  {
+                         "npu_excluded_when_unusable_sources":  [
+                                                                    "ai_workload_report_quality.unusable_lanes",
+                                                                    "ai_workload_quality_lane_routing.routing.excluded_advisory_lanes",
+                                                                    "npu_decode_quality_remediation.checks.npu_usable_for_advisory == false",
+                                                                    "legacy excluded context-file signals"
+                                                                ]
+                     },
+    "passed":  true,
+    "errors":  [
+
+               ],
+    "warnings":  [
+
+                 ]
+}

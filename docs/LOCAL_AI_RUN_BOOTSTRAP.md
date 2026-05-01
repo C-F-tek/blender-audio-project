@@ -19,6 +19,23 @@ forgetting compact evidence bundles
 mixing GitHub-only review with local workstation evidence
 ```
 
+## Hybrid master-AI / local-pipeline model
+
+The current operating model is hybrid.
+
+```text
+Chat / GitHub-only AI / Codex-style control plane
+  -> strategic planning, review, issue/PR orchestration, small edits, human-facing summaries
+
+Local AI/NPU prototype pipeline
+  -> heavy local context processing, validators, advisory packets, repository proposals, compact evidence
+
+Human / master AI
+  -> approves promotion from advisory/proposal outputs to patch specs, reviewed replacements, apply or merge
+```
+
+Codex/GitHub-only AI is not obsolete. It remains useful as a master/control-plane during the transition. The local pipeline should take the token-heavy local work and produce report-only/proposal-only artifacts for review.
+
 ## Non-interactive entrypoint mode
 
 Local AI runners may be launched without an interactive chat.
@@ -35,10 +52,19 @@ Current task index:
 docs/LOCAL_AI_TASKS/README.md
 ```
 
-Current issue #57 entrypoint:
+Current issue #62 entrypoint:
 
 ```text
-docs/LOCAL_AI_TASKS/issue-57-docs-congruence-cleanup.md
+docs/LOCAL_AI_TASKS/issue-62-hybrid-master-ai-local-pipeline.md
+```
+
+Preferred project-owned runner path:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+  -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
+  -TaskBranch codex/hybrid-local-pipeline-runner `
+  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
 ```
 
 A local AI runner started from a task file must still read `AGENTS.md` first, then this bootstrap, then the task file.
@@ -87,14 +113,14 @@ Then read the active task object:
 GitHub issue, PR body, execution plan or docs/LOCAL_AI_TASKS/*.md file referenced by the runner
 ```
 
-For the current post-PR #55 cleanup task, read:
+For the current hybrid runner task, read:
 
 ```text
-docs/LOCAL_AI_TASKS/issue-57-docs-congruence-cleanup.md
-https://github.com/C-F-tek/blender-audio-project/issues/57
-docs/EXECUTION_PLANS/completed/2026-05-01_selective_planner_prototype.md
-docs/AI_SELECTIVE_PLANNER.md
-docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_selective_planner_real_evidence.md
+docs/LOCAL_AI_TASKS/issue-62-hybrid-master-ai-local-pipeline.md
+https://github.com/C-F-tek/blender-audio-project/issues/62
+Tools/workflow/run_local_ai_markdown_task.ps1
+Tools/workflow/run_local_ai_task_via_pipeline.ps1
+docs/LOCAL_AI_WORKFLOW.md
 ```
 
 If a file is missing, report it as missing. Do not invent its contents.
@@ -191,6 +217,16 @@ python .\Tools\validation\check_validation_report_contract.py --repo-root . --ou
 git diff --check
 ```
 
+For local pipeline runner validation:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
+  -PromptFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
+  -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
+  -RunDir .\output\local_ai_runs\issue62_adapter_smoke `
+  -DryRun
+```
+
 For selective-planner output validation:
 
 ```powershell
@@ -254,20 +290,21 @@ No runtime files, provider behavior, generated indexes, full analysis JSON or Bl
 
 ## Current local task pointer
 
-The current cleanup task is tracked in:
+The current hybrid runner task is tracked in:
 
 ```text
-docs/LOCAL_AI_TASKS/issue-57-docs-congruence-cleanup.md
-GitHub issue #57
+docs/LOCAL_AI_TASKS/issue-62-hybrid-master-ai-local-pipeline.md
+GitHub issue #62
 ```
 
 The expected work is:
 
 ```text
-move the selective planner execution plan from active/ to completed/
-update status fields
-run documentation congruence and execution-plan validators
-open a small docs/workflow-state PR
+define the hybrid master-AI/local-pipeline model
+prefer project-owned local pipeline adapter examples over Codex CLI examples
+keep Codex/GitHub-only AI available as master/control-plane during transition
+add report-only local pipeline adapter
+validate without implicit provider execution
 ```
 
-No GPU/NPU run is required for issue #57.
+No GPU/NPU run is required for issue #62 unless explicitly requested.

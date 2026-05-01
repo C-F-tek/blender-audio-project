@@ -10,6 +10,10 @@
   If -RunnerCommand is provided, the command is executed after placeholder
   substitution. No provider/GPU/NPU execution is performed by this wrapper.
 
+  The preferred project-owned runner is Tools/workflow/run_local_ai_task_via_pipeline.ps1.
+  External runners such as Codex CLI may still be used by the master/control-plane
+  AI workflow during the transition, but they are not the default local runner path.
+
 .EXAMPLE
   .\Tools\workflow\run_local_ai_markdown_task.ps1 `
     -TaskFile .\docs\LOCAL_AI_TASKS\issue-57-docs-congruence-cleanup.md `
@@ -17,9 +21,9 @@
 
 .EXAMPLE
   .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-    -TaskFile .\docs\LOCAL_AI_TASKS\issue-57-docs-congruence-cleanup.md `
-    -TaskBranch codex/docs-congruence-cleanup `
-    -RunnerCommand 'codex exec --input "{PROMPT_FILE}"'
+    -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
+    -TaskBranch codex/hybrid-local-pipeline-runner `
+    -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
 #>
 [CmdletBinding()]
 param(
@@ -219,6 +223,8 @@ $taskText
 
 $prompt | Set-Content -LiteralPath $promptPath -Encoding UTF8
 
+$pipelineExample = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile `"{PROMPT_FILE}`" -TaskFile `"{TASK_FILE}`" -RunDir `"{RUN_DIR}`""
+
 $procedure = @"
 # Local AI Run Procedure
 
@@ -239,9 +245,20 @@ $(Get-RepoRelativePath $repoRoot $manifestPath)
   -TaskBranch $TaskBranch
 ```
 
-## Runner command placeholder contract
+## Preferred project-owned runner
 
-If your local AI CLI accepts a prompt file, call this wrapper with `-RunnerCommand`.
+The preferred local runner is the repository pipeline adapter:
+
+```powershell
+.\Tools\workflow\run_local_ai_markdown_task.ps1 `
+  -TaskFile .$([System.IO.Path]::DirectorySeparatorChar)$($taskRelative.Replace('/', [System.IO.Path]::DirectorySeparatorChar)) `
+  -TaskBranch $TaskBranch `
+  -RunnerCommand '$pipelineExample'
+```
+
+This mode creates advisory packets/proposals through repository tools. It does not apply patches and does not execute providers unless explicit provider flags are passed to the adapter.
+
+## Runner command placeholder contract
 
 Available placeholders:
 
@@ -254,19 +271,7 @@ Available placeholders:
 {BRANCH}
 ```
 
-Examples:
-
-```powershell
-.\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .$([System.IO.Path]::DirectorySeparatorChar)$($taskRelative.Replace('/', [System.IO.Path]::DirectorySeparatorChar)) `
-  -TaskBranch $TaskBranch `
-  -RunnerCommand 'codex exec --input "{PROMPT_FILE}"'
-
-.\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .$([System.IO.Path]::DirectorySeparatorChar)$($taskRelative.Replace('/', [System.IO.Path]::DirectorySeparatorChar)) `
-  -TaskBranch $TaskBranch `
-  -RunnerCommand 'python .\Tools\local_ai_runner.py --prompt "{PROMPT_FILE}" --repo-root "{REPO_ROOT}"'
-```
+External runners can still be used by the master/control-plane workflow during the transition, but they are not the default local path.
 
 ## No runner mode
 
@@ -276,7 +281,7 @@ If `-RunnerCommand` is omitted, this wrapper only prepares the packet. Use:
 $(Get-RepoRelativePath $repoRoot $promptPath)
 ```
 
-as the input file for your local AI tool.
+as the input file for a local runner.
 "@
 
 $procedure | Set-Content -LiteralPath $procedurePath -Encoding UTF8
@@ -291,6 +296,7 @@ $manifest = [ordered]@{
     task_file = $taskRelative
     agents_file = "AGENTS.md"
     bootstrap_file = "docs/LOCAL_AI_RUN_BOOTSTRAP.md"
+    preferred_runner = "Tools/workflow/run_local_ai_task_via_pipeline.ps1"
     run_dir = (Get-RepoRelativePath $repoRoot $runDir)
     prompt_file = (Get-RepoRelativePath $repoRoot $promptPath)
     procedure_file = (Get-RepoRelativePath $repoRoot $procedurePath)
