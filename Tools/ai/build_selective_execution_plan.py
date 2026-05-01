@@ -319,7 +319,7 @@ def build_recommendations(
     validators.append(validator_item(
         "ai_context_pack_contract",
         "The selective planner depends on context-pack evidence as its first input.",
-        r"python .\Tools\validation\check_ai_context_pack_contract.py --repo-root . --context-pack .\docs\LOCAL_VALIDATION_EVIDENCE\project_self_improvement_context_pack.json --output .\output\validation\ai_context_pack_contract.json",
+        r"python .\Tools\validation\check_ai_context_pack_contract.py --repo-root . --pack .\output\ai_context_packs\project_self_improvement.json --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\project_self_improvement_context_pack_evidence.json --output .\output\validation\ai_context_pack_contract.json",
     ))
     validators.append(validator_item(
         "dry_run_matrix_evidence_bundle",
@@ -401,7 +401,7 @@ def command_sets() -> dict[str, list[str]]:
     """Return copy-pasteable command sets."""
     return {
         "build_and_validate_selective_plan": [
-            r"python .\Tools\ai\build_ai_context_pack.py --repo-root . --basename project_self_improvement_context_pack",
+            r"python .\Tools\ai\build_ai_context_pack.py --repo-root . --profile project_self_improvement",
             r"python .\Tools\ai\build_selective_execution_plan.py --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md",
             r"python .\Tools\validation\check_selective_execution_plan.py --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json",
         ],
