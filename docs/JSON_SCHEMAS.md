@@ -72,6 +72,52 @@ The helper does not force older repository validators to change shape immediatel
 
 These contracts describe report artifacts used by the local AI/provider orchestration workflow. They are not Blender runtime schemas and must not be used to change prompt prose, model settings, provider execution behavior or generated analysis JSON.
 
+### AI workload report quality
+
+```text
+File pattern:
+output/validation/ai_workload_report_quality.json
+Producer:
+Tools/validation/check_ai_workload_report_quality.py
+Consumer:
+Tools/ai/workload_quality.py
+Tools/ai/build_workload_quality_lane_routing.py
+Tools/ai/suggest_repository_updates.py
+Tools/ai/build_repository_change_proposals.py
+Tools/ai/build_github_evidence_bundle.py
+Required fields:
+schema_version, kind, repo_root, passed, errors, warnings, provider_execution_performed, source_writes_performed, policy, mode, usable_lanes, unusable_lanes, decision, checks
+Required kind:
+ai_workload_report_quality
+Required policy:
+usable_text_lanes_only_for_advisory_context
+Provider semantics:
+This report is built from already-generated workload reports and must keep provider_execution_performed=false.
+Notes:
+Each checks.results entry exposes path, lane, provider, compute_lane, exists, usable, classification, advisory_use, provider_execution_performed, errors, warnings and metrics.
+Ollama/GPU/CUDA can be primary advisory only when classified usable_text.
+NPU/OpenVINO reports classified unusable_output are excluded from advisory context.
+```
+
+### NPU review metadata
+
+```text
+File pattern:
+output/validation/npu_review_metadata.json
+Producer:
+Tools/npu/run_npu_review.py --metadata-out
+Consumer:
+validation report contract checks, workload-gate reviewers and local AI handoffs.
+Required fields:
+schema_version, kind, repo_root, passed, errors, warnings, engine, provider, device, metadata_only, provider_execution_performed, generated_output_written, source_writes_performed, patch_application_performed, advisory_role, quality_gate_required_before_advisory_use
+Required kind:
+npu_review_metadata
+Provider semantics:
+metadata_only=true means no provider was loaded, no generated review text was written and provider_execution_performed=false.
+Notes:
+A metadata sidecar does not make NPU advisory. It records that quality_gate_required_before_advisory_use is true.
+```
+
 ### AI workload quality lane routing
 
 ```text

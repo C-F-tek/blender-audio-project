@@ -105,6 +105,25 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_loc
 
 Use this when Carmine wants real workstation artifacts for deeper testing.
 
+## AI workload report quality gate
+
+The local AI core/tool activation lane should use the AI workload report quality gate after provider/probe reports exist and before generated workload reports influence advisory packets.
+
+Validator:
+
+```powershell
+python .\Toolsalidation\check_ai_workload_report_quality.py --repo-root . --output .\outputalidationi_workload_report_quality.json
+```
+
+Expected routing semantics:
+
+```text
+Ollama/GPU usable_text -> primary advisory context
+NPU/OpenVINO unusable_output -> excluded from advisory context
+```
+
+The quality gate remains report-only. It must not execute providers, promote NPU to advisory, introduce OpenVINO GPU as primary lane or apply patches.
+
 ## Expected outputs
 
 ```text

@@ -230,6 +230,22 @@ generated_output_written=false
 quality_gate_required_before_advisory_use=true
 ```
 
+## Compatibility alias
+
+Some local reports and drift checks may refer to the promotion gate as:
+
+```text
+quality_report_required_before_advisory_use
+```
+
+This is equivalent to the sidecar field:
+
+```text
+quality_gate_required_before_advisory_use
+```
+
+Both names mean that workload report quality must be checked before any generated workload text is trusted as advisory context.
+
 ## Guardrails
 
 The quality gate must not:
