@@ -11,10 +11,10 @@ The current GitHub repository slug is still `C-F-tek/blender-audio-project`, but
 Current `master` / `origin/master` state verified on 2026-05-01:
 
 ```text
-ef6da71 feat(ai): add full-context golden proposal generator (#82)
+2d2e2b9 test(ai): add final evidence bundle builder smoke
 ```
 
-Recent merged work after the original PR #48 provider baseline:
+Recent merged work after the original PR #48 provider baseline includes these current layers:
 
 | PR | Status | Meaning |
 |---:|---|---|
@@ -26,6 +26,20 @@ Recent merged work after the original PR #48 provider baseline:
 | #80 | merged | Added compact evidence from the real full-context golden path run. |
 | #81 | merged | Added the full-context golden proposal coverage validator. |
 | #82 | merged | Added the deterministic full-context golden proposal generator. |
+| #83 | merged | Synced the current local AI project documentation state. |
+| #84 | merged | Added local AI adapter manifest contract validation. |
+| #85 | merged | Added the NPU knowledge-broker / context-oracle packet. |
+| #86 | merged | Added reusable local AI enrichment plan helper. |
+| #87 | merged | Added the full-context golden path preset. |
+| #88 | merged | Added selected-chunks evidence standard block. |
+| #89 | merged | Added full-context golden docs contract validation. |
+| #90 | merged | Added the local AI core/tool activation lane. |
+| #91 | merged | Promoted the AI workload report quality gate. |
+| #92 | merged | Added AI workload quality gate docs-drift tooling. |
+| #93 | merged | Added code contract drift analyzer. |
+| #95-#100 | merged | Added and refined megalithic repository review tooling and signal extraction. |
+| #103-#105 | merged | Added GPU planner recommendation diagnostics and fallback readiness fixes. |
+| #106 | merged | Included patch plans and artifact manifest summaries in evidence bundles. |
 
 PR #77 remains open on GitHub but is superseded by merged PR #78 unless a human explicitly reopens that line of work.
 
@@ -37,6 +51,7 @@ Validated evidence:
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.json
 ```
 
 Evidence decision summary:
@@ -68,9 +83,12 @@ Markdown task entrypoint
   -> selected-chunks evidence
   -> bounded context pack
   -> SQLite-backed agent state packet
+  -> enrichment plan / adapter manifest / NPU knowledge-broker packet
   -> explicit multistep GPU/NPU provider workflow
   -> advisory/proposals
+  -> agent review evidence sufficiency and manual-review documentation patch plans
   -> deterministic full-context golden proposal generator
+  -> evidence bundle with patch-plan and artifact manifest summaries
   -> manual-review-only patch-spec candidates
 ```
 
@@ -84,6 +102,14 @@ Important current source additions:
 | `Tools/validation/check_selective_execution_plan.py` | Validates selective planner reports. |
 | `Tools/ai/build_full_context_golden_proposals.py` | Deterministically emits the full-context golden proposal families P1-P6 for manual review. |
 | `Tools/validation/check_full_context_golden_proposals.py` | Validates semantic coverage of full-context golden proposal reports. |
+| `Tools/ai/build_local_ai_enrichment_plan.py` | Builds reusable app-agnostic enrichment plans for local AI runs. |
+| `Tools/npu/build_npu_knowledge_broker_packet.py` | Builds NPU knowledge-broker/context-oracle packets without promoting NPU to primary advisory. |
+| `Tools/workflow/run_local_ai_core_tool_activation.ps1` | Orchestrates the app-agnostic local AI core/tool activation lane. |
+| `Tools/ai/build_agent_review_evidence_sufficiency.py` | Summarizes whether agent review evidence is ready for manual-review patch planning. |
+| `Tools/ai/build_agent_review_patch_plan.py` | Builds manual-review-only documentation patch plans. |
+| `Tools/ai/run_agent_gpu_deep_planning_review.py` | Runs explicit GPU planner review flows for local-only diagnostics. |
+| `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` | Coordinates explicit GPU/NPU planning/evidence orchestration. |
+| `Tools/validation/run_agent_review_patch_plan_full_validation.py` | Canonical provider-free validation wrapper for documentation patch-plan evidence. |
 
 Important current evidence additions:
 
@@ -94,6 +120,10 @@ docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_core_ai_backend_context_pack_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/local_ai_core_tool_activation_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/gpu_planner_full_after_fallback_fix_evidence_20260501-225331.json
+docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.json
 ```
 
 ## Provider baseline status
@@ -214,7 +244,8 @@ risks
 | GHO-006 | in progress | Provider adapter work remains explicit and quality-gated through the local task adapter and multistep workflow flags. |
 | GHO-007 | in progress | Memory policy is now used by the local AI task adapter through SQLite-backed agent state packets; durable promotion rules remain separate. |
 | GHO-008 | in progress | NPU is validated for decode smoke, not yet for general advisory lane. |
-| GHO-009 | in progress | Selected semantic chunks, context packs and full-context golden proposals now exist; next work should promote reviewed proposal families one at a time. |
+| GHO-009 | in progress | Selected semantic chunks, context packs and full-context golden proposals now exist; promote reviewed proposal families one at a time. |
+| GHO-010 | in progress | Local AI core/tool activation, agent-review patch planning and evidence-bundle summaries now exist; keep using compact evidence instead of ignored output reports. |
 
 ## Current local owner batch
 
@@ -227,13 +258,10 @@ git pull --ff-only origin master
 git status
 ```
 
-Recommended full-context local run when Carmine can execute GPU/NPU workloads:
+Recommended local core activation run when Carmine can execute the workstation workflow:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
-  -TaskBranch codex/full-context-ai-npu-golden-run `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -BuildSemanticChunks -SelectSemanticChunks -BuildSelectedChunksEvidence -SelectedChunksEvidenceBasename full_context_golden_selected_chunks_evidence -ChunkQuery "workflow adapter local ai full context enrichment selected chunks sqlite memory provider multistep proposals validators npu knowledge broker context oracle retrieval ranking" -ChunkPathBoost Tools/workflow,Tools/ai,Tools/validation,Tools/npu -SelectedChunksBasename full_context_golden_selected_chunks -MaxSelectedChunks 24 -MaxSelectedChunkChars 32000 -MaxSelectedChunkExcerptChars 2500 -BuildContextPack -ContextPackProfile core_ai_backend -ContextPackBasename full_context_golden_core_ai_backend -ContextPackEvidenceBasename full_context_golden_core_ai_backend_context_pack_evidence -BuildAgentStatePacket -AgentStateBasename full_context_golden_agent_state -AgentStateObjective "Run full-context local AI/NPU golden path and propose controlled complexity escalation such as core helper, validator, wrapper flag, docs contract or NPU knowledge broker." -MemoryDb .\indexAI\agent_memory\agent_memory.sqlite -SaveInputsToMemoryDb -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename full_context_golden_local_ai_context -ProposalBasename full_context_golden_local_ai_context_proposals -EvidenceBasename full_context_golden_local_ai_context_evidence -MultistepBasename full_context_golden_local_ai_context_multistep -MultistepProposalBasename full_context_golden_local_ai_context_multistep_proposals -MultistepEvidenceBasename full_context_golden_local_ai_context_multistep_evidence'
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_core_tool_activation.ps1
 ```
 
 After documentation/source changes:
@@ -247,12 +275,13 @@ git diff --stat
 
 ## Recommended next technical directions
 
-1. Promote the full-context golden proposal families P1-P6 one at a time into reviewed patch specs or focused implementation PRs.
-2. Add stricter contract docs for the full-context golden proposal report and selected-chunks evidence flow where still missing.
-3. Continue improving the selective planner so it can rank validators and distinguish GitHub-only from local-only next actions.
-4. Open a follow-up milestone for NPU advisory promotion only if a real workload quality gate can classify NPU output as `usable_text`.
-5. Decide whether to rename the GitHub repository to match the new working title.
-6. Keep Blender runtime out of core provider orchestration work.
+1. Continue from local AI core/tool activation outputs and agent-review documentation patch plans.
+2. Keep improving evidence bundles so patch plans, selected chunks and artifact manifests are visible in compact GitHub evidence.
+3. Promote one validated patch-plan/proposal family at a time into focused implementation PRs.
+4. Continue improving the selective planner so it can rank validators and distinguish GitHub-only from local-only next actions.
+5. Open a follow-up milestone for NPU advisory promotion only if a real workload quality gate can classify NPU output as `usable_text`.
+6. Decide whether to rename the GitHub repository to match the new working title.
+7. Keep Blender runtime out of core provider orchestration work.
 
 ## Do not do yet
 
@@ -282,6 +311,9 @@ compact GitHub evidence bundles
 task-scoped AI context packs for safer continuation
 selected semantic chunks for focused context
 full-context golden proposal generation for controlled next steps
+local AI core/tool activation
+agent-review patch-plan evidence
+evidence bundles that include patch-plan and artifact manifest summaries
 ```
 
 Blender/audio remains important as a legacy/current application domain, but not as the project identity or architecture boundary.

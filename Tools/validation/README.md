@@ -688,9 +688,11 @@ python .\Tools\validation\run_agent_review_patch_plan_full_validation.py `
   --bundle-basename agent_review_doc_patch_plan_evidence `
   --output .\output\validation\agent_review_patch_plan_full_validation.json `
   --markdown-output .\output\validation\agent_review_patch_plan_full_validation.md
+```
 
 The wrapper runs:
 
+```text
 run_agent_review_patch_plan_smoke.py
 check_docs_links.py
 check_python_syntax.py
@@ -699,10 +701,13 @@ build_github_evidence_bundle.py
 check_github_evidence_bundle.py
 git diff --check
 git status --short
+```
 
 Expected tracked evidence:
 
+```text
 docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
+```
 
 This lane is provider-free, patch-runner-free and documentation-only. Long reports remain under ignored output/**; GitHub review uses only the compact task-scoped evidence bundle.

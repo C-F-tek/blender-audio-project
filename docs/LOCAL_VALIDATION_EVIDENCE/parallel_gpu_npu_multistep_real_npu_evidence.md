@@ -79,7 +79,7 @@
 - JSON OK: `True`
 - Kind: `post_validation_ai_work_packet`
 - Passed: `True`
-- Ollama: `{'used': True, 'model': None, 'error': '', 'text_preview': '```markdown\n# Next Safe Milestone\n\n**Title:** Review and Fix Failing Validation Reports\n\n**Details:** \n- Focus on fixing the failing validation reports identified in `C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\validation\\\\ai_workload_report_quality.json`.\n- Ensure that the AI workload report meets quality standards by addressing issues related to alphabetic character ratio, word count, and natural language appearance.\n\n# Files to Inspect\n\n1. **Validation Report:**\n   - `C:\\\\Users\\'}`
+- Ollama: `{'used': True, 'model': None, 'error': '', 'text_preview': '<markdown fence>\n# Next Safe Milestone\n\n**Title:** Review and Fix Failing Validation Reports\n\n**Details:** \n- Focus on fixing the failing validation reports identified in `C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\validation\\\\ai_workload_report_quality.json`.\n- Ensure that the AI workload report meets quality standards by addressing issues related to alphabetic character ratio, word count, and natural language appearance.\n\n# Files to Inspect\n\n1. **Validation Report:**\n   - `C:\\\\Users\\'}`
 
 ### `output/ai_packets/npu_ollama_primary_routing_proposals.json`
 

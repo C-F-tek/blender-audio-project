@@ -25,12 +25,16 @@ Blender/audio-reactive generation remains the first application domain and legac
 15. `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`
 16. `AI_CONTEXT_PACKS.md`
 17. `AI_SELECTIVE_PLANNER.md`
-18. `LOCAL_AI_TASKS/README.md`
-19. `AI_MEMORY_POLICY.md`
-20. `AI_PIPELINE_ARCHITECTURE.md`
-21. `AI_PIPELINE_REFACTOR_STATUS.md`
-22. `LOCAL_WORKSTATION_TARGET.md`
-23. Blender/audio docs only when entering that application domain.
+18. `LOCAL_AI_CORE_TOOL_ACTIVATION.md`
+19. `LOCAL_AI_TASKS/README.md`
+20. `AI_WORKLOAD_REPORT_QUALITY_GATE.md`
+21. `AI_REFERENCE_ONBOARDING.md`
+22. `AI_REFERENCE_SOURCE_MAP.md`
+23. `AI_MEMORY_POLICY.md`
+24. `AI_PIPELINE_ARCHITECTURE.md`
+25. `AI_PIPELINE_REFACTOR_STATUS.md`
+26. `LOCAL_WORKSTATION_TARGET.md`
+27. Blender/audio docs only when entering that application domain.
 
 ## Current validated provider posture
 
@@ -45,6 +49,7 @@ Validated evidence:
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.json
 ```
 
 Confirmed decisions:
@@ -70,6 +75,7 @@ npu_decode_smoke_passed: true
 | `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow, GPU/NPU parallelism and evidence handling. |
 | `JSON_SCHEMAS.md` | JSON/report contract notes and current schema gap index. |
 | `AI_SELECTIVE_PLANNER.md` | Report-only selective planner that recommends validators and candidate patch specs from context/evidence. |
+| `LOCAL_AI_CORE_TOOL_ACTIVATION.md` | App-agnostic activation lane for selected chunks, context packs, enrichment plans, knowledge broker packets, proposals and evidence. |
 | `LOCAL_AI_TASKS/README.md` | Non-interactive Markdown task entrypoints for local AI runs. |
 | `LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable local validation evidence. |
 | `../Tools/validation/README.md` | Local validation commands and report contracts. |
@@ -80,6 +86,7 @@ npu_decode_smoke_passed: true
 | File | Purpose |
 |---|---|
 | `AI_MEMORY_POLICY.md` | Retention, promotion and quarantine policy for generic agent memory. |
+| `AI_WORKLOAD_REPORT_QUALITY_GATE.md` | Documentation and validator workflow for workload quality-gate drift. |
 | `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local Git/GitHub validation, evidence, index regeneration, commit and push workflow. |
 | `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | GitHub-only continuation mode and local-validation handoff. |
 | `AI_CONTEXT_PACKS.md` | Task-scoped AI context pack profiles, builder contract and compact evidence workflow. |
@@ -88,6 +95,8 @@ npu_decode_smoke_passed: true
 | `MODULE_MAP.md` | Repository areas and navigation map. |
 | `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | External agent-first engineering patterns mapped into project actions. |
 | `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this project. |
+| `AI_REFERENCE_ONBOARDING.md` | AI-to-AI reference onboarding for current local AI/evidence lanes. |
+| `AI_REFERENCE_SOURCE_MAP.md` | Source map for AI reference docs and local evidence workflows. |
 
 ### AI artifact pipeline and generated policy
 
@@ -151,7 +160,13 @@ git commit -m "test: add local ai workflow evidence bundle"
 git push
 ```
 
-Preferred current full-context local AI task:
+Preferred current local AI core/tool activation:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_core_tool_activation.ps1
+```
+
+The full-context golden path remains available as a heavier task-specific run:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
