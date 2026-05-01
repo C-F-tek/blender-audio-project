@@ -21,7 +21,8 @@
   Provider execution remains explicit and opt-in through -UseExplicitProviders.
   Megalithic repository review is also opt-in through -RunMegalithicReview.
   Ollama/GPU live review inside the megalithic review remains opt-in through
-  -UseOllamaForMegalithicReview.
+  -UseOllamaForMegalithicReview. The PR draft is built from the refined
+  megalithic signal report, not from the raw wide-net findings.
 #>
 [CmdletBinding()]
 param(
@@ -87,6 +88,9 @@ $ContextPack = "output/ai_context_packs/full_context_golden_core_ai_backend.json
 $MegalithicReviewJson = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review.json"
 $MegalithicReviewMd = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review.md"
 $MegalithicReviewProposals = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review_proposals.json"
+$MegalithicRefinedReviewJson = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.json"
+$MegalithicRefinedReviewMd = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.md"
+$MegalithicRefinedProposals = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_proposals.json"
 $MegalithicReviewPrDraft = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_review_pr_draft.json"
 $MegalithicReviewPrDraftMd = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_review_pr_draft.md"
 
@@ -192,10 +196,18 @@ if (-not $DryRun) {
         Invoke-Checked -Label "Run optional all-resources megalithic repository review" -Block {
             python @MegalithicArgs
         }
-        Invoke-Checked -Label "Build megalithic review PR draft artifact" -Block {
-            python .\Tools\ai\build_megalithic_review_pr_draft.py `
+        Invoke-Checked -Label "Refine megalithic review signals" -Block {
+            python .\Tools\ai\refine_megalithic_review_signals.py `
                 --review $MegalithicReviewJson `
                 --proposals $MegalithicReviewProposals `
+                --output $MegalithicRefinedReviewJson `
+                --proposal-output $MegalithicRefinedProposals `
+                --markdown-output $MegalithicRefinedReviewMd
+        }
+        Invoke-Checked -Label "Build megalithic review PR draft artifact" -Block {
+            python .\Tools\ai\build_megalithic_review_pr_draft.py `
+                --review $MegalithicRefinedReviewJson `
+                --proposals $MegalithicRefinedProposals `
                 --output $MegalithicReviewPrDraft `
                 --markdown-output $MegalithicReviewPrDraftMd `
                 --base-branch master `
@@ -252,6 +264,9 @@ $Summary = [ordered]@{
         megalithic_review_json = $MegalithicReviewJson
         megalithic_review_markdown = $MegalithicReviewMd
         megalithic_review_proposals = $MegalithicReviewProposals
+        megalithic_refined_review_json = $MegalithicRefinedReviewJson
+        megalithic_refined_review_markdown = $MegalithicRefinedReviewMd
+        megalithic_refined_proposals = $MegalithicRefinedProposals
         megalithic_review_pr_draft = $MegalithicReviewPrDraft
         megalithic_review_pr_draft_markdown = $MegalithicReviewPrDraftMd
         macro_patch_manifest = "output/patch_specs/${Basename}_patch_specs_manifest.json"
@@ -279,6 +294,7 @@ New-Item -ItemType Directory -Force -Path "output/ai_pipeline" | Out-Null
     "- GitHub evidence: docs/LOCAL_VALIDATION_EVIDENCE/${EvidenceBasename}.json",
     "- NPU knowledge broker packet: $KnowledgePacket",
     "- Megalithic review: $MegalithicReviewJson",
+    "- Megalithic refined review: $MegalithicRefinedReviewJson",
     "- Megalithic review PR draft: $MegalithicReviewPrDraft",
     "- Macro patch manifest: output/patch_specs/${Basename}_patch_specs_manifest.json"
 ) | Set-Content -LiteralPath $SummaryMd -Encoding UTF8
