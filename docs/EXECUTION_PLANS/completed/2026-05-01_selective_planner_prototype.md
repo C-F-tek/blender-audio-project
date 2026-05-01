@@ -1,6 +1,11 @@
 # Selective Planner Prototype
 
-Status: completed
+## Status
+
+completed
+
+## Metadata
+
 Date: 2026-05-01
 Completed: 2026-05-01
 Scope: core AI/backend orchestration, validation and evidence planning

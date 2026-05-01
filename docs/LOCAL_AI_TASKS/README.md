@@ -41,7 +41,7 @@ This keeps token-heavy local work inside the local pipeline while preserving mas
 
 ## Recommended next sequence
 
-Run these tasks in order:
+Historical task progression:
 
 ```text
 1. consistency-local-ai-contracts-and-powershell.md
@@ -51,6 +51,15 @@ Run these tasks in order:
 ```
 
 The first task checks documentation/script consistency. The second task uses the consolidated model to review workflow and AI tools for safe patch-spec candidates. The third task plans the enrichment path that lets future local runs use SQLite memory, semantic chunks and bounded context packs to reduce token pressure on large MD/code work. The fourth task exercises the current full-context golden path and asks the local AI to propose controlled complexity increases such as a new core/helper function, validator, wrapper flag, documentation contract or patch-spec promotion.
+
+Current post-PR #82 next sequence:
+
+```text
+1. Treat full-context-ai-npu-golden-path.md as the preferred end-to-end local task.
+2. Use Tools/ai/build_full_context_golden_proposals.py to produce deterministic P1-P6 proposal families from the golden-path proposal report.
+3. Validate those proposals with check_repository_change_proposals.py and check_full_context_golden_proposals.py.
+4. Promote one proposal family at a time into reviewed patch specs or focused implementation PRs.
+```
 
 ## Runner expectation
 

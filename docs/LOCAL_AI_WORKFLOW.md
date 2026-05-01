@@ -45,10 +45,19 @@ Stage 5: Future local automation may replace more chat/GitHub-only work after qu
 
 ## Current validated state
 
-Evidence:
+Provider baseline evidence:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
+```
+
+Current full-context golden path evidence:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_core_ai_backend_context_pack_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
 ```
 
 Validated decisions:
@@ -73,13 +82,16 @@ Operational meaning:
 Repository context and local reports
   -> Markdown task entrypoint when non-interactive local execution is needed
   -> local AI run packet
+  -> semantic code chunks and selected focused chunks when useful
   -> task-scoped AI context pack when useful
+  -> optional SQLite-backed agent state packet
   -> workload quality gate
   -> quality-based advisory routing
   -> report-only local pipeline adapter
   -> explicit multistep provider workflow for heavy local analysis when requested
   -> primary advisory packet/proposals when explicitly requested and quality-gated
   -> repository proposals
+  -> full-context golden proposal families when requested
   -> proposal-derived draft patch specs
   -> reviewed dry-run patch specs from explicit replacement plans
   -> compact evidence bundle
@@ -129,16 +141,16 @@ The non-interactive wrapper prepares a task packet from repository Markdown inst
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
-  -TaskBranch codex/hybrid-local-pipeline-runner
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -TaskBranch codex/full-context-ai-npu-golden-run
 ```
 
 The preferred project-owned runner path invokes the local pipeline adapter:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
-  -TaskBranch codex/hybrid-local-pipeline-runner `
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -TaskBranch codex/full-context-ai-npu-golden-run `
   -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
 ```
 
@@ -158,7 +170,7 @@ Explicit multistep adapter mode:
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
   -PromptFile .\output\local_ai_runs\<run>\local_ai_prompt.md `
-  -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
   -RunDir .\output\local_ai_runs\<run> `
   -Profile npu `
   -RunMultistepProviderWorkflow `
@@ -202,8 +214,12 @@ Use this runner for explicit provider diagnostics/evidence. Do not use it as an 
 | `Tools/workflow/run_local_ai_markdown_task.ps1` | Builds non-interactive local AI run packets from Markdown task entrypoints. |
 | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | Preferred project-owned adapter from local task prompt to report-only/proposal-only pipeline outputs; can explicitly call multistep provider workflow. |
 | `docs/LOCAL_AI_TASKS/` | Markdown task entrypoints for non-interactive local runs. |
+| `Tools/ai/select_semantic_code_chunks.py` | Selects bounded task-focused semantic chunks from the generated semantic chunk index. |
+| `Tools/validation/check_selected_semantic_chunks.py` | Validates selected-chunks bundles and can emit compact selected-chunks evidence. |
 | `Tools/ai/build_ai_context_pack.py` | Builds bounded task-scoped context packs and compact evidence for future AI/human task planning. |
 | `Tools/validation/check_ai_context_pack_contract.py` | Validates context packs and context-pack evidence without executing providers. |
+| `Tools/ai/build_selective_execution_plan.py` | Builds report-only recommendations for next validators and candidate patch specs from context/evidence. |
+| `Tools/validation/check_selective_execution_plan.py` | Validates selective execution plan reports. |
 | `Tools/validation/check_ai_workload_report_quality.py` | Classifies workload reports into usable/unusable lanes. |
 | `Tools/ai/workload_quality.py` | Shared routing helper for trusted/excluded advisory context. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | Builds routing report and declares primary advisory provider. |
@@ -217,6 +233,8 @@ Use this runner for explicit provider diagnostics/evidence. Do not use it as an 
 | `Tools/validation/check_patch_spec_drafts.py` | Validates draft patch-spec contracts and blocks queued/concrete replacements. |
 | `Tools/ai/promote_patch_spec_draft.py` | Combines one draft spec with an explicit replacement plan and writes a reviewed dry-run-passing spec under `output/patch_specs/`. |
 | `Tools/validation/check_reviewed_patch_specs.py` | Revalidates reviewed patch specs and reruns dry-run without writing source files. |
+| `Tools/ai/build_full_context_golden_proposals.py` | Builds deterministic manual-review-only proposal families P1-P6 from the full-context golden path. |
+| `Tools/validation/check_full_context_golden_proposals.py` | Validates full-context golden proposal coverage beyond the generic proposal schema. |
 | `Tools/ai/build_dry_run_matrix_evidence_bundle.py` | Summarizes ignored dry-run matrix reports into compact Git-trackable evidence. |
 | `Tools/validation/check_dry_run_matrix_evidence_bundle.py` | Validates dry-run matrix evidence without executing providers or matrix cases. |
 | `Tools/ai/build_github_evidence_bundle.py` | Summarizes long ignored `output/` reports into tracked docs evidence. |
@@ -252,6 +270,8 @@ python .\Tools\validation\check_dry_run_matrix_evidence_bundle.py --repo-root . 
 - Local task pipeline outputs remain in ignored `output/local_ai_runs/` unless compact evidence is intentionally built.
 - Dry-run matrix evidence proves planning/report contracts only; it does not prove provider execution.
 - Context packs belong under ignored `output/ai_context_packs/`; only compact evidence belongs in `docs/LOCAL_VALIDATION_EVIDENCE/`.
+- Selected semantic chunks belong under ignored `output/ai_context_packs/`; compact selected-chunks evidence may be committed under `docs/LOCAL_VALIDATION_EVIDENCE/`.
+- Full-context golden proposal reports remain manual-review-only and do not apply patches by themselves.
 - Proposal-derived patch specs remain draft-only under `output/patch_specs/` until reviewed and dry-run.
 - Reviewed patch specs are still manual-review-only and must not be queued or applied without a separate explicit approval.
 - No destructive overwrite of source or analysis data.

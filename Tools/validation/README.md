@@ -23,7 +23,9 @@ AI dry-run matrix evidence bundle checks
 AI pipeline schema-v6 report contract checks
 GitHub evidence bundle contract checks
 selective execution plan contract checks
+selected semantic chunks contract checks
 repository change proposal contract checks
+full-context golden proposal contract checks
 proposal patch-spec draft contract checks
 reviewed patch-spec dry-run contract checks
 AI context pack contract checks
@@ -111,7 +113,9 @@ python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --out
 python .\Tools\validation\check_dry_run_matrix_evidence_bundle.py --repo-root . --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\ai_pipeline_dry_run_matrix_evidence.json --output .\output\validation\dry_run_matrix_evidence_bundle.json
 python .\Tools\validation\check_github_evidence_bundle.py --repo-root . --output .\output\validation\github_evidence_bundle.json
 python .\Tools\validation\check_selective_execution_plan.py --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json
+python .\Tools\validation\check_selected_semantic_chunks.py --repo-root . --bundle .\output\ai_context_packs\full_context_golden_selected_chunks.json --output .\output\validation\full_context_golden_selected_chunks_contract.json --evidence-output .\docs\LOCAL_VALIDATION_EVIDENCE\full_context_golden_selected_chunks_evidence.json --markdown-output .\docs\LOCAL_VALIDATION_EVIDENCE\full_context_golden_selected_chunks_evidence.md
 python .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output .\output\validation\repository_change_proposals_contract.json
+python .\Tools\validation\check_full_context_golden_proposals.py --repo-root . --proposal .\output\ai_pipeline\full_context_golden_proposals.json --output .\output\validation\full_context_golden_proposals_contract.json --min-proposals 6
 python .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest .\output\patch_specs\proposal_patch_specs_manifest.json --output .\output\validation\patch_spec_drafts.json
 python .\Tools\validation\check_reviewed_patch_specs.py --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_manifest.json --output .\output\validation\reviewed_patch_specs.json
 python .\Tools\validation\check_ai_context_pack_contract.py --repo-root . --pack .\output\ai_context_packs\project_self_improvement.json --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\project_self_improvement_context_pack_evidence.json --output .\output\validation\ai_context_pack_contract.json
@@ -150,7 +154,9 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_ai_pipeline_report_contract.py` | Validates one schema-v6 AI pipeline report, including dry-run-only semantics when requested. | No |
 | `check_github_evidence_bundle.py` | Validates Git-trackable AI/provider evidence bundle shape and decision fields without reading ignored `output/` contents. | No |
 | `check_selective_execution_plan.py` | Validates report-only selective execution plan recommendations, local-only command sets and patch-spec candidate boundaries. | No |
+| `check_selected_semantic_chunks.py` | Validates selected semantic chunk bundles and can emit compact selected-chunks evidence. | No |
 | `check_repository_change_proposals.py` | Validates manual-review repository proposal reports and their code/Markdown/JSON suggestion descriptors. | No |
+| `check_full_context_golden_proposals.py` | Validates semantic coverage of full-context golden proposal families beyond the generic repository proposal schema. | No |
 | `check_patch_spec_drafts.py` | Validates proposal-derived draft patch specs under `output/patch_specs/` and rejects queued or concrete replacements. | No |
 | `check_reviewed_patch_specs.py` | Validates reviewed patch specs and reruns dry-run without writing source files. | No |
 | `check_ai_context_pack_contract.py` | Validates AI context packs and compact context-pack evidence without executing providers. | No |
@@ -186,6 +192,52 @@ local-only GPU/NPU evidence commands are present
 ```
 
 This validator does not execute providers, run validators from the plan, apply patches, run Blender or write source targets.
+
+## Selected semantic chunks validation
+
+Selected semantic chunks are bounded focused-context bundles generated from the semantic chunk index. They are safe context inputs, not source patches.
+
+Validate a selected chunk bundle and optionally emit compact evidence:
+
+```powershell
+python .\Tools\validation\check_selected_semantic_chunks.py --repo-root . --bundle .\output\ai_context_packs\full_context_golden_selected_chunks.json --output .\output\validation\full_context_golden_selected_chunks_contract.json --evidence-output .\docs\LOCAL_VALIDATION_EVIDENCE\full_context_golden_selected_chunks_evidence.json --markdown-output .\docs\LOCAL_VALIDATION_EVIDENCE\full_context_golden_selected_chunks_evidence.md --max-total-chars 32000
+```
+
+The validator checks:
+
+```text
+kind == semantic_code_chunk_selection
+source_writes_performed == false
+provider_execution_performed == false
+selected_count > 0
+selected_count <= max_chunks
+total_selected_chars stays within budget
+chunk ids are unique
+paths and line ranges are concrete
+```
+
+## Full-context golden proposal validation
+
+The generic proposal validator checks schema shape. The full-context golden proposal validator adds semantic coverage requirements for the current golden path.
+
+Run after generating deterministic full-context proposals:
+
+```powershell
+python .\Tools\ai\build_full_context_golden_proposals.py --repo-root . --source-report .\output\local_ai_runs\<run>\pipeline\full_context_golden_local_ai_context_proposals.json --output .\output\ai_pipeline\full_context_golden_proposals.json --markdown-output .\output\ai_pipeline\full_context_golden_proposals.md
+python .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal .\output\ai_pipeline\full_context_golden_proposals.json --output .\output\validation\full_context_golden_repository_proposals_contract.json
+python .\Tools\validation\check_full_context_golden_proposals.py --repo-root . --proposal .\output\ai_pipeline\full_context_golden_proposals.json --output .\output\validation\full_context_golden_proposals_contract.json --min-proposals 6
+```
+
+Required proposal families:
+
+```text
+P1 adapter manifest validator
+P2 reusable enrichment-plan helper
+P3 full-context golden path docs contract
+P4 optional wrapper preset flag
+P5 selected-chunks evidence standard validation block
+P6 NPU knowledge-broker / context-oracle prototype
+```
 
 ## Execution plan status validation
 

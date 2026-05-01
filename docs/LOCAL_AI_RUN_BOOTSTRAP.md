@@ -52,18 +52,18 @@ Current task index:
 docs/LOCAL_AI_TASKS/README.md
 ```
 
-Current issue #62 entrypoint:
+Current task index:
 
 ```text
-docs/LOCAL_AI_TASKS/issue-62-hybrid-master-ai-local-pipeline.md
+docs/LOCAL_AI_TASKS/README.md
 ```
 
 Preferred project-owned runner path:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
-  -TaskBranch codex/hybrid-local-pipeline-runner `
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -TaskBranch codex/full-context-ai-npu-golden-run `
   -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
 ```
 
@@ -113,11 +113,10 @@ Then read the active task object:
 GitHub issue, PR body, execution plan or docs/LOCAL_AI_TASKS/*.md file referenced by the runner
 ```
 
-For the current hybrid runner task, read:
+For the current full-context golden path task, read:
 
 ```text
-docs/LOCAL_AI_TASKS/issue-62-hybrid-master-ai-local-pipeline.md
-https://github.com/C-F-tek/blender-audio-project/issues/62
+docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md
 Tools/workflow/run_local_ai_markdown_task.ps1
 Tools/workflow/run_local_ai_task_via_pipeline.ps1
 docs/LOCAL_AI_WORKFLOW.md
@@ -221,9 +220,9 @@ For local pipeline runner validation:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
-  -PromptFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
-  -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
-  -RunDir .\output\local_ai_runs\issue62_adapter_smoke `
+  -PromptFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -RunDir .\output\local_ai_runs\full_context_golden_adapter_smoke `
   -DryRun
 ```
 
@@ -290,21 +289,16 @@ No runtime files, provider behavior, generated indexes, full analysis JSON or Bl
 
 ## Current local task pointer
 
-The current hybrid runner task is tracked in:
+The preferred current end-to-end local task is tracked in:
 
 ```text
-docs/LOCAL_AI_TASKS/issue-62-hybrid-master-ai-local-pipeline.md
-GitHub issue #62
+docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md
 ```
 
 The expected work is:
 
 ```text
-define the hybrid master-AI/local-pipeline model
-prefer project-owned local pipeline adapter examples over Codex CLI examples
-keep Codex/GitHub-only AI available as master/control-plane during transition
-add report-only local pipeline adapter
-validate without implicit provider execution
+exercise the project-owned local AI pipeline with selected chunks, context pack, SQLite-backed agent state, explicit multistep GPU/NPU provider workflow, evidence and controlled proposal generation
 ```
 
-No GPU/NPU run is required for issue #62 unless explicitly requested.
+GPU/NPU execution remains explicit. If Carmine cannot run the local provider workflow, GitHub-only agents must stop at report-only/docs/validator work and request the exact local command/evidence bundle needed next.
