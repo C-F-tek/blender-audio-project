@@ -46,21 +46,22 @@ P3 low
 | TD-015 | Validator report consistency | P2 | open | Validators do not yet have one explicitly documented common report contract. | Downstream automation may need per-validator special cases. | Review common fields (`schema_version`, `repo_root`, `passed`, `errors`) and create small follow-up PRs only after documenting current differences. | 2026-04-30 |
 | TD-016 | NPU runtime wiring | P2 | in_progress | `Tools/npu/run_dual_ai_pipeline.py` still owns orchestration while helper groups are being adopted incrementally. | Partial migration can drift if helper/runtime equivalence is not validated after each group. | Next continue with runtime-safe provider result report adoption; keep provider execution adapters last. | 2026-04-30 |
 | TD-017 | Local AI broker identity/policy | P2 | open | NPU/GPU/Ollama lanes are visible and testable, but there is no durable authenticated local broker/policy model yet. | Future local AI tools could mix identity, permissions, network access, provider execution and file writes without a clear gate. | After the current internal report/proposal loop is stable, add an advisory-only authenticated local AI broker plan: identity context, permission profile, resource-lane routing, network gateway boundaries and audit reports. Do not implement network or secret access until explicit policy exists. | 2026-04-30 |
-| TD-018 | AI context packs | P2 | in_progress | Agents still need to infer task context from broad docs or generated indexes. | Token waste and drift can cause overly broad edits or missing validators. | Add bounded profile-based context packs with compact evidence first; later add selective execution planning from changed files. | 2026-05-01 |
+| TD-018 | AI context packs and selective planning | P2 | in_progress | Context packs, selected semantic chunks and the report-only selective planner now exist, but ranking/freshness logic is still basic. | Agents may still choose broad or stale validation paths when several evidence bundles exist. | Continue with validator scoring, evidence freshness heuristics and clearer GitHub-only versus local-only action ranking. | 2026-05-01 |
+| TD-019 | Full-context golden proposal promotion | P2 | open | The deterministic full-context golden proposal generator emits P1-P6 proposal families, but they are not yet promoted into reviewed patch specs or focused implementation PRs. | Valuable proposal output can remain inert or be applied too broadly if promotion is not staged. | Promote one proposal family at a time through reviewed patch specs, focused validators and compact evidence. Keep all application explicit and manual-review-only until validated. | 2026-05-01 |
 
 ## Add a new item
 
 Use the next ID:
 
 ```text
-TD-019
+TD-020
 ```
 
 Template:
 
 | ID | Area | Priority | Status | Symptom | Risk | Recommended action | Last reviewed |
 |---|---|---:|---|---|---|---|---|
-| TD-019 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
+| TD-020 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
 
 ## Rules
 

@@ -10,13 +10,16 @@ The project still contains Blender/audio-reactive workflows, but the active arch
 
 ```text
 local source/docs/context
+  -> semantic code chunks and selected focused chunks when useful
   -> task-scoped AI context pack when useful
+  -> SQLite-backed agent state packet when requested
   -> validation reports
   -> workload report quality gate
   -> advisory lane routing
   -> trusted/excluded context selection
   -> explicit provider probes or primary advisory generation
   -> post-validation AI packet and proposals
+  -> full-context golden proposal families when requested
   -> proposal-derived draft patch specs
   -> explicit replacement plan and reviewed dry-run spec
   -> compact evidence bundle under docs/LOCAL_VALIDATION_EVIDENCE/
@@ -67,6 +70,8 @@ Primary evidence:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
 ```
 
 Validated decisions from that evidence:
@@ -83,7 +88,10 @@ npu_decode_smoke_passed: true
 | Data | Producer | Consumer | Notes |
 |---|---|---|---|
 | Source/docs context | repository files | advisory packet builder | Non-workload files are trusted unless normal file read fails. |
+| Semantic code chunks | `Tools/npu/build_semantic_code_chunks.py` | selected chunk builder, local AI task adapter | Generated context under index/output paths; do not hand-edit. |
+| Selected semantic chunks | `Tools/ai/select_semantic_code_chunks.py` | context pack builder, local AI task adapter, provider packets | Bounded focused context under ignored `output/ai_context_packs/`; validator can emit compact tracked evidence. |
 | AI context pack | `Tools/ai/build_ai_context_pack.py` | human/AI task planning, proposal builders | Bounded task-scoped context under ignored `output/ai_context_packs/` plus compact tracked evidence. |
+| Agent state packet | `Tools/ai/build_agent_state_packet.py` | local AI task adapter, advisory packet builder | Can use SQLite memory locally; generated SQLite DB files stay untracked. |
 | Workload reports | local provider workload scripts | quality gate | Generated text reports from provider lanes. |
 | Workload quality report | `Tools/validation/check_ai_workload_report_quality.py` | lane routing, remediation, packet builder | Determines `usable_lanes` and `unusable_lanes`. |
 | Lane routing report | `Tools/ai/build_workload_quality_lane_routing.py` | packet builder, evidence bundle | Declares trusted/excluded context and primary advisory provider. |
@@ -92,6 +100,7 @@ npu_decode_smoke_passed: true
 | Local provider probe report | `Tools/ai/run_local_provider_probe.py` | evidence bundle | Explicit GPU/Ollama and NPU/OpenVINO probe evidence. |
 | Post-validation AI packet | `Tools/ai/suggest_repository_updates.py` | maintainer / proposal builder | Uses quality-approved advisory context only. |
 | Repository change proposals | `Tools/ai/build_repository_change_proposals.py` | maintainer, future trusted patch builders | Advisory only; no auto-apply. Includes `suggestion_outputs` descriptors for code/MD/JSON/PowerShell targets. |
+| Full-context golden proposals | `Tools/ai/build_full_context_golden_proposals.py` | maintainer, validators, future patch-spec promotion | Deterministic P1-P6 proposal families; manual-review-only and no source mutation. |
 | Proposal patch-spec drafts | `Tools/ai/build_patch_specs_from_proposals.py` | maintainer, trusted patch builders | Inert draft specs under `output/patch_specs/`; no replacements, no queue writes, no auto-apply. |
 | Reviewed patch specs | `Tools/ai/promote_patch_spec_draft.py` | maintainer, trusted patch builders | Concrete replacements plus mandatory dry-run under `output/patch_specs/`; no source writes and no queue writes. |
 | Dry-run matrix evidence bundle | `Tools/ai/build_dry_run_matrix_evidence_bundle.py` | GitHub review, validation handoffs, future selective execution planners | Compact tracked summary of ignored dry-run matrix reports; proves dry-run/planned-only coverage, not provider execution. |
@@ -134,6 +143,8 @@ This is now one application domain over the local AI orchestration workbench, no
 `docs/JSON_SCHEMAS.md` exists as a schema-notes file, but the following contracts still need more formal treatment:
 
 - provider probe report;
+- selected semantic chunks report/evidence beyond the focused contract already present;
+- full-context golden proposal report beyond the focused validator already present;
 - legacy audio analysis JSON;
 - music context JSON;
 - generated artifact plan/manifest schema.
@@ -142,4 +153,4 @@ This is now one application domain over the local AI orchestration workbench, no
 
 ## Recommended next improvement
 
-Add direct raw-output validators for provider probe reports and continue shaping the suggestion/proposal loop from context packs through reviewed dry-run specs toward approved local apply or queue workflows.
+Promote the full-context golden proposal families P1-P6 one at a time, then add direct raw-output validators for provider probe reports and continue shaping the suggestion/proposal loop from context packs through reviewed dry-run specs toward approved local apply or queue workflows.

@@ -24,6 +24,7 @@ The repository has not been renamed yet. Renaming the GitHub repository would ch
 
 ```text
 local context / reports / generated artifacts
+  -> semantic chunk selection and bounded context packs when useful
   -> validation and quality gates
   -> provider lane classification
   -> GPU/CUDA advisory lane through Ollama
@@ -43,7 +44,7 @@ Current provider mapping:
 
 ## Current validated state
 
-Local evidence pushed under `docs/LOCAL_VALIDATION_EVIDENCE/` confirms the current master baseline originally validated in PR #48 and extended by later AI/proposal/patch-spec milestones:
+Local evidence pushed under `docs/LOCAL_VALIDATION_EVIDENCE/` confirms the provider baseline originally validated in PR #48 and extended by later selected-context, full-context and proposal milestones:
 
 ```text
 ollama_gpu_primary_advisory: true
@@ -52,10 +53,14 @@ provider_execution_seen: true
 npu_decode_smoke_passed: true
 ```
 
-The important evidence bundle is:
+Important evidence bundles include:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_core_ai_backend_context_pack_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
 ```
 
 Validated facts:
@@ -99,6 +104,23 @@ python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename lates
 git add docs/LOCAL_VALIDATION_EVIDENCE/
 git commit -m "test: add local ai workflow evidence bundle"
 git push
+```
+
+### Full-context local AI golden path
+
+The current end-to-end local AI task exercises selected chunks, context packs, SQLite-backed agent state, explicit multistep GPU/NPU evidence, proposals and manual-review-only patch-spec generation:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -TaskBranch codex/full-context-ai-npu-golden-run `
+  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
+```
+
+The deterministic proposal generator for the current golden path is:
+
+```powershell
+python .\Tools\ai\build_full_context_golden_proposals.py --repo-root . --source-report .\output\local_ai_runs\<run>\pipeline\full_context_golden_local_ai_context_proposals.json --output .\output\ai_pipeline\full_context_golden_proposals.json --markdown-output .\output\ai_pipeline\full_context_golden_proposals.md
 ```
 
 ## Main repository layout
@@ -151,9 +173,11 @@ Those assets are now treated as the first application domain that benefits from 
 5. `docs/DATA_FLOW.md`
 6. `docs/LOCAL_AI_WORKFLOW.md`
 7. `docs/JSON_SCHEMAS.md`
-8. `Tools/npu/pipeline/README.md`
-9. `Tools/validation/README.md`
-10. `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md`
+8. `docs/LOCAL_AI_TASKS/README.md`
+9. `Tools/npu/pipeline/README.md`
+10. `Tools/validation/README.md`
+11. `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md`
+12. `docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.md`
 
 ## Current operational decision
 
@@ -162,5 +186,5 @@ Treat Ollama/GPU as the primary advisory lane.
 Treat NPU/OpenVINO as a validated smoke/probe lane, not yet a general advisory lane.
 Use compact evidence bundles instead of pasting long local output reports.
 Keep Blender runtime out of this milestone.
-Continue with follow-up validation, context-pack, proposal and patch-spec work on current master.
+Continue by promoting full-context golden proposal families one at a time through validators, reviewed patch specs or focused implementation PRs.
 ```

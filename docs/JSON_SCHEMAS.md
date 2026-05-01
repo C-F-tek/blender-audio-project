@@ -24,8 +24,12 @@ GitHub-only agents must not infer local report contents that are not present in 
 | keyframe JSON | Animation and timing data for Blender | not fully specified |
 | implementation draft JSON | AI-generated implementation plan | partially covered by NPU helper contract validators |
 | generated artifact plan JSON | Proposed generated artifact paths and content descriptors | partially covered by generated artifact path policy and NPU helper validators |
+| selected semantic chunks JSON | Bounded focused source/docs context selected from semantic chunk index | validator exists |
+| selected semantic chunks evidence JSON | Compact tracked proof for selected focused context | validator exists |
 | AI context pack JSON | Task-scoped source/docs context and validation plan for AI/human continuation | validator exists |
 | AI context pack evidence JSON | Compact tracked summary of a generated context pack | validator exists |
+| selective execution plan JSON | Report-only recommendation plan for validators and patch-spec candidates | validator exists |
+| full-context golden proposal JSON | Deterministic manual-review-only proposal families P1-P6 | validator exists |
 | proposal patch-spec draft JSON | Reviewable shell for future deterministic patch specs | validator exists |
 | reviewed patch-spec JSON | Dry-run-proven concrete patch candidate | validator exists |
 | provider request/result envelope JSON | Planned or future provider exchange envelopes | partial NPU helper contract only; provider execution adapters remain future work |
@@ -212,6 +216,82 @@ Notes:
 Suggestion descriptors describe code/MD/JSON/PowerShell targets for future manual patches. They are not source writes and must not auto-apply.
 ```
 
+### Selected semantic chunks
+
+```text
+File pattern:
+output/ai_context_packs/*selected_chunks*.json
+docs/LOCAL_VALIDATION_EVIDENCE/*selected_chunks*_evidence.json
+Producer:
+Tools/ai/select_semantic_code_chunks.py
+Tools/validation/check_selected_semantic_chunks.py for compact evidence
+Consumer:
+Local AI task adapter, context-pack builder, advisory packet builder, GitHub-only reviewers.
+Required selected-bundle fields:
+schema_version, kind, generated_at, repo_root, source_manifest, query, selected_count, max_chunks, max_total_chars, total_selected_chars, provider_execution_performed, source_writes_performed, selected_chunks
+Required evidence fields:
+schema_version, kind, generated_at, repo_root, source_bundle, passed, errors, warnings, selected_count, total_selected_chars, decision
+Required kind:
+semantic_code_chunk_selection
+selected_semantic_chunks_evidence
+Provider semantics:
+Selection and selected-chunks validation do not execute providers and do not write source files.
+Current validator:
+Tools/validation/check_selected_semantic_chunks.py
+Notes:
+Selected chunks are bounded context, not patch instructions. Compact evidence may be committed for GitHub review; full selected context remains under ignored output paths.
+```
+
+### Selective execution plans
+
+```text
+File pattern:
+output/ai_pipeline/selective_execution_plan.json
+Producer:
+Tools/ai/build_selective_execution_plan.py
+Consumer:
+Human maintainers, GitHub-only agents and future local runners.
+Required fields:
+schema_version, kind, generated_at, repo_root, apply_mode, provider_execution_performed, patch_application_performed, inputs, provider_evidence_summary, dry_run_summary, validation_health, recommended_validators, recommended_patch_specs, blocked_actions, local_only_actions_for_carmine, github_only_actions_for_ai, risks, next_command_set, passed, errors, warnings
+Required kind:
+selective_execution_plan
+Provider semantics:
+The planner does not execute providers. It may recommend explicit local GPU/NPU evidence commands for Carmine.
+Current validator:
+Tools/validation/check_selective_execution_plan.py
+Notes:
+Recommendations are report-only and should distinguish GitHub-only work from local-only work.
+```
+
+### Full-context golden proposals
+
+```text
+File pattern:
+output/ai_pipeline/full_context_golden_proposals.json
+Producer:
+Tools/ai/build_full_context_golden_proposals.py
+Consumer:
+Maintainers, proposal validators and future patch-spec promotion tools.
+Required fields:
+Same generic `repository_change_proposals` root/proposal fields plus coverage of required proposal families P1-P6.
+Required kind:
+repository_change_proposals
+Required proposal families:
+P1 adapter manifest validator
+P2 reusable enrichment-plan helper
+P3 full-context golden path docs contract
+P4 optional wrapper preset flag
+P5 selected-chunks evidence standard validation block
+P6 NPU knowledge-broker / context-oracle prototype
+Provider semantics:
+The generator is deterministic and report-only. It does not execute providers, apply patches or mutate source.
+Current validators:
+Tools/validation/check_repository_change_proposals.py
+Tools/validation/check_full_context_golden_proposals.py
+Notes:
+The full-context validator catches semantic insufficiency even when the generic proposal schema passes.
+```
+
 ### Proposal patch-spec drafts
 
 ```text
@@ -302,11 +382,14 @@ Context packs must avoid generated indexes, local output, Ready To Jazz runtime,
 | AI dry-run matrix report | `output/ai_pipeline/dry_run_matrix_report.json` | `Tools/ai/run_pipeline_dry_run_matrix.py` | `Tools/validation/check_ai_dry_run_matrix_contract.py` | `schema_version`, `repo_root`, `output_dir`, `case_count`, `passed`, `results` | Future additive checks should remain warning-first until local samples are reviewed. |
 | Individual AI pipeline dry-run report | `output/ai_pipeline/dry_run_matrix/<case>/ai_pipeline_dry_run_report.json` | `Tools/ai/run_parallel_artifact_pipeline.py` through matrix cases | `Tools/validation/check_ai_pipeline_report_contract.py`; also invoked by `check_ai_dry_run_matrix_contract.py` for referenced case reports | schema-v6 root fields plus `summary`, `schedule`, `lanes`, `agent_state_packet`, `steps`, `post_run_expected_outputs` | Unknown future fields remain accepted; `--require-dry-run` enforces `dry_run=true` and planned-only steps for dry-run reports. |
 | AI dry-run matrix evidence bundle | `docs/LOCAL_VALIDATION_EVIDENCE/ai_pipeline_dry_run_matrix_evidence.json` | `Tools/ai/build_dry_run_matrix_evidence_bundle.py` | `Tools/validation/check_dry_run_matrix_evidence_bundle.py` | `schema_version`, `kind`, `provider_execution_performed`, `matrix`, `validation_reports`, `case_summary`, `cases`, `decision` | Compact Git-trackable proof that the local matrix ran as dry-run/planned-only with no provider execution claim. |
+| Selected semantic chunks | `output/ai_context_packs/*selected_chunks*.json` | `Tools/ai/select_semantic_code_chunks.py` | `Tools/validation/check_selected_semantic_chunks.py` | `schema_version`, `kind`, `selected_count`, `max_chunks`, `total_selected_chars`, `provider_execution_performed`, `source_writes_performed`, `selected_chunks` | Focused context only; compact evidence can be emitted under `docs/LOCAL_VALIDATION_EVIDENCE/`. |
+| Selective execution plan | `output/ai_pipeline/selective_execution_plan.json` | `Tools/ai/build_selective_execution_plan.py` | `Tools/validation/check_selective_execution_plan.py` | `schema_version`, `kind`, `apply_mode`, `provider_execution_performed`, `recommended_validators`, `recommended_patch_specs`, `next_command_set` | Report-only next-action recommendations; no provider execution or patch application. |
 | AI workload quality lane routing report | `output/validation/ai_workload_quality_lane_routing.json` | `Tools/ai/build_workload_quality_lane_routing.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `primary_advisory_provider`, `policy`, `mode`, `routing` | Direct raw-output validator remains future work; evidence copies preserve the current provider-lane decision. |
 | NPU decode quality remediation report | `output/validation/npu_decode_quality_remediation.json` | `Tools/validation/check_npu_decode_quality_remediation.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `policy`, `mode`, `checks` | Report-only; must not promote unusable NPU workload output to advisory context. |
 | NPU decode smoke diagnostic report | `output/validation/npu_decode_smoke_diagnostic.json` | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `policy`, `mode`, `provider`, `checks` | Explicit NPU diagnostic only; passing smoke does not make OpenVINO/NPU the primary advisory lane. |
 | GitHub validation evidence bundle | `docs/LOCAL_VALIDATION_EVIDENCE/*_evidence.json` | `Tools/ai/build_github_evidence_bundle.py` | `Tools/validation/check_github_evidence_bundle.py` | `schema_version`, `kind`, `generated_at`, `repo_root`, `source_reports`, `reports`, `decision`; each report has `path`, `exists`, `json_ok`, `kind`, `passed`, `summary` | Compact Git-trackable proof for GitHub-only agents; older bundles may warn for missing optional provider decision fields. |
 | Repository change proposal report | `output/ai_pipeline/*proposals.json`, `output/ai_packets/*proposals.json` | `Tools/ai/build_repository_change_proposals.py` | `Tools/validation/check_repository_change_proposals.py` | root report fields plus per-proposal `id`, `priority`, `area`, `title`, `target_files`, `patch_sketch`, `validation_commands`, `stop_conditions`, `suggestion_outputs` | Advisory manual-review suggestions for code/MD/JSON/PowerShell targets; no auto-apply. |
+| Full-context golden proposals | `output/ai_pipeline/full_context_golden_proposals.json` | `Tools/ai/build_full_context_golden_proposals.py` | `Tools/validation/check_repository_change_proposals.py`, `Tools/validation/check_full_context_golden_proposals.py` | Generic proposal fields plus required families P1-P6 | Deterministic manual-review-only proposal coverage for controlled complexity escalation. |
 | Proposal patch-spec draft manifest/spec | `output/patch_specs/*_manifest.json`, `output/patch_specs/<basename>/*.json` | `Tools/ai/build_patch_specs_from_proposals.py` | `Tools/validation/check_patch_spec_drafts.py` | manifest/spec root fields plus draft `operations` with empty `replacements` | Drafts must not be queued under `patch_specs/inbox/`; use reviewed patch-spec promotion for concrete replacements. |
 | Reviewed patch-spec manifest/spec | `output/patch_specs/reviewed*.json`, `output/patch_specs/reviewed*_manifest.json` | `Tools/ai/promote_patch_spec_draft.py` | `Tools/validation/check_reviewed_patch_specs.py` | manifest/spec root fields plus concrete replacements and `dry_run.passed=true` | Apply/queue approval remains future work; reviewed specs must not be auto-applied. |
 | NPU helper module smoke report | `output/validation/npu_pipeline_modules.json` | `Tools/validation/check_npu_pipeline_modules.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | Contract is helper-focused and provider-free; do not use it as provider execution proof. |

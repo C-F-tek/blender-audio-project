@@ -62,13 +62,14 @@ Before creating or editing a package or pipeline module, read:
 7. `docs/DATA_FLOW.md`
 8. `docs/LOCAL_AI_WORKFLOW.md`
 9. `docs/JSON_SCHEMAS.md`
-10. `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md` when reviewing PR #48 or later evidence bundles
-11. `Tools/npu/pipeline/README.md`
-12. `Tools/validation/README.md`
-13. `docs/EXECUTION_PLANS/README.md`
-14. `docs/TECH_DEBT_TRACKER.md`
-15. the active GitHub issue, PR body or execution plan referenced by the user
-16. the target source file before modifying it
+10. `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md` when reviewing provider-lane evidence
+11. `docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.md` when reviewing the current full-context local AI workflow
+12. `Tools/npu/pipeline/README.md`
+13. `Tools/validation/README.md`
+14. `docs/EXECUTION_PLANS/README.md`
+15. `docs/TECH_DEBT_TRACKER.md`
+16. the active GitHub issue, PR body or execution plan referenced by the user
+17. the target source file before modifying it
 
 ## Local AI run bootstrap
 
@@ -113,7 +114,7 @@ If the local bootstrap conflicts with a more specific user task, preserve the ha
 
 ## Current validated AI/provider state
 
-Evidence pushed under `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json` confirms:
+Provider-lane baseline evidence under `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json` confirms:
 
 ```text
 ollama_gpu_primary_advisory: true
@@ -129,6 +130,22 @@ Ollama/GPU is the primary advisory lane.
 NPU/OpenVINO is validated for explicit smoke/probe execution.
 The old NPU workload report remains unusable and must stay excluded from advisory context.
 NPU promotion to general advisory requires a future quality-gated milestone.
+```
+
+Current full-context workflow evidence is also tracked under:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_core_ai_backend_context_pack_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
+```
+
+Operational interpretation:
+
+```text
+The local AI pipeline can now build selected semantic chunks, bounded context packs, SQLite-backed agent state packets, explicit multistep provider evidence and manual-review-only full-context proposal families.
+These outputs are still advisory/proposal artifacts, not automatic patch application or provider promotion.
 ```
 
 ## Current NPU/helper package state
@@ -188,6 +205,15 @@ powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_h
 python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
 python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
 python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
+```
+
+Current full-context local AI task:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -TaskBranch codex/full-context-ai-npu-golden-run `
+  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
 ```
 
 Regenerate indexes after structural or documentation changes:

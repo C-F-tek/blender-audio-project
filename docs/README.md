@@ -25,11 +25,12 @@ Blender/audio-reactive generation remains the first application domain and legac
 15. `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`
 16. `AI_CONTEXT_PACKS.md`
 17. `AI_SELECTIVE_PLANNER.md`
-18. `AI_MEMORY_POLICY.md`
-19. `AI_PIPELINE_ARCHITECTURE.md`
-20. `AI_PIPELINE_REFACTOR_STATUS.md`
-21. `LOCAL_WORKSTATION_TARGET.md`
-22. Blender/audio docs only when entering that application domain.
+18. `LOCAL_AI_TASKS/README.md`
+19. `AI_MEMORY_POLICY.md`
+20. `AI_PIPELINE_ARCHITECTURE.md`
+21. `AI_PIPELINE_REFACTOR_STATUS.md`
+22. `LOCAL_WORKSTATION_TARGET.md`
+23. Blender/audio docs only when entering that application domain.
 
 ## Current validated provider posture
 
@@ -42,6 +43,8 @@ Validated evidence:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
 ```
 
 Confirmed decisions:
@@ -67,6 +70,7 @@ npu_decode_smoke_passed: true
 | `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow, GPU/NPU parallelism and evidence handling. |
 | `JSON_SCHEMAS.md` | JSON/report contract notes and current schema gap index. |
 | `AI_SELECTIVE_PLANNER.md` | Report-only selective planner that recommends validators and candidate patch specs from context/evidence. |
+| `LOCAL_AI_TASKS/README.md` | Non-interactive Markdown task entrypoints for local AI runs. |
 | `LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable local validation evidence. |
 | `../Tools/validation/README.md` | Local validation commands and report contracts. |
 | `../Tools/npu/pipeline/README.md` | App-agnostic NPU/provider helper package. |
@@ -125,7 +129,7 @@ These docs remain relevant when working on Blender/audio outputs, but are not th
 
 ## Current workflow summary
 
-Preferred current validation workflow:
+Provider baseline validation workflow:
 
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
@@ -145,6 +149,15 @@ Evidence push workflow:
 git add docs/LOCAL_VALIDATION_EVIDENCE/
 git commit -m "test: add local ai workflow evidence bundle"
 git push
+```
+
+Preferred current full-context local AI task:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -TaskBranch codex/full-context-ai-npu-golden-run `
+  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
 ```
 
 ## Documentation style

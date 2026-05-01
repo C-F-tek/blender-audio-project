@@ -51,6 +51,16 @@ python .\Tools\validation\check_selective_execution_plan.py --repo-root . --plan
 
 The validation report contract usually lives under ignored `output/`; when it is missing in GitHub-only mode, the planner emits a risk/warning rather than inventing local results.
 
+For current full-context review, pass the newer provider evidence explicitly:
+
+```powershell
+python .\Tools\ai\build_selective_execution_plan.py `
+  --repo-root . `
+  --provider-evidence .\docs\LOCAL_VALIDATION_EVIDENCE\full_context_golden_local_ai_context_multistep_evidence.json `
+  --output .\output\ai_pipeline\selective_execution_plan.json `
+  --markdown-output .\output\ai_pipeline\selective_execution_plan.md
+```
+
 ## Output contract
 
 The JSON plan uses:

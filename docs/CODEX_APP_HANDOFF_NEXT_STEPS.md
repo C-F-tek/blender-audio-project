@@ -16,15 +16,27 @@ The GitHub repository slug is historical. The active architecture is no longer B
 
 ## Current baseline
 
-PR #48 has been merged into `master`.
-
-Merged PR title:
+This handoff originally started after PR #48. As of 2026-05-01, `master` is further ahead:
 
 ```text
-Evolve IA-Carmine local AI orchestration with GPU/NPU routing
+ef6da71 feat(ai): add full-context golden proposal generator (#82)
 ```
 
-Core capabilities now on `master`:
+The PR #48 provider-lane work is still the baseline for GPU/NPU advisory routing, but current next-step planning should also account for later selected-context, full-context and proposal-generator work.
+
+Recent current capabilities on `master`:
+
+```text
+selected semantic chunk generation
+selected-chunks contract/evidence validation
+bounded context packs
+SQLite-backed agent state packet usage in local runs
+full-context AI/NPU golden path task entrypoint
+full-context golden proposal coverage validator
+deterministic full-context golden proposal generator
+```
+
+Provider-lane capabilities from PR #48 remain:
 
 ```text
 quality-based advisory context filtering
@@ -48,10 +60,14 @@ Do not introduce OpenVINO GPU as a primary lane.
 
 ## Validated evidence already present
 
-The important evidence bundle from PR #48 is:
+Important current evidence includes:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_core_ai_backend_context_pack_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
 ```
 
 Validated decision summary:
@@ -99,14 +115,31 @@ docs/PROJECT_STATUS_POINT.md
 docs/DATA_FLOW.md
 docs/LOCAL_AI_WORKFLOW.md
 docs/JSON_SCHEMAS.md
+docs/LOCAL_AI_TASKS/README.md
 Tools/npu/pipeline/README.md
 Tools/validation/README.md
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.md
 ```
 
-## Immediate validation to run on master
+## Current recommended next action
 
-Run a post-merge baseline evidence workflow:
+Use the full-context golden proposal families as the next controlled work queue:
+
+```text
+P1 adapter manifest validator
+P2 reusable enrichment-plan helper
+P3 full-context golden path docs contract
+P4 optional wrapper preset flag
+P5 selected-chunks evidence standard validation block
+P6 NPU knowledge-broker / context-oracle prototype
+```
+
+Promote one family at a time into a reviewed patch spec or focused implementation PR. Keep provider execution explicit and do not apply patches automatically.
+
+## Provider baseline validation to run when needed
+
+Run a post-merge provider evidence workflow only when fresh GPU/NPU evidence is needed:
 
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `

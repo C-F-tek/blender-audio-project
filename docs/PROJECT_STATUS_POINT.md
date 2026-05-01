@@ -6,12 +6,37 @@ This document records the current technical status of `IA-Carmine Local AI Orche
 
 The current GitHub repository slug is still `C-F-tek/blender-audio-project`, but the project identity has moved beyond Blender/audio. The repository is now centered on local AI orchestration, provider-lane routing, quality-gated advisory context, NPU/GPU diagnostics, validation reports and compact GitHub evidence bundles.
 
-## Current validated baseline
+## Current GitHub/code baseline
+
+Current `master` / `origin/master` state verified on 2026-05-01:
+
+```text
+ef6da71 feat(ai): add full-context golden proposal generator (#82)
+```
+
+Recent merged work after the original PR #48 provider baseline:
+
+| PR | Status | Meaning |
+|---:|---|---|
+| #74 | merged | Added focused semantic chunk selection for bounded local AI context. |
+| #75 | merged | Added selected-chunks real local context evidence. |
+| #76 | merged | Added selected semantic chunks validator/evidence contract. |
+| #78 | merged | Wired selected-chunks evidence into the local AI task adapter. |
+| #79 | merged | Added the full-context AI/NPU golden path task entrypoint. |
+| #80 | merged | Added compact evidence from the real full-context golden path run. |
+| #81 | merged | Added the full-context golden proposal coverage validator. |
+| #82 | merged | Added the deterministic full-context golden proposal generator. |
+
+PR #77 remains open on GitHub but is superseded by merged PR #78 unless a human explicitly reopens that line of work.
+
+## Current validated provider baseline
 
 Validated evidence:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
 ```
 
 Evidence decision summary:
@@ -32,9 +57,48 @@ npu_decode_smoke_passed: true
 | Historical NPU workload report | OpenVINO/NPU generated report | Excluded advisory input | The old `npu_real_workload_report.md` remains numeric/hex-like and is correctly excluded from advisory context. |
 | Blender runtime | Blender Python | Legacy application domain | Frozen for the current core/backend milestones. |
 
-## Baseline status
+## Current self-improvement pipeline status
 
-PR #48 introduced the current local AI orchestration baseline now present on `master`:
+The current project-owned local AI loop is now broader than the PR #48 provider baseline:
+
+```text
+Markdown task entrypoint
+  -> semantic code chunk index
+  -> selected semantic chunks
+  -> selected-chunks evidence
+  -> bounded context pack
+  -> SQLite-backed agent state packet
+  -> explicit multistep GPU/NPU provider workflow
+  -> advisory/proposals
+  -> deterministic full-context golden proposal generator
+  -> manual-review-only patch-spec candidates
+```
+
+Important current source additions:
+
+| File | Role |
+|---|---|
+| `Tools/ai/select_semantic_code_chunks.py` | Builds bounded selected semantic chunk bundles from the generated semantic chunk index. |
+| `Tools/validation/check_selected_semantic_chunks.py` | Validates selected chunk bundles and can emit compact selected-chunks evidence. |
+| `Tools/ai/build_selective_execution_plan.py` | Report-only planner that recommends validators and candidate patch specs from context/evidence. |
+| `Tools/validation/check_selective_execution_plan.py` | Validates selective planner reports. |
+| `Tools/ai/build_full_context_golden_proposals.py` | Deterministically emits the full-context golden proposal families P1-P6 for manual review. |
+| `Tools/validation/check_full_context_golden_proposals.py` | Validates semantic coverage of full-context golden proposal reports. |
+
+Important current evidence additions:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/selected_chunks_real_local_ai_context_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/selected_chunks_real_local_ai_context_multistep_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_core_ai_backend_context_pack_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
+```
+
+## Provider baseline status
+
+PR #48 introduced the provider-lane baseline still present on `master`:
 
 ```text
 P-AI-WORKLOAD-QUALITY-BASED-LANE-ROUTING
@@ -147,33 +211,29 @@ risks
 | GHO-003 | in progress | Tech debt should record NPU advisory promotion and repository rename decision. |
 | GHO-004 | in progress | JSON/schema docs should include new evidence/routing/smoke report contracts. |
 | GHO-005 | addressed for current milestone | Compact evidence bundle now replaces pasted long local reports. |
-| GHO-006 | planned | Future provider adapter work should remain explicit and quality-gated. |
-| GHO-007 | in progress | Memory policy remains separate but should use the same evidence/report pattern. |
+| GHO-006 | in progress | Provider adapter work remains explicit and quality-gated through the local task adapter and multistep workflow flags. |
+| GHO-007 | in progress | Memory policy is now used by the local AI task adapter through SQLite-backed agent state packets; durable promotion rules remain separate. |
 | GHO-008 | in progress | NPU is validated for decode smoke, not yet for general advisory lane. |
+| GHO-009 | in progress | Selected semantic chunks, context packs and full-context golden proposals now exist; next work should promote reviewed proposal families one at a time. |
 
-## Next local owner batch
+## Current local owner batch
 
-For the next task on this branch:
+For new work, start from updated `master`:
 
 ```powershell
 git fetch origin
-git checkout ai/workload-quality-routing-npu-remediation
-git pull --ff-only
+git switch master
+git pull --ff-only origin master
 git status
 ```
 
-Recommended verification:
+Recommended full-context local run when Carmine can execute GPU/NPU workloads:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
-  -Profile npu `
-  -RunOllamaProbe `
-  -RunNpuProbe `
-  -RunNpuDecodeSmoke `
-  -UsePrimaryAdvisoryProvider `
-  -Basename parallel_gpu_npu_multistep_real_npu_v2 `
-  -ProposalBasename parallel_gpu_npu_multistep_real_npu_v2_proposals `
-  -EvidenceBasename parallel_gpu_npu_multistep_real_npu_v2_evidence
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -TaskBranch codex/full-context-ai-npu-golden-run `
+  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -BuildSemanticChunks -SelectSemanticChunks -BuildSelectedChunksEvidence -SelectedChunksEvidenceBasename full_context_golden_selected_chunks_evidence -ChunkQuery "workflow adapter local ai full context enrichment selected chunks sqlite memory provider multistep proposals validators npu knowledge broker context oracle retrieval ranking" -ChunkPathBoost Tools/workflow,Tools/ai,Tools/validation,Tools/npu -SelectedChunksBasename full_context_golden_selected_chunks -MaxSelectedChunks 24 -MaxSelectedChunkChars 32000 -MaxSelectedChunkExcerptChars 2500 -BuildContextPack -ContextPackProfile core_ai_backend -ContextPackBasename full_context_golden_core_ai_backend -ContextPackEvidenceBasename full_context_golden_core_ai_backend_context_pack_evidence -BuildAgentStatePacket -AgentStateBasename full_context_golden_agent_state -AgentStateObjective "Run full-context local AI/NPU golden path and propose controlled complexity escalation such as core helper, validator, wrapper flag, docs contract or NPU knowledge broker." -MemoryDb .\indexAI\agent_memory\agent_memory.sqlite -SaveInputsToMemoryDb -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename full_context_golden_local_ai_context -ProposalBasename full_context_golden_local_ai_context_proposals -EvidenceBasename full_context_golden_local_ai_context_evidence -MultistepBasename full_context_golden_local_ai_context_multistep -MultistepProposalBasename full_context_golden_local_ai_context_multistep_proposals -MultistepEvidenceBasename full_context_golden_local_ai_context_multistep_evidence'
 ```
 
 After documentation/source changes:
@@ -187,15 +247,12 @@ git diff --stat
 
 ## Recommended next technical directions
 
-1. Continue building self-improvement tooling around context packs, proposal reports, draft patch specs and reviewed dry-run specs.
-2. Open a follow-up milestone for NPU advisory promotion only if a real workload quality gate can classify NPU output as `usable_text`.
-3. Add formal schema notes for:
-   - `ai_workload_quality_lane_routing`;
-   - `npu_decode_quality_remediation`;
-   - `npu_decode_smoke_diagnostic`;
-   - `github_validation_evidence_bundle`.
-4. Decide whether to rename the GitHub repository to match the new working title.
-5. Keep Blender runtime out of core provider orchestration work.
+1. Promote the full-context golden proposal families P1-P6 one at a time into reviewed patch specs or focused implementation PRs.
+2. Add stricter contract docs for the full-context golden proposal report and selected-chunks evidence flow where still missing.
+3. Continue improving the selective planner so it can rank validators and distinguish GitHub-only from local-only next actions.
+4. Open a follow-up milestone for NPU advisory promotion only if a real workload quality gate can classify NPU output as `usable_text`.
+5. Decide whether to rename the GitHub repository to match the new working title.
+6. Keep Blender runtime out of core provider orchestration work.
 
 ## Do not do yet
 
@@ -223,6 +280,8 @@ quality-based advisory context filtering
 parallel provider workflow
 compact GitHub evidence bundles
 task-scoped AI context packs for safer continuation
+selected semantic chunks for focused context
+full-context golden proposal generation for controlled next steps
 ```
 
 Blender/audio remains important as a legacy/current application domain, but not as the project identity or architecture boundary.
