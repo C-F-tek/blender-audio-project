@@ -7,22 +7,16 @@
   It uses the existing FullContextGoldenPath preset to build real local artifacts
   for review and testing while preserving explicit-provider and no-apply guardrails.
 
-  Default behavior is provider-free and patch-free:
-    - builds selected chunks, selected-chunks evidence, context pack, agent state,
-      enrichment plan, advisory packet/proposals and compact GitHub evidence;
-    - builds and validates an NPU knowledge-broker packet as context-only metadata;
-    - validates adapter manifest and selected artifacts;
-    - does not apply patches, run Blender, run FFmpeg or merge anything.
+  Default behavior is provider-free and patch-free. When -RunMegalithicReview is
+  enabled, the runner also builds request-scoped/read-only agnostic context
+  artifacts and feeds them into the megalithic review as explicit report files:
 
-  Macro patch mode is manual-review-only. It may generate draft patch specs under
-  output/patch_specs/ when -GenerateMacroPatchDrafts is passed, but it never
-  applies them and never queues them for automatic execution.
+    - agent memory inventory
+    - agnostic tool inventory
+    - transient request context
 
-  Provider execution remains explicit and opt-in through -UseExplicitProviders.
-  Megalithic repository review is also opt-in through -RunMegalithicReview.
-  Ollama/GPU live review inside the megalithic review remains opt-in through
-  -UseOllamaForMegalithicReview. The PR draft is built from the refined
-  megalithic signal report, not from the raw wide-net findings.
+  These artifacts are report-only. They do not write SQLite memory, do not apply
+  patches, do not run Blender and do not create GitHub pull requests.
 #>
 [CmdletBinding()]
 param(
@@ -49,10 +43,7 @@ function Resolve-ExistingPath {
 }
 
 function Invoke-Checked {
-    param(
-        [string]$Label,
-        [scriptblock]$Block
-    )
+    param([string]$Label, [scriptblock]$Block)
     Write-Host ""
     Write-Host "=== $Label ===" -ForegroundColor Cyan
     & $Block
@@ -61,22 +52,19 @@ function Invoke-Checked {
     }
 }
 
-function Join-Args {
-    param([string[]]$Values)
-    return ($Values -join " ")
-}
-
 $RepoRootPath = Resolve-ExistingPath $RepoRoot
 Set-Location $RepoRootPath
 
 $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $SafeRunName = [regex]::Replace($RunName.ToLowerInvariant(), "[^a-z0-9._-]+", "_").Trim("._-")
 if ([string]::IsNullOrWhiteSpace($SafeRunName)) { $SafeRunName = "local_ai_core_tool_activation" }
+
 $RunDir = "output/local_ai_runs/${Stamp}_${SafeRunName}"
 $PipelineDir = "$RunDir/pipeline"
 $Basename = "local_ai_core_tool_activation"
 $ProposalBasename = "local_ai_core_tool_activation_proposals"
 $EvidenceBasename = "local_ai_core_tool_activation_evidence"
+
 $KnowledgePacket = "output/ai_pipeline/local_ai_core_tool_activation_npu_knowledge_broker_packet.json"
 $KnowledgePacketMd = "output/ai_pipeline/local_ai_core_tool_activation_npu_knowledge_broker_packet.md"
 $KnowledgeValidation = "output/validation/local_ai_core_tool_activation_npu_knowledge_broker_packet_contract.json"
@@ -85,6 +73,14 @@ $AdapterManifestValidation = "output/validation/local_ai_core_tool_activation_ad
 $GithubEvidenceValidation = "output/validation/local_ai_core_tool_activation_github_evidence_bundle.json"
 $SelectedChunks = "output/ai_context_packs/full_context_golden_selected_chunks.json"
 $ContextPack = "output/ai_context_packs/full_context_golden_core_ai_backend.json"
+
+$AgentMemoryInventoryJson = "output/ai_pipeline/local_ai_core_tool_activation_agent_memory_inventory.json"
+$AgentMemoryInventoryMd = "output/ai_pipeline/local_ai_core_tool_activation_agent_memory_inventory.md"
+$AgnosticToolInventoryJson = "output/ai_pipeline/local_ai_core_tool_activation_agnostic_tool_inventory.json"
+$AgnosticToolInventoryMd = "output/ai_pipeline/local_ai_core_tool_activation_agnostic_tool_inventory.md"
+$TransientRequestContextJson = "output/ai_pipeline/local_ai_core_tool_activation_transient_request_context.json"
+$TransientRequestContextMd = "output/ai_pipeline/local_ai_core_tool_activation_transient_request_context.md"
+
 $MegalithicReviewJson = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review.json"
 $MegalithicReviewMd = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review.md"
 $MegalithicReviewProposals = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review_proposals.json"
@@ -127,14 +123,8 @@ if ($UseExplicitProviders) {
         "-UsePrimaryAdvisoryProvider"
     )
 }
-
-if ($GenerateMacroPatchDrafts) {
-    $PipelineArgs += "-GeneratePatchSpecs"
-}
-
-if ($DryRun) {
-    $PipelineArgs += "-DryRun"
-}
+if ($GenerateMacroPatchDrafts) { $PipelineArgs += "-GeneratePatchSpecs" }
+if ($DryRun) { $PipelineArgs += "-DryRun" }
 
 Invoke-Checked -Label "Run full-context local AI core/tool activation pipeline" -Block {
     powershell.exe @PipelineArgs
@@ -177,6 +167,35 @@ if (-not $DryRun) {
     }
 
     if ($RunMegalithicReview) {
+        Invoke-Checked -Label "Build agnostic agent memory inventory" -Block {
+            python .\Tools\ai\build_agent_memory_inventory.py `
+                --repo-root . `
+                --memory-db .\indexAI\agent_memory\agent_memory.sqlite `
+                --objective $Objective `
+                --output $AgentMemoryInventoryJson `
+                --markdown-output $AgentMemoryInventoryMd
+        }
+
+        Invoke-Checked -Label "Build agnostic tool inventory" -Block {
+            python .\Tools\ai\build_agent_agnostic_tool_inventory.py `
+                --repo-root . `
+                --output $AgnosticToolInventoryJson `
+                --markdown-output $AgnosticToolInventoryMd
+        }
+
+        Invoke-Checked -Label "Build transient request context" -Block {
+            python .\Tools\ai\build_agent_transient_request_context.py `
+                --repo-root . `
+                --objective $Objective `
+                --memory-note $Objective `
+                --report-file $AgentMemoryInventoryJson `
+                --report-file $AgnosticToolInventoryJson `
+                --report-file $KnowledgePacket `
+                --report-file $AdapterManifest `
+                --output $TransientRequestContextJson `
+                --markdown-output $TransientRequestContextMd
+        }
+
         $MegalithicArgs = @(
             ".\Tools\ai\run_megalithic_repo_review.py",
             "--repo-root", ".",
@@ -186,6 +205,9 @@ if (-not $DryRun) {
             "--include-index",
             "--include-output",
             "--include-sqlite-memory",
+            "--report-file", $AgentMemoryInventoryJson,
+            "--report-file", $AgnosticToolInventoryJson,
+            "--report-file", $TransientRequestContextJson,
             "--output", $MegalithicReviewJson,
             "--markdown-output", $MegalithicReviewMd,
             "--proposal-output", $MegalithicReviewProposals
@@ -193,6 +215,7 @@ if (-not $DryRun) {
         if ($UseOllamaForMegalithicReview) {
             $MegalithicArgs += @("--use-ollama", "--ollama-max-new-tokens", "5000")
         }
+
         Invoke-Checked -Label "Run optional all-resources megalithic repository review" -Block {
             python @MegalithicArgs
         }
@@ -261,6 +284,12 @@ $Summary = [ordered]@{
         npu_knowledge_broker_packet = $KnowledgePacket
         npu_knowledge_broker_markdown = $KnowledgePacketMd
         npu_knowledge_broker_validation = $KnowledgeValidation
+        agent_memory_inventory_json = $AgentMemoryInventoryJson
+        agent_memory_inventory_markdown = $AgentMemoryInventoryMd
+        agnostic_tool_inventory_json = $AgnosticToolInventoryJson
+        agnostic_tool_inventory_markdown = $AgnosticToolInventoryMd
+        transient_request_context_json = $TransientRequestContextJson
+        transient_request_context_markdown = $TransientRequestContextMd
         megalithic_review_json = $MegalithicReviewJson
         megalithic_review_markdown = $MegalithicReviewMd
         megalithic_review_proposals = $MegalithicReviewProposals
@@ -293,6 +322,9 @@ New-Item -ItemType Directory -Force -Path "output/ai_pipeline" | Out-Null
     "- Adapter manifest: $AdapterManifest",
     "- GitHub evidence: docs/LOCAL_VALIDATION_EVIDENCE/${EvidenceBasename}.json",
     "- NPU knowledge broker packet: $KnowledgePacket",
+    "- Agent memory inventory: $AgentMemoryInventoryJson",
+    "- Agnostic tool inventory: $AgnosticToolInventoryJson",
+    "- Transient request context: $TransientRequestContextJson",
     "- Megalithic review: $MegalithicReviewJson",
     "- Megalithic refined review: $MegalithicRefinedReviewJson",
     "- Megalithic review PR draft: $MegalithicReviewPrDraft",
