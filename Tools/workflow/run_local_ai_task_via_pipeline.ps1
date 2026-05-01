@@ -38,6 +38,13 @@ param(
 
     [string[]]$ExtraContextFile = @(),
     [switch]$BuildSemanticChunks,
+    [switch]$SelectSemanticChunks,
+    [string]$ChunkQuery = "",
+    [string[]]$ChunkPathBoost = @(),
+    [string]$SelectedChunksBasename = "",
+    [int]$MaxSelectedChunks = 20,
+    [int]$MaxSelectedChunkChars = 24000,
+    [int]$MaxSelectedChunkExcerptChars = 2500,
     [switch]$BuildAgentStatePacket,
     [string]$MemoryDb = "indexAI/agent_memory/agent_memory.sqlite",
     [switch]$SaveInputsToMemoryDb,
@@ -191,9 +198,13 @@ if ([string]::IsNullOrWhiteSpace($MultistepProposalBasename)) { $MultistepPropos
 if ([string]::IsNullOrWhiteSpace($MultistepEvidenceBasename)) { $MultistepEvidenceBasename = "${Basename}_multistep_evidence" }
 if ([string]::IsNullOrWhiteSpace($ContextPackBasename)) { $ContextPackBasename = "${Basename}_context_pack" }
 if ([string]::IsNullOrWhiteSpace($ContextPackEvidenceBasename)) { $ContextPackEvidenceBasename = "${Basename}_context_pack_evidence" }
+if ([string]::IsNullOrWhiteSpace($SelectedChunksBasename)) { $SelectedChunksBasename = "${Basename}_selected_chunks" }
 if ([string]::IsNullOrWhiteSpace($AgentStateBasename)) { $AgentStateBasename = New-SafeName $Basename "local_ai_agent_state" }
 if ([string]::IsNullOrWhiteSpace($AgentStateObjective)) {
     $AgentStateObjective = "Run local AI task $Basename with task Markdown, memory, semantic chunks and bounded context."
+}
+if ([string]::IsNullOrWhiteSpace($ChunkQuery)) {
+    $ChunkQuery = $AgentStateObjective
 }
 
 $ContextFiles = @($PromptRel)
@@ -207,6 +218,8 @@ $ContextFiles = Normalize-ContextFiles $ContextFiles
 $EnrichmentOutputs = [ordered]@{
     semantic_chunks_manifest = ""
     semantic_chunks_json = ""
+    selected_chunks_json = ""
+    selected_chunks_markdown = ""
     context_pack_json = ""
     context_pack_markdown = ""
     context_pack_evidence_json = ""
@@ -224,6 +237,32 @@ if ($BuildSemanticChunks) {
     $ContextFiles = Normalize-ContextFiles $ContextFiles
     $EnrichmentOutputs.semantic_chunks_manifest = "indexAI/code_chunks/semantic_code_chunks_manifest.json"
     $EnrichmentOutputs.semantic_chunks_json = "indexAI/code_chunks/semantic_code_chunks.json"
+}
+
+if ($SelectSemanticChunks) {
+    $SelectedChunksJson = "output/ai_context_packs/$SelectedChunksBasename.json"
+    $SelectedChunksMd = "output/ai_context_packs/$SelectedChunksBasename.md"
+    $SelectArgs = @(
+        ".\Tools\ai\select_semantic_code_chunks.py",
+        "--repo-root", ".",
+        "--query", $ChunkQuery,
+        "--output", $SelectedChunksJson,
+        "--markdown-output", $SelectedChunksMd,
+        "--max-chunks", "$MaxSelectedChunks",
+        "--max-total-chars", "$MaxSelectedChunkChars",
+        "--max-excerpt-chars", "$MaxSelectedChunkExcerptChars"
+    )
+    foreach ($boost in $ChunkPathBoost) {
+        $SelectArgs += @("--path-boost", $boost)
+    }
+    Invoke-CommandChecked -Label "Select focused semantic code chunks" -Block {
+        python @SelectArgs
+    }
+    $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $SelectedChunksMd -Root $RepoRootPath
+    $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $SelectedChunksJson -Root $RepoRootPath
+    $ContextFiles = Normalize-ContextFiles $ContextFiles
+    $EnrichmentOutputs.selected_chunks_json = $SelectedChunksJson
+    $EnrichmentOutputs.selected_chunks_markdown = $SelectedChunksMd
 }
 
 if ($BuildContextPack) {
@@ -294,6 +333,7 @@ Write-Host "Pipeline output: $PipelineRel"
 Write-Host "Profile: $Profile"
 Write-Host "Context files: $($ContextFiles -join ', ')"
 Write-Host "Build semantic chunks: $BuildSemanticChunks"
+Write-Host "Select semantic chunks: $SelectSemanticChunks"
 Write-Host "Build context pack: $BuildContextPack"
 Write-Host "Build agent state packet: $BuildAgentStatePacket"
 Write-Host "Use primary advisory provider: $UsePrimaryAdvisoryProvider"
@@ -391,6 +431,10 @@ $Manifest = [ordered]@{
     context_file_count = $ContextFiles.Count
     enrichment_requested = [ordered]@{
         build_semantic_chunks = [bool]$BuildSemanticChunks
+        select_semantic_chunks = [bool]$SelectSemanticChunks
+        chunk_query = $ChunkQuery
+        max_selected_chunks = $MaxSelectedChunks
+        max_selected_chunk_chars = $MaxSelectedChunkChars
         build_context_pack = [bool]$BuildContextPack
         context_pack_profile = $ContextPackProfile
         build_agent_state_packet = [bool]$BuildAgentStatePacket
