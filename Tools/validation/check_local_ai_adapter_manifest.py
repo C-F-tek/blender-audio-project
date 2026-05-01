@@ -52,6 +52,11 @@ REQUIRED_ENRICHMENT_REQUESTED_FIELDS = (
     "save_inputs_to_memory_db",
 )
 
+ALLOWED_INDEXAI_ARTIFACTS = {
+    "indexAI/code_chunks/semantic_code_chunks.json",
+    "indexAI/code_chunks/semantic_code_chunks_manifest.json",
+}
+
 FORBIDDEN_PATH_PREFIXES = (
     ".git/",
     ".venv/",
@@ -102,7 +107,7 @@ def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     return data, None
 
 
-def path_policy_errors(path: str, *, allow_output: bool = True, allow_index_manifest: bool = True) -> list[str]:
+def path_policy_errors(path: str, *, allow_output: bool = True, allow_index_artifacts: bool = True) -> list[str]:
     normalized = normalize_path(path)
     errors: list[str] = []
     if not normalized:
@@ -115,7 +120,7 @@ def path_policy_errors(path: str, *, allow_output: bool = True, allow_index_mani
         errors.append(f"forbidden path prefix: {normalized}")
     if normalized.startswith("output/") and not allow_output:
         errors.append(f"output path is not allowed here: {normalized}")
-    if normalized.startswith("indexAI/") and not (allow_index_manifest and normalized == "indexAI/code_chunks/semantic_code_chunks_manifest.json"):
+    if normalized.startswith("indexAI/") and not (allow_index_artifacts and normalized in ALLOWED_INDEXAI_ARTIFACTS):
         errors.append(f"indexAI path is not allowed here: {normalized}")
     lower = normalized.lower()
     if any(fragment in lower for fragment in FORBIDDEN_PATH_FRAGMENTS) and lower.endswith(".json"):
@@ -134,12 +139,13 @@ def require_path_if_requested(
     reason: str,
     *,
     allow_output: bool = True,
+    allow_index_artifacts: bool = True,
 ) -> None:
     value = normalize_path(outputs.get(field))
     if not value:
         errors.append(f"{field} is required when {reason}")
         return
-    for error in path_policy_errors(value, allow_output=allow_output):
+    for error in path_policy_errors(value, allow_output=allow_output, allow_index_artifacts=allow_index_artifacts):
         errors.append(f"{field}: {error}")
 
 
@@ -219,13 +225,13 @@ def validate_manifest(path: Path, repo_root: Path) -> dict[str, Any]:
         if not bool_field(enrichment_requested, "select_semantic_chunks"):
             errors.append("build_selected_chunks_evidence requires select_semantic_chunks")
         require_path_if_requested(errors, enrichment_outputs, "selected_chunks_validation", "build_selected_chunks_evidence is true")
-        require_path_if_requested(errors, enrichment_outputs, "selected_chunks_evidence_json", "build_selected_chunks_evidence is true", allow_output=False)
-        require_path_if_requested(errors, enrichment_outputs, "selected_chunks_evidence_markdown", "build_selected_chunks_evidence is true", allow_output=False)
+        require_path_if_requested(errors, enrichment_outputs, "selected_chunks_evidence_json", "build_selected_chunks_evidence is true", allow_output=False, allow_index_artifacts=False)
+        require_path_if_requested(errors, enrichment_outputs, "selected_chunks_evidence_markdown", "build_selected_chunks_evidence is true", allow_output=False, allow_index_artifacts=False)
 
     if bool_field(enrichment_requested, "build_context_pack"):
         require_path_if_requested(errors, enrichment_outputs, "context_pack_json", "build_context_pack is true")
         require_path_if_requested(errors, enrichment_outputs, "context_pack_markdown", "build_context_pack is true")
-        require_path_if_requested(errors, enrichment_outputs, "context_pack_evidence_json", "build_context_pack is true", allow_output=False)
+        require_path_if_requested(errors, enrichment_outputs, "context_pack_evidence_json", "build_context_pack is true", allow_output=False, allow_index_artifacts=False)
 
     if bool_field(enrichment_requested, "build_agent_state_packet"):
         require_path_if_requested(errors, enrichment_outputs, "agent_state_json", "build_agent_state_packet is true")
