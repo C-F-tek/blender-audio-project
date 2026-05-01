@@ -47,7 +47,12 @@ PLACEHOLDER_PATH_REFERENCES = {
     "Scripting/package_name",
     "Tools/validation/fixtures",
     "patch_specs/inbox",
+    "Tools/npu/npu_preflight_report.json",
 }
+GENERATED_REFERENCE_PREFIXES = (
+    "output/",
+    "indexAI/",
+)
 PATH_ALIAS_PREFIXES = (
     ("EXECUTION_PLANS/", "docs/EXECUTION_PLANS/"),
     ("github/workflows/", ".github/workflows/"),
@@ -63,6 +68,7 @@ ALLOW_DUPLICATE_SYMBOLS = {
     "add_item",
     "append_output",
     "apply_filter",
+    "artifact_extra_roots",
     "ask_bool",
     "build_inventory",
     "build_layout",
@@ -162,7 +168,8 @@ def is_conceptual_slash_term(reference: str) -> bool:
 
 
 def is_placeholder_reference(reference: str) -> bool:
-    return normalize_reference(reference) in PLACEHOLDER_PATH_REFERENCES
+    ref = normalize_reference(reference)
+    return ref in PLACEHOLDER_PATH_REFERENCES or any(ref.startswith(prefix) for prefix in GENERATED_REFERENCE_PREFIXES)
 
 
 def classify_ai_workload_failure(report: dict[str, Any]) -> dict[str, Any]:
@@ -226,7 +233,7 @@ def refine_doc_code(review: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[
         if doc in LOW_SIGNAL_DOCS:
             ignored_refs.append({**item, "normalized_reference": normalized, "reason": "low_signal_generated_history"})
         elif is_placeholder_reference(reference):
-            ignored_refs.append({**item, "normalized_reference": normalized, "reason": "placeholder_or_template_path"})
+            ignored_refs.append({**item, "normalized_reference": normalized, "reason": "placeholder_generated_or_template_path"})
         elif resolved:
             resolved_refs.append({**item, "normalized_reference": normalized, "resolved_reference": resolved, "reason": "exists_after_normalization_or_alias"})
         elif is_conceptual_slash_term(reference):
