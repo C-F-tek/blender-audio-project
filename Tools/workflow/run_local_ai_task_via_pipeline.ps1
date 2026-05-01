@@ -134,6 +134,23 @@ function Add-ContextFileIfPresent {
     return $Current
 }
 
+function Normalize-ContextFiles {
+    param([string[]]$Values)
+    $seen = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+    $normalized = @()
+    foreach ($value in $Values) {
+        $item = [string]$value
+        if ([string]::IsNullOrWhiteSpace($item)) {
+            continue
+        }
+        $item = $item.Trim().Replace("\", "/")
+        if ($seen.Add($item)) {
+            $normalized += $item
+        }
+    }
+    return $normalized
+}
+
 function New-SafeName {
     param([string]$Value, [string]$Fallback)
     $safe = [regex]::Replace(($Value.ToLowerInvariant()), "[^a-z0-9._-]+", "_").Trim("._-")
@@ -185,6 +202,7 @@ if ($TaskRel -ne "") { $ContextFiles += $TaskRel }
 foreach ($extra in $ExtraContextFile) {
     $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $extra -Root $RepoRootPath
 }
+$ContextFiles = Normalize-ContextFiles $ContextFiles
 
 $EnrichmentOutputs = [ordered]@{
     semantic_chunks_manifest = ""
@@ -203,6 +221,7 @@ if ($BuildSemanticChunks) {
         python .\Tools\npu\build_semantic_code_chunks.py --repo-root .
     }
     $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue "indexAI/code_chunks/semantic_code_chunks_manifest.json" -Root $RepoRootPath
+    $ContextFiles = Normalize-ContextFiles $ContextFiles
     $EnrichmentOutputs.semantic_chunks_manifest = "indexAI/code_chunks/semantic_code_chunks_manifest.json"
     $EnrichmentOutputs.semantic_chunks_json = "indexAI/code_chunks/semantic_code_chunks.json"
 }
@@ -222,12 +241,14 @@ if ($BuildContextPack) {
     $ContextPackEvidenceJson = "docs/LOCAL_VALIDATION_EVIDENCE/$ContextPackEvidenceBasename.json"
     $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $ContextPackMd -Root $RepoRootPath
     $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $ContextPackJson -Root $RepoRootPath
+    $ContextFiles = Normalize-ContextFiles $ContextFiles
     $EnrichmentOutputs.context_pack_json = $ContextPackJson
     $EnrichmentOutputs.context_pack_markdown = $ContextPackMd
     $EnrichmentOutputs.context_pack_evidence_json = $ContextPackEvidenceJson
 }
 
 if ($BuildAgentStatePacket) {
+    $ContextFiles = Normalize-ContextFiles $ContextFiles
     $AgentArgs = @(
         ".\Tools\ai\build_agent_state_packet.py",
         "--repo-root", ".",
@@ -250,10 +271,13 @@ if ($BuildAgentStatePacket) {
     $AgentStateManifest = "$AgentStateRel/${AgentStateBasename}_memory_manifest.json"
     $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $AgentStateMd -Root $RepoRootPath
     $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $AgentStateJson -Root $RepoRootPath
+    $ContextFiles = Normalize-ContextFiles $ContextFiles
     $EnrichmentOutputs.agent_state_json = $AgentStateJson
     $EnrichmentOutputs.agent_state_markdown = $AgentStateMd
     $EnrichmentOutputs.agent_state_memory_manifest = $AgentStateManifest
 }
+
+$ContextFiles = Normalize-ContextFiles $ContextFiles
 
 $ReportFiles = @(
     "output/validation/docs_links.json",
@@ -364,6 +388,7 @@ $Manifest = [ordered]@{
     basename = $Basename
     proposal_basename = $ProposalBasename
     context_files = $ContextFiles
+    context_file_count = $ContextFiles.Count
     enrichment_requested = [ordered]@{
         build_semantic_chunks = [bool]$BuildSemanticChunks
         build_context_pack = [bool]$BuildContextPack
