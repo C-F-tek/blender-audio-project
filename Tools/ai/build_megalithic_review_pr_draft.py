@@ -4,6 +4,8 @@
 This tool does not create a GitHub pull request. It converts review/proposal
 artifacts into a PR-ready JSON/Markdown package so a human or a separate GitHub
 step can decide whether to create a real PR.
+
+It supports both raw megalithic review artifacts and signal-refined artifacts.
 """
 from __future__ import annotations
 
@@ -33,6 +35,26 @@ def slugify(value: str) -> str:
     return slug[:72] or "megalithic-review-followup"
 
 
+def review_summary(review: dict[str, Any]) -> dict[str, Any]:
+    summary = review.get("summary")
+    if isinstance(summary, dict):
+        return summary
+    original_summary = review.get("original_summary")
+    if isinstance(original_summary, dict):
+        return original_summary
+    return {}
+
+
+def review_findings(review: dict[str, Any]) -> list[dict[str, Any]]:
+    refined = review.get("refined_findings")
+    if isinstance(refined, list):
+        return [item for item in refined if isinstance(item, dict)]
+    deterministic = review.get("deterministic_findings")
+    if isinstance(deterministic, list):
+        return [item for item in deterministic if isinstance(item, dict)]
+    return []
+
+
 def proposal_titles(proposals: dict[str, Any]) -> list[str]:
     items = proposals.get("proposals", [])
     titles = []
@@ -46,9 +68,7 @@ def proposal_titles(proposals: dict[str, Any]) -> list[str]:
 
 def top_findings(review: dict[str, Any], *, limit: int = 12) -> list[str]:
     out = []
-    for finding in review.get("deterministic_findings", [])[:limit]:
-        if not isinstance(finding, dict):
-            continue
+    for finding in review_findings(review)[:limit]:
         severity = finding.get("severity", "unknown")
         area = finding.get("area", "unknown")
         title = finding.get("title", "untitled finding")
@@ -57,13 +77,19 @@ def top_findings(review: dict[str, Any], *, limit: int = 12) -> list[str]:
 
 
 def build_pr_body(review: dict[str, Any], proposals: dict[str, Any], *, branch_name: str) -> str:
-    summary = review.get("summary", {})
+    summary = review_summary(review)
     proposal_count = int(proposals.get("proposal_count") or 0)
     provider_execution = bool(review.get("provider_execution_performed"))
+    review_kind = review.get("kind") or "unknown_review"
     lines = [
         "Generated from megalithic repository review artifacts.",
         "",
         "This is a review PR draft. It is intended for manual evaluation before any commit or real PR creation.",
+        "",
+        "Review source:",
+        "",
+        f"- Review kind: {review_kind}",
+        f"- Proposal kind: {proposals.get('kind')}",
         "",
         "Scope reviewed:",
         "",
@@ -82,7 +108,7 @@ def build_pr_body(review: dict[str, Any], proposals: dict[str, Any], *, branch_n
     if findings:
         lines.extend(f"- {item}" for item in findings)
     else:
-        lines.append("- No deterministic findings recorded.")
+        lines.append("- No actionable findings recorded.")
     lines.extend(["", "Proposed follow-up:", ""])
     titles = proposal_titles(proposals)
     if titles:
@@ -98,8 +124,8 @@ def build_pr_body(review: dict[str, Any], proposals: dict[str, Any], *, branch_n
             "",
             "Validation checklist:",
             "",
-            "- [ ] Review megalithic_repo_review.md",
-            "- [ ] Review megalithic_repo_review_proposals.json",
+            "- [ ] Review megalithic review Markdown artifact",
+            "- [ ] Review megalithic proposal JSON artifact",
             "- [ ] Apply only selected manual-review proposals",
             "- [ ] Do not commit output/** artifacts",
             "- [ ] Do not commit SQLite memory DB files",
@@ -170,6 +196,8 @@ def render_markdown(draft: dict[str, Any]) -> str:
     lines.append(f"- Proposal count: `{draft['proposal_count']}`")
     lines.append(f"- Suggested branch: `{draft['suggested_branch']}`")
     lines.append(f"- Title: `{draft['title']}`")
+    lines.append(f"- Review artifact: `{draft['review_artifact']}`")
+    lines.append(f"- Proposal artifact: `{draft['proposal_artifact']}`")
     lines.append("")
     lines.append("## PR Body")
     lines.append("")
