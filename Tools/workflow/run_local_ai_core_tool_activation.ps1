@@ -19,6 +19,9 @@
   applies them and never queues them for automatic execution.
 
   Provider execution remains explicit and opt-in through -UseExplicitProviders.
+  Megalithic repository review is also opt-in through -RunMegalithicReview.
+  Ollama/GPU live review inside the megalithic review remains opt-in through
+  -UseOllamaForMegalithicReview.
 #>
 [CmdletBinding()]
 param(
@@ -28,6 +31,8 @@ param(
     [string]$Objective = "Activate the app-agnostic IA-Carmine local AI core/tool pipeline, generate concrete repository artifacts, validate NPU knowledge-broker context and prepare manual-review macro patch drafts when explicitly requested.",
     [switch]$UseExplicitProviders,
     [switch]$GenerateMacroPatchDrafts,
+    [switch]$RunMegalithicReview,
+    [switch]$UseOllamaForMegalithicReview,
     [switch]$DryRun
 )
 
@@ -79,6 +84,9 @@ $AdapterManifestValidation = "output/validation/local_ai_core_tool_activation_ad
 $GithubEvidenceValidation = "output/validation/local_ai_core_tool_activation_github_evidence_bundle.json"
 $SelectedChunks = "output/ai_context_packs/full_context_golden_selected_chunks.json"
 $ContextPack = "output/ai_context_packs/full_context_golden_core_ai_backend.json"
+$MegalithicReviewJson = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review.json"
+$MegalithicReviewMd = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review.md"
+$MegalithicReviewProposals = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review_proposals.json"
 
 Write-Host "=== IA-Carmine Local AI Core/Tool Activation ===" -ForegroundColor Green
 Write-Host "Repo: $RepoRootPath"
@@ -86,6 +94,8 @@ Write-Host "Task file: $TaskFile"
 Write-Host "Run dir: $RunDir"
 Write-Host "Use explicit providers: $UseExplicitProviders"
 Write-Host "Generate macro patch drafts: $GenerateMacroPatchDrafts"
+Write-Host "Run megalithic review: $RunMegalithicReview"
+Write-Host "Use Ollama for megalithic review: $UseOllamaForMegalithicReview"
 Write-Host "Dry run: $DryRun"
 
 $PipelineArgs = @(
@@ -160,6 +170,28 @@ if (-not $DryRun) {
             --output $GithubEvidenceValidation
     }
 
+    if ($RunMegalithicReview) {
+        $MegalithicArgs = @(
+            ".\Tools\ai\run_megalithic_repo_review.py",
+            "--repo-root", ".",
+            "--include-all-docs",
+            "--include-all-code",
+            "--include-raw",
+            "--include-index",
+            "--include-output",
+            "--include-sqlite-memory",
+            "--output", $MegalithicReviewJson,
+            "--markdown-output", $MegalithicReviewMd,
+            "--proposal-output", $MegalithicReviewProposals
+        )
+        if ($UseOllamaForMegalithicReview) {
+            $MegalithicArgs += @("--use-ollama", "--ollama-max-new-tokens", "5000")
+        }
+        Invoke-Checked -Label "Run optional all-resources megalithic repository review" -Block {
+            python @MegalithicArgs
+        }
+    }
+
     if ($GenerateMacroPatchDrafts) {
         $PatchManifest = "output/patch_specs/${Basename}_patch_specs_manifest.json"
         if (Test-Path -LiteralPath $PatchManifest -PathType Leaf) {
@@ -186,6 +218,8 @@ $Summary = [ordered]@{
     task_file = $TaskFile.Replace("\", "/")
     use_explicit_providers = [bool]$UseExplicitProviders
     generate_macro_patch_drafts = [bool]$GenerateMacroPatchDrafts
+    run_megalithic_review = [bool]$RunMegalithicReview
+    use_ollama_for_megalithic_review = [bool]$UseOllamaForMegalithicReview
     dry_run = [bool]$DryRun
     provider_execution_policy = "explicit_only"
     apply_policy = "manual_review_only_no_auto_apply"
@@ -204,6 +238,9 @@ $Summary = [ordered]@{
         npu_knowledge_broker_packet = $KnowledgePacket
         npu_knowledge_broker_markdown = $KnowledgePacketMd
         npu_knowledge_broker_validation = $KnowledgeValidation
+        megalithic_review_json = $MegalithicReviewJson
+        megalithic_review_markdown = $MegalithicReviewMd
+        megalithic_review_proposals = $MegalithicReviewProposals
         macro_patch_manifest = "output/patch_specs/${Basename}_patch_specs_manifest.json"
     }
 }
@@ -218,6 +255,8 @@ New-Item -ItemType Directory -Force -Path "output/ai_pipeline" | Out-Null
     "- Run dir: $($Summary.run_dir)",
     "- Explicit providers: $UseExplicitProviders",
     "- Macro patch drafts: $GenerateMacroPatchDrafts",
+    "- Megalithic review: $RunMegalithicReview",
+    "- Ollama megalithic review: $UseOllamaForMegalithicReview",
     "- Apply policy: $($Summary.apply_policy)",
     "- App agnostic: $($Summary.app_agnostic)",
     "",
@@ -226,6 +265,7 @@ New-Item -ItemType Directory -Force -Path "output/ai_pipeline" | Out-Null
     "- Adapter manifest: $AdapterManifest",
     "- GitHub evidence: docs/LOCAL_VALIDATION_EVIDENCE/${EvidenceBasename}.json",
     "- NPU knowledge broker packet: $KnowledgePacket",
+    "- Megalithic review: $MegalithicReviewJson",
     "- Macro patch manifest: output/patch_specs/${Basename}_patch_specs_manifest.json"
 ) | Set-Content -LiteralPath $SummaryMd -Encoding UTF8
 
