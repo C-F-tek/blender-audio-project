@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "ai_context_pack_evidence",
-  "generated_at": "2026-05-01T08:35:04",
+  "generated_at": "2026-05-01T09:22:13",
   "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "profile": "project_self_improvement",
   "profile_description": "Prototype context pack for the repo helping plan its own next validated work.",
@@ -60,7 +60,7 @@
       "required": true,
       "included": true,
       "truncated": true,
-      "sha256": "c5365cac029ab9f1b0a40854698d1d931b1ca34a9575200f2056e438018f331e",
+      "sha256": "50bf7cb95a2a2af7cedf9c251e50b89724a3eda3bfcb41879088decd908e2db3",
       "included_chars": 4000
     },
     {
@@ -78,7 +78,7 @@
       "required": true,
       "included": true,
       "truncated": true,
-      "sha256": "3dafc847fee3b01689ab942748f265f7c07a355c7afac19a31ef4c03d7eb87e7",
+      "sha256": "97eb7477ca448160106082cbb26e610855b7f5306dc2dcf8b91544a0357c7d45",
       "included_chars": 4000
     },
     {
@@ -87,7 +87,7 @@
       "required": true,
       "included": true,
       "truncated": true,
-      "sha256": "92b2da0a38a87ca8883fc529c65dcf67f0df9c633993af1f2e604b7429685ed0",
+      "sha256": "ae4463b3f92a5197b05472269462ec7ad0a88368a3485700f4a2d68ab64e70e3",
       "included_chars": 4000
     },
     {
@@ -105,7 +105,7 @@
       "required": true,
       "included": true,
       "truncated": true,
-      "sha256": "14762bc7b8646372eed584a42c991f9afacdd40bd100ddbf57b78bbf43c3c6b6",
+      "sha256": "84b9a6abc0ae4dde0058d35b1931458da993191ee978e746193b8899f0f1f6ce",
       "included_chars": 4000
     },
     {
@@ -114,7 +114,7 @@
       "required": true,
       "included": true,
       "truncated": true,
-      "sha256": "7b185771cb45a13fdc0413aa8916d6e197333d9cac379d6afd58970192c511bf",
+      "sha256": "5d57d525d9f615b8e459a4eb152ef8fcabeae0bce3d6797e54e602b5d7fe8795",
       "included_chars": 4000
     },
     {
@@ -150,7 +150,7 @@
       "required": false,
       "included": true,
       "truncated": true,
-      "sha256": "ed10b8ab2838da77772c9ff3b57e5161dc4199cbae38dbb4e57d2db32774ac2b",
+      "sha256": "80f9735f5ac80c20749df4b493f08509eae7a64d87ac38c4d83086de253e7648",
       "included_chars": 4000
     },
     {

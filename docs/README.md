@@ -24,11 +24,12 @@ Blender/audio-reactive generation remains the first application domain and legac
 14. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
 15. `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`
 16. `AI_CONTEXT_PACKS.md`
-17. `AI_MEMORY_POLICY.md`
-18. `AI_PIPELINE_ARCHITECTURE.md`
-19. `AI_PIPELINE_REFACTOR_STATUS.md`
-20. `LOCAL_WORKSTATION_TARGET.md`
-21. Blender/audio docs only when entering that application domain.
+17. `AI_SELECTIVE_PLANNER.md`
+18. `AI_MEMORY_POLICY.md`
+19. `AI_PIPELINE_ARCHITECTURE.md`
+20. `AI_PIPELINE_REFACTOR_STATUS.md`
+21. `LOCAL_WORKSTATION_TARGET.md`
+22. Blender/audio docs only when entering that application domain.
 
 ## Current validated provider posture
 
@@ -65,6 +66,7 @@ npu_decode_smoke_passed: true
 | `DATA_FLOW.md` | Current app-agnostic data/report/provider flow. |
 | `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow, GPU/NPU parallelism and evidence handling. |
 | `JSON_SCHEMAS.md` | JSON/report contract notes and current schema gap index. |
+| `AI_SELECTIVE_PLANNER.md` | Report-only selective planner that recommends validators and candidate patch specs from context/evidence. |
 | `LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable local validation evidence. |
 | `../Tools/validation/README.md` | Local validation commands and report contracts. |
 | `../Tools/npu/pipeline/README.md` | App-agnostic NPU/provider helper package. |
