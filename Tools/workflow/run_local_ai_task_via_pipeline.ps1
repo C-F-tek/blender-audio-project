@@ -14,6 +14,11 @@
   Provider execution remains explicit through -UsePrimaryAdvisoryProvider and
   -RunMultistepProviderWorkflow. NPU remains probe / guardrail / decode
   diagnostic. Ollama/GPU remains primary advisory behind the quality gate.
+
+  -FullContextGoldenPath is a safe preset. It expands to the standard local
+  context enrichment options, selected-chunks evidence, context pack, agent state
+  and enrichment plan. It does not enable provider execution, probes, multistep
+  provider workflow, patch-spec generation or patch application by itself.
 #>
 [CmdletBinding()]
 param(
@@ -26,6 +31,8 @@ param(
 
     [ValidateSet("core", "npu", "docs")]
     [string]$Profile = "docs",
+
+    [switch]$FullContextGoldenPath,
 
     [string]$Basename = "local_ai_task_pipeline",
     [string]$ProposalBasename = "local_ai_task_pipeline_proposals",
@@ -40,6 +47,8 @@ param(
     [switch]$BuildSemanticChunks,
     [switch]$SelectSemanticChunks,
     [switch]$BuildSelectedChunksEvidence,
+    [switch]$BuildEnrichmentPlan,
+    [string]$EnrichmentPlanBasename = "",
     [string]$ChunkQuery = "",
     [string[]]$ChunkPathBoost = @(),
     [string]$SelectedChunksBasename = "",
@@ -170,6 +179,37 @@ function New-SafeName {
 $RepoRootPath = Resolve-ExistingPath $RepoRoot
 Set-Location $RepoRootPath
 
+if ($FullContextGoldenPath) {
+    $Profile = "npu"
+    $BuildSemanticChunks = $true
+    $SelectSemanticChunks = $true
+    $BuildSelectedChunksEvidence = $true
+    $BuildContextPack = $true
+    $BuildAgentStatePacket = $true
+    $BuildEnrichmentPlan = $true
+    $SaveInputsToMemoryDb = $true
+
+    if ($Basename -eq "local_ai_task_pipeline") { $Basename = "full_context_golden_local_ai_context" }
+    if ($ProposalBasename -eq "local_ai_task_pipeline_proposals") { $ProposalBasename = "full_context_golden_local_ai_context_proposals" }
+    if ([string]::IsNullOrWhiteSpace($SelectedChunksBasename)) { $SelectedChunksBasename = "full_context_golden_selected_chunks" }
+    if ([string]::IsNullOrWhiteSpace($SelectedChunksEvidenceBasename)) { $SelectedChunksEvidenceBasename = "full_context_golden_selected_chunks_evidence" }
+    if ([string]::IsNullOrWhiteSpace($ContextPackBasename)) { $ContextPackBasename = "full_context_golden_core_ai_backend" }
+    if ([string]::IsNullOrWhiteSpace($ContextPackEvidenceBasename)) { $ContextPackEvidenceBasename = "full_context_golden_core_ai_backend_context_pack_evidence" }
+    if ([string]::IsNullOrWhiteSpace($AgentStateBasename)) { $AgentStateBasename = "full_context_golden_agent_state" }
+    if ([string]::IsNullOrWhiteSpace($EnrichmentPlanBasename)) { $EnrichmentPlanBasename = "full_context_golden_enrichment_plan" }
+    if ([string]::IsNullOrWhiteSpace($ChunkQuery)) {
+        $ChunkQuery = "workflow adapter local ai full context enrichment selected chunks sqlite memory provider multistep proposals validators npu knowledge broker context oracle retrieval ranking"
+    }
+    if ($ChunkPathBoost.Count -eq 0) {
+        $ChunkPathBoost = @("Tools/workflow", "Tools/ai", "Tools/validation", "Tools/npu")
+    }
+    if ($MaxSelectedChunks -eq 20) { $MaxSelectedChunks = 24 }
+    if ($MaxSelectedChunkChars -eq 24000) { $MaxSelectedChunkChars = 32000 }
+    if ([string]::IsNullOrWhiteSpace($AgentStateObjective)) {
+        $AgentStateObjective = "Run full-context local AI/NPU golden path and plan controlled complexity escalation while preserving Ollama/GPU as primary advisory and NPU as knowledge broker."
+    }
+}
+
 if ($BuildSelectedChunksEvidence -and -not $SelectSemanticChunks) {
     throw "-BuildSelectedChunksEvidence requires -SelectSemanticChunks"
 }
@@ -190,6 +230,7 @@ $AgentStateDir = Join-Path $PipelineDir "agent_state"
 New-Item -ItemType Directory -Force -Path $PipelineDir | Out-Null
 New-Item -ItemType Directory -Force -Path $AgentStateDir | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $RepoRootPath "output/validation") | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $RepoRootPath "output/ai_pipeline") | Out-Null
 
 $PromptRel = Get-RepoRelativePath $RepoRootPath $PromptPath
 $PipelineRel = Get-RepoRelativePath $RepoRootPath $PipelineDir
@@ -207,6 +248,7 @@ if ([string]::IsNullOrWhiteSpace($ContextPackEvidenceBasename)) { $ContextPackEv
 if ([string]::IsNullOrWhiteSpace($SelectedChunksBasename)) { $SelectedChunksBasename = "${Basename}_selected_chunks" }
 if ([string]::IsNullOrWhiteSpace($SelectedChunksEvidenceBasename)) { $SelectedChunksEvidenceBasename = "${SelectedChunksBasename}_evidence" }
 if ([string]::IsNullOrWhiteSpace($AgentStateBasename)) { $AgentStateBasename = New-SafeName $Basename "local_ai_agent_state" }
+if ([string]::IsNullOrWhiteSpace($EnrichmentPlanBasename)) { $EnrichmentPlanBasename = "${Basename}_enrichment_plan" }
 if ([string]::IsNullOrWhiteSpace($AgentStateObjective)) {
     $AgentStateObjective = "Run local AI task $Basename with task Markdown, memory, semantic chunks and bounded context."
 }
@@ -236,7 +278,38 @@ $EnrichmentOutputs = [ordered]@{
     agent_state_json = ""
     agent_state_markdown = ""
     agent_state_memory_manifest = ""
+    enrichment_plan_json = ""
+    enrichment_plan_markdown = ""
+    enrichment_plan_validation = ""
     memory_db = $MemoryDb.Replace("\", "/")
+}
+
+if ($BuildEnrichmentPlan) {
+    $EnrichmentPlanJson = "output/ai_pipeline/${EnrichmentPlanBasename}.json"
+    $EnrichmentPlanMd = "output/ai_pipeline/${EnrichmentPlanBasename}.md"
+    $EnrichmentPlanValidation = "output/validation/${EnrichmentPlanBasename}_contract.json"
+    Invoke-CommandChecked -Label "Build local AI enrichment plan" -Block {
+        python .\Tools\ai\build_local_ai_enrichment_plan.py `
+            --repo-root . `
+            --objective $AgentStateObjective `
+            --task-file $TaskRel `
+            --profile $Profile `
+            --basename $EnrichmentPlanBasename `
+            --output $EnrichmentPlanJson `
+            --markdown-output $EnrichmentPlanMd
+    }
+    Invoke-CommandChecked -Label "Validate local AI enrichment plan" -Block {
+        python .\Tools\validation\check_local_ai_enrichment_plan.py `
+            --repo-root . `
+            --plan $EnrichmentPlanJson `
+            --output $EnrichmentPlanValidation
+    }
+    $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $EnrichmentPlanMd -Root $RepoRootPath
+    $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $EnrichmentPlanJson -Root $RepoRootPath
+    $ContextFiles = Normalize-ContextFiles $ContextFiles
+    $EnrichmentOutputs.enrichment_plan_json = $EnrichmentPlanJson
+    $EnrichmentOutputs.enrichment_plan_markdown = $EnrichmentPlanMd
+    $EnrichmentOutputs.enrichment_plan_validation = $EnrichmentPlanValidation
 }
 
 if ($BuildSemanticChunks) {
@@ -359,7 +432,9 @@ Write-Host "Prompt: $PromptRel"
 Write-Host "Task: $TaskRel"
 Write-Host "Pipeline output: $PipelineRel"
 Write-Host "Profile: $Profile"
+Write-Host "Full context golden path preset: $FullContextGoldenPath"
 Write-Host "Context files: $($ContextFiles -join ', ')"
+Write-Host "Build enrichment plan: $BuildEnrichmentPlan"
 Write-Host "Build semantic chunks: $BuildSemanticChunks"
 Write-Host "Select semantic chunks: $SelectSemanticChunks"
 Write-Host "Build selected chunks evidence: $BuildSelectedChunksEvidence"
@@ -458,7 +533,10 @@ $Manifest = [ordered]@{
     proposal_basename = $ProposalBasename
     context_files = $ContextFiles
     context_file_count = $ContextFiles.Count
+    full_context_golden_path_preset = [bool]$FullContextGoldenPath
     enrichment_requested = [ordered]@{
+        build_enrichment_plan = [bool]$BuildEnrichmentPlan
+        enrichment_plan_basename = $EnrichmentPlanBasename
         build_semantic_chunks = [bool]$BuildSemanticChunks
         select_semantic_chunks = [bool]$SelectSemanticChunks
         build_selected_chunks_evidence = [bool]$BuildSelectedChunksEvidence
@@ -492,6 +570,9 @@ $Manifest = [ordered]@{
         proposals_json = "$PipelineRel/$ProposalBasename.json"
         proposals_markdown = "$PipelineRel/$ProposalBasename.md"
         proposal_validation = $ProposalValidationOutput
+        enrichment_plan_json = $EnrichmentOutputs.enrichment_plan_json
+        enrichment_plan_markdown = $EnrichmentOutputs.enrichment_plan_markdown
+        enrichment_plan_validation = $EnrichmentOutputs.enrichment_plan_validation
         selected_chunks_validation = $EnrichmentOutputs.selected_chunks_validation
         selected_chunks_evidence_json = $EnrichmentOutputs.selected_chunks_evidence_json
         selected_chunks_evidence_markdown = $EnrichmentOutputs.selected_chunks_evidence_markdown
@@ -513,6 +594,7 @@ Write-Host "[OK] Manifest: $(Get-RepoRelativePath $RepoRootPath $ManifestPath)"
 Write-Host "[OK] Packet:   $PipelineRel/$Basename.md"
 Write-Host "[OK] Proposal: $PipelineRel/$ProposalBasename.md"
 Write-Host "[OK] Context files: $($ContextFiles.Count)"
+Write-Host "[OK] Full context golden path preset: $FullContextGoldenPath"
 Write-Host "[OK] Multistep requested: $RunMultistepProviderWorkflow"
 Write-Host "[OK] Provider execution requested: $($UsePrimaryAdvisoryProvider -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke)"
 Write-Host "[OK] Patch application performed: False"
