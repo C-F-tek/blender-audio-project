@@ -33,6 +33,7 @@ class CodeContractSpec:
     required_terms: tuple[str, ...]
     recommended_terms: tuple[str, ...] = ()
     forbidden_terms: tuple[str, ...] = ()
+    allowed_global_forbidden_terms: tuple[str, ...] = ()
     safe_patch_hint: str = "Add the missing contract term or update the contract spec if the implementation intentionally moved."
 
 
@@ -157,6 +158,10 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
             "openvino_gpu_primary_lane",
         ),
         recommended_terms=("AI_WORKLOAD_REPORT_QUALITY_GATE.md", "quality_report_required_before_advisory_use"),
+        allowed_global_forbidden_terms=(
+            "OpenVINO GPU primary lane",
+            "provider execution by default",
+        ),
         safe_patch_hint="Keep docs drift as report-only analysis that emits safe manual actions.",
     ),
     CodeContractSpec(
@@ -205,7 +210,16 @@ def check_contract(repo_root: Path, spec: CodeContractSpec) -> dict[str, Any]:
     missing_required = [term for term in spec.required_terms if term not in text]
     missing_recommended = [term for term in spec.recommended_terms if term not in text]
     forbidden_present = [term for term in spec.forbidden_terms if term in text]
-    forbidden_global_present = [term for term in FORBIDDEN_GLOBAL_TERMS if term in text]
+    forbidden_global_present = [
+        term
+        for term in FORBIDDEN_GLOBAL_TERMS
+        if term in text and term not in spec.allowed_global_forbidden_terms
+    ]
+    allowed_global_forbidden_present = [
+        term
+        for term in spec.allowed_global_forbidden_terms
+        if term in text
+    ]
 
     errors: list[str] = []
     warnings: list[str] = []
@@ -245,6 +259,7 @@ def check_contract(repo_root: Path, spec: CodeContractSpec) -> dict[str, Any]:
         "missing_recommended_terms": missing_recommended,
         "forbidden_terms_present": forbidden_present,
         "forbidden_global_terms_present": forbidden_global_present,
+        "allowed_global_forbidden_terms_present": allowed_global_forbidden_present,
         "errors": errors,
         "warnings": warnings,
         "safe_actions": safe_actions,
@@ -281,6 +296,10 @@ def render_markdown(report: dict[str, Any]) -> str:
         if check["forbidden_terms_present"] or check["forbidden_global_terms_present"]:
             lines.append("- Forbidden terms present:")
             for term in check["forbidden_terms_present"] + check["forbidden_global_terms_present"]:
+                lines.append(f"  - `{term}`")
+        if check.get("allowed_global_forbidden_terms_present"):
+            lines.append("- Allowed guardrail literals present:")
+            for term in check["allowed_global_forbidden_terms_present"]:
                 lines.append(f"  - `{term}`")
         if check["safe_actions"]:
             lines.append("- Suggested safe actions:")
