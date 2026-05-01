@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Run an explicit Ollama/GPU deep planning review over repository evidence.
 
 This is the first long-running deliberative layer for IA-Carmine. Unlike smoke
@@ -181,9 +181,16 @@ def evidence_ready_for_manual_patch_count(evidence: dict[str, Any]) -> int:
                 elif key == "ready_count" and isinstance(child, int) and value.get("kind") == "agent_review_evidence_sufficiency":
                     explicit_counts.append(child)
                 visit(child)
-            status = value.get("status") or value.get("classification") or value.get("decision")
-            if status in {"ready_for_manual_patch", "ready_for_patch_plan"}:
+            status = value.get("status") or value.get("classification")
+            if isinstance(status, str) and status in {"ready_for_manual_patch", "ready_for_patch_plan"}:
                 ready_items += 1
+            decision = value.get("decision")
+            if isinstance(decision, str) and decision in {"ready_for_manual_patch", "ready_for_patch_plan"}:
+                ready_items += 1
+            elif isinstance(decision, dict):
+                ready = decision.get("ready_for_manual_patch") or decision.get("ready_for_patch_plan")
+                if ready is True:
+                    ready_items += 1
         elif isinstance(value, list):
             for child in value:
                 visit(child)
@@ -482,7 +489,7 @@ def build_markdown(report: dict[str, Any]) -> str:
     lines.append("## Recommendations")
     lines.append("")
     for rec in report.get("recommendations", []):
-        lines.append(f"### {rec.get('id', 'recommendation')} — {rec.get('area')}")
+        lines.append(f"### {rec.get('id', 'recommendation')} â€” {rec.get('area')}")
         lines.append(f"- Status: `{rec.get('status')}`")
         lines.append(f"- Risk: `{rec.get('risk')}`")
         lines.append(f"- Target files: `{rec.get('target_files')}`")
@@ -704,3 +711,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
