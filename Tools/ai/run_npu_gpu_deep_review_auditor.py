@@ -6,6 +6,14 @@ This tool prepares a compact context from the GPU/Ollama deep-planning report
 and optionally invokes Tools/npu/run_npu_review.py with OpenVINO/NPU. Any NPU
 failure or unusable output is captured as a warning and never blocks the GPU
 review or patch-planning flow.
+
+The report separates four different states because Task Manager hardware
+activity only happens after the OpenVINO GenAI provider loads successfully:
+
+- provider_execution_requested: the caller asked for NPU execution;
+- provider_load_attempted: run_npu_review.py reached the NPU load path;
+- provider_execution_succeeded: provider completed and wrote output;
+- provider_execution_performed: kept as a strict success flag for report users.
 """
 from __future__ import annotations
 
@@ -25,6 +33,7 @@ DEFAULT_NPU_NOTES = "output/ai_pipeline/npu_gpu_deep_review_audit_notes.md"
 DEFAULT_NPU_METADATA = "output/validation/npu_gpu_deep_review_audit_metadata.json"
 DEFAULT_OUTPUT = "output/validation/npu_gpu_deep_review_audit.json"
 DEFAULT_MARKDOWN = "output/validation/npu_gpu_deep_review_audit.md"
+OPENVINO_GENAI_MISSING = "ModuleNotFoundError: No module named 'openvino_genai'"
 
 
 def now_iso() -> str:
@@ -117,10 +126,32 @@ def text_metrics(text: str) -> dict[str, Any]:
     }
 
 
-def classify_npu_output(text: str, returncode: int, error: str | None) -> tuple[str, list[str]]:
+def provider_load_attempted(stdout: str, stderr: str) -> bool:
+    combined = f"{stdout}\n{stderr}"
+    return "[NPU] Loading model:" in combined or "[NPU] Device: NPU" in combined
+
+
+def dependency_missing(stdout: str, stderr: str, error: str | None) -> bool:
+    combined = f"{stdout}\n{stderr}\n{error or ''}"
+    return OPENVINO_GENAI_MISSING in combined
+
+
+def classify_npu_output(
+    text: str,
+    returncode: int,
+    error: str | None,
+    stdout: str,
+    stderr: str,
+    metadata_only: bool,
+) -> tuple[str, list[str]]:
     warnings: list[str] = []
+    if metadata_only:
+        return "metadata_only", warnings
     if error:
         warnings.append(error)
+    if dependency_missing(stdout, stderr, error):
+        warnings.append("NPU auditor dependency missing: openvino_genai is not importable in this Python environment")
+        return "dependency_missing_openvino_genai", warnings
     if returncode != 0:
         warnings.append(f"NPU auditor command returned {returncode}")
     if not text.strip():
@@ -187,16 +218,17 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
     if args.metadata_only:
         command.append("--metadata-only")
 
-    returncode = None
+    returncode = 0
     stdout = ""
     stderr = ""
     error = None
     npu_text = ""
-    provider_execution_performed = False
+    requested = bool(args.run_npu)
+    load_attempted = False
     generated_output_written = False
     if args.run_npu:
         returncode, stdout, stderr, error = run_command(command, repo_root, args.timeout_seconds)
-        provider_execution_performed = not args.metadata_only
+        load_attempted = provider_load_attempted(stdout, stderr)
         generated_output_written = npu_out.exists() and not args.metadata_only
         if npu_out.exists():
             try:
@@ -204,15 +236,15 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             except OSError as exc:
                 error = f"{type(exc).__name__}: {exc}"
     else:
-        returncode = 0
         stdout = "NPU auditor skipped by default. Pass --run-npu to execute OpenVINO/NPU."
 
-    classification, warnings = classify_npu_output(npu_text, int(returncode or 0), error)
+    classification, warnings = classify_npu_output(npu_text, int(returncode or 0), error, stdout, stderr, args.metadata_only)
     if not args.run_npu:
         classification = "not_executed"
         warnings = ["NPU auditor was not executed; context artifact was prepared only"]
 
-    blocking = False
+    dep_missing = dependency_missing(stdout, stderr, error)
+    provider_succeeded = bool(args.run_npu and not args.metadata_only and returncode == 0 and generated_output_written and classification == "usable_audit_text")
     report = {
         "schema_version": 1,
         "kind": "npu_gpu_deep_review_audit",
@@ -221,23 +253,31 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
         "passed": True,
         "errors": [],
         "warnings": warnings,
-        "provider_execution_performed": provider_execution_performed,
+        "provider_execution_performed": provider_succeeded,
+        "provider_execution_requested": requested,
+        "provider_load_attempted": load_attempted,
+        "provider_execution_succeeded": provider_succeeded,
+        "dependency_missing": dep_missing,
         "patch_application_performed": False,
         "source_writes_performed": False,
         "apply_mode": "report_only_non_blocking_npu_audit",
         "non_blocking": True,
-        "blocking": blocking,
+        "blocking": False,
         "gpu_review": repo_rel(gpu_review_path, repo_root),
         "context_output": repo_rel(context_path, repo_root),
         "npu_output": repo_rel(npu_out, repo_root),
         "npu_notes_output": repo_rel(npu_notes, repo_root),
         "npu_metadata_output": repo_rel(npu_metadata, repo_root),
         "npu_auditor": {
-            "requested": bool(args.run_npu),
+            "requested": requested,
             "metadata_only": bool(args.metadata_only),
             "returncode": returncode,
             "classification": classification,
-            "provider_execution_performed": provider_execution_performed,
+            "provider_execution_requested": requested,
+            "provider_load_attempted": load_attempted,
+            "provider_execution_performed": provider_succeeded,
+            "provider_execution_succeeded": provider_succeeded,
+            "dependency_missing": dep_missing,
             "generated_output_written": generated_output_written,
             "stdout_tail": stdout,
             "stderr_tail": stderr,
@@ -247,6 +287,7 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             "gpu_review_blocked": False,
             "npu_primary_advisory": False,
             "npu_audit_usable": classification == "usable_audit_text",
+            "npu_dependency_missing": dep_missing,
             "recommendation": "continue_manual_review; treat NPU audit as non-blocking guardrail signal only",
         },
         "guardrails": {
@@ -266,7 +307,10 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# NPU GPU Deep Review Audit", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Non-blocking: `{report['non_blocking']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Provider execution requested: `{report['provider_execution_requested']}`")
+    lines.append(f"- Provider load attempted: `{report['provider_load_attempted']}`")
+    lines.append(f"- Provider execution succeeded: `{report['provider_execution_succeeded']}`")
+    lines.append(f"- Dependency missing: `{report['dependency_missing']}`")
     lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Classification: `{report['npu_auditor']['classification']}`")
     lines.append(f"- GPU review blocked: `{report['decision']['gpu_review_blocked']}`")
@@ -313,7 +357,10 @@ def main() -> int:
                 "passed": report["passed"],
                 "output": str(output),
                 "markdown": str(markdown_output),
-                "provider_execution_performed": report["provider_execution_performed"],
+                "provider_execution_requested": report["provider_execution_requested"],
+                "provider_load_attempted": report["provider_load_attempted"],
+                "provider_execution_succeeded": report["provider_execution_succeeded"],
+                "dependency_missing": report["dependency_missing"],
                 "patch_application_performed": report["patch_application_performed"],
                 "non_blocking": report["non_blocking"],
                 "classification": report["npu_auditor"]["classification"],
