@@ -14,6 +14,11 @@ activity only happens after the OpenVINO GenAI provider loads successfully:
 - provider_load_attempted: run_npu_review.py reached the NPU load path;
 - provider_execution_succeeded: provider completed and wrote output;
 - provider_execution_performed: kept as a strict success flag for report users.
+
+Naming note:
+
+- Python import module: openvino_genai
+- PyPI package name: openvino-genai
 """
 from __future__ import annotations
 
@@ -21,10 +26,14 @@ import argparse
 import json
 import os
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+try:
+    from Tools.npu.npu_runtime import DEFAULT_NPU_PYTHON
+except ImportError:
+    DEFAULT_NPU_PYTHON = Path(os.environ.get("SPAZIOTEMPO_NPU_PYTHON", Path.home() / "blender" / "venvs" / "blender-npu-ai" / "Scripts" / "python.exe"))
 
 DEFAULT_GPU_REVIEW = "output/ai_pipeline/agent_gpu_deep_planning_review.json"
 DEFAULT_CONTEXT = "output/ai_pipeline/npu_gpu_deep_review_audit_context.md"
@@ -68,6 +77,12 @@ def compact_json(data: Any, max_chars: int) -> str:
     if len(text) > max_chars:
         return text[:max_chars] + "\n...[truncated]"
     return text
+
+
+def npu_python_path(value: str | None) -> Path:
+    if value:
+        return Path(value).expanduser()
+    return Path(os.environ.get("SPAZIOTEMPO_NPU_PYTHON", str(DEFAULT_NPU_PYTHON))).expanduser()
 
 
 def build_context(gpu_review: dict[str, Any]) -> str:
@@ -150,7 +165,7 @@ def classify_npu_output(
     if error:
         warnings.append(error)
     if dependency_missing(stdout, stderr, error):
-        warnings.append("NPU auditor dependency missing: openvino_genai is not importable in this Python environment")
+        warnings.append("NPU auditor dependency missing: Python module openvino_genai is not importable; install PyPI package openvino-genai in the active NPU Python environment")
         return "dependency_missing_openvino_genai", warnings
     if returncode != 0:
         warnings.append(f"NPU auditor command returned {returncode}")
@@ -190,11 +205,12 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
     npu_out = resolve_path(repo_root, args.npu_output)
     npu_notes = resolve_path(repo_root, args.npu_notes_output)
     npu_metadata = resolve_path(repo_root, args.npu_metadata_output)
+    npu_python = npu_python_path(args.npu_python)
     context_path.parent.mkdir(parents=True, exist_ok=True)
     context_path.write_text(build_context(gpu_review), encoding="utf-8")
 
     command = [
-        sys.executable,
+        str(npu_python),
         "Tools/npu/run_npu_review.py",
         "--engine",
         "npu",
@@ -226,8 +242,13 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
     requested = bool(args.run_npu)
     load_attempted = False
     generated_output_written = False
+    npu_python_exists = npu_python.exists()
     if args.run_npu:
-        returncode, stdout, stderr, error = run_command(command, repo_root, args.timeout_seconds)
+        if not npu_python_exists:
+            returncode = 1
+            error = f"NPU Python not found: {npu_python}"
+        else:
+            returncode, stdout, stderr, error = run_command(command, repo_root, args.timeout_seconds)
         load_attempted = provider_load_attempted(stdout, stderr)
         generated_output_written = npu_out.exists() and not args.metadata_only
         if npu_out.exists():
@@ -239,6 +260,9 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
         stdout = "NPU auditor skipped by default. Pass --run-npu to execute OpenVINO/NPU."
 
     classification, warnings = classify_npu_output(npu_text, int(returncode or 0), error, stdout, stderr, args.metadata_only)
+    if args.run_npu and not npu_python_exists:
+        classification = "npu_python_missing"
+        warnings.append(f"NPU Python not found: {npu_python}")
     if not args.run_npu:
         classification = "not_executed"
         warnings = ["NPU auditor was not executed; context artifact was prepared only"]
@@ -258,6 +282,8 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
         "provider_load_attempted": load_attempted,
         "provider_execution_succeeded": provider_succeeded,
         "dependency_missing": dep_missing,
+        "npu_python": str(npu_python),
+        "npu_python_exists": npu_python_exists,
         "patch_application_performed": False,
         "source_writes_performed": False,
         "apply_mode": "report_only_non_blocking_npu_audit",
@@ -278,6 +304,8 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             "provider_execution_performed": provider_succeeded,
             "provider_execution_succeeded": provider_succeeded,
             "dependency_missing": dep_missing,
+            "npu_python": str(npu_python),
+            "npu_python_exists": npu_python_exists,
             "generated_output_written": generated_output_written,
             "stdout_tail": stdout,
             "stderr_tail": stderr,
@@ -288,6 +316,7 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             "npu_primary_advisory": False,
             "npu_audit_usable": classification == "usable_audit_text",
             "npu_dependency_missing": dep_missing,
+            "npu_python_missing": not npu_python_exists,
             "recommendation": "continue_manual_review; treat NPU audit as non-blocking guardrail signal only",
         },
         "guardrails": {
@@ -307,6 +336,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# NPU GPU Deep Review Audit", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Non-blocking: `{report['non_blocking']}`")
+    lines.append(f"- NPU Python: `{report['npu_python']}`")
+    lines.append(f"- NPU Python exists: `{report['npu_python_exists']}`")
     lines.append(f"- Provider execution requested: `{report['provider_execution_requested']}`")
     lines.append(f"- Provider load attempted: `{report['provider_load_attempted']}`")
     lines.append(f"- Provider execution succeeded: `{report['provider_execution_succeeded']}`")
@@ -332,6 +363,7 @@ def main() -> int:
     parser.add_argument("--gpu-review", default=DEFAULT_GPU_REVIEW)
     parser.add_argument("--run-npu", action="store_true", help="Explicitly execute OpenVINO/NPU auditor. Without this, only context is prepared.")
     parser.add_argument("--metadata-only", action="store_true", help="Ask run_npu_review.py to write metadata only without loading provider.")
+    parser.add_argument("--npu-python", default=None, help="Python executable for the NPU/OpenVINO GenAI environment. Defaults to SPAZIOTEMPO_NPU_PYTHON or Tools.npu.npu_runtime.DEFAULT_NPU_PYTHON.")
     parser.add_argument("--timeout-seconds", type=int, default=900)
     parser.add_argument("--max-context-chars", type=int, default=42000)
     parser.add_argument("--max-prompt-chars", type=int, default=15000)
@@ -357,6 +389,8 @@ def main() -> int:
                 "passed": report["passed"],
                 "output": str(output),
                 "markdown": str(markdown_output),
+                "npu_python": report["npu_python"],
+                "npu_python_exists": report["npu_python_exists"],
                 "provider_execution_requested": report["provider_execution_requested"],
                 "provider_load_attempted": report["provider_load_attempted"],
                 "provider_execution_succeeded": report["provider_execution_succeeded"],
