@@ -79,6 +79,52 @@ validators/evidence
   make ignored local outputs reviewable from GitHub through compact evidence
 ```
 
+## NPU knowledge-broker concept
+
+The local AI must explicitly evaluate whether the NPU lane can become a lightweight knowledge broker without becoming the primary advisory model.
+
+Target role:
+
+```text
+NPU as local knowledge broker / context oracle
+```
+
+Allowed responsibilities:
+
+```text
+1. Create or refresh semantic chunk indexes.
+2. Rank or preselect candidate Markdown/code/document chunks for a task objective.
+3. Produce compact context bundles or evidence summaries.
+4. Answer constrained retrieval questions such as: which docs/files/chunks are probably relevant?
+5. Run decode/probe diagnostics to verify that the local NPU stack is usable.
+6. Help reduce token pressure before the Ollama/GPU advisory model receives context.
+```
+
+Forbidden responsibilities:
+
+```text
+1. Do not make final patch decisions.
+2. Do not become primary advisory provider.
+3. Do not apply patches or rewrite source files.
+4. Do not bypass selected-chunks/context-pack validators.
+5. Do not replace Ollama/GPU for creative/repository advisory reasoning.
+6. Do not introduce OpenVINO GPU as the primary lane.
+```
+
+The local AI must propose a safe architecture for this concept, for example:
+
+```text
+Task objective
+  -> NPU knowledge broker builds/ranks candidate chunks
+  -> selected chunk validator checks budget and guardrails
+  -> context pack builder adds bounded docs/status context
+  -> SQLite agent state adds local memory
+  -> Ollama/GPU advisory model reasons over the prepared context
+  -> validators/evidence decide whether proposals are reviewable
+```
+
+This must remain report-only until a future reviewed patch spec explicitly promotes an implementation.
+
 ## Required input files
 
 The local AI must consider:
@@ -127,6 +173,9 @@ Allowed complexity increases:
 
 5. New patch-spec promotion proposal
    Example: convert a reviewed proposal into a draft patch spec under output/patch_specs only.
+
+6. NPU knowledge-broker proposal
+   Example: introduce a report-only helper that lets the NPU lane build/rank/select candidate chunks or context bundles before Ollama/GPU advisory reasoning.
 ```
 
 Forbidden complexity increases:
@@ -157,6 +206,7 @@ selected_chunks_summary
 context_pack_summary
 agent_state_summary
 provider_routing_summary
+npu_knowledge_broker_assessment
 current_capabilities
 missing_contracts
 complexity_escalation_candidates
@@ -172,7 +222,7 @@ Each complexity escalation candidate must include:
 proposal_id
 title
 target_files
-change_type: core_helper | validator | wrapper_flag | docs_contract | patch_spec_promotion | follow_up_task
+change_type: core_helper | validator | wrapper_flag | docs_contract | patch_spec_promotion | knowledge_broker | follow_up_task
 rationale
 evidence_source_files
 expected_outputs
@@ -193,6 +243,7 @@ P2: reusable enrichment-plan helper
 P3: full-context golden path docs update
 P4: optional wrapper preset flag
 P5: selected-chunks evidence in standard local validation block
+P6: NPU knowledge-broker helper / context oracle prototype
 ```
 
 Do not implement these proposals in this task. Generate proposals and draft patch specs only.
@@ -205,7 +256,7 @@ Run this task through the project-owned wrapper:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
   -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
   -TaskBranch codex/full-context-ai-npu-golden-run `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -BuildSemanticChunks -SelectSemanticChunks -BuildSelectedChunksEvidence -SelectedChunksEvidenceBasename full_context_golden_selected_chunks_evidence -ChunkQuery "workflow adapter local ai full context enrichment selected chunks sqlite memory provider multistep proposals validators" -ChunkPathBoost Tools/workflow,Tools/ai,Tools/validation -SelectedChunksBasename full_context_golden_selected_chunks -MaxSelectedChunks 24 -MaxSelectedChunkChars 32000 -MaxSelectedChunkExcerptChars 2500 -BuildContextPack -ContextPackProfile core_ai_backend -ContextPackBasename full_context_golden_core_ai_backend -ContextPackEvidenceBasename full_context_golden_core_ai_backend_context_pack_evidence -BuildAgentStatePacket -AgentStateBasename full_context_golden_agent_state -AgentStateObjective "Run full-context local AI/NPU golden path and propose controlled complexity escalation such as core helper, validator, wrapper flag or docs contract." -MemoryDb .\indexAI\agent_memory\agent_memory.sqlite -SaveInputsToMemoryDb -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename full_context_golden_local_ai_context -ProposalBasename full_context_golden_local_ai_context_proposals -EvidenceBasename full_context_golden_local_ai_context_evidence -MultistepBasename full_context_golden_local_ai_context_multistep -MultistepProposalBasename full_context_golden_local_ai_context_multistep_proposals -MultistepEvidenceBasename full_context_golden_local_ai_context_multistep_evidence'
+  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -BuildSemanticChunks -SelectSemanticChunks -BuildSelectedChunksEvidence -SelectedChunksEvidenceBasename full_context_golden_selected_chunks_evidence -ChunkQuery "workflow adapter local ai full context enrichment selected chunks sqlite memory provider multistep proposals validators npu knowledge broker context oracle retrieval ranking" -ChunkPathBoost Tools/workflow,Tools/ai,Tools/validation,Tools/npu -SelectedChunksBasename full_context_golden_selected_chunks -MaxSelectedChunks 24 -MaxSelectedChunkChars 32000 -MaxSelectedChunkExcerptChars 2500 -BuildContextPack -ContextPackProfile core_ai_backend -ContextPackBasename full_context_golden_core_ai_backend -ContextPackEvidenceBasename full_context_golden_core_ai_backend_context_pack_evidence -BuildAgentStatePacket -AgentStateBasename full_context_golden_agent_state -AgentStateObjective "Run full-context local AI/NPU golden path and propose controlled complexity escalation such as core helper, validator, wrapper flag, docs contract or NPU knowledge broker." -MemoryDb .\indexAI\agent_memory\agent_memory.sqlite -SaveInputsToMemoryDb -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename full_context_golden_local_ai_context -ProposalBasename full_context_golden_local_ai_context_proposals -EvidenceBasename full_context_golden_local_ai_context_evidence -MultistepBasename full_context_golden_local_ai_context_multistep -MultistepProposalBasename full_context_golden_local_ai_context_multistep_proposals -MultistepEvidenceBasename full_context_golden_local_ai_context_multistep_evidence'
 ```
 
 ## Required post-run validation
@@ -292,5 +343,6 @@ validator results
 provider execution statement
 patch application statement
 top 5 complexity escalation candidates
+NPU knowledge-broker assessment
 recommended next patch-spec promotion
 ```
