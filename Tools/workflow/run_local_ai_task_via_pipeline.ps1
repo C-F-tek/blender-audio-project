@@ -3,11 +3,10 @@
   Run a local Markdown AI task through the project-owned report-only AI pipeline.
 
 .DESCRIPTION
-  This adapter is the preferred project-owned runner target for
-  Tools/workflow/run_local_ai_markdown_task.ps1.
+  Preferred runner target for Tools/workflow/run_local_ai_markdown_task.ps1.
 
-  It consumes the generated local_ai_prompt.md plus the task Markdown file,
-  then invokes the repository's report-only/proposal-only AI packet pipeline.
+  It consumes local_ai_prompt.md plus the task Markdown file, optionally builds
+  enrichment artifacts, and invokes report-only/proposal-only AI packet tools.
 
   Default mode does not execute providers, does not apply patches, does not run
   Blender, does not run FFmpeg and does not edit source files.
@@ -15,24 +14,6 @@
   Provider execution remains explicit through -UsePrimaryAdvisoryProvider and
   -RunMultistepProviderWorkflow. NPU remains probe / guardrail / decode
   diagnostic. Ollama/GPU remains primary advisory behind the quality gate.
-
-.EXAMPLE
-  .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
-    -PromptFile .\output\local_ai_runs\run\local_ai_prompt.md `
-    -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
-    -RunDir .\output\local_ai_runs\run
-
-.EXAMPLE
-  .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
-    -PromptFile .\output\local_ai_runs\run\local_ai_prompt.md `
-    -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
-    -RunDir .\output\local_ai_runs\run `
-    -RunMultistepProviderWorkflow `
-    -RunOllamaProbe `
-    -RunNpuProbe `
-    -RunNpuDecodeSmoke `
-    -UsePrimaryAdvisoryProvider `
-    -BuildEvidence
 #>
 [CmdletBinding()]
 param(
@@ -54,6 +35,21 @@ param(
     [string]$MultistepEvidenceBasename = "",
     [string]$Model = "",
     [int]$MaxContextChars = 12000,
+
+    [string[]]$ExtraContextFile = @(),
+    [switch]$BuildSemanticChunks,
+    [switch]$BuildAgentStatePacket,
+    [string]$MemoryDb = "indexAI/agent_memory/agent_memory.sqlite",
+    [switch]$SaveInputsToMemoryDb,
+    [string]$AgentStateObjective = "",
+    [string]$AgentStateBasename = "",
+    [int]$AgentStateMaxMemoryChars = 24000,
+    [switch]$BuildContextPack,
+    [string]$ContextPackProfile = "core_ai_backend",
+    [string]$ContextPackBasename = "",
+    [string]$ContextPackEvidenceBasename = "",
+    [int]$ContextPackMaxTotalChars = 64000,
+    [int]$ContextPackMaxFileChars = 4000,
 
     [switch]$UsePrimaryAdvisoryProvider,
     [switch]$RunMultistepProviderWorkflow,
@@ -117,6 +113,34 @@ function Invoke-CommandChecked {
     }
 }
 
+function Add-ContextFileIfPresent {
+    param(
+        [string[]]$Current,
+        [string]$PathValue,
+        [string]$Root
+    )
+    if ([string]::IsNullOrWhiteSpace($PathValue)) {
+        return $Current
+    }
+    $full = Resolve-PlannedPath $PathValue
+    if (-not (Test-Path -LiteralPath $full -PathType Leaf)) {
+        Write-Warning "Context file not found, not adding: $PathValue"
+        return $Current
+    }
+    $rel = Get-RepoRelativePath $Root $full
+    if ($Current -notcontains $rel) {
+        return @($Current + $rel)
+    }
+    return $Current
+}
+
+function New-SafeName {
+    param([string]$Value, [string]$Fallback)
+    $safe = [regex]::Replace(($Value.ToLowerInvariant()), "[^a-z0-9._-]+", "_").Trim("._-")
+    if ([string]::IsNullOrWhiteSpace($safe)) { return $Fallback }
+    return $safe
+}
+
 $RepoRootPath = Resolve-ExistingPath $RepoRoot
 Set-Location $RepoRootPath
 
@@ -132,29 +156,103 @@ if ([string]::IsNullOrWhiteSpace($RunDir)) {
 }
 $RunDirPath = Resolve-PlannedPath $RunDir
 $PipelineDir = Join-Path $RunDirPath "pipeline"
+$AgentStateDir = Join-Path $PipelineDir "agent_state"
 New-Item -ItemType Directory -Force -Path $PipelineDir | Out-Null
+New-Item -ItemType Directory -Force -Path $AgentStateDir | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $RepoRootPath "output/validation") | Out-Null
 
 $PromptRel = Get-RepoRelativePath $RepoRootPath $PromptPath
 $PipelineRel = Get-RepoRelativePath $RepoRootPath $PipelineDir
+$AgentStateRel = Get-RepoRelativePath $RepoRootPath $AgentStateDir
 $TaskRel = ""
 if ($TaskPath -ne "") {
     $TaskRel = Get-RepoRelativePath $RepoRootPath $TaskPath
 }
 
-if ([string]::IsNullOrWhiteSpace($MultistepBasename)) {
-    $MultistepBasename = "${Basename}_multistep"
-}
-if ([string]::IsNullOrWhiteSpace($MultistepProposalBasename)) {
-    $MultistepProposalBasename = "${Basename}_multistep_proposals"
-}
-if ([string]::IsNullOrWhiteSpace($MultistepEvidenceBasename)) {
-    $MultistepEvidenceBasename = "${Basename}_multistep_evidence"
+if ([string]::IsNullOrWhiteSpace($MultistepBasename)) { $MultistepBasename = "${Basename}_multistep" }
+if ([string]::IsNullOrWhiteSpace($MultistepProposalBasename)) { $MultistepProposalBasename = "${Basename}_multistep_proposals" }
+if ([string]::IsNullOrWhiteSpace($MultistepEvidenceBasename)) { $MultistepEvidenceBasename = "${Basename}_multistep_evidence" }
+if ([string]::IsNullOrWhiteSpace($ContextPackBasename)) { $ContextPackBasename = "${Basename}_context_pack" }
+if ([string]::IsNullOrWhiteSpace($ContextPackEvidenceBasename)) { $ContextPackEvidenceBasename = "${Basename}_context_pack_evidence" }
+if ([string]::IsNullOrWhiteSpace($AgentStateBasename)) { $AgentStateBasename = New-SafeName $Basename "local_ai_agent_state" }
+if ([string]::IsNullOrWhiteSpace($AgentStateObjective)) {
+    $AgentStateObjective = "Run local AI task $Basename with task Markdown, memory, semantic chunks and bounded context."
 }
 
 $ContextFiles = @($PromptRel)
-if ($TaskRel -ne "") {
-    $ContextFiles += $TaskRel
+if ($TaskRel -ne "") { $ContextFiles += $TaskRel }
+
+foreach ($extra in $ExtraContextFile) {
+    $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $extra -Root $RepoRootPath
+}
+
+$EnrichmentOutputs = [ordered]@{
+    semantic_chunks_manifest = ""
+    semantic_chunks_json = ""
+    context_pack_json = ""
+    context_pack_markdown = ""
+    context_pack_evidence_json = ""
+    agent_state_json = ""
+    agent_state_markdown = ""
+    agent_state_memory_manifest = ""
+    memory_db = $MemoryDb.Replace("\", "/")
+}
+
+if ($BuildSemanticChunks) {
+    Invoke-CommandChecked -Label "Build semantic code chunks" -Block {
+        python .\Tools\npu\build_semantic_code_chunks.py --repo-root .
+    }
+    $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue "indexAI/code_chunks/semantic_code_chunks_manifest.json" -Root $RepoRootPath
+    $EnrichmentOutputs.semantic_chunks_manifest = "indexAI/code_chunks/semantic_code_chunks_manifest.json"
+    $EnrichmentOutputs.semantic_chunks_json = "indexAI/code_chunks/semantic_code_chunks.json"
+}
+
+if ($BuildContextPack) {
+    Invoke-CommandChecked -Label "Build bounded AI context pack" -Block {
+        python .\Tools\ai\build_ai_context_pack.py `
+            --repo-root . `
+            --profile $ContextPackProfile `
+            --basename $ContextPackBasename `
+            --evidence-basename $ContextPackEvidenceBasename `
+            --max-total-chars $ContextPackMaxTotalChars `
+            --max-file-chars $ContextPackMaxFileChars
+    }
+    $ContextPackJson = "output/ai_context_packs/$ContextPackBasename.json"
+    $ContextPackMd = "output/ai_context_packs/$ContextPackBasename.md"
+    $ContextPackEvidenceJson = "docs/LOCAL_VALIDATION_EVIDENCE/$ContextPackEvidenceBasename.json"
+    $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $ContextPackMd -Root $RepoRootPath
+    $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $ContextPackJson -Root $RepoRootPath
+    $EnrichmentOutputs.context_pack_json = $ContextPackJson
+    $EnrichmentOutputs.context_pack_markdown = $ContextPackMd
+    $EnrichmentOutputs.context_pack_evidence_json = $ContextPackEvidenceJson
+}
+
+if ($BuildAgentStatePacket) {
+    $AgentArgs = @(
+        ".\Tools\ai\build_agent_state_packet.py",
+        "--repo-root", ".",
+        "--objective", $AgentStateObjective,
+        "--output-dir", $AgentStateRel,
+        "--packet-name", $AgentStateBasename,
+        "--max-memory-chars", "$AgentStateMaxMemoryChars",
+        "--memory-db", $MemoryDb
+    )
+    if ($SaveInputsToMemoryDb) { $AgentArgs += "--save-inputs-to-memory-db" }
+    $AgentArgs += @("--memory-note", "Local AI enrichment run. Preserve report-only defaults, explicit providers, NPU guardrail role and no patch apply.")
+    foreach ($context in $ContextFiles) {
+        $AgentArgs += @("--include-file", $context)
+    }
+    Invoke-CommandChecked -Label "Build agent state packet with SQLite memory" -Block {
+        python @AgentArgs
+    }
+    $AgentStateJson = "$AgentStateRel/$AgentStateBasename.json"
+    $AgentStateMd = "$AgentStateRel/$AgentStateBasename.md"
+    $AgentStateManifest = "$AgentStateRel/${AgentStateBasename}_memory_manifest.json"
+    $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $AgentStateMd -Root $RepoRootPath
+    $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $AgentStateJson -Root $RepoRootPath
+    $EnrichmentOutputs.agent_state_json = $AgentStateJson
+    $EnrichmentOutputs.agent_state_markdown = $AgentStateMd
+    $EnrichmentOutputs.agent_state_memory_manifest = $AgentStateManifest
 }
 
 $ReportFiles = @(
@@ -170,6 +268,10 @@ Write-Host "Prompt: $PromptRel"
 Write-Host "Task: $TaskRel"
 Write-Host "Pipeline output: $PipelineRel"
 Write-Host "Profile: $Profile"
+Write-Host "Context files: $($ContextFiles -join ', ')"
+Write-Host "Build semantic chunks: $BuildSemanticChunks"
+Write-Host "Build context pack: $BuildContextPack"
+Write-Host "Build agent state packet: $BuildAgentStatePacket"
 Write-Host "Use primary advisory provider: $UsePrimaryAdvisoryProvider"
 Write-Host "Run multistep provider workflow: $RunMultistepProviderWorkflow"
 Write-Host "Run Ollama probe: $RunOllamaProbe"
@@ -181,8 +283,7 @@ Write-Host "Dry run: $DryRun"
 
 if ($RunMultistepProviderWorkflow) {
     $MultistepArgs = @(
-        "-NoProfile",
-        "-ExecutionPolicy", "Bypass",
+        "-NoProfile", "-ExecutionPolicy", "Bypass",
         "-File", ".\Tools\workflow\run_parallel_ai_provider_multistep.ps1",
         "-RepoRoot", ".",
         "-Profile", $Profile,
@@ -193,30 +294,17 @@ if ($RunMultistepProviderWorkflow) {
         "-ContextFile", ($ContextFiles -join ","),
         "-MaxContextChars", "$MaxContextChars"
     )
-    if ($RunOllamaProbe) {
-        $MultistepArgs += "-RunOllamaProbe"
-    }
-    if ($RunNpuProbe) {
-        $MultistepArgs += "-RunNpuProbe"
-    }
-    if ($RunNpuDecodeSmoke) {
-        $MultistepArgs += "-RunNpuDecodeSmoke"
-    }
-    if ($UsePrimaryAdvisoryProvider) {
-        $MultistepArgs += "-UsePrimaryAdvisoryProvider"
-    }
-    if ($Model -ne "") {
-        $MultistepArgs += @("-Model", $Model)
-    }
+    if ($RunOllamaProbe) { $MultistepArgs += "-RunOllamaProbe" }
+    if ($RunNpuProbe) { $MultistepArgs += "-RunNpuProbe" }
+    if ($RunNpuDecodeSmoke) { $MultistepArgs += "-RunNpuDecodeSmoke" }
+    if ($UsePrimaryAdvisoryProvider) { $MultistepArgs += "-UsePrimaryAdvisoryProvider" }
+    if ($Model -ne "") { $MultistepArgs += @("-Model", $Model) }
 
-    Invoke-CommandChecked -Label "Run explicit multistep provider workflow" -Block {
-        powershell.exe @MultistepArgs
-    }
+    Invoke-CommandChecked -Label "Run explicit multistep provider workflow" -Block { powershell.exe @MultistepArgs }
 }
 
 $PacketArgs = @(
-    "-NoProfile",
-    "-ExecutionPolicy", "Bypass",
+    "-NoProfile", "-ExecutionPolicy", "Bypass",
     "-File", ".\Tools\workflow\run_post_validation_ai_packet.ps1",
     "-RepoRoot", ".",
     "-Profile", $Profile,
@@ -227,16 +315,10 @@ $PacketArgs = @(
     "-ReportFile", ($ReportFiles -join ","),
     "-MaxContextChars", "$MaxContextChars"
 )
-if ($UsePrimaryAdvisoryProvider) {
-    $PacketArgs += "-UsePrimaryAdvisoryProvider"
-}
-if ($Model -ne "") {
-    $PacketArgs += @("-Model", $Model)
-}
+if ($UsePrimaryAdvisoryProvider) { $PacketArgs += "-UsePrimaryAdvisoryProvider" }
+if ($Model -ne "") { $PacketArgs += @("-Model", $Model) }
 
-Invoke-CommandChecked -Label "Build advisory packet and repository proposals" -Block {
-    powershell.exe @PacketArgs
-}
+Invoke-CommandChecked -Label "Build advisory packet and repository proposals" -Block { powershell.exe @PacketArgs }
 
 $ProposalPath = Join-Path $PipelineDir "$ProposalBasename.json"
 $ProposalRel = Get-RepoRelativePath $RepoRootPath $ProposalPath
@@ -244,10 +326,7 @@ $ProposalValidationOutput = "output/validation/${Basename}_repository_change_pro
 
 if (Test-Path -LiteralPath $ProposalPath -PathType Leaf) {
     Invoke-CommandChecked -Label "Validate repository change proposals" -Block {
-        python .\Tools\validation\check_repository_change_proposals.py `
-            --repo-root . `
-            --proposal $ProposalRel `
-            --output $ProposalValidationOutput
+        python .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal $ProposalRel --output $ProposalValidationOutput
     }
 }
 else {
@@ -258,28 +337,17 @@ if ($GeneratePatchSpecs -and (Test-Path -LiteralPath $ProposalPath -PathType Lea
     $PatchBasename = "${Basename}_patch_specs"
     $PatchManifest = "output/patch_specs/${PatchBasename}_manifest.json"
     Invoke-CommandChecked -Label "Build draft patch specs from proposals" -Block {
-        python .\Tools\ai\build_patch_specs_from_proposals.py `
-            --repo-root . `
-            --proposal $ProposalRel `
-            --output-dir output\patch_specs `
-            --basename $PatchBasename
+        python .\Tools\ai\build_patch_specs_from_proposals.py --repo-root . --proposal $ProposalRel --output-dir output\patch_specs --basename $PatchBasename
     }
     Invoke-CommandChecked -Label "Validate draft patch specs" -Block {
-        python .\Tools\validation\check_patch_spec_drafts.py `
-            --repo-root . `
-            --manifest $PatchManifest `
-            --output "output/validation/${Basename}_patch_spec_drafts.json"
+        python .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest $PatchManifest --output "output/validation/${Basename}_patch_spec_drafts.json"
     }
 }
 
 if ($BuildEvidence) {
-    if ([string]::IsNullOrWhiteSpace($EvidenceBasename)) {
-        $EvidenceBasename = "${Basename}_evidence"
-    }
+    if ([string]::IsNullOrWhiteSpace($EvidenceBasename)) { $EvidenceBasename = "${Basename}_evidence" }
     Invoke-CommandChecked -Label "Build compact GitHub evidence bundle" -Block {
-        python .\Tools\ai\build_github_evidence_bundle.py `
-            --repo-root . `
-            --basename $EvidenceBasename
+        python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename $EvidenceBasename
     }
 }
 
@@ -295,6 +363,17 @@ $Manifest = [ordered]@{
     profile = $Profile
     basename = $Basename
     proposal_basename = $ProposalBasename
+    context_files = $ContextFiles
+    enrichment_requested = [ordered]@{
+        build_semantic_chunks = [bool]$BuildSemanticChunks
+        build_context_pack = [bool]$BuildContextPack
+        context_pack_profile = $ContextPackProfile
+        build_agent_state_packet = [bool]$BuildAgentStatePacket
+        memory_db = $MemoryDb.Replace("\", "/")
+        save_inputs_to_memory_db = [bool]$SaveInputsToMemoryDb
+        extra_context_file_count = $ExtraContextFile.Count
+    }
+    enrichment_outputs = $EnrichmentOutputs
     multistep_provider_workflow_requested = [bool]$RunMultistepProviderWorkflow
     multistep_basename = $MultistepBasename
     multistep_proposal_basename = $MultistepProposalBasename
@@ -323,13 +402,14 @@ $Manifest = [ordered]@{
     warnings = @()
     errors = @()
 }
-($Manifest | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $ManifestPath -Encoding UTF8
+($Manifest | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $ManifestPath -Encoding UTF8
 
 Write-Host ""
 Write-Host "[OK] Local pipeline adapter complete" -ForegroundColor Green
 Write-Host "[OK] Manifest: $(Get-RepoRelativePath $RepoRootPath $ManifestPath)"
 Write-Host "[OK] Packet:   $PipelineRel/$Basename.md"
 Write-Host "[OK] Proposal: $PipelineRel/$ProposalBasename.md"
+Write-Host "[OK] Context files: $($ContextFiles.Count)"
 Write-Host "[OK] Multistep requested: $RunMultistepProviderWorkflow"
 Write-Host "[OK] Provider execution requested: $($UsePrimaryAdvisoryProvider -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke)"
 Write-Host "[OK] Patch application performed: False"
