@@ -171,6 +171,10 @@ def build_npu_command(args: argparse.Namespace, repo_root: Path, checkpoint: Pat
     return command
 
 
+def should_launch_npu_audit(round_id: int, every_rounds: int) -> bool:
+    return round_id == 1 or round_id % max(1, every_rounds) == 0
+
+
 def launch_due_audits(
     *,
     args: argparse.Namespace,
@@ -187,7 +191,7 @@ def launch_due_audits(
         round_id = checkpoint_round(checkpoint)
         if round_id is None or round_id in launched_rounds:
             continue
-        if round_id % max(1, args.npu_auditor_every_rounds) != 0:
+        if not should_launch_npu_audit(round_id, args.npu_auditor_every_rounds):
             launched_rounds.add(round_id)
             continue
         if len(active_audits) >= args.max_concurrent_npu_audits:
@@ -259,6 +263,9 @@ def build_markdown(report: dict[str, Any]) -> str:
         "elapsed_seconds",
         "npu_audit_count",
         "npu_audit_success_count",
+        "gpu_recommendation_count",
+        "gpu_empty_recommendations_reason",
+        "gpu_evidence_ready_for_manual_patch_count",
     ]:
         lines.append(f"- `{key}`: `{report.get(key)}`")
     lines.append("")
@@ -334,6 +341,10 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         errors.append(f"GPU output missing: {repo_rel(gpu_output, repo_root)}")
 
     npu_success_count = sum(1 for item in audit_records if item.get("provider_execution_succeeded") is True or item.get("classification") == "usable_audit_text")
+    gpu_recommendation_count = gpu_report.get("recommendation_count")
+    gpu_empty_recommendations_reason = gpu_report.get("empty_recommendations_reason", "")
+    gpu_evidence_ready_count = gpu_report.get("evidence_ready_for_manual_patch_count", 0)
+    gpu_recommended_next_layer = gpu_report.get("decision", {}).get("recommended_next_layer") or gpu_report.get("recommended_next_layer")
     report = {
         "schema_version": 1,
         "kind": "agent_gpu_npu_parallel_orchestrator",
@@ -352,10 +363,21 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "gpu_stderr_tail": gpu_stderr,
         "gpu_output": repo_rel(gpu_output, repo_root),
         "gpu_markdown": repo_rel(gpu_markdown, repo_root),
+        "gpu_recommendation_count": gpu_recommendation_count,
+        "gpu_empty_recommendations_reason": gpu_empty_recommendations_reason,
+        "gpu_evidence_ready_for_manual_patch_count": gpu_evidence_ready_count,
+        "gpu_recommended_next_layer": gpu_recommended_next_layer,
         "gpu_summary": {
             "passed": gpu_report.get("passed"),
             "round_count": gpu_report.get("round_count"),
-            "recommendation_count": gpu_report.get("recommendation_count"),
+            "recommendation_count": gpu_recommendation_count,
+            "raw_recommendation_candidate_count": gpu_report.get("raw_recommendation_candidate_count"),
+            "filtered_recommendation_count": gpu_report.get("filtered_recommendation_count"),
+            "json_parse_error_count": gpu_report.get("json_parse_error_count"),
+            "repair_attempt_count": gpu_report.get("repair_attempt_count"),
+            "empty_recommendations_reason": gpu_empty_recommendations_reason,
+            "evidence_ready_for_manual_patch_count": gpu_evidence_ready_count,
+            "recommended_next_layer": gpu_recommended_next_layer,
             "decision": gpu_report.get("decision", {}),
         },
         "checkpoint_dir": repo_rel(checkpoint_dir, repo_root),
@@ -367,7 +389,9 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "npu_auditor_mode": "parallel_best_effort",
             "npu_audit_success_count": npu_success_count,
             "ready_for_patch_plan": bool(gpu_report.get("decision", {}).get("ready_for_patch_plan")),
-            "recommended_next_layer": gpu_report.get("decision", {}).get("recommended_next_layer"),
+            "fallback_patch_plan_recommended": bool(gpu_report.get("decision", {}).get("fallback_patch_plan_recommended")),
+            "recommended_next_layer": gpu_recommended_next_layer,
+            "gpu_empty_recommendations_reason": gpu_empty_recommendations_reason,
             "manual_review_required": True,
         },
         "guardrails": {
@@ -433,6 +457,9 @@ def main() -> int:
         "gpu_returncode": report["gpu_returncode"],
         "gpu_round_count": report["gpu_summary"].get("round_count"),
         "gpu_recommendation_count": report["gpu_summary"].get("recommendation_count"),
+        "gpu_empty_recommendations_reason": report.get("gpu_empty_recommendations_reason"),
+        "gpu_evidence_ready_for_manual_patch_count": report.get("gpu_evidence_ready_for_manual_patch_count"),
+        "gpu_recommended_next_layer": report.get("gpu_recommended_next_layer"),
         "npu_audit_count": report["npu_audit_count"],
         "npu_audit_success_count": report["npu_audit_success_count"],
         "gpu_review_blocked_by_npu": report["decision"]["gpu_review_blocked_by_npu"],
