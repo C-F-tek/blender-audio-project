@@ -7,6 +7,7 @@ This supervised runner is the long-running IA-Carmine planning mode:
 - each round writes an intermediate checkpoint JSON/Markdown artifact;
 - optional NPU auditor inspects checkpoints as a non-blocking guardrail;
 - NPU failures, unusable text or missing OpenVINO are warnings only;
+- repeated deterministic NPU dependency failures are circuit-broken;
 - no patch is applied and no GitHub PR is created.
 """
 from __future__ import annotations
@@ -28,7 +29,6 @@ try:
         build_markdown,
         build_prompt,
         collect_repo_context,
-        compact_json,
         extract_evidence_files,
         merge_recommendations,
         parse_model_json,
@@ -48,7 +48,6 @@ except ImportError:
         build_markdown,
         build_prompt,
         collect_repo_context,
-        compact_json,
         extract_evidence_files,
         merge_recommendations,
         parse_model_json,
@@ -62,6 +61,7 @@ except ImportError:
 DEFAULT_OUTPUT = "output/ai_pipeline/agent_gpu_deep_planning_supervised.json"
 DEFAULT_MARKDOWN = "output/ai_pipeline/agent_gpu_deep_planning_supervised.md"
 DEFAULT_CHECKPOINT_DIR = "output/ai_pipeline/gpu_deep_planning_checkpoints"
+TERMINAL_NPU_AUDIT_CLASSIFICATIONS = {"dependency_missing_openvino_genai"}
 
 
 def now_iso() -> str:
@@ -105,11 +105,14 @@ def build_report(
     errors: list[str],
     warnings: list[str],
     started_at: float,
+    npu_auditor_disabled_reason: str = "",
 ) -> dict[str, Any]:
     recommendations = merge_recommendations(rounds)
     ready = [rec for rec in recommendations if rec.get("status") == "ready_for_patch_plan"]
     needs_context = [rec for rec in recommendations if rec.get("status") == "needs_more_context"]
     unusable_npu = [audit for audit in npu_audits if audit.get("classification") not in {"usable_audit_text", "not_executed", "metadata_only"}]
+    npu_success_count = sum(1 for audit in npu_audits if audit.get("provider_execution_succeeded") is True or audit.get("classification") == "usable_audit_text")
+    npu_requested_count = sum(1 for audit in npu_audits if audit.get("provider_execution_requested") is True)
     return {
         "schema_version": 1,
         "kind": "agent_gpu_deep_planning_supervised",
@@ -130,6 +133,9 @@ def build_report(
         "round_count": len(rounds),
         "rounds": rounds,
         "npu_audit_count": len(npu_audits),
+        "npu_audit_requested_count": npu_requested_count,
+        "npu_audit_success_count": npu_success_count,
+        "npu_auditor_disabled_reason": npu_auditor_disabled_reason,
         "npu_audits": npu_audits,
         "recommendation_count": len(recommendations),
         "recommendations": recommendations,
@@ -139,6 +145,8 @@ def build_report(
             "needs_more_context_count": len(needs_context),
             "npu_auditor_non_blocking": True,
             "npu_unusable_or_failed_count": len(unusable_npu),
+            "npu_audit_success_count": npu_success_count,
+            "npu_auditor_disabled_reason": npu_auditor_disabled_reason,
             "recommended_next_layer": "build_agent_review_patch_plan.py" if ready else "collect_more_evidence",
             "manual_review_required": True,
         },
@@ -192,7 +200,6 @@ def run_npu_audit_for_checkpoint(repo_root: Path, checkpoint_json: Path, audit_j
     if args.run_npu_auditor_provider:
         command.append("--run-npu")
     else:
-        # Metadata-only still validates the sidecar route without loading NPU.
         command.extend(["--run-npu", "--metadata-only"])
     returncode, stdout, stderr, error = run_command(command, repo_root, args.npu_auditor_timeout_seconds + 30)
     audit: dict[str, Any] = {
@@ -204,16 +211,26 @@ def run_npu_audit_for_checkpoint(repo_root: Path, checkpoint_json: Path, audit_j
         "error": error or "",
         "blocking": False,
         "classification": "missing_audit_output",
+        "provider_execution_requested": bool(args.run_npu_auditor_provider),
+        "provider_load_attempted": False,
+        "provider_execution_succeeded": False,
+        "provider_execution_performed": False,
+        "dependency_missing": False,
     }
     if audit_json.exists():
         try:
             data = read_json(audit_json)
+            nested = data.get("npu_auditor", {})
             audit.update(
                 {
                     "kind": data.get("kind"),
                     "passed": data.get("passed"),
-                    "provider_execution_performed": data.get("provider_execution_performed"),
-                    "classification": data.get("npu_auditor", {}).get("classification"),
+                    "provider_execution_requested": data.get("provider_execution_requested", nested.get("provider_execution_requested")),
+                    "provider_load_attempted": data.get("provider_load_attempted", nested.get("provider_load_attempted")),
+                    "provider_execution_succeeded": data.get("provider_execution_succeeded", nested.get("provider_execution_succeeded")),
+                    "provider_execution_performed": data.get("provider_execution_performed", nested.get("provider_execution_performed")),
+                    "dependency_missing": data.get("dependency_missing", nested.get("dependency_missing")),
+                    "classification": nested.get("classification") or data.get("classification"),
                     "gpu_review_blocked": data.get("decision", {}).get("gpu_review_blocked"),
                     "warnings": data.get("warnings", []),
                 }
@@ -277,6 +294,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
     warnings: list[str] = []
     model_used = args.ollama_model or ""
     base_url = normalize_base_url(args.ollama_base_url or DEFAULT_BASE_URL)
+    npu_auditor_disabled_reason = ""
 
     with OllamaModelManager(base_url=base_url, keep_alive=args.keep_alive, shutdown_server=False, startup_timeout=args.startup_timeout) as manager:
         for index, batch in enumerate(batches, start=1):
@@ -324,17 +342,27 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 errors=errors,
                 warnings=warnings,
                 started_at=started_at,
+                npu_auditor_disabled_reason=npu_auditor_disabled_reason,
             )
             checkpoint_json, checkpoint_md, audit_json = checkpoint_paths(checkpoint_dir, index)
             write_json(checkpoint_json, interim_report)
             checkpoint_md.write_text(build_markdown(interim_report), encoding="utf-8")
-            if args.include_npu_auditor and index % max(1, args.npu_auditor_every_rounds) == 0:
+            should_audit = (
+                args.include_npu_auditor
+                and not npu_auditor_disabled_reason
+                and index % max(1, args.npu_auditor_every_rounds) == 0
+            )
+            if should_audit:
                 audit = run_npu_audit_for_checkpoint(repo_root, checkpoint_json, audit_json, args)
                 npu_audits.append(audit)
                 if audit.get("error"):
                     warnings.append(f"NPU audit round {index}: {audit.get('error')}")
-                if audit.get("classification") not in {"usable_audit_text", "metadata_only", "not_executed"}:
-                    warnings.append(f"NPU audit round {index}: classification={audit.get('classification')}")
+                classification = str(audit.get("classification") or "")
+                if classification not in {"usable_audit_text", "metadata_only", "not_executed"}:
+                    warnings.append(f"NPU audit round {index}: classification={classification}")
+                if classification in TERMINAL_NPU_AUDIT_CLASSIFICATIONS:
+                    npu_auditor_disabled_reason = classification
+                    warnings.append(f"NPU auditor circuit breaker enabled after round {index}: {classification}")
 
     return build_report(
         repo_root=repo_root,
@@ -349,6 +377,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
         errors=errors,
         warnings=warnings,
         started_at=started_at,
+        npu_auditor_disabled_reason=npu_auditor_disabled_reason,
     )
 
 
@@ -399,6 +428,8 @@ def main() -> int:
                 "elapsed_seconds": report["elapsed_seconds"],
                 "round_count": report["round_count"],
                 "npu_audit_count": report["npu_audit_count"],
+                "npu_audit_success_count": report["npu_audit_success_count"],
+                "npu_auditor_disabled_reason": report["npu_auditor_disabled_reason"],
                 "recommendation_count": report["recommendation_count"],
                 "ready_for_patch_plan": report["decision"].get("ready_for_patch_plan"),
             },
