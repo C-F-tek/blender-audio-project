@@ -23,6 +23,21 @@ DEFAULT_REPORTS = (
     ("ollama", "output/ai_packets/ollama_gpu_real_workload_report.md"),
 )
 
+LANE_ROLES = {
+    "ollama": {
+        "provider": "ollama",
+        "compute_lane": "gpu_cuda",
+        "allowed_role_when_usable": "primary_advisory",
+        "execution_mode": "explicit_only",
+    },
+    "npu": {
+        "provider": "openvino_npu",
+        "compute_lane": "npu",
+        "allowed_role_when_usable": "knowledge_broker_or_probe",
+        "execution_mode": "explicit_only",
+    },
+}
+
 HEXISH_CHARS = set("0123456789abcdefABCDEF, .\n\r\t")
 PRINTABLE = set(string.printable)
 
@@ -64,15 +79,56 @@ def text_metrics(text: str) -> dict[str, Any]:
     }
 
 
+def lane_role(lane: str) -> dict[str, Any]:
+    return dict(LANE_ROLES.get(lane, {
+        "provider": lane or "unknown",
+        "compute_lane": "unknown",
+        "allowed_role_when_usable": "context_only",
+        "execution_mode": "explicit_only",
+    }))
+
+
+def advisory_use(lane: str, usable: bool) -> dict[str, Any]:
+    role = lane_role(lane)
+    if not usable:
+        return {
+            "allowed_as_advisory_context": False,
+            "allowed_role": "excluded_from_advisory_context",
+            "reason": "unusable_workload_report",
+        }
+    if lane == "ollama":
+        return {
+            "allowed_as_advisory_context": True,
+            "allowed_role": "primary_advisory",
+            "reason": "usable_text_primary_advisory_lane",
+        }
+    if lane == "npu":
+        return {
+            "allowed_as_advisory_context": False,
+            "allowed_role": role["allowed_role_when_usable"],
+            "reason": "npu_is_not_primary_advisory_lane",
+        }
+    return {
+        "allowed_as_advisory_context": True,
+        "allowed_role": role["allowed_role_when_usable"],
+        "reason": "usable_text_context_lane",
+    }
+
+
 def classify_report(path: Path, *, lane: str, repo_root: Path) -> dict[str, Any]:
     rel_path = path.relative_to(repo_root).as_posix() if path.is_absolute() and path.is_relative_to(repo_root) else str(path)
+    role = lane_role(lane)
     if not path.exists():
         return {
             "path": rel_path,
             "lane": lane,
+            "provider": role["provider"],
+            "compute_lane": role["compute_lane"],
             "exists": False,
             "usable": False,
             "classification": "missing",
+            "advisory_use": advisory_use(lane, False),
+            "provider_execution_performed": False,
             "errors": ["report file is missing"],
             "warnings": [],
             "metrics": {},
@@ -96,16 +152,39 @@ def classify_report(path: Path, *, lane: str, repo_root: Path) -> dict[str, Any]
     if metrics["markdown_heading_count"] == 0 and metrics["sentence_marker_count"] < 3:
         warnings.append("report lacks Markdown headings and has few sentence markers")
 
-    classification = "usable_text" if not errors else "unusable_output"
+    usable = not errors
+    classification = "usable_text" if usable else "unusable_output"
     return {
         "path": rel_path,
         "lane": lane,
+        "provider": role["provider"],
+        "compute_lane": role["compute_lane"],
         "exists": True,
-        "usable": not errors,
+        "usable": usable,
         "classification": classification,
+        "advisory_use": advisory_use(lane, usable),
+        "provider_execution_performed": False,
         "errors": errors,
         "warnings": warnings,
         "metrics": metrics,
+    }
+
+
+def quality_decision(results: list[dict[str, Any]]) -> dict[str, Any]:
+    usable_lanes = [item["lane"] for item in results if item.get("usable")]
+    unusable_lanes = [item["lane"] for item in results if not item.get("usable")]
+    ollama_primary = any(item["lane"] == "ollama" and item.get("usable") for item in results)
+    npu_usable = any(item["lane"] == "npu" and item.get("usable") for item in results)
+    npu_excluded = any(item["lane"] == "npu" and not item.get("advisory_use", {}).get("allowed_as_advisory_context") for item in results)
+    return {
+        "usable_lanes": usable_lanes,
+        "unusable_lanes": unusable_lanes,
+        "ollama_gpu_primary_advisory_allowed": ollama_primary,
+        "npu_report_text_usable": npu_usable,
+        "npu_excluded_from_primary_advisory": npu_excluded,
+        "provider_execution_seen": False,
+        "source_writes_performed": False,
+        "routing_policy": "usable_text_lanes_only_for_advisory_context",
     }
 
 
@@ -137,8 +216,13 @@ def check_ai_workload_report_quality(repo_root: Path, report_specs: list[tuple[s
         "passed": not blocking_errors,
         "errors": blocking_errors,
         "warnings": warnings,
+        "provider_execution_performed": False,
+        "source_writes_performed": False,
+        "policy": "usable_text_lanes_only_for_advisory_context",
+        "mode": "report_only_workload_quality_gate",
         "usable_lanes": usable_lanes,
         "unusable_lanes": unusable_lanes,
+        "decision": quality_decision(results),
         "checks": {
             "report_count": len(results),
             "usable_count": len(usable_lanes),

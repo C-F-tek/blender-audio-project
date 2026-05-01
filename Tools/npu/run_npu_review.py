@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import argparse
+import json
 from datetime import datetime
 
 
@@ -474,6 +475,47 @@ def run_chunked(pipe, context_path: Path, chunk_dir: Path, notes_out: Path, args
     return reduce_notes(pipe, notes, args)
 
 
+def write_metadata_report(
+    args: argparse.Namespace,
+    out_path: Path,
+    notes_out: Path,
+    *,
+    provider_execution_performed: bool,
+    generated_output_written: bool,
+) -> None:
+    if not args.metadata_out:
+        return
+    metadata_path = Path(args.metadata_out)
+    metadata = {
+        "schema_version": 1,
+        "kind": "npu_review_metadata",
+        "repo_root": str(ROOT),
+        "passed": True,
+        "errors": [],
+        "warnings": [],
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "engine": args.engine,
+        "provider": "ollama" if args.engine == "ollama" else "openvino_npu",
+        "device": args.device if args.engine == "npu" else None,
+        "domain": args.domain,
+        "mode": args.mode,
+        "metadata_only": bool(args.metadata_only),
+        "context": str(Path(args.context)),
+        "chunk_dir": str(Path(args.chunk_dir)),
+        "output": str(out_path),
+        "notes_output": str(notes_out),
+        "provider_execution_performed": bool(provider_execution_performed),
+        "generated_output_written": bool(generated_output_written),
+        "source_writes_performed": False,
+        "patch_application_performed": False,
+        "advisory_role": "probe_or_knowledge_broker" if args.engine == "npu" else "primary_advisory_when_quality_approved",
+        "quality_gate_required_before_advisory_use": True,
+    }
+    metadata_path.parent.mkdir(parents=True, exist_ok=True)
+    metadata_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"[OK] Wrote metadata: {metadata_path}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-dir", default=str(DEFAULT_MODEL_DIR))
@@ -481,6 +523,8 @@ def main() -> None:
     parser.add_argument("--chunk-dir")
     parser.add_argument("--out")
     parser.add_argument("--notes-out")
+    parser.add_argument("--metadata-out", help="Optional JSON sidecar describing provider execution and advisory role.")
+    parser.add_argument("--metadata-only", action="store_true", help="Write metadata sidecar without loading providers or generating review text.")
     parser.add_argument("--device", default="NPU")
     parser.add_argument("--engine", choices=["npu", "ollama"], default="npu")
     parser.add_argument("--ollama-model", default="qwen2.5-coder:14b")
@@ -519,9 +563,21 @@ def main() -> None:
 
     model_dir = Path(args.model_dir)
     context_path = Path(args.context)
-    chunk_dir = Path(args.chunk_dir)
     out_path = Path(args.out)
     notes_out = Path(args.notes_out)
+
+    if args.metadata_only:
+        if not args.metadata_out:
+            parser.error("--metadata-only requires --metadata-out")
+        write_metadata_report(
+            args,
+            out_path,
+            notes_out,
+            provider_execution_performed=False,
+            generated_output_written=False,
+        )
+        print("[OK] Metadata-only mode: provider not loaded and no review text generated")
+        return
 
     if args.engine == "npu" and not model_dir.exists():
         raise FileNotFoundError(f"Model dir not found: {model_dir}")
@@ -550,13 +606,20 @@ def main() -> None:
         if args.mode == "onepass":
             text = run_onepass(pipe, context_path, args)
         else:
-            text = run_chunked(pipe, context_path, chunk_dir, notes_out, args)
+            text = run_chunked(pipe, context_path, Path(args.chunk_dir), notes_out, args)
     finally:
         if hasattr(pipe, "close"):
             pipe.close()
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(text.strip() + "\n", encoding="utf-8")
+    write_metadata_report(
+        args,
+        out_path,
+        notes_out,
+        provider_execution_performed=True,
+        generated_output_written=True,
+    )
 
     print(f"[OK] Wrote: {out_path}")
 

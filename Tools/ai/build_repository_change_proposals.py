@@ -139,6 +139,27 @@ def provider_report_adoption_green(by_kind: dict[str, dict[str, Any]]) -> bool:
     )
 
 
+def workload_quality_decision(by_kind: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    report = by_kind.get("ai_workload_report_quality")
+    if not isinstance(report, dict):
+        return {
+            "quality_report_present": False,
+            "usable_lanes": [],
+            "unusable_lanes": [],
+            "ollama_gpu_primary_advisory_allowed": False,
+            "npu_excluded_from_primary_advisory": True,
+        }
+    decision = report.get("decision") if isinstance(report.get("decision"), dict) else {}
+    return {
+        "quality_report_present": True,
+        "usable_lanes": report.get("usable_lanes") or [],
+        "unusable_lanes": report.get("unusable_lanes") or [],
+        "ollama_gpu_primary_advisory_allowed": decision.get("ollama_gpu_primary_advisory_allowed") is True,
+        "npu_excluded_from_primary_advisory": decision.get("npu_excluded_from_primary_advisory") is not False,
+        "routing_policy": decision.get("routing_policy") or report.get("policy"),
+    }
+
+
 def ai_workload_quality_has_unusable_output(by_kind: dict[str, dict[str, Any]]) -> bool:
     report = by_kind.get("ai_workload_report_quality")
     return isinstance(report, dict) and bool(report.get("unusable_lanes"))
@@ -158,6 +179,7 @@ def proposal(
     stop_conditions: list[str],
     suggestion_outputs: list[dict[str, str]] | None = None,
     do_not_touch: list[str] | None = None,
+    evidence_summary: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "id": proposal_id,
@@ -169,6 +191,7 @@ def proposal(
         "change_type": change_type,
         "apply_mode": "manual_review_only",
         "patch_sketch": sketch,
+        "evidence_summary": evidence_summary or {},
         "suggestion_outputs": suggestion_outputs if suggestion_outputs is not None else build_suggestion_outputs(target_files),
         "validation_commands": validation,
         "stop_conditions": stop_conditions,
@@ -184,9 +207,9 @@ def proposal(
 
 
 def ai_workload_quality_remediation_proposal(by_kind: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    quality = by_kind.get("ai_workload_report_quality") or {}
-    usable = ", ".join(quality.get("usable_lanes") or []) or "none"
-    unusable = ", ".join(quality.get("unusable_lanes") or []) or "none"
+    quality_summary = workload_quality_decision(by_kind)
+    usable = ", ".join(quality_summary.get("usable_lanes") or []) or "none"
+    unusable = ", ".join(quality_summary.get("unusable_lanes") or []) or "none"
     return proposal(
         proposal_id="P-AI-WORKLOAD-REPORT-QUALITY-GATE",
         priority="P1",
@@ -205,6 +228,7 @@ def ai_workload_quality_remediation_proposal(by_kind: dict[str, dict[str, Any]])
             "docs/JSON_SCHEMAS.md",
         ],
         change_type="workload_quality_gate",
+        evidence_summary={"workload_quality_decision": quality_summary},
         sketch=[
             "Keep Ollama/GPU workload reports as primary advisory context when classified usable.",
             "Exclude or clearly mark NPU/OpenVINO generated reports as unusable when they are numeric/hex-like or non-linguistic.",
@@ -471,6 +495,13 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(f"- Apply mode: `{item['apply_mode']}`")
         lines.append(f"- Rationale: {item['rationale']}")
         lines.append("")
+        if item.get("evidence_summary"):
+            lines.append("### Evidence summary")
+            lines.append("")
+            lines.append("```json")
+            lines.append(json.dumps(item["evidence_summary"], indent=2, ensure_ascii=False))
+            lines.append("```")
+            lines.append("")
         lines.append("### Target files")
         for path in item["target_files"]:
             lines.append(f"- `{path}`")
