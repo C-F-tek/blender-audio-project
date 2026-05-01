@@ -176,5 +176,20 @@ serial --matrix-workers 1 remains available
 ## Local validation status
 
 ```text
-Local workstation validation pending.
+Local workstation validation passed on 2026-05-01.
+
+Command:
+python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 2
+
+Observed result:
+case_count=80
+planned_case_count=80
+base_case_count=40
+repeat_cases=2
+matrix_workers=12
+passed=true
+
+Follow-up evidence:
+docs/LOCAL_VALIDATION_EVIDENCE/ai_pipeline_dry_run_matrix_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/ai_pipeline_dry_run_matrix_evidence.md
 ```

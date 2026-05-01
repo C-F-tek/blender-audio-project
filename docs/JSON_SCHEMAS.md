@@ -35,6 +35,7 @@ GitHub-only agents must not infer local report contents that are not present in 
 | patch task packet JSON | Patch or service packet for AI workflows | not fully specified |
 | project manifest JSON | File index or project code manifest | present in AI index areas |
 | AI dry-run matrix report JSON | Machine-readable dry-run matrix result | contract validator exists |
+| AI dry-run matrix evidence JSON | Compact Git-trackable summary of a local dry-run matrix run | validator exists |
 | NPU helper validation report JSON | Machine-readable NPU helper validation result | focused validators exist |
 | validator report JSON | Machine-readable validation result | common fields under review and helper envelope exists |
 | generated artifact path report JSON | Destination-policy result for generated files | validator exists |
@@ -158,6 +159,29 @@ Notes:
 Historical bundles that predate `npu_decode_smoke_passed` should warn instead of failing. Unknown future report kinds remain accepted when the common summary envelope is intact.
 ```
 
+### AI dry-run matrix evidence bundle
+
+```text
+File pattern:
+docs/LOCAL_VALIDATION_EVIDENCE/ai_pipeline_dry_run_matrix_evidence.json
+Producer:
+Tools/ai/build_dry_run_matrix_evidence_bundle.py
+Consumer:
+GitHub-only review agents, local validation handoffs and future selective execution planners.
+Required fields:
+schema_version, kind, generated_at, repo_root, source_matrix_report, source_validation_reports, provider_execution_performed, passed, errors, warnings, matrix, validation_reports, case_summary, cases, decision
+Required kind:
+dry_run_matrix_evidence_bundle
+Required decision fields:
+matrix_passed, all_validation_reports_passed, all_case_reports_present, all_cases_dry_run, all_steps_planned_only, provider_execution_seen, gpu_npu_workloads_executed, parallel_execution_seen, repeat_cases_seen
+Provider semantics:
+This evidence summarizes dry-run planning only. It must keep provider_execution_performed=false and must not be used as proof that GPU/NPU workloads executed.
+Current validator:
+Tools/validation/check_dry_run_matrix_evidence_bundle.py
+Notes:
+The full matrix report remains under ignored output. The evidence records enough per-case status to prove dry-run-only, planned-only behavior without committing long stdout/stderr tails.
+```
+
 ### Repository change proposals
 
 ```text
@@ -277,6 +301,7 @@ Context packs must avoid generated indexes, local output, Ready To Jazz runtime,
 |---|---|---|---|---|---|
 | AI dry-run matrix report | `output/ai_pipeline/dry_run_matrix_report.json` | `Tools/ai/run_pipeline_dry_run_matrix.py` | `Tools/validation/check_ai_dry_run_matrix_contract.py` | `schema_version`, `repo_root`, `output_dir`, `case_count`, `passed`, `results` | Future additive checks should remain warning-first until local samples are reviewed. |
 | Individual AI pipeline dry-run report | `output/ai_pipeline/dry_run_matrix/<case>/ai_pipeline_dry_run_report.json` | `Tools/ai/run_parallel_artifact_pipeline.py` through matrix cases | `Tools/validation/check_ai_pipeline_report_contract.py`; also invoked by `check_ai_dry_run_matrix_contract.py` for referenced case reports | schema-v6 root fields plus `summary`, `schedule`, `lanes`, `agent_state_packet`, `steps`, `post_run_expected_outputs` | Unknown future fields remain accepted; `--require-dry-run` enforces `dry_run=true` and planned-only steps for dry-run reports. |
+| AI dry-run matrix evidence bundle | `docs/LOCAL_VALIDATION_EVIDENCE/ai_pipeline_dry_run_matrix_evidence.json` | `Tools/ai/build_dry_run_matrix_evidence_bundle.py` | `Tools/validation/check_dry_run_matrix_evidence_bundle.py` | `schema_version`, `kind`, `provider_execution_performed`, `matrix`, `validation_reports`, `case_summary`, `cases`, `decision` | Compact Git-trackable proof that the local matrix ran as dry-run/planned-only with no provider execution claim. |
 | AI workload quality lane routing report | `output/validation/ai_workload_quality_lane_routing.json` | `Tools/ai/build_workload_quality_lane_routing.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `primary_advisory_provider`, `policy`, `mode`, `routing` | Direct raw-output validator remains future work; evidence copies preserve the current provider-lane decision. |
 | NPU decode quality remediation report | `output/validation/npu_decode_quality_remediation.json` | `Tools/validation/check_npu_decode_quality_remediation.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `policy`, `mode`, `checks` | Report-only; must not promote unusable NPU workload output to advisory context. |
 | NPU decode smoke diagnostic report | `output/validation/npu_decode_smoke_diagnostic.json` | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `policy`, `mode`, `provider`, `checks` | Explicit NPU diagnostic only; passing smoke does not make OpenVINO/NPU the primary advisory lane. |
