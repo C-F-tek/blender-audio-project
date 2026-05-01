@@ -49,6 +49,7 @@ Repository context and local reports
   -> primary advisory packet through Ollama/GPU when explicitly requested
   -> repository proposals
   -> proposal-derived draft patch specs
+  -> reviewed dry-run patch specs from explicit replacement plans
   -> compact evidence bundle
   -> GitHub review
 ```
@@ -92,6 +93,8 @@ This runner performs:
 | `Tools/validation/check_repository_change_proposals.py` | Validates proposal reports before they are used as future patch work items. |
 | `Tools/ai/build_patch_specs_from_proposals.py` | Converts validated proposals into inert draft patch specs under `output/patch_specs/`. |
 | `Tools/validation/check_patch_spec_drafts.py` | Validates draft patch-spec contracts and blocks queued/concrete replacements. |
+| `Tools/ai/promote_patch_spec_draft.py` | Combines one draft spec with an explicit replacement plan and writes a reviewed dry-run-passing spec under `output/patch_specs/`. |
+| `Tools/validation/check_reviewed_patch_specs.py` | Revalidates reviewed patch specs and reruns dry-run without writing source files. |
 | `Tools/ai/build_github_evidence_bundle.py` | Summarizes long ignored `output/` reports into tracked docs evidence. |
 | `Tools/workflow/run_post_validation_ai_packet.ps1` | Builds packet/proposals and supports primary advisory provider mode. |
 | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | Main current parallel GPU/NPU multistep runner. |
@@ -115,6 +118,7 @@ git push
 - Generated evidence belongs under `docs/LOCAL_VALIDATION_EVIDENCE/`.
 - Full local reports remain in ignored `output/`.
 - Proposal-derived patch specs remain draft-only under `output/patch_specs/` until reviewed and dry-run.
+- Reviewed patch specs are still manual-review-only and must not be queued or applied without a separate explicit approval.
 - No destructive overwrite of source or analysis data.
 - No Blender runtime changes unless explicitly scoped.
 - Manual review remains required for source patches and proposals.

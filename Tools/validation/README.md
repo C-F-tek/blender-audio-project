@@ -23,6 +23,7 @@ AI pipeline schema-v6 report contract checks
 GitHub evidence bundle contract checks
 repository change proposal contract checks
 proposal patch-spec draft contract checks
+reviewed patch-spec dry-run contract checks
 validation report contract checks
 agent memory policy checks
 Blender compatibility smokes
@@ -107,6 +108,7 @@ python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --out
 python .\Tools\validation\check_github_evidence_bundle.py --repo-root . --output .\output\validation\github_evidence_bundle.json
 python .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output .\output\validation\repository_change_proposals_contract.json
 python .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest .\output\patch_specs\proposal_patch_specs_manifest.json --output .\output\validation\patch_spec_drafts.json
+python .\Tools\validation\check_reviewed_patch_specs.py --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_manifest.json --output .\output\validation\reviewed_patch_specs.json
 python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
 python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
 python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
@@ -142,6 +144,7 @@ python .\Tools\validation\check_generated_blender_script_policy.py --repo-root .
 | `check_github_evidence_bundle.py` | Validates Git-trackable AI/provider evidence bundle shape and decision fields without reading ignored `output/` contents. | No |
 | `check_repository_change_proposals.py` | Validates manual-review repository proposal reports and their code/Markdown/JSON suggestion descriptors. | No |
 | `check_patch_spec_drafts.py` | Validates proposal-derived draft patch specs under `output/patch_specs/` and rejects queued or concrete replacements. | No |
+| `check_reviewed_patch_specs.py` | Validates reviewed patch specs and reruns dry-run without writing source files. | No |
 | `check_validation_report_contract.py` | Validates generated reports in `output/validation/` for common root fields. | No |
 | `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and docs agree. | No |
 | `check_agent_memory_policy.py` | Checks generic memory retention and promotion guardrails. | No |
@@ -237,6 +240,37 @@ provider_execution_performed == false
 operations target existing concrete files
 replacements are empty while the spec is a draft
 drafts are not stored under patch_specs/inbox/
+```
+
+This validator does not execute providers, apply patch specs, run Blender or write source targets.
+
+## Reviewed patch-spec validation
+
+Reviewed patch specs are produced from a draft plus an explicit replacement plan. They still live under ignored `output/patch_specs/`, remain manual-review-only and are not copied to `patch_specs/inbox/` automatically.
+
+Promote the fixture draft with dry-run:
+
+```powershell
+python .\Tools\ai\promote_patch_spec_draft.py --repo-root . --draft .\Tools\ai\fixtures\patch_spec_review_draft.json --replacement-plan .\Tools\ai\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
+```
+
+Validate the reviewed spec:
+
+```powershell
+python .\Tools\validation\check_reviewed_patch_specs.py --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_fixture_manifest.json --output .\output\validation\reviewed_patch_specs.json
+```
+
+The validator checks:
+
+```text
+kind == reviewed_patch_spec_manifest / reviewed_patch_spec
+apply_mode == manual_review_only
+review_status == dry_run_passed
+provider_execution_performed == false
+operations target existing concrete files
+replacements are present and structurally valid
+reviewed specs are not stored under patch_specs/inbox/
+dry-run still passes at validation time
 ```
 
 This validator does not execute providers, apply patch specs, run Blender or write source targets.
@@ -451,6 +485,7 @@ python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\outpu
 python .\Tools\validation\check_github_evidence_bundle.py --repo-root . --output .\output\validation\github_evidence_bundle.json
 python .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output .\output\validation\repository_change_proposals_contract.json
 python .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest .\output\patch_specs\proposal_patch_specs_manifest.json --output .\output\validation\patch_spec_drafts.json
+python .\Tools\validation\check_reviewed_patch_specs.py --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_manifest.json --output .\output\validation\reviewed_patch_specs.json
 python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
 python .\Tools\npu\build_project_ai_index.py
 python .\Tools\npu\build_npu_code_context.py

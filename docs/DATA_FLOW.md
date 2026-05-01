@@ -17,6 +17,7 @@ local source/docs/context
   -> explicit provider probes or primary advisory generation
   -> post-validation AI packet and proposals
   -> proposal-derived draft patch specs
+  -> explicit replacement plan and reviewed dry-run spec
   -> compact evidence bundle under docs/LOCAL_VALIDATION_EVIDENCE/
   -> manual review / PR / merge
 ```
@@ -90,6 +91,7 @@ npu_decode_smoke_passed: true
 | Post-validation AI packet | `Tools/ai/suggest_repository_updates.py` | maintainer / proposal builder | Uses quality-approved advisory context only. |
 | Repository change proposals | `Tools/ai/build_repository_change_proposals.py` | maintainer, future trusted patch builders | Advisory only; no auto-apply. Includes `suggestion_outputs` descriptors for code/MD/JSON/PowerShell targets. |
 | Proposal patch-spec drafts | `Tools/ai/build_patch_specs_from_proposals.py` | maintainer, trusted patch builders | Inert draft specs under `output/patch_specs/`; no replacements, no queue writes, no auto-apply. |
+| Reviewed patch specs | `Tools/ai/promote_patch_spec_draft.py` | maintainer, trusted patch builders | Concrete replacements plus mandatory dry-run under `output/patch_specs/`; no source writes and no queue writes. |
 | Evidence bundle | `Tools/ai/build_github_evidence_bundle.py` | GitHub review and future AI agents | Compact tracked summary of ignored `output/` reports. |
 | NPU runtime output manifest | `Tools/npu/build_runtime_output_manifest.py` | validation/evidence | Observability only. |
 | Provider result envelope | `Tools/npu/pipeline/providers.py` | result reports, diagnostics and evidence | Normalizes provider output and metadata. |
@@ -132,8 +134,8 @@ This is now one application domain over the local AI orchestration workbench, no
 - legacy audio analysis JSON;
 - music context JSON;
 - generated artifact plan/manifest schema.
-- promotion contract from proposal-derived patch-spec draft to reviewed concrete patch spec.
+- promotion from reviewed dry-run patch spec to approved local apply or GitHub Action queue.
 
 ## Recommended next improvement
 
-Add direct raw-output validators for provider probe reports and continue shaping the suggestion/proposal loop from inert draft patch specs toward reviewed, dry-runnable code/Markdown/JSON patch candidates.
+Add direct raw-output validators for provider probe reports and continue shaping the suggestion/proposal loop from reviewed dry-run specs toward approved local apply or queue workflows.
