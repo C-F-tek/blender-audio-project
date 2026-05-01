@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import argparse
+import json
 from datetime import datetime
 
 
@@ -474,6 +475,34 @@ def run_chunked(pipe, context_path: Path, chunk_dir: Path, notes_out: Path, args
     return reduce_notes(pipe, notes, args)
 
 
+def write_metadata_report(args: argparse.Namespace, out_path: Path, notes_out: Path) -> None:
+    if not args.metadata_out:
+        return
+    metadata_path = Path(args.metadata_out)
+    metadata = {
+        "schema_version": 1,
+        "kind": "npu_review_metadata",
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "engine": args.engine,
+        "provider": "ollama" if args.engine == "ollama" else "openvino_npu",
+        "device": args.device if args.engine == "npu" else None,
+        "domain": args.domain,
+        "mode": args.mode,
+        "context": str(Path(args.context)),
+        "chunk_dir": str(Path(args.chunk_dir)),
+        "output": str(out_path),
+        "notes_output": str(notes_out),
+        "provider_execution_performed": True,
+        "source_writes_performed": False,
+        "patch_application_performed": False,
+        "advisory_role": "probe_or_knowledge_broker" if args.engine == "npu" else "primary_advisory_when_quality_approved",
+        "quality_gate_required_before_advisory_use": True,
+    }
+    metadata_path.parent.mkdir(parents=True, exist_ok=True)
+    metadata_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"[OK] Wrote metadata: {metadata_path}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-dir", default=str(DEFAULT_MODEL_DIR))
@@ -481,6 +510,7 @@ def main() -> None:
     parser.add_argument("--chunk-dir")
     parser.add_argument("--out")
     parser.add_argument("--notes-out")
+    parser.add_argument("--metadata-out", help="Optional JSON sidecar describing provider execution and advisory role.")
     parser.add_argument("--device", default="NPU")
     parser.add_argument("--engine", choices=["npu", "ollama"], default="npu")
     parser.add_argument("--ollama-model", default="qwen2.5-coder:14b")
@@ -557,6 +587,7 @@ def main() -> None:
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(text.strip() + "\n", encoding="utf-8")
+    write_metadata_report(args, out_path, notes_out)
 
     print(f"[OK] Wrote: {out_path}")
 
