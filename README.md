@@ -25,12 +25,13 @@ The repository has not been renamed yet. Renaming the GitHub repository would ch
 ```text
 local context / reports / generated artifacts
   -> semantic chunk selection and bounded context packs when useful
+  -> enrichment plans / adapter manifests / knowledge-broker packets
   -> validation and quality gates
   -> provider lane classification
   -> GPU/CUDA advisory lane through Ollama
   -> NPU/OpenVINO probe, guardrail and decode diagnostics
   -> multistep workflow reports
-  -> compact GitHub evidence bundles
+  -> manual-review patch plans and compact GitHub evidence bundles
   -> manual review / PR / merge
 ```
 
@@ -61,6 +62,9 @@ docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_core_ai_backend_context_pack_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/local_ai_core_tool_activation_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.json
 ```
 
 Validated facts:
@@ -105,6 +109,18 @@ git add docs/LOCAL_VALIDATION_EVIDENCE/
 git commit -m "test: add local ai workflow evidence bundle"
 git push
 ```
+
+### Full-context local AI golden path
+
+### Local AI core/tool activation
+
+The current app-agnostic activation lane builds concrete review artifacts without touching Blender runtime:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_core_tool_activation.ps1
+```
+
+It can produce selected chunks, context packs, enrichment plans, adapter manifests, repository proposals, NPU knowledge-broker packets, evidence bundles and optional manual-review macro patch draft specs.
 
 ### Full-context local AI golden path
 
@@ -174,10 +190,13 @@ Those assets are now treated as the first application domain that benefits from 
 6. `docs/LOCAL_AI_WORKFLOW.md`
 7. `docs/JSON_SCHEMAS.md`
 8. `docs/LOCAL_AI_TASKS/README.md`
-9. `Tools/npu/pipeline/README.md`
-10. `Tools/validation/README.md`
-11. `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md`
-12. `docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.md`
+9. `docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md`
+10. `docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md`
+11. `Tools/npu/pipeline/README.md`
+12. `Tools/validation/README.md`
+13. `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md`
+14. `docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.md`
+15. `docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.md`
 
 ## Current operational decision
 
@@ -186,5 +205,5 @@ Treat Ollama/GPU as the primary advisory lane.
 Treat NPU/OpenVINO as a validated smoke/probe lane, not yet a general advisory lane.
 Use compact evidence bundles instead of pasting long local output reports.
 Keep Blender runtime out of this milestone.
-Continue by promoting full-context golden proposal families one at a time through validators, reviewed patch specs or focused implementation PRs.
+Continue from local AI core/tool activation, evidence-bundle summaries and manual-review patch plans. Promote only one validated proposal/patch-plan family at a time.
 ```

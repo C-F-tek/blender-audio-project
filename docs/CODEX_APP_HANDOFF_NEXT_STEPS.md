@@ -1,4 +1,4 @@
-# Codex App Handoff — Next Steps
+# Codex App Handoff - Next Steps
 
 ## Repository
 
@@ -19,10 +19,10 @@ The GitHub repository slug is historical. The active architecture is no longer B
 This handoff originally started after PR #48. As of 2026-05-01, `master` is further ahead:
 
 ```text
-ef6da71 feat(ai): add full-context golden proposal generator (#82)
+2d2e2b9 test(ai): add final evidence bundle builder smoke
 ```
 
-The PR #48 provider-lane work is still the baseline for GPU/NPU advisory routing, but current next-step planning should also account for later selected-context, full-context and proposal-generator work.
+The PR #48 provider-lane work is still the baseline for GPU/NPU advisory routing, but current next-step planning should also account for later selected-context, full-context, local-core activation, patch-plan and evidence-bundle work.
 
 Recent current capabilities on `master`:
 
@@ -34,6 +34,9 @@ SQLite-backed agent state packet usage in local runs
 full-context AI/NPU golden path task entrypoint
 full-context golden proposal coverage validator
 deterministic full-context golden proposal generator
+local AI core/tool activation lane
+agent-review evidence sufficiency and documentation patch-plan tooling
+evidence bundles with patch-plan and artifact-manifest summaries
 ```
 
 Provider-lane capabilities from PR #48 remain:
@@ -68,6 +71,9 @@ docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_core_ai_backend_context_pack_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/local_ai_core_tool_activation_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.json
 ```
 
 Validated decision summary:
@@ -116,23 +122,25 @@ docs/DATA_FLOW.md
 docs/LOCAL_AI_WORKFLOW.md
 docs/JSON_SCHEMAS.md
 docs/LOCAL_AI_TASKS/README.md
+docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md
+docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md
 Tools/npu/pipeline/README.md
 Tools/validation/README.md
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.md
+docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.md
 ```
 
 ## Current recommended next action
 
-Use the full-context golden proposal families as the next controlled work queue:
+Use the current local AI core/evidence lanes as the next controlled work queue:
 
 ```text
-P1 adapter manifest validator
-P2 reusable enrichment-plan helper
-P3 full-context golden path docs contract
-P4 optional wrapper preset flag
-P5 selected-chunks evidence standard validation block
-P6 NPU knowledge-broker / context-oracle prototype
+local AI core/tool activation outputs
+agent-review evidence sufficiency
+manual-review documentation patch plans
+evidence bundle patch-plan summaries
+one focused patch-plan/proposal family at a time
 ```
 
 Promote one family at a time into a reviewed patch spec or focused implementation PR. Keep provider execution explicit and do not apply patches automatically.

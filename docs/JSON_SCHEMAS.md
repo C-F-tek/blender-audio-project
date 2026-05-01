@@ -197,16 +197,22 @@ Required fields:
 schema_version, kind, generated_at, repo_root, source_reports, reports, decision
 Required kind:
 github_validation_evidence_bundle
+Optional current fields:
+artifact_manifest
 Required decision fields:
 ollama_gpu_primary_advisory, npu_excluded_when_unusable, provider_execution_seen
 Optional provider decision fields:
 npu_decode_smoke_passed
+Optional current decision fields:
+artifact_manifest_built, patch_plan_summary_seen
 Required report summary fields:
 path, exists, json_ok, kind, passed, summary
+Optional report summary fields:
+patch_plan_summary
 Current validator:
 Tools/validation/check_github_evidence_bundle.py
 Notes:
-Historical bundles that predate `npu_decode_smoke_passed` should warn instead of failing. Unknown future report kinds remain accepted when the common summary envelope is intact.
+Historical bundles that predate `npu_decode_smoke_passed`, `artifact_manifest` or `patch_plan_summary` should warn instead of failing. Unknown future report kinds remain accepted when the common summary envelope is intact.
 ```
 
 ### AI dry-run matrix evidence bundle
@@ -529,4 +535,4 @@ Patch semantics:
 The wrapper must keep patch_application_performed=false. Documentation edits remain manual-review-only.
 Notes:
 This bundle is task-scoped. For this lane, selected semantic chunk evidence is intentionally disabled unless explicitly requested by a future task.
-
+```

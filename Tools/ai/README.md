@@ -78,6 +78,25 @@ py .\Tools\ai\build_full_context_golden_proposals.py `
   --markdown-output .\output\ai_pipeline\full_context_golden_proposals.md
 ```
 
+Build an app-agnostic local AI enrichment plan:
+
+```powershell
+py .\Tools\ai\build_local_ai_enrichment_plan.py --repo-root . --output .\output\ai_pipeline\local_ai_enrichment_plan.json --markdown-output .\output\ai_pipeline\local_ai_enrichment_plan.md
+```
+
+Build NPU knowledge-broker context-oracle packet:
+
+```powershell
+py .\Tools\npu\build_npu_knowledge_broker_packet.py --repo-root . --output .\output\ai_pipeline\npu_knowledge_broker_packet.json --markdown-output .\output\ai_pipeline\npu_knowledge_broker_packet.md
+```
+
+Build agent review evidence sufficiency and patch plans:
+
+```powershell
+py .\Tools\ai\build_agent_review_evidence_sufficiency.py --repo-root . --output .\output\ai_pipeline\agent_review_evidence_sufficiency.json --markdown-output .\output\ai_pipeline\agent_review_evidence_sufficiency.md
+py .\Tools\ai\build_agent_review_patch_plan.py --repo-root . --output .\output\patch_specs\agent_review_patch_plan.json --markdown-output .\output\patch_specs\agent_review_patch_plan.md
+```
+
 Run the safe orchestrator:
 
 ```powershell
@@ -101,9 +120,15 @@ Markdown task
   -> selected semantic chunks
   -> context pack
   -> agent state packet
+  -> enrichment plan
+  -> adapter manifest
+  -> NPU knowledge-broker packet
   -> explicit multistep GPU/NPU evidence
   -> repository proposals
+  -> agent review evidence sufficiency
+  -> documentation patch plans
   -> full-context golden proposal families
+  -> evidence bundles with patch-plan and artifact-manifest summaries
   -> manual-review-only patch-spec candidates
 ```
 

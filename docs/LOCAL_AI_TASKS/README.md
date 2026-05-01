@@ -38,6 +38,11 @@ This keeps token-heavy local work inside the local pipeline while preserving mas
 | `selected-review-workflow-ai-tools-patch-specs.md` | Multistep review of `Tools/workflow/*.ps1` and `Tools/ai/*.py` to propose safe patch-spec candidates. |
 | `enrich-local-ai-memory-chunks-context-wrapper.md` | Integrate the reasoning for SQLite memory, semantic chunks, context packs and wrapper/multistep enrichment. |
 | `full-context-ai-npu-golden-path.md` | End-to-end full-context AI/NPU golden path with selected chunks, selected-chunks evidence, context pack, SQLite agent state, multistep providers and controlled complexity escalation proposals. |
+| `full-context-golden-docs-contract.md` | Validate that the full-context golden path is documented as a stable contract. |
+| `apply-agent-review-doc-patch-plan.md` | Apply only low-risk documentation patch plans after manual review. |
+| `gpu-npu-parallel-evidence-runbook.md` | Runbook for GPU/NPU evidence and planner diagnostics. |
+| `improve-gpu-planner-nonempty-recommendations.md` | Task entrypoint for GPU planner non-empty recommendation diagnostics. |
+| `heavy-gpu-local-ai-diagnostics-handoff.md` | Handoff for heavy local GPU diagnostics when GitHub-only agents cannot execute providers. |
 
 ## Recommended next sequence
 
@@ -52,13 +57,13 @@ Historical task progression:
 
 The first task checks documentation/script consistency. The second task uses the consolidated model to review workflow and AI tools for safe patch-spec candidates. The third task plans the enrichment path that lets future local runs use SQLite memory, semantic chunks and bounded context packs to reduce token pressure on large MD/code work. The fourth task exercises the current full-context golden path and asks the local AI to propose controlled complexity increases such as a new core/helper function, validator, wrapper flag, documentation contract or patch-spec promotion.
 
-Current post-PR #82 next sequence:
+Current post-PR #106 next sequence:
 
 ```text
-1. Treat full-context-ai-npu-golden-path.md as the preferred end-to-end local task.
-2. Use Tools/ai/build_full_context_golden_proposals.py to produce deterministic P1-P6 proposal families from the golden-path proposal report.
-3. Validate those proposals with check_repository_change_proposals.py and check_full_context_golden_proposals.py.
-4. Promote one proposal family at a time into reviewed patch specs or focused implementation PRs.
+1. Use LOCAL_AI_CORE_TOOL_ACTIVATION as the preferred app-agnostic activation lane.
+2. Use gpu-npu-parallel-evidence-runbook.md for real GPU/NPU evidence diagnostics.
+3. Use agent review evidence sufficiency and patch-plan tooling for documentation-only manual-review patch plans.
+4. Promote one validated proposal or patch-plan family at a time into focused implementation PRs.
 ```
 
 ## Runner expectation

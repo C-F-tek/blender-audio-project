@@ -139,12 +139,15 @@ docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_core_ai_backend_context_pack_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/local_ai_core_tool_activation_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.json
 ```
 
 Operational interpretation:
 
 ```text
-The local AI pipeline can now build selected semantic chunks, bounded context packs, SQLite-backed agent state packets, explicit multistep provider evidence and manual-review-only full-context proposal families.
+The local AI pipeline can now build selected semantic chunks, bounded context packs, SQLite-backed agent state packets, enrichment plans, adapter manifests, NPU knowledge-broker packets, explicit multistep provider evidence and manual-review-only proposal/patch-plan families.
 These outputs are still advisory/proposal artifacts, not automatic patch application or provider promotion.
 ```
 
@@ -208,6 +211,12 @@ python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\ou
 ```
 
 Current full-context local AI task:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_core_tool_activation.ps1
+```
+
+Heavier full-context local AI task:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `

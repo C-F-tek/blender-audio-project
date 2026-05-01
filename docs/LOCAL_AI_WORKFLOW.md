@@ -58,6 +58,9 @@ docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_core_ai_backend_context_pack_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/local_ai_core_tool_activation_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.json
 ```
 
 Validated decisions:
@@ -85,16 +88,18 @@ Repository context and local reports
   -> semantic code chunks and selected focused chunks when useful
   -> task-scoped AI context pack when useful
   -> optional SQLite-backed agent state packet
+  -> enrichment plan / adapter manifest / NPU knowledge-broker packet
   -> workload quality gate
   -> quality-based advisory routing
   -> report-only local pipeline adapter
   -> explicit multistep provider workflow for heavy local analysis when requested
   -> primary advisory packet/proposals when explicitly requested and quality-gated
   -> repository proposals
+  -> agent review evidence sufficiency and manual-review patch plans
   -> full-context golden proposal families when requested
   -> proposal-derived draft patch specs
   -> reviewed dry-run patch specs from explicit replacement plans
-  -> compact evidence bundle
+  -> compact evidence bundle with report, patch-plan and artifact-manifest summaries
   -> GitHub/master-AI review
 ```
 
@@ -213,6 +218,7 @@ Use this runner for explicit provider diagnostics/evidence. Do not use it as an 
 |---|---|
 | `Tools/workflow/run_local_ai_markdown_task.ps1` | Builds non-interactive local AI run packets from Markdown task entrypoints. |
 | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | Preferred project-owned adapter from local task prompt to report-only/proposal-only pipeline outputs; can explicitly call multistep provider workflow. |
+| `Tools/workflow/run_local_ai_core_tool_activation.ps1` | App-agnostic activation lane for local AI core/tools and compact evidence. |
 | `docs/LOCAL_AI_TASKS/` | Markdown task entrypoints for non-interactive local runs. |
 | `Tools/ai/select_semantic_code_chunks.py` | Selects bounded task-focused semantic chunks from the generated semantic chunk index. |
 | `Tools/validation/check_selected_semantic_chunks.py` | Validates selected-chunks bundles and can emit compact selected-chunks evidence. |
@@ -220,6 +226,14 @@ Use this runner for explicit provider diagnostics/evidence. Do not use it as an 
 | `Tools/validation/check_ai_context_pack_contract.py` | Validates context packs and context-pack evidence without executing providers. |
 | `Tools/ai/build_selective_execution_plan.py` | Builds report-only recommendations for next validators and candidate patch specs from context/evidence. |
 | `Tools/validation/check_selective_execution_plan.py` | Validates selective execution plan reports. |
+| `Tools/ai/build_local_ai_enrichment_plan.py` | Builds reusable local AI enrichment plans. |
+| `Tools/validation/check_local_ai_enrichment_plan.py` | Validates enrichment plan reports. |
+| `Tools/validation/check_local_ai_adapter_manifest.py` | Validates local AI task adapter manifests. |
+| `Tools/npu/build_npu_knowledge_broker_packet.py` | Builds NPU knowledge-broker/context-oracle packets. |
+| `Tools/validation/check_npu_knowledge_broker_packet.py` | Validates NPU knowledge-broker packets without provider promotion. |
+| `Tools/ai/build_agent_review_evidence_sufficiency.py` | Builds evidence sufficiency reports for agent-review patch planning. |
+| `Tools/ai/build_agent_review_patch_plan.py` | Builds manual-review-only documentation patch plans. |
+| `Tools/validation/run_agent_review_patch_plan_full_validation.py` | Runs the provider-free patch-plan validation and evidence bundle wrapper. |
 | `Tools/validation/check_ai_workload_report_quality.py` | Classifies workload reports into usable/unusable lanes. |
 | `Tools/ai/workload_quality.py` | Shared routing helper for trusted/excluded advisory context. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | Builds routing report and declares primary advisory provider. |
