@@ -31,6 +31,12 @@ OPTIONAL_PROVIDER_DECISION_FIELDS = (
     "npu_decode_smoke_passed",
 )
 
+OPTIONAL_CONTEXT_DECISION_FIELDS = (
+    "selected_chunks_evidence_seen",
+    "selected_chunks_built",
+    "budget_respected",
+)
+
 REQUIRED_REPORT_FIELDS = (
     "path",
     "exists",
@@ -65,6 +71,15 @@ OPTIONAL_SUMMARY_HINT_FIELDS_BY_KIND = {
     "local_provider_probe": ("provider_execution_performed",),
     "npu_runtime_output_manifest": ("provider_execution_performed", "mode"),
     "provider_result_report": ("provider_execution_performed", "mode", "provider"),
+    "selected_semantic_chunks_evidence": (
+        "provider_execution_performed",
+        "source_writes_performed",
+        "selected_count",
+        "total_selected_chars",
+        "max_chunks",
+        "max_total_chars",
+        "decision",
+    ),
 }
 
 
@@ -129,11 +144,16 @@ def validate_decision(decision: Any) -> tuple[dict[str, bool], list[str], list[s
         elif not isinstance(decision[field], bool):
             warnings.append(f"decision.{field} should be a boolean")
 
+    for field in OPTIONAL_CONTEXT_DECISION_FIELDS:
+        checks[field] = field in decision
+        if field in decision and not isinstance(decision[field], bool):
+            warnings.append(f"decision.{field} should be a boolean")
+
     return checks, errors, warnings
 
 
-def validate_report_entry(entry: Any, index: int) -> dict[str, Any]:
-    label = f"reports[{index}]"
+def validate_report_entry(entry: Any, index: int, *, label_prefix: str = "reports") -> dict[str, Any]:
+    label = f"{label_prefix}[{index}]"
     errors: list[str] = []
     warnings: list[str] = []
 
@@ -185,6 +205,31 @@ def validate_report_entry(entry: Any, index: int) -> dict[str, Any]:
     }
 
 
+def validate_report_list(raw_entries: Any, label_prefix: str, *, required: bool) -> tuple[list[dict[str, Any]], list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if raw_entries is None:
+        if required:
+            errors.append(f"{label_prefix} must be a list")
+        return [], errors, warnings
+
+    if not isinstance(raw_entries, list):
+        errors.append(f"{label_prefix} must be a list")
+        return [], errors, warnings
+
+    checks = [
+        validate_report_entry(entry, index, label_prefix=label_prefix)
+        for index, entry in enumerate(raw_entries)
+    ]
+    for check in checks:
+        for error in check.get("errors", []):
+            errors.append(f"{check.get('path')}: {error}")
+        for warning in check.get("warnings", []):
+            warnings.append(f"{check.get('path')}: {warning}")
+    return checks, errors, warnings
+
+
 def validate_bundle(path: Path, repo_root: Path) -> dict[str, Any]:
     rel_path = repo_relative(path, repo_root)
     errors: list[str] = []
@@ -199,8 +244,10 @@ def validate_bundle(path: Path, repo_root: Path) -> dict[str, Any]:
             "kind": None,
             "schema_version": None,
             "report_count": 0,
+            "selected_chunks_evidence_count": 0,
             "decision_checks": {},
             "report_checks": [],
+            "selected_chunks_evidence_checks": [],
             "errors": ["evidence bundle is missing"],
             "warnings": warnings,
         }
@@ -215,8 +262,10 @@ def validate_bundle(path: Path, repo_root: Path) -> dict[str, Any]:
             "kind": None,
             "schema_version": None,
             "report_count": 0,
+            "selected_chunks_evidence_count": 0,
             "decision_checks": {},
             "report_checks": [],
+            "selected_chunks_evidence_checks": [],
             "errors": [parse_error or "unknown JSON parse error"],
             "warnings": warnings,
         }
@@ -232,21 +281,28 @@ def validate_bundle(path: Path, repo_root: Path) -> dict[str, Any]:
     if not isinstance(source_reports, list):
         warnings.append("source_reports should be a list")
 
+    source_selected = data.get("source_selected_chunks_evidence")
+    if source_selected is not None and not isinstance(source_selected, list):
+        warnings.append("source_selected_chunks_evidence should be a list when present")
+
     decision_checks, decision_errors, decision_warnings = validate_decision(data.get("decision"))
     errors.extend(decision_errors)
     warnings.extend(decision_warnings)
 
+    report_checks, report_errors, report_warnings = validate_report_list(data.get("reports"), "reports", required=True)
+    errors.extend(report_errors)
+    warnings.extend(report_warnings)
+
+    selected_checks, selected_errors, selected_warnings = validate_report_list(
+        data.get("selected_chunks_evidence"),
+        "selected_chunks_evidence",
+        required=False,
+    )
+    errors.extend(selected_errors)
+    warnings.extend(selected_warnings)
+
     raw_reports = data.get("reports")
-    if not isinstance(raw_reports, list):
-        errors.append("reports must be a list")
-        report_checks: list[dict[str, Any]] = []
-    else:
-        report_checks = [validate_report_entry(entry, index) for index, entry in enumerate(raw_reports)]
-        for check in report_checks:
-            for error in check.get("errors", []):
-                errors.append(f"{check.get('path')}: {error}")
-            for warning in check.get("warnings", []):
-                warnings.append(f"{check.get('path')}: {warning}")
+    raw_selected = data.get("selected_chunks_evidence")
 
     return {
         "path": rel_path,
@@ -256,8 +312,10 @@ def validate_bundle(path: Path, repo_root: Path) -> dict[str, Any]:
         "kind": kind,
         "schema_version": schema_version,
         "report_count": len(raw_reports) if isinstance(raw_reports, list) else 0,
+        "selected_chunks_evidence_count": len(raw_selected) if isinstance(raw_selected, list) else 0,
         "decision_checks": decision_checks,
         "report_checks": report_checks,
+        "selected_chunks_evidence_checks": selected_checks,
         "errors": errors,
         "warnings": warnings,
     }
