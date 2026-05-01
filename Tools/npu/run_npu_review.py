@@ -489,6 +489,10 @@ def write_metadata_report(
     metadata = {
         "schema_version": 1,
         "kind": "npu_review_metadata",
+        "repo_root": str(ROOT),
+        "passed": True,
+        "errors": [],
+        "warnings": [],
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "engine": args.engine,
         "provider": "ollama" if args.engine == "ollama" else "openvino_npu",
