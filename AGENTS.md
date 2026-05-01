@@ -2,6 +2,25 @@
 
 This file provides operating context for AI assistants and automated code-review systems working on this repository.
 
+## Mandatory agent contract
+
+Every AI assistant, local agent, automated code-review system or GitHub-only assistant working on this repository must treat this file as the primary repository contract.
+
+Before planning, editing, validating, opening a PR or suggesting changes, the agent must:
+
+1. read `AGENTS.md`;
+2. follow its guardrails unless a later, explicit human instruction overrides a non-safety detail;
+3. report any conflict between the task request and this file before modifying files;
+4. refuse or stop any action that would violate hard guardrails without explicit human confirmation.
+
+For local runs, the agent must also read:
+
+```text
+docs/LOCAL_AI_RUN_BOOTSTRAP.md
+```
+
+This requirement applies even when the task is small, documentation-only or apparently mechanical.
+
 ## Repository identity
 
 - Working title: `IA-Carmine Local AI Orchestration Workbench`
@@ -34,19 +53,46 @@ The repository name is historical. Do not infer that Blender/audio is still the 
 
 Before creating or editing a package or pipeline module, read:
 
-1. `README.md`
-2. `WORKFLOW.md`
-3. `docs/README.md`
-4. `docs/PROJECT_STATUS_POINT.md`
-5. `docs/DATA_FLOW.md`
-6. `docs/LOCAL_AI_WORKFLOW.md`
-7. `docs/JSON_SCHEMAS.md`
-8. `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md` when reviewing PR #48 or later evidence bundles
-9. `Tools/npu/pipeline/README.md`
-10. `Tools/validation/README.md`
-11. `docs/EXECUTION_PLANS/README.md`
-12. `docs/TECH_DEBT_TRACKER.md`
-13. the target source file before modifying it
+1. `AGENTS.md`
+2. `README.md`
+3. `WORKFLOW.md`
+4. `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when running from a local checkout or delegating to a local AI agent
+5. `docs/README.md`
+6. `docs/PROJECT_STATUS_POINT.md`
+7. `docs/DATA_FLOW.md`
+8. `docs/LOCAL_AI_WORKFLOW.md`
+9. `docs/JSON_SCHEMAS.md`
+10. `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md` when reviewing PR #48 or later evidence bundles
+11. `Tools/npu/pipeline/README.md`
+12. `Tools/validation/README.md`
+13. `docs/EXECUTION_PLANS/README.md`
+14. `docs/TECH_DEBT_TRACKER.md`
+15. the active GitHub issue, PR body or execution plan referenced by the user
+16. the target source file before modifying it
+
+## Local AI run bootstrap
+
+Local AI agents must read:
+
+```text
+docs/LOCAL_AI_RUN_BOOTSTRAP.md
+```
+
+before planning or editing from a local checkout.
+
+That bootstrap defines:
+
+```text
+repository sync preflight
+mandatory local reading set
+task classification
+provider/runtime guardrails
+validation selection
+PR/reporting contract
+current local task pointers
+```
+
+If the local bootstrap conflicts with a more specific user task, preserve the hard safety guardrails and report the conflict explicitly.
 
 ## Important folders
 
@@ -178,16 +224,17 @@ docs/EXECUTION_PLANS/README.md
 
 When editing this repository:
 
-1. Identify whether the task is core AI/backend, validation/evidence, NPU/provider diagnostic or legacy Blender runtime.
-2. Read the nearest README and relevant docs.
-3. Check active execution plans and the tech debt tracker.
-4. Inspect the target Python/PowerShell file before modifying it.
-5. Produce small, reviewable changes.
-6. Keep working packages stable.
-7. Document every new assumption.
-8. Run the smallest relevant validation.
-9. Prefer compact evidence bundles under `docs/LOCAL_VALIDATION_EVIDENCE/` for long local outputs.
-10. Report changed files, purpose, risks, tests and line counts.
+1. Read `AGENTS.md` and, for local runs, `docs/LOCAL_AI_RUN_BOOTSTRAP.md`.
+2. Identify whether the task is core AI/backend, validation/evidence, NPU/provider diagnostic, documentation/workflow-state or legacy Blender runtime.
+3. Read the nearest README and relevant docs.
+4. Check active execution plans and the tech debt tracker.
+5. Inspect the target Python/PowerShell/Markdown file before modifying it.
+6. Produce small, reviewable changes.
+7. Keep working packages stable.
+8. Document every new assumption.
+9. Run the smallest relevant validation.
+10. Prefer compact evidence bundles under `docs/LOCAL_VALIDATION_EVIDENCE/` for long local outputs.
+11. Report changed files, purpose, risks, tests and line counts.
 
 ## Safe modification rules
 
