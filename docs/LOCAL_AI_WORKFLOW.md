@@ -77,12 +77,50 @@ Repository context and local reports
   -> workload quality gate
   -> quality-based advisory routing
   -> report-only local pipeline adapter
+  -> explicit multistep provider workflow for heavy local analysis when requested
   -> primary advisory packet/proposals when explicitly requested and quality-gated
   -> repository proposals
   -> proposal-derived draft patch specs
   -> reviewed dry-run patch specs from explicit replacement plans
   -> compact evidence bundle
   -> GitHub/master-AI review
+```
+
+## Multistep heavy-work policy
+
+For large Markdown files, large code files, repository-wide consistency checks, or generated artifacts that may exceed a safe single-pass context, multistep mode is the preferred local execution pattern.
+
+Use multistep mode for:
+
+```text
+large docs/code consistency reviews
+cross-file Markdown/code contract checks
+proposal generation from master-AI task files
+candidate patch-spec generation from validated proposals
+large file generation that needs staged review
+provider evidence that must stay compact and Git-trackable
+```
+
+The expected heavy-work flow is:
+
+```text
+master-AI writes or updates docs/LOCAL_AI_TASKS/*.md
+local wrapper builds local_ai_prompt.md
+local adapter runs report-only/proposal-only analysis
+optional explicit multistep provider workflow produces provider evidence
+proposal validators check output contracts
+master-AI/human reviews proposals before patch specs or apply
+```
+
+Do not use multistep mode to bypass guardrails. It remains:
+
+```text
+explicit provider execution only
+report-only/proposal-only by default
+no automatic patch apply
+no automatic merge
+NPU remains probe / guardrail / decode diagnostic
+Ollama/GPU remains primary advisory behind quality gate
 ```
 
 ## Local Markdown task runner
@@ -113,6 +151,22 @@ writes outputs under output/local_ai_runs/<run>/pipeline/
 validates repository proposals when produced
 does not apply patches
 does not execute providers unless explicit provider flags are passed
+```
+
+Explicit multistep adapter mode:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
+  -PromptFile .\output\local_ai_runs\<run>\local_ai_prompt.md `
+  -TaskFile .\docs\LOCAL_AI_TASKS\issue-62-hybrid-master-ai-local-pipeline.md `
+  -RunDir .\output\local_ai_runs\<run> `
+  -Profile npu `
+  -RunMultistepProviderWorkflow `
+  -RunOllamaProbe `
+  -RunNpuProbe `
+  -RunNpuDecodeSmoke `
+  -UsePrimaryAdvisoryProvider `
+  -BuildEvidence
 ```
 
 ## Primary multistep runner
@@ -146,7 +200,7 @@ Use this runner for explicit provider diagnostics/evidence. Do not use it as an 
 | File | Role |
 |---|---|
 | `Tools/workflow/run_local_ai_markdown_task.ps1` | Builds non-interactive local AI run packets from Markdown task entrypoints. |
-| `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | Preferred project-owned adapter from local task prompt to report-only/proposal-only pipeline outputs. |
+| `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | Preferred project-owned adapter from local task prompt to report-only/proposal-only pipeline outputs; can explicitly call multistep provider workflow. |
 | `docs/LOCAL_AI_TASKS/` | Markdown task entrypoints for non-interactive local runs. |
 | `Tools/ai/build_ai_context_pack.py` | Builds bounded task-scoped context packs and compact evidence for future AI/human task planning. |
 | `Tools/validation/check_ai_context_pack_contract.py` | Validates context packs and context-pack evidence without executing providers. |
@@ -207,6 +261,7 @@ python .\Tools\validation\check_dry_run_matrix_evidence_bundle.py --repo-root . 
 ## AI rules
 
 - Treat local AI output as draft material until validated.
+- Use multistep mode for large MD/code analysis and large artifact generation.
 - Keep generated packages or workflow outputs separated by task/version.
 - Do not merge unrelated generated packages automatically.
 - Preserve full analysis JSON files.
