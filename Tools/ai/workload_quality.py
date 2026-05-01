@@ -17,6 +17,14 @@ from typing import Any, Iterable
 
 
 DEFAULT_QUALITY_REPORT = "output/validation/ai_workload_report_quality.json"
+TRACKED_WORKLOAD_PATH_SUFFIXES = (
+    "output/ai_packets/npu_real_workload_report.md",
+    "output/ai_packets/ollama_gpu_real_workload_report.md",
+)
+WORKLOAD_LANE_BY_SUFFIX = {
+    "output/ai_packets/npu_real_workload_report.md": "npu",
+    "output/ai_packets/ollama_gpu_real_workload_report.md": "ollama",
+}
 
 
 @dataclass(frozen=True)
@@ -46,6 +54,18 @@ def _normalize_path(value: str | Path) -> str:
 def _resolve_repo_path(repo_root: Path, value: str | Path) -> Path:
     path = Path(value)
     return path if path.is_absolute() else repo_root / path
+
+
+def tracked_workload_lane_for_path(path: str | Path) -> str:
+    normalized = _normalize_path(path)
+    for suffix, lane in WORKLOAD_LANE_BY_SUFFIX.items():
+        if normalized.endswith(suffix):
+            return lane
+    return ""
+
+
+def is_tracked_workload_path(path: str | Path) -> bool:
+    return bool(tracked_workload_lane_for_path(path))
 
 
 def read_json_if_exists(path: Path) -> dict[str, Any] | None:
@@ -116,15 +136,15 @@ def lane_for_context_path(path: str | Path, report: dict[str, Any] | None) -> st
     for known_path, item in by_path.items():
         if normalized.endswith(known_path) or known_path.endswith(normalized):
             return str(item.get("lane") or "")
-    return ""
+    return tracked_workload_lane_for_path(normalized)
 
 
 def classify_context_path(path: str | Path, report: dict[str, Any] | None) -> AdvisoryContextDecision:
     """Classify one context file against the quality report.
 
     Unknown paths remain trusted because the gate only applies to known generated
-    workload reports. Known lanes marked unusable are excluded from advisory
-    context but remain visible in routing metadata.
+    workload reports. Known workload report paths fail closed when the quality
+    report is missing or unreadable.
     """
 
     normalized = _normalize_path(path)
@@ -132,10 +152,20 @@ def classify_context_path(path: str | Path, report: dict[str, Any] | None) -> Ad
     if not lane:
         return AdvisoryContextDecision(path=normalized, lane="", trusted=True, reason="not_a_tracked_workload_report")
 
+    if not is_quality_report(report):
+        return AdvisoryContextDecision(
+            path=normalized,
+            lane=lane,
+            trusted=False,
+            reason="quality_report_missing_fail_closed",
+            classification="quality_unknown",
+        )
+
     by_lane = results_by_lane(report)
     item = by_lane.get(lane, {})
     classification = str(item.get("classification") or "")
-    if lane in usable_lanes(report) and item.get("usable") is True:
+    advisory_use = item.get("advisory_use") if isinstance(item.get("advisory_use"), dict) else {}
+    if lane in usable_lanes(report) and item.get("usable") is True and advisory_use.get("allowed_as_advisory_context") is not False:
         return AdvisoryContextDecision(
             path=normalized,
             lane=lane,
@@ -147,7 +177,7 @@ def classify_context_path(path: str | Path, report: dict[str, Any] | None) -> Ad
         path=normalized,
         lane=lane,
         trusted=False,
-        reason=classification or "unusable_workload_report",
+        reason=classification or advisory_use.get("reason") or "unusable_workload_report",
         classification=classification,
     )
 
@@ -181,7 +211,7 @@ def build_quality_routing_summary(report: dict[str, Any] | None) -> dict[str, An
             "advisory_lanes": [],
             "excluded_advisory_lanes": [],
             "provider_execution_performed": False,
-            "policy": "quality_routing_disabled_missing_report",
+            "policy": "quality_routing_fail_closed_for_tracked_workload_reports",
         }
     return {
         "quality_report_present": True,
