@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Run the standard full validation loop for agent review patch plans.
 
 The loop validates the patch-plan builder output, runs the smallest relevant
@@ -348,6 +348,8 @@ def build_commands(args: argparse.Namespace, repo_root: Path) -> tuple[list[tupl
                 args.python_syntax_output,
                 "--report",
                 args.validation_report_contract_output,
+                "--selected-chunks-evidence",
+                "__agent_review_patch_plan_no_selected_chunks__",
             ],
             args.timeout_seconds,
         ),
@@ -482,3 +484,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
