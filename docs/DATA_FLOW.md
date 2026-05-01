@@ -10,6 +10,7 @@ The project still contains Blender/audio-reactive workflows, but the active arch
 
 ```text
 local source/docs/context
+  -> task-scoped AI context pack when useful
   -> validation reports
   -> workload report quality gate
   -> advisory lane routing
@@ -82,6 +83,7 @@ npu_decode_smoke_passed: true
 | Data | Producer | Consumer | Notes |
 |---|---|---|---|
 | Source/docs context | repository files | advisory packet builder | Non-workload files are trusted unless normal file read fails. |
+| AI context pack | `Tools/ai/build_ai_context_pack.py` | human/AI task planning, proposal builders | Bounded task-scoped context under ignored `output/ai_context_packs/` plus compact tracked evidence. |
 | Workload reports | local provider workload scripts | quality gate | Generated text reports from provider lanes. |
 | Workload quality report | `Tools/validation/check_ai_workload_report_quality.py` | lane routing, remediation, packet builder | Determines `usable_lanes` and `unusable_lanes`. |
 | Lane routing report | `Tools/ai/build_workload_quality_lane_routing.py` | packet builder, evidence bundle | Declares trusted/excluded context and primary advisory provider. |
@@ -134,8 +136,9 @@ This is now one application domain over the local AI orchestration workbench, no
 - legacy audio analysis JSON;
 - music context JSON;
 - generated artifact plan/manifest schema.
-- promotion from reviewed dry-run patch spec to approved local apply or GitHub Action queue.
+- promotion from reviewed dry-run patch spec to approved local apply or GitHub Action queue;
+- richer context-pack profiles and selective execution plans for changed-file workflows.
 
 ## Recommended next improvement
 
-Add direct raw-output validators for provider probe reports and continue shaping the suggestion/proposal loop from reviewed dry-run specs toward approved local apply or queue workflows.
+Add direct raw-output validators for provider probe reports and continue shaping the suggestion/proposal loop from context packs through reviewed dry-run specs toward approved local apply or queue workflows.

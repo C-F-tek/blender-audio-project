@@ -6,7 +6,7 @@ This document records the current technical status of `IA-Carmine Local AI Orche
 
 The current GitHub repository slug is still `C-F-tek/blender-audio-project`, but the project identity has moved beyond Blender/audio. The repository is now centered on local AI orchestration, provider-lane routing, quality-gated advisory context, NPU/GPU diagnostics, validation reports and compact GitHub evidence bundles.
 
-## Current validated baseline on PR #48 branch
+## Current validated baseline
 
 Validated evidence:
 
@@ -30,11 +30,11 @@ npu_decode_smoke_passed: true
 | GPU/CUDA | Ollama | Primary advisory provider | Quality routing declares `ollama` usable and primary; advisory packet execution used Ollama when explicitly requested. |
 | NPU/OpenVINO | OpenVINO GenAI | Probe / guardrail / decode diagnostic | Real NPU decode smoke passed through dedicated NPU Python and produced readable text. |
 | Historical NPU workload report | OpenVINO/NPU generated report | Excluded advisory input | The old `npu_real_workload_report.md` remains numeric/hex-like and is correctly excluded from advisory context. |
-| Blender runtime | Blender Python | Legacy application domain | Frozen for this milestone. No runtime package work belongs to PR #48. |
+| Blender runtime | Blender Python | Legacy application domain | Frozen for the current core/backend milestones. |
 
-## PR #48 status
+## Baseline status
 
-PR #48 implements the current local AI orchestration milestone:
+PR #48 introduced the current local AI orchestration baseline now present on `master`:
 
 ```text
 P-AI-WORKLOAD-QUALITY-BASED-LANE-ROUTING
@@ -143,7 +143,7 @@ risks
 | ID | Status | Notes |
 |---|---|---|
 | GHO-001 | updated | Project identity updated to local AI orchestration workbench. |
-| GHO-002 | in progress | Active execution plans should be reconciled after PR #48 merge. |
+| GHO-002 | updated | Completed execution plans are moved out of `active/`; remaining active plans represent future work. |
 | GHO-003 | in progress | Tech debt should record NPU advisory promotion and repository rename decision. |
 | GHO-004 | in progress | JSON/schema docs should include new evidence/routing/smoke report contracts. |
 | GHO-005 | addressed for current milestone | Compact evidence bundle now replaces pasted long local reports. |
@@ -187,7 +187,7 @@ git diff --stat
 
 ## Recommended next technical directions
 
-1. Merge PR #48 after documentation and evidence review.
+1. Continue building self-improvement tooling around context packs, proposal reports, draft patch specs and reviewed dry-run specs.
 2. Open a follow-up milestone for NPU advisory promotion only if a real workload quality gate can classify NPU output as `usable_text`.
 3. Add formal schema notes for:
    - `ai_workload_quality_lane_routing`;
@@ -222,6 +222,7 @@ NPU/OpenVINO explicit probe and decode-smoke diagnostics
 quality-based advisory context filtering
 parallel provider workflow
 compact GitHub evidence bundles
+task-scoped AI context packs for safer continuation
 ```
 
 Blender/audio remains important as a legacy/current application domain, but not as the project identity or architecture boundary.

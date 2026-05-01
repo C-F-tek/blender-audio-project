@@ -23,11 +23,12 @@ Blender/audio-reactive generation remains the first application domain and legac
 13. `REFACTORING_AND_REUSE_PLAN.md`
 14. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
 15. `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`
-16. `AI_MEMORY_POLICY.md`
-17. `AI_PIPELINE_ARCHITECTURE.md`
-18. `AI_PIPELINE_REFACTOR_STATUS.md`
-19. `LOCAL_WORKSTATION_TARGET.md`
-20. Blender/audio docs only when entering that application domain.
+16. `AI_CONTEXT_PACKS.md`
+17. `AI_MEMORY_POLICY.md`
+18. `AI_PIPELINE_ARCHITECTURE.md`
+19. `AI_PIPELINE_REFACTOR_STATUS.md`
+20. `LOCAL_WORKSTATION_TARGET.md`
+21. Blender/audio docs only when entering that application domain.
 
 ## Current validated provider posture
 
@@ -75,6 +76,7 @@ npu_decode_smoke_passed: true
 | `AI_MEMORY_POLICY.md` | Retention, promotion and quarantine policy for generic agent memory. |
 | `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local Git/GitHub validation, evidence, index regeneration, commit and push workflow. |
 | `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | GitHub-only continuation mode and local-validation handoff. |
+| `AI_CONTEXT_PACKS.md` | Task-scoped AI context pack profiles, builder contract and compact evidence workflow. |
 | `EXECUTION_PLANS/README.md` | Durable task-plan workflow for larger or staged work. |
 | `TECH_DEBT_TRACKER.md` | Known debt and remediation queue. |
 | `MODULE_MAP.md` | Repository areas and navigation map. |

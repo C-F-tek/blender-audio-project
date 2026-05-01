@@ -43,6 +43,7 @@ Operational meaning:
 
 ```text
 Repository context and local reports
+  -> task-scoped AI context pack when useful
   -> workload quality gate
   -> quality-based advisory routing
   -> parallel provider probes / NPU decode smoke
@@ -82,6 +83,8 @@ This runner performs:
 
 | File | Role |
 |---|---|
+| `Tools/ai/build_ai_context_pack.py` | Builds bounded task-scoped context packs and compact evidence for future AI/human task planning. |
+| `Tools/validation/check_ai_context_pack_contract.py` | Validates context packs and context-pack evidence without executing providers. |
 | `Tools/validation/check_ai_workload_report_quality.py` | Classifies workload reports into usable/unusable lanes. |
 | `Tools/ai/workload_quality.py` | Shared routing helper for trusted/excluded advisory context. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | Builds routing report and declares primary advisory provider. |
@@ -117,6 +120,7 @@ git push
 - NPU promotion to advisory requires workload quality evidence, not just decode smoke.
 - Generated evidence belongs under `docs/LOCAL_VALIDATION_EVIDENCE/`.
 - Full local reports remain in ignored `output/`.
+- Context packs belong under ignored `output/ai_context_packs/`; only compact evidence belongs in `docs/LOCAL_VALIDATION_EVIDENCE/`.
 - Proposal-derived patch specs remain draft-only under `output/patch_specs/` until reviewed and dry-run.
 - Reviewed patch specs are still manual-review-only and must not be queued or applied without a separate explicit approval.
 - No destructive overwrite of source or analysis data.
