@@ -215,18 +215,18 @@ New-Item -ItemType Directory -Force -Path "output/ai_pipeline" | Out-Null
 @(
     "# Local AI Core/Tool Activation Summary",
     "",
-    "- Run dir: `$($Summary.run_dir)`",
-    "- Explicit providers: `$UseExplicitProviders`",
-    "- Macro patch drafts: `$GenerateMacroPatchDrafts`",
-    "- Apply policy: `$($Summary.apply_policy)`",
-    "- App agnostic: `$($Summary.app_agnostic)`",
+    "- Run dir: $($Summary.run_dir)",
+    "- Explicit providers: $UseExplicitProviders",
+    "- Macro patch drafts: $GenerateMacroPatchDrafts",
+    "- Apply policy: $($Summary.apply_policy)",
+    "- App agnostic: $($Summary.app_agnostic)",
     "",
     "## Outputs",
     "",
-    "- Adapter manifest: `$AdapterManifest`",
-    "- GitHub evidence: `docs/LOCAL_VALIDATION_EVIDENCE/${EvidenceBasename}.json`",
-    "- NPU knowledge broker packet: `$KnowledgePacket`",
-    "- Macro patch manifest: `output/patch_specs/${Basename}_patch_specs_manifest.json`"
+    "- Adapter manifest: $AdapterManifest",
+    "- GitHub evidence: docs/LOCAL_VALIDATION_EVIDENCE/${EvidenceBasename}.json",
+    "- NPU knowledge broker packet: $KnowledgePacket",
+    "- Macro patch manifest: output/patch_specs/${Basename}_patch_specs_manifest.json"
 ) | Set-Content -LiteralPath $SummaryMd -Encoding UTF8
 
 Write-Host ""
