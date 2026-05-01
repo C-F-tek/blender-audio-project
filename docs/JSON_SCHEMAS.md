@@ -25,6 +25,7 @@ GitHub-only agents must not infer local report contents that are not present in 
 | implementation draft JSON | AI-generated implementation plan | partially covered by NPU helper contract validators |
 | generated artifact plan JSON | Proposed generated artifact paths and content descriptors | partially covered by generated artifact path policy and NPU helper validators |
 | proposal patch-spec draft JSON | Reviewable shell for future deterministic patch specs | validator exists |
+| reviewed patch-spec JSON | Dry-run-proven concrete patch candidate | validator exists |
 | provider request/result envelope JSON | Planned or future provider exchange envelopes | partial NPU helper contract only; provider execution adapters remain future work |
 | provider preflight report JSON | Provider readiness metadata before execution | normalized by NPU provider helper; does not imply provider execution |
 | migration readiness report JSON | Gate report before runtime wiring | partial NPU helper contract only |
@@ -214,6 +215,35 @@ Notes:
 Draft specs are inert and must keep `replacements` empty. They must remain outside `patch_specs/inbox/` until a reviewed concrete patch is intentionally prepared and dry-run.
 ```
 
+### Reviewed patch specs
+
+```text
+File pattern:
+output/patch_specs/reviewed*.json
+output/patch_specs/reviewed*_manifest.json
+Producer:
+Tools/ai/promote_patch_spec_draft.py
+Consumer:
+Maintainers and future trusted patch builders.
+Required manifest fields:
+schema_version, kind, generated_at, repo_root, passed, errors, warnings, provider_execution_performed, apply_mode, review_status, source_draft_spec, source_replacement_plan, reviewed_spec_count, specs
+Required spec fields:
+version, schema_version, kind, generated_at, source_draft_spec, source_replacement_plan, apply_mode, review_status, provider_execution_performed, description, operations, dry_run
+Required kind:
+reviewed_patch_spec_manifest
+reviewed_patch_spec
+Required apply mode:
+manual_review_only
+Required review status:
+dry_run_passed
+Provider semantics:
+Reviewed spec promotion does not execute providers. It only reads a draft spec and explicit replacement plan.
+Current validator:
+Tools/validation/check_reviewed_patch_specs.py
+Notes:
+Reviewed specs contain concrete replacements and must pass dry-run. They still remain outside `patch_specs/inbox/` and are not applied by the promotion or validation tools.
+```
+
 ## Report / artifact contract gap index
 
 | Report / artifact | Typical path | Producer | Current validator | Current required fields | Missing checks / notes |
@@ -225,7 +255,8 @@ Draft specs are inert and must keep `replacements` empty. They must remain outsi
 | NPU decode smoke diagnostic report | `output/validation/npu_decode_smoke_diagnostic.json` | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | `Tools/validation/check_github_evidence_bundle.py` for Git-tracked summarized copies | `schema_version`, `kind`, `passed`, `provider_execution_performed`, `errors`, `warnings`, `policy`, `mode`, `provider`, `checks` | Explicit NPU diagnostic only; passing smoke does not make OpenVINO/NPU the primary advisory lane. |
 | GitHub validation evidence bundle | `docs/LOCAL_VALIDATION_EVIDENCE/*_evidence.json` | `Tools/ai/build_github_evidence_bundle.py` | `Tools/validation/check_github_evidence_bundle.py` | `schema_version`, `kind`, `generated_at`, `repo_root`, `source_reports`, `reports`, `decision`; each report has `path`, `exists`, `json_ok`, `kind`, `passed`, `summary` | Compact Git-trackable proof for GitHub-only agents; older bundles may warn for missing optional provider decision fields. |
 | Repository change proposal report | `output/ai_pipeline/*proposals.json`, `output/ai_packets/*proposals.json` | `Tools/ai/build_repository_change_proposals.py` | `Tools/validation/check_repository_change_proposals.py` | root report fields plus per-proposal `id`, `priority`, `area`, `title`, `target_files`, `patch_sketch`, `validation_commands`, `stop_conditions`, `suggestion_outputs` | Advisory manual-review suggestions for code/MD/JSON/PowerShell targets; no auto-apply. |
-| Proposal patch-spec draft manifest/spec | `output/patch_specs/*_manifest.json`, `output/patch_specs/<basename>/*.json` | `Tools/ai/build_patch_specs_from_proposals.py` | `Tools/validation/check_patch_spec_drafts.py` | manifest/spec root fields plus draft `operations` with empty `replacements` | Review-to-concrete promotion remains future work; drafts must not be queued under `patch_specs/inbox/`. |
+| Proposal patch-spec draft manifest/spec | `output/patch_specs/*_manifest.json`, `output/patch_specs/<basename>/*.json` | `Tools/ai/build_patch_specs_from_proposals.py` | `Tools/validation/check_patch_spec_drafts.py` | manifest/spec root fields plus draft `operations` with empty `replacements` | Drafts must not be queued under `patch_specs/inbox/`; use reviewed patch-spec promotion for concrete replacements. |
+| Reviewed patch-spec manifest/spec | `output/patch_specs/reviewed*.json`, `output/patch_specs/reviewed*_manifest.json` | `Tools/ai/promote_patch_spec_draft.py` | `Tools/validation/check_reviewed_patch_specs.py` | manifest/spec root fields plus concrete replacements and `dry_run.passed=true` | Apply/queue approval remains future work; reviewed specs must not be auto-applied. |
 | NPU helper module smoke report | `output/validation/npu_pipeline_modules.json` | `Tools/validation/check_npu_pipeline_modules.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | Contract is helper-focused and provider-free; do not use it as provider execution proof. |
 | NPU helper unit-test report | `output/validation/npu_pipeline_helper_tests.json` | `Tools/validation/check_npu_pipeline_helper_tests.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks.tests_run`, `checks.error_count`, `checks.failure_count` | Wraps deterministic `unittest`; no Blender/NPU/Ollama/provider execution. |
 | NPU helper docs report | `output/validation/npu_pipeline_docs.json` | `Tools/validation/check_npu_pipeline_docs.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `warnings`, `checks` | Checks `Tools/npu/pipeline/README.md` against expected helper modules/terms. |

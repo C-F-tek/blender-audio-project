@@ -13,6 +13,8 @@ The workflow allows small, reviewable file modifications to be described as JSON
 | `Tools/repo_patch_runner/apply_repo_mods.py` | Safe repository patch runner. |
 | `Tools/ai/build_patch_specs_from_proposals.py` | Builds inert proposal-derived draft specs under `output/patch_specs/`. |
 | `Tools/validation/check_patch_spec_drafts.py` | Validates draft specs before any review-to-concrete promotion. |
+| `Tools/ai/promote_patch_spec_draft.py` | Promotes one draft plus an explicit replacement plan into a reviewed dry-run-passing spec. |
+| `Tools/validation/check_reviewed_patch_specs.py` | Revalidates reviewed specs and reruns dry-run without applying patches. |
 | `output/patch_specs/` | Ignored local workspace for generated draft patch specs. |
 | `patch_specs/inbox/` | Queue of patch specs waiting to be applied. |
 | `patch_specs/applied/` | Patch specs already applied by the GitHub Action. |
@@ -219,7 +221,27 @@ These drafts are intentionally inert:
 - they use `draft_status=needs_concrete_replacements`;
 - they must not be copied into `patch_specs/inbox/` without a separate review step.
 
-The draft validator rejects concrete replacements and queued inbox paths. Promotion from draft to a real patch spec requires adding exact/regex/insert replacements, dry-running with `apply_repo_mods.py`, then choosing an explicit local apply or GitHub Action queue path.
+The draft validator rejects concrete replacements and queued inbox paths.
+
+## Review-to-concrete promotion
+
+Promotion from draft to a concrete reviewed spec requires a separate replacement plan:
+
+```powershell
+python .\Tools\ai\promote_patch_spec_draft.py --repo-root . --draft .\Tools\ai\fixtures\patch_spec_review_draft.json --replacement-plan .\Tools\ai\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
+python .\Tools\validation\check_reviewed_patch_specs.py --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_fixture_manifest.json --output .\output\validation\reviewed_patch_specs.json
+```
+
+The promotion tool:
+
+- reads a draft spec and a replacement plan;
+- requires replacement operations to target files already listed in the draft;
+- writes a `reviewed_patch_spec` under ignored `output/patch_specs/`;
+- runs `apply_repo_mods.py` in dry-run mode through the shared runner code;
+- refuses reviewed specs whose dry-run does not change at least one target;
+- never uses `--write` and never writes `patch_specs/inbox/`.
+
+Reviewed specs are still not queued patches. Choosing local apply or GitHub Action queue remains a separate explicit step after human or trusted-agent approval.
 
 ## Local workflow for AI-assisted patching
 
