@@ -84,36 +84,39 @@ renders/**
 SQLite databases
 full analysis JSON
 Blender runtime scripts
-provider model/prompt/temperature/orchestration behavior
 generated semantic indexes
 ```
 
-Do not execute Ollama/OpenVINO/GPU/NPU providers.
+Do not run local AI providers for this documentation task.
 
 Do not apply repo patch specs automatically.
 
 Do not merge to master.
 
-## Validation commands
+## Standard validation and evidence command
 
-Run after edits:
+Run this canonical command after edits. It runs the patch-plan smoke check, docs links, Python syntax, validation report contract, compact GitHub evidence bundle build, evidence bundle validation, `git diff --check` and `git status --short`.
 
 ```powershell
-python .\Tools\validation\check_docs_links.py `
+python .\Tools\validation\run_agent_review_patch_plan_full_validation.py `
   --repo-root . `
-  --output .\output\validation\docs_links.json
-
-python .\Tools\validation\check_python_syntax.py `
-  --repo-root . `
-  --output .\output\validation\python_syntax.json
-
-python .\Tools\validation\check_validation_report_contract.py `
-  --repo-root . `
-  --output .\output\validation\validation_report_contract.json
-
-git diff --check
-git status --short
+  --orchestrator .\output\ai_pipeline\agent_gpu_npu_parallel_orchestrator_live.json `
+  --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `
+  --min-patch-plans 12 `
+  --expect-fallback `
+  --bundle-basename agent_review_doc_patch_plan_evidence `
+  --output .\output\validation\agent_review_patch_plan_full_validation.json `
+  --markdown-output .\output\validation\agent_review_patch_plan_full_validation.md
 ```
+
+Expected Git-trackable evidence outputs:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
+```
+
+Keep long local reports under `output/`. Commit only the compact evidence bundle under `docs/LOCAL_VALIDATION_EVIDENCE/`.
 
 ## PR report requirements
 
