@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 """Run a sequential smoke matrix for agnostic IA-Carmine AI tools.
 
-This validation layer executes only report-only/manual-review tools by default.
-It verifies that each tool produces machine-readable artifacts and preserves the
-core guardrails:
+The matrix executes report-only/manual-review tools by default and validates the
+artifacts they produce. Expectations are applied per output artifact because
+review reports, proposal manifests and PR-draft artifacts intentionally expose
+different guardrail fields.
 
-- no provider execution by default;
-- no patch application;
-- no real GitHub PR creation;
-- SQLite memory is read-only;
-- outputs are written under output/ for review only.
-
-Live provider checks and full workflow orchestration remain explicit opt-in flags.
+Default behavior performs no provider execution and no patch application.
 """
 from __future__ import annotations
 
@@ -29,10 +24,10 @@ try:
 except ImportError:  # Allows package-style imports during external checks.
     from Tools.validation.report_utils import resolve_output_path, write_json_report  # type: ignore
 
-
 DEFAULT_OUTPUT = "output/validation/agnostic_ai_tools_smoke_matrix.json"
 DEFAULT_MARKDOWN = "output/validation/agnostic_ai_tools_smoke_matrix.md"
 DEFAULT_WORK_DIR = "output/validation/agnostic_ai_tools_smoke_matrix"
+COMMON_JSON_FIELDS = ("schema_version", "kind", "passed")
 
 
 @dataclass(frozen=True)
@@ -42,8 +37,10 @@ class SmokeStep:
     name: str
     command: list[str]
     expected_outputs: list[str]
-    required_fields: tuple[str, ...] = ("schema_version", "kind", "passed")
+    required_fields: tuple[str, ...] = COMMON_JSON_FIELDS
     expected_values: dict[str, Any] = field(default_factory=dict)
+    expected_values_by_output: dict[str, dict[str, Any]] = field(default_factory=dict)
+    required_fields_by_output: dict[str, tuple[str, ...]] = field(default_factory=dict)
     allow_nonzero: bool = False
     heavy: bool = False
     provider_live: bool = False
@@ -78,6 +75,16 @@ def value_at(data: dict[str, Any], dotted: str) -> Any:
             return None
         current = current[part]
     return current
+
+
+def expected_for_output(step: SmokeStep, output: str) -> dict[str, Any]:
+    """Return expected values for a specific output artifact."""
+    return step.expected_values_by_output.get(output, step.expected_values)
+
+
+def required_for_output(step: SmokeStep, output: str) -> tuple[str, ...]:
+    """Return required fields for a specific output artifact."""
+    return step.required_fields_by_output.get(output, step.required_fields)
 
 
 def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str | None]:
@@ -170,10 +177,12 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
                 memory_inventory_md,
             ],
             expected_outputs=[memory_inventory_json, memory_inventory_md],
-            expected_values={
-                "provider_execution_performed": False,
-                "patch_application_performed": False,
-                "guardrails.sqlite_read_only": True,
+            expected_values_by_output={
+                memory_inventory_json: {
+                    "provider_execution_performed": False,
+                    "patch_application_performed": False,
+                    "guardrails.sqlite_read_only": True,
+                }
             },
         ),
         SmokeStep(
@@ -197,10 +206,17 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
                 megalithic_proposals,
             ],
             expected_outputs=[megalithic_json, megalithic_md, megalithic_proposals],
-            expected_values={
-                "provider_execution_performed": False,
-                "patch_application_performed": False,
-                "guardrails.sqlite_memory_read_only": True,
+            expected_values_by_output={
+                megalithic_json: {
+                    "provider_execution_performed": False,
+                    "patch_application_performed": False,
+                    "guardrails.sqlite_memory_read_only": True,
+                },
+                megalithic_proposals: {
+                    "provider_execution_performed": False,
+                    "patch_application_performed": False,
+                    "apply_mode": "manual_review_only",
+                },
             },
             heavy=True,
         ),
@@ -221,9 +237,15 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
                 refined_md,
             ],
             expected_outputs=[refined_json, refined_md, refined_proposals],
-            expected_values={
-                "patch_application_performed": False,
-                "guardrails.real_github_pr_created": False,
+            expected_values_by_output={
+                refined_json: {
+                    "patch_application_performed": False,
+                    "guardrails.real_github_pr_created": False,
+                },
+                refined_proposals: {
+                    "patch_application_performed": False,
+                    "apply_mode": "manual_review_only",
+                },
             },
         ),
         SmokeStep(
@@ -245,10 +267,12 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
                 "review",
             ],
             expected_outputs=[pr_draft_json, pr_draft_md],
-            expected_values={
-                "patch_application_performed": False,
-                "guardrails.real_github_pr_created": False,
-                "guardrails.manual_review_required": True,
+            expected_values_by_output={
+                pr_draft_json: {
+                    "patch_application_performed": False,
+                    "guardrails.real_github_pr_created": False,
+                    "guardrails.manual_review_required": True,
+                }
             },
         ),
     ]
@@ -282,9 +306,16 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
                     live_proposals,
                 ],
                 expected_outputs=[live_json, live_md, live_proposals],
-                expected_values={
-                    "provider_execution_performed": True,
-                    "patch_application_performed": False,
+                expected_values_by_output={
+                    live_json: {
+                        "provider_execution_performed": True,
+                        "patch_application_performed": False,
+                    },
+                    live_proposals: {
+                        "provider_execution_performed": True,
+                        "patch_application_performed": False,
+                        "apply_mode": "manual_review_only",
+                    },
                 },
                 heavy=True,
                 provider_live=True,
@@ -306,9 +337,11 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
                     "-RunMegalithicReview",
                 ],
                 expected_outputs=[workflow_summary],
-                expected_values={
-                    "patch_application_performed": False,
-                    "run_megalithic_review": True,
+                expected_values_by_output={
+                    workflow_summary: {
+                        "patch_application_performed": False,
+                        "run_megalithic_review": True,
+                    }
                 },
                 heavy=True,
                 workflow=True,
@@ -334,7 +367,6 @@ def run_step(step: SmokeStep, repo_root: Path, timeout_seconds: int, *, dry_run:
     }
     if dry_run:
         result["warnings"].append("dry-run: command not executed")
-        result["ok"] = True
         return result
 
     returncode, stdout, stderr, error = run_command(step.command, repo_root, timeout_seconds)
@@ -350,8 +382,8 @@ def run_step(step: SmokeStep, repo_root: Path, timeout_seconds: int, *, dry_run:
         validation = validate_output(
             path=repo_path(repo_root, output),
             repo_root=repo_root,
-            required_fields=step.required_fields if output.endswith(".json") else (),
-            expected_values=step.expected_values if output.endswith(".json") else {},
+            required_fields=required_for_output(step, output) if output.endswith(".json") else (),
+            expected_values=expected_for_output(step, output) if output.endswith(".json") else {},
         )
         result["outputs"].append(validation)
         if not validation["ok"]:
