@@ -53,7 +53,7 @@ function Resolve-RepoRoot {
     return (Resolve-Path $root.Trim()).Path
 }
 
-function Resolve-RepoPath {
+function Resolve-ExistingRepoPath {
     param(
         [string]$RepoRoot,
         [string]$PathValue
@@ -62,6 +62,17 @@ function Resolve-RepoPath {
         return (Resolve-Path $PathValue).Path
     }
     return (Resolve-Path (Join-Path $RepoRoot $PathValue)).Path
+}
+
+function Resolve-PlannedRepoPath {
+    param(
+        [string]$RepoRoot,
+        [string]$PathValue
+    )
+    if ([System.IO.Path]::IsPathRooted($PathValue)) {
+        return [System.IO.Path]::GetFullPath($PathValue)
+    }
+    return [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $PathValue))
 }
 
 function Get-RepoRelativePath {
@@ -113,22 +124,23 @@ function New-SafeSlug {
 $repoRoot = Resolve-RepoRoot
 Set-Location $repoRoot
 
-$agentsPath = Resolve-RepoPath $repoRoot "AGENTS.md"
-$bootstrapPath = Resolve-RepoPath $repoRoot "docs/LOCAL_AI_RUN_BOOTSTRAP.md"
-$taskPath = Resolve-RepoPath $repoRoot $TaskFile
+$agentsPath = Resolve-ExistingRepoPath $repoRoot "AGENTS.md"
+$bootstrapPath = Resolve-ExistingRepoPath $repoRoot "docs/LOCAL_AI_RUN_BOOTSTRAP.md"
+$taskPath = Resolve-ExistingRepoPath $repoRoot $TaskFile
 
 $taskRelative = Get-RepoRelativePath $repoRoot $taskPath
 $taskSlug = New-SafeSlug ([System.IO.Path]::GetFileNameWithoutExtension($taskPath))
 $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$runDir = Join-Path (Resolve-RepoPath $repoRoot $OutputDir) "${timestamp}_${taskSlug}"
+$runBaseDir = Resolve-PlannedRepoPath $repoRoot $OutputDir
+$runDir = Join-Path $runBaseDir "${timestamp}_${taskSlug}"
 New-Item -ItemType Directory -Force -Path $runDir | Out-Null
 
 Assert-CleanWorkingTree -AllowDirtyTree:$AllowDirty
 
 if (-not $SkipGitSync) {
-    Invoke-Git @("fetch", "origin")
-    Invoke-Git @("switch", "master")
-    Invoke-Git @("pull", "--ff-only", "origin", "master")
+    Invoke-Git -GitArgs @("fetch", "origin")
+    Invoke-Git -GitArgs @("switch", "master")
+    Invoke-Git -GitArgs @("pull", "--ff-only", "origin", "master")
 }
 
 if (-not $NoBranch -and -not [string]::IsNullOrWhiteSpace($TaskBranch)) {
@@ -137,10 +149,10 @@ if (-not $NoBranch -and -not [string]::IsNullOrWhiteSpace($TaskBranch)) {
         throw "git branch lookup failed"
     }
     if ($existingBranches) {
-        Invoke-Git @("switch", $TaskBranch)
+        Invoke-Git -GitArgs @("switch", $TaskBranch)
     }
     else {
-        Invoke-Git @("switch", "-c", $TaskBranch)
+        Invoke-Git -GitArgs @("switch", "-c", $TaskBranch)
     }
 }
 
