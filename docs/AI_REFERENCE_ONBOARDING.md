@@ -26,7 +26,11 @@ AI agents entering the repository should use this order:
    - `docs/AI_MEMORY_POLICY.md`;
    - `docs/QUALITY_GATE.md`;
    - `docs/JSON_SCHEMAS.md`;
-   - `docs/AI_ARTIFACT_SCHEMAS.md`.
+   - `docs/AI_ARTIFACT_SCHEMAS.md`;
+8. for manual-review documentation patch plans, read:
+   - `docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md`;
+   - `Tools/validation/run_agent_review_patch_plan_full_validation.py`;
+   - `docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md`.
 
 ## What this layer is
 
@@ -69,6 +73,26 @@ docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md
 
 This keeps remote AI agents effective without bloating the repository.
 
+## Manual-review patch-plan evidence route
+
+Documentation patch plans generated from local AI evidence should use the repository task/evidence route instead of long chat paste or ignored report commits.
+
+For the agent-review documentation lane:
+
+```text
+docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md
+Tools/validation/run_agent_review_patch_plan_full_validation.py
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
+```
+
+Rules:
+
+- keep full local reports under ignored `output/**`;
+- commit only compact task-scoped evidence under `docs/LOCAL_VALIDATION_EVIDENCE/`;
+- keep provider execution explicit-only and disabled for documentation-only patch plans;
+- keep patch application manual-review-only.
+
 ## Recommended agent behavior
 
 When an AI agent uses this reference layer, it should:
@@ -91,6 +115,7 @@ When an AI agent uses this reference layer, it should:
 | NPU/OpenVINO/local inference changes | `docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md` |
 | JSON validation, guardrails, evals | `docs/AI_GUARDRAILS_VALIDATION_GUIDE.md` |
 | Agent instructions or AI onboarding | `docs/AI_REFERENCE_SOURCE_MAP.md` and `AGENTS.md` |
+| Manual-review documentation patch plans | `docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md` and `Tools/validation/run_agent_review_patch_plan_full_validation.py` |
 | Generated Blender script rules | `docs/QUALITY_GATE.md`, `docs/COMPATIBILITY.md`, `docs/AI_GENERATED_PACKAGE_STANDARD.md` |
 
 ## Safe extension rule

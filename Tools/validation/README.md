@@ -673,3 +673,36 @@ git add Tools/npu/npu_code_context.md `
 git commit -m "chore: regenerate ai and npu indexes"
 git push origin master
 ```
+
+## Agent review patch-plan full validation
+
+The agent-review documentation patch-plan lane has a canonical wrapper:
+
+```powershell
+python .\Tools\validation\run_agent_review_patch_plan_full_validation.py `
+  --repo-root . `
+  --orchestrator .\output\ai_pipeline\agent_gpu_npu_parallel_orchestrator_live.json `
+  --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `
+  --min-patch-plans 12 `
+  --expect-fallback `
+  --bundle-basename agent_review_doc_patch_plan_evidence `
+  --output .\output\validation\agent_review_patch_plan_full_validation.json `
+  --markdown-output .\output\validation\agent_review_patch_plan_full_validation.md
+
+The wrapper runs:
+
+run_agent_review_patch_plan_smoke.py
+check_docs_links.py
+check_python_syntax.py
+check_validation_report_contract.py
+build_github_evidence_bundle.py
+check_github_evidence_bundle.py
+git diff --check
+git status --short
+
+Expected tracked evidence:
+
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
+
+This lane is provider-free, patch-runner-free and documentation-only. Long reports remain under ignored output/**; GitHub review uses only the compact task-scoped evidence bundle.

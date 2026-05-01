@@ -502,3 +502,31 @@ Notes:
 4. Continue with domain artifacts such as music summaries and scene specs after report contracts remain stable.
 5. Keep unknown future fields accepted unless a validator has a clear reason to reject them.
 6. If runtime-output manifest emission is added later, make it additive observability only and do not change output paths or generated file content.
+
+## Agent review patch-plan validation bundle
+
+```text
+File pattern:
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
+Producer:
+Tools/validation/run_agent_review_patch_plan_full_validation.py
+Consumer:
+GitHub-only review agents, manual-review documentation patch tasks and PR summaries.
+Required fields:
+schema_version, kind, generated_at, repo_root, source_reports, reports, selected_chunks_evidence, decision
+Required kind:
+github_validation_evidence_bundle
+Required source reports:
+output/patch_specs/agent_review_patch_plan.json
+output/validation/agent_review_patch_plan_smoke.json
+output/validation/docs_links.json
+output/validation/python_syntax.json
+output/validation/validation_report_contract.json
+Provider semantics:
+The wrapper must keep provider_execution_performed=false and must not run Ollama, OpenVINO, GPU, NPU or Blender.
+Patch semantics:
+The wrapper must keep patch_application_performed=false. Documentation edits remain manual-review-only.
+Notes:
+This bundle is task-scoped. For this lane, selected semantic chunk evidence is intentionally disabled unless explicitly requested by a future task.
+
