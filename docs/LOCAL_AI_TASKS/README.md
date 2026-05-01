@@ -37,6 +37,7 @@ This keeps token-heavy local work inside the local pipeline while preserving mas
 | `consistency-local-ai-contracts-and-powershell.md` | Compare local AI contract docs with PowerShell runners and produce consistency proposals/evidence. |
 | `selected-review-workflow-ai-tools-patch-specs.md` | Multistep review of `Tools/workflow/*.ps1` and `Tools/ai/*.py` to propose safe patch-spec candidates. |
 | `enrich-local-ai-memory-chunks-context-wrapper.md` | Integrate the reasoning for SQLite memory, semantic chunks, context packs and wrapper/multistep enrichment. |
+| `full-context-ai-npu-golden-path.md` | End-to-end full-context AI/NPU golden path with selected chunks, selected-chunks evidence, context pack, SQLite agent state, multistep providers and controlled complexity escalation proposals. |
 
 ## Recommended next sequence
 
@@ -46,21 +47,22 @@ Run these tasks in order:
 1. consistency-local-ai-contracts-and-powershell.md
 2. selected-review-workflow-ai-tools-patch-specs.md
 3. enrich-local-ai-memory-chunks-context-wrapper.md
+4. full-context-ai-npu-golden-path.md
 ```
 
-The first task checks documentation/script consistency. The second task uses the consolidated model to review workflow and AI tools for safe patch-spec candidates. The third task plans the enrichment path that lets future local runs use SQLite memory, semantic chunks and bounded context packs to reduce token pressure on large MD/code work.
+The first task checks documentation/script consistency. The second task uses the consolidated model to review workflow and AI tools for safe patch-spec candidates. The third task plans the enrichment path that lets future local runs use SQLite memory, semantic chunks and bounded context packs to reduce token pressure on large MD/code work. The fourth task exercises the current full-context golden path and asks the local AI to propose controlled complexity increases such as a new core/helper function, validator, wrapper flag, documentation contract or patch-spec promotion.
 
 ## Runner expectation
 
 A local command should pass one of these Markdown files as the task/instruction file to the AI runner.
 
-The preferred project-owned command path is:
+The preferred project-owned command path for the full-context golden path is:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .\docs\LOCAL_AI_TASKS\enrich-local-ai-memory-chunks-context-wrapper.md `
-  -TaskBranch codex/enrich-local-ai-memory-chunks-context `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename enrich_local_ai_memory_chunks_context -ProposalBasename enrich_local_ai_memory_chunks_context_proposals -EvidenceBasename enrich_local_ai_memory_chunks_context_evidence -MultistepBasename enrich_local_ai_memory_chunks_context_multistep -MultistepProposalBasename enrich_local_ai_memory_chunks_context_multistep_proposals -MultistepEvidenceBasename enrich_local_ai_memory_chunks_context_multistep_evidence'
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -TaskBranch codex/full-context-ai-npu-golden-run `
+  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -BuildSemanticChunks -SelectSemanticChunks -BuildSelectedChunksEvidence -SelectedChunksEvidenceBasename full_context_golden_selected_chunks_evidence -ChunkQuery "workflow adapter local ai full context enrichment selected chunks sqlite memory provider multistep proposals validators" -ChunkPathBoost Tools/workflow,Tools/ai,Tools/validation -SelectedChunksBasename full_context_golden_selected_chunks -MaxSelectedChunks 24 -MaxSelectedChunkChars 32000 -MaxSelectedChunkExcerptChars 2500 -BuildContextPack -ContextPackProfile core_ai_backend -ContextPackBasename full_context_golden_core_ai_backend -ContextPackEvidenceBasename full_context_golden_core_ai_backend_context_pack_evidence -BuildAgentStatePacket -AgentStateBasename full_context_golden_agent_state -AgentStateObjective "Run full-context local AI/NPU golden path and propose controlled complexity escalation such as core helper, validator, wrapper flag or docs contract." -MemoryDb .\indexAI\agent_memory\agent_memory.sqlite -SaveInputsToMemoryDb -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename full_context_golden_local_ai_context -ProposalBasename full_context_golden_local_ai_context_proposals -EvidenceBasename full_context_golden_local_ai_context_evidence -MultistepBasename full_context_golden_local_ai_context_multistep -MultistepProposalBasename full_context_golden_local_ai_context_multistep_proposals -MultistepEvidenceBasename full_context_golden_local_ai_context_multistep_evidence'
 ```
 
 The runner should not require interactive chat. The task file contains:
