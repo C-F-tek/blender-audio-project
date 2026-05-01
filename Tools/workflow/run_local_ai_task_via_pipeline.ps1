@@ -45,6 +45,8 @@ param(
     [int]$MaxSelectedChunks = 20,
     [int]$MaxSelectedChunkChars = 24000,
     [int]$MaxSelectedChunkExcerptChars = 2500,
+    [switch]$BuildSelectedChunksEvidence,
+    [string]$SelectedChunksEvidenceBasename = "",
     [switch]$BuildAgentStatePacket,
     [string]$MemoryDb = "indexAI/agent_memory/agent_memory.sqlite",
     [switch]$SaveInputsToMemoryDb,
@@ -199,6 +201,7 @@ if ([string]::IsNullOrWhiteSpace($MultistepEvidenceBasename)) { $MultistepEviden
 if ([string]::IsNullOrWhiteSpace($ContextPackBasename)) { $ContextPackBasename = "${Basename}_context_pack" }
 if ([string]::IsNullOrWhiteSpace($ContextPackEvidenceBasename)) { $ContextPackEvidenceBasename = "${Basename}_context_pack_evidence" }
 if ([string]::IsNullOrWhiteSpace($SelectedChunksBasename)) { $SelectedChunksBasename = "${Basename}_selected_chunks" }
+if ([string]::IsNullOrWhiteSpace($SelectedChunksEvidenceBasename)) { $SelectedChunksEvidenceBasename = "${SelectedChunksBasename}_evidence" }
 if ([string]::IsNullOrWhiteSpace($AgentStateBasename)) { $AgentStateBasename = New-SafeName $Basename "local_ai_agent_state" }
 if ([string]::IsNullOrWhiteSpace($AgentStateObjective)) {
     $AgentStateObjective = "Run local AI task $Basename with task Markdown, memory, semantic chunks and bounded context."
@@ -206,6 +209,12 @@ if ([string]::IsNullOrWhiteSpace($AgentStateObjective)) {
 if ([string]::IsNullOrWhiteSpace($ChunkQuery)) {
     $ChunkQuery = $AgentStateObjective
 }
+
+$SelectedChunksJson = "output/ai_context_packs/$SelectedChunksBasename.json"
+$SelectedChunksMd = "output/ai_context_packs/$SelectedChunksBasename.md"
+$SelectedChunksValidationJson = "output/validation/${SelectedChunksBasename}_selected_chunks.json"
+$SelectedChunksEvidenceJson = "docs/LOCAL_VALIDATION_EVIDENCE/$SelectedChunksEvidenceBasename.json"
+$SelectedChunksEvidenceMd = "docs/LOCAL_VALIDATION_EVIDENCE/$SelectedChunksEvidenceBasename.md"
 
 $ContextFiles = @($PromptRel)
 if ($TaskRel -ne "") { $ContextFiles += $TaskRel }
@@ -220,6 +229,9 @@ $EnrichmentOutputs = [ordered]@{
     semantic_chunks_json = ""
     selected_chunks_json = ""
     selected_chunks_markdown = ""
+    selected_chunks_validation_json = ""
+    selected_chunks_evidence_json = ""
+    selected_chunks_evidence_markdown = ""
     context_pack_json = ""
     context_pack_markdown = ""
     context_pack_evidence_json = ""
@@ -240,8 +252,6 @@ if ($BuildSemanticChunks) {
 }
 
 if ($SelectSemanticChunks) {
-    $SelectedChunksJson = "output/ai_context_packs/$SelectedChunksBasename.json"
-    $SelectedChunksMd = "output/ai_context_packs/$SelectedChunksBasename.md"
     $SelectArgs = @(
         ".\Tools\ai\select_semantic_code_chunks.py",
         "--repo-root", ".",
@@ -263,6 +273,24 @@ if ($SelectSemanticChunks) {
     $ContextFiles = Normalize-ContextFiles $ContextFiles
     $EnrichmentOutputs.selected_chunks_json = $SelectedChunksJson
     $EnrichmentOutputs.selected_chunks_markdown = $SelectedChunksMd
+}
+elseif ($BuildSelectedChunksEvidence) {
+    throw "-BuildSelectedChunksEvidence requires -SelectSemanticChunks so the selected-chunks bundle exists."
+}
+
+if ($BuildSelectedChunksEvidence) {
+    Invoke-CommandChecked -Label "Validate selected semantic chunks and build compact evidence" -Block {
+        python .\Tools\validation\check_selected_semantic_chunks.py `
+            --repo-root . `
+            --bundle $SelectedChunksJson `
+            --output $SelectedChunksValidationJson `
+            --evidence-output $SelectedChunksEvidenceJson `
+            --markdown-output $SelectedChunksEvidenceMd `
+            --max-total-chars $MaxSelectedChunkChars
+    }
+    $EnrichmentOutputs.selected_chunks_validation_json = $SelectedChunksValidationJson
+    $EnrichmentOutputs.selected_chunks_evidence_json = $SelectedChunksEvidenceJson
+    $EnrichmentOutputs.selected_chunks_evidence_markdown = $SelectedChunksEvidenceMd
 }
 
 if ($BuildContextPack) {
@@ -324,6 +352,9 @@ $ReportFiles = @(
     "output/validation/validation_report_contract.json",
     "output/validation/python_syntax.json"
 )
+if ($BuildSelectedChunksEvidence) {
+    $ReportFiles += $SelectedChunksValidationJson
+}
 
 Write-Host "=== Local AI task via project pipeline ==="
 Write-Host "Repo: $RepoRootPath"
@@ -334,6 +365,7 @@ Write-Host "Profile: $Profile"
 Write-Host "Context files: $($ContextFiles -join ', ')"
 Write-Host "Build semantic chunks: $BuildSemanticChunks"
 Write-Host "Select semantic chunks: $SelectSemanticChunks"
+Write-Host "Build selected chunks evidence: $BuildSelectedChunksEvidence"
 Write-Host "Build context pack: $BuildContextPack"
 Write-Host "Build agent state packet: $BuildAgentStatePacket"
 Write-Host "Use primary advisory provider: $UsePrimaryAdvisoryProvider"
@@ -432,9 +464,11 @@ $Manifest = [ordered]@{
     enrichment_requested = [ordered]@{
         build_semantic_chunks = [bool]$BuildSemanticChunks
         select_semantic_chunks = [bool]$SelectSemanticChunks
+        build_selected_chunks_evidence = [bool]$BuildSelectedChunksEvidence
         chunk_query = $ChunkQuery
         max_selected_chunks = $MaxSelectedChunks
         max_selected_chunk_chars = $MaxSelectedChunkChars
+        selected_chunks_evidence_basename = $SelectedChunksEvidenceBasename
         build_context_pack = [bool]$BuildContextPack
         context_pack_profile = $ContextPackProfile
         build_agent_state_packet = [bool]$BuildAgentStatePacket
@@ -461,6 +495,9 @@ $Manifest = [ordered]@{
         proposals_json = "$PipelineRel/$ProposalBasename.json"
         proposals_markdown = "$PipelineRel/$ProposalBasename.md"
         proposal_validation = $ProposalValidationOutput
+        selected_chunks_validation_json = $SelectedChunksValidationJson
+        selected_chunks_evidence_json = $SelectedChunksEvidenceJson
+        selected_chunks_evidence_markdown = $SelectedChunksEvidenceMd
         multistep_packet_json = "$PipelineRel/$MultistepBasename.json"
         multistep_packet_markdown = "$PipelineRel/$MultistepBasename.md"
         multistep_proposals_json = "$PipelineRel/$MultistepProposalBasename.json"
