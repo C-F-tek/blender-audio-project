@@ -34,8 +34,9 @@ This keeps token-heavy local work inside the local pipeline while preserving mas
 |---|---|
 | `issue-57-docs-congruence-cleanup.md` | Complete the documentation/workflow-state cleanup after selective planner merge. |
 | `issue-62-hybrid-master-ai-local-pipeline.md` | Define and validate the hybrid master-AI plus local pipeline runner model. |
-| `consistency-local-ai-contracts-and-powershell.md` | First next task: compare local AI contract docs with PowerShell runners and produce consistency proposals/evidence. |
-| `selected-review-workflow-ai-tools-patch-specs.md` | Second next task: multistep review of `Tools/workflow/*.ps1` and `Tools/ai/*.py` to propose safe patch-spec candidates. |
+| `consistency-local-ai-contracts-and-powershell.md` | Compare local AI contract docs with PowerShell runners and produce consistency proposals/evidence. |
+| `selected-review-workflow-ai-tools-patch-specs.md` | Multistep review of `Tools/workflow/*.ps1` and `Tools/ai/*.py` to propose safe patch-spec candidates. |
+| `enrich-local-ai-memory-chunks-context-wrapper.md` | Integrate the reasoning for SQLite memory, semantic chunks, context packs and wrapper/multistep enrichment. |
 
 ## Recommended next sequence
 
@@ -44,9 +45,10 @@ Run these tasks in order:
 ```text
 1. consistency-local-ai-contracts-and-powershell.md
 2. selected-review-workflow-ai-tools-patch-specs.md
+3. enrich-local-ai-memory-chunks-context-wrapper.md
 ```
 
-The first task checks documentation/script consistency. The second task uses the consolidated model to review workflow and AI tools for safe patch-spec candidates.
+The first task checks documentation/script consistency. The second task uses the consolidated model to review workflow and AI tools for safe patch-spec candidates. The third task plans the enrichment path that lets future local runs use SQLite memory, semantic chunks and bounded context packs to reduce token pressure on large MD/code work.
 
 ## Runner expectation
 
@@ -56,9 +58,9 @@ The preferred project-owned command path is:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .\docs\LOCAL_AI_TASKS\consistency-local-ai-contracts-and-powershell.md `
-  -TaskBranch codex/consistency-local-ai-contracts `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -Basename consistency_local_ai_contracts -ProposalBasename consistency_local_ai_contracts_proposals -EvidenceBasename consistency_local_ai_contracts_evidence -MultistepBasename consistency_local_ai_contracts_multistep -MultistepProposalBasename consistency_local_ai_contracts_multistep_proposals -MultistepEvidenceBasename consistency_local_ai_contracts_multistep_evidence'
+  -TaskFile .\docs\LOCAL_AI_TASKS\enrich-local-ai-memory-chunks-context-wrapper.md `
+  -TaskBranch codex/enrich-local-ai-memory-chunks-context `
+  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename enrich_local_ai_memory_chunks_context -ProposalBasename enrich_local_ai_memory_chunks_context_proposals -EvidenceBasename enrich_local_ai_memory_chunks_context_evidence -MultistepBasename enrich_local_ai_memory_chunks_context_multistep -MultistepProposalBasename enrich_local_ai_memory_chunks_context_multistep_proposals -MultistepEvidenceBasename enrich_local_ai_memory_chunks_context_multistep_evidence'
 ```
 
 The runner should not require interactive chat. The task file contains:
