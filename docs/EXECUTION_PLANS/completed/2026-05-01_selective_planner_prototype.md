@@ -1,7 +1,8 @@
 # Selective Planner Prototype
 
-Status: active
+Status: completed
 Date: 2026-05-01
+Completed: 2026-05-01
 Scope: core AI/backend orchestration, validation and evidence planning
 
 ## Goal
@@ -93,6 +94,17 @@ python .\Tools\validation\check_validation_report_contract.py --repo-root . --ou
 - Recommended patch specs remain manual-review-only candidates.
 - Local-only GPU/NPU evidence commands are included when needed.
 - Existing Blender/runtime guardrails remain untouched.
+
+## Completion summary
+
+Completed in PR #55 and merged by commit `f88c8453e0945bcb117372a3aa62e597010f030f`.
+
+The local validation evidence for the selective planner real GPU/NPU workflow is recorded in:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_selective_planner_real_evidence.json
+docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_selective_planner_real_evidence.md
+```
 
 ## Risks
 

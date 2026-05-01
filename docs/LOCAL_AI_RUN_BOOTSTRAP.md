@@ -92,7 +92,7 @@ For the current post-PR #55 cleanup task, read:
 ```text
 docs/LOCAL_AI_TASKS/issue-57-docs-congruence-cleanup.md
 https://github.com/C-F-tek/blender-audio-project/issues/57
-docs/EXECUTION_PLANS/active/2026-05-01_selective_planner_prototype.md
+docs/EXECUTION_PLANS/completed/2026-05-01_selective_planner_prototype.md
 docs/AI_SELECTIVE_PLANNER.md
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_selective_planner_real_evidence.md
 ```
