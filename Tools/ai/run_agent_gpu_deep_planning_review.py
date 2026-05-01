@@ -39,6 +39,14 @@ DEFAULT_OUTPUT = "output/ai_pipeline/agent_gpu_deep_planning_review.json"
 DEFAULT_MARKDOWN = "output/ai_pipeline/agent_gpu_deep_planning_review.md"
 TEXT_EXTENSIONS = {".md", ".py", ".ps1", ".sh", ".json", ".yaml", ".yml", ".txt"}
 EXCLUDED_DIRS = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", "renders"}
+EMPTY_RECOMMENDATION_REASONS = {
+    "json_parse_failure",
+    "valid_json_empty_recommendations",
+    "recommendations_filtered_out",
+    "evidence_ready_but_no_gpu_plan",
+    "model_output_missing_required_fields",
+    "repair_attempt_failed",
+}
 
 
 @dataclass(frozen=True)
@@ -153,6 +161,39 @@ def extract_evidence_files(evidence: dict[str, Any]) -> list[str]:
     return paths
 
 
+def evidence_ready_for_manual_patch_count(evidence: dict[str, Any]) -> int:
+    """Return an evidence-ready count without assuming a single report shape.
+
+    Historical evidence reports have used both a root/summary integer and per-item
+    readiness markers. The GPU planner should not invent recommendations, but it
+    must know whether another deterministic layer already has ready candidates.
+    """
+
+    explicit_counts: list[int] = []
+    ready_items = 0
+
+    def visit(value: Any) -> None:
+        nonlocal ready_items
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if key == "ready_for_manual_patch_count" and isinstance(child, int):
+                    explicit_counts.append(child)
+                elif key == "ready_count" and isinstance(child, int) and value.get("kind") == "agent_review_evidence_sufficiency":
+                    explicit_counts.append(child)
+                visit(child)
+            status = value.get("status") or value.get("classification") or value.get("decision")
+            if status in {"ready_for_manual_patch", "ready_for_patch_plan"}:
+                ready_items += 1
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    visit(evidence)
+    if explicit_counts:
+        return max(explicit_counts)
+    return ready_items
+
+
 def compact_json(data: Any, max_chars: int) -> str:
     text = json.dumps(data, indent=2, ensure_ascii=False)
     if len(text) > max_chars:
@@ -232,20 +273,174 @@ def build_prompt(
     )
 
 
-def parse_model_json(text: str) -> dict[str, Any]:
+def parse_model_json_with_diagnostics(text: str) -> tuple[dict[str, Any], dict[str, Any]]:
     stripped = text.strip()
+    repair_attempt_count = 0
+
     if stripped.startswith("```"):
+        repair_attempt_count += 1
         stripped = stripped.strip("`")
         if stripped.lower().startswith("json"):
             stripped = stripped[4:].strip()
+
     start = stripped.find("{")
     end = stripped.rfind("}")
-    if start >= 0 and end >= start:
+    if start >= 0 and end >= start and (start > 0 or end < len(stripped) - 1):
+        repair_attempt_count += 1
         stripped = stripped[start : end + 1]
+
+    diagnostics: dict[str, Any] = {
+        "json_ok": False,
+        "parse_error": "",
+        "repair_attempt_count": repair_attempt_count,
+        "model_output_missing_required_fields": False,
+    }
+
     try:
-        return json.loads(stripped)
-    except json.JSONDecodeError:
-        return {"summary": text[:2000], "confidence": "low", "recommendations": [], "missing_evidence": ["model_response_not_valid_json"], "next_best_action": "review raw model response"}
+        parsed_any = json.loads(stripped)
+    except json.JSONDecodeError as exc:
+        diagnostics["parse_error"] = f"{type(exc).__name__}: {exc}"
+        return (
+            {
+                "summary": text[:2000],
+                "confidence": "low",
+                "recommendations": [],
+                "missing_evidence": ["model_response_not_valid_json"],
+                "next_best_action": "review raw model response",
+            },
+            diagnostics,
+        )
+
+    diagnostics["json_ok"] = True
+    if not isinstance(parsed_any, dict):
+        diagnostics["model_output_missing_required_fields"] = True
+        return (
+            {
+                "summary": str(parsed_any)[:2000],
+                "confidence": "low",
+                "recommendations": [],
+                "missing_evidence": ["model_response_not_json_object"],
+                "next_best_action": "review raw model response",
+            },
+            diagnostics,
+        )
+
+    parsed = parsed_any
+    if "recommendations" not in parsed:
+        diagnostics["model_output_missing_required_fields"] = True
+        parsed["recommendations"] = []
+    elif not isinstance(parsed.get("recommendations"), list):
+        diagnostics["model_output_missing_required_fields"] = True
+        parsed["recommendations"] = []
+
+    parsed.setdefault("missing_evidence", [])
+    parsed.setdefault("next_best_action", "")
+    return parsed, diagnostics
+
+
+def parse_model_json(text: str) -> dict[str, Any]:
+    parsed, _diagnostics = parse_model_json_with_diagnostics(text)
+    return parsed
+
+
+def _raw_recommendations(parsed: dict[str, Any]) -> list[Any]:
+    recommendations = parsed.get("recommendations", [])
+    return recommendations if isinstance(recommendations, list) else []
+
+
+def classify_empty_recommendations(
+    *,
+    json_ok: bool,
+    parse_error: str,
+    repair_attempt_count: int,
+    model_output_missing_required_fields: bool,
+    raw_recommendation_candidate_count: int,
+    filtered_recommendation_count: int,
+    evidence_ready_for_manual_patch_count_value: int,
+) -> str:
+    if filtered_recommendation_count > 0:
+        return ""
+    if not json_ok and repair_attempt_count > 0 and parse_error:
+        return "repair_attempt_failed"
+    if not json_ok:
+        return "json_parse_failure"
+    if model_output_missing_required_fields:
+        return "model_output_missing_required_fields"
+    if raw_recommendation_candidate_count > 0 and filtered_recommendation_count == 0:
+        return "recommendations_filtered_out"
+    if evidence_ready_for_manual_patch_count_value > 0:
+        return "evidence_ready_but_no_gpu_plan"
+    return "valid_json_empty_recommendations"
+
+
+def recommendation_diagnostics_for_round(
+    parsed: dict[str, Any],
+    parse_diagnostics: dict[str, Any],
+    evidence_ready_for_manual_patch_count_value: int,
+) -> dict[str, Any]:
+    raw_recommendations = _raw_recommendations(parsed)
+    raw_count = len(raw_recommendations)
+    filtered_count = sum(1 for rec in raw_recommendations if isinstance(rec, dict))
+    reason = classify_empty_recommendations(
+        json_ok=bool(parse_diagnostics.get("json_ok")),
+        parse_error=str(parse_diagnostics.get("parse_error") or ""),
+        repair_attempt_count=int(parse_diagnostics.get("repair_attempt_count") or 0),
+        model_output_missing_required_fields=bool(parse_diagnostics.get("model_output_missing_required_fields")),
+        raw_recommendation_candidate_count=raw_count,
+        filtered_recommendation_count=filtered_count,
+        evidence_ready_for_manual_patch_count_value=evidence_ready_for_manual_patch_count_value,
+    )
+    return {
+        "json_ok": bool(parse_diagnostics.get("json_ok")),
+        "parse_error": str(parse_diagnostics.get("parse_error") or ""),
+        "repair_attempt_count": int(parse_diagnostics.get("repair_attempt_count") or 0),
+        "raw_recommendation_candidate_count": raw_count,
+        "filtered_recommendation_count": filtered_count,
+        "recommendation_count": filtered_count,
+        "empty_recommendations_reason": reason,
+        "evidence_ready_for_manual_patch_count": evidence_ready_for_manual_patch_count_value,
+        "recommended_next_layer": "build_agent_review_patch_plan.py"
+        if reason == "evidence_ready_but_no_gpu_plan"
+        else "",
+    }
+
+
+def aggregate_recommendation_diagnostics(rounds: list[dict[str, Any]], evidence: dict[str, Any]) -> dict[str, Any]:
+    evidence_ready_count = evidence_ready_for_manual_patch_count(evidence)
+    raw_count = sum(int(round_result.get("raw_recommendation_candidate_count") or 0) for round_result in rounds)
+    filtered_count = len(merge_recommendations(rounds))
+    repair_attempt_count = sum(int(round_result.get("repair_attempt_count") or 0) for round_result in rounds)
+    json_parse_error_count = sum(1 for round_result in rounds if not round_result.get("json_ok", True))
+    missing_required_count = sum(1 for round_result in rounds if round_result.get("empty_recommendations_reason") == "model_output_missing_required_fields")
+    parse_errors = [str(round_result.get("parse_error")) for round_result in rounds if round_result.get("parse_error")]
+
+    reason = ""
+    if filtered_count == 0:
+        if any(round_result.get("empty_recommendations_reason") == "repair_attempt_failed" for round_result in rounds):
+            reason = "repair_attempt_failed"
+        elif json_parse_error_count:
+            reason = "json_parse_failure"
+        elif missing_required_count:
+            reason = "model_output_missing_required_fields"
+        elif raw_count > 0:
+            reason = "recommendations_filtered_out"
+        elif evidence_ready_count > 0:
+            reason = "evidence_ready_but_no_gpu_plan"
+        else:
+            reason = "valid_json_empty_recommendations"
+
+    return {
+        "json_parse_error_count": json_parse_error_count,
+        "parse_error": parse_errors[0] if parse_errors else "",
+        "repair_attempt_count": repair_attempt_count,
+        "raw_recommendation_candidate_count": raw_count,
+        "filtered_recommendation_count": filtered_count,
+        "empty_recommendations_reason": reason,
+        "evidence_ready_for_manual_patch_count": evidence_ready_count,
+        "recommended_next_layer": "build_agent_review_patch_plan.py"
+        if reason == "evidence_ready_but_no_gpu_plan" or filtered_count > 0
+        else "collect_more_evidence",
+    }
 
 
 def merge_recommendations(rounds: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -254,6 +449,8 @@ def merge_recommendations(rounds: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for round_result in rounds:
         parsed = round_result.get("parsed_response") or {}
         for rec in parsed.get("recommendations", []) if isinstance(parsed, dict) else []:
+            if not isinstance(rec, dict):
+                continue
             key = json.dumps([rec.get("area"), rec.get("status"), rec.get("target_files"), rec.get("proposed_strategy")], sort_keys=True, ensure_ascii=False)
             if key in seen:
                 continue
@@ -271,6 +468,11 @@ def build_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Elapsed seconds: `{report['elapsed_seconds']}`")
     lines.append(f"- Round count: `{report['round_count']}`")
     lines.append(f"- Recommendation count: `{report['recommendation_count']}`")
+    lines.append(f"- Raw recommendation candidates: `{report.get('raw_recommendation_candidate_count')}`")
+    lines.append(f"- Filtered recommendation count: `{report.get('filtered_recommendation_count')}`")
+    lines.append(f"- JSON parse error count: `{report.get('json_parse_error_count')}`")
+    lines.append(f"- Empty recommendations reason: `{report.get('empty_recommendations_reason')}`")
+    lines.append(f"- Evidence ready for manual patch count: `{report.get('evidence_ready_for_manual_patch_count')}`")
     lines.append("")
     lines.append("## Decision")
     lines.append("")
@@ -294,6 +496,7 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     evidence = read_json(resolve_path(repo_root, args.evidence))
     refined = read_json(resolve_path(repo_root, args.refined_review)) if resolve_path(repo_root, args.refined_review).exists() else {}
+    evidence_ready_count = evidence_ready_for_manual_patch_count(evidence)
     context_reports = []
     for report_file in args.report_file:
         path = resolve_path(repo_root, report_file)
@@ -335,6 +538,13 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
             "elapsed_seconds": 0,
             "round_count": 0,
             "recommendation_count": 0,
+            "raw_recommendation_candidate_count": 0,
+            "filtered_recommendation_count": 0,
+            "json_parse_error_count": 0,
+            "repair_attempt_count": 0,
+            "empty_recommendations_reason": "valid_json_empty_recommendations",
+            "evidence_ready_for_manual_patch_count": evidence_ready_count,
+            "recommended_next_layer": "collect_more_evidence",
             "recommendations": [],
             "decision": {"ready_for_patch_plan": False, "reason": "provider execution not enabled"},
             "guardrails": {"provider_execution_requires_use_ollama": True, "patch_application_performed": False},
@@ -359,11 +569,18 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
             round_start = time.perf_counter()
             try:
                 response, model_used = manager.generate(args.ollama_model, prompt, max_new_tokens=args.max_new_tokens, temperature=args.temperature)
-                parsed = parse_model_json(response)
+                parsed, parse_diagnostics = parse_model_json_with_diagnostics(response)
             except Exception as exc:  # noqa: BLE001 - report-only provider diagnostics.
                 response = ""
                 parsed = {"summary": "provider error", "confidence": "low", "recommendations": [], "missing_evidence": [str(exc)], "next_best_action": "inspect provider error"}
+                parse_diagnostics = {
+                    "json_ok": False,
+                    "parse_error": f"{type(exc).__name__}: {exc}",
+                    "repair_attempt_count": 0,
+                    "model_output_missing_required_fields": False,
+                }
                 errors.append(f"round {index}: {type(exc).__name__}: {exc}")
+            round_diagnostics = recommendation_diagnostics_for_round(parsed, parse_diagnostics, evidence_ready_count)
             rounds.append(
                 {
                     "round": index,
@@ -373,17 +590,24 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
                     "response_chars": len(response),
                     "raw_response_preview": response[:3000],
                     "parsed_response": parsed,
+                    **round_diagnostics,
                 }
             )
 
     recommendations = merge_recommendations(rounds)
+    diagnostics = aggregate_recommendation_diagnostics(rounds, evidence)
     ready = [rec for rec in recommendations if rec.get("status") == "ready_for_patch_plan"]
     needs_context = [rec for rec in recommendations if rec.get("status") == "needs_more_context"]
+    fallback_recommended = (
+        diagnostics["evidence_ready_for_manual_patch_count"] > 0
+        and diagnostics["filtered_recommendation_count"] == 0
+    )
     decision = {
         "ready_for_patch_plan": bool(ready),
         "ready_count": len(ready),
         "needs_more_context_count": len(needs_context),
-        "recommended_next_layer": "build_agent_review_patch_plan.py" if ready else "collect_more_evidence",
+        "fallback_patch_plan_recommended": fallback_recommended,
+        "recommended_next_layer": diagnostics["recommended_next_layer"],
         "manual_review_required": True,
     }
     return {
@@ -407,6 +631,7 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
         "rounds": rounds,
         "recommendation_count": len(recommendations),
         "recommendations": recommendations,
+        **diagnostics,
         "decision": decision,
         "guardrails": {
             "provider_execution_requires_use_ollama": True,
@@ -463,7 +688,12 @@ def main() -> int:
                 "elapsed_seconds": report["elapsed_seconds"],
                 "round_count": report["round_count"],
                 "recommendation_count": report["recommendation_count"],
+                "raw_recommendation_candidate_count": report.get("raw_recommendation_candidate_count"),
+                "filtered_recommendation_count": report.get("filtered_recommendation_count"),
+                "empty_recommendations_reason": report.get("empty_recommendations_reason"),
+                "evidence_ready_for_manual_patch_count": report.get("evidence_ready_for_manual_patch_count"),
                 "ready_for_patch_plan": report["decision"].get("ready_for_patch_plan"),
+                "recommended_next_layer": report["decision"].get("recommended_next_layer"),
             },
             indent=2,
             ensure_ascii=False,

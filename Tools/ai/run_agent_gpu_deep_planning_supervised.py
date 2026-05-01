@@ -26,13 +26,16 @@ try:
     from Tools.ai.run_agent_gpu_deep_planning_review import (
         DEFAULT_EVIDENCE,
         DEFAULT_REFINED,
+        aggregate_recommendation_diagnostics,
         build_markdown,
         build_prompt,
         collect_repo_context,
+        evidence_ready_for_manual_patch_count,
         extract_evidence_files,
         merge_recommendations,
-        parse_model_json,
+        parse_model_json_with_diagnostics,
         read_json,
+        recommendation_diagnostics_for_round,
         resolve_path,
         repo_rel,
         split_batches,
@@ -45,13 +48,16 @@ except ImportError:
     from Tools.ai.run_agent_gpu_deep_planning_review import (  # type: ignore
         DEFAULT_EVIDENCE,
         DEFAULT_REFINED,
+        aggregate_recommendation_diagnostics,
         build_markdown,
         build_prompt,
         collect_repo_context,
+        evidence_ready_for_manual_patch_count,
         extract_evidence_files,
         merge_recommendations,
-        parse_model_json,
+        parse_model_json_with_diagnostics,
         read_json,
+        recommendation_diagnostics_for_round,
         resolve_path,
         repo_rel,
         split_batches,
@@ -108,11 +114,16 @@ def build_report(
     npu_auditor_disabled_reason: str = "",
 ) -> dict[str, Any]:
     recommendations = merge_recommendations(rounds)
+    diagnostics = aggregate_recommendation_diagnostics(rounds, evidence)
     ready = [rec for rec in recommendations if rec.get("status") == "ready_for_patch_plan"]
     needs_context = [rec for rec in recommendations if rec.get("status") == "needs_more_context"]
     unusable_npu = [audit for audit in npu_audits if audit.get("classification") not in {"usable_audit_text", "not_executed", "metadata_only"}]
     npu_success_count = sum(1 for audit in npu_audits if audit.get("provider_execution_succeeded") is True or audit.get("classification") == "usable_audit_text")
     npu_requested_count = sum(1 for audit in npu_audits if audit.get("provider_execution_requested") is True)
+    fallback_recommended = (
+        diagnostics["evidence_ready_for_manual_patch_count"] > 0
+        and diagnostics["filtered_recommendation_count"] == 0
+    )
     return {
         "schema_version": 1,
         "kind": "agent_gpu_deep_planning_supervised",
@@ -139,15 +150,17 @@ def build_report(
         "npu_audits": npu_audits,
         "recommendation_count": len(recommendations),
         "recommendations": recommendations,
+        **diagnostics,
         "decision": {
             "ready_for_patch_plan": bool(ready),
             "ready_count": len(ready),
             "needs_more_context_count": len(needs_context),
+            "fallback_patch_plan_recommended": fallback_recommended,
             "npu_auditor_non_blocking": True,
             "npu_unusable_or_failed_count": len(unusable_npu),
             "npu_audit_success_count": npu_success_count,
             "npu_auditor_disabled_reason": npu_auditor_disabled_reason,
-            "recommended_next_layer": "build_agent_review_patch_plan.py" if ready else "collect_more_evidence",
+            "recommended_next_layer": diagnostics["recommended_next_layer"],
             "manual_review_required": True,
         },
         "inputs": {
@@ -245,6 +258,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
     started_at = time.perf_counter()
     evidence = read_json(resolve_path(repo_root, args.evidence))
     refined = read_json(resolve_path(repo_root, args.refined_review)) if resolve_path(repo_root, args.refined_review).exists() else {}
+    evidence_ready_count = evidence_ready_for_manual_patch_count(evidence)
     context_reports = []
     for report_file in args.report_file:
         path = resolve_path(repo_root, report_file)
@@ -274,6 +288,13 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             "round_count": 0,
             "npu_audit_count": 0,
             "recommendation_count": 0,
+            "raw_recommendation_candidate_count": 0,
+            "filtered_recommendation_count": 0,
+            "json_parse_error_count": 0,
+            "repair_attempt_count": 0,
+            "empty_recommendations_reason": "valid_json_empty_recommendations",
+            "evidence_ready_for_manual_patch_count": evidence_ready_count,
+            "recommended_next_layer": "collect_more_evidence",
             "decision": {"ready_for_patch_plan": False, "manual_review_required": True},
             "guardrails": {"provider_execution_requires_use_ollama": True, "patch_application_performed": False},
         }
@@ -314,11 +335,18 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             round_start = time.perf_counter()
             try:
                 response, model_used = manager.generate(args.ollama_model, prompt, max_new_tokens=args.max_new_tokens, temperature=args.temperature)
-                parsed = parse_model_json(response)
+                parsed, parse_diagnostics = parse_model_json_with_diagnostics(response)
             except Exception as exc:  # noqa: BLE001
                 response = ""
                 parsed = {"summary": "provider error", "confidence": "low", "recommendations": [], "missing_evidence": [str(exc)], "next_best_action": "inspect provider error"}
+                parse_diagnostics = {
+                    "json_ok": False,
+                    "parse_error": f"{type(exc).__name__}: {exc}",
+                    "repair_attempt_count": 0,
+                    "model_output_missing_required_fields": False,
+                }
                 errors.append(f"round {index}: {type(exc).__name__}: {exc}")
+            round_diagnostics = recommendation_diagnostics_for_round(parsed, parse_diagnostics, evidence_ready_count)
             round_data = {
                 "round": index,
                 "elapsed_seconds": round(time.perf_counter() - round_start, 3),
@@ -327,6 +355,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 "response_chars": len(response),
                 "raw_response_preview": response[:3000],
                 "parsed_response": parsed,
+                **round_diagnostics,
             }
             rounds.append(round_data)
             interim_report = build_report(
@@ -431,7 +460,12 @@ def main() -> int:
                 "npu_audit_success_count": report["npu_audit_success_count"],
                 "npu_auditor_disabled_reason": report["npu_auditor_disabled_reason"],
                 "recommendation_count": report["recommendation_count"],
+                "raw_recommendation_candidate_count": report.get("raw_recommendation_candidate_count"),
+                "filtered_recommendation_count": report.get("filtered_recommendation_count"),
+                "empty_recommendations_reason": report.get("empty_recommendations_reason"),
+                "evidence_ready_for_manual_patch_count": report.get("evidence_ready_for_manual_patch_count"),
                 "ready_for_patch_plan": report["decision"].get("ready_for_patch_plan"),
+                "recommended_next_layer": report["decision"].get("recommended_next_layer"),
             },
             indent=2,
             ensure_ascii=False,
