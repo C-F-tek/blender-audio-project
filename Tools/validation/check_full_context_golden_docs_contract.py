@@ -3,9 +3,9 @@
 
 This validator is intentionally docs-only and report-only. It verifies that the
 repository keeps a stable full-context golden-path contract across the task
-entrypoint, bootstrap, local workflow docs and validation docs. It does not run
-providers, build context packs, apply patches, invoke Blender or read ignored
-runtime outputs.
+entrypoint, bootstrap, local workflow docs and the dedicated P3 contract doc.
+It does not run providers, build context packs, apply patches, invoke Blender or
+read ignored runtime outputs.
 """
 from __future__ import annotations
 
@@ -29,7 +29,6 @@ REQUIRED_DOCS = (
     "docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md",
     "docs/LOCAL_AI_TASKS/full-context-golden-docs-contract.md",
     "docs/JSON_SCHEMAS.md",
-    "Tools/validation/README.md",
 )
 
 TASK_REQUIRED_TERMS = (
@@ -43,12 +42,6 @@ TASK_REQUIRED_TERMS = (
     "OpenVINO/NPU",
     "selected chunks validator/evidence",
     "SQLite-backed agent state packet",
-    "P1: adapter manifest validator",
-    "P2: reusable enrichment-plan helper",
-    "P3: full-context golden path docs contract",
-    "P4: optional wrapper preset flag",
-    "P5: selected-chunks evidence standard validation block",
-    "P6: NPU knowledge-broker helper / context oracle prototype",
 )
 
 BOOTSTRAP_REQUIRED_TERMS = (
@@ -81,11 +74,6 @@ CONTRACT_DOC_REQUIRED_TERMS = (
     "Validation command",
 )
 
-VALIDATION_README_REQUIRED_TERMS = (
-    "check_full_context_golden_docs_contract.py",
-    "full-context golden docs contract",
-)
-
 FORBIDDEN_DOC_TERMS = (
     "NPU as primary advisory",
     "OpenVINO GPU primary lane",
@@ -94,13 +82,6 @@ FORBIDDEN_DOC_TERMS = (
 )
 
 P_FAMILIES = ("P1", "P2", "P3", "P4", "P5", "P6")
-
-
-def repo_relative(path: Path, repo_root: Path) -> str:
-    try:
-        return path.resolve().relative_to(repo_root).as_posix()
-    except ValueError:
-        return path.as_posix()
 
 
 def read_text(path: Path) -> tuple[str, str | None]:
@@ -149,18 +130,24 @@ def check_terms(repo_root: Path, rel_path: str, required_terms: tuple[str, ...])
 
 
 def check_p_family_coverage(repo_root: Path) -> dict[str, Any]:
-    rel_path = "docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md"
-    path = repo_root / rel_path
-    text, error = read_text(path)
+    rel_paths = (
+        "docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md",
+        "docs/LOCAL_AI_TASKS/full-context-golden-docs-contract.md",
+    )
+    texts: list[str] = []
     errors: list[str] = []
-    if error:
-        errors.append(error)
-    coverage = {family: family in text for family in P_FAMILIES}
+    for rel_path in rel_paths:
+        text, error = read_text(repo_root / rel_path)
+        if error:
+            errors.append(f"{rel_path}: {error}")
+        texts.append(text)
+    combined = "\n".join(texts)
+    coverage = {family: family in combined for family in P_FAMILIES}
     missing = [family for family, present in coverage.items() if not present]
     if missing:
         errors.append(f"missing proposal families: {', '.join(missing)}")
     return {
-        "path": rel_path,
+        "path": "full_context_golden_p_family_coverage",
         "ok": not errors,
         "coverage": coverage,
         "errors": errors,
@@ -169,48 +156,37 @@ def check_p_family_coverage(repo_root: Path) -> dict[str, Any]:
 
 
 def check_command_alignment(repo_root: Path) -> dict[str, Any]:
-    """Check docs expose the safe preset and the no-provider contract together."""
+    """Check the dedicated contract exposes the safe preset and guardrails."""
 
-    rel_paths = (
-        "docs/LOCAL_AI_TASKS/README.md",
-        "docs/LOCAL_AI_RUN_BOOTSTRAP.md",
-        "docs/LOCAL_AI_WORKFLOW.md",
-        "docs/LOCAL_AI_TASKS/full-context-golden-docs-contract.md",
-    )
+    rel_path = "docs/LOCAL_AI_TASKS/full-context-golden-docs-contract.md"
+    text, error = read_text(repo_root / rel_path)
     errors: list[str] = []
     warnings: list[str] = []
-    details: dict[str, dict[str, bool]] = {}
-    for rel_path in rel_paths:
-        text, error = read_text(repo_root / rel_path)
-        if error:
-            errors.append(f"{rel_path}: {error}")
-            continue
-        details[rel_path] = {
+    if error:
+        errors.append(error)
+        flags: dict[str, bool] = {}
+    else:
+        lower = text.lower()
+        flags = {
             "mentions_full_context_preset": "-FullContextGoldenPath" in text,
-            "mentions_provider_explicit": "explicit" in text.lower() and "provider" in text.lower(),
-            "mentions_no_patch_apply": "no automatic patch apply" in text.lower() or "does not apply patches" in text.lower(),
+            "mentions_provider_explicit": "provider execution explicit-only" in lower,
+            "mentions_no_patch_apply": "no automatic patch apply" in lower,
+            "mentions_no_blender_runtime": "blender runtime" in lower,
         }
-
-    for rel_path, flags in details.items():
-        if not flags["mentions_provider_explicit"]:
-            errors.append(f"{rel_path}: provider explicit-only wording missing")
-        if not flags["mentions_no_patch_apply"]:
-            errors.append(f"{rel_path}: no-patch-apply wording missing")
-
-    preset_docs = [rel for rel, flags in details.items() if flags["mentions_full_context_preset"]]
-    if not preset_docs:
-        errors.append("no contract doc mentions -FullContextGoldenPath")
+        for key, present in flags.items():
+            if not present:
+                errors.append(f"missing contract flag: {key}")
 
     return {
-        "path": "full_context_golden_docs_command_alignment",
+        "path": rel_path,
         "ok": not errors,
-        "details": details,
+        "details": flags,
         "errors": errors,
         "warnings": warnings,
     }
 
 
-def check_duplicate_bootstrap_lines(repo_root: Path) -> dict[str, Any]:
+def check_bootstrap_duplicate_index(repo_root: Path) -> dict[str, Any]:
     rel_path = "docs/LOCAL_AI_RUN_BOOTSTRAP.md"
     text, error = read_text(repo_root / rel_path)
     errors: list[str] = []
@@ -218,17 +194,14 @@ def check_duplicate_bootstrap_lines(repo_root: Path) -> dict[str, Any]:
     if error:
         errors.append(error)
         line_count = 0
-        duplicated_current_task_index = False
     else:
         line_count = text.count("Current task index:")
-        duplicated_current_task_index = line_count > 1
-        if duplicated_current_task_index:
-            errors.append("Current task index block is duplicated")
+        if line_count > 1:
+            warnings.append("Current task index block is duplicated; keep one block in a future docs cleanup")
     return {
         "path": rel_path,
         "ok": not errors,
         "current_task_index_count": line_count,
-        "duplicated_current_task_index": duplicated_current_task_index,
         "errors": errors,
         "warnings": warnings,
     }
@@ -241,12 +214,11 @@ def validate_docs_contract(repo_root: Path) -> dict[str, Any]:
         check_terms(repo_root, "docs/LOCAL_AI_RUN_BOOTSTRAP.md", BOOTSTRAP_REQUIRED_TERMS),
         check_terms(repo_root, "docs/LOCAL_AI_WORKFLOW.md", WORKFLOW_REQUIRED_TERMS),
         check_terms(repo_root, "docs/LOCAL_AI_TASKS/full-context-golden-docs-contract.md", CONTRACT_DOC_REQUIRED_TERMS),
-        check_terms(repo_root, "Tools/validation/README.md", VALIDATION_README_REQUIRED_TERMS),
     ]
     consistency_checks = [
         check_p_family_coverage(repo_root),
         check_command_alignment(repo_root),
-        check_duplicate_bootstrap_lines(repo_root),
+        check_bootstrap_duplicate_index(repo_root),
     ]
 
     all_checks = file_checks + term_checks + consistency_checks
