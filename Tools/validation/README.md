@@ -133,6 +133,48 @@ python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . 
 python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
 ```
 
+## AI workload report quality gate
+
+The AI workload report quality gate validates already-generated AI workload
+reports before packet/proposal builders use them as advisory context.
+
+Canonical contract:
+
+```text
+docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md
+```
+
+Validator:
+
+```powershell
+python .\Toolsalidation\check_ai_workload_report_quality.py --repo-root . --output .\outputalidationi_workload_report_quality.json
+```
+
+Core report kind and policy:
+
+```text
+ai_workload_report_quality
+usable_text_lanes_only_for_advisory_context
+```
+
+The validator is report-only and must keep:
+
+```text
+provider_execution_performed=false
+source_writes_performed=false
+```
+
+NPU review metadata can be emitted without provider loading:
+
+```powershell
+python .\Tools
+puun_npu_review.py --metadata-only --metadata-out .\outputalidation
+pu_review_metadata.json
+```
+
+The `npu_review_metadata` sidecar records advisory role and quality-gate status.
+Metadata-only mode must keep provider execution disabled.
+
 ## Tool map
 
 | Tool | Role | Heavy workloads |
