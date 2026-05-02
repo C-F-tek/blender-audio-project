@@ -32,6 +32,7 @@ try:
         collect_repo_context,
         evidence_ready_for_manual_patch_count,
         extract_evidence_files,
+        extract_valid_tool_requests,
         merge_recommendations,
         parse_model_json_with_diagnostics,
         read_json,
@@ -54,6 +55,7 @@ except ImportError:
         collect_repo_context,
         evidence_ready_for_manual_patch_count,
         extract_evidence_files,
+        extract_valid_tool_requests,
         merge_recommendations,
         parse_model_json_with_diagnostics,
         read_json,
@@ -97,6 +99,150 @@ def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tu
         return 1, "", "", f"{type(exc).__name__}: {exc}"
 
 
+def compact_tool_results_for_context(tool_results: list[dict[str, Any]], *, max_items: int = 8) -> list[dict[str, Any]]:
+    compact: list[dict[str, Any]] = []
+    for item in tool_results[:max_items]:
+        compact.append(
+            {
+                "id": item.get("id"),
+                "tool": item.get("tool"),
+                "executed": item.get("executed"),
+                "blocked": item.get("blocked"),
+                "returncode": item.get("returncode"),
+                "outputs": item.get("outputs", {}),
+                "summary": item.get("summary", {}),
+                "guardrails": item.get("guardrails", {}),
+                "errors": item.get("errors", []),
+            }
+        )
+    return compact
+
+
+def run_runtime_tool_broker_for_round(
+    *,
+    repo_root: Path,
+    args: argparse.Namespace,
+    round_index: int,
+    tool_requests: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Execute valid planner tool requests through the report-only broker."""
+
+    if not args.enable_runtime_tool_broker:
+        return {
+            "enabled": False,
+            "requested_tool_count": len(tool_requests),
+            "executed": False,
+            "tool_results": [],
+            "guardrails": {
+                "broker_execution_requires_enable_runtime_tool_broker": True,
+                "patch_application_performed": False,
+                "persistent_memory_write_performed": False,
+            },
+        }
+    if not tool_requests:
+        return {
+            "enabled": True,
+            "requested_tool_count": 0,
+            "executed": False,
+            "tool_results": [],
+            "guardrails": {
+                "patch_application_performed": False,
+                "persistent_memory_write_performed": False,
+            },
+        }
+
+    output_root = resolve_path(repo_root, args.runtime_tool_output_dir)
+    round_dir = output_root / f"round_{round_index:03d}"
+    round_dir.mkdir(parents=True, exist_ok=True)
+    request_file = round_dir / f"round_{round_index:03d}_tool_requests.json"
+    broker_output = round_dir / f"round_{round_index:03d}_runtime_tool_broker.json"
+    broker_markdown = round_dir / f"round_{round_index:03d}_runtime_tool_broker.md"
+    request_packet = {
+        "schema_version": 1,
+        "kind": "gpu_planner_runtime_tool_requests",
+        "repo_root": str(repo_root),
+        "round": round_index,
+        "tool_requests": tool_requests,
+        "guardrails": {
+            "free_shell_allowed": False,
+            "broker_allowlist_required": True,
+            "patch_application_allowed": False,
+            "persistent_memory_write_allowed": False,
+            "manual_review_required": True,
+        },
+    }
+    write_json(request_file, request_packet)
+    command = [
+        sys.executable,
+        "Tools/ai/agent_runtime_tool_broker.py",
+        "--repo-root",
+        ".",
+        "--request-file",
+        str(request_file),
+        "--tool-output-dir",
+        str(round_dir),
+        "--timeout-seconds",
+        str(args.runtime_tool_timeout_seconds),
+        "--output",
+        str(broker_output),
+        "--markdown-output",
+        str(broker_markdown),
+    ]
+    returncode, stdout, stderr, error = run_command(command, repo_root, args.runtime_tool_timeout_seconds + 30)
+    broker_report: dict[str, Any] = {}
+    if broker_output.exists():
+        try:
+            broker_report = read_json(broker_output)
+        except Exception as exc:  # noqa: BLE001
+            error = f"{error or ''} {type(exc).__name__}: {exc}".strip()
+
+    return {
+        "enabled": True,
+        "executed": True,
+        "requested_tool_count": len(tool_requests),
+        "returncode": returncode,
+        "stdout_tail": stdout,
+        "stderr_tail": stderr,
+        "error": error or "",
+        "request_file": repo_rel(request_file, repo_root),
+        "broker_output": repo_rel(broker_output, repo_root),
+        "broker_markdown": repo_rel(broker_markdown, repo_root),
+        "passed": broker_report.get("passed"),
+        "tool_request_count": broker_report.get("tool_request_count", len(tool_requests)),
+        "tool_execution_count": broker_report.get("tool_execution_count", 0),
+        "blocked_tool_count": broker_report.get("blocked_tool_count", 0),
+        "failed_tool_count": broker_report.get("failed_tool_count", 0),
+        "operational_sqlite_write_performed": broker_report.get("operational_sqlite_write_performed", False),
+        "provider_execution_performed": broker_report.get("provider_execution_performed", False),
+        "patch_application_performed": broker_report.get("patch_application_performed", False),
+        "sqlite_write_performed": broker_report.get("sqlite_write_performed", False),
+        "persistent_memory_write_performed": broker_report.get("persistent_memory_write_performed", False),
+        "tool_results": compact_tool_results_for_context(broker_report.get("tool_results", [])),
+        "guardrails": broker_report.get("guardrails", {}),
+    }
+
+
+def runtime_tool_context_report(round_index: int, broker_result: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "path": broker_result.get("broker_output"),
+        "kind": "agent_runtime_tool_broker",
+        "passed": broker_result.get("passed"),
+        "summary": {
+            "round": round_index,
+            "tool_request_count": broker_result.get("tool_request_count"),
+            "tool_execution_count": broker_result.get("tool_execution_count"),
+            "blocked_tool_count": broker_result.get("blocked_tool_count"),
+            "failed_tool_count": broker_result.get("failed_tool_count"),
+            "operational_sqlite_write_performed": broker_result.get("operational_sqlite_write_performed"),
+        },
+        "decision": {
+            "runtime_tool_results_available": bool(broker_result.get("tool_results")),
+            "manual_review_required": True,
+        },
+        "tool_results": broker_result.get("tool_results", []),
+    }
+
+
 def build_report(
     *,
     repo_root: Path,
@@ -124,6 +270,12 @@ def build_report(
         diagnostics["evidence_ready_for_manual_patch_count"] > 0
         and diagnostics["filtered_recommendation_count"] == 0
     )
+    runtime_brokers = [round_item.get("runtime_tool_broker", {}) for round_item in rounds if round_item.get("runtime_tool_broker")]
+    runtime_tool_request_count = sum(int(item.get("requested_tool_count") or 0) for item in runtime_brokers)
+    runtime_tool_execution_count = sum(int(item.get("tool_execution_count") or 0) for item in runtime_brokers)
+    runtime_tool_failed_count = sum(int(item.get("failed_tool_count") or 0) for item in runtime_brokers)
+    runtime_tool_blocked_count = sum(int(item.get("blocked_tool_count") or 0) for item in runtime_brokers)
+    runtime_tool_result_count = sum(len(item.get("tool_results", [])) for item in runtime_brokers)
     return {
         "schema_version": 1,
         "kind": "agent_gpu_deep_planning_supervised",
@@ -148,6 +300,12 @@ def build_report(
         "npu_audit_success_count": npu_success_count,
         "npu_auditor_disabled_reason": npu_auditor_disabled_reason,
         "npu_audits": npu_audits,
+        "runtime_tool_broker_enabled": bool(args.enable_runtime_tool_broker),
+        "runtime_tool_request_count": runtime_tool_request_count,
+        "runtime_tool_execution_count": runtime_tool_execution_count,
+        "runtime_tool_failed_count": runtime_tool_failed_count,
+        "runtime_tool_blocked_count": runtime_tool_blocked_count,
+        "runtime_tool_result_count": runtime_tool_result_count,
         "recommendation_count": len(recommendations),
         "recommendations": recommendations,
         **diagnostics,
@@ -177,6 +335,8 @@ def build_report(
             "real_github_pr_created": False,
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
+            "runtime_tool_broker_report_only": True,
+            "runtime_tool_broker_requires_enable_runtime_tool_broker": True,
             "manual_review_required": True,
         },
     }
@@ -293,6 +453,12 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             "tool_request_count": 0,
             "valid_tool_request_count": 0,
             "invalid_tool_request_count": 0,
+            "runtime_tool_broker_enabled": bool(args.enable_runtime_tool_broker),
+            "runtime_tool_request_count": 0,
+            "runtime_tool_execution_count": 0,
+            "runtime_tool_failed_count": 0,
+            "runtime_tool_blocked_count": 0,
+            "runtime_tool_result_count": 0,
             "json_parse_error_count": 0,
             "repair_attempt_count": 0,
             "empty_recommendations_reason": "valid_json_empty_recommendations",
@@ -350,6 +516,24 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 }
                 errors.append(f"round {index}: {type(exc).__name__}: {exc}")
             round_diagnostics = recommendation_diagnostics_for_round(parsed, parse_diagnostics, evidence_ready_count)
+            valid_tool_requests, invalid_tool_request_errors = extract_valid_tool_requests(
+                parsed,
+                max_requests=args.runtime_tool_max_requests_per_round,
+            )
+            if invalid_tool_request_errors:
+                warnings.append(f"round {index}: invalid tool requests: {invalid_tool_request_errors}")
+            runtime_broker = run_runtime_tool_broker_for_round(
+                repo_root=repo_root,
+                args=args,
+                round_index=index,
+                tool_requests=valid_tool_requests,
+            )
+            if runtime_broker.get("error"):
+                warnings.append(f"runtime tool broker round {index}: {runtime_broker.get('error')}")
+            if runtime_broker.get("returncode") not in (None, 0):
+                warnings.append(f"runtime tool broker round {index}: returncode={runtime_broker.get('returncode')}")
+            if runtime_broker.get("executed"):
+                context_reports.append(runtime_tool_context_report(index, runtime_broker))
             round_data = {
                 "round": index,
                 "elapsed_seconds": round(time.perf_counter() - round_start, 3),
@@ -358,6 +542,9 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 "response_chars": len(response),
                 "raw_response_preview": response[:3000],
                 "parsed_response": parsed,
+                "tool_requests": valid_tool_requests,
+                "invalid_tool_request_errors": invalid_tool_request_errors,
+                "runtime_tool_broker": runtime_broker,
                 **round_diagnostics,
             }
             rounds.append(round_data)
@@ -433,6 +620,10 @@ def main() -> int:
     parser.add_argument("--startup-timeout", type=float, default=30.0)
     parser.add_argument("--max-new-tokens", type=int, default=1800)
     parser.add_argument("--temperature", type=float, default=0.1)
+    parser.add_argument("--enable-runtime-tool-broker", action="store_true")
+    parser.add_argument("--runtime-tool-output-dir", default="output/ai_runtime_tools/gpu_planner_runtime_tools")
+    parser.add_argument("--runtime-tool-timeout-seconds", type=int, default=300)
+    parser.add_argument("--runtime-tool-max-requests-per-round", type=int, default=8)
     parser.add_argument("--include-npu-auditor", action="store_true")
     parser.add_argument("--run-npu-auditor-provider", action="store_true", help="Actually execute OpenVINO/NPU auditor. Without this, auditor uses metadata-only mode.")
     parser.add_argument("--npu-auditor-every-rounds", type=int, default=1)
@@ -469,6 +660,12 @@ def main() -> int:
                 "valid_tool_request_count": report.get("valid_tool_request_count"),
                 "invalid_tool_request_count": report.get("invalid_tool_request_count"),
                 "empty_recommendations_reason": report.get("empty_recommendations_reason"),
+                "runtime_tool_broker_enabled": report.get("runtime_tool_broker_enabled"),
+                "runtime_tool_request_count": report.get("runtime_tool_request_count"),
+                "runtime_tool_execution_count": report.get("runtime_tool_execution_count"),
+                "runtime_tool_failed_count": report.get("runtime_tool_failed_count"),
+                "runtime_tool_blocked_count": report.get("runtime_tool_blocked_count"),
+                "runtime_tool_result_count": report.get("runtime_tool_result_count"),
                 "evidence_ready_for_manual_patch_count": report.get("evidence_ready_for_manual_patch_count"),
                 "ready_for_patch_plan": report["decision"].get("ready_for_patch_plan"),
                 "recommended_next_layer": report["decision"].get("recommended_next_layer"),
