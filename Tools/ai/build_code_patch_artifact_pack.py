@@ -45,6 +45,29 @@ def nested_value(data: dict[str, Any], key: str) -> Any:
     return source.get(key) if isinstance(source, dict) else None
 
 
+def list_field_or_error(data: dict[str, Any], field: str, label: str, errors: list[str]) -> list[Any]:
+    """Return a list field, appending the existing error wording when invalid."""
+    value = data.get(field, [])
+    if not isinstance(value, list):
+        errors.append(f"{label} {field} must be a list")
+        return []
+    return value
+
+
+def validate_count_matches(data: dict[str, Any], count_field: str, items: list[Any], label: str, errors: list[str]) -> None:
+    """Append an error when a reported count does not match the list length."""
+    if data.get(count_field) != len(items):
+        errors.append(f"{label} {count_field} must match len({items_label_for_count(count_field)})")
+
+
+def items_label_for_count(count_field: str) -> str:
+    """Return the legacy list-field label used in count mismatch diagnostics."""
+    return {
+        "patch_plan_count": "code_patch_plans",
+        "docs_followup_count": "docs_followup_suggestions",
+    }.get(count_field, "items")
+
+
 def summarize_code_plan(plan: dict[str, Any]) -> dict[str, Any]:
     """Return a compact code-plan summary safe for evidence bundles."""
     return {
@@ -88,12 +111,10 @@ def summarize_code_plan_report(code_plan: dict[str, Any], errors: list[str]) -> 
     if code_plan.get("kind") != "agent_review_code_patch_plan":
         errors.append("code patch plan kind must be agent_review_code_patch_plan")
     errors.extend(report_guardrail_errors(code_plan, "code patch plan"))
-    raw_plans = code_plan.get("code_patch_plans", [])
-    if not isinstance(raw_plans, list):
-        errors.append("code patch plan code_patch_plans must be a list")
+    raw_plans = list_field_or_error(code_plan, "code_patch_plans", "code patch plan", errors)
+    if not raw_plans:
         return []
-    if code_plan.get("patch_plan_count") != len(raw_plans):
-        errors.append("code patch plan patch_plan_count must match len(code_patch_plans)")
+    validate_count_matches(code_plan, "patch_plan_count", raw_plans, "code patch plan", errors)
     return [summarize_code_plan(plan) for plan in raw_plans if isinstance(plan, dict)]
 
 
@@ -102,12 +123,10 @@ def summarize_docs_followup_report(docs_followup: dict[str, Any], errors: list[s
     if docs_followup.get("kind") != "agent_review_code_docs_followup":
         errors.append("docs follow-up kind must be agent_review_code_docs_followup")
     errors.extend(report_guardrail_errors(docs_followup, "docs follow-up"))
-    raw_suggestions = docs_followup.get("docs_followup_suggestions", [])
-    if not isinstance(raw_suggestions, list):
-        errors.append("docs follow-up docs_followup_suggestions must be a list")
+    raw_suggestions = list_field_or_error(docs_followup, "docs_followup_suggestions", "docs follow-up", errors)
+    if not raw_suggestions:
         return []
-    if docs_followup.get("docs_followup_count") != len(raw_suggestions):
-        errors.append("docs follow-up docs_followup_count must match len(docs_followup_suggestions)")
+    validate_count_matches(docs_followup, "docs_followup_count", raw_suggestions, "docs follow-up", errors)
     return [summarize_docs_followup(item) for item in raw_suggestions if isinstance(item, dict)]
 
 
