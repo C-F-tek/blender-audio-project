@@ -160,6 +160,22 @@ def is_code_like_path(path_value: str) -> bool:
     return Path(path_value).suffix.lower() in CODE_EXTENSIONS
 
 
+def forbidden_target_errors(path: str) -> list[str]:
+    """Return policy errors for forbidden target prefixes, suffixes and fragments."""
+    lower = path.lower()
+    errors: list[str] = []
+    for prefix in FORBIDDEN_TARGET_PREFIXES:
+        if path.startswith(prefix):
+            errors.append(f"forbidden target prefix: {prefix}")
+    for suffix in FORBIDDEN_TARGET_SUFFIXES:
+        if lower.endswith(suffix):
+            errors.append(f"forbidden target suffix: {suffix}")
+    for fragment in FORBIDDEN_TARGET_FRAGMENTS:
+        if fragment in lower:
+            errors.append(f"forbidden target fragment: {fragment}")
+    return errors
+
+
 def target_path_errors(repo_root: Path, path_value: str, *, require_existing: bool = True, require_code_like: bool = True) -> list[str]:
     """Validate a repository target path for manual-review code patch plans."""
     path = normalize_repo_path(path_value)
@@ -173,15 +189,7 @@ def target_path_errors(repo_root: Path, path_value: str, *, require_existing: bo
         full.relative_to(repo_root.resolve(strict=False))
     except ValueError:
         errors.append("target path escapes repository root")
-    for prefix in FORBIDDEN_TARGET_PREFIXES:
-        if path.startswith(prefix):
-            errors.append(f"forbidden target prefix: {prefix}")
-    for suffix in FORBIDDEN_TARGET_SUFFIXES:
-        if path.lower().endswith(suffix):
-            errors.append(f"forbidden target suffix: {suffix}")
-    for fragment in FORBIDDEN_TARGET_FRAGMENTS:
-        if fragment in path.lower():
-            errors.append(f"forbidden target fragment: {fragment}")
+    errors.extend(forbidden_target_errors(path))
     if require_code_like and not is_code_like_path(path):
         errors.append("target is not a code/config script path for the code patch-plan lane")
     if require_existing and not full.is_file():
