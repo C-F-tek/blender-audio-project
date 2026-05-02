@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "kind": "github_validation_evidence_bundle",
+  "generated_at": "2026-05-02T20:45:49",
+  "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "source_reports": [
+    "output/validation/gpu_planner_json_contract_smoke_20260502-204507.json"
+  ],
+  "source_selected_chunks_evidence": [
+    "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json"
+  ],
+  "source_included_artifacts": [
+    "output/validation/gpu_planner_json_contract_smoke_20260502-204507.md",
+    "docs/LOCAL_AI_TASKS/gpu-planner-json-contract-hardening.md"
+  ],
+  "reports": [
+    {
+      "path": "output/validation/gpu_planner_json_contract_smoke_20260502-204507.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "gpu_planner_json_contract_smoke",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "gpu_planner_json_contract_smoke",
+        "passed": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "errors": [],
+        "warnings": [],
+        "manual_review_required": true
+      }
+    }
+  ],
+  "selected_chunks_evidence": [
+    {
+      "path": "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "selected_semantic_chunks_evidence",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "selected_semantic_chunks_evidence",
+        "passed": true,
+        "provider_execution_performed": false,
+        "source_writes_performed": false,
+        "selected_count": 24,
+        "total_selected_chars": 28649,
+        "max_chunks": 24,
+        "max_total_chars": 32000,
+        "source_bundle": "output/ai_context_packs/full_context_golden_selected_chunks.json",
+        "source_chunks": "indexAI/code_chunks/semantic_code_chunks.json",
+        "decision": {
+          "selected_chunks_built": true,
+          "budget_respected": true,
+          "provider_execution_seen": false,
+          "source_writes_performed": false,
+          "forbidden_paths_blocked": true
+        },
+        "errors": [],
+        "warnings": []
+      }
+    }
+  ],
+  "artifact_manifest": [
+    {
+      "path": "output/validation/gpu_planner_json_contract_smoke_20260502-204507.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 3635,
+      "sha256": "8236937113a4991f184737ba40a49a8c948668693b8de6c55dc26c6fd97da8aa",
+      "role": "local_artifact_reference",
+      "content_included": true,
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"gpu_planner_json_contract_smoke\",\n  \"generated_at\": \"2026-05-02T20:45:08\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"blender_runtime_execution_performed\": false,\n  \"sqlite_write_performed\": false,\n  \"manual_review_required\": true,\n  \"case_count\": 4,\n  \"failed_case_count\": 0,\n  \"cases\": [\n    {\n      \"name\": \"valid_recommendation\",\n      \"passed\": true,\n      \"expected_reason\": \"\",\n      \"result\": {\n        \"json_ok\": true,\n        \"schema_ok\": true,\n        \"context_echo_detected\": false,\n        \"parse_error\": \"\",\n        \"schema_errors\": [],\n        \"raw_response_sha256\": \"6a92b710401e93a30fec47fcef59b398e404b87036d01a7908fe4761b7f98319\",\n        \"raw_response_chars\": 757,\n        \"top_level_keys\": [\n          \"confidence\",\n          \"missing_evidence\",\n          \"next_best_action\",\n          \"recommendations\",\n          \"summary\"\n        ],\n        \"recommendation_count\": 1,\n        \"valid_recommendation_count\": 1,\n        \"invalid_recommendation_count\": 0,\n        \"empty_recommendations_reason\": \"\"\n      }\n    },\n    {\n      \"name\": \"context_echo\",\n      \"passed\": true,\n      \"expected_reason\": \"context_echo_detected\",\n      \"result\": {\n        \"json_ok\": true,\n        \"schema_ok\": false,\n        \"context_echo_detected\": true,\n        \"parse_error\": \"\",\n        \"schema_errors\": [\n          \"missing top-level ",
+      "preview_chars": 1500,
+      "line_count": 112
+    }
+  ],
+  "included_artifacts": [
+    {
+      "path": "output/validation/gpu_planner_json_contract_smoke_20260502-204507.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 925,
+      "sha256": "d98845c217da543038e9253b5f6b4df26e2f5337ab6bf4dde9d275b759811061",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 44,
+      "raw_chars": 881,
+      "included_chars": 881,
+      "content": "# GPU Planner JSON Contract Smoke\n\n- Passed: `True`\n- Case count: `4`\n- Failed case count: `0`\n- Patch application performed: `False`\n- Source writes performed: `False`\n\n## `valid_recommendation`\n\n- Passed: `True`\n- Expected reason: ``\n- Reason: ``\n- JSON OK: `True`\n- Schema OK: `True`\n- Context echo detected: `False`\n\n## `context_echo`\n\n- Passed: `True`\n- Expected reason: `context_echo_detected`\n- Reason: `context_echo_detected`\n- JSON OK: `True`\n- Schema OK: `False`\n- Context echo detected: `True`\n\n## `malformed_json`\n\n- Passed: `True`\n- Expected reason: `json_parse_failure`\n- Reason: `json_parse_failure`\n- JSON OK: `False`\n- Schema OK: `False`\n- Context echo detected: `False`\n\n## `schema_context_echo`\n\n- Passed: `True`\n- Expected reason: `context_echo_detected`\n- Reason: `context_echo_detected`\n- JSON OK: `True`\n- Schema OK: `False`\n- Context echo detected: `True`\n\n"
+    },
+    {
+      "path": "docs/LOCAL_AI_TASKS/gpu-planner-json-contract-hardening.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 2133,
+      "sha256": "fa9cac6fac90165ecab746698bb0dfd21415428eac8ce99c89bad129289a04b0",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 94,
+      "raw_chars": 2133,
+      "included_chars": 2133,
+      "content": "# GPU Planner JSON Contract Hardening\n\n## Purpose\n\nThis note documents the first hardening layer after PR #111.\n\nThe immediate goal is to reduce ambiguous GPU planner failures by classifying model output more precisely before it reaches recommendation merge/filter logic.\n\n## Added helper\n\n```text\nTools/ai/gpu_planner_json_contract.py\n```\n\nThe helper is report-only and does not run providers.\n\nIt validates:\n\n```text\nJSON parseability\nexpected top-level recommendation schema\ncontext echo outputs\nrecommendation object shape\nrisk/status enums\ntarget_files, validation_commands and stop_conditions list types\n```\n\n## Added smoke\n\n```text\nTools/validation/run_gpu_planner_json_contract_smoke.py\n```\n\nSmoke cases:\n\n```text\nvalid_recommendation -> accepted\ncontext_echo -> classified as context_echo_detected\nmalformed_json -> classified as json_parse_failure\n```\n\n## Why this matters\n\nThe project-complete AI-to-AI run showed:\n\n```text\nGPU/Ollama provider execution completed\nround_count=24\njson_parse_error_count=16\nrepair_attempt_count=18\nrecommendation_count=0\nevidence_ready_for_manual_patch_count=12\nempty_recommendations_reason=repair_attempt_failed\n```\n\nThe included raw preview also showed the model returning a `files` payload with `content_preview` entries instead of the expected recommendation object. That is not only invalid JSON recovery; it is a task-shape failure.\n\n## New classifications\n\n```text\njson_parse_failure\ncontext_echo_detected\nmodel_output_schema_mismatch\nevidence_ready_but_no_gpu_plan\nvalid_json_empty_recommendations\n```\n\n## Intended integration path\n\nThis PR deliberately adds a reusable helper and smoke first.\n\nNext integration step:\n\n```text\nreplace local duplicated GPU parse/classification code with gpu_planner_json_contract.validate_model_response_contract\n```\n\nTarget files:\n\n```text\nTools/ai/run_agent_gpu_deep_planning_review.py\nTools/ai/run_agent_gpu_deep_planning_supervised.py\n```\n\n## Guardrails\n\n```text\nno provider/model setting changes\nno automatic patch application\nno source writes through patch runner\nno Blender runtime execution\nno raw output/** commit\nmanual review required\n```\n"
+    }
+  ],
+  "included_artifact_policy": {
+    "auto_include_related_artifacts": true,
+    "max_included_artifact_chars": 12000,
+    "max_included_artifacts": 40,
+    "content_extension_allowlist": [
+      ".cfg",
+      ".csv",
+      ".ini",
+      ".json",
+      ".md",
+      ".ps1",
+      ".py",
+      ".toml",
+      ".txt",
+      ".yaml",
+      ".yml"
+    ],
+    "raw_artifact_deny_prefixes": [
+      "output/ai_context_packs/",
+      "output/ai_pipeline/gpu_deep_planning_parallel_checkpoints/",
+      "output/ai_pipeline/gpu_planner_nonempty_diagnostics_checkpoints",
+      "output/ai_pipeline/gpu_planner_fallback_verify_checkpoints",
+      "output/ai_pipeline/gpu_planner_full_after_fallback_fix_checkpoints",
+      "indexAI/code_chunks/",
+      "indexAI/project_code_chunks/",
+      "renders/"
+    ],
+    "raw_artifact_deny_fragments": [
+      "full_analysis",
+      "analysis_full",
+      ".sqlite",
+      ".db",
+      "_npu_async_audit_context",
+      "_npu_async_audit_npu",
+      "_npu_async_audit_npu_notes"
+    ]
+  },
+  "decision": {
+    "ollama_gpu_primary_advisory": false,
+    "npu_excluded_when_unusable": false,
+    "provider_execution_seen": false,
+    "npu_decode_smoke_passed": false,
+    "selected_chunks_evidence_seen": true,
+    "selected_chunks_built": true,
+    "budget_respected": true,
+    "artifact_manifest_built": true,
+    "included_artifacts_built": true,
+    "included_artifact_count": 2,
+    "patch_plan_summary_seen": false
+  }
+}
