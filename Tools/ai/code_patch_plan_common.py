@@ -2,11 +2,12 @@
 """Shared helpers for report-only code patch-plan tooling.
 
 The helpers in this module are intentionally side-effect-light. They centralize
-path normalization, compact JSON loading, guardrail checks and Markdown writing
-for the code patch-plan lane.
+path normalization, compact JSON loading, line-count evidence loading,
+guardrail checks and Markdown writing for the code patch-plan lane.
 """
 from __future__ import annotations
 
+import csv
 import json
 import sys
 from datetime import datetime
@@ -77,6 +78,39 @@ def read_json_object(path: Path, *, missing_is_error: bool = True) -> tuple[dict
     if not isinstance(data, dict):
         return {}, ["root JSON value must be an object"]
     return data, []
+
+
+def load_line_counts(repo_root: Path, csv_path: Path) -> tuple[dict[str, int], list[str]]:
+    """Load optional line-count CSV evidence as a sizing hint."""
+    warnings: list[str] = []
+    counts: dict[str, int] = {}
+    if not csv_path.exists():
+        warnings.append(f"line-count CSV missing: {repo_rel(repo_root, csv_path)}")
+        return counts, warnings
+    try:
+        with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
+            reader = csv.DictReader(handle)
+            for row in reader:
+                path = normalize_repo_path(row.get("Path") or row.get("File"))
+                raw_lines = row.get("Lines") or row.get("lines")
+                if not path or raw_lines is None:
+                    continue
+                try:
+                    counts[path] = int(str(raw_lines).strip())
+                except ValueError:
+                    continue
+    except OSError as exc:
+        warnings.append(f"unable to read line-count CSV: {type(exc).__name__}: {exc}")
+    return counts, warnings
+
+
+def line_count_for(path_value: str, counts: dict[str, int]) -> int | None:
+    """Return a CSV line-count hint, including suffix matching for absolute CSV paths."""
+    normalized = normalize_repo_path(path_value)
+    if normalized in counts:
+        return counts[normalized]
+    matches = [lines for path, lines in counts.items() if normalize_repo_path(path).endswith(normalized)]
+    return matches[0] if len(matches) == 1 else None
 
 
 def compact_text(value: Any, limit: int = MAX_TEXT_CHARS) -> str:
