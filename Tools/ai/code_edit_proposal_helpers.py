@@ -70,7 +70,8 @@ def default_validation_commands_for(path_value: str) -> list[str]:
     """Return default validators for a target file."""
     commands = list(DEFAULT_CODE_VALIDATION_COMMANDS)
     if Path(path_value).suffix.lower() == ".py":
-        commands.insert(0, f"python -m py_compile .\\{path_value.replace('/', '\\')}")
+        ps_path = path_value.replace("/", "\\")
+        commands.insert(0, f"python -m py_compile .\\{ps_path}")
     return commands
 
 
@@ -198,14 +199,15 @@ def build_code_edit_proposal(
 
 def proposal_summary(proposal: dict[str, Any]) -> dict[str, Any]:
     """Return compact summary for evidence bundles."""
+    metadata = proposal.get("target_metadata") if isinstance(proposal.get("target_metadata"), dict) else {}
     return {
         "id": proposal.get("id"),
         "target_file": proposal.get("target_file"),
         "edit_kind": proposal.get("edit_kind"),
         "manual_review_required": proposal.get("manual_review_required"),
         "ready_for_manual_review": proposal.get("ready_for_manual_review"),
-        "target_sha256": (proposal.get("target_metadata") or {}).get("sha256") if isinstance(proposal.get("target_metadata"), dict) else None,
-        "target_line_count": (proposal.get("target_metadata") or {}).get("line_count") if isinstance(proposal.get("target_metadata"), dict) else None,
+        "target_sha256": metadata.get("sha256"),
+        "target_line_count": metadata.get("line_count"),
         "rationale": compact_text(proposal.get("rationale"), 1000),
         "edit_strategy": compact_text(proposal.get("edit_strategy"), 1000),
         "validation_commands": proposal.get("validation_commands", []),
