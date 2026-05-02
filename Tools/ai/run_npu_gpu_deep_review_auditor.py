@@ -79,13 +79,77 @@ def compact_json(data: Any, max_chars: int) -> str:
     return text
 
 
+
+def summarize_runtime_tool_context_report(path: Path, repo_root: Path, max_chars: int) -> dict[str, Any]:
+    item: dict[str, Any] = {
+        "path": repo_rel(path, repo_root),
+        "exists": path.exists(),
+        "json_ok": False,
+    }
+    if not path.exists() or not path.is_file():
+        return item
+    try:
+        data = read_json(path)
+    except Exception as exc:  # noqa: BLE001 - context summary must be non-blocking.
+        item["read_error"] = f"{type(exc).__name__}: {exc}"
+        return item
+    item["json_ok"] = True
+    tool_results = data.get("tool_results") if isinstance(data.get("tool_results"), list) else []
+    item.update(
+        {
+            "kind": data.get("kind"),
+            "passed": data.get("passed"),
+            "tool_request_count": data.get("tool_request_count"),
+            "tool_execution_count": data.get("tool_execution_count"),
+            "blocked_tool_count": data.get("blocked_tool_count"),
+            "failed_tool_count": data.get("failed_tool_count"),
+            "provider_execution_performed": data.get("provider_execution_performed"),
+            "patch_application_performed": data.get("patch_application_performed"),
+            "sqlite_write_performed": data.get("sqlite_write_performed"),
+            "persistent_memory_write_performed": data.get("persistent_memory_write_performed"),
+            "operational_sqlite_write_performed": data.get("operational_sqlite_write_performed"),
+            "guardrails": data.get("guardrails", {}),
+            "tool_results": [
+                {
+                    "id": result.get("id"),
+                    "tool": result.get("tool"),
+                    "executed": result.get("executed"),
+                    "blocked": result.get("blocked"),
+                    "returncode": result.get("returncode"),
+                    "outputs": result.get("outputs", {}),
+                }
+                for result in tool_results[:24]
+                if isinstance(result, dict)
+            ],
+        }
+    )
+    rendered = json.dumps(item, ensure_ascii=False, default=str)
+    if len(rendered) > max_chars:
+        item["truncated"] = True
+        item["tool_results"] = item.get("tool_results", [])[:8]
+    return item
+
+
+def load_runtime_tool_context_reports(repo_root: Path, values: list[str], max_chars: int) -> list[dict[str, Any]]:
+    reports: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for value in values:
+        path = resolve_path(repo_root, value)
+        key = str(path)
+        if key in seen:
+            continue
+        seen.add(key)
+        reports.append(summarize_runtime_tool_context_report(path, repo_root, max_chars))
+    return reports
+
 def npu_python_path(value: str | None) -> Path:
     if value:
         return Path(value).expanduser()
     return Path(os.environ.get("SPAZIOTEMPO_NPU_PYTHON", str(DEFAULT_NPU_PYTHON))).expanduser()
 
 
-def build_context(gpu_review: dict[str, Any]) -> str:
+def build_context(gpu_review: dict[str, Any], runtime_tool_context_reports: list[dict[str, Any]] | None = None) -> str:
+    runtime_tool_context_reports = runtime_tool_context_reports or []
     recommendations = gpu_review.get("recommendations", [])
     decision = gpu_review.get("decision", {})
     rounds = gpu_review.get("rounds", [])
@@ -118,6 +182,16 @@ def build_context(gpu_review: dict[str, Any]) -> str:
             "recommendation_count": gpu_review.get("recommendation_count"),
             "decision": decision,
             "guardrails": gpu_review.get("guardrails", {}),
+        },
+        "runtime_toolbox_context": {
+            "seen": bool(runtime_tool_context_reports),
+            "report_count": len(runtime_tool_context_reports),
+            "reports": runtime_tool_context_reports,
+            "instructions": [
+                "Use this shared toolbox context as evidence for audit, not as authority to execute tools directly.",
+                "The NPU auditor remains non-blocking and must not apply patches.",
+                "Any further tool execution must be requested through the runtime broker/orchestrator layer.",
+            ],
         },
         "recommendations": recommendations,
         "rounds": compact_rounds,
@@ -206,8 +280,13 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
     npu_notes = resolve_path(repo_root, args.npu_notes_output)
     npu_metadata = resolve_path(repo_root, args.npu_metadata_output)
     npu_python = npu_python_path(args.npu_python)
+    runtime_tool_context_reports = load_runtime_tool_context_reports(
+        repo_root,
+        args.runtime_tool_context_report,
+        args.max_runtime_tool_context_chars,
+    )
     context_path.parent.mkdir(parents=True, exist_ok=True)
-    context_path.write_text(build_context(gpu_review), encoding="utf-8")
+    context_path.write_text(build_context(gpu_review, runtime_tool_context_reports), encoding="utf-8")
 
     command = [
         str(npu_python),
@@ -288,6 +367,9 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
         "npu_python_exists": npu_python_exists,
         "patch_application_performed": False,
         "source_writes_performed": False,
+        "runtime_tool_context_seen": bool(runtime_tool_context_reports),
+        "runtime_tool_context_report_count": len(runtime_tool_context_reports),
+        "runtime_tool_context_reports": runtime_tool_context_reports,
         "apply_mode": "report_only_non_blocking_npu_audit",
         "non_blocking": True,
         "blocking": False,
@@ -321,6 +403,8 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             "npu_dependency_missing": dep_missing,
             "npu_provider_empty_response": provider_empty_response,
             "npu_python_missing": not npu_python_exists,
+            "runtime_tool_context_seen": bool(runtime_tool_context_reports),
+            "runtime_tool_context_report_count": len(runtime_tool_context_reports),
             "recommendation": "continue_manual_review; treat NPU audit as non-blocking guardrail signal only",
         },
         "guardrails": {
@@ -331,6 +415,8 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             "real_github_pr_created": False,
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
+            "runtime_toolbox_context_read_only": True,
+            "runtime_toolbox_execution_requires_broker": True,
         },
     }
     return report
@@ -349,6 +435,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Dependency missing: `{report['dependency_missing']}`")
     lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Classification: `{report['npu_auditor']['classification']}`")
+    lines.append(f"- Runtime tool context seen: `{report.get('runtime_tool_context_seen')}`")
+    lines.append(f"- Runtime tool context report count: `{report.get('runtime_tool_context_report_count')}`")
     lines.append(f"- GPU review blocked: `{report['decision']['gpu_review_blocked']}`")
     lines.append("")
     if report["warnings"]:
@@ -373,6 +461,8 @@ def main() -> int:
     parser.add_argument("--max-context-chars", type=int, default=42000)
     parser.add_argument("--max-prompt-chars", type=int, default=15000)
     parser.add_argument("--max-new-tokens", type=int, default=900)
+    parser.add_argument("--runtime-tool-context-report", action="append", default=[], help="Broker/toolbox JSON report to include as read-only NPU audit context.")
+    parser.add_argument("--max-runtime-tool-context-chars", type=int, default=6000)
     parser.add_argument("--context-output", default=DEFAULT_CONTEXT)
     parser.add_argument("--npu-output", default=DEFAULT_NPU_OUT)
     parser.add_argument("--npu-notes-output", default=DEFAULT_NPU_NOTES)
@@ -404,6 +494,8 @@ def main() -> int:
                 "patch_application_performed": report["patch_application_performed"],
                 "non_blocking": report["non_blocking"],
                 "classification": report["npu_auditor"]["classification"],
+                "runtime_tool_context_seen": report.get("runtime_tool_context_seen"),
+                "runtime_tool_context_report_count": report.get("runtime_tool_context_report_count"),
                 "gpu_review_blocked": report["decision"]["gpu_review_blocked"],
             },
             indent=2,

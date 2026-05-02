@@ -140,6 +140,25 @@ def build_gpu_command(args: argparse.Namespace, repo_root: Path, checkpoint_dir:
     return command
 
 
+def collect_runtime_tool_context_reports(args: argparse.Namespace, repo_root: Path, round_id: int) -> list[Path]:
+    if not getattr(args, "enable_runtime_tool_broker", False):
+        return []
+    base = resolve_path(repo_root, args.runtime_tool_output_dir)
+    candidates = [
+        base / "round_000" / "round_000_runtime_tool_broker.json",
+        base / f"round_{round_id:03d}" / f"round_{round_id:03d}_runtime_tool_broker.json",
+    ]
+    reports: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = str(candidate.resolve(strict=False))
+        if key in seen or not candidate.exists():
+            continue
+        seen.add(key)
+        reports.append(candidate)
+    return reports
+
+
 def build_npu_command(args: argparse.Namespace, repo_root: Path, checkpoint: Path, audit_json: Path) -> list[str]:
     command = [
         sys.executable,
@@ -169,6 +188,9 @@ def build_npu_command(args: argparse.Namespace, repo_root: Path, checkpoint: Pat
         "--max-new-tokens",
         str(args.npu_max_new_tokens),
     ]
+    round_id = checkpoint_round(checkpoint) or 0
+    for context_report in collect_runtime_tool_context_reports(args, repo_root, round_id):
+        command.extend(["--runtime-tool-context-report", str(context_report)])
     if args.run_npu_auditor_provider:
         command.append("--run-npu")
     else:
@@ -251,6 +273,8 @@ def harvest_finished_audits(
                                 "provider_execution_performed": data.get("provider_execution_performed", nested.get("provider_execution_performed")),
                                 "dependency_missing": data.get("dependency_missing", nested.get("dependency_missing")),
                                 "warnings": data.get("warnings", []),
+                                "runtime_tool_context_seen": data.get("runtime_tool_context_seen"),
+                                "runtime_tool_context_report_count": data.get("runtime_tool_context_report_count"),
                                 "gpu_review_blocked": data.get("decision", {}).get("gpu_review_blocked"),
                             }
                         )
@@ -270,6 +294,7 @@ def build_markdown(report: dict[str, Any]) -> str:
         "elapsed_seconds",
         "npu_audit_count",
         "npu_audit_success_count",
+        "npu_tool_context_seen_count",
         "gpu_recommendation_count",
         "gpu_empty_recommendations_reason",
         "gpu_evidence_ready_for_manual_patch_count",
@@ -354,6 +379,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         errors.append(f"GPU output missing: {repo_rel(gpu_output, repo_root)}")
 
     npu_success_count = sum(1 for item in audit_records if item.get("provider_execution_succeeded") is True or item.get("classification") == "usable_audit_text")
+    npu_tool_context_seen_count = sum(1 for item in audit_records if item.get("runtime_tool_context_seen") is True)
     gpu_recommendation_count = gpu_report.get("recommendation_count")
     gpu_empty_recommendations_reason = gpu_report.get("empty_recommendations_reason", "")
     gpu_evidence_ready_count = gpu_report.get("evidence_ready_for_manual_patch_count", 0)
@@ -426,11 +452,13 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "checkpoint_dir": repo_rel(checkpoint_dir, repo_root),
         "npu_audit_count": len(audit_records),
         "npu_audit_success_count": npu_success_count,
+        "npu_tool_context_seen_count": npu_tool_context_seen_count,
         "npu_audits": audit_records,
         "decision": {
             "gpu_review_blocked_by_npu": False,
             "npu_auditor_mode": "parallel_best_effort",
             "npu_audit_success_count": npu_success_count,
+            "npu_tool_context_seen_count": npu_tool_context_seen_count,
             "ready_for_patch_plan": bool(gpu_report.get("decision", {}).get("ready_for_patch_plan")),
             "fallback_patch_plan_recommended": bool(gpu_report.get("decision", {}).get("fallback_patch_plan_recommended")),
             "recommended_next_layer": gpu_recommended_next_layer,
@@ -524,6 +552,7 @@ def main() -> int:
         "runtime_tool_result_count": report.get("runtime_tool_result_count"),
         "npu_audit_count": report["npu_audit_count"],
         "npu_audit_success_count": report["npu_audit_success_count"],
+        "npu_tool_context_seen_count": report.get("npu_tool_context_seen_count"),
         "gpu_review_blocked_by_npu": report["decision"]["gpu_review_blocked_by_npu"],
     }, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2
