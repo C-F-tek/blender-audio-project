@@ -37,6 +37,16 @@ OPTIONAL_CONTEXT_DECISION_FIELDS = (
     "budget_respected",
 )
 
+OPTIONAL_ARTIFACT_DECISION_FIELDS = (
+    "artifact_manifest_built",
+    "included_artifacts_built",
+    "patch_plan_summary_seen",
+)
+
+OPTIONAL_COUNT_DECISION_FIELDS = (
+    "included_artifact_count",
+)
+
 REQUIRED_REPORT_FIELDS = (
     "path",
     "exists",
@@ -122,6 +132,32 @@ def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     return data, None
 
 
+def validate_optional_boolean_decision_fields(
+    decision: dict[str, Any],
+    fields: tuple[str, ...],
+    warnings: list[str],
+) -> dict[str, bool]:
+    checks: dict[str, bool] = {}
+    for field in fields:
+        checks[field] = field in decision
+        if field in decision and not isinstance(decision[field], bool):
+            warnings.append(f"decision.{field} should be a boolean")
+    return checks
+
+
+def validate_optional_count_decision_fields(
+    decision: dict[str, Any],
+    fields: tuple[str, ...],
+    warnings: list[str],
+) -> dict[str, bool]:
+    checks: dict[str, bool] = {}
+    for field in fields:
+        checks[field] = field in decision
+        if field in decision and not isinstance(decision[field], int):
+            warnings.append(f"decision.{field} should be an integer")
+    return checks
+
+
 def validate_decision(decision: Any) -> tuple[dict[str, bool], list[str], list[str]]:
     checks: dict[str, bool] = {}
     errors: list[str] = []
@@ -144,10 +180,9 @@ def validate_decision(decision: Any) -> tuple[dict[str, bool], list[str], list[s
         elif not isinstance(decision[field], bool):
             warnings.append(f"decision.{field} should be a boolean")
 
-    for field in OPTIONAL_CONTEXT_DECISION_FIELDS:
-        checks[field] = field in decision
-        if field in decision and not isinstance(decision[field], bool):
-            warnings.append(f"decision.{field} should be a boolean")
+    checks.update(validate_optional_boolean_decision_fields(decision, OPTIONAL_CONTEXT_DECISION_FIELDS, warnings))
+    checks.update(validate_optional_boolean_decision_fields(decision, OPTIONAL_ARTIFACT_DECISION_FIELDS, warnings))
+    checks.update(validate_optional_count_decision_fields(decision, OPTIONAL_COUNT_DECISION_FIELDS, warnings))
 
     return checks, errors, warnings
 
