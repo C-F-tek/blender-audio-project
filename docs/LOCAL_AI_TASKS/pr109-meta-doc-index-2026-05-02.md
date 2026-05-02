@@ -10,10 +10,11 @@ Use this file as the first read when resuming locally.
 
 ```text
 1. docs/LOCAL_AI_TASKS/pr109-pre-return-status-2026-05-02.md
-2. docs/LOCAL_AI_TASKS/pr109-evidence-flow.md
-3. docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md
-4. docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md
-5. docs/LOCAL_AI_TASKS/open-issue-triage-2026-05-02.md
+2. docs/LOCAL_AI_TASKS/pr109-docs-only-phase-log-2026-05-02.md
+3. docs/LOCAL_AI_TASKS/pr109-evidence-flow.md
+4. docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md
+5. docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md
+6. docs/LOCAL_AI_TASKS/open-issue-triage-2026-05-02.md
 ```
 
 ## File purposes
@@ -25,6 +26,14 @@ single-page snapshot
 current PR stack
 hard blocker
 what to do / what not to do at workstation
+```
+
+### `pr109-docs-only-phase-log-2026-05-02.md`
+
+```text
+GitHub-only docs/metadata phase boundary
+completed docs-only tasks
+explicit stop condition before local validation resumes
 ```
 
 ### `pr109-evidence-flow.md`
