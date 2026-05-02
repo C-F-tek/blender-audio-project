@@ -4,6 +4,33 @@ from __future__ import annotations
 
 from typing import Any
 
+REPORT_ENTRY_FIELDS = (
+    ("provider_execution_performed", "Provider execution performed"),
+    ("patch_application_performed", "Patch application performed"),
+    ("source_writes_performed", "Source writes performed"),
+    ("patch_plan_count", "Patch plan count"),
+    ("recommendation_count", "Recommendation count"),
+    ("recommended_next_layer", "Recommended next layer"),
+    ("selected_count", "Selected count"),
+    ("total_selected_chars", "Total selected chars"),
+    ("max_total_chars", "Max total chars"),
+    ("usable_lanes", "Usable lanes"),
+    ("unusable_lanes", "Unusable lanes"),
+    ("primary_advisory_provider", "Primary advisory provider"),
+    ("python_exe", "Python executable"),
+)
+REPORT_DETAIL_FIELDS = (("errors", "Errors"), ("warnings", "Warnings"), ("routing", "Routing"), ("decision", "Decision"), ("ollama", "Ollama"))
+
+
+def append_report_summary_fields(lines: list[str], summary: dict[str, Any]) -> None:
+    """Append compact scalar/detail fields for a report summary."""
+    for field, label in REPORT_ENTRY_FIELDS:
+        if summary.get(field) is not None:
+            lines.append(f"- {label}: `{summary.get(field)}`")
+    for field, label in REPORT_DETAIL_FIELDS:
+        if summary.get(field):
+            lines.append(f"- {label}: `{summary.get(field)}`")
+
 
 def render_report_entry(lines: list[str], item: dict[str, Any]) -> None:
     """Append one report/selected-chunks entry to Markdown lines."""
@@ -14,26 +41,7 @@ def render_report_entry(lines: list[str], item: dict[str, Any]) -> None:
     lines.append(f"- JSON OK: `{item['json_ok']}`")
     lines.append(f"- Kind: `{item.get('kind')}`")
     lines.append(f"- Passed: `{item.get('passed')}`")
-    for field, label in (
-        ("provider_execution_performed", "Provider execution performed"),
-        ("patch_application_performed", "Patch application performed"),
-        ("source_writes_performed", "Source writes performed"),
-        ("patch_plan_count", "Patch plan count"),
-        ("recommendation_count", "Recommendation count"),
-        ("recommended_next_layer", "Recommended next layer"),
-        ("selected_count", "Selected count"),
-        ("total_selected_chars", "Total selected chars"),
-        ("max_total_chars", "Max total chars"),
-        ("usable_lanes", "Usable lanes"),
-        ("unusable_lanes", "Unusable lanes"),
-        ("primary_advisory_provider", "Primary advisory provider"),
-        ("python_exe", "Python executable"),
-    ):
-        if summary.get(field) is not None:
-            lines.append(f"- {label}: `{summary.get(field)}`")
-    for field, label in (("errors", "Errors"), ("warnings", "Warnings"), ("routing", "Routing"), ("decision", "Decision"), ("ollama", "Ollama")):
-        if summary.get(field):
-            lines.append(f"- {label}: `{summary.get(field)}`")
+    append_report_summary_fields(lines, summary)
     patch_plan_summary = summary.get("patch_plan_summary") or {}
     if patch_plan_summary:
         lines.append(f"- Patch plan summary count: `{patch_plan_summary.get('patch_plan_count')}`")
@@ -42,14 +50,20 @@ def render_report_entry(lines: list[str], item: dict[str, Any]) -> None:
     lines.append("")
 
 
-def render_patch_plan_summary(lines: list[str], bundle: dict[str, Any]) -> None:
-    """Append compact patch-plan summaries to Markdown lines."""
+def patch_plan_summary_entries(bundle: dict[str, Any]) -> list[tuple[dict[str, Any], dict[str, Any]]]:
+    """Return report entries that contain patch-plan summaries."""
     entries: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for item in bundle.get("reports", []):
         summary = item.get("summary", {}) if isinstance(item.get("summary"), dict) else {}
         patch_plan_summary = summary.get("patch_plan_summary") if isinstance(summary.get("patch_plan_summary"), dict) else {}
         if patch_plan_summary:
             entries.append((item, patch_plan_summary))
+    return entries
+
+
+def render_patch_plan_summary(lines: list[str], bundle: dict[str, Any]) -> None:
+    """Append compact patch-plan summaries to Markdown lines."""
+    entries = patch_plan_summary_entries(bundle)
     if not entries:
         return
     lines.append("## Patch plan summary")
