@@ -31,12 +31,21 @@ selected artifact contents
 related Markdown/CSV/JSON outputs
 auto-discovered sibling artifacts
 explicit artifacts selected by the user
+native code patch-plan summaries
 ```
 
-## Tool
+## Tools
+
+Primary bundle builder:
 
 ```text
 Tools/ai/build_github_evidence_bundle.py
+```
+
+Code patch-plan enrichment post-processor:
+
+```text
+Tools/ai/enrich_github_evidence_bundle_code_plan.py
 ```
 
 Relevant bundle options:
@@ -60,6 +69,7 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $Reports = @(
   ".\output\validation\python_syntax_macro.json",
   ".\output\validation\python_line_count_macro.json",
+  ".\output\analysis\code_interpreter_report_macro.json",
   ".\output\validation\artifact_domain_registry_macro.json",
   ".\output\validation\docs_links_macro.json",
   ".\output\validation\markdown_command_hygiene_macro.json",
@@ -111,6 +121,59 @@ python .\Tools\ai\build_github_evidence_bundle.py `
 
 This keeps raw output files local while preserving review-critical content in a bounded Git-trackable bundle.
 
+## Enrich a bundle with native code patch-plan summary
+
+Use this after generating a bundle that references an `agent_review_code_patch_plan` report, especially the static code plan report.
+
+```powershell
+python .\Tools\ai\enrich_github_evidence_bundle_code_plan.py `
+  --repo-root . `
+  --bundle ".\docs\LOCAL_VALIDATION_EVIDENCE\pr109_static_code_plan_bundle_$Stamp.json"
+```
+
+Expected decision fields after enrichment:
+
+```text
+patch_plan_summary_seen = true
+code_patch_plan_summary_enriched_count >= 1
+```
+
+The Markdown bundle should also include a native `Patch plan summary` section for the `agent_review_code_patch_plan` report.
+
+## Static code plan bundle example
+
+```powershell
+$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+
+$Reports = @(
+  ".\output\validation\python_syntax_pr109.json",
+  ".\output\analysis\code_interpreter_report_pr109.json",
+  ".\output\validation\artifact_domain_registry_pr109.json",
+  ".\output\validation\agent_review_code_patch_plan_with_static_smoke_pr109.json",
+  ".\output\validation\code_edit_proposal_from_plan_smoke_pr109.json",
+  ".\output\validation\code_patch_artifact_pack_static_pr109.json",
+  ".\output\validation\python_line_count_pr109.json",
+  ".\output\patch_specs\agent_review_code_patch_plan_with_static_pr109.json"
+) | Where-Object { Test-Path $_ }
+
+python .\Tools\ai\build_github_evidence_bundle.py `
+  --repo-root . `
+  --basename pr109_static_code_plan_bundle_$Stamp `
+  --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
+  --report ($Reports -join ',') `
+  --artifact .\output\analysis\code_interpreter_report_pr109.md `
+  --artifact .\output\patch_specs\agent_review_code_patch_plan_with_static_pr109.md `
+  --artifact .\output\patch_specs\code_edit_proposal_from_plan_pr109.md `
+  --artifact .\docs\TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md `
+  --artifact .\docs\AGENT_REVIEW_CODE_PATCH_PLAN.md `
+  --max-included-artifact-chars 12000 `
+  --max-included-artifacts 80
+
+python .\Tools\ai\enrich_github_evidence_bundle_code_plan.py `
+  --repo-root . `
+  --bundle ".\docs\LOCAL_VALIDATION_EVIDENCE\pr109_static_code_plan_bundle_$Stamp.json"
+```
+
 ## Disable auto-related inclusion
 
 Use this when you want only explicitly selected artifacts:
@@ -158,6 +221,7 @@ Stop if:
 
 ```text
 bundle validation fails
+code patch-plan enrichment fails
 bundle includes blocked full_analysis / analysis_full / SQLite / DB content
 raw output/** files are staged directly
 the included artifact payload becomes too large for review
