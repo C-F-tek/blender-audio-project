@@ -100,6 +100,17 @@ def validate_source_plan_report(report: dict[str, Any]) -> list[str]:
     return errors
 
 
+def plan_list_or_none(plan: dict[str, Any], field: str) -> list[Any] | None:
+    """Return a list-valued plan field when present."""
+    value = plan.get(field)
+    return value if isinstance(value, list) else None
+
+
+def proposal_id_for(plan: dict[str, Any]) -> str:
+    """Return the generated proposal id for a selected plan."""
+    return f"code_edit_from_{plan.get('id') or 'plan'}"
+
+
 def build_report(
     repo_root: Path,
     source_path: Path,
@@ -200,18 +211,17 @@ def build_code_edit_from_plan(
         diff_text, operations, payload_warnings = infer_edit_payload(selected_plan, edit_kind, unified_diff, structured_operations)
         warnings.extend(payload_warnings)
         if target_file:
-            proposal_id = f"code_edit_from_{selected_plan.get('id') or 'plan'}"
             proposal, proposal_errors, proposal_warnings = build_code_edit_proposal(
                 repo_root,
-                proposal_id=proposal_id,
+                proposal_id=proposal_id_for(selected_plan),
                 target_file=target_file,
                 rationale=str(selected_plan.get("rationale") or "Generated from code patch plan."),
                 edit_strategy=str(selected_plan.get("edit_strategy") or "Review the source plan and apply a minimal manual edit."),
                 edit_kind=edit_kind,
                 unified_diff=diff_text,
                 structured_operations=operations,
-                validation_commands=selected_plan.get("validation_commands") if isinstance(selected_plan.get("validation_commands"), list) else None,
-                stop_conditions=selected_plan.get("stop_conditions") if isinstance(selected_plan.get("stop_conditions"), list) else None,
+                validation_commands=plan_list_or_none(selected_plan, "validation_commands"),
+                stop_conditions=plan_list_or_none(selected_plan, "stop_conditions"),
             )
             errors.extend(proposal_errors)
             warnings.extend(proposal_warnings)
