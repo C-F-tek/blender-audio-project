@@ -501,6 +501,7 @@ def main() -> int:
     parser.add_argument("--runtime-tool-output-dir", default="output/ai_runtime_tools/gpu_planner_runtime_tools")
     parser.add_argument("--runtime-tool-timeout-seconds", type=int, default=300)
     parser.add_argument("--runtime-tool-max-requests-per-round", type=int, default=8)
+    parser.add_argument("--disable-runtime-tool-bootstrap", action="store_true")
     parser.add_argument("--run-npu-auditor-provider", action="store_true")
     parser.add_argument("--npu-python", default=None)
     parser.add_argument("--npu-auditor-every-rounds", type=int, default=4)
