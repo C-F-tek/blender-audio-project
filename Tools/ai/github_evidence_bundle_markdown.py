@@ -20,6 +20,22 @@ REPORT_ENTRY_FIELDS = (
     ("python_exe", "Python executable"),
 )
 REPORT_DETAIL_FIELDS = (("errors", "Errors"), ("warnings", "Warnings"), ("routing", "Routing"), ("decision", "Decision"), ("ollama", "Ollama"))
+PATCH_PLAN_SUMMARY_FIELDS = (
+    ("patch_plan_count", "Patch plan count"),
+    ("fallback_used", "Fallback used"),
+    ("manual_review_required", "Manual review required"),
+    ("provider_execution_performed", "Provider execution performed"),
+    ("patch_application_performed", "Patch application performed"),
+    ("source_writes_performed", "Source writes performed"),
+)
+PATCH_PLAN_DETAIL_FIELDS = (
+    ("source", "Source"),
+    ("risk", "Risk"),
+    ("status", "Status"),
+    ("target_files", "Target files"),
+    ("rationale", "Rationale"),
+    ("edit_strategy", "Strategy"),
+)
 
 
 def append_report_summary_fields(lines: list[str], summary: dict[str, Any]) -> None:
@@ -30,6 +46,24 @@ def append_report_summary_fields(lines: list[str], summary: dict[str, Any]) -> N
     for field, label in REPORT_DETAIL_FIELDS:
         if summary.get(field):
             lines.append(f"- {label}: `{summary.get(field)}`")
+
+
+def append_patch_plan_summary_fields(lines: list[str], patch_plan_summary: dict[str, Any]) -> None:
+    """Append scalar patch-plan summary fields."""
+    for field, label in PATCH_PLAN_SUMMARY_FIELDS:
+        lines.append(f"- {label}: `{patch_plan_summary.get(field)}`")
+
+
+def append_patch_plan_detail_fields(lines: list[str], plan: dict[str, Any]) -> None:
+    """Append one compact patch-plan item."""
+    lines.append(f"#### {plan.get('id')} — {plan.get('area')}")
+    for field, label in PATCH_PLAN_DETAIL_FIELDS:
+        value = plan.get(field)
+        if field in {"source", "risk", "status"}:
+            lines.append(f"- {label}: `{value}`")
+        else:
+            lines.append(f"- {label}: {value}")
+    lines.append("")
 
 
 def render_report_entry(lines: list[str], item: dict[str, Any]) -> None:
@@ -71,24 +105,11 @@ def render_patch_plan_summary(lines: list[str], bundle: dict[str, Any]) -> None:
     for item, patch_plan_summary in entries:
         lines.append(f"### `{item.get('path')}`")
         lines.append("")
-        lines.append(f"- Patch plan count: `{patch_plan_summary.get('patch_plan_count')}`")
-        lines.append(f"- Fallback used: `{patch_plan_summary.get('fallback_used')}`")
-        lines.append(f"- Manual review required: `{patch_plan_summary.get('manual_review_required')}`")
-        lines.append(f"- Provider execution performed: `{patch_plan_summary.get('provider_execution_performed')}`")
-        lines.append(f"- Patch application performed: `{patch_plan_summary.get('patch_application_performed')}`")
-        lines.append(f"- Source writes performed: `{patch_plan_summary.get('source_writes_performed')}`")
+        append_patch_plan_summary_fields(lines, patch_plan_summary)
         lines.append("")
         for plan in patch_plan_summary.get("plans", []):
-            if not isinstance(plan, dict):
-                continue
-            lines.append(f"#### {plan.get('id')} — {plan.get('area')}")
-            lines.append(f"- Source: `{plan.get('source')}`")
-            lines.append(f"- Risk: `{plan.get('risk')}`")
-            lines.append(f"- Status: `{plan.get('status')}`")
-            lines.append(f"- Target files: `{plan.get('target_files')}`")
-            lines.append(f"- Rationale: {plan.get('rationale')}")
-            lines.append(f"- Strategy: {plan.get('edit_strategy')}")
-            lines.append("")
+            if isinstance(plan, dict):
+                append_patch_plan_detail_fields(lines, plan)
         lines.append("")
 
 
@@ -134,29 +155,35 @@ def render_included_artifacts(lines: list[str], bundle: dict[str, Any]) -> None:
         lines.append("")
 
 
-def render_markdown(bundle: dict[str, Any]) -> str:
-    """Render the full evidence bundle Markdown companion."""
-    lines = ["# Local Validation Evidence Bundle", ""]
-    lines.append(f"- Generated at: `{bundle['generated_at']}`")
-    lines.append(f"- Kind: `{bundle['kind']}`")
-    lines.append("")
+def render_decision_summary(lines: list[str], bundle: dict[str, Any]) -> None:
+    """Append the top-level decision summary."""
     lines.append("## Decision summary")
     for key, value in bundle["decision"].items():
         lines.append(f"- `{key}`: `{value}`")
     lines.append("")
+
+
+def render_reports(lines: list[str], bundle: dict[str, Any]) -> None:
+    """Append report entries."""
     lines.append("## Reports")
     lines.append("")
     for item in bundle["reports"]:
         render_report_entry(lines, item)
-    render_patch_plan_summary(lines, bundle)
-    render_artifact_manifest(lines, bundle)
-    render_included_artifacts(lines, bundle)
+
+
+def render_selected_chunks(lines: list[str], bundle: dict[str, Any]) -> None:
+    """Append selected-chunks evidence entries when present."""
     selected = bundle.get("selected_chunks_evidence") or []
-    if selected:
-        lines.append("## Selected chunks evidence")
-        lines.append("")
-        for item in selected:
-            render_report_entry(lines, item)
+    if not selected:
+        return
+    lines.append("## Selected chunks evidence")
+    lines.append("")
+    for item in selected:
+        render_report_entry(lines, item)
+
+
+def render_git_push_helper(lines: list[str]) -> None:
+    """Append the Git push helper block."""
     lines.append("## Git push helper")
     lines.append("")
     lines.append("```powershell")
@@ -164,4 +191,19 @@ def render_markdown(bundle: dict[str, Any]) -> str:
     lines.append('git commit -m "test: add local ai workflow evidence bundle"')
     lines.append("git push")
     lines.append("```")
+
+
+def render_markdown(bundle: dict[str, Any]) -> str:
+    """Render the full evidence bundle Markdown companion."""
+    lines = ["# Local Validation Evidence Bundle", ""]
+    lines.append(f"- Generated at: `{bundle['generated_at']}`")
+    lines.append(f"- Kind: `{bundle['kind']}`")
+    lines.append("")
+    render_decision_summary(lines, bundle)
+    render_reports(lines, bundle)
+    render_patch_plan_summary(lines, bundle)
+    render_artifact_manifest(lines, bundle)
+    render_included_artifacts(lines, bundle)
+    render_selected_chunks(lines, bundle)
+    render_git_push_helper(lines)
     return "\n".join(lines) + "\n"
