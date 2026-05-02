@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "kind": "github_validation_evidence_bundle",
+  "generated_at": "2026-05-02T19:29:16",
+  "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "source_reports": [
+    "output/validation/python_syntax_pr109_after_wiring.json",
+    "output/analysis/code_interpreter_report_pr109_after_wiring.json"
+  ],
+  "source_selected_chunks_evidence": [
+    "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json"
+  ],
+  "source_included_artifacts": [
+    "output/analysis/code_interpreter_report_pr109_after_wiring.md",
+    "docs/LOCAL_AI_TASKS/pr109-meta-doc-index-2026-05-02.md",
+    "docs/LOCAL_AI_TASKS/pr109-pre-return-status-2026-05-02.md",
+    "docs/LOCAL_AI_TASKS/pr109-evidence-flow.md"
+  ],
+  "reports": [
+    {
+      "path": "output/validation/python_syntax_pr109_after_wiring.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "python_syntax",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "python_syntax",
+        "passed": true,
+        "provider_execution_performed": null,
+        "patch_application_performed": null,
+        "source_writes_performed": null,
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "path": "output/analysis/code_interpreter_report_pr109_after_wiring.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "code_interpreter_report",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "code_interpreter_report",
+        "passed": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "errors": [],
+        "warnings": [],
+        "manual_review_required": true,
+        "recommendation_count": 64
+      }
+    }
+  ],
+  "selected_chunks_evidence": [
+    {
+      "path": "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "selected_semantic_chunks_evidence",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "selected_semantic_chunks_evidence",
+        "passed": true,
+        "provider_execution_performed": false,
+        "source_writes_performed": false,
+        "selected_count": 24,
+        "total_selected_chars": 28649,
+        "max_chunks": 24,
+        "max_total_chars": 32000,
+        "source_bundle": "output/ai_context_packs/full_context_golden_selected_chunks.json",
+        "source_chunks": "indexAI/code_chunks/semantic_code_chunks.json",
+        "decision": {
+          "selected_chunks_built": true,
+          "budget_respected": true,
+          "provider_execution_seen": false,
+          "source_writes_performed": false,
+          "forbidden_paths_blocked": true
+        },
+        "errors": [],
+        "warnings": []
+      }
+    }
+  ],
+  "artifact_manifest": [
+    {
+      "path": "output/validation/python_syntax_pr109_after_wiring.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 31633,
+      "sha256": "edd47d36a36e45aaabff1b1fcae368846c6dfb17a295f42df37ffe4b0485ad29",
+      "role": "local_artifact_reference",
+      "content_included": true,
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"python_syntax\",\n  \"repo_root\": \"C:/Users/carmi/blender/blender-audio-project\",\n  \"checked_count\": 271,\n  \"failed_count\": 0,\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"excluded\": [\n    \".git\",\n    \".hg\",\n    \".mypy_cache\",\n    \".pytest_cache\",\n    \".repo_patch_backups\",\n    \".ruff_cache\",\n    \".svn\",\n    \".venv\",\n    \"__pycache__\",\n    \"indexAI\",\n    \"output\",\n    \"renders\",\n    \"venv\"\n  ],\n  \"results\": [\n    {\n      \"path\": \"analyze_wav.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"build_track_summary.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"normalize_scene_spec.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"old script legacy/spaziotempo_album_visual_v3.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"old script legacy/spaziotempo_album_visual_v5.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"old script legacy/spaziotempo_asset_visual_v6.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"old script legacy/spaziotempo_asset_visual_v61.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"Scripting/_template_audio_reactive_package/audio_mapping.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"Scripting/_template_audio_reactive_package/camera.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"Scripting/_template_audio_reactive_pack",
+      "preview_chars": 1500,
+      "line_count": 1382
+    },
+    {
+      "path": "output/analysis/code_interpreter_report_pr109_after_wiring.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 661564,
+      "sha256": "8f86d7255eecf2b3a514ce9b0b5a5165a618da39d1dabd26df9edc25d9c78381",
+      "role": "local_artifact_reference",
+      "content_included": true,
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"code_interpreter_report\",\n  \"generated_at\": \"2026-05-02T19:28:26\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"manual_review_required\": true,\n  \"apply_mode\": \"report_only_static_code_interpreter\",\n  \"file_count\": 129,\n  \"parsed_file_count\": 129,\n  \"total_lines\": 33281,\n  \"total_functions\": 1196,\n  \"total_classes\": 29,\n  \"total_risk_signals\": 12,\n  \"total_todos\": 17,\n  \"top_imports\": [\n    {\n      \"module\": \"Tools\",\n      \"count\": 447\n    },\n    {\n      \"module\": \"__future__\",\n      \"count\": 129\n    },\n    {\n      \"module\": \"typing\",\n      \"count\": 122\n    },\n    {\n      \"module\": \"pathlib\",\n      \"count\": 120\n    },\n    {\n      \"module\": \"argparse\",\n      \"count\": 96\n    },\n    {\n      \"module\": \"json\",\n      \"count\": 92\n    },\n    {\n      \"module\": \"report_utils\",\n      \"count\": 68\n    },\n    {\n      \"module\": \"datetime\",\n      \"count\": 55\n    },\n    {\n      \"module\": \"sys\",\n      \"count\": 51\n    },\n    {\n      \"module\": \"dataclasses\",\n      \"count\": 28\n    },\n    {\n      \"module\": \"agent_state\",\n      \"count\": 26\n    },\n    {\n      \"module\": \"re\",\n      \"count\": 20\n    },\n    {\n      \"module\": \"models\",\n      \"count\": 16\n    },\n    {\n      \"module\": \"artifact_contracts\",\n      \"count\": 13\n    },\n    {\n      \"module\": \"pipeline\",\n      \"count\": 13\n",
+      "preview_chars": 1500,
+      "line_count": 25135
+    }
+  ],
+  "included_artifacts": [
+    {
+      "path": "output/analysis/code_interpreter_report_pr109_after_wiring.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 7482,
+      "sha256": "f89c0f4b9983554989f4da8f5bca5177837fa16595207b37ff1215a8aef3163f",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 84,
+      "raw_chars": 7358,
+      "included_chars": 7358,
+      "content": "# Static Code Interpreter Report\n\n- Passed: `True`\n- File count: `129`\n- Parsed files: `129`\n- Total lines: `33281`\n- Total functions: `1196`\n- Total classes: `29`\n- Risk signals: `12`\n- TODO/FIXME markers: `17`\n- Recommendation count: `64`\n- Provider execution performed: `False`\n- Patch application performed: `False`\n- Source writes performed: `False`\n\n## Largest files\n\n- `Tools/ai/run_agent_gpu_deep_planning_review.py` — `714` lines, risk `medium`\n- `Tools/validation/check_npu_pipeline_modules.py` — `627` lines, risk `medium`\n- `Tools/ai/build_selective_execution_plan.py` — `618` lines, risk `medium`\n- `Tools/ai/build_repository_change_proposals.py` — `582` lines, risk `medium`\n- `Tools/ai/build_ai_context_pack.py` — `575` lines, risk `medium`\n- `Tools/ai/run_pipeline_dry_run_matrix.py` — `573` lines, risk `medium`\n- `Tools/ai/build_agent_review_patch_plan.py` — `562` lines, risk `medium`\n- `Tools/ai/suggest_repository_updates.py` — `551` lines, risk `medium`\n- `Tools/ai/agent_state.py` — `544` lines, risk `medium`\n- `Tools/ai/run_megalithic_repo_review.py` — `519` lines, risk `medium`\n- `Tools/ai/build_agent_review_code_patch_plan.py` — `499` lines, risk `medium`\n- `Tools/validation/ai_pipeline_report_contracts.py` — `497` lines, risk `medium`\n- `Tools/ai/refine_megalithic_review_signals.py` — `489` lines, risk `medium`\n- `Tools/validation/run_agent_review_patch_plan_full_validation.py` — `487` lines, risk `medium`\n- `Tools/validation/run_agnostic_ai_tools_smoke_matrix.py` — `483` lines, risk `medium`\n- `Tools/ai/run_agent_gpu_deep_planning_supervised.py` — `478` lines, risk `medium`\n- `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` — `471` lines, risk `medium`\n- `Tools/validation/check_reviewed_patch_specs.py` — `446` lines, risk `medium`\n- `Tools/ai/promote_patch_spec_draft.py` — `442` lines, risk `medium`\n- `Tools/ai/build_code_interpreter_report.py` — `437` lines, risk `medium`\n\n## Recommendations\n\n- `code_static_001` `Tools/ai/agent_memory_policy.py` risk `medium`: complex functions detected\n- `code_static_002` `Tools/ai/agent_state.py` risk `medium`: medium-size Python module\n- `code_static_003` `Tools/ai/build_agent_agnostic_tool_inventory.py` risk `medium`: medium-size Python module, complex functions detected\n- `code_static_004` `Tools/ai/build_agent_memory_inventory.py` risk `medium`: large functions detected\n- `code_static_005` `Tools/ai/build_agent_review_code_patch_plan.py` risk `medium`: medium-size Python module\n- `code_static_006` `Tools/ai/build_agent_review_patch_plan.py` risk `medium`: medium-size Python module, large functions detected, complex functions detected\n- `code_static_007` `Tools/ai/build_ai_context_pack.py` risk `medium`: medium-size Python module, complex functions detected\n- `code_static_008` `Tools/ai/build_code_interpreter_report.py` risk `medium`: medium-size Python module, TODO/FIXME markers detected\n- `code_static_009` `Tools/ai/build_dry_run_matrix_evidence_bundle.py` risk `medium`: complex functions detected\n- `code_static_010` `Tools/ai/build_full_context_golden_proposals.py` risk `medium`: large functions detected\n- `code_static_011` `Tools/ai/build_local_ai_enrichment_plan.py` risk `medium`: large functions detected\n- `code_static_012` `Tools/ai/build_music_intermediates.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_013` `Tools/ai/build_patch_specs_from_proposals.py` risk `medium`: medium-size Python module, large functions detected, complex functions detected\n- `code_static_014` `Tools/ai/build_repository_change_proposals.py` risk `medium`: medium-size Python module, large functions detected, complex functions detected\n- `code_static_015` `Tools/ai/build_selective_execution_plan.py` risk `medium`: medium-size Python module, large functions detected, complex functions detected\n- `code_static_016` `Tools/ai/build_workload_quality_lane_routing.py` risk `medium`: complex functions detected\n- `code_static_017` `Tools/ai/check_local_resource_lanes.py` risk `medium`: complex functions detected\n- `code_static_018` `Tools/ai/check_npu_provider_environment.py` risk `medium`: large functions detected, complex functions detected, static risk calls detected\n- `code_static_019` `Tools/ai/model_json.py` risk `medium`: complex functions detected\n- `code_static_020` `Tools/ai/pipeline/preflight.py` risk `medium`: complex functions detected\n- `code_static_021` `Tools/ai/pipeline/remediation.py` risk `medium`: large functions detected, complex functions detected, TODO/FIXME markers detected\n- `code_static_022` `Tools/ai/pipeline/steps.py` risk `medium`: large functions detected\n- `code_static_023` `Tools/ai/promote_patch_spec_draft.py` risk `medium`: medium-size Python module, large functions detected, complex functions detected\n- `code_static_024` `Tools/ai/refine_megalithic_review_signals.py` risk `medium`: medium-size Python module\n- `code_static_025` `Tools/ai/review_wave_entrypoints.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_026` `Tools/ai/run_agent_gpu_deep_planning_review.py` risk `medium`: medium-size Python module, large functions detected, complex functions detected\n- `code_static_027` `Tools/ai/run_agent_gpu_deep_planning_supervised.py` risk `medium`: medium-size Python module, large functions detected, complex functions detected, static risk calls detected\n- `code_static_028` `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` risk `medium`: medium-size Python module, large functions detected, complex functions detected, static risk calls detected\n- `code_static_029` `Tools/ai/run_local_provider_probe.py` risk `medium`: complex functions detected\n- `code_static_030` `Tools/ai/run_megalithic_repo_review.py` risk `medium`: medium-size Python module, complex functions detected\n- `code_static_031` `Tools/ai/run_npu_decode_smoke_diagnostic.py` risk `medium`: large functions detected, complex functions detected, static risk calls detected\n- `code_static_032` `Tools/ai/run_npu_gpu_deep_review_auditor.py` risk `medium`: medium-size Python module, large functions detected, complex functions detected, static risk calls detected\n- `code_static_033` `Tools/ai/run_pipeline_dry_run_matrix.py` risk `medium`: medium-size Python module, large functions detected, static risk calls detected\n- `code_static_034` `Tools/ai/select_semantic_code_chunks.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_035` `Tools/ai/smart_ai_gatekeeper.py` risk `medium`: complex functions detected, TODO/FIXME markers detected\n- `code_static_036` `Tools/ai/suggest_repository_updates.py` risk `medium`: medium-size Python module, complex functions detected\n- `code_static_037` `Tools/ai/validate_ai_artifacts.py` risk `medium`: complex functions detected\n- `code_static_038` `Tools/validation/ai_pipeline_report_contracts.py` risk `medium`: medium-size Python module, large functions detected, complex functions detected\n- `code_static_039` `Tools/validation/check_ai_context_pack_contract.py` risk `medium`: medium-size Python module, complex functions detected\n- `code_static_040` `Tools/validation/check_ai_dry_run_matrix_cases.py` risk `medium`: large functions detected, complex functions detected\n\n## Guardrail\n\nThis is static interpretation only. It does not execute repository code or apply changes.\n"
+    },
+    {
+      "path": "docs/LOCAL_AI_TASKS/pr109-meta-doc-index-2026-05-02.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 1674,
+      "sha256": "b4571c40e5861187e1f41f7a699bd870bcded3165a79da817e15bf28c10126ff",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 76,
+      "raw_chars": 1672,
+      "included_chars": 1672,
+      "content": "# PR109 meta-documentation index — 2026-05-02\n\n## Purpose\n\nCompact index of PR #109 meta-documents created during GitHub-only preparation.\n\nUse this file as the first read when resuming locally.\n\n## Read order\n\n```text\n1. docs/LOCAL_AI_TASKS/pr109-pre-return-status-2026-05-02.md\n2. docs/LOCAL_AI_TASKS/pr109-docs-only-phase-log-2026-05-02.md\n3. docs/LOCAL_AI_TASKS/pr109-evidence-flow.md\n4. docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md\n5. docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md\n6. docs/LOCAL_AI_TASKS/open-issue-triage-2026-05-02.md\n```\n\n## File purposes\n\n### `pr109-pre-return-status-2026-05-02.md`\n\n```text\nsingle-page snapshot\ncurrent PR stack\nhard blocker\nwhat to do / what not to do at workstation\n```\n\n### `pr109-docs-only-phase-log-2026-05-02.md`\n\n```text\nGitHub-only docs/metadata phase boundary\ncompleted docs-only tasks\nexplicit stop condition before local validation resumes\n```\n\n### `pr109-evidence-flow.md`\n\n```text\nshort operational evidence flow\nrun levels: focused, multi, macro\nraw evidence versus compact Git evidence boundary\nmerge gate\n```\n\n### `pr109-prelocal-github-only-audit.md`\n\n```text\ndetailed audit\nlocal command blocks\nwiring sequence\nbundle rebuild sequence\nlong touched-file inventory\n```\n\n### `open-pr-triage-2026-05-02.md`\n\n```text\nopen and closed PR state\nrecommended PR ordering\nPR #110 scratch-only handling\n```\n\n### `open-issue-triage-2026-05-02.md`\n\n```text\nopen issues #57 and #104\nfuture queue\nrisk classification for docs cleanup versus provider/GPU work\n```\n\n## Local resume rule\n\nDo not start with merge/rebase/cleanup. Start with sync, status, diff check and compile gates from the pre-return status note.\n"
+    },
+    {
+      "path": "docs/LOCAL_AI_TASKS/pr109-pre-return-status-2026-05-02.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 3076,
+      "sha256": "41950271ec3d0d1c1a04275e556c2085ac3d9ddfeae18d9368bc8db4c219c490",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 106,
+      "raw_chars": 3074,
+      "included_chars": 3074,
+      "content": "# PR109 pre-return status — 2026-05-02\n\n## Scope\n\nSnapshot of safe GitHub-only preparation before local workstation access resumes.\n\nNo code execution, provider execution, Blender runtime, merge, rebase, delete, force-push or branch rewrite was performed by this note.\n\n## Current active PR stack\n\n```text\nPR #108: open, mergeable, documentation/validator lane\nPR #109: open, mergeable again as of latest GitHub check, official active PR, local wiring still pending\nPR #110: open draft, scratch-only workspace, do not merge\n```\n\nClosed as stale/superseded during triage:\n\n```text\nPR #1: closed, merged=false\nPR #2: closed, merged=false\n```\n\n## GitHub-only work completed\n\n```text\nupdated PR #109 body with current operating flow\nadded concise PR109 evidence flow note\nadded open PR triage note\nupdated open PR triage after closing stale PRs\nadded open issue triage note\nadded pre-return status snapshot\ncleaned code-quality unused imports before the final docs-only phase\n```\n\n## Docs created for local return\n\n```text\ndocs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md\ndocs/LOCAL_AI_TASKS/pr109-evidence-flow.md\ndocs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md\ndocs/LOCAL_AI_TASKS/open-issue-triage-2026-05-02.md\ndocs/LOCAL_AI_TASKS/pr109-pre-return-status-2026-05-02.md\n```\n\n## Current blocker\n\nThe final orchestrator wiring still requires local filesystem access:\n\n```text\ncopy Tools/ai/github_evidence_bundle_build_github_evidence_bundle_ready.py\nover  Tools/ai/build_github_evidence_bundle.py\n```\n\nThis was intentionally not done via GitHub API because of earlier long-file truncation/corruption risk.\n\n## Mergeability note\n\nGitHub briefly reported PR #109 as non-mergeable after documentation-only commits, then later reported it as mergeable again. Treat mergeability as a local-return verification item, not as a reason to do structural GitHub-only changes.\n\nRequired local checks:\n\n```powershell\ngit fetch origin\ngit switch codex/design-code-patch-plan-lane\ngit pull --ff-only origin codex/design-code-patch-plan-lane\ngit status --short\ngit diff --check\n```\n\nIf GitHub reports conflicts after sync, inspect conflict source locally before any rebase/merge/update action.\n\n## Do next at workstation\n\n```text\n1. Sync PR #109 branch.\n2. Run git diff --check.\n3. Compile refactored entry points.\n4. Wire build_github_evidence_bundle.py locally.\n5. Compile wired orchestrator.\n6. Run focused validation.\n7. Build fresh compact evidence bundle.\n8. Validate bundle.\n9. Stage only wiring + compact evidence.\n10. Commit and push.\n```\n\n## Do not do before local validation\n\n```text\nmerge PR #109\nmerge PR #108\nclose PR #110\nedit build_github_evidence_bundle.py through API\nedit large evidence bundles through API\nstart provider/GPU/NPU heavy runs\nopen new PRs\n```\n\n## Future queue\n\n```text\nIssue #57: safest next docs-only cleanup candidate after PR #108/#109 stabilize\nIssue #104: future provider/GPU workload-depth task, parked until explicit local provider work is planned\nPR #110: close only after PR #109 contains all useful changes and has fresh local evidence\n```\n"
+    },
+    {
+      "path": "docs/LOCAL_AI_TASKS/pr109-evidence-flow.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 2708,
+      "sha256": "d8dd8a6419374be6484263f3991166d84334728834ccaebf5a47402e6a1cde61",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 113,
+      "raw_chars": 2708,
+      "included_chars": 2708,
+      "content": "# PR109 evidence flow\n\n## Purpose\n\nThis note gives the short operational flow for PR #109 after GitHub-only preparation and before merge review.\n\nIt complements:\n\n```text\ndocs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md\n```\n\n## Flow\n\n```text\nentry Markdown / PR state\n-> sync official PR branch\n-> local compile and hygiene gate\n-> controlled local wiring\n-> focused single-run validators\n-> optional multi-run / macro validators\n-> collect raw reports under ignored output/**\n-> build compact evidence bundle under docs/LOCAL_VALIDATION_EVIDENCE/\n-> validate compact bundle\n-> stage only source wiring + compact evidence\n-> push PR branch\n-> GitHub audit from committed evidence\n```\n\n## Entry sources\n\n```text\nPR: #109\nbranch: codex/design-code-patch-plan-lane\naudit note: docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md\nreplacement-ready orchestrator: Tools/ai/github_evidence_bundle_build_github_evidence_bundle_ready.py\nfinal target orchestrator: Tools/ai/build_github_evidence_bundle.py\n```\n\nPR #110 / `codex/refactor-workspace-109` is scratch-only and must not be merged.\n\n## Run levels\n\n```text\nfocused run = py_compile + check_python_syntax + static report + bundle validation\nmulti run = selected validator batch over Tools/ai and Tools/validation\nmacro run = broader local validation runner / dry-run matrix when workstation time allows\n```\n\nStart with the focused run. Move to multi/macro only after the focused run is green.\n\n## Evidence boundary\n\nRaw evidence remains local and ignored:\n\n```text\noutput/validation/*.json\noutput/analysis/*.json\noutput/analysis/*.md\noutput/patch_specs/*.json\noutput/patch_specs/*.md\n```\n\nGit-tracked evidence must be compact, bounded and timestamped:\n\n```text\ndocs/LOCAL_VALIDATION_EVIDENCE/<purpose>_<YYYYMMDD-HHMMSS>.json\ndocs/LOCAL_VALIDATION_EVIDENCE/<purpose>_<YYYYMMDD-HHMMSS>.md\n```\n\n## Push boundary\n\nAllowed to stage:\n\n```text\nreviewed source/doc changes\ncompact evidence bundle JSON/Markdown\nsmall task notes\n```\n\nForbidden to stage:\n\n```text\nraw output/**\nfull analysis JSON\nSQLite/database files\nruntime media\nrender outputs\nlarge provider transcripts\n```\n\n## Required post-wiring evidence\n\nAfter locally copying the replacement-ready orchestrator over `Tools/ai/build_github_evidence_bundle.py`, build a fresh bundle and confirm at least:\n\n```text\npatch_plan_summary_seen=true\nartifact_manifest_built=true\nincluded_artifacts_built=true\nincluded_artifact_count>=1\nprovider_execution_seen=false\n```\n\n## Merge gate\n\nDo not merge PR #109 to `master` until:\n\n```text\nlocal wiring commit is pushed\nfresh compact evidence bundle is pushed\nbundle validation passes\nmanual review confirms no raw output/** or forbidden artifacts are staged\n```\n"
+    }
+  ],
+  "included_artifact_policy": {
+    "auto_include_related_artifacts": true,
+    "max_included_artifact_chars": 12000,
+    "max_included_artifacts": 80,
+    "content_extension_allowlist": [
+      ".cfg",
+      ".csv",
+      ".ini",
+      ".json",
+      ".md",
+      ".ps1",
+      ".py",
+      ".toml",
+      ".txt",
+      ".yaml",
+      ".yml"
+    ],
+    "raw_artifact_deny_prefixes": [
+      "output/ai_context_packs/",
+      "output/ai_pipeline/gpu_deep_planning_parallel_checkpoints/",
+      "output/ai_pipeline/gpu_planner_nonempty_diagnostics_checkpoints",
+      "output/ai_pipeline/gpu_planner_fallback_verify_checkpoints",
+      "output/ai_pipeline/gpu_planner_full_after_fallback_fix_checkpoints",
+      "indexAI/code_chunks/",
+      "indexAI/project_code_chunks/",
+      "renders/"
+    ],
+    "raw_artifact_deny_fragments": [
+      "full_analysis",
+      "analysis_full",
+      ".sqlite",
+      ".db",
+      "_npu_async_audit_context",
+      "_npu_async_audit_npu",
+      "_npu_async_audit_npu_notes"
+    ]
+  },
+  "decision": {
+    "ollama_gpu_primary_advisory": false,
+    "npu_excluded_when_unusable": false,
+    "provider_execution_seen": false,
+    "npu_decode_smoke_passed": false,
+    "selected_chunks_evidence_seen": true,
+    "selected_chunks_built": true,
+    "budget_respected": true,
+    "artifact_manifest_built": true,
+    "included_artifacts_built": true,
+    "included_artifact_count": 4,
+    "patch_plan_summary_seen": false
+  }
+}
