@@ -22,6 +22,7 @@ Validate together:
 PR #108 contract-drift validation documentation
 PR #109 agent-review code patch-plan design/build/smoke/docs-follow-up lane
 PR #109 complete code edit proposal helper and smoke lane
+PR #109 tool-agnostic artifact domain registry
 current master local AI evidence-bundle tooling
 current master selected-chunks evidence tooling
 current master agnostic context stack tooling
@@ -43,6 +44,7 @@ Tools/ai/build_agent_review_evidence_sufficiency.py
 Tools/validation/run_agent_review_evidence_sufficiency_smoke.py
 Tools/validation/build_python_line_count_csv.py
 Tools/validation/run_code_edit_proposal_smoke.py
+Tools/validation/check_artifact_domain_registry.py
 ```
 
 `check_core_activation_agnostic_contract.py` statically verifies that the local AI core activation lane still wires full-context orchestration, explicit provider flags, agnostic memory/tool/transient context artifacts, megalithic review stack and manual-review guardrails.
@@ -54,6 +56,8 @@ Tools/validation/run_code_edit_proposal_smoke.py
 `build_python_line_count_csv.py` regenerates deterministic Python line-count evidence after local runs, replacing stale ad-hoc CSV snapshots with a tracked, reproducible command.
 
 `run_code_edit_proposal_smoke.py` validates complete code edit proposal artifacts without applying patches. It is the smoke gate for future coding-complete proposal lanes.
+
+`check_artifact_domain_registry.py` validates the tool-agnostic artifact domain registry for code, docs, validation, workflow, text, audio, scene spec and provider-result lanes.
 
 ## Explicitly out of scope
 
@@ -94,6 +98,7 @@ local validators
 report-only drift checks
 report-only evidence sufficiency classification
 report-only line-count CSV generation
+report-only artifact domain registry validation
 report-only code patch-plan generation
 report-only code edit proposal smoke validation
 report-only docs follow-up generation
@@ -169,6 +174,10 @@ git switch codex/design-code-patch-plan-lane
 python .\Tools\validation\check_python_syntax.py `
   --repo-root . `
   --output .\output\validation\python_syntax_pr109.json
+
+python .\Tools\validation\check_artifact_domain_registry.py `
+  --repo-root . `
+  --output .\output\validation\artifact_domain_registry_pr109.json
 
 python .\Tools\validation\check_docs_links.py `
   --repo-root . `
@@ -391,6 +400,10 @@ python .\Tools\validation\build_python_line_count_csv.py `
   --report-output .\output\validation\python_line_count_macro.json `
   --markdown-output .\output\validation\python_line_count_macro.md
 
+python .\Tools\validation\check_artifact_domain_registry.py `
+  --repo-root . `
+  --output .\output\validation\artifact_domain_registry_macro.json
+
 python .\Tools\validation\check_docs_links.py `
   --repo-root . `
   --output .\output\validation\docs_links_macro.json
@@ -468,6 +481,7 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $Reports = @(
   ".\output\validation\python_syntax_macro.json",
   ".\output\validation\python_line_count_macro.json",
+  ".\output\validation\artifact_domain_registry_macro.json",
   ".\output\validation\docs_links_macro.json",
   ".\output\validation\markdown_command_hygiene_macro.json",
   ".\output\validation\core_activation_agnostic_contract.json",
@@ -508,6 +522,7 @@ The prototype gate is green only if:
 ```text
 all required validators passed
 fresh python line-count CSV/report generated
+artifact domain registry validation passes
 agnostic core activation contract passes
 agnostic context stack dry-run passes
 agnostic context stack full smoke passes or is explicitly deferred with reason
@@ -568,6 +583,8 @@ Tools/ai/build_agent_review_code_patch_plan.py
 Tools/ai/build_code_patch_docs_followup.py
 Tools/ai/build_code_patch_artifact_pack.py
 Tools/ai/code_edit_proposal_helpers.py
+Tools/ai/artifact_domain_registry.py
+Tools/validation/check_artifact_domain_registry.py
 Tools/validation/run_agent_review_code_patch_plan_smoke.py
 Tools/validation/run_code_edit_proposal_smoke.py
 Tools/validation/build_python_line_count_csv.py
@@ -582,6 +599,7 @@ Stop immediately if:
 ```text
 validator output is not JSON-parseable
 python line-count CSV/report generation fails
+artifact domain registry validation fails
 contract drift reports show source_writes_performed=true
 agnostic core activation contract fails
 agent_review_evidence_sufficiency_smoke fails when refined-review inputs are present
