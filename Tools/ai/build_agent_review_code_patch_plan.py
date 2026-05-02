@@ -10,14 +10,19 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
+
 try:
-    from report_utils import resolve_output_path, write_json_report
-except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report  # type: ignore
+    from Tools.validation.report_utils import resolve_output_path, write_json_report
+except ImportError:  # pragma: no cover - fallback for direct package-local execution.
+    from report_utils import resolve_output_path, write_json_report  # type: ignore
 
 
 PLAN_KIND = "agent_review_code_patch_plan"
@@ -135,7 +140,6 @@ def line_count_for(path_value: str, counts: dict[str, int]) -> int | None:
     normalized = normalize_repo_path(path_value)
     if normalized in counts:
         return counts[normalized]
-    # Some older CSV exports may contain absolute paths. Use suffix matching as a fallback.
     matches = [lines for path, lines in counts.items() if normalize_repo_path(path).endswith(normalized)]
     if len(matches) == 1:
         return matches[0]
@@ -147,10 +151,7 @@ def risk_for(path_value: str, check: dict[str, Any], counts: dict[str, int]) -> 
     error_count = len(check.get("errors", []) if isinstance(check.get("errors"), list) else [])
     warning_count = len(check.get("warnings", []) if isinstance(check.get("warnings"), list) else [])
     missing_required = len(check.get("missing_required_terms", []) if isinstance(check.get("missing_required_terms"), list) else [])
-    if missing_required or error_count:
-        base = "medium"
-    else:
-        base = "low"
+    base = "medium" if missing_required or error_count else "low"
     if lines is not None and lines >= 600:
         return "high" if base == "medium" else "medium"
     if warning_count >= 5 and base == "low":
@@ -205,7 +206,8 @@ def validation_commands_for(path_value: str) -> list[str]:
     commands = list(DEFAULT_VALIDATION_COMMANDS)
     suffix = Path(path_value).suffix.lower()
     if suffix == ".py":
-        commands.insert(0, f"python -m py_compile .\\{path_value.replace('/', '\\\\')}")
+        ps_path = path_value.replace("/", "\\")
+        commands.insert(0, f"python -m py_compile .\\{ps_path}")
     return commands
 
 
