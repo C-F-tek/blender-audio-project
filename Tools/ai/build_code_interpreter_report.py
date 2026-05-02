@@ -27,7 +27,6 @@ from Tools.ai.code_patch_plan_common import (  # noqa: E402
     now_iso,
     repo_rel,
     report_only_guardrails,
-    resolve_output_path,
     write_json_and_markdown,
 )
 
@@ -253,6 +252,31 @@ def classify_file_risk(item: dict[str, Any]) -> str:
     return "low"
 
 
+def recommendation_reasons(item: dict[str, Any], risk: str) -> list[str]:
+    """Return non-empty reasons for every medium/high static recommendation."""
+    reasons: list[str] = []
+    if not item.get("parse_ok"):
+        reasons.append("file does not parse")
+    if item.get("line_count", 0) >= 800:
+        reasons.append("large Python module")
+    elif risk in {"medium", "high"} and item.get("line_count", 0) >= 400:
+        reasons.append("medium-size Python module")
+    if item.get("large_function_count", 0):
+        reasons.append("large functions detected")
+    if item.get("complex_function_count", 0):
+        reasons.append("complex functions detected")
+    if item.get("risk_signal_count", 0):
+        reasons.append("static risk calls detected")
+    if item.get("todo_count", 0):
+        reasons.append("TODO/FIXME markers detected")
+    if risk in {"medium", "high"} and not reasons:
+        branch_count = item.get("branch_count", 0)
+        function_count = item.get("function_count", 0)
+        line_count_value = item.get("line_count", 0)
+        reasons.append(f"risk classified as {risk} from aggregate static metrics: lines={line_count_value}, functions={function_count}, branches={branch_count}")
+    return reasons
+
+
 def validation_commands_for(path_value: str) -> list[str]:
     """Return validation commands for one recommendation target."""
     ps_path = str(path_value).replace("/", "\\")
@@ -270,19 +294,7 @@ def build_recommendations(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
         risk = classify_file_risk(item)
         if risk == "low" and not item.get("todo_count"):
             continue
-        reasons: list[str] = []
-        if not item.get("parse_ok"):
-            reasons.append("file does not parse")
-        if item.get("line_count", 0) >= 800:
-            reasons.append("large Python module")
-        if item.get("large_function_count", 0):
-            reasons.append("large functions detected")
-        if item.get("complex_function_count", 0):
-            reasons.append("complex functions detected")
-        if item.get("risk_signal_count", 0):
-            reasons.append("static risk calls detected")
-        if item.get("todo_count", 0):
-            reasons.append("TODO/FIXME markers detected")
+        reasons = recommendation_reasons(item, risk)
         recommendations.append(
             {
                 "id": f"code_static_{len(recommendations) + 1:03d}",
@@ -382,7 +394,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     if not recommendations:
         lines.append("- none")
     for item in recommendations[:40]:
-        lines.append(f"- `{item.get('id')}` `{item.get('target_file')}` risk `{item.get('risk')}`: {', '.join(item.get('reasons') or [])}")
+        lines.append(f"- `{item.get('id')}` `{item.get('target_file')}` risk `{item.get('risk')}`: {', '.join(item.get('reasons') or ['no reason recorded'])}")
     lines.append("")
     lines.append("## Guardrail")
     lines.append("")
