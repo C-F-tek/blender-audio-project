@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Smoke test for explicit provider_empty_response diagnostics.
+"""Smoke test for explicit provider_empty_response and bootstrap reporting diagnostics.
 
 This smoke does not execute GPU/Ollama or NPU providers. It validates that:
 - NPU audit classification maps empty text to provider_empty_response;
-- supervised GPU runner contains explicit provider_empty_response handling.
+- supervised GPU runner contains explicit provider_empty_response handling;
+- supervised GPU report code exposes bootstrap broker diagnostics.
 """
 from __future__ import annotations
 
@@ -35,6 +36,11 @@ def resolve_path(repo_root: Path, value: str) -> Path:
     return path.resolve()
 
 
+def marker_check(text: str, marker: str, errors: list[str]) -> None:
+    if marker not in text:
+        errors.append(f"missing supervised marker: {marker}")
+
+
 def build_report(repo_root: Path) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -49,19 +55,26 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     )
     if classification != "provider_empty_response":
         errors.append(f"NPU empty output classified as {classification!r}, expected provider_empty_response")
-    if not any("empty response" in item for item in npu_warnings):
+    if not any("empty response" in item.lower() for item in npu_warnings):
         errors.append("NPU empty output did not emit an empty-response warning")
 
     supervised_path = repo_root / "Tools" / "ai" / "run_agent_gpu_deep_planning_supervised.py"
     supervised_text = supervised_path.read_text(encoding="utf-8")
-    required_markers = [
+
+    for marker in (
         "provider_empty_response_count",
         "ProviderEmptyResponse: model returned an empty response",
         "provider_empty_response",
-    ]
-    for marker in required_markers:
-        if marker not in supervised_text:
-            errors.append(f"missing supervised marker: {marker}")
+        "runtime_tool_bootstrap",
+        "runtime_tool_bootstrap_output",
+        "runtime_tool_bootstrap_execution_count",
+        "runtime_tool_bootstrap_result_count",
+        "recommended_next_layer",
+    ):
+        marker_check(supervised_text, marker, errors)
+
+    if '"empty_recommendations_reason": "provider_empty_response"' not in supervised_text and "provider_empty_response" not in supervised_text:
+        errors.append("supervised runner does not expose provider_empty_response as an empty recommendation reason")
 
     return {
         "schema_version": 1,
@@ -102,6 +115,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     if report.get("errors"):
         lines.extend(["", "## Errors"])
         lines.extend(f"- {item}" for item in report["errors"])
+    if report.get("warnings"):
+        lines.extend(["", "## Warnings"])
+        lines.extend(f"- {item}" for item in report["warnings"])
     return "\n".join(lines) + "\n"
 
 

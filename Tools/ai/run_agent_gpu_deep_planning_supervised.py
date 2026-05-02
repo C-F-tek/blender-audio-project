@@ -200,16 +200,20 @@ def run_runtime_tool_broker_for_round(
     ]
     returncode, stdout, stderr, error = run_command(command, repo_root, args.runtime_tool_timeout_seconds + 30)
     broker_report: dict[str, Any] = {}
-    if broker_output.exists():
+    broker_output_exists = broker_output.exists()
+    if broker_output_exists:
         try:
             broker_report = read_json(broker_output)
         except Exception as exc:  # noqa: BLE001
             error = f"{error or ''} {type(exc).__name__}: {exc}".strip()
+    elif not error:
+        error = "runtime_tool_broker_output_missing"
 
     return {
         "enabled": True,
         "executed": True,
         "requested_tool_count": len(tool_requests),
+        "command": command,
         "returncode": returncode,
         "stdout_tail": stdout,
         "stderr_tail": stderr,
@@ -217,6 +221,7 @@ def run_runtime_tool_broker_for_round(
         "request_file": repo_rel(request_file, repo_root),
         "broker_output": repo_rel(broker_output, repo_root),
         "broker_markdown": repo_rel(broker_markdown, repo_root),
+        "broker_output_exists": broker_output_exists,
         "passed": broker_report.get("passed"),
         "tool_request_count": broker_report.get("tool_request_count", len(tool_requests)),
         "tool_execution_count": broker_report.get("tool_execution_count", 0),
@@ -329,13 +334,23 @@ def build_report(
     runtime_tool_blocked_count = int(runtime_tool_bootstrap.get("blocked_tool_count") or 0) + sum(int(item.get("blocked_tool_count") or 0) for item in runtime_brokers)
     runtime_tool_result_count = len(runtime_tool_bootstrap.get("tool_results", [])) + sum(len(item.get("tool_results", [])) for item in runtime_brokers)
     provider_empty_response_count = sum(1 for round_item in rounds if round_item.get("provider_empty_response"))
+    report_errors = list(errors)
+    runtime_tool_bootstrap_failed = bool(runtime_tool_bootstrap.get("executed") and runtime_tool_bootstrap.get("passed") is not True)
+    if runtime_tool_bootstrap_failed:
+        detail = runtime_tool_bootstrap.get("error") or f"returncode={runtime_tool_bootstrap.get('returncode')} broker_output_exists={runtime_tool_bootstrap.get('broker_output_exists')}"
+        report_errors.append(f"runtime_tool_bootstrap_failed: {detail}")
+    if provider_empty_response_count:
+        diagnostics = dict(diagnostics)
+        diagnostics["empty_recommendations_reason"] = "provider_empty_response"
+        diagnostics["recommended_next_layer"] = "inspect_provider_empty_response"
+        fallback_recommended = False
     return {
         "schema_version": 1,
         "kind": "agent_gpu_deep_planning_supervised",
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
-        "passed": not errors,
-        "errors": errors,
+        "passed": not report_errors,
+        "errors": report_errors,
         "warnings": warnings,
         "provider_execution_performed": True,
         "patch_application_performed": False,
@@ -363,6 +378,7 @@ def build_report(
         "runtime_tool_bootstrap_blocked_count": int(runtime_tool_bootstrap.get("blocked_tool_count") or 0),
         "runtime_tool_bootstrap_result_count": len(runtime_tool_bootstrap.get("tool_results", [])),
         "runtime_tool_bootstrap_output": runtime_tool_bootstrap.get("broker_output", ""),
+        "runtime_tool_bootstrap": runtime_tool_bootstrap,
         "runtime_tool_request_count": runtime_tool_request_count,
         "runtime_tool_execution_count": runtime_tool_execution_count,
         "runtime_tool_failed_count": runtime_tool_failed_count,
@@ -534,6 +550,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             "runtime_tool_bootstrap_blocked_count": int(runtime_tool_bootstrap.get("blocked_tool_count") or 0),
             "runtime_tool_bootstrap_result_count": len(runtime_tool_bootstrap.get("tool_results", [])),
             "runtime_tool_bootstrap_output": runtime_tool_bootstrap.get("broker_output", ""),
+            "runtime_tool_bootstrap": runtime_tool_bootstrap,
             "runtime_tool_request_count": int(runtime_tool_bootstrap.get("requested_tool_count") or 0),
             "runtime_tool_execution_count": int(runtime_tool_bootstrap.get("tool_execution_count") or 0),
             "runtime_tool_failed_count": int(runtime_tool_bootstrap.get("failed_tool_count") or 0),
@@ -621,6 +638,8 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 }
                 errors.append(f"round {index}: {type(exc).__name__}: {exc}")
             round_diagnostics = recommendation_diagnostics_for_round(parsed, parse_diagnostics, evidence_ready_count)
+            if parse_diagnostics.get("provider_empty_response"):
+                round_diagnostics["empty_recommendations_reason"] = "provider_empty_response"
             valid_tool_requests, invalid_tool_request_errors = extract_valid_tool_requests(
                 parsed,
                 max_requests=args.runtime_tool_max_requests_per_round,
