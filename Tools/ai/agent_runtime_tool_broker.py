@@ -421,9 +421,9 @@ def execute_tool_request(
         "guardrails": {
             "provider_execution_performed": False,
             "patch_application_performed": False,
-            "sqlite_write_performed": persistent_memory_write_count > 0,
-            "persistent_memory_write_performed": persistent_memory_write_count > 0,
-            "persistent_memory_write_count": persistent_memory_write_count,
+            "sqlite_write_performed": False,
+            "persistent_memory_write_performed": False,
+            "persistent_memory_write_count": 0,
             "persistent_memory_write_requires_explicit_confirm": True,
             "operational_sqlite_write_performed": False,
             "operational_memory_write_performed": False,
