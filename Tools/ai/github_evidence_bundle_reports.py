@@ -15,6 +15,38 @@ from Tools.ai.github_evidence_bundle_io import (
     split_path_values,
 )
 
+CORE_SUMMARY_KEYS = (
+    "usable_lanes",
+    "unusable_lanes",
+    "primary_advisory_provider",
+    "policy",
+    "mode",
+    "provider",
+    "python_exe",
+    "device",
+    "model_dir",
+    "proposal_count",
+    "patch_plan_count",
+    "fallback_used",
+    "manual_review_required",
+    "recommendation_count",
+    "round_count",
+    "empty_recommendations_reason",
+    "evidence_ready_for_manual_patch_count",
+    "recommended_next_layer",
+)
+CHECK_SUMMARY_KEYS = (
+    "classification",
+    "usable_for_advisory",
+    "npu_usable_for_advisory",
+    "npu_classification",
+    "metrics",
+    "npu_metrics",
+    "provider_envelope",
+    "promotion_gate",
+    "required_promotion_gate",
+)
+
 
 def compact_patch_plan(plan: dict[str, Any]) -> dict[str, Any]:
     """Return compact patch-plan metadata for bundle summaries."""
@@ -52,43 +84,18 @@ def summarize_patch_plan_report(data: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
-    """Summarize one JSON validation/provider/report artifact."""
-    rel = repo_relative(path, repo_root)
-    data = read_json(path)
-    if data is None:
-        return {"path": rel, "exists": path.exists(), "json_ok": False, "kind": None, "passed": None, "summary": {}}
-
-    summary: dict[str, Any] = {
-        "schema_version": data.get("schema_version"),
-        "kind": data.get("kind"),
-        "passed": data.get("passed"),
-        "provider_execution_performed": data.get("provider_execution_performed"),
-        "patch_application_performed": data.get("patch_application_performed"),
-        "source_writes_performed": data.get("source_writes_performed"),
-        "errors": compact_value(data.get("errors") or []),
-        "warnings": compact_value(data.get("warnings") or []),
-    }
-    for key in (
-        "usable_lanes", "unusable_lanes", "primary_advisory_provider", "policy", "mode", "provider", "python_exe", "device",
-        "model_dir", "proposal_count", "patch_plan_count", "fallback_used", "manual_review_required", "recommendation_count",
-        "round_count", "empty_recommendations_reason", "evidence_ready_for_manual_patch_count", "recommended_next_layer",
-    ):
+def add_core_summary_fields(summary: dict[str, Any], data: dict[str, Any]) -> None:
+    """Add common scalar/list report fields to a summary."""
+    for key in CORE_SUMMARY_KEYS:
         if key in data:
             summary[key] = compact_value(data.get(key))
+
+
+def add_nested_summary_fields(summary: dict[str, Any], data: dict[str, Any]) -> None:
+    """Add compact nested report fields to a summary."""
     checks = data.get("checks") if isinstance(data.get("checks"), dict) else {}
     if checks:
-        summary["checks"] = compact_value(
-            {
-                key: checks.get(key)
-                for key in (
-                    "classification", "usable_for_advisory", "npu_usable_for_advisory", "npu_classification",
-                    "metrics", "npu_metrics", "provider_envelope", "promotion_gate", "required_promotion_gate",
-                )
-                if key in checks
-            },
-            max_string=350,
-        )
+        summary["checks"] = compact_value({key: checks.get(key) for key in CHECK_SUMMARY_KEYS if key in checks}, max_string=350)
     routing = data.get("routing") if isinstance(data.get("routing"), dict) else {}
     if routing:
         summary["routing"] = compact_value(
@@ -117,6 +124,32 @@ def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
             {"used": ollama.get("used"), "model": ollama.get("model"), "error": ollama.get("error"), "text_preview": (ollama.get("text") or "")[:500]},
             max_string=500,
         )
+
+
+def base_report_summary(data: dict[str, Any]) -> dict[str, Any]:
+    """Return common report summary fields."""
+    return {
+        "schema_version": data.get("schema_version"),
+        "kind": data.get("kind"),
+        "passed": data.get("passed"),
+        "provider_execution_performed": data.get("provider_execution_performed"),
+        "patch_application_performed": data.get("patch_application_performed"),
+        "source_writes_performed": data.get("source_writes_performed"),
+        "errors": compact_value(data.get("errors") or []),
+        "warnings": compact_value(data.get("warnings") or []),
+    }
+
+
+def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
+    """Summarize one JSON validation/provider/report artifact."""
+    rel = repo_relative(path, repo_root)
+    data = read_json(path)
+    if data is None:
+        return {"path": rel, "exists": path.exists(), "json_ok": False, "kind": None, "passed": None, "summary": {}}
+
+    summary = base_report_summary(data)
+    add_core_summary_fields(summary, data)
+    add_nested_summary_fields(summary, data)
 
     patch_plan_summary = summarize_patch_plan_report(data)
     if patch_plan_summary:
