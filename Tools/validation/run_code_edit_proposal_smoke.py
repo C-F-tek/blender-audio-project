@@ -122,6 +122,20 @@ def validate_edit_payload(data: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_proposal_metadata(data: dict[str, Any]) -> list[str]:
+    """Validate proposal kind, mode, guardrails and required metadata fields."""
+    errors: list[str] = []
+    if data.get("kind") != EXPECTED_KIND:
+        errors.append(f"proposal.kind must be {EXPECTED_KIND}")
+    if data.get("apply_mode") != EXPECTED_APPLY_MODE:
+        errors.append(f"proposal.apply_mode must be {EXPECTED_APPLY_MODE}")
+    errors.extend(report_guardrail_errors(data, "code edit proposal"))
+    errors.extend(validate_required_strings(data))
+    for field in REQUIRED_LISTS:
+        errors.extend(validate_non_empty_string_list(data, field))
+    return errors
+
+
 def validate_report(repo_root: Path, proposal_path: Path) -> dict[str, Any]:
     """Validate one code edit proposal artifact or build wrapper."""
     raw_data, load_errors = read_json_object(proposal_path)
@@ -134,14 +148,7 @@ def validate_report(repo_root: Path, proposal_path: Path) -> dict[str, Any]:
         errors.extend(unwrap_errors)
         warnings.extend(unwrap_warnings)
     if data:
-        if data.get("kind") != EXPECTED_KIND:
-            errors.append(f"proposal.kind must be {EXPECTED_KIND}")
-        if data.get("apply_mode") != EXPECTED_APPLY_MODE:
-            errors.append(f"proposal.apply_mode must be {EXPECTED_APPLY_MODE}")
-        errors.extend(report_guardrail_errors(data, "code edit proposal"))
-        errors.extend(validate_required_strings(data))
-        for field in REQUIRED_LISTS:
-            errors.extend(validate_non_empty_string_list(data, field))
+        errors.extend(validate_proposal_metadata(data))
         target_errors, target_warnings = validate_target(repo_root, data)
         errors.extend(target_errors)
         warnings.extend(target_warnings)
