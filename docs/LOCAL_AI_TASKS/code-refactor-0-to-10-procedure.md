@@ -278,6 +278,83 @@ existing local helper modules in Tools/ai or Tools/validation
 
 Do not create a new shared helper module if an existing one is a better fit.
 
+## 2.1 Optional memory/tool reload after code or knowledge changes
+
+Use this optional step only when the repository knowledge surface changed materially before a 0 -> 10 run.
+
+Typical triggers:
+
+```text
+- new or modified AI tooling under Tools/ai, Tools/validation, Tools/workflow or Tools/npu
+- new or modified docs/runbooks under docs/LOCAL_AI_TASKS or docs/LOCAL_VALIDATION_EVIDENCE
+- merged PRs that change runtime toolbox, broker, orchestrator, memory routing or provider diagnostics
+- stale evidence bundle after code/doc changes
+- ChatGPT/local IA handoff says the memory/tool context may be outdated
+```
+
+Default behavior:
+
+```text
+optional
+report-only
+no provider execution
+no patch application
+no Blender runtime
+no persistent memory write
+no raw output/** commit
+```
+
+Recommended safe reload command:
+
+```powershell
+$MemoryReloadStamp = Get-Date -Format "yyyyMMdd-HHmmss"
+
+.\Tools\workflow\run_full_memory_tool_regeneration.ps1 `
+  -RepoRoot . `
+  -Stamp $MemoryReloadStamp `
+  -Profile full_refactor `
+  -Objective "Reload IA-Carmine memory/tool context after code or knowledge changes before a 0 -> 10 run." `
+  -WriteCompactBundle
+```
+
+Inspect the workflow report:
+
+```powershell
+Get-Content ".\output\validation\full_memory_tool_regeneration_${MemoryReloadStamp}_workflow.json" -Raw |
+  ConvertFrom-Json |
+  Select-Object passed, profile, provider_execution_performed, patch_application_performed, sqlite_write_performed, persistent_memory_write_performed, report_count, artifact_count, errors, bundle_json, bundle_markdown
+```
+
+Required guardrail result:
+
+```text
+passed=True
+provider_execution_performed=False
+patch_application_performed=False
+sqlite_write_performed=False
+persistent_memory_write_performed=False
+```
+
+Evidence policy:
+
+```text
+Commit compact evidence only if it is needed for the review:
+docs/LOCAL_VALIDATION_EVIDENCE/full_memory_tool_regeneration_bundle_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_memory_tool_regeneration_bundle_<STAMP>.md
+docs/LOCAL_VALIDATION_EVIDENCE/full_memory_tool_regeneration_python_line_count_<STAMP>.csv
+```
+
+Never commit:
+
+```text
+output/**
+*.db
+*.sqlite
+renders/**
+```
+
+If this optional reload is run, add the generated compact bundle as a `--report-file` or committed evidence reference in the later GPU/NPU/refactor run so the local IA sees the refreshed state.
+
 ## 3. Build full Python line-count evidence
 
 Run the deterministic line-count tool:
