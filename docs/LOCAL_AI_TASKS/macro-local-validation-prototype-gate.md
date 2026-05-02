@@ -6,6 +6,14 @@ Run a full local validation gate before promoting the current AI documentation/c
 
 This task is intended for Carmine's local workstation, after the documentation-only PRs have been reviewed locally.
 
+General policy reference:
+
+```text
+docs/LOCAL_RUNS_TESTING_AND_EVIDENCE.md
+```
+
+That guide defines the shared rules for GitHub Markdown startup, test runs, effective runs, `output/**` handling, compact evidence bundles and commit policy. This macro task is the concrete PR #108/#109 gate built on top of that general policy.
+
 ## Scope
 
 Validate together:
