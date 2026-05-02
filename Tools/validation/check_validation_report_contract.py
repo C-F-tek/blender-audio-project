@@ -17,7 +17,7 @@ except ImportError:  # Allows package-style imports during external checks.
 DEFAULT_REPORT_DIR = "output/validation"
 REQUIRED_COMMON_FIELDS = ("schema_version", "repo_root", "passed")
 RECOMMENDED_COMMON_FIELDS = ("kind", "errors")
-NON_REPORT_FILE_PATTERNS = ("*_stdout.json",)
+NON_REPORT_FILE_PATTERNS = ("*_stdout.json", "*_request_*.json", "*_tool_requests.json")
 
 
 EXPECTED_REPORT_KINDS = {
@@ -128,8 +128,20 @@ def validate_report_file(path: Path, repo_root: Path, require_recommended: bool)
     }
 
 
-def validate_reports(repo_root: Path, report_dir: Path, require_recommended: bool) -> dict[str, Any]:
-    files, ignored_files = collect_report_files(report_dir)
+def validate_reports(
+    repo_root: Path,
+    report_dir: Path,
+    require_recommended: bool,
+    report_files: list[Path] | None = None,
+) -> dict[str, Any]:
+    if report_files:
+        files = [
+            path if path.is_absolute() else repo_root / path
+            for path in report_files
+        ]
+        ignored_files: list[Path] = []
+    else:
+        files, ignored_files = collect_report_files(report_dir)
     results = [validate_report_file(path, repo_root, require_recommended) for path in files]
     errors: list[str] = []
     warnings: list[str] = []
@@ -165,6 +177,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--report-dir", default=DEFAULT_REPORT_DIR)
+    parser.add_argument("--report-file", action="append", default=[], help="Validate only these report JSON files instead of scanning report-dir.")
     parser.add_argument("--output", help="Optional JSON report path.")
     parser.add_argument(
         "--require-recommended",
@@ -177,7 +190,8 @@ def main() -> int:
     report_dir = Path(args.report_dir)
     if not report_dir.is_absolute():
         report_dir = repo_root / report_dir
-    report = validate_reports(repo_root, report_dir.resolve(), args.require_recommended)
+    report_files = [Path(item) for item in args.report_file]
+    report = validate_reports(repo_root, report_dir.resolve(), args.require_recommended, report_files)
     output = resolve_output_path(repo_root, args.output) if args.output else None
     print(write_json_report(report, output), end="")
     return 0 if report["passed"] else 2

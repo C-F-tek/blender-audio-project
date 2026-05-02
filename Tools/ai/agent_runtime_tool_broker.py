@@ -212,9 +212,13 @@ def check_validation_report_contract(repo_root: Path, out_dir: Path, request_id:
         "Tools/validation/check_validation_report_contract.py",
         "--repo-root",
         ".",
+        "--report-dir",
+        str(out_dir),
         "--output",
         str(report),
     ]
+    for report_file in split_values(args.get("report_file")):
+        command.extend(["--report-file", report_file])
     return command, {"json_report": repo_rel(report, repo_root)}
 
 
@@ -320,8 +324,8 @@ TOOL_SPECS: dict[str, ToolSpec] = {
     ),
     "check_validation_report_contract": ToolSpec(
         name="check_validation_report_contract",
-        description="Validate repository validation report contract.",
-        allowed_args=(),
+        description="Validate validation report contract for a scoped report-dir or explicit report files.",
+        allowed_args=("report_file",),
         builder=check_validation_report_contract,
     ),
     "run_gpu_planner_json_contract_smoke": ToolSpec(

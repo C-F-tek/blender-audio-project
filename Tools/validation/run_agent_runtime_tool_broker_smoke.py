@@ -185,6 +185,7 @@ def main() -> int:
         "schema_version": 1,
         "kind": "agent_runtime_tool_broker_smoke",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "repo_root": str(repo_root),
         "passed": not errors,
         "errors": errors,
         "warnings": [],

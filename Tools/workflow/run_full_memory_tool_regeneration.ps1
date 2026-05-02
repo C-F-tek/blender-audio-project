@@ -205,11 +205,28 @@ Invoke-RepoPython -Label "Python syntax validation" -ArgsList @(
     "--output", $PythonSyntaxJson
 )
 
-Invoke-RepoPython -Label "Validation report contract" -ArgsList @(
+$ContractArgs = @(
     ".\Tools\validation\check_validation_report_contract.py",
     "--repo-root", ".",
     "--output", $ValidationContractJson
 )
+foreach ($Path in @(
+    $MemoryInventoryJson,
+    $ToolInventoryJson,
+    $PersistentStatusJson,
+    $OperationalStatusJson,
+    $PolicyJson,
+    $BrokerJson,
+    $TransientJson,
+    $LineCountJson,
+    $CodeInterpreterJson,
+    $PythonSyntaxJson
+)) {
+    if (Test-Path $Path) {
+        $ContractArgs += @("--report-file", $Path)
+    }
+}
+Invoke-RepoPython -Label "Validation report contract" -ArgsList $ContractArgs
 
 Invoke-RepoPython -Label "Runtime broker smoke" -ArgsList @(
     ".\Tools\validation\run_agent_runtime_tool_broker_smoke.py",
@@ -243,6 +260,19 @@ foreach ($Path in @(
     Add-ExistingPath -List $Artifacts -Path $Path
 }
 
+$WorkflowErrors = @()
+foreach ($Path in $Reports) {
+    try {
+        $Data = Get-Content $Path -Raw | ConvertFrom-Json
+        if ($null -ne $Data.passed -and $Data.passed -eq $false) {
+            $WorkflowErrors += "${Path}: passed=false"
+        }
+    } catch {
+        $WorkflowErrors += "${Path}: failed to parse workflow report input: $($_.Exception.Message)"
+    }
+}
+$WorkflowPassed = ($WorkflowErrors.Count -eq 0)
+
 $WorkflowReport = [ordered]@{
     schema_version = 1
     kind = "full_memory_tool_regeneration_workflow"
@@ -251,8 +281,8 @@ $WorkflowReport = [ordered]@{
     stamp = $Stamp
     profile = $Profile
     objective = $Objective
-    passed = $true
-    errors = @()
+    passed = $WorkflowPassed
+    errors = @($WorkflowErrors)
     warnings = @()
     provider_execution_performed = $false
     patch_application_performed = $false
@@ -285,7 +315,7 @@ $ArtifactLines = @($Artifacts | ForEach-Object { "- ``$_``" })
 $WorkflowMarkdown = @(
     "# Full Memory / Tool Regeneration Workflow",
     "",
-    "- Passed: ``True``",
+    "- Passed: ``$WorkflowPassed``",
     "- Stamp: ``$Stamp``",
     "- Profile: ``$Profile``",
     "- Report count: ``$($Reports.Count)``",
