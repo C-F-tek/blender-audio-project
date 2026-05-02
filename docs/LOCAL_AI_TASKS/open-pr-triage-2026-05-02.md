@@ -2,11 +2,11 @@
 
 ## Scope
 
-GitHub-only triage of open pull requests before local workstation validation.
+GitHub-only triage of pull requests before local workstation validation.
 
 No merges, rebases, deletes, force-pushes or branch rewrites are authorized by this note.
 
-## Open PR inventory
+## Current open PR inventory
 
 ### PR #109 — `docs(ai): design manual-review code patch plan lane`
 
@@ -80,57 +80,49 @@ python .\Tools\validation\check_validation_report_contract.py --repo-root . --ou
 git diff --check
 ```
 
+## Closed as stale/superseded during triage
+
 ### PR #2 — `Add safe AI artifact pipeline optimization layer`
 
 ```text
-state: open
-mergeable: false
-draft: true
+state: closed
+merged: false
+was_draft: true
 base: master
 head: ai-pipeline-optimization-safe
 role: older AI artifact pipeline layer
 ```
 
-Status:
+Closure rationale:
 
 ```text
 stale/non-mergeable draft
 likely superseded by later AI pipeline work and PR #109 concepts
+recover any still-useful ideas selectively after PR #108/#109 settle
 ```
 
-Suggested handling:
-
-```text
-review only after PR #108/#109 settle
-close or supersede if its content is already covered by newer lanes
-avoid trying to merge without rebasing/revalidating
-```
+No branch deletion, rewrite, merge or destructive repository action was performed.
 
 ### PR #1 — `docs: add AI-friendly GitHub developer guide`
 
 ```text
-state: open
-mergeable: false
-draft: false
+state: closed
+merged: false
+was_draft: false
 base: master
 head: docs/ai-friendly-github-dev-guide-v2
 role: older documentation/CI bootstrap PR
 ```
 
-Status:
+Closure rationale:
 
 ```text
 stale/non-mergeable
 some documentation or CI ideas may already be superseded by later docs and validation lanes
+recover useful docs/CI concepts selectively into a fresh branch if still relevant
 ```
 
-Suggested handling:
-
-```text
-review after PR #108/#109
-salvage useful docs/CI concepts into a fresh branch if still relevant
-avoid direct merge while non-mergeable
-```
+No branch deletion, rewrite, merge or destructive repository action was performed.
 
 ## Recommended order
 
@@ -139,9 +131,9 @@ avoid direct merge while non-mergeable
 2. Validate PR #108 locally; consider merging PR #108 before PR #109 if it is a prerequisite documentation/validator base.
 3. Rebase/update PR #109 if PR #108 is merged first.
 4. Close PR #110 after confirming no unique useful changes remain.
-5. Reassess PR #1 and PR #2 as stale/superseded candidates.
+5. Reassess closed PR #1/#2 only as idea sources, not merge candidates.
 ```
 
 ## Current safe decision
 
-Do not merge any PR from GitHub-only state. The next destructive/structural operations require local validation evidence first.
+Do not merge any remaining open PR from GitHub-only state. The next destructive/structural operations require local validation evidence first.
