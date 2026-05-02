@@ -18,6 +18,7 @@ current master selected-chunks evidence tooling
 current master agnostic context stack tooling
 current master evidence sufficiency tooling
 current local validation/report contracts
+fresh Python line-count evidence generated after local runs
 ```
 
 This task does not authorize merging by itself. It produces evidence and a go/no-go decision for later manual promotion.
@@ -31,6 +32,7 @@ Tools/validation/check_core_activation_agnostic_contract.py
 Tools/validation/run_agnostic_context_stack_smoke.py
 Tools/ai/build_agent_review_evidence_sufficiency.py
 Tools/validation/run_agent_review_evidence_sufficiency_smoke.py
+Tools/validation/build_python_line_count_csv.py
 ```
 
 `check_core_activation_agnostic_contract.py` statically verifies that the local AI core activation lane still wires full-context orchestration, explicit provider flags, agnostic memory/tool/transient context artifacts, megalithic review stack and manual-review guardrails.
@@ -38,6 +40,8 @@ Tools/validation/run_agent_review_evidence_sufficiency_smoke.py
 `run_agnostic_context_stack_smoke.py` executes the CPU-only/report-only agnostic context stack smoke: memory inventory, agnostic tool inventory, transient request context, megalithic review, signal refinement and PR draft generation. Use `--dry-run` first when testing branch integration.
 
 `build_agent_review_evidence_sufficiency.py` and `run_agent_review_evidence_sufficiency_smoke.py` classify whether refined review findings are sufficient for manual patch candidates or still need more context. They remain provider-free and patch-free.
+
+`build_python_line_count_csv.py` regenerates deterministic Python line-count evidence after local runs, replacing stale ad-hoc CSV snapshots with a tracked, reproducible command.
 
 ## Explicitly out of scope
 
@@ -77,6 +81,7 @@ Allowed:
 local validators
 report-only drift checks
 report-only evidence sufficiency classification
+report-only line-count CSV generation
 report-only code patch-plan generation
 report-only docs follow-up generation
 report-only code patch artifact packing
@@ -184,6 +189,12 @@ python .\Tools\ai\build_code_patch_artifact_pack.py `
   --docs-followup .\output\patch_specs\agent_review_code_docs_followup_pr109.json `
   --output .\output\validation\code_patch_artifact_pack_pr109.json `
   --markdown-output .\output\validation\code_patch_artifact_pack_pr109.md
+
+python .\Tools\validation\build_python_line_count_csv.py `
+  --repo-root . `
+  --csv-output .\docs\LOCAL_VALIDATION_EVIDENCE\python_line_count_latest.csv `
+  --report-output .\output\validation\python_line_count_latest_pr109.json `
+  --markdown-output .\output\validation\python_line_count_latest_pr109.md
 
 python .\Tools\validation\check_validation_report_contract.py `
   --repo-root . `
@@ -356,6 +367,12 @@ python .\Tools\validation\check_python_syntax.py `
   --repo-root . `
   --output .\output\validation\python_syntax_macro.json
 
+python .\Tools\validation\build_python_line_count_csv.py `
+  --repo-root . `
+  --timestamped `
+  --report-output .\output\validation\python_line_count_macro.json `
+  --markdown-output .\output\validation\python_line_count_macro.md
+
 python .\Tools\validation\check_docs_links.py `
   --repo-root . `
   --output .\output\validation\docs_links_macro.json
@@ -415,7 +432,7 @@ no Ollama execution
 no OpenVINO/NPU execution
 no Blender execution
 no patch application
-no source writes outside report outputs
+no source writes outside report outputs and timestamped compact evidence
 ```
 
 ## Phase 8 — Build compact macro evidence bundle
@@ -427,6 +444,7 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
 $Reports = @(
   ".\output\validation\python_syntax_macro.json",
+  ".\output\validation\python_line_count_macro.json",
   ".\output\validation\docs_links_macro.json",
   ".\output\validation\markdown_command_hygiene_macro.json",
   ".\output\validation\core_activation_agnostic_contract.json",
@@ -465,6 +483,7 @@ The prototype gate is green only if:
 
 ```text
 all required validators passed
+fresh python line-count CSV/report generated
 agnostic core activation contract passes
 agnostic context stack dry-run passes
 agnostic context stack full smoke passes or is explicitly deferred with reason
@@ -493,7 +512,8 @@ Only compact evidence may be versioned, and only intentionally:
 ```powershell
 git add `
   ".\docs\LOCAL_VALIDATION_EVIDENCE\macro_pr108_pr109_validation_$Stamp.json" `
-  ".\docs\LOCAL_VALIDATION_EVIDENCE\macro_pr108_pr109_validation_$Stamp.md"
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\macro_pr108_pr109_validation_$Stamp.md" `
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\python_line_count_$Stamp.csv"
 ```
 
 Do not use `git add .`.
@@ -523,6 +543,7 @@ Tools/ai/build_agent_review_code_patch_plan.py
 Tools/ai/build_code_patch_docs_followup.py
 Tools/ai/build_code_patch_artifact_pack.py
 Tools/validation/run_agent_review_code_patch_plan_smoke.py
+Tools/validation/build_python_line_count_csv.py
 ```
 
 Any created or modified Python/PowerShell file must report resulting line count.
@@ -533,6 +554,7 @@ Stop immediately if:
 
 ```text
 validator output is not JSON-parseable
+python line-count CSV/report generation fails
 contract drift reports show source_writes_performed=true
 agnostic core activation contract fails
 agent_review_evidence_sufficiency_smoke fails when refined-review inputs are present
