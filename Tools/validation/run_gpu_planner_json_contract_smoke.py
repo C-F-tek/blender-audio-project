@@ -70,7 +70,7 @@ def run_smoke() -> dict[str, Any]:
           "rationale": "contract hardening is isolated",
           "proposed_strategy": "reuse shared parser and validate recommendation schema",
           "risk": "low",
-          "validation_commands": ["python -m py_compile .\\Tools\\ai\\run_agent_gpu_deep_planning_review.py"],
+          "validation_commands": ["python -m py_compile ./Tools/ai/run_agent_gpu_deep_planning_review.py"],
           "stop_conditions": ["stop if parser invents recommendations"]
         }
       ],
