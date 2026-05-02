@@ -32,6 +32,16 @@ DEFAULT_GPU_MARKDOWN = "output/ai_pipeline/agent_gpu_deep_planning_parallel_gpu.
 DEFAULT_CHECKPOINT_DIR = "output/ai_pipeline/gpu_deep_planning_parallel_checkpoints"
 ROUND_RE = re.compile(r"round_(\d{3})\.json$")
 
+ORCHESTRATOR_RUNTIME_TOOL_BOOTSTRAP_REQUESTS: list[dict[str, object]] = [
+    {"id": "orchestrator_bootstrap_tool_inventory", "tool": "build_agent_agnostic_tool_inventory", "reason": "Bootstrap shared runtime tool inventory before GPU/NPU orchestration.", "args": {}},
+    {"id": "orchestrator_bootstrap_memory_inventory", "tool": "build_agent_memory_inventory", "reason": "Bootstrap durable project memory inventory before GPU/NPU orchestration.", "args": {}},
+    {"id": "orchestrator_bootstrap_persistent_memory_status", "tool": "runtime_sqlite_memory", "reason": "Bootstrap persistent memory status in read-only mode before GPU/NPU orchestration.", "args": {"action": "status", "scope": "persistent"}},
+    {"id": "orchestrator_bootstrap_operational_memory_status", "tool": "runtime_sqlite_memory", "reason": "Bootstrap operational scratch memory status before GPU/NPU orchestration.", "args": {"action": "status", "scope": "operational"}},
+    {"id": "orchestrator_bootstrap_python_line_count", "tool": "build_python_line_count_csv", "reason": "Bootstrap Python inventory before orchestration.", "args": {}},
+    {"id": "orchestrator_bootstrap_python_syntax", "tool": "check_python_syntax", "reason": "Bootstrap Python syntax baseline before orchestration.", "args": {}},
+    {"id": "orchestrator_bootstrap_gpu_contract_smoke", "tool": "run_gpu_planner_json_contract_smoke", "reason": "Bootstrap GPU JSON contract validation before orchestration.", "args": {}},
+]
+
 
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
@@ -89,6 +99,89 @@ def run_command_sync(command: list[str], repo_root: Path, timeout_seconds: int) 
         return 1, "", "", f"{type(exc).__name__}: {exc}"
 
 
+
+
+def run_orchestrator_runtime_tool_broker_packet(
+    *,
+    args: argparse.Namespace,
+    repo_root: Path,
+    tool_requests: list[dict[str, Any]],
+    request_kind: str,
+    output_subdir: str,
+    output_prefix: str,
+    source: str,
+) -> dict[str, Any]:
+    if not getattr(args, "enable_runtime_tool_broker", False):
+        return {"enabled": False, "executed": False, "source": source, "requested_tool_count": len(tool_requests), "tool_execution_count": 0, "blocked_tool_count": 0, "failed_tool_count": 0, "tool_results": [], "guardrails": {"broker_execution_requires_enable_runtime_tool_broker": True, "patch_application_performed": False, "persistent_memory_write_performed": False}}
+    if not tool_requests:
+        return {"enabled": True, "executed": False, "source": source, "requested_tool_count": 0, "tool_execution_count": 0, "blocked_tool_count": 0, "failed_tool_count": 0, "tool_results": [], "guardrails": {"patch_application_performed": False, "persistent_memory_write_performed": False}}
+    output_root = resolve_path(repo_root, args.runtime_tool_output_dir)
+    out_dir = output_root / output_subdir
+    out_dir.mkdir(parents=True, exist_ok=True)
+    request_file = out_dir / f"{output_prefix}_tool_requests.json"
+    broker_output = out_dir / f"{output_prefix}_runtime_tool_broker.json"
+    broker_markdown = out_dir / f"{output_prefix}_runtime_tool_broker.md"
+    request_packet = {"schema_version": 1, "kind": request_kind, "repo_root": str(repo_root), "source": source, "tool_requests": tool_requests, "guardrails": {"free_shell_allowed": False, "broker_allowlist_required": True, "patch_application_allowed": False, "provider_execution_allowed": False, "persistent_memory_write_allowed": False, "manual_review_required": True}}
+    write_json(request_file, request_packet)
+    command = [sys.executable, "Tools/ai/agent_runtime_tool_broker.py", "--repo-root", ".", "--request-file", str(request_file), "--tool-output-dir", str(out_dir), "--timeout-seconds", str(args.runtime_tool_timeout_seconds), "--output", str(broker_output), "--markdown-output", str(broker_markdown)]
+    returncode, stdout, stderr, error = run_command_sync(command, repo_root, args.runtime_tool_timeout_seconds + 30)
+    broker_report: dict[str, Any] = {}
+    broker_output_exists = broker_output.exists()
+    if broker_output_exists:
+        try:
+            broker_report = read_json(broker_output)
+        except Exception as exc:
+            error = f"{error} {type(exc).__name__}: {exc}".strip()
+    elif not error:
+        error = "runtime_tool_broker_output_missing"
+    return {"enabled": True, "executed": True, "source": source, "requested_tool_count": len(tool_requests), "command": command, "returncode": returncode, "stdout_tail": stdout, "stderr_tail": stderr, "error": error, "request_file": repo_rel(request_file, repo_root), "broker_output": repo_rel(broker_output, repo_root), "broker_markdown": repo_rel(broker_markdown, repo_root), "broker_output_exists": broker_output_exists, "passed": broker_report.get("passed"), "tool_request_count": broker_report.get("tool_request_count", len(tool_requests)), "tool_execution_count": broker_report.get("tool_execution_count", 0), "blocked_tool_count": broker_report.get("blocked_tool_count", 0), "failed_tool_count": broker_report.get("failed_tool_count", 0), "provider_execution_performed": broker_report.get("provider_execution_performed", False), "patch_application_performed": broker_report.get("patch_application_performed", False), "sqlite_write_performed": broker_report.get("sqlite_write_performed", False), "persistent_memory_write_performed": broker_report.get("persistent_memory_write_performed", False), "operational_sqlite_write_performed": broker_report.get("operational_sqlite_write_performed", False), "tool_results": broker_report.get("tool_results", [])[:8], "guardrails": broker_report.get("guardrails", {})}
+
+
+def run_orchestrator_runtime_tool_bootstrap(args: argparse.Namespace, repo_root: Path) -> dict[str, Any]:
+    if not getattr(args, "enable_runtime_tool_broker", False):
+        return {"enabled": False, "executed": False, "bootstrap": True, "requested_tool_count": 0, "tool_results": []}
+    if getattr(args, "disable_runtime_tool_bootstrap", False):
+        return {"enabled": True, "executed": False, "bootstrap": True, "disabled": True, "requested_tool_count": 0, "tool_results": []}
+    result = run_orchestrator_runtime_tool_broker_packet(args=args, repo_root=repo_root, tool_requests=[dict(item) for item in ORCHESTRATOR_RUNTIME_TOOL_BOOTSTRAP_REQUESTS], request_kind="orchestrator_runtime_tool_bootstrap_requests", output_subdir="round_000", output_prefix="round_000", source="orchestrator_bootstrap")
+    result["bootstrap"] = True
+    result["bootstrap_tool_ids"] = [str(item["id"]) for item in ORCHESTRATOR_RUNTIME_TOOL_BOOTSTRAP_REQUESTS]
+    return result
+
+
+def collect_gpu_tool_request_entries(gpu_report: dict[str, Any], max_requests_per_round: int) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    rounds = gpu_report.get("rounds", [])
+    if not isinstance(rounds, list):
+        return entries
+    for round_item in rounds:
+        if not isinstance(round_item, dict):
+            continue
+        parsed = round_item.get("parsed_response") if isinstance(round_item.get("parsed_response"), dict) else {}
+        raw_requests = parsed.get("tool_requests") if isinstance(parsed.get("tool_requests"), list) else []
+        tool_requests: list[dict[str, Any]] = []
+        for index, item in enumerate(raw_requests[:max_requests_per_round], start=1):
+            if not isinstance(item, dict):
+                continue
+            request = dict(item)
+            request.setdefault("id", f"gpu_round_{int(round_item.get('round') or 0):03d}_tool_{index:03d}")
+            request.setdefault("reason", "GPU planner requested additional report-only tool evidence.")
+            request["source"] = "gpu_planner"
+            tool_requests.append(request)
+        if tool_requests:
+            entries.append({"round": int(round_item.get("round") or 0), "tool_requests": tool_requests})
+    return entries
+
+
+def execute_gpu_runtime_tool_requests_from_report(*, args: argparse.Namespace, repo_root: Path, gpu_report: dict[str, Any]) -> list[dict[str, Any]]:
+    results: list[dict[str, Any]] = []
+    for entry in collect_gpu_tool_request_entries(gpu_report, args.runtime_tool_max_requests_per_round):
+        round_id = int(entry.get("round") or 0)
+        broker = run_orchestrator_runtime_tool_broker_packet(args=args, repo_root=repo_root, tool_requests=entry.get("tool_requests", []), request_kind="gpu_planner_orchestrated_runtime_tool_requests", output_subdir=f"gpu_round_{round_id:03d}", output_prefix=f"gpu_round_{round_id:03d}", source="gpu_planner")
+        broker["round"] = round_id
+        results.append(broker)
+    return results
+
+
 def checkpoint_round(path: Path) -> int | None:
     match = ROUND_RE.search(path.name)
     if not match:
@@ -144,13 +237,16 @@ def build_gpu_command(args: argparse.Namespace, repo_root: Path, checkpoint_dir:
         command.extend(["--ollama-model", args.ollama_model])
     if args.ollama_base_url:
         command.extend(["--ollama-base-url", args.ollama_base_url])
-    if args.enable_runtime_tool_broker:
+    if args.enable_runtime_tool_broker and getattr(args, "gpu_runner_direct_runtime_tool_broker", False):
         command.append("--enable-runtime-tool-broker")
         command.extend(["--runtime-tool-output-dir", args.runtime_tool_output_dir])
         command.extend(["--runtime-tool-timeout-seconds", str(args.runtime_tool_timeout_seconds)])
         command.extend(["--runtime-tool-max-requests-per-round", str(args.runtime_tool_max_requests_per_round)])
         if args.disable_runtime_tool_bootstrap:
             command.append("--disable-runtime-tool-bootstrap")
+    bootstrap_report = getattr(args, "orchestrator_runtime_tool_bootstrap_result", {})
+    if args.enable_runtime_tool_broker and isinstance(bootstrap_report, dict) and bootstrap_report.get("broker_output"):
+        command.extend(["--report-file", str(bootstrap_report["broker_output"])])
     for report_file in args.report_file:
         command.extend(["--report-file", report_file])
     for context_root in args.context_root:
@@ -468,6 +564,8 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
     gpu_output = resolve_path(repo_root, args.gpu_output)
     gpu_markdown = resolve_path(repo_root, args.gpu_markdown_output)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    orchestrator_runtime_tool_bootstrap = run_orchestrator_runtime_tool_bootstrap(args, repo_root)
+    setattr(args, "orchestrator_runtime_tool_bootstrap_result", orchestrator_runtime_tool_bootstrap)
     gpu_command = build_gpu_command(args, repo_root, checkpoint_dir, gpu_output, gpu_markdown)
     gpu_process = run_command_async(gpu_command, repo_root)
     launched_rounds: set[int] = set()
@@ -535,6 +633,17 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             if broker.get("returncode") not in (None, 0):
                 warnings.append(f"NPU runtime tool broker round {audit.get('round')}: returncode={broker.get('returncode')}")
 
+    gpu_runtime_tool_brokers = execute_gpu_runtime_tool_requests_from_report(
+        args=args,
+        repo_root=repo_root,
+        gpu_report=gpu_report,
+    ) if getattr(args, "enable_runtime_tool_broker", False) else []
+    for broker in gpu_runtime_tool_brokers:
+        if broker.get("error"):
+            warnings.append(f"GPU runtime tool broker round {broker.get('round')}: {broker.get('error')}")
+        if broker.get("returncode") not in (None, 0):
+            warnings.append(f"GPU runtime tool broker round {broker.get('round')}: returncode={broker.get('returncode')}")
+
     npu_success_count = sum(1 for item in audit_records if item.get("provider_execution_succeeded") is True or item.get("classification") == "usable_audit_text")
     npu_tool_context_seen_count = sum(1 for item in audit_records if item.get("runtime_tool_context_seen") is True)
     npu_tool_request_count = sum(int(item.get("npu_tool_request_count") or 0) for item in audit_records)
@@ -544,6 +653,16 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
     npu_runtime_tool_failed_count = sum(int(item.get("failed_tool_count") or 0) for item in npu_runtime_brokers)
     npu_runtime_tool_blocked_count = sum(int(item.get("blocked_tool_count") or 0) for item in npu_runtime_brokers)
     npu_runtime_tool_result_count = sum(len(item.get("tool_results", [])) for item in npu_runtime_brokers)
+    gpu_orchestrated_runtime_tool_request_count = sum(int(item.get("requested_tool_count") or 0) for item in gpu_runtime_tool_brokers)
+    gpu_orchestrated_runtime_tool_execution_count = sum(int(item.get("tool_execution_count") or 0) for item in gpu_runtime_tool_brokers)
+    gpu_orchestrated_runtime_tool_failed_count = sum(int(item.get("failed_tool_count") or 0) for item in gpu_runtime_tool_brokers)
+    gpu_orchestrated_runtime_tool_blocked_count = sum(int(item.get("blocked_tool_count") or 0) for item in gpu_runtime_tool_brokers)
+    gpu_orchestrated_runtime_tool_result_count = sum(len(item.get("tool_results", [])) for item in gpu_runtime_tool_brokers)
+    orchestrator_runtime_tool_bootstrap_request_count = int(orchestrator_runtime_tool_bootstrap.get("requested_tool_count") or 0)
+    orchestrator_runtime_tool_bootstrap_execution_count = int(orchestrator_runtime_tool_bootstrap.get("tool_execution_count") or 0)
+    orchestrator_runtime_tool_bootstrap_failed_count = int(orchestrator_runtime_tool_bootstrap.get("failed_tool_count") or 0)
+    orchestrator_runtime_tool_bootstrap_blocked_count = int(orchestrator_runtime_tool_bootstrap.get("blocked_tool_count") or 0)
+    orchestrator_runtime_tool_bootstrap_result_count = len(orchestrator_runtime_tool_bootstrap.get("tool_results", []))
     gpu_recommendation_count = gpu_report.get("recommendation_count")
     gpu_empty_recommendations_reason = gpu_report.get("empty_recommendations_reason", "")
     gpu_evidence_ready_count = gpu_report.get("evidence_ready_for_manual_patch_count", 0)
@@ -594,6 +713,21 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "runtime_tool_failed_count": runtime_tool_failed_count,
         "runtime_tool_blocked_count": runtime_tool_blocked_count,
         "runtime_tool_result_count": runtime_tool_result_count,
+        "orchestrator_runtime_tool_bootstrap": orchestrator_runtime_tool_bootstrap,
+        "orchestrator_runtime_tool_bootstrap_executed": bool(orchestrator_runtime_tool_bootstrap.get("executed")),
+        "orchestrator_runtime_tool_bootstrap_passed": orchestrator_runtime_tool_bootstrap.get("passed"),
+        "orchestrator_runtime_tool_bootstrap_request_count": orchestrator_runtime_tool_bootstrap_request_count,
+        "orchestrator_runtime_tool_bootstrap_execution_count": orchestrator_runtime_tool_bootstrap_execution_count,
+        "orchestrator_runtime_tool_bootstrap_failed_count": orchestrator_runtime_tool_bootstrap_failed_count,
+        "orchestrator_runtime_tool_bootstrap_blocked_count": orchestrator_runtime_tool_bootstrap_blocked_count,
+        "orchestrator_runtime_tool_bootstrap_result_count": orchestrator_runtime_tool_bootstrap_result_count,
+        "gpu_orchestrated_runtime_tool_brokers": gpu_runtime_tool_brokers,
+        "gpu_orchestrated_runtime_tool_request_count": gpu_orchestrated_runtime_tool_request_count,
+        "gpu_orchestrated_runtime_tool_execution_count": gpu_orchestrated_runtime_tool_execution_count,
+        "gpu_orchestrated_runtime_tool_failed_count": gpu_orchestrated_runtime_tool_failed_count,
+        "gpu_orchestrated_runtime_tool_blocked_count": gpu_orchestrated_runtime_tool_blocked_count,
+        "gpu_orchestrated_runtime_tool_result_count": gpu_orchestrated_runtime_tool_result_count,
+        "gpu_runner_direct_runtime_tool_broker": bool(getattr(args, "gpu_runner_direct_runtime_tool_broker", False)),
         "gpu_summary": {
             "passed": gpu_report.get("passed"),
             "round_count": gpu_report.get("round_count"),
@@ -652,6 +786,8 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
             "runtime_tool_broker_report_only": True,
+            "orchestrator_controls_gpu_runtime_tools": not bool(getattr(args, "gpu_runner_direct_runtime_tool_broker", False)),
+            "gpu_runner_direct_runtime_tool_broker": bool(getattr(args, "gpu_runner_direct_runtime_tool_broker", False)),
             "npu_runtime_tools_execute_via_broker": True,
         },
     }
@@ -675,6 +811,7 @@ def main() -> int:
     parser.add_argument("--report-file", action="append", default=[])
     parser.add_argument("--context-root", action="append", default=[])
     parser.add_argument("--enable-runtime-tool-broker", action="store_true")
+    parser.add_argument("--gpu-runner-direct-runtime-tool-broker", action="store_true", help="Compatibility mode: let the GPU supervised runner execute runtime tools directly instead of routing GPU requests through the orchestrator.")
     parser.add_argument("--runtime-tool-output-dir", default="output/ai_runtime_tools/gpu_planner_runtime_tools")
     parser.add_argument("--runtime-tool-timeout-seconds", type=int, default=300)
     parser.add_argument("--runtime-tool-max-requests-per-round", type=int, default=8)
@@ -728,6 +865,11 @@ def main() -> int:
         "runtime_tool_failed_count": report.get("runtime_tool_failed_count"),
         "runtime_tool_blocked_count": report.get("runtime_tool_blocked_count"),
         "runtime_tool_result_count": report.get("runtime_tool_result_count"),
+        "orchestrator_runtime_tool_bootstrap_execution_count": report.get("orchestrator_runtime_tool_bootstrap_execution_count"),
+        "gpu_orchestrated_runtime_tool_request_count": report.get("gpu_orchestrated_runtime_tool_request_count"),
+        "gpu_orchestrated_runtime_tool_execution_count": report.get("gpu_orchestrated_runtime_tool_execution_count"),
+        "gpu_orchestrated_runtime_tool_failed_count": report.get("gpu_orchestrated_runtime_tool_failed_count"),
+        "gpu_orchestrated_runtime_tool_blocked_count": report.get("gpu_orchestrated_runtime_tool_blocked_count"),
         "npu_audit_count": report["npu_audit_count"],
         "npu_audit_success_count": report["npu_audit_success_count"],
         "npu_tool_context_seen_count": report.get("npu_tool_context_seen_count"),
