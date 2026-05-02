@@ -22,6 +22,7 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
+from Tools.ai.code_edit_proposal_helpers import default_validation_commands_for  # noqa: E402
 from Tools.ai.code_patch_plan_common import (  # noqa: E402
     compact_text,
     now_iso,
@@ -29,6 +30,7 @@ from Tools.ai.code_patch_plan_common import (  # noqa: E402
     report_only_guardrails,
     write_json_and_markdown,
 )
+from Tools.ai.github_evidence_bundle_io import line_count, read_text  # noqa: E402
 
 REPORT_KIND = "code_interpreter_report"
 DEFAULT_OUTPUT = "output/analysis/code_interpreter_report.json"
@@ -102,15 +104,12 @@ def resolve_roots(repo_root: Path, values: list[str]) -> list[Path]:
 
 def read_source(path: Path) -> tuple[str, str | None]:
     """Read source text."""
-    try:
-        return path.read_text(encoding="utf-8-sig", errors="replace"), None
-    except OSError as exc:
-        return "", f"{type(exc).__name__}: {exc}"
+    return read_text(path)
 
 
 def source_line_count(source: str) -> int:
     """Return a stable physical line count for source text."""
-    return source.count("\n") + (0 if source.endswith("\n") else 1) if source else 0
+    return line_count(source)
 
 
 def dotted_name(node: ast.AST) -> str:
@@ -282,16 +281,6 @@ def recommendation_reasons(item: dict[str, Any], risk: str) -> list[str]:
     return reasons
 
 
-def validation_commands_for(path_value: str) -> list[str]:
-    """Return validation commands for one recommendation target."""
-    ps_path = str(path_value).replace("/", "\\")
-    return [
-        f"python -m py_compile .\\{ps_path}",
-        "python .\\Tools\\validation\\check_python_syntax.py --repo-root . --output .\\output\\validation\\python_syntax.json",
-        "git diff --check",
-    ]
-
-
 def recommendation_record(index: int, item: dict[str, Any], risk: str, reasons: list[str]) -> dict[str, Any]:
     """Build one static recommendation record."""
     target_file = str(item.get("path") or "")
@@ -302,7 +291,7 @@ def recommendation_record(index: int, item: dict[str, Any], risk: str, reasons: 
         "status": "candidate_for_manual_review",
         "reasons": reasons,
         "recommended_next_layer": "agent_review_code_patch_plan" if item.get("parse_ok") else "syntax_fix_before_patch_plan",
-        "validation_commands": validation_commands_for(target_file),
+        "validation_commands": default_validation_commands_for(target_file),
     }
 
 
