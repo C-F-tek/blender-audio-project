@@ -275,6 +275,10 @@ def harvest_finished_audits(
                                 "warnings": data.get("warnings", []),
                                 "runtime_tool_context_seen": data.get("runtime_tool_context_seen"),
                                 "runtime_tool_context_report_count": data.get("runtime_tool_context_report_count"),
+                                "npu_tool_request_count": data.get("tool_request_count"),
+                                "npu_valid_tool_request_count": data.get("valid_tool_request_count"),
+                                "npu_invalid_tool_request_count": data.get("invalid_tool_request_count"),
+                                "npu_tool_requests": data.get("tool_requests", [])[:8],
                                 "gpu_review_blocked": data.get("decision", {}).get("gpu_review_blocked"),
                             }
                         )
@@ -295,6 +299,7 @@ def build_markdown(report: dict[str, Any]) -> str:
         "npu_audit_count",
         "npu_audit_success_count",
         "npu_tool_context_seen_count",
+        "npu_tool_request_count",
         "gpu_recommendation_count",
         "gpu_empty_recommendations_reason",
         "gpu_evidence_ready_for_manual_patch_count",
@@ -380,6 +385,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
 
     npu_success_count = sum(1 for item in audit_records if item.get("provider_execution_succeeded") is True or item.get("classification") == "usable_audit_text")
     npu_tool_context_seen_count = sum(1 for item in audit_records if item.get("runtime_tool_context_seen") is True)
+    npu_tool_request_count = sum(int(item.get("npu_tool_request_count") or 0) for item in audit_records)
     gpu_recommendation_count = gpu_report.get("recommendation_count")
     gpu_empty_recommendations_reason = gpu_report.get("empty_recommendations_reason", "")
     gpu_evidence_ready_count = gpu_report.get("evidence_ready_for_manual_patch_count", 0)
@@ -453,12 +459,14 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "npu_audit_count": len(audit_records),
         "npu_audit_success_count": npu_success_count,
         "npu_tool_context_seen_count": npu_tool_context_seen_count,
+        "npu_tool_request_count": npu_tool_request_count,
         "npu_audits": audit_records,
         "decision": {
             "gpu_review_blocked_by_npu": False,
             "npu_auditor_mode": "parallel_best_effort",
             "npu_audit_success_count": npu_success_count,
             "npu_tool_context_seen_count": npu_tool_context_seen_count,
+            "npu_tool_request_count": npu_tool_request_count,
             "ready_for_patch_plan": bool(gpu_report.get("decision", {}).get("ready_for_patch_plan")),
             "fallback_patch_plan_recommended": bool(gpu_report.get("decision", {}).get("fallback_patch_plan_recommended")),
             "recommended_next_layer": gpu_recommended_next_layer,
@@ -554,6 +562,7 @@ def main() -> int:
         "npu_audit_count": report["npu_audit_count"],
         "npu_audit_success_count": report["npu_audit_success_count"],
         "npu_tool_context_seen_count": report.get("npu_tool_context_seen_count"),
+        "npu_tool_request_count": report.get("npu_tool_request_count"),
         "gpu_review_blocked_by_npu": report["decision"]["gpu_review_blocked_by_npu"],
     }, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2

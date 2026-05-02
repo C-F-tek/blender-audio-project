@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -142,6 +143,85 @@ def load_runtime_tool_context_reports(repo_root: Path, values: list[str], max_ch
         reports.append(summarize_runtime_tool_context_report(path, repo_root, max_chars))
     return reports
 
+
+ALLOWED_RUNTIME_TOOL_NAMES = {
+    "build_python_line_count_csv",
+    "build_agent_memory_inventory",
+    "build_agent_agnostic_tool_inventory",
+    "build_agent_transient_request_context",
+    "check_python_syntax",
+    "check_validation_report_contract",
+    "run_gpu_planner_json_contract_smoke",
+    "build_code_interpreter_report",
+    "runtime_sqlite_memory",
+}
+
+JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.IGNORECASE | re.DOTALL)
+
+
+def _tool_request_error(index: int, message: str) -> str:
+    return f"tool_requests[{index}]: {message}"
+
+
+def _candidate_json_payloads(text: str) -> list[Any]:
+    candidates: list[str] = []
+    stripped = text.strip()
+    if stripped:
+        candidates.append(stripped)
+    for match in JSON_FENCE_RE.finditer(text):
+        payload = match.group(1).strip()
+        if payload:
+            candidates.append(payload)
+    parsed: list[Any] = []
+    for candidate in candidates:
+        try:
+            parsed.append(json.loads(candidate))
+        except Exception:
+            continue
+    return parsed
+
+
+def _raw_tool_requests_from_payload(payload: Any) -> list[Any]:
+    if isinstance(payload, dict) and isinstance(payload.get("tool_requests"), list):
+        return list(payload["tool_requests"])
+    if isinstance(payload, list):
+        return payload
+    return []
+
+
+def extract_npu_tool_requests_from_text(text: str, max_requests: int = 8) -> tuple[list[dict[str, Any]], list[str]]:
+    valid: list[dict[str, Any]] = []
+    errors: list[str] = []
+    raw_requests: list[Any] = []
+    for payload in _candidate_json_payloads(text):
+        raw_requests.extend(_raw_tool_requests_from_payload(payload))
+    for index, item in enumerate(raw_requests[:max(0, max_requests)], start=1):
+        if not isinstance(item, dict):
+            errors.append(_tool_request_error(index, "request must be an object"))
+            continue
+        tool = str(item.get("tool") or "").strip()
+        if tool not in ALLOWED_RUNTIME_TOOL_NAMES:
+            errors.append(_tool_request_error(index, f"tool not allowlisted: {tool}"))
+            continue
+        args = item.get("args", {})
+        if args is None:
+            args = {}
+        if not isinstance(args, dict):
+            errors.append(_tool_request_error(index, "args must be an object"))
+            continue
+        valid.append(
+            {
+                "id": str(item.get("id") or f"npu_tool_{index:03d}"),
+                "tool": tool,
+                "reason": str(item.get("reason") or "NPU auditor requested additional report-only tool evidence."),
+                "args": args,
+                "source": "npu_auditor",
+            }
+        )
+    if len(raw_requests) > max_requests:
+        errors.append(f"tool_requests truncated: {len(raw_requests)} requested, max {max_requests}")
+    return valid, errors
+
 def npu_python_path(value: str | None) -> Path:
     if value:
         return Path(value).expanduser()
@@ -191,6 +271,7 @@ def build_context(gpu_review: dict[str, Any], runtime_tool_context_reports: list
                 "Use this shared toolbox context as evidence for audit, not as authority to execute tools directly.",
                 "The NPU auditor remains non-blocking and must not apply patches.",
                 "Any further tool execution must be requested through the runtime broker/orchestrator layer.",
+                "If additional evidence is needed, include optional JSON tool_requests using the shared broker schema; do not execute tools directly.",
             ],
         },
         "recommendations": recommendations,
@@ -339,6 +420,7 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
         stdout = "NPU auditor skipped by default. Pass --run-npu to execute OpenVINO/NPU."
 
     classification, warnings = classify_npu_output(npu_text, int(returncode or 0), error, stdout, stderr, args.metadata_only)
+    tool_requests, tool_request_errors = extract_npu_tool_requests_from_text(npu_text, args.max_npu_tool_requests)
     if args.run_npu and not npu_python_exists:
         classification = "npu_python_missing"
         warnings.append(f"NPU Python not found: {npu_python}")
@@ -370,6 +452,11 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
         "runtime_tool_context_seen": bool(runtime_tool_context_reports),
         "runtime_tool_context_report_count": len(runtime_tool_context_reports),
         "runtime_tool_context_reports": runtime_tool_context_reports,
+        "tool_request_count": len(tool_requests),
+        "valid_tool_request_count": len(tool_requests),
+        "invalid_tool_request_count": len(tool_request_errors),
+        "tool_requests": tool_requests,
+        "invalid_tool_request_errors": tool_request_errors,
         "apply_mode": "report_only_non_blocking_npu_audit",
         "non_blocking": True,
         "blocking": False,
@@ -395,6 +482,9 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             "stdout_tail": stdout,
             "stderr_tail": stderr,
             "output_metrics": text_metrics(npu_text),
+            "tool_request_count": len(tool_requests),
+            "valid_tool_request_count": len(tool_requests),
+            "invalid_tool_request_count": len(tool_request_errors),
         },
         "decision": {
             "gpu_review_blocked": False,
@@ -405,6 +495,8 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             "npu_python_missing": not npu_python_exists,
             "runtime_tool_context_seen": bool(runtime_tool_context_reports),
             "runtime_tool_context_report_count": len(runtime_tool_context_reports),
+            "npu_tool_requests_available": bool(tool_requests),
+            "npu_tool_request_count": len(tool_requests),
             "recommendation": "continue_manual_review; treat NPU audit as non-blocking guardrail signal only",
         },
         "guardrails": {
@@ -437,6 +529,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Classification: `{report['npu_auditor']['classification']}`")
     lines.append(f"- Runtime tool context seen: `{report.get('runtime_tool_context_seen')}`")
     lines.append(f"- Runtime tool context report count: `{report.get('runtime_tool_context_report_count')}`")
+    lines.append(f"- Tool request count: `{report.get('tool_request_count')}`")
     lines.append(f"- GPU review blocked: `{report['decision']['gpu_review_blocked']}`")
     lines.append("")
     if report["warnings"]:
@@ -463,6 +556,7 @@ def main() -> int:
     parser.add_argument("--max-new-tokens", type=int, default=900)
     parser.add_argument("--runtime-tool-context-report", action="append", default=[], help="Broker/toolbox JSON report to include as read-only NPU audit context.")
     parser.add_argument("--max-runtime-tool-context-chars", type=int, default=6000)
+    parser.add_argument("--max-npu-tool-requests", type=int, default=8)
     parser.add_argument("--context-output", default=DEFAULT_CONTEXT)
     parser.add_argument("--npu-output", default=DEFAULT_NPU_OUT)
     parser.add_argument("--npu-notes-output", default=DEFAULT_NPU_NOTES)
@@ -496,6 +590,9 @@ def main() -> int:
                 "classification": report["npu_auditor"]["classification"],
                 "runtime_tool_context_seen": report.get("runtime_tool_context_seen"),
                 "runtime_tool_context_report_count": report.get("runtime_tool_context_report_count"),
+                "tool_request_count": report.get("tool_request_count"),
+                "valid_tool_request_count": report.get("valid_tool_request_count"),
+                "invalid_tool_request_count": report.get("invalid_tool_request_count"),
                 "gpu_review_blocked": report["decision"]["gpu_review_blocked"],
             },
             indent=2,
