@@ -56,7 +56,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def run_smoke() -> dict[str, Any]:
+def run_smoke(repo_root: Path) -> dict[str, Any]:
     valid_response = """
     {
       "summary": "valid manual review plan",
@@ -160,6 +160,7 @@ def run_smoke() -> dict[str, Any]:
         "schema_version": 1,
         "kind": "gpu_planner_json_contract_smoke",
         "generated_at": now_iso(),
+        "repo_root": repo_root.as_posix(),
         "passed": not failed,
         "errors": [f"case failed: {case['name']}" for case in failed],
         "warnings": [],
@@ -183,7 +184,7 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    report = run_smoke()
+    report = run_smoke(repo_root)
     output = resolve_path(repo_root, args.output)
     markdown_output = resolve_path(repo_root, args.markdown_output)
     write_json(output, report)
