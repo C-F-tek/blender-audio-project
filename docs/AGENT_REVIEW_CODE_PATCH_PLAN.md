@@ -32,6 +32,16 @@ code_contract_drift report
   -> optional small hand-applied code PR
 ```
 
+Complete code edit proposal helper:
+
+```text
+manual-review code patch plan item
+  -> Tools/ai/code_edit_proposal_helpers.py
+  -> code_edit_proposal metadata
+  -> validators + stop conditions
+  -> human applies or rejects the edit in a separate implementation step
+```
+
 Documentation follow-up bridge:
 
 ```text
@@ -51,6 +61,17 @@ patch_application_performed = false
 source_writes_performed = false
 manual_review_required = true
 apply_mode = report_only_manual_review_code_patch_plan
+```
+
+For complete code edit proposals:
+
+```text
+kind = code_edit_proposal
+apply_mode = report_only_manual_review_code_edit_proposal
+provider_execution_performed = false
+patch_application_performed = false
+source_writes_performed = false
+manual_review_required = true
 ```
 
 For docs follow-up reports:
@@ -110,6 +131,88 @@ Each `code_patch_plans[]` item should be small and reviewable:
   ],
   "manual_review_required": true
 }
+```
+
+## Complete code edit proposal helper
+
+Helper:
+
+```text
+Tools/ai/code_edit_proposal_helpers.py
+```
+
+This helper is the first coding-complete primitive for the code-editor lane. It does not apply edits. It builds a complete proposal object containing:
+
+```text
+target path
+target metadata: exists, suffix, line_count, sha256
+edit kind: no_op, structured_edit, unified_diff
+bounded unified diff preview
+structured operations
+rationale
+edit strategy
+validation commands
+stop conditions
+manual review status
+```
+
+Supported edit kinds:
+
+```text
+no_op
+structured_edit
+unified_diff
+```
+
+Supported structured operations:
+
+```text
+replace
+insert_after
+insert_before
+delete
+append
+```
+
+A complete proposal must remain metadata-only:
+
+```text
+source_writes_performed = false
+patch_application_performed = false
+provider_execution_performed = false
+```
+
+The helper validates that target files do not escape the repository, do not target blocked artifacts, and include validators. For Python targets it automatically adds:
+
+```powershell
+python -m py_compile .\<target-file>
+```
+
+alongside repository validators:
+
+```powershell
+python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
+python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+git diff --check
+```
+
+A unified-diff proposal must reference the normalized target file and include standard diff markers:
+
+```text
+---
++++
+@@
+```
+
+The helper rejects or flags proposals that mention blocked fragments such as:
+
+```text
+output/
+renders/
+.sqlite
+.db
+full_analysis
+analysis_full
 ```
 
 ## Builder, fixtures and smoke validator
@@ -284,6 +387,22 @@ plans[].validation_commands
 plans[].stop_conditions
 ```
 
+Recommended code edit proposal summary fields:
+
+```text
+id
+target_file
+edit_kind
+manual_review_required
+ready_for_manual_review
+target_sha256
+target_line_count
+rationale
+edit_strategy
+validation_commands
+stop_conditions
+```
+
 Recommended docs-follow-up summary fields:
 
 ```text
@@ -328,7 +447,8 @@ OpenVINO GPU primary-lane-free
 1. Run code_contract_drift.
 2. Build agent_review_code_patch_plan from the drift report.
 3. Validate the code patch plan with run_agent_review_code_patch_plan_smoke.py.
-4. Build agent_review_code_docs_followup from the code patch plan.
-5. Review code and docs queues together.
-6. Only then consider a separate hand-applied code/docs PR generated from reviewed plans.
+4. Optionally build complete code_edit_proposal metadata for selected plan items.
+5. Build agent_review_code_docs_followup from the code patch plan.
+6. Review code and docs queues together.
+7. Only then consider a separate hand-applied code/docs PR generated from reviewed plans.
 ```
