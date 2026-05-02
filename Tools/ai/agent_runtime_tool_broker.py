@@ -64,6 +64,10 @@ def safe_id(value: Any, fallback: str) -> str:
     return text[:80] or fallback
 
 
+def truthy(value: Any) -> bool:
+    return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
 def split_values(value: Any) -> list[str]:
     if value is None:
         return []
@@ -286,6 +290,8 @@ def runtime_sqlite_memory(repo_root: Path, out_dir: Path, request_id: str, args:
             command.extend([flag, str(args[source])])
     if args.get("limit") is not None:
         command.extend(["--limit", str(args["limit"])])
+    if truthy(args.get("allow_persistent_write")):
+        command.append("--allow-persistent-write")
     for tag in split_values(args.get("tag")):
         command.extend(["--tag", tag])
     return command, {"json_report": repo_rel(report, repo_root), "markdown_report": repo_rel(markdown, repo_root)}
@@ -355,6 +361,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "query",
             "limit",
             "confirm",
+            "allow_persistent_write",
         ),
         builder=runtime_sqlite_memory,
     ),
@@ -405,6 +412,7 @@ def execute_tool_request(
         "executed": False,
         "blocked": False,
         "dry_run": dry_run,
+        "persistent_memory_write_authorized": False,
         "returncode": None,
         "errors": [],
         "warnings": [],
@@ -413,8 +421,10 @@ def execute_tool_request(
         "guardrails": {
             "provider_execution_performed": False,
             "patch_application_performed": False,
-            "sqlite_write_performed": False,
-            "persistent_memory_write_performed": False,
+            "sqlite_write_performed": persistent_memory_write_count > 0,
+            "persistent_memory_write_performed": persistent_memory_write_count > 0,
+            "persistent_memory_write_count": persistent_memory_write_count,
+            "persistent_memory_write_requires_explicit_confirm": True,
             "operational_sqlite_write_performed": False,
             "operational_memory_write_performed": False,
             "operational_memory_clear_performed": False,
@@ -422,6 +432,14 @@ def execute_tool_request(
             "git_write_performed": False,
         },
     }
+
+    base_result["persistent_memory_write_authorized"] = (
+        tool_name == "runtime_sqlite_memory"
+        and str(request_args.get("action") or "") == "remember"
+        and str(request_args.get("scope") or "") == "persistent"
+        and truthy(request_args.get("allow_persistent_write"))
+        and str(request_args.get("confirm") or "") == "persistent_write"
+    )
 
     spec = TOOL_SPECS.get(tool_name)
     if spec is None:
@@ -509,12 +527,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         for item in results
         if item.get("guardrails", {}).get("provider_execution_performed")
         or item.get("guardrails", {}).get("patch_application_performed")
-        or item.get("guardrails", {}).get("sqlite_write_performed")
-        or item.get("guardrails", {}).get("persistent_memory_write_performed")
+        or (item.get("guardrails", {}).get("sqlite_write_performed") and not item.get("persistent_memory_write_authorized"))
+        or (item.get("guardrails", {}).get("persistent_memory_write_performed") and not item.get("persistent_memory_write_authorized"))
         or item.get("guardrails", {}).get("blender_runtime_touched")
         or item.get("guardrails", {}).get("git_write_performed")
     ]
     operational_sqlite_write_count = sum(1 for item in results if item.get("guardrails", {}).get("operational_sqlite_write_performed"))
+    persistent_memory_write_count = sum(1 for item in results if item.get("guardrails", {}).get("persistent_memory_write_performed"))
     operational_memory_clear_count = sum(1 for item in results if item.get("guardrails", {}).get("operational_memory_clear_performed"))
 
     return {
@@ -531,10 +550,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
-        "sqlite_write_performed": False,
-        "persistent_memory_write_performed": False,
+        "sqlite_write_performed": persistent_memory_write_count > 0,
+        "persistent_memory_write_performed": persistent_memory_write_count > 0,
         "operational_sqlite_write_performed": operational_sqlite_write_count > 0,
         "operational_sqlite_write_count": operational_sqlite_write_count,
+        "persistent_memory_write_count": persistent_memory_write_count,
         "operational_memory_clear_count": operational_memory_clear_count,
         "blender_runtime_execution_performed": False,
         "git_write_performed": False,
@@ -636,6 +656,7 @@ def main() -> int:
                 "patch_application_performed": report["patch_application_performed"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
                 "persistent_memory_write_performed": report["persistent_memory_write_performed"],
+                "persistent_memory_write_count": report.get("persistent_memory_write_count", 0),
                 "operational_sqlite_write_performed": report["operational_sqlite_write_performed"],
                 "operational_sqlite_write_count": report["operational_sqlite_write_count"],
                 "operational_memory_clear_count": report["operational_memory_clear_count"],
