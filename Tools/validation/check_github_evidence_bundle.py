@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +18,11 @@ try:
 except ImportError:  # Allows package-style imports during external checks.
     from Tools.validation.report_utils import resolve_output_path, write_json_report  # type: ignore
 
-from Tools.ai.github_evidence_bundle_io import repo_relative, split_path_values
+try:
+    from Tools.ai.github_evidence_bundle_io import repo_relative, split_path_values
+except ImportError:  # Allows direct execution from Tools/validation on older Python path setups.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from Tools.ai.github_evidence_bundle_io import repo_relative, split_path_values  # type: ignore
 
 
 EXPECTED_KIND = "github_validation_evidence_bundle"
