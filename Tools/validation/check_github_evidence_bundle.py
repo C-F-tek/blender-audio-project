@@ -17,6 +17,8 @@ try:
 except ImportError:  # Allows package-style imports during external checks.
     from Tools.validation.report_utils import resolve_output_path, write_json_report  # type: ignore
 
+from Tools.ai.github_evidence_bundle_io import repo_relative, split_path_values
+
 
 EXPECTED_KIND = "github_validation_evidence_bundle"
 EXPECTED_SCHEMA_VERSION = 1
@@ -93,13 +95,6 @@ OPTIONAL_SUMMARY_HINT_FIELDS_BY_KIND = {
 }
 
 
-def repo_relative(path: Path, repo_root: Path) -> str:
-    try:
-        return path.resolve().relative_to(repo_root).as_posix()
-    except ValueError:
-        return path.as_posix()
-
-
 def default_bundle_paths(repo_root: Path) -> list[Path]:
     evidence_dir = repo_root / "docs" / "LOCAL_VALIDATION_EVIDENCE"
     paths: list[Path] = []
@@ -108,16 +103,6 @@ def default_bundle_paths(repo_root: Path) -> list[Path]:
         if parse_error or data is None or data.get("kind") == EXPECTED_KIND:
             paths.append(path)
     return paths
-
-
-def split_path_values(items: list[str]) -> list[str]:
-    values: list[str] = []
-    for item in items:
-        for part in str(item).split(","):
-            normalized = part.strip().strip("'\"")
-            if normalized:
-                values.append(normalized)
-    return values
 
 
 def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
