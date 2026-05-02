@@ -14,10 +14,25 @@ Validate together:
 PR #108 contract-drift validation documentation
 PR #109 agent-review code patch-plan design
 current master local AI evidence-bundle tooling
+current master selected-chunks evidence tooling
 current local validation/report contracts
 ```
 
 This task does not authorize merging by itself. It produces evidence and a go/no-go decision for later manual promotion.
+
+## Explicitly out of scope
+
+PR #77 is intentionally out of scope for this macro gate.
+
+Reason:
+
+```text
+PR #77 selected-chunks evidence wrapper was superseded by current master.
+Current master already contains -BuildSelectedChunksEvidence, -SelectedChunksEvidenceBasename, selected-chunks validation/evidence outputs and adapter manifest fields.
+PR #77 was diverged from master and has been closed unmerged.
+```
+
+Do not reintroduce PR #77 into the prototype stack unless a new diff proves that a useful, non-duplicated change is missing from `master`.
 
 ## Guardrails
 
@@ -69,9 +84,17 @@ git pull --ff-only origin codex/design-code-patch-plan-lane
 git status --short
 ```
 
-If either branch has local uncommitted work, stop and inspect before continuing.
+Optional sanity check that PR #77 remains out of scope:
 
-## Phase 1 — Lightweight validators per PR
+```powershell
+git branch -r --contains origin/codex/wire-selected-chunks-evidence-wrapper
+```
+
+Do not switch to or merge `codex/wire-selected-chunks-evidence-wrapper` for this gate.
+
+If either active branch has local uncommitted work, stop and inspect before continuing.
+
+## Phase 1 — Lightweight validators per active PR
 
 Run on PR #108 branch:
 
@@ -105,9 +128,35 @@ python .\Tools\validation\check_validation_report_contract.py `
 git diff --check
 ```
 
-## Phase 2 — Contract drift reports
+## Phase 2 — Master baseline selected-chunks smoke
 
-On the branch that contains the contract-drift guide or after locally stacking both PRs for test only, run:
+Selected-chunks evidence is now treated as current `master` baseline, not as PR #77 content.
+
+Run only if you want to verify that the baseline still works before prototype promotion:
+
+```powershell
+git switch master
+git pull --ff-only origin master
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
+  -PromptFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
+  -RunDir .\output\local_ai_runs\selected_chunks_baseline_smoke `
+  -BuildSemanticChunks `
+  -SelectSemanticChunks `
+  -BuildSelectedChunksEvidence `
+  -SelectedChunksBasename selected_chunks_baseline_smoke_focus `
+  -SelectedChunksEvidenceBasename selected_chunks_baseline_smoke_evidence `
+  -ChunkQuery "contract drift code patch plan selected chunks validation evidence" `
+  -ChunkPathBoost Tools/ai,Tools/validation,Tools/workflow,docs `
+  -DryRun
+```
+
+This command is a dry-run wrapper smoke. It should not execute providers, apply patches, run Blender or commit evidence.
+
+## Phase 3 — Contract drift reports
+
+On the branch that contains the contract-drift guide or after locally stacking both active PRs for test only, run:
 
 ```powershell
 python .\Tools\validation\check_code_contract_drift.py `
@@ -131,9 +180,9 @@ source_writes_performed = false
 
 A failed drift report means review is needed. It does not mean apply patches automatically.
 
-## Phase 3 — Optional stacked integration test
+## Phase 4 — Optional stacked integration test
 
-Only for local testing, create a temporary branch that stacks both PRs. Do not push unless you explicitly want an integration branch.
+Only for local testing, create a temporary branch that stacks PR #108 and PR #109. Do not push unless you explicitly want an integration branch.
 
 ```powershell
 git switch master
@@ -158,11 +207,13 @@ git diff --stat
 git diff --check
 ```
 
+Do not merge or test PR #77 here.
+
 Do not commit this local integration branch unless explicitly needed.
 
-## Phase 4 — Macro validator block
+## Phase 5 — Macro validator block
 
-Run the non-provider macro block:
+Run the non-provider macro block on the stacked local branch or on the active branch you are validating:
 
 ```powershell
 python .\Tools\validation\check_python_syntax.py `
@@ -197,7 +248,7 @@ no Blender execution
 no patch application
 ```
 
-## Phase 5 — Build compact macro evidence bundle
+## Phase 6 — Build compact macro evidence bundle
 
 Use a timestamped basename:
 
@@ -226,7 +277,7 @@ python .\Tools\validation\check_github_evidence_bundle.py `
   --output ".\output\validation\macro_pr108_pr109_validation_${Stamp}_bundle_validation.json"
 ```
 
-## Phase 6 — Prototype gate decision
+## Phase 7 — Prototype gate decision
 
 The prototype gate is green only if:
 
@@ -238,6 +289,7 @@ no DB/SQLite/full analysis JSON is staged
 no provider execution was implied by provider-free reports
 no Blender runtime was required
 manual review found no architectural conflict between #108 and #109
+PR #77 remains closed/superseded and no selected-chunks baseline gap was found
 ```
 
 Inspect before any commit:
@@ -257,7 +309,7 @@ git add `
 
 Do not use `git add .`.
 
-## Phase 7 — If everything passes
+## Phase 8 — If everything passes
 
 If the macro gate is green, the recommended order is:
 
@@ -290,4 +342,5 @@ any generated full analysis JSON is staged
 Blender runtime is required
 provider execution happened in a provider-free phase
 merge conflict appears during stacked local test
+PR #77 changes appear in the integration diff
 ```
