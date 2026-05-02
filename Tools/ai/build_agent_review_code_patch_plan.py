@@ -9,9 +9,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -19,10 +17,16 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report
-except ImportError:  # pragma: no cover - fallback for direct package-local execution.
-    from report_utils import resolve_output_path, write_json_report  # type: ignore
+from Tools.ai.code_patch_plan_common import (  # noqa: E402
+    normalize_repo_path,
+    now_iso,
+    read_json_object,
+    repo_rel,
+    report_only_guardrails,
+    resolve_output_path,
+    target_path_errors,
+    write_json_and_markdown,
+)
 
 
 PLAN_KIND = "agent_review_code_patch_plan"
@@ -31,24 +35,6 @@ DEFAULT_CODE_DRIFT_REPORT = "output/validation/code_contract_drift.json"
 DEFAULT_OUTPUT = "output/patch_specs/agent_review_code_patch_plan.json"
 DEFAULT_MARKDOWN = "output/patch_specs/agent_review_code_patch_plan.md"
 DEFAULT_LINE_COUNT_CSV = "docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260501-215122.csv"
-
-CODE_EXTENSIONS = {".py", ".ps1", ".psm1", ".psd1", ".yml", ".yaml"}
-FORBIDDEN_TARGET_PREFIXES = (
-    "output/",
-    "renders/",
-    ".git/",
-    "indexAI/code_chunks/",
-    "indexAI/project_code_chunks/",
-)
-FORBIDDEN_TARGET_SUFFIXES = (
-    ".db",
-    ".sqlite",
-    ".sqlite3",
-)
-FORBIDDEN_TARGET_FRAGMENTS = (
-    "full_analysis",
-    "analysis_full",
-)
 DEFAULT_VALIDATION_COMMANDS = [
     "python .\\Tools\\validation\\check_python_syntax.py --repo-root . --output .\\output\\validation\\python_syntax.json",
     "python .\\Tools\\validation\\check_validation_report_contract.py --repo-root . --output .\\output\\validation\\validation_report_contract.json",
@@ -56,64 +42,8 @@ DEFAULT_VALIDATION_COMMANDS = [
 ]
 
 
-def now_iso() -> str:
-    return datetime.now().isoformat(timespec="seconds")
-
-
-def repo_rel(repo_root: Path, path: Path) -> str:
-    try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
-    except ValueError:
-        return path.resolve(strict=False).as_posix()
-
-
-def read_json_object(path: Path) -> tuple[dict[str, Any], list[str]]:
-    try:
-        data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (OSError, json.JSONDecodeError) as exc:
-        return {}, [f"{type(exc).__name__}: {exc}"]
-    if not isinstance(data, dict):
-        return {}, ["root JSON value must be an object"]
-    return data, []
-
-
-def normalize_repo_path(value: Any) -> str:
-    return str(value or "").strip().replace("\\", "/").lstrip("./")
-
-
-def is_code_like_path(path_value: str) -> bool:
-    return Path(path_value).suffix.lower() in CODE_EXTENSIONS
-
-
-def target_errors(repo_root: Path, path_value: str) -> list[str]:
-    path = normalize_repo_path(path_value)
-    errors: list[str] = []
-    if not path:
-        return ["empty target path"]
-    if Path(path).is_absolute():
-        errors.append("absolute target paths are not allowed")
-    full = (repo_root / path).resolve(strict=False)
-    try:
-        full.relative_to(repo_root.resolve(strict=False))
-    except ValueError:
-        errors.append("target path escapes repository root")
-    for prefix in FORBIDDEN_TARGET_PREFIXES:
-        if path.startswith(prefix):
-            errors.append(f"forbidden target prefix: {prefix}")
-    for suffix in FORBIDDEN_TARGET_SUFFIXES:
-        if path.lower().endswith(suffix):
-            errors.append(f"forbidden target suffix: {suffix}")
-    for fragment in FORBIDDEN_TARGET_FRAGMENTS:
-        if fragment in path.lower():
-            errors.append(f"forbidden target fragment: {fragment}")
-    if not is_code_like_path(path):
-        errors.append("target is not a code/config script path for the code patch-plan lane")
-    if not full.is_file():
-        errors.append("target file does not exist")
-    return errors
-
-
 def load_line_counts(repo_root: Path, csv_path: Path) -> tuple[dict[str, int], list[str]]:
+    """Load optional line-count CSV evidence as a sizing hint."""
     warnings: list[str] = []
     counts: dict[str, int] = {}
     if not csv_path.exists():
@@ -137,64 +67,65 @@ def load_line_counts(repo_root: Path, csv_path: Path) -> tuple[dict[str, int], l
 
 
 def line_count_for(path_value: str, counts: dict[str, int]) -> int | None:
+    """Return a CSV line-count hint, including suffix matching for absolute CSV paths."""
     normalized = normalize_repo_path(path_value)
     if normalized in counts:
         return counts[normalized]
     matches = [lines for path, lines in counts.items() if normalize_repo_path(path).endswith(normalized)]
-    if len(matches) == 1:
-        return matches[0]
-    return None
+    return matches[0] if len(matches) == 1 else None
+
+
+def list_len(value: Any) -> int:
+    """Return list length only when the value is a list."""
+    return len(value) if isinstance(value, list) else 0
 
 
 def risk_for(path_value: str, check: dict[str, Any], counts: dict[str, int]) -> str:
+    """Classify patch-plan risk from drift severity and file size."""
     lines = line_count_for(path_value, counts)
-    error_count = len(check.get("errors", []) if isinstance(check.get("errors"), list) else [])
-    warning_count = len(check.get("warnings", []) if isinstance(check.get("warnings"), list) else [])
-    missing_required = len(check.get("missing_required_terms", []) if isinstance(check.get("missing_required_terms"), list) else [])
-    base = "medium" if missing_required or error_count else "low"
+    base = "medium" if list_len(check.get("missing_required_terms")) or list_len(check.get("errors")) else "low"
     if lines is not None and lines >= 600:
         return "high" if base == "medium" else "medium"
-    if warning_count >= 5 and base == "low":
+    if list_len(check.get("warnings")) >= 5 and base == "low":
         return "medium"
     return base
 
 
 def status_for(check: dict[str, Any]) -> str:
+    """Return review status for one contract-drift check."""
     if check.get("ok") is False:
         return "ready_for_manual_review"
-    missing_recommended = check.get("missing_recommended_terms", [])
-    warnings = check.get("warnings", [])
-    if missing_recommended or warnings:
+    if check.get("missing_recommended_terms") or check.get("warnings"):
         return "candidate_for_manual_review"
     return "informational"
 
 
+def list_field(check: dict[str, Any], field: str) -> list[Any]:
+    """Return a list-valued check field or an empty list."""
+    value = check.get(field)
+    return value if isinstance(value, list) else []
+
+
 def rationale_for(check: dict[str, Any]) -> str:
+    """Build a concise rationale from one contract-drift check."""
     contract = check.get("contract") or "code contract"
-    missing_required = check.get("missing_required_terms", []) if isinstance(check.get("missing_required_terms"), list) else []
-    missing_recommended = check.get("missing_recommended_terms", []) if isinstance(check.get("missing_recommended_terms"), list) else []
-    forbidden = check.get("forbidden_terms_present", []) if isinstance(check.get("forbidden_terms_present"), list) else []
     parts = [f"Contract drift check `{contract}` reported a code-review candidate."]
-    if missing_required:
-        parts.append("Missing required terms: " + ", ".join(f"`{term}`" for term in missing_required[:8]) + ".")
-    if missing_recommended:
-        parts.append("Missing recommended terms: " + ", ".join(f"`{term}`" for term in missing_recommended[:8]) + ".")
-    if forbidden:
-        parts.append("Forbidden terms present: " + ", ".join(f"`{term}`" for term in forbidden[:8]) + ".")
+    for label, field in (
+        ("Missing required terms", "missing_required_terms"),
+        ("Missing recommended terms", "missing_recommended_terms"),
+        ("Forbidden terms present", "forbidden_terms_present"),
+    ):
+        values = list_field(check, field)
+        if values:
+            parts.append(f"{label}: " + ", ".join(f"`{term}`" for term in values[:8]) + ".")
     return " ".join(parts)
 
 
 def edit_strategy_for(path_value: str, check: dict[str, Any], counts: dict[str, int]) -> str:
-    hint = ""
-    safe_actions = check.get("safe_actions", []) if isinstance(check.get("safe_actions"), list) else []
-    for action in safe_actions:
-        if isinstance(action, dict) and action.get("hint"):
-            hint = str(action["hint"])
-            break
+    """Build the manual-review edit strategy for one code patch plan."""
+    hint = first_safe_action_hint(check)
     lines = line_count_for(path_value, counts)
-    size_note = ""
-    if lines is not None:
-        size_note = f" Current CSV sizing hint: {lines} lines; verify current count locally before editing."
+    size_note = f" Current CSV sizing hint: {lines} lines; verify current count locally before editing." if lines is not None else ""
     return (
         (hint or "Apply the smallest targeted code/config change that restores the documented contract terms.")
         + size_note
@@ -202,76 +133,106 @@ def edit_strategy_for(path_value: str, check: dict[str, Any], counts: dict[str, 
     )
 
 
+def first_safe_action_hint(check: dict[str, Any]) -> str:
+    """Return the first safe-action hint if present."""
+    for action in list_field(check, "safe_actions"):
+        if isinstance(action, dict) and action.get("hint"):
+            return str(action["hint"])
+    return ""
+
+
 def validation_commands_for(path_value: str) -> list[str]:
+    """Return validation commands recommended after manually applying a patch."""
     commands = list(DEFAULT_VALIDATION_COMMANDS)
-    suffix = Path(path_value).suffix.lower()
-    if suffix == ".py":
-        ps_path = path_value.replace("/", "\\")
-        commands.insert(0, f"python -m py_compile .\\{ps_path}")
+    if Path(path_value).suffix.lower() == ".py":
+        commands.insert(0, f"python -m py_compile .\\{path_value.replace('/', '\\')}")
     return commands
 
 
-def plan_from_check(index: int, repo_root: Path, check: dict[str, Any], counts: dict[str, int]) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
-    path_value = normalize_repo_path(check.get("path"))
-    if not path_value:
-        return None, {"id": f"code_contract_{index:03d}", "reason": "check has no path"}
-    errors = target_errors(repo_root, path_value)
-    if errors:
-        return None, {"id": f"code_contract_{index:03d}", "path": path_value, "reason": "; ".join(errors)}
-
-    missing_required = check.get("missing_required_terms", []) if isinstance(check.get("missing_required_terms"), list) else []
-    missing_recommended = check.get("missing_recommended_terms", []) if isinstance(check.get("missing_recommended_terms"), list) else []
-    check_errors = check.get("errors", []) if isinstance(check.get("errors"), list) else []
-    check_warnings = check.get("warnings", []) if isinstance(check.get("warnings"), list) else []
-    if not missing_required and not missing_recommended and not check_errors and not check_warnings and check.get("ok") is not False:
-        return None, {"id": f"code_contract_{index:03d}", "path": path_value, "reason": "check is already clean"}
-
-    return (
-        {
-            "id": f"code_contract_{index:03d}",
-            "area": str(check.get("owner_lane") or check.get("contract") or "validation"),
-            "risk": risk_for(path_value, check, counts),
-            "status": status_for(check),
-            "target_files": [path_value],
-            "rationale": rationale_for(check),
-            "edit_strategy": edit_strategy_for(path_value, check, counts),
-            "proposed_patch": "",
-            "validation_commands": validation_commands_for(path_value),
-            "stop_conditions": [
-                "Stop if the target file changed since the drift report was generated.",
-                "Stop if the edit requires provider execution, Blender runtime execution, or patch auto-apply.",
-                "Stop if the patch touches output/**, generated indexes, full analysis JSON, SQLite, secrets, permissions, billing, or repository visibility.",
-                "Stop if local validation fails.",
-            ],
-            "manual_review_required": True,
-            "source_evidence": {
-                "contract": check.get("contract"),
-                "owner_lane": check.get("owner_lane"),
-                "consumed_by_lanes": check.get("consumed_by_lanes", []),
-                "missing_required_terms": missing_required,
-                "missing_recommended_terms": missing_recommended,
-                "errors": check_errors,
-                "warnings": check_warnings,
-                "line_count_csv_hint": line_count_for(path_value, counts),
-            },
-        },
-        None,
-    )
-
-
 def should_consider_check(check: Any) -> bool:
+    """Return true when a contract-drift check can become a patch-plan candidate."""
     if not isinstance(check, dict):
         return False
     if check.get("ok") is False:
         return True
-    for field in ("missing_required_terms", "missing_recommended_terms", "errors", "warnings"):
-        value = check.get(field)
-        if isinstance(value, list) and value:
-            return True
-    return False
+    return any(list_field(check, field) for field in ("missing_required_terms", "missing_recommended_terms", "errors", "warnings"))
+
+
+def plan_from_check(index: int, repo_root: Path, check: dict[str, Any], counts: dict[str, int]) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
+    """Convert one contract-drift check into one manual-review code patch plan."""
+    path_value = normalize_repo_path(check.get("path"))
+    skipped_id = f"code_contract_{index:03d}"
+    if not path_value:
+        return None, {"id": skipped_id, "reason": "check has no path"}
+    errors = target_path_errors(repo_root, path_value)
+    if errors:
+        return None, {"id": skipped_id, "path": path_value, "reason": "; ".join(errors)}
+
+    if check_is_clean(check):
+        return None, {"id": skipped_id, "path": path_value, "reason": "check is already clean"}
+
+    return build_plan(skipped_id, path_value, check, counts), None
+
+
+def check_is_clean(check: dict[str, Any]) -> bool:
+    """Return true when a check has no actionable drift."""
+    return (
+        not list_field(check, "missing_required_terms")
+        and not list_field(check, "missing_recommended_terms")
+        and not list_field(check, "errors")
+        and not list_field(check, "warnings")
+        and check.get("ok") is not False
+    )
+
+
+def build_plan(plan_id: str, path_value: str, check: dict[str, Any], counts: dict[str, int]) -> dict[str, Any]:
+    """Build the code patch-plan JSON object for one target file."""
+    return {
+        "id": plan_id,
+        "area": str(check.get("owner_lane") or check.get("contract") or "validation"),
+        "risk": risk_for(path_value, check, counts),
+        "status": status_for(check),
+        "target_files": [path_value],
+        "rationale": rationale_for(check),
+        "edit_strategy": edit_strategy_for(path_value, check, counts),
+        "proposed_patch": "",
+        "validation_commands": validation_commands_for(path_value),
+        "stop_conditions": [
+            "Stop if the target file changed since the drift report was generated.",
+            "Stop if the edit requires provider execution, Blender runtime execution, or patch auto-apply.",
+            "Stop if the patch touches output/**, generated indexes, full analysis JSON, SQLite, secrets, permissions, billing, or repository visibility.",
+            "Stop if local validation fails.",
+        ],
+        "manual_review_required": True,
+        "source_evidence": {
+            "contract": check.get("contract"),
+            "owner_lane": check.get("owner_lane"),
+            "consumed_by_lanes": list_field(check, "consumed_by_lanes"),
+            "missing_required_terms": list_field(check, "missing_required_terms"),
+            "missing_recommended_terms": list_field(check, "missing_recommended_terms"),
+            "errors": list_field(check, "errors"),
+            "warnings": list_field(check, "warnings"),
+            "line_count_csv_hint": line_count_for(path_value, counts),
+        },
+    }
+
+
+def validate_code_drift_report(code_drift: dict[str, Any], errors: list[str]) -> list[dict[str, Any]]:
+    """Validate the code_contract_drift source report and return its checks."""
+    if code_drift.get("kind") != "code_contract_drift":
+        errors.append("code drift report kind must be code_contract_drift")
+    for field in ("provider_execution_performed", "patch_application_performed", "source_writes_performed"):
+        if code_drift.get(field) is not False:
+            errors.append(f"code drift report {field} must be false")
+    checks = code_drift.get("checks", [])
+    if not isinstance(checks, list):
+        errors.append("code drift report checks must be a list")
+        return []
+    return [check for check in checks if isinstance(check, dict)]
 
 
 def build_code_patch_plan(repo_root: Path, code_drift_path: Path, line_count_csv: Path) -> dict[str, Any]:
+    """Build the full agent_review_code_patch_plan report."""
     errors: list[str] = []
     warnings: list[str] = []
     code_drift, load_errors = read_json_object(code_drift_path)
@@ -282,15 +243,7 @@ def build_code_patch_plan(repo_root: Path, code_drift_path: Path, line_count_csv
     plans: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
     if code_drift:
-        if code_drift.get("kind") != "code_contract_drift":
-            errors.append("code drift report kind must be code_contract_drift")
-        for field in ("provider_execution_performed", "patch_application_performed", "source_writes_performed"):
-            if code_drift.get(field) is not False:
-                errors.append(f"code drift report {field} must be false")
-        checks = code_drift.get("checks", [])
-        if not isinstance(checks, list):
-            errors.append("code drift report checks must be a list")
-            checks = []
+        checks = validate_code_drift_report(code_drift, errors)
         for index, check in enumerate(checks, start=1):
             if not should_consider_check(check):
                 continue
@@ -303,6 +256,20 @@ def build_code_patch_plan(repo_root: Path, code_drift_path: Path, line_count_csv
     if code_drift and not plans:
         warnings.append("no code patch plans were produced from code_contract_drift checks")
 
+    return build_report(repo_root, code_drift_path, line_count_csv, counts, plans, skipped, errors, warnings)
+
+
+def build_report(
+    repo_root: Path,
+    code_drift_path: Path,
+    line_count_csv: Path,
+    counts: dict[str, int],
+    plans: list[dict[str, Any]],
+    skipped: list[dict[str, str]],
+    errors: list[str],
+    warnings: list[str],
+) -> dict[str, Any]:
+    """Assemble the final report object."""
     return {
         "schema_version": 1,
         "kind": PLAN_KIND,
@@ -331,21 +298,15 @@ def build_code_patch_plan(repo_root: Path, code_drift_path: Path, line_count_csv
             "manual_review_required": True,
             "recommended_next_layer": "manual_review_then_targeted_code_pr" if plans and not errors else "collect_or_fix_code_contract_evidence",
         },
-        "guardrails": {
-            "report_only": True,
-            "manual_review_required": True,
-            "provider_execution_performed": False,
-            "patch_application_performed": False,
-            "source_writes_performed": False,
-            "blender_runtime_execution_performed": False,
-            "sqlite_write_performed": False,
-            "npu_primary_advisory": False,
-            "openvino_gpu_primary_lane": False,
-        },
+        "guardrails": report_only_guardrails(
+            npu_primary_advisory=False,
+            openvino_gpu_primary_lane=False,
+        ),
     }
 
 
 def render_markdown(report: dict[str, Any]) -> str:
+    """Render the code patch-plan report as Markdown."""
     lines = ["# Agent Review Code Patch Plan", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Apply mode: `{report['apply_mode']}`")
@@ -355,16 +316,30 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
     lines.append(f"- Patch plan count: `{report['patch_plan_count']}`")
     lines.append("")
-    lines.append("## Inputs")
+    lines.extend(render_inputs(report))
+    lines.extend(render_plans(report.get("code_patch_plans", [])))
+    lines.extend(render_skipped(report.get("skipped_candidates", [])))
+    lines.append("## Guardrail")
     lines.append("")
+    lines.append("This artifact is a code patch plan only. It contains no replacements and must not be treated as an apply queue.")
+    return "\n".join(lines) + "\n"
+
+
+def render_inputs(report: dict[str, Any]) -> list[str]:
+    """Render report input metadata."""
+    lines = ["## Inputs", ""]
     for key, value in report.get("inputs", {}).items():
         lines.append(f"- `{key}`: `{value}`")
     lines.append("")
-    lines.append("## Plans")
-    lines.append("")
-    if not report.get("code_patch_plans"):
-        lines.append("- none")
-    for plan in report.get("code_patch_plans", []):
+    return lines
+
+
+def render_plans(plans: Any) -> list[str]:
+    """Render code patch plans."""
+    lines = ["## Plans", ""]
+    if not plans:
+        return lines + ["- none", ""]
+    for plan in plans:
         lines.append(f"### `{plan['id']}`")
         lines.append("")
         lines.append(f"- Area: `{plan['area']}`")
@@ -374,16 +349,18 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(f"- Rationale: {plan['rationale']}")
         lines.append(f"- Strategy: {plan['edit_strategy']}")
         lines.append("")
-    if report.get("skipped_candidates"):
-        lines.append("## Skipped candidates")
-        lines.append("")
-        for item in report["skipped_candidates"]:
-            lines.append(f"- `{item.get('id')}` `{item.get('path', '')}`: {item.get('reason')}")
-        lines.append("")
-    lines.append("## Guardrail")
+    return lines
+
+
+def render_skipped(skipped: Any) -> list[str]:
+    """Render skipped candidate diagnostics."""
+    if not skipped:
+        return []
+    lines = ["## Skipped candidates", ""]
+    for item in skipped:
+        lines.append(f"- `{item.get('id')}` `{item.get('path', '')}`: {item.get('reason')}")
     lines.append("")
-    lines.append("This artifact is a code patch plan only. It contains no replacements and must not be treated as an apply queue.")
-    return "\n".join(lines) + "\n"
+    return lines
 
 
 def main() -> int:
@@ -399,13 +376,7 @@ def main() -> int:
     code_drift_path = resolve_output_path(repo_root, args.code_contract_drift_report)
     line_count_csv = resolve_output_path(repo_root, args.line_count_csv)
     report = build_code_patch_plan(repo_root, code_drift_path, line_count_csv)
-
-    output = resolve_output_path(repo_root, args.output)
-    markdown_output = resolve_output_path(repo_root, args.markdown_output)
-    text = write_json_report(report, output)
-    markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    markdown_output.write_text(render_markdown(report), encoding="utf-8")
-    print(text, end="")
+    print(write_json_and_markdown(repo_root, report, args.output, args.markdown_output, render_markdown(report)), end="")
     return 0 if report["passed"] else 2
 
 
