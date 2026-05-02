@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "kind": "github_validation_evidence_bundle",
+  "generated_at": "2026-05-02T21:03:24",
+  "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "source_reports": [
+    "output/analysis/gpu_json_contract_replay_20260502-195523.json"
+  ],
+  "source_selected_chunks_evidence": [
+    "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json"
+  ],
+  "source_included_artifacts": [
+    "output/analysis/gpu_json_contract_replay_20260502-195523.md",
+    "docs/LOCAL_AI_TASKS/gpu-json-contract-runner-integration.md",
+    "output/ai_pipeline/project_complete_20260502-195523_parallel_gpu.json"
+  ],
+  "reports": [
+    {
+      "path": "output/analysis/gpu_json_contract_replay_20260502-195523.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "gpu_planner_json_contract_replay",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "gpu_planner_json_contract_replay",
+        "passed": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "errors": [],
+        "warnings": [],
+        "manual_review_required": true
+      }
+    }
+  ],
+  "selected_chunks_evidence": [
+    {
+      "path": "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "selected_semantic_chunks_evidence",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "selected_semantic_chunks_evidence",
+        "passed": true,
+        "provider_execution_performed": false,
+        "source_writes_performed": false,
+        "selected_count": 24,
+        "total_selected_chars": 28649,
+        "max_chunks": 24,
+        "max_total_chars": 32000,
+        "source_bundle": "output/ai_context_packs/full_context_golden_selected_chunks.json",
+        "source_chunks": "indexAI/code_chunks/semantic_code_chunks.json",
+        "decision": {
+          "selected_chunks_built": true,
+          "budget_respected": true,
+          "provider_execution_seen": false,
+          "source_writes_performed": false,
+          "forbidden_paths_blocked": true
+        },
+        "errors": [],
+        "warnings": []
+      }
+    }
+  ],
+  "artifact_manifest": [
+    {
+      "path": "output/analysis/gpu_json_contract_replay_20260502-195523.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 23063,
+      "sha256": "d7ed3a6ed2ad77714be191fa85cea33fbe3273f23362cb79b983dc6555cda1b1",
+      "role": "local_artifact_reference",
+      "content_included": true,
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"gpu_planner_json_contract_replay\",\n  \"generated_at\": \"2026-05-02T21:03:03\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"blender_runtime_execution_performed\": false,\n  \"sqlite_write_performed\": false,\n  \"manual_review_required\": true,\n  \"inputs\": {\n    \"gpu_report\": \"output/ai_pipeline/project_complete_20260502-195523_parallel_gpu.json\"\n  },\n  \"source_summary\": {\n    \"kind\": \"agent_gpu_deep_planning_supervised\",\n    \"passed\": true,\n    \"round_count\": 24,\n    \"recommendation_count\": 0,\n    \"json_parse_error_count\": 16,\n    \"repair_attempt_count\": 18,\n    \"empty_recommendations_reason\": \"repair_attempt_failed\",\n    \"evidence_ready_for_manual_patch_count\": 12\n  },\n  \"replayed_round_count\": 24,\n  \"contract_reason_counts\": {\n    \"json_parse_failure\": 22,\n    \"model_output_schema_mismatch\": 2\n  },\n  \"context_echo_detected_count\": 0,\n  \"json_parse_failure_count\": 22,\n  \"model_output_schema_mismatch_count\": 2,\n  \"valid_recommendation_output_count\": 0,\n  \"rounds\": [\n    {\n      \"round\": 1,\n      \"original_empty_recommendations_reason\": \"repair_attempt_failed\",\n      \"original_json_ok\": false,\n      \"original_parse_error\": \"JSONDecodeError: Expecting ',' delimiter: line 289 column 6 (char 20752)\",\n      \"original_response_chars\": 21255,\n      \"contract\": {\n   ",
+      "preview_chars": 1500,
+      "line_count": 572
+    }
+  ],
+  "included_artifacts": [
+    {
+      "path": "output/analysis/gpu_json_contract_replay_20260502-195523.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 638,
+      "sha256": "62fae4b5076a81ce8798422e102020ed46d7ff908badb236613c9307e160c4f5",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 23,
+      "raw_chars": 615,
+      "included_chars": 615,
+      "content": "# GPU Planner JSON Contract Replay\n\n- Passed: `True`\n- Replayed rounds: `24`\n- Context echo detected: `0`\n- JSON parse failures: `22`\n- Schema mismatches: `2`\n- Valid recommendation outputs: `0`\n- Patch application performed: `False`\n- Source writes performed: `False`\n\n## Contract reason counts\n\n- `json_parse_failure`: `22`\n- `model_output_schema_mismatch`: `2`\n\n## Decision\n\n- `contract_helper_replay_available`: `True`\n- `safe_to_wire_runner_after_replay`: `True`\n- `recommended_next_layer`: `wire validate_model_response_contract into run_agent_gpu_deep_planning_review.py`\n- `manual_review_required`: `True`\n\n"
+    },
+    {
+      "path": "docs/LOCAL_AI_TASKS/gpu-json-contract-runner-integration.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 2371,
+      "sha256": "7d5848ea67eaa571425df6d1a9268643b7d9d8fcf1b24728bcff2bfc1da54cff",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 95,
+      "raw_chars": 2371,
+      "included_chars": 2371,
+      "content": "# GPU JSON Contract Runner Integration\n\n## Purpose\n\nPlan and validation notes for integrating `Tools.ai.gpu_planner_json_contract.validate_model_response_contract()` into the real GPU planning runners.\n\nTarget runners:\n\n```text\nTools/ai/run_agent_gpu_deep_planning_review.py\nTools/ai/run_agent_gpu_deep_planning_supervised.py\n```\n\n## Current safe bridge\n\nBefore changing the long-running provider path, use:\n\n```text\nTools/ai/replay_gpu_planner_json_contract.py\n```\n\nThis replays already captured GPU planner raw responses through the contract helper.\n\nIt does not run providers and does not write source files.\n\n## Command\n\n```powershell\npython .\\Tools\\ai\\replay_gpu_planner_json_contract.py `\n  --repo-root . `\n  --gpu-report \".\\output\\ai_pipeline\\project_complete_20260502-195523_parallel_gpu.json\" `\n  --output \".\\output\\analysis\\gpu_json_contract_replay_20260502-195523.json\" `\n  --markdown-output \".\\output\\analysis\\gpu_json_contract_replay_20260502-195523.md\"\n```\n\n## Expected report fields\n\n```text\nreplayed_round_count\ncontract_reason_counts\ncontext_echo_detected_count\njson_parse_failure_count\nmodel_output_schema_mismatch_count\nvalid_recommendation_output_count\n```\n\n## Integration target\n\nOnce replay confirms useful classifications, update the runner parsing flow:\n\n```text\nmodel response\n-> validate_model_response_contract(response, evidence_ready_for_manual_patch_count)\n-> parsed response from contract result when valid\n-> round diagnostics include contract fields\n-> aggregate diagnostics use classified reasons\n```\n\n## New reason precedence\n\nPrefer this ordering when no valid recommendations survive:\n\n```text\ncontext_echo_detected\njson_parse_failure\nmodel_output_schema_mismatch\nrecommendations_filtered_out\nevidence_ready_but_no_gpu_plan\nvalid_json_empty_recommendations\n```\n\n`repair_attempt_failed` should remain only as a legacy/compatibility signal when older reports are inspected.\n\n## Guardrails\n\n```text\nno provider/model settings change in the runner integration PR\nno automatic patch application\nno source writes through patch runner\nno Blender runtime execution\nno SQLite/database writes\nmanual review required\n```\n\n## Bundle rule\n\nInclude only compact evidence:\n\n```text\nGPU JSON contract replay report\nthis integration note\nsmall smoke/compile evidence\n```\n\nDo not include raw GPU output directly unless truncated by the bundle builder.\n"
+    },
+    {
+      "path": "output/ai_pipeline/project_complete_20260502-195523_parallel_gpu.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 168570,
+      "sha256": "de0459178f46139aed0082527cee52e879b86d459684b84c0addb822396109c8",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": true,
+      "line_count": 1642,
+      "raw_chars": 166916,
+      "included_chars": 12000,
+      "content": "{\n  \"schema_version\": 1,\n  \"kind\": \"agent_gpu_deep_planning_supervised\",\n  \"generated_at\": \"2026-05-02T20:08:56\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": true,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"apply_mode\": \"report_only_gpu_deep_planning_with_non_blocking_npu_audit\",\n  \"model_used\": \"qwen2.5-coder:14b\",\n  \"ollama_base_url\": \"http://127.0.0.1:11434\",\n  \"budget_minutes\": 30,\n  \"elapsed_seconds\": 668.685,\n  \"context_file_count\": 240,\n  \"round_count\": 24,\n  \"rounds\": [\n    {\n      \"round\": 1,\n      \"elapsed_seconds\": 70.87,\n      \"file_count\": 10,\n      \"files\": [\n        \"docs/AGENT_REVIEW_CODE_PATCH_PLAN.md\",\n        \"docs/AI_ARTIFACT_SCHEMAS.md\",\n        \"docs/AI_CHUNKING_STRATEGY.md\",\n        \"docs/AI_CONTEXT_PACKS.md\",\n        \"docs/AI_DOCS_ENTRYPOINT.md\",\n        \"docs/AI_EXTERNAL_KNOWLEDGE.md\",\n        \"docs/AI_GENERATED_PACKAGE_STANDARD.md\",\n        \"docs/AI_GUARDRAILS_VALIDATION_GUIDE.md\",\n        \"docs/AI_MEMORY_POLICY.md\",\n        \"docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md\"\n      ],\n      \"response_chars\": 21255,\n      \"raw_response_preview\": \"```json\\n{\\n  \\\"files\\\": [\\n    {\\n      \\\"path\\\": \\\"AGENTS.md\\\",\\n      \\\"exists\\\": true,\\n      \\\"lines\\\": 123,\\n      \\\"chars\\\": 4567,\\n      \\\"content_preview\\\": \\\"# AGENTS.md\\\\n\\\\n## Purpose\\\\n\\\\nThis file is the main machine-readable entry point for any AI agent, coding assistant or automated reviewer that starts inside this repository.\\\\n\\\\nIt should contain practical instructions for AI systems:\\\\n\\\\n- repository identity;\\\\n- important folders;\\\\n- safe commands;\\\\n- validation commands;\\\\n- permission boundaries;\\\\n- refactoring rules;\\\\n- expected reporting format.\\\"\\n    },\\n    {\\n      \\\"path\\\": \\\"WORKFLOW.md\\\",\\n      \\\"exists\\\": true,\\n      \\\"lines\\\": 150,\\n      \\\"chars\\\": 6789,\\n      \\\"content_preview\\\": \\\"# WORKFLOW.md\\\\n\\\\n## Purpose\\\\n\\\\nThis document outlines the general workflow for contributing to this repository, including guidelines for code submission, validation, and review.\\\\n\\\\n## Key Steps\\\\n\\\\n1. **Fork the Repository**: Create a fork of the main repository on GitHub.\\\\n2. **Clone Your Fork**: Clone your forked repository to your local machine.\\\\n3. **Create a New Branch**: For each new feature or bug fix, create a new branch from the `main` branch.\\\"\\n    },\\n    {\\n      \\\"path\\\": \\\"README.md\\\",\\n      \\\"exists\\\": true,\\n      \\\"lines\\\": 100,\\n      \\\"chars\\\": 4567,\\n      \\\"content_preview\\\": \\\"# README.md\\\\n\\\\n## Welcome to the Blender Audio Project!\\\\n\\\\nThis repository contains the source code for the Blender Audio Project, an open-source project aimed at enhancing audio capabilities within Blender.\\\\n\\\\n## Getting Started\\\\n\\\\nTo get started with contributing to this project, follow these steps:\\\\n\\\\n1. **Clone the Repository**: Clone the main repository from GitHub.\\\"\\n    },\\n    {\\n      \\\"path\\\": \\\"JSON_SCHEMAS.md\\\",\\n      \\\"exists\\\": true,\\n      \\\"lines\\\": 200,\\n      \\\"chars\\\": 8901,\\n      \\\"content_preview\\\": \\\"# JSON_SCHEMAS.md\\\\n\\\\n## Purpose\\\\n\\\\nThis document outlines the JSON schemas used within this repository for various configuration and data files. JSON schemas ensure that these files are structured correctly and contain all necessary fields.\\\\n\\\\n## Schemas Overview\\\\n\\\\n- **config.json**: Contains project-wide configuration settings.\\\\n- **data.json**: Stores data required by the application.\\\"\\n    },\\n    {\\n      \\\"path\\\": \\\"AI_REFERENCE_ONBOARDING.md\\\",\\n      \\\"exists\\\": true,\\n      \\\"lines\\\": 180,\\n      \\\"chars\\\": 7654,\\n      \\\"content_preview\\\": \\\"# AI_REFERENCE_ONBOARDING.md\\\\n\\\\n## Purpose\\\\n\\\\nThis document serves as a reference for onboarding new AI agents and coding assistants to this repository. It provides an overview of the project structure, key components, and best practices.\\\\n\\\\n## Key Components\\\\n\\\\n- **AGENTS.md**: The main entry point for AI agents, containing practical instructions.\\\"\\n    },\\n    {\\n      \\\"path\\\": \\\"AI_REFERENCE_SOURCE_MAP.md\\\",\\n      \\\"exists\\\": true,\\n      \\\"lines\\\": 190,\\n      \\\"chars\\\": 8765,\\n      \\\"content_preview\\\": \\\"# AI_REFERENCE_SOURCE_MAP.md\\\\n\\\\n## Purpose\\\\n\\\\nThis document maps the source code of this repository to its various components and functionalities. It helps AI agents understand how different\",\n      \"parsed_response\": {\n        \"summary\": \"```json\\n{\\n  \\\"files\\\": [\\n    {\\n      \\\"path\\\": \\\"AGENTS.md\\\",\\n      \\\"exists\\\": true,\\n      \\\"lines\\\": 123,\\n      \\\"chars\\\": 4567,\\n      \\\"content_preview\\\": \\\"# AGENTS.md\\\\n\\\\n## Purpose\\\\n\\\\nThis file is the main machine-readable entry point for any AI agent, coding assistant or automated reviewer that starts inside this repository.\\\\n\\\\nIt should contain practical instructions for AI systems:\\\\n\\\\n- repository identity;\\\\n- important folders;\\\\n- safe commands;\\\\n- validation commands;\\\\n- permission boundaries;\\\\n- refactoring rules;\\\\n- expected reporting format.\\\"\\n    },\\n    {\\n      \\\"path\\\": \\\"WORKFLOW.md\\\",\\n      \\\"exists\\\": true,\\n      \\\"lines\\\": 150,\\n      \\\"chars\\\": 6789,\\n      \\\"content_preview\\\": \\\"# WORKFLOW.md\\\\n\\\\n## Purpose\\\\n\\\\nThis document outlines the general workflow for contributing to this repository, including guidelines for code submission, validation, and review.\\\\n\\\\n## Key Steps\\\\n\\\\n1. **Fork the Repository**: Create a fork of the main repository on GitHub.\\\\n2. **Clone Your Fork**: Clone your forked repository to your local machine.\\\\n3. **Create a New Branch**: For each new feature or bug fix, create a new branch from the `main` branch.\\\"\\n    },\\n    {\\n      \\\"path\\\": \\\"README.md\\\",\\n      \\\"exists\\\": true,\\n      \\\"lines\\\": 100,\\n      \\\"chars\\\": 4567,\\n      \\\"content_preview\\\": \\\"# README.md\\\\n\\\\n## Welcome to the Blender Audio Project!\\\\n\\\\nThis repository contains the source code for the Blender Audio Project, an open-source project aimed at enhancing audio capabilities within Blender.\\\\n\\\\n## Getting Started\\\\n\\\\nTo get started with contributing to this project, follow these steps:\\\\n\\\\n1. **Clone the Repository**: Clone the main repository from GitHub.\\\"\\n    },\\n    {\\n      \\\"path\\\": \\\"JSON_SCHEMAS.md\\\",\\n      \\\"exists\\\": true,\\n      \\\"lines\\\": 200,\\n      \\\"chars\\\": 8901,\\n      \\\"content_preview\\\": \\\"# JSON_SCHEMAS.md\\\\n\\\\n## Purpose\\\\n\\\\nThis document outlines the JSON schemas used within this repository for various configuration and data files. JSON schemas ensure that these files are structured correctly and contain all nec\",\n        \"confidence\": \"low\",\n        \"recommendations\": [],\n        \"missing_evidence\": [\n          \"model_response_not_valid_json\"\n        ],\n        \"next_best_action\": \"review raw model response\"\n      },\n      \"json_ok\": false,\n      \"parse_error\": \"JSONDecodeError: Expecting ',' delimiter: line 289 column 6 (char 20752)\",\n      \"repair_attempt_count\": 2,\n      \"raw_recommendation_candidate_count\": 0,\n      \"filtered_recommendation_count\": 0,\n      \"recommendation_count\": 0,\n      \"empty_recommendations_reason\": \"repair_attempt_failed\",\n      \"evidence_ready_for_manual_patch_count\": 12,\n      \"recommended_next_layer\": \"\"\n    },\n    {\n      \"round\": 2,\n      \"elapsed_seconds\": 33.478,\n      \"file_count\": 10,\n      \"files\": [\n        \"docs/AI_ONBOARDING.md\",\n        \"docs/AI_PIPELINE_ARCHITECTURE.md\",\n        \"docs/AI_PIPELINE_OPTIMIZATION.md\",\n        \"docs/AI_PIPELINE_REFACTOR_STATUS.md\",\n        \"docs/AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md\",\n        \"docs/AI_REFERENCE_ONBOARDING.md\",\n        \"docs/AI_REFERENCE_SOURCE_MAP.md\",\n        \"docs/AI_SELECTIVE_PLANNER.md\",\n        \"docs/AI_SMART_POLICY.md\",\n        \"docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md\"\n      ],\n      \"response_chars\": 9543,\n      \"raw_response_preview\": \"```json\\n{\\n  \\\"files\\\": [\\n    {\\n      \\\"path\\\": \\\"AGENTS.md\\\",\\n      \\\"content\\\": \\\"# AGENTS.md\\\\n\\\\n## Purpose\\\\n\\\\nThis file outlines the rules and guidelines for AI coding agents working within this repository. It includes safe commands, permission boundaries, and reading order.\\\\n\\\\n## Safe Commands\\\\n\\\\n- `git pull`\\\\n- `git push`\\\\n- `python run_agent.py`\\\\n\\\\n## Permission Boundaries\\\\n\\\\nAI agents are allowed to:\\\\n\\\\n- Read files in the repository\\\\n- Write changes to local branches\\\\n- Execute safe commands listed above\\\\n\\\\n## Reading Order\\\\n\\\\n1. `AGENTS.md`\\\\n2. `WORKFLOW.md`\\\\n3. `docs/README.md`\\\\n4. Current execution plans\\\\n5. Current validators and schema docs\\\\n6. External references summarized in `docs/AI_REFERENCE_SOURCE_MAP.md`\\\"\\n    },\\n    {\\n      \\\"path\\\": \\\"WORKFLOW.md\\\",\\n      \\\"content\\\": \\\"# WORKFLOW.md\\\\n\\\\n## Purpose\\\\n\\\\nThis file describes the general workflow for contributing to this repository, including branching strategies, pull request processes, and code review guidelines.\\\\n\\\\n## Branching Strategies\\\\n\\\\n- Use feature branches for new features: `feature/feature-name`\\\\n- Use bugfix branches for fixing issues: `bugfix/issue-number`\\\\n- Use release branches for preparing releases: `release/version-number`\\\\n\\\\n## Pull Request Process\\\\n\\\\n1. Create a feature or bugfix branch from the main branch.\\\\n2. Implement changes and ensure all tests pass.\\\\n3. Open a pull request to the main branch.\\\\n4. Wait for code review and address any feedback.\\\\n5. Once approved, merge the pull request into the main branch.\\\\n\\\\n## Code Review Guidelines\\\\n\\\\n- Ensure code follows the project's coding standards.\\\\n- Verify that all tests are passing.\\\\n- Check for adherence to `AGENTS.md` rules.\\\"\\n    },\\n    {\\n      \\\"path\\\": \\\"docs/README.md\\\",\\n      \\\"content\\\": \\\"# README.md\\\\n\\\\n## Purpose\\\\n\\\\nThis file provides an overview of the documentation in this repository, including guides, validation rules, and execution plans.\\\\n\\\\n## Documentation Overview\\\\n\\\\n- **AI Provider Agnostic Pipeline Guide**: `docs/AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md`\\\\n- **NPU Runtime Reference Guide**: `docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md`\\\\n- **Guardrails Validation Guide**: `docs/AI_GUARDRAILS_VALIDATION_GUIDE.md`\\\\n- **JSON Schemas**: `docs/JSON_SCHEMAS.md`\\\\n- **AI Artifact Schemas**: `docs/AI_ARTIFACT_SCHEMAS.md`\\\\n\\\\n## Usage Instructions\\\\n\\\\n1. Read the relevant guide for your task.\\\\n2. Map external concepts to local files and validators.\\\\n3. Follow the project's coding standards and rules.\\\"\\n    },\\n    {\\n      \\\"path\\\": \\\"docs/AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md\\\",\\n      \\\"content\\\": \\\"# AI Provider Agnostic Pipeline Guide\\\\n\\\\n## Purpose\\\\n\\\\nThis guide explains how to implement a provider-agnostic pipeline for inference tasks, ensuring that the code can work with different providers like OpenVINO, Ollama, or local Python tools.\\\\n\\\\n## Key Concepts\\\\n\\\\n- **Orchestration**: Separation between model, provider, and orchestration logic.\\\\n- **Provider-Free Preparation**: Preparing the environment without hard-coding a specific provider.\\\\n- \",\n      \"parsed_response\": {\n        \"files\": [\n          {\n            \"path\": \"AGENTS.md\",\n            \"content\": \"# AGENTS.md\\n\\n## Purpose\\n\\nThis file outlines the rules and guidelines for AI coding agents working within this repository. It includes safe commands, permission boundaries, and reading order.\\n\\n## Safe Commands\\n\\n- `git pull`\\n- `git push`\\n- `python run_agent.py`\\n\\n## Permission Boundaries\\n\\nAI agents are allowed to:\\n\\n- Read files in the repository\\n- Write changes to local branches\\n- Execute safe commands listed above\\n\\n## Reading Order\\n\\n1. `AGENTS.md`\\n2. `WORKFLOW.md`\\n3. `docs/README.md`\\n4. Current execution plans\\n5. Current validators and schema docs\\n6. External references summarized in `docs/AI_REFERENCE_SOURCE_MAP.md`\"\n          },\n          {\n            \"path\": \"WORKFLOW.md\",\n            \"content\": \"# WORKFLOW.md\\n\\n## Purpose\\n\\nThis file describes the general workflow for contributing to this repository, including branching strategies, pull request processes, and code review guidelines.\\n"
+    }
+  ],
+  "included_artifact_policy": {
+    "auto_include_related_artifacts": true,
+    "max_included_artifact_chars": 12000,
+    "max_included_artifacts": 10,
+    "content_extension_allowlist": [
+      ".cfg",
+      ".csv",
+      ".ini",
+      ".json",
+      ".md",
+      ".ps1",
+      ".py",
+      ".toml",
+      ".txt",
+      ".yaml",
+      ".yml"
+    ],
+    "raw_artifact_deny_prefixes": [
+      "output/ai_context_packs/",
+      "output/ai_pipeline/gpu_deep_planning_parallel_checkpoints/",
+      "output/ai_pipeline/gpu_planner_nonempty_diagnostics_checkpoints",
+      "output/ai_pipeline/gpu_planner_fallback_verify_checkpoints",
+      "output/ai_pipeline/gpu_planner_full_after_fallback_fix_checkpoints",
+      "indexAI/code_chunks/",
+      "indexAI/project_code_chunks/",
+      "renders/"
+    ],
+    "raw_artifact_deny_fragments": [
+      "full_analysis",
+      "analysis_full",
+      ".sqlite",
+      ".db",
+      "_npu_async_audit_context",
+      "_npu_async_audit_npu",
+      "_npu_async_audit_npu_notes"
+    ]
+  },
+  "decision": {
+    "ollama_gpu_primary_advisory": false,
+    "npu_excluded_when_unusable": false,
+    "provider_execution_seen": false,
+    "npu_decode_smoke_passed": false,
+    "selected_chunks_evidence_seen": true,
+    "selected_chunks_built": true,
+    "budget_respected": true,
+    "artifact_manifest_built": true,
+    "included_artifacts_built": true,
+    "included_artifact_count": 3,
+    "patch_plan_summary_seen": false
+  }
+}
