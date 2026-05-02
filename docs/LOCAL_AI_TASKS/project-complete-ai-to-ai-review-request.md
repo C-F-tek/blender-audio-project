@@ -108,6 +108,48 @@ which one or two project-only targets should become the next small review PR
 
 Produce advisory outputs and manual-review candidates only.
 
+## AI improvement impressions
+
+In addition to evidence-backed recommendations, provide a separate section named `AI improvement impressions`.
+
+This section should contain operational impressions that emerged while reading the repository, running the local tools, comparing reports and observing provider behavior.
+
+Each impression must be clearly marked as one of:
+
+```text
+evidence-backed
+inferred from multiple signals
+speculative but potentially useful
+```
+
+For each impression include:
+
+```text
+short title
+why it may improve the project
+evidence or signals that triggered it
+risk if ignored
+minimal next action
+whether it should become a task, issue, doc update or future PR
+```
+
+Useful impression categories include:
+
+```text
+architecture simplification
+pipeline reuse in other projects
+tooling ergonomics
+evidence quality
+provider orchestration
+GPU/NPU workload split
+manual-review friction
+bundle/audit readability
+validator coverage
+future refactor candidates
+```
+
+Do not present impressions as facts unless the evidence supports them. Do not propose automatic edits from impressions. Convert them into reviewable task candidates only.
+
 ## Required final artifact
 
 ```text
