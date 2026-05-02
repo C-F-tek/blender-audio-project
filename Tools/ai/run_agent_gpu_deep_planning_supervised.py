@@ -328,6 +328,7 @@ def build_report(
     runtime_tool_failed_count = int(runtime_tool_bootstrap.get("failed_tool_count") or 0) + sum(int(item.get("failed_tool_count") or 0) for item in runtime_brokers)
     runtime_tool_blocked_count = int(runtime_tool_bootstrap.get("blocked_tool_count") or 0) + sum(int(item.get("blocked_tool_count") or 0) for item in runtime_brokers)
     runtime_tool_result_count = len(runtime_tool_bootstrap.get("tool_results", [])) + sum(len(item.get("tool_results", [])) for item in runtime_brokers)
+    provider_empty_response_count = sum(1 for round_item in rounds if round_item.get("provider_empty_response"))
     return {
         "schema_version": 1,
         "kind": "agent_gpu_deep_planning_supervised",
@@ -367,6 +368,7 @@ def build_report(
         "runtime_tool_failed_count": runtime_tool_failed_count,
         "runtime_tool_blocked_count": runtime_tool_blocked_count,
         "runtime_tool_result_count": runtime_tool_result_count,
+        "provider_empty_response_count": provider_empty_response_count,
         "recommendation_count": len(recommendations),
         "recommendations": recommendations,
         **diagnostics,
@@ -521,6 +523,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             "tool_request_count": 0,
             "valid_tool_request_count": 0,
             "invalid_tool_request_count": 0,
+            "provider_empty_response_count": 0,
             "runtime_tool_broker_enabled": bool(args.enable_runtime_tool_broker),
             "runtime_tool_bootstrap_enabled": bool(args.enable_runtime_tool_broker and not args.disable_runtime_tool_bootstrap),
             "runtime_tool_bootstrap_executed": bool(runtime_tool_bootstrap.get("executed")),
@@ -587,7 +590,25 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             round_start = time.perf_counter()
             try:
                 response, model_used = manager.generate(args.ollama_model, prompt, max_new_tokens=args.max_new_tokens, temperature=args.temperature)
-                parsed, parse_diagnostics = parse_model_json_with_diagnostics(response, evidence_ready_count)
+                if not str(response or "").strip():
+                    parsed = {
+                        "summary": "provider returned an empty response",
+                        "confidence": "low",
+                        "recommendations": [],
+                        "tool_requests": [],
+                        "missing_evidence": ["provider_empty_response"],
+                        "next_best_action": "inspect provider runtime, prompt budget and model output settings",
+                    }
+                    parse_diagnostics = {
+                        "json_ok": False,
+                        "parse_error": "ProviderEmptyResponse: model returned an empty response",
+                        "repair_attempt_count": 0,
+                        "model_output_missing_required_fields": False,
+                        "provider_empty_response": True,
+                    }
+                    errors.append(f"round {index}: provider_empty_response")
+                else:
+                    parsed, parse_diagnostics = parse_model_json_with_diagnostics(response, evidence_ready_count)
             except Exception as exc:  # noqa: BLE001
                 response = ""
                 parsed = {"summary": "provider error", "confidence": "low", "recommendations": [], "missing_evidence": [str(exc)], "next_best_action": "inspect provider error"}
@@ -596,6 +617,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                     "parse_error": f"{type(exc).__name__}: {exc}",
                     "repair_attempt_count": 0,
                     "model_output_missing_required_fields": False,
+                    "provider_empty_response": False,
                 }
                 errors.append(f"round {index}: {type(exc).__name__}: {exc}")
             round_diagnostics = recommendation_diagnostics_for_round(parsed, parse_diagnostics, evidence_ready_count)
@@ -625,6 +647,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 "response_chars": len(response),
                 "raw_response_preview": response[:3000],
                 "parsed_response": parsed,
+                "provider_empty_response": bool(parse_diagnostics.get("provider_empty_response")),
                 "tool_requests": valid_tool_requests,
                 "invalid_tool_request_errors": invalid_tool_request_errors,
                 "runtime_tool_broker": runtime_broker,
@@ -756,6 +779,7 @@ def main() -> int:
                 "runtime_tool_failed_count": report.get("runtime_tool_failed_count"),
                 "runtime_tool_blocked_count": report.get("runtime_tool_blocked_count"),
                 "runtime_tool_result_count": report.get("runtime_tool_result_count"),
+                "provider_empty_response_count": report.get("provider_empty_response_count"),
                 "evidence_ready_for_manual_patch_count": report.get("evidence_ready_for_manual_patch_count"),
                 "ready_for_patch_plan": report["decision"].get("ready_for_patch_plan"),
                 "recommended_next_layer": report["decision"].get("recommended_next_layer"),

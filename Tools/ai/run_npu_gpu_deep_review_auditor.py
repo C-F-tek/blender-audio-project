@@ -170,8 +170,8 @@ def classify_npu_output(
     if returncode != 0:
         warnings.append(f"NPU auditor command returned {returncode}")
     if not text.strip():
-        warnings.append("NPU auditor produced empty output")
-        return "missing_or_empty", warnings
+        warnings.append("NPU provider returned an empty response")
+        return "provider_empty_response", warnings
     metrics = text_metrics(text)
     if metrics["word_count"] < 20 or metrics["alpha_ratio"] < 0.25 or metrics["digit_ratio"] > 0.65:
         warnings.append("NPU auditor output appears unusable or non-linguistic")
@@ -268,6 +268,7 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
         warnings = ["NPU auditor was not executed; context artifact was prepared only"]
 
     dep_missing = dependency_missing(stdout, stderr, error)
+    provider_empty_response = classification == "provider_empty_response"
     provider_succeeded = bool(args.run_npu and not args.metadata_only and returncode == 0 and generated_output_written and classification == "usable_audit_text")
     report = {
         "schema_version": 1,
@@ -281,6 +282,7 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
         "provider_execution_requested": requested,
         "provider_load_attempted": load_attempted,
         "provider_execution_succeeded": provider_succeeded,
+        "provider_empty_response": provider_empty_response,
         "dependency_missing": dep_missing,
         "npu_python": str(npu_python),
         "npu_python_exists": npu_python_exists,
@@ -303,6 +305,7 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             "provider_load_attempted": load_attempted,
             "provider_execution_performed": provider_succeeded,
             "provider_execution_succeeded": provider_succeeded,
+            "provider_empty_response": provider_empty_response,
             "dependency_missing": dep_missing,
             "npu_python": str(npu_python),
             "npu_python_exists": npu_python_exists,
@@ -316,6 +319,7 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             "npu_primary_advisory": False,
             "npu_audit_usable": classification == "usable_audit_text",
             "npu_dependency_missing": dep_missing,
+            "npu_provider_empty_response": provider_empty_response,
             "npu_python_missing": not npu_python_exists,
             "recommendation": "continue_manual_review; treat NPU audit as non-blocking guardrail signal only",
         },
@@ -341,6 +345,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Provider execution requested: `{report['provider_execution_requested']}`")
     lines.append(f"- Provider load attempted: `{report['provider_load_attempted']}`")
     lines.append(f"- Provider execution succeeded: `{report['provider_execution_succeeded']}`")
+    lines.append(f"- Provider empty response: `{report.get('provider_empty_response')}`")
     lines.append(f"- Dependency missing: `{report['dependency_missing']}`")
     lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Classification: `{report['npu_auditor']['classification']}`")
@@ -394,6 +399,7 @@ def main() -> int:
                 "provider_execution_requested": report["provider_execution_requested"],
                 "provider_load_attempted": report["provider_load_attempted"],
                 "provider_execution_succeeded": report["provider_execution_succeeded"],
+                "provider_empty_response": report.get("provider_empty_response"),
                 "dependency_missing": report["dependency_missing"],
                 "patch_application_performed": report["patch_application_performed"],
                 "non_blocking": report["non_blocking"],

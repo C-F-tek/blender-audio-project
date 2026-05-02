@@ -482,6 +482,7 @@ def write_metadata_report(
     *,
     provider_execution_performed: bool,
     generated_output_written: bool,
+    provider_empty_response: bool = False,
 ) -> None:
     if not args.metadata_out:
         return
@@ -506,6 +507,7 @@ def write_metadata_report(
         "notes_output": str(notes_out),
         "provider_execution_performed": bool(provider_execution_performed),
         "generated_output_written": bool(generated_output_written),
+        "provider_empty_response": bool(provider_empty_response),
         "source_writes_performed": False,
         "patch_application_performed": False,
         "advisory_role": "probe_or_knowledge_broker" if args.engine == "npu" else "primary_advisory_when_quality_approved",
@@ -575,6 +577,7 @@ def main() -> None:
             notes_out,
             provider_execution_performed=False,
             generated_output_written=False,
+            provider_empty_response=False,
         )
         print("[OK] Metadata-only mode: provider not loaded and no review text generated")
         return
