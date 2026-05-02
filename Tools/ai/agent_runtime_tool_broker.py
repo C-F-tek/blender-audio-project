@@ -251,6 +251,42 @@ def build_code_interpreter_report(repo_root: Path, out_dir: Path, request_id: st
     return command, {"json_report": repo_rel(report, repo_root), "markdown_report": repo_rel(markdown, repo_root)}
 
 
+def runtime_sqlite_memory(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
+    report, markdown = base_outputs(out_dir, request_id, "runtime_sqlite_memory")
+    command = [
+        sys.executable,
+        "Tools/ai/agent_runtime_sqlite_memory.py",
+        "--repo-root",
+        ".",
+        "--action",
+        str(args.get("action") or "status"),
+        "--scope",
+        str(args.get("scope") or "operational"),
+        "--request-id",
+        request_id,
+        "--output",
+        str(report),
+        "--markdown-output",
+        str(markdown),
+    ]
+    for source, flag in (
+        ("database", "--database"),
+        ("persistent_database", "--persistent-database"),
+        ("summary", "--summary"),
+        ("content", "--content"),
+        ("role", "--role"),
+        ("query", "--query"),
+        ("confirm", "--confirm"),
+    ):
+        if args.get(source) is not None:
+            command.extend([flag, str(args[source])])
+    if args.get("limit") is not None:
+        command.extend(["--limit", str(args["limit"])])
+    for tag in split_values(args.get("tag")):
+        command.extend(["--tag", tag])
+    return command, {"json_report": repo_rel(report, repo_root), "markdown_report": repo_rel(markdown, repo_root)}
+
+
 TOOL_SPECS: dict[str, ToolSpec] = {
     "build_python_line_count_csv": ToolSpec(
         name="build_python_line_count_csv",
@@ -299,6 +335,24 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         description="Build static code-interpreter style report over selected roots.",
         allowed_args=("input",),
         builder=build_code_interpreter_report,
+    ),
+    "runtime_sqlite_memory": ToolSpec(
+        name="runtime_sqlite_memory",
+        description="Use protected persistent SQLite read-only or operational scratch SQLite memory under output/**.",
+        allowed_args=(
+            "action",
+            "scope",
+            "database",
+            "persistent_database",
+            "summary",
+            "content",
+            "role",
+            "tag",
+            "query",
+            "limit",
+            "confirm",
+        ),
+        builder=runtime_sqlite_memory,
     ),
 }
 
@@ -357,6 +411,9 @@ def execute_tool_request(
             "patch_application_performed": False,
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
+            "operational_sqlite_write_performed": False,
+            "operational_memory_write_performed": False,
+            "operational_memory_clear_performed": False,
             "blender_runtime_touched": False,
             "git_write_performed": False,
         },
@@ -410,6 +467,9 @@ def execute_tool_request(
                     "patch_application_performed": bool(report_data.get("patch_application_performed") or guardrails.get("patch_application_performed")),
                     "sqlite_write_performed": bool(guardrails.get("sqlite_write_performed") or guardrails.get("sqlite_db_committed") or guardrails.get("sqlite_db_touched") is True and not guardrails.get("sqlite_read_only")),
                     "persistent_memory_write_performed": bool(guardrails.get("persistent_memory_write_performed") or guardrails.get("memory_promotion_performed")),
+                    "operational_sqlite_write_performed": bool(report_data.get("operational_sqlite_write_performed") or guardrails.get("operational_sqlite_write_performed")),
+                    "operational_memory_write_performed": bool(report_data.get("operational_memory_write_performed") or guardrails.get("operational_memory_write_performed")),
+                    "operational_memory_clear_performed": bool(report_data.get("operational_memory_clear_performed") or guardrails.get("operational_memory_clear_performed")),
                     "blender_runtime_touched": bool(guardrails.get("blender_runtime_touched")),
                 }
             )
@@ -450,6 +510,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         or item.get("guardrails", {}).get("blender_runtime_touched")
         or item.get("guardrails", {}).get("git_write_performed")
     ]
+    operational_sqlite_write_count = sum(1 for item in results if item.get("guardrails", {}).get("operational_sqlite_write_performed"))
+    operational_memory_clear_count = sum(1 for item in results if item.get("guardrails", {}).get("operational_memory_clear_performed"))
 
     return {
         "schema_version": 1,
@@ -467,6 +529,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "source_writes_performed": False,
         "sqlite_write_performed": False,
         "persistent_memory_write_performed": False,
+        "operational_sqlite_write_performed": operational_sqlite_write_count > 0,
+        "operational_sqlite_write_count": operational_sqlite_write_count,
+        "operational_memory_clear_count": operational_memory_clear_count,
         "blender_runtime_execution_performed": False,
         "git_write_performed": False,
         "dry_run": bool(args.dry_run),
@@ -483,6 +548,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "patch_application_performed": False,
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
+            "operational_sqlite_write_allowed_under_output": True,
+            "operational_sqlite_write_performed": operational_sqlite_write_count > 0,
+            "operational_memory_clear_count": operational_memory_clear_count,
             "blender_runtime_touched": False,
             "git_write_performed": False,
             "manual_review_required": True,
@@ -503,6 +571,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "patch_application_performed",
         "sqlite_write_performed",
         "persistent_memory_write_performed",
+        "operational_sqlite_write_performed",
+        "operational_sqlite_write_count",
+        "operational_memory_clear_count",
         "blender_runtime_execution_performed",
     ):
         lines.append(f"- {key}: `{report.get(key)}`")
@@ -561,6 +632,9 @@ def main() -> int:
                 "patch_application_performed": report["patch_application_performed"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
                 "persistent_memory_write_performed": report["persistent_memory_write_performed"],
+                "operational_sqlite_write_performed": report["operational_sqlite_write_performed"],
+                "operational_sqlite_write_count": report["operational_sqlite_write_count"],
+                "operational_memory_clear_count": report["operational_memory_clear_count"],
             },
             indent=2,
             ensure_ascii=False,

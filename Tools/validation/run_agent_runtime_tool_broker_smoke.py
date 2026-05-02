@@ -80,6 +80,36 @@ def build_smoke_request() -> dict[str, Any]:
                 "args": {"memory_note": "Runtime broker smoke: report-only context aggregation."},
             },
             {
+                "id": "operational_memory_status",
+                "tool": "runtime_sqlite_memory",
+                "reason": "Doctor tool needs scratch operational memory status.",
+                "args": {"action": "status", "scope": "operational"},
+            },
+            {
+                "id": "operational_memory_remember",
+                "tool": "runtime_sqlite_memory",
+                "reason": "Doctor tool stores transient working context in clearable scratch memory.",
+                "args": {
+                    "action": "remember",
+                    "scope": "operational",
+                    "summary": "runtime broker smoke operational memory",
+                    "content": "This is a temporary operational memory record created by smoke validation.",
+                    "tag": ["smoke", "operational_memory"]
+                },
+            },
+            {
+                "id": "operational_memory_search",
+                "tool": "runtime_sqlite_memory",
+                "reason": "Doctor tool retrieves transient working context.",
+                "args": {"action": "search", "scope": "operational", "query": "temporary operational", "limit": 5},
+            },
+            {
+                "id": "persistent_memory_status",
+                "tool": "runtime_sqlite_memory",
+                "reason": "Doctor tool inspects persistent memory only in read-only mode.",
+                "args": {"action": "status", "scope": "persistent"},
+            },
+            {
                 "id": "blocked_free_shell",
                 "tool": "shell",
                 "reason": "This must be blocked because free shell is not allowlisted.",
@@ -93,16 +123,16 @@ def validate_report(report: dict[str, Any], *, dry_run: bool) -> list[str]:
     errors: list[str] = []
     if report.get("kind") != "agent_runtime_tool_broker":
         errors.append("unexpected report kind")
-    if report.get("tool_request_count") != 4:
-        errors.append("expected 4 tool requests")
+    if report.get("tool_request_count") != 8:
+        errors.append("expected 8 tool requests")
     if report.get("blocked_tool_count") != 1:
         errors.append("expected one blocked non-allowlisted tool")
     if dry_run:
         if report.get("tool_execution_count") != 0:
             errors.append("dry-run should not execute tools")
     else:
-        if report.get("tool_execution_count") != 3:
-            errors.append("expected three executed allowlisted tools")
+        if report.get("tool_execution_count") != 7:
+            errors.append("expected seven executed allowlisted tools")
     for key in (
         "provider_execution_performed",
         "patch_application_performed",
@@ -117,6 +147,12 @@ def validate_report(report: dict[str, Any], *, dry_run: bool) -> list[str]:
         errors.append("free_shell_exposed guardrail must be false")
     if report.get("guardrails", {}).get("allowlist_enforced") is not True:
         errors.append("allowlist_enforced guardrail must be true")
+    if report.get("operational_sqlite_write_performed") is not True:
+        errors.append("operational_sqlite_write_performed should be true after operational remember")
+    if report.get("sqlite_write_performed") is not False:
+        errors.append("protected sqlite_write_performed must remain false")
+    if report.get("persistent_memory_write_performed") is not False:
+        errors.append("persistent_memory_write_performed must remain false")
     return errors
 
 
