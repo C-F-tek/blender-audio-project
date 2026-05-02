@@ -7,7 +7,6 @@ source edit, validators and stop conditions while preserving manual review.
 """
 from __future__ import annotations
 
-import hashlib
 import sys
 from pathlib import Path
 from typing import Any
@@ -21,6 +20,7 @@ from Tools.ai.code_patch_plan_common import (  # noqa: E402
     normalize_repo_path,
     target_path_errors,
 )
+from Tools.ai.github_evidence_bundle_io import line_count, read_text, sha256_file  # noqa: E402
 
 EDIT_KIND_STRUCTURED = "structured_edit"
 EDIT_KIND_UNIFIED_DIFF = "unified_diff"
@@ -42,29 +42,12 @@ DEFAULT_CODE_VALIDATION_COMMANDS = [
 ]
 
 
-def file_sha256(path: Path) -> str | None:
-    """Return SHA-256 for an existing file, or None when unavailable."""
-    if not path.is_file():
-        return None
-    digest = hashlib.sha256()
-    try:
-        with path.open("rb") as handle:
-            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                digest.update(chunk)
-    except OSError:
-        return None
-    return digest.hexdigest()
-
-
 def physical_line_count(path: Path) -> int | None:
     """Return physical line count for an existing text file."""
     if not path.is_file():
         return None
-    try:
-        with path.open("r", encoding="utf-8-sig", errors="replace") as handle:
-            return sum(1 for _ in handle)
-    except OSError:
-        return None
+    text, error = read_text(path)
+    return None if error else line_count(text)
 
 
 def default_validation_commands_for(path_value: str) -> list[str]:
@@ -83,7 +66,7 @@ def target_metadata(repo_root: Path, path_value: str) -> dict[str, Any]:
     return {
         "path": normalized,
         "exists": full.is_file(),
-        "sha256": file_sha256(full),
+        "sha256": sha256_file(full),
         "line_count": physical_line_count(full),
         "suffix": full.suffix.lower(),
     }
