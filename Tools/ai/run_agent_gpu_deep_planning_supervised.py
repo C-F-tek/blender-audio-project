@@ -335,7 +335,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             round_start = time.perf_counter()
             try:
                 response, model_used = manager.generate(args.ollama_model, prompt, max_new_tokens=args.max_new_tokens, temperature=args.temperature)
-                parsed, parse_diagnostics = parse_model_json_with_diagnostics(response)
+                parsed, parse_diagnostics = parse_model_json_with_diagnostics(response, evidence_ready_count)
             except Exception as exc:  # noqa: BLE001
                 response = ""
                 parsed = {"summary": "provider error", "confidence": "low", "recommendations": [], "missing_evidence": [str(exc)], "next_best_action": "inspect provider error"}
