@@ -49,6 +49,16 @@ def validate_non_empty_string_list(item: dict[str, Any], field: str) -> list[str
     return []
 
 
+def plan_id_for(item: dict[str, Any], index: int) -> str:
+    """Return the display id for a plan check."""
+    return str(item.get("id") or f"<missing-{index}>")
+
+
+def invalid_plan_check(index: int) -> dict[str, Any]:
+    """Return the legacy check payload for a non-object plan item."""
+    return {"index": index, "id": f"<invalid-{index}>", "ok": False, "errors": ["plan item must be an object"], "warnings": []}
+
+
 def validate_target_files(repo_root: Path, item: dict[str, Any]) -> tuple[list[str], list[str], list[str]]:
     """Validate plan target_files and return errors, warnings and normalized paths."""
     errors: list[str] = []
@@ -89,9 +99,9 @@ def validate_proposed_patch(item: dict[str, Any]) -> list[str]:
 def validate_plan_item(repo_root: Path, item: Any, index: int) -> dict[str, Any]:
     """Validate one code patch-plan item."""
     if not isinstance(item, dict):
-        return {"index": index, "id": f"<invalid-{index}>", "ok": False, "errors": ["plan item must be an object"], "warnings": []}
+        return invalid_plan_check(index)
 
-    plan_id = str(item.get("id") or f"<missing-{index}>")
+    plan_id = plan_id_for(item, index)
     errors = validate_required_strings(item)
     warnings: list[str] = []
     if item.get("manual_review_required") is not True:
