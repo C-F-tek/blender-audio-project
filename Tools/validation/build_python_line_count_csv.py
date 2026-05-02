@@ -77,6 +77,12 @@ def should_include_python(path: Path, repo_root: Path, excluded_dirs: set[str], 
     return path.suffix.lower() == ".py" and path.suffix.lower() not in excluded_suffixes and not excluded_by_dir(path, repo_root, excluded_dirs)
 
 
+def iter_included_python_files(repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]) -> list[Path]:
+    """Return included Python files in stable repository-relative order."""
+    paths = [path for path in repo_root.rglob("*.py") if should_include_python(path, repo_root, excluded_dirs, excluded_suffixes)]
+    return sorted(paths, key=lambda value: repo_rel(repo_root, value).lower())
+
+
 def count_lines(path: Path) -> tuple[int, str | None]:
     """Count physical lines in a UTF-8-compatible way."""
     try:
@@ -90,9 +96,7 @@ def collect_python_counts(repo_root: Path, excluded_dirs: set[str], excluded_suf
     """Collect line counts for included Python files."""
     rows: list[dict[str, Any]] = []
     errors: list[str] = []
-    for path in sorted(repo_root.rglob("*.py"), key=lambda value: repo_rel(repo_root, value).lower()):
-        if not should_include_python(path, repo_root, excluded_dirs, excluded_suffixes):
-            continue
+    for path in iter_included_python_files(repo_root, excluded_dirs, excluded_suffixes):
         row, error = build_row(repo_root, path)
         if error:
             errors.append(error)
