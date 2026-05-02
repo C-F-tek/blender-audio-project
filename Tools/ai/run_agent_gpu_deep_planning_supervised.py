@@ -71,6 +71,16 @@ DEFAULT_MARKDOWN = "output/ai_pipeline/agent_gpu_deep_planning_supervised.md"
 DEFAULT_CHECKPOINT_DIR = "output/ai_pipeline/gpu_deep_planning_checkpoints"
 TERMINAL_NPU_AUDIT_CLASSIFICATIONS = {"dependency_missing_openvino_genai"}
 
+DEFAULT_RUNTIME_TOOL_BOOTSTRAP_REQUESTS: list[dict[str, Any]] = [
+    {"id": "bootstrap_tool_inventory", "tool": "build_agent_agnostic_tool_inventory", "reason": "Bootstrap available runtime tools, capabilities and guardrails before GPU planning.", "args": {}},
+    {"id": "bootstrap_memory_inventory", "tool": "build_agent_memory_inventory", "reason": "Bootstrap durable project memory inventory before GPU planning.", "args": {}},
+    {"id": "bootstrap_persistent_memory_status", "tool": "runtime_sqlite_memory", "reason": "Bootstrap persistent memory status in read-only mode before GPU planning.", "args": {"action": "status", "scope": "persistent"}},
+    {"id": "bootstrap_operational_memory_status", "tool": "runtime_sqlite_memory", "reason": "Bootstrap operational scratch memory status before GPU planning.", "args": {"action": "status", "scope": "operational"}},
+    {"id": "bootstrap_python_line_count", "tool": "build_python_line_count_csv", "reason": "Bootstrap full Python inventory before refactor planning.", "args": {}},
+    {"id": "bootstrap_python_syntax", "tool": "check_python_syntax", "reason": "Bootstrap Python syntax baseline before code planning.", "args": {}},
+    {"id": "bootstrap_gpu_contract_smoke", "tool": "run_gpu_planner_json_contract_smoke", "reason": "Bootstrap GPU JSON contract validation, including runtime tool request support.", "args": {}},
+]
+
 
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
@@ -229,6 +239,7 @@ def runtime_tool_context_report(round_index: int, broker_result: dict[str, Any])
         "passed": broker_result.get("passed"),
         "summary": {
             "round": round_index,
+            "bootstrap": bool(broker_result.get("bootstrap")),
             "tool_request_count": broker_result.get("tool_request_count"),
             "tool_execution_count": broker_result.get("tool_execution_count"),
             "blocked_tool_count": broker_result.get("blocked_tool_count"),
@@ -241,6 +252,46 @@ def runtime_tool_context_report(round_index: int, broker_result: dict[str, Any])
         },
         "tool_results": broker_result.get("tool_results", []),
     }
+
+
+def run_runtime_tool_bootstrap(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
+    # Run deterministic broker bootstrap before the first GPU planner prompt.
+    if not args.enable_runtime_tool_broker:
+        return {
+            "enabled": False,
+            "executed": False,
+            "bootstrap": True,
+            "requested_tool_count": 0,
+            "tool_results": [],
+            "guardrails": {
+                "bootstrap_requires_enable_runtime_tool_broker": True,
+                "patch_application_performed": False,
+                "persistent_memory_write_performed": False,
+            },
+        }
+    if args.disable_runtime_tool_bootstrap:
+        return {
+            "enabled": True,
+            "executed": False,
+            "bootstrap": True,
+            "disabled": True,
+            "requested_tool_count": 0,
+            "tool_results": [],
+            "guardrails": {
+                "bootstrap_disabled_by_flag": True,
+                "patch_application_performed": False,
+                "persistent_memory_write_performed": False,
+            },
+        }
+    result = run_runtime_tool_broker_for_round(
+        repo_root=repo_root,
+        args=args,
+        round_index=0,
+        tool_requests=[dict(item) for item in DEFAULT_RUNTIME_TOOL_BOOTSTRAP_REQUESTS],
+    )
+    result["bootstrap"] = True
+    result["bootstrap_tool_ids"] = [item["id"] for item in DEFAULT_RUNTIME_TOOL_BOOTSTRAP_REQUESTS]
+    return result
 
 
 def build_report(
@@ -270,12 +321,13 @@ def build_report(
         diagnostics["evidence_ready_for_manual_patch_count"] > 0
         and diagnostics["filtered_recommendation_count"] == 0
     )
+    runtime_tool_bootstrap = getattr(args, "runtime_tool_bootstrap_result", {})
     runtime_brokers = [round_item.get("runtime_tool_broker", {}) for round_item in rounds if round_item.get("runtime_tool_broker")]
-    runtime_tool_request_count = sum(int(item.get("requested_tool_count") or 0) for item in runtime_brokers)
-    runtime_tool_execution_count = sum(int(item.get("tool_execution_count") or 0) for item in runtime_brokers)
-    runtime_tool_failed_count = sum(int(item.get("failed_tool_count") or 0) for item in runtime_brokers)
-    runtime_tool_blocked_count = sum(int(item.get("blocked_tool_count") or 0) for item in runtime_brokers)
-    runtime_tool_result_count = sum(len(item.get("tool_results", [])) for item in runtime_brokers)
+    runtime_tool_request_count = int(runtime_tool_bootstrap.get("requested_tool_count") or 0) + sum(int(item.get("requested_tool_count") or 0) for item in runtime_brokers)
+    runtime_tool_execution_count = int(runtime_tool_bootstrap.get("tool_execution_count") or 0) + sum(int(item.get("tool_execution_count") or 0) for item in runtime_brokers)
+    runtime_tool_failed_count = int(runtime_tool_bootstrap.get("failed_tool_count") or 0) + sum(int(item.get("failed_tool_count") or 0) for item in runtime_brokers)
+    runtime_tool_blocked_count = int(runtime_tool_bootstrap.get("blocked_tool_count") or 0) + sum(int(item.get("blocked_tool_count") or 0) for item in runtime_brokers)
+    runtime_tool_result_count = len(runtime_tool_bootstrap.get("tool_results", [])) + sum(len(item.get("tool_results", [])) for item in runtime_brokers)
     return {
         "schema_version": 1,
         "kind": "agent_gpu_deep_planning_supervised",
@@ -301,6 +353,15 @@ def build_report(
         "npu_auditor_disabled_reason": npu_auditor_disabled_reason,
         "npu_audits": npu_audits,
         "runtime_tool_broker_enabled": bool(args.enable_runtime_tool_broker),
+        "runtime_tool_bootstrap_enabled": bool(args.enable_runtime_tool_broker and not args.disable_runtime_tool_bootstrap),
+        "runtime_tool_bootstrap_executed": bool(runtime_tool_bootstrap.get("executed")),
+        "runtime_tool_bootstrap_passed": runtime_tool_bootstrap.get("passed"),
+        "runtime_tool_bootstrap_request_count": int(runtime_tool_bootstrap.get("requested_tool_count") or 0),
+        "runtime_tool_bootstrap_execution_count": int(runtime_tool_bootstrap.get("tool_execution_count") or 0),
+        "runtime_tool_bootstrap_failed_count": int(runtime_tool_bootstrap.get("failed_tool_count") or 0),
+        "runtime_tool_bootstrap_blocked_count": int(runtime_tool_bootstrap.get("blocked_tool_count") or 0),
+        "runtime_tool_bootstrap_result_count": len(runtime_tool_bootstrap.get("tool_results", [])),
+        "runtime_tool_bootstrap_output": runtime_tool_bootstrap.get("broker_output", ""),
         "runtime_tool_request_count": runtime_tool_request_count,
         "runtime_tool_execution_count": runtime_tool_execution_count,
         "runtime_tool_failed_count": runtime_tool_failed_count,
@@ -420,6 +481,10 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
     refined = read_json(resolve_path(repo_root, args.refined_review)) if resolve_path(repo_root, args.refined_review).exists() else {}
     evidence_ready_count = evidence_ready_for_manual_patch_count(evidence)
     context_reports = []
+    runtime_tool_bootstrap = run_runtime_tool_bootstrap(repo_root, args)
+    setattr(args, "runtime_tool_bootstrap_result", runtime_tool_bootstrap)
+    if runtime_tool_bootstrap.get("executed"):
+        context_reports.append(runtime_tool_context_report(0, runtime_tool_bootstrap))
     for report_file in args.report_file:
         path = resolve_path(repo_root, report_file)
         if path.exists():
@@ -447,6 +512,9 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             "elapsed_seconds": 0,
             "round_count": 0,
             "npu_audit_count": 0,
+            "npu_audit_requested_count": 0,
+            "npu_audit_success_count": 0,
+            "npu_auditor_disabled_reason": "",
             "recommendation_count": 0,
             "raw_recommendation_candidate_count": 0,
             "filtered_recommendation_count": 0,
@@ -454,18 +522,33 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             "valid_tool_request_count": 0,
             "invalid_tool_request_count": 0,
             "runtime_tool_broker_enabled": bool(args.enable_runtime_tool_broker),
-            "runtime_tool_request_count": 0,
-            "runtime_tool_execution_count": 0,
-            "runtime_tool_failed_count": 0,
-            "runtime_tool_blocked_count": 0,
-            "runtime_tool_result_count": 0,
+            "runtime_tool_bootstrap_enabled": bool(args.enable_runtime_tool_broker and not args.disable_runtime_tool_bootstrap),
+            "runtime_tool_bootstrap_executed": bool(runtime_tool_bootstrap.get("executed")),
+            "runtime_tool_bootstrap_passed": runtime_tool_bootstrap.get("passed"),
+            "runtime_tool_bootstrap_request_count": int(runtime_tool_bootstrap.get("requested_tool_count") or 0),
+            "runtime_tool_bootstrap_execution_count": int(runtime_tool_bootstrap.get("tool_execution_count") or 0),
+            "runtime_tool_bootstrap_failed_count": int(runtime_tool_bootstrap.get("failed_tool_count") or 0),
+            "runtime_tool_bootstrap_blocked_count": int(runtime_tool_bootstrap.get("blocked_tool_count") or 0),
+            "runtime_tool_bootstrap_result_count": len(runtime_tool_bootstrap.get("tool_results", [])),
+            "runtime_tool_bootstrap_output": runtime_tool_bootstrap.get("broker_output", ""),
+            "runtime_tool_request_count": int(runtime_tool_bootstrap.get("requested_tool_count") or 0),
+            "runtime_tool_execution_count": int(runtime_tool_bootstrap.get("tool_execution_count") or 0),
+            "runtime_tool_failed_count": int(runtime_tool_bootstrap.get("failed_tool_count") or 0),
+            "runtime_tool_blocked_count": int(runtime_tool_bootstrap.get("blocked_tool_count") or 0),
+            "runtime_tool_result_count": len(runtime_tool_bootstrap.get("tool_results", [])),
             "json_parse_error_count": 0,
             "repair_attempt_count": 0,
             "empty_recommendations_reason": "valid_json_empty_recommendations",
             "evidence_ready_for_manual_patch_count": evidence_ready_count,
             "recommended_next_layer": "collect_more_evidence",
             "decision": {"ready_for_patch_plan": False, "manual_review_required": True},
-            "guardrails": {"provider_execution_requires_use_ollama": True, "patch_application_performed": False},
+            "guardrails": {
+                "provider_execution_requires_use_ollama": True,
+                "patch_application_performed": False,
+                "runtime_tool_bootstrap_report_only": True,
+                "runtime_tool_bootstrap_requires_enable_runtime_tool_broker": True,
+                "persistent_memory_write_performed": False,
+            },
         }
 
     evidence_paths = extract_evidence_files(evidence)
@@ -624,6 +707,7 @@ def main() -> int:
     parser.add_argument("--runtime-tool-output-dir", default="output/ai_runtime_tools/gpu_planner_runtime_tools")
     parser.add_argument("--runtime-tool-timeout-seconds", type=int, default=300)
     parser.add_argument("--runtime-tool-max-requests-per-round", type=int, default=8)
+    parser.add_argument("--disable-runtime-tool-bootstrap", action="store_true")
     parser.add_argument("--include-npu-auditor", action="store_true")
     parser.add_argument("--run-npu-auditor-provider", action="store_true", help="Actually execute OpenVINO/NPU auditor. Without this, auditor uses metadata-only mode.")
     parser.add_argument("--npu-auditor-every-rounds", type=int, default=1)
@@ -651,8 +735,8 @@ def main() -> int:
                 "elapsed_seconds": report["elapsed_seconds"],
                 "round_count": report["round_count"],
                 "npu_audit_count": report["npu_audit_count"],
-                "npu_audit_success_count": report["npu_audit_success_count"],
-                "npu_auditor_disabled_reason": report["npu_auditor_disabled_reason"],
+                "npu_audit_success_count": report.get("npu_audit_success_count", 0),
+                "npu_auditor_disabled_reason": report.get("npu_auditor_disabled_reason", ""),
                 "recommendation_count": report["recommendation_count"],
                 "raw_recommendation_candidate_count": report.get("raw_recommendation_candidate_count"),
                 "filtered_recommendation_count": report.get("filtered_recommendation_count"),
@@ -661,6 +745,12 @@ def main() -> int:
                 "invalid_tool_request_count": report.get("invalid_tool_request_count"),
                 "empty_recommendations_reason": report.get("empty_recommendations_reason"),
                 "runtime_tool_broker_enabled": report.get("runtime_tool_broker_enabled"),
+                "runtime_tool_bootstrap_executed": report.get("runtime_tool_bootstrap_executed"),
+                "runtime_tool_bootstrap_passed": report.get("runtime_tool_bootstrap_passed"),
+                "runtime_tool_bootstrap_request_count": report.get("runtime_tool_bootstrap_request_count"),
+                "runtime_tool_bootstrap_execution_count": report.get("runtime_tool_bootstrap_execution_count"),
+                "runtime_tool_bootstrap_failed_count": report.get("runtime_tool_bootstrap_failed_count"),
+                "runtime_tool_bootstrap_blocked_count": report.get("runtime_tool_bootstrap_blocked_count"),
                 "runtime_tool_request_count": report.get("runtime_tool_request_count"),
                 "runtime_tool_execution_count": report.get("runtime_tool_execution_count"),
                 "runtime_tool_failed_count": report.get("runtime_tool_failed_count"),
