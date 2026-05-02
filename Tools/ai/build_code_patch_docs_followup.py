@@ -107,12 +107,32 @@ def unique_candidates(candidates: list[str]) -> list[str]:
     return unique
 
 
+def normalized_target_files(plan: dict[str, Any]) -> list[str]:
+    """Return normalized code target files from a patch plan."""
+    target_files = plan.get("target_files", []) if isinstance(plan.get("target_files"), list) else []
+    return [normalize_repo_path(target) for target in target_files]
+
+
+def target_text_for_plan(plan: dict[str, Any]) -> str:
+    """Return the rationale target text for one patch plan."""
+    target_text = ", ".join(f"`{target}`" for target in normalized_target_files(plan))
+    return target_text or "the code target"
+
+
+def source_evidence_for_plan(plan: dict[str, Any], plan_id: str) -> dict[str, Any]:
+    """Return the docs-follow-up source evidence block for one patch plan."""
+    return {
+        "code_patch_plan_id": plan_id,
+        "code_target_files": normalized_target_files(plan),
+        "code_rationale": plan.get("rationale"),
+        "code_edit_strategy": plan.get("edit_strategy"),
+    }
+
+
 def docs_followup_for_plan(repo_root: Path, plan: dict[str, Any], index: int) -> dict[str, Any]:
     """Build one docs follow-up suggestion from one code patch-plan item."""
     plan_id = str(plan.get("id") or f"code_patch_{index:03d}")
     existing_targets, missing_targets = existing_doc_targets(repo_root, doc_candidates_for_plan(plan))
-    target_files = plan.get("target_files", []) if isinstance(plan.get("target_files"), list) else []
-    target_text = ", ".join(f"`{normalize_repo_path(target)}`" for target in target_files) or "the code target"
     return {
         "id": f"docs_followup_{index:03d}",
         "source_code_patch_plan_id": plan_id,
@@ -121,7 +141,7 @@ def docs_followup_for_plan(repo_root: Path, plan: dict[str, Any], index: int) ->
         "status": "candidate_for_manual_review",
         "target_files": existing_targets,
         "missing_candidate_docs": missing_targets,
-        "rationale": f"Code patch plan `{plan_id}` may change {target_text}; documentation should be reviewed for matching contract, workflow or schema updates.",
+        "rationale": f"Code patch plan `{plan_id}` may change {target_text_for_plan(plan)}; documentation should be reviewed for matching contract, workflow or schema updates.",
         "edit_strategy": "After the code patch is reviewed, update only the affected docs with a narrow cross-reference, schema note, validator command or workflow note. Do not duplicate full contracts and do not apply documentation edits automatically.",
         "validation_commands": list(DEFAULT_VALIDATION_COMMANDS),
         "stop_conditions": [
@@ -130,12 +150,7 @@ def docs_followup_for_plan(repo_root: Path, plan: dict[str, Any], index: int) ->
             "Stop if documentation validation fails.",
         ],
         "manual_review_required": True,
-        "source_evidence": {
-            "code_patch_plan_id": plan_id,
-            "code_target_files": [normalize_repo_path(target) for target in target_files],
-            "code_rationale": plan.get("rationale"),
-            "code_edit_strategy": plan.get("edit_strategy"),
-        },
+        "source_evidence": source_evidence_for_plan(plan, plan_id),
     }
 
 
