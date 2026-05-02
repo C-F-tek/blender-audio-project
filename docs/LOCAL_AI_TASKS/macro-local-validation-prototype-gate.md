@@ -20,6 +20,7 @@ Validate together:
 
 ```text
 PR #108 contract-drift validation documentation
+PR #109 static code interpreter evidence lane
 PR #109 agent-review code patch-plan design/build/smoke/docs-follow-up lane
 PR #109 complete code edit proposal helper/build/smoke lane
 PR #109 tool-agnostic artifact domain registry
@@ -43,6 +44,7 @@ Tools/validation/run_agnostic_context_stack_smoke.py
 Tools/ai/build_agent_review_evidence_sufficiency.py
 Tools/validation/run_agent_review_evidence_sufficiency_smoke.py
 Tools/validation/build_python_line_count_csv.py
+Tools/ai/build_code_interpreter_report.py
 Tools/ai/build_code_edit_proposal_from_plan.py
 Tools/validation/run_code_edit_proposal_smoke.py
 Tools/validation/check_artifact_domain_registry.py
@@ -55,6 +57,8 @@ Tools/validation/check_artifact_domain_registry.py
 `build_agent_review_evidence_sufficiency.py` and `run_agent_review_evidence_sufficiency_smoke.py` classify whether refined review findings are sufficient for manual patch candidates or still need more context. They remain provider-free and patch-free.
 
 `build_python_line_count_csv.py` regenerates deterministic Python line-count evidence after local runs, replacing stale ad-hoc CSV snapshots with a tracked, reproducible command.
+
+`build_code_interpreter_report.py` statically interprets Python code via AST, producing function/class/import/risk/todo/complexity evidence without executing repository code.
 
 `build_code_edit_proposal_from_plan.py` turns a selected `agent_review_code_patch_plan` item into complete `code_edit_proposal` metadata without applying the proposal.
 
@@ -98,6 +102,7 @@ Allowed:
 
 ```text
 local validators
+report-only static code interpretation
 report-only drift checks
 report-only evidence sufficiency classification
 report-only line-count CSV generation
@@ -178,6 +183,13 @@ git switch codex/design-code-patch-plan-lane
 python .\Tools\validation\check_python_syntax.py `
   --repo-root . `
   --output .\output\validation\python_syntax_pr109.json
+
+python .\Tools\ai\build_code_interpreter_report.py `
+  --repo-root . `
+  --input Tools/ai `
+  --input Tools/validation `
+  --output .\output\analysis\code_interpreter_report_pr109.json `
+  --markdown-output .\output\analysis\code_interpreter_report_pr109.md
 
 python .\Tools\validation\check_artifact_domain_registry.py `
   --repo-root . `
@@ -415,6 +427,13 @@ python .\Tools\validation\build_python_line_count_csv.py `
   --report-output .\output\validation\python_line_count_macro.json `
   --markdown-output .\output\validation\python_line_count_macro.md
 
+python .\Tools\ai\build_code_interpreter_report.py `
+  --repo-root . `
+  --input Tools/ai `
+  --input Tools/validation `
+  --output .\output\analysis\code_interpreter_report_macro.json `
+  --markdown-output .\output\analysis\code_interpreter_report_macro.md
+
 python .\Tools\validation\check_artifact_domain_registry.py `
   --repo-root . `
   --output .\output\validation\artifact_domain_registry_macro.json
@@ -507,6 +526,7 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $Reports = @(
   ".\output\validation\python_syntax_macro.json",
   ".\output\validation\python_line_count_macro.json",
+  ".\output\analysis\code_interpreter_report_macro.json",
   ".\output\validation\artifact_domain_registry_macro.json",
   ".\output\validation\docs_links_macro.json",
   ".\output\validation\markdown_command_hygiene_macro.json",
@@ -530,7 +550,12 @@ python .\Tools\ai\build_github_evidence_bundle.py `
   --repo-root . `
   --basename macro_pr108_pr109_validation_$Stamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
-  --report ($Reports -join ',')
+  --report ($Reports -join ',') `
+  --artifact .\output\analysis\code_interpreter_report_macro.md `
+  --artifact .\output\patch_specs\agent_review_code_patch_plan_macro.md `
+  --artifact .\output\patch_specs\code_edit_proposal_from_plan_macro.md `
+  --max-included-artifact-chars 12000 `
+  --max-included-artifacts 80
 ```
 
 Validate the new bundle:
@@ -549,6 +574,7 @@ The prototype gate is green only if:
 ```text
 all required validators passed
 fresh python line-count CSV/report generated
+static code interpreter report generated
 artifact domain registry validation passes
 agnostic core activation contract passes
 agnostic context stack dry-run passes
@@ -608,6 +634,7 @@ The following are already part of PR #109:
 
 ```text
 Tools/ai/build_agent_review_code_patch_plan.py
+Tools/ai/build_code_interpreter_report.py
 Tools/ai/build_code_edit_proposal_from_plan.py
 Tools/ai/build_code_patch_docs_followup.py
 Tools/ai/build_code_patch_artifact_pack.py
@@ -628,6 +655,7 @@ Stop immediately if:
 ```text
 validator output is not JSON-parseable
 python line-count CSV/report generation fails
+static code interpreter report fails
 artifact domain registry validation fails
 contract drift reports show source_writes_performed=true
 agnostic core activation contract fails
