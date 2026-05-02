@@ -21,6 +21,7 @@ Validate together:
 ```text
 PR #108 contract-drift validation documentation
 PR #109 agent-review code patch-plan design/build/smoke/docs-follow-up lane
+PR #109 complete code edit proposal helper and smoke lane
 current master local AI evidence-bundle tooling
 current master selected-chunks evidence tooling
 current master agnostic context stack tooling
@@ -41,6 +42,7 @@ Tools/validation/run_agnostic_context_stack_smoke.py
 Tools/ai/build_agent_review_evidence_sufficiency.py
 Tools/validation/run_agent_review_evidence_sufficiency_smoke.py
 Tools/validation/build_python_line_count_csv.py
+Tools/validation/run_code_edit_proposal_smoke.py
 ```
 
 `check_core_activation_agnostic_contract.py` statically verifies that the local AI core activation lane still wires full-context orchestration, explicit provider flags, agnostic memory/tool/transient context artifacts, megalithic review stack and manual-review guardrails.
@@ -50,6 +52,8 @@ Tools/validation/build_python_line_count_csv.py
 `build_agent_review_evidence_sufficiency.py` and `run_agent_review_evidence_sufficiency_smoke.py` classify whether refined review findings are sufficient for manual patch candidates or still need more context. They remain provider-free and patch-free.
 
 `build_python_line_count_csv.py` regenerates deterministic Python line-count evidence after local runs, replacing stale ad-hoc CSV snapshots with a tracked, reproducible command.
+
+`run_code_edit_proposal_smoke.py` validates complete code edit proposal artifacts without applying patches. It is the smoke gate for future coding-complete proposal lanes.
 
 ## Explicitly out of scope
 
@@ -91,6 +95,7 @@ report-only drift checks
 report-only evidence sufficiency classification
 report-only line-count CSV generation
 report-only code patch-plan generation
+report-only code edit proposal smoke validation
 report-only docs follow-up generation
 report-only code patch artifact packing
 CPU-only/report-only agnostic context stack smoke
@@ -173,6 +178,11 @@ python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
   --repo-root . `
   --report .\Tools\ai\fixtures\agent_review_code_patch_plan_fixture.json `
   --output .\output\validation\agent_review_code_patch_plan_smoke_pr109.json
+
+python .\Tools\validation\run_code_edit_proposal_smoke.py `
+  --repo-root . `
+  --proposal .\Tools\ai\fixtures\code_edit_proposal_fixture.json `
+  --output .\output\validation\code_edit_proposal_smoke_pr109.json
 
 python .\Tools\ai\build_agent_review_code_patch_plan.py `
   --repo-root . `
@@ -394,6 +404,11 @@ python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
   --report .\Tools\ai\fixtures\agent_review_code_patch_plan_fixture.json `
   --output .\output\validation\agent_review_code_patch_plan_smoke_macro.json
 
+python .\Tools\validation\run_code_edit_proposal_smoke.py `
+  --repo-root . `
+  --proposal .\Tools\ai\fixtures\code_edit_proposal_fixture.json `
+  --output .\output\validation\code_edit_proposal_smoke_macro.json
+
 python .\Tools\ai\build_agent_review_code_patch_plan.py `
   --repo-root . `
   --code-contract-drift-report .\output\validation\code_contract_drift.json `
@@ -460,6 +475,7 @@ $Reports = @(
   ".\output\validation\agnostic_context_stack_smoke.json",
   ".\output\validation\agent_review_evidence_sufficiency_smoke_macro.json",
   ".\output\validation\agent_review_code_patch_plan_smoke_macro.json",
+  ".\output\validation\code_edit_proposal_smoke_macro.json",
   ".\output\validation\agent_review_code_patch_plan_smoke_macro_built.json",
   ".\output\validation\code_patch_artifact_pack_macro.json",
   ".\output\validation\json_artifacts_macro.json",
@@ -498,6 +514,7 @@ agnostic context stack full smoke passes or is explicitly deferred with reason
 evidence sufficiency smoke passes or is explicitly skipped because refined-review artifacts are absent
 new evidence bundle validates
 code patch-plan smoke passes
+code edit proposal smoke passes
 code docs-follow-up report is generated or explicitly reports no ready follow-up
 code patch artifact pack is generated and validates guardrails
 no output/** is staged
@@ -550,7 +567,9 @@ The following are already part of PR #109:
 Tools/ai/build_agent_review_code_patch_plan.py
 Tools/ai/build_code_patch_docs_followup.py
 Tools/ai/build_code_patch_artifact_pack.py
+Tools/ai/code_edit_proposal_helpers.py
 Tools/validation/run_agent_review_code_patch_plan_smoke.py
+Tools/validation/run_code_edit_proposal_smoke.py
 Tools/validation/build_python_line_count_csv.py
 ```
 
@@ -567,6 +586,7 @@ contract drift reports show source_writes_performed=true
 agnostic core activation contract fails
 agent_review_evidence_sufficiency_smoke fails when refined-review inputs are present
 agent_review_code_patch_plan smoke report fails
+code_edit_proposal_smoke fails
 agent_review_code_docs_followup reports source_writes_performed=true
 code_patch_artifact_pack reports source_writes_performed=true
 markdown command hygiene report fails
