@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import json
 import mimetypes
 import sys
 from pathlib import Path
@@ -22,11 +21,9 @@ if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
 from Tools.ai.code_patch_plan_common import (  # noqa: E402
-    normalize_repo_path,
     now_iso,
     repo_rel,
     report_only_guardrails,
-    resolve_output_path,
     write_json_and_markdown,
 )
 
