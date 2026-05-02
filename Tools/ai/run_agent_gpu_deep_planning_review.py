@@ -27,6 +27,7 @@ from typing import Any
 
 try:
     from Tools.ai.gpu_planner_json_contract import (
+        ALLOWED_RUNTIME_TOOLS,
         result_to_dict,
         validate_model_response_contract,
         validate_recommendation_object,
@@ -37,6 +38,7 @@ except ImportError:  # Script-style execution from Tools/ai.
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from Tools.ai.gpu_planner_json_contract import (  # type: ignore
+        ALLOWED_RUNTIME_TOOLS,
         result_to_dict,
         validate_model_response_contract,
         validate_recommendation_object,
@@ -58,6 +60,7 @@ EMPTY_RECOMMENDATION_REASONS = {
     "evidence_ready_but_no_gpu_plan",
     "model_output_missing_required_fields",
     "repair_attempt_failed",
+    "tool_requests_pending",
 }
 
 
@@ -259,7 +262,20 @@ def build_prompt(
             "Prefer small manual-review docs/code patch plans over broad rewrites.",
             "Call out missing evidence explicitly.",
             "Return valid JSON only.",
+            "When evidence is missing, request broker tools through tool_requests instead of guessing.",
+            "Never request shell, git write, provider execution, patch application, Blender runtime, or persistent memory writes.",
+            "Operational memory may be requested only through runtime_sqlite_memory with scope=operational.",
+            "Persistent memory may be searched/status-checked only through runtime_sqlite_memory with scope=persistent.",
         ],
+        "available_runtime_tools": sorted(ALLOWED_RUNTIME_TOOLS),
+        "tool_request_policy": {
+            "execution_model": "planner emits tool_requests; orchestrator/broker executes later",
+            "free_shell_allowed": False,
+            "persistent_memory_write_allowed": False,
+            "patch_application_allowed": False,
+            "provider_execution_allowed": False,
+            "operational_memory_scope": "scratch context under output/** only",
+        },
         "expected_json_schema": {
             "summary": "short technical summary",
             "confidence": "low|medium|high",
@@ -274,6 +290,14 @@ def build_prompt(
                     "risk": "low|medium|high",
                     "validation_commands": ["command"],
                     "stop_conditions": ["condition"],
+                }
+            ],
+            "tool_requests": [
+                {
+                    "id": "string",
+                    "tool": "one available_runtime_tools value",
+                    "reason": "why the tool is needed before deciding",
+                    "args": {},
                 }
             ],
             "missing_evidence": ["string"],
@@ -320,6 +344,7 @@ def parse_model_json_with_diagnostics(
                 "summary": text[:2000],
                 "confidence": "low",
                 "recommendations": [],
+                "tool_requests": [],
                 "missing_evidence": ["model_response_not_valid_json"],
                 "next_best_action": "review raw model response",
             },
@@ -330,6 +355,8 @@ def parse_model_json_with_diagnostics(
     recommendations = parsed.get("recommendations")
     if not isinstance(recommendations, list):
         parsed["recommendations"] = []
+    if not isinstance(parsed.get("tool_requests", []), list):
+        parsed["tool_requests"] = []
     parsed.setdefault("missing_evidence", [])
     parsed.setdefault("next_best_action", "")
     return parsed, diagnostics
@@ -356,9 +383,12 @@ def classify_empty_recommendations(
     raw_recommendation_candidate_count: int,
     filtered_recommendation_count: int,
     evidence_ready_for_manual_patch_count_value: int,
+    valid_tool_request_count: int = 0,
 ) -> str:
     if filtered_recommendation_count > 0:
         return ""
+    if valid_tool_request_count > 0:
+        return "tool_requests_pending"
     if context_echo_detected:
         return "context_echo_detected"
     if not json_ok:
@@ -379,6 +409,8 @@ def recommendation_diagnostics_for_round(
 ) -> dict[str, Any]:
     raw_recommendations = _raw_recommendations(parsed)
     raw_count = len(raw_recommendations)
+    tool_requests = parsed.get("tool_requests", [])
+    tool_request_count = len(tool_requests) if isinstance(tool_requests, list) else 0
     filtered_count = int(parse_diagnostics.get("valid_recommendation_count") or 0)
     if "valid_recommendation_count" not in parse_diagnostics:
         filtered_count = sum(1 for rec in raw_recommendations if isinstance(rec, dict))
@@ -392,6 +424,7 @@ def recommendation_diagnostics_for_round(
         raw_recommendation_candidate_count=raw_count,
         filtered_recommendation_count=filtered_count,
         evidence_ready_for_manual_patch_count_value=evidence_ready_for_manual_patch_count_value,
+        valid_tool_request_count=int(parse_diagnostics.get("valid_tool_request_count") or 0),
     )
     return {
         "json_ok": bool(parse_diagnostics.get("json_ok")),
@@ -406,6 +439,9 @@ def recommendation_diagnostics_for_round(
         "raw_recommendation_candidate_count": raw_count,
         "filtered_recommendation_count": filtered_count,
         "recommendation_count": filtered_count,
+        "tool_request_count": tool_request_count,
+        "valid_tool_request_count": int(parse_diagnostics.get("valid_tool_request_count") or 0),
+        "invalid_tool_request_count": int(parse_diagnostics.get("invalid_tool_request_count") or 0),
         "empty_recommendations_reason": reason,
         "evidence_ready_for_manual_patch_count": evidence_ready_for_manual_patch_count_value,
         "recommended_next_layer": "build_agent_review_patch_plan.py"
@@ -428,6 +464,9 @@ def aggregate_recommendation_diagnostics(rounds: list[dict[str, Any]], evidence:
         or round_result.get("empty_recommendations_reason") == "model_output_schema_mismatch"
         or round_result.get("empty_recommendations_reason") == "model_output_missing_required_fields"
     )
+    tool_request_count = sum(int(round_result.get("tool_request_count") or 0) for round_result in rounds)
+    valid_tool_request_count = sum(int(round_result.get("valid_tool_request_count") or 0) for round_result in rounds)
+    invalid_tool_request_count = sum(int(round_result.get("invalid_tool_request_count") or 0) for round_result in rounds)
     parse_errors = [str(round_result.get("parse_error")) for round_result in rounds if round_result.get("parse_error")]
 
     reason = ""
@@ -440,6 +479,8 @@ def aggregate_recommendation_diagnostics(rounds: list[dict[str, Any]], evidence:
             reason = "model_output_schema_mismatch"
         elif raw_count > 0:
             reason = "recommendations_filtered_out"
+        elif valid_tool_request_count > 0:
+            reason = "tool_requests_pending"
         elif evidence_ready_count > 0:
             reason = "evidence_ready_but_no_gpu_plan"
         else:
@@ -453,6 +494,9 @@ def aggregate_recommendation_diagnostics(rounds: list[dict[str, Any]], evidence:
         "repair_attempt_count": repair_attempt_count,
         "raw_recommendation_candidate_count": raw_count,
         "filtered_recommendation_count": filtered_count,
+        "tool_request_count": tool_request_count,
+        "valid_tool_request_count": valid_tool_request_count,
+        "invalid_tool_request_count": invalid_tool_request_count,
         "empty_recommendations_reason": reason,
         "evidence_ready_for_manual_patch_count": evidence_ready_count,
         "recommended_next_layer": "build_agent_review_patch_plan.py"
@@ -490,6 +534,9 @@ def build_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Recommendation count: `{report['recommendation_count']}`")
     lines.append(f"- Raw recommendation candidates: `{report.get('raw_recommendation_candidate_count')}`")
     lines.append(f"- Filtered recommendation count: `{report.get('filtered_recommendation_count')}`")
+    lines.append(f"- Tool request count: `{report.get('tool_request_count')}`")
+    lines.append(f"- Valid tool request count: `{report.get('valid_tool_request_count')}`")
+    lines.append(f"- Invalid tool request count: `{report.get('invalid_tool_request_count')}`")
     lines.append(f"- JSON parse error count: `{report.get('json_parse_error_count')}`")
     lines.append(f"- Context echo detected count: `{report.get('context_echo_detected_count')}`")
     lines.append(f"- Model output schema mismatch count: `{report.get('model_output_schema_mismatch_count')}`")
@@ -562,6 +609,9 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
             "recommendation_count": 0,
             "raw_recommendation_candidate_count": 0,
             "filtered_recommendation_count": 0,
+            "tool_request_count": 0,
+            "valid_tool_request_count": 0,
+            "invalid_tool_request_count": 0,
             "json_parse_error_count": 0,
             "repair_attempt_count": 0,
             "empty_recommendations_reason": "valid_json_empty_recommendations",
@@ -712,6 +762,9 @@ def main() -> int:
                 "recommendation_count": report["recommendation_count"],
                 "raw_recommendation_candidate_count": report.get("raw_recommendation_candidate_count"),
                 "filtered_recommendation_count": report.get("filtered_recommendation_count"),
+                "tool_request_count": report.get("tool_request_count"),
+                "valid_tool_request_count": report.get("valid_tool_request_count"),
+                "invalid_tool_request_count": report.get("invalid_tool_request_count"),
                 "empty_recommendations_reason": report.get("empty_recommendations_reason"),
                 "evidence_ready_for_manual_patch_count": report.get("evidence_ready_for_manual_patch_count"),
                 "ready_for_patch_plan": report["decision"].get("ready_for_patch_plan"),

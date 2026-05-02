@@ -90,6 +90,46 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     }
     ```
     """
+    tool_request_response = """
+    {
+      "summary": "need runtime tools before patch planning",
+      "confidence": "medium",
+      "recommendations": [],
+      "tool_requests": [
+        {
+          "id": "python_line_count_inventory",
+          "tool": "build_python_line_count_csv",
+          "reason": "Need complete Python inventory before selecting refactor targets.",
+          "args": {}
+        },
+        {
+          "id": "operational_memory_status",
+          "tool": "runtime_sqlite_memory",
+          "reason": "Need scratch operational memory status before the next planner round.",
+          "args": {"action": "status", "scope": "operational"}
+        }
+      ],
+      "missing_evidence": [],
+      "next_best_action": "run broker for requested tools"
+    }
+    """
+    invalid_tool_request_response = """
+    {
+      "summary": "invalid runtime tool request",
+      "confidence": "low",
+      "recommendations": [],
+      "tool_requests": [
+        {
+          "id": "free_shell",
+          "tool": "shell",
+          "reason": "This must be blocked by the contract.",
+          "args": {"command": "whoami"}
+        }
+      ],
+      "missing_evidence": [],
+      "next_best_action": "reject invalid tool request"
+    }
+    """
     malformed_response = "not JSON at all: { missing quoted keys and closing braces"
     schema_mismatch_response = """
     {
@@ -119,6 +159,22 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
             "expected_context_echo": True,
         },
         {
+            "name": "tool_requests_pending",
+            "response": tool_request_response,
+            "expected_reason": "tool_requests_pending",
+            "expected_json_ok": True,
+            "expected_context_echo": False,
+            "expected_valid_tool_request_count": 2,
+        },
+        {
+            "name": "invalid_tool_request",
+            "response": invalid_tool_request_response,
+            "expected_reason": "model_output_schema_mismatch",
+            "expected_json_ok": True,
+            "expected_context_echo": False,
+            "expected_valid_tool_request_count": 0,
+        },
+        {
             "name": "malformed_json",
             "response": malformed_response,
             "expected_reason": "json_parse_failure",
@@ -141,10 +197,15 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
             evidence_ready_for_manual_patch_count=12,
         )
         result_dict = result_to_dict(result)
+        expected_valid_tool_request_count = case.get("expected_valid_tool_request_count")
         passed = (
             result.empty_recommendations_reason == case["expected_reason"]
             and result.json_ok is case["expected_json_ok"]
             and result.context_echo_detected is case["expected_context_echo"]
+            and (
+                expected_valid_tool_request_count is None
+                or result.valid_tool_request_count == expected_valid_tool_request_count
+            )
         )
         rendered_cases.append(
             {

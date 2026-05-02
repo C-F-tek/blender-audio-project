@@ -32,9 +32,21 @@ REQUIRED_RECOMMENDATION_KEYS = {
     "validation_commands",
     "stop_conditions",
 }
+ALLOWED_RUNTIME_TOOLS = {
+    "build_python_line_count_csv",
+    "build_agent_memory_inventory",
+    "build_agent_agnostic_tool_inventory",
+    "build_agent_transient_request_context",
+    "check_python_syntax",
+    "check_validation_report_contract",
+    "run_gpu_planner_json_contract_smoke",
+    "build_code_interpreter_report",
+    "runtime_sqlite_memory",
+}
+REQUIRED_TOOL_REQUEST_KEYS = {"id", "tool", "reason", "args"}
 CONTEXT_ECHO_TOP_LEVEL_KEYS = {"files", "context_files", "repository_files", "file_previews"}
 CONTEXT_ECHO_NESTED_KEYS = {"content_preview", "preview", "raw_response_preview"}
-EXPECTED_TOP_LEVEL_KEYS = {"summary", "confidence", "recommendations", "missing_evidence", "next_best_action"}
+EXPECTED_TOP_LEVEL_KEYS = {"summary", "confidence", "recommendations", "tool_requests", "missing_evidence", "next_best_action"}
 OPEN_TO_CLOSE = {"{": "}", "[": "]"}
 
 
@@ -53,6 +65,9 @@ class ModelJsonContractResult:
     recommendation_count: int
     valid_recommendation_count: int
     invalid_recommendation_count: int
+    tool_request_count: int
+    valid_tool_request_count: int
+    invalid_tool_request_count: int
     empty_recommendations_reason: str
     parsed: dict[str, Any]
 
@@ -183,18 +198,77 @@ def validate_recommendations(parsed: dict[str, Any]) -> tuple[int, int, list[str
     return valid_count, len(recommendations) - valid_count, errors
 
 
+def validate_tool_request_object(value: Any, index: int) -> list[str]:
+    """Return schema errors for one broker-compatible runtime tool request."""
+
+    errors: list[str] = []
+    if not isinstance(value, dict):
+        return [f"tool_requests[{index}] must be an object"]
+
+    missing = sorted(REQUIRED_TOOL_REQUEST_KEYS - set(value))
+    if missing:
+        errors.append(f"tool_requests[{index}] missing keys: {', '.join(missing)}")
+
+    request_id = value.get("id")
+    if not isinstance(request_id, str) or not request_id.strip():
+        errors.append(f"tool_requests[{index}].id must be a non-empty string")
+
+    tool_name = value.get("tool")
+    if not isinstance(tool_name, str) or not tool_name.strip():
+        errors.append(f"tool_requests[{index}].tool must be a non-empty string")
+    elif tool_name not in ALLOWED_RUNTIME_TOOLS:
+        errors.append(f"tool_requests[{index}].tool not allowlisted: {tool_name!r}")
+
+    reason = value.get("reason")
+    if not isinstance(reason, str) or not reason.strip():
+        errors.append(f"tool_requests[{index}].reason must be a non-empty string")
+
+    request_args = value.get("args")
+    if not isinstance(request_args, dict):
+        errors.append(f"tool_requests[{index}].args must be an object")
+
+    if _contains_nested_context_echo(value):
+        errors.append(f"tool_requests[{index}] embeds raw context preview data")
+
+    return errors
+
+
+def validate_tool_requests(parsed: dict[str, Any]) -> tuple[int, int, list[str]]:
+    """Validate optional runtime tool requests for the broker layer."""
+
+    if "tool_requests" not in parsed:
+        return 0, 0, []
+
+    tool_requests = parsed.get("tool_requests")
+    if not isinstance(tool_requests, list):
+        return 0, 0, ["top-level tool_requests must be a list"]
+
+    valid_count = 0
+    errors: list[str] = []
+    for index, item in enumerate(tool_requests):
+        item_errors = validate_tool_request_object(item, index)
+        if item_errors:
+            errors.extend(item_errors)
+        else:
+            valid_count += 1
+    return valid_count, len(tool_requests) - valid_count, errors
+
+
 def classify_empty_reason(
     *,
     json_ok: bool,
     schema_ok: bool,
     context_echo_detected: bool,
     valid_recommendation_count: int,
+    valid_tool_request_count: int = 0,
     evidence_ready_for_manual_patch_count: int = 0,
 ) -> str:
     """Classify an empty or unusable recommendation result."""
 
     if valid_recommendation_count > 0:
         return ""
+    if valid_tool_request_count > 0:
+        return "tool_requests_pending"
     if context_echo_detected:
         return "context_echo_detected"
     if not json_ok:
@@ -235,6 +309,8 @@ def validate_model_response_contract(
     context_echo = False
     valid_count = 0
     invalid_count = 0
+    valid_tool_count = 0
+    invalid_tool_count = 0
 
     if json_ok:
         context_echo = detect_context_echo(parsed)
@@ -247,6 +323,8 @@ def validate_model_response_contract(
         if "recommendations" in parsed:
             valid_count, invalid_count, recommendation_errors = validate_recommendations(parsed)
             schema_errors.extend(recommendation_errors)
+        valid_tool_count, invalid_tool_count, tool_errors = validate_tool_requests(parsed)
+        schema_errors.extend(tool_errors)
 
     schema_ok = json_ok and not schema_errors and not context_echo
     recommendation_count = valid_count
@@ -255,6 +333,7 @@ def validate_model_response_contract(
         schema_ok=schema_ok,
         context_echo_detected=context_echo,
         valid_recommendation_count=valid_count,
+        valid_tool_request_count=valid_tool_count,
         evidence_ready_for_manual_patch_count=evidence_ready_for_manual_patch_count,
     )
     return ModelJsonContractResult(
@@ -269,6 +348,9 @@ def validate_model_response_contract(
         recommendation_count=recommendation_count,
         valid_recommendation_count=valid_count,
         invalid_recommendation_count=invalid_count,
+        tool_request_count=valid_tool_count + invalid_tool_count,
+        valid_tool_request_count=valid_tool_count,
+        invalid_tool_request_count=invalid_tool_count,
         empty_recommendations_reason=reason,
         parsed=parsed,
     )
@@ -289,6 +371,9 @@ def result_to_dict(result: ModelJsonContractResult, *, include_parsed: bool = Fa
         "recommendation_count": result.recommendation_count,
         "valid_recommendation_count": result.valid_recommendation_count,
         "invalid_recommendation_count": result.invalid_recommendation_count,
+        "tool_request_count": result.tool_request_count,
+        "valid_tool_request_count": result.valid_tool_request_count,
+        "invalid_tool_request_count": result.invalid_tool_request_count,
         "empty_recommendations_reason": result.empty_recommendations_reason,
     }
     if include_parsed:
