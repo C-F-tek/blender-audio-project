@@ -105,6 +105,13 @@ python .\Tools\validation\check_docs_links.py `
   --repo-root . `
   --output .\output\validation\docs_links_pr108.json
 
+python .\Tools\validation\check_markdown_command_hygiene.py `
+  --repo-root . `
+  --path docs/CONTRACT_DRIFT_VALIDATION.md `
+  --path docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md `
+  --path docs/README.md `
+  --output .\output\validation\markdown_command_hygiene_pr108.json
+
 python .\Tools\validation\check_validation_report_contract.py `
   --repo-root . `
   --output .\output\validation\validation_report_contract_pr108.json
@@ -120,6 +127,11 @@ git switch codex/design-code-patch-plan-lane
 python .\Tools\validation\check_docs_links.py `
   --repo-root . `
   --output .\output\validation\docs_links_pr109.json
+
+python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
+  --repo-root . `
+  --report .\Tools\ai\fixtures\agent_review_code_patch_plan_fixture.json `
+  --output .\output\validation\agent_review_code_patch_plan_smoke_pr109.json
 
 python .\Tools\validation\check_validation_report_contract.py `
   --repo-root . `
@@ -168,6 +180,10 @@ python .\Tools\validation\check_docs_contract_drift.py `
   --repo-root . `
   --output .\output\validation\docs_contract_drift.json `
   --markdown-output .\output\validation\docs_contract_drift.md
+
+python .\Tools\validation\check_markdown_command_hygiene.py `
+  --repo-root . `
+  --output .\output\validation\markdown_command_hygiene.json
 ```
 
 Expected semantics:
@@ -178,7 +194,7 @@ patch_application_performed = false
 source_writes_performed = false
 ```
 
-A failed drift report means review is needed. It does not mean apply patches automatically.
+A failed drift or hygiene report means review is needed. It does not mean apply patches automatically.
 
 ## Phase 4 — Optional stacked integration test
 
@@ -224,6 +240,15 @@ python .\Tools\validation\check_docs_links.py `
   --repo-root . `
   --output .\output\validation\docs_links_macro.json
 
+python .\Tools\validation\check_markdown_command_hygiene.py `
+  --repo-root . `
+  --output .\output\validation\markdown_command_hygiene_macro.json
+
+python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
+  --repo-root . `
+  --report .\Tools\ai\fixtures\agent_review_code_patch_plan_fixture.json `
+  --output .\output\validation\agent_review_code_patch_plan_smoke_macro.json
+
 python .\Tools\validation\check_json_artifacts.py `
   --repo-root . `
   --output .\output\validation\json_artifacts_macro.json
@@ -261,6 +286,8 @@ python .\Tools\ai\build_github_evidence_bundle.py `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
   --report .\output\validation\python_syntax_macro.json `
   --report .\output\validation\docs_links_macro.json `
+  --report .\output\validation\markdown_command_hygiene_macro.json `
+  --report .\output\validation\agent_review_code_patch_plan_smoke_macro.json `
   --report .\output\validation\json_artifacts_macro.json `
   --report .\output\validation\validation_report_contract_macro.json `
   --report .\output\validation\github_evidence_bundle_macro.json `
@@ -324,9 +351,10 @@ Prototype implementation should be separate and may target:
 
 ```text
 Tools/ai/build_agent_review_code_patch_plan.py
-Tools/validation/run_agent_review_code_patch_plan_smoke.py
 schema docs and validator docs
 ```
+
+`Tools/validation/run_agent_review_code_patch_plan_smoke.py` already exists in PR #109 as the contract smoke validator.
 
 Any created or modified Python/PowerShell file must report resulting line count.
 
@@ -337,6 +365,8 @@ Stop immediately if:
 ```text
 validator output is not JSON-parseable
 contract drift reports show source_writes_performed=true
+agent_review_code_patch_plan smoke report fails
+markdown command hygiene report fails
 any output/** file is staged
 any generated full analysis JSON is staged
 Blender runtime is required
