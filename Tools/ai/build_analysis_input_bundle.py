@@ -22,7 +22,6 @@ if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
 from Tools.ai.code_patch_plan_common import (  # noqa: E402
-    compact_text,
     normalize_repo_path,
     now_iso,
     repo_rel,
@@ -169,6 +168,24 @@ def build_entry(repo_root: Path, path: Path, max_file_chars: int, remaining_char
     )
 
 
+def largest_files_summary(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return the largest included-file summaries for the report."""
+    return sorted(
+        [
+            {
+                "path": entry.get("path"),
+                "raw_chars": entry.get("raw_chars"),
+                "line_count": entry.get("line_count"),
+                "truncated": entry.get("truncated"),
+            }
+            for entry in entries
+            if entry.get("included")
+        ],
+        key=lambda item: int(item.get("raw_chars") or 0),
+        reverse=True,
+    )[:20]
+
+
 def build_bundle(
     repo_root: Path,
     input_paths: list[Path],
@@ -216,22 +233,7 @@ def build_bundle(
         "excluded_dirs": sorted(excluded_dirs),
         "excluded_suffixes": sorted(excluded_suffixes),
         "entries": entries,
-        "summary": {
-            "largest_files": sorted(
-                [
-                    {
-                        "path": entry.get("path"),
-                        "raw_chars": entry.get("raw_chars"),
-                        "line_count": entry.get("line_count"),
-                        "truncated": entry.get("truncated"),
-                    }
-                    for entry in entries
-                    if entry.get("included")
-                ],
-                key=lambda item: int(item.get("raw_chars") or 0),
-                reverse=True,
-            )[:20]
-        },
+        "summary": {"largest_files": largest_files_summary(entries)},
         "guardrails": report_only_guardrails(
             raw_runtime_artifacts_excluded=True,
             providers_executed=False,
