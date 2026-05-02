@@ -42,6 +42,11 @@ DEFAULT_VALIDATION_COMMANDS = [
     "python .\\Tools\\validation\\check_validation_report_contract.py --repo-root . --output .\\output\\validation\\validation_report_contract.json",
     "git diff --check",
 ]
+COMMON_STOP_CONDITIONS = [
+    "Stop if the edit requires provider execution, Blender runtime execution, or patch auto-apply.",
+    "Stop if the patch touches output/**, generated indexes, full analysis JSON, SQLite, secrets, permissions, billing, or repository visibility.",
+    "Stop if local validation fails.",
+]
 MAX_STATIC_RECOMMENDATIONS = 30
 
 
@@ -54,6 +59,17 @@ def list_field(check: dict[str, Any], field: str) -> list[Any]:
     """Return a list-valued check field or an empty list."""
     value = check.get(field)
     return value if isinstance(value, list) else []
+
+
+def stop_conditions_for(source_label: str) -> list[str]:
+    """Return shared manual-review stop conditions for one evidence source."""
+    return [f"Stop if the target file changed since {source_label} was generated.", *COMMON_STOP_CONDITIONS]
+
+
+def source_kind_for(plan: dict[str, Any]) -> Any:
+    """Return the source kind recorded on a code patch plan."""
+    source_evidence = plan.get("source_evidence")
+    return source_evidence.get("source_kind") if isinstance(source_evidence, dict) else None
 
 
 def risk_for(path_value: str, check: dict[str, Any], counts: dict[str, int]) -> str:
@@ -166,12 +182,7 @@ def build_plan(plan_id: str, path_value: str, check: dict[str, Any], counts: dic
         "edit_strategy": edit_strategy_for(path_value, check, counts),
         "proposed_patch": "",
         "validation_commands": validation_commands_for(path_value),
-        "stop_conditions": [
-            "Stop if the target file changed since the drift report was generated.",
-            "Stop if the edit requires provider execution, Blender runtime execution, or patch auto-apply.",
-            "Stop if the patch touches output/**, generated indexes, full analysis JSON, SQLite, secrets, permissions, billing, or repository visibility.",
-            "Stop if local validation fails.",
-        ],
+        "stop_conditions": stop_conditions_for("the drift report"),
         "manual_review_required": True,
         "source_evidence": {
             "contract": check.get("contract"),
@@ -260,12 +271,7 @@ def plan_from_static_recommendation(
         "edit_strategy": static_strategy_for(path_value, recommendation, counts),
         "proposed_patch": "",
         "validation_commands": validation_commands_for(path_value),
-        "stop_conditions": [
-            "Stop if the target file changed since the static code interpreter report was generated.",
-            "Stop if the edit requires provider execution, Blender runtime execution, or patch auto-apply.",
-            "Stop if the patch touches output/**, generated indexes, full analysis JSON, SQLite, secrets, permissions, billing, or repository visibility.",
-            "Stop if local validation fails.",
-        ],
+        "stop_conditions": stop_conditions_for("the static code interpreter report"),
         "manual_review_required": True,
         "source_evidence": {
             "source_kind": "code_interpreter_report",
@@ -367,8 +373,8 @@ def build_report(
     warnings: list[str],
 ) -> dict[str, Any]:
     """Assemble the final report object."""
-    static_count = sum(1 for plan in plans if (plan.get("source_evidence") or {}).get("source_kind") == "code_interpreter_report")
-    drift_count = sum(1 for plan in plans if (plan.get("source_evidence") or {}).get("source_kind") == "code_contract_drift")
+    static_count = sum(1 for plan in plans if source_kind_for(plan) == "code_interpreter_report")
+    drift_count = sum(1 for plan in plans if source_kind_for(plan) == "code_contract_drift")
     return {
         "schema_version": 1,
         "kind": PLAN_KIND,
@@ -446,11 +452,10 @@ def render_plans(plans: Any) -> list[str]:
     if not plans:
         return lines + ["- none", ""]
     for plan in plans:
-        source_kind = (plan.get("source_evidence") or {}).get("source_kind") if isinstance(plan.get("source_evidence"), dict) else None
         lines.append(f"### `{plan['id']}`")
         lines.append("")
         lines.append(f"- Area: `{plan['area']}`")
-        lines.append(f"- Source kind: `{source_kind}`")
+        lines.append(f"- Source kind: `{source_kind_for(plan)}`")
         lines.append(f"- Risk: `{plan['risk']}`")
         lines.append(f"- Status: `{plan['status']}`")
         lines.append(f"- Target files: `{', '.join(plan['target_files'])}`")
