@@ -2,11 +2,11 @@
 
 ## Purpose
 
-This document defines the proposed report-only lane for turning repository review evidence into safe, manual-review code patch plans.
+This document defines the report-only lane for turning repository review evidence into safe, manual-review code patch plans.
 
 The goal is to extend the current documentation patch-plan workflow toward code editing without enabling automatic source mutation.
 
-This lane is design-first. It does not authorize a patch runner, provider execution, Blender runtime execution or direct writes to source files.
+This lane may describe code edits and related documentation follow-up work. It must not apply either code or documentation patches automatically.
 
 ## Relationship to existing lanes
 
@@ -21,19 +21,27 @@ local evidence / review reports
   -> Git-trackable evidence bundle
 ```
 
-Proposed code patch-plan lane:
+Code patch-plan lane:
 
 ```text
-local evidence / review reports
-  -> agent_review_code_patch_plan report
-  -> code patch smoke validator
+code_contract_drift report
+  -> Tools/ai/build_agent_review_code_patch_plan.py
+  -> output/patch_specs/agent_review_code_patch_plan.json
+  -> Tools/validation/run_agent_review_code_patch_plan_smoke.py
   -> manual review
   -> optional small hand-applied code PR
-  -> validators
-  -> Git-trackable evidence bundle
 ```
 
-The proposed lane may describe code edits. It must not apply them.
+Documentation follow-up bridge:
+
+```text
+agent_review_code_patch_plan report
+  -> Tools/ai/build_code_patch_docs_followup.py
+  -> output/patch_specs/agent_review_code_docs_followup.json
+  -> manual-review documentation queue
+```
+
+The bridge lets code-plan output notify the documentation lane. It is not an apply queue.
 
 ## Required default behavior
 
@@ -45,9 +53,20 @@ manual_review_required = true
 apply_mode = report_only_manual_review_code_patch_plan
 ```
 
+For docs follow-up reports:
+
+```text
+kind = agent_review_code_docs_followup
+apply_mode = report_only_manual_review_docs_followup
+provider_execution_performed = false
+patch_application_performed = false
+source_writes_performed = false
+manual_review_required = true
+```
+
 A report that violates these defaults should fail validation unless the task explicitly authorizes a later, separate reviewed implementation phase.
 
-## Proposed JSON report shape
+## JSON report shape
 
 ```json
 {
@@ -77,7 +96,7 @@ Each `code_patch_plans[]` item should be small and reviewable:
   "target_files": ["Tools/validation/example.py"],
   "rationale": "Why the edit is needed.",
   "edit_strategy": "How the edit should be made.",
-  "proposed_patch": "optional unified diff or structured edit descriptor",
+  "proposed_patch": "optional bounded preview only",
   "validation_commands": [
     "python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json",
     "python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json",
@@ -93,13 +112,18 @@ Each `code_patch_plans[]` item should be small and reviewable:
 }
 ```
 
-## Initial fixture and smoke validator
+## Builder, fixtures and smoke validator
 
-This design lane now includes a minimal fixture and smoke validator so the report contract can be tested before implementing a code patch-plan builder.
-
-Fixture:
+Builder:
 
 ```text
+Tools/ai/build_agent_review_code_patch_plan.py
+```
+
+Fixture inputs:
+
+```text
+Tools/ai/fixtures/code_contract_drift_fixture.json
 Tools/ai/fixtures/agent_review_code_patch_plan_fixture.json
 ```
 
@@ -109,7 +133,17 @@ Smoke validator:
 Tools/validation/run_agent_review_code_patch_plan_smoke.py
 ```
 
-Run:
+Build from fixture:
+
+```powershell
+python .\Tools\ai\build_agent_review_code_patch_plan.py `
+  --repo-root . `
+  --code-contract-drift-report .\Tools\ai\fixtures\code_contract_drift_fixture.json `
+  --output .\output\patch_specs\agent_review_code_patch_plan_fixture_built.json `
+  --markdown-output .\output\patch_specs\agent_review_code_patch_plan_fixture_built.md
+```
+
+Validate fixture report:
 
 ```powershell
 python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
@@ -118,7 +152,16 @@ python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
   --output .\output\validation\agent_review_code_patch_plan_smoke.json
 ```
 
-The smoke validator checks the proposed contract and preserves:
+Validate generated report:
+
+```powershell
+python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
+  --repo-root . `
+  --report .\output\patch_specs\agent_review_code_patch_plan_fixture_built.json `
+  --output .\output\validation\agent_review_code_patch_plan_smoke_built.json
+```
+
+The builder and smoke validator preserve:
 
 ```text
 provider_execution_performed = false
@@ -126,7 +169,38 @@ patch_application_performed = false
 source_writes_performed = false
 ```
 
-It validates the report shape only. It does not apply patches, run providers, run Blender or write source files.
+They do not apply patches, run providers, run Blender or write source files.
+
+## Documentation follow-up bridge
+
+When a code patch plan proposes code changes, the docs follow-up bridge emits a related documentation review queue.
+
+Bridge:
+
+```text
+Tools/ai/build_code_patch_docs_followup.py
+```
+
+Run:
+
+```powershell
+python .\Tools\ai\build_code_patch_docs_followup.py `
+  --repo-root . `
+  --code-patch-plan .\output\patch_specs\agent_review_code_patch_plan_fixture_built.json `
+  --output .\output\patch_specs\agent_review_code_docs_followup.json `
+  --markdown-output .\output\patch_specs\agent_review_code_docs_followup.md
+```
+
+The bridge maps code target areas to likely documentation surfaces, for example:
+
+| Code area/path | Candidate docs |
+|---|---|
+| `Tools/validation/**` | `Tools/validation/README.md`, `docs/JSON_SCHEMAS.md`, `docs/CONTRACT_DRIFT_VALIDATION.md` |
+| `Tools/workflow/**` | `docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md`, `docs/LOCAL_AI_TASKS/README.md`, `WORKFLOW.md` |
+| `Tools/ai/**` | `docs/AGENT_REVIEW_CODE_PATCH_PLAN.md`, `docs/JSON_SCHEMAS.md`, `docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md` |
+| `Tools/npu/**` | `docs/LOCAL_AI_WORKFLOW.md`, `docs/LOCAL_WORKSTATION_TARGET.md`, `docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md` |
+
+Docs follow-up suggestions remain manual-review-only. They should be reviewed after the related code patch plan is accepted or materially changed.
 
 ## Allowed targets
 
@@ -160,34 +234,6 @@ Blender runtime execution paths without explicit runtime task scope
 provider credentials, secrets, billing, permissions or repository visibility
 ```
 
-## Proposed files for implementation phase
-
-If this lane is implemented later, keep it separate from this design PR.
-
-Candidate new files:
-
-```text
-Tools/ai/build_agent_review_code_patch_plan.py
-```
-
-Already introduced for contract validation in this design lane:
-
-```text
-Tools/ai/fixtures/agent_review_code_patch_plan_fixture.json
-Tools/validation/run_agent_review_code_patch_plan_smoke.py
-```
-
-Candidate documentation updates:
-
-```text
-docs/JSON_SCHEMAS.md
-docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md
-Tools/validation/README.md
-docs/LOCAL_AI_TASKS/README.md
-```
-
-Do not create the builder until the report contract and validator behavior are reviewed.
-
 ## Smoke validator expectations
 
 The smoke validator checks:
@@ -217,9 +263,9 @@ read ignored output/** reports unless explicitly supplied as input evidence
 
 ## Evidence bundle integration
 
-The existing evidence bundle builder should summarize code patch-plan reports in the same compact style used for documentation patch plans.
+The existing evidence bundle builder should summarize code patch-plan and docs follow-up reports in the same compact style used for documentation patch plans.
 
-Recommended summary fields:
+Recommended code-plan summary fields:
 
 ```text
 patch_plan_count
@@ -236,6 +282,21 @@ plans[].rationale
 plans[].edit_strategy
 plans[].validation_commands
 plans[].stop_conditions
+```
+
+Recommended docs-follow-up summary fields:
+
+```text
+docs_followup_count
+manual_review_required
+provider_execution_performed
+patch_application_performed
+source_writes_performed
+suggestions[].id
+suggestions[].source_code_patch_plan_id
+suggestions[].target_files
+suggestions[].rationale
+suggestions[].edit_strategy
 ```
 
 The bundle may include `proposed_patch` only as a bounded preview. Full raw artifacts should remain local unless they are deliberately small, reviewed and Git-trackable.
@@ -264,10 +325,10 @@ OpenVINO GPU primary-lane-free
 ## Recommended next implementation sequence
 
 ```text
-1. Review this design.
-2. Add schema documentation for agent_review_code_patch_plan.
-3. Validate the fixture with run_agent_review_code_patch_plan_smoke.py.
-4. Add evidence-bundle summary support if needed.
-5. Add a deterministic builder only after the report contract is accepted.
-6. Only then consider a separate hand-applied code PR generated from a reviewed plan.
+1. Run code_contract_drift.
+2. Build agent_review_code_patch_plan from the drift report.
+3. Validate the code patch plan with run_agent_review_code_patch_plan_smoke.py.
+4. Build agent_review_code_docs_followup from the code patch plan.
+5. Review code and docs queues together.
+6. Only then consider a separate hand-applied code/docs PR generated from reviewed plans.
 ```
