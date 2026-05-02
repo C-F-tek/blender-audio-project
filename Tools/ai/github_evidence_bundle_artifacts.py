@@ -18,22 +18,27 @@ from Tools.ai.github_evidence_bundle_io import (
 )
 
 
-def summarize_artifact(path: Path, repo_root: Path) -> dict[str, Any]:
-    """Return a compact manifest entry for a local artifact/report path."""
-    rel = normalize_manifest_path(path, repo_root)
-    item: dict[str, Any] = {
-        "path": rel,
+def base_artifact_entry(path: Path, repo_root: Path, role: str) -> dict[str, Any]:
+    """Return common artifact metadata fields."""
+    return {
+        "path": normalize_manifest_path(path, repo_root),
         "exists": path.exists(),
         "suffix": path.suffix.lower(),
         "size_bytes": path.stat().st_size if path.exists() and path.is_file() else None,
         "sha256": sha256_file(path),
-        "content_included": False,
-        "role": "local_artifact_reference",
+        "role": role,
     }
+
+
+def summarize_artifact(path: Path, repo_root: Path) -> dict[str, Any]:
+    """Return a compact manifest entry for a local artifact/report path."""
+    item = base_artifact_entry(path, repo_root, "local_artifact_reference")
+    item["content_included"] = False
 
     if not path.exists() or not path.is_file():
         return item
 
+    rel = str(item["path"])
     if path.suffix.lower() in CONTENT_EXTENSION_ALLOWLIST and raw_artifact_content_allowed(rel):
         text, error = read_text(path)
         if error:
@@ -49,19 +54,12 @@ def summarize_artifact(path: Path, repo_root: Path) -> dict[str, Any]:
 
 def build_included_artifact(path: Path, repo_root: Path, *, max_chars: int, role: str) -> dict[str, Any]:
     """Return bounded artifact content for explicit/auto-related bundle artifacts."""
-    rel = normalize_manifest_path(path, repo_root)
-    item: dict[str, Any] = {
-        "path": rel,
-        "exists": path.exists(),
-        "suffix": path.suffix.lower(),
-        "size_bytes": path.stat().st_size if path.exists() and path.is_file() else None,
-        "sha256": sha256_file(path),
-        "role": role,
-        "content_included": False,
-        "content_truncated": False,
-    }
+    item = base_artifact_entry(path, repo_root, role)
+    item["content_included"] = False
+    item["content_truncated"] = False
     if not path.exists() or not path.is_file():
         return item
+    rel = str(item["path"])
     if path.suffix.lower() not in CONTENT_EXTENSION_ALLOWLIST:
         item["skip_reason"] = "suffix_not_text_allowlisted"
         return item
@@ -81,6 +79,20 @@ def build_included_artifact(path: Path, repo_root: Path, *, max_chars: int, role
     return item
 
 
+def append_declared_artifacts(discovered: list[Path], repo_root: Path, data: dict[str, Any]) -> None:
+    """Append report-declared related artifacts to a discovered path list."""
+    for key in ("markdown_output", "markdown_report", "csv_written"):
+        value = data.get(key)
+        if isinstance(value, str):
+            discovered.append(resolve_repo_path(repo_root, value))
+    inputs = data.get("inputs") if isinstance(data.get("inputs"), dict) else {}
+    for value in inputs.values():
+        if isinstance(value, str) and value:
+            path = resolve_repo_path(repo_root, value)
+            if path.exists() and path.is_file():
+                discovered.append(path)
+
+
 def discover_related_artifacts(repo_root: Path, report_paths: list[Path]) -> list[Path]:
     """Discover useful sibling/declared artifacts for bounded bundle inclusion."""
     discovered: list[Path] = []
@@ -90,18 +102,8 @@ def discover_related_artifacts(repo_root: Path, report_paths: list[Path]) -> lis
             if sibling_md.exists():
                 discovered.append(sibling_md)
         data = read_json(report)
-        if not data:
-            continue
-        for key in ("markdown_output", "markdown_report", "csv_written"):
-            value = data.get(key)
-            if isinstance(value, str):
-                discovered.append(resolve_repo_path(repo_root, value))
-        inputs = data.get("inputs") if isinstance(data.get("inputs"), dict) else {}
-        for value in inputs.values():
-            if isinstance(value, str) and value:
-                path = resolve_repo_path(repo_root, value)
-                if path.exists() and path.is_file():
-                    discovered.append(path)
+        if data:
+            append_declared_artifacts(discovered, repo_root, data)
     unique: dict[str, Path] = {}
     for path in discovered:
         key = path.resolve().as_posix() if path.exists() else path.as_posix()
