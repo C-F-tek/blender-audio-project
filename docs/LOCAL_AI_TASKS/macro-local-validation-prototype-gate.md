@@ -73,6 +73,7 @@ local validators
 report-only drift checks
 report-only code patch-plan generation
 report-only docs follow-up generation
+report-only code patch artifact packing
 CPU-only/report-only agnostic context stack smoke
 Git-trackable compact evidence bundle
 manual review
@@ -170,6 +171,13 @@ python .\Tools\ai\build_code_patch_docs_followup.py `
   --code-patch-plan .\output\patch_specs\agent_review_code_patch_plan_fixture_built.json `
   --output .\output\patch_specs\agent_review_code_docs_followup_pr109.json `
   --markdown-output .\output\patch_specs\agent_review_code_docs_followup_pr109.md
+
+python .\Tools\ai\build_code_patch_artifact_pack.py `
+  --repo-root . `
+  --code-patch-plan .\output\patch_specs\agent_review_code_patch_plan_fixture_built.json `
+  --docs-followup .\output\patch_specs\agent_review_code_docs_followup_pr109.json `
+  --output .\output\validation\code_patch_artifact_pack_pr109.json `
+  --markdown-output .\output\validation\code_patch_artifact_pack_pr109.md
 
 python .\Tools\validation\check_validation_report_contract.py `
   --repo-root . `
@@ -344,6 +352,13 @@ python .\Tools\ai\build_code_patch_docs_followup.py `
   --output .\output\patch_specs\agent_review_code_docs_followup_macro.json `
   --markdown-output .\output\patch_specs\agent_review_code_docs_followup_macro.md
 
+python .\Tools\ai\build_code_patch_artifact_pack.py `
+  --repo-root . `
+  --code-patch-plan .\output\patch_specs\agent_review_code_patch_plan_macro.json `
+  --docs-followup .\output\patch_specs\agent_review_code_docs_followup_macro.json `
+  --output .\output\validation\code_patch_artifact_pack_macro.json `
+  --markdown-output .\output\validation\code_patch_artifact_pack_macro.md
+
 python .\Tools\validation\check_json_artifacts.py `
   --repo-root . `
   --output .\output\validation\json_artifacts_macro.json
@@ -388,8 +403,7 @@ python .\Tools\ai\build_github_evidence_bundle.py `
   --report .\output\validation\agnostic_context_stack_smoke.json `
   --report .\output\validation\agent_review_code_patch_plan_smoke_macro.json `
   --report .\output\validation\agent_review_code_patch_plan_smoke_macro_built.json `
-  --report .\output\patch_specs\agent_review_code_patch_plan_macro.json `
-  --report .\output\patch_specs\agent_review_code_docs_followup_macro.json `
+  --report .\output\validation\code_patch_artifact_pack_macro.json `
   --report .\output\validation\json_artifacts_macro.json `
   --report .\output\validation\validation_report_contract_macro.json `
   --report .\output\validation\github_evidence_bundle_macro.json `
@@ -418,6 +432,7 @@ agnostic context stack full smoke passes or is explicitly deferred with reason
 new evidence bundle validates
 code patch-plan smoke passes
 code docs-follow-up report is generated or explicitly reports no ready follow-up
+code patch artifact pack is generated and validates guardrails
 no output/** is staged
 no DB/SQLite/full analysis JSON is staged
 no provider execution was implied by provider-free reports
@@ -466,6 +481,7 @@ The following are already part of PR #109:
 ```text
 Tools/ai/build_agent_review_code_patch_plan.py
 Tools/ai/build_code_patch_docs_followup.py
+Tools/ai/build_code_patch_artifact_pack.py
 Tools/validation/run_agent_review_code_patch_plan_smoke.py
 ```
 
@@ -481,6 +497,7 @@ contract drift reports show source_writes_performed=true
 agnostic core activation contract fails
 agent_review_code_patch_plan smoke report fails
 agent_review_code_docs_followup reports source_writes_performed=true
+code_patch_artifact_pack reports source_writes_performed=true
 markdown command hygiene report fails
 any output/** file is staged
 any generated full analysis JSON is staged
