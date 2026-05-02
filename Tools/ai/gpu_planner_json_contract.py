@@ -14,9 +14,9 @@ from dataclasses import dataclass
 from typing import Any
 
 try:
-    from Tools.ai.model_json import ModelJsonParseError, parse_model_json_object
+    from Tools.ai.model_json import ModelJsonParseError, parse_model_json_object, strip_markdown_json_fence
 except ImportError:  # Script-style execution from Tools/ai.
-    from model_json import ModelJsonParseError, parse_model_json_object  # type: ignore
+    from model_json import ModelJsonParseError, parse_model_json_object, strip_markdown_json_fence  # type: ignore
 
 
 ALLOWED_STATUSES = {"ready_for_patch_plan", "needs_more_context", "advisory_only"}
@@ -35,6 +35,7 @@ REQUIRED_RECOMMENDATION_KEYS = {
 CONTEXT_ECHO_TOP_LEVEL_KEYS = {"files", "context_files", "repository_files", "file_previews"}
 CONTEXT_ECHO_NESTED_KEYS = {"content_preview", "preview", "raw_response_preview"}
 EXPECTED_TOP_LEVEL_KEYS = {"summary", "confidence", "recommendations", "missing_evidence", "next_best_action"}
+OPEN_TO_CLOSE = {"{": "}", "[": "]"}
 
 
 @dataclass(frozen=True)
@@ -60,6 +61,48 @@ def response_hash(text: str) -> str:
     """Return a stable hash for a raw model response."""
 
     return hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()
+
+
+def _balanced_outer_json(text: str) -> bool:
+    """Return true when the apparent outer JSON document is balanced.
+
+    This is deliberately stricter than ``model_json.extract_json_candidate``.
+    Contract validation should not recover a nested object from a visibly
+    truncated outer model response and classify that nested object as the
+    complete planner answer.
+    """
+
+    stripped = strip_markdown_json_fence(text).strip()
+    if not stripped or stripped[0] not in OPEN_TO_CLOSE:
+        return True
+
+    expected_outer_close = OPEN_TO_CLOSE[stripped[0]]
+    if not stripped.endswith(expected_outer_close):
+        return False
+
+    stack = [expected_outer_close]
+    in_string = False
+    escaped = False
+    for char in stripped[1:]:
+        if escaped:
+            escaped = False
+            continue
+        if char == "\\" and in_string:
+            escaped = True
+            continue
+        if char == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if char in OPEN_TO_CLOSE:
+            stack.append(OPEN_TO_CLOSE[char])
+            continue
+        if char in "}]":
+            if not stack or stack[-1] != char:
+                return False
+            stack.pop()
+    return not stack and not in_string
 
 
 def _contains_nested_context_echo(value: Any, *, depth: int = 0) -> bool:
@@ -172,14 +215,20 @@ def validate_model_response_contract(
 
     raw_sha = response_hash(text)
     raw_chars = len(text)
-    try:
-        parsed = parse_model_json_object(text)
-        json_ok = True
-        parse_error = ""
-    except ModelJsonParseError as exc:
-        parsed = {}
+    parse_error = ""
+    parsed: dict[str, Any] = {}
+
+    if not _balanced_outer_json(text):
         json_ok = False
-        parse_error = f"{type(exc).__name__}: {exc}"
+        parse_error = "outer JSON document appears truncated or unbalanced"
+    else:
+        try:
+            parsed = parse_model_json_object(text)
+            json_ok = True
+        except ModelJsonParseError as exc:
+            parsed = {}
+            json_ok = False
+            parse_error = f"{type(exc).__name__}: {exc}"
 
     top_level_keys = tuple(sorted(parsed)) if isinstance(parsed, dict) else ()
     schema_errors: list[str] = []
