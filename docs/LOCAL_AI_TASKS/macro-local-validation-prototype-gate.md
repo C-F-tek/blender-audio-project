@@ -12,7 +12,7 @@ Validate together:
 
 ```text
 PR #108 contract-drift validation documentation
-PR #109 agent-review code patch-plan design
+PR #109 agent-review code patch-plan design/build/smoke/docs-follow-up lane
 current master local AI evidence-bundle tooling
 current master selected-chunks evidence tooling
 current local validation/report contracts
@@ -57,6 +57,8 @@ Allowed:
 ```text
 local validators
 report-only drift checks
+report-only code patch-plan generation
+report-only docs follow-up generation
 Git-trackable compact evidence bundle
 manual review
 small follow-up documentation PR if needed
@@ -124,6 +126,10 @@ Run on PR #109 branch:
 ```powershell
 git switch codex/design-code-patch-plan-lane
 
+python .\Tools\validation\check_python_syntax.py `
+  --repo-root . `
+  --output .\output\validation\python_syntax_pr109.json
+
 python .\Tools\validation\check_docs_links.py `
   --repo-root . `
   --output .\output\validation\docs_links_pr109.json
@@ -132,6 +138,23 @@ python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
   --repo-root . `
   --report .\Tools\ai\fixtures\agent_review_code_patch_plan_fixture.json `
   --output .\output\validation\agent_review_code_patch_plan_smoke_pr109.json
+
+python .\Tools\ai\build_agent_review_code_patch_plan.py `
+  --repo-root . `
+  --code-contract-drift-report .\Tools\ai\fixtures\code_contract_drift_fixture.json `
+  --output .\output\patch_specs\agent_review_code_patch_plan_fixture_built.json `
+  --markdown-output .\output\patch_specs\agent_review_code_patch_plan_fixture_built.md
+
+python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
+  --repo-root . `
+  --report .\output\patch_specs\agent_review_code_patch_plan_fixture_built.json `
+  --output .\output\validation\agent_review_code_patch_plan_smoke_built_pr109.json
+
+python .\Tools\ai\build_code_patch_docs_followup.py `
+  --repo-root . `
+  --code-patch-plan .\output\patch_specs\agent_review_code_patch_plan_fixture_built.json `
+  --output .\output\patch_specs\agent_review_code_docs_followup_pr109.json `
+  --markdown-output .\output\patch_specs\agent_review_code_docs_followup_pr109.md
 
 python .\Tools\validation\check_validation_report_contract.py `
   --repo-root . `
@@ -227,7 +250,7 @@ Do not merge or test PR #77 here.
 
 Do not commit this local integration branch unless explicitly needed.
 
-## Phase 5 — Macro validator block
+## Phase 5 — Macro validator and generator block
 
 Run the non-provider macro block on the stacked local branch or on the active branch you are validating:
 
@@ -248,6 +271,23 @@ python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
   --repo-root . `
   --report .\Tools\ai\fixtures\agent_review_code_patch_plan_fixture.json `
   --output .\output\validation\agent_review_code_patch_plan_smoke_macro.json
+
+python .\Tools\ai\build_agent_review_code_patch_plan.py `
+  --repo-root . `
+  --code-contract-drift-report .\output\validation\code_contract_drift.json `
+  --output .\output\patch_specs\agent_review_code_patch_plan_macro.json `
+  --markdown-output .\output\patch_specs\agent_review_code_patch_plan_macro.md
+
+python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
+  --repo-root . `
+  --report .\output\patch_specs\agent_review_code_patch_plan_macro.json `
+  --output .\output\validation\agent_review_code_patch_plan_smoke_macro_built.json
+
+python .\Tools\ai\build_code_patch_docs_followup.py `
+  --repo-root . `
+  --code-patch-plan .\output\patch_specs\agent_review_code_patch_plan_macro.json `
+  --output .\output\patch_specs\agent_review_code_docs_followup_macro.json `
+  --markdown-output .\output\patch_specs\agent_review_code_docs_followup_macro.md
 
 python .\Tools\validation\check_json_artifacts.py `
   --repo-root . `
@@ -271,6 +311,7 @@ no Ollama execution
 no OpenVINO/NPU execution
 no Blender execution
 no patch application
+no source writes outside report outputs
 ```
 
 ## Phase 6 — Build compact macro evidence bundle
@@ -288,6 +329,9 @@ python .\Tools\ai\build_github_evidence_bundle.py `
   --report .\output\validation\docs_links_macro.json `
   --report .\output\validation\markdown_command_hygiene_macro.json `
   --report .\output\validation\agent_review_code_patch_plan_smoke_macro.json `
+  --report .\output\validation\agent_review_code_patch_plan_smoke_macro_built.json `
+  --report .\output\patch_specs\agent_review_code_patch_plan_macro.json `
+  --report .\output\patch_specs\agent_review_code_docs_followup_macro.json `
   --report .\output\validation\json_artifacts_macro.json `
   --report .\output\validation\validation_report_contract_macro.json `
   --report .\output\validation\github_evidence_bundle_macro.json `
@@ -311,6 +355,8 @@ The prototype gate is green only if:
 ```text
 all required validators passed
 new evidence bundle validates
+code patch-plan smoke passes
+code docs-follow-up report is generated or explicitly reports no ready follow-up
 no output/** is staged
 no DB/SQLite/full analysis JSON is staged
 no provider execution was implied by provider-free reports
@@ -350,11 +396,17 @@ If the macro gate is green, the recommended order is:
 Prototype implementation should be separate and may target:
 
 ```text
-Tools/ai/build_agent_review_code_patch_plan.py
 schema docs and validator docs
+optional reviewed code/docs patch generated from the report-only queues
 ```
 
-`Tools/validation/run_agent_review_code_patch_plan_smoke.py` already exists in PR #109 as the contract smoke validator.
+The following are already part of PR #109:
+
+```text
+Tools/ai/build_agent_review_code_patch_plan.py
+Tools/ai/build_code_patch_docs_followup.py
+Tools/validation/run_agent_review_code_patch_plan_smoke.py
+```
 
 Any created or modified Python/PowerShell file must report resulting line count.
 
@@ -366,6 +418,7 @@ Stop immediately if:
 validator output is not JSON-parseable
 contract drift reports show source_writes_performed=true
 agent_review_code_patch_plan smoke report fails
+agent_review_code_docs_followup reports source_writes_performed=true
 markdown command hygiene report fails
 any output/** file is staged
 any generated full analysis JSON is staged
