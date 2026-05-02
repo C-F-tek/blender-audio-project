@@ -157,6 +157,17 @@ def get_domain(name: str) -> ArtifactDomain | None:
     return DOMAIN_BY_NAME.get(name)
 
 
+def registry_guardrails() -> dict[str, bool]:
+    """Return default registry guardrails."""
+    return {
+        "manual_review_required_by_default": True,
+        "provider_allowed_by_default": False,
+        "runtime_allowed_by_default": False,
+        "patch_application_allowed_by_default": False,
+        "source_writes_allowed_by_default": False,
+    }
+
+
 def registry_report() -> dict[str, Any]:
     """Return a compact registry report."""
     return {
@@ -164,14 +175,34 @@ def registry_report() -> dict[str, Any]:
         "kind": "artifact_domain_registry",
         "domain_count": len(DOMAINS),
         "domains": [domain.to_report_dict() for domain in DOMAINS],
-        "guardrails": {
-            "manual_review_required_by_default": True,
-            "provider_allowed_by_default": False,
-            "runtime_allowed_by_default": False,
-            "patch_application_allowed_by_default": False,
-            "source_writes_allowed_by_default": False,
-        },
+        "guardrails": registry_guardrails(),
     }
+
+
+def validate_domain(domain: ArtifactDomain, seen: set[str]) -> tuple[list[str], list[str]]:
+    """Validate one domain policy and update the seen-name set."""
+    errors: list[str] = []
+    warnings: list[str] = []
+    if not domain.domain:
+        errors.append("domain name cannot be empty")
+        return errors, warnings
+    if domain.domain in seen:
+        errors.append(f"duplicate domain: {domain.domain}")
+    seen.add(domain.domain)
+    if not domain.description:
+        errors.append(f"{domain.domain}: description is required")
+    if not domain.requires_manual_review:
+        errors.append(f"{domain.domain}: requires_manual_review must remain true")
+    if domain.runtime_allowed_by_default:
+        errors.append(f"{domain.domain}: runtime_allowed_by_default must remain false")
+    if domain.provider_allowed_by_default:
+        errors.append(f"{domain.domain}: provider_allowed_by_default must remain false")
+    if not (domain.proposal_kinds or domain.evidence_kinds or domain.pack_kinds):
+        warnings.append(f"{domain.domain}: no artifact kinds declared")
+    for guardrail in domain.required_guardrails:
+        if not guardrail.endswith("performed") and guardrail != "manual_review_required":
+            warnings.append(f"{domain.domain}: unusual guardrail field `{guardrail}`")
+    return errors, warnings
 
 
 def validate_registry() -> tuple[list[str], list[str]]:
@@ -180,23 +211,7 @@ def validate_registry() -> tuple[list[str], list[str]]:
     warnings: list[str] = []
     seen: set[str] = set()
     for domain in DOMAINS:
-        if not domain.domain:
-            errors.append("domain name cannot be empty")
-            continue
-        if domain.domain in seen:
-            errors.append(f"duplicate domain: {domain.domain}")
-        seen.add(domain.domain)
-        if not domain.description:
-            errors.append(f"{domain.domain}: description is required")
-        if not domain.requires_manual_review:
-            errors.append(f"{domain.domain}: requires_manual_review must remain true")
-        if domain.runtime_allowed_by_default:
-            errors.append(f"{domain.domain}: runtime_allowed_by_default must remain false")
-        if domain.provider_allowed_by_default:
-            errors.append(f"{domain.domain}: provider_allowed_by_default must remain false")
-        if not (domain.proposal_kinds or domain.evidence_kinds or domain.pack_kinds):
-            warnings.append(f"{domain.domain}: no artifact kinds declared")
-        for guardrail in domain.required_guardrails:
-            if not guardrail.endswith("performed") and guardrail != "manual_review_required":
-                warnings.append(f"{domain.domain}: unusual guardrail field `{guardrail}`")
+        domain_errors, domain_warnings = validate_domain(domain, seen)
+        errors.extend(domain_errors)
+        warnings.extend(domain_warnings)
     return errors, warnings
