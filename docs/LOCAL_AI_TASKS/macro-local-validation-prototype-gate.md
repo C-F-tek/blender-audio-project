@@ -16,6 +16,7 @@ PR #109 agent-review code patch-plan design/build/smoke/docs-follow-up lane
 current master local AI evidence-bundle tooling
 current master selected-chunks evidence tooling
 current master agnostic context stack tooling
+current master evidence sufficiency tooling
 current local validation/report contracts
 ```
 
@@ -28,11 +29,15 @@ This macro gate intentionally reuses existing agnostic tools instead of duplicat
 ```text
 Tools/validation/check_core_activation_agnostic_contract.py
 Tools/validation/run_agnostic_context_stack_smoke.py
+Tools/ai/build_agent_review_evidence_sufficiency.py
+Tools/validation/run_agent_review_evidence_sufficiency_smoke.py
 ```
 
 `check_core_activation_agnostic_contract.py` statically verifies that the local AI core activation lane still wires full-context orchestration, explicit provider flags, agnostic memory/tool/transient context artifacts, megalithic review stack and manual-review guardrails.
 
 `run_agnostic_context_stack_smoke.py` executes the CPU-only/report-only agnostic context stack smoke: memory inventory, agnostic tool inventory, transient request context, megalithic review, signal refinement and PR draft generation. Use `--dry-run` first when testing branch integration.
+
+`build_agent_review_evidence_sufficiency.py` and `run_agent_review_evidence_sufficiency_smoke.py` classify whether refined review findings are sufficient for manual patch candidates or still need more context. They remain provider-free and patch-free.
 
 ## Explicitly out of scope
 
@@ -71,6 +76,7 @@ Allowed:
 ```text
 local validators
 report-only drift checks
+report-only evidence sufficiency classification
 report-only code patch-plan generation
 report-only docs follow-up generation
 report-only code patch artifact packing
@@ -252,7 +258,35 @@ real_github_pr_created = false
 sqlite_read_only = true
 ```
 
-## Phase 4 — Contract drift reports
+## Phase 4 — Evidence sufficiency classification
+
+If refined megalithic review/proposal files exist from a prior local run, classify whether the evidence is sufficient before generating or promoting patch plans:
+
+```powershell
+python .\Tools\validation\run_agent_review_evidence_sufficiency_smoke.py `
+  --repo-root . `
+  --refined-review .\output\ai_pipeline\local_ai_core_tool_activation_megalithic_refined_review.json `
+  --refined-proposals .\output\ai_pipeline\local_ai_core_tool_activation_megalithic_refined_proposals.json `
+  --report-file .\output\validation\core_activation_agnostic_contract.json `
+  --report-file .\output\validation\agnostic_context_stack_smoke.json `
+  --tool-output .\output\ai_pipeline\agent_review_evidence_sufficiency_macro.json `
+  --tool-markdown-output .\output\ai_pipeline\agent_review_evidence_sufficiency_macro.md `
+  --output .\output\validation\agent_review_evidence_sufficiency_smoke_macro.json `
+  --markdown-output .\output\validation\agent_review_evidence_sufficiency_smoke_macro.md
+```
+
+If the refined review files are not present, skip this phase and record the skip reason in the final manual notes. Do not synthesize fake refined-review evidence.
+
+Expected semantics:
+
+```text
+kind = agent_review_evidence_sufficiency_smoke
+provider_execution_performed = false
+patch_application_performed = false
+source_writes_performed = false
+```
+
+## Phase 5 — Contract drift reports
 
 On the branch that contains the contract-drift guide or after locally stacking both active PRs for test only, run:
 
@@ -282,7 +316,7 @@ source_writes_performed = false
 
 A failed drift or hygiene report means review is needed. It does not mean apply patches automatically.
 
-## Phase 5 — Optional stacked integration test
+## Phase 6 — Optional stacked integration test
 
 Only for local testing, create a temporary branch that stacks PR #108 and PR #109. Do not push unless you explicitly want an integration branch.
 
@@ -313,7 +347,7 @@ Do not merge or test PR #77 here.
 
 Do not commit this local integration branch unless explicitly needed.
 
-## Phase 6 — Macro validator and generator block
+## Phase 7 — Macro validator and generator block
 
 Run the non-provider macro block on the stacked local branch or on the active branch you are validating:
 
@@ -384,31 +418,36 @@ no patch application
 no source writes outside report outputs
 ```
 
-## Phase 7 — Build compact macro evidence bundle
+## Phase 8 — Build compact macro evidence bundle
 
 Use a timestamped basename:
 
 ```powershell
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
+$Reports = @(
+  ".\output\validation\python_syntax_macro.json",
+  ".\output\validation\docs_links_macro.json",
+  ".\output\validation\markdown_command_hygiene_macro.json",
+  ".\output\validation\core_activation_agnostic_contract.json",
+  ".\output\validation\agnostic_context_stack_smoke_dryrun.json",
+  ".\output\validation\agnostic_context_stack_smoke.json",
+  ".\output\validation\agent_review_evidence_sufficiency_smoke_macro.json",
+  ".\output\validation\agent_review_code_patch_plan_smoke_macro.json",
+  ".\output\validation\agent_review_code_patch_plan_smoke_macro_built.json",
+  ".\output\validation\code_patch_artifact_pack_macro.json",
+  ".\output\validation\json_artifacts_macro.json",
+  ".\output\validation\validation_report_contract_macro.json",
+  ".\output\validation\github_evidence_bundle_macro.json",
+  ".\output\validation\code_contract_drift.json",
+  ".\output\validation\docs_contract_drift.json"
+) | Where-Object { Test-Path $_ }
+
 python .\Tools\ai\build_github_evidence_bundle.py `
   --repo-root . `
   --basename macro_pr108_pr109_validation_$Stamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
-  --report .\output\validation\python_syntax_macro.json `
-  --report .\output\validation\docs_links_macro.json `
-  --report .\output\validation\markdown_command_hygiene_macro.json `
-  --report .\output\validation\core_activation_agnostic_contract.json `
-  --report .\output\validation\agnostic_context_stack_smoke_dryrun.json `
-  --report .\output\validation\agnostic_context_stack_smoke.json `
-  --report .\output\validation\agent_review_code_patch_plan_smoke_macro.json `
-  --report .\output\validation\agent_review_code_patch_plan_smoke_macro_built.json `
-  --report .\output\validation\code_patch_artifact_pack_macro.json `
-  --report .\output\validation\json_artifacts_macro.json `
-  --report .\output\validation\validation_report_contract_macro.json `
-  --report .\output\validation\github_evidence_bundle_macro.json `
-  --report .\output\validation\code_contract_drift.json `
-  --report .\output\validation\docs_contract_drift.json
+  --report ($Reports -join ',')
 ```
 
 Validate the new bundle:
@@ -420,7 +459,7 @@ python .\Tools\validation\check_github_evidence_bundle.py `
   --output ".\output\validation\macro_pr108_pr109_validation_${Stamp}_bundle_validation.json"
 ```
 
-## Phase 8 — Prototype gate decision
+## Phase 9 — Prototype gate decision
 
 The prototype gate is green only if:
 
@@ -429,6 +468,7 @@ all required validators passed
 agnostic core activation contract passes
 agnostic context stack dry-run passes
 agnostic context stack full smoke passes or is explicitly deferred with reason
+evidence sufficiency smoke passes or is explicitly skipped because refined-review artifacts are absent
 new evidence bundle validates
 code patch-plan smoke passes
 code docs-follow-up report is generated or explicitly reports no ready follow-up
@@ -458,7 +498,7 @@ git add `
 
 Do not use `git add .`.
 
-## Phase 9 — If everything passes
+## Phase 10 — If everything passes
 
 If the macro gate is green, the recommended order is:
 
@@ -495,6 +535,7 @@ Stop immediately if:
 validator output is not JSON-parseable
 contract drift reports show source_writes_performed=true
 agnostic core activation contract fails
+agent_review_evidence_sufficiency_smoke fails when refined-review inputs are present
 agent_review_code_patch_plan smoke report fails
 agent_review_code_docs_followup reports source_writes_performed=true
 code_patch_artifact_pack reports source_writes_performed=true
