@@ -213,6 +213,25 @@ def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def line_count(text: str) -> int:
+    """Return a physical line count matching existing context-pack semantics."""
+    return text.count("\n") + (1 if text and not text.endswith("\n") else 0)
+
+
+def context_unavailable_reason(entry: dict[str, Any]) -> str:
+    """Return the most specific reason a context entry is unavailable."""
+    return str(entry.get("policy_error") or entry.get("read_error") or "")
+
+
+def path_escapes_repo(repo_root: Path, path: Path) -> bool:
+    """Return true when a resolved path is outside the repository root."""
+    try:
+        path.relative_to(repo_root)
+    except ValueError:
+        return True
+    return False
+
+
 def path_policy_error(path: str) -> str | None:
     normalized = normalize_repo_path(path)
     if not normalized:
@@ -271,9 +290,7 @@ def build_file_entry(
     }
     if policy_error:
         return entry, remaining_chars
-    try:
-        full_path.relative_to(repo_root)
-    except ValueError:
+    if path_escapes_repo(repo_root, full_path):
         entry["policy_ok"] = False
         entry["policy_error"] = "path escapes repository root"
         return entry, remaining_chars
@@ -291,7 +308,7 @@ def build_file_entry(
         entry["read_error"] = read_error or "unknown read error"
         return entry, remaining_chars
 
-    entry["line_count"] = text.count("\n") + (1 if text and not text.endswith("\n") else 0)
+    entry["line_count"] = line_count(text)
     entry["sha256"] = sha256_text(text)
     entry["chars"] = len(text)
     budget = max(0, min(remaining_chars, max_file_chars))
@@ -344,9 +361,9 @@ def build_pack(
         )
         file_entries.append(entry)
         if required and (not entry["exists"] or not entry["included"] or not entry["policy_ok"]):
-            errors.append(f"required file unavailable for context: {path} ({entry.get('policy_error') or entry.get('read_error')})")
+            errors.append(f"required file unavailable for context: {path} ({context_unavailable_reason(entry)})")
         elif (not required) and (not entry["exists"] or not entry["included"] or not entry["policy_ok"]):
-            warnings.append(f"optional file unavailable for context: {path} ({entry.get('policy_error') or entry.get('read_error')})")
+            warnings.append(f"optional file unavailable for context: {path} ({context_unavailable_reason(entry)})")
         if entry.get("truncated"):
             warnings.append(f"context content truncated for {path}")
 
