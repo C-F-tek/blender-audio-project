@@ -14,27 +14,28 @@ Blender/audio-reactive generation remains the first application domain and legac
 4. `DATA_FLOW.md`
 5. `LOCAL_AI_WORKFLOW.md`
 6. `JSON_SCHEMAS.md`
-7. `../Tools/npu/pipeline/README.md`
-8. `../Tools/validation/README.md`
-9. `LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md` when reviewing the validated GPU/NPU workflow
-10. `EXECUTION_PLANS/README.md`
-11. `TECH_DEBT_TRACKER.md`
-12. `MODULE_MAP.md`
-13. `REFACTORING_AND_REUSE_PLAN.md`
-14. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
-15. `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`
-16. `AI_CONTEXT_PACKS.md`
-17. `AI_SELECTIVE_PLANNER.md`
-18. `LOCAL_AI_CORE_TOOL_ACTIVATION.md`
-19. `LOCAL_AI_TASKS/README.md`
-20. `AI_WORKLOAD_REPORT_QUALITY_GATE.md`
-21. `AI_REFERENCE_ONBOARDING.md`
-22. `AI_REFERENCE_SOURCE_MAP.md`
-23. `AI_MEMORY_POLICY.md`
-24. `AI_PIPELINE_ARCHITECTURE.md`
-25. `AI_PIPELINE_REFACTOR_STATUS.md`
-26. `LOCAL_WORKSTATION_TARGET.md`
-27. Blender/audio docs only when entering that application domain.
+7. `CONTRACT_DRIFT_VALIDATION.md`
+8. `../Tools/npu/pipeline/README.md`
+9. `../Tools/validation/README.md`
+10. `LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md` when reviewing the validated GPU/NPU workflow
+11. `EXECUTION_PLANS/README.md`
+12. `TECH_DEBT_TRACKER.md`
+13. `MODULE_MAP.md`
+14. `REFACTORING_AND_REUSE_PLAN.md`
+15. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
+16. `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`
+17. `AI_CONTEXT_PACKS.md`
+18. `AI_SELECTIVE_PLANNER.md`
+19. `LOCAL_AI_CORE_TOOL_ACTIVATION.md`
+20. `LOCAL_AI_TASKS/README.md`
+21. `AI_WORKLOAD_REPORT_QUALITY_GATE.md`
+22. `AI_REFERENCE_ONBOARDING.md`
+23. `AI_REFERENCE_SOURCE_MAP.md`
+24. `AI_MEMORY_POLICY.md`
+25. `AI_PIPELINE_ARCHITECTURE.md`
+26. `AI_PIPELINE_REFACTOR_STATUS.md`
+27. `LOCAL_WORKSTATION_TARGET.md`
+28. Blender/audio docs only when entering that application domain.
 
 ## Current validated provider posture
 
@@ -74,6 +75,7 @@ npu_decode_smoke_passed: true
 | `DATA_FLOW.md` | Current app-agnostic data/report/provider flow. |
 | `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow, GPU/NPU parallelism and evidence handling. |
 | `JSON_SCHEMAS.md` | JSON/report contract notes and current schema gap index. |
+| `CONTRACT_DRIFT_VALIDATION.md` | Report-only code/docs contract drift validation, safe manual-review promotion model and line-count evidence usage. |
 | `AI_SELECTIVE_PLANNER.md` | Report-only selective planner that recommends validators and candidate patch specs from context/evidence. |
 | `LOCAL_AI_CORE_TOOL_ACTIVATION.md` | App-agnostic activation lane for selected chunks, context packs, enrichment plans, knowledge broker packets, proposals and evidence. |
 | `LOCAL_AI_TASKS/README.md` | Non-interactive Markdown task entrypoints for local AI runs. |
@@ -155,7 +157,7 @@ powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_pr
 Evidence push workflow:
 
 ```powershell
-git add docs/LOCAL_VALIDATION_EVIDENCE/
+git add docs/LOCAL_VALIDATION_EVIDENCE/<bundle>.json docs/LOCAL_VALIDATION_EVIDENCE/<bundle>.md
 git commit -m "test: add local ai workflow evidence bundle"
 git push
 ```
@@ -202,9 +204,10 @@ Before editing code, an AI system should:
 5. read `DATA_FLOW.md`;
 6. read `LOCAL_AI_WORKFLOW.md`;
 7. read `JSON_SCHEMAS.md`;
-8. read `../Tools/npu/pipeline/README.md` for NPU/provider work;
-9. read `../Tools/validation/README.md` for validation/report work;
-10. inspect the target source file before producing a patch.
+8. read `CONTRACT_DRIFT_VALIDATION.md` for contract-drift work;
+9. read `../Tools/npu/pipeline/README.md` for NPU/provider work;
+10. read `../Tools/validation/README.md` for validation/report work;
+11. inspect the target source file before producing a patch.
 
 ## Refactoring note
 
