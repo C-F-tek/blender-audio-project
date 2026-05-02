@@ -1,16 +1,16 @@
-# PR109 pre-return status — 2026-05-02
+# PR109 final pre-merge status — 2026-05-02
 
 ## Scope
 
-Snapshot of safe GitHub-only preparation before local workstation access resumes.
+Snapshot of PR #109 after local workstation validation, local orchestrator wiring and post-wiring evidence push.
 
-No code execution, provider execution, Blender runtime, merge, rebase, delete, force-push or branch rewrite was performed by this note.
+No provider execution, Blender runtime, patch auto-apply, raw `output/**` commit, full analysis JSON commit, SQLite/database commit, force-push, branch rewrite or repository setting change was performed by this note.
 
 ## Current active PR stack
 
 ```text
 PR #108: open, mergeable, documentation/validator lane
-PR #109: open, mergeable again as of latest GitHub check, official active PR, local wiring still pending
+PR #109: open, mergeable, official active PR, local wiring completed
 PR #110: open draft, scratch-only workspace, do not merge
 ```
 
@@ -21,7 +21,7 @@ PR #1: closed, merged=false
 PR #2: closed, merged=false
 ```
 
-## GitHub-only work completed
+## GitHub-only and local work completed
 
 ```text
 updated PR #109 body with current operating flow
@@ -30,77 +30,91 @@ added open PR triage note
 updated open PR triage after closing stale PRs
 added open issue triage note
 added pre-return status snapshot
-cleaned code-quality unused imports before the final docs-only phase
+cleaned code-quality unused imports
+wired Tools/ai/build_github_evidence_bundle.py locally from the replacement-ready orchestrator
+pushed post-wiring compact evidence bundle
+added Python module execution note for PYTHONPATH and python -m usage
 ```
 
-## Docs created for local return
+## Docs created for review
 
 ```text
+docs/LOCAL_AI_TASKS/pr109-meta-doc-index-2026-05-02.md
+docs/LOCAL_AI_TASKS/pr109-pythonpath-module-execution-note-2026-05-02.md
 docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md
 docs/LOCAL_AI_TASKS/pr109-evidence-flow.md
 docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md
 docs/LOCAL_AI_TASKS/open-issue-triage-2026-05-02.md
 docs/LOCAL_AI_TASKS/pr109-pre-return-status-2026-05-02.md
+docs/LOCAL_AI_TASKS/pr109-docs-only-phase-log-2026-05-02.md
 ```
 
-## Current blocker
+## Wiring status
 
-The final orchestrator wiring still requires local filesystem access:
+Completed locally and pushed:
 
 ```text
-copy Tools/ai/github_evidence_bundle_build_github_evidence_bundle_ready.py
-over  Tools/ai/build_github_evidence_bundle.py
+commit: 6b9e583 refactor(ai): wire github evidence bundle orchestrator
+source: Tools/ai/github_evidence_bundle_build_github_evidence_bundle_ready.py
+target: Tools/ai/build_github_evidence_bundle.py
 ```
 
-This was intentionally not done via GitHub API because of earlier long-file truncation/corruption risk.
+## Post-wiring evidence
 
-## Mergeability note
+Fresh compact evidence bundle pushed:
 
-GitHub briefly reported PR #109 as non-mergeable after documentation-only commits, then later reported it as mergeable again. Treat mergeability as a local-return verification item, not as a reason to do structural GitHub-only changes.
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/pr109_after_wiring_bundle_20260502-192916.json
+docs/LOCAL_VALIDATION_EVIDENCE/pr109_after_wiring_bundle_20260502-192916.md
+```
 
-Required local checks:
+Observed from the committed bundle:
+
+```text
+python_syntax: passed=true
+code_interpreter_report: passed=true
+provider_execution_seen=false
+selected_chunks_evidence_seen=true
+selected_chunks_built=true
+budget_respected=true
+artifact_manifest_built=true
+included_artifacts_built=true
+included_artifact_count=4
+```
+
+`patch_plan_summary_seen=false` in the final bundle is expected because that bundle includes syntax and static interpreter reports, not a native patch-plan report.
+
+## Python module execution requirement
+
+For modularized `Tools.*` entry points, use repository-root `PYTHONPATH` and prefer module execution:
 
 ```powershell
-git fetch origin
-git switch codex/design-code-patch-plan-lane
-git pull --ff-only origin codex/design-code-patch-plan-lane
-git status --short
-git diff --check
+$env:PYTHONPATH = (Get-Location).Path
+python -m Tools.ai.build_github_evidence_bundle --help
+python -m Tools.validation.check_github_evidence_bundle --help
 ```
 
-If GitHub reports conflicts after sync, inspect conflict source locally before any rebase/merge/update action.
+## Final local state before merge request
 
-## Do next at workstation
+User-confirmed local state:
 
 ```text
-1. Sync PR #109 branch.
-2. Run git diff --check.
-3. Compile refactored entry points.
-4. Wire build_github_evidence_bundle.py locally.
-5. Compile wired orchestrator.
-6. Run focused validation.
-7. Build fresh compact evidence bundle.
-8. Validate bundle.
-9. Stage only wiring + compact evidence.
-10. Commit and push.
+git status --short: clean
+HEAD: 00d4ce1 docs(ai): link PR109 Python module execution note
+origin/codex/design-code-patch-plan-lane: 00d4ce1
 ```
 
-## Do not do before local validation
+GitHub PR state before this final docs refresh:
 
 ```text
-merge PR #109
-merge PR #108
-close PR #110
-edit build_github_evidence_bundle.py through API
-edit large evidence bundles through API
-start provider/GPU/NPU heavy runs
-open new PRs
+PR #109: open
+mergeable: true
+review threads: resolved
+CI/status checks: none attached
 ```
 
-## Future queue
+## Merge gate
 
-```text
-Issue #57: safest next docs-only cleanup candidate after PR #108/#109 stabilize
-Issue #104: future provider/GPU workload-depth task, parked until explicit local provider work is planned
-PR #110: close only after PR #109 contains all useful changes and has fresh local evidence
-```
+PR #109 may be merged only after this final docs refresh is pushed and GitHub still reports it as mergeable.
+
+Do not merge PR #110. It remains scratch-only.
