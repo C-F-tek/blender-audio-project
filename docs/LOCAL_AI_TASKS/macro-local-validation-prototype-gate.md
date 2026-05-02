@@ -15,10 +15,24 @@ PR #108 contract-drift validation documentation
 PR #109 agent-review code patch-plan design/build/smoke/docs-follow-up lane
 current master local AI evidence-bundle tooling
 current master selected-chunks evidence tooling
+current master agnostic context stack tooling
 current local validation/report contracts
 ```
 
 This task does not authorize merging by itself. It produces evidence and a go/no-go decision for later manual promotion.
+
+## Existing agnostic tools used by this gate
+
+This macro gate intentionally reuses existing agnostic tools instead of duplicating them:
+
+```text
+Tools/validation/check_core_activation_agnostic_contract.py
+Tools/validation/run_agnostic_context_stack_smoke.py
+```
+
+`check_core_activation_agnostic_contract.py` statically verifies that the local AI core activation lane still wires full-context orchestration, explicit provider flags, agnostic memory/tool/transient context artifacts, megalithic review stack and manual-review guardrails.
+
+`run_agnostic_context_stack_smoke.py` executes the CPU-only/report-only agnostic context stack smoke: memory inventory, agnostic tool inventory, transient request context, megalithic review, signal refinement and PR draft generation. Use `--dry-run` first when testing branch integration.
 
 ## Explicitly out of scope
 
@@ -59,6 +73,7 @@ local validators
 report-only drift checks
 report-only code patch-plan generation
 report-only docs follow-up generation
+CPU-only/report-only agnostic context stack smoke
 Git-trackable compact evidence bundle
 manual review
 small follow-up documentation PR if needed
@@ -189,7 +204,47 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_loc
 
 This command is a dry-run wrapper smoke. It should not execute providers, apply patches, run Blender or commit evidence.
 
-## Phase 3 — Contract drift reports
+## Phase 3 — Agnostic core/context prechecks
+
+Run the static agnostic core activation contract check:
+
+```powershell
+python .\Tools\validation\check_core_activation_agnostic_contract.py `
+  --repo-root . `
+  --output .\output\validation\core_activation_agnostic_contract.json `
+  --markdown-output .\output\validation\core_activation_agnostic_contract.md
+```
+
+Then run the agnostic context stack smoke in dry-run mode first:
+
+```powershell
+python .\Tools\validation\run_agnostic_context_stack_smoke.py `
+  --repo-root . `
+  --dry-run `
+  --output .\output\validation\agnostic_context_stack_smoke_dryrun.json `
+  --markdown-output .\output\validation\agnostic_context_stack_smoke_dryrun.md
+```
+
+If the dry-run command shape is correct and you want the full CPU-only/report-only stack smoke, run:
+
+```powershell
+python .\Tools\validation\run_agnostic_context_stack_smoke.py `
+  --repo-root . `
+  --output .\output\validation\agnostic_context_stack_smoke.json `
+  --markdown-output .\output\validation\agnostic_context_stack_smoke.md
+```
+
+Expected semantics:
+
+```text
+provider_execution_performed = false
+patch_application_performed = false
+source_writes_performed = false
+real_github_pr_created = false
+sqlite_read_only = true
+```
+
+## Phase 4 — Contract drift reports
 
 On the branch that contains the contract-drift guide or after locally stacking both active PRs for test only, run:
 
@@ -219,7 +274,7 @@ source_writes_performed = false
 
 A failed drift or hygiene report means review is needed. It does not mean apply patches automatically.
 
-## Phase 4 — Optional stacked integration test
+## Phase 5 — Optional stacked integration test
 
 Only for local testing, create a temporary branch that stacks PR #108 and PR #109. Do not push unless you explicitly want an integration branch.
 
@@ -250,7 +305,7 @@ Do not merge or test PR #77 here.
 
 Do not commit this local integration branch unless explicitly needed.
 
-## Phase 5 — Macro validator and generator block
+## Phase 6 — Macro validator and generator block
 
 Run the non-provider macro block on the stacked local branch or on the active branch you are validating:
 
@@ -314,7 +369,7 @@ no patch application
 no source writes outside report outputs
 ```
 
-## Phase 6 — Build compact macro evidence bundle
+## Phase 7 — Build compact macro evidence bundle
 
 Use a timestamped basename:
 
@@ -328,6 +383,9 @@ python .\Tools\ai\build_github_evidence_bundle.py `
   --report .\output\validation\python_syntax_macro.json `
   --report .\output\validation\docs_links_macro.json `
   --report .\output\validation\markdown_command_hygiene_macro.json `
+  --report .\output\validation\core_activation_agnostic_contract.json `
+  --report .\output\validation\agnostic_context_stack_smoke_dryrun.json `
+  --report .\output\validation\agnostic_context_stack_smoke.json `
   --report .\output\validation\agent_review_code_patch_plan_smoke_macro.json `
   --report .\output\validation\agent_review_code_patch_plan_smoke_macro_built.json `
   --report .\output\patch_specs\agent_review_code_patch_plan_macro.json `
@@ -348,12 +406,15 @@ python .\Tools\validation\check_github_evidence_bundle.py `
   --output ".\output\validation\macro_pr108_pr109_validation_${Stamp}_bundle_validation.json"
 ```
 
-## Phase 7 — Prototype gate decision
+## Phase 8 — Prototype gate decision
 
 The prototype gate is green only if:
 
 ```text
 all required validators passed
+agnostic core activation contract passes
+agnostic context stack dry-run passes
+agnostic context stack full smoke passes or is explicitly deferred with reason
 new evidence bundle validates
 code patch-plan smoke passes
 code docs-follow-up report is generated or explicitly reports no ready follow-up
@@ -382,7 +443,7 @@ git add `
 
 Do not use `git add .`.
 
-## Phase 8 — If everything passes
+## Phase 9 — If everything passes
 
 If the macro gate is green, the recommended order is:
 
@@ -417,6 +478,7 @@ Stop immediately if:
 ```text
 validator output is not JSON-parseable
 contract drift reports show source_writes_performed=true
+agnostic core activation contract fails
 agent_review_code_patch_plan smoke report fails
 agent_review_code_docs_followup reports source_writes_performed=true
 markdown command hygiene report fails
