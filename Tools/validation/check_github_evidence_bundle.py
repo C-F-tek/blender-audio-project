@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,12 @@ try:
     from report_utils import resolve_output_path, write_json_report
 except ImportError:  # Allows package-style imports during external checks.
     from Tools.validation.report_utils import resolve_output_path, write_json_report  # type: ignore
+
+try:
+    from Tools.ai.github_evidence_bundle_io import repo_relative, split_path_values
+except ImportError:  # Allows direct execution from Tools/validation on older Python path setups.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from Tools.ai.github_evidence_bundle_io import repo_relative, split_path_values  # type: ignore
 
 
 EXPECTED_KIND = "github_validation_evidence_bundle"
@@ -35,6 +42,16 @@ OPTIONAL_CONTEXT_DECISION_FIELDS = (
     "selected_chunks_evidence_seen",
     "selected_chunks_built",
     "budget_respected",
+)
+
+OPTIONAL_ARTIFACT_DECISION_FIELDS = (
+    "artifact_manifest_built",
+    "included_artifacts_built",
+    "patch_plan_summary_seen",
+)
+
+OPTIONAL_COUNT_DECISION_FIELDS = (
+    "included_artifact_count",
 )
 
 REQUIRED_REPORT_FIELDS = (
@@ -83,13 +100,6 @@ OPTIONAL_SUMMARY_HINT_FIELDS_BY_KIND = {
 }
 
 
-def repo_relative(path: Path, repo_root: Path) -> str:
-    try:
-        return path.resolve().relative_to(repo_root).as_posix()
-    except ValueError:
-        return path.as_posix()
-
-
 def default_bundle_paths(repo_root: Path) -> list[Path]:
     evidence_dir = repo_root / "docs" / "LOCAL_VALIDATION_EVIDENCE"
     paths: list[Path] = []
@@ -98,16 +108,6 @@ def default_bundle_paths(repo_root: Path) -> list[Path]:
         if parse_error or data is None or data.get("kind") == EXPECTED_KIND:
             paths.append(path)
     return paths
-
-
-def split_path_values(items: list[str]) -> list[str]:
-    values: list[str] = []
-    for item in items:
-        for part in str(item).split(","):
-            normalized = part.strip().strip("'\"")
-            if normalized:
-                values.append(normalized)
-    return values
 
 
 def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
@@ -120,6 +120,32 @@ def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     if not isinstance(data, dict):
         return None, f"expected a JSON object, got {type(data).__name__}"
     return data, None
+
+
+def validate_optional_boolean_decision_fields(
+    decision: dict[str, Any],
+    fields: tuple[str, ...],
+    warnings: list[str],
+) -> dict[str, bool]:
+    checks: dict[str, bool] = {}
+    for field in fields:
+        checks[field] = field in decision
+        if field in decision and not isinstance(decision[field], bool):
+            warnings.append(f"decision.{field} should be a boolean")
+    return checks
+
+
+def validate_optional_count_decision_fields(
+    decision: dict[str, Any],
+    fields: tuple[str, ...],
+    warnings: list[str],
+) -> dict[str, bool]:
+    checks: dict[str, bool] = {}
+    for field in fields:
+        checks[field] = field in decision
+        if field in decision and not isinstance(decision[field], int):
+            warnings.append(f"decision.{field} should be an integer")
+    return checks
 
 
 def validate_decision(decision: Any) -> tuple[dict[str, bool], list[str], list[str]]:
@@ -144,10 +170,9 @@ def validate_decision(decision: Any) -> tuple[dict[str, bool], list[str], list[s
         elif not isinstance(decision[field], bool):
             warnings.append(f"decision.{field} should be a boolean")
 
-    for field in OPTIONAL_CONTEXT_DECISION_FIELDS:
-        checks[field] = field in decision
-        if field in decision and not isinstance(decision[field], bool):
-            warnings.append(f"decision.{field} should be a boolean")
+    checks.update(validate_optional_boolean_decision_fields(decision, OPTIONAL_CONTEXT_DECISION_FIELDS, warnings))
+    checks.update(validate_optional_boolean_decision_fields(decision, OPTIONAL_ARTIFACT_DECISION_FIELDS, warnings))
+    checks.update(validate_optional_count_decision_fields(decision, OPTIONAL_COUNT_DECISION_FIELDS, warnings))
 
     return checks, errors, warnings
 

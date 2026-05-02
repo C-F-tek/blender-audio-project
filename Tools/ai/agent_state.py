@@ -56,6 +56,24 @@ def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()
 
 
+def clamp_confidence(value: Any) -> float:
+    """Return confidence bounded to the supported 0.0-1.0 interval."""
+    return max(0.0, min(1.0, float(value)))
+
+
+def stable_tag_tuple(tags: Iterable[Any]) -> tuple[str, ...]:
+    """Return non-empty tags while preserving first-seen order."""
+    return tuple(dict.fromkeys(str(tag) for tag in tags if str(tag).strip()))
+
+
+def json_or_default(raw: str, default: Any) -> Any:
+    """Parse a JSON field, returning the fallback for malformed payloads."""
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return default
+
+
 def compact_text(text: str, limit: int = 900) -> str:
     """Collapse whitespace and trim text to a predictable size."""
     compact = " ".join(str(text or "").split())
@@ -128,7 +146,6 @@ class MemoryRecord:
         """Create a memory record from raw text."""
         content = text[:max_record_chars].rstrip()
         identity = f"{kind}:{scope}:{source}:{sha256_text(content)[:16]}"
-        tag_tuple = tuple(dict.fromkeys(str(tag) for tag in tags if str(tag).strip()))
         return cls(
             record_id=sha256_text(identity)[:20],
             kind=kind,
@@ -136,8 +153,8 @@ class MemoryRecord:
             source=source,
             summary=compact_text(content, 900),
             content=content,
-            tags=tag_tuple,
-            confidence=max(0.0, min(1.0, float(confidence))),
+            tags=stable_tag_tuple(tags),
+            confidence=clamp_confidence(confidence),
             metadata=dict(metadata or {}),
         )
 
@@ -160,7 +177,7 @@ class MemoryRecord:
             summary=str(payload.get("summary") or compact_text(content, 900)),
             content=content,
             tags=tuple(str(tag) for tag in tags),
-            confidence=max(0.0, min(1.0, float(payload.get("confidence", 1.0)))),
+            confidence=clamp_confidence(payload.get("confidence", 1.0)),
             created_at=str(payload.get("created_at") or utc_now_iso()),
             updated_at=payload.get("updated_at"),
             expires_at=payload.get("expires_at"),
@@ -312,14 +329,8 @@ def load_memory_db(path: Path, *, limit: int = 1000) -> list[MemoryRecord]:
             """,
             (int(limit),),
         ):
-            try:
-                tags = json.loads(row["tags_json"])
-            except json.JSONDecodeError:
-                tags = []
-            try:
-                metadata = json.loads(row["metadata_json"])
-            except json.JSONDecodeError:
-                metadata = {}
+            tags = json_or_default(row["tags_json"], [])
+            metadata = json_or_default(row["metadata_json"], {})
             records.append(
                 MemoryRecord(
                     record_id=row["record_id"],

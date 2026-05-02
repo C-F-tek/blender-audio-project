@@ -1,0 +1,530 @@
+{
+  "schema_version": 1,
+  "kind": "github_validation_evidence_bundle",
+  "generated_at": "2026-05-02T14:19:22",
+  "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "source_reports": [
+    "output/validation/python_syntax_pr109.json",
+    "output/analysis/code_interpreter_report_pr109.json",
+    "output/validation/artifact_domain_registry_pr109.json",
+    "output/validation/code_edit_proposal_smoke_pr109.json",
+    "output/validation/agent_review_code_patch_plan_smoke_built_pr109.json",
+    "output/validation/code_edit_proposal_from_plan_smoke_pr109.json",
+    "output/validation/code_patch_artifact_pack_pr109.json",
+    "output/validation/python_line_count_pr109.json"
+  ],
+  "source_selected_chunks_evidence": [
+    "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json"
+  ],
+  "source_included_artifacts": [
+    "output/analysis/code_interpreter_report_pr109.md",
+    "output/patch_specs/agent_review_code_patch_plan_fixture_built.md",
+    "output/patch_specs/code_edit_proposal_from_plan_pr109.md",
+    "output/patch_specs/agent_review_code_docs_followup_pr109.md",
+    "output/validation/code_patch_artifact_pack_pr109.md",
+    "docs/TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md",
+    "docs/AGENT_REVIEW_CODE_PATCH_PLAN.md",
+    "docs/LOCAL_AI_TASKS/build-analysis-input-bundle.md",
+    "docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260502-141635.csv",
+    "output/patch_specs/agent_review_code_docs_followup_pr109.json",
+    "output/patch_specs/agent_review_code_patch_plan_fixture_built.json",
+    "output/validation/python_line_count_pr109.md"
+  ],
+  "reports": [
+    {
+      "path": "output/validation/python_syntax_pr109.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "python_syntax",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "python_syntax",
+        "passed": true,
+        "provider_execution_performed": null,
+        "patch_application_performed": null,
+        "source_writes_performed": null,
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "path": "output/analysis/code_interpreter_report_pr109.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "code_interpreter_report",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "code_interpreter_report",
+        "passed": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "errors": [],
+        "warnings": [],
+        "manual_review_required": true,
+        "recommendation_count": 66
+      }
+    },
+    {
+      "path": "output/validation/artifact_domain_registry_pr109.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "artifact_domain_registry_validation",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "artifact_domain_registry_validation",
+        "passed": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "errors": [],
+        "warnings": [],
+        "manual_review_required": true
+      }
+    },
+    {
+      "path": "output/validation/code_edit_proposal_smoke_pr109.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "code_edit_proposal_smoke",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "code_edit_proposal_smoke",
+        "passed": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "errors": [],
+        "warnings": [
+          "target_metadata.sha256 is null; regenerate proposal from local filesystem for stronger review evidence",
+          "target_metadata.line_count is null; regenerate proposal from local filesystem for stronger review evidence"
+        ],
+        "manual_review_required": true
+      }
+    },
+    {
+      "path": "output/validation/agent_review_code_patch_plan_smoke_built_pr109.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "agent_review_code_patch_plan_smoke",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "agent_review_code_patch_plan_smoke",
+        "passed": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "errors": [],
+        "warnings": [],
+        "manual_review_required": true
+      }
+    },
+    {
+      "path": "output/validation/code_edit_proposal_from_plan_smoke_pr109.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "code_edit_proposal_smoke",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "code_edit_proposal_smoke",
+        "passed": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "errors": [],
+        "warnings": [],
+        "manual_review_required": true
+      }
+    },
+    {
+      "path": "output/validation/code_patch_artifact_pack_pr109.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "code_patch_artifact_pack",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "code_patch_artifact_pack",
+        "passed": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "errors": [],
+        "warnings": [],
+        "manual_review_required": true
+      }
+    },
+    {
+      "path": "output/validation/python_line_count_pr109.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "python_line_count_csv",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "python_line_count_csv",
+        "passed": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "errors": [],
+        "warnings": []
+      }
+    }
+  ],
+  "selected_chunks_evidence": [
+    {
+      "path": "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "selected_semantic_chunks_evidence",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "selected_semantic_chunks_evidence",
+        "passed": true,
+        "provider_execution_performed": false,
+        "source_writes_performed": false,
+        "selected_count": 24,
+        "total_selected_chars": 28649,
+        "max_chunks": 24,
+        "max_total_chars": 32000,
+        "source_bundle": "output/ai_context_packs/full_context_golden_selected_chunks.json",
+        "source_chunks": "indexAI/code_chunks/semantic_code_chunks.json",
+        "decision": {
+          "selected_chunks_built": true,
+          "budget_respected": true,
+          "provider_execution_seen": false,
+          "source_writes_performed": false,
+          "forbidden_paths_blocked": true
+        },
+        "errors": [],
+        "warnings": []
+      }
+    }
+  ],
+  "artifact_manifest": [
+    {
+      "path": "output/validation/python_syntax_pr109.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 30785,
+      "sha256": "05dd23f8a7fb07320822b1bbb486d3bda2589a9e0a6790eb383bd4797a55b2dc",
+      "content_included": true,
+      "role": "local_artifact_reference",
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"python_syntax\",\n  \"repo_root\": \"C:/Users/carmi/blender/blender-audio-project\",\n  \"checked_count\": 264,\n  \"failed_count\": 0,\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"excluded\": [\n    \".git\",\n    \".hg\",\n    \".mypy_cache\",\n    \".pytest_cache\",\n    \".repo_patch_backups\",\n    \".ruff_cache\",\n    \".svn\",\n    \".venv\",\n    \"__pycache__\",\n    \"indexAI\",\n    \"output\",\n    \"renders\",\n    \"venv\"\n  ],\n  \"results\": [\n    {\n      \"path\": \"analyze_wav.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"build_track_summary.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"normalize_scene_spec.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"old script legacy/spaziotempo_album_visual_v3.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"old script legacy/spaziotempo_album_visual_v5.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"old script legacy/spaziotempo_asset_visual_v6.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"old script legacy/spaziotempo_asset_visual_v61.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"Scripting/_template_audio_reactive_package/audio_mapping.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"Scripting/_template_audio_reactive_package/camera.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"Scripting/_template_audio_reactive_pack",
+      "preview_chars": 1500,
+      "line_count": 1347
+    },
+    {
+      "path": "output/analysis/code_interpreter_report_pr109.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 616554,
+      "sha256": "a5895d6e86c15d7ec4aab242c6e74c912114f4d9f44c0657069cc20867715436",
+      "content_included": true,
+      "role": "local_artifact_reference",
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"code_interpreter_report\",\n  \"generated_at\": \"2026-05-02T14:16:19\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"manual_review_required\": true,\n  \"apply_mode\": \"report_only_static_code_interpreter\",\n  \"file_count\": 122,\n  \"parsed_file_count\": 122,\n  \"total_lines\": 32264,\n  \"total_functions\": 1125,\n  \"total_classes\": 29,\n  \"total_risk_signals\": 12,\n  \"total_todos\": 17,\n  \"top_imports\": [\n    {\n      \"module\": \"Tools\",\n      \"count\": 386\n    },\n    {\n      \"module\": \"__future__\",\n      \"count\": 122\n    },\n    {\n      \"module\": \"pathlib\",\n      \"count\": 115\n    },\n    {\n      \"module\": \"typing\",\n      \"count\": 115\n    },\n    {\n      \"module\": \"argparse\",\n      \"count\": 94\n    },\n    {\n      \"module\": \"json\",\n      \"count\": 90\n    },\n    {\n      \"module\": \"report_utils\",\n      \"count\": 68\n    },\n    {\n      \"module\": \"datetime\",\n      \"count\": 54\n    },\n    {\n      \"module\": \"sys\",\n      \"count\": 49\n    },\n    {\n      \"module\": \"dataclasses\",\n      \"count\": 28\n    },\n    {\n      \"module\": \"agent_state\",\n      \"count\": 26\n    },\n    {\n      \"module\": \"re\",\n      \"count\": 20\n    },\n    {\n      \"module\": \"models\",\n      \"count\": 16\n    },\n    {\n      \"module\": \"artifact_contracts\",\n      \"count\": 13\n    },\n    {\n      \"module\": \"pipeline\",\n      \"count\": 13\n",
+      "preview_chars": 1500,
+      "line_count": 23761
+    },
+    {
+      "path": "output/validation/artifact_domain_registry_pr109.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 11762,
+      "sha256": "0d770e0c6bf5948a9b56728a8da12c45a471c12f40880eb57b19cd0da7d86e0c",
+      "content_included": true,
+      "role": "local_artifact_reference",
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"artifact_domain_registry_validation\",\n  \"generated_at\": \"2026-05-02T14:16:20\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"manual_review_required\": true,\n  \"domain_count\": 8,\n  \"domains\": [\n    \"code\",\n    \"docs\",\n    \"validation\",\n    \"workflow\",\n    \"text\",\n    \"audio\",\n    \"scene_spec\",\n    \"provider_result\"\n  ],\n  \"registry\": {\n    \"schema_version\": 1,\n    \"kind\": \"artifact_domain_registry\",\n    \"domain_count\": 8,\n    \"domains\": [\n      {\n        \"domain\": \"code\",\n        \"description\": \"Source/config code proposals, validators and code patch artifact packs.\",\n        \"proposal_kinds\": [\n          \"agent_review_code_patch_plan\",\n          \"code_edit_proposal\"\n        ],\n        \"evidence_kinds\": [\n          \"code_contract_drift\",\n          \"python_line_count_csv\",\n          \"analysis_input_bundle\",\n          \"code_interpreter_report\"\n        ],\n        \"pack_kinds\": [\n          \"code_patch_artifact_pack\"\n        ],\n        \"blocked_target_prefixes\": [\n          \"output/\",\n          \"renders/\",\n          \".git/\",\n          \"indexAI/code_chunks/\",\n          \"indexAI/project_code_chunks/\"\n        ],\n        \"blocked_target_suffixes\": [\n          \".db\",\n          \".sqlite\",\n          \".sqlite3\"\n        ],\n        \"blocked_target_fragments\": [\n      ",
+      "preview_chars": 1500,
+      "line_count": 389
+    },
+    {
+      "path": "output/validation/code_edit_proposal_smoke_pr109.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 2516,
+      "sha256": "2a370428b563bd43eed3621fd26e419b5689e6705d4c15daa84efeadf7ae1494",
+      "content_included": true,
+      "role": "local_artifact_reference",
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"code_edit_proposal_smoke\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"proposal\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\Tools\\\\ai\\\\fixtures\\\\code_edit_proposal_fixture.json\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [\n    \"target_metadata.sha256 is null; regenerate proposal from local filesystem for stronger review evidence\",\n    \"target_metadata.line_count is null; regenerate proposal from local filesystem for stronger review evidence\"\n  ],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"manual_review_required\": true,\n  \"summary\": {\n    \"id\": \"code_edit_fixture_001\",\n    \"target_file\": \"Tools/ai/code_patch_plan_common.py\",\n    \"edit_kind\": \"no_op\",\n    \"manual_review_required\": true,\n    \"ready_for_manual_review\": true,\n    \"target_sha256\": null,\n    \"target_line_count\": null,\n    \"rationale\": \"Fixture validates the code edit proposal contract without proposing a source mutation.\",\n    \"edit_strategy\": \"Keep this proposal advisory-only. Use it to validate guardrails, target metadata shape, validation commands and stop conditions.\",\n    \"validation_commands\": [\n      \"python -m py_compile .\\\\Tools\\\\ai\\\\code_patch_plan_common.py\",\n      \"python .\\\\Tools\\\\validation\\\\check_python_syntax.py --repo-root . --output .\\\\output\\\\validation\\\\python_syntax.json\",\n      \"python .\\\\Tools\\\\validation\\\\check_validation_report_contract.py ",
+      "preview_chars": 1500,
+      "line_count": 52
+    },
+    {
+      "path": "output/validation/agent_review_code_patch_plan_smoke_built_pr109.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 1203,
+      "sha256": "0111c4f8c73e5fad521bdc34e4e1d624067b1d7f182ea048ff49f085882279e6",
+      "content_included": true,
+      "role": "local_artifact_reference",
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"agent_review_code_patch_plan_smoke\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"report\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\patch_specs\\\\agent_review_code_patch_plan_fixture_built.json\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"manual_review_required\": true,\n  \"plan_count\": 1,\n  \"checks\": [\n    {\n      \"index\": 0,\n      \"id\": \"code_contract_001\",\n      \"ok\": true,\n      \"errors\": [],\n      \"warnings\": [],\n      \"target_files\": [\n        \"Tools/validation/check_validation_report_contract.py\"\n      ]\n    }\n  ],\n  \"guardrails\": {\n    \"report_only\": true,\n    \"manual_review_required\": true,\n    \"provider_execution_performed\": false,\n    \"patch_application_performed\": false,\n    \"source_writes_performed\": false,\n    \"blender_runtime_execution_performed\": false,\n    \"sqlite_write_performed\": false,\n    \"providers_executed\": false,\n    \"blender_runtime_executed\": false,\n    \"patches_applied\": false,\n    \"source_files_written\": false\n  }\n}\n",
+      "preview_chars": 1164,
+      "line_count": 39
+    },
+    {
+      "path": "output/validation/code_edit_proposal_from_plan_smoke_pr109.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 2652,
+      "sha256": "c103c04a9e943ead91ac1e5bf49c690caf86d3f1ff2e4ae0266270d0df73342f",
+      "content_included": true,
+      "role": "local_artifact_reference",
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"code_edit_proposal_smoke\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"proposal\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\patch_specs\\\\code_edit_proposal_from_plan_pr109.json\",\n  \"input_mode\": \"code_edit_proposal_build_wrapper\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"manual_review_required\": true,\n  \"summary\": {\n    \"id\": \"code_edit_from_code_contract_001\",\n    \"target_file\": \"Tools/validation/check_validation_report_contract.py\",\n    \"edit_kind\": \"no_op\",\n    \"manual_review_required\": true,\n    \"ready_for_manual_review\": true,\n    \"target_sha256\": \"fbdf0101c508fd1d12ed285b7cb180658bb243cc46b8f69b57634ad7bc0497d0\",\n    \"target_line_count\": 187,\n    \"rationale\": \"Contract drift check `fixture_validation_report_contract_manual_review_gate` reported a code-review candidate. Missing required terms: `fixture_manual_review_gate`. Missing recommended terms: `manual_review_required`.\",\n    \"edit_strategy\": \"Fixture-only suggestion. Do not apply; validate report-only code patch-plan generation. Current CSV sizing hint: 152 lines; verify current count locally before editing. Do not apply this plan automatically.\",\n    \"validation_commands\": [\n      \"python -m py_compile .\\\\Tools\\\\validation\\\\check_validation_report_contract.py\",\n      \"python .\\\\Tools\\\\validation\\\\check_pytho",
+      "preview_chars": 1500,
+      "line_count": 50
+    },
+    {
+      "path": "output/validation/code_patch_artifact_pack_pr109.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 4947,
+      "sha256": "53c46e40e31002806a66315ae453b6b6146c65331e802726ec42475214d399dc",
+      "content_included": true,
+      "role": "local_artifact_reference",
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"code_patch_artifact_pack\",\n  \"generated_at\": \"2026-05-02T14:16:31\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"manual_review_required\": true,\n  \"apply_mode\": \"report_only_compact_code_patch_artifact_pack\",\n  \"inputs\": {\n    \"code_patch_plan\": \"output/patch_specs/agent_review_code_patch_plan_fixture_built.json\",\n    \"docs_followup\": \"output/patch_specs/agent_review_code_docs_followup_pr109.json\"\n  },\n  \"summary\": {\n    \"code_patch_plan_count\": 1,\n    \"docs_followup_count\": 1,\n    \"code_patch_plan_ready\": true,\n    \"docs_followup_ready\": true\n  },\n  \"code_patch_plans\": [\n    {\n      \"id\": \"code_contract_001\",\n      \"area\": \"cpu_validation\",\n      \"risk\": \"medium\",\n      \"status\": \"ready_for_manual_review\",\n      \"target_files\": [\n        \"Tools/validation/check_validation_report_contract.py\"\n      ],\n      \"rationale\": \"Contract drift check `fixture_validation_report_contract_manual_review_gate` reported a code-review candidate. Missing required terms: `fixture_manual_review_gate`. Missing recommended terms: `manual_review_required`.\",\n      \"edit_strategy\": \"Fixture-only suggestion. Do not apply; validate report-only code patch-plan generation. Current CSV sizing hint: 152 lines; verify current count locally before editing. Do not apply this plan au",
+      "preview_chars": 1500,
+      "line_count": 101
+    },
+    {
+      "path": "output/validation/python_line_count_pr109.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 3104,
+      "sha256": "c3afa0a7443d89da9400591c30776de2899a8d87dbaf2036713ca52684ffb340",
+      "content_included": true,
+      "role": "local_artifact_reference",
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"python_line_count_csv\",\n  \"generated_at\": \"2026-05-02T14:16:36\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"csv_written\": \"docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260502-141635.csv\",\n  \"file_count\": 265,\n  \"total_lines\": 75396,\n  \"top_files\": [\n    {\n      \"File\": \"Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py\",\n      \"Lines\": 2197\n    },\n    {\n      \"File\": \"Tools/npu/run_dual_ai_pipeline.py\",\n      \"Lines\": 1773\n    },\n    {\n      \"File\": \"old script legacy/spaziotempo_asset_visual_v61.py\",\n      \"Lines\": 1513\n    },\n    {\n      \"File\": \"Scripting/v61b/scene_tuning_panel.py\",\n      \"Lines\": 1262\n    },\n    {\n      \"File\": \"Tools/workflow/workflow_state.py\",\n      \"Lines\": 1230\n    },\n    {\n      \"File\": \"old script legacy/spaziotempo_asset_visual_v6.py\",\n      \"Lines\": 1174\n    },\n    {\n      \"File\": \"Scripting/v61b_backgood/scene_tuning_panel.py\",\n      \"Lines\": 1097\n    },\n    {\n      \"File\": \"Scripting/v61b/animation.py\",\n      \"Lines\": 1079\n    },\n    {\n      \"File\": \"Scripting/v61b_backgood/animation.py\",\n      \"Lines\": 1019\n    },\n    {\n      \"File\": \"old script legacy/spaziotempo_album_visual_v5.py\",\n      \"Lines\": 969\n    },\n    {\n      \"File\": \"Tools/workflow/gui/workflow_gui.py\",\n  ",
+      "preview_chars": 1500,
+      "line_count": 126
+    }
+  ],
+  "included_artifacts": [
+    {
+      "path": "output/analysis/code_interpreter_report_pr109.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 6916,
+      "sha256": "6ae0bcd98d2044f6cdd399d3e22bb499b0f89c9117991392336fc047b80bac42",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 84,
+      "raw_chars": 6792,
+      "included_chars": 6792,
+      "content": "# Static Code Interpreter Report\n\n- Passed: `True`\n- File count: `122`\n- Parsed files: `122`\n- Total lines: `32264`\n- Total functions: `1125`\n- Total classes: `29`\n- Risk signals: `12`\n- TODO/FIXME markers: `17`\n- Recommendation count: `66`\n- Provider execution performed: `False`\n- Patch application performed: `False`\n- Source writes performed: `False`\n\n## Largest files\n\n- `Tools/ai/run_agent_gpu_deep_planning_review.py` — `714` lines, risk `medium`\n- `Tools/ai/build_github_evidence_bundle.py` — `688` lines, risk `medium`\n- `Tools/validation/check_npu_pipeline_modules.py` — `627` lines, risk `medium`\n- `Tools/ai/build_selective_execution_plan.py` — `618` lines, risk `medium`\n- `Tools/ai/build_repository_change_proposals.py` — `582` lines, risk `medium`\n- `Tools/ai/run_pipeline_dry_run_matrix.py` — `573` lines, risk `medium`\n- `Tools/ai/build_agent_review_patch_plan.py` — `562` lines, risk `medium`\n- `Tools/ai/build_ai_context_pack.py` — `558` lines, risk `medium`\n- `Tools/ai/suggest_repository_updates.py` — `551` lines, risk `medium`\n- `Tools/ai/agent_state.py` — `533` lines, risk `medium`\n- `Tools/ai/run_megalithic_repo_review.py` — `519` lines, risk `medium`\n- `Tools/validation/ai_pipeline_report_contracts.py` — `497` lines, risk `medium`\n- `Tools/ai/refine_megalithic_review_signals.py` — `489` lines, risk `medium`\n- `Tools/validation/run_agent_review_patch_plan_full_validation.py` — `487` lines, risk `medium`\n- `Tools/validation/run_agnostic_ai_tools_smoke_matrix.py` — `483` lines, risk `medium`\n- `Tools/ai/run_agent_gpu_deep_planning_supervised.py` — `478` lines, risk `medium`\n- `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` — `471` lines, risk `medium`\n- `Tools/validation/check_reviewed_patch_specs.py` — `446` lines, risk `medium`\n- `Tools/ai/promote_patch_spec_draft.py` — `442` lines, risk `medium`\n- `Tools/validation/check_ai_context_pack_contract.py` — `425` lines, risk `medium`\n\n## Recommendations\n\n- `code_static_001` `Tools/ai/agent_memory_policy.py` risk `medium`: complex functions detected\n- `code_static_002` `Tools/ai/agent_state.py` risk `medium`: \n- `code_static_003` `Tools/ai/artifact_domain_registry.py` risk `medium`: complex functions detected\n- `code_static_004` `Tools/ai/build_agent_agnostic_tool_inventory.py` risk `medium`: complex functions detected\n- `code_static_005` `Tools/ai/build_agent_memory_inventory.py` risk `medium`: large functions detected\n- `code_static_006` `Tools/ai/build_agent_review_patch_plan.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_007` `Tools/ai/build_ai_context_pack.py` risk `medium`: complex functions detected\n- `code_static_008` `Tools/ai/build_code_interpreter_report.py` risk `medium`: TODO/FIXME markers detected\n- `code_static_009` `Tools/ai/build_dry_run_matrix_evidence_bundle.py` risk `medium`: complex functions detected\n- `code_static_010` `Tools/ai/build_full_context_golden_proposals.py` risk `medium`: large functions detected\n- `code_static_011` `Tools/ai/build_github_evidence_bundle.py` risk `medium`: complex functions detected\n- `code_static_012` `Tools/ai/build_local_ai_enrichment_plan.py` risk `medium`: large functions detected\n- `code_static_013` `Tools/ai/build_music_intermediates.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_014` `Tools/ai/build_patch_specs_from_proposals.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_015` `Tools/ai/build_repository_change_proposals.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_016` `Tools/ai/build_selective_execution_plan.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_017` `Tools/ai/build_workload_quality_lane_routing.py` risk `medium`: complex functions detected\n- `code_static_018` `Tools/ai/check_local_resource_lanes.py` risk `medium`: complex functions detected\n- `code_static_019` `Tools/ai/check_npu_provider_environment.py` risk `medium`: large functions detected, complex functions detected, static risk calls detected\n- `code_static_020` `Tools/ai/code_patch_plan_common.py` risk `medium`: complex functions detected\n- `code_static_021` `Tools/ai/model_json.py` risk `medium`: complex functions detected\n- `code_static_022` `Tools/ai/pipeline/preflight.py` risk `medium`: complex functions detected\n- `code_static_023` `Tools/ai/pipeline/remediation.py` risk `medium`: large functions detected, complex functions detected, TODO/FIXME markers detected\n- `code_static_024` `Tools/ai/pipeline/steps.py` risk `medium`: large functions detected\n- `code_static_025` `Tools/ai/promote_patch_spec_draft.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_026` `Tools/ai/refine_megalithic_review_signals.py` risk `medium`: \n- `code_static_027` `Tools/ai/review_wave_entrypoints.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_028` `Tools/ai/run_agent_gpu_deep_planning_review.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_029` `Tools/ai/run_agent_gpu_deep_planning_supervised.py` risk `medium`: large functions detected, complex functions detected, static risk calls detected\n- `code_static_030` `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` risk `medium`: large functions detected, complex functions detected, static risk calls detected\n- `code_static_031` `Tools/ai/run_local_provider_probe.py` risk `medium`: complex functions detected\n- `code_static_032` `Tools/ai/run_megalithic_repo_review.py` risk `medium`: complex functions detected\n- `code_static_033` `Tools/ai/run_npu_decode_smoke_diagnostic.py` risk `medium`: large functions detected, complex functions detected, static risk calls detected\n- `code_static_034` `Tools/ai/run_npu_gpu_deep_review_auditor.py` risk `medium`: large functions detected, complex functions detected, static risk calls detected\n- `code_static_035` `Tools/ai/run_pipeline_dry_run_matrix.py` risk `medium`: large functions detected, static risk calls detected\n- `code_static_036` `Tools/ai/select_semantic_code_chunks.py` risk `medium`: large functions detected, complex functions detected\n- `code_static_037` `Tools/ai/smart_ai_gatekeeper.py` risk `medium`: complex functions detected, TODO/FIXME markers detected\n- `code_static_038` `Tools/ai/suggest_repository_updates.py` risk `medium`: complex functions detected\n- `code_static_039` `Tools/ai/validate_ai_artifacts.py` risk `medium`: complex functions detected\n- `code_static_040` `Tools/validation/ai_pipeline_report_contracts.py` risk `medium`: large functions detected, complex functions detected\n\n## Guardrail\n\nThis is static interpretation only. It does not execute repository code or apply changes.\n"
+    },
+    {
+      "path": "output/patch_specs/agent_review_code_patch_plan_fixture_built.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 1292,
+      "sha256": "d369eb445cd9b03cf2ded5815d45ce35a0f0a9dc7c7c6ad2797dbf453177dfc2",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 30,
+      "raw_chars": 1262,
+      "included_chars": 1262,
+      "content": "# Agent Review Code Patch Plan\n\n- Passed: `True`\n- Apply mode: `report_only_manual_review_code_patch_plan`\n- Manual review required: `True`\n- Provider execution performed: `False`\n- Patch application performed: `False`\n- Source writes performed: `False`\n- Patch plan count: `1`\n\n## Inputs\n\n- `code_contract_drift_report`: `Tools/ai/fixtures/code_contract_drift_fixture.json`\n- `line_count_csv`: `docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260501-215122.csv`\n- `line_count_csv_loaded`: `True`\n\n## Plans\n\n### `code_contract_001`\n\n- Area: `cpu_validation`\n- Risk: `medium`\n- Status: `ready_for_manual_review`\n- Target files: `Tools/validation/check_validation_report_contract.py`\n- Rationale: Contract drift check `fixture_validation_report_contract_manual_review_gate` reported a code-review candidate. Missing required terms: `fixture_manual_review_gate`. Missing recommended terms: `manual_review_required`.\n- Strategy: Fixture-only suggestion. Do not apply; validate report-only code patch-plan generation. Current CSV sizing hint: 152 lines; verify current count locally before editing. Do not apply this plan automatically.\n\n## Guardrail\n\nThis artifact is a code patch plan only. It contains no replacements and must not be treated as an apply queue.\n"
+    },
+    {
+      "path": "output/patch_specs/code_edit_proposal_from_plan_pr109.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 1104,
+      "sha256": "a4d2c8d7779b339f60d30e59ea0d9dc07a099147b7a22a54aec0dd6bc0eb55ae",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 23,
+      "raw_chars": 1081,
+      "included_chars": 1081,
+      "content": "# Code Edit Proposal Build\n\n- Passed: `True`\n- Apply mode: `report_only_code_edit_proposal_build`\n- Manual review required: `True`\n- Provider execution performed: `False`\n- Patch application performed: `False`\n- Source writes performed: `False`\n- Selected plan: `code_contract_001`\n\n## Proposal summary\n\n- Target file: `Tools/validation/check_validation_report_contract.py`\n- Edit kind: `no_op`\n- Ready for manual review: `True`\n- Target line count: `187`\n- Target SHA-256: `fbdf0101c508fd1d12ed285b7cb180658bb243cc46b8f69b57634ad7bc0497d0`\n- Rationale: Contract drift check `fixture_validation_report_contract_manual_review_gate` reported a code-review candidate. Missing required terms: `fixture_manual_review_gate`. Missing recommended terms: `manual_review_required`.\n- Strategy: Fixture-only suggestion. Do not apply; validate report-only code patch-plan generation. Current CSV sizing hint: 152 lines; verify current count locally before editing. Do not apply this plan automatically.\n\n## Guardrail\n\nThis build creates proposal metadata only. It does not apply the proposal.\n"
+    },
+    {
+      "path": "output/patch_specs/agent_review_code_docs_followup_pr109.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 1078,
+      "sha256": "a050d24a403503b5226fbe5ac72e4a5f68d612f26cb8a944e6a7f4ba3a557311",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 23,
+      "raw_chars": 1055,
+      "included_chars": 1055,
+      "content": "# Agent Review Code Docs Follow-up\n\n- Passed: `True`\n- Apply mode: `report_only_manual_review_docs_followup`\n- Manual review required: `True`\n- Provider execution performed: `False`\n- Patch application performed: `False`\n- Source writes performed: `False`\n- Docs follow-up count: `1`\n\n## Suggestions\n\n### `docs_followup_001` from `code_contract_001`\n\n- Status: `candidate_for_manual_review`\n- Target docs: `Tools/validation/README.md, docs/JSON_SCHEMAS.md`\n- Missing candidate docs: `docs/CONTRACT_DRIFT_VALIDATION.md`\n- Rationale: Code patch plan `code_contract_001` may change `Tools/validation/check_validation_report_contract.py`; documentation should be reviewed for matching contract, workflow or schema updates.\n- Strategy: After the code patch is reviewed, update only the affected docs with a narrow cross-reference, schema note, validator command or workflow note. Do not duplicate full contracts and do not apply documentation edits automatically.\n\n## Guardrail\n\nThis report notifies the documentation lane only. It is not a patch apply queue.\n"
+    },
+    {
+      "path": "output/validation/code_patch_artifact_pack_pr109.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 1306,
+      "sha256": "2fbe5bdada8605b5fac3a1d9be86cbdf763adbdeccb429c321f0bc8798d3af09",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 33,
+      "raw_chars": 1273,
+      "included_chars": 1273,
+      "content": "# Code Patch Artifact Pack\n\n- Passed: `True`\n- Apply mode: `report_only_compact_code_patch_artifact_pack`\n- Manual review required: `True`\n- Provider execution performed: `False`\n- Patch application performed: `False`\n- Source writes performed: `False`\n- Code patch plan count: `1`\n- Docs follow-up count: `1`\n\n## Code patch plans\n\n### `code_contract_001`\n- Area: `cpu_validation`\n- Risk: `medium`\n- Status: `ready_for_manual_review`\n- Target files: `['Tools/validation/check_validation_report_contract.py']`\n- Rationale: Contract drift check `fixture_validation_report_contract_manual_review_gate` reported a code-review candidate. Missing required terms: `fixture_manual_review_gate`. Missing recommended terms: `manual_review_required`.\n\n## Docs follow-up suggestions\n\n### `docs_followup_001`\n- Source code plan: `code_contract_001`\n- Area: `cpu_validation`\n- Risk: `medium`\n- Status: `candidate_for_manual_review`\n- Target files: `['Tools/validation/README.md', 'docs/JSON_SCHEMAS.md']`\n- Rationale: Code patch plan `code_contract_001` may change `Tools/validation/check_validation_report_contract.py`; documentation should be reviewed for matching contract, workflow or schema updates.\n\n## Guardrail\n\nThis pack is compact evidence only. It is not a patch apply queue.\n"
+    },
+    {
+      "path": "docs/TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 8579,
+      "sha256": "d0a5be72375cbd31aec7347b1fef2f3ebab74f7114fdcfa29c56e788d4f5bdde",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 452,
+      "raw_chars": 8571,
+      "included_chars": 8571,
+      "content": "# Tool-Agnostic Artifact Expansion Roadmap\n\n## Purpose\n\nThis document reframes the current local AI work as a tool-agnostic artifact engine rather than a Blender-only prototype.\n\nThe immediate implementation is code-focused because code is the safest and most testable base layer. The same philosophy should generalize to audio, text, documentation, scene descriptions, validation reports, prompts and future domain-specific artifacts.\n\n## Core shift\n\nPrevious framing:\n\n```text\nBlender prototype support\n```\n\nCurrent framing:\n\n```text\ntool-agnostic artifact production and validation framework\n```\n\nThe framework should be able to ingest evidence, generate proposals, validate contracts, produce compact bundles and keep every high-risk action manual-review-first.\n\n## Stable primitives already emerging\n\nThe current PR introduces or connects these primitives:\n\n```text\ncontract drift report\nagent review patch plan\ncode patch plan\ncomplete code edit proposal\ndocs follow-up suggestion\nartifact pack\nevidence bundle\nline-count evidence\nagnostic context stack smoke\nmanual review gate\n```\n\nThese are not code-only concepts. They can be generalized as:\n\n```text\ndomain evidence\nartifact proposal\nartifact validator\nartifact follow-up\nartifact pack\nartifact evidence bundle\nmanual promotion gate\n```\n\n## Domains\n\nThe framework should treat domains as lanes, not as hard-coded project identities.\n\nInitial domains:\n\n```text\ncode\ndocs\nvalidation\nworkflow\nlocal_ai_context\n```\n\nPlanned domains:\n\n```text\naudio\ntext\nprompt\nscene_spec\nrender_plan\nasset_manifest\nmodel_context\nprovider_result\n```\n\nEach domain should declare:\n\n```text\ninput evidence types\nallowed output artifact types\nvalidators\nblocked targets\nmanual review rules\npromotion rules\nbundle summary shape\n```\n\n## Artifact lifecycle\n\nEvery artifact should pass through the same lifecycle:\n\n```text\ncollect evidence\nnormalize evidence\nproduce proposal\nvalidate proposal\npack compact evidence\nmanual review\npromote or reject\n```\n\nNo artifact should jump directly from AI generation to source/runtime mutation.\n\n## Universal guardrails\n\nAll lanes inherit these default guardrails:\n\n```text\nprovider_execution_performed = false unless explicitly requested\npatch_application_performed = false unless explicitly requested\nsource_writes_performed = false unless explicitly requested\nmanual_review_required = true\noutput/** is local only\nraw runtime artifacts are not versioned\ncompact evidence is preferred\nfull analysis JSON is not committed\nSQLite/database artifacts are not committed\nBlender runtime is not executed unless the task is explicitly runtime-scoped\n```\n\n## Artifact categories\n\n### Evidence artifact\n\nEvidence artifacts describe what was observed.\n\nExamples:\n\n```text\ncode_contract_drift\ndocs_contract_drift\npython_line_count_csv\nagnostic_context_stack_smoke\nprovider_result_report\naudio_analysis_summary\ntext_corpus_summary\n```\n\nRequirements:\n\n```text\nschema_version\nkind\npassed\nerrors\nwarnings\nprovider_execution_performed\npatch_application_performed\nsource_writes_performed\nsource references\ncompact summary\n```\n\n### Proposal artifact\n\nProposal artifacts describe what could be changed or generated.\n\nExamples:\n\n```text\nagent_review_code_patch_plan\ncode_edit_proposal\nagent_review_code_docs_followup\nscene_patch_plan\naudio_feature_mapping_plan\ntext_rewrite_plan\nprompt_refinement_plan\n```\n\nRequirements:\n\n```text\nkind\napply_mode\nmanual_review_required\ntargets\nrationale\nstrategy\nvalidation_commands\nstop_conditions\nrisk\nstatus\n```\n\n### Pack artifact\n\nPack artifacts summarize large proposal/evidence sets for GitHub review.\n\nExamples:\n\n```text\ncode_patch_artifact_pack\ngithub_evidence_bundle\nfuture audio_artifact_pack\nfuture text_artifact_pack\nfuture scene_spec_artifact_pack\n```\n\nRequirements:\n\n```text\nraw content minimized\nlarge payloads omitted or bounded\nreviewable summaries only\nlinks/paths to source local artifacts\nmanual decision section\n```\n\n## Limits to actively test\n\nThe next phase should intentionally find limits in these areas.\n\n### 1. Schema pressure\n\nQuestion:\n\n```text\nCan one schema family describe code, docs, audio, text and scene artifacts without becoming vague?\n```\n\nTest strategy:\n\n```text\ncreate one minimal proposal fixture per domain\nrun common smoke validator concepts\ncompare required fields\nsplit only when field semantics truly diverge\n```\n\n### 2. Evidence size pressure\n\nQuestion:\n\n```text\nHow much raw evidence can be summarized before decisions lose traceability?\n```\n\nTest strategy:\n\n```text\nlarge code file summary\nlarge audio analysis summary\nlarge text corpus summary\nlarge provider result summary\ncompact pack output\nmanual review check\n```\n\n### 3. Target safety pressure\n\nQuestion:\n\n```text\nCan target path policies stay generic while still blocking dangerous domain-specific outputs?\n```\n\nTest strategy:\n\n```text\ncode target policy\ndocs target policy\naudio output target policy\nscene spec target policy\nruntime artifact target policy\n```\n\n### 4. Validator portability\n\nQuestion:\n\n```text\nCan validators be declared as metadata and executed separately from artifact generation?\n```\n\nTest strategy:\n\n```text\nproposal declares validators\nsmoke validates validators exist as strings\nrunner remains separate\nno automatic execution in proposal generation\n```\n\n### 5. Provider boundary\n\nQuestion:\n\n```text\nCan provider outputs be consumed as evidence without turning provider execution into a hidden dependency?\n```\n\nTest strategy:\n\n```text\nprovider_result_report fixture\nprovider_execution_performed flag\nsource prompt hash\noutput summary only\nmanual review gate\n```\n\n### 6. Domain handoff quality\n\nQuestion:\n\n```text\nCan one artifact from a domain notify another domain safely?\n```\n\nExamples:\n\n```text\ncode patch plan -> docs follow-up\naudio analysis -> scene spec proposal\ntext analysis -> prompt refinement plan\nprovider result -> validation follow-up\n```\n\nTest strategy:\n\n```text\nbuild bridge artifacts\nvalidate no writes\nvalidate compact summary\nrequire manual review\n```\n\n## New horizon: artifact domain registry\n\nThe framework should eventually define a domain registry.\n\nPotential file:\n\n```text\nTools/ai/artifact_domain_registry.py\n```\n\nInitial registry record:\n\n```json\n{\n  \"domain\": \"code\",\n  \"proposal_kinds\": [\"agent_review_code_patch_plan\", \"code_edit_proposal\"],\n  \"evidence_kinds\": [\"code_contract_drift\", \"python_line_count_csv\"],\n  \"pack_kinds\": [\"code_patch_artifact_pack\"],\n  \"blocked_target_prefixes\": [\"output/\", \"renders/\"],\n  \"blocked_target_suffixes\": [\".db\", \".sqlite\", \".sqlite3\"],\n  \"requires_manual_review\": true\n}\n```\n\nThis would let future domains plug into the same lifecycle without copying logic.\n\n## New horizon: universal artifact proposal\n\nThe code edit proposal can evolve into a universal proposal shape.\n\nGeneric shape:\n\n```json\n{\n  \"kind\": \"artifact_proposal\",\n  \"domain\": \"code|docs|audio|text|scene_spec|prompt\",\n  \"target\": {},\n  \"rationale\": \"why\",\n  \"strategy\": \"how\",\n  \"payload\": {},\n  \"validation_commands\": [],\n  \"stop_conditions\": [],\n  \"manual_review_required\": true,\n  \"provider_execution_performed\": false,\n  \"artifact_write_performed\": false\n}\n```\n\nDo not replace domain-specific proposals too early. First collect fixtures and real examples.\n\n## Recommended next implementation sequence\n\n### Phase A — complete code lane base\n\n```text\ncode_edit_proposal_smoke\ncode patch artifact pack includes code edit proposal summaries\nmacro evidence bundle includes code edit proposal smoke\nlocal validation proves contract\n```\n\n### Phase B — introduce artifact domain registry\n\n```text\ncreate registry module\nadd code/docs domains\nadd smoke validator for registry\nconsume registry in proposal validators where useful\n```\n\n### Phase C — add non-code fixture lane\n\nChoose one low-risk domain first:\n\n```text\ntext artifact proposal\n```\n\nReason:\n\n```text\ntext has low runtime risk\ntext is easy to validate structurally\ntext can reuse docs/prompt workflows\n```\n\nThen add:\n\n```text\naudio summary proposal\nscene spec proposal\nprovider result proposal\n```\n\n### Phase D — measure limits\n\nFor each domain, measure:\n\n```text\nartifact size\nsummary quality\nvalidator strictness\nmanual review burden\ncross-domain follow-up quality\n```\n\n## Decision rule\n\nA new capability is acceptable only when it preserves:\n\n```text\nexplicit evidence\nbounded artifact size\nmanual review\nvalidated report contract\nno implicit runtime side effects\ncompact GitHub evidence\n```\n\nIf a capability requires hidden execution, raw output commits or automatic mutation, it belongs in a separate explicit implementation branch, not in the agnostic base layer.\n"
+    },
+    {
+      "path": "docs/AGENT_REVIEW_CODE_PATCH_PLAN.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 12430,
+      "sha256": "761012517b6af20afb6bb9d65fceaeeacbffe4895b459bd4d0bdba9168653678",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": true,
+      "line_count": 454,
+      "raw_chars": 12430,
+      "included_chars": 12000,
+      "content": "# Agent Review Code Patch Plan\n\n## Purpose\n\nThis document defines the report-only lane for turning repository review evidence into safe, manual-review code patch plans.\n\nThe goal is to extend the current documentation patch-plan workflow toward code editing without enabling automatic source mutation.\n\nThis lane may describe code edits and related documentation follow-up work. It must not apply either code or documentation patches automatically.\n\n## Relationship to existing lanes\n\nExisting documentation patch-plan lane:\n\n```text\nlocal evidence / review reports\n  -> Tools/ai/build_agent_review_patch_plan.py\n  -> output/patch_specs/agent_review_patch_plan.json\n  -> Tools/validation/run_agent_review_patch_plan_smoke.py\n  -> manual-review documentation edits\n  -> Git-trackable evidence bundle\n```\n\nCode patch-plan lane:\n\n```text\ncode_contract_drift report\n  -> Tools/ai/build_agent_review_code_patch_plan.py\n  -> output/patch_specs/agent_review_code_patch_plan.json\n  -> Tools/validation/run_agent_review_code_patch_plan_smoke.py\n  -> manual review\n  -> optional small hand-applied code PR\n```\n\nComplete code edit proposal helper:\n\n```text\nmanual-review code patch plan item\n  -> Tools/ai/code_edit_proposal_helpers.py\n  -> code_edit_proposal metadata\n  -> validators + stop conditions\n  -> human applies or rejects the edit in a separate implementation step\n```\n\nDocumentation follow-up bridge:\n\n```text\nagent_review_code_patch_plan report\n  -> Tools/ai/build_code_patch_docs_followup.py\n  -> output/patch_specs/agent_review_code_docs_followup.json\n  -> manual-review documentation queue\n```\n\nThe bridge lets code-plan output notify the documentation lane. It is not an apply queue.\n\n## Required default behavior\n\n```text\nprovider_execution_performed = false\npatch_application_performed = false\nsource_writes_performed = false\nmanual_review_required = true\napply_mode = report_only_manual_review_code_patch_plan\n```\n\nFor complete code edit proposals:\n\n```text\nkind = code_edit_proposal\napply_mode = report_only_manual_review_code_edit_proposal\nprovider_execution_performed = false\npatch_application_performed = false\nsource_writes_performed = false\nmanual_review_required = true\n```\n\nFor docs follow-up reports:\n\n```text\nkind = agent_review_code_docs_followup\napply_mode = report_only_manual_review_docs_followup\nprovider_execution_performed = false\npatch_application_performed = false\nsource_writes_performed = false\nmanual_review_required = true\n```\n\nA report that violates these defaults should fail validation unless the task explicitly authorizes a later, separate reviewed implementation phase.\n\n## JSON report shape\n\n```json\n{\n  \"schema_version\": 1,\n  \"kind\": \"agent_review_code_patch_plan\",\n  \"passed\": true,\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"apply_mode\": \"report_only_manual_review_code_patch_plan\",\n  \"manual_review_required\": true,\n  \"patch_plan_count\": 0,\n  \"code_patch_plans\": [],\n  \"errors\": [],\n  \"warnings\": []\n}\n```\n\nEach `code_patch_plans[]` item should be small and reviewable:\n\n```json\n{\n  \"id\": \"code_patch_001\",\n  \"area\": \"validation\",\n  \"risk\": \"low\",\n  \"status\": \"ready_for_manual_review\",\n  \"target_files\": [\"Tools/validation/example.py\"],\n  \"rationale\": \"Why the edit is needed.\",\n  \"edit_strategy\": \"How the edit should be made.\",\n  \"proposed_patch\": \"optional bounded preview only\",\n  \"validation_commands\": [\n    \"python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json\",\n    \"python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json\",\n    \"git diff --check\"\n  ],\n  \"stop_conditions\": [\n    \"Stop if the target file does not exist unless the task explicitly authorizes a new source file.\",\n    \"Stop if the patch touches output/**.\",\n    \"Stop if validation fails.\",\n    \"Stop if Blender runtime execution is required.\"\n  ],\n  \"manual_review_required\": true\n}\n```\n\n## Complete code edit proposal helper\n\nHelper:\n\n```text\nTools/ai/code_edit_proposal_helpers.py\n```\n\nThis helper is the first coding-complete primitive for the code-editor lane. It does not apply edits. It builds a complete proposal object containing:\n\n```text\ntarget path\ntarget metadata: exists, suffix, line_count, sha256\nedit kind: no_op, structured_edit, unified_diff\nbounded unified diff preview\nstructured operations\nrationale\nedit strategy\nvalidation commands\nstop conditions\nmanual review status\n```\n\nSupported edit kinds:\n\n```text\nno_op\nstructured_edit\nunified_diff\n```\n\nSupported structured operations:\n\n```text\nreplace\ninsert_after\ninsert_before\ndelete\nappend\n```\n\nA complete proposal must remain metadata-only:\n\n```text\nsource_writes_performed = false\npatch_application_performed = false\nprovider_execution_performed = false\n```\n\nThe helper validates that target files do not escape the repository, do not target blocked artifacts, and include validators. For Python targets it automatically adds:\n\n```powershell\npython -m py_compile .\\<target-file>\n```\n\nalongside repository validators:\n\n```powershell\npython .\\Tools\\validation\\check_python_syntax.py --repo-root . --output .\\output\\validation\\python_syntax.json\npython .\\Tools\\validation\\check_validation_report_contract.py --repo-root . --output .\\output\\validation\\validation_report_contract.json\ngit diff --check\n```\n\nA unified-diff proposal must reference the normalized target file and include standard diff markers:\n\n```text\n---\n+++\n@@\n```\n\nThe helper rejects or flags proposals that mention blocked fragments such as:\n\n```text\noutput/\nrenders/\n.sqlite\n.db\nfull_analysis\nanalysis_full\n```\n\n## Builder, fixtures and smoke validator\n\nBuilder:\n\n```text\nTools/ai/build_agent_review_code_patch_plan.py\n```\n\nFixture inputs:\n\n```text\nTools/ai/fixtures/code_contract_drift_fixture.json\nTools/ai/fixtures/agent_review_code_patch_plan_fixture.json\n```\n\nSmoke validator:\n\n```text\nTools/validation/run_agent_review_code_patch_plan_smoke.py\n```\n\nBuild from fixture:\n\n```powershell\npython .\\Tools\\ai\\build_agent_review_code_patch_plan.py `\n  --repo-root . `\n  --code-contract-drift-report .\\Tools\\ai\\fixtures\\code_contract_drift_fixture.json `\n  --output .\\output\\patch_specs\\agent_review_code_patch_plan_fixture_built.json `\n  --markdown-output .\\output\\patch_specs\\agent_review_code_patch_plan_fixture_built.md\n```\n\nValidate fixture report:\n\n```powershell\npython .\\Tools\\validation\\run_agent_review_code_patch_plan_smoke.py `\n  --repo-root . `\n  --report .\\Tools\\ai\\fixtures\\agent_review_code_patch_plan_fixture.json `\n  --output .\\output\\validation\\agent_review_code_patch_plan_smoke.json\n```\n\nValidate generated report:\n\n```powershell\npython .\\Tools\\validation\\run_agent_review_code_patch_plan_smoke.py `\n  --repo-root . `\n  --report .\\output\\patch_specs\\agent_review_code_patch_plan_fixture_built.json `\n  --output .\\output\\validation\\agent_review_code_patch_plan_smoke_built.json\n```\n\nThe builder and smoke validator preserve:\n\n```text\nprovider_execution_performed = false\npatch_application_performed = false\nsource_writes_performed = false\n```\n\nThey do not apply patches, run providers, run Blender or write source files.\n\n## Documentation follow-up bridge\n\nWhen a code patch plan proposes code changes, the docs follow-up bridge emits a related documentation review queue.\n\nBridge:\n\n```text\nTools/ai/build_code_patch_docs_followup.py\n```\n\nRun:\n\n```powershell\npython .\\Tools\\ai\\build_code_patch_docs_followup.py `\n  --repo-root . `\n  --code-patch-plan .\\output\\patch_specs\\agent_review_code_patch_plan_fixture_built.json `\n  --output .\\output\\patch_specs\\agent_review_code_docs_followup.json `\n  --markdown-output .\\output\\patch_specs\\agent_review_code_docs_followup.md\n```\n\nThe bridge maps code target areas to likely documentation surfaces, for example:\n\n| Code area/path | Candidate docs |\n|---|---|\n| `Tools/validation/**` | `Tools/validation/README.md`, `docs/JSON_SCHEMAS.md`, `docs/CONTRACT_DRIFT_VALIDATION.md` |\n| `Tools/workflow/**` | `docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md`, `docs/LOCAL_AI_TASKS/README.md`, `WORKFLOW.md` |\n| `Tools/ai/**` | `docs/AGENT_REVIEW_CODE_PATCH_PLAN.md`, `docs/JSON_SCHEMAS.md`, `docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md` |\n| `Tools/npu/**` | `docs/LOCAL_AI_WORKFLOW.md`, `docs/LOCAL_WORKSTATION_TARGET.md`, `docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md` |\n\nDocs follow-up suggestions remain manual-review-only. They should be reviewed after the related code patch plan is accepted or materially changed.\n\n## Allowed targets\n\nA code patch plan may target source files only when all conditions hold:\n\n```text\nfile exists, unless the task explicitly authorizes a new source file\nfile is not under output/**\nfile is not generated index content\nfile is not full analysis JSON\nfile is not a SQLite/database artifact\nedit is small and target-specific\nvalidation commands are listed\nstop conditions are explicit\n```\n\n## Blocked targets\n\nThe code patch-plan lane must reject or mark blocked any plan touching:\n\n```text\noutput/**\n*.db\n*.sqlite\nrenders/**\nindexAI/code_chunks/**\nindexAI/project_code_chunks/**\nfull_analysis*.json\n*analysis_full*.json\nBlender runtime execution paths without explicit runtime task scope\nprovider credentials, secrets, billing, permissions or repository visibility\n```\n\n## Smoke validator expectations\n\nThe smoke validator checks:\n\n```text\nkind == agent_review_code_patch_plan\napply_mode == report_only_manual_review_code_patch_plan\nmanual_review_required == true\nprovider_execution_performed == false\npatch_application_performed == false\nsource_writes_performed == false\npatch_plan_count == len(code_patch_plans)\nall target files are allowed or explicitly declared future/new-file candidates\nall plans include validation_commands and stop_conditions\nno forbidden path appears in target_files or proposed_patch metadata\n```\n\nThe smoke validator must not:\n\n```text\napply patches\nrun providers\nrun Blender\nwrite source files\nread ignored output/** reports unless explicitly supplied as input evidence\n```\n\n## Evidence bundle integration\n\nThe existing evidence bundle builder should summarize code patch-plan and docs follow-up reports in the same compact style used for documentation patch plans.\n\nRecommended code-plan summary fields:\n\n```text\npatch_plan_count\nmanual_review_required\nprovider_execution_performed\npatch_application_performed\nsource_writes_performed\nplans[].id\nplans[].area\nplans[].risk\nplans[].status\nplans[].target_files\nplans[].rationale\nplans[].edit_strategy\nplans[].validation_commands\nplans[].stop_conditions\n```\n\nRecommended code edit proposal summary fields:\n\n```text\nid\ntarget_file\nedit_kind\nmanual_review_required\nready_for_manual_review\ntarget_sha256\ntarget_line_count\nrationale\nedit_strategy\nvalidation_commands\nstop_conditions\n```\n\nRecommended docs-follow-up summary fields:\n\n```text\ndocs_followup_count\nmanual_review_required\nprovider_execution_performed\npatch_application_performed\nsource_writes_performed\nsuggestions[].id\nsuggestions[].source_code_patch_plan_id\nsuggestions[].target_files\nsuggestions[].rationale\nsuggestions[].edit_strategy\n```\n\nThe bundle may include `proposed_patch` only as a bounded preview. Full raw artifacts should remain local unless they are deliberately small, reviewed and Git-trackable.\n\n## Line-count evidence usage\n\nUse `docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260501-215122.csv` as a sizing hint before prioritizing code patch plans.\n\nLarge files require narrower patch scope. The CSV is useful but may be stale, so always inspect current file content before generating or applying any code patch.\n\n## Guardrails\n\nThis lane must remain:\n\n```text\nreport-only by default\nmanual-review-only\nprovider-free unless a separate explicit evidence step already ran\npatch-application-free\nsource-write-free until a human-approved implementation phase\nBlender-runtime-free\nNPU advisory promotion-free\nOpenVINO GPU primary-lane-free\n```\n\n## Recommended next implementation sequence\n\n```text\n1. Run code_contract_dr"
+    },
+    {
+      "path": "docs/LOCAL_AI_TASKS/build-analysis-input-bundle.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 5370,
+      "sha256": "aa47974a223335e1899d37b3add00b64dbe29d27d9e2aafef36131bb8ce81cbc",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 166,
+      "raw_chars": 5368,
+      "included_chars": 5368,
+      "content": "# Local AI Task — Build enriched analysis/evidence bundle\n\n## Purpose\n\nBuild a Git-trackable evidence bundle that can include the contents the tool considers necessary for review.\n\nThe operational input model remains unchanged:\n\n```text\nstart from Markdown task/runbook\nread the current repository state\nconsume selected local reports/evidence files\n```\n\nThis task extends the final output bundle. The bundle may include bounded content from Python, Markdown, JSON, TXT, YAML, CSV and other text-like artifacts when the tool or user marks them useful for review.\n\n## Key distinction\n\nDo not change the run input philosophy:\n\n```text\nMarkdown task -> current repo -> local reports -> evidence bundle\n```\n\nDo extend the final bundle output:\n\n```text\nsummary reports\nartifact manifest\nselected artifact contents\nrelated Markdown/CSV/JSON outputs\nauto-discovered sibling artifacts\nexplicit artifacts selected by the user\n```\n\n## Tool\n\n```text\nTools/ai/build_github_evidence_bundle.py\n```\n\nRelevant bundle options:\n\n```text\n--report                         validation/report JSON input, repeatable or comma-separated\n--artifact                       extra file to include with bounded content, repeatable or comma-separated\n--no-auto-include-related-artifacts\n--max-included-artifact-chars\n--max-included-artifacts\n--selected-chunks-evidence\n```\n\nBy default, the bundle may auto-include related sibling/declared artifacts such as matching `.md` files or paths referenced in report `inputs` metadata.\n\n## Build enriched bundle from macro reports\n\n```powershell\n$Stamp = Get-Date -Format \"yyyyMMdd-HHmmss\"\n\n$Reports = @(\n  \".\\output\\validation\\python_syntax_macro.json\",\n  \".\\output\\validation\\python_line_count_macro.json\",\n  \".\\output\\validation\\artifact_domain_registry_macro.json\",\n  \".\\output\\validation\\docs_links_macro.json\",\n  \".\\output\\validation\\markdown_command_hygiene_macro.json\",\n  \".\\output\\validation\\core_activation_agnostic_contract.json\",\n  \".\\output\\validation\\agnostic_context_stack_smoke_dryrun.json\",\n  \".\\output\\validation\\agent_review_code_patch_plan_smoke_macro.json\",\n  \".\\output\\validation\\code_edit_proposal_smoke_macro.json\",\n  \".\\output\\validation\\agent_review_code_patch_plan_smoke_macro_built.json\",\n  \".\\output\\validation\\code_edit_proposal_from_plan_smoke_macro.json\",\n  \".\\output\\validation\\code_patch_artifact_pack_macro.json\",\n  \".\\output\\validation\\json_artifacts_macro.json\",\n  \".\\output\\validation\\validation_report_contract_macro.json\",\n  \".\\output\\validation\\github_evidence_bundle_macro.json\",\n  \".\\output\\validation\\code_contract_drift.json\",\n  \".\\output\\validation\\docs_contract_drift.json\"\n) | Where-Object { Test-Path $_ }\n\npython .\\Tools\\ai\\build_github_evidence_bundle.py `\n  --repo-root . `\n  --basename macro_pr108_pr109_validation_$Stamp `\n  --output-dir docs/LOCAL_VALIDATION_EVIDENCE `\n  --report ($Reports -join ',') `\n  --artifact .\\docs\\TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md `\n  --artifact .\\docs\\AGENT_REVIEW_CODE_PATCH_PLAN.md `\n  --artifact .\\docs\\LOCAL_RUNS_TESTING_AND_EVIDENCE.md `\n  --max-included-artifact-chars 9000 `\n  --max-included-artifacts 60\n```\n\n## Add explicit output artifacts when useful\n\n`output/**` files should not be committed directly, but selected contents can be included inside the compact evidence bundle when needed for review.\n\nExample:\n\n```powershell\npython .\\Tools\\ai\\build_github_evidence_bundle.py `\n  --repo-root . `\n  --basename enriched_analysis_review_$Stamp `\n  --output-dir docs/LOCAL_VALIDATION_EVIDENCE `\n  --report ($Reports -join ',') `\n  --artifact .\\output\\patch_specs\\agent_review_code_patch_plan_macro.md `\n  --artifact .\\output\\patch_specs\\code_edit_proposal_from_plan_macro.md `\n  --artifact .\\output\\validation\\artifact_domain_registry_macro.json `\n  --artifact .\\output\\analysis_input\\agnostic_code_lane_bundle.md `\n  --max-included-artifact-chars 12000 `\n  --max-included-artifacts 80\n```\n\nThis keeps raw output files local while preserving review-critical content in a bounded Git-trackable bundle.\n\n## Disable auto-related inclusion\n\nUse this when you want only explicitly selected artifacts:\n\n```powershell\npython .\\Tools\\ai\\build_github_evidence_bundle.py `\n  --repo-root . `\n  --basename explicit_only_bundle_$Stamp `\n  --output-dir docs/LOCAL_VALIDATION_EVIDENCE `\n  --report ($Reports -join ',') `\n  --artifact .\\docs\\TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md `\n  --no-auto-include-related-artifacts\n```\n\n## Validate bundle\n\n```powershell\npython .\\Tools\\validation\\check_github_evidence_bundle.py `\n  --repo-root . `\n  --bundle \".\\docs\\LOCAL_VALIDATION_EVIDENCE\\macro_pr108_pr109_validation_$Stamp.json\" `\n  --output \".\\output\\validation\\macro_pr108_pr109_validation_${Stamp}_bundle_validation.json\"\n```\n\n## Commit policy\n\nOnly commit the compact bundle artifacts:\n\n```powershell\ngit add `\n  \".\\docs\\LOCAL_VALIDATION_EVIDENCE\\macro_pr108_pr109_validation_$Stamp.json\" `\n  \".\\docs\\LOCAL_VALIDATION_EVIDENCE\\macro_pr108_pr109_validation_$Stamp.md\"\n```\n\nDo not commit raw `output/**` files.\n\nDo not use:\n\n```powershell\ngit add .\n```\n\n## Stop conditions\n\nStop if:\n\n```text\nbundle validation fails\nbundle includes blocked full_analysis / analysis_full / SQLite / DB content\nraw output/** files are staged directly\nthe included artifact payload becomes too large for review\nprovider execution is implied by a provider-free run\npatch application happened unexpectedly\n```\n"
+    },
+    {
+      "path": "docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260502-141635.csv",
+      "exists": true,
+      "suffix": ".csv",
+      "size_bytes": 12369,
+      "sha256": "507d76d8c92296fbbce768e5624713f191279d8401d805d169584fa4c5c1d286",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": true,
+      "line_count": 266,
+      "raw_chars": 12103,
+      "included_chars": 12000,
+      "content": "File,Lines\nScripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py,2197\nTools/npu/run_dual_ai_pipeline.py,1773\nold script legacy/spaziotempo_asset_visual_v61.py,1513\nScripting/v61b/scene_tuning_panel.py,1262\nTools/workflow/workflow_state.py,1230\nold script legacy/spaziotempo_asset_visual_v6.py,1174\nScripting/v61b_backgood/scene_tuning_panel.py,1097\nScripting/v61b/animation.py,1079\nScripting/v61b_backgood/animation.py,1019\nold script legacy/spaziotempo_album_visual_v5.py,969\nTools/workflow/gui/workflow_gui.py,738\nScripting/v61b/physics_setup.py,737\nScripting/v61b/asset_setup.py,725\nScripting/v61b_backgood/asset_setup.py,725\nScripting/v61b_backgood/physics_setup.py,720\nTools/ai/run_agent_gpu_deep_planning_review.py,714\nTools/npu/build_music_context.py,711\nold script legacy/spaziotempo_album_visual_v3.py,710\nTools/ai/build_github_evidence_bundle.py,688\nScripting/v61b/materials.py,657\nTools/npu/run_npu_review.py,628\nTools/validation/check_npu_pipeline_modules.py,627\nTools/ai/build_selective_execution_plan.py,618\nTools/workflow/workflow_debug.py,607\nTools/ai/build_repository_change_proposals.py,582\nTools/ai/run_pipeline_dry_run_matrix.py,573\nTools/ai/build_agent_review_patch_plan.py,562\nTools/ai/build_ai_context_pack.py,558\nScripting/v61b/atmosphere_setup.py,554\nTools/ai/suggest_repository_updates.py,551\nScripting/v61b_backgood/atmosphere_setup.py,543\nTools/ai/agent_state.py,533\nTools/ai/run_megalithic_repo_review.py,519\nScripting/v61b_backgood/materials.py,513\nTools/validation/ai_pipeline_report_contracts.py,497\nTools/npu/npu_guardrail_service.py,490\nTools/ai/refine_megalithic_review_signals.py,489\nTools/validation/run_agent_review_patch_plan_full_validation.py,487\nTools/validation/run_agnostic_ai_tools_smoke_matrix.py,483\nTools/ai/run_agent_gpu_deep_planning_supervised.py,478\nTools/ai/run_agent_gpu_npu_parallel_orchestrator.py,471\nnormalize_scene_spec.py,469\nTools/validation/check_reviewed_patch_specs.py,446\nTools/repo_patch_runner/apply_repo_mods.py,443\nTools/ai/promote_patch_spec_draft.py,442\nScripting/v61b/config.py,439\nTools/npu/build_project_ai_index.py,436\nTools/validation/check_ai_context_pack_contract.py,425\nTools/npu/ollama_runtime.py,422\nTools/workflow/gui/components/storage_dashboard.py,422\nTools/workflow/scene_brief.py,419\nTools/ai/build_code_interpreter_report.py,415\nTools/ai/build_patch_specs_from_proposals.py,414\nTools/ai/run_npu_gpu_deep_review_auditor.py,411\nTools/ai/build_agent_agnostic_tool_inventory.py,408\nTools/npu/build_npu_code_context.py,402\nTools/validation/check_patch_spec_drafts.py,400\nScripting/v61b/encode_ffmpeg_v61b.py,399\nTools/ai/build_dry_run_matrix_evidence_bundle.py,398\nTools/ai/build_agent_memory_inventory.py,397\nScripting/v61b/encode_image_sequence_v61b.py,395\nScripting/v61b/hotpatch/hero_material_patch.py,395\nScripting/v61b_backgood/hotpatch/hero_material_patch.py,395\nTools/ai/build_agent_review_evidence_sufficiency.py,394\nScripting/v61b/fog_dynamics.py,392\nTools/ai/build_full_context_golden_proposals.py,392\nTools/validation/check_code_contract_drift.py,392\nTools/workflow/gui/components/artifact_browser.py,390\nScripting/v61b_backgood/encode_image_sequence_v61b.py,376\nTools/validation/check_github_evidence_bundle.py,376\nindexAI/scene_scripts/lll_luca_vera_master_scene_builder_candidate.py,369\nTools/npu/generated_blender_script_candidate.py,369\nTools/npu/generated_blender_script_candidate_FristNear.py,369\nTools/validation/check_repository_change_proposals.py,366\nTools/validation/test_npu_pipeline_helpers.py,359\nScripting/v61b_backgood/config.py,358\nTools/ai/build_local_ai_enrichment_plan.py,357\nTools/npu/build_ai_service_packet.py,355\nTools/workflow/project_awareness.py,353\nTools/ai/build_agent_review_code_patch_plan.py,351\nTools/validation/check_ai_dry_run_matrix_contract.py,341\nTools/validation/check_selected_semantic_chunks.py,339\nTools/ai/check_local_resource_lanes.py,335\nTools/validation/apply_docs_contract_drift_fixes.py,331\nTools/npu/build_npu_knowledge_broker_packet.py,327\nTools/npu/build_blender_manual_context.py,326\nTools/workflow/workflow_shell.py,324\nTools/validation/check_dry_run_matrix_evidence_bundle.py,321\nTools/workflow/gui/workflow_gui_modern.py,319\nTools/validation/check_local_ai_adapter_manifest.py,317\nTools/ai/build_music_intermediates.py,314\nTools/ai/run_npu_decode_smoke_diagnostic.py,314\nTools/ai/agent_memory_policy.py,307\nTools/validation/check_full_context_golden_proposals.py,307\nTools/ai/build_analysis_input_bundle.py,305\nScripting/v61b/hotpatch/accent_patch.py,301\nTools/npu/pipeline/providers.py,297\nTools/ai/select_semantic_code_chunks.py,291\nTools/validation/check_ai_pipeline_modules.py,290\nScripting/v61b/hotpatch/diagnostics.py,286\nTools/workflow/startup_check.py,284\nTools/ai/build_agent_transient_request_context.py,283\nTools/validation/run_agent_review_patch_plan_smoke.py,283\nTools/workflow/gui/components/session_overview.py,278\nScripting/v61b/render_setup.py,270\nTools/validation/check_full_context_golden_docs_contract.py,270\nScripting/v61b_backgood/render_setup.py,267\nTools/workflow/ai_runtime_diagnostics.py,267\nTools/validation/check_ai_workload_report_quality.py,260\nTools/validation/check_docs_contract_drift.py,259\nanalyze_wav.py,257\nTools/validation/run_agnostic_context_stack_smoke.py,256\nTools/ai/build_code_patch_docs_followup.py,251\nTools/ai/build_megalithic_review_pr_draft.py,245\nScripting/v61b_backgood/fog_dynamics.py,240\nTools/ai/build_code_edit_proposal_from_plan.py,240\nTools/ai/review_wave_entrypoints.py,240\nTools/ai/build_code_patch_artifact_pack.py,239\nTools/npu/run_ollama_music_agent.py,238\nTools/validation/check_selective_execution_plan.py,238\nTools/ai/smart_ai_gatekeeper.py,232\nTools/validation/check_ai_dry_run_matrix_outputs.py,230\nTools/validation/check_npu_knowledge_broker_packet.py,229\nTools/ai/workload_quality.py,222\nTools/validation/check_generated_artifact_path_policy.py,222\nScripting/v61b/spaziotempo/core/registry.py,221\nTools/validation/build_python_line_count_csv.py,221\nTools/workflow/smart_ai_context.py,219\nTools/validation/generated_file_policy.py,217\nTools/ai/code_edit_proposal_helpers.py,215\nTools/validation/check_local_ai_enrichment_plan.py,209\nTools/validation/check_core_activation_agnostic_contract.py,207\nScripting/v61b/hotpatch/render_patch.py,206\nScripting/v61b_backgood/hotpatch/render_patch.py,206\nTools/validation/run_agent_review_evidence_sufficiency_smoke.py,204\nScripting/ready_to_jazz_wow_youtube_profiles_audio_sync/encode_final_youtube.py,203\nTools/ai/artifact_domain_registry.py,202\nScripting/v61b/main_v61b.py,200\nTools/ai/validate_ai_artifacts.py,200\nTools/ai/code_patch_plan_common.py,199\nScripting/v61b/world_setup.py,198\nTools/ai/pipeline/steps.py,197\nTools/validation/generated_python_policy.py,197\nTools/validation/run_agent_review_code_patch_plan_smoke.py,191\nTools/ai/check_npu_provider_environment.py,189\nTools/validation/check_validation_report_contract.py,187\nTools/ai/build_workload_quality_lane_routing.py,186\nTools/workflow/git_auto_push.py,186\nTools/ai/pipeline/remediation.py,185\nTools/validation/check_ai_dry_run_matrix_cases.py,183\nTools/workflow/gui/components/action_panel.py,183\nTools/ai/run_local_provider_probe.py,182\nTools/workflow/gui/components/live_output_panel.py,182\nScripting/v61b_backgood/main_v61b.py,181\nTools/workflow/gui/workflow_gui_with_push.py,181\nScripting/v61b_backgood/world_setup.py,174\nTools/validation/check_generated_blender_script_policy.py,173\nTools/validation/run_code_edit_proposal_smoke.py,164\nScripting/shared/image_sequence.py,161\nTools/npu/npu_runtime.py,160\nScripting/v61b/fog_filaments.py,159\nTools/validation/check_npu_decode_quality_remediation.py,159\nTools/npu/pipeline/__init__.py,157\nTools/ai/pipeline/models.py,152\nScripting/v61b/hotpatch/lighting_patch.py,150\nTools/validation/check_refactor_status_consistency.py,149\nTools/npu/build_runtime_output_manifest.py,148\nTools/npu/build_provider_result_report.py,147\nTools/validation/check_blender_shared_compat_smoke.py,147\nTools/workflow/artifact_consult.py,144\nTools/validation/check_docs_links.py,141\nScripting/shared/blender_compat.py,140\nScripting/shared/ffmpeg_encoder.py,134\nScripting/shared/render_profiles.py,133\nScripting/v61b/hotpatch/fog_patch.py,133\nScripting/v61b/spaziotempo/core/collections.py,132\nTools/validation/check_json_artifacts.py,132\nTools/ai/model_json.py,130\nTools/ai/build_agent_state_packet.py,128\nTools/npu/pipeline/artifact_paths.py,127\nTools/npu/run_npu_artifact_reviewer.py,127\nScripting/v61b_backgood/hotpatch/accent_patch.py,125\nTools/npu/pipeline/reports.py,125\nTools/validation/check_agent_memory_policy.py,125\nTools/validation/check_generated_python_policy.py,125\nScripting/v61b_backgood/hotpatch/fog_patch.py,124\nTools/validation/check_execution_plan_status.py,123\nTools/validation/check_ai_model_json.py,119\nTools/ai/pipeline/schema_report.py,118\nTools/validation/check_package_structure.py,117\nTools/workflow/workflow_shell_with_push.py,117\nbuild_track_summary.py,113\nTools/npu/ai_memory_context.py,111\nTools/workflow/asset_inventory.py,110\nTools/ai/pipeline/markdown_report.py,107\nTools/npu/pipeline/config.py,107\nTools/validation/check_python_syntax.py,105\nTools/ai/pipeline/preflight.py,104\nScripting/v61b/hotpatch/runner.py,103\nScripting/shared/path_utils.py,102\nTools/ai/pipeline/runner.py,102\nTools/npu/pipeline/prompts.py,99\nScripting/v61b/scene_utils.py,97\nScripting/v61b_backgood/scene_utils.py,97\nTools/ai/pipeline/guardrail_models.py,97\nTools/validation/check_npu_pipeline_docs.py,96\nTools/workflow/gui/components/st_theme.py,92\nScripting/v61b/hotpatch/common.py,91\nScripting/v61b_backgood/hotpatch/common.py,91\nTools/npu/build_semantic_code_chunks.py,91\nScripting/shared/json_io.py,88\nTools/ai/pipeline/artifact_contracts.py,86\nScripting/v61b_backgood/hotpatch/lighting_patch.py,85\nTools/npu/pipeline/validators.py,84\nTools/validation/check_provider_result_parsing.py,83\nScripting/v61b/io_utils.py,81\nScripting/v61b_backgood/io_utils.py,81\nTools/npu/pipeline/fixtures.py,80\nScripting/_template_audio_reactive_package/main.py,79\nScripting/_template_audio_reactive_package/encode_ffmpeg.py,75\nTools/npu/pipeline/context_builder.py,75\nTools/ai/pipeline/reports.py,74\nTools/ai/pipeline/compat.py,73\nTools/ai/pipeline/refactor_status.py,70\nTools/npu/pipeline/runner.py,70\nTools/ai/review_agent_memory.py,69\nTools/npu/pipeline/migration_readiness.py,68\nTools/ai/pipeline/scheduler.py,66\nTools/ai/run_parallel_artifact_pipeline.py,65\nTools/validation/check_ai_pipeline_report_contract.py,65\nTools/validation/check_artifact_domain_registry.py,64\nScripting/v61b/hot_update_scene_v61b.py,63\nScripting/v61b_backgood/hot_update_scene_v61b.py,61\nTools/npu/pipeline/io_utils.py,61\nScripting/v61b_backgood/hotpatch/runner.py,60\nTools/validation/check_npu_pipeline_helper_tests.py,59\nTools/npu/pipeline/artifact_writer.py,56\nTools/ai/merge_ai_candidates.py,53\nTools/npu/pipeline/legacy_compat.py,52\nScripting/_template_audio_reactive_package/audio_mapping.py,51\nScripting/v61b/reload_utils.py,51\nTools/ai/pipeline/cli.py,50\nTools/validation/report_utils.py,50\nScripting/_template_audio_reactive_package/config.py,49\nScripting/_template_audio_reactive_package/materials.py,35\nTools/ai/pipeline/orchestrator.py,31\nScripting/v61b/camera_setup.py,29\nScripting/v61b_backgood/camera_setup.py,29\nScripting/_template_audio_reactive_package/camera.py,26\nScripting/_template_audio_reactive_package/render_settings.py,26\nScripting/_template_audio_reactive_package/lighting.py,23\nTools/ai/pipeline/__init__.py,23\nScripting/_template_audio_reactive_package/scene_objects.py,21\nScripting/ready_to_jazz_wow_youtube_profiles_audio_sync/render_profiles_reference.py,20\nScripting/v61b/spaziotempo/features/catalog.py,19\nTools/ai/pipeline/defaults.py,15\nScripting/shared/__init__.py,13\nScripting/v61b/spaziotempo/__init__.py,4\nScripting/v61b/hotpatch/__init__.py,3\nScripting/v61b_backgood/hotpatch/__init__.py,3\nScripting/v61b/__init__.py,1\nScripting/v61b/spaziotempo/core/__init__.py,1\nScripting/v61b/spaziotempo/fe"
+    },
+    {
+      "path": "output/patch_specs/agent_review_code_docs_followup_pr109.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 3653,
+      "sha256": "ea916ce3f0893e2f03a67bd7d62849a68cc02202fb281b2086d2e162d59b2f64",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 74,
+      "raw_chars": 3579,
+      "included_chars": 3579,
+      "content": "{\n  \"schema_version\": 1,\n  \"kind\": \"agent_review_code_docs_followup\",\n  \"generated_at\": \"2026-05-02T14:16:30\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"manual_review_required\": true,\n  \"apply_mode\": \"report_only_manual_review_docs_followup\",\n  \"inputs\": {\n    \"code_patch_plan\": \"output/patch_specs/agent_review_code_patch_plan_fixture_built.json\",\n    \"code_patch_plan_kind\": \"agent_review_code_patch_plan\",\n    \"code_patch_plan_count\": 1\n  },\n  \"docs_followup_count\": 1,\n  \"docs_followup_suggestions\": [\n    {\n      \"id\": \"docs_followup_001\",\n      \"source_code_patch_plan_id\": \"code_contract_001\",\n      \"area\": \"cpu_validation\",\n      \"risk\": \"medium\",\n      \"status\": \"candidate_for_manual_review\",\n      \"target_files\": [\n        \"Tools/validation/README.md\",\n        \"docs/JSON_SCHEMAS.md\"\n      ],\n      \"missing_candidate_docs\": [\n        \"docs/CONTRACT_DRIFT_VALIDATION.md\"\n      ],\n      \"rationale\": \"Code patch plan `code_contract_001` may change `Tools/validation/check_validation_report_contract.py`; documentation should be reviewed for matching contract, workflow or schema updates.\",\n      \"edit_strategy\": \"After the code patch is reviewed, update only the affected docs with a narrow cross-reference, schema note, validator command or workflow note. Do not duplicate full contracts and do not apply documentation edits automatically.\",\n      \"validation_commands\": [\n        \"python .\\\\Tools\\\\validation\\\\check_docs_links.py --repo-root . --output .\\\\output\\\\validation\\\\docs_links.json\",\n        \"python .\\\\Tools\\\\validation\\\\check_markdown_command_hygiene.py --repo-root . --output .\\\\output\\\\validation\\\\markdown_command_hygiene.json\",\n        \"python .\\\\Tools\\\\validation\\\\check_validation_report_contract.py --repo-root . --output .\\\\output\\\\validation\\\\validation_report_contract.json\",\n        \"git diff --check\"\n      ],\n      \"stop_conditions\": [\n        \"Stop if the related code patch is rejected or substantially changed.\",\n        \"Stop if the docs update would touch output/**, generated indexes, full analysis JSON or runtime artifacts.\",\n        \"Stop if documentation validation fails.\"\n      ],\n      \"manual_review_required\": true,\n      \"source_evidence\": {\n        \"code_patch_plan_id\": \"code_contract_001\",\n        \"code_target_files\": [\n          \"Tools/validation/check_validation_report_contract.py\"\n        ],\n        \"code_rationale\": \"Contract drift check `fixture_validation_report_contract_manual_review_gate` reported a code-review candidate. Missing required terms: `fixture_manual_review_gate`. Missing recommended terms: `manual_review_required`.\",\n        \"code_edit_strategy\": \"Fixture-only suggestion. Do not apply; validate report-only code patch-plan generation. Current CSV sizing hint: 152 lines; verify current count locally before editing. Do not apply this plan automatically.\"\n      }\n    }\n  ],\n  \"decision\": {\n    \"ready_for_manual_docs_review\": true,\n    \"docs_followup_count\": 1,\n    \"manual_review_required\": true,\n    \"recommended_next_layer\": \"review_docs_followups_after_code_plan\"\n  },\n  \"guardrails\": {\n    \"report_only\": true,\n    \"manual_review_required\": true,\n    \"provider_execution_performed\": false,\n    \"patch_application_performed\": false,\n    \"source_writes_performed\": false,\n    \"blender_runtime_execution_performed\": false,\n    \"sqlite_write_performed\": false,\n    \"docs_written\": false\n  }\n}\n"
+    },
+    {
+      "path": "output/patch_specs/agent_review_code_patch_plan_fixture_built.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 3669,
+      "sha256": "21992b62fce4f830962c7735692b942c1bc370fd11ab4e695ff6c14079d2a78c",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 86,
+      "raw_chars": 3583,
+      "included_chars": 3583,
+      "content": "{\n  \"schema_version\": 1,\n  \"kind\": \"agent_review_code_patch_plan\",\n  \"generated_at\": \"2026-05-02T14:16:25\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"manual_review_required\": true,\n  \"apply_mode\": \"report_only_manual_review_code_patch_plan\",\n  \"inputs\": {\n    \"code_contract_drift_report\": \"Tools/ai/fixtures/code_contract_drift_fixture.json\",\n    \"line_count_csv\": \"docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260501-215122.csv\",\n    \"line_count_csv_loaded\": true\n  },\n  \"patch_plan_count\": 1,\n  \"code_patch_plans\": [\n    {\n      \"id\": \"code_contract_001\",\n      \"area\": \"cpu_validation\",\n      \"risk\": \"medium\",\n      \"status\": \"ready_for_manual_review\",\n      \"target_files\": [\n        \"Tools/validation/check_validation_report_contract.py\"\n      ],\n      \"rationale\": \"Contract drift check `fixture_validation_report_contract_manual_review_gate` reported a code-review candidate. Missing required terms: `fixture_manual_review_gate`. Missing recommended terms: `manual_review_required`.\",\n      \"edit_strategy\": \"Fixture-only suggestion. Do not apply; validate report-only code patch-plan generation. Current CSV sizing hint: 152 lines; verify current count locally before editing. Do not apply this plan automatically.\",\n      \"proposed_patch\": \"\",\n      \"validation_commands\": [\n        \"python -m py_compile .\\\\Tools\\\\validation\\\\check_validation_report_contract.py\",\n        \"python .\\\\Tools\\\\validation\\\\check_python_syntax.py --repo-root . --output .\\\\output\\\\validation\\\\python_syntax.json\",\n        \"python .\\\\Tools\\\\validation\\\\check_validation_report_contract.py --repo-root . --output .\\\\output\\\\validation\\\\validation_report_contract.json\",\n        \"git diff --check\"\n      ],\n      \"stop_conditions\": [\n        \"Stop if the target file changed since the drift report was generated.\",\n        \"Stop if the edit requires provider execution, Blender runtime execution, or patch auto-apply.\",\n        \"Stop if the patch touches output/**, generated indexes, full analysis JSON, SQLite, secrets, permissions, billing, or repository visibility.\",\n        \"Stop if local validation fails.\"\n      ],\n      \"manual_review_required\": true,\n      \"source_evidence\": {\n        \"contract\": \"fixture_validation_report_contract_manual_review_gate\",\n        \"owner_lane\": \"cpu_validation\",\n        \"consumed_by_lanes\": [\n          \"cpu\"\n        ],\n        \"missing_required_terms\": [\n          \"fixture_manual_review_gate\"\n        ],\n        \"missing_recommended_terms\": [\n          \"manual_review_required\"\n        ],\n        \"errors\": [\n          \"missing required term: fixture_manual_review_gate\"\n        ],\n        \"warnings\": [\n          \"missing recommended term: manual_review_required\"\n        ],\n        \"line_count_csv_hint\": 152\n      }\n    }\n  ],\n  \"skipped_candidate_count\": 0,\n  \"skipped_candidates\": [],\n  \"decision\": {\n    \"ready_for_manual_review\": true,\n    \"patch_plan_count\": 1,\n    \"manual_review_required\": true,\n    \"recommended_next_layer\": \"manual_review_then_targeted_code_pr\"\n  },\n  \"guardrails\": {\n    \"report_only\": true,\n    \"manual_review_required\": true,\n    \"provider_execution_performed\": false,\n    \"patch_application_performed\": false,\n    \"source_writes_performed\": false,\n    \"blender_runtime_execution_performed\": false,\n    \"sqlite_write_performed\": false,\n    \"npu_primary_advisory\": false,\n    \"openvino_gpu_primary_lane\": false\n  }\n}\n"
+    },
+    {
+      "path": "output/validation/python_line_count_pr109.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 1704,
+      "sha256": "d03cefe79424175b45e05f6724a6f9b713d15b652a4bd572066391b1ea23fd5b",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 36,
+      "raw_chars": 1628,
+      "included_chars": 1628,
+      "content": "# Python Line Count CSV\n\n- Passed: `True`\n- CSV: `docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260502-141635.csv`\n- File count: `265`\n- Total lines: `75396`\n- Provider execution performed: `False`\n- Patch application performed: `False`\n- Source writes performed: `False`\n\n## Largest Python files\n\n- `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/main_ready_to_jazz_wow_youtube.py` — `2197` lines\n- `Tools/npu/run_dual_ai_pipeline.py` — `1773` lines\n- `old script legacy/spaziotempo_asset_visual_v61.py` — `1513` lines\n- `Scripting/v61b/scene_tuning_panel.py` — `1262` lines\n- `Tools/workflow/workflow_state.py` — `1230` lines\n- `old script legacy/spaziotempo_asset_visual_v6.py` — `1174` lines\n- `Scripting/v61b_backgood/scene_tuning_panel.py` — `1097` lines\n- `Scripting/v61b/animation.py` — `1079` lines\n- `Scripting/v61b_backgood/animation.py` — `1019` lines\n- `old script legacy/spaziotempo_album_visual_v5.py` — `969` lines\n- `Tools/workflow/gui/workflow_gui.py` — `738` lines\n- `Scripting/v61b/physics_setup.py` — `737` lines\n- `Scripting/v61b/asset_setup.py` — `725` lines\n- `Scripting/v61b_backgood/asset_setup.py` — `725` lines\n- `Scripting/v61b_backgood/physics_setup.py` — `720` lines\n- `Tools/ai/run_agent_gpu_deep_planning_review.py` — `714` lines\n- `Tools/npu/build_music_context.py` — `711` lines\n- `old script legacy/spaziotempo_album_visual_v3.py` — `710` lines\n- `Tools/ai/build_github_evidence_bundle.py` — `688` lines\n- `Scripting/v61b/materials.py` — `657` lines\n\n## Guardrail\n\nThis artifact is line-count evidence only. It is not a patch plan and it must not be committed from `output/**`.\n"
+    }
+  ],
+  "included_artifact_policy": {
+    "auto_include_related_artifacts": true,
+    "max_included_artifact_chars": 12000,
+    "max_included_artifacts": 80,
+    "content_extension_allowlist": [
+      ".cfg",
+      ".csv",
+      ".ini",
+      ".json",
+      ".md",
+      ".ps1",
+      ".py",
+      ".toml",
+      ".txt",
+      ".yaml",
+      ".yml"
+    ],
+    "raw_artifact_deny_prefixes": [
+      "output/ai_context_packs/",
+      "output/ai_pipeline/gpu_deep_planning_parallel_checkpoints/",
+      "output/ai_pipeline/gpu_planner_nonempty_diagnostics_checkpoints",
+      "output/ai_pipeline/gpu_planner_fallback_verify_checkpoints",
+      "output/ai_pipeline/gpu_planner_full_after_fallback_fix_checkpoints",
+      "indexAI/code_chunks/",
+      "indexAI/project_code_chunks/",
+      "renders/"
+    ],
+    "raw_artifact_deny_fragments": [
+      "full_analysis",
+      "analysis_full",
+      ".sqlite",
+      ".db",
+      "_npu_async_audit_context",
+      "_npu_async_audit_npu",
+      "_npu_async_audit_npu_notes"
+    ]
+  },
+  "decision": {
+    "ollama_gpu_primary_advisory": false,
+    "npu_excluded_when_unusable": false,
+    "provider_execution_seen": false,
+    "npu_decode_smoke_passed": false,
+    "selected_chunks_evidence_seen": true,
+    "selected_chunks_built": true,
+    "budget_respected": true,
+    "artifact_manifest_built": true,
+    "included_artifacts_built": true,
+    "included_artifact_count": 12,
+    "patch_plan_summary_seen": false
+  }
+}
