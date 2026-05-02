@@ -11,9 +11,7 @@ Blender or read ignored runtime output unless a report path is explicitly given.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -21,10 +19,16 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report
-except ImportError:  # pragma: no cover - fallback for direct package-local execution.
-    from report_utils import resolve_output_path, write_json_report  # type: ignore
+from Tools.ai.code_patch_plan_common import (  # noqa: E402
+    normalize_repo_path,
+    now_iso,
+    read_json_object,
+    repo_rel,
+    report_guardrail_errors,
+    report_only_guardrails,
+    resolve_output_path,
+    write_json_and_markdown,
+)
 
 
 REPORT_KIND = "agent_review_code_docs_followup"
@@ -34,104 +38,21 @@ DEFAULT_OUTPUT = "output/patch_specs/agent_review_code_docs_followup.json"
 DEFAULT_MARKDOWN = "output/patch_specs/agent_review_code_docs_followup.md"
 
 DOC_TARGETS_BY_AREA: tuple[tuple[str, tuple[str, ...]], ...] = (
-    (
-        "validation",
-        (
-            "Tools/validation/README.md",
-            "docs/JSON_SCHEMAS.md",
-            "docs/CONTRACT_DRIFT_VALIDATION.md",
-        ),
-    ),
-    (
-        "cpu_validation",
-        (
-            "Tools/validation/README.md",
-            "docs/JSON_SCHEMAS.md",
-            "docs/CONTRACT_DRIFT_VALIDATION.md",
-        ),
-    ),
-    (
-        "cpu_orchestration",
-        (
-            "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
-            "docs/LOCAL_AI_TASKS/README.md",
-            "WORKFLOW.md",
-        ),
-    ),
-    (
-        "workflow",
-        (
-            "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
-            "docs/LOCAL_AI_TASKS/README.md",
-            "WORKFLOW.md",
-        ),
-    ),
-    (
-        "ai",
-        (
-            "docs/AGENT_REVIEW_CODE_PATCH_PLAN.md",
-            "docs/JSON_SCHEMAS.md",
-            "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
-        ),
-    ),
-    (
-        "npu",
-        (
-            "docs/LOCAL_AI_WORKFLOW.md",
-            "docs/LOCAL_WORKSTATION_TARGET.md",
-            "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
-        ),
-    ),
+    ("validation", ("Tools/validation/README.md", "docs/JSON_SCHEMAS.md", "docs/CONTRACT_DRIFT_VALIDATION.md")),
+    ("cpu_validation", ("Tools/validation/README.md", "docs/JSON_SCHEMAS.md", "docs/CONTRACT_DRIFT_VALIDATION.md")),
+    ("cpu_orchestration", ("docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md", "docs/LOCAL_AI_TASKS/README.md", "WORKFLOW.md")),
+    ("workflow", ("docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md", "docs/LOCAL_AI_TASKS/README.md", "WORKFLOW.md")),
+    ("ai", ("docs/AGENT_REVIEW_CODE_PATCH_PLAN.md", "docs/JSON_SCHEMAS.md", "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md")),
+    ("npu", ("docs/LOCAL_AI_WORKFLOW.md", "docs/LOCAL_WORKSTATION_TARGET.md", "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md")),
 )
-
 DOC_TARGETS_BY_PATH_PREFIX: tuple[tuple[str, tuple[str, ...]], ...] = (
-    (
-        "Tools/validation/",
-        (
-            "Tools/validation/README.md",
-            "docs/JSON_SCHEMAS.md",
-            "docs/CONTRACT_DRIFT_VALIDATION.md",
-        ),
-    ),
-    (
-        "Tools/workflow/",
-        (
-            "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
-            "docs/LOCAL_AI_TASKS/README.md",
-            "WORKFLOW.md",
-        ),
-    ),
-    (
-        "Tools/ai/",
-        (
-            "docs/AGENT_REVIEW_CODE_PATCH_PLAN.md",
-            "docs/JSON_SCHEMAS.md",
-            "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
-        ),
-    ),
-    (
-        "Tools/npu/",
-        (
-            "docs/LOCAL_AI_WORKFLOW.md",
-            "docs/LOCAL_WORKSTATION_TARGET.md",
-            "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
-        ),
-    ),
-    (
-        ".github/workflows/",
-        (
-            "docs/DEVELOPER_GUIDE.md",
-            "docs/README.md",
-            "WORKFLOW.md",
-        ),
-    ),
+    ("Tools/validation/", ("Tools/validation/README.md", "docs/JSON_SCHEMAS.md", "docs/CONTRACT_DRIFT_VALIDATION.md")),
+    ("Tools/workflow/", ("docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md", "docs/LOCAL_AI_TASKS/README.md", "WORKFLOW.md")),
+    ("Tools/ai/", ("docs/AGENT_REVIEW_CODE_PATCH_PLAN.md", "docs/JSON_SCHEMAS.md", "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md")),
+    ("Tools/npu/", ("docs/LOCAL_AI_WORKFLOW.md", "docs/LOCAL_WORKSTATION_TARGET.md", "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md")),
+    (".github/workflows/", ("docs/DEVELOPER_GUIDE.md", "docs/README.md", "WORKFLOW.md")),
 )
-
-FALLBACK_DOC_TARGETS = (
-    "docs/AGENT_REVIEW_CODE_PATCH_PLAN.md",
-    "docs/JSON_SCHEMAS.md",
-)
-
+FALLBACK_DOC_TARGETS = ("docs/AGENT_REVIEW_CODE_PATCH_PLAN.md", "docs/JSON_SCHEMAS.md")
 DEFAULT_VALIDATION_COMMANDS = (
     "python .\\Tools\\validation\\check_docs_links.py --repo-root . --output .\\output\\validation\\docs_links.json",
     "python .\\Tools\\validation\\check_markdown_command_hygiene.py --repo-root . --output .\\output\\validation\\markdown_command_hygiene.json",
@@ -140,32 +61,8 @@ DEFAULT_VALIDATION_COMMANDS = (
 )
 
 
-def now_iso() -> str:
-    return datetime.now().isoformat(timespec="seconds")
-
-
-def normalize_repo_path(value: Any) -> str:
-    return str(value or "").strip().replace("\\", "/").lstrip("./")
-
-
-def repo_rel(repo_root: Path, path: Path) -> str:
-    try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
-    except ValueError:
-        return path.resolve(strict=False).as_posix()
-
-
-def read_json_object(path: Path) -> tuple[dict[str, Any], list[str]]:
-    try:
-        data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (OSError, json.JSONDecodeError) as exc:
-        return {}, [f"{type(exc).__name__}: {exc}"]
-    if not isinstance(data, dict):
-        return {}, ["root JSON value must be an object"]
-    return data, []
-
-
 def existing_doc_targets(repo_root: Path, candidates: list[str]) -> tuple[list[str], list[str]]:
+    """Split candidate docs into existing and missing repository files."""
     existing: list[str] = []
     missing: list[str] = []
     seen: set[str] = set()
@@ -182,6 +79,7 @@ def existing_doc_targets(repo_root: Path, candidates: list[str]) -> tuple[list[s
 
 
 def doc_candidates_for_plan(plan: dict[str, Any]) -> list[str]:
+    """Map one code patch-plan item to candidate documentation surfaces."""
     candidates: list[str] = []
     area = str(plan.get("area") or "").lower()
     for key, docs in DOC_TARGETS_BY_AREA:
@@ -194,8 +92,11 @@ def doc_candidates_for_plan(plan: dict[str, Any]) -> list[str]:
             for prefix, docs in DOC_TARGETS_BY_PATH_PREFIX:
                 if normalized.startswith(prefix):
                     candidates.extend(docs)
-    if not candidates:
-        candidates.extend(FALLBACK_DOC_TARGETS)
+    return unique_candidates(candidates or list(FALLBACK_DOC_TARGETS))
+
+
+def unique_candidates(candidates: list[str]) -> list[str]:
+    """Return normalized unique candidate paths in stable order."""
     unique: list[str] = []
     seen: set[str] = set()
     for candidate in candidates:
@@ -207,19 +108,11 @@ def doc_candidates_for_plan(plan: dict[str, Any]) -> list[str]:
 
 
 def docs_followup_for_plan(repo_root: Path, plan: dict[str, Any], index: int) -> dict[str, Any]:
+    """Build one docs follow-up suggestion from one code patch-plan item."""
     plan_id = str(plan.get("id") or f"code_patch_{index:03d}")
-    doc_candidates = doc_candidates_for_plan(plan)
-    existing_targets, missing_targets = existing_doc_targets(repo_root, doc_candidates)
+    existing_targets, missing_targets = existing_doc_targets(repo_root, doc_candidates_for_plan(plan))
     target_files = plan.get("target_files", []) if isinstance(plan.get("target_files"), list) else []
     target_text = ", ".join(f"`{normalize_repo_path(target)}`" for target in target_files) or "the code target"
-    rationale = (
-        f"Code patch plan `{plan_id}` may change {target_text}; documentation should be reviewed for matching contract, "
-        "workflow or schema updates."
-    )
-    edit_strategy = (
-        "After the code patch is reviewed, update only the affected docs with a narrow cross-reference, schema note, "
-        "validator command or workflow note. Do not duplicate full contracts and do not apply documentation edits automatically."
-    )
     return {
         "id": f"docs_followup_{index:03d}",
         "source_code_patch_plan_id": plan_id,
@@ -228,8 +121,8 @@ def docs_followup_for_plan(repo_root: Path, plan: dict[str, Any], index: int) ->
         "status": "candidate_for_manual_review",
         "target_files": existing_targets,
         "missing_candidate_docs": missing_targets,
-        "rationale": rationale,
-        "edit_strategy": edit_strategy,
+        "rationale": f"Code patch plan `{plan_id}` may change {target_text}; documentation should be reviewed for matching contract, workflow or schema updates.",
+        "edit_strategy": "After the code patch is reviewed, update only the affected docs with a narrow cross-reference, schema note, validator command or workflow note. Do not duplicate full contracts and do not apply documentation edits automatically.",
         "validation_commands": list(DEFAULT_VALIDATION_COMMANDS),
         "stop_conditions": [
             "Stop if the related code patch is rejected or substantially changed.",
@@ -246,32 +139,32 @@ def docs_followup_for_plan(repo_root: Path, plan: dict[str, Any], index: int) ->
     }
 
 
+def validate_code_plan_report(code_plan: dict[str, Any]) -> tuple[list[str], list[dict[str, Any]]]:
+    """Validate the source code patch-plan report and return its plan list."""
+    errors: list[str] = []
+    if code_plan.get("kind") != EXPECTED_CODE_PLAN_KIND:
+        errors.append(f"code patch plan kind must be {EXPECTED_CODE_PLAN_KIND}")
+    errors.extend(report_guardrail_errors(code_plan, "code patch plan"))
+    plans = code_plan.get("code_patch_plans", [])
+    if not isinstance(plans, list):
+        errors.append("code_patch_plans must be a list")
+        return errors, []
+    return errors, [plan for plan in plans if isinstance(plan, dict)]
+
+
 def build_docs_followup(repo_root: Path, code_plan_path: Path) -> dict[str, Any]:
+    """Build a report-only docs follow-up artifact from a code patch-plan report."""
     code_plan, load_errors = read_json_object(code_plan_path)
     errors = [f"code patch plan: {error}" for error in load_errors]
     warnings: list[str] = []
     suggestions: list[dict[str, Any]] = []
 
     if code_plan:
-        if code_plan.get("kind") != EXPECTED_CODE_PLAN_KIND:
-            errors.append(f"code patch plan kind must be {EXPECTED_CODE_PLAN_KIND}")
-        for field in ("provider_execution_performed", "patch_application_performed", "source_writes_performed"):
-            if code_plan.get(field) is not False:
-                errors.append(f"code patch plan {field} must be false")
-        if code_plan.get("manual_review_required") is not True:
-            errors.append("code patch plan manual_review_required must be true")
-        plans = code_plan.get("code_patch_plans", [])
-        if not isinstance(plans, list):
-            errors.append("code_patch_plans must be a list")
-            plans = []
-        for index, plan in enumerate(plans, start=1):
-            if not isinstance(plan, dict):
-                warnings.append(f"skipping non-object code patch plan at index {index}")
-                continue
-            suggestions.append(docs_followup_for_plan(repo_root, plan, index))
-
-    if code_plan and not suggestions:
-        warnings.append("no docs follow-up suggestions were produced from the code patch plan")
+        validation_errors, plans = validate_code_plan_report(code_plan)
+        errors.extend(validation_errors)
+        suggestions = [docs_followup_for_plan(repo_root, plan, index) for index, plan in enumerate(plans, start=1)]
+        if not suggestions:
+            warnings.append("no docs follow-up suggestions were produced from the code patch plan")
 
     return {
         "schema_version": 1,
@@ -288,8 +181,8 @@ def build_docs_followup(repo_root: Path, code_plan_path: Path) -> dict[str, Any]
         "apply_mode": "report_only_manual_review_docs_followup",
         "inputs": {
             "code_patch_plan": repo_rel(repo_root, code_plan_path),
-            "code_patch_plan_kind": code_plan.get("kind"),
-            "code_patch_plan_count": code_plan.get("patch_plan_count"),
+            "code_patch_plan_kind": code_plan.get("kind") if code_plan else None,
+            "code_patch_plan_count": code_plan.get("patch_plan_count") if code_plan else None,
         },
         "docs_followup_count": len(suggestions),
         "docs_followup_suggestions": suggestions,
@@ -299,20 +192,12 @@ def build_docs_followup(repo_root: Path, code_plan_path: Path) -> dict[str, Any]
             "manual_review_required": True,
             "recommended_next_layer": "review_docs_followups_after_code_plan" if suggestions and not errors else "no_docs_followup_ready",
         },
-        "guardrails": {
-            "report_only": True,
-            "manual_review_required": True,
-            "provider_execution_performed": False,
-            "patch_application_performed": False,
-            "source_writes_performed": False,
-            "docs_written": False,
-            "blender_runtime_execution_performed": False,
-            "sqlite_write_performed": False,
-        },
+        "guardrails": report_only_guardrails(docs_written=False),
     }
 
 
 def render_markdown(report: dict[str, Any]) -> str:
+    """Render docs follow-up suggestions as Markdown."""
     lines = ["# Agent Review Code Docs Follow-up", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Apply mode: `{report['apply_mode']}`")
@@ -327,19 +212,24 @@ def render_markdown(report: dict[str, Any]) -> str:
     if not report.get("docs_followup_suggestions"):
         lines.append("- none")
     for suggestion in report.get("docs_followup_suggestions", []):
-        lines.append(f"### `{suggestion['id']}` from `{suggestion['source_code_patch_plan_id']}`")
-        lines.append("")
-        lines.append(f"- Status: `{suggestion['status']}`")
-        lines.append(f"- Target docs: `{', '.join(suggestion['target_files'])}`")
-        if suggestion.get("missing_candidate_docs"):
-            lines.append(f"- Missing candidate docs: `{', '.join(suggestion['missing_candidate_docs'])}`")
-        lines.append(f"- Rationale: {suggestion['rationale']}")
-        lines.append(f"- Strategy: {suggestion['edit_strategy']}")
-        lines.append("")
+        lines.extend(render_suggestion(suggestion))
     lines.append("## Guardrail")
     lines.append("")
     lines.append("This report notifies the documentation lane only. It is not a patch apply queue.")
     return "\n".join(lines) + "\n"
+
+
+def render_suggestion(suggestion: dict[str, Any]) -> list[str]:
+    """Render one docs follow-up suggestion."""
+    lines = [f"### `{suggestion['id']}` from `{suggestion['source_code_patch_plan_id']}`", ""]
+    lines.append(f"- Status: `{suggestion['status']}`")
+    lines.append(f"- Target docs: `{', '.join(suggestion['target_files'])}`")
+    if suggestion.get("missing_candidate_docs"):
+        lines.append(f"- Missing candidate docs: `{', '.join(suggestion['missing_candidate_docs'])}`")
+    lines.append(f"- Rationale: {suggestion['rationale']}")
+    lines.append(f"- Strategy: {suggestion['edit_strategy']}")
+    lines.append("")
+    return lines
 
 
 def main() -> int:
@@ -353,12 +243,7 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     code_plan_path = resolve_output_path(repo_root, args.code_patch_plan)
     report = build_docs_followup(repo_root, code_plan_path)
-    output = resolve_output_path(repo_root, args.output)
-    markdown_output = resolve_output_path(repo_root, args.markdown_output)
-    text = write_json_report(report, output)
-    markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    markdown_output.write_text(render_markdown(report), encoding="utf-8")
-    print(text, end="")
+    print(write_json_and_markdown(repo_root, report, args.output, args.markdown_output, render_markdown(report)), end="")
     return 0 if report["passed"] else 2
 
 
