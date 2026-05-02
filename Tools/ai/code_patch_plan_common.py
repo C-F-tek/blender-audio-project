@@ -80,6 +80,18 @@ def read_json_object(path: Path, *, missing_is_error: bool = True) -> tuple[dict
     return data, []
 
 
+def parse_line_count_row(row: dict[str, Any]) -> tuple[str, int] | None:
+    """Parse one line-count CSV row into `(path, lines)` when valid."""
+    path = normalize_repo_path(row.get("Path") or row.get("File"))
+    raw_lines = row.get("Lines") or row.get("lines")
+    if not path or raw_lines is None:
+        return None
+    try:
+        return path, int(str(raw_lines).strip())
+    except ValueError:
+        return None
+
+
 def load_line_counts(repo_root: Path, csv_path: Path) -> tuple[dict[str, int], list[str]]:
     """Load optional line-count CSV evidence as a sizing hint."""
     warnings: list[str] = []
@@ -91,14 +103,11 @@ def load_line_counts(repo_root: Path, csv_path: Path) -> tuple[dict[str, int], l
         with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
             reader = csv.DictReader(handle)
             for row in reader:
-                path = normalize_repo_path(row.get("Path") or row.get("File"))
-                raw_lines = row.get("Lines") or row.get("lines")
-                if not path or raw_lines is None:
+                parsed = parse_line_count_row(row)
+                if parsed is None:
                     continue
-                try:
-                    counts[path] = int(str(raw_lines).strip())
-                except ValueError:
-                    continue
+                path, lines = parsed
+                counts[path] = lines
     except OSError as exc:
         warnings.append(f"unable to read line-count CSV: {type(exc).__name__}: {exc}")
     return counts, warnings
