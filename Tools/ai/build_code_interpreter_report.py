@@ -108,6 +108,11 @@ def read_source(path: Path) -> tuple[str, str | None]:
         return "", f"{type(exc).__name__}: {exc}"
 
 
+def source_line_count(source: str) -> int:
+    """Return a stable physical line count for source text."""
+    return source.count("\n") + (0 if source.endswith("\n") else 1) if source else 0
+
+
 def dotted_name(node: ast.AST) -> str:
     """Return dotted name for call/import expression when possible."""
     if isinstance(node, ast.Name):
@@ -198,7 +203,7 @@ def analyze_file(repo_root: Path, path: Path) -> dict[str, Any]:
         "read_ok": read_error is None,
         "parse_ok": False,
         "errors": [read_error] if read_error else [],
-        "line_count": source.count("\n") + (0 if source.endswith("\n") else 1) if source else 0,
+        "line_count": source_line_count(source),
         "char_count": len(source),
     }
     if read_error:
@@ -321,11 +326,34 @@ def aggregate_imports(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{"module": module, "count": count} for module, count in counter.most_common(40)]
 
 
+def aggregate_file_metrics(files: list[dict[str, Any]]) -> dict[str, int]:
+    """Return aggregate report counters for analyzed files."""
+    return {
+        "file_count": len(files),
+        "parsed_file_count": sum(1 for item in files if item.get("parse_ok")),
+        "total_lines": sum(int(item.get("line_count") or 0) for item in files),
+        "total_functions": sum(int(item.get("function_count") or 0) for item in files),
+        "total_classes": sum(int(item.get("class_count") or 0) for item in files),
+        "total_risk_signals": sum(int(item.get("risk_signal_count") or 0) for item in files),
+        "total_todos": sum(int(item.get("todo_count") or 0) for item in files),
+    }
+
+
+def largest_file_entries(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return largest-file summary entries."""
+    return sorted(
+        [{"path": item.get("path"), "line_count": item.get("line_count"), "risk": classify_file_risk(item)} for item in files],
+        key=lambda value: int(value.get("line_count") or 0),
+        reverse=True,
+    )[:30]
+
+
 def build_report(repo_root: Path, roots: list[Path], excluded_dirs: set[str]) -> dict[str, Any]:
     """Build full static code interpreter report."""
     files = [analyze_file(repo_root, path) for path in iter_python_files(repo_root, roots, excluded_dirs)]
     errors = [f"{item.get('path')}: {'; '.join(item.get('errors') or [])}" for item in files if item.get("errors")]
     recommendations = build_recommendations(files)
+    metrics = aggregate_file_metrics(files)
     return {
         "schema_version": 1,
         "kind": REPORT_KIND,
@@ -339,19 +367,9 @@ def build_report(repo_root: Path, roots: list[Path], excluded_dirs: set[str]) ->
         "source_writes_performed": False,
         "manual_review_required": True,
         "apply_mode": "report_only_static_code_interpreter",
-        "file_count": len(files),
-        "parsed_file_count": sum(1 for item in files if item.get("parse_ok")),
-        "total_lines": sum(int(item.get("line_count") or 0) for item in files),
-        "total_functions": sum(int(item.get("function_count") or 0) for item in files),
-        "total_classes": sum(int(item.get("class_count") or 0) for item in files),
-        "total_risk_signals": sum(int(item.get("risk_signal_count") or 0) for item in files),
-        "total_todos": sum(int(item.get("todo_count") or 0) for item in files),
+        **metrics,
         "top_imports": aggregate_imports(files),
-        "largest_files": sorted(
-            [{"path": item.get("path"), "line_count": item.get("line_count"), "risk": classify_file_risk(item)} for item in files],
-            key=lambda value: int(value.get("line_count") or 0),
-            reverse=True,
-        )[:30],
+        "largest_files": largest_file_entries(files),
         "risk_summary": dict(Counter(classify_file_risk(item) for item in files)),
         "recommendation_count": len(recommendations),
         "recommendations": recommendations[:80],
