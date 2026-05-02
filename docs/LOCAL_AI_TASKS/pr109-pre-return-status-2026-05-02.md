@@ -10,7 +10,7 @@ No code execution, provider execution, Blender runtime, merge, rebase, delete, f
 
 ```text
 PR #108: open, mergeable, documentation/validator lane
-PR #109: open, official active PR, local wiring still pending
+PR #109: open, mergeable again as of latest GitHub check, official active PR, local wiring still pending
 PR #110: open draft, scratch-only workspace, do not merge
 ```
 
@@ -29,6 +29,7 @@ added concise PR109 evidence flow note
 added open PR triage note
 updated open PR triage after closing stale PRs
 added open issue triage note
+added pre-return status snapshot
 cleaned code-quality unused imports before the final docs-only phase
 ```
 
@@ -55,7 +56,7 @@ This was intentionally not done via GitHub API because of earlier long-file trun
 
 ## Mergeability note
 
-GitHub recently reported PR #109 as non-mergeable after documentation-only commits. Treat this as a local-return check item, not as a reason to do structural GitHub-only changes.
+GitHub briefly reported PR #109 as non-mergeable after documentation-only commits, then later reported it as mergeable again. Treat mergeability as a local-return verification item, not as a reason to do structural GitHub-only changes.
 
 Required local checks:
 
@@ -67,7 +68,7 @@ git status --short
 git diff --check
 ```
 
-If GitHub still reports conflicts after sync, inspect conflict source locally before any rebase/merge/update action.
+If GitHub reports conflicts after sync, inspect conflict source locally before any rebase/merge/update action.
 
 ## Do next at workstation
 
