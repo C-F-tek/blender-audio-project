@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Validate report-only code edit proposal artifacts.
 
-The validator checks the metadata contract for a single `code_edit_proposal`.
+The validator checks the metadata contract for either:
+
+- a direct `code_edit_proposal`; or
+- a `code_edit_proposal_build` wrapper containing a nested `proposal` object.
+
 It does not apply patches, execute providers, run Blender or write source files.
 """
 from __future__ import annotations
@@ -35,6 +39,7 @@ from Tools.ai.code_patch_plan_common import (  # noqa: E402
 REPORT_KIND = "code_edit_proposal_smoke"
 EXPECTED_KIND = "code_edit_proposal"
 EXPECTED_APPLY_MODE = "report_only_manual_review_code_edit_proposal"
+BUILD_WRAPPER_KIND = "code_edit_proposal_build"
 REQUIRED_STRINGS = ("id", "target_file", "edit_kind", "rationale", "edit_strategy")
 REQUIRED_LISTS = ("validation_commands", "stop_conditions")
 
@@ -52,6 +57,26 @@ def validate_non_empty_string_list(data: dict[str, Any], field: str) -> list[str
     if not all(isinstance(item, str) and item.strip() for item in value):
         return [f"{field} entries must be non-empty strings"]
     return []
+
+
+def unwrap_proposal(data: dict[str, Any]) -> tuple[dict[str, Any], list[str], list[str], str]:
+    """Return a proposal object from direct or wrapper input."""
+    errors: list[str] = []
+    warnings: list[str] = []
+    input_kind = str(data.get("kind") or "")
+    if input_kind == EXPECTED_KIND:
+        return data, errors, warnings, "direct_code_edit_proposal"
+    if input_kind != BUILD_WRAPPER_KIND:
+        errors.append(f"kind must be {EXPECTED_KIND} or {BUILD_WRAPPER_KIND}")
+        return {}, errors, warnings, "unsupported_input"
+    errors.extend(report_guardrail_errors(data, "code edit proposal build"))
+    proposal = data.get("proposal")
+    if not isinstance(proposal, dict) or not proposal:
+        errors.append("code_edit_proposal_build.proposal must be a non-empty object")
+        return {}, errors, warnings, "wrapper_missing_proposal"
+    if data.get("passed") is not True:
+        warnings.append("code_edit_proposal_build.passed is not true; validating nested proposal anyway")
+    return proposal, errors, warnings, "code_edit_proposal_build_wrapper"
 
 
 def validate_target(repo_root: Path, data: dict[str, Any]) -> tuple[list[str], list[str]]:
@@ -98,15 +123,21 @@ def validate_edit_payload(data: dict[str, Any]) -> list[str]:
 
 
 def validate_report(repo_root: Path, proposal_path: Path) -> dict[str, Any]:
-    """Validate one code edit proposal artifact."""
-    data, load_errors = read_json_object(proposal_path)
+    """Validate one code edit proposal artifact or build wrapper."""
+    raw_data, load_errors = read_json_object(proposal_path)
     errors = list(load_errors)
     warnings: list[str] = []
+    input_mode = "empty_or_unreadable"
+    data: dict[str, Any] = {}
+    if raw_data:
+        data, unwrap_errors, unwrap_warnings, input_mode = unwrap_proposal(raw_data)
+        errors.extend(unwrap_errors)
+        warnings.extend(unwrap_warnings)
     if data:
         if data.get("kind") != EXPECTED_KIND:
-            errors.append(f"kind must be {EXPECTED_KIND}")
+            errors.append(f"proposal.kind must be {EXPECTED_KIND}")
         if data.get("apply_mode") != EXPECTED_APPLY_MODE:
-            errors.append(f"apply_mode must be {EXPECTED_APPLY_MODE}")
+            errors.append(f"proposal.apply_mode must be {EXPECTED_APPLY_MODE}")
         errors.extend(report_guardrail_errors(data, "code edit proposal"))
         errors.extend(validate_required_strings(data))
         for field in REQUIRED_LISTS:
@@ -123,6 +154,7 @@ def validate_report(repo_root: Path, proposal_path: Path) -> dict[str, Any]:
         "kind": REPORT_KIND,
         "repo_root": str(repo_root),
         "proposal": str(proposal_path),
+        "input_mode": input_mode,
         "passed": not errors,
         "errors": errors,
         "warnings": warnings,
