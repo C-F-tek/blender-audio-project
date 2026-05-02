@@ -253,6 +253,16 @@ def classify_file_risk(item: dict[str, Any]) -> str:
     return "low"
 
 
+def validation_commands_for(path_value: str) -> list[str]:
+    """Return validation commands for one recommendation target."""
+    ps_path = str(path_value).replace("/", "\\")
+    return [
+        f"python -m py_compile .\\{ps_path}",
+        "python .\\Tools\\validation\\check_python_syntax.py --repo-root . --output .\\output\\validation\\python_syntax.json",
+        "git diff --check",
+    ]
+
+
 def build_recommendations(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Build static recommendations suitable for later patch-plan review."""
     recommendations: list[dict[str, Any]] = []
@@ -281,11 +291,7 @@ def build_recommendations(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "status": "candidate_for_manual_review",
                 "reasons": reasons,
                 "recommended_next_layer": "agent_review_code_patch_plan" if item.get("parse_ok") else "syntax_fix_before_patch_plan",
-                "validation_commands": [
-                    f"python -m py_compile .\\{str(item.get('path')).replace('/', '\\')}",
-                    "python .\\Tools\\validation\\check_python_syntax.py --repo-root . --output .\\output\\validation\\python_syntax.json",
-                    "git diff --check",
-                ],
+                "validation_commands": validation_commands_for(str(item.get("path") or "")),
             }
         )
     return recommendations
