@@ -28,6 +28,7 @@ EDIT_KIND_NOOP = "no_op"
 ALLOWED_EDIT_KINDS = {EDIT_KIND_STRUCTURED, EDIT_KIND_UNIFIED_DIFF, EDIT_KIND_NOOP}
 MAX_PROPOSAL_TEXT_CHARS = 12000
 MAX_SNIPPET_CHARS = 4000
+FORBIDDEN_DIFF_FRAGMENTS = ("output/", "renders/", ".sqlite", ".db", "full_analysis", "analysis_full")
 DEFAULT_CODE_STOP_CONDITIONS = [
     "Stop if the target file changed since the proposal was generated.",
     "Stop if the edit touches output/**, generated indexes, full analysis JSON, SQLite, secrets, permissions, billing, or repository visibility.",
@@ -93,6 +94,12 @@ def validate_edit_kind(edit_kind: str) -> list[str]:
     return [] if edit_kind in ALLOWED_EDIT_KINDS else [f"unsupported edit kind: {edit_kind}"]
 
 
+def forbidden_diff_fragment_errors(diff_text: str) -> list[str]:
+    """Return forbidden-fragment errors for a normalized diff body."""
+    lower = diff_text.lower().replace("\\", "/")
+    return [f"unified diff references forbidden fragment: {fragment}" for fragment in FORBIDDEN_DIFF_FRAGMENTS if fragment in lower]
+
+
 def validate_unified_diff_text(diff_text: str, target_file: str) -> list[str]:
     """Validate a proposed unified diff without applying it."""
     errors: list[str] = []
@@ -105,12 +112,8 @@ def validate_unified_diff_text(diff_text: str, target_file: str) -> list[str]:
     for marker in required_markers:
         if marker not in diff_text:
             errors.append(f"unified diff missing marker: {marker.strip()}")
-    forbidden_fragments = ("output/", "renders/", ".sqlite", ".db", "full_analysis", "analysis_full")
-    lower = diff_text.lower().replace("\\", "/")
-    for fragment in forbidden_fragments:
-        if fragment in lower:
-            errors.append(f"unified diff references forbidden fragment: {fragment}")
-    if normalized_target and normalized_target not in lower:
+    errors.extend(forbidden_diff_fragment_errors(diff_text))
+    if normalized_target and normalized_target not in diff_text.lower().replace("\\", "/"):
         errors.append("unified diff does not reference the normalized target file")
     return errors
 
