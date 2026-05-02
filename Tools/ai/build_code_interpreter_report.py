@@ -292,6 +292,20 @@ def validation_commands_for(path_value: str) -> list[str]:
     ]
 
 
+def recommendation_record(index: int, item: dict[str, Any], risk: str, reasons: list[str]) -> dict[str, Any]:
+    """Build one static recommendation record."""
+    target_file = str(item.get("path") or "")
+    return {
+        "id": f"code_static_{index:03d}",
+        "target_file": item.get("path"),
+        "risk": risk,
+        "status": "candidate_for_manual_review",
+        "reasons": reasons,
+        "recommended_next_layer": "agent_review_code_patch_plan" if item.get("parse_ok") else "syntax_fix_before_patch_plan",
+        "validation_commands": validation_commands_for(target_file),
+    }
+
+
 def build_recommendations(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Build static recommendations suitable for later patch-plan review."""
     recommendations: list[dict[str, Any]] = []
@@ -299,18 +313,7 @@ def build_recommendations(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
         risk = classify_file_risk(item)
         if risk == "low" and not item.get("todo_count"):
             continue
-        reasons = recommendation_reasons(item, risk)
-        recommendations.append(
-            {
-                "id": f"code_static_{len(recommendations) + 1:03d}",
-                "target_file": item.get("path"),
-                "risk": risk,
-                "status": "candidate_for_manual_review",
-                "reasons": reasons,
-                "recommended_next_layer": "agent_review_code_patch_plan" if item.get("parse_ok") else "syntax_fix_before_patch_plan",
-                "validation_commands": validation_commands_for(str(item.get("path") or "")),
-            }
-        )
+        recommendations.append(recommendation_record(len(recommendations) + 1, item, risk, recommendation_reasons(item, risk)))
     return recommendations
 
 
