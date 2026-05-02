@@ -81,17 +81,46 @@ def included_artifact_paths(bundle: dict[str, Any]) -> list[str]:
     return paths
 
 
+def patch_plan_summary_fields(summary: dict[str, Any]) -> dict[str, Any]:
+    """Return top-level report summary fields derived from patch-plan summary."""
+    return {
+        "patch_plan_summary": summary,
+        "patch_plan_count": summary.get("patch_plan_count"),
+        "static_code_patch_plan_count": summary.get("static_code_patch_plan_count"),
+        "code_contract_patch_plan_count": summary.get("code_contract_patch_plan_count"),
+        "recommended_next_layer": summary.get("recommended_next_layer"),
+    }
+
+
+def report_entry_for_code_patch_plan(raw: str, data: dict[str, Any], summary: dict[str, Any]) -> dict[str, Any]:
+    """Build a bundle report entry for a discovered code patch-plan report."""
+    return {
+        "path": raw,
+        "exists": True,
+        "json_ok": True,
+        "kind": data.get("kind"),
+        "passed": data.get("passed"),
+        "summary": {
+            "schema_version": data.get("schema_version"),
+            "kind": data.get("kind"),
+            "passed": data.get("passed"),
+            "provider_execution_performed": data.get("provider_execution_performed"),
+            "patch_application_performed": data.get("patch_application_performed"),
+            "source_writes_performed": data.get("source_writes_performed"),
+            "errors": data.get("errors") or [],
+            "warnings": data.get("warnings") or [],
+            **patch_plan_summary_fields(summary),
+        },
+    }
+
+
 def attach_summary_to_report(bundle: dict[str, Any], path_value: str, summary: dict[str, Any]) -> bool:
     """Attach a code patch-plan summary to an existing report entry if present."""
     for item in bundle.get("reports", []):
         if not isinstance(item, dict) or item.get("path") != path_value:
             continue
         current = item.get("summary") if isinstance(item.get("summary"), dict) else {}
-        current["patch_plan_summary"] = summary
-        current["patch_plan_count"] = summary.get("patch_plan_count")
-        current["static_code_patch_plan_count"] = summary.get("static_code_patch_plan_count")
-        current["code_contract_patch_plan_count"] = summary.get("code_contract_patch_plan_count")
-        current["recommended_next_layer"] = summary.get("recommended_next_layer")
+        current.update(patch_plan_summary_fields(summary))
         item["summary"] = current
         return True
     return False
@@ -118,30 +147,7 @@ def discover_and_apply(repo_root: Path, bundle: dict[str, Any]) -> tuple[int, li
             continue
         attached = attach_summary_to_report(bundle, raw, summary)
         if not attached:
-            bundle.setdefault("reports", []).append(
-                {
-                    "path": raw,
-                    "exists": True,
-                    "json_ok": True,
-                    "kind": data.get("kind"),
-                    "passed": data.get("passed"),
-                    "summary": {
-                        "schema_version": data.get("schema_version"),
-                        "kind": data.get("kind"),
-                        "passed": data.get("passed"),
-                        "provider_execution_performed": data.get("provider_execution_performed"),
-                        "patch_application_performed": data.get("patch_application_performed"),
-                        "source_writes_performed": data.get("source_writes_performed"),
-                        "errors": data.get("errors") or [],
-                        "warnings": data.get("warnings") or [],
-                        "patch_plan_summary": summary,
-                        "patch_plan_count": summary.get("patch_plan_count"),
-                        "static_code_patch_plan_count": summary.get("static_code_patch_plan_count"),
-                        "code_contract_patch_plan_count": summary.get("code_contract_patch_plan_count"),
-                        "recommended_next_layer": summary.get("recommended_next_layer"),
-                    },
-                }
-            )
+            bundle.setdefault("reports", []).append(report_entry_for_code_patch_plan(raw, data, summary))
         enriched += 1
     if enriched == 0:
         warnings.append("no agent_review_code_patch_plan report found for enrichment")
