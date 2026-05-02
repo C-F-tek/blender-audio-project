@@ -40,6 +40,11 @@ def read_json(path: Path) -> dict[str, Any]:
     return value
 
 
+def nested_dict(data: dict[str, Any], key: str) -> dict[str, Any]:
+    value = data.get(key)
+    return value if isinstance(value, dict) else {}
+
+
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -63,6 +68,14 @@ def safe_int(value: Any, default: int = 0) -> int:
         return int(value)
     if isinstance(value, str) and value.isdigit():
         return int(value)
+    return default
+
+
+def first_int(default: int, *values: Any) -> int:
+    for value in values:
+        parsed = safe_int(value, default=-1)
+        if parsed >= 0:
+            return parsed
     return default
 
 
@@ -127,6 +140,8 @@ def build_suggestions(report: dict[str, Any], metrics: dict[str, Any]) -> dict[s
         suggestions["reasoning"].append("No NPU audits were observed; first verify provider availability before tuning cadence.")
     if coverage < 0.35 and round_count >= 12:
         suggestions["reasoning"].append("NPU audit coverage is low compared with GPU round count; keep checkpoint auditing sampled, not per-round.")
+    if avg_gpu <= 0 and round_count > 0:
+        suggestions["reasoning"].append("GPU per-round duration was unavailable in the orchestrator; using total GPU elapsed divided by round count as estimate.")
     if skew > 2.0:
         suggestions["reasoning"].append("Average NPU audit duration is much slower than one GPU round; reduce NPU prompt/context/tokens and audit every several rounds.")
     if metrics["npu_audit_success_count"] == audit_count and audit_count > 0:
@@ -138,15 +153,19 @@ def build_suggestions(report: dict[str, Any], metrics: dict[str, Any]) -> dict[s
 
 def analyze(repo_root: Path, orchestrator_path: Path) -> dict[str, Any]:
     report = read_json(orchestrator_path)
+    gpu_summary = nested_dict(report, "gpu_summary")
     rounds = report.get("rounds") if isinstance(report.get("rounds"), list) else []
     npu_audits = report.get("npu_audits") if isinstance(report.get("npu_audits"), list) else []
     gpu_round_durations = [safe_float(item.get("elapsed_seconds")) for item in rounds if isinstance(item, dict)]
     gpu_round_durations = [value for value in gpu_round_durations if value > 0]
     npu_durations = [audit_duration_seconds(item) for item in npu_audits if isinstance(item, dict)]
     npu_durations = [value for value in npu_durations if value > 0]
-    round_count = safe_int(report.get("round_count"), len(rounds))
-    audit_count = safe_int(report.get("npu_audit_count"), len(npu_audits))
-    success_count = safe_int(report.get("npu_audit_success_count"))
+    round_count = first_int(len(rounds), report.get("round_count"), gpu_summary.get("round_count"))
+    audit_count = first_int(len(npu_audits), report.get("npu_audit_count"))
+    success_count = first_int(0, report.get("npu_audit_success_count"))
+    gpu_elapsed = safe_float(report.get("gpu_elapsed_seconds")) or safe_float(gpu_summary.get("elapsed_seconds")) or safe_float(report.get("elapsed_seconds"))
+    if not gpu_round_durations and round_count > 0 and gpu_elapsed > 0:
+        gpu_round_durations = [gpu_elapsed / round_count]
     avg_gpu = sum(gpu_round_durations) / len(gpu_round_durations) if gpu_round_durations else 0.0
     avg_npu = sum(npu_durations) / len(npu_durations) if npu_durations else 0.0
     metrics = {
@@ -161,10 +180,11 @@ def analyze(repo_root: Path, orchestrator_path: Path) -> dict[str, Any]:
         "p50_npu_audit_seconds": round(percentile(npu_durations, 50), 3),
         "p90_npu_audit_seconds": round(percentile(npu_durations, 90), 3),
         "npu_to_gpu_avg_duration_ratio": round(avg_npu / avg_gpu, 3) if avg_gpu else 0.0,
-        "gpu_elapsed_seconds": safe_float(report.get("elapsed_seconds")),
+        "gpu_elapsed_seconds": gpu_elapsed,
         "provider_execution_performed": bool(report.get("provider_execution_performed")),
         "patch_application_performed": bool(report.get("patch_application_performed")),
         "source_writes_performed": bool(report.get("source_writes_performed")),
+        "gpu_metrics_source": "rounds" if report.get("rounds") else "gpu_summary_or_elapsed_estimate",
     }
     suggestions = build_suggestions(report, metrics)
     return {
