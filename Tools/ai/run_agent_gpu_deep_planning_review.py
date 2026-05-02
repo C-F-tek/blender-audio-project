@@ -31,6 +31,7 @@ try:
         result_to_dict,
         validate_model_response_contract,
         validate_recommendation_object,
+        validate_tool_request_object,
     )
     from Tools.npu.ollama_runtime import DEFAULT_BASE_URL, OllamaModelManager, normalize_base_url
 except ImportError:  # Script-style execution from Tools/ai.
@@ -42,6 +43,7 @@ except ImportError:  # Script-style execution from Tools/ai.
         result_to_dict,
         validate_model_response_contract,
         validate_recommendation_object,
+        validate_tool_request_object,
     )
     from Tools.npu.ollama_runtime import DEFAULT_BASE_URL, OllamaModelManager, normalize_base_url  # type: ignore
 
@@ -370,6 +372,34 @@ def parse_model_json(text: str) -> dict[str, Any]:
 def _raw_recommendations(parsed: dict[str, Any]) -> list[Any]:
     recommendations = parsed.get("recommendations", [])
     return recommendations if isinstance(recommendations, list) else []
+
+
+def extract_valid_tool_requests(parsed: dict[str, Any], *, max_requests: int = 8) -> tuple[list[dict[str, Any]], list[str]]:
+    """Return broker-compatible valid runtime tool requests and validation errors.
+
+    This helper does not execute tools. It only reuses the shared GPU planner
+    contract validator to keep planner, supervised runner and orchestrator
+    semantics aligned.
+    """
+
+    raw_requests = parsed.get("tool_requests", [])
+    if raw_requests in (None, []):
+        return [], []
+    if not isinstance(raw_requests, list):
+        return [], ["top-level tool_requests must be a list"]
+
+    valid: list[dict[str, Any]] = []
+    errors: list[str] = []
+    for index, item in enumerate(raw_requests):
+        item_errors = validate_tool_request_object(item, index)
+        if item_errors:
+            errors.extend(item_errors)
+            continue
+        if len(valid) >= max_requests:
+            errors.append(f"tool_requests[{index}] skipped: max_requests={max_requests} reached")
+            continue
+        valid.append(dict(item))
+    return valid, errors
 
 
 def classify_empty_recommendations(

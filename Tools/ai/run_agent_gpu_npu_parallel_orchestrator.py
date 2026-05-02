@@ -126,6 +126,11 @@ def build_gpu_command(args: argparse.Namespace, repo_root: Path, checkpoint_dir:
         command.extend(["--ollama-model", args.ollama_model])
     if args.ollama_base_url:
         command.extend(["--ollama-base-url", args.ollama_base_url])
+    if args.enable_runtime_tool_broker:
+        command.append("--enable-runtime-tool-broker")
+        command.extend(["--runtime-tool-output-dir", args.runtime_tool_output_dir])
+        command.extend(["--runtime-tool-timeout-seconds", str(args.runtime_tool_timeout_seconds)])
+        command.extend(["--runtime-tool-max-requests-per-round", str(args.runtime_tool_max_requests_per_round)])
     for report_file in args.report_file:
         command.extend(["--report-file", report_file])
     for context_root in args.context_root:
@@ -266,6 +271,12 @@ def build_markdown(report: dict[str, Any]) -> str:
         "gpu_recommendation_count",
         "gpu_empty_recommendations_reason",
         "gpu_evidence_ready_for_manual_patch_count",
+        "runtime_tool_broker_enabled",
+        "runtime_tool_request_count",
+        "runtime_tool_execution_count",
+        "runtime_tool_failed_count",
+        "runtime_tool_blocked_count",
+        "runtime_tool_result_count",
     ]:
         lines.append(f"- `{key}`: `{report.get(key)}`")
     lines.append("")
@@ -345,6 +356,12 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
     gpu_empty_recommendations_reason = gpu_report.get("empty_recommendations_reason", "")
     gpu_evidence_ready_count = gpu_report.get("evidence_ready_for_manual_patch_count", 0)
     gpu_recommended_next_layer = gpu_report.get("decision", {}).get("recommended_next_layer") or gpu_report.get("recommended_next_layer")
+    runtime_tool_broker_enabled = bool(gpu_report.get("runtime_tool_broker_enabled"))
+    runtime_tool_request_count = int(gpu_report.get("runtime_tool_request_count") or 0)
+    runtime_tool_execution_count = int(gpu_report.get("runtime_tool_execution_count") or 0)
+    runtime_tool_failed_count = int(gpu_report.get("runtime_tool_failed_count") or 0)
+    runtime_tool_blocked_count = int(gpu_report.get("runtime_tool_blocked_count") or 0)
+    runtime_tool_result_count = int(gpu_report.get("runtime_tool_result_count") or 0)
     report = {
         "schema_version": 1,
         "kind": "agent_gpu_npu_parallel_orchestrator",
@@ -367,6 +384,12 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "gpu_empty_recommendations_reason": gpu_empty_recommendations_reason,
         "gpu_evidence_ready_for_manual_patch_count": gpu_evidence_ready_count,
         "gpu_recommended_next_layer": gpu_recommended_next_layer,
+        "runtime_tool_broker_enabled": runtime_tool_broker_enabled,
+        "runtime_tool_request_count": runtime_tool_request_count,
+        "runtime_tool_execution_count": runtime_tool_execution_count,
+        "runtime_tool_failed_count": runtime_tool_failed_count,
+        "runtime_tool_blocked_count": runtime_tool_blocked_count,
+        "runtime_tool_result_count": runtime_tool_result_count,
         "gpu_summary": {
             "passed": gpu_report.get("passed"),
             "round_count": gpu_report.get("round_count"),
@@ -378,6 +401,12 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "empty_recommendations_reason": gpu_empty_recommendations_reason,
             "evidence_ready_for_manual_patch_count": gpu_evidence_ready_count,
             "recommended_next_layer": gpu_recommended_next_layer,
+            "runtime_tool_broker_enabled": runtime_tool_broker_enabled,
+            "runtime_tool_request_count": runtime_tool_request_count,
+            "runtime_tool_execution_count": runtime_tool_execution_count,
+            "runtime_tool_failed_count": runtime_tool_failed_count,
+            "runtime_tool_blocked_count": runtime_tool_blocked_count,
+            "runtime_tool_result_count": runtime_tool_result_count,
             "decision": gpu_report.get("decision", {}),
         },
         "checkpoint_dir": repo_rel(checkpoint_dir, repo_root),
@@ -392,6 +421,8 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "fallback_patch_plan_recommended": bool(gpu_report.get("decision", {}).get("fallback_patch_plan_recommended")),
             "recommended_next_layer": gpu_recommended_next_layer,
             "gpu_empty_recommendations_reason": gpu_empty_recommendations_reason,
+            "runtime_tool_broker_enabled": runtime_tool_broker_enabled,
+            "runtime_tool_result_count": runtime_tool_result_count,
             "manual_review_required": True,
         },
         "guardrails": {
@@ -402,6 +433,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "real_github_pr_created": False,
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
+            "runtime_tool_broker_report_only": True,
         },
     }
     return report
@@ -423,6 +455,10 @@ def main() -> int:
     parser.add_argument("--refined-review", default="output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review_v3.json")
     parser.add_argument("--report-file", action="append", default=[])
     parser.add_argument("--context-root", action="append", default=[])
+    parser.add_argument("--enable-runtime-tool-broker", action="store_true")
+    parser.add_argument("--runtime-tool-output-dir", default="output/ai_runtime_tools/gpu_planner_runtime_tools")
+    parser.add_argument("--runtime-tool-timeout-seconds", type=int, default=300)
+    parser.add_argument("--runtime-tool-max-requests-per-round", type=int, default=8)
     parser.add_argument("--run-npu-auditor-provider", action="store_true")
     parser.add_argument("--npu-python", default=None)
     parser.add_argument("--npu-auditor-every-rounds", type=int, default=4)
@@ -460,6 +496,12 @@ def main() -> int:
         "gpu_empty_recommendations_reason": report.get("gpu_empty_recommendations_reason"),
         "gpu_evidence_ready_for_manual_patch_count": report.get("gpu_evidence_ready_for_manual_patch_count"),
         "gpu_recommended_next_layer": report.get("gpu_recommended_next_layer"),
+        "runtime_tool_broker_enabled": report.get("runtime_tool_broker_enabled"),
+        "runtime_tool_request_count": report.get("runtime_tool_request_count"),
+        "runtime_tool_execution_count": report.get("runtime_tool_execution_count"),
+        "runtime_tool_failed_count": report.get("runtime_tool_failed_count"),
+        "runtime_tool_blocked_count": report.get("runtime_tool_blocked_count"),
+        "runtime_tool_result_count": report.get("runtime_tool_result_count"),
         "npu_audit_count": report["npu_audit_count"],
         "npu_audit_success_count": report["npu_audit_success_count"],
         "gpu_review_blocked_by_npu": report["decision"]["gpu_review_blocked_by_npu"],
