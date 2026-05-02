@@ -47,6 +47,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(f"## `{case['name']}`")
         lines.append("")
         lines.append(f"- Passed: `{case['passed']}`")
+        lines.append(f"- Expected reason: `{case['expected_reason']}`")
         lines.append(f"- Reason: `{case['result']['empty_recommendations_reason']}`")
         lines.append(f"- JSON OK: `{case['result']['json_ok']}`")
         lines.append(f"- Schema OK: `{case['result']['schema_ok']}`")
@@ -89,12 +90,18 @@ def run_smoke() -> dict[str, Any]:
     }
     ```
     """
-    malformed_response = """
+    malformed_response = "not JSON at all: { missing quoted keys and closing braces"
+    schema_mismatch_response = """
     {
-      "summary": "broken",
-      "recommendations": [
-        {"id": "bad", "status": "ready_for_patch_plan"}
+      "summary": "valid JSON but wrong shape",
+      "confidence": "low",
+      "files": [
+        {
+          "path": "AGENTS.md",
+          "content_preview": "# AGENTS.md\\n..."
+        }
       ]
+    }
     """
     cases = [
         {
@@ -117,6 +124,13 @@ def run_smoke() -> dict[str, Any]:
             "expected_reason": "json_parse_failure",
             "expected_json_ok": False,
             "expected_context_echo": False,
+        },
+        {
+            "name": "schema_context_echo",
+            "response": schema_mismatch_response,
+            "expected_reason": "context_echo_detected",
+            "expected_json_ok": True,
+            "expected_context_echo": True,
         },
     ]
 
