@@ -13,14 +13,21 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-from datetime import datetime
+import sys
 from pathlib import Path
 from typing import Any
 
-try:
-    from report_utils import resolve_output_path, write_json_report
-except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report  # type: ignore
+REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
+
+from Tools.ai.code_patch_plan_common import (  # noqa: E402
+    now_iso,
+    report_only_guardrails,
+    resolve_output_path,
+    repo_rel,
+    write_json_and_markdown,
+)
 
 
 REPORT_KIND = "python_line_count_csv"
@@ -43,35 +50,17 @@ DEFAULT_EXCLUDED_DIRS = {
     "renders",
     "venv",
 }
-DEFAULT_EXCLUDED_SUFFIXES = {
-    ".db",
-    ".sqlite",
-    ".sqlite3",
-}
+DEFAULT_EXCLUDED_SUFFIXES = {".db", ".sqlite", ".sqlite3"}
 
 
-def now_stamp() -> str:
-    """Return a compact local timestamp safe for filenames."""
-    return datetime.now().strftime("%Y%m%d-%H%M%S")
-
-
-def repo_rel(repo_root: Path, path: Path) -> str:
-    """Return repository-relative POSIX path when possible."""
-    try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
-    except ValueError:
-        return path.resolve(strict=False).as_posix()
+def timestamp_from_iso(value: str) -> str:
+    """Convert `YYYY-MM-DDTHH:MM:SS` to `YYYYMMDD-HHMMSS`."""
+    return value.replace("-", "").replace(":", "").replace("T", "-")
 
 
 def split_csv_values(values: list[str]) -> set[str]:
     """Expand repeated comma-separated CLI values into a set."""
-    items: set[str] = set()
-    for value in values:
-        for item in value.split(","):
-            normalized = item.strip()
-            if normalized:
-                items.add(normalized)
-    return items
+    return {item.strip() for value in values for item in value.split(",") if item.strip()}
 
 
 def excluded_by_dir(path: Path, repo_root: Path, excluded_dirs: set[str]) -> bool:
@@ -85,11 +74,7 @@ def excluded_by_dir(path: Path, repo_root: Path, excluded_dirs: set[str]) -> boo
 
 def should_include_python(path: Path, repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]) -> bool:
     """Return true when a path should be counted as source Python."""
-    if path.suffix.lower() != ".py":
-        return False
-    if path.suffix.lower() in excluded_suffixes:
-        return False
-    return not excluded_by_dir(path, repo_root, excluded_dirs)
+    return path.suffix.lower() == ".py" and path.suffix.lower() not in excluded_suffixes and not excluded_by_dir(path, repo_root, excluded_dirs)
 
 
 def count_lines(path: Path) -> tuple[int, str | None]:
@@ -108,14 +93,22 @@ def collect_python_counts(repo_root: Path, excluded_dirs: set[str], excluded_suf
     for path in sorted(repo_root.rglob("*.py"), key=lambda value: repo_rel(repo_root, value).lower()):
         if not should_include_python(path, repo_root, excluded_dirs, excluded_suffixes):
             continue
-        lines, error = count_lines(path)
-        rel = repo_rel(repo_root, path)
+        row, error = build_row(repo_root, path)
         if error:
-            errors.append(f"{rel}: {error}")
-            continue
-        rows.append({"File": rel, "Lines": lines})
+            errors.append(error)
+        else:
+            rows.append(row)
     rows.sort(key=lambda row: (-int(row["Lines"]), str(row["File"]).lower()))
     return rows, errors
+
+
+def build_row(repo_root: Path, path: Path) -> tuple[dict[str, Any], str | None]:
+    """Build one CSV row or return an error string."""
+    lines, error = count_lines(path)
+    rel = repo_rel(repo_root, path)
+    if error:
+        return {}, f"{rel}: {error}"
+    return {"File": rel, "Lines": lines}, None
 
 
 def write_csv(rows: list[dict[str, Any]], output: Path) -> None:
@@ -127,18 +120,12 @@ def write_csv(rows: list[dict[str, Any]], output: Path) -> None:
         writer.writerows(rows)
 
 
-def top_rows(rows: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
-    """Return the largest files by line count."""
-    return rows[: max(limit, 0)]
-
-
 def build_report(repo_root: Path, rows: list[dict[str, Any]], errors: list[str], csv_path: Path, excluded_dirs: set[str]) -> dict[str, Any]:
     """Build JSON validation/evidence summary for the CSV output."""
-    total_lines = sum(int(row["Lines"]) for row in rows)
     return {
         "schema_version": 1,
         "kind": REPORT_KIND,
-        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "generated_at": now_iso(),
         "repo_root": str(repo_root),
         "passed": not errors,
         "errors": errors,
@@ -148,36 +135,25 @@ def build_report(repo_root: Path, rows: list[dict[str, Any]], errors: list[str],
         "source_writes_performed": False,
         "csv_written": repo_rel(repo_root, csv_path),
         "file_count": len(rows),
-        "total_lines": total_lines,
-        "top_files": top_rows(rows, 20),
+        "total_lines": sum(int(row["Lines"]) for row in rows),
+        "top_files": rows[:20],
         "excluded_dirs": sorted(excluded_dirs),
-        "guardrails": {
-            "report_only": True,
-            "source_files_modified": False,
-            "providers_executed": False,
-            "blender_runtime_executed": False,
-            "patches_applied": False,
-        },
+        "guardrails": report_only_guardrails(
+            source_files_modified=False,
+            providers_executed=False,
+            blender_runtime_executed=False,
+            patches_applied=False,
+        ),
     }
 
 
 def render_markdown(report: dict[str, Any]) -> str:
     """Render a compact Markdown summary for human review."""
     lines = ["# Python Line Count CSV", ""]
-    lines.append(f"- Passed: `{report['passed']}`")
-    lines.append(f"- CSV: `{report['csv_written']}`")
-    lines.append(f"- File count: `{report['file_count']}`")
-    lines.append(f"- Total lines: `{report['total_lines']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
-    lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
-    lines.append("")
+    lines.extend(render_summary(report))
     lines.append("## Largest Python files")
     lines.append("")
-    if not report.get("top_files"):
-        lines.append("- none")
-    for row in report.get("top_files", []):
-        lines.append(f"- `{row['File']}` — `{row['Lines']}` lines")
+    lines.extend(render_top_files(report.get("top_files", [])))
     lines.append("")
     lines.append("## Guardrail")
     lines.append("")
@@ -185,14 +161,36 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_summary(report: dict[str, Any]) -> list[str]:
+    """Render top-level report metadata."""
+    return [
+        f"- Passed: `{report['passed']}`",
+        f"- CSV: `{report['csv_written']}`",
+        f"- File count: `{report['file_count']}`",
+        f"- Total lines: `{report['total_lines']}`",
+        f"- Provider execution performed: `{report['provider_execution_performed']}`",
+        f"- Patch application performed: `{report['patch_application_performed']}`",
+        f"- Source writes performed: `{report['source_writes_performed']}`",
+        "",
+    ]
+
+
+def render_top_files(rows: Any) -> list[str]:
+    """Render top line-count rows."""
+    if not rows:
+        return ["- none"]
+    return [f"- `{row['File']}` — `{row['Lines']}` lines" for row in rows]
+
+
 def default_csv_path(repo_root: Path, timestamped: bool) -> Path:
     """Return default CSV path, optionally timestamped."""
     if not timestamped:
         return resolve_output_path(repo_root, DEFAULT_CSV)
-    return repo_root / "docs" / "LOCAL_VALIDATION_EVIDENCE" / f"python_line_count_{now_stamp()}.csv"
+    return repo_root / "docs" / "LOCAL_VALIDATION_EVIDENCE" / f"python_line_count_{timestamp_from_iso(now_iso())}.csv"
 
 
-def main() -> int:
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--csv-output", help="CSV output path. Defaults to docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_latest.csv")
@@ -201,22 +199,21 @@ def main() -> int:
     parser.add_argument("--timestamped", action="store_true", help="Write a timestamped CSV under docs/LOCAL_VALIDATION_EVIDENCE/.")
     parser.add_argument("--exclude-dir", action="append", default=[], help="Additional directory name to exclude; comma-separated values are accepted.")
     parser.add_argument("--include-default-excludes", action=argparse.BooleanOptionalAction, default=True)
-    args = parser.parse_args()
+    return parser.parse_args()
 
+
+def main() -> int:
+    args = parse_args()
     repo_root = Path(args.repo_root).resolve()
     excluded_dirs = set(DEFAULT_EXCLUDED_DIRS) if args.include_default_excludes else set()
     excluded_dirs.update(split_csv_values(args.exclude_dir))
-    excluded_suffixes = set(DEFAULT_EXCLUDED_SUFFIXES)
     csv_path = resolve_output_path(repo_root, args.csv_output) if args.csv_output else default_csv_path(repo_root, args.timestamped)
 
-    rows, errors = collect_python_counts(repo_root, excluded_dirs, excluded_suffixes)
+    rows, errors = collect_python_counts(repo_root, excluded_dirs, set(DEFAULT_EXCLUDED_SUFFIXES))
     write_csv(rows, csv_path)
     report = build_report(repo_root, rows, errors, csv_path, excluded_dirs)
-    write_json_report(report, resolve_output_path(repo_root, args.report_output))
-    markdown_output = resolve_output_path(repo_root, args.markdown_output)
-    markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    markdown_output.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps(report, indent=2, ensure_ascii=False), end="\n")
+    json_text = write_json_and_markdown(repo_root, report, args.report_output, args.markdown_output, render_markdown(report))
+    print(json.dumps(json.loads(json_text), indent=2, ensure_ascii=False), end="\n")
     return 0 if report["passed"] else 2
 
 
