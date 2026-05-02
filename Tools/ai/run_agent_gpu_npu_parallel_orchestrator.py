@@ -71,6 +71,24 @@ def run_command_async(command: list[str], repo_root: Path) -> subprocess.Popen[s
     )
 
 
+def run_command_sync(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str]:
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=repo_root,
+            text=True,
+            capture_output=True,
+            timeout=timeout_seconds,
+            check=False,
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+        )
+        return completed.returncode, completed.stdout[-12000:], completed.stderr[-12000:], ""
+    except subprocess.TimeoutExpired as exc:
+        return 124, exc.stdout or "", exc.stderr or "", f"TimeoutExpired: {timeout_seconds}s"
+    except Exception as exc:  # noqa: BLE001 - report-only runtime broker execution must be captured.
+        return 1, "", "", f"{type(exc).__name__}: {exc}"
+
+
 def checkpoint_round(path: Path) -> int | None:
     match = ROUND_RE.search(path.name)
     if not match:
@@ -157,6 +175,122 @@ def collect_runtime_tool_context_reports(args: argparse.Namespace, repo_root: Pa
         seen.add(key)
         reports.append(candidate)
     return reports
+
+
+def run_npu_runtime_tool_broker_for_audit(
+    *,
+    args: argparse.Namespace,
+    repo_root: Path,
+    audit_record: dict[str, Any],
+) -> dict[str, Any]:
+    tool_requests = audit_record.get("npu_tool_requests") if isinstance(audit_record.get("npu_tool_requests"), list) else []
+    round_id = int(audit_record.get("round") or 0)
+    if not getattr(args, "enable_runtime_tool_broker", False):
+        return {
+            "enabled": False,
+            "executed": False,
+            "requested_tool_count": len(tool_requests),
+            "tool_execution_count": 0,
+            "blocked_tool_count": 0,
+            "failed_tool_count": 0,
+            "tool_results": [],
+            "guardrails": {
+                "broker_execution_requires_enable_runtime_tool_broker": True,
+                "patch_application_performed": False,
+                "persistent_memory_write_performed": False,
+            },
+        }
+    if not tool_requests:
+        return {
+            "enabled": True,
+            "executed": False,
+            "requested_tool_count": 0,
+            "tool_execution_count": 0,
+            "blocked_tool_count": 0,
+            "failed_tool_count": 0,
+            "tool_results": [],
+            "guardrails": {
+                "patch_application_performed": False,
+                "persistent_memory_write_performed": False,
+            },
+        }
+
+    output_root = resolve_path(repo_root, args.runtime_tool_output_dir)
+    round_dir = output_root / f"npu_round_{round_id:03d}"
+    round_dir.mkdir(parents=True, exist_ok=True)
+    request_file = round_dir / f"npu_round_{round_id:03d}_tool_requests.json"
+    broker_output = round_dir / f"npu_round_{round_id:03d}_runtime_tool_broker.json"
+    broker_markdown = round_dir / f"npu_round_{round_id:03d}_runtime_tool_broker.md"
+    request_packet = {
+        "schema_version": 1,
+        "kind": "npu_auditor_runtime_tool_requests",
+        "repo_root": str(repo_root),
+        "round": round_id,
+        "source_audit": audit_record.get("audit_output"),
+        "tool_requests": tool_requests,
+        "guardrails": {
+            "free_shell_allowed": False,
+            "broker_allowlist_required": True,
+            "patch_application_allowed": False,
+            "provider_execution_allowed": False,
+            "persistent_memory_write_allowed": False,
+            "manual_review_required": True,
+        },
+    }
+    write_json(request_file, request_packet)
+    command = [
+        sys.executable,
+        "Tools/ai/agent_runtime_tool_broker.py",
+        "--repo-root",
+        ".",
+        "--request-file",
+        str(request_file),
+        "--tool-output-dir",
+        str(round_dir),
+        "--timeout-seconds",
+        str(args.runtime_tool_timeout_seconds),
+        "--output",
+        str(broker_output),
+        "--markdown-output",
+        str(broker_markdown),
+    ]
+    returncode, stdout, stderr, error = run_command_sync(command, repo_root, args.runtime_tool_timeout_seconds + 30)
+    broker_report: dict[str, Any] = {}
+    broker_output_exists = broker_output.exists()
+    if broker_output_exists:
+        try:
+            broker_report = read_json(broker_output)
+        except Exception as exc:  # noqa: BLE001
+            error = f"{error} {type(exc).__name__}: {exc}".strip()
+    elif not error:
+        error = "npu_runtime_tool_broker_output_missing"
+
+    return {
+        "enabled": True,
+        "executed": True,
+        "requested_tool_count": len(tool_requests),
+        "command": command,
+        "returncode": returncode,
+        "stdout_tail": stdout,
+        "stderr_tail": stderr,
+        "error": error,
+        "request_file": repo_rel(request_file, repo_root),
+        "broker_output": repo_rel(broker_output, repo_root),
+        "broker_markdown": repo_rel(broker_markdown, repo_root),
+        "broker_output_exists": broker_output_exists,
+        "passed": broker_report.get("passed"),
+        "tool_request_count": broker_report.get("tool_request_count", len(tool_requests)),
+        "tool_execution_count": broker_report.get("tool_execution_count", 0),
+        "blocked_tool_count": broker_report.get("blocked_tool_count", 0),
+        "failed_tool_count": broker_report.get("failed_tool_count", 0),
+        "provider_execution_performed": broker_report.get("provider_execution_performed", False),
+        "patch_application_performed": broker_report.get("patch_application_performed", False),
+        "sqlite_write_performed": broker_report.get("sqlite_write_performed", False),
+        "persistent_memory_write_performed": broker_report.get("persistent_memory_write_performed", False),
+        "operational_sqlite_write_performed": broker_report.get("operational_sqlite_write_performed", False),
+        "tool_results": broker_report.get("tool_results", [])[:8],
+        "guardrails": broker_report.get("guardrails", {}),
+    }
 
 
 def build_npu_command(args: argparse.Namespace, repo_root: Path, checkpoint: Path, audit_json: Path) -> list[str]:
@@ -300,6 +434,11 @@ def build_markdown(report: dict[str, Any]) -> str:
         "npu_audit_success_count",
         "npu_tool_context_seen_count",
         "npu_tool_request_count",
+        "npu_runtime_tool_request_count",
+        "npu_runtime_tool_execution_count",
+        "npu_runtime_tool_failed_count",
+        "npu_runtime_tool_blocked_count",
+        "npu_runtime_tool_result_count",
         "gpu_recommendation_count",
         "gpu_empty_recommendations_reason",
         "gpu_evidence_ready_for_manual_patch_count",
@@ -383,9 +522,28 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
     else:
         errors.append(f"GPU output missing: {repo_rel(gpu_output, repo_root)}")
 
+    for audit in audit_records:
+        if audit.get("npu_tool_requests") and not audit.get("npu_runtime_tool_broker"):
+            audit["npu_runtime_tool_broker"] = run_npu_runtime_tool_broker_for_audit(
+                args=args,
+                repo_root=repo_root,
+                audit_record=audit,
+            )
+            broker = audit["npu_runtime_tool_broker"]
+            if broker.get("error"):
+                warnings.append(f"NPU runtime tool broker round {audit.get('round')}: {broker.get('error')}")
+            if broker.get("returncode") not in (None, 0):
+                warnings.append(f"NPU runtime tool broker round {audit.get('round')}: returncode={broker.get('returncode')}")
+
     npu_success_count = sum(1 for item in audit_records if item.get("provider_execution_succeeded") is True or item.get("classification") == "usable_audit_text")
     npu_tool_context_seen_count = sum(1 for item in audit_records if item.get("runtime_tool_context_seen") is True)
     npu_tool_request_count = sum(int(item.get("npu_tool_request_count") or 0) for item in audit_records)
+    npu_runtime_brokers = [item.get("npu_runtime_tool_broker", {}) for item in audit_records if item.get("npu_runtime_tool_broker")]
+    npu_runtime_tool_request_count = sum(int(item.get("requested_tool_count") or 0) for item in npu_runtime_brokers)
+    npu_runtime_tool_execution_count = sum(int(item.get("tool_execution_count") or 0) for item in npu_runtime_brokers)
+    npu_runtime_tool_failed_count = sum(int(item.get("failed_tool_count") or 0) for item in npu_runtime_brokers)
+    npu_runtime_tool_blocked_count = sum(int(item.get("blocked_tool_count") or 0) for item in npu_runtime_brokers)
+    npu_runtime_tool_result_count = sum(len(item.get("tool_results", [])) for item in npu_runtime_brokers)
     gpu_recommendation_count = gpu_report.get("recommendation_count")
     gpu_empty_recommendations_reason = gpu_report.get("empty_recommendations_reason", "")
     gpu_evidence_ready_count = gpu_report.get("evidence_ready_for_manual_patch_count", 0)
@@ -460,6 +618,11 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "npu_audit_success_count": npu_success_count,
         "npu_tool_context_seen_count": npu_tool_context_seen_count,
         "npu_tool_request_count": npu_tool_request_count,
+        "npu_runtime_tool_request_count": npu_runtime_tool_request_count,
+        "npu_runtime_tool_execution_count": npu_runtime_tool_execution_count,
+        "npu_runtime_tool_failed_count": npu_runtime_tool_failed_count,
+        "npu_runtime_tool_blocked_count": npu_runtime_tool_blocked_count,
+        "npu_runtime_tool_result_count": npu_runtime_tool_result_count,
         "npu_audits": audit_records,
         "decision": {
             "gpu_review_blocked_by_npu": False,
@@ -467,6 +630,11 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "npu_audit_success_count": npu_success_count,
             "npu_tool_context_seen_count": npu_tool_context_seen_count,
             "npu_tool_request_count": npu_tool_request_count,
+            "npu_runtime_tool_request_count": npu_runtime_tool_request_count,
+            "npu_runtime_tool_execution_count": npu_runtime_tool_execution_count,
+            "npu_runtime_tool_failed_count": npu_runtime_tool_failed_count,
+            "npu_runtime_tool_blocked_count": npu_runtime_tool_blocked_count,
+            "npu_runtime_tool_result_count": npu_runtime_tool_result_count,
             "ready_for_patch_plan": bool(gpu_report.get("decision", {}).get("ready_for_patch_plan")),
             "fallback_patch_plan_recommended": bool(gpu_report.get("decision", {}).get("fallback_patch_plan_recommended")),
             "recommended_next_layer": gpu_recommended_next_layer,
@@ -484,6 +652,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
             "runtime_tool_broker_report_only": True,
+            "npu_runtime_tools_execute_via_broker": True,
         },
     }
     return report
@@ -563,6 +732,11 @@ def main() -> int:
         "npu_audit_success_count": report["npu_audit_success_count"],
         "npu_tool_context_seen_count": report.get("npu_tool_context_seen_count"),
         "npu_tool_request_count": report.get("npu_tool_request_count"),
+        "npu_runtime_tool_request_count": report.get("npu_runtime_tool_request_count"),
+        "npu_runtime_tool_execution_count": report.get("npu_runtime_tool_execution_count"),
+        "npu_runtime_tool_failed_count": report.get("npu_runtime_tool_failed_count"),
+        "npu_runtime_tool_blocked_count": report.get("npu_runtime_tool_blocked_count"),
+        "npu_runtime_tool_result_count": report.get("npu_runtime_tool_result_count"),
         "gpu_review_blocked_by_npu": report["decision"]["gpu_review_blocked_by_npu"],
     }, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2
