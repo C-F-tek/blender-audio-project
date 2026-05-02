@@ -12,6 +12,7 @@ The contract-drift lane is evidence-first and report-only. It helps local and Gi
 |---|---|---|
 | `Tools/validation/check_code_contract_drift.py` | `code_contract_drift` | Checks that important Python and PowerShell tools still expose the guardrail strings, symbols and lane contracts required by the local AI core/tool workflow. |
 | `Tools/validation/check_docs_contract_drift.py` | `docs_contract_drift` | Checks that central Markdown documents mention required workflow, provider and report-contract terms. |
+| `Tools/validation/check_markdown_command_hygiene.py` | `markdown_command_hygiene` | Checks Markdown files for control characters, unclosed fenced code blocks and suspicious command-fence path corruption. |
 | `Tools/validation/apply_docs_contract_drift_fixes.py` | explicit docs fixer | Applies only narrow documentation fixes when explicitly run with its apply flag; it is not a generic patch runner. |
 
 All of these tools must remain:
@@ -73,6 +74,35 @@ source_writes_performed = false
 ```
 
 If a documentation fix is needed, prefer a small PR that updates the affected Markdown and includes the validator output in the local evidence bundle.
+
+## Markdown command hygiene
+
+`markdown_command_hygiene` prevents broken copy/paste runbooks by checking Markdown files for invisible control characters and malformed command fences.
+
+Recommended targeted command for this lane:
+
+```powershell
+python .\Tools\validation\check_markdown_command_hygiene.py `
+  --repo-root . `
+  --path docs/CONTRACT_DRIFT_VALIDATION.md `
+  --path docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md `
+  --path docs/README.md `
+  --output .\output\validation\markdown_command_hygiene_contract_drift.json
+```
+
+Default mode checks the main project entrypoint Markdown files that are most likely to contain copy/paste commands.
+
+Expected report semantics:
+
+```text
+kind = markdown_command_hygiene
+provider_execution_performed = false
+patch_application_performed = false
+source_writes_performed = false
+commands_executed = false
+```
+
+This validator does not execute command blocks. It only inspects text.
 
 ## Relationship with patch plans
 
@@ -146,6 +176,7 @@ python .\Tools\ai\build_github_evidence_bundle.py `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
   --report .\output\validation\code_contract_drift.json `
   --report .\output\validation\docs_contract_drift.json `
+  --report .\output\validation\markdown_command_hygiene_contract_drift.json `
   --report .\output\validation\validation_report_contract.json `
   --report .\output\validation\python_syntax.json
 ```
