@@ -21,7 +21,7 @@ Validate together:
 ```text
 PR #108 contract-drift validation documentation
 PR #109 agent-review code patch-plan design/build/smoke/docs-follow-up lane
-PR #109 complete code edit proposal helper and smoke lane
+PR #109 complete code edit proposal helper/build/smoke lane
 PR #109 tool-agnostic artifact domain registry
 current master local AI evidence-bundle tooling
 current master selected-chunks evidence tooling
@@ -43,6 +43,7 @@ Tools/validation/run_agnostic_context_stack_smoke.py
 Tools/ai/build_agent_review_evidence_sufficiency.py
 Tools/validation/run_agent_review_evidence_sufficiency_smoke.py
 Tools/validation/build_python_line_count_csv.py
+Tools/ai/build_code_edit_proposal_from_plan.py
 Tools/validation/run_code_edit_proposal_smoke.py
 Tools/validation/check_artifact_domain_registry.py
 ```
@@ -54,6 +55,8 @@ Tools/validation/check_artifact_domain_registry.py
 `build_agent_review_evidence_sufficiency.py` and `run_agent_review_evidence_sufficiency_smoke.py` classify whether refined review findings are sufficient for manual patch candidates or still need more context. They remain provider-free and patch-free.
 
 `build_python_line_count_csv.py` regenerates deterministic Python line-count evidence after local runs, replacing stale ad-hoc CSV snapshots with a tracked, reproducible command.
+
+`build_code_edit_proposal_from_plan.py` turns a selected `agent_review_code_patch_plan` item into complete `code_edit_proposal` metadata without applying the proposal.
 
 `run_code_edit_proposal_smoke.py` validates complete code edit proposal artifacts without applying patches. It is the smoke gate for future coding-complete proposal lanes.
 
@@ -100,6 +103,7 @@ report-only evidence sufficiency classification
 report-only line-count CSV generation
 report-only artifact domain registry validation
 report-only code patch-plan generation
+report-only code edit proposal generation
 report-only code edit proposal smoke validation
 report-only docs follow-up generation
 report-only code patch artifact packing
@@ -203,6 +207,17 @@ python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
   --repo-root . `
   --report .\output\patch_specs\agent_review_code_patch_plan_fixture_built.json `
   --output .\output\validation\agent_review_code_patch_plan_smoke_built_pr109.json
+
+python .\Tools\ai\build_code_edit_proposal_from_plan.py `
+  --repo-root . `
+  --code-patch-plan .\output\patch_specs\agent_review_code_patch_plan_fixture_built.json `
+  --output .\output\patch_specs\code_edit_proposal_from_plan_pr109.json `
+  --markdown-output .\output\patch_specs\code_edit_proposal_from_plan_pr109.md
+
+python .\Tools\validation\run_code_edit_proposal_smoke.py `
+  --repo-root . `
+  --proposal .\output\patch_specs\code_edit_proposal_from_plan_pr109.json `
+  --output .\output\validation\code_edit_proposal_from_plan_smoke_pr109.json
 
 python .\Tools\ai\build_code_patch_docs_followup.py `
   --repo-root . `
@@ -433,6 +448,17 @@ python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
   --report .\output\patch_specs\agent_review_code_patch_plan_macro.json `
   --output .\output\validation\agent_review_code_patch_plan_smoke_macro_built.json
 
+python .\Tools\ai\build_code_edit_proposal_from_plan.py `
+  --repo-root . `
+  --code-patch-plan .\output\patch_specs\agent_review_code_patch_plan_macro.json `
+  --output .\output\patch_specs\code_edit_proposal_from_plan_macro.json `
+  --markdown-output .\output\patch_specs\code_edit_proposal_from_plan_macro.md
+
+python .\Tools\validation\run_code_edit_proposal_smoke.py `
+  --repo-root . `
+  --proposal .\output\patch_specs\code_edit_proposal_from_plan_macro.json `
+  --output .\output\validation\code_edit_proposal_from_plan_smoke_macro.json
+
 python .\Tools\ai\build_code_patch_docs_followup.py `
   --repo-root . `
   --code-patch-plan .\output\patch_specs\agent_review_code_patch_plan_macro.json `
@@ -491,6 +517,7 @@ $Reports = @(
   ".\output\validation\agent_review_code_patch_plan_smoke_macro.json",
   ".\output\validation\code_edit_proposal_smoke_macro.json",
   ".\output\validation\agent_review_code_patch_plan_smoke_macro_built.json",
+  ".\output\validation\code_edit_proposal_from_plan_smoke_macro.json",
   ".\output\validation\code_patch_artifact_pack_macro.json",
   ".\output\validation\json_artifacts_macro.json",
   ".\output\validation\validation_report_contract_macro.json",
@@ -530,6 +557,7 @@ evidence sufficiency smoke passes or is explicitly skipped because refined-revie
 new evidence bundle validates
 code patch-plan smoke passes
 code edit proposal smoke passes
+code edit proposal from plan smoke passes
 code docs-follow-up report is generated or explicitly reports no ready follow-up
 code patch artifact pack is generated and validates guardrails
 no output/** is staged
@@ -580,6 +608,7 @@ The following are already part of PR #109:
 
 ```text
 Tools/ai/build_agent_review_code_patch_plan.py
+Tools/ai/build_code_edit_proposal_from_plan.py
 Tools/ai/build_code_patch_docs_followup.py
 Tools/ai/build_code_patch_artifact_pack.py
 Tools/ai/code_edit_proposal_helpers.py
@@ -605,6 +634,7 @@ agnostic core activation contract fails
 agent_review_evidence_sufficiency_smoke fails when refined-review inputs are present
 agent_review_code_patch_plan smoke report fails
 code_edit_proposal_smoke fails
+code_edit_proposal_from_plan_smoke fails
 agent_review_code_docs_followup reports source_writes_performed=true
 code_patch_artifact_pack reports source_writes_performed=true
 markdown command hygiene report fails
