@@ -7,6 +7,9 @@ from typing import Any
 from Tools.ai.github_evidence_bundle_io import as_list, list_contains
 from Tools.ai.github_evidence_bundle_reports import report_summaries
 
+NPU_UNUSABLE_CLASSIFICATIONS = {"unusable_output", "unusable"}
+NPU_REAL_WORKLOAD_REPORT = "output/ai_packets/npu_real_workload_report.md"
+
 
 def selected_chunks_evidence_seen(selected_chunks_evidence: list[dict[str, Any]]) -> bool:
     """Return whether at least one compact selected-chunks report is present."""
@@ -37,34 +40,51 @@ def selected_chunks_budget_respected(selected_chunks_evidence: list[dict[str, An
     return False
 
 
+def npu_checks_mark_unusable(checks: dict[str, Any]) -> bool:
+    """Return whether a checks block marks NPU as unusable for advisory."""
+    if checks.get("npu_usable_for_advisory") is False:
+        return True
+    return str(checks.get("npu_classification") or "").lower() in NPU_UNUSABLE_CLASSIFICATIONS
+
+
 def npu_marked_unusable(reports: list[dict[str, Any]]) -> bool:
     """Return whether validation evidence marks NPU output unusable for advisory."""
     for summary in report_summaries(reports):
         if list_contains(summary.get("unusable_lanes"), "npu"):
             return True
         checks = summary.get("checks") if isinstance(summary.get("checks"), dict) else {}
-        if checks.get("npu_usable_for_advisory") is False:
-            return True
-        if str(checks.get("npu_classification") or "").lower() in {"unusable_output", "unusable"}:
+        if npu_checks_mark_unusable(checks):
             return True
     return False
+
+
+def routing_excludes_npu(routing: dict[str, Any]) -> bool:
+    """Return whether a routing block excludes NPU from advisory."""
+    if list_contains(routing.get("excluded_advisory_lanes"), "npu"):
+        return True
+    return any(
+        isinstance(ctx, dict) and ctx.get("lane") == "npu" and ctx.get("trusted") is False
+        for ctx in as_list(routing.get("excluded_context_files"))
+    )
+
+
+def context_excludes_npu(context: dict[str, Any]) -> bool:
+    """Return whether a context block excludes the NPU workload report."""
+    excluded_context = context.get("excluded_context_files") or []
+    if NPU_REAL_WORKLOAD_REPORT in excluded_context:
+        return True
+    advisory_routing = context.get("advisory_context_routing") if isinstance(context.get("advisory_context_routing"), dict) else {}
+    return list_contains(advisory_routing.get("excluded_advisory_lanes"), "npu")
 
 
 def npu_marked_excluded_from_advisory(reports: list[dict[str, Any]]) -> bool:
     """Return whether routing/evidence excludes NPU from advisory context."""
     for summary in report_summaries(reports):
         routing = summary.get("routing") if isinstance(summary.get("routing"), dict) else {}
-        if list_contains(routing.get("excluded_advisory_lanes"), "npu"):
+        if routing_excludes_npu(routing):
             return True
-        for ctx in as_list(routing.get("excluded_context_files")):
-            if isinstance(ctx, dict) and ctx.get("lane") == "npu" and ctx.get("trusted") is False:
-                return True
         context = summary.get("context") if isinstance(summary.get("context"), dict) else {}
-        excluded_context = context.get("excluded_context_files") or []
-        if "output/ai_packets/npu_real_workload_report.md" in excluded_context:
-            return True
-        advisory_routing = context.get("advisory_context_routing") if isinstance(context.get("advisory_context_routing"), dict) else {}
-        if list_contains(advisory_routing.get("excluded_advisory_lanes"), "npu"):
+        if context_excludes_npu(context):
             return True
     return False
 
