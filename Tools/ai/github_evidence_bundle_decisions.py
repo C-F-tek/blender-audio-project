@@ -114,6 +114,16 @@ def npu_decode_smoke_passed(reports: list[dict[str, Any]]) -> bool:
     )
 
 
+def provider_execution_seen(reports: list[dict[str, Any]]) -> bool:
+    """Return whether any summarized report performed provider execution."""
+    return any(item.get("summary", {}).get("provider_execution_performed") is True for item in reports)
+
+
+def patch_plan_summary_seen(reports: list[dict[str, Any]]) -> bool:
+    """Return whether any summarized report contains native patch-plan details."""
+    return any(bool(item.get("summary", {}).get("patch_plan_summary")) for item in reports)
+
+
 def build_decision(
     reports: list[dict[str, Any]],
     selected_chunks_evidence: list[dict[str, Any]],
@@ -124,7 +134,7 @@ def build_decision(
     return {
         "ollama_gpu_primary_advisory": ollama_gpu_primary_advisory(reports),
         "npu_excluded_when_unusable": npu_excluded_when_unusable(reports),
-        "provider_execution_seen": any(item.get("summary", {}).get("provider_execution_performed") is True for item in reports),
+        "provider_execution_seen": provider_execution_seen(reports),
         "npu_decode_smoke_passed": npu_decode_smoke_passed(reports),
         "selected_chunks_evidence_seen": selected_chunks_evidence_seen(selected_chunks_evidence),
         "selected_chunks_built": selected_chunks_built(selected_chunks_evidence),
@@ -132,5 +142,5 @@ def build_decision(
         "artifact_manifest_built": bool(artifact_manifest),
         "included_artifacts_built": bool(included_artifacts),
         "included_artifact_count": len(included_artifacts),
-        "patch_plan_summary_seen": any(bool(item.get("summary", {}).get("patch_plan_summary")) for item in reports),
+        "patch_plan_summary_seen": patch_plan_summary_seen(reports),
     }
