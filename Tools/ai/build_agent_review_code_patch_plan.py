@@ -8,7 +8,6 @@ write source files, write SQLite databases or touch runtime output artifacts.
 from __future__ import annotations
 
 import argparse
-import csv
 import sys
 from pathlib import Path
 from typing import Any
@@ -18,6 +17,8 @@ if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
 from Tools.ai.code_patch_plan_common import (  # noqa: E402
+    line_count_for,
+    load_line_counts,
     normalize_repo_path,
     now_iso,
     read_json_object,
@@ -42,42 +43,15 @@ DEFAULT_VALIDATION_COMMANDS = [
 ]
 
 
-def load_line_counts(repo_root: Path, csv_path: Path) -> tuple[dict[str, int], list[str]]:
-    """Load optional line-count CSV evidence as a sizing hint."""
-    warnings: list[str] = []
-    counts: dict[str, int] = {}
-    if not csv_path.exists():
-        warnings.append(f"line-count CSV missing: {repo_rel(repo_root, csv_path)}")
-        return counts, warnings
-    try:
-        with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
-            reader = csv.DictReader(handle)
-            for row in reader:
-                path = normalize_repo_path(row.get("Path") or row.get("File"))
-                raw_lines = row.get("Lines") or row.get("lines")
-                if not path or raw_lines is None:
-                    continue
-                try:
-                    counts[path] = int(str(raw_lines).strip())
-                except ValueError:
-                    continue
-    except OSError as exc:
-        warnings.append(f"unable to read line-count CSV: {type(exc).__name__}: {exc}")
-    return counts, warnings
-
-
-def line_count_for(path_value: str, counts: dict[str, int]) -> int | None:
-    """Return a CSV line-count hint, including suffix matching for absolute CSV paths."""
-    normalized = normalize_repo_path(path_value)
-    if normalized in counts:
-        return counts[normalized]
-    matches = [lines for path, lines in counts.items() if normalize_repo_path(path).endswith(normalized)]
-    return matches[0] if len(matches) == 1 else None
-
-
 def list_len(value: Any) -> int:
     """Return list length only when the value is a list."""
     return len(value) if isinstance(value, list) else 0
+
+
+def list_field(check: dict[str, Any], field: str) -> list[Any]:
+    """Return a list-valued check field or an empty list."""
+    value = check.get(field)
+    return value if isinstance(value, list) else []
 
 
 def risk_for(path_value: str, check: dict[str, Any], counts: dict[str, int]) -> str:
@@ -98,12 +72,6 @@ def status_for(check: dict[str, Any]) -> str:
     if check.get("missing_recommended_terms") or check.get("warnings"):
         return "candidate_for_manual_review"
     return "informational"
-
-
-def list_field(check: dict[str, Any], field: str) -> list[Any]:
-    """Return a list-valued check field or an empty list."""
-    value = check.get(field)
-    return value if isinstance(value, list) else []
 
 
 def rationale_for(check: dict[str, Any]) -> str:
@@ -145,7 +113,8 @@ def validation_commands_for(path_value: str) -> list[str]:
     """Return validation commands recommended after manually applying a patch."""
     commands = list(DEFAULT_VALIDATION_COMMANDS)
     if Path(path_value).suffix.lower() == ".py":
-        commands.insert(0, f"python -m py_compile .\\{path_value.replace('/', '\\')}")
+        ps_path = path_value.replace("/", "\\")
+        commands.insert(0, f"python -m py_compile .\\{ps_path}")
     return commands
 
 
@@ -158,22 +127,6 @@ def should_consider_check(check: Any) -> bool:
     return any(list_field(check, field) for field in ("missing_required_terms", "missing_recommended_terms", "errors", "warnings"))
 
 
-def plan_from_check(index: int, repo_root: Path, check: dict[str, Any], counts: dict[str, int]) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
-    """Convert one contract-drift check into one manual-review code patch plan."""
-    path_value = normalize_repo_path(check.get("path"))
-    skipped_id = f"code_contract_{index:03d}"
-    if not path_value:
-        return None, {"id": skipped_id, "reason": "check has no path"}
-    errors = target_path_errors(repo_root, path_value)
-    if errors:
-        return None, {"id": skipped_id, "path": path_value, "reason": "; ".join(errors)}
-
-    if check_is_clean(check):
-        return None, {"id": skipped_id, "path": path_value, "reason": "check is already clean"}
-
-    return build_plan(skipped_id, path_value, check, counts), None
-
-
 def check_is_clean(check: dict[str, Any]) -> bool:
     """Return true when a check has no actionable drift."""
     return (
@@ -183,6 +136,20 @@ def check_is_clean(check: dict[str, Any]) -> bool:
         and not list_field(check, "warnings")
         and check.get("ok") is not False
     )
+
+
+def plan_from_check(index: int, repo_root: Path, check: dict[str, Any], counts: dict[str, int]) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
+    """Convert one contract-drift check into one manual-review code patch plan."""
+    path_value = normalize_repo_path(check.get("path"))
+    skipped_id = f"code_contract_{index:03d}"
+    if not path_value:
+        return None, {"id": skipped_id, "reason": "check has no path"}
+    errors = target_path_errors(repo_root, path_value)
+    if errors:
+        return None, {"id": skipped_id, "path": path_value, "reason": "; ".join(errors)}
+    if check_is_clean(check):
+        return None, {"id": skipped_id, "path": path_value, "reason": "check is already clean"}
+    return build_plan(skipped_id, path_value, check, counts), None
 
 
 def build_plan(plan_id: str, path_value: str, check: dict[str, Any], counts: dict[str, int]) -> dict[str, Any]:
