@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "kind": "github_validation_evidence_bundle",
+  "generated_at": "2026-05-02T20:55:39",
+  "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "source_reports": [
+    "output/analysis/gpu_npu_run_sync_20260502-195523_after_fix.json"
+  ],
+  "source_selected_chunks_evidence": [
+    "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json"
+  ],
+  "source_included_artifacts": [
+    "output/analysis/gpu_npu_run_sync_20260502-195523_after_fix.md",
+    "docs/LOCAL_AI_TASKS/gpu-npu-balanced-run-profile.md",
+    "output/ai_pipeline/project_complete_20260502-195523_orchestrator.json"
+  ],
+  "reports": [
+    {
+      "path": "output/analysis/gpu_npu_run_sync_20260502-195523_after_fix.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "gpu_npu_run_sync_analysis",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "gpu_npu_run_sync_analysis",
+        "passed": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "errors": [],
+        "warnings": [],
+        "manual_review_required": true
+      }
+    }
+  ],
+  "selected_chunks_evidence": [
+    {
+      "path": "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "selected_semantic_chunks_evidence",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "selected_semantic_chunks_evidence",
+        "passed": true,
+        "provider_execution_performed": false,
+        "source_writes_performed": false,
+        "selected_count": 24,
+        "total_selected_chars": 28649,
+        "max_chunks": 24,
+        "max_total_chars": 32000,
+        "source_bundle": "output/ai_context_packs/full_context_golden_selected_chunks.json",
+        "source_chunks": "indexAI/code_chunks/semantic_code_chunks.json",
+        "decision": {
+          "selected_chunks_built": true,
+          "budget_respected": true,
+          "provider_execution_seen": false,
+          "source_writes_performed": false,
+          "forbidden_paths_blocked": true
+        },
+        "errors": [],
+        "warnings": []
+      }
+    }
+  ],
+  "artifact_manifest": [
+    {
+      "path": "output/analysis/gpu_npu_run_sync_20260502-195523_after_fix.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 2637,
+      "sha256": "4fc1b44a4af642a43110bec61e0d40044749f98a712a62de60e1a2a2f2e1e4ba",
+      "role": "local_artifact_reference",
+      "content_included": true,
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"gpu_npu_run_sync_analysis\",\n  \"generated_at\": \"2026-05-02T20:55:14\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"blender_runtime_execution_performed\": false,\n  \"sqlite_write_performed\": false,\n  \"manual_review_required\": true,\n  \"inputs\": {\n    \"orchestrator\": \"output/ai_pipeline/project_complete_20260502-195523_orchestrator.json\"\n  },\n  \"metrics\": {\n    \"gpu_round_count\": 24,\n    \"npu_audit_count\": 5,\n    \"npu_audit_success_count\": 5,\n    \"npu_audit_round_coverage\": 0.208,\n    \"avg_gpu_round_seconds\": 29.425,\n    \"p50_gpu_round_seconds\": 29.425,\n    \"p90_gpu_round_seconds\": 29.425,\n    \"avg_npu_audit_seconds\": 124.8,\n    \"p50_npu_audit_seconds\": 122.0,\n    \"p90_npu_audit_seconds\": 130.0,\n    \"npu_to_gpu_avg_duration_ratio\": 4.241,\n    \"gpu_elapsed_seconds\": 706.195,\n    \"provider_execution_performed\": true,\n    \"patch_application_performed\": false,\n    \"source_writes_performed\": false,\n    \"gpu_metrics_source\": \"gpu_summary_or_elapsed_estimate\"\n  },\n  \"suggestions\": {\n    \"recommended_profile\": \"gpu_npu_balanced_advisory\",\n    \"reasoning\": [\n      \"NPU audit coverage is low compared with GPU round count; keep checkpoint auditing sampled, not per-round.\",\n      \"Average NPU audit duration is much slower than one GPU round; reduce NPU prompt/context/",
+      "preview_chars": 1500,
+      "line_count": 69
+    }
+  ],
+  "included_artifacts": [
+    {
+      "path": "output/analysis/gpu_npu_run_sync_20260502-195523_after_fix.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 1589,
+      "sha256": "25a0feda675decc46ec460af23e3bbf6e4c7fa9e9705da99c3b07831e1eba391",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 46,
+      "raw_chars": 1543,
+      "included_chars": 1543,
+      "content": "# GPU/NPU Run Sync Analysis\n\n- Passed: `True`\n- Provider execution performed: `False`\n- Patch application performed: `False`\n- Source writes performed: `False`\n\n## Metrics\n\n- `gpu_round_count`: `24`\n- `npu_audit_count`: `5`\n- `npu_audit_success_count`: `5`\n- `npu_audit_round_coverage`: `0.208`\n- `avg_gpu_round_seconds`: `29.425`\n- `p50_gpu_round_seconds`: `29.425`\n- `p90_gpu_round_seconds`: `29.425`\n- `avg_npu_audit_seconds`: `124.8`\n- `p50_npu_audit_seconds`: `122.0`\n- `p90_npu_audit_seconds`: `130.0`\n- `npu_to_gpu_avg_duration_ratio`: `4.241`\n- `gpu_elapsed_seconds`: `706.195`\n- `provider_execution_performed`: `True`\n- `patch_application_performed`: `False`\n- `source_writes_performed`: `False`\n- `gpu_metrics_source`: `gpu_summary_or_elapsed_estimate`\n\n## Suggested balanced profile\n\n- `npu_auditor_every_rounds`: `4`\n- `max_concurrent_npu_audits`: `1`\n- `npu_auditor_timeout_seconds`: `420`\n- `npu_max_context_chars`: `8000`\n- `npu_max_prompt_chars`: `1200`\n- `npu_max_new_tokens`: `384`\n- `npu_final_wait_seconds`: `180`\n- `gpu_max_new_tokens`: `3600`\n- `gpu_files_per_round`: `8`\n- `gpu_max_chars_per_file`: `6000`\n\n## Reasoning\n\n- NPU audit coverage is low compared with GPU round count; keep checkpoint auditing sampled, not per-round.\n- Average NPU audit duration is much slower than one GPU round; reduce NPU prompt/context/tokens and audit every several rounds.\n- NPU audits are usable; tune cadence rather than disabling the lane.\n- GPU JSON contract hardening should be tested before increasing GPU token budget further.\n\n"
+    },
+    {
+      "path": "docs/LOCAL_AI_TASKS/gpu-npu-balanced-run-profile.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 3594,
+      "sha256": "f50b4a7456e6d48a7a3512b79c3cf1ad0664dfbc01f187119d4fc57ed9f16247",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "line_count": 162,
+      "raw_chars": 3594,
+      "included_chars": 3594,
+      "content": "# GPU/NPU Balanced Run Profile\n\n## Purpose\n\nBalanced profile proposal for complete local AI-to-AI runs when the GPU planner advances much faster than the NPU checkpoint auditor.\n\nThe goal is not perfect lockstep. The goal is useful NPU checkpoint coverage without blocking GPU progress or leaving NPU audits too stale.\n\n## Reference run observation\n\nReference run:\n\n```text\nproject_complete_20260502-195523\n```\n\nObserved behavior:\n\n```text\nGPU planner completed 24 rounds\nNPU checkpoint auditor completed 5 audits\nNPU audits succeeded\nGPU output still ended with repair_attempt_failed\n```\n\nInterpretation:\n\n```text\nNPU is useful as a sampled checkpoint auditor, not as a per-round synchronous reviewer.\n```\n\n## Baseline complete-run parameters\n\nPrevious project-complete run used:\n\n```text\n--budget-minutes 30\n--max-rounds 24\n--files-per-round 10\n--max-context-files 240\n--max-chars-per-file 8000\n--max-new-tokens 4800\n--npu-auditor-every-rounds 4\n--max-concurrent-npu-audits 1\n--npu-auditor-timeout-seconds 600\n--npu-max-context-chars 12000\n--npu-max-prompt-chars 1500\n--npu-max-new-tokens 512\n--npu-final-wait-seconds 120\n```\n\n## Balanced profile candidate\n\nUse this profile for the next comparative complete run after JSON-contract integration is available:\n\n```text\n--budget-minutes 30\n--max-rounds 20\n--files-per-round 8\n--max-context-files 220\n--max-chars-per-file 6000\n--max-new-tokens 3600\n--npu-auditor-every-rounds 3\n--max-concurrent-npu-audits 1\n--npu-auditor-timeout-seconds 420\n--npu-max-context-chars 8000\n--npu-max-prompt-chars 1200\n--npu-max-new-tokens 384\n--npu-final-wait-seconds 180\n```\n\n## Rationale\n\nGPU-side changes:\n\n```text\nslightly smaller file batches\nslightly smaller per-file context\nlower max-new-tokens than 4800\nfewer max rounds\n```\n\nExpected effect:\n\n```text\nless prompt echo pressure\nless malformed long JSON\nmore compact GPU responses\nless runaway round count\n```\n\nNPU-side changes:\n\n```text\nsmaller context budget\nsmaller prompt budget\nsmaller decode budget\nshorter per-audit timeout\nlonger final wait\n```\n\nExpected effect:\n\n```text\nfaster NPU checkpoint completion\nless chance that final NPU audits are still draining after GPU completion\nbetter end-of-run audit inclusion\n```\n\nCadence:\n\n```text\nnpu-auditor-every-rounds 3\n```\n\nExpected effect:\n\n```text\nmore frequent checkpoint coverage than every 4 rounds, while still avoiding per-round lockstep.\n```\n\n## Guardrails\n\n```text\nNPU remains non-blocking\nNPU remains checkpoint/audit/support lane\nNPU is not promoted to primary advisory\nOpenVINO GPU is not used as primary lane\nno provider/model setting changes first\nno patch auto-apply\nno source writes through patch runner\nno Blender runtime execution\nraw output/** remains local only\ncompact bundle remains required\n```\n\n## Required analysis tool\n\nUse:\n\n```powershell\npython .\\Tools\\ai\\analyze_gpu_npu_run_sync.py `\n  --repo-root . `\n  --orchestrator \".\\output\\ai_pipeline\\project_complete_<STAMP>_orchestrator.json\" `\n  --output \".\\output\\analysis\\gpu_npu_run_sync_<STAMP>.json\" `\n  --markdown-output \".\\output\\analysis\\gpu_npu_run_sync_<STAMP>.md\"\n```\n\nThe sync analysis report must be included in the evidence bundle for any future complete run that changes GPU/NPU cadence parameters.\n\n## Success criteria\n\nA balanced run is better if:\n\n```text\nGPU JSON contract failures decrease\ncontext_echo_detected is separated from raw parse failure\nNPU audit success remains true\nNPU audit coverage improves or remains useful\nfinal bundle includes NPU audit evidence and sync analysis\nfallback patch-plan remains available when GPU recommendations are empty\n```\n"
+    },
+    {
+      "path": "output/ai_pipeline/project_complete_20260502-195523_orchestrator.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 20138,
+      "sha256": "fdf74c5801328d125e3d5d7bbb422b25f0ebb4327d487b85648685e7fc59a3e9",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": true,
+      "line_count": 311,
+      "raw_chars": 19827,
+      "included_chars": 12000,
+      "content": "{\n  \"schema_version\": 1,\n  \"kind\": \"agent_gpu_npu_parallel_orchestrator\",\n  \"generated_at\": \"2026-05-02T20:09:33\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": true,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"apply_mode\": \"report_only_parallel_gpu_planner_npu_auditor\",\n  \"elapsed_seconds\": 706.195,\n  \"gpu_returncode\": 0,\n  \"gpu_stdout_tail\": \"{\\n  \\\"passed\\\": true,\\n  \\\"output\\\": \\\"C:\\\\\\\\Users\\\\\\\\carmi\\\\\\\\blender\\\\\\\\blender-audio-project\\\\\\\\output\\\\\\\\ai_pipeline\\\\\\\\project_complete_20260502-195523_parallel_gpu.json\\\",\\n  \\\"markdown\\\": \\\"C:\\\\\\\\Users\\\\\\\\carmi\\\\\\\\blender\\\\\\\\blender-audio-project\\\\\\\\output\\\\\\\\ai_pipeline\\\\\\\\project_complete_20260502-195523_parallel_gpu.md\\\",\\n  \\\"provider_execution_performed\\\": true,\\n  \\\"patch_application_performed\\\": false,\\n  \\\"elapsed_seconds\\\": 668.685,\\n  \\\"round_count\\\": 24,\\n  \\\"npu_audit_count\\\": 0,\\n  \\\"npu_audit_success_count\\\": 0,\\n  \\\"npu_auditor_disabled_reason\\\": \\\"\\\",\\n  \\\"recommendation_count\\\": 0,\\n  \\\"raw_recommendation_candidate_count\\\": 0,\\n  \\\"filtered_recommendation_count\\\": 0,\\n  \\\"empty_recommendations_reason\\\": \\\"repair_attempt_failed\\\",\\n  \\\"evidence_ready_for_manual_patch_count\\\": 12,\\n  \\\"ready_for_patch_plan\\\": false,\\n  \\\"recommended_next_layer\\\": \\\"build_agent_review_patch_plan.py\\\"\\n}\\n\",\n  \"gpu_stderr_tail\": \"\",\n  \"gpu_output\": \"output/ai_pipeline/project_complete_20260502-195523_parallel_gpu.json\",\n  \"gpu_markdown\": \"output/ai_pipeline/project_complete_20260502-195523_parallel_gpu.md\",\n  \"gpu_recommendation_count\": 0,\n  \"gpu_empty_recommendations_reason\": \"repair_attempt_failed\",\n  \"gpu_evidence_ready_for_manual_patch_count\": 12,\n  \"gpu_recommended_next_layer\": \"build_agent_review_patch_plan.py\",\n  \"gpu_summary\": {\n    \"passed\": true,\n    \"round_count\": 24,\n    \"recommendation_count\": 0,\n    \"raw_recommendation_candidate_count\": 0,\n    \"filtered_recommendation_count\": 0,\n    \"json_parse_error_count\": 16,\n    \"repair_attempt_count\": 18,\n    \"empty_recommendations_reason\": \"repair_attempt_failed\",\n    \"evidence_ready_for_manual_patch_count\": 12,\n    \"recommended_next_layer\": \"build_agent_review_patch_plan.py\",\n    \"decision\": {\n      \"ready_for_patch_plan\": false,\n      \"ready_count\": 0,\n      \"needs_more_context_count\": 0,\n      \"fallback_patch_plan_recommended\": true,\n      \"npu_auditor_non_blocking\": true,\n      \"npu_unusable_or_failed_count\": 0,\n      \"npu_audit_success_count\": 0,\n      \"npu_auditor_disabled_reason\": \"\",\n      \"recommended_next_layer\": \"build_agent_review_patch_plan.py\",\n      \"manual_review_required\": true\n    }\n  },\n  \"checkpoint_dir\": \"output/ai_pipeline/project_complete_20260502-195523_checkpoints\",\n  \"npu_audit_count\": 5,\n  \"npu_audit_success_count\": 5,\n  \"npu_audits\": [\n    {\n      \"round\": 1,\n      \"checkpoint\": \"output/ai_pipeline/project_complete_20260502-195523_checkpoints/round_001.json\",\n      \"audit_output\": \"output/ai_pipeline/project_complete_20260502-195523_checkpoints/round_001_npu_async_audit.json\",\n      \"started_at\": \"2026-05-02T19:58:59\",\n      \"status\": \"finished\",\n      \"command\": [\n        \"C:\\\\Python314\\\\python.exe\",\n        \"Tools/ai/run_npu_gpu_deep_review_auditor.py\",\n        \"--repo-root\",\n        \".\",\n        \"--gpu-review\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_001.json\",\n        \"--output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_001_npu_async_audit.json\",\n        \"--markdown-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_001_npu_async_audit.md\",\n        \"--context-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_001_npu_async_audit_context.md\",\n        \"--npu-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_001_npu_async_audit_npu.md\",\n        \"--npu-notes-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_001_npu_async_audit_npu_notes.md\",\n        \"--npu-metadata-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_001_npu_async_audit_metadata.json\",\n        \"--timeout-seconds\",\n        \"600\",\n        \"--max-context-chars\",\n        \"4000\",\n        \"--max-prompt-chars\",\n        \"1500\",\n        \"--max-new-tokens\",\n        \"512\",\n        \"--run-npu\"\n      ],\n      \"finished_at\": \"2026-05-02T20:01:07\",\n      \"returncode\": 0,\n      \"stdout_tail\": \"{\\n  \\\"passed\\\": true,\\n  \\\"output\\\": \\\"C:\\\\\\\\Users\\\\\\\\carmi\\\\\\\\blender\\\\\\\\blender-audio-project\\\\\\\\output\\\\\\\\ai_pipeline\\\\\\\\project_complete_20260502-195523_checkpoints\\\\\\\\round_001_npu_async_audit.json\\\",\\n  \\\"markdown\\\": \\\"C:\\\\\\\\Users\\\\\\\\carmi\\\\\\\\blender\\\\\\\\blender-audio-project\\\\\\\\output\\\\\\\\ai_pipeline\\\\\\\\project_complete_20260502-195523_checkpoints\\\\\\\\round_001_npu_async_audit.md\\\",\\n  \\\"npu_python\\\": \\\"C:\\\\\\\\Users\\\\\\\\carmi\\\\\\\\blender\\\\\\\\venvs\\\\\\\\blender-npu-ai\\\\\\\\Scripts\\\\\\\\python.exe\\\",\\n  \\\"npu_python_exists\\\": true,\\n  \\\"provider_execution_requested\\\": true,\\n  \\\"provider_load_attempted\\\": true,\\n  \\\"provider_execution_succeeded\\\": true,\\n  \\\"dependency_missing\\\": false,\\n  \\\"patch_application_performed\\\": false,\\n  \\\"non_blocking\\\": true,\\n  \\\"classification\\\": \\\"usable_audit_text\\\",\\n  \\\"gpu_review_blocked\\\": false\\n}\\n\",\n      \"stderr_tail\": \"\",\n      \"classification\": \"usable_audit_text\",\n      \"provider_execution_requested\": true,\n      \"provider_load_attempted\": true,\n      \"provider_execution_succeeded\": true,\n      \"provider_execution_performed\": true,\n      \"dependency_missing\": false,\n      \"warnings\": [],\n      \"gpu_review_blocked\": false\n    },\n    {\n      \"round\": 4,\n      \"checkpoint\": \"output/ai_pipeline/project_complete_20260502-195523_checkpoints/round_004.json\",\n      \"audit_output\": \"output/ai_pipeline/project_complete_20260502-195523_checkpoints/round_004_npu_async_audit.json\",\n      \"started_at\": \"2026-05-02T20:01:09\",\n      \"status\": \"finished\",\n      \"command\": [\n        \"C:\\\\Python314\\\\python.exe\",\n        \"Tools/ai/run_npu_gpu_deep_review_auditor.py\",\n        \"--repo-root\",\n        \".\",\n        \"--gpu-review\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_004.json\",\n        \"--output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_004_npu_async_audit.json\",\n        \"--markdown-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_004_npu_async_audit.md\",\n        \"--context-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_004_npu_async_audit_context.md\",\n        \"--npu-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_004_npu_async_audit_npu.md\",\n        \"--npu-notes-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_004_npu_async_audit_npu_notes.md\",\n        \"--npu-metadata-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_004_npu_async_audit_metadata.json\",\n        \"--timeout-seconds\",\n        \"600\",\n        \"--max-context-chars\",\n        \"4000\",\n        \"--max-prompt-chars\",\n        \"1500\",\n        \"--max-new-tokens\",\n        \"512\",\n        \"--run-npu\"\n      ],\n      \"finished_at\": \"2026-05-02T20:03:19\",\n      \"returncode\": 0,\n      \"stdout_tail\": \"{\\n  \\\"passed\\\": true,\\n  \\\"output\\\": \\\"C:\\\\\\\\Users\\\\\\\\carmi\\\\\\\\blender\\\\\\\\blender-audio-project\\\\\\\\output\\\\\\\\ai_pipeline\\\\\\\\project_complete_20260502-195523_checkpoints\\\\\\\\round_004_npu_async_audit.json\\\",\\n  \\\"markdown\\\": \\\"C:\\\\\\\\Users\\\\\\\\carmi\\\\\\\\blender\\\\\\\\blender-audio-project\\\\\\\\output\\\\\\\\ai_pipeline\\\\\\\\project_complete_20260502-195523_checkpoints\\\\\\\\round_004_npu_async_audit.md\\\",\\n  \\\"npu_python\\\": \\\"C:\\\\\\\\Users\\\\\\\\carmi\\\\\\\\blender\\\\\\\\venvs\\\\\\\\blender-npu-ai\\\\\\\\Scripts\\\\\\\\python.exe\\\",\\n  \\\"npu_python_exists\\\": true,\\n  \\\"provider_execution_requested\\\": true,\\n  \\\"provider_load_attempted\\\": true,\\n  \\\"provider_execution_succeeded\\\": true,\\n  \\\"dependency_missing\\\": false,\\n  \\\"patch_application_performed\\\": false,\\n  \\\"non_blocking\\\": true,\\n  \\\"classification\\\": \\\"usable_audit_text\\\",\\n  \\\"gpu_review_blocked\\\": false\\n}\\n\",\n      \"stderr_tail\": \"\",\n      \"classification\": \"usable_audit_text\",\n      \"provider_execution_requested\": true,\n      \"provider_load_attempted\": true,\n      \"provider_execution_succeeded\": true,\n      \"provider_execution_performed\": true,\n      \"dependency_missing\": false,\n      \"warnings\": [],\n      \"gpu_review_blocked\": false\n    },\n    {\n      \"round\": 8,\n      \"checkpoint\": \"output/ai_pipeline/project_complete_20260502-195523_checkpoints/round_008.json\",\n      \"audit_output\": \"output/ai_pipeline/project_complete_20260502-195523_checkpoints/round_008_npu_async_audit.json\",\n      \"started_at\": \"2026-05-02T20:03:21\",\n      \"status\": \"finished\",\n      \"command\": [\n        \"C:\\\\Python314\\\\python.exe\",\n        \"Tools/ai/run_npu_gpu_deep_review_auditor.py\",\n        \"--repo-root\",\n        \".\",\n        \"--gpu-review\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_008.json\",\n        \"--output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_008_npu_async_audit.json\",\n        \"--markdown-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_008_npu_async_audit.md\",\n        \"--context-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_008_npu_async_audit_context.md\",\n        \"--npu-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_008_npu_async_audit_npu.md\",\n        \"--npu-notes-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_008_npu_async_audit_npu_notes.md\",\n        \"--npu-metadata-output\",\n        \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\ai_pipeline\\\\project_complete_20260502-195523_checkpoints\\\\round_008_npu_async_audit_metadata.json\",\n        \"--timeout-seconds\",\n        \"600\",\n        \"--max-context-chars\",\n        \"4000\",\n        \"--max-prompt-chars\",\n        \"1500\",\n        \"--max-new-tokens\",\n        \"512\",\n        \"--run-npu\"\n      ],\n      \"finished_at\": \"2026-05-02T20:05:23\",\n      \"returncode\": 0,\n      \"stdout_tail\": \"{\\n  \\\"passed\\\": true,\\n  \\\"output\\\": \\\"C:\\\\\\\\Users\\\\\\\\carmi\\\\\\\\blender\\\\\\\\blender-audio-project\\\\\\\\output\\\\\\\\ai_pipeline\\\\\\\\project_complete_20260502-195523_checkpoints\\\\\\\\round_008_npu_async_audit.json\\\",\\n  \\\"markdown\\\": \\\"C:\\\\\\\\Users\\\\\\\\carmi\\\\\\\\blender\\\\\\\\blender-audio-project\\\\\\\\output\\\\\\\\ai_pipeline\\\\\\\\project_complete_20260502-195523_checkpoints\\\\\\\\round_008_npu_async_audit.md\\\",\\n  \\\"npu_python\\\": \\\"C:\\\\\\\\Users\\\\\\\\carmi\\\\\\\\blender\\\\\\\\venvs\\\\\\\\blender-npu-ai\\\\\\\\Scripts\\\\\\\\python.exe\\\",\\n  \\\"npu_python_exists\\\": true,\\n  \\\"provider_execution_requested\\\": tru"
+    }
+  ],
+  "included_artifact_policy": {
+    "auto_include_related_artifacts": true,
+    "max_included_artifact_chars": 12000,
+    "max_included_artifacts": 40,
+    "content_extension_allowlist": [
+      ".cfg",
+      ".csv",
+      ".ini",
+      ".json",
+      ".md",
+      ".ps1",
+      ".py",
+      ".toml",
+      ".txt",
+      ".yaml",
+      ".yml"
+    ],
+    "raw_artifact_deny_prefixes": [
+      "output/ai_context_packs/",
+      "output/ai_pipeline/gpu_deep_planning_parallel_checkpoints/",
+      "output/ai_pipeline/gpu_planner_nonempty_diagnostics_checkpoints",
+      "output/ai_pipeline/gpu_planner_fallback_verify_checkpoints",
+      "output/ai_pipeline/gpu_planner_full_after_fallback_fix_checkpoints",
+      "indexAI/code_chunks/",
+      "indexAI/project_code_chunks/",
+      "renders/"
+    ],
+    "raw_artifact_deny_fragments": [
+      "full_analysis",
+      "analysis_full",
+      ".sqlite",
+      ".db",
+      "_npu_async_audit_context",
+      "_npu_async_audit_npu",
+      "_npu_async_audit_npu_notes"
+    ]
+  },
+  "decision": {
+    "ollama_gpu_primary_advisory": false,
+    "npu_excluded_when_unusable": false,
+    "provider_execution_seen": false,
+    "npu_decode_smoke_passed": false,
+    "selected_chunks_evidence_seen": true,
+    "selected_chunks_built": true,
+    "budget_respected": true,
+    "artifact_manifest_built": true,
+    "included_artifacts_built": true,
+    "included_artifact_count": 3,
+    "patch_plan_summary_seen": false
+  }
+}
