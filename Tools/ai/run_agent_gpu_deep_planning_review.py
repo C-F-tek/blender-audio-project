@@ -26,11 +26,21 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from Tools.ai.gpu_planner_json_contract import (
+        result_to_dict,
+        validate_model_response_contract,
+        validate_recommendation_object,
+    )
     from Tools.npu.ollama_runtime import DEFAULT_BASE_URL, OllamaModelManager, normalize_base_url
 except ImportError:  # Script-style execution from Tools/ai.
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.gpu_planner_json_contract import (  # type: ignore
+        result_to_dict,
+        validate_model_response_contract,
+        validate_recommendation_object,
+    )
     from Tools.npu.ollama_runtime import DEFAULT_BASE_URL, OllamaModelManager, normalize_base_url  # type: ignore
 
 DEFAULT_EVIDENCE = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
@@ -40,7 +50,9 @@ DEFAULT_MARKDOWN = "output/ai_pipeline/agent_gpu_deep_planning_review.md"
 TEXT_EXTENSIONS = {".md", ".py", ".ps1", ".sh", ".json", ".yaml", ".yml", ".txt"}
 EXCLUDED_DIRS = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", "renders"}
 EMPTY_RECOMMENDATION_REASONS = {
+    "context_echo_detected",
     "json_parse_failure",
+    "model_output_schema_mismatch",
     "valid_json_empty_recommendations",
     "recommendations_filtered_out",
     "evidence_ready_but_no_gpu_plan",
@@ -280,33 +292,29 @@ def build_prompt(
     )
 
 
-def parse_model_json_with_diagnostics(text: str) -> tuple[dict[str, Any], dict[str, Any]]:
-    stripped = text.strip()
-    repair_attempt_count = 0
+def parse_model_json_with_diagnostics(
+    text: str,
+    evidence_ready_for_manual_patch_count_value: int = 0,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Parse one model response and attach shared GPU JSON contract diagnostics."""
 
-    if stripped.startswith("```"):
-        repair_attempt_count += 1
-        stripped = stripped.strip("`")
-        if stripped.lower().startswith("json"):
-            stripped = stripped[4:].strip()
-
-    start = stripped.find("{")
-    end = stripped.rfind("}")
-    if start >= 0 and end >= start and (start > 0 or end < len(stripped) - 1):
-        repair_attempt_count += 1
-        stripped = stripped[start : end + 1]
-
+    contract_result = validate_model_response_contract(
+        text,
+        evidence_ready_for_manual_patch_count=evidence_ready_for_manual_patch_count_value,
+    )
+    contract = result_to_dict(contract_result, include_parsed=False)
     diagnostics: dict[str, Any] = {
-        "json_ok": False,
-        "parse_error": "",
-        "repair_attempt_count": repair_attempt_count,
-        "model_output_missing_required_fields": False,
+        **contract,
+        "contract": contract,
+        "contract_empty_recommendations_reason": contract_result.empty_recommendations_reason,
+        "model_output_schema_mismatch": contract_result.json_ok and not contract_result.schema_ok,
+        # Legacy field retained for report consumers that still read the old name.
+        "model_output_missing_required_fields": contract_result.json_ok and not contract_result.schema_ok,
+        # The shared contract parser is strict; repair attempts are not the preferred classifier anymore.
+        "repair_attempt_count": 0,
     }
 
-    try:
-        parsed_any = json.loads(stripped)
-    except json.JSONDecodeError as exc:
-        diagnostics["parse_error"] = f"{type(exc).__name__}: {exc}"
+    if not contract_result.json_ok:
         return (
             {
                 "summary": text[:2000],
@@ -318,28 +326,10 @@ def parse_model_json_with_diagnostics(text: str) -> tuple[dict[str, Any], dict[s
             diagnostics,
         )
 
-    diagnostics["json_ok"] = True
-    if not isinstance(parsed_any, dict):
-        diagnostics["model_output_missing_required_fields"] = True
-        return (
-            {
-                "summary": str(parsed_any)[:2000],
-                "confidence": "low",
-                "recommendations": [],
-                "missing_evidence": ["model_response_not_json_object"],
-                "next_best_action": "review raw model response",
-            },
-            diagnostics,
-        )
-
-    parsed = parsed_any
-    if "recommendations" not in parsed:
-        diagnostics["model_output_missing_required_fields"] = True
+    parsed = dict(contract_result.parsed)
+    recommendations = parsed.get("recommendations")
+    if not isinstance(recommendations, list):
         parsed["recommendations"] = []
-    elif not isinstance(parsed.get("recommendations"), list):
-        diagnostics["model_output_missing_required_fields"] = True
-        parsed["recommendations"] = []
-
     parsed.setdefault("missing_evidence", [])
     parsed.setdefault("next_best_action", "")
     return parsed, diagnostics
@@ -361,18 +351,20 @@ def classify_empty_recommendations(
     parse_error: str,
     repair_attempt_count: int,
     model_output_missing_required_fields: bool,
+    model_output_schema_mismatch: bool,
+    context_echo_detected: bool,
     raw_recommendation_candidate_count: int,
     filtered_recommendation_count: int,
     evidence_ready_for_manual_patch_count_value: int,
 ) -> str:
     if filtered_recommendation_count > 0:
         return ""
-    if not json_ok and repair_attempt_count > 0 and parse_error:
-        return "repair_attempt_failed"
+    if context_echo_detected:
+        return "context_echo_detected"
     if not json_ok:
         return "json_parse_failure"
-    if model_output_missing_required_fields:
-        return "model_output_missing_required_fields"
+    if model_output_schema_mismatch or model_output_missing_required_fields:
+        return "model_output_schema_mismatch"
     if raw_recommendation_candidate_count > 0 and filtered_recommendation_count == 0:
         return "recommendations_filtered_out"
     if evidence_ready_for_manual_patch_count_value > 0:
@@ -387,12 +379,16 @@ def recommendation_diagnostics_for_round(
 ) -> dict[str, Any]:
     raw_recommendations = _raw_recommendations(parsed)
     raw_count = len(raw_recommendations)
-    filtered_count = sum(1 for rec in raw_recommendations if isinstance(rec, dict))
+    filtered_count = int(parse_diagnostics.get("valid_recommendation_count") or 0)
+    if "valid_recommendation_count" not in parse_diagnostics:
+        filtered_count = sum(1 for rec in raw_recommendations if isinstance(rec, dict))
     reason = classify_empty_recommendations(
         json_ok=bool(parse_diagnostics.get("json_ok")),
         parse_error=str(parse_diagnostics.get("parse_error") or ""),
         repair_attempt_count=int(parse_diagnostics.get("repair_attempt_count") or 0),
         model_output_missing_required_fields=bool(parse_diagnostics.get("model_output_missing_required_fields")),
+        model_output_schema_mismatch=bool(parse_diagnostics.get("model_output_schema_mismatch")),
+        context_echo_detected=bool(parse_diagnostics.get("context_echo_detected")),
         raw_recommendation_candidate_count=raw_count,
         filtered_recommendation_count=filtered_count,
         evidence_ready_for_manual_patch_count_value=evidence_ready_for_manual_patch_count_value,
@@ -400,6 +396,12 @@ def recommendation_diagnostics_for_round(
     return {
         "json_ok": bool(parse_diagnostics.get("json_ok")),
         "parse_error": str(parse_diagnostics.get("parse_error") or ""),
+        "schema_ok": bool(parse_diagnostics.get("schema_ok")),
+        "schema_errors": list(parse_diagnostics.get("schema_errors") or []),
+        "context_echo_detected": bool(parse_diagnostics.get("context_echo_detected")),
+        "model_output_schema_mismatch": bool(parse_diagnostics.get("model_output_schema_mismatch")),
+        "contract_empty_recommendations_reason": str(parse_diagnostics.get("contract_empty_recommendations_reason") or ""),
+        "contract": parse_diagnostics.get("contract", {}),
         "repair_attempt_count": int(parse_diagnostics.get("repair_attempt_count") or 0),
         "raw_recommendation_candidate_count": raw_count,
         "filtered_recommendation_count": filtered_count,
@@ -418,17 +420,24 @@ def aggregate_recommendation_diagnostics(rounds: list[dict[str, Any]], evidence:
     filtered_count = len(merge_recommendations(rounds))
     repair_attempt_count = sum(int(round_result.get("repair_attempt_count") or 0) for round_result in rounds)
     json_parse_error_count = sum(1 for round_result in rounds if not round_result.get("json_ok", True))
-    missing_required_count = sum(1 for round_result in rounds if round_result.get("empty_recommendations_reason") == "model_output_missing_required_fields")
+    context_echo_detected_count = sum(1 for round_result in rounds if round_result.get("context_echo_detected"))
+    model_output_schema_mismatch_count = sum(
+        1
+        for round_result in rounds
+        if round_result.get("model_output_schema_mismatch")
+        or round_result.get("empty_recommendations_reason") == "model_output_schema_mismatch"
+        or round_result.get("empty_recommendations_reason") == "model_output_missing_required_fields"
+    )
     parse_errors = [str(round_result.get("parse_error")) for round_result in rounds if round_result.get("parse_error")]
 
     reason = ""
     if filtered_count == 0:
-        if any(round_result.get("empty_recommendations_reason") == "repair_attempt_failed" for round_result in rounds):
-            reason = "repair_attempt_failed"
+        if context_echo_detected_count:
+            reason = "context_echo_detected"
         elif json_parse_error_count:
             reason = "json_parse_failure"
-        elif missing_required_count:
-            reason = "model_output_missing_required_fields"
+        elif model_output_schema_mismatch_count:
+            reason = "model_output_schema_mismatch"
         elif raw_count > 0:
             reason = "recommendations_filtered_out"
         elif evidence_ready_count > 0:
@@ -438,6 +447,8 @@ def aggregate_recommendation_diagnostics(rounds: list[dict[str, Any]], evidence:
 
     return {
         "json_parse_error_count": json_parse_error_count,
+        "context_echo_detected_count": context_echo_detected_count,
+        "model_output_schema_mismatch_count": model_output_schema_mismatch_count,
         "parse_error": parse_errors[0] if parse_errors else "",
         "repair_attempt_count": repair_attempt_count,
         "raw_recommendation_candidate_count": raw_count,
@@ -457,6 +468,8 @@ def merge_recommendations(rounds: list[dict[str, Any]]) -> list[dict[str, Any]]:
         parsed = round_result.get("parsed_response") or {}
         for rec in parsed.get("recommendations", []) if isinstance(parsed, dict) else []:
             if not isinstance(rec, dict):
+                continue
+            if validate_recommendation_object(rec, len(merged)):
                 continue
             key = json.dumps([rec.get("area"), rec.get("status"), rec.get("target_files"), rec.get("proposed_strategy")], sort_keys=True, ensure_ascii=False)
             if key in seen:
@@ -478,6 +491,8 @@ def build_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Raw recommendation candidates: `{report.get('raw_recommendation_candidate_count')}`")
     lines.append(f"- Filtered recommendation count: `{report.get('filtered_recommendation_count')}`")
     lines.append(f"- JSON parse error count: `{report.get('json_parse_error_count')}`")
+    lines.append(f"- Context echo detected count: `{report.get('context_echo_detected_count')}`")
+    lines.append(f"- Model output schema mismatch count: `{report.get('model_output_schema_mismatch_count')}`")
     lines.append(f"- Empty recommendations reason: `{report.get('empty_recommendations_reason')}`")
     lines.append(f"- Evidence ready for manual patch count: `{report.get('evidence_ready_for_manual_patch_count')}`")
     lines.append("")
@@ -576,7 +591,7 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
             round_start = time.perf_counter()
             try:
                 response, model_used = manager.generate(args.ollama_model, prompt, max_new_tokens=args.max_new_tokens, temperature=args.temperature)
-                parsed, parse_diagnostics = parse_model_json_with_diagnostics(response)
+                parsed, parse_diagnostics = parse_model_json_with_diagnostics(response, evidence_ready_count)
             except Exception as exc:  # noqa: BLE001 - report-only provider diagnostics.
                 response = ""
                 parsed = {"summary": "provider error", "confidence": "low", "recommendations": [], "missing_evidence": [str(exc)], "next_best_action": "inspect provider error"}
