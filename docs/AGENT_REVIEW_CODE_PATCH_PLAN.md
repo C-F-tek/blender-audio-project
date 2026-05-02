@@ -93,6 +93,41 @@ Each `code_patch_plans[]` item should be small and reviewable:
 }
 ```
 
+## Initial fixture and smoke validator
+
+This design lane now includes a minimal fixture and smoke validator so the report contract can be tested before implementing a code patch-plan builder.
+
+Fixture:
+
+```text
+Tools/ai/fixtures/agent_review_code_patch_plan_fixture.json
+```
+
+Smoke validator:
+
+```text
+Tools/validation/run_agent_review_code_patch_plan_smoke.py
+```
+
+Run:
+
+```powershell
+python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
+  --repo-root . `
+  --report .\Tools\ai\fixtures\agent_review_code_patch_plan_fixture.json `
+  --output .\output\validation\agent_review_code_patch_plan_smoke.json
+```
+
+The smoke validator checks the proposed contract and preserves:
+
+```text
+provider_execution_performed = false
+patch_application_performed = false
+source_writes_performed = false
+```
+
+It validates the report shape only. It does not apply patches, run providers, run Blender or write source files.
+
 ## Allowed targets
 
 A code patch plan may target source files only when all conditions hold:
@@ -133,6 +168,12 @@ Candidate new files:
 
 ```text
 Tools/ai/build_agent_review_code_patch_plan.py
+```
+
+Already introduced for contract validation in this design lane:
+
+```text
+Tools/ai/fixtures/agent_review_code_patch_plan_fixture.json
 Tools/validation/run_agent_review_code_patch_plan_smoke.py
 ```
 
@@ -145,11 +186,11 @@ Tools/validation/README.md
 docs/LOCAL_AI_TASKS/README.md
 ```
 
-Do not create these implementation files until the report contract and validator behavior are reviewed.
+Do not create the builder until the report contract and validator behavior are reviewed.
 
 ## Smoke validator expectations
 
-A future smoke validator should check:
+The smoke validator checks:
 
 ```text
 kind == agent_review_code_patch_plan
@@ -225,8 +266,8 @@ OpenVINO GPU primary-lane-free
 ```text
 1. Review this design.
 2. Add schema documentation for agent_review_code_patch_plan.
-3. Add a smoke validator that validates a fixture/report without applying patches.
-4. Add a deterministic fixture with zero or one low-risk example plan.
-5. Add evidence-bundle summary support if needed.
+3. Validate the fixture with run_agent_review_code_patch_plan_smoke.py.
+4. Add evidence-bundle summary support if needed.
+5. Add a deterministic builder only after the report contract is accepted.
 6. Only then consider a separate hand-applied code PR generated from a reviewed plan.
 ```
