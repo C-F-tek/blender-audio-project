@@ -683,6 +683,85 @@ python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
 
 If the code patch-plan builder does not have suitable input yet, do not fake a plan. Use the full run/replay/sync/line-count evidence bundle as the result and make the next recommended step explicit.
 
+
+<!-- shared-toolbox-ai-to-ai-bundle-builder -->
+
+### 10.a Preferred shared toolbox AI-to-AI bundle builder
+
+When `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` is available, use it for the shared toolbox AI-to-AI final summary and compact bundle instead of manually composing the final summary in PowerShell.
+
+The builder is report-only and must remain inside these guardrails:
+
+```text
+no provider execution by the builder
+no patch application
+no Blender runtime
+no SQLite or persistent memory write
+no git commit or push
+no output/** commit
+```
+
+Recommended command:
+
+```powershell
+python -m Tools.ai.build_shared_toolbox_ai_to_ai_bundle `
+  --repo-root . `
+  --stamp $Stamp `
+  --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
+  --validate-bundle
+```
+
+Default recursive discovery is enabled for stamped `.json` and `.md` evidence under bounded safe roots:
+
+```text
+output/validation
+output/analysis
+output/ai_pipeline
+docs/LOCAL_AI_TASKS
+```
+
+Large `.json` and `.md` files above 200 physical lines are not dumped as unbounded raw content. The final summary records a `chunked_file_index` with pointer-style links:
+
+```text
+path#L1-L200 -> path#L201-L400 -> ... -> END
+```
+
+Use these controls when needed:
+
+```powershell
+--no-recursive-defaults
+--recursive-report-root <path>
+--recursive-artifact-root <path>
+--recursive-include-unstamped
+--recursive-max-files 120
+--chunk-large-files-lines 200
+```
+
+Use `--recursive-include-unstamped` only with narrow roots. The shared evidence-bundle deny policy still blocks raw heavy artifacts such as checkpoints, context packs, `full_analysis`, SQLite/database files and render paths.
+
+Use the manual PowerShell summary block only as a temporary fallback when the builder is unavailable or broken. The expected builder outputs are:
+
+```text
+output/analysis/shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+output/analysis/shared_toolbox_ai_to_ai_final_summary_<STAMP>.md
+docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.md
+output/validation/shared_toolbox_ai_to_ai_bundle_<STAMP>_validation.json
+```
+
+Validate after builder changes with:
+
+```powershell
+python -m py_compile `
+  .\Tools\ai\build_shared_toolbox_ai_to_ai_bundle.py `
+  .\Tools\validation\run_shared_toolbox_ai_to_ai_bundle_smoke.py
+
+python .\Tools\validation\run_shared_toolbox_ai_to_ai_bundle_smoke.py `
+  --repo-root . `
+  --output .\output\validation\shared_toolbox_ai_to_ai_bundle_smoke.json `
+  --markdown-output .\output\validation\shared_toolbox_ai_to_ai_bundle_smoke.md
+```
+
 ## 10. Build compact evidence bundle, validate, commit safely
 
 Collect reports:
