@@ -48,3 +48,80 @@ def warning_result_messages(results: Iterable[dict[str, Any]], *, label_key: str
         else:
             warnings.append(f"{label}: {raw}")
     return warnings
+
+def read_json_report(path: Path, *, default: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Read a JSON report object, returning a safe default on missing/invalid input."""
+    if default is None:
+        default = {}
+    if not path.exists():
+        return dict(default)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return dict(default)
+    return data if isinstance(data, dict) else dict(default)
+
+
+def write_text_report(text: str, output: Path) -> str:
+    """Write UTF-8 text report content and return the written text."""
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(text, encoding="utf-8")
+    return text
+
+
+def split_csv_values(value: Any) -> list[str]:
+    """Split repeatable/comma-separated CLI-style values into a compact list."""
+    if value is None:
+        return []
+    items = value if isinstance(value, list) else [value]
+    out: list[str] = []
+    for item in items:
+        for part in str(item).split(","):
+            normalized = part.strip().strip("'\"")
+            if normalized and normalized not in out:
+                out.append(normalized)
+    return out
+
+
+def load_line_count_csv_rows(csv_path: Path) -> list[dict[str, str]]:
+    """Load File/Lines rows from a Python line-count CSV report."""
+    import csv
+
+    if not csv_path.exists():
+        return []
+    with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
+        rows = [dict(row) for row in csv.DictReader(handle)]
+    return sorted(rows, key=lambda item: int(item.get("Lines") or 0), reverse=True)
+
+
+def render_full_python_line_count_markdown(*, stamp: str, csv_path: Path, rows: list[dict[str, str]]) -> str:
+    """Render an untruncated Markdown inventory from line-count CSV rows."""
+    total_lines = sum(int(row.get("Lines") or 0) for row in rows)
+    lines: list[str] = [
+        "# Full Python Line Count Inventory",
+        "",
+        f"- Stamp: {stamp}",
+        f"- CSV: {csv_path}",
+        f"- File count: {len(rows)}",
+        f"- Total Python lines: {total_lines}",
+        "- Visibility rule: all counted Python files are listed below; do not truncate to top 10/top 20.",
+        "",
+        "| Lines | File |",
+        "|---:|---|",
+    ]
+    for row in rows:
+        lines.append(f"| {row.get('Lines') or 0} | `{row.get('File') or ''}` |")
+    return "\n".join(lines) + "\n"
+
+
+def write_full_python_line_count_markdown(*, stamp: str, csv_path: Path, output: Path) -> dict[str, Any]:
+    """Build and write full line-count Markdown from a line-count CSV."""
+    rows = load_line_count_csv_rows(csv_path)
+    markdown = render_full_python_line_count_markdown(stamp=stamp, csv_path=csv_path, rows=rows)
+    write_text_report(markdown, output)
+    return {
+        "csv_path": str(csv_path),
+        "markdown_path": str(output),
+        "file_count": len(rows),
+        "total_lines": sum(int(row.get("Lines") or 0) for row in rows),
+    }
