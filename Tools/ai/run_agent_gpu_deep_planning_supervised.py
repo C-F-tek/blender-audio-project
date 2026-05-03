@@ -12,6 +12,16 @@ This supervised runner is the long-running IA-Carmine planning mode:
 """
 from __future__ import annotations
 
+try:
+    from Tools.ai.schema_repair_context import build_schema_repair_context_stack
+except ImportError:
+    import sys as _schema_repair_sys
+
+    _schema_repair_repo_root = Path(__file__).resolve().parents[2]
+    if str(_schema_repair_repo_root) not in _schema_repair_sys.path:
+        _schema_repair_sys.path.insert(0, str(_schema_repair_repo_root))
+    from Tools.ai.schema_repair_context import build_schema_repair_context_stack  # type: ignore
+
 import argparse
 import json
 import os
@@ -707,6 +717,12 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 break
             if time.perf_counter() >= deadline and rounds:
                 break
+            context_reports = build_schema_repair_context_stack(
+                base_context_reports=context_reports,
+                rounds=rounds,
+                evidence_ready_for_manual_patch_count=evidence_ready_count,
+                provider="gpu_ollama",
+            )
             prompt = build_prompt(
                 objective=args.objective,
                 evidence=evidence,
