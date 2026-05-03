@@ -265,6 +265,7 @@ Invoke-RepoPython -Label "Repository consistency map" -ArgsList @(
 Invoke-RepoPython -Label "Repository consistency map smoke" -ArgsList @(
     ".\Tools\validation\run_repository_consistency_map_smoke.py",
     "--repo-root", ".",
+    "--map-report", $RepositoryConsistencyJson,
     "--output", $RepositoryConsistencySmokeJson,
     "--markdown-output", $RepositoryConsistencySmokeMd,
     "--workers", "$RepositoryConsistencyMapWorkers"
