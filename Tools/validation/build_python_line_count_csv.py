@@ -28,6 +28,7 @@ from Tools.ai.code_patch_plan_common import (  # noqa: E402
     repo_rel,
     write_json_and_markdown,
 )
+from Tools.validation.report_utils import count_file_lines, split_csv_values  # noqa: E402
 
 
 REPORT_KIND = "python_line_count_csv"
@@ -58,11 +59,6 @@ def timestamp_from_iso(value: str) -> str:
     return value.replace("-", "").replace(":", "").replace("T", "-")
 
 
-def split_csv_values(values: list[str]) -> set[str]:
-    """Expand repeated comma-separated CLI values into a set."""
-    return {item.strip() for value in values for item in value.split(",") if item.strip()}
-
-
 def excluded_by_dir(path: Path, repo_root: Path, excluded_dirs: set[str]) -> bool:
     """Return true when any path component belongs to an excluded directory."""
     try:
@@ -84,12 +80,8 @@ def iter_included_python_files(repo_root: Path, excluded_dirs: set[str], exclude
 
 
 def count_lines(path: Path) -> tuple[int, str | None]:
-    """Count physical lines in a UTF-8-compatible way."""
-    try:
-        with path.open("r", encoding="utf-8-sig", errors="replace") as handle:
-            return sum(1 for _ in handle), None
-    except OSError as exc:
-        return 0, f"{type(exc).__name__}: {exc}"
+    """Count physical lines using the shared validation report helper."""
+    return count_file_lines(path)
 
 
 def collect_python_counts(repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]) -> tuple[list[dict[str, Any]], list[str]]:

@@ -12,9 +12,18 @@ import argparse
 import hashlib
 import json
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+try:
+    from Tools.validation.report_utils import physical_line_count
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.validation.report_utils import physical_line_count
 
 DEFAULT_OUTPUT_DIR = "output/ai_context_packs"
 DEFAULT_EVIDENCE_DIR = "docs/LOCAL_VALIDATION_EVIDENCE"
@@ -215,7 +224,7 @@ def sha256_text(text: str) -> str:
 
 def line_count(text: str) -> int:
     """Return a physical line count matching existing context-pack semantics."""
-    return text.count("\n") + (1 if text and not text.endswith("\n") else 0)
+    return physical_line_count(text)
 
 
 def context_unavailable_reason(entry: dict[str, Any]) -> str:

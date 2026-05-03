@@ -4,8 +4,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+try:
+    from Tools.validation.report_utils import count_file_lines
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.validation.report_utils import count_file_lines
 
 
 SKIP_DIRS = {"shared", "__pycache__"}
@@ -13,10 +22,8 @@ SKIP_NAME_PARTS = ("_backup", "_backgood", "_bak")
 
 
 def count_lines(path: Path) -> int:
-    try:
-        return len(path.read_text(encoding="utf-8", errors="replace").splitlines())
-    except OSError:
-        return 0
+    lines, _error = count_file_lines(path, encoding="utf-8")
+    return lines
 
 
 def inspect_package(path: Path, scripting_root: Path) -> dict[str, Any]:

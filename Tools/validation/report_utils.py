@@ -83,6 +83,69 @@ def split_csv_values(value: Any) -> list[str]:
     return out
 
 
+def physical_line_count(text: str) -> int:
+    """Return physical line count for text using repository report semantics."""
+    if not text:
+        return 0
+    return text.count("\n") + (0 if text.endswith("\n") else 1)
+
+
+def count_file_lines(path: Path, *, encoding: str = "utf-8-sig") -> tuple[int, str | None]:
+    """Count physical lines in a text file without raising on read errors."""
+    try:
+        text = path.read_text(encoding=encoding, errors="replace")
+    except OSError as exc:
+        return 0, f"{type(exc).__name__}: {exc}"
+    return physical_line_count(text), None
+
+
+def _normalize_line_count_path(value: Any) -> str:
+    """Normalize a path value found in line-count CSV/JSON evidence."""
+    return str(value or "").strip().replace("\\", "/").lstrip("./")
+
+
+def parse_line_count_csv_row(row: dict[str, Any]) -> tuple[str, int] | None:
+    """Parse one File/Lines or Path/lines CSV row into a normalized tuple."""
+    path = _normalize_line_count_path(row.get("Path") or row.get("File"))
+    raw_lines = row.get("Lines") or row.get("lines")
+    if not path or raw_lines is None:
+        return None
+    try:
+        return path, int(str(raw_lines).strip())
+    except ValueError:
+        return None
+
+
+def load_line_count_csv_map(csv_path: Path) -> tuple[dict[str, int], list[str]]:
+    """Load line-count CSV evidence into a normalized path -> lines map."""
+    import csv
+
+    counts: dict[str, int] = {}
+    warnings: list[str] = []
+    if not csv_path.exists():
+        return counts, [f"line-count CSV missing: {csv_path}"]
+    try:
+        with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
+            for row in csv.DictReader(handle):
+                parsed = parse_line_count_csv_row(dict(row))
+                if parsed is None:
+                    continue
+                path, lines = parsed
+                counts[path] = lines
+    except OSError as exc:
+        warnings.append(f"unable to read line-count CSV: {type(exc).__name__}: {exc}")
+    return counts, warnings
+
+
+def line_count_for_path(path_value: str, counts: dict[str, int]) -> int | None:
+    """Return a line-count hint, allowing suffix matching for absolute CSV paths."""
+    normalized = _normalize_line_count_path(path_value)
+    if normalized in counts:
+        return counts[normalized]
+    matches = [lines for path, lines in counts.items() if _normalize_line_count_path(path).endswith(normalized)]
+    return matches[0] if len(matches) == 1 else None
+
+
 def load_line_count_csv_rows(csv_path: Path) -> list[dict[str, str]]:
     """Load File/Lines rows from a Python line-count CSV report."""
     import csv

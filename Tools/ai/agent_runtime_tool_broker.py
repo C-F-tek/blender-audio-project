@@ -27,12 +27,12 @@ from pathlib import Path
 from typing import Any, Callable
 
 try:
-    from Tools.validation.report_utils import write_json_report
+    from Tools.validation.report_utils import split_csv_values, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation.report_utils import write_json_report
+    from Tools.validation.report_utils import split_csv_values, write_json_report
 
 
 DEFAULT_OUTPUT = "output/validation/agent_runtime_tool_broker.json"
@@ -722,4 +722,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
