@@ -299,6 +299,27 @@ The capability manifest must describe:
 Semantic chunk handoff must include the capability manifest as a source file.
 
 
+### Regenerate repo help, context and evidence after corpus purge
+
+When generated context corpus is deleted or default-excluded, run this phase before any new full-toolbox/provider decision run.
+
+Required order:
+
+```text
+1. Delete/purge generated corpus.
+2. Rebuild indexAI with Tools/npu/build_project_ai_index.py --force.
+3. Remove stale project_awareness snapshots that point to deleted corpus.
+4. Rebuild tool inventory and memory inventory.
+5. Rebuild repository consistency map and smoke.
+6. Run Python syntax validation.
+7. Regenerate runtime tool capability manifest.
+8. Regenerate semantic cloud handoff chunks.
+9. Verify no stale references remain outside generator/policy docs.
+```
+
+Do not commit `output/**`. Commit only regenerated source/index files and explicit evidence under `docs/LOCAL_VALIDATION_EVIDENCE`.
+
+
 ## Global guardrails
 
 Never do without explicit user command:
@@ -340,7 +361,7 @@ patch application only through explicit --apply or explicit source-edit instruct
 
 # Procedure variants
 
-## Variant A — Expanded/manual 0 -> 10 full toolbox run
+## Variant A â€” Expanded/manual 0 -> 10 full toolbox run
 
 This is the full manual 0 -> 10 flow. It is the expanded version of the procedure Carmine used before the integrated wrapper existed.
 
@@ -748,7 +769,7 @@ Get-Content ".\output\validation\full_toolbox_agent_review_decision_loop_${Stamp
 
 ---
 
-## Variant B — Integrated no-provider semi-automatic flow
+## Variant B â€” Integrated no-provider semi-automatic flow
 
 Use this when existing orchestrator/GPU artifacts are valid enough and the goal is to test the deterministic decision and patch-plan path quickly.
 
@@ -786,7 +807,7 @@ patch_plan_count >= 1
 fatal_report_failure_count=0
 ```
 
-## Variant C — Integrated provider semi-automatic flow
+## Variant C â€” Integrated provider semi-automatic flow
 
 Use when a fresh full GPU/NPU run is needed.
 
@@ -822,7 +843,7 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
   -NpuFinalWaitSeconds 120
 ```
 
-## Variant D — Patch bundle builder from a real patch plan
+## Variant D â€” Patch bundle builder from a real patch plan
 
 Use after a successful decision loop has produced:
 
@@ -919,7 +940,7 @@ git commit -m "docs(ai): apply review patch bundle notes"
 git push
 ```
 
-## Variant E — Evidence-only commit
+## Variant E â€” Evidence-only commit
 
 After a full toolbox run, commit only compact Git-trackable evidence when useful:
 
@@ -1002,3 +1023,28 @@ SQLite/persistent memory write is true without explicit memory PR
 provider execution happened in a no-provider path
 output/** appears in staged files
 ```
+
+### Blender manual corpus default exclusion
+
+The Blender manual generated corpus is not part of the default IA-Carmine full-toolbox/provider context.
+
+Deleted/default-excluded corpus:
+
+```text
+Tools/npu/npu_blender_manual_chunks/**
+Tools/npu/npu_blender_manual_index.md
+Tools/npu/npu_blender_manual_manifest.json
+
+Rationale:
+
+Full-toolbox/provider runs must prioritize Tools/ai, Tools/validation, Tools/workflow,
+runtime tool telemetry, repository consistency evidence, recommendations, patch plans,
+memory inventory and tool capability manifests.
+
+Blender manual chunks are large reference material and can dominate prompt/context
+selection, reducing provider/toolbox signal quality.
+
+Allowed use:
+
+Regenerate/include Blender manual chunks only for Blender/API/manual-focused runs.
+Do not include them in IA-Carmine provider/toolbox cloud handoff by default.

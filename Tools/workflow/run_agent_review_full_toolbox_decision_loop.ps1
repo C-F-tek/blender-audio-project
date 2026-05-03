@@ -146,6 +146,8 @@ $TelemetrySummaryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telem
 $TelemetrySummaryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.md"
 $RuntimeToolTelemetryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.json"
 $RuntimeToolTelemetryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.md"
+$RuntimeToolCapabilityJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_capability_manifest_$Stamp.json"
+$RuntimeToolCapabilityMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_capability_manifest_$Stamp.md"
 $EvidenceChunkBase = "full_toolbox_${Stamp}_cloud_semantic"
 $EvidenceChunkDir = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunks"
 $EvidenceChunkManifestJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunk_manifest.json"
@@ -233,6 +235,7 @@ Invoke-RepoPython -Label "Contract script compile" -ArgsList @(
     ".\Tools\ai\build_agent_review_patch_plan.py",
     ".\Tools\ai\build_full_toolbox_run_telemetry_summary.py",
     ".\Tools\ai\build_runtime_tool_usage_telemetry.py",
+    ".\Tools\ai\build_runtime_tool_capability_manifest.py",
     ".\Tools\ai\build_semantic_evidence_chunks.py",
     ".\Tools\ai\run_agent_review_decision_loop.py",
     ".\Tools\ai\build_repository_consistency_map.py",
@@ -588,13 +591,23 @@ Invoke-RepoPython -Label "Runtime tool usage telemetry" -ArgsList @(
     "--markdown-output", $RuntimeToolTelemetryMd
 )
 
+Invoke-RepoPython -Label "Runtime tool capability manifest" -ArgsList @(
+    ".\Tools\ai\build_runtime_tool_capability_manifest.py",
+    "--repo-root", ".",
+    "--tool-usage", $RuntimeToolTelemetryJson,
+    "--output", $RuntimeToolCapabilityJson,
+    "--markdown-output", $RuntimeToolCapabilityMd
+)
+
 $SemanticChunkSources = @(
     $BundleJson,
     $BundleMd,
     $TelemetrySummaryJson,
     $TelemetrySummaryMd,
     $RuntimeToolTelemetryJson,
-    $RuntimeToolTelemetryMd
+    $RuntimeToolTelemetryMd,
+    $RuntimeToolCapabilityJson,
+    $RuntimeToolCapabilityMd
 ) | Where-Object { Test-Path $_ }
 $SemanticChunkArgs = @(
     ".\Tools\ai\build_semantic_evidence_chunks.py",
@@ -624,7 +637,7 @@ foreach ($Path in @(
     $CodeInterpreterMd, $GpuContractSmokeMd, $DeterministicSmokeMd, $DecisionLoopSmokeMd,
     $NpuEnvMd, $OrchMd, $GpuMd, $GpuReplayMd, $GpuNpuSyncMd, $RecommendationsMd,
     $DecisionLoopMd, $PatchPlanMd, $TelemetrySummaryJson, $TelemetrySummaryMd, $RuntimeToolTelemetryJson, $RuntimeToolTelemetryMd,
-    $EvidenceChunkManifestJson, $EvidenceChunkManifestMd, $BundleJson, $BundleMd
+    $RuntimeToolCapabilityJson, $RuntimeToolCapabilityMd, $EvidenceChunkManifestJson, $EvidenceChunkManifestMd, $BundleJson, $BundleMd
 )) {
     Add-ExistingPath -List $Artifacts -Path $Path
 }
@@ -664,6 +677,8 @@ $EvidenceToCommit = @(
     $TelemetrySummaryMd,
     $RuntimeToolTelemetryJson,
     $RuntimeToolTelemetryMd,
+    $RuntimeToolCapabilityJson,
+    $RuntimeToolCapabilityMd,
     $EvidenceChunkManifestJson,
     $EvidenceChunkManifestMd
 ) | Where-Object { Test-Path $_ }
