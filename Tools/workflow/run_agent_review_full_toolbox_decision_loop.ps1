@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$RepoRoot = ".",
     [string]$Stamp = "",
     [string]$OutputRoot = "output",
@@ -148,7 +148,6 @@ if (-not $SkipMemoryReload) {
         Stamp = $Stamp
         Profile = "full_refactor"
         Objective = "Reload IA-Carmine full toolbox context before agent review full toolbox decision-loop run."
-        WriteCompactBundle = $true
     }
 } else {
     [void]$Warnings.Add("memory/tool regeneration skipped by request")
