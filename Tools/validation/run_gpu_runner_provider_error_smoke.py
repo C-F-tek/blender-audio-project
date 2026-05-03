@@ -51,6 +51,8 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "provider_error_initialized": "provider_error = \"\"",
         "empty_raw_response_repair_guard": "empty_or_missing_raw_response",
         "provider_error_report_field": "\"provider_error\": provider_error",
+        "provider_error_count_report_field": "\"provider_error_count\": provider_error_count",
+        "raw_response_assignment_after_generate": "raw_response = response",
     }
     marker_results: dict[str, bool] = {}
     for key, marker in required_markers.items():

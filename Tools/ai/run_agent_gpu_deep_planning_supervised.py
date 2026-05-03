@@ -552,7 +552,7 @@ def build_report(
     deterministic_runtime_tool_fallback_failed_count = sum(int(item.get("failed_tool_count") or 0) for item in deterministic_runtime_brokers)
     deterministic_runtime_tool_fallback_blocked_count = sum(int(item.get("blocked_tool_count") or 0) for item in deterministic_runtime_brokers)
     provider_empty_response_count = sum(1 for round_item in rounds if round_item.get("provider_empty_response"))
-    "provider_error": provider_error,
+    provider_error_count = sum(1 for round_item in rounds if round_item.get("provider_error"))
     schema_repair_retry_attempt_count = sum(1 for round_item in rounds if round_item.get("schema_repair_retry", {}).get("attempted"))
     schema_repair_retry_accept_count = sum(1 for round_item in rounds if round_item.get("schema_repair_retry", {}).get("accepted"))
     runtime_tool_feedback_context_report_count = sum(1 for item in context_reports if isinstance(item, dict) and item.get("kind") == "runtime_tool_feedback_context")
@@ -614,6 +614,7 @@ def build_report(
         "deterministic_runtime_tool_fallback_failed_count": deterministic_runtime_tool_fallback_failed_count,
         "deterministic_runtime_tool_fallback_blocked_count": deterministic_runtime_tool_fallback_blocked_count,
         "provider_empty_response_count": provider_empty_response_count,
+        "provider_error_count": provider_error_count,
         "schema_repair_retry_attempt_count": schema_repair_retry_attempt_count,
         "schema_repair_retry_accept_count": schema_repair_retry_accept_count,
         "recommendation_count": len(recommendations),
@@ -741,6 +742,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 data = read_json(path)
                 context_reports.append({"path": repo_rel(path, repo_root), "kind": data.get("kind"), "passed": data.get("passed"), "summary": data.get("summary", {}), "decision": data.get("decision", {})})
             except Exception as exc:  # noqa: BLE001
+                provider_error = f"{type(exc).__name__}: {exc}"
                 context_reports.append({"path": repo_rel(path, repo_root), "error": str(exc)})
         else:
             context_reports.append({"path": repo_rel(path, repo_root), "error": "missing"})
@@ -860,6 +862,8 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                     temperature=args.temperature,
                     response_format="json",
                 )
+                raw_response = response
+                model_used_for_round = model_used
                 if not str(response or "").strip():
                     parsed = {
                         "summary": "provider returned an empty response",
@@ -875,6 +879,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                         "repair_attempt_count": 0,
                         "model_output_missing_required_fields": False,
                         "provider_empty_response": True,
+                        "provider_error": provider_error,
                     }
                     errors.append(f"round {index}: provider_empty_response")
                 else:
@@ -899,6 +904,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             except Exception as exc:  # noqa: BLE001
                 provider_error = f"{type(exc).__name__}: {exc}"
                 response = ""
+                raw_response = response
                 parsed = {"summary": "provider error", "confidence": "low", "recommendations": [], "missing_evidence": [str(exc)], "next_best_action": "inspect provider error"}
                 parse_diagnostics = {
                     "json_ok": False,
