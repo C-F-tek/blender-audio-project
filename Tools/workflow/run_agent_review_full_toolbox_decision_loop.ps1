@@ -144,6 +144,8 @@ $WorkflowJson = ".\output\validation\agent_review_full_toolbox_decision_loop_${S
 $WorkflowMd = ".\output\validation\agent_review_full_toolbox_decision_loop_${Stamp}_workflow.md"
 $TelemetrySummaryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.json"
 $TelemetrySummaryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.md"
+$RuntimeToolTelemetryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.json"
+$RuntimeToolTelemetryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.md"
 
 Write-Host "=== Agent Review Full Toolbox Decision Loop ==="
 Write-Host "Repo: $RepoRootPath"
@@ -225,6 +227,7 @@ Invoke-RepoPython -Label "Contract script compile" -ArgsList @(
     ".\Tools\ai\build_deterministic_recommendations.py",
     ".\Tools\ai\build_agent_review_patch_plan.py",
     ".\Tools\ai\build_full_toolbox_run_telemetry_summary.py",
+    ".\Tools\ai\build_runtime_tool_usage_telemetry.py",
     ".\Tools\ai\run_agent_review_decision_loop.py",
     ".\Tools\ai\build_repository_consistency_map.py",
     ".\Tools\validation\run_repository_consistency_map_smoke.py",
@@ -567,6 +570,18 @@ if ($BundleValidationForTelemetry -and $BundleValidationForTelemetry.passed -eq 
 }
 Invoke-RepoPython -Label "Full toolbox run telemetry summary" -ArgsList $TelemetryArgs
 
+Invoke-RepoPython -Label "Runtime tool usage telemetry" -ArgsList @(
+    ".\Tools\ai\build_runtime_tool_usage_telemetry.py",
+    "--repo-root", ".",
+    "--stamp", $Stamp,
+    "--orchestrator", $OrchOut,
+    "--gpu-report", $GpuOut,
+    "--gpu-npu-sync", $GpuNpuSyncJson,
+    "--decision-loop", $DecisionLoopJson,
+    "--output", $RuntimeToolTelemetryJson,
+    "--markdown-output", $RuntimeToolTelemetryMd
+)
+
 foreach ($Path in @(
     $MemoryWorkflow, $RepositoryConsistencyJson, $RepositoryConsistencySmokeJson, $LineCountJson, $PythonSyntaxJson, $CodeInterpreterJson, $GpuContractSmokeJson,
     $DeterministicSmokeJson, $DecisionLoopSmokeJson, $NpuEnvJson, $OrchOut, $GpuOut, $GpuReplayJson,
@@ -579,7 +594,7 @@ foreach ($Path in @(
     $MemoryBundleJson, $MemoryBundleMd, $MemoryLineCountCsv, $RepositoryConsistencyMd, $RepositoryConsistencySmokeMd, $LineCountAllMd, $LineCountCsv,
     $CodeInterpreterMd, $GpuContractSmokeMd, $DeterministicSmokeMd, $DecisionLoopSmokeMd,
     $NpuEnvMd, $OrchMd, $GpuMd, $GpuReplayMd, $GpuNpuSyncMd, $RecommendationsMd,
-    $DecisionLoopMd, $PatchPlanMd, $TelemetrySummaryJson, $TelemetrySummaryMd, $BundleJson, $BundleMd
+    $DecisionLoopMd, $PatchPlanMd, $TelemetrySummaryJson, $TelemetrySummaryMd, $RuntimeToolTelemetryJson, $RuntimeToolTelemetryMd, $BundleJson, $BundleMd
 )) {
     Add-ExistingPath -List $Artifacts -Path $Path
 }
@@ -644,7 +659,9 @@ $WorkflowReport = [ordered]@{
         ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.json",
         ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.md",
         $TelemetrySummaryJson,
-        $TelemetrySummaryMd
+        $TelemetrySummaryMd,
+        $RuntimeToolTelemetryJson,
+        $RuntimeToolTelemetryMd
     ) | Where-Object { Test-Path $_ }
     guardrails = [ordered]@{
         provider_execution_requires_explicit_flag = $true
