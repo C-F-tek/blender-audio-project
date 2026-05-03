@@ -7,18 +7,18 @@ patch plans are substantive, evidence-backed and not cosmetic-only.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 try:
+    from Tools.ai.code_patch_plan_common import normalize_repo_path, now_iso, read_json_object, repo_rel
     from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.code_patch_plan_common import normalize_repo_path, now_iso, read_json_object, repo_rel  # type: ignore
     from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
 
 DEFAULT_OUTPUT = "output/validation/substantive_planning_smoke.json"
@@ -51,31 +51,8 @@ FORBIDDEN_TARGET_PREFIXES = (
 )
 
 
-def now_iso() -> str:
-    return datetime.now().isoformat(timespec="seconds")
-
-
-def repo_rel(path: Path, repo_root: Path) -> str:
-    try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
-    except ValueError:
-        return path.resolve(strict=False).as_posix()
-
-
 def read_json(path: Path) -> tuple[dict[str, Any], list[str]]:
-    if not path.exists():
-        return {}, [f"missing file: {path}"]
-    try:
-        data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except Exception as exc:  # noqa: BLE001
-        return {}, [f"{type(exc).__name__}: {exc}"]
-    if not isinstance(data, dict):
-        return {}, ["JSON root is not an object"]
-    return data, []
-
-
-def normalize_path(value: Any) -> str:
-    return str(value or "").strip().replace("\\", "/").strip("/")
+    return read_json_object(path, missing_is_error=True)
 
 
 def text_blob(item: dict[str, Any]) -> str:
@@ -94,7 +71,7 @@ def target_errors(target_files: Any) -> list[str]:
     if not isinstance(target_files, list) or not target_files:
         return ["target_files is empty or not a list"]
     for raw in target_files:
-        path = normalize_path(raw)
+        path = normalize_repo_path(raw)
         if not path:
             errors.append("empty target path")
             continue
@@ -279,8 +256,8 @@ def main() -> int:
         "persistent_memory_write_performed": False,
         "manual_review_required": True,
         "inputs": {
-            "recommendations": repo_rel(rec_path, repo_root),
-            "patch_plan": repo_rel(patch_path, repo_root) if patch_path else "",
+            "recommendations": repo_rel(repo_root, rec_path),
+            "patch_plan": repo_rel(repo_root, patch_path) if patch_path else "",
         },
         "recommendation_results": rec_results,
         "patch_plan_results": patch_results,
