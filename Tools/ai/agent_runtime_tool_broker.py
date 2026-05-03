@@ -27,12 +27,12 @@ from pathlib import Path
 from typing import Any, Callable
 
 try:
-    from Tools.validation.report_utils import split_csv_values, write_json_report
+    from Tools.validation.report_utils import read_json_report, split_csv_values, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation.report_utils import split_csv_values, write_json_report
+    from Tools.validation.report_utils import read_json_report, split_csv_values, write_json_report
 
 
 DEFAULT_OUTPUT = "output/validation/agent_runtime_tool_broker.json"
@@ -91,15 +91,6 @@ def split_values(value: Any) -> list[str]:
                 out.append(normalized)
     return out
 
-
-def read_json_if_exists(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except Exception:
-        return {}
-    return data if isinstance(data, dict) else {}
 
 
 def compact_value(value: Any, *, max_chars: int = 2500) -> Any:
@@ -524,7 +515,7 @@ def execute_tool_request(
 
     json_report = outputs.get("json_report")
     if json_report:
-        report_data = read_json_if_exists(resolve_path(repo_root, json_report))
+        report_data = read_json_report(resolve_path(repo_root, json_report))
         if report_data:
             base_result["summary"] = {
                 "kind": report_data.get("kind"),
@@ -553,7 +544,7 @@ def execute_tool_request(
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     request_path = resolve_path(repo_root, args.request_file)
-    requests_data = read_json_if_exists(request_path)
+    requests_data = read_json_report(request_path)
     tool_requests = extract_tool_requests(requests_data)
     stamp = args.stamp or datetime.now().strftime("%Y%m%d-%H%M%S")
     out_dir = resolve_path(repo_root, args.tool_output_dir or f"output/ai_runtime_tools/{stamp}")

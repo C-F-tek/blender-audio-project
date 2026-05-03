@@ -11,10 +11,22 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+
+try:
+    from Tools.ai.code_patch_plan_common import read_json_object
+    from Tools.validation.report_utils import write_json_report, write_text_report
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.code_patch_plan_common import read_json_object
+    from Tools.validation.report_utils import write_json_report, write_text_report
 
 DEFAULT_REVIEW = "output/ai_pipeline/megalithic_repo_review.json"
 DEFAULT_PROPOSALS = "output/ai_pipeline/megalithic_repo_review_proposals.json"
@@ -26,13 +38,17 @@ def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
-def read_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8-sig"))
-
 
 def slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
     return slug[:72] or "megalithic-review-followup"
+
+
+def load_json_object(path: Path) -> dict[str, Any]:
+    data, errors = read_json_object(path)
+    if errors:
+        raise ValueError(f"{path}: {'; '.join(errors)}")
+    return data
 
 
 def review_summary(review: dict[str, Any]) -> dict[str, Any]:
@@ -219,16 +235,14 @@ def main() -> int:
     parser.add_argument("--title-prefix", default="review")
     args = parser.parse_args()
 
-    review = read_json(Path(args.review))
-    proposals = read_json(Path(args.proposals))
+    review = load_json_object(Path(args.review))
+    proposals = load_json_object(Path(args.proposals))
     draft = build_pr_draft(review, proposals, base_branch=args.base_branch, title_prefix=args.title_prefix)
 
     output = Path(args.output)
     markdown_output = Path(args.markdown_output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(draft, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    markdown_output.write_text(render_markdown(draft), encoding="utf-8")
+    write_json_report(draft, output)
+    write_text_report(render_markdown(draft), markdown_output)
 
     print(json.dumps({
         "passed": draft["passed"],

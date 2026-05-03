@@ -164,10 +164,6 @@ def read_text(path: Path) -> tuple[str, str | None]:
         return "", f"{type(exc).__name__}: {exc}"
 
 
-def read_json(path: Path) -> dict[str, Any]:
-    """Read a JSON report object through the shared validation helper."""
-    return read_json_report(path)
-
 
 def iter_python_files(repo_root: Path, roots: list[str]) -> list[Path]:
     files: list[Path] = []
@@ -326,7 +322,7 @@ def collect_report_status(repo_root: Path, report_paths: list[str]) -> tuple[lis
     warnings: list[str] = []
     for raw in report_paths:
         path = resolve_path(repo_root, raw)
-        data = read_json(path)
+        data = read_json_report(path)
         item = {
             "path": repo_rel(path, repo_root),
             "exists": path.exists(),
@@ -403,7 +399,7 @@ def merge_existing_audit_candidates(repo_root: Path, paths: list[str]) -> list[d
     for raw in paths:
         path = resolve_path(repo_root, raw)
         source = repo_rel(path, repo_root)
-        data = read_json(path)
+        data = read_json_report(path)
         if not data:
             continue
         index = 0
@@ -424,7 +420,7 @@ def summarize_existing_audit_reports(repo_root: Path, paths: list[str]) -> dict[
     for raw in paths:
         path = resolve_path(repo_root, raw)
         rel = repo_rel(path, repo_root)
-        data = read_json(path)
+        data = read_json_report(path)
         summary = {
             "path": rel,
             "exists": path.exists(),

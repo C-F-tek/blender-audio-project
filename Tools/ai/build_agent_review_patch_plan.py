@@ -13,9 +13,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+
+try:
+    from Tools.ai.code_patch_plan_common import read_json_object
+    from Tools.validation.report_utils import write_json_report, write_text_report
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.code_patch_plan_common import read_json_object
+    from Tools.validation.report_utils import write_json_report, write_text_report
 
 DEFAULT_ORCHESTRATOR = "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"
 DEFAULT_EVIDENCE = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
@@ -64,16 +76,13 @@ def repo_rel(path: Path, repo_root: Path) -> str:
         return str(path)
 
 
-def read_json(path: Path) -> dict[str, Any]:
-    data = json.loads(path.read_text(encoding="utf-8-sig"))
-    if not isinstance(data, dict):
-        raise ValueError(f"{path} must contain a JSON object")
+def load_json_object(path: Path) -> dict[str, Any]:
+    data, errors = read_json_object(path)
+    if errors:
+        raise ValueError(f"{path}: {'; '.join(errors)}")
     return data
 
 
-def write_json(path: Path, data: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def normalize_repo_path(value: Any) -> str:
@@ -141,7 +150,7 @@ def load_gpu_report(repo_root: Path, orchestrator: dict[str, Any], warnings: lis
         warnings.append(f"GPU report referenced by orchestrator is missing: {repo_rel(path, repo_root)}")
         return {}
     try:
-        return read_json(path)
+        return load_json_object(path)
     except Exception as exc:  # noqa: BLE001 - report-only diagnostic.
         warnings.append(f"Unable to read GPU report {repo_rel(path, repo_root)}: {type(exc).__name__}: {exc}")
         return {}
@@ -444,7 +453,7 @@ def build_patch_plan(args: argparse.Namespace) -> dict[str, Any]:
 
     if orchestrator_path.exists():
         try:
-            orchestrator = read_json(orchestrator_path)
+            orchestrator = load_json_object(orchestrator_path)
         except Exception as exc:  # noqa: BLE001
             warnings.append(f"Unable to read orchestrator report: {type(exc).__name__}: {exc}")
     else:
@@ -452,7 +461,7 @@ def build_patch_plan(args: argparse.Namespace) -> dict[str, Any]:
 
     if evidence_path.exists():
         try:
-            evidence = read_json(evidence_path)
+            evidence = load_json_object(evidence_path)
         except Exception as exc:  # noqa: BLE001
             errors.append(f"Unable to read evidence report: {type(exc).__name__}: {exc}")
     else:
@@ -536,9 +545,8 @@ def main() -> int:
     report = build_patch_plan(args)
     output = resolve_path(repo_root, args.output)
     markdown_output = resolve_path(repo_root, args.markdown_output)
-    write_json(output, report)
-    markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    markdown_output.write_text(render_markdown(report), encoding="utf-8")
+    write_json_report(report, output)
+    write_text_report(render_markdown(report), markdown_output)
     print(
         json.dumps(
             {
