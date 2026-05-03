@@ -21,7 +21,8 @@ param(
     [int]$NpuMaxNewTokens = 384,
     [int]$NpuFinalWaitSeconds = 180,
     [int]$MinRecommendations = 1,
-    [int]$MinPatchPlans = 1
+    [int]$MinPatchPlans = 1,
+    [int]$RepositoryConsistencyMapWorkers = 8
 )
 
 $ErrorActionPreference = "Stop"
@@ -144,6 +145,7 @@ Write-Host "=== Agent Review Full Toolbox Decision Loop ==="
 Write-Host "Repo: $RepoRootPath"
 Write-Host "Stamp: $Stamp"
 Write-Host "RunGpuNpuProvider: $RunGpuNpuProvider"
+Write-Host "RepositoryConsistencyMapWorkers: $RepositoryConsistencyMapWorkers"
 Write-Host "Guardrail: report-only decision loop; provider execution only when -RunGpuNpuProvider is explicitly supplied."
 
 if (-not $SkipMemoryReload) {
@@ -256,14 +258,16 @@ Invoke-RepoPython -Label "Repository consistency map" -ArgsList @(
     ".\Tools\ai\build_repository_consistency_map.py",
     "--repo-root", ".",
     "--output", $RepositoryConsistencyJson,
-    "--markdown-output", $RepositoryConsistencyMd
+    "--markdown-output", $RepositoryConsistencyMd,
+    "--workers", "$RepositoryConsistencyMapWorkers"
 )
 
 Invoke-RepoPython -Label "Repository consistency map smoke" -ArgsList @(
     ".\Tools\validation\run_repository_consistency_map_smoke.py",
     "--repo-root", ".",
     "--output", $RepositoryConsistencySmokeJson,
-    "--markdown-output", $RepositoryConsistencySmokeMd
+    "--markdown-output", $RepositoryConsistencySmokeMd,
+    "--workers", "$RepositoryConsistencyMapWorkers"
 )
 
 if ($RunGpuNpuProvider) {

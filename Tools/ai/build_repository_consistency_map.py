@@ -13,6 +13,7 @@ import json
 import re
 import sys
 from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
@@ -146,16 +147,29 @@ def resolve_repo_reference(repo_root: Path, source: str, raw_ref: str, path_inde
     return ref, False, "missing"
 
 
-def extract_markdown_references(repo_root: Path, path_index: dict[str, str], *, max_snippet_chars: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
+def bounded_worker_count(requested: int, workload_count: int) -> int:
+    # Conservative worker cap for repository scans.
+    if workload_count <= 1:
+        return 1
+    if requested <= 0:
+        requested = 8
+    return max(1, min(requested, workload_count))
+
+def extract_markdown_references(repo_root: Path, path_index: dict[str, str], *, max_snippet_chars: int, workers: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
     references: list[dict[str, Any]] = []
     commands: list[dict[str, Any]] = []
     warnings: list[str] = []
-    for path in iter_files(repo_root, DOC_EXTENSIONS):
+    markdown_files = iter_files(repo_root, DOC_EXTENSIONS)
+
+    def scan_markdown_file(path: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
+        file_references: list[dict[str, Any]] = []
+        file_commands: list[dict[str, Any]] = []
+        file_warnings: list[str] = []
         rel = repo_rel(path, repo_root)
         text, error = read_text(path)
         if error:
-            warnings.append(f"{rel}: {error}")
-            continue
+            file_warnings.append(f"{rel}: {error}")
+            return file_references, file_commands, file_warnings
         seen_refs: set[tuple[str, int]] = set()
         candidates: list[tuple[str, int]] = []
         for match in PATH_TOKEN_RE.finditer(text):
@@ -177,7 +191,7 @@ def extract_markdown_references(repo_root: Path, path_index: dict[str, str], *, 
             resolved, exists, mode = resolve_repo_reference(repo_root, rel, raw_ref, path_index)
             ext = Path(normalize_ref(raw_ref)).suffix.lower()
             kind = "python" if ext == ".py" else "powershell" if ext == ".ps1" else "markdown" if ext in DOC_EXTENSIONS else "artifact"
-            references.append(
+            file_references.append(
                 {
                     "source": rel,
                     "line": line_no,
@@ -195,7 +209,7 @@ def extract_markdown_references(repo_root: Path, path_index: dict[str, str], *, 
             resolved, exists, mode = resolve_repo_reference(repo_root, rel, script_raw, path_index)
             args_text = match.group("args") or ""
             flags = sorted(set(FLAG_RE.findall(args_text)))
-            commands.append(
+            file_commands.append(
                 {
                     "source": rel,
                     "line": line_no,
@@ -207,8 +221,22 @@ def extract_markdown_references(repo_root: Path, path_index: dict[str, str], *, 
                     "snippet": snippet_for_line(text, line_no, max_chars=max_snippet_chars),
                 }
             )
-    return references, commands, warnings
+        return file_references, file_commands, file_warnings
 
+    worker_count = bounded_worker_count(workers, len(markdown_files))
+    if worker_count > 1:
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            for file_references, file_commands, file_warnings in executor.map(scan_markdown_file, markdown_files):
+                references.extend(file_references)
+                commands.extend(file_commands)
+                warnings.extend(file_warnings)
+    else:
+        for path in markdown_files:
+            file_references, file_commands, file_warnings = scan_markdown_file(path)
+            references.extend(file_references)
+            commands.extend(file_commands)
+            warnings.extend(file_warnings)
+    return references, commands, warnings
 
 def literal_string(node: ast.AST) -> str | None:
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
@@ -292,32 +320,47 @@ def extract_local_import_findings(tree: ast.AST, source: str, repo_root: Path) -
     return findings
 
 
-def extract_python_inventory(repo_root: Path) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]], list[str]]:
+def extract_python_inventory(repo_root: Path, *, workers: int) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]], list[str]]:
     inventory: dict[str, dict[str, Any]] = {}
     import_findings: list[dict[str, Any]] = []
     warnings: list[str] = []
-    for path in iter_files(repo_root, {".py"}):
+    python_files = iter_files(repo_root, {".py"})
+
+    def scan_python_file(path: Path) -> tuple[str, dict[str, Any], list[dict[str, Any]], list[str]]:
         rel = repo_rel(path, repo_root)
         text, error = read_text(path)
+        file_warnings: list[str] = []
         if error:
-            warnings.append(f"{rel}: {error}")
-            continue
+            file_warnings.append(f"{rel}: {error}")
+            return rel, {"argparse_flags": [], "functions": [], "classes": [], "syntax_error": error}, [], file_warnings
         try:
             tree = ast.parse(text, filename=rel)
         except SyntaxError as exc:
-            warnings.append(f"{rel}: SyntaxError line {exc.lineno}: {exc.msg}")
-            inventory[rel] = {"argparse_flags": [], "functions": [], "classes": [], "syntax_error": str(exc)}
-            continue
+            file_warnings.append(f"{rel}: SyntaxError line {exc.lineno}: {exc.msg}")
+            return rel, {"argparse_flags": [], "functions": [], "classes": [], "syntax_error": str(exc)}, [], file_warnings
         symbols = extract_python_symbols(tree)
-        inventory[rel] = {
+        item = {
             "argparse_flags": extract_argparse_flags(tree),
             "functions": symbols["functions"],
             "classes": symbols["classes"],
             "syntax_error": "",
         }
-        import_findings.extend(extract_local_import_findings(tree, rel, repo_root))
-    return inventory, import_findings, warnings
+        return rel, item, extract_local_import_findings(tree, rel, repo_root), file_warnings
 
+    worker_count = bounded_worker_count(workers, len(python_files))
+    if worker_count > 1:
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            for rel, item, file_import_findings, file_warnings in executor.map(scan_python_file, python_files):
+                inventory[rel] = item
+                import_findings.extend(file_import_findings)
+                warnings.extend(file_warnings)
+    else:
+        for path in python_files:
+            rel, item, file_import_findings, file_warnings = scan_python_file(path)
+            inventory[rel] = item
+            import_findings.extend(file_import_findings)
+            warnings.extend(file_warnings)
+    return inventory, import_findings, warnings
 
 def smoke_candidates_for_script(script: str, all_python_files: Iterable[str]) -> list[str]:
     stem = Path(script).stem.lower()
@@ -444,8 +487,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         repo_root,
         path_index,
         max_snippet_chars=args.max_snippet_chars,
+        workers=args.workers,
     )
-    py_inventory, import_findings, py_warnings = extract_python_inventory(repo_root)
+    py_inventory, import_findings, py_warnings = extract_python_inventory(repo_root, workers=args.workers)
     findings = build_findings(
         md_refs=md_refs,
         md_commands=md_commands,
@@ -485,6 +529,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "markdown_python_commands": md_commands[: args.max_detail_items] if args.max_detail_items else md_commands,
         "python_inventory": py_inventory,
         "provider_hints_for_gpu_planner": build_provider_hints(findings),
+        "performance": {
+            "workers_requested": args.workers,
+            "markdown_scan_workers": bounded_worker_count(args.workers, len(iter_files(repo_root, DOC_EXTENSIONS))),
+            "python_scan_workers": bounded_worker_count(args.workers, len(iter_files(repo_root, {".py"}))),
+        },
         "guardrails": {
             "report_only": True,
             "provider_execution_performed": False,
@@ -506,6 +555,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Markdown references: `{report['scope']['markdown_reference_count']}`")
     lines.append(f"- Markdown Python commands: `{report['scope']['markdown_python_command_count']}`")
     lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    if report.get("performance"):
+        lines.append(f"- Workers requested: `{report['performance'].get('workers_requested')}`")
     lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append("")
     lines.append("## Severity counts")
@@ -549,6 +600,7 @@ def main() -> int:
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
     parser.add_argument("--max-detail-items", type=int, default=2000)
     parser.add_argument("--max-snippet-chars", type=int, default=DEFAULT_MAX_SNIPPET_CHARS)
+    parser.add_argument("--workers", type=int, default=8, help="Bounded worker count for Markdown/Python repository scans.")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -570,6 +622,7 @@ def main() -> int:
                 "provider_execution_performed": report["provider_execution_performed"],
                 "patch_application_performed": report["patch_application_performed"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
+                "workers_requested": report.get("performance", {}).get("workers_requested"),
             },
             indent=2,
             ensure_ascii=False,
