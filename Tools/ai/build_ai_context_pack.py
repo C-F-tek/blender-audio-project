@@ -222,11 +222,6 @@ def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def line_count(text: str) -> int:
-    """Return a physical line count matching existing context-pack semantics."""
-    return physical_line_count(text)
-
-
 def context_unavailable_reason(entry: dict[str, Any]) -> str:
     """Return the most specific reason a context entry is unavailable."""
     return str(entry.get("policy_error") or entry.get("read_error") or "")
@@ -317,7 +312,7 @@ def build_file_entry(
         entry["read_error"] = read_error or "unknown read error"
         return entry, remaining_chars
 
-    entry["line_count"] = line_count(text)
+    entry["line_count"] = physical_line_count(text)
     entry["sha256"] = sha256_text(text)
     entry["chars"] = len(text)
     budget = max(0, min(remaining_chars, max_file_chars))

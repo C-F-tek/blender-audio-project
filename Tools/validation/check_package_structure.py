@@ -21,11 +21,6 @@ SKIP_DIRS = {"shared", "__pycache__"}
 SKIP_NAME_PARTS = ("_backup", "_backgood", "_bak")
 
 
-def count_lines(path: Path) -> int:
-    lines, _error = count_file_lines(path, encoding="utf-8")
-    return lines
-
-
 def inspect_package(path: Path, scripting_root: Path) -> dict[str, Any]:
     python_files = sorted(path.glob("*.py"))
     readme = path / "README.md"
@@ -51,7 +46,7 @@ def inspect_package(path: Path, scripting_root: Path) -> dict[str, Any]:
         "python_file_count": len(python_files),
         "main_candidates": [item.name for item in main_candidates],
         "encode_candidates": [item.name for item in encode_candidates],
-        "line_counts": {item.name: count_lines(item) for item in python_files},
+        "line_counts": {item.name: count_file_lines(item, encoding="utf-8")[0] for item in python_files},
         "warnings": warnings,
         "status": "ok" if not warnings else "review",
     }

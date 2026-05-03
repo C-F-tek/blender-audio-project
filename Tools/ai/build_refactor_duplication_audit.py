@@ -79,7 +79,7 @@ HELPER_RULES: tuple[dict[str, Any], ...] = (
     },
     {
         "candidate_id": "dup_line_count_helpers",
-        "name_pattern": re.compile(r"^(line_count|build_python_line_count_csv|load_line_counts|count_lines)$"),
+        "name_pattern": re.compile(r"^(line_count|load_line_counts|count_lines)$"),
         "repeated_logic": "Line-count calculation/loading helper patterns.",
         "existing_helper_available": True,
         "preferred_existing_helper_or_module": "Tools.validation.build_python_line_count_csv is the authoritative generator; use report CSV/JSON outputs instead of re-counting when possible.",
@@ -107,6 +107,15 @@ HELPER_RULES: tuple[dict[str, Any], ...] = (
         "risk": "medium",
         "schema_or_cli_impact": "possible broker/orchestrator schema impact; do not refactor automatically.",
     },
+)
+
+LINE_COUNT_SHARED_DELEGATION_TOKENS = (
+    "physical_line_count(",
+    "count_file_lines(",
+    "parse_line_count_csv_row(",
+    "load_line_count_csv_map(",
+    "line_count_for_path(",
+    "shared_line_count_for_path(",
 )
 
 
@@ -211,6 +220,7 @@ def collect_functions(repo_root: Path, files: list[Path]) -> tuple[list[dict[str
                     "line_count": max(1, end - start + 1),
                     "is_async": isinstance(node, ast.AsyncFunctionDef),
                     "body_hash_seed": re.sub(r"\s+", " ", body.strip())[:500],
+                    "uses_shared_line_count_helper": any(token in body for token in LINE_COUNT_SHARED_DELEGATION_TOKENS),
                 }
             )
     return functions, warnings
@@ -225,6 +235,8 @@ def build_rule_candidates(functions: list[dict[str, Any]]) -> list[dict[str, Any
     candidates: list[dict[str, Any]] = []
     for rule in HELPER_RULES:
         matched = [item for item in functions if rule["name_pattern"].match(str(item["name"]))]
+        if rule["candidate_id"] == "dup_line_count_helpers":
+            matched = [item for item in matched if not item.get("uses_shared_line_count_helper")]
         distinct_files = sorted({str(item["path"]) for item in matched})
         if len(matched) < 2 or len(distinct_files) < 2:
             continue

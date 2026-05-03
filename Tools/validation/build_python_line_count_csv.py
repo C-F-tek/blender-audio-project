@@ -79,11 +79,6 @@ def iter_included_python_files(repo_root: Path, excluded_dirs: set[str], exclude
     return sorted(paths, key=lambda value: repo_rel(repo_root, value).lower())
 
 
-def count_lines(path: Path) -> tuple[int, str | None]:
-    """Count physical lines using the shared validation report helper."""
-    return count_file_lines(path)
-
-
 def collect_python_counts(repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]) -> tuple[list[dict[str, Any]], list[str]]:
     """Collect line counts for included Python files."""
     rows: list[dict[str, Any]] = []
@@ -100,7 +95,7 @@ def collect_python_counts(repo_root: Path, excluded_dirs: set[str], excluded_suf
 
 def build_row(repo_root: Path, path: Path) -> tuple[dict[str, Any], str | None]:
     """Build one CSV row or return an error string."""
-    lines, error = count_lines(path)
+    lines, error = count_file_lines(path)
     rel = repo_rel(repo_root, path)
     if error:
         return {}, f"{rel}: {error}"
