@@ -12,6 +12,7 @@ import ast
 import json
 import re
 import sys
+import time
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -58,6 +59,9 @@ BACKTICK_RE = re.compile(r"`([^`]+)`")
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
+
+def elapsed_seconds(started: float) -> float:
+    return round(time.perf_counter() - started, 3)
 
 def resolve_path(repo_root: Path, value: str | Path) -> Path:
     path = Path(value)
@@ -481,15 +485,33 @@ def build_provider_hints(findings: list[dict[str, Any]]) -> list[dict[str, Any]]
 
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
+    total_started = time.perf_counter()
     repo_root = Path(args.repo_root).resolve()
+    timings: dict[str, float] = {}
+
+    phase_started = time.perf_counter()
+    markdown_file_count = len(iter_files(repo_root, DOC_EXTENSIONS))
+    python_file_count = len(iter_files(repo_root, {".py"}))
+    timings["file_discovery_seconds"] = elapsed_seconds(phase_started)
+
+    phase_started = time.perf_counter()
     path_index = build_existing_path_index(repo_root)
+    timings["path_index_seconds"] = elapsed_seconds(phase_started)
+
+    phase_started = time.perf_counter()
     md_refs, md_commands, md_warnings = extract_markdown_references(
         repo_root,
         path_index,
         max_snippet_chars=args.max_snippet_chars,
         workers=args.workers,
     )
+    timings["markdown_scan_seconds"] = elapsed_seconds(phase_started)
+
+    phase_started = time.perf_counter()
     py_inventory, import_findings, py_warnings = extract_python_inventory(repo_root, workers=args.workers)
+    timings["python_inventory_seconds"] = elapsed_seconds(phase_started)
+
+    phase_started = time.perf_counter()
     findings = build_findings(
         md_refs=md_refs,
         md_commands=md_commands,
@@ -499,6 +521,26 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     severity_counts = Counter(str(item.get("severity")) for item in findings)
     kind_counts = Counter(str(item.get("kind")) for item in findings)
     references_by_kind = Counter(str(item.get("kind")) for item in md_refs)
+    provider_hints = build_provider_hints(findings)
+    timings["findings_build_seconds"] = elapsed_seconds(phase_started)
+
+    phase_started = time.perf_counter()
+    scope = {
+        "markdown_file_count": markdown_file_count,
+        "python_file_count": python_file_count,
+        "markdown_reference_count": len(md_refs),
+        "markdown_python_command_count": len(md_commands),
+        "python_inventory_count": len(py_inventory),
+    }
+    performance = {
+        "workers_requested": args.workers,
+        "markdown_scan_workers": bounded_worker_count(args.workers, markdown_file_count),
+        "python_scan_workers": bounded_worker_count(args.workers, python_file_count),
+        **timings,
+    }
+    performance["report_assembly_seconds"] = elapsed_seconds(phase_started)
+    performance["total_build_report_seconds"] = elapsed_seconds(total_started)
+
     report = {
         "schema_version": 1,
         "kind": "repository_consistency_map",
@@ -513,13 +555,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "sqlite_write_performed": False,
         "persistent_memory_write_performed": False,
         "manual_review_required": True,
-        "scope": {
-            "markdown_file_count": len(iter_files(repo_root, DOC_EXTENSIONS)),
-            "python_file_count": len(iter_files(repo_root, {".py"})),
-            "markdown_reference_count": len(md_refs),
-            "markdown_python_command_count": len(md_commands),
-            "python_inventory_count": len(py_inventory),
-        },
+        "scope": scope,
         "finding_count": len(findings),
         "severity_counts": dict(sorted(severity_counts.items())),
         "finding_kind_counts": dict(sorted(kind_counts.items())),
@@ -528,12 +564,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "markdown_references": md_refs[: args.max_detail_items] if args.max_detail_items else md_refs,
         "markdown_python_commands": md_commands[: args.max_detail_items] if args.max_detail_items else md_commands,
         "python_inventory": py_inventory,
-        "provider_hints_for_gpu_planner": build_provider_hints(findings),
-        "performance": {
-            "workers_requested": args.workers,
-            "markdown_scan_workers": bounded_worker_count(args.workers, len(iter_files(repo_root, DOC_EXTENSIONS))),
-            "python_scan_workers": bounded_worker_count(args.workers, len(iter_files(repo_root, {".py"}))),
-        },
+        "provider_hints_for_gpu_planner": provider_hints,
+        "performance": performance,
         "guardrails": {
             "report_only": True,
             "provider_execution_performed": False,
@@ -545,7 +577,6 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     }
     return report
 
-
 def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Repository Consistency Map", ""]
     lines.append(f"- Passed: `{report['passed']}`")
@@ -556,7 +587,11 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Markdown Python commands: `{report['scope']['markdown_python_command_count']}`")
     lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
     if report.get("performance"):
-        lines.append(f"- Workers requested: `{report['performance'].get('workers_requested')}`")
+        performance = report["performance"]
+        lines.append(f"- Workers requested: `{performance.get('workers_requested')}`")
+        lines.append(f"- Total build seconds: `{performance.get('total_build_report_seconds')}`")
+        lines.append(f"- Markdown scan seconds: `{performance.get('markdown_scan_seconds')}`")
+        lines.append(f"- Python inventory seconds: `{performance.get('python_inventory_seconds')}`")
     lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append("")
     lines.append("## Severity counts")
@@ -623,6 +658,7 @@ def main() -> int:
                 "patch_application_performed": report["patch_application_performed"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
                 "workers_requested": report.get("performance", {}).get("workers_requested"),
+                "performance": report.get("performance", {}),
             },
             indent=2,
             ensure_ascii=False,
