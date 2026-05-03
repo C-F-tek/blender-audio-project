@@ -5,7 +5,6 @@ param(
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
     [switch]$RunGpuNpuProvider,
     [switch]$SkipMemoryReload,
-    [switch]$SkipRepositoryConsistencyMap,
     [switch]$SkipPostValidationPacket,
     [switch]$SkipSharedToolboxBundle,
     [int]$BudgetMinutes = 30,
@@ -145,7 +144,6 @@ Write-Host "=== Agent Review Full Toolbox Decision Loop ==="
 Write-Host "Repo: $RepoRootPath"
 Write-Host "Stamp: $Stamp"
 Write-Host "RunGpuNpuProvider: $RunGpuNpuProvider"
-Write-Host "SkipRepositoryConsistencyMap: $SkipRepositoryConsistencyMap"
 Write-Host "Guardrail: report-only decision loop; provider execution only when -RunGpuNpuProvider is explicitly supplied."
 
 if (-not $SkipMemoryReload) {
@@ -254,23 +252,19 @@ Invoke-RepoPython -Label "NPU provider environment preflight" -ArgsList @(
     "--markdown-output", $NpuEnvMd
 )
 
-if (-not $SkipRepositoryConsistencyMap) {
-    Invoke-RepoPython -Label "Repository consistency map" -ArgsList @(
-        ".\Tools\ai\build_repository_consistency_map.py",
-        "--repo-root", ".",
-        "--output", $RepositoryConsistencyJson,
-        "--markdown-output", $RepositoryConsistencyMd
-    )
+Invoke-RepoPython -Label "Repository consistency map" -ArgsList @(
+    ".\Tools\ai\build_repository_consistency_map.py",
+    "--repo-root", ".",
+    "--output", $RepositoryConsistencyJson,
+    "--markdown-output", $RepositoryConsistencyMd
+)
 
-    Invoke-RepoPython -Label "Repository consistency map smoke" -ArgsList @(
-        ".\Tools\validation\run_repository_consistency_map_smoke.py",
-        "--repo-root", ".",
-        "--output", $RepositoryConsistencySmokeJson,
-        "--markdown-output", $RepositoryConsistencySmokeMd
-    )
-} else {
-    [void]$Warnings.Add("repository consistency map skipped by request")
-}
+Invoke-RepoPython -Label "Repository consistency map smoke" -ArgsList @(
+    ".\Tools\validation\run_repository_consistency_map_smoke.py",
+    "--repo-root", ".",
+    "--output", $RepositoryConsistencySmokeJson,
+    "--markdown-output", $RepositoryConsistencySmokeMd
+)
 
 if ($RunGpuNpuProvider) {
     Invoke-RepoPython -Label "GPU primary advisory + NPU auditor orchestrator" -ArgsList @(
