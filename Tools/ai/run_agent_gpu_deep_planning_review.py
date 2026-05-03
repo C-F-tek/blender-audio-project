@@ -27,11 +27,15 @@ from typing import Any
 
 try:
     from Tools.ai.gpu_planner_json_contract import (
-        ALLOWED_RUNTIME_TOOLS,
         result_to_dict,
         validate_model_response_contract,
         validate_recommendation_object,
         validate_tool_request_object,
+    )
+    from Tools.ai.runtime_tool_guidance import (
+        ALLOWED_RUNTIME_TOOLS,
+        TOOL_REQUEST_DECISION_GUIDE,
+        build_provider_tool_guidance_payload,
     )
     from Tools.npu.ollama_runtime import DEFAULT_BASE_URL, OllamaModelManager, normalize_base_url
 except ImportError:  # Script-style execution from Tools/ai.
@@ -39,11 +43,15 @@ except ImportError:  # Script-style execution from Tools/ai.
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from Tools.ai.gpu_planner_json_contract import (  # type: ignore
-        ALLOWED_RUNTIME_TOOLS,
         result_to_dict,
         validate_model_response_contract,
         validate_recommendation_object,
         validate_tool_request_object,
+    )
+    from Tools.ai.runtime_tool_guidance import (  # type: ignore
+        ALLOWED_RUNTIME_TOOLS,
+        TOOL_REQUEST_DECISION_GUIDE,
+        build_provider_tool_guidance_payload,
     )
     from Tools.npu.ollama_runtime import DEFAULT_BASE_URL, OllamaModelManager, normalize_base_url  # type: ignore
 
@@ -66,53 +74,6 @@ EMPTY_RECOMMENDATION_REASONS = {
     "tool_requests_pending",
 }
 
-
-TOOL_REQUEST_DECISION_GUIDE: dict[str, Any] = {
-    "principle": "When repository evidence is insufficient for a valid recommendation, request allowlisted tools instead of summarizing or echoing context.",
-    "must_request_tools_when": [
-        "recommendations would otherwise be empty",
-        "schema-valid target files cannot be selected from current evidence",
-        "syntax, line-count, validation-contract, memory, or tool inventory evidence is missing",
-        "the next_best_action would be collect_more_evidence, inspect validation, or inspect inventory",
-    ],
-    "must_not_request_tools_when": [
-        "a recommendation is already ready_for_patch_plan with concrete target_files and validation_commands",
-        "the missing evidence cannot be obtained by an allowlisted runtime tool",
-        "the request would require shell, git write, provider execution, Blender runtime, patch application, or persistent memory writes",
-    ],
-    "preferred_tool_mapping": {
-        "need Python file inventory or line-count ranking": "build_python_line_count_csv",
-        "need available local tool inventory": "build_agent_agnostic_tool_inventory",
-        "need durable memory inventory": "build_agent_memory_inventory",
-        "need transient task/request context": "build_agent_transient_request_context",
-        "need syntax baseline": "check_python_syntax",
-        "need validation report contract check": "check_validation_report_contract",
-        "need GPU planner JSON contract check": "run_gpu_planner_json_contract_smoke",
-        "need code-interpreter style static report": "build_code_interpreter_report",
-        "need memory status/search": "runtime_sqlite_memory",
-    },
-    "valid_examples": [
-        {
-            "id": "need_python_inventory",
-            "tool": "build_python_line_count_csv",
-            "reason": "Need current Python line-count inventory before choosing safe refactor targets.",
-            "args": {},
-        },
-        {
-            "id": "need_syntax_baseline",
-            "tool": "check_python_syntax",
-            "reason": "Need syntax baseline before producing a manual patch plan.",
-            "args": {},
-        },
-        {
-            "id": "need_operational_memory_status",
-            "tool": "runtime_sqlite_memory",
-            "reason": "Need operational scratch memory status before deciding whether additional local context exists.",
-            "args": {"action": "status", "scope": "operational"},
-        },
-    ],
-    "output_rule": "If recommendations is empty and evidence_ready_for_manual_patch_count is greater than zero, tool_requests should contain at least one valid request unless missing_evidence explains why no allowlisted tool can help.",
-}
 
 
 @dataclass(frozen=True)
@@ -332,6 +293,7 @@ def build_prompt(
             "operational_memory_scope": "scratch context under output/** only",
         },
         "tool_request_decision_guide": TOOL_REQUEST_DECISION_GUIDE,
+        "provider_tool_guidance": build_provider_tool_guidance_payload("gpu_ollama"),
         "expected_json_schema": {
             "summary": "short technical summary",
             "confidence": "low|medium|high",

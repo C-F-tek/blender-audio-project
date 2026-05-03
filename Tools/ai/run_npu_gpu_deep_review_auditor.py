@@ -32,8 +32,24 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from Tools.ai.runtime_tool_guidance import (
+        ALLOWED_RUNTIME_TOOLS,
+        build_provider_tool_guidance_payload,
+        validate_runtime_tool_request_object,
+    )
     from Tools.npu.npu_runtime import DEFAULT_NPU_PYTHON
 except ImportError:
+    import sys
+
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.runtime_tool_guidance import (  # type: ignore
+        ALLOWED_RUNTIME_TOOLS,
+        build_provider_tool_guidance_payload,
+        validate_runtime_tool_request_object,
+    )
+
     DEFAULT_NPU_PYTHON = Path(os.environ.get("SPAZIOTEMPO_NPU_PYTHON", Path.home() / "blender" / "venvs" / "blender-npu-ai" / "Scripts" / "python.exe"))
 
 DEFAULT_GPU_REVIEW = "output/ai_pipeline/agent_gpu_deep_planning_review.json"
@@ -144,17 +160,7 @@ def load_runtime_tool_context_reports(repo_root: Path, values: list[str], max_ch
     return reports
 
 
-ALLOWED_RUNTIME_TOOL_NAMES = {
-    "build_python_line_count_csv",
-    "build_agent_memory_inventory",
-    "build_agent_agnostic_tool_inventory",
-    "build_agent_transient_request_context",
-    "check_python_syntax",
-    "check_validation_report_contract",
-    "run_gpu_planner_json_contract_smoke",
-    "build_code_interpreter_report",
-    "runtime_sqlite_memory",
-}
+ALLOWED_RUNTIME_TOOL_NAMES = ALLOWED_RUNTIME_TOOLS
 
 JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.IGNORECASE | re.DOTALL)
 
@@ -199,16 +205,12 @@ def extract_npu_tool_requests_from_text(text: str, max_requests: int = 8) -> tup
         if not isinstance(item, dict):
             errors.append(_tool_request_error(index, "request must be an object"))
             continue
+        shared_errors = validate_runtime_tool_request_object(item, index)
+        if shared_errors:
+            errors.extend(shared_errors)
+            continue
         tool = str(item.get("tool") or "").strip()
-        if tool not in ALLOWED_RUNTIME_TOOL_NAMES:
-            errors.append(_tool_request_error(index, f"tool not allowlisted: {tool}"))
-            continue
         args = item.get("args", {})
-        if args is None:
-            args = {}
-        if not isinstance(args, dict):
-            errors.append(_tool_request_error(index, "args must be an object"))
-            continue
         valid.append(
             {
                 "id": str(item.get("id") or f"npu_tool_{index:03d}"),
@@ -251,6 +253,7 @@ def build_context(gpu_review: dict[str, Any], runtime_tool_context_reports: list
             "Do not create a patch.",
             "Do not act as primary advisory provider.",
             "Return concise Markdown with: Verdict, Drift Risks, Evidence Gaps, Guardrail Notes, Non-blocking Recommendation.",
+            "If the audit needs more evidence, add a fenced JSON block containing tool_requests using the shared broker schema.",
         ],
         "gpu_review_summary": {
             "kind": gpu_review.get("kind"),
@@ -272,7 +275,9 @@ def build_context(gpu_review: dict[str, Any], runtime_tool_context_reports: list
                 "The NPU auditor remains non-blocking and must not apply patches.",
                 "Any further tool execution must be requested through the runtime broker/orchestrator layer.",
                 "If additional evidence is needed, include optional JSON tool_requests using the shared broker schema; do not execute tools directly.",
+                "When useful, include a fenced ```json object with top-level tool_requests so the broker can parse it.",
             ],
+            "provider_tool_guidance": build_provider_tool_guidance_payload("npu_openvino"),
         },
         "recommendations": recommendations,
         "rounds": compact_rounds,

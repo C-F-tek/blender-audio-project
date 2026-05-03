@@ -15,8 +15,10 @@ from typing import Any
 
 try:
     from Tools.ai.model_json import ModelJsonParseError, parse_model_json_object, strip_markdown_json_fence
+    from Tools.ai.runtime_tool_guidance import ALLOWED_RUNTIME_TOOLS
 except ImportError:  # Script-style execution from Tools/ai.
     from model_json import ModelJsonParseError, parse_model_json_object, strip_markdown_json_fence  # type: ignore
+    from runtime_tool_guidance import ALLOWED_RUNTIME_TOOLS  # type: ignore
 
 
 ALLOWED_STATUSES = {"ready_for_patch_plan", "needs_more_context", "advisory_only"}
@@ -32,17 +34,8 @@ REQUIRED_RECOMMENDATION_KEYS = {
     "validation_commands",
     "stop_conditions",
 }
-ALLOWED_RUNTIME_TOOLS = {
-    "build_python_line_count_csv",
-    "build_agent_memory_inventory",
-    "build_agent_agnostic_tool_inventory",
-    "build_agent_transient_request_context",
-    "check_python_syntax",
-    "check_validation_report_contract",
-    "run_gpu_planner_json_contract_smoke",
-    "build_code_interpreter_report",
-    "runtime_sqlite_memory",
-}
+# ALLOWED_RUNTIME_TOOLS is imported from Tools.ai.runtime_tool_guidance so GPU,
+# NPU and live provider loops share the same broker allowlist.
 REQUIRED_TOOL_REQUEST_KEYS = {"id", "tool", "reason", "args"}
 CONTEXT_ECHO_TOP_LEVEL_KEYS = {"files", "context_files", "repository_files", "file_previews"}
 CONTEXT_ECHO_NESTED_KEYS = {"content_preview", "preview", "raw_response_preview"}
