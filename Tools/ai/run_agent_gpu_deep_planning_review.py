@@ -60,9 +60,58 @@ EMPTY_RECOMMENDATION_REASONS = {
     "valid_json_empty_recommendations",
     "recommendations_filtered_out",
     "evidence_ready_but_no_gpu_plan",
+    "evidence_ready_but_no_tool_requests",
     "model_output_missing_required_fields",
     "repair_attempt_failed",
     "tool_requests_pending",
+}
+
+
+TOOL_REQUEST_DECISION_GUIDE: dict[str, Any] = {
+    "principle": "When repository evidence is insufficient for a valid recommendation, request allowlisted tools instead of summarizing or echoing context.",
+    "must_request_tools_when": [
+        "recommendations would otherwise be empty",
+        "schema-valid target files cannot be selected from current evidence",
+        "syntax, line-count, validation-contract, memory, or tool inventory evidence is missing",
+        "the next_best_action would be collect_more_evidence, inspect validation, or inspect inventory",
+    ],
+    "must_not_request_tools_when": [
+        "a recommendation is already ready_for_patch_plan with concrete target_files and validation_commands",
+        "the missing evidence cannot be obtained by an allowlisted runtime tool",
+        "the request would require shell, git write, provider execution, Blender runtime, patch application, or persistent memory writes",
+    ],
+    "preferred_tool_mapping": {
+        "need Python file inventory or line-count ranking": "build_python_line_count_csv",
+        "need available local tool inventory": "build_agent_agnostic_tool_inventory",
+        "need durable memory inventory": "build_agent_memory_inventory",
+        "need transient task/request context": "build_agent_transient_request_context",
+        "need syntax baseline": "check_python_syntax",
+        "need validation report contract check": "check_validation_report_contract",
+        "need GPU planner JSON contract check": "run_gpu_planner_json_contract_smoke",
+        "need code-interpreter style static report": "build_code_interpreter_report",
+        "need memory status/search": "runtime_sqlite_memory",
+    },
+    "valid_examples": [
+        {
+            "id": "need_python_inventory",
+            "tool": "build_python_line_count_csv",
+            "reason": "Need current Python line-count inventory before choosing safe refactor targets.",
+            "args": {},
+        },
+        {
+            "id": "need_syntax_baseline",
+            "tool": "check_python_syntax",
+            "reason": "Need syntax baseline before producing a manual patch plan.",
+            "args": {},
+        },
+        {
+            "id": "need_operational_memory_status",
+            "tool": "runtime_sqlite_memory",
+            "reason": "Need operational scratch memory status before deciding whether additional local context exists.",
+            "args": {"action": "status", "scope": "operational"},
+        },
+    ],
+    "output_rule": "If recommendations is empty and evidence_ready_for_manual_patch_count is greater than zero, tool_requests should contain at least one valid request unless missing_evidence explains why no allowlisted tool can help.",
 }
 
 
@@ -265,6 +314,10 @@ def build_prompt(
             "Call out missing evidence explicitly.",
             "Return valid JSON only.",
             "When evidence is missing, request broker tools through tool_requests instead of guessing.",
+            "If you cannot produce a schema-valid recommendation, emit at least one valid tool_request when an allowlisted tool can reduce uncertainty.",
+            "Do not answer with prose summaries of repository files; return the JSON object only.",
+            "Do not echo input file previews, execution plans, or documentation chunks.",
+            "If recommendations is empty, tool_requests must be non-empty unless missing_evidence explicitly says no allowlisted tool can help.",
             "Never request shell, git write, provider execution, patch application, Blender runtime, or persistent memory writes.",
             "Operational memory may be requested only through runtime_sqlite_memory with scope=operational.",
             "Persistent memory may be searched/status-checked only through runtime_sqlite_memory with scope=persistent.",
@@ -278,6 +331,7 @@ def build_prompt(
             "provider_execution_allowed": False,
             "operational_memory_scope": "scratch context under output/** only",
         },
+        "tool_request_decision_guide": TOOL_REQUEST_DECISION_GUIDE,
         "expected_json_schema": {
             "summary": "short technical summary",
             "confidence": "low|medium|high",
@@ -428,7 +482,7 @@ def classify_empty_recommendations(
     if raw_recommendation_candidate_count > 0 and filtered_recommendation_count == 0:
         return "recommendations_filtered_out"
     if evidence_ready_for_manual_patch_count_value > 0:
-        return "evidence_ready_but_no_gpu_plan"
+        return "evidence_ready_but_no_tool_requests"
     return "valid_json_empty_recommendations"
 
 
@@ -474,8 +528,11 @@ def recommendation_diagnostics_for_round(
         "invalid_tool_request_count": int(parse_diagnostics.get("invalid_tool_request_count") or 0),
         "empty_recommendations_reason": reason,
         "evidence_ready_for_manual_patch_count": evidence_ready_for_manual_patch_count_value,
+        "provider_tool_request_absence_reason": reason
+        if reason == "evidence_ready_but_no_tool_requests"
+        else "",
         "recommended_next_layer": "build_agent_review_patch_plan.py"
-        if reason == "evidence_ready_but_no_gpu_plan"
+        if reason in {"evidence_ready_but_no_gpu_plan", "evidence_ready_but_no_tool_requests"}
         else "",
     }
 
@@ -512,7 +569,7 @@ def aggregate_recommendation_diagnostics(rounds: list[dict[str, Any]], evidence:
         elif valid_tool_request_count > 0:
             reason = "tool_requests_pending"
         elif evidence_ready_count > 0:
-            reason = "evidence_ready_but_no_gpu_plan"
+            reason = "evidence_ready_but_no_tool_requests"
         else:
             reason = "valid_json_empty_recommendations"
 
@@ -529,6 +586,9 @@ def aggregate_recommendation_diagnostics(rounds: list[dict[str, Any]], evidence:
         "invalid_tool_request_count": invalid_tool_request_count,
         "empty_recommendations_reason": reason,
         "evidence_ready_for_manual_patch_count": evidence_ready_count,
+        "provider_tool_request_absence_reason": reason
+        if reason == "evidence_ready_but_no_tool_requests"
+        else "",
         "recommended_next_layer": "build_agent_review_patch_plan.py"
         if evidence_ready_count > 0 or filtered_count > 0
         else "collect_more_evidence",

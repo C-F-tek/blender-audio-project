@@ -276,7 +276,7 @@ def classify_empty_reason(
     if not schema_ok:
         return "model_output_schema_mismatch"
     if evidence_ready_for_manual_patch_count > 0:
-        return "evidence_ready_but_no_gpu_plan"
+        return "evidence_ready_but_no_tool_requests"
     return "valid_json_empty_recommendations"
 
 
