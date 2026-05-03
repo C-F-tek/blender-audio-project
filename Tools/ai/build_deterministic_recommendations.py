@@ -411,6 +411,204 @@ def synthesize_from_evidence(
     return validated, skipped
 
 
+SUBSTANTIVE_CONSISTENCY_FINDING_PRIORITIES = {
+    "python_import_missing": 10,
+    "md_python_command_script_missing": 20,
+    "md_mentions_missing_powershell_path": 30,
+    "md_cli_arg_not_in_argparse": 40,
+    "md_mentions_missing_python_path": 50,
+    "md_mentions_missing_markdown_path": 60,
+    "documented_python_script_without_obvious_smoke": 70,
+}
+COSMETIC_FINDING_KEYWORDS = (
+    "whitespace",
+    "space-only",
+    "spacing-only",
+    "tag spacing",
+    "tag-spacing",
+    "formatting-only",
+    "cosmetic",
+)
+
+
+def severity_rank(value: Any) -> int:
+    return {"high": 0, "medium": 1, "low": 2}.get(str(value or "").lower(), 3)
+
+
+def finding_priority(finding: dict[str, Any]) -> tuple[int, int, str, int]:
+    kind = str(finding.get("kind") or "")
+    return (
+        severity_rank(finding.get("severity")),
+        SUBSTANTIVE_CONSISTENCY_FINDING_PRIORITIES.get(kind, 999),
+        normalize_repo_path(finding.get("source")),
+        int(finding.get("line") or 0),
+    )
+
+
+def is_cosmetic_consistency_finding(finding: dict[str, Any]) -> bool:
+    text = " ".join(
+        str(finding.get(key) or "")
+        for key in ("kind", "severity", "source", "target", "flag", "evidence", "recommendation")
+    ).lower()
+    return any(keyword in text for keyword in COSMETIC_FINDING_KEYWORDS)
+
+
+def consistency_target_file(finding: dict[str, Any], repo_root: Path) -> tuple[str, str | None]:
+    source = normalize_repo_path(finding.get("source"))
+    if source:
+        source_error = target_path_error(source, repo_root)
+        if source_error is None:
+            return source, None
+        return "", f"source {source!r}: {source_error}"
+    target = normalize_repo_path(finding.get("target"))
+    if target:
+        target_error = target_path_error(target, repo_root)
+        if target_error is None:
+            return target, None
+        return "", f"target {target!r}: {target_error}"
+    return "", "finding has neither source nor target"
+
+
+def consistency_area(kind: str) -> str:
+    if kind == "python_import_missing":
+        return "python_python"
+    if kind in {"md_python_command_script_missing", "md_cli_arg_not_in_argparse", "md_mentions_missing_python_path"}:
+        return "md_python"
+    if kind == "md_mentions_missing_powershell_path":
+        return "md_powershell"
+    if kind == "md_mentions_missing_markdown_path":
+        return "md_md"
+    if kind == "documented_python_script_without_obvious_smoke":
+        return "python_validation"
+    return "repository_consistency"
+
+
+def consistency_validation_commands(target_file: str) -> list[str]:
+    commands = list(DEFAULT_VALIDATION_COMMANDS)
+    if target_file.endswith(".py"):
+        commands.insert(0, f"python -m py_compile {target_file}")
+    return commands
+
+
+def repository_consistency_recommendation(
+    *,
+    finding: dict[str, Any],
+    index: int,
+    repo_root: Path,
+    tool_refs: list[dict[str, Any]],
+    npu_refs: list[dict[str, Any]],
+) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
+    kind = str(finding.get("kind") or "")
+    if kind not in SUBSTANTIVE_CONSISTENCY_FINDING_PRIORITIES:
+        return None, {"id": f"consistency_{index:03d}", "reason": f"unsupported finding kind: {kind}"}
+    if is_cosmetic_consistency_finding(finding):
+        return None, {"id": f"consistency_{index:03d}", "reason": "cosmetic/whitespace-only finding skipped"}
+    target_file, target_error = consistency_target_file(finding, repo_root)
+    if target_error:
+        return None, {"id": f"consistency_{index:03d}", "reason": target_error}
+
+    source = normalize_repo_path(finding.get("source"))
+    target = normalize_repo_path(finding.get("target"))
+    flag = str(finding.get("flag") or "")
+    line = int(finding.get("line") or 0)
+    severity = str(finding.get("severity") or "medium")
+    evidence = str(finding.get("evidence") or "")
+    recommendation = str(finding.get("recommendation") or "Resolve the repository consistency finding with the narrowest safe patch.")
+    area = consistency_area(kind)
+    risk = "medium" if severity == "high" else "low"
+    evidence_label = f"{source}:{line}" if line else source or target_file
+    mismatch = flag or target or kind
+    strategy = (
+        f"Build a focused patch plan for `{kind}` using mapper evidence `{evidence_label}`. "
+        f"Target `{target_file}` and resolve `{mismatch}` without formatting-only edits. "
+        f"Mapper recommendation: {recommendation}"
+    )
+
+    return (
+        {
+            "id": f"consistency_{index:03d}",
+            "area": area,
+            "status": "ready_for_patch_plan",
+            "target_files": [target_file],
+            "rationale": f"Repository consistency mapper reported {severity} `{kind}` at `{evidence_label}` targeting `{mismatch}`.",
+            "proposed_strategy": strategy,
+            "risk": risk,
+            "validation_commands": consistency_validation_commands(target_file),
+            "stop_conditions": [
+                "Stop if the edit is only whitespace, tag spacing or Markdown formatting without fixing the cited finding.",
+                "Stop if the target/source evidence no longer exists after refreshing master.",
+                "Stop if the fix would touch output/**, generated indexes, SQLite, provider settings or Blender runtime.",
+                "Stop if resolving the finding requires inventing behavior not supported by code evidence.",
+            ],
+            "source": "repository_consistency_map",
+            "evidence": [evidence_label] if evidence_label else [],
+            "tool_evidence": tool_refs,
+            "npu_audit_refs": npu_refs,
+            "repository_consistency_finding": {
+                "kind": kind,
+                "severity": severity,
+                "source": source,
+                "line": line,
+                "target": target,
+                "flag": flag,
+                "evidence": evidence[:500],
+            },
+            "guardrails": {
+                "patch_application_performed": False,
+                "manual_review_required": True,
+                "cosmetic_patch_allowed": False,
+            },
+        },
+        None,
+    )
+
+
+def synthesize_from_repository_consistency_maps(
+    *,
+    repository_maps: list[dict[str, Any]],
+    repo_root: Path,
+    npu_refs: list[dict[str, Any]],
+    tool_refs: list[dict[str, Any]],
+    max_recommendations: int,
+) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+    findings: list[dict[str, Any]] = []
+    for repository_map in repository_maps:
+        raw_findings = repository_map.get("findings")
+        if not isinstance(raw_findings, list):
+            continue
+        for item in raw_findings:
+            if isinstance(item, dict):
+                findings.append(item)
+    findings = sorted(findings, key=finding_priority)
+
+    recommendations: list[dict[str, Any]] = []
+    skipped: list[dict[str, str]] = []
+    seen_targets: set[tuple[str, str, str]] = set()
+    for index, finding in enumerate(findings, start=1):
+        if len(recommendations) >= max_recommendations:
+            break
+        rec, skip = repository_consistency_recommendation(
+            finding=finding,
+            index=index,
+            repo_root=repo_root,
+            tool_refs=tool_refs,
+            npu_refs=npu_refs,
+        )
+        if skip:
+            skipped.append(skip)
+        if not rec:
+            continue
+        dedupe_key = (str(rec.get("area")), str(rec.get("target_files")), str(rec.get("rationale")))
+        if dedupe_key in seen_targets:
+            continue
+        errors = recommendation_schema_errors(rec, len(recommendations), repo_root)
+        if errors:
+            skipped.append({"id": str(rec.get("id")), "reason": "; ".join(errors)})
+            continue
+        seen_targets.add(dedupe_key)
+        recommendations.append(rec)
+    return recommendations, skipped
+
 def load_gpu_report(repo_root: Path, orchestrator: dict[str, Any], explicit_gpu_report: str) -> tuple[dict[str, Any], list[str]]:
     warnings: list[str] = []
     if explicit_gpu_report:
@@ -452,12 +650,15 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
     warnings.extend(gpu_warnings)
 
     tool_refs: list[dict[str, Any]] = []
+    repository_consistency_maps: list[dict[str, Any]] = []
     for value in args.tool_report:
         path = resolve_path(repo_root, value)
         data, tool_errors = load_report_at(repo_root, value, missing_is_error=False)
         warnings.extend(tool_errors)
         if data:
             tool_refs.append(summarize_tool_report(path, repo_root, data))
+            if data.get("kind") == "repository_consistency_map":
+                repository_consistency_maps.append(data)
 
     npu_refs = npu_audit_refs(orchestrator)
     provider_recs, provider_skipped = provider_recommendations(gpu_report, repo_root)
@@ -472,6 +673,24 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
             recommendations.append(rec)
 
     deterministic_used = False
+    consistency_recommendation_count = 0
+    if not recommendations and repository_consistency_maps:
+        deterministic_used = True
+        consistency_synthesized, consistency_skipped = synthesize_from_repository_consistency_maps(
+            repository_maps=repository_consistency_maps,
+            repo_root=repo_root,
+            npu_refs=npu_refs,
+            tool_refs=tool_refs,
+            max_recommendations=args.max_recommendations,
+        )
+        skipped.extend(consistency_skipped)
+        for rec in consistency_synthesized:
+            key = recommendation_key(rec)
+            if key not in seen:
+                seen.add(key)
+                recommendations.append(rec)
+        consistency_recommendation_count = len(recommendations)
+
     if not recommendations and evidence:
         deterministic_used = True
         synthesized, synthesized_skipped = synthesize_from_evidence(
@@ -522,6 +741,9 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
             "evidence_ready_for_manual_patch_count": evidence_ready_count,
             "gpu_empty_recommendations_reason": empty_reason,
             "ready_for_patch_plan": bool(recommendations),
+            "repository_consistency_map_count": len(repository_consistency_maps),
+            "substantive_consistency_recommendation_count": consistency_recommendation_count,
+            "cosmetic_patch_suppression_enabled": True,
             "recommended_next_layer": "build_agent_review_patch_plan.py" if recommendations else "collect_more_evidence",
             "manual_review_required": True,
         },
@@ -530,6 +752,7 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
             "orchestrator": normalize_repo_path(args.orchestrator),
             "gpu_report": normalize_repo_path(args.gpu_report) or normalize_repo_path(orchestrator.get("gpu_output")),
             "tool_report_count": len(args.tool_report),
+            "repository_consistency_map_count": len(repository_consistency_maps),
             "evidence_kind": evidence.get("kind"),
             "orchestrator_kind": orchestrator.get("kind"),
             "gpu_kind": gpu_report.get("kind"),
