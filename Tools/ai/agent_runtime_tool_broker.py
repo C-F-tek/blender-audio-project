@@ -26,6 +26,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
+try:
+    from Tools.validation.report_utils import write_json_report
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.validation.report_utils import write_json_report
+
 
 DEFAULT_OUTPUT = "output/validation/agent_runtime_tool_broker.json"
 DEFAULT_MARKDOWN = "output/validation/agent_runtime_tool_broker.md"
@@ -683,7 +691,7 @@ def main() -> int:
     markdown = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    write_json_report(report, output)
     markdown.write_text(render_markdown(report), encoding="utf-8")
 
     print(

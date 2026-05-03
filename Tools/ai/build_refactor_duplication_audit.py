@@ -22,12 +22,12 @@ from pathlib import Path
 from typing import Any, Iterable
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report
+    from Tools.validation.report_utils import read_json_report, resolve_output_path, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation.report_utils import resolve_output_path, write_json_report
+    from Tools.validation.report_utils import read_json_report, resolve_output_path, write_json_report
 
 
 DEFAULT_OUTPUT = "output/analysis/refactor_duplication_audit.json"
@@ -156,16 +156,8 @@ def read_text(path: Path) -> tuple[str, str | None]:
 
 
 def read_json(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    text, error = read_text(path)
-    if error:
-        return {}
-    try:
-        data = json.loads(text)
-    except json.JSONDecodeError:
-        return {}
-    return data if isinstance(data, dict) else {}
+    """Read a JSON report object through the shared validation helper."""
+    return read_json_report(path)
 
 
 def iter_python_files(repo_root: Path, roots: list[str]) -> list[Path]:

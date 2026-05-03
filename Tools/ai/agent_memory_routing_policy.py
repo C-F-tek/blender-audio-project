@@ -20,6 +20,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+try:
+    from Tools.validation.report_utils import write_json_report
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    import sys
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.validation.report_utils import write_json_report
+
 
 DEFAULT_OUTPUT = "output/validation/agent_memory_routing_policy.json"
 DEFAULT_MARKDOWN = "output/validation/agent_memory_routing_policy.md"
@@ -301,7 +310,7 @@ def build_policy(args: argparse.Namespace) -> dict[str, Any]:
         },
     }
     broker_request_path.parent.mkdir(parents=True, exist_ok=True)
-    broker_request_path.write_text(json.dumps(broker_request, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    write_json_report(broker_request, broker_request_path)
 
     persistent_count = sum(1 for item in tool_requests if item.get("tool") == "runtime_sqlite_memory" and item.get("args", {}).get("scope") == "persistent")
     operational_count = sum(1 for item in tool_requests if item.get("tool") == "runtime_sqlite_memory" and item.get("args", {}).get("scope") == "operational")
@@ -433,7 +442,7 @@ def main() -> int:
     markdown = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    write_json_report(report, output)
     markdown.write_text(render_markdown(report), encoding="utf-8")
     print(
         json.dumps(

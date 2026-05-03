@@ -160,24 +160,14 @@ if ($null -ne $LineCountReport -and $LineCountReport.csv_written) {
 }
 
 if (Test-Path $LineCountCsv) {
-    $Rows = Import-Csv $LineCountCsv | Sort-Object {[int]$_.Lines} -Descending
-    $TotalLines = ($Rows | Measure-Object -Property Lines -Sum).Sum
-    $FileCount = ($Rows | Measure-Object).Count
-    $Lines = @()
-    $Lines += "# Full Python Line Count Inventory"
-    $Lines += ""
-    $Lines += "- Stamp: $Stamp"
-    $Lines += "- CSV: $LineCountCsv"
-    $Lines += "- File count: $FileCount"
-    $Lines += "- Total Python lines: $TotalLines"
-    $Lines += "- Visibility rule: all counted Python files are listed below; do not truncate to top 10/top 20."
-    $Lines += ""
-    $Lines += "| Lines | File |"
-    $Lines += "|---:|---|"
-    foreach ($Row in $Rows) {
-        $Lines += "| $($Row.Lines) | ``$($Row.File)`` |"
-    }
-    $Lines | Set-Content -Path $LineCountAllMd -Encoding UTF8
+    Invoke-RepoPython -Label "Full Python line-count Markdown inventory" -ArgsList @(
+        "-m", "Tools.validation.build_full_python_line_count_markdown",
+        "--repo-root", ".",
+        "--stamp", $Stamp,
+        "--csv", $LineCountCsv,
+        "--output", $LineCountAllMd,
+        "--report-output", ".\$ValidationDir\ai_cycle_startup_${Stamp}_full_python_line_count_markdown.json"
+    )
 } else {
     [void]$Errors.Add("Line-count CSV was not created: $LineCountCsv")
 }
