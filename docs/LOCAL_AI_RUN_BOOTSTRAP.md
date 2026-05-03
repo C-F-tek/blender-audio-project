@@ -1,5 +1,66 @@
 # Local AI Run Bootstrap
 
+## FIRST ENTRY — Full Toolbox 0 -> 10 after PR #171
+
+When Carmine asks for any of these phrases, this is the first procedure to open and follow:
+
+```text
+Tutto su tutto
+full toolbox
+0-10
+cassetta degli attrezzi completa
+multi-macro patch
+multi-script
+multi-fase
+semi-automatic process
+```
+
+Primary current runbook:
+
+```text
+docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
+```
+
+The current operating chain is:
+
+```text
+full toolbox evidence
+  -> deterministic recommendations
+  -> agent review decision loop
+  -> warning-policy ledger
+  -> manual-review patch plan
+  -> review-safe patch bundle
+  -> explicit --apply only after review
+  -> validation
+  -> PR
+```
+
+Required merged baseline:
+
+```text
+PR #169: deterministic recommendation synthesizer
+PR #170: agent review decision loop + integrated warning policy
+PR #171: agent review patch bundle builder
+```
+
+Use the toolbox body model from the runbook:
+
+```text
+Skeleton / contracts
+Nervous system / orchestration
+Brain / decision layer
+Eyes / evidence collectors
+Immune system / validators
+Memory / read-only persistent status unless explicitly scoped
+Muscles / patch bundle apply lane
+Bloodstream / compact evidence
+Hands / GitHub + CLI
+```
+
+Do not start from the older PR #116 flow when the task is full-toolbox/0-10. The older `docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md` remains historical/refactor-specific; the post-#171 full-toolbox entrypoint is the runbook above.
+
+---
+
 This file is the first local-run bootstrap for AI assistants working inside a checked-out copy of this repository.
 
 Use it before changing files during local runs. It is intentionally operational and conservative.
@@ -103,6 +164,17 @@ docs/DATA_FLOW.md
 docs/LOCAL_AI_WORKFLOW.md
 docs/JSON_SCHEMAS.md
 Tools/validation/README.md
+```
+
+For full-toolbox / 0-10 tasks, immediately read next:
+
+```text
+docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
+```
+
+Then continue with:
+
+```text
 docs/EXECUTION_PLANS/README.md
 docs/TECH_DEBT_TRACKER.md
 ```
@@ -134,6 +206,7 @@ Classify the task before editing:
 | validation/evidence | validators, report-only builders, compact evidence docs | No implicit providers |
 | provider diagnostics | explicit-run scripts and diagnostics only | Explicit only |
 | core AI/backend | app-agnostic AI orchestration and validators | Explicit only when requested |
+| full-toolbox/0-10 | full evidence -> recommendation -> patch-plan -> patch-bundle process | Provider only through explicit full-toolbox command/flag |
 | Blender runtime | Blender scripts and scene behavior | Only when explicitly scoped |
 
 When the task is documentation/workflow-state, do not touch Python runtime code unless a validator/doc contract requires it and the reason is documented.
@@ -216,6 +289,12 @@ python .\Tools\validation\check_validation_report_contract.py --repo-root . --ou
 git diff --check
 ```
 
+For full-toolbox / 0-10 local runs, use:
+
+```text
+docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
+```
+
 For local pipeline runner validation:
 
 ```powershell
@@ -292,13 +371,13 @@ No runtime files, provider behavior, generated indexes, full analysis JSON or Bl
 The preferred current end-to-end local task is tracked in:
 
 ```text
-docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md
+docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
 ```
 
 The expected work is:
 
 ```text
-exercise the project-owned local AI pipeline with selected chunks, context pack, SQLite-backed agent state, explicit multistep GPU/NPU provider workflow, evidence and controlled proposal generation
+exercise the full toolbox process with selected tools, evidence collectors, optional GPU/NPU provider run, deterministic recommendations, warning-policy recovery, patch-plan generation, review-safe patch bundle generation and explicit apply/validation when authorized
 ```
 
 GPU/NPU execution remains explicit. If Carmine cannot run the local provider workflow, GitHub-only agents must stop at report-only/docs/validator work and request the exact local command/evidence bundle needed next.
