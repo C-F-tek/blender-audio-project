@@ -363,16 +363,102 @@ def verify_layering(repo_root: Path) -> dict[str, Any]:
     return checks
 
 
+def audit_list(data: dict[str, Any], key: str) -> list[dict[str, Any]]:
+    raw = data.get(key)
+    if not isinstance(raw, list):
+        return []
+    return [dict(item) for item in raw if isinstance(item, dict)]
+
+
+def normalize_imported_candidate(item: dict[str, Any], *, source: str, index: int) -> dict[str, Any]:
+    candidate = dict(item)
+    fallback = candidate.get("candidate_id") or candidate.get("id") or candidate.get("title") or candidate.get("repeated_logic")
+    candidate["candidate_id"] = safe_id(str(fallback or f"imported_audit_candidate_{index:03d}"))
+    candidate.setdefault("source", source)
+    candidate.setdefault("repeated_logic", candidate.get("title") or "Imported local-AI/refactor audit candidate.")
+    candidate.setdefault("files_involved", candidate.get("target_files") or [])
+    candidate.setdefault("existing_helper_available", None)
+    candidate.setdefault("preferred_existing_helper_or_module", candidate.get("preferred_helper") or candidate.get("preferred_existing_helper_or_module") or "Imported audit did not specify a helper/module.")
+    candidate.setdefault("recommendation_type", candidate.get("recommendation_type") or "needs_more_context")
+    candidate.setdefault("risk", candidate.get("risk") or "needs_review")
+    candidate.setdefault("schema_or_cli_impact", candidate.get("schema_or_cli_impact") or "needs manual review")
+    candidate.setdefault("validation_required", candidate.get("validation") or ["manual review", "check_python_syntax"])
+    candidate.setdefault("manual_review_required", True)
+    return candidate
+
+
 def merge_existing_audit_candidates(repo_root: Path, paths: list[str]) -> list[dict[str, Any]]:
     merged: list[dict[str, Any]] = []
+    candidate_keys = (
+        "duplication_candidates",
+        "refactor_candidates",
+        "duplicate_code_candidates",
+        "helper_reuse_candidates",
+        "manual_review_patch_plan_candidates",
+    )
     for raw in paths:
-        data = read_json(resolve_path(repo_root, raw))
-        for item in data.get("duplication_candidates", []) if isinstance(data.get("duplication_candidates"), list) else []:
-            if isinstance(item, dict):
-                candidate = dict(item)
-                candidate.setdefault("source", repo_rel(resolve_path(repo_root, raw), repo_root))
+        path = resolve_path(repo_root, raw)
+        source = repo_rel(path, repo_root)
+        data = read_json(path)
+        if not data:
+            continue
+        index = 0
+        for key in candidate_keys:
+            for item in audit_list(data, key):
+                index += 1
+                candidate = normalize_imported_candidate(item, source=source, index=index)
+                candidate.setdefault("imported_from_key", key)
                 merged.append(candidate)
     return merged
+
+
+def summarize_existing_audit_reports(repo_root: Path, paths: list[str]) -> dict[str, Any]:
+    summaries: list[dict[str, Any]] = []
+    helper_recommendations: list[str] = []
+    advisory_findings: list[str] = []
+    manual_plans: list[dict[str, Any]] = []
+    for raw in paths:
+        path = resolve_path(repo_root, raw)
+        rel = repo_rel(path, repo_root)
+        data = read_json(path)
+        summary = {
+            "path": rel,
+            "exists": path.exists(),
+            "kind": data.get("kind") if data else None,
+            "passed": data.get("passed") if data else None,
+            "provider_execution_performed": data.get("provider_execution_performed") if data else None,
+            "patch_application_performed": data.get("patch_application_performed") if data else None,
+            "sqlite_write_performed": data.get("sqlite_write_performed") if data else None,
+            "persistent_memory_write_performed": data.get("persistent_memory_write_performed") if data else None,
+            "duplication_candidate_count": len(audit_list(data, "duplication_candidates")) if data else 0,
+            "manual_review_patch_plan_candidate_count": len(audit_list(data, "manual_review_patch_plan_candidates")) if data else 0,
+        }
+        summaries.append(summary)
+        if not data:
+            continue
+        raw_helper = data.get("helper_reuse_recommendations")
+        if isinstance(raw_helper, list):
+            for item in raw_helper:
+                text = str(item).strip()
+                if text and text not in helper_recommendations:
+                    helper_recommendations.append(text)
+        raw_advisory = data.get("advisory_only_findings")
+        if isinstance(raw_advisory, list):
+            for item in raw_advisory:
+                text = str(item).strip()
+                if text and text not in advisory_findings:
+                    advisory_findings.append(text)
+        for item in audit_list(data, "manual_review_patch_plan_candidates"):
+            plan = dict(item)
+            plan.setdefault("source", rel)
+            plan.setdefault("manual_review_required", True)
+            manual_plans.append(plan)
+    return {
+        "reports": summaries,
+        "helper_reuse_recommendations": helper_recommendations,
+        "advisory_only_findings": advisory_findings,
+        "manual_review_patch_plan_candidates": manual_plans,
+    }
 
 
 def dedupe_candidates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -489,13 +575,15 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     for value in reports_raw:
         if value not in report_paths:
             report_paths.append(value)
+    input_audit_paths = split_values(args.input_audit_report)
+    existing_audit_summary = summarize_existing_audit_reports(repo_root, input_audit_paths)
 
     files = iter_python_files(repo_root, roots)
     functions, parse_warnings = collect_functions(repo_root, files)
     candidates = dedupe_candidates(
         build_rule_candidates(functions)
         + build_exact_name_candidates(functions)
-        + merge_existing_audit_candidates(repo_root, split_values(args.input_audit_report))
+        + merge_existing_audit_candidates(repo_root, input_audit_paths)
     )
     candidates = candidates[: max(1, args.max_candidates)]
     refactor_verification = verify_layering(repo_root)
@@ -513,6 +601,23 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     warnings = parse_warnings + report_warnings
     if not candidates:
         warnings.append("No duplication candidates detected; verify roots and patterns before treating this as complete.")
+
+    generated_patch_plan_candidates = build_manual_review_patch_plan_candidates(candidates)
+    imported_patch_plan_candidates = list(existing_audit_summary.get("manual_review_patch_plan_candidates") or [])
+    manual_review_patch_plan_candidates = generated_patch_plan_candidates + imported_patch_plan_candidates
+    helper_reuse_recommendations = [
+        "Reuse Tools.ai.github_evidence_bundle_io for evidence-bundle path/text/JSON helpers when semantics match.",
+        "Reuse Tools.ai.github_evidence_bundle_artifacts for artifact discovery and chunk pointer metadata.",
+        "Reuse Tools.validation.report_utils for validation output path resolution and JSON report writing.",
+        "Prefer promoting existing local functions into existing helper modules over creating new generic helper modules.",
+    ]
+    for item in existing_audit_summary.get("helper_reuse_recommendations") or []:
+        if item not in helper_reuse_recommendations:
+            helper_reuse_recommendations.append(item)
+    advisory_only_findings = list(advisory)
+    for item in existing_audit_summary.get("advisory_only_findings") or []:
+        if item not in advisory_only_findings:
+            advisory_only_findings.append(item)
 
     report = {
         "schema_version": 1,
@@ -533,14 +638,10 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "duplication_candidate_count": len(candidates),
         "refactor_verification": refactor_verification,
         "duplication_candidates": candidates,
-        "helper_reuse_recommendations": [
-            "Reuse Tools.ai.github_evidence_bundle_io for evidence-bundle path/text/JSON helpers when semantics match.",
-            "Reuse Tools.ai.github_evidence_bundle_artifacts for artifact discovery and chunk pointer metadata.",
-            "Reuse Tools.validation.report_utils for validation output path resolution and JSON report writing.",
-            "Prefer promoting existing local functions into existing helper modules over creating new generic helper modules.",
-        ],
-        "manual_review_patch_plan_candidates": build_manual_review_patch_plan_candidates(candidates),
-        "advisory_only_findings": advisory,
+        "helper_reuse_recommendations": helper_reuse_recommendations,
+        "manual_review_patch_plan_candidates": manual_review_patch_plan_candidates,
+        "advisory_only_findings": advisory_only_findings,
+        "input_audit_reports": existing_audit_summary.get("reports", []),
         "source_reports": report_status,
         "validation_commands": [
             "python -m py_compile Tools/ai/build_refactor_duplication_audit.py Tools/validation/run_refactor_duplication_audit_smoke.py",

@@ -10,6 +10,9 @@ param(
     [switch]$SkipSharedToolboxBundleSmoke,
     [switch]$SkipRefactorDuplicationAudit,
     [switch]$EnableNpuProviderEnvironmentCheck,
+    [string[]]$InputAuditReport = @(),
+    [string[]]$ExtraReport = @(),
+    [string[]]$ExtraArtifact = @(),
     [switch]$WriteCompactBundle,
     [int]$TimeoutSeconds = 300,
     [int]$MaxIncludedArtifactChars = 16000,
@@ -255,6 +258,13 @@ if (-not $SkipRefactorDuplicationAudit) {
     )
     if (Test-Path $CodeInterpreterJson) { $DupArgs += @("--code-interpreter-report", $CodeInterpreterJson) }
     if (Test-Path $SharedBundleSmokeJson) { $DupArgs += @("--bundle-smoke-report", $SharedBundleSmokeJson) }
+    foreach ($Path in $InputAuditReport) {
+        if (Test-Path $Path) {
+            $DupArgs += @("--input-audit-report", $Path)
+        } else {
+            [void]$Warnings.Add("Input audit report missing: $Path")
+        }
+    }
     Invoke-RepoPython -Label "Refactor duplication audit" -ArgsList $DupArgs
 } else {
     [void]$Warnings.Add("Refactor duplication audit skipped by request.")
@@ -267,6 +277,8 @@ foreach ($Path in @(
 )) {
     Add-ExistingPath -List $Reports -Path $Path
 }
+foreach ($Path in $InputAuditReport) { Add-ExistingPath -List $Reports -Path $Path }
+foreach ($Path in $ExtraReport) { Add-ExistingPath -List $Reports -Path $Path }
 
 foreach ($Path in @(
     ".\Tools\workflow\run_ai_cycle_startup_preflight.ps1",
@@ -277,6 +289,8 @@ foreach ($Path in @(
 )) {
     Add-ExistingPath -List $Artifacts -Path $Path
 }
+foreach ($Path in $InputAuditReport) { Add-ExistingPath -List $Artifacts -Path $Path }
+foreach ($Path in $ExtraArtifact) { Add-ExistingPath -List $Artifacts -Path $Path }
 
 foreach ($Path in $Reports) {
     $Data = Read-JsonOrNull $Path
@@ -313,6 +327,9 @@ $WorkflowReport = [ordered]@{
     artifact_count = $Artifacts.Count
     line_count_csv = $LineCountCsv
     line_count_all_markdown = $LineCountAllMd
+    input_audit_reports = @($InputAuditReport)
+    extra_reports = @($ExtraReport)
+    extra_artifacts = @($ExtraArtifact)
     reports = @($Reports)
     artifacts = @($Artifacts)
     compact_bundle_requested = [bool]$WriteCompactBundle
