@@ -740,3 +740,28 @@ It records the manual-review patch-plan decisions for this file without applying
   - Stop if the patch would touch output/**, generated indexes, SQLite, full analysis JSON, provider settings or Blender runtime.
 
 <!-- IA-CARMINE:PATCH-PLAN-APPLICATION:END -->
+
+<!-- IA-CARMINE:AGENT-REVIEW-PATCH-PLAN:BEGIN id=det_doc_doc_003:tools-validation-readme.md -->
+
+### IA-Carmine agent-review patch note
+
+This managed note records an evidence-backed manual-review patch plan. It is intentionally compact and idempotent.
+
+- Plan id: `det_doc_doc_003`
+- Area: `doc_doc`
+- Source: `gpu_recommendation`
+- Risk: `low`
+- Target: `Tools/validation/README.md`
+- Rationale: contract doc exists and missing terms are explicit
+- Strategy: Add a compact cross-reference for `code_contract_drift`, `docs_contract_drift`. Link or summarize the canonical source instead of duplicating large contract sections.
+- Validation commands:
+  - `python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json`
+  - `python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json`
+  - `git diff --check`
+  - `git status --short`
+- Stop conditions:
+  - Stop if the missing terms are already present after refreshing master.
+  - Stop if the edit would duplicate large generated artifacts.
+  - Stop if the patch would touch output/**, generated indexes, SQLite, full analysis JSON, provider settings or Blender runtime.
+
+<!-- IA-CARMINE:AGENT-REVIEW-PATCH-PLAN:END id=det_doc_doc_003:tools-validation-readme.md -->
