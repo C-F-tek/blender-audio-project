@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$RepoRoot = ".",
     [string]$Stamp = "",
     [string]$OutputRoot = "output",
@@ -617,8 +617,7 @@ $SemanticChunkArgs = @(
     "--chunk-output-dir", $EvidenceChunkDir,
     "--chunk-max-chars", "12000",
     "--chunk-overlap-lines", "12",
-    "--zip-output", $EvidenceChunkZip,
-    "--no-ollama"
+    "--zip-output", $EvidenceChunkZip
 )
 foreach ($Path in $SemanticChunkSources) {
     $SemanticChunkArgs += @("--source", $Path)
@@ -769,3 +768,4 @@ Write-Host "Recommendation count: $($WorkflowReport.recommendation_count)"
 Write-Host "Patch plan count: $($WorkflowReport.patch_plan_count)"
 Write-Host ""
 Write-Host "Git policy: stage only docs/LOCAL_VALIDATION_EVIDENCE outputs listed in workflow evidence_to_commit. Do not stage output/**, *.db or *.sqlite."
+

@@ -1,0 +1,263 @@
+# Evidence Chunk 0072/0081
+
+- source: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_20260503-231855.json`
+- source_sha256: `df2ddd91f8e75a76d63e8a525113ba6bbaeb9c3f8942dc8efbcd0a0e343e96ef`
+- line_start: `11224`
+- line_end: `11437`
+- section_kinds: `['json_key_section_split']`
+- previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-231855_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260503-231855_json_df2ddd91f8e7_chunk_0071.md`
+- next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-231855_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260503-231855_json_df2ddd91f8e7_chunk_0073.md`
+- summary_source: `deterministic`
+
+## Local chunk summary
+
+Chunk deterministico. Sezioni: artifact_chunk_index. Preview: "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json", "line_start": 32601, "line_end": 32800, "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L32401-L32600", "next_chunk_id": "output/analysis/cod...
+
+## Context before
+
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L32401-L32600",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 32401,
+          "line_end": 32600,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L32201-L32400",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L32601-L32800",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L32601-L32800",
+
+## Chunk content
+
+```json
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 32601,
+          "line_end": 32800,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L32401-L32600",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L32801-L33000",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L32801-L33000",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 32801,
+          "line_end": 33000,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L32601-L32800",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33001-L33200",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33001-L33200",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 33001,
+          "line_end": 33200,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L32801-L33000",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33201-L33400",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33201-L33400",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 33201,
+          "line_end": 33400,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33001-L33200",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33401-L33600",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33401-L33600",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 33401,
+          "line_end": 33600,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33201-L33400",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33601-L33800",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33601-L33800",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 33601,
+          "line_end": 33800,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33401-L33600",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33801-L34000",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33801-L34000",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 33801,
+          "line_end": 34000,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33601-L33800",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34001-L34200",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34001-L34200",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 34001,
+          "line_end": 34200,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L33801-L34000",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34201-L34400",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34201-L34400",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 34201,
+          "line_end": 34400,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34001-L34200",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34401-L34600",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34401-L34600",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 34401,
+          "line_end": 34600,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34201-L34400",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34601-L34800",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34601-L34800",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 34601,
+          "line_end": 34800,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34401-L34600",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34801-L35000",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34801-L35000",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 34801,
+          "line_end": 35000,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34601-L34800",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35001-L35200",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35001-L35200",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 35001,
+          "line_end": 35200,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L34801-L35000",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35201-L35400",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35201-L35400",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 35201,
+          "line_end": 35400,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35001-L35200",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35401-L35600",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35401-L35600",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 35401,
+          "line_end": 35600,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35201-L35400",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35601-L35800",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35601-L35800",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 35601,
+          "line_end": 35800,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35401-L35600",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35801-L36000",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35801-L36000",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 35801,
+          "line_end": 36000,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35601-L35800",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36001-L36200",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36001-L36200",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 36001,
+          "line_end": 36200,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L35801-L36000",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36201-L36400",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36201-L36400",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 36201,
+          "line_end": 36400,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36001-L36200",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36401-L36600",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36401-L36600",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 36401,
+          "line_end": 36600,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36201-L36400",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36601-L36800",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36601-L36800",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 36601,
+          "line_end": 36800,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36401-L36600",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36801-L37000",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36801-L37000",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 36801,
+          "line_end": 37000,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36601-L36800",
+```
+
+## Context after
+
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L37001-L37200",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L37001-L37200",
+          "path": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json",
+          "line_start": 37001,
+          "line_end": 37200,
+          "previous_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L36801-L37000",
+          "next_chunk_id": "output/analysis/code_interpreter_full_toolbox_20260503-231855.json#L37201-L37400",
+          "has_previous": true,

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # Smoke-test full toolbox deterministic chunking and telemetry invariants.
 from __future__ import annotations
 
@@ -33,8 +33,8 @@ def main() -> int:
     capability = read(repo_root / TARGETS[3])
     if "cloud_semantic_deterministic" not in workflow:
         errors.append("workflow does not use deterministic semantic chunk basename")
-    if '"--no-ollama"' not in workflow:
-        errors.append("workflow does not pass --no-ollama to build_semantic_evidence_chunks.py")
+    if '"--no-ollama"' in workflow:
+        errors.append("workflow must not hardcode --no-ollama in the full run; use --no-ollama only in the explicit AI-to-AI deterministic bundle command")
     if '$EvidenceChunkBase = "full_toolbox_${Stamp}_cloud_semantic"' in workflow:
         errors.append("workflow still contains non-deterministic cloud_semantic basename assignment")
     if "is_generated_evidence_chunk_path" not in repo_map:
@@ -101,3 +101,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
