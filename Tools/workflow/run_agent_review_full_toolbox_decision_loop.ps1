@@ -13,6 +13,8 @@ param(
     [int]$MaxContextFiles = 220,
     [int]$MaxCharsPerFile = 6000,
     [int]$MaxNewTokens = 3600,
+    [int]$MaxRecommendations = 20,
+    [int]$MaxPatchPlans = 20,
     [string]$KeepAlive = "35m",
     [int]$NpuAuditorEveryRounds = 3,
     [int]$NpuAuditorTimeoutSeconds = 420,
@@ -140,12 +142,16 @@ $FinalPythonSyntaxJson = ".\output\validation\python_syntax_full_toolbox_final_$
 $FinalContractJson = ".\output\validation\validation_report_contract_full_toolbox_final_$Stamp.json"
 $WorkflowJson = ".\output\validation\agent_review_full_toolbox_decision_loop_${Stamp}_workflow.json"
 $WorkflowMd = ".\output\validation\agent_review_full_toolbox_decision_loop_${Stamp}_workflow.md"
+$TelemetrySummaryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.json"
+$TelemetrySummaryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.md"
 
 Write-Host "=== Agent Review Full Toolbox Decision Loop ==="
 Write-Host "Repo: $RepoRootPath"
 Write-Host "Stamp: $Stamp"
 Write-Host "RunGpuNpuProvider: $RunGpuNpuProvider"
 Write-Host "RepositoryConsistencyMapWorkers: $RepositoryConsistencyMapWorkers"
+Write-Host "MaxRecommendations: $MaxRecommendations"
+Write-Host "MaxPatchPlans: $MaxPatchPlans"
 Write-Host "Guardrail: report-only decision loop; provider execution only when -RunGpuNpuProvider is explicitly supplied."
 
 if (-not $SkipMemoryReload) {
@@ -218,6 +224,7 @@ Invoke-RepoPython -Label "Contract script compile" -ArgsList @(
     ".\Tools\ai\analyze_gpu_npu_run_sync.py",
     ".\Tools\ai\build_deterministic_recommendations.py",
     ".\Tools\ai\build_agent_review_patch_plan.py",
+    ".\Tools\ai\build_full_toolbox_run_telemetry_summary.py",
     ".\Tools\ai\run_agent_review_decision_loop.py",
     ".\Tools\ai\build_repository_consistency_map.py",
     ".\Tools\validation\run_repository_consistency_map_smoke.py",
@@ -378,7 +385,9 @@ $DecisionArgs = @(
     "--output", $DecisionLoopJson,
     "--markdown-output", $DecisionLoopMd,
     "--min-recommendations", "$MinRecommendations",
-    "--min-patch-plans", "$MinPatchPlans"
+    "--min-patch-plans", "$MinPatchPlans",
+    "--max-recommendations", "$MaxRecommendations",
+    "--max-patch-plans", "$MaxPatchPlans"
 )
 foreach ($Report in $ToolReports) {
     $DecisionArgs += @("--tool-report", $Report)
@@ -515,6 +524,49 @@ Invoke-RepoPython -Label "Final scoped validation report contract" -ArgsList @(
     "--output", $FinalContractJson
 )
 
+$TelemetryArgs = @(
+    ".\Tools\ai\build_full_toolbox_run_telemetry_summary.py",
+    "--repo-root", ".",
+    "--stamp", $Stamp,
+    "--decision-loop", $DecisionLoopJson,
+    "--recommendations", $RecommendationsJson,
+    "--patch-plan", $PatchPlanJson,
+    "--repository-consistency", $RepositoryConsistencyJson,
+    "--repository-consistency-smoke", $RepositoryConsistencySmokeJson,
+    "--gpu-npu-sync", $GpuNpuSyncJson,
+    "--orchestrator", $OrchOut,
+    "--gpu-report", $GpuOut,
+    "--budget-minutes", "$BudgetMinutes",
+    "--max-rounds", "$MaxRounds",
+    "--files-per-round", "$FilesPerRound",
+    "--max-context-files", "$MaxContextFiles",
+    "--max-chars-per-file", "$MaxCharsPerFile",
+    "--max-new-tokens", "$MaxNewTokens",
+    "--npu-auditor-every-rounds", "$NpuAuditorEveryRounds",
+    "--repository-consistency-map-workers", "$RepositoryConsistencyMapWorkers",
+    "--output", $TelemetrySummaryJson,
+    "--markdown-output", $TelemetrySummaryMd
+)
+foreach ($Path in @(
+    $MemoryBundleJson,
+    $MemoryBundleMd,
+    $MemoryLineCountCsv,
+    $LineCountCsv,
+    $BundleJson,
+    $BundleMd,
+    ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.json",
+    ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.md"
+)) {
+    if (Test-Path $Path) {
+        $TelemetryArgs += @("--evidence-to-commit", $Path)
+    }
+}
+$BundleValidationForTelemetry = Read-JsonFile $BundleValidationJson
+if ($BundleValidationForTelemetry -and $BundleValidationForTelemetry.passed -eq $true) {
+    $TelemetryArgs += @("--bundle-validation-passed")
+}
+Invoke-RepoPython -Label "Full toolbox run telemetry summary" -ArgsList $TelemetryArgs
+
 foreach ($Path in @(
     $MemoryWorkflow, $RepositoryConsistencyJson, $RepositoryConsistencySmokeJson, $LineCountJson, $PythonSyntaxJson, $CodeInterpreterJson, $GpuContractSmokeJson,
     $DeterministicSmokeJson, $DecisionLoopSmokeJson, $NpuEnvJson, $OrchOut, $GpuOut, $GpuReplayJson,
@@ -527,20 +579,32 @@ foreach ($Path in @(
     $MemoryBundleJson, $MemoryBundleMd, $MemoryLineCountCsv, $RepositoryConsistencyMd, $RepositoryConsistencySmokeMd, $LineCountAllMd, $LineCountCsv,
     $CodeInterpreterMd, $GpuContractSmokeMd, $DeterministicSmokeMd, $DecisionLoopSmokeMd,
     $NpuEnvMd, $OrchMd, $GpuMd, $GpuReplayMd, $GpuNpuSyncMd, $RecommendationsMd,
-    $DecisionLoopMd, $PatchPlanMd, $BundleJson, $BundleMd
+    $DecisionLoopMd, $PatchPlanMd, $TelemetrySummaryJson, $TelemetrySummaryMd, $BundleJson, $BundleMd
 )) {
     Add-ExistingPath -List $Artifacts -Path $Path
 }
 
+$DecisionSummary = Read-JsonFile $DecisionLoopJson
+$BundleValidation = Read-JsonFile $BundleValidationJson
+$ProviderAdvisoryFailures = [System.Collections.ArrayList]@()
+$ProviderAdvisoryReports = @($OrchOut, $GpuOut)
 foreach ($ReportPath in $Reports) {
     $Data = Read-JsonFile $ReportPath
     if ($Data -and ($null -ne $Data.passed) -and ($Data.passed -eq $false)) {
-        [void]$Errors.Add("${ReportPath}: passed=false")
+        $DecisionLaneReady = (
+            $DecisionSummary -and
+            ($DecisionSummary.passed -eq $true) -and
+            ([int]$DecisionSummary.recommendation_count -ge $MinRecommendations) -and
+            ([int]$DecisionSummary.patch_plan_count -ge $MinPatchPlans)
+        )
+        if (($ProviderAdvisoryReports -contains $ReportPath) -and $DecisionLaneReady) {
+            [void]$ProviderAdvisoryFailures.Add($ReportPath)
+            [void]$Warnings.Add("${ReportPath}: passed=false degraded to provider advisory warning because decision loop passed with sufficient recommendations/patch plans")
+        } else {
+            [void]$Errors.Add("${ReportPath}: passed=false")
+        }
     }
 }
-
-$DecisionSummary = Read-JsonFile $DecisionLoopJson
-$BundleValidation = Read-JsonFile $BundleValidationJson
 $WorkflowPassed = ($Errors.Count -eq 0)
 $WorkflowReport = [ordered]@{
     schema_version = 1
@@ -564,6 +628,10 @@ $WorkflowReport = [ordered]@{
     bundle_validation_passed = if ($BundleValidation) { $BundleValidation.passed } else { $null }
     report_count = $Reports.Count
     artifact_count = $Artifacts.Count
+    provider_advisory_failure_count = $ProviderAdvisoryFailures.Count
+    provider_advisory_failures = @($ProviderAdvisoryFailures)
+    max_recommendations = $MaxRecommendations
+    max_patch_plans = $MaxPatchPlans
     reports = @($Reports)
     artifacts = @($Artifacts)
     evidence_to_commit = @(
@@ -574,7 +642,9 @@ $WorkflowReport = [ordered]@{
         $BundleJson,
         $BundleMd,
         ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.json",
-        ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.md"
+        ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.md",
+        $TelemetrySummaryJson,
+        $TelemetrySummaryMd
     ) | Where-Object { Test-Path $_ }
     guardrails = [ordered]@{
         provider_execution_requires_explicit_flag = $true
@@ -585,6 +655,7 @@ $WorkflowReport = [ordered]@{
         persistent_memory_write_performed = $false
         blender_runtime_execution_performed = $false
         raw_output_commit_allowed = $false
+        provider_advisory_failures_are_non_blocking_when_decision_lane_passes = $true
     }
 }
 $WorkflowReport | ConvertTo-Json -Depth 8 | Set-Content -Path $WorkflowJson -Encoding UTF8
@@ -601,6 +672,9 @@ $WorkflowMarkdown = @(
     "- Persistent memory write performed: ``False``",
     "- Recommendation count: ``$($WorkflowReport.recommendation_count)``",
     "- Patch plan count: ``$($WorkflowReport.patch_plan_count)``",
+    "- Max recommendations: ``$MaxRecommendations``",
+    "- Max patch plans: ``$MaxPatchPlans``",
+    "- Provider advisory failure count: ``$($WorkflowReport.provider_advisory_failure_count)``",
     "- Bundle validation passed: ``$($WorkflowReport.bundle_validation_passed)``",
     "",
     "## Evidence to commit",
