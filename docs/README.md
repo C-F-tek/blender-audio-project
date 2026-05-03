@@ -2,39 +2,63 @@
 
 This folder contains the stable technical documentation for `IA-Carmine Local AI Orchestration Workbench`.
 
-The GitHub repository slug is still `C-F-tek/blender-audio-project`, but the current project identity is broader than Blender/audio. The active architecture centers on local AI orchestration, provider-lane routing, quality gates, NPU/GPU diagnostics, validation reports, memory/guardrail contracts and compact GitHub evidence bundles.
+The GitHub repository slug is still `C-F-tek/blender-audio-project`, but the active project identity is broader than Blender/audio. The current architecture centers on local AI orchestration, provider-lane routing, quality gates, GPU/NPU diagnostics, validation reports, memory/guardrail contracts and compact GitHub evidence bundles.
 
 Blender/audio-reactive generation remains the first application domain and legacy production target. It is not the current architectural boundary.
 
-## Recommended reading order
+## Canonical reading order
+
+Use this order for humans, GitHub-only AI and local agents:
 
 1. `../AGENTS.md`
-2. `../WORKFLOW.md`
-3. `PROJECT_STATUS_POINT.md`
-4. `DATA_FLOW.md`
-5. `LOCAL_AI_WORKFLOW.md`
-6. `JSON_SCHEMAS.md`
-7. `../Tools/npu/pipeline/README.md`
-8. `../Tools/validation/README.md`
-9. `LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md` when reviewing the validated GPU/NPU workflow
-10. `EXECUTION_PLANS/README.md`
-11. `TECH_DEBT_TRACKER.md`
-12. `MODULE_MAP.md`
-13. `REFACTORING_AND_REUSE_PLAN.md`
-14. `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`
-15. `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`
-16. `AI_CONTEXT_PACKS.md`
-17. `AI_SELECTIVE_PLANNER.md`
-18. `LOCAL_AI_CORE_TOOL_ACTIVATION.md`
-19. `LOCAL_AI_TASKS/README.md`
-20. `AI_WORKLOAD_REPORT_QUALITY_GATE.md`
-21. `AI_REFERENCE_ONBOARDING.md`
-22. `AI_REFERENCE_SOURCE_MAP.md`
-23. `AI_MEMORY_POLICY.md`
-24. `AI_PIPELINE_ARCHITECTURE.md`
-25. `AI_PIPELINE_REFACTOR_STATUS.md`
-26. `LOCAL_WORKSTATION_TARGET.md`
-27. Blender/audio docs only when entering that application domain.
+2. `../README.md`
+3. `../WORKFLOW.md`
+4. `README.md`
+5. `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md`
+6. `PROJECT_STATUS_POINT.md`
+7. `DATA_FLOW.md`
+8. `LOCAL_AI_WORKFLOW.md`
+9. `JSON_SCHEMAS.md`
+10. `LOCAL_AI_RUN_BOOTSTRAP.md` when working from a local checkout
+11. `LOCAL_AI_TASKS/README.md`
+12. `LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` for full IA-Carmine runs
+13. `LOCAL_AI_TASKS/shared-runtime-toolbox-ai-to-ai-next-task-2026-05-03.md` for AI-to-AI handoff
+14. `../Tools/validation/README.md`
+15. `../Tools/npu/pipeline/README.md`
+16. `EXECUTION_PLANS/README.md`
+17. `TECH_DEBT_TRACKER.md`
+18. `MODULE_MAP.md`
+19. Domain-specific Blender/audio docs only when entering that application area.
+
+## Documentation governance
+
+`DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` is the control point for the current Markdown cleanup lane.
+
+Rules:
+
+```text
+new stable MD -> update the correct index
+new overlapping MD -> mark older material as superseded/historical/domain-only
+generated/evidence MD -> do not treat as source documentation
+deletion -> requires explicit user approval
+```
+
+Before broad documentation cleanup, generate inventory evidence:
+
+```powershell
+python .\Tools\validation\build_markdown_inventory.py `
+  --repo-root . `
+  --output .\output\validation\markdown_inventory.json `
+  --markdown-output .\output\validation\markdown_inventory.md
+```
+
+Then run:
+
+```powershell
+python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
+python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+git diff --check
+```
 
 ## Current validated provider posture
 
@@ -43,74 +67,88 @@ Ollama -> GPU/CUDA -> primary advisory provider
 OpenVINO -> NPU -> probe / guardrail / decode diagnostic
 ```
 
-Validated evidence:
-
-```text
-docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
-docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
-docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
-docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.json
-```
-
-Confirmed decisions:
+Validated decisions retained by the current docs:
 
 ```text
 ollama_gpu_primary_advisory: true
 npu_excluded_when_unusable: true
 provider_execution_seen: true
 npu_decode_smoke_passed: true
+provider execution remains explicit and report-bound
 ```
 
 ## Documentation groups
 
-### Core AI orchestration and validation
+### Core entrypoints and governance
 
 | File | Purpose |
 |---|---|
-| `../README.md` | Current project identity, provider-lane architecture and main workflows. |
-| `../AGENTS.md` | Operating contract for AI agents and automated reviewers. |
-| `../WORKFLOW.md` | Root operational workflow from task selection to evidence bundle. |
+| `../AGENTS.md` | Mandatory operating contract for AI agents and automated reviewers. |
+| `../README.md` | Human project identity and high-level architecture. |
+| `../WORKFLOW.md` | Root operational lifecycle from scope to validation, evidence and PR. |
+| `README.md` | This documentation index. |
+| `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | Markdown map, lifecycle policy, missing-index evidence lane and prune rules. |
 | `PROJECT_STATUS_POINT.md` | Current status checkpoint and next recommended tasks. |
-| `DATA_FLOW.md` | Current app-agnostic data/report/provider flow. |
-| `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow, GPU/NPU parallelism and evidence handling. |
-| `JSON_SCHEMAS.md` | JSON/report contract notes and current schema gap index. |
-| `AI_SELECTIVE_PLANNER.md` | Report-only selective planner that recommends validators and candidate patch specs from context/evidence. |
-| `LOCAL_AI_CORE_TOOL_ACTIVATION.md` | App-agnostic activation lane for selected chunks, context packs, enrichment plans, knowledge broker packets, proposals and evidence. |
-| `LOCAL_AI_TASKS/README.md` | Non-interactive Markdown task entrypoints for local AI runs. |
-| `LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable local validation evidence. |
-| `../Tools/validation/README.md` | Local validation commands and report contracts. |
-| `../Tools/npu/pipeline/README.md` | App-agnostic NPU/provider helper package. |
-
-### Provider, guardrail and memory workflow
-
-| File | Purpose |
-|---|---|
-| `AI_MEMORY_POLICY.md` | Retention, promotion and quarantine policy for generic agent memory. |
-| `AI_WORKLOAD_REPORT_QUALITY_GATE.md` | Documentation and validator workflow for workload quality-gate drift. |
-| `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local Git/GitHub validation, evidence, index regeneration, commit and push workflow. |
-| `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | GitHub-only continuation mode and local-validation handoff. |
-| `AI_CONTEXT_PACKS.md` | Task-scoped AI context pack profiles, builder contract and compact evidence workflow. |
-| `EXECUTION_PLANS/README.md` | Durable task-plan workflow for larger or staged work. |
-| `TECH_DEBT_TRACKER.md` | Known debt and remediation queue. |
+| `DATA_FLOW.md` | App-agnostic data/report/provider flow. |
 | `MODULE_MAP.md` | Repository areas and navigation map. |
-| `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | External agent-first engineering patterns mapped into project actions. |
-| `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this project. |
-| `AI_REFERENCE_ONBOARDING.md` | AI-to-AI reference onboarding for current local AI/evidence lanes. |
-| `AI_REFERENCE_SOURCE_MAP.md` | Source map for AI reference docs and local evidence workflows. |
+| `TECH_DEBT_TRACKER.md` | Known debt and remediation queue. |
 
-### AI artifact pipeline and generated policy
+### Local AI, provider and validation workflow
 
 | File | Purpose |
 |---|---|
+| `LOCAL_AI_RUN_BOOTSTRAP.md` | Local checkout bootstrap, reading set, task classification and guardrails. |
+| `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow, GPU/NPU parallelism and evidence handling. |
+| `LOCAL_AI_TASKS/README.md` | Non-interactive Markdown task entrypoints for local AI runs. |
+| `LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` | Canonical full-toolbox procedure. |
+| `LOCAL_AI_TASKS/shared-runtime-toolbox-ai-to-ai-next-task-2026-05-03.md` | Repo-native AI-to-AI next-task handoff. |
+| `AI_WORKLOAD_REPORT_QUALITY_GATE.md` | Workload quality-gate drift and validation workflow. |
+| `LOCAL_AI_CORE_TOOL_ACTIVATION.md` | App-agnostic activation lane for selected chunks, packs, broker packets, proposals and evidence. |
+| `AI_CONTEXT_PACKS.md` | Task-scoped AI context pack profiles and compact evidence workflow. |
+| `AI_SELECTIVE_PLANNER.md` | Report-only selective planner for validators and patch-spec candidates. |
+| `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local Git/GitHub validation, index regeneration, commit and push workflow. |
+| `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | GitHub-only continuation mode and local-validation handoff. |
+| `AI_MEMORY_POLICY.md` | Retention, promotion and quarantine policy for generic agent memory. |
+
+### AI artifact and pipeline contracts
+
+| File | Purpose |
+|---|---|
+| `JSON_SCHEMAS.md` | JSON/report contract notes and schema gap index. |
 | `AI_PIPELINE_ARCHITECTURE.md` | Modular AI artifact pipeline map. |
 | `AI_PIPELINE_REFACTOR_STATUS.md` | Stable refactor status marker. |
 | `AI_ARTIFACT_SCHEMAS.md` | AI artifact schema notes and validation report contracts. |
 | `GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | Template for future generated Python application adapters. |
 | `PATCH_SPEC_WORKFLOW.md` | Safe JSON patch-spec workflow and dry-run/apply commands. |
+| `AI_REFERENCE_ONBOARDING.md` | AI-to-AI reference onboarding for current local AI/evidence lanes. |
+| `AI_REFERENCE_SOURCE_MAP.md` | Source map for AI reference docs and local evidence workflows. |
+| `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this project. |
+| `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | External agent-first engineering patterns mapped into project actions. |
+
+### Validation and package-local documentation
+
+| File | Purpose |
+|---|---|
+| `../Tools/validation/README.md` | Validation command catalog and report contracts. |
+| `../Tools/npu/pipeline/README.md` | App-agnostic NPU/provider helper package contract. |
+| `../Tools/git/README.md` | Git helper documentation. |
+| `../Scripting/**/README.md` | Package-local Blender/application guidance. |
+
+### Compact evidence
+
+`LOCAL_VALIDATION_EVIDENCE/` contains compact Git-trackable evidence snapshots from ignored local output trees.
+
+Policy:
+
+```text
+evidence MD/JSON is review evidence, not canonical source documentation
+do not add evidence files to stable reading order unless a specific bundle is the current proof point
+do not commit evidence from aborted or partial runs unless explicitly approved
+```
 
 ### Legacy Blender/audio application domain
 
-These docs remain relevant when working on Blender/audio outputs, but are not the current core architecture:
+These docs are relevant only when working on Blender/audio outputs:
 
 | File | Purpose |
 |---|---|
@@ -136,75 +174,21 @@ These docs remain relevant when working on Blender/audio outputs, but are not th
 | `DEVELOPER_GUIDE.md` | Practical workflow for development and review. |
 | `PROJECT_AUDIT.md` | Technical assessment, risks and next actions. |
 
-## Current workflow summary
-
-Provider baseline validation workflow:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
-  -Profile npu `
-  -RunOllamaProbe `
-  -RunNpuProbe `
-  -RunNpuDecodeSmoke `
-  -UsePrimaryAdvisoryProvider `
-  -Basename parallel_gpu_npu_multistep_real_npu_v2 `
-  -ProposalBasename parallel_gpu_npu_multistep_real_npu_v2_proposals `
-  -EvidenceBasename parallel_gpu_npu_multistep_real_npu_v2_evidence
-```
-
-Evidence push workflow:
-
-```powershell
-git add docs/LOCAL_VALIDATION_EVIDENCE/
-git commit -m "test: add local ai workflow evidence bundle"
-git push
-```
-
-Preferred current local AI core/tool activation:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_core_tool_activation.ps1
-```
-
-The full-context golden path remains available as a heavier task-specific run:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
-  -TaskBranch codex/full-context-ai-npu-golden-run `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
-```
-
-## Documentation style
+## Style rules
 
 Use direct, explicit documentation.
 
 Rules:
 
-- Mark unverified information as `not specified`.
-- Prefer tables for file maps and contracts.
-- Keep provider execution modes explicit.
-- Keep package-specific Blender instructions near the package.
-- Keep global AI/provider/validation rules in `docs/`, `README.md`, `AGENTS.md` and `WORKFLOW.md`.
-- Do not document generated artifacts as manually maintained source.
-- Update this index when adding a new stable documentation file.
-
-## AI usage
-
-AI systems should treat this folder as the contract layer for the repository.
-
-Before editing code, an AI system should:
-
-1. read `../AGENTS.md`;
-2. read `../WORKFLOW.md`;
-3. read this documentation index;
-4. read `PROJECT_STATUS_POINT.md`;
-5. read `DATA_FLOW.md`;
-6. read `LOCAL_AI_WORKFLOW.md`;
-7. read `JSON_SCHEMAS.md`;
-8. read `../Tools/npu/pipeline/README.md` for NPU/provider work;
-9. read `../Tools/validation/README.md` for validation/report work;
-10. inspect the target source file before producing a patch.
+```text
+mark unverified information as not specified
+prefer tables for file maps and contracts
+keep provider execution modes explicit
+keep package-specific Blender instructions near the package
+keep global AI/provider/validation rules in root entrypoints and docs/
+do not document generated artifacts as manually maintained source
+update the correct index when adding a maintained Markdown file
+```
 
 ## Refactoring note
 
