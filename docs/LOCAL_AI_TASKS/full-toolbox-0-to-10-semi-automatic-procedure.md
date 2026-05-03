@@ -213,6 +213,42 @@ MaxPatchPlans:
 ```
 
 
+### Semantic evidence chunking for cloud handoff
+
+Large evidence files must be split before zip/upload/cloud handoff when they exceed practical cloud-context limits. The local AI path may still generate and validate the full bundle, but the cloud handoff must use a manifest plus ordered chunks.
+
+Current rule:
+
+```text
+Ollama local summaries are enabled by default.
+Use --no-ollama only when local Ollama must be disabled.
+This chunking phase uses direct local Ollama only; no NPU/GPU audit lane is executed.
+Chunks must preserve source SHA256, line ranges, previous/next links, and overlap context.
+Do not use plain truncation as the primary cloud-handoff strategy.
+```
+
+Canonical tool:
+
+```powershell
+python .\Tools\ai\build_semantic_evidence_chunks.py `
+  --repo-root . `
+  --basename full_toolbox_${Stamp}_cloud_semantic `
+  --source .\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_agent_review_decision_loop_${Stamp}.json `
+  --source .\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_agent_review_decision_loop_${Stamp}.md `
+  --output-dir .\docs\LOCAL_VALIDATION_EVIDENCE `
+  --chunk-output-dir .\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_${Stamp}_cloud_semantic_chunks `
+  --chunk-max-chars 12000 `
+  --chunk-overlap-lines 12 `
+  --zip-output .\output\validation\full_toolbox_${Stamp}_cloud_semantic_chunks.zip
+```
+
+To disable Ollama:
+
+```powershell
+--no-ollama
+```
+
+
 ## Global guardrails
 
 Never do without explicit user command:

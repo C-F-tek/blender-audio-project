@@ -146,6 +146,11 @@ $TelemetrySummaryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telem
 $TelemetrySummaryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.md"
 $RuntimeToolTelemetryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.json"
 $RuntimeToolTelemetryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.md"
+$EvidenceChunkBase = "full_toolbox_${Stamp}_cloud_semantic"
+$EvidenceChunkDir = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunks"
+$EvidenceChunkManifestJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunk_manifest.json"
+$EvidenceChunkManifestMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunk_manifest.md"
+$EvidenceChunkZip = ".\output\validation\${EvidenceChunkBase}_chunks.zip"
 
 Write-Host "=== Agent Review Full Toolbox Decision Loop ==="
 Write-Host "Repo: $RepoRootPath"
@@ -228,6 +233,7 @@ Invoke-RepoPython -Label "Contract script compile" -ArgsList @(
     ".\Tools\ai\build_agent_review_patch_plan.py",
     ".\Tools\ai\build_full_toolbox_run_telemetry_summary.py",
     ".\Tools\ai\build_runtime_tool_usage_telemetry.py",
+    ".\Tools\ai\build_semantic_evidence_chunks.py",
     ".\Tools\ai\run_agent_review_decision_loop.py",
     ".\Tools\ai\build_repository_consistency_map.py",
     ".\Tools\validation\run_repository_consistency_map_smoke.py",
@@ -582,6 +588,29 @@ Invoke-RepoPython -Label "Runtime tool usage telemetry" -ArgsList @(
     "--markdown-output", $RuntimeToolTelemetryMd
 )
 
+$SemanticChunkSources = @(
+    $BundleJson,
+    $BundleMd,
+    $TelemetrySummaryJson,
+    $TelemetrySummaryMd,
+    $RuntimeToolTelemetryJson,
+    $RuntimeToolTelemetryMd
+) | Where-Object { Test-Path $_ }
+$SemanticChunkArgs = @(
+    ".\Tools\ai\build_semantic_evidence_chunks.py",
+    "--repo-root", ".",
+    "--basename", $EvidenceChunkBase,
+    "--output-dir", $EvidenceDir,
+    "--chunk-output-dir", $EvidenceChunkDir,
+    "--chunk-max-chars", "12000",
+    "--chunk-overlap-lines", "12",
+    "--zip-output", $EvidenceChunkZip
+)
+foreach ($Path in $SemanticChunkSources) {
+    $SemanticChunkArgs += @("--source", $Path)
+}
+Invoke-RepoPython -Label "Semantic evidence chunking for cloud handoff" -ArgsList $SemanticChunkArgs
+
 foreach ($Path in @(
     $MemoryWorkflow, $RepositoryConsistencyJson, $RepositoryConsistencySmokeJson, $LineCountJson, $PythonSyntaxJson, $CodeInterpreterJson, $GpuContractSmokeJson,
     $DeterministicSmokeJson, $DecisionLoopSmokeJson, $NpuEnvJson, $OrchOut, $GpuOut, $GpuReplayJson,
@@ -594,7 +623,8 @@ foreach ($Path in @(
     $MemoryBundleJson, $MemoryBundleMd, $MemoryLineCountCsv, $RepositoryConsistencyMd, $RepositoryConsistencySmokeMd, $LineCountAllMd, $LineCountCsv,
     $CodeInterpreterMd, $GpuContractSmokeMd, $DeterministicSmokeMd, $DecisionLoopSmokeMd,
     $NpuEnvMd, $OrchMd, $GpuMd, $GpuReplayMd, $GpuNpuSyncMd, $RecommendationsMd,
-    $DecisionLoopMd, $PatchPlanMd, $TelemetrySummaryJson, $TelemetrySummaryMd, $RuntimeToolTelemetryJson, $RuntimeToolTelemetryMd, $BundleJson, $BundleMd
+    $DecisionLoopMd, $PatchPlanMd, $TelemetrySummaryJson, $TelemetrySummaryMd, $RuntimeToolTelemetryJson, $RuntimeToolTelemetryMd,
+    $EvidenceChunkManifestJson, $EvidenceChunkManifestMd, $BundleJson, $BundleMd
 )) {
     Add-ExistingPath -List $Artifacts -Path $Path
 }
@@ -621,6 +651,32 @@ foreach ($ReportPath in $Reports) {
     }
 }
 $WorkflowPassed = ($Errors.Count -eq 0)
+$EvidenceToCommit = @(
+    $MemoryBundleJson,
+    $MemoryBundleMd,
+    $MemoryLineCountCsv,
+    $LineCountCsv,
+    $BundleJson,
+    $BundleMd,
+    ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.json",
+    ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.md",
+    $TelemetrySummaryJson,
+    $TelemetrySummaryMd,
+    $RuntimeToolTelemetryJson,
+    $RuntimeToolTelemetryMd,
+    $EvidenceChunkManifestJson,
+    $EvidenceChunkManifestMd
+) | Where-Object { Test-Path $_ }
+
+$ChunkManifestForCommit = Read-JsonFile $EvidenceChunkManifestJson
+if ($ChunkManifestForCommit -and $ChunkManifestForCommit.chunk_files) {
+    foreach ($ChunkPath in $ChunkManifestForCommit.chunk_files) {
+        if (Test-Path $ChunkPath) {
+            $EvidenceToCommit += @($ChunkPath)
+        }
+    }
+}
+
 $WorkflowReport = [ordered]@{
     schema_version = 1
     kind = "agent_review_full_toolbox_decision_loop_workflow"
@@ -649,20 +705,7 @@ $WorkflowReport = [ordered]@{
     max_patch_plans = $MaxPatchPlans
     reports = @($Reports)
     artifacts = @($Artifacts)
-    evidence_to_commit = @(
-        $MemoryBundleJson,
-        $MemoryBundleMd,
-        $MemoryLineCountCsv,
-        $LineCountCsv,
-        $BundleJson,
-        $BundleMd,
-        ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.json",
-        ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.md",
-        $TelemetrySummaryJson,
-        $TelemetrySummaryMd,
-        $RuntimeToolTelemetryJson,
-        $RuntimeToolTelemetryMd
-    ) | Where-Object { Test-Path $_ }
+    evidence_to_commit = @($EvidenceToCommit)
     guardrails = [ordered]@{
         provider_execution_requires_explicit_flag = $true
         run_gpu_npu_provider = [bool]$RunGpuNpuProvider
