@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-"""Replacement-ready orchestrator for build_github_evidence_bundle.py.
+"""Build compact Git-trackable GitHub evidence bundles.
 
-This file is intentionally kept separate so it can be manually copied over
-`Tools/ai/build_github_evidence_bundle.py` after syncing PR #109 locally.
-
-It preserves the public CLI and delegates implementation details to the split
-`github_evidence_bundle_*` modules.
-
-It does not execute providers, run Blender, apply patches or modify runtime
-outputs.
+The builder is report-only. It reads validation/report artifacts, optionally
+includes bounded related artifacts, writes compact JSON/Markdown evidence under
+`docs/LOCAL_VALIDATION_EVIDENCE`, and never executes providers, Blender, Git
+writes, patch application, or SQLite writes.
 """
 from __future__ import annotations
 
@@ -18,7 +14,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.github_evidence_bundle_artifacts import build_included_artifacts, summarize_artifact
+from Tools.ai.github_evidence_bundle_artifacts import (
+    DEFAULT_CHUNK_LINES,
+    DEFAULT_RECURSIVE_MAX_FILES,
+    build_artifact_chunk_index,
+    build_included_artifacts,
+    discover_recursive_artifacts,
+    summarize_artifact,
+)
 from Tools.ai.github_evidence_bundle_decisions import build_decision
 from Tools.ai.github_evidence_bundle_io import (
     CONTENT_EXTENSION_ALLOWLIST,
@@ -27,6 +30,7 @@ from Tools.ai.github_evidence_bundle_io import (
     DEFAULT_REPORTS,
     RAW_ARTIFACT_DENY_FRAGMENTS,
     RAW_ARTIFACT_DENY_PREFIXES,
+    normalize_manifest_path,
     resolve_repo_path,
     split_path_values,
 )
@@ -36,6 +40,19 @@ from Tools.ai.github_evidence_bundle_reports import (
     summarize_report,
     summarize_selected_chunks_evidence,
 )
+
+
+def dedupe_paths(paths: list[Path]) -> list[Path]:
+    """Return paths deduplicated by resolved path while preserving order."""
+    out: list[Path] = []
+    seen: set[str] = set()
+    for path in paths:
+        key = path.resolve().as_posix() if path.exists() else path.as_posix()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(path)
+    return out
 
 
 def build_bundle(
@@ -48,14 +65,47 @@ def build_bundle(
     auto_include_related: bool,
     max_included_artifact_chars: int,
     max_included_artifacts: int,
+    recursive_report_roots: list[str] | None = None,
+    recursive_artifact_roots: list[str] | None = None,
+    recursive_stamp: str | None = None,
+    recursive_include_unstamped: bool = False,
+    recursive_max_files: int = DEFAULT_RECURSIVE_MAX_FILES,
+    chunk_large_files_lines: int = 0,
 ) -> tuple[dict[str, Any], str]:
-    """Build and write the JSON/Markdown evidence bundle."""
+    """Build and write the JSON/Markdown evidence bundle.
+
+    The trailing recursive/chunk parameters are optional to preserve the original
+    public Python API. Older callers that pass the first nine positional
+    arguments continue to work unchanged.
+    """
     resolved_reports = [resolve_repo_path(repo_root, raw) for raw in report_paths]
+    explicit_artifacts = [resolve_repo_path(repo_root, raw) for raw in split_path_values(artifact_paths)]
+
+    recursive_report_paths, skipped_recursive_reports = discover_recursive_artifacts(
+        repo_root,
+        split_path_values(list(recursive_report_roots or [])),
+        suffixes=(".json",),
+        stamp=recursive_stamp,
+        include_unstamped=recursive_include_unstamped,
+        max_files=recursive_max_files,
+    )
+    recursive_artifact_paths, skipped_recursive_artifacts = discover_recursive_artifacts(
+        repo_root,
+        split_path_values(list(recursive_artifact_roots or [])),
+        suffixes=(".json", ".md"),
+        stamp=recursive_stamp,
+        include_unstamped=recursive_include_unstamped,
+        max_files=recursive_max_files,
+    )
+
+    resolved_reports = dedupe_paths(resolved_reports + recursive_report_paths)
+    explicit_artifacts = dedupe_paths(explicit_artifacts)
+    recursive_artifact_paths = dedupe_paths(recursive_artifact_paths)
+
     reports = [summarize_report(path, repo_root) for path in resolved_reports]
     artifact_manifest = [summarize_artifact(path, repo_root) for path in resolved_reports]
     selected_paths = discover_selected_chunks_evidence(repo_root, selected_chunks_paths)
     selected_chunks_evidence = [summarize_selected_chunks_evidence(path, repo_root) for path in selected_paths]
-    explicit_artifacts = [resolve_repo_path(repo_root, raw) for raw in split_path_values(artifact_paths)]
     included_artifacts = build_included_artifacts(
         repo_root,
         resolved_reports,
@@ -63,7 +113,28 @@ def build_bundle(
         auto_include_related=auto_include_related,
         max_chars=max_included_artifact_chars,
         max_artifacts=max_included_artifacts,
+        recursive_artifact_paths=recursive_artifact_paths,
+        max_lines_per_chunk=chunk_large_files_lines,
     )
+    chunk_index_source_paths = dedupe_paths(resolved_reports + explicit_artifacts + recursive_artifact_paths)
+    artifact_chunk_index = build_artifact_chunk_index(
+        repo_root,
+        chunk_index_source_paths,
+        max_lines_per_chunk=chunk_large_files_lines,
+    )
+
+    recursive_default_discovery = {
+        "enabled": bool(recursive_report_roots or recursive_artifact_roots),
+        "stamp": recursive_stamp,
+        "include_unstamped": recursive_include_unstamped,
+        "max_files": recursive_max_files,
+        "report_roots": split_path_values(list(recursive_report_roots or [])),
+        "artifact_roots": split_path_values(list(recursive_artifact_roots or [])),
+        "discovered_reports": [normalize_manifest_path(path, repo_root) for path in recursive_report_paths],
+        "discovered_artifacts": [normalize_manifest_path(path, repo_root) for path in recursive_artifact_paths],
+        "skipped_reports": skipped_recursive_reports[:200],
+        "skipped_artifacts": skipped_recursive_artifacts[:200],
+    }
 
     bundle = {
         "schema_version": 1,
@@ -77,10 +148,13 @@ def build_bundle(
         "selected_chunks_evidence": selected_chunks_evidence,
         "artifact_manifest": artifact_manifest,
         "included_artifacts": included_artifacts,
+        "artifact_chunk_index": artifact_chunk_index,
+        "recursive_default_discovery": recursive_default_discovery,
         "included_artifact_policy": {
             "auto_include_related_artifacts": auto_include_related,
             "max_included_artifact_chars": max_included_artifact_chars,
             "max_included_artifacts": max_included_artifacts,
+            "chunk_large_files_lines": chunk_large_files_lines,
             "content_extension_allowlist": sorted(CONTENT_EXTENSION_ALLOWLIST),
             "raw_artifact_deny_prefixes": list(RAW_ARTIFACT_DENY_PREFIXES),
             "raw_artifact_deny_fragments": list(RAW_ARTIFACT_DENY_FRAGMENTS),
@@ -107,6 +181,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-auto-include-related-artifacts", action="store_true", help="Disable automatic inclusion of sibling/declared related artifacts.")
     parser.add_argument("--max-included-artifact-chars", type=int, default=DEFAULT_INCLUDED_ARTIFACT_CHARS)
     parser.add_argument("--max-included-artifacts", type=int, default=DEFAULT_MAX_INCLUDED_ARTIFACTS)
+    parser.add_argument("--recursive-report-root", action="append", default=[], help="Bounded recursive root for stamped JSON reports. Repeatable or comma-separated.")
+    parser.add_argument("--recursive-artifact-root", action="append", default=[], help="Bounded recursive root for stamped JSON/Markdown artifacts. Repeatable or comma-separated.")
+    parser.add_argument("--recursive-stamp", default=None, help="Only include recursive files whose path contains this stamp unless --recursive-include-unstamped is set.")
+    parser.add_argument("--recursive-include-unstamped", action="store_true", help="Allow recursive discovery of files without the recursive stamp. Use only on narrow roots.")
+    parser.add_argument("--recursive-max-files", type=int, default=DEFAULT_RECURSIVE_MAX_FILES)
+    parser.add_argument("--chunk-large-files-lines", type=int, default=DEFAULT_CHUNK_LINES, help="Add pointer-linked chunk metadata for JSON/Markdown artifacts above this line count. Set 0 to disable.")
     parser.add_argument(
         "--selected-chunks-evidence",
         action="append",
@@ -133,6 +213,12 @@ def main() -> int:
         not args.no_auto_include_related_artifacts,
         args.max_included_artifact_chars,
         args.max_included_artifacts,
+        list(args.recursive_report_root or []),
+        list(args.recursive_artifact_root or []),
+        args.recursive_stamp,
+        bool(args.recursive_include_unstamped),
+        int(args.recursive_max_files),
+        int(args.chunk_large_files_lines),
     )
     print(json.dumps({"passed": True, "outputs": outputs.splitlines(), "decision": bundle["decision"]}, indent=2))
     return 0

@@ -2,8 +2,9 @@
 """Smoke test for the shared toolbox AI-to-AI bundle builder.
 
 The smoke is no-provider and report-only. It creates fake input reports under
-output/testdata, runs the builder, verifies final summary, compact bundle and
-optional bundle validation outputs, then writes a smoke JSON/Markdown report.
+output/testdata, runs the builder, verifies final summary, compact bundle,
+recursive discovery, pointer-style chunk metadata and optional bundle validation
+outputs, then writes a smoke JSON/Markdown report.
 """
 from __future__ import annotations
 
@@ -78,6 +79,7 @@ def create_fake_inputs(repo_root: Path, stamp: str) -> dict[str, Path]:
         "npu_execution": base / f"shared_toolbox_npu_execution_{stamp}.json",
         "orchestrator": base / f"shared_toolbox_ai_to_ai_{stamp}_orchestrator.json",
         "gpu": base / f"shared_toolbox_ai_to_ai_{stamp}_gpu.json",
+        "large_json": base / f"shared_toolbox_large_recursive_report_{stamp}.json",
     }
     write_json(reports["python_syntax"], fake_report(kind="python_syntax_validation", extra={"checked_count": 2, "failed_count": 0}))
     write_json(reports["code_interpreter"], fake_report(kind="code_interpreter_report", extra={"input_count": 2}))
@@ -130,6 +132,13 @@ def create_fake_inputs(repo_root: Path, stamp: str) -> dict[str, Path]:
             extra={"round_count": 1, "recommendation_count": 0, "runtime_tool_broker_enabled": True},
         ),
     )
+    write_json(
+        reports["large_json"],
+        fake_report(
+            kind="shared_toolbox_large_recursive_report",
+            extra={"rows": [{"index": index, "value": f"row-{index}"} for index in range(1, 220)]},
+        ),
+    )
 
     artifacts = {
         "task_md": base / "shared-runtime-toolbox-ai-to-ai-next-task-smoke.md",
@@ -137,24 +146,16 @@ def create_fake_inputs(repo_root: Path, stamp: str) -> dict[str, Path]:
         "code_interpreter_md": base / f"shared_toolbox_code_interpreter_{stamp}.md",
         "orchestrator_md": base / f"shared_toolbox_ai_to_ai_{stamp}_orchestrator.md",
         "gpu_md": base / f"shared_toolbox_ai_to_ai_{stamp}_gpu.md",
+        "large_markdown": base / f"shared_toolbox_large_recursive_artifact_{stamp}.md",
     }
     write_text(artifacts["task_md"], "# Smoke task\n\nReport-only shared toolbox smoke task.\n")
     write_text(artifacts["architecture_md"], "# Smoke architecture\n\nProviders ask. Orchestrator decides. Broker executes. Reports become evidence.\n")
     write_text(artifacts["code_interpreter_md"], "# Smoke code interpreter report\n\nNo provider execution.\n")
     write_text(artifacts["orchestrator_md"], "# Smoke orchestrator report\n\nProvider flag is inherited from fake input only.\n")
-    large_markdown = base / f"shared_toolbox_large_recursive_artifact_{stamp}.md"
-    artifacts["large_markdown"] = large_markdown
+    write_text(artifacts["gpu_md"], "# Smoke GPU report\n\nNo real provider was executed by this smoke.\n")
     write_text(
-        large_markdown,
+        artifacts["large_markdown"],
         "# Large recursive artifact\n\n" + "\n".join(f"line {index}" for index in range(1, 241)) + "\n",
-    )
-    reports["large_json"] = base / f"shared_toolbox_large_recursive_report_{stamp}.json"
-    write_json(
-        reports["large_json"],
-        fake_report(
-            kind="shared_toolbox_large_recursive_report",
-            extra={"rows": [{"index": index, "value": f"row-{index}"} for index in range(1, 220)]},
-        ),
     )
     return {**reports, **artifacts}
 
@@ -172,6 +173,10 @@ def render_markdown(report: dict[str, Any]) -> str:
         "bundle_json_exists",
         "bundle_markdown_exists",
         "bundle_validation_passed",
+        "recursive_defaults_enabled",
+        "recursive_default_files_seen",
+        "chunked_large_files_seen",
+        "chunk_next_pointer_seen",
     ):
         lines.append(f"- {key}: {report.get(key)}")
     if report.get("errors"):
@@ -216,8 +221,8 @@ def build_builder_args(repo_root: Path, paths: dict[str, Path]) -> SimpleNamespa
         validate_bundle=True,
         validation_output=f"output/validation/shared_toolbox_ai_to_ai_bundle_{stamp}_validation.json",
         max_included_artifact_chars=8000,
-        max_included_artifacts=20,
-        no_recursive_defaults=False,
+        max_included_artifacts=30,
+        no_recursive_defaults=True,
         recursive_report_root=[repo_relative(paths["large_json"].parent, repo_root)],
         recursive_artifact_root=[repo_relative(paths["large_markdown"].parent, repo_root)],
         recursive_include_unstamped=False,
@@ -245,12 +250,13 @@ def main() -> int:
     validation_output = repo_root / str(builder_result.get("validation_output") or "")
 
     summary = read_json(final_summary_json) or {}
+    bundle = read_json(bundle_json) or {}
     validation = read_json(validation_output) or {}
     errors: list[str] = []
     warnings: list[str] = []
 
-    chunked_index = summary.get("chunked_file_index") if isinstance(summary.get("chunked_file_index"), list) else []
-    recursive_defaults = summary.get("recursive_defaults") if isinstance(summary.get("recursive_defaults"), dict) else {}
+    chunked_index = bundle.get("artifact_chunk_index") if isinstance(bundle.get("artifact_chunk_index"), list) else []
+    recursive_defaults = bundle.get("recursive_default_discovery") if isinstance(bundle.get("recursive_default_discovery"), dict) else {}
     has_chunk_next_pointer = any(
         bool(chunk.get("next_chunk_id"))
         for item in chunked_index
