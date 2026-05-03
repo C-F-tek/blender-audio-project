@@ -11,6 +11,43 @@ docs/LOCAL_AI_RUN_BOOTSTRAP.md
 
 The local AI must always read those files first and treat them as the repository contract before acting.
 
+## FIRST ENTRY — Full Toolbox / 0-10 / Tutto su tutto
+
+When Carmine asks for any of these phrases, start here before older task files:
+
+```text
+Tutto su tutto
+full toolbox
+0-10
+cassetta degli attrezzi completa
+multi-macro patch
+multi-script
+multi-fase
+semi-automatic process
+```
+
+Primary current task entrypoint:
+
+```text
+docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
+```
+
+This post-PR171 procedure covers:
+
+```text
+full toolbox evidence
+  -> deterministic recommendations
+  -> agent review decision loop
+  -> warning-policy ledger
+  -> manual-review patch plan
+  -> review-safe patch bundle
+  -> explicit --apply only after review
+  -> validation
+  -> PR
+```
+
+Older post-PR116 refactor docs remain useful for historical/refactor-specific context, but the full-toolbox 0-10 entrypoint above is now preferred for complete IA-Carmine runs.
+
 ## Hybrid operating model
 
 The current model is hybrid, not a hard cutover.
@@ -32,6 +69,7 @@ This keeps token-heavy local work inside the local pipeline while preserving mas
 
 | File | Purpose |
 |---|---|
+| `full-toolbox-0-to-10-semi-automatic-procedure.md` | Preferred post-PR171 full-toolbox 0-10 process: evidence -> recommendation -> decision -> warning ledger -> patch plan -> patch bundle -> explicit apply -> validation -> PR. |
 | `issue-57-docs-congruence-cleanup.md` | Complete the documentation/workflow-state cleanup after selective planner merge. |
 | `issue-62-hybrid-master-ai-local-pipeline.md` | Define and validate the hybrid master-AI plus local pipeline runner model. |
 | `consistency-local-ai-contracts-and-powershell.md` | Compare local AI contract docs with PowerShell runners and produce consistency proposals/evidence. |
@@ -46,6 +84,16 @@ This keeps token-heavy local work inside the local pipeline while preserving mas
 
 ## Recommended next sequence
 
+Current post-PR171 next sequence:
+
+```text
+1. Use full-toolbox-0-to-10-semi-automatic-procedure.md for full IA-Carmine 0-10 runs.
+2. Use the integrated workflow for semi-automatic decision-loop runs.
+3. Use build_agent_review_patch_bundle.py after patch-plan generation.
+4. Apply bundle changes only with explicit --apply after manual review.
+5. Validate, stage intended source/docs only, and open focused PRs.
+```
+
 Historical task progression:
 
 ```text
@@ -55,9 +103,9 @@ Historical task progression:
 4. full-context-ai-npu-golden-path.md
 ```
 
-The first task checks documentation/script consistency. The second task uses the consolidated model to review workflow and AI tools for safe patch-spec candidates. The third task plans the enrichment path that lets future local runs use SQLite memory, semantic chunks and bounded context packs to reduce token pressure on large MD/code work. The fourth task exercises the current full-context golden path and asks the local AI to propose controlled complexity increases such as a new core/helper function, validator, wrapper flag, documentation contract or patch-spec promotion.
+The first historical task checks documentation/script consistency. The second task uses the consolidated model to review workflow and AI tools for safe patch-spec candidates. The third task plans the enrichment path that lets future local runs use SQLite memory, semantic chunks and bounded context packs to reduce token pressure on large MD/code work. The fourth task exercises the current full-context golden path and asks the local AI to propose controlled complexity increases such as a new core/helper function, validator, wrapper flag, documentation contract or patch-spec promotion.
 
-Current post-PR #106 next sequence:
+Current post-PR #106 next sequence remains relevant for older local-pipeline tasks:
 
 ```text
 1. Use LOCAL_AI_CORE_TOOL_ACTIVATION as the preferred app-agnostic activation lane.
@@ -69,6 +117,15 @@ Current post-PR #106 next sequence:
 ## Runner expectation
 
 A local command should pass one of these Markdown files as the task/instruction file to the AI runner.
+
+The preferred project-owned command path for the full-toolbox 0-10 procedure is:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+  -TaskFile .\docs\LOCAL_AI_TASKS\full-toolbox-0-to-10-semi-automatic-procedure.md `
+  -TaskBranch codex/full-toolbox-0-to-10-run `
+  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
+```
 
 The preferred project-owned command path for the full-context golden path is:
 
