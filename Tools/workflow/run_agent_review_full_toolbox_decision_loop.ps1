@@ -148,7 +148,7 @@ $RuntimeToolTelemetryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage
 $RuntimeToolTelemetryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.md"
 $RuntimeToolCapabilityJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_capability_manifest_$Stamp.json"
 $RuntimeToolCapabilityMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_capability_manifest_$Stamp.md"
-$EvidenceChunkBase = "full_toolbox_${Stamp}_cloud_semantic"
+$EvidenceChunkBase = "full_toolbox_${Stamp}_cloud_semantic_deterministic"
 $EvidenceChunkDir = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunks"
 $EvidenceChunkManifestJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunk_manifest.json"
 $EvidenceChunkManifestMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunk_manifest.md"
@@ -617,7 +617,8 @@ $SemanticChunkArgs = @(
     "--chunk-output-dir", $EvidenceChunkDir,
     "--chunk-max-chars", "12000",
     "--chunk-overlap-lines", "12",
-    "--zip-output", $EvidenceChunkZip
+    "--zip-output", $EvidenceChunkZip,
+    "--no-ollama"
 )
 foreach ($Path in $SemanticChunkSources) {
     $SemanticChunkArgs += @("--source", $Path)

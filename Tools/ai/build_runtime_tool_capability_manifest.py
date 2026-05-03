@@ -197,6 +197,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         'persistent_memory_write_performed': False,
         'blender_runtime_execution_performed': False,
         'tool_count': len(TOOL_SPECS),
+        'tool_usage_summary': safe_dict(usage_report.get('summary')),
+        'declared_runtime_tool_counters': safe_dict(usage_report.get('declared_runtime_tool_counters')),
         'tools': build_tool_rows(repo_root, usage),
         'caller_modes': caller_modes(usage_report),
         'source_files': sources,
@@ -224,6 +226,10 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ['# Runtime Tool Capability Manifest', '']
     lines.append(f"- Passed: `{report.get('passed')}`")
     lines.append(f"- Tool count: `{report.get('tool_count')}`")
+    usage_summary = safe_dict(report.get('tool_usage_summary'))
+    lines.append(f"- Declared runtime tool requests: `{usage_summary.get('runtime_tool_request_count')}`")
+    lines.append(f"- Broker runtime tool executions: `{usage_summary.get('runtime_tool_execution_count')}`")
+    lines.append(f"- Declared not executed count: `{usage_summary.get('declared_not_executed_count')}`")
     lines.append(f"- Provider execution performed: `{report.get('provider_execution_performed')}`")
     lines.append(f"- Patch application performed: `{report.get('patch_application_performed')}`")
     lines.append('')

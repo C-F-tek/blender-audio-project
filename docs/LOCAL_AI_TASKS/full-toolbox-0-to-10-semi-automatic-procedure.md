@@ -1066,3 +1066,42 @@ python .\Tools\validation\run_gpu_runner_provider_error_smoke.py `
 
 The runner must serialize provider exceptions or empty responses as report data. It must never fail a planning round with `UnboundLocalError` for `raw_response`. Schema repair retry is allowed only when a non-empty provider response exists.
 
+## Diagnostics and telemetry bundle invariants
+
+Full-toolbox AI-to-AI handoff chunks must be deterministic by default.
+
+Required semantic chunk policy:
+
+```text
+basename: full_toolbox_<STAMP>_cloud_semantic_deterministic
+ollama: disabled
+required flag: --no-ollama
+```
+
+Reason:
+
+```text
+Ollama summaries may be empty, truncated or stale. They are useful only as secondary verification, not as the primary cloud handoff source.
+```
+
+Repository consistency must not promote generated semantic chunk files into primary patch planning.
+
+Generated evidence chunk paths such as:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/*_cloud_semantic_chunks/**
+docs/LOCAL_VALIDATION_EVIDENCE/*_cloud_semantic_deterministic_chunks/**
+docs/LOCAL_VALIDATION_EVIDENCE/*_chunks/**
+```
+
+must be excluded from repository consistency findings or kept out of high-signal patch planning.
+
+Runtime tool telemetry must distinguish:
+
+```text
+declared runtime tool requests
+broker-executed tool calls
+declared-but-not-executed requests
+```
+
+A GPU planner may declare tool requests without broker execution. That state is valid telemetry and must not appear as a missing or empty telemetry channel.

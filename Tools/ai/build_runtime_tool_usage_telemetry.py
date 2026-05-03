@@ -363,6 +363,72 @@ def collect_npu_declared_requests(orchestrator: dict[str, Any]) -> list[dict[str
             )
     return entries
 
+def extract_declared_runtime_tool_counters(gpu_report: dict[str, Any], gpu_npu_sync: dict[str, Any]) -> dict[str, int]:
+    # Extract planner-declared runtime tool counters even when no broker entry exists.
+    candidates: list[dict[str, Any]] = []
+
+    performance = safe_dict(safe_dict(gpu_npu_sync.get("performance")).get("gpu"))
+    counters = safe_dict(performance.get("runtime_tool_counters"))
+    if counters:
+        candidates.append(counters)
+
+    sync_metrics = safe_dict(gpu_npu_sync.get("metrics")) or safe_dict(gpu_npu_sync.get("sync_metrics"))
+    if sync_metrics:
+        candidates.append(sync_metrics)
+
+    candidates.append(gpu_report)
+
+    def first_int(*names: str) -> int:
+        for source in candidates:
+            for name in names:
+                value = safe_int(source.get(name), -1)
+                if value >= 0:
+                    return value
+        return 0
+
+    request_count = first_int("runtime_tool_request_count", "runtime_tool_provider_request_count")
+    execution_count = first_int("runtime_tool_execution_count", "runtime_tool_provider_request_execution_count")
+    failed_count = first_int("runtime_tool_failed_count")
+    blocked_count = first_int("runtime_tool_blocked_count")
+    fallback_request_count = first_int("deterministic_runtime_tool_fallback_request_count")
+    fallback_execution_count = first_int("deterministic_runtime_tool_fallback_execution_count")
+
+    return {
+        "runtime_tool_request_count": request_count,
+        "runtime_tool_execution_count": execution_count,
+        "runtime_tool_failed_count": failed_count,
+        "runtime_tool_blocked_count": blocked_count,
+        "runtime_tool_provider_request_count": first_int("runtime_tool_provider_request_count"),
+        "runtime_tool_provider_request_execution_count": first_int("runtime_tool_provider_request_execution_count"),
+        "deterministic_runtime_tool_fallback_request_count": fallback_request_count,
+        "deterministic_runtime_tool_fallback_execution_count": fallback_execution_count,
+        "declared_not_executed_count": max(0, request_count - execution_count),
+    }
+
+
+def build_declared_runtime_tool_counter_entry(counters: dict[str, int]) -> dict[str, Any]:
+    # Create a single summary telemetry entry when only aggregate planner counters exist.
+    return {
+        "caller_ai": "gpu",
+        "phase": "gpu_planner_declared_tool_request_counters",
+        "round": None,
+        "broker_source": "gpu_report_or_gpu_npu_sync_counters",
+        "broker_report": "",
+        "tool_request_id": "gpu_declared_runtime_tool_request_counter_summary",
+        "tool": "declared_runtime_tool_request_summary",
+        "reason": "GPU planner reported runtime tool request counters without broker-executed per-tool entries.",
+        "requested_args": {},
+        "status": "declared_counter_summary_not_broker_executed",
+        "executed": False,
+        "blocked": False,
+        "failed": False,
+        "elapsed_seconds": 0.0,
+        "declared_counts": counters,
+        "result": {
+            "summary": "Planner declared runtime tool requests; broker execution count is reported separately.",
+            **counters,
+        },
+    }
 
 def summarize_entries(entries: list[dict[str, Any]]) -> dict[str, Any]:
     by_caller: dict[str, dict[str, Any]] = {}
@@ -421,9 +487,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('npu_runtime_tool_results'), 'npu', 'npu_runtime_tool_broker'))
     entries.extend(collect_gpu_declared_requests(gpu_report))
     entries.extend(collect_npu_declared_requests(orchestrator))
+    declared_counters = extract_declared_runtime_tool_counters(gpu_report, gpu_npu_sync)
+    if declared_counters["runtime_tool_request_count"] and not entries:
+        entries.append(build_declared_runtime_tool_counter_entry(declared_counters))
 
     max_entries = max(1, int(args.max_entries))
     summary = summarize_entries(entries)
+    summary.update(declared_counters)
     return {
         'schema_version': 1,
         'kind': 'runtime_tool_usage_telemetry',
@@ -452,6 +522,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         },
         'gpu_npu_sync_metrics': gpu_npu_sync.get('metrics'),
         'summary': summary,
+        'declared_runtime_tool_counters': declared_counters,
         'tool_calls': entries[:max_entries],
         'truncated_tool_call_count': max(0, len(entries) - max_entries),
         'guardrails': {
@@ -477,6 +548,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Failed count: `{summary.get('failed_count')}`")
     lines.append(f"- Blocked count: `{summary.get('blocked_count')}`")
     lines.append(f"- Total reported tool elapsed seconds: `{summary.get('total_reported_tool_elapsed_seconds')}`")
+    lines.append(f"- Declared runtime tool requests: `{summary.get('runtime_tool_request_count')}`")
+    lines.append(f"- Broker runtime tool executions: `{summary.get('runtime_tool_execution_count')}`")
+    lines.append(f"- Declared not executed count: `{summary.get('declared_not_executed_count')}`")
     lines.append('')
     lines.append('## By caller AI')
     lines.append('')
