@@ -667,18 +667,93 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
     gpu_empty_recommendations_reason = gpu_report.get("empty_recommendations_reason", "")
     gpu_evidence_ready_count = gpu_report.get("evidence_ready_for_manual_patch_count", 0)
     gpu_recommended_next_layer = gpu_report.get("decision", {}).get("recommended_next_layer") or gpu_report.get("recommended_next_layer")
-    runtime_tool_broker_enabled = bool(gpu_report.get("runtime_tool_broker_enabled"))
-    runtime_tool_request_count = int(gpu_report.get("runtime_tool_request_count") or 0)
-    runtime_tool_execution_count = int(gpu_report.get("runtime_tool_execution_count") or 0)
-    runtime_tool_failed_count = int(gpu_report.get("runtime_tool_failed_count") or 0)
-    runtime_tool_blocked_count = int(gpu_report.get("runtime_tool_blocked_count") or 0)
-    runtime_tool_result_count = int(gpu_report.get("runtime_tool_result_count") or 0)
-    runtime_tool_bootstrap_executed = bool(gpu_report.get("runtime_tool_bootstrap_executed"))
-    runtime_tool_bootstrap_passed = gpu_report.get("runtime_tool_bootstrap_passed")
-    runtime_tool_bootstrap_request_count = int(gpu_report.get("runtime_tool_bootstrap_request_count") or 0)
-    runtime_tool_bootstrap_execution_count = int(gpu_report.get("runtime_tool_bootstrap_execution_count") or 0)
-    runtime_tool_bootstrap_failed_count = int(gpu_report.get("runtime_tool_bootstrap_failed_count") or 0)
-    runtime_tool_bootstrap_blocked_count = int(gpu_report.get("runtime_tool_bootstrap_blocked_count") or 0)
+    gpu_runtime_tool_broker_enabled = bool(gpu_report.get("runtime_tool_broker_enabled"))
+    gpu_runtime_tool_request_count = int(gpu_report.get("runtime_tool_request_count") or 0)
+    gpu_runtime_tool_execution_count = int(gpu_report.get("runtime_tool_execution_count") or 0)
+    gpu_runtime_tool_failed_count = int(gpu_report.get("runtime_tool_failed_count") or 0)
+    gpu_runtime_tool_blocked_count = int(gpu_report.get("runtime_tool_blocked_count") or 0)
+    gpu_runtime_tool_result_count = int(gpu_report.get("runtime_tool_result_count") or 0)
+
+    gpu_runtime_tool_bootstrap_executed = bool(gpu_report.get("runtime_tool_bootstrap_executed"))
+    gpu_runtime_tool_bootstrap_passed = gpu_report.get("runtime_tool_bootstrap_passed")
+    gpu_runtime_tool_bootstrap_request_count = int(gpu_report.get("runtime_tool_bootstrap_request_count") or 0)
+    gpu_runtime_tool_bootstrap_execution_count = int(gpu_report.get("runtime_tool_bootstrap_execution_count") or 0)
+    gpu_runtime_tool_bootstrap_failed_count = int(gpu_report.get("runtime_tool_bootstrap_failed_count") or 0)
+    gpu_runtime_tool_bootstrap_blocked_count = int(gpu_report.get("runtime_tool_bootstrap_blocked_count") or 0)
+
+    orchestrator_runtime_tool_bootstrap_executed = bool(orchestrator_runtime_tool_bootstrap.get("executed"))
+    orchestrator_runtime_tool_bootstrap_enabled = bool(orchestrator_runtime_tool_bootstrap.get("enabled"))
+
+    runtime_tool_bootstrap_executed = bool(
+        gpu_runtime_tool_bootstrap_executed or orchestrator_runtime_tool_bootstrap_executed
+    )
+    runtime_tool_bootstrap_passed = (
+        orchestrator_runtime_tool_bootstrap.get("passed")
+        if orchestrator_runtime_tool_bootstrap_executed
+        else gpu_runtime_tool_bootstrap_passed
+    )
+    runtime_tool_bootstrap_request_count = (
+        gpu_runtime_tool_bootstrap_request_count + orchestrator_runtime_tool_bootstrap_request_count
+    )
+    runtime_tool_bootstrap_execution_count = (
+        gpu_runtime_tool_bootstrap_execution_count + orchestrator_runtime_tool_bootstrap_execution_count
+    )
+    runtime_tool_bootstrap_failed_count = (
+        gpu_runtime_tool_bootstrap_failed_count + orchestrator_runtime_tool_bootstrap_failed_count
+    )
+    runtime_tool_bootstrap_blocked_count = (
+        gpu_runtime_tool_bootstrap_blocked_count + orchestrator_runtime_tool_bootstrap_blocked_count
+    )
+
+    runtime_tool_provider_request_count = (
+        gpu_orchestrated_runtime_tool_request_count + npu_runtime_tool_request_count
+    )
+    runtime_tool_provider_request_execution_count = (
+        gpu_orchestrated_runtime_tool_execution_count + npu_runtime_tool_execution_count
+    )
+    runtime_tool_provider_request_failed_count = (
+        gpu_orchestrated_runtime_tool_failed_count + npu_runtime_tool_failed_count
+    )
+    runtime_tool_provider_request_blocked_count = (
+        gpu_orchestrated_runtime_tool_blocked_count + npu_runtime_tool_blocked_count
+    )
+    runtime_tool_provider_request_result_count = (
+        gpu_orchestrated_runtime_tool_result_count + npu_runtime_tool_result_count
+    )
+
+    runtime_tool_broker_enabled = bool(
+        getattr(args, "enable_runtime_tool_broker", False)
+        or gpu_runtime_tool_broker_enabled
+        or orchestrator_runtime_tool_bootstrap_enabled
+        or orchestrator_runtime_tool_bootstrap_executed
+        or gpu_runtime_tool_brokers
+        or npu_runtime_brokers
+    )
+    runtime_tool_request_count = (
+        gpu_runtime_tool_request_count
+        + runtime_tool_bootstrap_request_count
+        + runtime_tool_provider_request_count
+    )
+    runtime_tool_execution_count = (
+        gpu_runtime_tool_execution_count
+        + runtime_tool_bootstrap_execution_count
+        + runtime_tool_provider_request_execution_count
+    )
+    runtime_tool_failed_count = (
+        gpu_runtime_tool_failed_count
+        + runtime_tool_bootstrap_failed_count
+        + runtime_tool_provider_request_failed_count
+    )
+    runtime_tool_blocked_count = (
+        gpu_runtime_tool_blocked_count
+        + runtime_tool_bootstrap_blocked_count
+        + runtime_tool_provider_request_blocked_count
+    )
+    runtime_tool_result_count = (
+        gpu_runtime_tool_result_count
+        + orchestrator_runtime_tool_bootstrap_result_count
+        + runtime_tool_provider_request_result_count
+    )
     report = {
         "schema_version": 1,
         "kind": "agent_gpu_npu_parallel_orchestrator",
@@ -713,6 +788,17 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "runtime_tool_failed_count": runtime_tool_failed_count,
         "runtime_tool_blocked_count": runtime_tool_blocked_count,
         "runtime_tool_result_count": runtime_tool_result_count,
+        "gpu_runtime_tool_broker_enabled": gpu_runtime_tool_broker_enabled,
+        "gpu_runtime_tool_request_count": gpu_runtime_tool_request_count,
+        "gpu_runtime_tool_execution_count": gpu_runtime_tool_execution_count,
+        "gpu_runtime_tool_failed_count": gpu_runtime_tool_failed_count,
+        "gpu_runtime_tool_blocked_count": gpu_runtime_tool_blocked_count,
+        "gpu_runtime_tool_result_count": gpu_runtime_tool_result_count,
+        "runtime_tool_provider_request_count": runtime_tool_provider_request_count,
+        "runtime_tool_provider_request_execution_count": runtime_tool_provider_request_execution_count,
+        "runtime_tool_provider_request_failed_count": runtime_tool_provider_request_failed_count,
+        "runtime_tool_provider_request_blocked_count": runtime_tool_provider_request_blocked_count,
+        "runtime_tool_provider_request_result_count": runtime_tool_provider_request_result_count,
         "orchestrator_runtime_tool_bootstrap": orchestrator_runtime_tool_bootstrap,
         "orchestrator_runtime_tool_bootstrap_executed": bool(orchestrator_runtime_tool_bootstrap.get("executed")),
         "orchestrator_runtime_tool_bootstrap_passed": orchestrator_runtime_tool_bootstrap.get("passed"),
@@ -774,6 +860,11 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "recommended_next_layer": gpu_recommended_next_layer,
             "gpu_empty_recommendations_reason": gpu_empty_recommendations_reason,
             "runtime_tool_broker_enabled": runtime_tool_broker_enabled,
+            "runtime_tool_bootstrap_executed": runtime_tool_bootstrap_executed,
+            "runtime_tool_bootstrap_execution_count": runtime_tool_bootstrap_execution_count,
+            "runtime_tool_provider_request_count": runtime_tool_provider_request_count,
+            "runtime_tool_provider_request_execution_count": runtime_tool_provider_request_execution_count,
+            "runtime_tool_execution_count": runtime_tool_execution_count,
             "runtime_tool_result_count": runtime_tool_result_count,
             "manual_review_required": True,
         },
@@ -865,6 +956,8 @@ def main() -> int:
         "runtime_tool_failed_count": report.get("runtime_tool_failed_count"),
         "runtime_tool_blocked_count": report.get("runtime_tool_blocked_count"),
         "runtime_tool_result_count": report.get("runtime_tool_result_count"),
+        "runtime_tool_provider_request_count": report.get("runtime_tool_provider_request_count"),
+        "runtime_tool_provider_request_execution_count": report.get("runtime_tool_provider_request_execution_count"),
         "orchestrator_runtime_tool_bootstrap_execution_count": report.get("orchestrator_runtime_tool_bootstrap_execution_count"),
         "gpu_orchestrated_runtime_tool_request_count": report.get("gpu_orchestrated_runtime_tool_request_count"),
         "gpu_orchestrated_runtime_tool_execution_count": report.get("gpu_orchestrated_runtime_tool_execution_count"),
