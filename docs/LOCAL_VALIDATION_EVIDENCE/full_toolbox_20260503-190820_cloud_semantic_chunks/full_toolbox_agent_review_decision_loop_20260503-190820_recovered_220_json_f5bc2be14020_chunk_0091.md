@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nel messaggio.  Per procedere avrei bisogno delle righe effettive (L1801‑L2000) del file `full_toolbox_20260503-190820_agent_review_patch_plan_recovered_220.json`.
+Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nel messaggio. Per procedere avrei bisogno delle righe effettive (L1801‑L2000) del file `full_toolbox_20260503-190820_agent_review_patch_plan_recovered_220.json`. Una volta disponibili, potrò estrarre scopo, segnali principali, guardrail, errori e motivazione di utilizzo per un’AI cloud.
 
 ## Context before
 

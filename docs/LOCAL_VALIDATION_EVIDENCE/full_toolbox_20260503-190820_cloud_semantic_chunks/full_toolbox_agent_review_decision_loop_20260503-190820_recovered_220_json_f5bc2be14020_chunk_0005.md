@@ -7,11 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0004.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0006.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**: Generare un piano di patch mirato per
+Chunk deterministico. Sezioni: reports. Preview: "python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json", "git diff --check", "git status --short" ], "stop_conditions": [ "Stop if the edit is only whitespace, tag spacing or Markdo...
 
 ## Context before
 

@@ -11,8 +11,9 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere la mancata referenza a `validate_after_patch.ps1` in `full_toolbox_agent_review_decision_loop_20260503-182047.md` e registrare l’utilizzo degli strumenti da parte dell’AI.  
-**Segnali principali**: mapper di consistenza segnala `md_mentions_missing_powershell_path` (rischio medio
+**Scopo**: Correggere riferimenti mancanti a script PowerShell (`validate_after_patch.ps1`) nei documenti di validazione locale e registrare l’uso degli strumenti da parte dell’AI.  
+**Segnali principali**: Mapper di consistenza ha rilevato `md_mentions_missing_powershell_path` a riga 387 del file `full_toolbox_agent_review_decision_loop_20260503-182047.md`; la telemetria mostra zero chiamate di tool.  
+**Guardrail/erori**: Rischio medio; la correzione richiede intervent
 
 ## Context before
 

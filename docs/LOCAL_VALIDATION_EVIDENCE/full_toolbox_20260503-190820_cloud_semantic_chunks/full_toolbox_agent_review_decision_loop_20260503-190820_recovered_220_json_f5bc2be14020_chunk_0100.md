@@ -11,9 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Fornire un indice di navigazione per il file JSON `full_toolbox_20260503-190820_agent_review_patch_plan_recovered_220.json`, suddividendo il documento in blocchi di 200 righe con riferimenti a blocchi precedenti e successivi.  
-
-**Segn
+**Scopo**: Fornire metadati di navigazione per il file JSON `full_toolbox_202605
 
 ## Context before
 

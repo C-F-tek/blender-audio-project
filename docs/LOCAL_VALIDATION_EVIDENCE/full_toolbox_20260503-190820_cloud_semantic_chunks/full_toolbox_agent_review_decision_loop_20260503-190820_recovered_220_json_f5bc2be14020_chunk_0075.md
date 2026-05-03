@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Mi dispiace, ma il blocco di testo che mi hai fornito contiene solo riferimenti a linee di un file JSON (identificatori, percorsi e numeri di riga) e non il contenuto effettivo da riassumere. Senza il testo reale non posso generare un riassunto tecnico. Se puoi fornirmi le righe di contenuto (ad esempio il testo tra `line_start` e `line_end`), sarò felice di aiutarti.
+Non è possibile fornire un riassunto tecnico perché il testo effettivo del chunk non è stato incluso nella richiesta. Per procedere avrei bisogno del contenuto delle righe 42201‑42400 (o dell’intero blocco) del file `repository_consistency_map_full_toolbox_20260503-190820.json`.
 
 ## Context before
 

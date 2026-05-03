@@ -11,7 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Fornire la struttura di navigazione del file JSON “full_toolbox_20260503-190820_agent_review_patch_plan_recovered_
+**Scopo**: Fornire metadati di navigazione per un file JSON di specifiche patch di grande dimensione.  
+**Segnali principali**: identificatore del chunk, percorso del file,
 
 ## Context before
 

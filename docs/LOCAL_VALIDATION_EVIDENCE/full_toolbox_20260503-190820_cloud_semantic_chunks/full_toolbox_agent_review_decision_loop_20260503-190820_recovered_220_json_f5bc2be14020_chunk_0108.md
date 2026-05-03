@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Fornire metadati di navigazione per il file JSON di specifiche patch “full_toolbox_202
+**Scopo**: Fornire
 
 ## Context before
 

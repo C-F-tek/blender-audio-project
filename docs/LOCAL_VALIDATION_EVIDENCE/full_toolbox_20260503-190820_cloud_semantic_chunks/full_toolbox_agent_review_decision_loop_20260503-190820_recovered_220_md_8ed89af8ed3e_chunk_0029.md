@@ -7,11 +7,13 @@
 - section_kinds: `['markdown_heading_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0028.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0030.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: `output/ai_pipeline/full_toolbox_20260503-190820_bridge_orchestrator_recovered_220.json`. Preview: "provider_execution_requested": true, "provider_load_attempted" ```
+**Scopo**: Indicare lo stato di esecuzione di un provider all’interno dell’orchestratore AI.  
+**Segnali principali**:  
+- `"provider_execution_requested":
 
 ## Context before
 

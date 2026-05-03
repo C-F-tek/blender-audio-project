@@ -12,8 +12,8 @@
 ## Local chunk summary
 
 **Scopo**: Correggere i riferimenti mancanti a percorsi Python nei file Markdown (`md_mentions_missing_python_path`) per garantire coerenza documentale.  
-**Segnali principali**: 4 casi di alto rischio (medium) individuati da `Repository consistency mapper` in documenti di AI tasks e testing.  
-**Guardrail / errori**: Non modificare solo spazi, formattazione Markdown o file generati (`output/**`, SQLite, runtime Blender); fermarsi se l’e
+**Segnali principali**: 4 casi di alto rischio (medium) in documenti di AI tasks e testing, con evidenza puntuale (es. riga 155, 56, 244).  
+**Guardrail / errori**: Non modificare solo spazi, formattazione Markdown o file generati (`output
 
 ## Context before
 

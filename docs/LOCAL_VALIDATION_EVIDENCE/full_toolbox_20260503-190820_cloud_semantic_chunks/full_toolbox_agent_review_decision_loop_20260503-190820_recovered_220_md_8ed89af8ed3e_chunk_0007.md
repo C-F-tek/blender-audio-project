@@ -11,8 +11,9 @@
 
 ## Local chunk summary
 
-**Scopo**: definire un piano di patch mirato per correggere riferimenti Python mancanti nei file Markdown del progetto NPU.  
-**Segnali principali**: alto `md_mentions_missing_python_path` in 8 file (chunk_192, chunk_001, chunk_002, chunk_013) a linee specifiche (665‑666, 8‑20, 8, 49‑57).
+**Scopo**: definire un piano di patch mirato per correggere riferimenti mancanti a file Python in vari chunk Markdown del repository NPU.  
+**Segnali principali**: alto valore di `md_mentions_missing_python_path` in 8 file (chunk_192, chunk_001, chunk_002, chunk_013) con target `File.py`, `matplotlib.py`, `_scene_builder_candidate.py`.  
+**Guardrail / errori
 
 ## Context before
 

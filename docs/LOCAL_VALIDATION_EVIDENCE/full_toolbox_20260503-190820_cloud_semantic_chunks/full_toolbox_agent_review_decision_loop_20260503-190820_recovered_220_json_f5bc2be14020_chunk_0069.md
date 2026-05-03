@@ -11,7 +11,8 @@
 
 ## Local chunk summary
 
-Non è possibile fornire un riassunto tecnico perché il chunk indicato non contiene il testo effettivo da analizzare – è presente solo la struttura di riferimento (ID, percorso, intervalli di linee). Per poter sintetizzare lo scopo, i segnali principali, i guardrail o gli errori, e la rilevanza per un’AI cloud, è necessario avere accesso al contenuto delle linee 18201‑18400 (e delle successive) del file
+**Scopo**: Mappare l’intero file JSON “repository_consistency_map_full_toolbox” in blocchi di 200 righe per facilitare l’analisi e la verifica di consistenza.  
+**Segnali principali
 
 ## Context before
 

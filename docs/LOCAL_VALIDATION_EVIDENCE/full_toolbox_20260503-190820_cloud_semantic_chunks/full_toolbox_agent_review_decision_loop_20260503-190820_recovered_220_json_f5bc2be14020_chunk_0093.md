@@ -7,11 +7,12 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0092.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0094.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: artifact_chunk_index. Preview: "previous_chunk_id": "output/patch_specs/full_toolbox_20260503-190820_agent_review_patch_plan_recovered_220.json#L8801-L9000", "next_chunk_id": "output/patch_specs/full_toolbox_20260503-190820_agent_review_patch_plan_recovered_220.json#L9201-L9400", "has_previ...
+**Scopo**: Fornire metadati di navigazione per un segmento di un file JSON di specifiche di patch.  
+**Segnali principali**: `chunk
 
 ## Context before
 

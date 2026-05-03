@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nella richiesta. Sono state fornite solo informazioni di metadati (identificatori di chunk, percorsi di file e numeri di riga), ma non il contenuto effettivo da analizzare. Per procedere, si prega di inviare il testo reale del chunk.
+Mi dispiace, ma il blocco di testo che mi hai indicato contiene solo riferimenti a linee di un file JSON (ad esempio `#L54201-L54400`) e non include il contenuto effettivo da analizzare. Senza il testo reale non posso estrarre scopo, segnali, guardrail o motivazioni di utilizzo. Se puoi fornirmi il contenuto del chunk, sarò lieto di creare
 
 ## Context before
 

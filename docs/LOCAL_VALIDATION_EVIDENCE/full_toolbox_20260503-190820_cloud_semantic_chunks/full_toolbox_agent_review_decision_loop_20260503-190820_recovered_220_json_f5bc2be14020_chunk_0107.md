@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nel messaggio. Sono state fornite solo informazioni di metadati (identificatore, percorso, intervalli di linee) senza il contenuto effettivo delle righe 60601‑60800. Per procedere con il riassunto occorre fornire il testo reale di quel segmento.
+Non è possibile riassumere il contenuto di questo chunk perché il testo effettivo non è stato fornito – sono disponibili solo metadati di posizione (linee, ID, riferimenti a file). Per procedere con un riassunto tecnico è necessario avere l’estratto di testo reale.
 
 ## Context before
 

@@ -11,9 +11,10 @@
 
 ## Local chunk summary
 
-**Scopo**: Valutare l’esecuzione della pipeline AI, verificare la coerenza del repository e generare raccomandazioni di patch.  
+**Scopo**: Valutare l’esecuzione di un pipeline AI multi‑GPU/NPU, verificare la coerenza del repository, analizzare l’allineamento GPU‑NPU e sintetizzare raccomandazioni deterministiche.  
+
 **Segnali principali**:  
-- *Orchestrator* (GPU‑NPU parallel) non è passato, ma è stato eseguito
+- *Orchestrator* (
 
 ## Context before
 

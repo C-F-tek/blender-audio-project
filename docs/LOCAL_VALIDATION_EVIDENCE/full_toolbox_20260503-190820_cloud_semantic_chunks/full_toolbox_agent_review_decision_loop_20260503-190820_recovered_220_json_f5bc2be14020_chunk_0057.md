@@ -11,7 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: documentare i segmenti
+**Scopo**: Fornire metadati di navigazione per un file JSON di grandi dimensioni, consentendo l’accesso rapido a segmenti specifici.  
+**Segnali principali**: identificatore del chunk (`chunk_id`), percorso del file, intervallo di righe (`line_start`‑
 
 ## Context before
 

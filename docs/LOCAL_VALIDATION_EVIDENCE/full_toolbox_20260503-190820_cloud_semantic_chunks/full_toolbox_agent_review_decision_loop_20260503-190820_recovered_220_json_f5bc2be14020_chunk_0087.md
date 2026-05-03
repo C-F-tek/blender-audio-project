@@ -11,8 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: definire la struttura di paginazione di un file JSON di output di un pipeline AI, consentendo l’accesso a segmenti specifici.  
-**Seg
+**Scopo**: Fornire metadati
 
 ## Context before
 

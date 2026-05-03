@@ -11,7 +11,10 @@
 
 ## Local chunk summary
 
-Non posso riassumere il contenuto del chunk perché il testo effettivo non è stato fornito – sono disponibili solo le informazioni di metadati (ID, percorso, linee di inizio/fine). Per poter produrre un riassunto tecnico in italiano, avrei bisogno del testo reale delle righe 14401‑14600.
+Mi dispiace, ma il blocco che hai indicato contiene solo metadati (numeri di riga, ID di chunk, riferimenti a file) e non il testo effettivo da riassumere.  
+Per poter produrre un riassunto tecnico in italiano, avrei bisogno del contenuto reale delle righe 14401‑14600 (o dell’intero chunk).  
+
+Se puoi fornire il testo, sarò lieto di creare il riassunto richiesto.
 
 ## Context before
 

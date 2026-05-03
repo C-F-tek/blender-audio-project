@@ -11,8 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a file Python (.cpython‑313.py) nella documentazione `full_toolbox_agent_review_decision_loop_20260503-182047.md`.  
-**Segnali principali**: mapper di consistenza segnala `md_mentions_missing_python
+**Scopo**: Correggere riferimenti mancanti a file Python (.cpython‑313.py) presenti nella documentazione
 
 ## Context before
 

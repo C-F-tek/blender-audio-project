@@ -7,11 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0059.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0061.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**: definire la struttura di suddivisione
+Chunk deterministico. Sezioni: included_artifacts. Preview: "chunk_size_lines": 200, "chunk_count": 28, "first_chunk_id": "output/ai_pipeline/full_toolbox_20260503-190820_parallel_gpu.json#L1-L200", "last_chunk_id": "output/ai_pipeline/full_toolbox_20260503-190820_parallel_gpu.json#L5401-L5560", "chunk_pointers": [ { "...
 
 ## Context before
 

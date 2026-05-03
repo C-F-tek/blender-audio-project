@@ -11,11 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a percorsi Python in documentazione Markdown, garantendo coerenza tra file di documentazione e codice di validazione.  
-
-**Segnali principali**: `md_mentions_missing_python_path` rilevato in `full_toolbox_agent_review_decision_loop_20260503-182047.md` (linee 282, 283, 290) puntando a `Tools/validation/check_markdown_command_hygiene.py`.  
-
-**Guardrail / errori**
+**Scopo**: Correggere riferimenti mancanti
 
 ## Context before
 

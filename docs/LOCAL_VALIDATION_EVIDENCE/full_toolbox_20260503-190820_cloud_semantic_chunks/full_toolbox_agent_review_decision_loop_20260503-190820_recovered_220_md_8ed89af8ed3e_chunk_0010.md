@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a percorsi Python nei file Markdown di documentazione, garantendo
+**Scopo**: Correggere riferimenti mancanti a percorsi Python nei documenti di task locali,
 
 ## Context before
 

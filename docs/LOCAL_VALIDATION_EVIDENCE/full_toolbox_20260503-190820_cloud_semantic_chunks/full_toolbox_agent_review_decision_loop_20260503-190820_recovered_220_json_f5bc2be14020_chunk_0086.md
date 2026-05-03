@@ -7,12 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0085.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0087.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**: Definire la struttura di navigazione dei blocchi di output del pipeline AI, indicando ID, percorso, intervalli di linee e collegamenti tra blocchi consecutivi.  
-**Segnali principali**: `chunk_id`, `path`, `line_start`, `line_end
+Chunk deterministico. Sezioni: artifact_chunk_index. Preview: "has_previous": true, "has_next": true }, { "chunk_id": "output/ai_pipeline/full_toolbox_20260503-190820_deterministic_recommendations_recovered_220.json#L20201-L20400", "path": "output/ai_pipeline/full_toolbox_20260503-190820_deterministic_recommendations_rec...
 
 ## Context before
 

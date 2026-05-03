@@ -7,11 +7,15 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0024.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0026.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: reports. Preview: "Stop if the fix would touch output/**, generated indexes, SQLite, provider settings or Blender runtime.", "Stop if resolving the finding requires inventing behavior not supported by code evidence." ], "manual_review_required": true }, { "id": "consistency_292...
+**Scopo**: Valutazione manuale di problemi di coerenza nei file Markdown di documentazione, con focus su riferimenti a percorsi Python mancanti.  
+**Segnali principali**: `md_mentions_missing_python_path` in vari file (`complex_local_ai_provider_toolbox_bundle...`, `evidence_bundle_builder_patch_smoke...`).  
+**Guardrail / errori**:  
+- Arresto se la modifica riguarda solo spazi, formattazione Markdown o tag.  
+- Arresto se l’evidenza di
 
 ## Context before
 

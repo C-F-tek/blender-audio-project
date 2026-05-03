@@ -11,7 +11,10 @@
 
 ## Local chunk summary
 
-Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nella richiesta. Sono state fornite solo informazioni di metadati (ID, percorso, intervalli di linee) senza il contenuto effettivo da analizzare. Per procedere, si prega di inviare il testo reale del chunk.
+**Scopo**: Definire la struttura di navigazione per un file di analisi di consistenza del repository, consentendo l’individuazione rapida di blocchi di testo tramite ID, percorso e intervalli di riga.  
+
+**Segnali principali**:  
+- `chunk_id
 
 ## Context before
 

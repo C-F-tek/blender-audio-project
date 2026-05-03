@@ -11,8 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Eseguire audit NPU/GPU deep‑review sui checkpoint delle pipeline AI (round 18 e 24).  
-**Segnali principali**: audit terminato
+**Scopo**: Eseguire l’audit “NPU GPU deep review” sui checkpoint della pipeline AI per verificare la correttezza e la qualità delle risposte generate
 
 ## Context before
 

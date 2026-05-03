@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Mi dispiace, ma il blocco di testo da riassumere non è stato fornito – sono presenti solo riferimenti a linee di un file JSON. Senza il contenuto effettivo non posso generare un riassunto tecnico. Se puoi inviare il testo reale, sarò felice di aiutarti.
+Mi dispiace, ma il blocco che hai fornito contiene solo metadati (identificatori di riga, riferimenti a file e indicazioni di navigazione) e non il testo effettivo da riassumere. Per poter creare un riassunto tecnico con scopo, segnali principali, guardrail ed eventuali errori, avrei bisogno del contenuto reale delle righe 14201‑14400 (o
 
 ## Context before
 

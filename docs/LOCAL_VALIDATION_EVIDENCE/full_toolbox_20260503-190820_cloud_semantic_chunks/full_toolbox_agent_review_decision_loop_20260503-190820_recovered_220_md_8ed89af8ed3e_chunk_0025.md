@@ -7,15 +7,11 @@
 - section_kinds: `['markdown_heading_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0024.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0026.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**: definire la gestione delle referenze esterne e le linee guida per l’uso di un “reference layer” all’interno del repository, garantendo coerenza e sicurezza per gli agenti AI cloud.  
-
-**Segnali principali**: il layer non è un duplicato di OpenVINO, ONNX Runtime, Guardrails, ecc.; non sostituisce la validazione locale, non è dipendenza runtime, non autorizza modifiche distruttive e non bypassa AGENTS.md o i piani di esecuzione.  
-
-**Guardrail / errori**: i repository esterni devono rimanere
+Chunk deterministico. Sezioni: `output/ai_pipeline/agent_review_evidence_sufficiency.json`. Preview: "exists": true, "kind": "source_markdown", "chars": 3909, "lines": 106, "matched_terms": [ "docs/references", "docs/references" ], "snippet": "t this layer is not\n\nThis layer is not:\n\n- a complete mirror of OpenVINO, ONNX Runtime, Guardrails, Promptfoo, De...
 
 ## Context before
 

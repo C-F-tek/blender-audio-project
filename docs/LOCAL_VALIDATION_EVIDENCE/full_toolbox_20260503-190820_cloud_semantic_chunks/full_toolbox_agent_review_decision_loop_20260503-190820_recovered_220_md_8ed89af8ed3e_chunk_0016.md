@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a file Python nella documentazione `full_toolbox_agent_review_decision_loop_202
+**Scopo**: Correggere riferimenti mancanti a file Python nella documentazione `
 
 ## Context before
 

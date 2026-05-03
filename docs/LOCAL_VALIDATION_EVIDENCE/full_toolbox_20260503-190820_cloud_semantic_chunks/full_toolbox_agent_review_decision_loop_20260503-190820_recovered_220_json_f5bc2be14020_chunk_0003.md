@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Verific
+**Scopo**: Risolvere i problemi di “
 
 ## Context before
 

@@ -11,8 +11,10 @@
 
 ## Local chunk summary
 
-**Scopo**: Generare e verificare una mappa di consistenza del repository per l’analisi automatizzata.  
-**Segnali principali**: 2 chunk di 200 linee ciascuno con ID, percorso e puntatori; file di validazione “repository_consistency_map_smoke_full_toolbox_20260503-190820.md” con 13 linee, 2327 risultati,
+**Scopo**: Fornire artefatti di output per la verifica della consistenza del repository, utili all’AI cloud per monitorare e validare la mappatura dei contenuti.  
+**Segnali principali**:  
+- File di analisi (`repository_consistency_map_full_toolbox_20260503-190820.md`) con metadati di chunk (dimensione, conteggio, riferimenti).  
+- File
 
 ## Context before
 

@@ -11,7 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Verificare e correggere riferimenti a percorsi Python mancanti nei file Markdown del bundle di patch tecnica, garantendo coerenza tra documentazione e codice.
+**Scopo**: Correggere riferimenti Python mancanti nei file Markdown (`AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md`, `Scripting/README.md`).  
+**Segnali principali**: `md_mentions_missing_python_path` (linee
 
 ## Context before
 

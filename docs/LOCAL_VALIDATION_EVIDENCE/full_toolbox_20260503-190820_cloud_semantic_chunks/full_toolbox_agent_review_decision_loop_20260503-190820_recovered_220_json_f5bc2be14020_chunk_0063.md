@@ -7,11 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0062.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0064.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**:
+Chunk deterministico. Sezioni: artifact_chunk_index. Preview: "artifact_chunk_index": [ { "path": "output/ai_pipeline/full_toolbox_20260503-190820_orchestrator.json", "suffix": ".json", "line_count": 738, "chunk_size_lines": 200, "chunk_count": 4, "first_chunk_id": "output/ai_pipeline/full_toolbox_20260503-190820_orchest...
 
 ## Context before
 

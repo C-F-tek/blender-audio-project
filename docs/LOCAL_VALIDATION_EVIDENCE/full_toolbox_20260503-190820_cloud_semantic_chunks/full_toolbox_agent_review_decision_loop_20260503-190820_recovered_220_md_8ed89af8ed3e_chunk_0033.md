@@ -7,11 +7,12 @@
 - section_kinds: `['markdown_heading_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0032.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0034.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: `output/ai_pipeline/full_toolbox_20260503-190820_orchestrator.json`. Preview: ### `output/ai_pipeline/full_toolbox_20260503-190820_orchestrator.json` - Role: `auto_related_artifact` - Exists: `True` - Suffix: `.json` - Size bytes: `46914` - SHA-256: `4d48c0a3aa8e35c16db123a614a511def22c3a1f63a9ebcd7427849fb5387afb` - Content included: `...
+**Scopo**: orchestratore GPU/NPU parallelo per eseguire richieste di tool in un ambiente cloud AI, raccogliendo evidenze e decidendo se generare un piano di patch.  
+**Segn
 
 ## Context before
 

@@ -11,7 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Fornire metadati di paginazione per
+**Scopo**: Fornire metadati di navigazione per un file JSON di patch plan di 200 linee per chunk, consentendo l’accesso incrementale ai dati.  
+**Segnali principali**: `has_next`, `has_previous`, `chunk_id
 
 ## Context before
 

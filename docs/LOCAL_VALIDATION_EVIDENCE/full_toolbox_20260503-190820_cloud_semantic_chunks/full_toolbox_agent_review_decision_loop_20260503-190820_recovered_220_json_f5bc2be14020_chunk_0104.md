@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non posso riassumere il contenuto perché il testo effettivo del chunk non è stato fornito – sono disponibili solo i metadati di posizione (ID, percorso, linee di inizio/fine). Per procedere avrei bisogno del testo reale da analizzare.
+Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nel messaggio. Sono state fornite solo informazioni di metadati (ID, percorso, intervalli di linee) senza il contenuto effettivo da analizzare. Per procedere, si prega di inviare il testo reale del chunk.
 
 ## Context before
 

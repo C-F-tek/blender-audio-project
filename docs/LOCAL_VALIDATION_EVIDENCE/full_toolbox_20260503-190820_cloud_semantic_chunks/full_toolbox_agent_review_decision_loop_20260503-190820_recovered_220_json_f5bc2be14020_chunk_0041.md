@@ -11,10 +11,9 @@
 
 ## Local chunk summary
 
-**Scopo**: Registrare i risultati delle esecuzioni di pipeline AI (orchestrator, pianificazione GPU, mappatura di consistenza del repository) per analisi post‑esecuzione.  
-**Segnali principali**:  
-- *Orchestrator* (full_toolbox_20260503‑190820_orchestrator.json) indica fallimento (`passed:false`) con errore di ritorno GPU 2 e `json_parse_failure`.  
-- *Parallel GPU* (full_toolbox_20260503‑190820_parallel_gpu.json) mostra 10 000+ round con errori `UnboundLocalError` su `
+**Scopo**: registrare i risultati di una pipeline di AI per il progetto “blender‑audio‑project”, includendo orchestratore GPU, pianificazione GPU parallela e mappa di coerenza del repository.  
+**Segnali principali**: l’orchestratore non ha superato il test (`passed:false`, `gpu_returncode:2`), la pianificazione GPU parallela ha fallito per errori di parsing JSON (`json_parse_failure`), e la mappa di coerenza ha rilevato 2327 anomalie (816 high, 1465 medium, 46 low).  
+**Guardrail/erori**
 
 ## Context before
 

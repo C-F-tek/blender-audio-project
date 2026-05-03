@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Eseguire l’audit N
+**Scopo**: Eseguire l’audit NPU (Non‑Uniform Processing Unit) per i round 6 e 12 del pipeline “full_toolbox_202605
 
 ## Context before
 

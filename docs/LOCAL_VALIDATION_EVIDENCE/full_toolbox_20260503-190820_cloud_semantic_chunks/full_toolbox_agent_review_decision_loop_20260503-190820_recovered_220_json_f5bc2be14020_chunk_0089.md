@@ -11,7 +11,9 @@
 
 ## Local chunk summary
 
-**Scopo**: Fornire metadati di navigazione per il file JSON `full_toolbox_20260503-190820_deterministic_recommendations_recovered_220.json`, indicando gli intervalli di
+**Scopo**: Mappare i segmenti di un file JSON di grandi dimensioni per un’analisi distribuita.  
+**Segnali principali**: ID del chunk, percorso file, intervallo di linee, riferimenti a chunk precedente e successivo, flag di presenza di vicini.  
+**Guardrail / errori**: verificare l’integrità della sequenza (no gap, no
 
 ## Context before
 

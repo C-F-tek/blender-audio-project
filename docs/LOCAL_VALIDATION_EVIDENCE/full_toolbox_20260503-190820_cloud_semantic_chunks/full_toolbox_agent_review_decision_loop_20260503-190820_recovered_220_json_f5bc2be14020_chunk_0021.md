@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Verificare e correggere riferimenti a perc
+**Scopo**: Verificare e correg
 
 ## Context before
 

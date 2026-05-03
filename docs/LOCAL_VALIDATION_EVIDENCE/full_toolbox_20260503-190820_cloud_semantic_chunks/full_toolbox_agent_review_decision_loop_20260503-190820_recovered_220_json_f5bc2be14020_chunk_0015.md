@@ -7,12 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0014.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0016.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**: Rilevare e correggere riferimenti a percorsi Python mancanti nei file Markdown del progetto.  
-**Segnali principali**: `md_mentions_missing_python_path` con alto punteggio in
+Chunk deterministico. Sezioni: reports. Preview: ], "manual_review_required": true }, { "id": "consistency_076", "area": "md_python", "source": "gpu_recommendation", "risk": "medium", "status": "ready_for_manual_review", "target_files": [ "Tools/npu/npu_blender_manual_chunks/chunk_192_blender_manual_html_key...
 
 ## Context before
 

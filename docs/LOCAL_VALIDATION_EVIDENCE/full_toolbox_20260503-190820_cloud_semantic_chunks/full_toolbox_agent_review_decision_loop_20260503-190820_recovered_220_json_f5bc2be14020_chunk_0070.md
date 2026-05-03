@@ -7,12 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0069.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0071.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**: Mappare la consistenza del repository fornendo riferimenti a blocchi di testo (chunk) con i relativi intervalli di linee e collegamenti sequenziali.  
-**Segnali principali**: `chunk_id`, `line_start`, `line_end`, `previous_chunk_id`, `next_chunk_id`, `has_previous
+Chunk deterministico. Sezioni: artifact_chunk_index. Preview: "line_end": 22200, "previous_chunk_id": "output/analysis/repository_consistency_map_full_toolbox_20260503-190820.json#L21801-L22000", "next_chunk_id": "output/analysis/repository_consistency_map_full_toolbox_20260503-190820.json#L22201-L22400", "has_previous":...
 
 ## Context before
 

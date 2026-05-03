@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a script PowerShell nella
+**Scopo**: Correggere riferimenti
 
 ## Context before
 

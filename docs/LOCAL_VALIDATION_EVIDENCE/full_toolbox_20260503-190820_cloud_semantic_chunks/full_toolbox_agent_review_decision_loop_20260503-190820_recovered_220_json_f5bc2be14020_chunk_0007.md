@@ -11,8 +11,9 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a script PowerShell (`validate_after_patch.ps1`) nei file Markdown di documentazione.  
-**Segnali principali**: alto valore di `md
+**Scopo**: Correggere riferimenti mancanti a `validate_after_patch.ps1` nei file Markdown di documentazione (`full_toolbox_agent_review_decision_loop_20260503-182047.md`).  
+**Segnali principali**: mapper di consistenza segnala alto `md_mentions_missing_powershell_path` nelle righe 387, 394 e 395, indicando riferimenti non risolti a script PowerShell.  
+**Guardrail / errori**: le
 
 ## Context before
 

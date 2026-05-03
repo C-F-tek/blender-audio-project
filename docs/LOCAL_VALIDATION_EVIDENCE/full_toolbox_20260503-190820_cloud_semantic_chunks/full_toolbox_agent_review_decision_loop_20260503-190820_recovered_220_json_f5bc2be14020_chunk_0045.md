@@ -11,8 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Documentare la suddivisione in blocchi di un file di patch plan per la validazione locale.  
-**Segnali principali**: dimensione blocco (200 righe), numero blocchi (9),
+Mi dispiace, ma il blocco di testo da riassumere non è stato fornito – sono disponibili solo i metadati (posizione del file, numeri di riga, ecc.) ma non il contenuto effettivo delle righe 1‑200,
 
 ## Context before
 

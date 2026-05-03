@@ -11,8 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a file Python nei documenti Markdown, garantendo coerenza tra documentazione e codice.  
-**Segnali principali
+**Scopo**: Correggere riferimenti mancanti a file Python nei documenti Markdown, garantendo coerenza del repository.  
+**Segnali principali**: alto
 
 ## Context before
 

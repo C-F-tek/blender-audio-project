@@ -7,11 +7,13 @@
 - section_kinds: `['json_key_section']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0039.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0041.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: selected_chunks_evidence. Preview: "selected_chunks_evidence": [ { "path": "docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json", "exists": true, "json_ok": true, "kind": "selected_semantic_chunks_evidence", "passed": true, "summary": { "schema_version": 1, "kind": ...
+**Scopo**: Validare la selezione di 24 chunk semantici da un bundle di codice, garantendo che rientrino nel budget di 32 000 caratteri e che non contengano percorsi proibiti.  
+**Segnali principali**: `selected_count` = 24, `total_selected_chars` = 28 649, `budget_respected` = true, `forbidden_paths_blocked` = true.  
+**Guardrail / errori**: Nessun errore (`errors: []`) e nessun avviso (`warnings: []`); la decisione indica che la selezione
 
 ## Context before
 

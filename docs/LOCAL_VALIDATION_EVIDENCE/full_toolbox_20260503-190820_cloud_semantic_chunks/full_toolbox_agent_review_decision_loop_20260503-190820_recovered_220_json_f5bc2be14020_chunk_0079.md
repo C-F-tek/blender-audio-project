@@ -11,8 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**  
-Mappare
+**Scopo**: definire la mappatura
 
 ## Context before
 

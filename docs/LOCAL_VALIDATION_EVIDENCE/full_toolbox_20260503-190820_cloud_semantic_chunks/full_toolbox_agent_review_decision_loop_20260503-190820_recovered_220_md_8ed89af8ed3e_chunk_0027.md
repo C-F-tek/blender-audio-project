@@ -7,11 +7,11 @@
 - section_kinds: `['markdown_heading_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0026.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0028.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**: Registro del piano di patch deterministico generato dall’orchestratore Bridge per il progetto Blender‑Audio
+Chunk deterministico. Sezioni: `output/ai_pipeline/full_toolbox_20260503-190820_bridge_orchestrator_recovered_220.json`. Preview: ### `output/ai_pipeline/full_toolbox_20260503-190820_bridge_orchestrator_recovered_220.json` - Role: `auto_related_artifact` - Exists: `True` - Suffix: `.json` - Size bytes: `37585` - SHA-256: `d429fafb0d267182b0db2cbe4c2ba6364219d2fc7a82d14d53bfe752926112e7` ...
 
 ## Context before
 

@@ -11,8 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti a percorsi Python mancanti nei file Markdown, garantendo coerenza tra documentazione e codice.  
-**Segnali principali**: `md_mentions
+**
 
 ## Context before
 

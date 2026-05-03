@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non posso riassumere il contenuto del chunk perché non è stato fornito il testo effettivo, ma solo le informazioni di indice e percorso del file. Per procedere avrei bisogno delle righe di testo tra L26201 e L26400.
+Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nella richiesta.  L’unica informazione disponibile è la posizione del file e gli indici di riga, ma non il contenuto effettivo delle righe 26201‑26400 (e delle successive).  Per poter riassumere lo scopo, i segnali principali, i guardrail o gli errori, e la rile
 
 ## Context before
 

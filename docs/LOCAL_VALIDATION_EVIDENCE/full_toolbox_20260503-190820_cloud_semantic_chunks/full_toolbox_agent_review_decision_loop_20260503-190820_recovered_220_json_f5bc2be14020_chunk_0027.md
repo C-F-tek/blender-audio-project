@@ -7,13 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0026.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0028.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a `Scripting/shared/config_model.py` nei file Markdown di validazione, garantendo coerenza tra documentazione e codice.  
-**Segnali principali**: `md_mentions_missing_python_path` rilevato in più posizioni (3545, 3561, ecc.) del file `full_toolbox_agent_review_decision_loop_20260503-151613.md`.  
-**Guardrail / errori**: Non modificare solo formattazione, non toccare
+Chunk deterministico. Sezioni: reports. Preview: "edit_strategy": "Build a focused patch plan for `md_mentions_missing_python_path` using mapper evidence `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_20260503-151613.md:3120`. Target `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent...
 
 ## Context before
 

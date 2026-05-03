@@ -11,8 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: correggere i riferimenti mancanti a percorsi Python (`md_mentions_missing_python_path`) nella documentazione `full_toolbox_agent_review_decision_loop_20260503-182047.md`.  
-**Segnali principali**: mapper
+**Scopo**: Correggere i riferimenti mancanti a percorsi Python (`app.py`, `run_agent.py`) presenti nella documentazione `full_toolbox_agent_review_dec
 
 ## Context before
 

@@ -11,8 +11,9 @@
 
 ## Local chunk summary
 
-**Scopo**: Verificare e correggere riferimenti a percorsi Python mancanti nei file Markdown, garantendo coerenza tra documentazione e codice.  
-**Segnali principali**: `md_mentions_missing_python_path` con alto valore di rilevamento in vari file (`DEVELOPER_GUIDE.md`, `2026-04-29_superseded
+**Scopo**: Correggere riferimenti mancanti a percorsi Python nei file Markdown (`DEVELOPER_GUIDE.md`, `2026‑04‑29_superseded_pr_followups.md`).  
+**Segnali principali**: alto valore di `md_mentions_missing_python_path` indicato dal mapper di consistenza.  
+**Guardrail / errori**: stop conditions che imped
 
 ## Context before
 

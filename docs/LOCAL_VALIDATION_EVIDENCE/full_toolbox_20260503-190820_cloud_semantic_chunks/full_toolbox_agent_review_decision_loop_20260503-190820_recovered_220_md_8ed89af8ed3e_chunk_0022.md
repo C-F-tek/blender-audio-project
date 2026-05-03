@@ -11,10 +11,10 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti a script mancanti in documentazione markdown per garantire coerenza del repository.  
-**Segnali principali**: `md_python_command_script_missing` (run_agent.py) e `md_mentions_missing_powershell_path` (varie .ps1).  
-**Guardrail/errore**: Rischio medio; le correzioni devono evitare modifiche di sola formattazione, aggiornando o rimuovendo i comandi obsoleti.  
-**Perché serve a una AI cloud**: Mantiene l’integrità delle istruzioni di
+**Scopo**: Correggere riferimenti a script PowerShell e Python mancanti nei documenti di validazione e patching, garantendo coerenza del repository.  
+**Segnali principali**: `md_python_command_script_missing` (run_agent.py) e `md_mentions_missing_powershell_path` (varie .ps1) con rischio medio.  
+**Guardrail/errore**: Evitare modifiche solo di formattazione; aggiornare il percorso dello script o rimuovere il comando obsoleto.  
+**Perché serve a una AI cloud**: Assicura che le istruzioni di esecuzione siano valide e accessibili, permettendo all’AI di orchestrare correttamente i task di patch
 
 ## Context before
 

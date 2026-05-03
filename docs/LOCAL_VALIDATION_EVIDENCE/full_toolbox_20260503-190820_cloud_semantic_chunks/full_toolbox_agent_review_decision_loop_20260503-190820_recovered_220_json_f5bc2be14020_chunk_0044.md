@@ -11,8 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Definire la struttura di suddivisione di un file di testo in blocchi di 200 righe per l’elaborazione distribuita.  
-**Segnali principali**: `chunk_size_lines=200`, `chunk_count=11`, identificatori di inizio e fine (`first_chunk_id`, `last_chunk_id`) e un array di `chunk_pointers` con `line_start`, `line_end`, riferimenti a chunk precedente/seguente
+**Scopo**: Definire la suddivisione di un file di testo in blocchi di 200 righe per l’elaborazione distribuita.  
+**Segnali principali**: `chunk_size_lines=200`, `chunk_count=11`, identificatori di primo e ultimo blocco, e un array di `chunk_pointers` con `chunk_id`, `path`, `line_start`, `line_end`, riferimenti a
 
 ## Context before
 

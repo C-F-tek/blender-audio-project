@@ -7,11 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0023.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0025.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: reports. Preview: ], "rationale": "Repository consistency mapper reported high `md_mentions_missing_python_path` at `docs/LOCAL_VALIDATION_EVIDENCE/agent_review_patch_plan_summary_20260501-230858.md:21` targeting `Scripting/shared/config_model.py`.", "edit_strategy": "Build a f...
+**Sc
 
 ## Context before
 

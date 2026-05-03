@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Generare piani di patch per problemi di consistenza
+**Scopo**: Generare patch per problemi di consistenza del repository nei bundle di evidenza.
 
 ## Context before
 

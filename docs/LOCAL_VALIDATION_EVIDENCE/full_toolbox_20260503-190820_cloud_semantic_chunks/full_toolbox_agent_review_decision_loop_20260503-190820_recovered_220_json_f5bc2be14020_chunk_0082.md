@@ -11,11 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Fornire metadati di navigazione per un file JSON di grandi dimensioni, consentendo all’AI cloud di recuperare, visualizzare e collegare i blocchi di testo in modo sequenziale.  
-
-**Segnali principali**:  
-- `chunk_id`, `path`, `line_start`, `line_end` indicano l’intervallo di righe contenute.  
-- `previous_chunk
+**Scopo**: definire la struttura di
 
 ## Context before
 

@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**
+**Scopo**: Correggere riferimenti mancanti a file Python nella documentazione `full
 
 ## Context before
 

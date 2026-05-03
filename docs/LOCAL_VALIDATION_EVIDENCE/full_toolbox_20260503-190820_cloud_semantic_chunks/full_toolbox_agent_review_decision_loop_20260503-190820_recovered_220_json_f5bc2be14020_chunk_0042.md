@@ -11,10 +11,10 @@
 
 ## Local chunk summary
 
-**Scopo**: Generare e verificare un piano di patch deterministico per un progetto audio Blender, con successiva revisione manuale da parte di un agente.  
-**Segnali principali**: 220 raccomandazioni GPU, nessun errore, 12 evidenze sufficienti per PR reale, modalità “report_only_manual_review_patch_plan”.  
-**Guardrail / errori**: Nessun errore o warning registrato; la revisione manuale è obbligatoria (manual_review_required = true).  
-**Perché serve a una AI cloud**: Fornisce un output strutturato (JSON) che può essere consumato
+**Scopo**: Archiviazione e verifica dei risultati di un ciclo di raccomandazioni e patching automatizzato per un progetto AI.  
+**Segnali principali**: 220 raccomandazioni GPU generate, 220 patch plan, tutti i file esistenti e senza errori, ma richiedono revisione manuale.  
+**Guardrail / errori**: Nessun errore riportato; avvisi vuoti; `provider_execution_performed` e `patch_application_performed` sono false, indicando che l’esecuzione è stata simulata.  
+**Perché serve a una AI cloud**: Fornisce un bundle
 
 ## Context before
 

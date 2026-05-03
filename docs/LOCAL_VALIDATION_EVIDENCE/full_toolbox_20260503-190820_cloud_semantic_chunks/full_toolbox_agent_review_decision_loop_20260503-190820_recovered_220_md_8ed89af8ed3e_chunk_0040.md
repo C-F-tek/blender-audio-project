@@ -11,8 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Verificare la coerenza tra riferimenti Markdown e file Python, individuando riferimenti mancanti.  
-**Segnali principali**: 30+ occorrenze “md_mentions_missing_python_path” con severità *high* in vari file (`atmosphere_setup`, `camera
+**Scopo**: Verificare la consistenza del repository per l’AI cloud, assicurando che i riferimenti ai file Python siano corretti.
 
 ## Context before
 

@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Mi dispiace, ma il blocco di testo che mi hai fornito contiene solo riferimenti a linee di un file JSON (ad esempio `#L34201-L34400`) e non include il contenuto effettivo da analizzare. Senza il testo reale non posso estrarre scopo, segnali, guardrail o motivazioni di utilizzo. Se puoi fornirmi il contenuto del chunk, sarò lieto di creare il
+Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nel messaggio.  Per procedere avrei bisogno del contenuto effettivo delle righe L34201–L36001 del file `repository_consistency_map_full_toolbox_20260503-190820.json`.
 
 ## Context before
 

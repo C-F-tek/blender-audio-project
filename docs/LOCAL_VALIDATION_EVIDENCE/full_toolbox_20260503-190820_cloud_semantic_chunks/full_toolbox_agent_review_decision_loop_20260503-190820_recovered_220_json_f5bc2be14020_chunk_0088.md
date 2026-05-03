@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non posso riassumere il contenuto perché il testo effettivo del chunk non è stato fornito – sono disponibili solo metadati di posizione (ID, percorso, numeri di riga). Per procedere avrei bisogno del testo reale tra le linee 27401 e 27600.
+Non posso riassumere il contenuto di questo chunk perché il testo effettivo non è stato fornito – sono disponibili solo metadati di posizione (ID, percorso, numeri di riga). Per procedere avrei bisogno del testo reale tra le linee 27401 e 27600.
 
 ## Context before
 

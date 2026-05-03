@@ -7,11 +7,13 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0057.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0059.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: included_artifacts. Preview: { "path": "output/ai_pipeline/full_toolbox_20260503-190820_orchestrator.json", "exists": true, "suffix": ".json", "size_bytes": 46914, "sha256": "4d48c0a3aa8e35c16db123a614a511def22c3a1f63a9ebcd7427849fb5387afb", "role": "auto_related_artifact", "content_inclu...
+**Scopo**: Registro di esecuzione dell’orchestratore GPU‑NPU parallelo per la pipeline AI.  
+**Segnali principali**: esecuzione non superata (`passed:false`), 50 round, 200 richieste di tool runtime ma nessuna eseguita, 12 evidenze pronte per patch manuale.  
+**Errori / guardrail**: fallimento parsing JSON (`json_parse_failure`), 50 errori di parsing, nessuna raccomandazione generata, `gpu_returncode
 
 ## Context before
 

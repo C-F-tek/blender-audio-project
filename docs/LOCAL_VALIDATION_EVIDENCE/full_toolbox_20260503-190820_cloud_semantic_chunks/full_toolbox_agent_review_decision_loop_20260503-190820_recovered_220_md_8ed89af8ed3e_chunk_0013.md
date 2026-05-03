@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a `Scripting/shared/config_model.py` nella documentazione Markdown.
+**Scopo**: Correggere riferimenti mancanti a `
 
 ## Context before
 

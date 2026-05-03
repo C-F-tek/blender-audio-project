@@ -11,8 +11,11 @@
 
 ## Local chunk summary
 
-**Scopo**: Metadati di gestione dei file di patch per l’AI cloud, che definiscono quali chunk di testo includere, come scoprirli e quali artefatti escludere.  
-**Segnali principali**: elenco di chunk con
+**Scopo**: definire la struttura di scoperta e inclusione di artefatti per la generazione di patch in un ambiente AI cloud.  
+**Segnali principali**:  
+- `recursive_default_discovery.enabled = false` → la ricerca ricorsiva di report/artifact è disabilitata.  
+- Limiti di inclusione: massimo 120 file, 24 artefatti, 24 000 caratteri totali, 200 linee per file grande.  
+- Lista di estensioni consentite (.cfg, .csv, .ini, .json, .md, .ps1, .py, .toml, .txt, .yaml, .yml).
 
 ## Context before
 

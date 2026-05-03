@@ -11,8 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: guidare la revisione manuale di errori di riferimento Python in documentazione Markdown, generati dal mapper di consistenza.  
-**Segnali principali**: alto `
+**Scopo**: Verific
 
 ## Context before
 

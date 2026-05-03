@@ -11,10 +11,10 @@
 
 ## Local chunk summary
 
-**Scopo**: Valutare l’esecuzione parallela di GPU/NPU per l’orchestratore di agenti, verificando la riuscita delle audit e la generazione di patch.  
-**Segnali principali**: `passed: False`, `gpu_returncode: 2`, `elapsed_seconds: 1686.543`, 9 audit NPU riusciti, 200 richieste runtime tool ma nessuna esecuzione.  
-**Guardrail/erori**: `gpu_empty_recommendations_reason: json_parse_failure`, `manual_review_required: True`, `fallback_patch_plan_recommended: True`.  
-**Perché serve a una AI cloud**: Fornisce feedback
+**Scopo**: Valutare l’esecuzione parallela di GPU/NPU per un agente di patching, registrando metriche di successo, errori e raccomandazioni.  
+**Segnali principali**: `passed=False`, `gpu_returncode=2`, `elapsed_seconds≈1687s`, 9 audit NPU riusciti, 200 richieste runtime tool ma nessuna esecuzione.  
+**Guardrail/erori**: `gpu_empty_recommendations_reason=json_parse_failure`, `runtime_tool_broker_enabled=False`, `manual_review_required=True`.  
+**Perché serve a una AI cloud**: Fornisce feedback dettagliato sullo stato di patching
 
 ## Context before
 

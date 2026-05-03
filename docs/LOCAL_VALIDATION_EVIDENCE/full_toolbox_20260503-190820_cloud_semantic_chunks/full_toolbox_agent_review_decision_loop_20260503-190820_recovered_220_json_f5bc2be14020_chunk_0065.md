@@ -7,12 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0064.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0066.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**: Fornire un indice di navigazione per l’analisi del file `repository_consistency_map_full_toolbox_20260503-190820.json`, indicando i blocchi di linee da 2001 a 4000.  
-**Segnali principali**: identificatori di blocco (`chunk_id`), percorso del file, intervallo di linee (`line_start`‑`line_end`), riferimenti a bloc
+Chunk deterministico. Sezioni: artifact_chunk_index. Preview: "next_chunk_id": "output/analysis/repository_consistency_map_full_toolbox_20260503-190820.json#L2001-L2200", "has_previous": true, "has_next": true }, { "chunk_id": "output/analysis/repository_consistency_map_full_toolbox_20260503-190820.json#L2001-L2200", "pa...
 
 ## Context before
 

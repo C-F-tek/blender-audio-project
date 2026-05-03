@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti a percorsi Python mancanti nei file Markdown dei moduli NPU, garantendo coerenza documentale per il pipeline AI.  
+**Scopo**: Correggere riferimenti a percorsi Python mancanti nei file Markdown dei moduli NPU, garantendo coerenza documentale per i pipeline AI.  
 **Segnali principali**: `md_mentions_missing_python_path` alto in `chunk_013` (linee 141 e 149) e `chunk_014` (linea 137), puntando a `generated_scene_builder_candidate.py` o `_scene
 
 ## Context before

@@ -11,8 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Diagnostica di un errore di provider all’interno del pipeline AI, verificando la validità del JSON e del contratto di validazione.  
-**Seg
+**Scopo**: diagnosticare un errore di parsing del provider e attivare fallback automatici per mantenere
 
 ## Context before
 

@@ -11,13 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Non è possibile determinare lo scopo del chunk perché il testo effettivo non è stato fornito; l’unica informazione disponibile è la struttura di riferimento (path e range di linee).
-
-**Segnali principali**: Nessun dato testuale è presente, quindi non è possibile estrarre segnali o pattern.
-
-**Guardrail / errori**: L’assenza di contenuto impedisce qualsiasi analisi; è necessario fornire il testo reale per procedere.
-
-**Perché serve a una AI cloud**: In un contesto di pipeline AI, i chunk di file JSON vengono tipicamente usati per passare
+Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nel prompt. Sono state fornite solo informazioni di metadati (percorsi, numeri di riga, riferimenti a chunk precedenti e successivi) senza il contenuto effettivo da analizzare. Per procedere, occorre fornire il testo reale delle righe 16801‑17000 (o l’intero segmento richiesto).
 
 ## Context before
 

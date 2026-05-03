@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo
+**Scopo**: definire la struttura di suddivisione (chunking) di un
 
 ## Context before
 

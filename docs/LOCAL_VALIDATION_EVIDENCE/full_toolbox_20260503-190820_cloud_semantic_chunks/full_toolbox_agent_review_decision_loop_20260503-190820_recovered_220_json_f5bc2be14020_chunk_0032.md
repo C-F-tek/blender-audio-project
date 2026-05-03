@@ -7,13 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0031.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0033.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**: Valutare e correggere incongruenze nei riferimenti Python all’interno della documentazione Markdown, garantendo coerenza tra file di codice e documentazione.  
-**Segnali principali**: `md_mentions_missing_python_path` con alto punteggio, riferimenti a `app.py` e `run_agent.py` non trovati.  
-**Guardrail / errori**: fermarsi se l’operazione tocca output/**, SQLite, impostazioni provider o runtime Blender; evitare modifiche solo di spazi o formatt
+Chunk deterministico. Sezioni: reports. Preview: "Stop if the fix would touch output/**, generated indexes, SQLite, provider settings or Blender runtime.", "Stop if resolving the finding requires inventing behavior not supported by code evidence." ], "manual_review_required": true }, { "id": "consistency_332...
 
 ## Context before
 

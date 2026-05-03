@@ -11,9 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Registro di un test di “agent_gpu_deep_planning_supervised” eseguito su un cluster GPU.  
-**Segnali principali**: 46 round di esecuzione con errore costante `UnboundLocalError: cannot access local variable 'raw_response'`.  
-**Guardrail / errori**
+**Scopo**: Registro di esecuzione di un agente “GPU deep planning supervised” all’interno del progetto Blender‑Audio.  
+**Seg
 
 ## Context before
 

@@ -11,9 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Redigere patch mirati per risolvere i riferimenti mancanti a percorsi Python (`md_mentions_missing_python_path`) nei documenti Markdown.  
-**Segnali principali**: alto livello di `md_mentions_missing_python_path` in vari file di documentazione (`macro-local-validation-prototype-gate.md`, `next-chat-handoff-after-pr115-large-code-refactor-2026-05-02.md`, ecc.).  
-**Guardrail / errori**: fermarsi se l’edit è solo sp
+**Scopo**: Generare un piano di patch mirato per correggere riferimenti a percorsi Python mancanti (`md_mentions_missing_python_path`) nei file Markdown di documentazione.  
+**Segnali principali**: alto livello di `md_mentions_missing_python_path` in vari documenti (`macro-local-validation-prototype-gate.md`, `next-chat-handoff-after-pr115-large-code-refactor-2026-05-02.md`, ecc.), con target che puntano a file Python o pattern di file non presenti.
 
 ## Context before
 

@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non è possibile riassumere il contenuto di questo chunk perché il testo effettivo non è stato fornito – sono disponibili solo metadati di posizione (ID, percorso, intervalli di linee). Per procedere al riassunto tecnico è necessario avere l’estratto di testo reale.
+Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nel messaggio. Sono state fornite solo informazioni di metadati (ID, percorso, intervalli di linee) senza il contenuto effettivo delle righe 23801‑24000, 24001‑24200, ecc. Per poter sintetizzare lo scopo, i segnali principali, i guardrail o gli errori, e la rilevanza per un AI‑cloud, è necessario avere accesso al testo reale presente in quei segmenti. Se puoi inviare il contenuto delle linee indicate, sarò lieto di
 
 ## Context before
 

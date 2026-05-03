@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti a script Python mancanti nei bundle
+**Scopo**: Correggere riferimenti a script
 
 ## Context before
 

@@ -11,8 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: definire un piano di patch per correggere riferimenti mancanti a script PowerShell nei file di documentazione del bundle di patch AI.  
-**Segnali principali**: mapper di consistenza segnala `md_mentions_missing_powershell_path` (livello medio) in 8 punti specifici (AI_PATCH_BUNDLE_TECHNICAL
+**Scopo**: definire un piano di patch mirato per correggere riferimenti mancanti a script PowerShell nei file markdown del bundle di patch AI.  
+**Segnali principali**: alto valore di `md_mentions_missing_powers
 
 ## Context before
 

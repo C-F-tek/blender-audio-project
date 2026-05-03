@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**
+**Scopo**:
 
 ## Context before
 

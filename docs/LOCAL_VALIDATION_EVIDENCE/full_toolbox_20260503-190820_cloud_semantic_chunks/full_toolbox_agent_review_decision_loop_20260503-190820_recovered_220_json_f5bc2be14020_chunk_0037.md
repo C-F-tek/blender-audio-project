@@ -7,11 +7,13 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0036.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0038.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: reports. Preview: "Stop if the target/source evidence no longer exists after refreshing master.", "Stop if the fix would touch output/**, generated indexes, SQLite, provider settings or Blender runtime.", "Stop if resolving the finding requires inventing behavior not supported ...
+**Scopo**: Validare la consistenza dei riferimenti Python nei file Markdown (`md_python`) generati da un modello AI cloud.  
+**Segnali principali**: `md_mentions_missing_python_path` indicato in più linee (2181‑2183) del documento di validazione.  
+**Guardrail / errori
 
 ## Context before
 

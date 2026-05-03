@@ -7,11 +7,12 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0050.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0052.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: included_artifacts. Preview: "next_chunk_id": "output/ai_pipeline/full_toolbox_20260503-190820_deterministic_recommendations_recovered_220.json#L10801-L11000", "has_previous": true, "has_next": true }, { "chunk_id": "output/ai_pipeline/full_toolbox_20260503-190820_deterministic_recommenda...
+**Scopo**: Fornire metadati di navigazione per un file JSON di grandi dimensioni, consentendo l’accesso rapido a segmenti specifici.  
+**Segnali principali**: `chunk_id`, `path`, `line_start`, `line_end
 
 ## Context before
 

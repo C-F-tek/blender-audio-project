@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Fornire metadati
+**Scopo**: Fornire un indice di navigazione per un file JSON di grandi dimensioni
 
 ## Context before
 

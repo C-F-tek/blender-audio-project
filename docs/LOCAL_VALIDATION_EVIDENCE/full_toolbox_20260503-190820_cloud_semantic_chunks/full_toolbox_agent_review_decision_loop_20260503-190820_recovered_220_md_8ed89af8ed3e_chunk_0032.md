@@ -11,8 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Registrare lo stato di utilizzo degli strumenti di AI all’interno del cloud, in particolare per verificare la disponibilità di testi di audit utilizzabili.  
-**
+**Scopo**: indicare che il testo di audit è “usable” per l’uso in un’AI cloud.  
+**Segnali principali**: classificazione “usable_audit
 
 ## Context before
 

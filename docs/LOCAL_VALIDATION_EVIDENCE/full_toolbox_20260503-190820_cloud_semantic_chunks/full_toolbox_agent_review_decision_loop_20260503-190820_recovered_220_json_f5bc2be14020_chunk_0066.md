@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non posso riassumere il contenuto del chunk perché il testo effettivo non è stato fornito – l’unica informazione disponibile è la struttura di riferimento (ID, percorso, numeri di riga). Se puoi condividere le righe 6001‑6200 (o l’intero blocco di interesse), sarò lieto di creare il riassunto tecnico richiesto.
+Non posso riassumere il contenuto perché il blocco di testo effettivo non è stato fornito – sono disponibili solo i riferimenti di posizione (linee 6001‑6200, 6201‑6400, ecc.) senza il testo da analizzare. Se puoi inviare il testo reale, sarò lieto di creare il riassunto richiesto.
 
 ## Context before
 

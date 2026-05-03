@@ -11,10 +11,7 @@
 
 ## Local chunk summary
 
-**Riassunto (in base ai metadati disponibili)**  
-- **Scopo**: indicare la posizione di un blocco di artefatti inclusi nel file di output della pipeline AI.  
-- **Segnali principali**: riferimenti a linee di codice (28601‑28800, 28801‑29000, ecc.) e collegamenti a blocchi precedenti e successivi.  
-- **Guard
+Mi dispiace, ma il blocco di testo che mi hai fornito contiene solo riferimenti a linee di un file JSON (ad esempio `L28601-L28800`) e non include il contenuto effettivo da analizzare. Senza il testo reale non posso estrarre scopo, segnali, guardrail o motivazioni di utilizzo. Se puoi fornirmi il contenuto del chunk, sarò lieto di creare il ri
 
 ## Context before
 

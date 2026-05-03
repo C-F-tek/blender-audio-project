@@ -11,10 +11,7 @@
 
 ## Local chunk summary
 
-Mi dispiace, ma il blocco che hai indicato contiene solo metadati (ID, percorso, numeri di riga, collegamenti a chunk precedenti e successivi) e non il testo effettivo da analizzare.  
-Per poter produrre un riassunto tecnico con scopo, segnali principali, guardrail ed eventuali errori, avrei bisogno del contenuto testuale reale delle righe 13201‑13400 (o dell’intero chunk).  
-
-Se puoi fornire il testo, sarò lieto di creare il riassunto richiesto.
+Mi dispiace, ma il blocco di testo che hai indicato contiene solo metadati (identificatori, numeri di riga, riferimenti ai file) e non il contenuto effettivo da riassumere. Senza il testo reale non posso produrre un riassunto tecnico. Se puoi fornire le righe di codice o il testo che desideri sintetizzare, sarò felice di aiutarti.
 
 ## Context before
 

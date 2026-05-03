@@ -11,8 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: identificare riferimenti mancanti a file Python nella documentazione Markdown.  
-**Segnali principali**: 30+ avvisi “high” di tipo `md_mentions_missing_python_path` in `.aider.chat.history.md
+**Scopo**: Verificare la corretta referenza dei percorsi Python nei file di documentazione Markdown.  
+**Segnali principali**: 30+ occorrenze di `md
 
 ## Context before
 

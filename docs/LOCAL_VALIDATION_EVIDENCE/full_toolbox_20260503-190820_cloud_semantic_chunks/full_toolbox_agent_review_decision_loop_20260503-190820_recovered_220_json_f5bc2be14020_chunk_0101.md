@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non è possibile fornire un riassunto tecnico del chunk indicato perché il contenuto effettivo delle righe 38601‑38800 non è stato incluso nella richiesta. Per poter sintetizzare lo scopo, i segnali principali, eventuali guardrail o errori, e la rilevanza per un’AI cloud, è necessario avere accesso al testo reale di quel segmento. Se puoi
+Non posso riassumere il contenuto del chunk perché il testo effettivo non è stato fornito – l’unica informazione disponibile è la struttura di riferimento (ID, percorso, intervalli di linee). Per poter produrre un riassunto tecnico con scopo, segnali principali, guardrail ed eventuali errori, è necessario avere accesso al testo reale delle righe 38601‑38800. Se puoi fornire il contenuto, sarò lieto
 
 ## Context before
 

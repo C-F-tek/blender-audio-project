@@ -7,11 +7,11 @@
 - section_kinds: `['markdown_heading_section']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0011.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0013.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: consistency_297 — md_python; consistency_298 — md_python; consistency_299 — md_python; consistency_300 — md_python; consistency_301 — md_python. Preview: #### consistency_297 — md_python - Source: `gpu_recommendation` - Risk: `medium` - Status: `ready_for_manual_review` - Target files: ['docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_20260503-151613.md'] - Rationale: Repository consisten...
+**Scopo**: Correggere riferimenti mancanti a percorsi Python nella documentazione `full_toolbox_agent
 
 ## Context before
 

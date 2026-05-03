@@ -7,11 +7,11 @@
 - section_kinds: `['markdown_heading_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0030.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0032.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**
+Chunk deterministico. Sezioni: `output/ai_pipeline/full_toolbox_20260503-190820_deterministic_recommendations_recovered_220.json`. Preview: "npu_runtime_tool_failed_count": null, "npu_runtime_tool_blocked_count": null }, { "round": 24, "status": "finished", "classification": "usable_audit_text", "runtime_tool_context_seen": false, "npu_tool_request_count": 0, "npu_runtime_tool_execution_count": nu...
 
 ## Context before
 

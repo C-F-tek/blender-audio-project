@@ -12,9 +12,9 @@
 ## Local chunk summary
 
 Mi dispiace, ma non ho a disposizione il testo effettivo del chunk da riassumere – ho ricevuto solo le informazioni di indice e di posizione.  
-Per poter produrre un riassunto tecnico in 5 righe (scopo, segnali principali, guardrail, errori, utilità per AI cloud) avrei bisogno del contenuto testuale del blocco indicato.  
+Per poter produrre un riassunto tecnico in 5 righe (scopo, segnali principali, guardrail, errori, utilità per AI cloud) avrei bisogno del contenuto testuale del blocco.  
 
-Potresti gentilmente fornirmi le righe 10201‑10400 (
+Potresti gentilmente fornirmi le righe di testo (o un estratto) cor
 
 ## Context before
 

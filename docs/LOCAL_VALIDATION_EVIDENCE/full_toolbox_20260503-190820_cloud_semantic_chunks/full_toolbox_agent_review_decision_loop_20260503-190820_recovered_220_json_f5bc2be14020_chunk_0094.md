@@ -11,7 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Fornire metadati di navigazione per un file JSON di grandi dimensioni, consentendo l’estrazione di porzioni specifiche senza caricare l
+**Scopo**: Fornire metadati di navigazione per un file JSON di specifiche patch di grande dimensione.  
+**Segnali principali**: identificatore del chunk, percorso del file, intervallo di linee, riferimenti a chunk precedente
 
 ## Context before
 

@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Validare localmente l’intero flusso di AI‑pipeline (orchestrazione GPU/N
+**Scopo**: Validare localmente l’esecuzione
 
 ## Chunk content
 

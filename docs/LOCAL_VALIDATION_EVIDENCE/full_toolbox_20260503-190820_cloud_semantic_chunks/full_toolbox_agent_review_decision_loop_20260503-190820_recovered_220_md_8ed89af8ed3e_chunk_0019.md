@@ -11,8 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: definire un piano di patch per correggere errori di tipo `md_python_command_script_missing` rilevati dal mapper di consistenza.  
-**Segnali principali**: alto rischio medio
+**Scopo**: Generare un piano di patch per correggere riferimenti a script Python mancanti nei file Markdown.  
+**Segnali principali**: `md_python_command_script_missing` con alto rischio (medium) in 9 documenti, puntando a script come `check_markdown_command_hygiene.py
 
 ## Context before
 

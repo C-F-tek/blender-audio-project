@@ -7,11 +7,12 @@
 - section_kinds: `['markdown_heading_section']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0013.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_md_8ed89af8ed3e_chunk_0015.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: consistency_321 — md_python; consistency_322 — md_python; consistency_323 — md_python; consistency_324 — md_python; consistency_325 — md_python. Preview: #### consistency_321 — md_python - Source: `gpu_recommendation` - Risk: `medium` - Status: `ready_for_manual_review` - Target files: ['docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_20260503-182047.md'] - Rationale: Repository consisten...
+**Scopo**: definire un piano di patch mirato per correggere riferimenti mancanti a `Tools/validation/check_markdown_command_hygiene.py` nei file markdown di documentazione.  
+**Segnali principali**: mapper di consistenza ha rilevato un alto livello di `md
 
 ## Context before
 

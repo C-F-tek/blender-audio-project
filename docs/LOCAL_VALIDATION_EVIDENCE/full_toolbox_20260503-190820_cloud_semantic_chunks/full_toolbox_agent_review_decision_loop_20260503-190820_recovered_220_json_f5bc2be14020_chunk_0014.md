@@ -11,9 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Generare un piano di patch mirato per risolvere i riferimenti mancanti a percorsi Python (`md_mentions_missing_python_path`) nei file README e documentazione.  
-**Segnali principali**: Mapper di consistenza ha rilevato riferimenti non risolti a `Scripting/shared/panel_base.py`, `Scripting/shared/hotpatch_base.py`, e `build_*context*.py`.  
-**Guardrail / errori**: Le modifiche devono evitare cambiamenti
+**Scopo**: Correggere riferimenti mancanti a percorsi Python nei file Markdown (`Scripting/v61b/README.md`, `Tools/npu/README.md`).  
+**Segnali principali**
 
 ## Context before
 

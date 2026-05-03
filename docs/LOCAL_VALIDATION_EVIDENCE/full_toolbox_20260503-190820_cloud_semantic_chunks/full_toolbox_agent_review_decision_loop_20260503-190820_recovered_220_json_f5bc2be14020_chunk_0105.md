@@ -11,9 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Fornire un indice di navigazione per un file JSON di specifiche di patch di grandi dimensioni.  
-**Segnali principali**: `chunk_id`, `path`, `line_start`, `line_end`, riferimenti a `previous_chunk_id` e `next_chunk_id`, e flag `has_previous`/`has_next`.  
-**Guardrail /
+**Scopo
 
 ## Context before
 

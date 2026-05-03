@@ -11,8 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Revisione manuale di problemi di coerenza tra documentazione Markdown e file Python, identificati dal mapper di consistenza.  
-**Segnali principali**: `md_mentions_missing_python_path` elevato in vari file Markdown (es. `chunk_064_Scripting_v61b_README_md.md`, `chunk_080_Scripting_v61b_spaziotempo_core_registry
+**Scopo**: Verificare la coerenza tra documentazione Markdown e file Python, correggendo riferimenti mancanti (`md_mentions_missing_python_path`).  
+**Segnali principali**: Alti punteggi di mancata
 
 ## Context before
 

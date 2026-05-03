@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: definire la segmentazione del file `full_toolbox_20260503-190820_parallel_gpu.json` in blocchi di
+**Scopo**: descrivere la segmentazione del file `full_toolbox
 
 ## Context before
 

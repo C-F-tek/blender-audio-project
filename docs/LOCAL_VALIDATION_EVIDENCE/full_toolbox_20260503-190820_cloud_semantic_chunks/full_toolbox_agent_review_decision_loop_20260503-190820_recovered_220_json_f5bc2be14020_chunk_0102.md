@@ -11,7 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: definire
+**Scopo**: Fornire metadati di navigazione per un file JSON di specifiche di patch di grande dimensione.  
+**Segnali principali**:
 
 ## Context before
 

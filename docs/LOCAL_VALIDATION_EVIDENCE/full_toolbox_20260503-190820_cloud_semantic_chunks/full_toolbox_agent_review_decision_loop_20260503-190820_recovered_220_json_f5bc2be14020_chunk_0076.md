@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nella tua richiesta.  Per procedere avrei bisogno del contenuto effettivo delle righe 46201‑46400 (e delle successive) del file JSON indicato.  Se puoi inviare il testo, sarò lieto di creare il riassunto richiesto.
+Mi dispiace, ma non dispongo del contenuto effettivo del chunk indicato (solo le informazioni di posizione nel file). Senza il testo da analizzare non posso fornire un riassunto tecnico. Se puoi fornirmi le righe di testo o un estratto del contenuto, sarò lieto di aiutarti.
 
 ## Context before
 

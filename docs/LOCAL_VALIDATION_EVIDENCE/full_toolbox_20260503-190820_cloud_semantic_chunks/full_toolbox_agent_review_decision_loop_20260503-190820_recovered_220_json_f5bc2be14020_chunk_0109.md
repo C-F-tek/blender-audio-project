@@ -11,8 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Fornire metadati di navigazione per un segmento di un file JSON di patch plan.  
-**Segnali principali**: identificatore del
+**Scopo**: Definire i metadati di un segmento di file JSON contenente il piano di patch per l’agent.  
+**Segnali principali**: identificatore del chunk, percorso del file, intervallo di righe (67801‑68000),
 
 ## Context before
 

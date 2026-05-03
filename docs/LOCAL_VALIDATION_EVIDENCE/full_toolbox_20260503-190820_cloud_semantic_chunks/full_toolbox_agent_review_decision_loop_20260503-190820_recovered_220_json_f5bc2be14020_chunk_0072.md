@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non è possibile fornire un riassunto tecnico perché il blocco di testo richiesto non è stato incluso nella richiesta.  L’unica informazione disponibile è la posizione del file e gli indici di riga, ma non è presente il contenuto effettivo da analizzare.  Per procedere, si prega di inviare il testo reale del chunk.
+Non è possibile fornire un riassunto tecnico del chunk richiesto perché il testo effettivo non è stato incluso nella richiesta. Sono state fornite solo informazioni di metadati (identificatore, percorso, intervalli di linee, collegamenti a chunk precedenti e successivi), ma non il contenuto da analizzare. Per procedere con il riassunto, si prega di fornire il testo reale del chunk.
 
 ## Context before
 

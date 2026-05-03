@@ -7,11 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0102.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0104.md`
-- summary_source: `deterministic`
+- summary_source: `ollama`
 
 ## Local chunk summary
 
-Chunk deterministico. Sezioni: artifact_chunk_index. Preview: }, { "chunk_id": "output/patch_specs/full_toolbox_20260503-190820_agent_review_patch_plan_recovered_220.json#L45801-L46000", "path": "output/patch_specs/full_toolbox_20260503-190820_agent_review_patch_plan_recovered_220.json", "line_start": 45801, "line_end": ...
+Non è possibile fornire un riassunto tecnico perché il blocco di testo effettivo non è stato incluso nel prompt – sono state fornite solo le intestazioni di file e gli intervalli di riga. Per poter sintetizzare lo scopo, i segnali principali, i guardrail o gli errori, e la rilevanza per un’AI cloud, è necessario avere accesso al contenuto reale delle righe indicato (L45801‑L46000, L46001‑L46200, ecc.). Se puoi fornire il testo effettivo, sarò lieto di creare il riassunto richiesto.
 
 ## Context before
 

@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a script PowerShell nella documentazione `full_toolbox_agent_review_decision_loop_202605
+**Scopo**: Correggere riferimenti a script PowerShell mancanti nella documentazione `full_tool
 
 ## Context before
 

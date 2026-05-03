@@ -7,13 +7,11 @@
 - section_kinds: `['json_key_section_split']`
 - previous_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0032.md`
 - next_chunk_file: `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260503-190820_cloud_semantic_chunks/full_toolbox_agent_review_decision_loop_20260503-190820_recovered_220_json_f5bc2be14020_chunk_0034.md`
-- summary_source: `ollama`
+- summary_source: `deterministic`
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a `run_agent.py` nei file Markdown di validazione, garantendo coerenza tra documentazione e codice.  
-**Segnali principali**: `md_mentions_missing_python_path` con alto punteggio in diverse linee (330, 331, 338) del file `full_toolbox_agent_review_decision_loop_20260503-182047.md`.  
-**Guardrail / errori**: Non modificare solo spazi, formattazione Markdown, o file di output/SQLite/Blender;
+Chunk deterministico. Sezioni: reports. Preview: "git diff --check", "git status --short" ], "stop_conditions": [ "Stop if the edit is only whitespace, tag spacing or Markdown formatting without fixing the cited finding.", "Stop if the target/source evidence no longer exists after refreshing master.", "Stop ...
 
 ## Context before
 

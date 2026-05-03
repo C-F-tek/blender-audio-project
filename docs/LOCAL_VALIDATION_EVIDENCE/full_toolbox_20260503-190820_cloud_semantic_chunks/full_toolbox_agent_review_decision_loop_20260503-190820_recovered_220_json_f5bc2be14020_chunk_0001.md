@@ -11,11 +11,9 @@
 
 ## Local chunk summary
 
-**Scopo**: Fornire un bundle di evidenze di validazione per il progetto “blender‑audio‑project”, generato il 3 mag‑2026, con focus su orchestrazione, parallelismo GPU, coerenza repository e raccomandazioni deterministiche.  
-
-**Segnali principali**: presenza di file JSON/MD per orchestrator, parallel GPU, GPU‑NPU sync, mappe di coerenza, raccomandazioni recuperate, loop decisionale agent, patch plan, e telemetria di utilizzo runtime.  
-
-**Guardrail / errori**: nessun errore esplicitamente riportato; i file di “smoke test” indicano che
+**Scopo**: Fornire un bundle di evidenze di validazione per il progetto “blender‑audio‑project”, includendo report di pipeline AI, analisi di coerenza del repository, sincronizzazione GPU/NPU e piani di patch.  
+**Segnali principali**: risultati di orchestrazione, parallelismo GPU, raccomandazioni deterministiche, loop decisionale di revisione agente, mappature di coerenza e telemetria d’uso runtime.  
+**Guardrail / errori**: eventuali incongruenze nei file JSON/MD, errori di sincronizzazione GPU/NPU, e anomalie nei piani di patch (verificati nei report di valid
 
 ## Context before
 

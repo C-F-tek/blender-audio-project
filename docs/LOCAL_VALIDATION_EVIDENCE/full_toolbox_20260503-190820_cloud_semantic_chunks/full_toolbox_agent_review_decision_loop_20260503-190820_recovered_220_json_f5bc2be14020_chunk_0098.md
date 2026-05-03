@@ -11,7 +11,7 @@
 
 ## Local chunk summary
 
-Non posso riassumere il contenuto del chunk perché non è stato fornito il testo effettivo (solo metadati di posizione). Per procedere avrei bisogno delle righe di codice o del testo reale tra le linee 27601 e 27800 del file indicato.
+Non posso riassumere il contenuto perché il blocco fornito contiene solo metadati (identificatori di file e intervalli di linee) e non il testo effettivo da analizzare. Per procedere avrei bisogno del testo reale presente nelle righe 27601‑27800 del file indicato.
 
 ## Context before
 

@@ -11,9 +11,9 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a percorsi Python in documentazione markdown per mantenere coerenza del repository.  
-**Segnali principali**: `md_mentions_missing_python_path` elevato in 10 file markdown (es. `chunk_064_Scripting_v61b_README_md.md`, `chunk_080_Scripting_v61b_spaziotempo_core_registry_py.md`, ecc.).  
-**Guardrail
+**Scopo**: Correggere riferimenti a percorsi Python mancanti nei file Markdown, garantendo coerenza tra documentazione e codice.  
+**Segnali principali**: `md_mentions_missing_python_path` elevato in 10 file (es. `chunk_064_Scripting_v61b_README_md.md`, `chunk_080_Scripting_v61b_spaziotempo_core_registry_py.md`, ecc.).  
+**Guard
 
 ## Context before
 

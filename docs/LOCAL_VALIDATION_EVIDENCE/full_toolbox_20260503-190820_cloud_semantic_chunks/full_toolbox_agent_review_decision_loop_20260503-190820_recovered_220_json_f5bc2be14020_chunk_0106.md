@@ -11,11 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Non è possibile determinare lo scopo del chunk perché il testo effettivo non è stato fornito; l’unica informazione disponibile è la struttura di riferimento (ID, percorso, intervalli di linee).
-
-**Segnali principali**: Nessun dato testuale è presente, quindi non si possono estrarre segnali o pattern.
-
-**Guardrail / errori**: L’assenza di contenuto rende impossibile verificare la correttezza o la coerenza del file. Se il chunk dovesse contenere dati sensibili, la mancanza di visibilità impedisce di valutarne la sicurezza.
+Non è possibile fornire un riassunto tecnico perché il blocco di testo effettivo non è stato incluso nel prompt. Sono state fornite solo informazioni di metadati (ID, percorso, intervalli di linee) senza il contenuto reale da analizzare. Per procedere con il riassunto, occorre fornire il testo delle linee L56801‑L57000 (o l’intero blocco richiesto).
 
 ## Context before
 

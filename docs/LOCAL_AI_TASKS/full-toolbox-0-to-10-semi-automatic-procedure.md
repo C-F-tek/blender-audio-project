@@ -271,6 +271,34 @@ $M = Get-Content ".\docs\LOCAL_VALIDATION_EVIDENCE\${Base}_chunk_manifest.json" 
 Expected duplicate count: `0`.
 
 
+### Runtime tool capability manifest
+
+Every cloud/AI-to-AI handoff must carry the tool body, not only the evidence mind.
+
+Required files:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.md
+```
+
+The capability manifest must describe:
+
+```text
+- allowlisted tool names
+- allowed args
+- guardrails
+- safe default mode
+- broker source file
+- observed usage by tool/caller/phase
+- rule: cloud can reason about tools; execution remains local broker-controlled
+```
+
+Semantic chunk handoff must include the capability manifest as a source file.
+
+
 ## Global guardrails
 
 Never do without explicit user command:

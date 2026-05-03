@@ -11,8 +11,7 @@
 
 ## Local chunk summary
 
-**Scopo**: Correggere riferimenti mancanti a script PowerShell (`some_script.ps1`, `some_runner.ps1`) in documentazione Markdown, garantendo coerenza tra codice e documenti.  
-**Segnali principali**: Mapper di consistenza segnala alto `md_mentions_missing_powershell_path` in `docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_20260503-182047.md` (linee
+**Scopo**: Correggere riferimenti mancanti a script PowerShell (`some_script.ps1`, `some_runner.ps1`) presenti nella documentazione Markdown, garantendo
 
 ## Context before
 

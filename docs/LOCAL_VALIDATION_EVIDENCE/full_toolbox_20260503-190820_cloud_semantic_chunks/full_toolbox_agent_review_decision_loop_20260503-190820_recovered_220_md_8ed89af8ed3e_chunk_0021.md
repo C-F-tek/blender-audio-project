@@ -11,9 +11,8 @@
 
 ## Local chunk summary
 
-**Scopo**: Documento di patch plan generato dall’agent di revisione, con 220 patch proposte per correggere incoerenze di script Python nei file Markdown.  
-**Segnali principali**: `md_python_command_script_missing` in 7 file di documentazione, con riferimento a `Tools/validation/check_markdown_command_hygiene.py`.  
-**
+**Scopo**: Generare un piano di patch manuale per correggere errori di “md_python_command_script_missing” nei file Markdown del repository.  
+**Segnali principali
 
 ## Context before
 
