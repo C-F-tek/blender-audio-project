@@ -2,118 +2,106 @@
 
 ## Purpose
 
-This document is the control point for pruning and updating Markdown documentation in the repository.
+Control point for reducing Markdown redundancy and keeping one clear reading flow.
 
-The goal is to avoid adding another isolated Markdown file every time the project evolves. Any new stable document must either update an existing canonical document or explicitly retire/supersede older material.
+The goal is not to add more documentation. The goal is to make each Markdown file have a lifecycle, owner and reading position. New stable material must update an existing canonical document or explicitly mark older material as superseded, historical, generated or delete-candidate.
 
 This file is report-only. It does not authorize deletion by itself.
 
-## Source baseline
-
-Observed entry points on `master`:
-
-```text
-AGENTS.md
-README.md
-WORKFLOW.md
-docs/README.md
-docs/LOCAL_AI_RUN_BOOTSTRAP.md
-docs/LOCAL_AI_TASKS/README.md
-docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
-docs/LOCAL_AI_TASKS/shared-runtime-toolbox-ai-to-ai-next-task-2026-05-03.md
-Tools/validation/README.md
-Tools/npu/pipeline/README.md
-```
-
-Current project identity is broader than the historical Blender/audio repository name. The active architecture is local AI orchestration, provider-lane routing, evidence bundles, telemetry, repository consistency, deterministic recommendations and manual-review patch planning.
-
 ## Canonical entrypoint chain
 
-| Rank | File | Role | Keep concise? | Notes |
-|---:|---|---|---|---|
-| 1 | `AGENTS.md` | Mandatory machine contract for AI agents. | Yes | Must stay hard-guardrail focused. Avoid duplicating detailed runbooks here. |
-| 2 | `README.md` | Human project identity and high-level architecture. | Yes | Should describe the project and point to workflows, not duplicate every command. |
-| 3 | `WORKFLOW.md` | Root operational workflow. | Yes | Should define lifecycle and validation blocks. Move long scenario-specific runs to task docs. |
-| 4 | `docs/README.md` | Documentation index. | Yes | This is the stable MD map index. Every maintained stable doc should appear here or be intentionally excluded. |
-| 5 | `docs/LOCAL_AI_RUN_BOOTSTRAP.md` | Local AI bootstrap contract. | Medium | Only local-run prerequisites and reading set. |
-| 6 | `docs/LOCAL_AI_TASKS/README.md` | Task entrypoint index. | Yes | Only current task routing and historical task classification. |
-| 7 | `docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` | Canonical full-toolbox runbook. | No, but structured | This is allowed to be long because it is procedural. |
-| 8 | `docs/LOCAL_AI_TASKS/shared-runtime-toolbox-ai-to-ai-next-task-2026-05-03.md` | Current AI-to-AI next-task handoff. | Medium | Should stay repo-native and should supersede external handoff blobs. |
-| 9 | `Tools/validation/README.md` | Validation command catalog. | Medium | Command catalog only; architectural policy belongs in docs. |
-| 10 | `Tools/npu/pipeline/README.md` | NPU helper package contract. | Medium | Package-local contract only. |
+| Rank | File | Role | Rule |
+|---:|---|---|---|
+| 1 | `AGENTS.md` | Hard AI/agent contract | Keep short; guardrails only. |
+| 2 | `README.md` | Human project identity | Keep short; link to workflows. |
+| 3 | `WORKFLOW.md` | Operational lifecycle | Keep short; no scenario-specific long runs. |
+| 4 | `docs/README.md` | Documentation index | Single reading flow and doc family map. |
+| 5 | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | Markdown lifecycle and pruning policy | Cleanup control point. |
+| 6 | `docs/LOCAL_AI_RUN_BOOTSTRAP.md` | Local checkout bootstrap | Local-run prerequisites. |
+| 7 | `docs/LOCAL_AI_TASKS/README.md` | Task routing | Current vs historical task entrypoints. |
+| 8 | `docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` | Full toolbox runbook | Long procedural doc allowed. |
+| 9 | `docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md` | Code/refactor runbook | Long procedural doc allowed. |
+| 10 | `Tools/validation/README.md` | Validator catalog | Tool commands and contracts only. |
 
 ## Repository Markdown families
 
-| Family | Path pattern | Owner document | Lifecycle |
+| Family | Pattern | Owner | Lifecycle |
 |---|---|---|---|
-| Machine/human entrypoints | `AGENTS.md`, `README.md`, `WORKFLOW.md` | This file + `docs/README.md` | Canonical |
-| Stable project documentation | `docs/*.md` | `docs/README.md` | Maintained source docs |
-| Local AI task entrypoints | `docs/LOCAL_AI_TASKS/*.md` | `docs/LOCAL_AI_TASKS/README.md` | Current or historical tasks |
+| Root entrypoints | `AGENTS.md`, `README.md`, `WORKFLOW.md` | Root flow | Canonical, concise |
+| Stable docs | `docs/*.md` | `docs/README.md` | Maintained source docs |
+| Task runbooks | `docs/LOCAL_AI_TASKS/*.md` | `docs/LOCAL_AI_TASKS/README.md` | Current or historical |
 | Execution plans | `docs/EXECUTION_PLANS/**/*.md` | `docs/EXECUTION_PLANS/README.md` | State records |
-| Compact validation evidence | `docs/LOCAL_VALIDATION_EVIDENCE/*.md` | Evidence bundle builders | Snapshot evidence, not source docs |
-| Tool READMEs | `Tools/**/README.md` | Nearest package/tool owner | Package-local docs |
-| Generated/index context | `indexAI/**/*.md`, `Tools/npu/npu_code_*.md` | Generators | Regenerated, not hand-maintained source |
-| Blender application docs | `Scripting/**/*.md` | Package README / Blender domain docs | Application-domain docs |
-| Root historical/policy notes | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md`, `CHANGELOG.md` | Root index or explicit references | Retain only if linked from canonical docs |
+| Evidence | `docs/LOCAL_VALIDATION_EVIDENCE/*` | Evidence builders | Snapshot evidence, not source docs |
+| Tool READMEs | `Tools/**/README.md` | Nearest tool/package | Package-local |
+| Generated/index context | `indexAI/**/*.md`, `Tools/npu/npu_code_*.md` | Generators | Regenerated, not hand-edited |
+| Blender/application docs | `Scripting/**/*.md` | Package README | Application-domain only |
 
-## Current duplication map
+## Inventory tools
 
-| Topic | Current repeated locations | Canonical target | Pruning rule |
-|---|---|---|---|
-| Provider lane policy | `AGENTS.md`, `README.md`, `WORKFLOW.md`, `docs/README.md`, `LOCAL_AI_TASKS/*` | `AGENTS.md` for hard rule, `WORKFLOW.md` for operation | Keep one-line pointers elsewhere. |
-| Full-toolbox procedure | `WORKFLOW.md`, `docs/README.md`, `docs/LOCAL_AI_TASKS/README.md`, full-toolbox task file | `docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` | Entry points link to it, not copy command blocks. |
-| Evidence bundle requirements | `README.md`, `WORKFLOW.md`, `docs/README.md`, full-toolbox task file, handoff docs | `WORKFLOW.md` + full-toolbox task | Stable rule in `WORKFLOW.md`; run-specific list in task/evidence bundle. |
-| Patch bundle policy | Root policy note, task docs, handoffs | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` | Do not duplicate ZIP structure everywhere. |
-| Historical Blender role | `README.md`, `AGENTS.md`, `docs/README.md`, `MODULE_MAP.md` | `README.md` + `MODULE_MAP.md` | Keep overview once; detailed package docs under `Scripting/`. |
-| Validation commands | `WORKFLOW.md`, `Tools/validation/README.md`, task docs | `Tools/validation/README.md` | Task docs list only focused task commands. |
+Run these before broad documentation cleanup or refactor planning:
 
-## Missing evidence and tooling
+```powershell
+python .\Tools\validation\build_markdown_inventory.py --repo-root . --output .\output\validation\markdown_inventory.json --markdown-output .\output\validation\markdown_inventory.md
+python .\Tools\validation\build_script_inventory.py --repo-root . --output .\output\validation\script_inventory.json --csv-output .\output\validation\script_inventory.csv --markdown-output .\output\validation\script_inventory.md
+```
 
-The current docs have indexes and link validators, but the following controls were missing before this cleanup pass:
+Inventory roles:
 
-| Missing item | Why it matters | Resolution in this PR |
+| Tool | Purpose | Output policy |
 |---|---|---|
-| Repository-wide Markdown inventory | We need evidence of all `.md` files before deciding what is missing, duplicated or obsolete. | Added `Tools/validation/build_markdown_inventory.py`. |
-| Stable lifecycle labels for Markdown families | Evidence snapshots, runbooks and stable docs were easy to mix in review. | This document defines lifecycle classes. |
-| Add-before-prune rule | New docs could be added without retiring or superseding older material. | This document defines the rule below. |
-| Missing-index report | A doc can exist without appearing in a canonical index. | Inventory script reports `requires_index_review`. |
-| Prune-candidate report | Misc Markdown can drift without owner/lifecycle. | Inventory script reports `prune_candidates`. |
+| `build_markdown_inventory.py` | Classify `.md` files by family/lifecycle, missing index status and prune candidates. | Local `output/**` unless converted to compact evidence. |
+| `build_script_inventory.py` | Censisce scripts/tools with language, category, lines, description, functions, classes and methods. | Local `output/**`; CSV is for refactor review, not automatic source change. |
+
+The script inventory must be included in future refactor evidence together with the existing Python line-count CSV. Line count shows size; script inventory shows callable surface and intent.
+
+## Duplication map
+
+| Topic | Canonical target | Pruning rule |
+|---|---|---|
+| Provider lane policy | `AGENTS.md` for hard rule, `WORKFLOW.md` for lifecycle | Other docs link or summarize one line. |
+| Full-toolbox procedure | `LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` | No copied command blocks in entrypoints. |
+| Code/refactor procedure | `LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md` | Include line-count and script inventory evidence. |
+| Evidence bundle policy | `WORKFLOW.md` and full-toolbox runbook | Evidence snapshots are not source docs. |
+| Patch bundle policy | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` plus full-toolbox runbook | Do not duplicate generated bundle internals everywhere. |
+| Historical Blender role | `README.md` and `MODULE_MAP.md` | Detailed instructions stay under Blender/domain docs. |
+| Validation command catalog | `Tools/validation/README.md` | Task docs list only focused commands. |
 
 ## Add-before-prune rule
 
-When adding a new Markdown file:
+When adding or updating Markdown:
 
-1. Decide whether the content belongs in an existing canonical document.
-2. If a new file is still needed, add it to the correct owner index.
-3. Mark the older overlapping document as one of:
+1. Check whether the content belongs in an existing canonical file.
+2. If a new file is needed, add it to the correct index.
+3. Mark older overlap as one of:
    - `superseded by <path>`
    - `historical evidence`
    - `application-domain only`
    - `generated, do not hand-edit`
    - `delete candidate, requires explicit approval`
-4. Do not delete files in the same pass unless the user explicitly approves deletion.
+4. Replace repeated commands with links to canonical runbooks.
 5. Run Markdown inventory and docs link validation.
-6. Commit only the updated docs/source/evidence intended for review.
+6. Do not delete files without explicit user approval.
 
-## Pruning policy
+## Safe cleanup actions
 
-Safe without explicit deletion:
+Allowed without deletion:
 
 ```text
-- Update indexes.
-- Add superseded/historical notes.
-- Move task guidance into the canonical task index.
-- Replace repeated command blocks with links to canonical runbooks.
-- Generate inventory/evidence under output/validation.
+shorten root entrypoints
+update indexes
+mark historical/superseded/domain-only status
+replace copied command blocks with canonical links
+add or update report-only inventory tooling
+open PRs for review
 ```
 
-Requires explicit user confirmation:
+Requires explicit user approval:
 
 ```text
-- Delete Markdown files.
-- Move files across major folders.
-- Remove historical evidence.
-- Remove runbooks still referenced by task files.
+delete Markdown files
+move files across major folders
+remove historical evidence
+remove runbooks still referenced by task indexes
 ```
 
 Never treat as manually maintained source:
@@ -126,51 +114,23 @@ Tools/npu/npu_code_index.md
 output/**/*.md
 ```
 
-## Inventory command
-
-Use this before broad Markdown cleanup:
-
-```powershell
-python .\Tools\validation\build_markdown_inventory.py `
-  --repo-root . `
-  --output .\output\validation\markdown_inventory.json `
-  --markdown-output .\output\validation\markdown_inventory.md
-```
-
-Then validate normal documentation links:
-
-```powershell
-python .\Tools\validation\check_docs_links.py `
-  --repo-root . `
-  --output .\output\validation\docs_links.json
-
-python .\Tools\validation\check_validation_report_contract.py `
-  --repo-root . `
-  --output .\output\validation\validation_report_contract.json
-
-git diff --check
-```
-
 ## First cleanup sequence
 
-1. Generate the Markdown inventory.
-2. Review `missing_index[]` first.
-3. Update `docs/README.md` and `docs/LOCAL_AI_TASKS/README.md` only for files that are intentionally maintained.
-4. For historical task docs, keep them indexed as historical unless they are explicitly superseded.
-5. For compact evidence docs, keep them out of stable reading order; evidence belongs in evidence bundles, not canonical onboarding.
-6. Collapse repeated command blocks from entrypoints into links to canonical runbooks.
-7. Only after the map is clean, propose explicit delete/move candidates in a separate PR.
+1. Reduce root entrypoints to a single reading flow.
+2. Preserve long command blocks only in canonical task runbooks.
+3. Add Markdown and script inventories to the workflow/refactor evidence path.
+4. Use inventory output to identify missing-index and prune candidates.
+5. Mark obsolete material before any deletion.
+6. Create a separate deletion PR only after explicit approval.
 
-## Acceptance criteria for this documentation lane
-
-A documentation cleanup PR is acceptable when:
+## Acceptance criteria
 
 ```text
-- the entrypoint chain is explicit;
-- every stable maintained MD file is indexed or intentionally excluded;
-- generated/evidence MD files are not treated as source docs;
-- each new MD addition supersedes, updates or links an older overlapping doc;
-- no output/**, renders/**, *.db or *.sqlite files are committed;
-- docs link validation and markdown inventory run locally;
-- deletion candidates are listed but not deleted without explicit approval.
+single reading flow is explicit
+root entrypoints are shorter than before
+stable docs are indexed or intentionally excluded
+evidence/generated MD is not treated as source documentation
+script/tool inventory is available for refactor planning
+no output/**, renders/**, *.db or *.sqlite files are committed
+no deletion is performed without explicit approval
 ```
