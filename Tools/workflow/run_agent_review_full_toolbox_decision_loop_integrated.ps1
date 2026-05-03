@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$RepoRoot = ".",
     [string]$Stamp = "",
     [string]$OutputRoot = "output",
@@ -125,7 +125,6 @@ $WarningArgs = @(
     ".\Tools\ai\agent_review_warning_policy.py",
     "--repo-root", ".",
     "--decision-report", $DecisionLoopJson,
-    "--final-report", $WorkflowJson,
     "--min-recommendations", "$MinRecommendations",
     "--min-patch-plans", "$MinPatchPlans",
     "--output", $WarningPolicyJson,
