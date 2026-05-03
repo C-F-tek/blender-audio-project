@@ -19,9 +19,21 @@ if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report
+    from Tools.validation.report_utils import (
+        line_count_for_path as shared_line_count_for_path,
+        load_line_count_csv_map,
+        parse_line_count_csv_row,
+        resolve_output_path,
+        write_json_report,
+    )
 except ImportError:  # pragma: no cover - fallback for direct package-local execution.
-    from report_utils import resolve_output_path, write_json_report  # type: ignore
+    from report_utils import (  # type: ignore
+        line_count_for_path as shared_line_count_for_path,
+        load_line_count_csv_map,
+        parse_line_count_csv_row,
+        resolve_output_path,
+        write_json_report,
+    )
 
 REPORT_ONLY_FALSE_FIELDS = (
     "provider_execution_performed",
@@ -82,44 +94,21 @@ def read_json_object(path: Path, *, missing_is_error: bool = True) -> tuple[dict
 
 def parse_line_count_row(row: dict[str, Any]) -> tuple[str, int] | None:
     """Parse one line-count CSV row into `(path, lines)` when valid."""
-    path = normalize_repo_path(row.get("Path") or row.get("File"))
-    raw_lines = row.get("Lines") or row.get("lines")
-    if not path or raw_lines is None:
-        return None
-    try:
-        return path, int(str(raw_lines).strip())
-    except ValueError:
-        return None
+    return parse_line_count_csv_row(row)
 
 
 def load_line_counts(repo_root: Path, csv_path: Path) -> tuple[dict[str, int], list[str]]:
     """Load optional line-count CSV evidence as a sizing hint."""
-    warnings: list[str] = []
-    counts: dict[str, int] = {}
-    if not csv_path.exists():
-        warnings.append(f"line-count CSV missing: {repo_rel(repo_root, csv_path)}")
-        return counts, warnings
-    try:
-        with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
-            reader = csv.DictReader(handle)
-            for row in reader:
-                parsed = parse_line_count_row(row)
-                if parsed is None:
-                    continue
-                path, lines = parsed
-                counts[path] = lines
-    except OSError as exc:
-        warnings.append(f"unable to read line-count CSV: {type(exc).__name__}: {exc}")
-    return counts, warnings
+    counts, warnings = load_line_count_csv_map(csv_path)
+    normalized_warnings = [
+        warning.replace(str(csv_path), repo_rel(repo_root, csv_path)) for warning in warnings
+    ]
+    return counts, normalized_warnings
 
 
 def line_count_for(path_value: str, counts: dict[str, int]) -> int | None:
     """Return a CSV line-count hint, including suffix matching for absolute CSV paths."""
-    normalized = normalize_repo_path(path_value)
-    if normalized in counts:
-        return counts[normalized]
-    matches = [lines for path, lines in counts.items() if normalize_repo_path(path).endswith(normalized)]
-    return matches[0] if len(matches) == 1 else None
+    return shared_line_count_for_path(path_value, counts)
 
 
 def compact_text(value: Any, limit: int = MAX_TEXT_CHARS) -> str:

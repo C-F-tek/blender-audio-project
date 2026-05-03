@@ -7,6 +7,14 @@ import json
 from pathlib import Path
 from typing import Any
 
+try:
+    from Tools.validation.report_utils import physical_line_count
+except ImportError:  # pragma: no cover - fallback for direct package-local execution.
+    def physical_line_count(text: str) -> int:
+        if not text:
+            return 0
+        return text.count("\n") + (0 if text.endswith("\n") else 1)
+
 DEFAULT_REPORTS = (
     "output/validation/ai_workload_report_quality.json",
     "output/validation/ai_workload_quality_lane_routing.json",
@@ -95,9 +103,7 @@ def sha256_file(path: Path) -> str | None:
 
 def line_count(text: str) -> int:
     """Return physical line count for text."""
-    if not text:
-        return 0
-    return text.count("\n") + (0 if text.endswith("\n") else 1)
+    return physical_line_count(text)
 
 
 def compact_value(value: Any, *, max_string: int = 500) -> Any:
