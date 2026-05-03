@@ -106,3 +106,50 @@ When adding a new reference:
 4. avoid copying large upstream content;
 5. add or update a validator when the rule is enforceable;
 6. update `docs/README.md` if the new document is stable.
+
+<!-- IA-CARMINE:PATCH-PLAN-APPLICATION:START -->
+
+## IA-Carmine patch-plan application notes
+
+This managed block was generated from `output/patch_specs/agent_review_patch_plan.json`.
+It records the manual-review patch-plan decisions for this file without applying runtime/provider changes.
+
+### `det_doc_code_005` — `doc_code`
+
+- Source: `gpu_recommendation`
+- Status: `ready_for_manual_review`
+- Risk: `low`
+- Target file: `docs/AI_REFERENCE_SOURCE_MAP.md`
+- Manual review required: `True`
+- Rationale: source doc exists and target path remains missing
+- Strategy: Create a narrow manual-review patch plan for the documentation/code reference mismatch. Inspect `docs/external_references` and update `docs/AI_REFERENCE_SOURCE_MAP.md` only if the reference is stale or should point at an existing artifact. Candidate references observed: `docs/external_references`.
+- Validation commands:
+  - `python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json`
+  - `python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json`
+  - `git diff --check`
+  - `git status --short`
+- Stop conditions:
+  - Stop if the referenced file exists after refreshing master.
+  - Stop if the fix requires creating runtime code instead of correcting documentation or references.
+  - Stop if the patch would touch output/**, generated indexes, SQLite, full analysis JSON, provider settings or Blender runtime.
+
+### `det_doc_code_006` — `doc_code`
+
+- Source: `gpu_recommendation`
+- Status: `ready_for_manual_review`
+- Risk: `low`
+- Target file: `docs/AI_REFERENCE_SOURCE_MAP.md`
+- Manual review required: `True`
+- Rationale: source doc exists and target path remains missing
+- Strategy: Create a narrow manual-review patch plan for the documentation/code reference mismatch. Inspect `docs/references` and update `docs/AI_REFERENCE_SOURCE_MAP.md` only if the reference is stale or should point at an existing artifact. Candidate references observed: `docs/references`.
+- Validation commands:
+  - `python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json`
+  - `python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json`
+  - `git diff --check`
+  - `git status --short`
+- Stop conditions:
+  - Stop if the referenced file exists after refreshing master.
+  - Stop if the fix requires creating runtime code instead of correcting documentation or references.
+  - Stop if the patch would touch output/**, generated indexes, SQLite, full analysis JSON, provider settings or Blender runtime.
+
+<!-- IA-CARMINE:PATCH-PLAN-APPLICATION:END -->
