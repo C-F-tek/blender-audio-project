@@ -844,6 +844,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 elapsed_seconds=time.perf_counter() - started_at,
             )
             round_start = time.perf_counter()
+            schema_repair_retry: dict[str, Any] = {"attempted": False, "accepted": False, "reason": "not_attempted"}
             try:
                 response, model_used = manager.generate(
                     args.ollama_model,
