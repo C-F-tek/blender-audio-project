@@ -26,6 +26,11 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from Tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests
+except ImportError:  # Script-style execution from Tools/ai.
+    from runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
+
+try:
     from Tools.ai.gpu_planner_json_contract import (
         result_to_dict,
         validate_model_response_contract,
@@ -390,6 +395,47 @@ def _raw_recommendations(parsed: dict[str, Any]) -> list[Any]:
     return recommendations if isinstance(recommendations, list) else []
 
 
+
+DETERMINISTIC_TOOL_FALLBACK_SCHEMA_REASONS = {
+    "json_parse_failure",
+    "model_output_schema_mismatch",
+    "context_echo_detected",
+    "evidence_ready_but_no_tool_requests",
+    "valid_json_empty_recommendations",
+}
+
+
+def deterministic_tool_fallback_reason_from_parsed(parsed: dict[str, Any]) -> str:
+    """Return a fallback reason when provider output has no usable tool requests.
+
+    This does not execute tools. It only decides whether the existing runtime
+    broker should receive safe deterministic fallback requests. The fallback is
+    explicitly marked as deterministic_fallback by runtime_tool_guidance.
+    """
+
+    if not isinstance(parsed, dict):
+        return "model_output_schema_mismatch"
+    raw_requests = parsed.get("tool_requests")
+    if isinstance(raw_requests, list) and raw_requests:
+        return ""
+    recommendations = parsed.get("recommendations")
+    if isinstance(recommendations, list) and recommendations:
+        return ""
+
+    keys = set(parsed)
+    if keys & {"response", "files", "context_files", "repository_files", "file_previews"}:
+        return "context_echo_detected" if "files" in keys or "context_files" in keys else "model_output_schema_mismatch"
+
+    missing = parsed.get("missing_evidence")
+    if isinstance(missing, list) and any(str(item) == "model_response_not_valid_json" for item in missing):
+        return "json_parse_failure"
+
+    next_best_action = str(parsed.get("next_best_action") or "").strip()
+    summary = str(parsed.get("summary") or "").strip()
+    if next_best_action or summary or missing:
+        return "evidence_ready_but_no_tool_requests"
+    return ""
+
 def extract_valid_tool_requests(parsed: dict[str, Any], *, max_requests: int = 8) -> tuple[list[dict[str, Any]], list[str]]:
     """Return broker-compatible valid runtime tool requests and validation errors.
 
@@ -400,6 +446,9 @@ def extract_valid_tool_requests(parsed: dict[str, Any], *, max_requests: int = 8
 
     raw_requests = parsed.get("tool_requests", [])
     if raw_requests in (None, []):
+        fallback_reason = deterministic_tool_fallback_reason_from_parsed(parsed)
+        if fallback_reason:
+            return deterministic_fallback_tool_requests(fallback_reason, max_requests=max_requests), []
         return [], []
     if not isinstance(raw_requests, list):
         return [], ["top-level tool_requests must be a list"]

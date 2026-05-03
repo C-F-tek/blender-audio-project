@@ -163,6 +163,9 @@ def run_runtime_tool_broker_for_round(
             },
         }
 
+    request_sources = {str(item.get("source") or "provider") for item in tool_requests if isinstance(item, dict)}
+    request_source = "deterministic_fallback" if request_sources == {"deterministic_fallback"} else "provider"
+
     output_root = resolve_path(repo_root, args.runtime_tool_output_dir)
     round_dir = output_root / f"round_{round_index:03d}"
     round_dir.mkdir(parents=True, exist_ok=True)
@@ -213,6 +216,8 @@ def run_runtime_tool_broker_for_round(
 
     return {
         "enabled": True,
+        "source": request_source,
+        "deterministic_fallback": request_source == "deterministic_fallback",
         "executed": True,
         "requested_tool_count": len(tool_requests),
         "command": command,
@@ -572,6 +577,12 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             "runtime_tool_failed_count": int(runtime_tool_bootstrap.get("failed_tool_count") or 0),
             "runtime_tool_blocked_count": int(runtime_tool_bootstrap.get("blocked_tool_count") or 0),
             "runtime_tool_result_count": len(runtime_tool_bootstrap.get("tool_results", [])),
+            "runtime_tool_provider_request_count": 0,
+            "runtime_tool_provider_request_execution_count": 0,
+            "deterministic_runtime_tool_fallback_request_count": 0,
+            "deterministic_runtime_tool_fallback_execution_count": 0,
+            "deterministic_runtime_tool_fallback_failed_count": 0,
+            "deterministic_runtime_tool_fallback_blocked_count": 0,
             "json_parse_error_count": 0,
             "repair_attempt_count": 0,
             "empty_recommendations_reason": "valid_json_empty_recommendations",
