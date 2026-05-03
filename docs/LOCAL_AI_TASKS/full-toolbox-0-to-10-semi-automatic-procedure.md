@@ -185,6 +185,34 @@ warning_classification_counts
 
 A `passed=false` diagnostic report can become `input_nonfatal` only if the final authoritative decision layer recovers it into valid recommendations and patch plans while guardrails remain false.
 
+### Procedure maintenance and telemetry policy
+
+Whenever a patch changes workflow behavior, telemetry outputs, provider/advisory semantics, planning caps, bundle contents, guardrails, or full-toolbox evidence shape, update this `0 -> 10` procedure in the same PR.
+
+Current telemetry and cap rules:
+
+```text
+runtime tool telemetry:
+  docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json
+  docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.md
+
+run telemetry summary:
+  docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.json
+  docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.md
+
+provider advisory:
+  GPU/orchestrator passed=false may be downgraded to warning only when the deterministic decision lane produced enough valid recommendations and patch plans.
+
+patch-plan count semantics:
+  patch_plan_count must not be lower than available_patch_plan_count because of an artificial display/config cap.
+  patch_plan_count may be lower only when the patch planner itself rejects candidates through target validation, cosmetic suppression, missing evidence, forbidden paths, or guardrail policy.
+
+MaxPatchPlans:
+  accepted only for backward compatibility/telemetry.
+  must not truncate valid patch plans.
+```
+
+
 ## Global guardrails
 
 Never do without explicit user command:
@@ -349,6 +377,8 @@ python -m py_compile `
   .\Tools\ai\analyze_gpu_npu_run_sync.py `
   .\Tools\ai\build_deterministic_recommendations.py `
   .\Tools\ai\build_agent_review_patch_plan.py `
+  .\Tools\ai\build_full_toolbox_run_telemetry_summary.py `
+  .\Tools\ai\build_runtime_tool_usage_telemetry.py `
   .\Tools\ai\run_agent_review_decision_loop.py `
   .\Tools\ai\build_agent_review_patch_bundle.py `
   .\Tools\ai\run_agent_gpu_deep_planning_review.py `
@@ -502,8 +532,10 @@ python .\Tools\ai\run_agent_review_decision_loop.py `
   --patch-plan-markdown ".\output\patch_specs\full_toolbox_${Stamp}_agent_review_patch_plan.md" `
   --output ".\output\ai_pipeline\full_toolbox_${Stamp}_agent_review_decision_loop.json" `
   --markdown-output ".\output\ai_pipeline\full_toolbox_${Stamp}_agent_review_decision_loop.md" `
-  --min-recommendations 1 `
-  --min-patch-plans 1
+  --max-recommendations 80 `
+  --max-patch-plans 0 `
+  --min-recommendations 20 `
+  --min-patch-plans 20
 ```
 
 ### 9. Post-validation packet and compact evidence
@@ -526,7 +558,9 @@ $ContextFiles = @(
   ".\output\analysis\gpu_json_contract_replay_full_toolbox_$Stamp.md",
   ".\output\analysis\gpu_npu_run_sync_full_toolbox_$Stamp.md",
   ".\output\ai_pipeline\full_toolbox_${Stamp}_agent_review_decision_loop.md",
-  ".\output\patch_specs\full_toolbox_${Stamp}_agent_review_patch_plan.md"
+  ".\output\patch_specs\full_toolbox_${Stamp}_agent_review_patch_plan.md",
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.md",
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.md"
 )
 
 $ReportFiles = @(
@@ -546,6 +580,8 @@ $ReportFiles = @(
   ".\output\ai_pipeline\full_toolbox_${Stamp}_bridge_orchestrator.json",
   ".\output\ai_pipeline\full_toolbox_${Stamp}_agent_review_decision_loop.json",
   ".\output\patch_specs\full_toolbox_${Stamp}_agent_review_patch_plan.json",
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.json",
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.json",
   $MemoryWorkflow
 ) | Where-Object { Test-Path $_ }
 
@@ -809,7 +845,11 @@ git add `
   ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_agent_review_decision_loop_$Stamp.json" `
   ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_agent_review_decision_loop_$Stamp.md" `
   ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.json" `
-  ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.md"
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.md" `
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.json" `
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.md" `
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.json" `
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.md"
 
 git diff --cached --name-only
 ```

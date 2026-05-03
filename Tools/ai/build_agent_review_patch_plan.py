@@ -526,10 +526,13 @@ def build_patch_plan(args: argparse.Namespace) -> dict[str, Any]:
         warnings.append("no patch plans were produced from GPU recommendations or evidence fallback")
 
     available_patch_plan_count = len(plans)
-    max_patch_plans = int(getattr(args, "max_patch_plans", 0) or 0)
-    if max_patch_plans > 0 and len(plans) > max_patch_plans:
-        warnings.append(f"patch plans capped from {len(plans)} to {max_patch_plans}")
-        plans = plans[:max_patch_plans]
+    requested_max_patch_plans = int(getattr(args, "max_patch_plans", 0) or 0)
+    max_patch_plans = 0
+    if requested_max_patch_plans > 0:
+        warnings.append(
+            "max_patch_plans is accepted for compatibility/telemetry but does not truncate patch plans; "
+            "patch_plan_count may be lower than available_patch_plan_count only through guardrail rejection"
+        )
 
     decision = build_decision(
         plans=plans,
@@ -562,6 +565,7 @@ def build_patch_plan(args: argparse.Namespace) -> dict[str, Any]:
         "patch_plan_count": len(plans),
         "available_patch_plan_count": available_patch_plan_count,
         "max_patch_plans": max_patch_plans,
+        "requested_max_patch_plans": requested_max_patch_plans,
         "patch_plans": plans,
         "skipped_candidate_count": len(skipped),
         "skipped_candidates": skipped,
@@ -587,7 +591,7 @@ def main() -> int:
     parser.add_argument("--evidence", default=DEFAULT_EVIDENCE)
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
-    parser.add_argument("--max-patch-plans", type=int, default=0, help="Maximum patch plans to keep; 0 means no additional cap.")
+    parser.add_argument("--max-patch-plans", type=int, default=0, help="Compatibility/telemetry only; does not truncate valid patch plans.")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -605,6 +609,7 @@ def main() -> int:
                 "patch_plan_count": report["patch_plan_count"],
                 "available_patch_plan_count": report.get("available_patch_plan_count"),
                 "max_patch_plans": report.get("max_patch_plans"),
+                "requested_max_patch_plans": report.get("requested_max_patch_plans"),
                 "fallback_used": report["decision"]["fallback_used"],
                 "provider_execution_performed": report["provider_execution_performed"],
                 "patch_application_performed": report["patch_application_performed"],
