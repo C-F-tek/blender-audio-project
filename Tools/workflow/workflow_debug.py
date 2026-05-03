@@ -250,9 +250,9 @@ def expected_paths_for_operation(session: wf.WorkflowSession, operation: str) ->
             ("build_blender_manual_context.py", npu("build_blender_manual_context.py"), "file"),
         ]
         operation_outputs = [
-            ("Manual index", npu("npu_blender_manual_index.md"), "file"),
-            ("Manual manifest", npu("npu_blender_manual_manifest.json"), "file"),
-            ("Manual chunks", npu("npu_blender_manual_chunks"), "dir"),
+            ("Manual generated index (manual-focused only)", npu("npu_blender_manual_index.md"), "file"),
+            ("Manual generated manifest (manual-focused only)", npu("npu_blender_manual_manifest.json"), "file"),
+            ("Manual generated chunks (manual-focused only)", npu("npu_blender_manual_chunks"), "dir"),
         ]
     elif operation == "dual_ai_plan":
         operation_inputs = [

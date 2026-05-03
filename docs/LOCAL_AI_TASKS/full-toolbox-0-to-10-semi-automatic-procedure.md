@@ -185,6 +185,141 @@ warning_classification_counts
 
 A `passed=false` diagnostic report can become `input_nonfatal` only if the final authoritative decision layer recovers it into valid recommendations and patch plans while guardrails remain false.
 
+### Procedure maintenance and telemetry policy
+
+Whenever a patch changes workflow behavior, telemetry outputs, provider/advisory semantics, planning caps, bundle contents, guardrails, or full-toolbox evidence shape, update this `0 -> 10` procedure in the same PR.
+
+Current telemetry and cap rules:
+
+```text
+runtime tool telemetry:
+  docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json
+  docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.md
+
+run telemetry summary:
+  docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.json
+  docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.md
+
+provider advisory:
+  GPU/orchestrator passed=false may be downgraded to warning only when the deterministic decision lane produced enough valid recommendations and patch plans.
+
+patch-plan count semantics:
+  patch_plan_count must not be lower than available_patch_plan_count because of an artificial display/config cap.
+  patch_plan_count may be lower only when the patch planner itself rejects candidates through target validation, cosmetic suppression, missing evidence, forbidden paths, or guardrail policy.
+
+MaxPatchPlans:
+  accepted only for backward compatibility/telemetry.
+  must not truncate valid patch plans.
+```
+
+
+### Semantic evidence chunking for cloud handoff
+
+Large evidence files must be split before zip/upload/cloud handoff when they exceed practical cloud-context limits. The local AI path may still generate and validate the full bundle, but the cloud handoff must use a manifest plus ordered chunks.
+
+Current rule:
+
+```text
+Ollama local summaries are enabled by default.
+Use --no-ollama only when local Ollama must be disabled.
+This chunking phase uses direct local Ollama only; no NPU/GPU audit lane is executed.
+Chunks must preserve source SHA256, line ranges, previous/next links, and overlap context.
+Do not use plain truncation as the primary cloud-handoff strategy.
+```
+
+Canonical tool:
+
+```powershell
+python .\Tools\ai\build_semantic_evidence_chunks.py `
+  --repo-root . `
+  --basename full_toolbox_${Stamp}_cloud_semantic `
+  --source .\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_agent_review_decision_loop_${Stamp}.json `
+  --source .\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_agent_review_decision_loop_${Stamp}.md `
+  --output-dir .\docs\LOCAL_VALIDATION_EVIDENCE `
+  --chunk-output-dir .\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_${Stamp}_cloud_semantic_chunks `
+  --chunk-max-chars 12000 `
+  --chunk-overlap-lines 12 `
+  --zip-output .\output\validation\full_toolbox_${Stamp}_cloud_semantic_chunks.zip
+```
+
+To disable Ollama:
+
+```powershell
+--no-ollama
+```
+
+
+### Semantic chunk collision guard
+
+When splitting multiple sources that share the same base filename, chunk filenames must include the source suffix and a short source hash.
+
+Required invariant:
+
+```text
+chunk_file paths in *_chunk_manifest.json must be globally unique.
+.json and .md sources with the same stem must not write to the same *_chunk_0001.md path.
+Regenerate the chunk directory from a clean state before cloud handoff.
+```
+
+Validation:
+
+```powershell
+$M = Get-Content ".\docs\LOCAL_VALIDATION_EVIDENCE\${Base}_chunk_manifest.json" -Raw | ConvertFrom-Json
+($M.chunk_files | Group-Object | Where-Object Count -gt 1).Count
+```
+
+Expected duplicate count: `0`.
+
+
+### Runtime tool capability manifest
+
+Every cloud/AI-to-AI handoff must carry the tool body, not only the evidence mind.
+
+Required files:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.md
+```
+
+The capability manifest must describe:
+
+```text
+- allowlisted tool names
+- allowed args
+- guardrails
+- safe default mode
+- broker source file
+- observed usage by tool/caller/phase
+- rule: cloud can reason about tools; execution remains local broker-controlled
+```
+
+Semantic chunk handoff must include the capability manifest as a source file.
+
+
+### Regenerate repo help, context and evidence after corpus purge
+
+When generated context corpus is deleted or default-excluded, run this phase before any new full-toolbox/provider decision run.
+
+Required order:
+
+```text
+1. Delete/purge generated corpus.
+2. Rebuild indexAI with Tools/npu/build_project_ai_index.py --force.
+3. Remove stale project_awareness snapshots that point to deleted corpus.
+4. Rebuild tool inventory and memory inventory.
+5. Rebuild repository consistency map and smoke.
+6. Run Python syntax validation.
+7. Regenerate runtime tool capability manifest.
+8. Regenerate semantic cloud handoff chunks.
+9. Verify no stale references remain outside generator/policy docs.
+```
+
+Do not commit `output/**`. Commit only regenerated source/index files and explicit evidence under `docs/LOCAL_VALIDATION_EVIDENCE`.
+
+
 ## Global guardrails
 
 Never do without explicit user command:
@@ -226,7 +361,7 @@ patch application only through explicit --apply or explicit source-edit instruct
 
 # Procedure variants
 
-## Variant A — Expanded/manual 0 -> 10 full toolbox run
+## Variant A â€” Expanded/manual 0 -> 10 full toolbox run
 
 This is the full manual 0 -> 10 flow. It is the expanded version of the procedure Carmine used before the integrated wrapper existed.
 
@@ -349,6 +484,8 @@ python -m py_compile `
   .\Tools\ai\analyze_gpu_npu_run_sync.py `
   .\Tools\ai\build_deterministic_recommendations.py `
   .\Tools\ai\build_agent_review_patch_plan.py `
+  .\Tools\ai\build_full_toolbox_run_telemetry_summary.py `
+  .\Tools\ai\build_runtime_tool_usage_telemetry.py `
   .\Tools\ai\run_agent_review_decision_loop.py `
   .\Tools\ai\build_agent_review_patch_bundle.py `
   .\Tools\ai\run_agent_gpu_deep_planning_review.py `
@@ -502,8 +639,10 @@ python .\Tools\ai\run_agent_review_decision_loop.py `
   --patch-plan-markdown ".\output\patch_specs\full_toolbox_${Stamp}_agent_review_patch_plan.md" `
   --output ".\output\ai_pipeline\full_toolbox_${Stamp}_agent_review_decision_loop.json" `
   --markdown-output ".\output\ai_pipeline\full_toolbox_${Stamp}_agent_review_decision_loop.md" `
-  --min-recommendations 1 `
-  --min-patch-plans 1
+  --max-recommendations 80 `
+  --max-patch-plans 0 `
+  --min-recommendations 20 `
+  --min-patch-plans 20
 ```
 
 ### 9. Post-validation packet and compact evidence
@@ -526,7 +665,9 @@ $ContextFiles = @(
   ".\output\analysis\gpu_json_contract_replay_full_toolbox_$Stamp.md",
   ".\output\analysis\gpu_npu_run_sync_full_toolbox_$Stamp.md",
   ".\output\ai_pipeline\full_toolbox_${Stamp}_agent_review_decision_loop.md",
-  ".\output\patch_specs\full_toolbox_${Stamp}_agent_review_patch_plan.md"
+  ".\output\patch_specs\full_toolbox_${Stamp}_agent_review_patch_plan.md",
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.md",
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.md"
 )
 
 $ReportFiles = @(
@@ -546,6 +687,8 @@ $ReportFiles = @(
   ".\output\ai_pipeline\full_toolbox_${Stamp}_bridge_orchestrator.json",
   ".\output\ai_pipeline\full_toolbox_${Stamp}_agent_review_decision_loop.json",
   ".\output\patch_specs\full_toolbox_${Stamp}_agent_review_patch_plan.json",
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.json",
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.json",
   $MemoryWorkflow
 ) | Where-Object { Test-Path $_ }
 
@@ -626,7 +769,7 @@ Get-Content ".\output\validation\full_toolbox_agent_review_decision_loop_${Stamp
 
 ---
 
-## Variant B — Integrated no-provider semi-automatic flow
+## Variant B â€” Integrated no-provider semi-automatic flow
 
 Use this when existing orchestrator/GPU artifacts are valid enough and the goal is to test the deterministic decision and patch-plan path quickly.
 
@@ -664,7 +807,7 @@ patch_plan_count >= 1
 fatal_report_failure_count=0
 ```
 
-## Variant C — Integrated provider semi-automatic flow
+## Variant C â€” Integrated provider semi-automatic flow
 
 Use when a fresh full GPU/NPU run is needed.
 
@@ -700,7 +843,7 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
   -NpuFinalWaitSeconds 120
 ```
 
-## Variant D — Patch bundle builder from a real patch plan
+## Variant D â€” Patch bundle builder from a real patch plan
 
 Use after a successful decision loop has produced:
 
@@ -797,7 +940,7 @@ git commit -m "docs(ai): apply review patch bundle notes"
 git push
 ```
 
-## Variant E — Evidence-only commit
+## Variant E â€” Evidence-only commit
 
 After a full toolbox run, commit only compact Git-trackable evidence when useful:
 
@@ -809,7 +952,11 @@ git add `
   ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_agent_review_decision_loop_$Stamp.json" `
   ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_agent_review_decision_loop_$Stamp.md" `
   ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.json" `
-  ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.md"
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\shared_toolbox_ai_to_ai_bundle_$Stamp.md" `
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.json" `
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\full_toolbox_run_telemetry_summary_$Stamp.md" `
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.json" `
+  ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.md"
 
 git diff --cached --name-only
 ```
@@ -876,3 +1023,85 @@ SQLite/persistent memory write is true without explicit memory PR
 provider execution happened in a no-provider path
 output/** appears in staged files
 ```
+
+### Blender manual corpus default exclusion
+
+The Blender manual generated corpus is not part of the default IA-Carmine full-toolbox/provider context.
+
+Deleted/default-excluded corpus:
+
+```text
+Tools/npu/npu_blender_manual_chunks/**
+Tools/npu/npu_blender_manual_index.md
+Tools/npu/npu_blender_manual_manifest.json
+
+Rationale:
+
+Full-toolbox/provider runs must prioritize Tools/ai, Tools/validation, Tools/workflow,
+runtime tool telemetry, repository consistency evidence, recommendations, patch plans,
+memory inventory and tool capability manifests.
+
+Blender manual chunks are large reference material and can dominate prompt/context
+selection, reducing provider/toolbox signal quality.
+
+Allowed use:
+
+Regenerate/include Blender manual chunks only for Blender/API/manual-focused runs.
+Do not include them in IA-Carmine provider/toolbox cloud handoff by default.
+### GPU provider error hardening gate
+
+Before trusting any long full-toolbox provider-backed run, the GPU supervised runner must pass the provider-error smoke.
+
+Required validation:
+
+```powershell
+python -m py_compile .\Tools\ai\run_agent_gpu_deep_planning_supervised.py `
+  .\Tools\validation\run_gpu_runner_provider_error_smoke.py
+
+python .\Tools\validation\run_gpu_runner_provider_error_smoke.py `
+  --repo-root . `
+  --output .\output\validation\gpu_runner_provider_error_smoke.json `
+  --markdown-output .\output\validation\gpu_runner_provider_error_smoke.md
+```
+
+The runner must serialize provider exceptions or empty responses as report data. It must never fail a planning round with `UnboundLocalError` for `raw_response`. Schema repair retry is allowed only when a non-empty provider response exists.
+
+## Diagnostics and telemetry bundle invariants
+
+Full-toolbox AI-to-AI handoff chunks must be deterministic by default.
+
+Required semantic chunk policy:
+
+```text
+basename: full_toolbox_<STAMP>_cloud_semantic_deterministic
+ollama: disabled
+required flag: --no-ollama
+```
+
+Reason:
+
+```text
+Ollama summaries may be empty, truncated or stale. They are useful only as secondary verification, not as the primary cloud handoff source.
+```
+
+Repository consistency must not promote generated semantic chunk files into primary patch planning.
+
+Generated evidence chunk paths such as:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/*_cloud_semantic_chunks/**
+docs/LOCAL_VALIDATION_EVIDENCE/*_cloud_semantic_deterministic_chunks/**
+docs/LOCAL_VALIDATION_EVIDENCE/*_chunks/**
+```
+
+must be excluded from repository consistency findings or kept out of high-signal patch planning.
+
+Runtime tool telemetry must distinguish:
+
+```text
+declared runtime tool requests
+broker-executed tool calls
+declared-but-not-executed requests
+```
+
+A GPU planner may declare tool requests without broker execution. That state is valid telemetry and must not appear as a missing or empty telemetry channel.

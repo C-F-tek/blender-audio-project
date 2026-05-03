@@ -81,6 +81,7 @@ def build_patch_plan_from_bridge_args(
     evidence_path: Path,
     patch_plan_output: Path,
     patch_plan_markdown: Path,
+    max_patch_plans: int = 0,
 ) -> dict[str, Any]:
     args = argparse.Namespace(
         repo_root=str(repo_root),
@@ -88,6 +89,7 @@ def build_patch_plan_from_bridge_args(
         evidence=str(evidence_path),
         output=str(patch_plan_output),
         markdown_output=str(patch_plan_markdown),
+        max_patch_plans=max_patch_plans,
     )
     return build_patch_plan(args)
 
@@ -144,6 +146,7 @@ def build_decision_loop_report(args: argparse.Namespace) -> dict[str, Any]:
             evidence_path=evidence_path,
             patch_plan_output=patch_plan_output,
             patch_plan_markdown=patch_plan_markdown,
+            max_patch_plans=int(args.max_patch_plans),
         )
         if patch_plan_report.get("errors"):
             errors.extend(f"patch_plan: {error}" for error in patch_plan_report["errors"])
@@ -196,6 +199,8 @@ def build_decision_loop_report(args: argparse.Namespace) -> dict[str, Any]:
             "orchestrator": repo_rel(source_orchestrator_path, repo_root),
             "gpu_report": args.gpu_report,
             "tool_report_count": len(args.tool_report or []),
+            "max_recommendations": args.max_recommendations,
+            "max_patch_plans": args.max_patch_plans,
             "recommendation_kind": recommendation_report.get("kind"),
             "patch_plan_kind": patch_plan_report.get("kind") if patch_plan_report else None,
         },
@@ -264,6 +269,7 @@ def main() -> int:
     parser.add_argument("--gpu-report", default="")
     parser.add_argument("--tool-report", action="append", default=[])
     parser.add_argument("--max-recommendations", type=int, default=20)
+    parser.add_argument("--max-patch-plans", type=int, default=0, help="Maximum patch plans to keep; 0 means no additional cap.")
     parser.add_argument("--min-recommendations", type=int, default=1)
     parser.add_argument("--min-patch-plans", type=int, default=1)
     parser.add_argument("--recommendations-output", default=DEFAULT_RECOMMENDATIONS_OUTPUT)

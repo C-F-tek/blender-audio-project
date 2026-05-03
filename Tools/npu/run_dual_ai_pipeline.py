@@ -419,7 +419,8 @@ def build_implementation_prompt(
     scene_brief: dict[str, Any] | None = None,
     asset_inventory: dict[str, Any] | None = None,
 ) -> str:
-    manual_index = read_text(TOOLS_DIR / "npu_blender_manual_index.md")[:12000] if include_manual else ""
+    manual_index_path = TOOLS_DIR / "npu_blender_manual_index.md"
+    manual_index = read_text(manual_index_path)[:12000] if include_manual and manual_index_path.exists() else ""
     project_index = read_text(PROJECT_INDEX_MD)[:14000]
     project_manifest = read_text(PROJECT_MANIFEST_JSON)[:10000]
     guide = read_text(ROOT / "Scripting" / "v61b" / "SCENE_TUNING_GUIDE.md")[:10000]

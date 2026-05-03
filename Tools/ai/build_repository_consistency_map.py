@@ -43,6 +43,10 @@ EXCLUDE_DIRS = {
 TEXT_EXTENSIONS = {".md", ".markdown", ".py", ".ps1"}
 SCRIPT_EXTENSIONS = {".py", ".ps1"}
 DOC_EXTENSIONS = {".md", ".markdown"}
+GENERATED_EVIDENCE_CHUNK_RE = re.compile(
+    r"(^|/)docs/local_validation_evidence/.*(?:_cloud_semantic(?:_deterministic)?_chunks/|_chunks/|_chunk_\\d{4}\\.md$)",
+    re.IGNORECASE,
+)
 PATH_TOKEN_RE = re.compile(
     r"(?P<path>(?:\.?[A-Za-z0-9_./\\-]+/)?[A-Za-z0-9_.-]+\.(?:py|ps1|md|markdown|json|csv|sqlite|db))",
     re.IGNORECASE,
@@ -84,12 +88,20 @@ def normalize_ref(value: str) -> str:
     return normalized.strip("/")
 
 
+def is_generated_evidence_chunk_path(rel_posix: str) -> bool:
+    # Generated semantic handoff chunks must not drive repository consistency findings.
+    normalized = rel_posix.replace("\\", "/").lower().strip("/")
+    return bool(GENERATED_EVIDENCE_CHUNK_RE.search(normalized))
+
+
 def should_skip(path: Path, repo_root: Path) -> bool:
     try:
-        rel_parts = path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).parts
+        rel_path = path.resolve(strict=False).relative_to(repo_root.resolve(strict=False))
     except ValueError:
         return True
-    return any(part in EXCLUDE_DIRS for part in rel_parts)
+    rel_parts = rel_path.parts
+    rel_posix = rel_path.as_posix()
+    return any(part in EXCLUDE_DIRS for part in rel_parts) or is_generated_evidence_chunk_path(rel_posix)
 
 
 def iter_files(repo_root: Path, extensions: set[str]) -> list[Path]:
@@ -555,7 +567,10 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "sqlite_write_performed": False,
         "persistent_memory_write_performed": False,
         "manual_review_required": True,
-        "scope": scope,
+        "scope": {
+            **scope,
+            "generated_evidence_chunk_exclusion_enabled": True,
+        },
         "finding_count": len(findings),
         "severity_counts": dict(sorted(severity_counts.items())),
         "finding_kind_counts": dict(sorted(kind_counts.items())),
@@ -573,6 +588,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
             "do_not_commit_output": True,
+            "generated_evidence_chunk_dirs_excluded": True,
         },
     }
     return report

@@ -186,7 +186,7 @@ def build_verified_answers(awareness: dict[str, Any], music_context: dict[str, A
         {
             "question": "La pipeline e pronta per generare lo script scena?",
             "answer": (
-                "Si: analisi, music context, project index, manual index, service packet e scene brief risultano pronti."
+                "Si: analisi, music context, project index, service packet e scene brief risultano pronti. Il manual corpus Blender e escluso dal contesto default."
                 if state.get("can_generate_scene_script")
                 else "Non completamente: controlla `missing_or_suspicious` e i technical_files mancanti."
             ),
@@ -263,7 +263,7 @@ def build_project_awareness(
         "npu_music_context_md": NPU_DIR / "npu_music_context.md",
         "npu_music_manifest": NPU_DIR / "npu_music_manifest.json",
         "npu_code_index": NPU_DIR / "npu_code_index.md",
-        "npu_manual_index": NPU_DIR / "npu_blender_manual_index.md",
+        "npu_manual_generator": NPU_DIR / "build_blender_manual_context.py",
         "npu_preflight": NPU_DIR / "npu_preflight_report.json",
     }
 
@@ -295,7 +295,8 @@ def build_project_awareness(
             "wav_analysis_ready": ready_inputs,
             "music_context_ready": statuses["music_context_json"]["exists"],
             "project_index_ready": statuses["project_code_index"]["exists"],
-            "manual_index_ready": statuses["npu_manual_index"]["exists"],
+            "manual_corpus_default_excluded": True,
+            "manual_generator_ready": statuses["npu_manual_generator"]["exists"],
             "service_packet_ready": statuses["gpu_task_packet_json"]["exists"],
             "scene_brief_ready": statuses["scene_brief_json"]["exists"],
             "can_generate_scene_script": can_generate_script,
