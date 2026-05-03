@@ -141,6 +141,37 @@ def compact_evidence_files(item: dict[str, Any]) -> list[dict[str, Any]]:
     return compact
 
 
+COSMETIC_PATCH_KEYWORDS = (
+    "whitespace",
+    "space-only",
+    "spacing-only",
+    "tag spacing",
+    "tag-spacing",
+    "formatting-only",
+    "cosmetic",
+)
+
+
+def recommendation_text_blob(rec: dict[str, Any]) -> str:
+    return " ".join(
+        str(rec.get(key) or "")
+        for key in ("area", "rationale", "proposed_strategy", "edit_strategy")
+    ).lower()
+
+
+def has_substantive_consistency_evidence(rec: dict[str, Any]) -> bool:
+    if isinstance(rec.get("repository_consistency_finding"), dict):
+        return True
+    evidence = rec.get("source_evidence")
+    return isinstance(evidence, dict) and isinstance(evidence.get("repository_consistency_finding"), dict)
+
+
+def is_cosmetic_recommendation(rec: dict[str, Any]) -> bool:
+    if has_substantive_consistency_evidence(rec):
+        return False
+    text = recommendation_text_blob(rec)
+    return any(keyword in text for keyword in COSMETIC_PATCH_KEYWORDS)
+
 def load_gpu_report(repo_root: Path, orchestrator: dict[str, Any], warnings: list[str]) -> dict[str, Any]:
     gpu_output = orchestrator.get("gpu_output")
     if not gpu_output:
@@ -185,6 +216,8 @@ def normalize_gpu_recommendation(
     repo_root: Path,
     audit_refs: list[dict[str, Any]],
 ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
+    if is_cosmetic_recommendation(rec):
+        return None, {"id": str(rec.get("id") or f"gpu_{index:03d}"), "reason": "cosmetic/formatting-only recommendation suppressed"}
     target_files = unique_strings(rec.get("target_files", []) if isinstance(rec.get("target_files"), list) else [])
     if not target_files:
         return None, {"id": str(rec.get("id") or f"gpu_{index:03d}"), "reason": "GPU recommendation has no concrete target_files"}
@@ -210,9 +243,15 @@ def normalize_gpu_recommendation(
             ],
             "source_evidence": {
                 "gpu_recommendation": rec,
+                "repository_consistency_finding": rec.get("repository_consistency_finding"),
                 "npu_audit_refs": audit_refs,
             },
             "manual_review_required": True,
+            "guardrails": {
+                "cosmetic_patch_allowed": False,
+                "manual_review_required": True,
+                "patch_application_performed": False,
+            },
         },
         None,
     )
@@ -399,6 +438,7 @@ def build_decision(
         "evidence_sufficient_for_real_pr": evidence_decision.get("sufficient_for_real_pr"),
         "recommended_next_layer": "manual_review_then_targeted_patch" if plans else "collect_more_evidence",
         "manual_review_required": True,
+        "cosmetic_patch_suppression_enabled": True,
     }
 
 
