@@ -49,10 +49,10 @@ LEVELS = {
 }
 FINAL_KINDS = {
     "agent_review_decision_loop",
+    "agent_review_full_toolbox_decision_loop_integrated",
     "github_evidence_bundle_validation",
     "python_syntax",
     "validation_report_contract",
-    "agent_review_full_toolbox_decision_loop_workflow",
 }
 DEFAULT_OUTPUT = "output/validation/agent_review_warning_policy.json"
 DEFAULT_MARKDOWN_OUTPUT = "output/validation/agent_review_warning_policy.md"
@@ -322,6 +322,7 @@ def build_policy_report(args: argparse.Namespace) -> dict[str, Any]:
         "warning_ledger": ledger,
         "policy": {
             "scope": sorted(LEVELS),
+            "final_authoritative_kinds": sorted(FINAL_KINDS),
             "input_nonfatal_condition": "final decision layer recovered into valid recommendations and patch plans under guardrails",
             "fatal_condition": "final authoritative report failed, required report is invalid, or guardrail was violated",
         },
