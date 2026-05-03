@@ -249,6 +249,28 @@ To disable Ollama:
 ```
 
 
+### Semantic chunk collision guard
+
+When splitting multiple sources that share the same base filename, chunk filenames must include the source suffix and a short source hash.
+
+Required invariant:
+
+```text
+chunk_file paths in *_chunk_manifest.json must be globally unique.
+.json and .md sources with the same stem must not write to the same *_chunk_0001.md path.
+Regenerate the chunk directory from a clean state before cloud handoff.
+```
+
+Validation:
+
+```powershell
+$M = Get-Content ".\docs\LOCAL_VALIDATION_EVIDENCE\${Base}_chunk_manifest.json" -Raw | ConvertFrom-Json
+($M.chunk_files | Group-Object | Where-Object Count -gt 1).Count
+```
+
+Expected duplicate count: `0`.
+
+
 ## Global guardrails
 
 Never do without explicit user command:

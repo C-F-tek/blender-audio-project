@@ -336,7 +336,9 @@ def chunk_one_source(args: argparse.Namespace, repo_root: Path, source_path: Pat
     sections = normalize_sections(lines, sections, int(args.chunk_max_chars))
     chunks = pack_sections(lines, sections, int(args.chunk_max_chars))
     source_sha = sha256_file(source_path)
-    source_slug = slugify(Path(rel).stem, 'source')
+    suffix_slug = source_path.suffix.lower().lstrip('.') or 'txt'
+    sha_slug = (source_sha or 'nosha')[:12]
+    source_slug = slugify(f"{Path(rel).stem}_{suffix_slug}_{sha_slug}", 'source')
     chunk_entries: list[dict[str, Any]] = []
     language_hint = source_path.suffix.lower().lstrip('.') or 'text'
     pending_files: list[str] = []
@@ -479,6 +481,8 @@ def main() -> int:
     chunk_dir = resolve_output_path(repo_root, args.chunk_output_dir) if args.chunk_output_dir else output_dir / f"{args.basename}_chunks"
     output_dir.mkdir(parents=True, exist_ok=True)
     chunk_dir.mkdir(parents=True, exist_ok=True)
+    for old_chunk in chunk_dir.glob('*.md'):
+        old_chunk.unlink()
 
     warnings: list[str] = []
     errors: list[str] = []
@@ -494,6 +498,9 @@ def main() -> int:
         sources.append(chunk_one_source(args, repo_root, path, chunk_dir, warnings))
 
     chunk_files = [chunk['chunk_file'] for source in sources for chunk in source.get('chunks', [])]
+    duplicated_chunk_files = sorted({path for path in chunk_files if chunk_files.count(path) > 1})
+    if duplicated_chunk_files:
+        errors.append(f"duplicate chunk_file paths detected: {duplicated_chunk_files[:20]}")
     report = {
         'schema_version': 1,
         'kind': 'semantic_evidence_chunk_manifest',
