@@ -78,6 +78,20 @@ except ImportError:
     from Tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
     from Tools.npu.ollama_runtime import DEFAULT_BASE_URL, OllamaModelManager, normalize_base_url  # type: ignore
 
+
+try:
+    from Tools.ai.schema_repair_context import (
+        build_schema_repair_retry_prompt,
+        should_attempt_schema_repair_retry,
+        summarize_schema_repair_retry,
+    )
+except ImportError:
+    from schema_repair_context import (  # type: ignore
+        build_schema_repair_retry_prompt,
+        should_attempt_schema_repair_retry,
+        summarize_schema_repair_retry,
+    )
+
 DEFAULT_OUTPUT = "output/ai_pipeline/agent_gpu_deep_planning_supervised.json"
 DEFAULT_MARKDOWN = "output/ai_pipeline/agent_gpu_deep_planning_supervised.md"
 DEFAULT_CHECKPOINT_DIR = "output/ai_pipeline/gpu_deep_planning_checkpoints"
@@ -193,6 +207,8 @@ def run_runtime_tool_broker_for_round(
             "broker_allowlist_required": True,
             "patch_application_allowed": False,
             "persistent_memory_write_allowed": False,
+            "schema_repair_retry_attempt_count": schema_repair_retry_attempt_count,
+            "schema_repair_retry_accept_count": schema_repair_retry_accept_count,
             "manual_review_required": True,
         },
     }
@@ -359,6 +375,97 @@ def append_runtime_tool_feedback_context(
     return True
 
 
+def run_schema_repair_retry_for_round(
+    *,
+    manager: Any,
+    model: str,
+    args: argparse.Namespace,
+    round_index: int,
+    objective: str,
+    raw_response: str,
+    parsed_response: dict[str, Any],
+    parse_diagnostics: dict[str, Any],
+    context_reports: list[dict[str, Any]],
+    rounds: list[dict[str, Any]],
+    evidence_ready_for_manual_patch_count: int,
+) -> dict[str, Any]:
+    """Run one JSON-only schema repair pass for a bad provider response."""
+
+    valid_tool_count = int(parse_diagnostics.get("valid_tool_request_count") or 0)
+    if not should_attempt_schema_repair_retry(
+        parsed_response=parsed_response,
+        parse_diagnostics=parse_diagnostics,
+        evidence_ready_for_manual_patch_count=evidence_ready_for_manual_patch_count,
+        valid_tool_request_count=valid_tool_count,
+    ):
+        return {"attempted": False, "accepted": False, "reason": "not_needed"}
+
+    repair_prompt = build_schema_repair_retry_prompt(
+        provider="gpu_ollama",
+        round_index=round_index,
+        objective=objective,
+        raw_response=raw_response,
+        parsed_response=parsed_response,
+        parse_diagnostics=parse_diagnostics,
+        context_reports=context_reports,
+        rounds=rounds,
+        evidence_ready_for_manual_patch_count=evidence_ready_for_manual_patch_count,
+    )
+    repair_max_tokens = min(max(int(getattr(args, "max_new_tokens", 1600) or 1600), 900), 2200)
+    try:
+        repair_raw_response, repair_model_used = manager.generate(
+            model,
+            repair_prompt,
+            max_new_tokens=repair_max_tokens,
+            temperature=0.03,
+            num_thread=getattr(args, "ollama_num_thread", None),
+            response_format="json",
+        )
+    except Exception as exc:  # noqa: BLE001 - provider repair is best-effort.
+        return {
+            "attempted": True,
+            "accepted": False,
+            "reason": "repair_provider_error",
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+
+    repair_parsed, repair_diagnostics = parse_model_json_with_diagnostics(
+        repair_raw_response,
+        evidence_ready_for_manual_patch_count,
+    )
+    repair_tool_requests, repair_tool_errors = extract_valid_tool_requests(
+        repair_parsed,
+        max_requests=getattr(args, "runtime_tool_max_requests_per_round", 8),
+    )
+    repair_diagnostics["valid_tool_request_count"] = len(repair_tool_requests)
+    repair_diagnostics["invalid_tool_request_count"] = len(repair_tool_errors)
+    repair_recommendation_diagnostics = recommendation_diagnostics_for_round(
+        repair_parsed,
+        repair_diagnostics,
+        evidence_ready_for_manual_patch_count,
+    )
+    accepted = bool(
+        repair_diagnostics.get("schema_ok")
+        and (
+            int(repair_recommendation_diagnostics.get("filtered_recommendation_count") or 0) > 0
+            or len(repair_tool_requests) > 0
+        )
+    )
+    return {
+        "attempted": True,
+        "accepted": accepted,
+        "reason": "schema_repair_retry_accepted" if accepted else "schema_repair_retry_rejected",
+        "model_used": repair_model_used,
+        "raw_response_preview": repair_raw_response[:3000],
+        "raw_response": repair_raw_response,
+        "parsed_response": repair_parsed,
+        "parse_diagnostics": repair_diagnostics,
+        "tool_requests": repair_tool_requests,
+        "tool_request_errors": repair_tool_errors,
+        "recommendation_diagnostics": repair_recommendation_diagnostics,
+    }
+
+
 def run_runtime_tool_bootstrap(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     # Run deterministic broker bootstrap before the first GPU planner prompt.
     if not args.enable_runtime_tool_broker:
@@ -442,6 +549,8 @@ def build_report(
     deterministic_runtime_tool_fallback_failed_count = sum(int(item.get("failed_tool_count") or 0) for item in deterministic_runtime_brokers)
     deterministic_runtime_tool_fallback_blocked_count = sum(int(item.get("blocked_tool_count") or 0) for item in deterministic_runtime_brokers)
     provider_empty_response_count = sum(1 for round_item in rounds if round_item.get("provider_empty_response"))
+    schema_repair_retry_attempt_count = sum(1 for round_item in rounds if round_item.get("schema_repair_retry", {}).get("attempted"))
+    schema_repair_retry_accept_count = sum(1 for round_item in rounds if round_item.get("schema_repair_retry", {}).get("accepted"))
     runtime_tool_feedback_context_report_count = sum(1 for item in context_reports if isinstance(item, dict) and item.get("kind") == "runtime_tool_feedback_context")
     report_errors = list(errors)
     runtime_tool_bootstrap_failed = bool(runtime_tool_bootstrap.get("executed") and runtime_tool_bootstrap.get("passed") is not True)
@@ -501,6 +610,8 @@ def build_report(
         "deterministic_runtime_tool_fallback_failed_count": deterministic_runtime_tool_fallback_failed_count,
         "deterministic_runtime_tool_fallback_blocked_count": deterministic_runtime_tool_fallback_blocked_count,
         "provider_empty_response_count": provider_empty_response_count,
+        "schema_repair_retry_attempt_count": schema_repair_retry_attempt_count,
+        "schema_repair_retry_accept_count": schema_repair_retry_accept_count,
         "recommendation_count": len(recommendations),
         "recommendations": recommendations,
         **diagnostics,
@@ -760,6 +871,23 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                     errors.append(f"round {index}: provider_empty_response")
                 else:
                     parsed, parse_diagnostics = parse_model_json_with_diagnostics(response, evidence_ready_count)
+                    schema_repair_retry = run_schema_repair_retry_for_round(
+                        manager=manager,
+                        model=model_used,
+                        args=args,
+                        round_index=index,
+                        objective=args.objective,
+                        raw_response=raw_response,
+                        parsed_response=parsed,
+                        parse_diagnostics=parse_diagnostics,
+                        context_reports=context_reports,
+                        rounds=rounds,
+                        evidence_ready_for_manual_patch_count=evidence_ready_count,
+                    )
+                    if schema_repair_retry.get("accepted"):
+                        raw_response = str(schema_repair_retry.get("raw_response") or raw_response)
+                        parsed = dict(schema_repair_retry.get("parsed_response") or parsed)
+                        parse_diagnostics = dict(schema_repair_retry.get("parse_diagnostics") or parse_diagnostics)
             except Exception as exc:  # noqa: BLE001
                 response = ""
                 parsed = {"summary": "provider error", "confidence": "low", "recommendations": [], "missing_evidence": [str(exc)], "next_best_action": "inspect provider error"}
@@ -833,6 +961,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 "response_chars": len(response),
                 "raw_response_preview": response[:3000],
                 "parsed_response": parsed,
+                "schema_repair_retry": summarize_schema_repair_retry(schema_repair_retry),
                 "provider_empty_response": bool(parse_diagnostics.get("provider_empty_response")),
                 "tool_requests": valid_tool_requests,
                 "invalid_tool_request_errors": invalid_tool_request_errors,
