@@ -19,12 +19,20 @@ import argparse
 import json
 import sys
 from datetime import datetime
+from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any
 
 try:
     from Tools.ai.build_github_evidence_bundle import build_bundle
-    from Tools.ai.github_evidence_bundle_io import split_path_values
+    from Tools.ai.github_evidence_bundle_io import (
+        raw_artifact_content_allowed,
+        read_json,
+        read_text,
+        repo_relative,
+        resolve_repo_path,
+        split_path_values,
+    )
     from Tools.validation.check_github_evidence_bundle import validate_github_evidence_bundles
     from Tools.validation.report_utils import resolve_output_path, write_json_report
 except ImportError:
@@ -32,7 +40,14 @@ except ImportError:
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from Tools.ai.build_github_evidence_bundle import build_bundle
-    from Tools.ai.github_evidence_bundle_io import split_path_values
+    from Tools.ai.github_evidence_bundle_io import (
+        raw_artifact_content_allowed,
+        read_json,
+        read_text,
+        repo_relative,
+        resolve_repo_path,
+        split_path_values,
+    )
     from Tools.validation.check_github_evidence_bundle import validate_github_evidence_bundles
     from Tools.validation.report_utils import resolve_output_path, write_json_report
 
@@ -40,6 +55,31 @@ except ImportError:
 DEFAULT_STAMP_FORMAT = "%Y%m%d-%H%M%S"
 DEFAULT_BASENAME_PREFIX = "shared_toolbox_ai_to_ai_bundle"
 DEFAULT_FINAL_SUMMARY_PREFIX = "shared_toolbox_ai_to_ai_final_summary"
+DEFAULT_CHUNK_SIZE_LINES = 200
+DEFAULT_RECURSIVE_MAX_FILES = 120
+DEFAULT_RECURSIVE_REPORT_ROOTS: tuple[str, ...] = (
+    "output/validation",
+    "output/analysis",
+    "output/ai_pipeline",
+)
+DEFAULT_RECURSIVE_ARTIFACT_ROOTS: tuple[str, ...] = (
+    "output/analysis",
+    "output/ai_pipeline",
+    "docs/LOCAL_AI_TASKS",
+)
+DEFAULT_RECURSIVE_EXCLUDE_GLOBS: tuple[str, ...] = (
+    "output/ai_pipeline/*checkpoints*",
+    "output/ai_context_packs/*",
+    "indexAI/code_chunks/*",
+    "indexAI/project_code_chunks/*",
+    "renders/*",
+    "*.db",
+    "*.sqlite",
+    "*.sqlite-wal",
+    "*.sqlite-shm",
+    "*full_analysis*",
+    "*analysis_full*",
+)
 
 RUNTIME_TOOL_CAPABILITIES: tuple[dict[str, Any], ...] = (
     {
@@ -178,32 +218,23 @@ DEFAULT_ARTIFACT_TEMPLATES: tuple[str, ...] = (
 )
 
 
-def repo_relative(path: Path, repo_root: Path) -> str:
-    try:
-        return path.resolve().relative_to(repo_root.resolve()).as_posix()
-    except ValueError:
-        return path.as_posix()
-
-
-def resolve_repo_path(repo_root: Path, raw_path: str | Path) -> Path:
-    path = Path(raw_path)
-    if not path.is_absolute():
-        path = repo_root / path
-    return path.resolve()
-
-
 def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
-    try:
-        data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except FileNotFoundError:
+    """Read a JSON object while reusing shared evidence-bundle IO helpers."""
+    data = read_json(path)
+    if data is not None:
+        return data, None
+    if not path.exists():
         return None, "missing"
+    text, read_error = read_text(path)
+    if read_error:
+        return None, read_error
+    try:
+        parsed = json.loads(text)
     except json.JSONDecodeError as exc:
         return None, f"invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}"
-    except OSError as exc:
-        return None, f"{type(exc).__name__}: {exc}"
-    if not isinstance(data, dict):
-        return None, f"expected JSON object, got {type(data).__name__}"
-    return data, None
+    if not isinstance(parsed, dict):
+        return None, f"expected JSON object, got {type(parsed).__name__}"
+    return parsed, None
 
 
 def bool_from_report(data: dict[str, Any], key: str) -> bool:
@@ -254,6 +285,131 @@ def report_templates_for_stamp(stamp: str) -> list[str]:
 
 def artifact_templates_for_stamp(stamp: str) -> list[str]:
     return [item.format(stamp=stamp) for item in DEFAULT_ARTIFACT_TEMPLATES]
+
+
+def path_matches_any_glob(rel_path: str, patterns: tuple[str, ...] | list[str]) -> bool:
+    normalized = rel_path.replace("\\", "/")
+    return any(fnmatch(normalized, pattern.replace("\\", "/")) for pattern in patterns)
+
+
+def discover_recursive_files(
+    repo_root: Path,
+    roots: list[str],
+    suffixes: tuple[str, ...],
+    *,
+    stamp: str,
+    max_files: int,
+    include_unstamped: bool,
+    exclude_globs: tuple[str, ...] | list[str] = DEFAULT_RECURSIVE_EXCLUDE_GLOBS,
+) -> tuple[list[str], list[dict[str, Any]]]:
+    """Discover bounded recursive default files under safe roots."""
+    discovered: list[str] = []
+    skipped: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    for root in roots:
+        root_path = resolve_repo_path(repo_root, root)
+        root_rel = repo_relative(root_path, repo_root)
+        if not root_path.exists():
+            skipped.append({"path": root_rel, "reason": "recursive root missing"})
+            continue
+        if not root_path.is_dir():
+            skipped.append({"path": root_rel, "reason": "recursive root is not a directory"})
+            continue
+        for path in sorted(root_path.rglob("*")):
+            if len(discovered) >= max_files:
+                skipped.append({"path": root_rel, "reason": f"recursive max files reached: {max_files}"})
+                return discovered, skipped
+            if not path.is_file():
+                continue
+            if path.suffix.lower() not in suffixes:
+                continue
+            rel = repo_relative(path, repo_root)
+            if path_matches_any_glob(rel, exclude_globs):
+                skipped.append({"path": rel, "reason": "excluded by recursive guardrail"})
+                continue
+            if not raw_artifact_content_allowed(rel):
+                skipped.append({"path": rel, "reason": "content denied by shared evidence-bundle policy"})
+                continue
+            if not include_unstamped and stamp not in path.name and stamp not in rel:
+                skipped.append({"path": rel, "reason": "stamp not present in file name/path"})
+                continue
+            if rel in seen:
+                continue
+            discovered.append(rel)
+            seen.add(rel)
+    return discovered, skipped
+
+
+def file_line_count(path: Path) -> int | None:
+    """Return physical line count using shared defensive text reader."""
+    text, error = read_text(path)
+    if error:
+        return None
+    return len(text.splitlines())
+
+
+def build_chunked_file_index(
+    repo_root: Path,
+    paths: list[str],
+    *,
+    max_lines_per_chunk: int,
+) -> list[dict[str, Any]]:
+    """Build pointer-style chunk metadata for large JSON/Markdown artifacts."""
+    index: list[dict[str, Any]] = []
+    if max_lines_per_chunk <= 0:
+        return index
+
+    seen: set[str] = set()
+    for rel in paths:
+        path = resolve_repo_path(repo_root, rel)
+        normalized = repo_relative(path, repo_root)
+        if normalized in seen or path.suffix.lower() not in {".json", ".md"}:
+            continue
+        seen.add(normalized)
+        line_count = file_line_count(path)
+        if line_count is None or line_count <= max_lines_per_chunk:
+            continue
+
+        chunks: list[dict[str, Any]] = []
+        chunk_count = (line_count + max_lines_per_chunk - 1) // max_lines_per_chunk
+        for index_number in range(chunk_count):
+            start = index_number * max_lines_per_chunk + 1
+            end = min((index_number + 1) * max_lines_per_chunk, line_count)
+            chunk_id = f"{normalized}#L{start}-L{end}"
+            previous_id = None
+            next_id = None
+            if index_number > 0:
+                prev_start = (index_number - 1) * max_lines_per_chunk + 1
+                prev_end = min(index_number * max_lines_per_chunk, line_count)
+                previous_id = f"{normalized}#L{prev_start}-L{prev_end}"
+            if index_number + 1 < chunk_count:
+                next_start = (index_number + 1) * max_lines_per_chunk + 1
+                next_end = min((index_number + 2) * max_lines_per_chunk, line_count)
+                next_id = f"{normalized}#L{next_start}-L{next_end}"
+            chunks.append(
+                {
+                    "chunk_id": chunk_id,
+                    "path": normalized,
+                    "line_start": start,
+                    "line_end": end,
+                    "previous_chunk_id": previous_id,
+                    "next_chunk_id": next_id,
+                    "has_previous": previous_id is not None,
+                    "has_next": next_id is not None,
+                }
+            )
+        index.append(
+            {
+                "path": normalized,
+                "suffix": path.suffix.lower(),
+                "line_count": line_count,
+                "chunk_size_lines": max_lines_per_chunk,
+                "chunk_count": len(chunks),
+                "chunks": chunks,
+            }
+        )
+    return index
 
 
 def coalesce_list(*values: list[str]) -> list[str]:
@@ -391,6 +547,8 @@ def build_final_summary(
     recommended_next_task_md: str,
     missing_reports: list[dict[str, Any]],
     missing_artifacts: list[dict[str, Any]],
+    recursive_defaults: dict[str, Any] | None = None,
+    chunked_file_index: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     facts = collect_report_facts(repo_root, report_paths)
     tool_requests = facts.get("tool_requests_executed_or_proposed") or default_tool_requests()
@@ -420,6 +578,8 @@ def build_final_summary(
         "persistent_memory_write_performed": bool(facts.get("persistent_memory_write_performed")),
         "blender_runtime_execution_performed": bool(facts.get("blender_runtime_execution_performed")),
         "artifact_paths_considered": artifact_paths,
+        "recursive_defaults": recursive_defaults or {},
+        "chunked_file_index": chunked_file_index or [],
         "errors": facts.get("errors", []),
         "warnings": facts.get("warnings", []),
     }
@@ -485,6 +645,23 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
     lines.append("")
     lines.append(str(summary.get("recommended_next_task_md") or ""))
     lines.append("")
+    chunked = summary.get("chunked_file_index") or []
+    lines.append("## Chunked large JSON/Markdown files")
+    lines.append("")
+    if chunked:
+        for item in chunked:
+            lines.append(
+                f"- {item.get('path')} lines={item.get('line_count')} "
+                f"chunks={item.get('chunk_count')} chunk_size={item.get('chunk_size_lines')}"
+            )
+            for chunk in item.get("chunks", []):
+                pointer = chunk.get("next_chunk_id") or "END"
+                lines.append(
+                    f"  - {chunk.get('chunk_id')} -> next: {pointer}"
+                )
+    else:
+        lines.append("- No JSON/Markdown file above the chunk threshold was detected.")
+    lines.append("")
     lines.append("## Compact bundle paths")
     lines.append("")
     for path in summary.get("compact_bundle_paths", []):
@@ -525,6 +702,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--validation-output", default=None)
     parser.add_argument("--max-included-artifact-chars", type=int, default=14000)
     parser.add_argument("--max-included-artifacts", type=int, default=40)
+    parser.add_argument("--no-recursive-defaults", action="store_true", help="Disable bounded recursive default discovery for stamped JSON/Markdown files.")
+    parser.add_argument("--recursive-report-root", action="append", default=[], help="Extra recursive root for stamped JSON reports; repeatable or comma-separated.")
+    parser.add_argument("--recursive-artifact-root", action="append", default=[], help="Extra recursive root for stamped Markdown/JSON artifacts; repeatable or comma-separated.")
+    parser.add_argument("--recursive-include-unstamped", action="store_true", help="Allow recursive discovery of files without the stamp in their path. Use only on narrow roots.")
+    parser.add_argument("--recursive-max-files", type=int, default=DEFAULT_RECURSIVE_MAX_FILES)
+    parser.add_argument("--chunk-large-files-lines", type=int, default=DEFAULT_CHUNK_SIZE_LINES, help="Build pointer-style chunk metadata for JSON/Markdown files above this line count. Set 0 to disable.")
     return parser.parse_args(argv)
 
 
@@ -544,6 +727,21 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
         list(args.python_syntax_report or []),
     )
     report_candidates = coalesce_list(explicit_reports, report_templates_for_stamp(stamp))
+    recursive_report_paths: list[str] = []
+    recursive_artifact_paths: list[str] = []
+    recursive_skipped: list[dict[str, Any]] = []
+    if not args.no_recursive_defaults:
+        report_roots = coalesce_list(list(DEFAULT_RECURSIVE_REPORT_ROOTS), list(args.recursive_report_root or []))
+        recursive_report_paths, report_skipped = discover_recursive_files(
+            repo_root,
+            report_roots,
+            (".json",),
+            stamp=stamp,
+            max_files=int(args.recursive_max_files),
+            include_unstamped=bool(args.recursive_include_unstamped),
+        )
+        recursive_skipped.extend(report_skipped)
+        report_candidates = coalesce_list(report_candidates, recursive_report_paths)
     reports, missing_reports = existing_report_paths(
         repo_root,
         report_candidates,
@@ -559,12 +757,40 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
         list(args.artifact or []),
         artifact_templates_for_stamp(stamp),
     )
+    if not args.no_recursive_defaults:
+        artifact_roots = coalesce_list(list(DEFAULT_RECURSIVE_ARTIFACT_ROOTS), list(args.recursive_artifact_root or []))
+        recursive_artifact_paths, artifact_skipped = discover_recursive_files(
+            repo_root,
+            artifact_roots,
+            (".md", ".json"),
+            stamp=stamp,
+            max_files=int(args.recursive_max_files),
+            include_unstamped=bool(args.recursive_include_unstamped),
+        )
+        recursive_skipped.extend(artifact_skipped)
+        artifact_candidates = coalesce_list(artifact_candidates, recursive_artifact_paths)
     artifacts, missing_artifacts = existing_artifact_paths(
         repo_root,
         artifact_candidates,
         include_missing_optional=bool(args.include_missing_optional),
     )
 
+    chunked_index = build_chunked_file_index(
+        repo_root,
+        coalesce_list(reports, artifacts),
+        max_lines_per_chunk=int(args.chunk_large_files_lines),
+    )
+    recursive_defaults = {
+        "enabled": not args.no_recursive_defaults,
+        "report_roots": coalesce_list(list(DEFAULT_RECURSIVE_REPORT_ROOTS), list(args.recursive_report_root or [])) if not args.no_recursive_defaults else [],
+        "artifact_roots": coalesce_list(list(DEFAULT_RECURSIVE_ARTIFACT_ROOTS), list(args.recursive_artifact_root or [])) if not args.no_recursive_defaults else [],
+        "include_unstamped": bool(args.recursive_include_unstamped),
+        "max_files": int(args.recursive_max_files),
+        "discovered_reports": recursive_report_paths,
+        "discovered_artifacts": recursive_artifact_paths,
+        "skipped": recursive_skipped[:80],
+        "skipped_count": len(recursive_skipped),
+    }
     summary = build_final_summary(
         repo_root=repo_root,
         stamp=stamp,
@@ -574,6 +800,8 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
         recommended_next_task_md=args.task_md,
         missing_reports=missing_reports,
         missing_artifacts=missing_artifacts,
+        recursive_defaults=recursive_defaults,
+        chunked_file_index=chunked_index,
     )
     final_json, final_md = write_final_summary(repo_root, summary)
     reports_with_summary = coalesce_list(reports, [repo_relative(final_json, repo_root)])
@@ -620,6 +848,9 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
         "persistent_memory_write_performed": bool(summary.get("persistent_memory_write_performed")),
         "errors": list(summary.get("errors") or []) + list((validation_report or {}).get("errors") or []),
         "warnings": list(summary.get("warnings") or []) + list((validation_report or {}).get("warnings") or []),
+        "recursive_default_report_count": len(recursive_report_paths),
+        "recursive_default_artifact_count": len(recursive_artifact_paths),
+        "chunked_file_count": len(chunked_index),
         "missing_reports": missing_reports,
         "missing_artifacts": missing_artifacts,
     }

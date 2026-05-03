@@ -16,28 +16,23 @@ from typing import Any
 
 try:
     from Tools.ai.build_shared_toolbox_ai_to_ai_bundle import build_shared_toolbox_bundle
+    from Tools.ai.github_evidence_bundle_io import read_json, repo_relative
     from Tools.validation.report_utils import resolve_output_path, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from Tools.ai.build_shared_toolbox_ai_to_ai_bundle import build_shared_toolbox_bundle
+    from Tools.ai.github_evidence_bundle_io import read_json, repo_relative
     from Tools.validation.report_utils import resolve_output_path, write_json_report
 
 
 SMOKE_STAMP = "smoke-20260503-000000"
 
 
-def repo_relative(path: Path, repo_root: Path) -> str:
-    try:
-        return path.resolve().relative_to(repo_root.resolve()).as_posix()
-    except ValueError:
-        return path.as_posix()
-
-
 def write_json(path: Path, data: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    """Write JSON smoke inputs through the shared validation report helper."""
+    write_json_report(data, path)
 
 
 def write_text(path: Path, text: str) -> None:
@@ -147,16 +142,21 @@ def create_fake_inputs(repo_root: Path, stamp: str) -> dict[str, Path]:
     write_text(artifacts["architecture_md"], "# Smoke architecture\n\nProviders ask. Orchestrator decides. Broker executes. Reports become evidence.\n")
     write_text(artifacts["code_interpreter_md"], "# Smoke code interpreter report\n\nNo provider execution.\n")
     write_text(artifacts["orchestrator_md"], "# Smoke orchestrator report\n\nProvider flag is inherited from fake input only.\n")
-    write_text(artifacts["gpu_md"], "# Smoke GPU report\n\nNo real provider was executed by this smoke.\n")
+    large_markdown = base / f"shared_toolbox_large_recursive_artifact_{stamp}.md"
+    artifacts["large_markdown"] = large_markdown
+    write_text(
+        large_markdown,
+        "# Large recursive artifact\n\n" + "\n".join(f"line {index}" for index in range(1, 241)) + "\n",
+    )
+    reports["large_json"] = base / f"shared_toolbox_large_recursive_report_{stamp}.json"
+    write_json(
+        reports["large_json"],
+        fake_report(
+            kind="shared_toolbox_large_recursive_report",
+            extra={"rows": [{"index": index, "value": f"row-{index}"} for index in range(1, 220)]},
+        ),
+    )
     return {**reports, **artifacts}
-
-
-def read_json(path: Path) -> dict[str, Any] | None:
-    try:
-        data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    return data if isinstance(data, dict) else None
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -217,6 +217,12 @@ def build_builder_args(repo_root: Path, paths: dict[str, Path]) -> SimpleNamespa
         validation_output=f"output/validation/shared_toolbox_ai_to_ai_bundle_{stamp}_validation.json",
         max_included_artifact_chars=8000,
         max_included_artifacts=20,
+        no_recursive_defaults=False,
+        recursive_report_root=[repo_relative(paths["large_json"].parent, repo_root)],
+        recursive_artifact_root=[repo_relative(paths["large_markdown"].parent, repo_root)],
+        recursive_include_unstamped=False,
+        recursive_max_files=80,
+        chunk_large_files_lines=200,
     )
 
 
@@ -243,12 +249,26 @@ def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
 
+    chunked_index = summary.get("chunked_file_index") if isinstance(summary.get("chunked_file_index"), list) else []
+    recursive_defaults = summary.get("recursive_defaults") if isinstance(summary.get("recursive_defaults"), dict) else {}
+    has_chunk_next_pointer = any(
+        bool(chunk.get("next_chunk_id"))
+        for item in chunked_index
+        if isinstance(item, dict)
+        for chunk in item.get("chunks", [])
+        if isinstance(chunk, dict)
+    )
+
     checks = {
         "final_summary_json_exists": final_summary_json.exists(),
         "final_summary_markdown_exists": final_summary_md.exists(),
         "bundle_json_exists": bundle_json.exists(),
         "bundle_markdown_exists": bundle_md.exists(),
         "bundle_validation_passed": validation.get("passed") is True,
+        "recursive_defaults_enabled": recursive_defaults.get("enabled") is True,
+        "recursive_default_files_seen": bool(recursive_defaults.get("discovered_reports") or recursive_defaults.get("discovered_artifacts")),
+        "chunked_large_files_seen": bool(chunked_index),
+        "chunk_next_pointer_seen": has_chunk_next_pointer,
     }
     for key, ok in checks.items():
         if not ok:
@@ -281,6 +301,9 @@ def main() -> int:
         "bundle_markdown": repo_relative(bundle_md, repo_root),
         "validation_output": repo_relative(validation_output, repo_root),
         "builder_result": builder_result,
+        "chunked_file_count": len(chunked_index),
+        "recursive_discovered_report_count": len(recursive_defaults.get("discovered_reports") or []),
+        "recursive_discovered_artifact_count": len(recursive_defaults.get("discovered_artifacts") or []),
     }
 
     output = resolve_output_path(repo_root, args.output)

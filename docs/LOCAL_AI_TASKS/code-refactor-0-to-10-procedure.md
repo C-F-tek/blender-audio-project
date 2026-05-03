@@ -711,6 +711,34 @@ python -m Tools.ai.build_shared_toolbox_ai_to_ai_bundle `
   --validate-bundle
 ```
 
+Default recursive discovery is enabled for stamped `.json` and `.md` evidence under bounded safe roots:
+
+```text
+output/validation
+output/analysis
+output/ai_pipeline
+docs/LOCAL_AI_TASKS
+```
+
+Large `.json` and `.md` files above 200 physical lines are not dumped as unbounded raw content. The final summary records a `chunked_file_index` with pointer-style links:
+
+```text
+path#L1-L200 -> path#L201-L400 -> ... -> END
+```
+
+Use these controls when needed:
+
+```powershell
+--no-recursive-defaults
+--recursive-report-root <path>
+--recursive-artifact-root <path>
+--recursive-include-unstamped
+--recursive-max-files 120
+--chunk-large-files-lines 200
+```
+
+Use `--recursive-include-unstamped` only with narrow roots. The shared evidence-bundle deny policy still blocks raw heavy artifacts such as checkpoints, context packs, `full_analysis`, SQLite/database files and render paths.
+
 Use the manual PowerShell summary block only as a temporary fallback when the builder is unavailable or broken. The expected builder outputs are:
 
 ```text
