@@ -720,6 +720,10 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
     runtime_tool_provider_request_result_count = (
         gpu_orchestrated_runtime_tool_result_count + npu_runtime_tool_result_count
     )
+    deterministic_runtime_tool_fallback_request_count = int(gpu_report.get("deterministic_runtime_tool_fallback_request_count") or 0)
+    deterministic_runtime_tool_fallback_execution_count = int(gpu_report.get("deterministic_runtime_tool_fallback_execution_count") or 0)
+    deterministic_runtime_tool_fallback_failed_count = int(gpu_report.get("deterministic_runtime_tool_fallback_failed_count") or 0)
+    deterministic_runtime_tool_fallback_blocked_count = int(gpu_report.get("deterministic_runtime_tool_fallback_blocked_count") or 0)
 
     runtime_tool_broker_enabled = bool(
         getattr(args, "enable_runtime_tool_broker", False)
@@ -799,6 +803,10 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "runtime_tool_provider_request_failed_count": runtime_tool_provider_request_failed_count,
         "runtime_tool_provider_request_blocked_count": runtime_tool_provider_request_blocked_count,
         "runtime_tool_provider_request_result_count": runtime_tool_provider_request_result_count,
+        "deterministic_runtime_tool_fallback_request_count": deterministic_runtime_tool_fallback_request_count,
+        "deterministic_runtime_tool_fallback_execution_count": deterministic_runtime_tool_fallback_execution_count,
+        "deterministic_runtime_tool_fallback_failed_count": deterministic_runtime_tool_fallback_failed_count,
+        "deterministic_runtime_tool_fallback_blocked_count": deterministic_runtime_tool_fallback_blocked_count,
         "orchestrator_runtime_tool_bootstrap": orchestrator_runtime_tool_bootstrap,
         "orchestrator_runtime_tool_bootstrap_executed": bool(orchestrator_runtime_tool_bootstrap.get("executed")),
         "orchestrator_runtime_tool_bootstrap_passed": orchestrator_runtime_tool_bootstrap.get("passed"),
@@ -864,6 +872,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "runtime_tool_bootstrap_execution_count": runtime_tool_bootstrap_execution_count,
             "runtime_tool_provider_request_count": runtime_tool_provider_request_count,
             "runtime_tool_provider_request_execution_count": runtime_tool_provider_request_execution_count,
+            "deterministic_runtime_tool_fallback_execution_count": deterministic_runtime_tool_fallback_execution_count,
             "runtime_tool_execution_count": runtime_tool_execution_count,
             "runtime_tool_result_count": runtime_tool_result_count,
             "manual_review_required": True,
@@ -958,6 +967,7 @@ def main() -> int:
         "runtime_tool_result_count": report.get("runtime_tool_result_count"),
         "runtime_tool_provider_request_count": report.get("runtime_tool_provider_request_count"),
         "runtime_tool_provider_request_execution_count": report.get("runtime_tool_provider_request_execution_count"),
+        "deterministic_runtime_tool_fallback_execution_count": report.get("deterministic_runtime_tool_fallback_execution_count"),
         "orchestrator_runtime_tool_bootstrap_execution_count": report.get("orchestrator_runtime_tool_bootstrap_execution_count"),
         "gpu_orchestrated_runtime_tool_request_count": report.get("gpu_orchestrated_runtime_tool_request_count"),
         "gpu_orchestrated_runtime_tool_execution_count": report.get("gpu_orchestrated_runtime_tool_execution_count"),

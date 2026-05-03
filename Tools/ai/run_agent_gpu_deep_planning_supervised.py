@@ -41,6 +41,7 @@ try:
         repo_rel,
         split_batches,
     )
+    from Tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests
     from Tools.npu.ollama_runtime import DEFAULT_BASE_URL, OllamaModelManager, normalize_base_url
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
@@ -64,6 +65,7 @@ except ImportError:
         repo_rel,
         split_batches,
     )
+    from Tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
     from Tools.npu.ollama_runtime import DEFAULT_BASE_URL, OllamaModelManager, normalize_base_url  # type: ignore
 
 DEFAULT_OUTPUT = "output/ai_pipeline/agent_gpu_deep_planning_supervised.json"
@@ -328,11 +330,19 @@ def build_report(
     )
     runtime_tool_bootstrap = getattr(args, "runtime_tool_bootstrap_result", {})
     runtime_brokers = [round_item.get("runtime_tool_broker", {}) for round_item in rounds if round_item.get("runtime_tool_broker")]
+    provider_runtime_brokers = [item for item in runtime_brokers if item.get("source") != "deterministic_fallback"]
+    deterministic_runtime_brokers = [item for item in runtime_brokers if item.get("source") == "deterministic_fallback"]
     runtime_tool_request_count = int(runtime_tool_bootstrap.get("requested_tool_count") or 0) + sum(int(item.get("requested_tool_count") or 0) for item in runtime_brokers)
     runtime_tool_execution_count = int(runtime_tool_bootstrap.get("tool_execution_count") or 0) + sum(int(item.get("tool_execution_count") or 0) for item in runtime_brokers)
     runtime_tool_failed_count = int(runtime_tool_bootstrap.get("failed_tool_count") or 0) + sum(int(item.get("failed_tool_count") or 0) for item in runtime_brokers)
     runtime_tool_blocked_count = int(runtime_tool_bootstrap.get("blocked_tool_count") or 0) + sum(int(item.get("blocked_tool_count") or 0) for item in runtime_brokers)
     runtime_tool_result_count = len(runtime_tool_bootstrap.get("tool_results", [])) + sum(len(item.get("tool_results", [])) for item in runtime_brokers)
+    runtime_tool_provider_request_count = sum(int(item.get("requested_tool_count") or 0) for item in provider_runtime_brokers)
+    runtime_tool_provider_request_execution_count = sum(int(item.get("tool_execution_count") or 0) for item in provider_runtime_brokers)
+    deterministic_runtime_tool_fallback_request_count = sum(int(item.get("requested_tool_count") or 0) for item in deterministic_runtime_brokers)
+    deterministic_runtime_tool_fallback_execution_count = sum(int(item.get("tool_execution_count") or 0) for item in deterministic_runtime_brokers)
+    deterministic_runtime_tool_fallback_failed_count = sum(int(item.get("failed_tool_count") or 0) for item in deterministic_runtime_brokers)
+    deterministic_runtime_tool_fallback_blocked_count = sum(int(item.get("blocked_tool_count") or 0) for item in deterministic_runtime_brokers)
     provider_empty_response_count = sum(1 for round_item in rounds if round_item.get("provider_empty_response"))
     report_errors = list(errors)
     runtime_tool_bootstrap_failed = bool(runtime_tool_bootstrap.get("executed") and runtime_tool_bootstrap.get("passed") is not True)
@@ -384,6 +394,12 @@ def build_report(
         "runtime_tool_failed_count": runtime_tool_failed_count,
         "runtime_tool_blocked_count": runtime_tool_blocked_count,
         "runtime_tool_result_count": runtime_tool_result_count,
+        "runtime_tool_provider_request_count": runtime_tool_provider_request_count,
+        "runtime_tool_provider_request_execution_count": runtime_tool_provider_request_execution_count,
+        "deterministic_runtime_tool_fallback_request_count": deterministic_runtime_tool_fallback_request_count,
+        "deterministic_runtime_tool_fallback_execution_count": deterministic_runtime_tool_fallback_execution_count,
+        "deterministic_runtime_tool_fallback_failed_count": deterministic_runtime_tool_fallback_failed_count,
+        "deterministic_runtime_tool_fallback_blocked_count": deterministic_runtime_tool_fallback_blocked_count,
         "provider_empty_response_count": provider_empty_response_count,
         "recommendation_count": len(recommendations),
         "recommendations": recommendations,
@@ -606,7 +622,13 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             )
             round_start = time.perf_counter()
             try:
-                response, model_used = manager.generate(args.ollama_model, prompt, max_new_tokens=args.max_new_tokens, temperature=args.temperature)
+                response, model_used = manager.generate(
+                    args.ollama_model,
+                    prompt,
+                    max_new_tokens=args.max_new_tokens,
+                    temperature=args.temperature,
+                    response_format="json",
+                )
                 if not str(response or "").strip():
                     parsed = {
                         "summary": "provider returned an empty response",
@@ -644,14 +666,42 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 parsed,
                 max_requests=args.runtime_tool_max_requests_per_round,
             )
+            deterministic_fallback_used = False
+            deterministic_fallback_reason = ""
+            deterministic_fallback_requests: list[dict[str, Any]] = []
+            broker_tool_requests = valid_tool_requests
             if invalid_tool_request_errors:
                 warnings.append(f"round {index}: invalid tool requests: {invalid_tool_request_errors}")
+            if not valid_tool_requests and args.enable_runtime_tool_broker:
+                fallback_reason = str(round_diagnostics.get("empty_recommendations_reason") or "")
+                if fallback_reason in {
+                    "context_echo_detected",
+                    "json_parse_failure",
+                    "model_output_schema_mismatch",
+                    "evidence_ready_but_no_tool_requests",
+                    "valid_json_empty_recommendations",
+                }:
+                    deterministic_fallback_requests = deterministic_fallback_tool_requests(
+                        fallback_reason,
+                        max_requests=args.runtime_tool_max_requests_per_round,
+                    )
+                    if deterministic_fallback_requests:
+                        deterministic_fallback_used = True
+                        deterministic_fallback_reason = fallback_reason
+                        broker_tool_requests = deterministic_fallback_requests
             runtime_broker = run_runtime_tool_broker_for_round(
                 repo_root=repo_root,
                 args=args,
                 round_index=index,
-                tool_requests=valid_tool_requests,
+                tool_requests=broker_tool_requests,
             )
+            if deterministic_fallback_used:
+                runtime_broker["source"] = "deterministic_fallback"
+                runtime_broker["provider_generated_tool_requests"] = False
+                runtime_broker["deterministic_fallback_reason"] = deterministic_fallback_reason
+            elif valid_tool_requests:
+                runtime_broker["source"] = "provider_tool_requests"
+                runtime_broker["provider_generated_tool_requests"] = True
             if runtime_broker.get("error"):
                 warnings.append(f"runtime tool broker round {index}: {runtime_broker.get('error')}")
             if runtime_broker.get("returncode") not in (None, 0):
@@ -670,6 +720,10 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 "tool_requests": valid_tool_requests,
                 "invalid_tool_request_errors": invalid_tool_request_errors,
                 "runtime_tool_broker": runtime_broker,
+                "provider_tool_request_count": len(valid_tool_requests),
+                "deterministic_runtime_tool_fallback_used": deterministic_fallback_used,
+                "deterministic_runtime_tool_fallback_reason": deterministic_fallback_reason,
+                "deterministic_runtime_tool_fallback_request_count": len(deterministic_fallback_requests),
                 **round_diagnostics,
             }
             rounds.append(round_data)

@@ -271,6 +271,7 @@ class OllamaModelManager:
         max_new_tokens: int = 900,
         temperature: float = 0.15,
         num_thread: int | None = None,
+        response_format: str | None = None,
     ) -> tuple[str, str]:
         if self.session and self.current_model != model:
             self.session.close()
@@ -290,7 +291,13 @@ class OllamaModelManager:
             ).start()
             self.current_model = self.session.model
 
-        text = self.session.generate(prompt, max_new_tokens=max_new_tokens, temperature=temperature, num_thread=effective_num_thread)
+        text = self.session.generate(
+            prompt,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            num_thread=effective_num_thread,
+            response_format=response_format,
+        )
         return text, self.session.model or model
 
     def close(self) -> None:
@@ -349,7 +356,14 @@ class OllamaSession:
         append_ollama_runtime_event("session_start", {"preferred_model": self.preferred_model, "selected_model": self.model, "available_model_count": len(available), "started_server": self.started_server, "num_thread": self.num_thread, "elapsed_sec": round(time.perf_counter() - start, 4)})
         return self
 
-    def generate(self, prompt: str, max_new_tokens: int = 900, temperature: float = 0.15, num_thread: int | None = None) -> str:
+    def generate(
+        self,
+        prompt: str,
+        max_new_tokens: int = 900,
+        temperature: float = 0.15,
+        num_thread: int | None = None,
+        response_format: str | None = None,
+    ) -> str:
         if not self.model:
             self.start()
 
@@ -365,14 +379,16 @@ class OllamaSession:
                 "num_thread": effective_num_thread,
             },
         }
+        if response_format:
+            payload["format"] = response_format
         start = time.perf_counter()
         try:
             data = _json_request(self.base_url, "/api/generate", payload=payload, timeout=600.0)
         except Exception as exc:
-            append_ollama_runtime_event("generate_error", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "num_thread": effective_num_thread, "elapsed_sec": round(time.perf_counter() - start, 4), "error_type": type(exc).__name__, "error": str(exc)})
+            append_ollama_runtime_event("generate_error", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "num_thread": effective_num_thread, "response_format": response_format, "elapsed_sec": round(time.perf_counter() - start, 4), "error_type": type(exc).__name__, "error": str(exc)})
             raise
         response = str(data.get("response", "")).strip()
-        append_ollama_runtime_event("generate_result", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "num_thread": effective_num_thread, "elapsed_sec": round(time.perf_counter() - start, 4), "response_chars": len(response), "empty_response": not bool(response), "done": data.get("done"), "done_reason": data.get("done_reason"), "prompt_eval_count": data.get("prompt_eval_count"), "eval_count": data.get("eval_count"), "response_preview": response[:300]})
+        append_ollama_runtime_event("generate_result", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "num_thread": effective_num_thread, "response_format": response_format, "elapsed_sec": round(time.perf_counter() - start, 4), "response_chars": len(response), "empty_response": not bool(response), "done": data.get("done"), "done_reason": data.get("done_reason"), "prompt_eval_count": data.get("prompt_eval_count"), "eval_count": data.get("eval_count"), "response_preview": response[:300]})
         return response
 
     def unload_model(self) -> None:
