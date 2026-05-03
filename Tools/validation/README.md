@@ -740,7 +740,6 @@ It records the manual-review patch-plan decisions for this file without applying
   - Stop if the patch would touch output/**, generated indexes, SQLite, full analysis JSON, provider settings or Blender runtime.
 
 <!-- IA-CARMINE:PATCH-PLAN-APPLICATION:END -->
-
 <!-- IA-CARMINE:AGENT-REVIEW-PATCH-PLAN:BEGIN id=det_doc_doc_003:tools-validation-readme.md -->
 
 ### IA-Carmine agent-review patch note
