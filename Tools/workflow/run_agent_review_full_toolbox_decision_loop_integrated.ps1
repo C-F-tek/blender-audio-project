@@ -1,10 +1,11 @@
-﻿param(
+param(
     [string]$RepoRoot = ".",
     [string]$Stamp = "",
     [string]$OutputRoot = "output",
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
     [switch]$RunGpuNpuProvider,
     [switch]$SkipMemoryReload,
+    [switch]$SkipRepositoryConsistencyMap,
     [switch]$SkipPostValidationPacket,
     [switch]$SkipSharedToolboxBundle,
     [int]$BudgetMinutes = 30,
@@ -95,6 +96,7 @@ $RunnerParams = @{
 }
 if ($RunGpuNpuProvider) { $RunnerParams.RunGpuNpuProvider = $true }
 if ($SkipMemoryReload) { $RunnerParams.SkipMemoryReload = $true }
+if ($SkipRepositoryConsistencyMap) { $RunnerParams.SkipRepositoryConsistencyMap = $true }
 if ($SkipPostValidationPacket) { $RunnerParams.SkipPostValidationPacket = $true }
 if ($SkipSharedToolboxBundle) { $RunnerParams.SkipSharedToolboxBundle = $true }
 

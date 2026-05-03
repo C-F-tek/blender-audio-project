@@ -1,10 +1,11 @@
-﻿param(
+param(
     [string]$RepoRoot = ".",
     [string]$Stamp = "",
     [string]$OutputRoot = "output",
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
     [switch]$RunGpuNpuProvider,
     [switch]$SkipMemoryReload,
+    [switch]$SkipRepositoryConsistencyMap,
     [switch]$SkipPostValidationPacket,
     [switch]$SkipSharedToolboxBundle,
     [int]$BudgetMinutes = 30,
@@ -108,6 +109,10 @@ $DecisionLoopSmokeJson = ".\output\validation\agent_review_decision_loop_smoke_f
 $DecisionLoopSmokeMd = ".\output\validation\agent_review_decision_loop_smoke_full_toolbox_$Stamp.md"
 $NpuEnvJson = ".\output\validation\npu_provider_environment_full_toolbox_$Stamp.json"
 $NpuEnvMd = ".\output\validation\npu_provider_environment_full_toolbox_$Stamp.md"
+$RepositoryConsistencyJson = ".\output\analysis\repository_consistency_map_full_toolbox_$Stamp.json"
+$RepositoryConsistencyMd = ".\output\analysis\repository_consistency_map_full_toolbox_$Stamp.md"
+$RepositoryConsistencySmokeJson = ".\output\validation\repository_consistency_map_smoke_full_toolbox_$Stamp.json"
+$RepositoryConsistencySmokeMd = ".\output\validation\repository_consistency_map_smoke_full_toolbox_$Stamp.md"
 
 $OrchOut = ".\output\ai_pipeline\full_toolbox_${Stamp}_orchestrator.json"
 $OrchMd = ".\output\ai_pipeline\full_toolbox_${Stamp}_orchestrator.md"
@@ -140,6 +145,7 @@ Write-Host "=== Agent Review Full Toolbox Decision Loop ==="
 Write-Host "Repo: $RepoRootPath"
 Write-Host "Stamp: $Stamp"
 Write-Host "RunGpuNpuProvider: $RunGpuNpuProvider"
+Write-Host "SkipRepositoryConsistencyMap: $SkipRepositoryConsistencyMap"
 Write-Host "Guardrail: report-only decision loop; provider execution only when -RunGpuNpuProvider is explicitly supplied."
 
 if (-not $SkipMemoryReload) {
@@ -213,6 +219,8 @@ Invoke-RepoPython -Label "Contract script compile" -ArgsList @(
     ".\Tools\ai\build_deterministic_recommendations.py",
     ".\Tools\ai\build_agent_review_patch_plan.py",
     ".\Tools\ai\run_agent_review_decision_loop.py",
+    ".\Tools\ai\build_repository_consistency_map.py",
+    ".\Tools\validation\run_repository_consistency_map_smoke.py",
     ".\Tools\validation\run_gpu_planner_json_contract_smoke.py",
     ".\Tools\validation\run_deterministic_recommendation_synthesizer_smoke.py",
     ".\Tools\validation\run_agent_review_decision_loop_smoke.py"
@@ -246,6 +254,24 @@ Invoke-RepoPython -Label "NPU provider environment preflight" -ArgsList @(
     "--markdown-output", $NpuEnvMd
 )
 
+if (-not $SkipRepositoryConsistencyMap) {
+    Invoke-RepoPython -Label "Repository consistency map" -ArgsList @(
+        ".\Tools\ai\build_repository_consistency_map.py",
+        "--repo-root", ".",
+        "--output", $RepositoryConsistencyJson,
+        "--markdown-output", $RepositoryConsistencyMd
+    )
+
+    Invoke-RepoPython -Label "Repository consistency map smoke" -ArgsList @(
+        ".\Tools\validation\run_repository_consistency_map_smoke.py",
+        "--repo-root", ".",
+        "--output", $RepositoryConsistencySmokeJson,
+        "--markdown-output", $RepositoryConsistencySmokeMd
+    )
+} else {
+    [void]$Warnings.Add("repository consistency map skipped by request")
+}
+
 if ($RunGpuNpuProvider) {
     Invoke-RepoPython -Label "GPU primary advisory + NPU auditor orchestrator" -ArgsList @(
         ".\Tools\ai\run_agent_gpu_npu_parallel_orchestrator.py",
@@ -264,6 +290,8 @@ if ($RunGpuNpuProvider) {
         "--report-file", ".\output\ai_pipeline\local_ai_core_tool_activation_transient_request_context.json",
         "--report-file", ".\output\ai_packets\gpu_planner_nonempty_recommendations_advisory_manifest.json",
         "--report-file", ".\output\ai_packets\gpu_planner_nonempty_recommendations_proposals.json",
+        "--report-file", $RepositoryConsistencyJson,
+        "--report-file", $RepositoryConsistencySmokeJson,
         "--report-file", $CodeInterpreterJson,
         "--report-file", $LineCountJson,
         "--report-file", $PythonSyntaxJson,
@@ -323,6 +351,8 @@ if (Test-Path $OrchOut) {
 }
 
 $ToolReports = @(
+    $RepositoryConsistencyJson,
+    $RepositoryConsistencySmokeJson,
     $CodeInterpreterJson,
     $LineCountJson,
     $PythonSyntaxJson,
@@ -366,6 +396,8 @@ if (-not $SkipPostValidationPacket) {
         ".\Tools\ai\build_agent_review_patch_plan.py",
         ".\Tools\ai\run_agent_gpu_npu_parallel_orchestrator.py",
         ".\Tools\validation\run_agent_review_decision_loop_smoke.py",
+        $RepositoryConsistencyMd,
+        $RepositoryConsistencySmokeMd,
         $LineCountAllMd,
         $CodeInterpreterMd,
         $GpuReplayMd,
@@ -376,6 +408,8 @@ if (-not $SkipPostValidationPacket) {
     $ReportFiles = @(
         $OrchOut,
         $GpuOut,
+        $RepositoryConsistencyJson,
+        $RepositoryConsistencySmokeJson,
         $CodeInterpreterJson,
         $LineCountJson,
         $PythonSyntaxJson,
@@ -417,6 +451,8 @@ if (-not $SkipSharedToolboxBundle) {
 $ReportFilesForBundle = @(
     $OrchOut,
     $GpuOut,
+    $RepositoryConsistencyJson,
+    $RepositoryConsistencySmokeJson,
     $CodeInterpreterJson,
     $LineCountJson,
     $PythonSyntaxJson,
@@ -446,6 +482,8 @@ $BundleArgs = @(
     "--artifact", ".\docs\LOCAL_AI_TASKS\gpu-npu-parallel-evidence-runbook.md",
     "--artifact", ".\Tools\ai\run_agent_review_decision_loop.py",
     "--artifact", ".\Tools\validation\run_agent_review_decision_loop_smoke.py",
+    "--artifact", $RepositoryConsistencyMd,
+    "--artifact", $RepositoryConsistencySmokeMd,
     "--artifact", $LineCountAllMd,
     "--artifact", $LineCountCsv,
     "--artifact", $DecisionLoopMd,
@@ -472,13 +510,14 @@ Invoke-RepoPython -Label "Final scoped validation report contract" -ArgsList @(
     ".\Tools\validation\check_validation_report_contract.py",
     "--repo-root", ".",
     "--report-file", $DecisionLoopSmokeJson,
+    "--report-file", $RepositoryConsistencySmokeJson,
     "--report-file", $FinalPythonSyntaxJson,
     "--report-file", $BundleValidationJson,
     "--output", $FinalContractJson
 )
 
 foreach ($Path in @(
-    $MemoryWorkflow, $LineCountJson, $PythonSyntaxJson, $CodeInterpreterJson, $GpuContractSmokeJson,
+    $MemoryWorkflow, $RepositoryConsistencyJson, $RepositoryConsistencySmokeJson, $LineCountJson, $PythonSyntaxJson, $CodeInterpreterJson, $GpuContractSmokeJson,
     $DeterministicSmokeJson, $DecisionLoopSmokeJson, $NpuEnvJson, $OrchOut, $GpuOut, $GpuReplayJson,
     $GpuNpuSyncJson, $RecommendationsJson, $BridgeJson, $DecisionLoopJson, $PatchPlanJson,
     $BundleValidationJson, $FinalPythonSyntaxJson, $FinalContractJson
@@ -486,7 +525,7 @@ foreach ($Path in @(
     Add-ExistingPath -List $Reports -Path $Path
 }
 foreach ($Path in @(
-    $MemoryBundleJson, $MemoryBundleMd, $MemoryLineCountCsv, $LineCountAllMd, $LineCountCsv,
+    $MemoryBundleJson, $MemoryBundleMd, $MemoryLineCountCsv, $RepositoryConsistencyMd, $RepositoryConsistencySmokeMd, $LineCountAllMd, $LineCountCsv,
     $CodeInterpreterMd, $GpuContractSmokeMd, $DeterministicSmokeMd, $DecisionLoopSmokeMd,
     $NpuEnvMd, $OrchMd, $GpuMd, $GpuReplayMd, $GpuNpuSyncMd, $RecommendationsMd,
     $DecisionLoopMd, $PatchPlanMd, $BundleJson, $BundleMd
