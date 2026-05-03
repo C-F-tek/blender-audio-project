@@ -18,7 +18,6 @@ import hashlib
 import json
 import re
 import sys
-import textwrap
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -232,7 +231,6 @@ import argparse
 import hashlib
 import json
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -243,13 +241,6 @@ MANAGED_END_PREFIX = "<!-- IA-CARMINE:AGENT-REVIEW-PATCH-PLAN:END"
 
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
-
-
-def repo_rel(path: Path, repo_root: Path) -> str:
-    try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
-    except ValueError:
-        return path.resolve(strict=False).as_posix()
 
 
 def run_git_status(repo_root: Path) -> str:
@@ -376,6 +367,8 @@ def main() -> int:
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps({
         "passed": report["passed"],
+        "errors": report["errors"],
+        "warnings": report["warnings"],
         "apply_requested": report["apply_requested"],
         "operation_count": report["operation_count"],
         "changed_count": report["changed_count"],
@@ -594,6 +587,8 @@ def main() -> int:
         json.dumps(
             {
                 "passed": report["passed"],
+                "errors": report["errors"],
+                "warnings": report["warnings"],
                 "output": str(output),
                 "markdown": str(markdown_output),
                 "bundle_zip": report.get("bundle_zip"),
