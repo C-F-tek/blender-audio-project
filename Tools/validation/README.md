@@ -168,7 +168,8 @@ NPU review metadata can be emitted without provider loading:
 
 ```powershell
 python .\Tools
-puun_npu_review.py --metadata-only --metadata-out .\outputalidation
+pu
+un_npu_review.py --metadata-only --metadata-out .\outputalidation
 pu_review_metadata.json
 ```
 
@@ -711,3 +712,31 @@ docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
 ```
 
 This lane is provider-free, patch-runner-free and documentation-only. Long reports remain under ignored output/**; GitHub review uses only the compact task-scoped evidence bundle.
+
+<!-- IA-CARMINE:PATCH-PLAN-APPLICATION:START -->
+
+## IA-Carmine patch-plan application notes
+
+This managed block was generated from `output/patch_specs/agent_review_patch_plan.json`.
+It records the manual-review patch-plan decisions for this file without applying runtime/provider changes.
+
+### `det_doc_doc_003` — `doc_doc`
+
+- Source: `gpu_recommendation`
+- Status: `ready_for_manual_review`
+- Risk: `low`
+- Target file: `Tools/validation/README.md`
+- Manual review required: `True`
+- Rationale: contract doc exists and missing terms are explicit
+- Strategy: Add a compact cross-reference for `code_contract_drift`, `docs_contract_drift`. Link or summarize the canonical source instead of duplicating large contract sections.
+- Validation commands:
+  - `python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json`
+  - `python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json`
+  - `git diff --check`
+  - `git status --short`
+- Stop conditions:
+  - Stop if the missing terms are already present after refreshing master.
+  - Stop if the edit would duplicate large generated artifacts.
+  - Stop if the patch would touch output/**, generated indexes, SQLite, full analysis JSON, provider settings or Blender runtime.
+
+<!-- IA-CARMINE:PATCH-PLAN-APPLICATION:END -->

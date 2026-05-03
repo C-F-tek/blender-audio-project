@@ -536,3 +536,31 @@ The wrapper must keep patch_application_performed=false. Documentation edits rem
 Notes:
 This bundle is task-scoped. For this lane, selected semantic chunk evidence is intentionally disabled unless explicitly requested by a future task.
 ```
+
+<!-- IA-CARMINE:PATCH-PLAN-APPLICATION:START -->
+
+## IA-Carmine patch-plan application notes
+
+This managed block was generated from `output/patch_specs/agent_review_patch_plan.json`.
+It records the manual-review patch-plan decisions for this file without applying runtime/provider changes.
+
+### `det_doc_doc_002` — `doc_doc`
+
+- Source: `gpu_recommendation`
+- Status: `ready_for_manual_review`
+- Risk: `low`
+- Target file: `docs/JSON_SCHEMAS.md`
+- Manual review required: `True`
+- Rationale: contract doc exists and missing terms are explicit
+- Strategy: Add a compact cross-reference for `code_contract_drift`, `docs_contract_drift`. Link or summarize the canonical source instead of duplicating large contract sections.
+- Validation commands:
+  - `python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json`
+  - `python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json`
+  - `git diff --check`
+  - `git status --short`
+- Stop conditions:
+  - Stop if the missing terms are already present after refreshing master.
+  - Stop if the edit would duplicate large generated artifacts.
+  - Stop if the patch would touch output/**, generated indexes, SQLite, full analysis JSON, provider settings or Blender runtime.
+
+<!-- IA-CARMINE:PATCH-PLAN-APPLICATION:END -->

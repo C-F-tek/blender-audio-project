@@ -123,3 +123,50 @@ recommended next step
 ```
 
 For documentation-only changes, script line counts can be reported as `not applicable`.
+
+<!-- IA-CARMINE:PATCH-PLAN-APPLICATION:START -->
+
+## IA-Carmine patch-plan application notes
+
+This managed block was generated from `output/patch_specs/agent_review_patch_plan.json`.
+It records the manual-review patch-plan decisions for this file without applying runtime/provider changes.
+
+### `det_doc_code_001` — `doc_code`
+
+- Source: `gpu_recommendation`
+- Status: `ready_for_manual_review`
+- Risk: `low`
+- Target file: `docs/AI_ONBOARDING.md`
+- Manual review required: `True`
+- Rationale: source doc exists and target path remains missing
+- Strategy: Create a narrow manual-review patch plan for the documentation/code reference mismatch. Inspect `Scripting/shared/config_model.py` and update `docs/AI_ONBOARDING.md` only if the reference is stale or should point at an existing artifact. Candidate references observed: `Scripting/shared/config_model.py`.
+- Validation commands:
+  - `python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json`
+  - `python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json`
+  - `git diff --check`
+  - `git status --short`
+- Stop conditions:
+  - Stop if the referenced file exists after refreshing master.
+  - Stop if the fix requires creating runtime code instead of correcting documentation or references.
+  - Stop if the patch would touch output/**, generated indexes, SQLite, full analysis JSON, provider settings or Blender runtime.
+
+### `det_doc_code_002` — `doc_code`
+
+- Source: `gpu_recommendation`
+- Status: `ready_for_manual_review`
+- Risk: `low`
+- Target file: `docs/AI_ONBOARDING.md`
+- Manual review required: `True`
+- Rationale: source doc exists and target path remains missing
+- Strategy: Create a narrow manual-review patch plan for the documentation/code reference mismatch. Inspect `Scripting/shared/diagnostics.py` and update `docs/AI_ONBOARDING.md` only if the reference is stale or should point at an existing artifact. Candidate references observed: `Scripting/shared/diagnostics.py`.
+- Validation commands:
+  - `python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json`
+  - `python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json`
+  - `git diff --check`
+  - `git status --short`
+- Stop conditions:
+  - Stop if the referenced file exists after refreshing master.
+  - Stop if the fix requires creating runtime code instead of correcting documentation or references.
+  - Stop if the patch would touch output/**, generated indexes, SQLite, full analysis JSON, provider settings or Blender runtime.
+
+<!-- IA-CARMINE:PATCH-PLAN-APPLICATION:END -->
