@@ -16,6 +16,16 @@ It is still non-destructive:
 """
 from __future__ import annotations
 
+try:
+    from Tools.ai.schema_repair_context import build_schema_repair_context_stack
+except ImportError:
+    import sys as _schema_repair_sys
+
+    _schema_repair_repo_root = Path(__file__).resolve().parents[2]
+    if str(_schema_repair_repo_root) not in _schema_repair_sys.path:
+        _schema_repair_sys.path.insert(0, str(_schema_repair_repo_root))
+    from Tools.ai.schema_repair_context import build_schema_repair_context_stack  # type: ignore
+
 import argparse
 import json
 import sys
@@ -279,6 +289,9 @@ def build_prompt(
             "Prefer small manual-review docs/code patch plans over broad rewrites.",
             "Call out missing evidence explicitly.",
             "Return valid JSON only.",
+            "When schema_repair_provider_context is present, treat it as a hard repair contract for the next answer.",
+            "Runtime tool evidence means you must convert evidence into recommendations or explicit missing_evidence; do not request the same evidence again.",
+            "If evidence_ready_for_manual_patch_count is greater than zero, prefer at least one ready_for_patch_plan recommendation unless a specific blocker remains.",
             "When evidence is missing, request broker tools through tool_requests instead of guessing.",
             "If you cannot produce a schema-valid recommendation, emit at least one valid tool_request when an allowlisted tool can reduce uncertainty.",
             "Do not answer with prose summaries of repository files; return the JSON object only.",
@@ -730,6 +743,12 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
                 break
             if time.perf_counter() >= deadline and rounds:
                 break
+            context_reports = build_schema_repair_context_stack(
+                base_context_reports=context_reports,
+                rounds=rounds,
+                evidence_ready_for_manual_patch_count=evidence_ready_count,
+                provider="gpu_ollama",
+            )
             prompt = build_prompt(
                 objective=args.objective,
                 evidence=evidence,
