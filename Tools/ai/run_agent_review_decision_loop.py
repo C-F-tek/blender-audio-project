@@ -81,6 +81,7 @@ def build_patch_plan_from_bridge_args(
     evidence_path: Path,
     patch_plan_output: Path,
     patch_plan_markdown: Path,
+    max_patch_plans: int = 0,
 ) -> dict[str, Any]:
     args = argparse.Namespace(
         repo_root=str(repo_root),
@@ -88,7 +89,7 @@ def build_patch_plan_from_bridge_args(
         evidence=str(evidence_path),
         output=str(patch_plan_output),
         markdown_output=str(patch_plan_markdown),
-        max_patch_plans=getattr(args, "max_patch_plans", 0),
+        max_patch_plans=max_patch_plans,
     )
     return build_patch_plan(args)
 
@@ -145,6 +146,7 @@ def build_decision_loop_report(args: argparse.Namespace) -> dict[str, Any]:
             evidence_path=evidence_path,
             patch_plan_output=patch_plan_output,
             patch_plan_markdown=patch_plan_markdown,
+            max_patch_plans=int(args.max_patch_plans),
         )
         if patch_plan_report.get("errors"):
             errors.extend(f"patch_plan: {error}" for error in patch_plan_report["errors"])
