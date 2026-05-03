@@ -61,6 +61,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Repository Consistency Map Smoke", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Return code: `{report['returncode']}`")
+    lines.append(f"- Workers requested: `{report.get('workers_requested')}`")
     lines.append(f"- Finding count: `{report.get('finding_count')}`")
     lines.append(f"- Markdown reference count: `{report.get('markdown_reference_count')}`")
     lines.append(f"- Markdown Python command count: `{report.get('markdown_python_command_count')}`")
@@ -75,7 +76,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def run_smoke(repo_root: Path, timeout_seconds: int) -> dict[str, Any]:
+def run_smoke(repo_root: Path, timeout_seconds: int, workers: int) -> dict[str, Any]:
     map_output = repo_root / "output" / "validation" / "repository_consistency_map_smoke_map.json"
     map_markdown = repo_root / "output" / "validation" / "repository_consistency_map_smoke_map.md"
     command = [
@@ -89,6 +90,8 @@ def run_smoke(repo_root: Path, timeout_seconds: int) -> dict[str, Any]:
         str(map_markdown),
         "--max-detail-items",
         "500",
+        "--workers",
+        str(workers),
     ]
     returncode, stdout, stderr, runner_error = run_command(command, repo_root, timeout_seconds)
     errors: list[str] = []
@@ -135,6 +138,7 @@ def run_smoke(repo_root: Path, timeout_seconds: int) -> dict[str, Any]:
         "persistent_memory_write_performed": False,
         "manual_review_required": True,
         "returncode": returncode,
+        "workers_requested": workers,
         "stdout_tail": stdout,
         "stderr_tail": stderr,
         "mapper_output": rel(map_output, repo_root),
@@ -157,12 +161,13 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--timeout-seconds", type=int, default=180)
+    parser.add_argument("--workers", type=int, default=8, help="Worker count passed to build_repository_consistency_map.py.")
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    report = run_smoke(repo_root, args.timeout_seconds)
+    report = run_smoke(repo_root, args.timeout_seconds, args.workers)
     output = resolve_output_path(repo_root, args.output)
     markdown_output = resolve_output_path(repo_root, args.markdown_output)
     print(write_json_report(report, output), end="")

@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$RepoRoot = ".",
     [string]$Stamp = "",
     [string]$OutputRoot = "output",
@@ -21,7 +21,8 @@
     [int]$NpuMaxNewTokens = 384,
     [int]$NpuFinalWaitSeconds = 180,
     [int]$MinRecommendations = 1,
-    [int]$MinPatchPlans = 1
+    [int]$MinPatchPlans = 1,
+    [int]$RepositoryConsistencyMapWorkers = 8
 )
 
 $ErrorActionPreference = "Stop"
@@ -92,6 +93,7 @@ $RunnerParams = @{
     NpuFinalWaitSeconds = $NpuFinalWaitSeconds
     MinRecommendations = $MinRecommendations
     MinPatchPlans = $MinPatchPlans
+    RepositoryConsistencyMapWorkers = $RepositoryConsistencyMapWorkers
 }
 if ($RunGpuNpuProvider) { $RunnerParams.RunGpuNpuProvider = $true }
 if ($SkipMemoryReload) { $RunnerParams.SkipMemoryReload = $true }
