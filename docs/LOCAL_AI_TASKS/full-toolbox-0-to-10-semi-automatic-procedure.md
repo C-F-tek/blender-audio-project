@@ -1048,3 +1048,21 @@ Allowed use:
 
 Regenerate/include Blender manual chunks only for Blender/API/manual-focused runs.
 Do not include them in IA-Carmine provider/toolbox cloud handoff by default.
+### GPU provider error hardening gate
+
+Before trusting any long full-toolbox provider-backed run, the GPU supervised runner must pass the provider-error smoke.
+
+Required validation:
+
+```powershell
+python -m py_compile .\Tools\ai\run_agent_gpu_deep_planning_supervised.py `
+  .\Tools\validation\run_gpu_runner_provider_error_smoke.py
+
+python .\Tools\validation\run_gpu_runner_provider_error_smoke.py `
+  --repo-root . `
+  --output .\output\validation\gpu_runner_provider_error_smoke.json `
+  --markdown-output .\output\validation\gpu_runner_provider_error_smoke.md
+```
+
+The runner must serialize provider exceptions or empty responses as report data. It must never fail a planning round with `UnboundLocalError` for `raw_response`. Schema repair retry is allowed only when a non-empty provider response exists.
+

@@ -391,6 +391,9 @@ def run_schema_repair_retry_for_round(
 ) -> dict[str, Any]:
     """Run one JSON-only schema repair pass for a bad provider response."""
 
+    if not raw_response or not raw_response.strip():
+        return {"attempted": False, "accepted": False, "reason": "empty_or_missing_raw_response"}
+
     valid_tool_count = int(parse_diagnostics.get("valid_tool_request_count") or 0)
     if not should_attempt_schema_repair_retry(
         parsed_response=parsed_response,
@@ -549,6 +552,7 @@ def build_report(
     deterministic_runtime_tool_fallback_failed_count = sum(int(item.get("failed_tool_count") or 0) for item in deterministic_runtime_brokers)
     deterministic_runtime_tool_fallback_blocked_count = sum(int(item.get("blocked_tool_count") or 0) for item in deterministic_runtime_brokers)
     provider_empty_response_count = sum(1 for round_item in rounds if round_item.get("provider_empty_response"))
+    "provider_error": provider_error,
     schema_repair_retry_attempt_count = sum(1 for round_item in rounds if round_item.get("schema_repair_retry", {}).get("attempted"))
     schema_repair_retry_accept_count = sum(1 for round_item in rounds if round_item.get("schema_repair_retry", {}).get("accepted"))
     runtime_tool_feedback_context_report_count = sum(1 for item in context_reports if isinstance(item, dict) and item.get("kind") == "runtime_tool_feedback_context")
@@ -845,6 +849,9 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             )
             round_start = time.perf_counter()
             schema_repair_retry: dict[str, Any] = {"attempted": False, "accepted": False, "reason": "not_attempted"}
+            raw_response = ""
+            provider_error = ""
+            model_used_for_round = model_used if "model_used" in locals() else model
             try:
                 response, model_used = manager.generate(
                     args.ollama_model,
@@ -890,6 +897,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                         parsed = dict(schema_repair_retry.get("parsed_response") or parsed)
                         parse_diagnostics = dict(schema_repair_retry.get("parse_diagnostics") or parse_diagnostics)
             except Exception as exc:  # noqa: BLE001
+                provider_error = f"{type(exc).__name__}: {exc}"
                 response = ""
                 parsed = {"summary": "provider error", "confidence": "low", "recommendations": [], "missing_evidence": [str(exc)], "next_best_action": "inspect provider error"}
                 parse_diagnostics = {
