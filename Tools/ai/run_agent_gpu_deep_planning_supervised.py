@@ -12,6 +12,8 @@ This supervised runner is the long-running IA-Carmine planning mode:
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 try:
     from Tools.ai.schema_repair_context import build_schema_repair_context_stack
 except ImportError:
@@ -207,8 +209,6 @@ def run_runtime_tool_broker_for_round(
             "broker_allowlist_required": True,
             "patch_application_allowed": False,
             "persistent_memory_write_allowed": False,
-            "schema_repair_retry_attempt_count": schema_repair_retry_attempt_count,
-            "schema_repair_retry_accept_count": schema_repair_retry_accept_count,
             "manual_review_required": True,
         },
     }
