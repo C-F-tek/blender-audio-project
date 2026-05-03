@@ -266,6 +266,89 @@ def runtime_tool_context_report(round_index: int, broker_result: dict[str, Any])
     }
 
 
+def runtime_tool_feedback_context_report(round_index: int, broker_result: dict[str, Any]) -> dict[str, Any]:
+    """Build compact closed-loop context from a runtime broker result."""
+
+    source = str(broker_result.get("source") or "provider")
+    tool_results = broker_result.get("tool_results", [])
+    if not isinstance(tool_results, list):
+        tool_results = []
+    return {
+        "path": broker_result.get("broker_output"),
+        "kind": "runtime_tool_feedback_context",
+        "source": source,
+        "round": round_index,
+        "passed": broker_result.get("passed"),
+        "summary": {
+            "tool_request_count": broker_result.get("tool_request_count"),
+            "requested_tool_count": broker_result.get("requested_tool_count"),
+            "tool_execution_count": broker_result.get("tool_execution_count"),
+            "blocked_tool_count": broker_result.get("blocked_tool_count"),
+            "failed_tool_count": broker_result.get("failed_tool_count"),
+            "deterministic_fallback": bool(broker_result.get("deterministic_fallback")),
+            "provider_execution_performed": broker_result.get("provider_execution_performed"),
+            "patch_application_performed": broker_result.get("patch_application_performed"),
+            "sqlite_write_performed": broker_result.get("sqlite_write_performed"),
+            "persistent_memory_write_performed": broker_result.get("persistent_memory_write_performed"),
+            "operational_sqlite_write_performed": broker_result.get("operational_sqlite_write_performed"),
+        },
+        "decision": {
+            "runtime_tool_results_available": bool(tool_results),
+            "feed_into_next_provider_round": True,
+            "manual_review_required": True,
+            "do_not_treat_fallback_as_provider_emitted": source == "deterministic_fallback",
+        },
+        "tool_results": tool_results,
+        "guardrails": {
+            "report_only": True,
+            "provider_must_not_execute_tools_directly": True,
+            "patch_application_performed": False,
+            "persistent_memory_write_performed": False,
+        },
+    }
+
+
+def append_runtime_tool_feedback_context(
+    context_reports: list[dict[str, Any]],
+    round_index: int,
+    broker_result: dict[str, Any],
+    *,
+    max_feedback_reports: int = 24,
+) -> bool:
+    """Append broker feedback context for subsequent provider rounds."""
+
+    if not isinstance(broker_result, dict):
+        return False
+    if not broker_result.get("executed"):
+        return False
+    if broker_result.get("broker_output_exists") is False and not broker_result.get("tool_results"):
+        return False
+
+    feedback = runtime_tool_feedback_context_report(round_index, broker_result)
+    existing = [
+        item
+        for item in context_reports
+        if isinstance(item, dict) and item.get("kind") == "runtime_tool_feedback_context"
+    ]
+
+    if len(existing) >= max_feedback_reports:
+        removed = 0
+        trimmed: list[dict[str, Any]] = []
+        for item in context_reports:
+            if (
+                isinstance(item, dict)
+                and item.get("kind") == "runtime_tool_feedback_context"
+                and removed < len(existing) - max_feedback_reports + 1
+            ):
+                removed += 1
+                continue
+            trimmed.append(item)
+        context_reports[:] = trimmed
+
+    context_reports.append(feedback)
+    return True
+
+
 def run_runtime_tool_bootstrap(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     # Run deterministic broker bootstrap before the first GPU planner prompt.
     if not args.enable_runtime_tool_broker:
@@ -349,6 +432,7 @@ def build_report(
     deterministic_runtime_tool_fallback_failed_count = sum(int(item.get("failed_tool_count") or 0) for item in deterministic_runtime_brokers)
     deterministic_runtime_tool_fallback_blocked_count = sum(int(item.get("blocked_tool_count") or 0) for item in deterministic_runtime_brokers)
     provider_empty_response_count = sum(1 for round_item in rounds if round_item.get("provider_empty_response"))
+    runtime_tool_feedback_context_report_count = sum(1 for item in context_reports if isinstance(item, dict) and item.get("kind") == "runtime_tool_feedback_context")
     report_errors = list(errors)
     runtime_tool_bootstrap_failed = bool(runtime_tool_bootstrap.get("executed") and runtime_tool_bootstrap.get("passed") is not True)
     if runtime_tool_bootstrap_failed:
@@ -401,6 +485,7 @@ def build_report(
         "runtime_tool_result_count": runtime_tool_result_count,
         "runtime_tool_provider_request_count": runtime_tool_provider_request_count,
         "runtime_tool_provider_request_execution_count": runtime_tool_provider_request_execution_count,
+        "runtime_tool_feedback_context_report_count": runtime_tool_feedback_context_report_count,
         "deterministic_runtime_tool_fallback_request_count": deterministic_runtime_tool_fallback_request_count,
         "deterministic_runtime_tool_fallback_execution_count": deterministic_runtime_tool_fallback_execution_count,
         "deterministic_runtime_tool_fallback_failed_count": deterministic_runtime_tool_fallback_failed_count,
@@ -705,6 +790,11 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 args=args,
                 round_index=index,
                 tool_requests=broker_tool_requests,
+            )
+            runtime_tool_feedback_context_appended = append_runtime_tool_feedback_context(
+                context_reports,
+                index,
+                runtime_broker,
             )
             if deterministic_fallback_used:
                 runtime_broker["source"] = "deterministic_fallback"
