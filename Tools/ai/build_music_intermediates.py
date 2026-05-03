@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import math
 import statistics
 from datetime import datetime, timezone
@@ -16,13 +17,18 @@ from pathlib import Path
 from typing import Any
 
 
+try:
+    from Tools.validation.report_utils import write_json_report, write_text_report
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.validation.report_utils import write_json_report, write_text_report
+
+
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8", errors="replace"))
 
-
-def write_json(path: Path, payload: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def first_number(data: Any, keys: tuple[str, ...]) -> float | None:
@@ -301,10 +307,9 @@ def main() -> int:
     for name, payload in artifacts.items():
         path = out / name
         if isinstance(payload, str):
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(payload, encoding="utf-8")
+            write_text_report(payload, path)
         else:
-            write_json(path, payload)
+            write_json_report(payload, path)
         written[name] = str(path)
     print(json.dumps(written, indent=2, ensure_ascii=False))
     return 0

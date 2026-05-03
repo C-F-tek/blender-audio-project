@@ -19,9 +19,21 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+
+try:
+    from Tools.ai.code_patch_plan_common import read_json_object
+    from Tools.validation.report_utils import write_json_report, write_text_report
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.code_patch_plan_common import read_json_object
+    from Tools.validation.report_utils import write_json_report, write_text_report
 
 DEFAULT_OUTPUT = "output/ai_pipeline/agent_transient_request_context.json"
 DEFAULT_MARKDOWN = "output/ai_pipeline/agent_transient_request_context.md"
@@ -109,23 +121,21 @@ def collect_raw_files(repo_root: Path, values: list[str], *, max_files: int, max
     return files
 
 
-def read_json_if_exists(repo_root: Path, value: str) -> dict[str, Any]:
+def build_report_reference(repo_root: Path, value: str) -> dict[str, Any]:
     path = resolve_path(repo_root, value)
     out: dict[str, Any] = {"path": repo_rel(path, repo_root), "exists": path.exists(), "kind": None, "passed": None, "error": "", "summary": {}}
     if not path.exists():
         out["error"] = "missing"
         return out
-    try:
-        data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except Exception as exc:  # noqa: BLE001 - transient context report.
-        out["error"] = f"{type(exc).__name__}: {exc}"
+    data, errors = read_json_object(path)
+    if errors:
+        out["error"] = "; ".join(errors)
         return out
-    if isinstance(data, dict):
-        out["kind"] = data.get("kind")
-        out["passed"] = data.get("passed")
-        for key in ("summary", "decision", "guardrails", "inputs"):
-            if isinstance(data.get(key), dict):
-                out["summary"][key] = data[key]
+    out["kind"] = data.get("kind")
+    out["passed"] = data.get("passed")
+    for key in ("summary", "decision", "guardrails", "inputs"):
+        if isinstance(data.get(key), dict):
+            out["summary"][key] = data[key]
     return out
 
 
@@ -133,7 +143,7 @@ def build_context(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     memory_notes = [item for item in split_values(args.memory_note or [])]
     raw_files = collect_raw_files(repo_root, args.raw_file or [], max_files=args.max_raw_files, max_chars_per_file=args.max_chars_per_file)
-    report_refs = [read_json_if_exists(repo_root, value) for value in split_values(args.report_file or [])]
+    report_refs = [build_report_reference(repo_root, value) for value in split_values(args.report_file or [])]
     warnings: list[str] = []
     for item in raw_files:
         if item.get("error"):
@@ -255,10 +265,8 @@ def main() -> int:
     report = build_context(args)
     output = resolve_path(repo_root, args.output)
     markdown_output = resolve_path(repo_root, args.markdown_output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    markdown_output.write_text(render_markdown(report), encoding="utf-8")
+    write_json_report(report, output)
+    write_text_report(render_markdown(report), markdown_output)
     print(
         json.dumps(
             {

@@ -10,9 +10,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+
+try:
+    from Tools.ai.code_patch_plan_common import read_json_object
+    from Tools.validation.report_utils import write_json_report, write_text_report
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.code_patch_plan_common import read_json_object
+    from Tools.validation.report_utils import write_json_report, write_text_report
 
 
 def now_iso() -> str:
@@ -33,21 +45,11 @@ def repo_rel(repo_root: Path, path: Path) -> str:
         return str(path)
 
 
-def read_json(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text(encoding="utf-8-sig"))
-    if not isinstance(value, dict):
-        raise TypeError(f"JSON root must be object: {path}")
-    return value
-
 
 def nested_dict(data: dict[str, Any], key: str) -> dict[str, Any]:
     value = data.get(key)
     return value if isinstance(value, dict) else {}
 
-
-def write_json(path: Path, data: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def safe_float(value: Any, default: float = 0.0) -> float:
@@ -152,7 +154,9 @@ def build_suggestions(report: dict[str, Any], metrics: dict[str, Any]) -> dict[s
 
 
 def analyze(repo_root: Path, orchestrator_path: Path) -> dict[str, Any]:
-    report = read_json(orchestrator_path)
+    report, read_errors = read_json_object(orchestrator_path)
+    if read_errors:
+        raise ValueError("; ".join(read_errors))
     gpu_summary = nested_dict(report, "gpu_summary")
     rounds = report.get("rounds") if isinstance(report.get("rounds"), list) else []
     npu_audits = report.get("npu_audits") if isinstance(report.get("npu_audits"), list) else []
@@ -249,9 +253,8 @@ def main() -> int:
     report = analyze(repo_root, resolve_path(repo_root, args.orchestrator))
     output = resolve_path(repo_root, args.output)
     markdown_output = resolve_path(repo_root, args.markdown_output)
-    write_json(output, report)
-    markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    markdown_output.write_text(render_markdown(report) + "\n", encoding="utf-8")
+    write_json_report(report, output)
+    write_text_report(render_markdown(report) + "\n", markdown_output)
     print(
         json.dumps(
             {

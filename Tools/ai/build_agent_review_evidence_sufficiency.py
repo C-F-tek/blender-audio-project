@@ -18,11 +18,23 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+
+try:
+    from Tools.ai.code_patch_plan_common import read_json_object
+    from Tools.validation.report_utils import write_json_report, write_text_report
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.code_patch_plan_common import read_json_object
+    from Tools.validation.report_utils import write_json_report, write_text_report
 
 DEFAULT_REFINED_REVIEW = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.json"
 DEFAULT_REFINED_PROPOSALS = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_proposals.json"
@@ -62,12 +74,16 @@ def repo_rel(path: Path, repo_root: Path) -> str:
         return str(path)
 
 
-def read_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8-sig"))
-
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8-sig", errors="replace")
+
+
+def load_json_object(path: Path) -> dict[str, Any]:
+    data, errors = read_json_object(path)
+    if errors:
+        raise ValueError(f"{path}: {'; '.join(errors)}")
+    return data
 
 
 def compact_snippet(text: str, terms: list[str], *, max_chars: int = MAX_SNIPPET_CHARS) -> str:
@@ -120,10 +136,9 @@ def load_optional_report(repo_root: Path, value: str) -> dict[str, Any]:
     if not path.exists():
         out["error"] = "missing"
         return out
-    try:
-        data = read_json(path)
-    except Exception as exc:  # noqa: BLE001 - report-only analyzer.
-        out["error"] = f"{type(exc).__name__}: {exc}"
+    data, errors = read_json_object(path)
+    if errors:
+        out["error"] = "; ".join(errors)
         return out
     out["kind"] = data.get("kind")
     out["passed"] = data.get("passed")
@@ -274,8 +289,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     refined_path = resolve_path(repo_root, args.refined_review)
     proposals_path = resolve_path(repo_root, args.refined_proposals)
-    refined = read_json(refined_path)
-    proposals = read_json(proposals_path) if proposals_path.exists() else {}
+    refined = load_json_object(refined_path)
+    proposals = load_json_object(proposals_path) if proposals_path.exists() else {}
     doc_code = analyze_doc_code(refined, repo_root)
     doc_doc = analyze_doc_doc(refined, repo_root)
     code_code = analyze_code_code(refined, repo_root)
@@ -367,10 +382,8 @@ def main() -> int:
     report = build_report(args)
     output = resolve_path(repo_root, args.output)
     markdown_output = resolve_path(repo_root, args.markdown_output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    markdown_output.write_text(render_markdown(report), encoding="utf-8")
+    write_json_report(report, output)
+    write_text_report(render_markdown(report), markdown_output)
     print(
         json.dumps(
             {
