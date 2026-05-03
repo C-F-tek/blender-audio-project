@@ -130,6 +130,16 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
       "next_best_action": "reject invalid tool request"
     }
     """
+    evidence_ready_no_tool_request_response = """
+    {
+      "summary": "evidence is ready but the model did not request tools",
+      "confidence": "low",
+      "recommendations": [],
+      "tool_requests": [],
+      "missing_evidence": [],
+      "next_best_action": "manual review cannot proceed without more concrete evidence"
+    }
+    """
     malformed_response = "not JSON at all: { missing quoted keys and closing braces"
     schema_mismatch_response = """
     {
@@ -170,6 +180,14 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
             "name": "invalid_tool_request",
             "response": invalid_tool_request_response,
             "expected_reason": "model_output_schema_mismatch",
+            "expected_json_ok": True,
+            "expected_context_echo": False,
+            "expected_valid_tool_request_count": 0,
+        },
+        {
+            "name": "evidence_ready_no_tool_request",
+            "response": evidence_ready_no_tool_request_response,
+            "expected_reason": "evidence_ready_but_no_tool_requests",
             "expected_json_ok": True,
             "expected_context_echo": False,
             "expected_valid_tool_request_count": 0,
