@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "full_toolbox_run_telemetry_summary",
-  "generated_at": "2026-05-03T18:56:14",
+  "generated_at": "2026-05-03T18:58:38",
   "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "stamp": "20260503-182047",
   "passed": true,
@@ -39,8 +39,17 @@
     "patch_plan_count": 20,
     "deterministic_synthesizer_used": true,
     "patch_plan_fallback_used": null,
-    "bundle_validation_passed": false,
-    "evidence_to_commit": []
+    "bundle_validation_passed": true,
+    "evidence_to_commit": [
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_memory_tool_regeneration_bundle_20260503-182047.json",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_memory_tool_regeneration_bundle_20260503-182047.md",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_memory_tool_regeneration_python_line_count_20260503-182047.csv",
+      "docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260503-182313.csv",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_toolbox_agent_review_decision_loop_20260503-182047.json",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_toolbox_agent_review_decision_loop_20260503-182047.md",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\shared_toolbox_ai_to_ai_bundle_20260503-182047.json",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\shared_toolbox_ai_to_ai_bundle_20260503-182047.md"
+    ]
   },
   "recommendations_first20": [
     {
