@@ -35,6 +35,7 @@ try:
     from Tools.ai.runtime_tool_guidance import (
         ALLOWED_RUNTIME_TOOLS,
         build_provider_tool_guidance_payload,
+        deterministic_fallback_tool_requests,
         validate_runtime_tool_request_object,
     )
     from Tools.npu.npu_runtime import DEFAULT_NPU_PYTHON
@@ -47,6 +48,7 @@ except ImportError:
     from Tools.ai.runtime_tool_guidance import (  # type: ignore
         ALLOWED_RUNTIME_TOOLS,
         build_provider_tool_guidance_payload,
+        deterministic_fallback_tool_requests,
         validate_runtime_tool_request_object,
     )
 
@@ -223,6 +225,59 @@ def extract_npu_tool_requests_from_text(text: str, max_requests: int = 8) -> tup
     if len(raw_requests) > max_requests:
         errors.append(f"tool_requests truncated: {len(raw_requests)} requested, max {max_requests}")
     return valid, errors
+
+def should_use_npu_deterministic_tool_fallback(
+    *,
+    run_npu: bool,
+    metadata_only: bool,
+    runtime_tool_context_reports: list[dict[str, Any]],
+    tool_requests: list[dict[str, Any]],
+    classification: str,
+    disabled: bool,
+) -> bool:
+    """Return whether the NPU audit lane should emit broker-compatible fallback tools."""
+
+    if disabled:
+        return False
+    if metadata_only:
+        return False
+    if not run_npu:
+        return False
+    if tool_requests:
+        return False
+    if not runtime_tool_context_reports:
+        return False
+    return classification in {
+        "usable_audit_text",
+        "provider_empty_response",
+        "unusable_output",
+        "dependency_missing_openvino_genai",
+        "npu_python_missing",
+    }
+
+
+def build_npu_deterministic_tool_fallback_requests(
+    *,
+    classification: str,
+    runtime_tool_context_reports: list[dict[str, Any]],
+    max_requests: int,
+) -> list[dict[str, Any]]:
+    """Build safe NPU fallback tool requests for broker execution by the orchestrator."""
+
+    reason = (
+        "NPU auditor emitted no valid tool_requests while runtime tool context was available; "
+        f"classification={classification}; runtime_tool_context_report_count={len(runtime_tool_context_reports)}"
+    )
+    requests = deterministic_fallback_tool_requests(reason, max_requests=max_requests)
+    normalized: list[dict[str, Any]] = []
+    for index, request in enumerate(requests, start=1):
+        item = dict(request)
+        item["id"] = f"npu_{item.get('id') or f'fallback_{index:03d}'}"
+        item["source"] = "npu_deterministic_fallback"
+        item["reason"] = f"NPU deterministic fallback: {item.get('reason', reason)}"
+        normalized.append(item)
+    return normalized
+
 
 def npu_python_path(value: str | None) -> Path:
     if value:
@@ -426,6 +481,26 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
 
     classification, warnings = classify_npu_output(npu_text, int(returncode or 0), error, stdout, stderr, args.metadata_only)
     tool_requests, tool_request_errors = extract_npu_tool_requests_from_text(npu_text, args.max_npu_tool_requests)
+    npu_deterministic_tool_fallback_used = False
+    npu_deterministic_tool_fallback_reason = ""
+    if should_use_npu_deterministic_tool_fallback(
+        run_npu=bool(args.run_npu),
+        metadata_only=bool(args.metadata_only),
+        runtime_tool_context_reports=runtime_tool_context_reports,
+        tool_requests=tool_requests,
+        classification=classification,
+        disabled=bool(args.disable_npu_tool_fallback),
+    ):
+        npu_deterministic_tool_fallback_used = True
+        npu_deterministic_tool_fallback_reason = (
+            "npu_no_tool_requests_with_runtime_context; "
+            f"classification={classification}; runtime_tool_context_report_count={len(runtime_tool_context_reports)}"
+        )
+        tool_requests = build_npu_deterministic_tool_fallback_requests(
+            classification=classification,
+            runtime_tool_context_reports=runtime_tool_context_reports,
+            max_requests=args.max_npu_tool_requests,
+        )
     if args.run_npu and not npu_python_exists:
         classification = "npu_python_missing"
         warnings.append(f"NPU Python not found: {npu_python}")
@@ -462,6 +537,9 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
         "invalid_tool_request_count": len(tool_request_errors),
         "tool_requests": tool_requests,
         "invalid_tool_request_errors": tool_request_errors,
+        "npu_deterministic_tool_fallback_used": npu_deterministic_tool_fallback_used,
+        "npu_deterministic_tool_fallback_reason": npu_deterministic_tool_fallback_reason,
+        "npu_deterministic_tool_fallback_count": len(tool_requests) if npu_deterministic_tool_fallback_used else 0,
         "apply_mode": "report_only_non_blocking_npu_audit",
         "non_blocking": True,
         "blocking": False,
@@ -490,6 +568,8 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             "tool_request_count": len(tool_requests),
             "valid_tool_request_count": len(tool_requests),
             "invalid_tool_request_count": len(tool_request_errors),
+            "npu_deterministic_tool_fallback_used": npu_deterministic_tool_fallback_used,
+            "npu_deterministic_tool_fallback_count": len(tool_requests) if npu_deterministic_tool_fallback_used else 0,
         },
         "decision": {
             "gpu_review_blocked": False,
@@ -562,6 +642,7 @@ def main() -> int:
     parser.add_argument("--runtime-tool-context-report", action="append", default=[], help="Broker/toolbox JSON report to include as read-only NPU audit context.")
     parser.add_argument("--max-runtime-tool-context-chars", type=int, default=6000)
     parser.add_argument("--max-npu-tool-requests", type=int, default=8)
+    parser.add_argument("--disable-npu-tool-fallback", action="store_true", help="Disable deterministic NPU fallback tool_requests when NPU emits none despite runtime context.")
     parser.add_argument("--context-output", default=DEFAULT_CONTEXT)
     parser.add_argument("--npu-output", default=DEFAULT_NPU_OUT)
     parser.add_argument("--npu-notes-output", default=DEFAULT_NPU_NOTES)
@@ -598,6 +679,8 @@ def main() -> int:
                 "tool_request_count": report.get("tool_request_count"),
                 "valid_tool_request_count": report.get("valid_tool_request_count"),
                 "invalid_tool_request_count": report.get("invalid_tool_request_count"),
+                "npu_deterministic_tool_fallback_used": report.get("npu_deterministic_tool_fallback_used"),
+                "npu_deterministic_tool_fallback_count": report.get("npu_deterministic_tool_fallback_count"),
                 "gpu_review_blocked": report["decision"]["gpu_review_blocked"],
             },
             indent=2,

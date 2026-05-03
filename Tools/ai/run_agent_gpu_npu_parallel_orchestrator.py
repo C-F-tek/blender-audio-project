@@ -511,6 +511,8 @@ def harvest_finished_audits(
                                 "npu_tool_request_count": data.get("tool_request_count"),
                                 "npu_valid_tool_request_count": data.get("valid_tool_request_count"),
                                 "npu_invalid_tool_request_count": data.get("invalid_tool_request_count"),
+                                "npu_deterministic_tool_fallback_used": data.get("npu_deterministic_tool_fallback_used"),
+                                "npu_deterministic_tool_fallback_count": data.get("npu_deterministic_tool_fallback_count"),
                                 "npu_tool_requests": data.get("tool_requests", [])[:8],
                                 "gpu_review_blocked": data.get("decision", {}).get("gpu_review_blocked"),
                             }
@@ -821,6 +823,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
     npu_success_count = sum(1 for item in audit_records if item.get("provider_execution_succeeded") is True or item.get("classification") == "usable_audit_text")
     npu_tool_context_seen_count = sum(1 for item in audit_records if item.get("runtime_tool_context_seen") is True)
     npu_tool_request_count = sum(int(item.get("npu_tool_request_count") or 0) for item in audit_records)
+    npu_deterministic_tool_fallback_count = sum(int(item.get("npu_deterministic_tool_fallback_count") or 0) for item in audit_records)
     npu_runtime_brokers = [item.get("npu_runtime_tool_broker", {}) for item in audit_records if item.get("npu_runtime_tool_broker")]
     npu_runtime_tool_request_count = sum(int(item.get("requested_tool_count") or 0) for item in npu_runtime_brokers)
     npu_runtime_tool_execution_count = sum(int(item.get("tool_execution_count") or 0) for item in npu_runtime_brokers)
@@ -1020,6 +1023,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "npu_audit_success_count": npu_success_count,
         "npu_tool_context_seen_count": npu_tool_context_seen_count,
         "npu_tool_request_count": npu_tool_request_count,
+        "npu_deterministic_tool_fallback_count": npu_deterministic_tool_fallback_count,
         "npu_runtime_tool_request_count": npu_runtime_tool_request_count,
         "npu_runtime_tool_execution_count": npu_runtime_tool_execution_count,
         "npu_runtime_tool_failed_count": npu_runtime_tool_failed_count,
@@ -1032,6 +1036,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "npu_audit_success_count": npu_success_count,
             "npu_tool_context_seen_count": npu_tool_context_seen_count,
             "npu_tool_request_count": npu_tool_request_count,
+            "npu_deterministic_tool_fallback_count": npu_deterministic_tool_fallback_count,
             "npu_runtime_tool_request_count": npu_runtime_tool_request_count,
             "npu_runtime_tool_execution_count": npu_runtime_tool_execution_count,
             "npu_runtime_tool_failed_count": npu_runtime_tool_failed_count,
@@ -1159,6 +1164,7 @@ def main() -> int:
         "npu_audit_success_count": report["npu_audit_success_count"],
         "npu_tool_context_seen_count": report.get("npu_tool_context_seen_count"),
         "npu_tool_request_count": report.get("npu_tool_request_count"),
+        "npu_deterministic_tool_fallback_count": report.get("npu_deterministic_tool_fallback_count"),
         "npu_runtime_tool_request_count": report.get("npu_runtime_tool_request_count"),
         "npu_runtime_tool_execution_count": report.get("npu_runtime_tool_execution_count"),
         "npu_runtime_tool_failed_count": report.get("npu_runtime_tool_failed_count"),
