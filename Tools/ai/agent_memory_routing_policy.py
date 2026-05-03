@@ -227,6 +227,13 @@ def build_discovery_tool_requests(args: argparse.Namespace) -> list[dict[str, An
                     reason="Build static code report over existing tool roots before proposing refactor seams.",
                     args={"input": ["Tools/ai", "Tools/validation", "Tools/workflow", "Tools/npu"]},
                 ),
+
+                tool_request(
+                    request_id="refactor_duplication_audit",
+                    tool="build_refactor_duplication_audit",
+                    reason="Audit duplicated helper/function patterns and verify refactor layering before proposing implementation patches.",
+                    args={"root": ["Tools/ai", "Tools/validation", "Tools/workflow", "Tools/npu"]},
+                ),
                 tool_request(
                     request_id="python_syntax_check",
                     tool="check_python_syntax",
