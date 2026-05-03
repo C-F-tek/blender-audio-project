@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "github_validation_evidence_bundle",
-  "generated_at": "2026-05-03T19:54:29",
+  "generated_at": "2026-05-03T20:03:07",
   "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
   "source_reports": [
     "output/ai_pipeline/full_toolbox_20260503-190820_orchestrator.json",
