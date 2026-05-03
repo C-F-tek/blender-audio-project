@@ -259,6 +259,34 @@ def build_code_interpreter_report(repo_root: Path, out_dir: Path, request_id: st
     return command, {"json_report": repo_rel(report, repo_root), "markdown_report": repo_rel(markdown, repo_root)}
 
 
+
+def build_refactor_duplication_audit(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
+    report, markdown = base_outputs(out_dir, request_id, "refactor_duplication_audit")
+    command = [
+        sys.executable,
+        "Tools/ai/build_refactor_duplication_audit.py",
+        "--repo-root",
+        ".",
+        "--output",
+        str(report),
+        "--markdown-output",
+        str(markdown),
+    ]
+    multi_args = (
+        ("root", "--root"),
+        ("report", "--report"),
+        ("input_audit_report", "--input-audit-report"),
+        ("line_count_report", "--line-count-report"),
+        ("code_interpreter_report", "--code-interpreter-report"),
+        ("python_syntax_report", "--python-syntax-report"),
+        ("bundle_smoke_report", "--bundle-smoke-report"),
+        ("memory_routing_report", "--memory-routing-report"),
+    )
+    for key, flag in multi_args:
+        for value in split_values(args.get(key)):
+            command.extend([flag, value])
+    return command, {"json_report": repo_rel(report, repo_root), "markdown_report": repo_rel(markdown, repo_root)}
+
 def runtime_sqlite_memory(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
     report, markdown = base_outputs(out_dir, request_id, "runtime_sqlite_memory")
     command = [
@@ -345,6 +373,22 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         description="Build static code-interpreter style report over selected roots.",
         allowed_args=("input",),
         builder=build_code_interpreter_report,
+    ),
+
+    "build_refactor_duplication_audit": ToolSpec(
+        name="build_refactor_duplication_audit",
+        description="Build a report-only duplicated-helper/refactor audit over selected code roots and existing evidence reports.",
+        allowed_args=(
+            "root",
+            "report",
+            "input_audit_report",
+            "line_count_report",
+            "code_interpreter_report",
+            "python_syntax_report",
+            "bundle_smoke_report",
+            "memory_routing_report",
+        ),
+        builder=build_refactor_duplication_audit,
     ),
     "runtime_sqlite_memory": ToolSpec(
         name="runtime_sqlite_memory",
