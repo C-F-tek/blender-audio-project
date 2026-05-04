@@ -2,6 +2,12 @@
 
 This task starts after the entrypoint reduction, unified launcher and script inventory PR work.
 
+This file is a task brief. It is not a command catalog. Current executable commands live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
 ## Purpose
 
 Continue Markdown cleanup by identifying obsolete, superseded and historical files without deleting anything automatically.
@@ -38,7 +44,6 @@ Supporting historical references, read only when triaging old 0-to-10 duplicatio
 ```text
 docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
 docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md
-docs/LOCAL_AI_TASKS/code-refactor-local-machine-validation-addendum.md
 ```
 
 If any required file is missing, stop and report.
@@ -70,68 +75,44 @@ run providers
 merge to master
 ```
 
-## Preflight
+## Launcher route
 
-```powershell
-git fetch origin
-git switch master
-git pull --ff-only origin master
-git status --short
-$env:PYTHONPATH = (Get-Location).Path
-$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+Use the unified launcher for this task.
+
+Required launcher phases:
+
+```text
+md
+python
+contract
+full_validation
 ```
 
-Create a branch:
+Optional phases when explicitly requested:
 
-```powershell
-git switch -c codex/docs-md-obsolete-pruning-$Stamp
+```text
+context_pack
+agent_state
+evidence
+patch_specs
+provider
 ```
 
-## Preferred unified launcher path
+If provider-backed advisory is explicitly wanted later, use `Full0To10` or provider flags through the unified launcher. Do not start from legacy 0-to-10 runbooks as active entrypoints.
 
-For a modern docs-pruning run, prefer the unified launcher instead of manually chaining old commands:
+## Inventory ownership
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode md,python,contract,full_validation `
-  -RunIntensity quick `
-  -SkipGitSync `
-  -NoBranch
-```
+Markdown and script inventories are produced by the launcher or by focused validator commands owned by `Tools/validation/README.md`.
 
-If provider-backed advisory is explicitly wanted later, use `-Full0To10` or add provider flags through the unified launcher. Do not start from legacy 0-to-10 runbooks as active entrypoints.
+For this task, report inventory results through compact surfaces:
 
-## Inventories
-
-When running manually, use these inventories:
-
-```powershell
-python .\Tools\validation\build_markdown_inventory.py `
-  --repo-root . `
-  --output .\output\validation\markdown_inventory_$Stamp.json `
-  --markdown-output .\output\validation\markdown_inventory_$Stamp.md
-
-python .\Tools\validation\build_script_inventory.py `
-  --repo-root . `
-  --output .\output\validation\script_inventory_$Stamp.json `
-  --csv-output .\output\validation\script_inventory_$Stamp.csv `
-  --markdown-output .\output\validation\script_inventory_$Stamp.md
-```
-
-Inspect:
-
-```powershell
-$MdInv = Get-Content ".\output\validation\markdown_inventory_$Stamp.json" -Raw | ConvertFrom-Json
-$ScriptInv = Get-Content ".\output\validation\script_inventory_$Stamp.json" -Raw | ConvertFrom-Json
-
-$MdInv | Select-Object passed, markdown_count, missing_index_count, prune_candidate_count, errors, warnings
-$MdInv.category_counts
-$MdInv.lifecycle_counts
-$MdInv.missing_index | Select-Object path, category, lifecycle, lines, heading | Format-Table -AutoSize
-$MdInv.prune_candidates | Select-Object path, category, lifecycle, lines, heading | Format-Table -AutoSize
-
-$ScriptInv | Select-Object passed, script_count, syntax_warning_count, errors, warnings
-$ScriptInv.category_counts
+```text
+unified launcher manifest
+phase_status
+phase_reports
+Markdown inventory summary
+script inventory summary / CSV
+triage report if created
 ```
 
 ## Visibility-first rule
@@ -141,7 +122,7 @@ Every report or proposed bundle must be readable from compact surfaces before op
 Required order:
 
 ```text
-launcher command or manual command list
+launcher command
 manifest or inventory summary
 phase/report references
 compact Markdown/CSV summary
@@ -216,50 +197,26 @@ inventory builder catalog
 AI/provider/report validator catalog
 NPU/helper validator catalog
 Blender/generated-file validator catalog
-standard minimal validation block
+minimal validation ownership notes
 guardrails
 ```
 
 Move or link long procedural blocks to existing canonical runbooks instead of keeping them in the README.
 
-## Validation
-
-```powershell
-python -m py_compile .\Tools\validation\build_markdown_inventory.py .\Tools\validation\build_script_inventory.py
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links_$Stamp.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract_$Stamp.json
-git diff --check
-git status --short
-```
-
 ## Optional compact evidence bundle
 
 Do not commit raw `output/**`.
 
-If evidence is needed for GitHub-only review, build a compact bundle using the existing evidence tooling and include these inputs:
+If evidence is needed for GitHub-only review, build a compact bundle through the unified launcher or evidence tooling and include only compact tracked summaries under:
 
 ```text
-output/validation/markdown_inventory_$Stamp.json
-output/validation/markdown_inventory_$Stamp.md
-output/validation/script_inventory_$Stamp.json
-output/validation/script_inventory_$Stamp.csv
-output/validation/script_inventory_$Stamp.md
-output/validation/docs_links_$Stamp.json
-output/validation/validation_report_contract_$Stamp.json
-docs/DOCUMENTATION_OBSOLETE_TRIAGE.md
-```
-
-Expected committed evidence, only if needed:
-
-```text
-docs/LOCAL_VALIDATION_EVIDENCE/docs_md_obsolete_triage_bundle_$Stamp.json
-docs/LOCAL_VALIDATION_EVIDENCE/docs_md_obsolete_triage_bundle_$Stamp.md
+docs/LOCAL_VALIDATION_EVIDENCE/
 ```
 
 ## Acceptance criteria
 
 ```text
-no file deleted
+no file deleted unless explicitly approved
 single reading flow preserved
 unified launcher remains the active local-AI entrypoint
 obsolete/superseded candidates listed
@@ -267,6 +224,6 @@ script inventory included in refactor evidence path
 visibility-first compliance checked
 length-policy compliance checked
 Tools/validation README reduction either applied or listed as next patch
-local validation commands included
+launcher validation evidence referenced
 raw output/** not committed
 ```
