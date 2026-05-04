@@ -1,8 +1,10 @@
 # Documentation
 
-Stable documentation index for `IA-Carmine Local AI Orchestration Workbench`.
+Single operational documentation index for `IA-Carmine Local AI Orchestration Workbench`.
 
 The repository slug is still `C-F-tek/blender-audio-project`, but the active architecture is local AI orchestration, provider-lane routing, validation, evidence, telemetry and manual-review patch planning. Blender/audio remains the first application domain, not the architectural boundary.
+
+Lifecycle, pruning, oversized Markdown and corruption rules are owned by `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md`. This file owns the reading order and stable index only.
 
 ## Single reading flow
 
@@ -27,6 +29,8 @@ nearest package/tool README
 target file
 ```
 
+No historical report, evidence snapshot, generated context, superseded guide or local tool history file is part of the default reading flow.
+
 ## Current canonical task runbooks
 
 | Need | File |
@@ -43,7 +47,7 @@ python .\Tools\validation\build_markdown_inventory.py --repo-root . --output .\o
 python .\Tools\validation\build_script_inventory.py --repo-root . --output .\output\validation\script_inventory.json --csv-output .\output\validation\script_inventory.csv --markdown-output .\output\validation\script_inventory.md
 ```
 
-Use Markdown inventory for obsolete/redundant docs. Use script inventory for tool/script discovery, CSV review, function/class/method visibility and refactor planning.
+Use Markdown inventory for lifecycle, obsolete/redundant docs, oversized Markdown and control-character review. Use script inventory for tool/script discovery, CSV review, function/class/method visibility and refactor planning.
 
 ## Documentation families
 
@@ -56,6 +60,8 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 | Evidence | `LOCAL_VALIDATION_EVIDENCE/` | Review snapshots, not source docs. |
 | Generated/index context | `indexAI/**`, `Tools/npu/npu_code_*.md` | Regenerate; do not hand-edit. |
 | Blender/application docs | `Scripting/**/README.md` and Blender docs below | Application-domain only. |
+| Historical reports/handoffs | Historical section below | Retained only for evidence/history; replaced by current docs/live inspection. |
+| Superseded guides | `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` and inventory replacement fields | Retained only with explicit replacement path. |
 
 ## Core stable docs
 
