@@ -7,10 +7,11 @@ This is the primary repository contract for AI assistants, local agents, automat
 Before planning, editing, validating, opening a PR or suggesting changes, the agent must:
 
 1. read `AGENTS.md`;
-2. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
-3. follow hard guardrails unless the human explicitly approves a normally restricted action;
-4. report task/request conflicts before modifying files;
-5. inspect the target source/document before proposing a patch.
+2. read `CHATGPT.md` and `CHATGPT/README.md` when resuming ChatGPT-assisted, local-AI, full-toolbox or handoff-driven work;
+3. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
+4. follow hard guardrails unless the human explicitly approves a normally restricted action;
+5. report task/request conflicts before modifying files;
+6. inspect the target source/document before proposing a patch.
 
 ## Repository identity
 
@@ -30,6 +31,10 @@ The repository name is historical. Do not infer that Blender/audio is the curren
 
 ```text
 AGENTS.md
+CHATGPT.md
+CHATGPT/README.md
+CHATGPT/next-chat-handoff-*.md           # when present and relevant
+CHATGPT/chatgpt-session-problems-and-robust-fixes-*.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md          # local checkout only
 README.md
 WORKFLOW.md
@@ -54,6 +59,28 @@ Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
 Legacy runbooks such as `full-toolbox-0-to-10-semi-automatic-procedure.md` and `code-refactor-0-to-10-procedure.md` are historical/supporting references unless the human explicitly asks for a legacy manual flow.
+
+## ChatGPT operational memory
+
+`CHATGPT/` is a lightweight operational-memory surface for long ChatGPT-assisted repository sessions.
+
+Agents must treat it as discoverable advisory context:
+
+```text
+CHATGPT.md                         # root pointer
+CHATGPT/README.md                  # index and reading order
+CHATGPT/next-chat-handoff-*.md     # current handoff state
+CHATGPT/chatgpt-session-problems-and-robust-fixes-*.md
+```
+
+Rules:
+
+```text
+Read CHATGPT notes early when resuming a handoff or local-AI workflow.
+Use CHATGPT notes to avoid repeating known chat/tooling failures.
+Do not let CHATGPT notes override AGENTS.md, source code, validation reports or canonical docs.
+Keep CHATGPT notes small, plain Markdown and useful to local context pack builders.
+```
 
 ## Current provider posture
 
@@ -104,6 +131,7 @@ Do not accept silent fallback such as provider requested but quality routing mis
 
 | Path | Meaning |
 |---|---|
+| `CHATGPT/` | Lightweight ChatGPT/session operational memory and handoff notes. Read early for resumed AI-assisted work. |
 | `Tools/ai/` | AI orchestration, provider probes, evidence bundles, recommendations and patch-plan tooling. |
 | `Tools/workflow/` | Local workflow runners and post-validation packet generation. |
 | `Tools/npu/` | NPU/OpenVINO support, context builders and runtime diagnostics. |
