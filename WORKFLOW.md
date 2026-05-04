@@ -27,6 +27,8 @@ AGENTS.md
 README.md
 docs/README.md
 docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
+docs/LOCAL_AI_TASKS/README.md
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/PROJECT_STATUS_POINT.md
 docs/DATA_FLOW.md
 docs/LOCAL_AI_WORKFLOW.md
@@ -35,6 +37,45 @@ Tools/validation/README.md
 ```
 
 For local AI runs, also read `docs/LOCAL_AI_RUN_BOOTSTRAP.md`. For code/provider/refactor work, read the nearest tool/package README and the target source file.
+
+## Unified local AI workflow
+
+The active local AI workflow entrypoint is:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+Full selectable 0-to-10 run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity balanced `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+Quick 5-minute style run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity quick `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+Interactive phase picker:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Interactive
+```
+
+Legacy 0-to-10 scripts/runbooks are no longer the first operator path. Use them only as internal lanes or historical detail unless the user explicitly requests a legacy manual procedure.
 
 ## Provider policy
 
@@ -45,6 +86,8 @@ Blender runtime -> application target, frozen unless explicitly scoped
 ```
 
 Provider execution must stay explicit and report-bound.
+
+A full 0-to-10 run must not silently degrade if provider quality routing is missing. It must build workload quality routing evidence or fail clearly; dry-run may mark the routing report as planned.
 
 ## Standard preflight
 
@@ -59,6 +102,8 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 ```
 
 Stop if unrelated local changes are present.
+
+The unified launcher resolves Python through `-PythonExe`, `IA_CARMINE_PYTHON`, `.venv`, `venv` and finally `python` fallback. It also sets `PYTHONPATH` to the repository root.
 
 ## Inventories before broad review/refactor
 
@@ -90,7 +135,7 @@ git diff --check
 git status --short
 ```
 
-For full workflow, provider, full-toolbox or code-refactor runs, use the dedicated task runbooks.
+For full workflow, provider, full-toolbox or code-refactor runs, prefer the unified launcher.
 
 ## Evidence and patch bundles
 
@@ -100,12 +145,7 @@ Preferred evidence path:
 python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename latest_ai_workflow_evidence
 ```
 
-Patch application remains manual-review-only unless the user explicitly requests apply. Use the existing full-toolbox patch bundle lane documented in:
-
-```text
-docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
-AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md
-```
+Patch application remains manual-review-only unless the user explicitly requests apply. Patch-spec generation may be requested through the unified launcher, but source application must remain a separate reviewed action.
 
 ## Index regeneration
 
