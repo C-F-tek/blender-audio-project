@@ -4,17 +4,21 @@
 
 This document describes the current data movement across `IA-Carmine Local AI Orchestration Workbench`.
 
-The project still contains Blender/audio-reactive workflows, but the active architectural flow is now app-agnostic local AI orchestration: reports, provider lanes, quality gates, explicit probes, advisory packets and compact GitHub evidence.
+The project still contains Blender/audio-reactive workflows, but the active architectural flow is now app-agnostic local AI orchestration: launcher-selected phases, reports, provider lanes, quality gates, explicit probes, advisory packets and compact GitHub evidence.
 
 ## Current core AI orchestration flow
 
 ```text
-local source/docs/context
+unified launcher command
+  -> selected modes / Full0To10 profile / intensity knobs
+  -> unified_local_ai_refactor_manifest.json
+  -> local source/docs/context
+  -> Markdown and script inventories when selected
   -> semantic code chunks and selected focused chunks when useful
   -> task-scoped AI context pack when useful
   -> SQLite-backed agent state packet when requested
   -> validation reports
-  -> workload report quality gate
+  -> workload report quality gate when provider routing is requested
   -> advisory lane routing
   -> trusted/excluded context selection
   -> explicit provider probes or primary advisory generation
@@ -25,6 +29,15 @@ local source/docs/context
   -> compact evidence bundle under docs/LOCAL_VALIDATION_EVIDENCE/
   -> manual review / PR / merge
 ```
+
+Primary operator entrypoint:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+The manifest is the first review object. Detailed reports are opened only after the manifest shows which phases produced them.
 
 ## Provider-lane flow
 
@@ -56,7 +69,9 @@ OpenVINO GPU is not a primary lane.
 
 ## Parallel multistep workflow flow
 
-`Tools/workflow/run_parallel_ai_provider_multistep.ps1` coordinates:
+`Tools/workflow/run_parallel_ai_provider_multistep.ps1` is a supporting provider lane. It is normally selected through the unified launcher or called directly only for explicit provider diagnostics.
+
+It coordinates:
 
 ```text
 Step 1: workload quality gate
@@ -87,7 +102,10 @@ npu_decode_smoke_passed: true
 
 | Data | Producer | Consumer | Notes |
 |---|---|---|---|
-| Source/docs context | repository files | advisory packet builder | Non-workload files are trusted unless normal file read fails. |
+| Unified manifest | `Tools/workflow/run_unified_local_ai_refactor.ps1` | human/AI review | First review object for selected modes, phase status, reports, context, providers and guardrails. |
+| Source/docs context | repository files | inventories, context packs, advisory packet builder | Non-workload files are trusted unless normal file read fails. |
+| Markdown inventory | `Tools/validation/build_markdown_inventory.py` | docs cleanup, pruning, link review | Generated under `output/**`; do not commit unless compact evidence is intentionally built. |
+| Script inventory | `Tools/validation/build_script_inventory.py` | tool/function visibility, refactor review | JSON/CSV/Markdown inventory under `output/**`. |
 | Semantic code chunks | `Tools/npu/build_semantic_code_chunks.py` | selected chunk builder, local AI task adapter | Generated context under index/output paths; do not hand-edit. |
 | Selected semantic chunks | `Tools/ai/select_semantic_code_chunks.py` | context pack builder, local AI task adapter, provider packets | Bounded focused context under ignored `output/ai_context_packs/`; validator can emit compact tracked evidence. |
 | AI context pack | `Tools/ai/build_ai_context_pack.py` | human/AI task planning, proposal builders | Bounded task-scoped context under ignored `output/ai_context_packs/` plus compact tracked evidence. |
@@ -128,6 +146,7 @@ This is now one application domain over the local AI orchestration workbench, no
 
 ## Rules for AI systems
 
+- Start full local AI flows from the unified launcher manifest path.
 - Exclude unusable workload reports from advisory context before reading their content.
 - Treat NPU short smoke success as diagnostic evidence, not as general advisory promotion.
 - Keep provider execution explicit and report-bound.
@@ -142,15 +161,16 @@ This is now one application domain over the local AI orchestration workbench, no
 
 `docs/JSON_SCHEMAS.md` exists as a schema-notes file, but the following contracts still need more formal treatment:
 
+- unified launcher manifest/phase contract beyond the compact contract doc;
 - provider probe report;
 - selected semantic chunks report/evidence beyond the focused contract already present;
 - full-context golden proposal report beyond the focused validator already present;
 - legacy audio analysis JSON;
 - music context JSON;
-- generated artifact plan/manifest schema.
+- generated artifact plan/manifest schema;
 - promotion from reviewed dry-run patch spec to approved local apply or GitHub Action queue;
 - richer context-pack profiles and selective execution plans for changed-file workflows.
 
 ## Recommended next improvement
 
-Promote the full-context golden proposal families P1-P6 one at a time, then add direct raw-output validators for provider probe reports and continue shaping the suggestion/proposal loop from context packs through reviewed dry-run specs toward approved local apply or queue workflows.
+Keep the unified launcher contract and docs indexes aligned with the actual runner, then promote the full-context golden proposal families P1-P6 one at a time. Add direct raw-output validators for provider probe reports and continue shaping the suggestion/proposal loop from context packs through reviewed dry-run specs toward approved local apply or queue workflows.
