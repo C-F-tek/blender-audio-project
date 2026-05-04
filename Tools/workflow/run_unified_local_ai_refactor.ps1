@@ -871,7 +871,6 @@ trap {
 
 $ContextFiles = @()
 $ReportFiles = @()
-$ContextFiles += $AiPacketsDir.Replace("\\", "/")
 $PhaseReports = [ordered]@{}
 $PhaseStatus = [ordered]@{}
 
@@ -1128,6 +1127,11 @@ if ($RunLegacyFullToolboxIntegrated) {
 if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-ModeEnabled "patch_specs") -or (Test-ModeEnabled "evidence") -or $UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $GeneratePatchSpecs -or $BuildEvidence) {
     $BaseName = "unified_${ModeName}_$Stamp"
     $ProposalBaseName = "unified_${ModeName}_proposals_$Stamp"
+    $ContextFiles = @($ContextFiles | Where-Object {
+        $ContextPath = [string]$_
+        -not (Test-Path -LiteralPath $ContextPath -PathType Container)
+    })
+
     $RunnerArgs = @(
         "-NoProfile", "-ExecutionPolicy", "Bypass",
         "-File", ".\Tools\workflow\run_local_ai_task_via_pipeline.ps1",

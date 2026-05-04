@@ -271,6 +271,48 @@ $M = Get-Content ".\docs\LOCAL_VALIDATION_EVIDENCE\${Base}_chunk_manifest.json" 
 Expected duplicate count: `0`.
 
 
+
+### Global DataStamp and AI packets contract
+
+Every unified launcher run must resolve one timestamp only:
+
+```powershell
+$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$DataStamp = $Stamp
+
+The run-scoped AI packets directory is:
+
+$AiPacketsRoot = ".\output\ai_packets"
+$AiPacketsDir = Join-Path $AiPacketsRoot $DataStamp
+
+Contract:
+
+output/ai_packets/<DataStamp> is the run packet directory.
+It is a directory, not a context file.
+Never pass output/ai_packets/<DataStamp> as -ExtraContextFile.
+Only concrete files inside the directory may be used as context/report inputs.
+
+Allowed packet files include:
+
+output/ai_packets/<DataStamp>/npu_real_workload_report.md
+output/ai_packets/<DataStamp>/ollama_gpu_real_workload_report.md
+
+The workload-quality gate must receive the directory through:
+
+--report-dir $AiPacketsDir
+
+The official/local advisory context must receive only concrete files. Before passing -ExtraContextFile, sanitize context inputs:
+
+$ContextFiles = @($ContextFiles | Where-Object {
+    $ContextPath = [string]$_
+    -not (Test-Path -LiteralPath $ContextPath -PathType Container)
+})
+
+Git policy remains unchanged:
+
+Do not commit output/**.
+Commit only source, docs, tests, and compact evidence explicitly listed by evidence_to_commit.
+
 ### Runtime tool capability manifest
 
 Every cloud/AI-to-AI handoff must carry the tool body, not only the evidence mind.
@@ -361,7 +403,7 @@ patch application only through explicit --apply or explicit source-edit instruct
 
 # Procedure variants
 
-## Variant A â€” Expanded/manual 0 -> 10 full toolbox run
+## Variant A Ã¢â‚¬â€ Expanded/manual 0 -> 10 full toolbox run
 
 This is the full manual 0 -> 10 flow. It is the expanded version of the procedure Carmine used before the integrated wrapper existed.
 
@@ -769,7 +811,7 @@ Get-Content ".\output\validation\full_toolbox_agent_review_decision_loop_${Stamp
 
 ---
 
-## Variant B â€” Integrated no-provider semi-automatic flow
+## Variant B Ã¢â‚¬â€ Integrated no-provider semi-automatic flow
 
 Use this when existing orchestrator/GPU artifacts are valid enough and the goal is to test the deterministic decision and patch-plan path quickly.
 
@@ -807,7 +849,7 @@ patch_plan_count >= 1
 fatal_report_failure_count=0
 ```
 
-## Variant C â€” Integrated provider semi-automatic flow
+## Variant C Ã¢â‚¬â€ Integrated provider semi-automatic flow
 
 Use when a fresh full GPU/NPU run is needed.
 
@@ -843,7 +885,7 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
   -NpuFinalWaitSeconds 120
 ```
 
-## Variant D â€” Patch bundle builder from a real patch plan
+## Variant D Ã¢â‚¬â€ Patch bundle builder from a real patch plan
 
 Use after a successful decision loop has produced:
 
@@ -940,7 +982,7 @@ git commit -m "docs(ai): apply review patch bundle notes"
 git push
 ```
 
-## Variant E â€” Evidence-only commit
+## Variant E Ã¢â‚¬â€ Evidence-only commit
 
 After a full toolbox run, commit only compact Git-trackable evidence when useful:
 
