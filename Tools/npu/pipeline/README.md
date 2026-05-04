@@ -2,9 +2,7 @@
 
 This package contains app-agnostic helper modules for the local NPU/Ollama pipeline.
 
-The package is intentionally additive. Existing CLI entrypoints own orchestration while validated migration phases wire selected helpers in one group at a time.
-
-For full local AI orchestration, start from the unified launcher:
+For broad local AI orchestration and full validation, start from the unified launcher:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
@@ -13,41 +11,46 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 
 This package is not the primary operator entrypoint.
 
+## Command ownership
+
+This README is a package catalog and migration policy. Current executable commands for broad validation, full runs, quick tests, provider probes and full validation live in the unified launcher runbook.
+
+Focused NPU helper commands may be used only when debugging this package or validating one helper contract directly. They must not be presented as replacements for the unified launcher.
+
 ## Current scope
 
 Allowed:
 
 ```text
-pure configuration objects
+configuration objects
 path and generated-artifact validation
-legacy dual-AI runtime output policy helpers
-UTF-8 text and JSON-object IO helpers
-legacy-compatible IO aliases
+legacy runtime-output policy helpers
+UTF-8 text and JSON IO helpers
 legacy/new helper equivalence checks
-deterministic fixtures for tests and dry-runs
+deterministic fixtures
 prompt payload builders
 context bundle helpers
-planned-only provider descriptors
+planned provider descriptors
 provider preflight report normalizers
-planned-only runner stage reports
+planned runner stage reports
 contract validators
 artifact write planning helpers
 migration readiness reports
-common validation report envelopes
-runtime-output manifest helpers for additive observability
+common validation envelopes
+runtime-output manifest helpers
 ```
 
-Forbidden in this package unless explicitly validated:
+Forbidden in this package unless explicitly scoped and validated:
 
 ```text
 Blender runtime execution
-NPU/Ollama provider calls
+provider calls
 GPU jobs
 FFmpeg jobs
 Ready To Jazz migration
 full analysis JSON mutation
 hand-edited generated indexes
-provider execution behavior changes
+provider behavior changes
 ```
 
 ## Module map
@@ -55,95 +58,53 @@ provider execution behavior changes
 | Module | Responsibility |
 |---|---|
 | `config.py` | Repository paths, track defaults and data-only pipeline configuration. |
-| `artifact_paths.py` | Generated artifact path normalization, allowed-prefix validation and exact legacy runtime output policy. |
+| `artifact_paths.py` | Generated artifact path normalization, allowed-prefix validation and legacy runtime-output policy. |
 | `io_utils.py` | UTF-8 text and JSON-object read/write helpers plus legacy-compatible aliases. |
 | `legacy_compat.py` | Equivalence helpers for comparing legacy functions with new helpers before runtime wiring. |
 | `fixtures.py` | Deterministic fixture payloads for tests, dry-runs and contract examples. |
 | `prompts.py` | Deterministic prompt payload builders. |
 | `context_builder.py` | Bounded context slices and compact context bundle metrics. |
-| `providers.py` | Planned-only provider request/result envelopes and provider preflight report normalization. |
-| `runner.py` | Planned-only stage-plan reports. |
+| `providers.py` | Planned provider request/result envelopes and provider preflight report normalization. |
+| `runner.py` | Planned stage-plan reports. |
 | `validators.py` | Contract-level validators that preserve unknown future fields. |
 | `artifact_writer.py` | Validated generated-artifact write helpers. |
 | `migration_readiness.py` | Deterministic gates for future runtime wiring readiness. |
-| `reports.py` | Helper-boundary reports, common validation report envelopes and runtime-output manifests. |
+| `reports.py` | Helper-boundary reports, validation envelopes and runtime-output manifests. |
 
 ## Runtime-adjacent scripts outside this package
 
-These scripts are related to NPU/Ollama/provider behavior but are not automatically part of this helper package's runtime-free contract.
-
 | File | Classification | Notes |
 |---|---|---|
-| `Tools/npu/ollama_runtime.py` | runtime-adjacent helper | Ollama runtime/session helper. Do not imply execution unless called by an explicit provider command. |
-| `Tools/npu/npu_runtime.py` | runtime-adjacent helper | NPU preflight/runtime helper. Keep separate from planned-only provider descriptors. |
-| `Tools/npu/run_npu_review.py` | explicit local diagnostic/review entrypoint | Provider/model behavior must remain explicit. Not the unified launcher. |
+| `Tools/npu/ollama_runtime.py` | runtime-adjacent helper | Do not imply execution unless called by an explicit provider command. |
+| `Tools/npu/npu_runtime.py` | runtime-adjacent helper | Keep separate from planned provider descriptors. |
+| `Tools/npu/run_npu_review.py` | explicit local diagnostic/review helper | Not the unified launcher. |
 | `Tools/npu/run_npu_context.ps1` | explicit local context/review wrapper | Useful local helper; not the canonical full 0-to-10 path. |
-| `Tools/npu/build_provider_result_report.py` | supporting report builder | Converts provider result data into report surfaces. Do not treat as provider execution by itself. |
+| `Tools/npu/build_provider_result_report.py` | supporting report builder | Converts provider result data into report surfaces. |
 | `Tools/ai/run_npu_gpu_deep_review_auditor.py` | diagnostic-only | Explicit heavy local diagnostic. |
-| `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` | legacy/integrated orchestration lane | Prefer unified launcher; verify current caller before changing runtime behavior. |
+| `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` | legacy/integrated orchestration lane | Prefer unified launcher; verify current caller before changing behavior. |
 
 Policy:
 
 ```text
-planned-only helper modules may be validated without providers
+planned helper modules may be validated without providers
 runtime-adjacent helpers must not be called implicitly by validators
-provider execution must be visible in the unified launcher manifest or explicit local evidence
+provider execution must be visible in launcher manifest or explicit local evidence
+broad validation belongs to the unified launcher
 ```
 
-## Validation
+## Validation ownership
 
-Focused helper validation workflow:
+Broad validation route:
 
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-Focused smoke validation:
+Focused helper validation remains allowed only for package debugging and should produce explicit reports under `output/validation/`.
 
-```powershell
-python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
-```
+Focused package validation must not execute Blender, provider calls, GPU jobs or FFmpeg.
 
-Focused unit-test validation:
-
-```powershell
-python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
-```
-
-Documentation/module alignment validation:
-
-```powershell
-python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
-```
-
-Direct unittest mode:
-
-```powershell
-python .\Tools\validation\test_npu_pipeline_helpers.py
-```
-
-Full local validation should normally be routed through the unified launcher:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode validation,contract,full_validation `
-  -RunIntensity quick
-```
-
-Legacy direct full-validation wrapper remains available as supporting detail:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
-```
-
-Regenerate indexes after accepted structural changes:
-
-```powershell
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
-```
-
-Do not hand-edit generated indexes.
+Full local validation should normally be routed through the unified launcher. Legacy direct full-validation wrappers are supporting detail only.
 
 ## Migration policy
 
@@ -155,7 +116,7 @@ Completed validated runtime-helper adoption:
 2. Artifact path and implementation draft contract helpers.
 3. Prompt payload helpers.
 4. Context summary and generated support-file write-planning helpers.
-5. Exact legacy runtime output policy helpers.
+5. Legacy runtime-output policy helpers.
 6. Provider preflight normalization without provider execution.
 
 Current safe next layer:
@@ -176,12 +137,11 @@ full artifact writer runtime migration
 memory/guardrail runtime integration
 ```
 
-Every runtime bridge phase must keep provider/model execution behavior stable unless a later execution plan explicitly scopes and validates that behavior change.
+Every runtime bridge phase must keep provider/model behavior stable unless a later execution plan explicitly scopes and validates that behavior change.
 
 ## Cross-reference
 
-Forgotten-script visibility and classification audit:
-
 ```text
 docs/LOCAL_AI_TASKS/forgotten-scripts-documentation-audit.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
