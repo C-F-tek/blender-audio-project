@@ -221,6 +221,33 @@ output/**/*.md
 6. Add script-reference validation before any broad command-block rewrite.
 7. Create a separate deletion PR only after explicit approval.
 
+## Post-cleanup operating order
+
+After this documentation cleanup lane is validated and merged:
+
+1. Re-run Markdown and script inventories on updated `master`.
+2. Triage stale/non-mergeable PRs before new broad refactor work.
+3. Re-run a reduced full-toolbox cycle, not a long budget escalation.
+4. Measure whether lifecycle pruning reduced repository-consistency noise.
+5. Treat GPU/provider direct recommendations as a metric to observe, not a reason to increase context blindly.
+6. Generate compact evidence only from complete and valid runs.
+7. Promote substantive patch plans only after stale/generated/historical noise is excluded.
+
+Recommended reduced full-toolbox profile after cleanup:
+
+```text
+budget_minutes=10-12
+max_rounds=8
+files_per_round=8
+max_context_files=120
+max_chars_per_file=6000
+max_new_tokens=3200
+npu_auditor_every_rounds=6
+repository_consistency_map_workers=8
+```
+
+This order intentionally prioritizes evidence quality over provider budget expansion.
+
 ## Acceptance criteria
 
 ```text
@@ -235,6 +262,7 @@ control-character corruption is surfaced before promotion
 script/tool inventory is available for refactor planning
 Markdown does not override script-backed behavior
 script-reference validation is planned before broad command-block rewrites
+post-cleanup run order avoids long budget escalation before noise reduction
 no output/**, renders/**, *.db or *.sqlite files are committed
 no deletion is performed without explicit approval
 ```
