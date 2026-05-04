@@ -16,6 +16,7 @@ README.md
 DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 LOCAL_AI_RUN_BOOTSTRAP.md        # local checkout only
 LOCAL_AI_TASKS/README.md         # task entrypoints
+LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 PROJECT_STATUS_POINT.md
 DATA_FLOW.md
 LOCAL_AI_WORKFLOW.md
@@ -31,10 +32,42 @@ target file
 
 | Need | File |
 |---|---|
-| Full toolbox 0→10 repository run | `LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` |
-| Code/refactor 0→10 run | `LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md` |
+| Unified full 0-to-10 local AI workflow | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
+| Local AI task routing/index | `LOCAL_AI_TASKS/README.md` |
 | Markdown cleanup and pruning governance | `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |
-| Local AI task routing | `LOCAL_AI_TASKS/README.md` |
+
+Legacy/supporting runbooks:
+
+```text
+LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
+LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md
+LOCAL_AI_TASKS/code-refactor-local-machine-validation-addendum.md
+LOCAL_AI_TASKS/code-refactor-md-lane-extension.md
+```
+
+These files remain useful for historical details and scoped validation semantics, but the active execution path is the unified launcher.
+
+## Canonical local command
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity balanced `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+Quick run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity quick `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
 
 ## Inventories before broad changes
 
@@ -52,6 +85,7 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 | Root entrypoints | `../AGENTS.md`, `../README.md`, `../WORKFLOW.md` | Short canonical flow only; no long runbooks. |
 | Stable docs | `README.md` | Maintained source documentation. |
 | Task runbooks | `LOCAL_AI_TASKS/README.md` | Current/historical task entrypoints. |
+| Unified local AI launcher | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Active 0-to-10 local AI execution guide. |
 | Execution plans | `EXECUTION_PLANS/README.md` | Durable state records. |
 | Evidence | `LOCAL_VALIDATION_EVIDENCE/` | Review snapshots, not source docs. |
 | Generated/index context | `indexAI/**`, `Tools/npu/npu_code_*.md` | Regenerate; do not hand-edit. |
