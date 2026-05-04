@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
@@ -707,5 +707,3 @@ Write-Host "[OK] Patch specs requested: $($Manifest.patch_specs_requested)"
 Write-Host "[OK] Patch application performed: False"
 Write-Host "[OK] Reports: $($ReportFiles -join ', ')"
 Write-Host "[OK] Context files: $($ContextFiles -join ', ')"
-
-
