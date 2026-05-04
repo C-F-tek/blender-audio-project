@@ -168,10 +168,10 @@ function Ensure-RequiredProviderArtifacts {
         Write-TextArtifact -Path $OrchestratorMarkdownPath -Lines @(
             "# Required provider orchestrator fallback",
             "",
-            "- Passed: `False`",
-            "- Provider execution requested: `True`",
-            "- Provider execution performed: `False`",
-            "- Classification: `required_provider_artifact_missing`",
+            '- Passed: `False`',
+            '- Provider execution requested: `True`',
+            '- Provider execution performed: `False`',
+            '- Classification: `required_provider_artifact_missing`',
             "",
             "Strict real-run activation required an orchestrator report, but the provider lane did not produce one."
         )
@@ -208,10 +208,10 @@ function Ensure-RequiredProviderArtifacts {
         Write-TextArtifact -Path $GpuMarkdownPath -Lines @(
             "# Required GPU provider fallback",
             "",
-            "- Passed: `False`",
-            "- Provider execution requested: `True`",
-            "- Provider execution performed: `False`",
-            "- Classification: `required_provider_artifact_missing`",
+            '- Passed: `False`',
+            '- Provider execution requested: `True`',
+            '- Provider execution performed: `False`',
+            '- Classification: `required_provider_artifact_missing`',
             "",
             "Strict real-run activation required GPU primary advisory output, but the provider lane did not produce it."
         )
