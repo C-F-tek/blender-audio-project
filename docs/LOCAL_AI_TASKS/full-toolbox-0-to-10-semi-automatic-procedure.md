@@ -156,19 +156,16 @@ contract checking
 
 ### Memory
 
-Current policy:
+Current full-run policy: TUTTO SU TUTTO.
+
+In the canonical full run, memory lanes are active when the launcher supports them. This includes input persistence / memory reload / runtime memory evidence lanes unless an explicit `-NoMemoryWrite` maintenance flag is supplied.
+
+Expected current full toolbox reporting:
 
 ```text
-persistent SQLite may be read in read-only mode
-persistent SQLite must not be written unless a dedicated memory PR explicitly authorizes it
-operational SQLite/cache is future work and must be separately scoped
-```
-
-Expected current full toolbox result:
-
-```text
-sqlite_write_performed=false
-persistent_memory_write_performed=false
+memory lanes active by default in full real runs
+sqlite_write_performed and persistent_memory_write_performed must be reported truthfully
+no silent memory write is allowed outside the declared memory lane
 ```
 
 ### Warning ledger
@@ -374,6 +371,33 @@ Required order:
 Do not commit `output/**`. Commit only regenerated source/index files and explicit evidence under `docs/LOCAL_VALIDATION_EVIDENCE`.
 
 
+### Full run unica — TUTTO SU TUTTO canonical command
+
+The current canonical full run is not the conservative/read-only variant. It is the all-lanes run.
+
+Use the unified launcher, current branch, one global stamp, `-Mode all`, and `-Full0To10`. Do not add `-No*` flags unless performing a deliberate maintenance/debug run.
+
+```powershell
+$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Mode all `
+  -Full0To10 `
+  -Stamp $Stamp `
+  -RunIntensity balanced `
+  -BudgetMinutes 30 `
+  -MaxRounds 20 `
+  -FilesPerRound 8 `
+  -MaxContextFiles 220 `
+  -MaxCharsPerFile 6000 `
+  -MaxNewTokens 3600 `
+  -KeepAlive 35m
+```
+
+This activates the full runtime body: probes, providers, GPU/NPU advisory/audit, workload quality, evidence, patch specs, telemetry, memory lane, integrated decision loop and validation reports.
+
+The run still remains report/proposal oriented until a separate explicit patch-apply command is issued.
+
 ### Strict real-run tool activation
 
 Every real run must activate all declared probes, tools and provider lanes unless an explicit `-No*` flag disables a specific lane.
@@ -393,6 +417,7 @@ GeneratePatchSpecs
 UseOllamaAdvisory
 UsePrimaryAdvisoryProvider
 RunLegacyFullToolboxIntegrated
+SaveInputsToMemoryDb
 ```
 
 The policy does not fake successful provider execution. If a required provider lane does not produce its required files, the workflow must create schema-valid failure artifacts so the bundle contains a complete diagnosis instead of a missing-file cascade.
@@ -435,13 +460,14 @@ raw checkpoints
 large full analysis JSON outside compact evidence policy
 ```
 
-Default state:
+Default state for canonical full run:
 
 ```text
-report-only until explicit apply
-manual-review required
-provider execution only with explicit provider flag/path
+TUTTO SU TUTTO runtime activation
+all declared probes/tools/provider/advisory/evidence/patch-spec/memory lanes active
+manual-review required for patch application
 patch application only through explicit --apply or explicit source-edit instruction
+Git destructive actions remain separate explicit commands
 ```
 
 ---
