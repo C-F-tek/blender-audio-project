@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
@@ -34,6 +34,7 @@ param(
     [string]$Profile = "docs",
     [string]$Model = "gpt-oss:20b",
     [int]$MaxContextChars = 12000,
+    [string]$PythonExe = "",
     [switch]$Interactive,
     [switch]$SkipGitSync,
     [switch]$NoBranch,
@@ -116,6 +117,7 @@ function Show-LauncherIntro {
     Write-Host ""
     Write-Host "Guardrails: no patch apply, no commit, no push, no merge, no Blender, no FFmpeg."
     Write-Host "Reset guardrail: no delete unless -ApplyReset and exact -ConfirmResetText are supplied."
+    Write-Host "Python policy: use -PythonExe, IA_CARMINE_PYTHON, .venv, venv, then python fallback."
     Write-Host ""
 }
 
@@ -321,10 +323,51 @@ function Write-ResetPlan {
 }
 
 
+
+function Resolve-PythonExe {
+    param([string]$Requested, [string]$Root)
+
+    $candidates = @()
+    if (-not [string]::IsNullOrWhiteSpace($Requested)) {
+        $candidates += $Requested
+    }
+    if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) {
+        $candidates += $env:IA_CARMINE_PYTHON
+    }
+
+    $candidates += @(
+        (Join-Path $Root ".venv/Scripts/python.exe"),
+        (Join-Path $Root "venv/Scripts/python.exe"),
+        (Join-Path $Root ".venv314/Scripts/python.exe"),
+        "python"
+    )
+
+    foreach ($candidate in $candidates) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+
+        if ($candidate -eq "python") {
+            return "python"
+        }
+
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+
+    throw "No usable Python interpreter found. Set -PythonExe or IA_CARMINE_PYTHON."
+}
+
+function Invoke-Python {
+    param([string[]]$PythonArgs)
+    & $ResolvedPythonExe @PythonArgs
+}
+
 Show-LauncherIntro
 $RepoRoot = Resolve-RepoRoot
 Set-Location $RepoRoot
 $env:PYTHONPATH = $RepoRoot
+$ResolvedPythonExe = Resolve-PythonExe -Requested $PythonExe -Root $RepoRoot
+Write-Host "[INFO] Python: $ResolvedPythonExe"
 
 if ($Interactive -or @($Mode).Count -eq 0) { $ResolvedModes = @(Read-InteractiveModes) } else { $ResolvedModes = @(Normalize-ModeList $Mode) }
 if (@($ResolvedModes).Count -eq 0) { throw "No modes selected. Use -Interactive or -Mode all." }
@@ -405,7 +448,7 @@ Write-Host "[INFO] Reset apply: $ApplyReset"
 foreach ($warning in $Warnings) { Write-Warning $warning }
 
 $PhaseStatus.baseline_compile = Invoke-Checked "Baseline compile validation/inventory tools" {
-    python -m py_compile .\Tools\validation\build_markdown_inventory.py .\Tools\validation\build_script_inventory.py .\Tools\validation\check_validation_report_contract.py
+    Invoke-Python @("-m", "py_compile", ".\Tools\validation\build_markdown_inventory.py", ".\Tools\validation\build_script_inventory.py", ".\Tools\validation\check_validation_report_contract.py")
 }
 
 if (Test-ModeEnabled "smoke") {
@@ -413,7 +456,7 @@ if (Test-ModeEnabled "smoke") {
     if (Test-Path .\Tools\workflow\startup_check.py) {
         $StartupCheck = "$ValidationDir/startup_check_${ModeName}_$Stamp.json"
         $PhaseStatus.startup_check = Invoke-Checked "Startup smoke check" {
-            python .\Tools\workflow\startup_check.py --repo-root . --output $StartupCheck
+            Invoke-Python @(".\Tools\workflow\startup_check.py", "--repo-root", ".", "--output", $StartupCheck)
         } -SoftFail:$ContinueOnValidationError
         if (Test-Path $StartupCheck) { $ReportFiles += $StartupCheck; $PhaseReports.startup_check = $StartupCheck }
     }
@@ -449,10 +492,10 @@ if (Test-ModeEnabled "md") {
     $MarkdownMd = "$ValidationDir/markdown_inventory_${ModeName}_$Stamp.md"
     $DocsLinks = "$ValidationDir/docs_links_${ModeName}_$Stamp.json"
     $PhaseStatus.markdown_inventory = Invoke-Checked "Build Markdown inventory" {
-        python .\Tools\validation\build_markdown_inventory.py --repo-root . --output $MarkdownJson --markdown-output $MarkdownMd
+        Invoke-Python @(".\Tools\validation\build_markdown_inventory.py", "--repo-root", ".", "--output", $MarkdownJson, "--markdown-output", $MarkdownMd)
     }
     $PhaseStatus.docs_links = Invoke-Checked "Check docs links" {
-        python .\Tools\validation\check_docs_links.py --repo-root . --output $DocsLinks
+        Invoke-Python @(".\Tools\validation\check_docs_links.py", "--repo-root", ".", "--output", $DocsLinks)
     } -SoftFail:$ContinueOnValidationError
     $ReportFiles += @($MarkdownJson, $DocsLinks)
     $ContextFiles = Add-ExistingContextFile $ContextFiles $MarkdownMd
@@ -464,7 +507,7 @@ if (Test-ModeEnabled "json") {
     $JsonContract = "$ValidationDir/validation_report_contract_json_${ModeName}_$Stamp.json"
     $Args = @(".\Tools\validation\check_validation_report_contract.py", "--repo-root", ".", "--output", $JsonContract)
     foreach ($Report in $ReportFiles) { $Args += @("--report-file", $Report) }
-    $PhaseStatus.json_contract = Invoke-Checked "Validate current JSON/report contracts" { python @Args } -SoftFail:$ContinueOnValidationError
+    $PhaseStatus.json_contract = Invoke-Checked "Validate current JSON/report contracts" { Invoke-Python $Args } -SoftFail:$ContinueOnValidationError
     $ReportFiles += $JsonContract
     $PhaseReports.json_contract = $JsonContract
 }
@@ -474,7 +517,7 @@ if (Test-ModeEnabled "python") {
     $ScriptCsv = "$ValidationDir/script_inventory_${ModeName}_$Stamp.csv"
     $ScriptMd = "$ValidationDir/script_inventory_${ModeName}_$Stamp.md"
     $PhaseStatus.script_inventory = Invoke-Checked "Build script/tool inventory" {
-        python .\Tools\validation\build_script_inventory.py --repo-root . --output $ScriptJson --csv-output $ScriptCsv --markdown-output $ScriptMd
+        Invoke-Python @(".\Tools\validation\build_script_inventory.py", "--repo-root", ".", "--output", $ScriptJson, "--csv-output", $ScriptCsv, "--markdown-output", $ScriptMd)
     }
     $ReportFiles += $ScriptJson
     $ContextFiles = Add-ExistingContextFile $ContextFiles $ScriptMd
@@ -484,7 +527,7 @@ if (Test-ModeEnabled "python") {
 
 if (Test-ModeEnabled "chunks") {
     $PhaseStatus.semantic_chunks = Invoke-Checked "Build semantic code chunks" {
-        python .\Tools\npu\build_semantic_code_chunks.py --repo-root .
+        Invoke-Python @(".\Tools\npu\build_semantic_code_chunks.py", "--repo-root", ".")
     } -SoftFail:$ContinueOnValidationError
     $ContextFiles = Add-ExistingContextFile $ContextFiles "indexAI/code_chunks/semantic_code_chunks_manifest.json"
 }
@@ -492,7 +535,7 @@ if (Test-ModeEnabled "chunks") {
 if (Test-ModeEnabled "context_pack") {
     $ContextPackBase = "unified_${ModeName}_context_pack_$Stamp"
     $PhaseStatus.context_pack = Invoke-Checked "Build AI context pack" {
-        python .\Tools\ai\build_ai_context_pack.py --repo-root . --profile core_ai_backend --basename $ContextPackBase --evidence-basename "${ContextPackBase}_evidence" --max-total-chars 64000 --max-file-chars 4000
+        Invoke-Python @(".\Tools\ai\build_ai_context_pack.py", "--repo-root", ".", "--profile", "core_ai_backend", "--basename", $ContextPackBase, "--evidence-basename", "${ContextPackBase}_evidence", "--max-total-chars", "64000", "--max-file-chars", "4000")
     } -SoftFail:$ContinueOnValidationError
     $ContextFiles = Add-ExistingContextFile $ContextFiles "output/ai_context_packs/$ContextPackBase.md"
     $ContextFiles = Add-ExistingContextFile $ContextFiles "output/ai_context_packs/$ContextPackBase.json"
@@ -516,7 +559,7 @@ if (Test-ModeEnabled "agent_state") {
         $AgentArgs += "--save-inputs-to-memory-db"
     }
     $PhaseStatus.agent_state = Invoke-Checked "Build agent state packet" {
-        python @AgentArgs
+        Invoke-Python $AgentArgs
     } -SoftFail:$ContinueOnValidationError
     $ContextFiles = Add-ExistingContextFile $ContextFiles "$AgentStateDir/$AgentStateBase.md"
     $ContextFiles = Add-ExistingContextFile $ContextFiles "$AgentStateDir/$AgentStateBase.json"
@@ -526,7 +569,7 @@ $FinalContract = "$ValidationDir/validation_report_contract_${ModeName}_$Stamp.j
 if ((Test-ModeEnabled "contract") -or $ReportFiles.Count -gt 0) {
     $ContractArgs = @(".\Tools\validation\check_validation_report_contract.py", "--repo-root", ".", "--output", $FinalContract)
     foreach ($Report in $ReportFiles) { $ContractArgs += @("--report-file", $Report) }
-    $PhaseStatus.task_scoped_contract = Invoke-Checked "Validate task-scoped reports" { python @ContractArgs } -SoftFail:$ContinueOnValidationError
+    $PhaseStatus.task_scoped_contract = Invoke-Checked "Validate task-scoped reports" { Invoke-Python $ContractArgs } -SoftFail:$ContinueOnValidationError
     $ReportFiles += $FinalContract
     $PhaseReports.task_scoped_contract = $FinalContract
 }
@@ -604,6 +647,9 @@ $Manifest = [ordered]@{
     available_modes = @($ModeDescriptions.Keys)
     profile = $Profile
     model = $Model
+    python_exe = $ResolvedPythonExe
+    python_exe_requested = $PythonExe
+    ia_carmine_python_env = $env:IA_CARMINE_PYTHON
     stamp = $Stamp
     task_file = $TaskFile.Replace("\", "/")
     task_branch = $TaskBranch
@@ -634,3 +680,4 @@ Write-Host "[OK] Patch specs requested: $($Manifest.patch_specs_requested)"
 Write-Host "[OK] Patch application performed: False"
 Write-Host "[OK] Reports: $($ReportFiles -join ', ')"
 Write-Host "[OK] Context files: $($ContextFiles -join ', ')"
+
