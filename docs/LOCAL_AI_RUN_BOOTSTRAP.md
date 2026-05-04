@@ -6,7 +6,7 @@ Use it before changing files during local runs. It is intentionally operational 
 
 ## FIRST ENTRY — Unified Local AI 0-to-10
 
-When Carmine asks for any of these phrases, this is the first procedure to open and follow:
+When Carmine asks for any of these phrases, open the unified launcher runbook first:
 
 ```text
 Tutto su tutto
@@ -19,6 +19,14 @@ multi-fase
 semi-automatic process
 flusso unico
 run completa
+quick test
+smoke
+full validation
+provider run
+GPU/NPU run
+memory handoff
+patch specs
+reset
 ```
 
 Primary current runbook:
@@ -33,36 +41,57 @@ Primary current launcher:
 Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
-Canonical full run:
+No other local-AI runner is an active first entrypoint. Supporting wrappers may be called by the launcher, but they must not be used as separate operator paths unless a future PR explicitly promotes them into the launcher manifest/phase contract.
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity balanced `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
-```
+## One-flow rule
 
-Quick 5-minute style run:
+All local-AI execution profiles must be modeled as launcher modes, profiles or flags.
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity quick `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
-```
-
-The current operating chain is:
+This includes:
 
 ```text
-unified launcher command
+quick tests
+smoke tests
+full runs
+deep runs
+full validation
+documentation cleanup
+script/tool inventory
+provider runs
+Ollama advisory
+NPU probes
+multistep provider workflow
+SQLite memory handoff
+context packs
+semantic chunks
+patch-spec generation
+reset cleanup
+legacy full-toolbox integrated behavior
+```
+
+Do not start from these as first entrypoints:
+
+```text
+run_local_ai_markdown_task.ps1
+run_local_ai_task_via_pipeline.ps1
+run_post_validation_ai_packet.ps1
+run_parallel_ai_provider_multistep.ps1
+run_local_validation_after_refactor.ps1
+run_agent_review_full_toolbox_decision_loop_integrated.ps1
+full-toolbox-0-to-10-semi-automatic-procedure.md
+code-refactor-0-to-10-procedure.md
+```
+
+They are implementation lanes, historical material or scoped helpers behind the unified launcher.
+
+## Current operating chain
+
+```text
+unified launcher command from unified-local-ai-refactor-launcher.md
   -> manifest-first run visibility
   -> inventories / reports / context packs / memory packet
   -> workload quality routing when provider is requested
-  -> official pipeline adapter
+  -> official pipeline adapter when selected
   -> Ollama advisory / primary provider lane when explicitly enabled
   -> multistep provider probes when selected
   -> deterministic recommendations
@@ -86,8 +115,6 @@ Bloodstream / compact evidence
 Hands / GitHub + CLI
 ```
 
-Do not start from `docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` or `docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md` as active entrypoints. They remain historical/supporting references for older validation semantics.
-
 ## Purpose
 
 The local AI should autonomously read the current task context and repository guardrails before planning or editing.
@@ -103,6 +130,7 @@ forgetting compact evidence bundles
 mixing GitHub-only review with local workstation evidence
 opening huge evidence bundles before the manifest/summary
 starting from superseded 0-to-10 runbooks
+using a supporting wrapper as an active first entrypoint
 ```
 
 ## Visibility-first rule
@@ -142,67 +170,38 @@ The current operating model is hybrid.
 Chat / GitHub-only AI / Codex-style control plane
   -> strategic planning, review, issue/PR orchestration, small edits, human-facing summaries
 
-Local AI/NPU prototype pipeline
+Unified local AI pipeline
   -> heavy local context processing, validators, advisory packets, repository proposals, compact evidence
 
 Human / master AI
   -> approves promotion from advisory/proposal outputs to patch specs, reviewed replacements, apply or merge
 ```
 
-Codex/GitHub-only AI is not obsolete. It remains useful as a master/control-plane during the transition. The local pipeline should take the token-heavy local work and produce report-only/proposal-only artifacts for review.
+Codex/GitHub-only AI is not obsolete. It remains useful as a master/control-plane during the transition. The unified local pipeline should take the token-heavy local work and produce report-only/proposal-only artifacts for review.
 
 ## Non-interactive entrypoint mode
 
-Local AI runners may be launched without an interactive chat.
+Local AI runners may be launched without an interactive chat, but the launcher remains the entrypoint.
 
-For unified full runs, prefer:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity balanced `
-  -Model gpt-oss:20b
-```
-
-For task-scoped adapter runs, pass a Markdown task file from:
+Use the unified launcher runbook for current commands and flags:
 
 ```text
-docs/LOCAL_AI_TASKS/
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-Current task index:
-
-```text
-docs/LOCAL_AI_TASKS/README.md
-```
-
-Task-scoped project-owned runner path:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
-  -TaskBranch codex/full-context-ai-npu-golden-run `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
-```
-
-A local AI runner started from a task file must still read `AGENTS.md` first, then this bootstrap, then the task file.
+A local AI runner started from a task file must still read `AGENTS.md` first, then this bootstrap, then the task file. The task file may define task intent, but execution still routes through the unified launcher unless a human explicitly scopes a one-off helper invocation.
 
 ## Phase 0 - Repository sync preflight
 
-Before running an AI task locally, the human or local AI should confirm:
+Before running an AI task locally, confirm:
 
-```powershell
-git status
-git branch --show-current
-git fetch origin
-```
-
-For new task branches, start from updated `master`:
-
-```powershell
-git switch master
-git pull --ff-only origin master
-git switch -c <task-branch>
+```text
+current branch
+remote sync state
+working tree state
+whether dirty changes are intentional
+Python/venv resolution
+ignored output/cache/state files are not staged
 ```
 
 Do not continue if the working tree contains unrelated changes unless the task explicitly covers them or `-AllowDirty` is intentionally supplied to the unified launcher.
@@ -219,10 +218,10 @@ docs/README.md
 docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_TASKS/README.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 docs/PROJECT_STATUS_POINT.md
 docs/DATA_FLOW.md
 docs/LOCAL_AI_WORKFLOW.md
-docs/JSON_SCHEMAS.md
 Tools/validation/README.md
 ```
 
@@ -239,15 +238,6 @@ Then read the active task object:
 GitHub issue, PR body, execution plan or docs/LOCAL_AI_TASKS/*.md file referenced by the runner
 ```
 
-For the current full-context golden path task, read:
-
-```text
-docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md
-Tools/workflow/run_local_ai_markdown_task.ps1
-Tools/workflow/run_local_ai_task_via_pipeline.ps1
-docs/LOCAL_AI_WORKFLOW.md
-```
-
 If a file is missing, report it as missing. Do not invent its contents.
 
 ## Phase 2 - Task classification
@@ -258,8 +248,8 @@ Classify the task before editing:
 |---|---|---|
 | docs/workflow-state | Markdown docs, execution plans, issue/PR handoff notes | No |
 | validation/evidence | validators, report-only builders, compact evidence docs | No implicit providers |
-| provider diagnostics | explicit-run scripts and diagnostics only | Explicit only |
-| core AI/backend | app-agnostic AI orchestration and validators | Explicit only when requested |
+| provider diagnostics | explicit-run scripts and diagnostics only | Through launcher provider/probe phases only |
+| core AI/backend | app-agnostic AI orchestration and validators | Explicit only when selected |
 | unified full 0-to-10 | full evidence -> recommendation -> patch-plan -> patch-bundle process | Provider only through explicit unified launcher command/flag |
 | Blender runtime | Blender scripts and scene behavior | Only when explicitly scoped |
 
@@ -285,7 +275,7 @@ production render/deploy actions
 
 Do not execute Ollama/OpenVINO/GPU/NPU providers implicitly.
 
-Provider execution is valid only with explicit local commands and must produce compact evidence or manifests under:
+Provider execution is valid only with explicit launcher flags and must produce compact evidence or manifests under:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/
@@ -304,7 +294,7 @@ Before modifying files, produce a small plan with:
 task class
 files expected to change
 files that must not change
-validators to run
+launcher mode/profile/flags expected to validate the change
 expected output paths
 stop conditions
 ```
@@ -338,75 +328,23 @@ full analysis JSON edits
 
 ## Phase 6 - Required validation selection
 
-Select the smallest relevant validator set.
+Select validation through the unified launcher whenever possible.
 
-For documentation/workflow-state cleanup:
+Mapping:
 
-```powershell
-python .\Tools\validation\check_execution_plan_status.py --repo-root . --output .\output\validation\execution_plan_status.json
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
-git diff --check
-```
+| Need | Launcher route |
+|---|---|
+| Documentation/workflow-state cleanup | `md,contract,full_validation` phases |
+| Quick full loop | `Full0To10` with quick intensity |
+| Balanced full loop | `Full0To10` with balanced intensity |
+| Deep full loop | `Full0To10` with deep intensity |
+| Provider evidence | `Full0To10` or provider mode with explicit provider/probe flags |
+| Patch-spec generation | `patch_specs` phase or `Full0To10` default |
+| Reset planning/apply | `reset` mode with reset guardrails |
+| Script/tool inventory | `python` phase |
+| Semantic chunks/context/memory | `chunks`, `context_pack`, `agent_state` phases |
 
-For unified full 0-to-10 local runs, use:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity balanced `
-  -Model gpt-oss:20b
-```
-
-For a quick full run, use:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity quick `
-  -Model gpt-oss:20b
-```
-
-For local pipeline runner validation:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
-  -PromptFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
-  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
-  -RunDir .\output\local_ai_runs\full_context_golden_adapter_smoke `
-  -DryRun
-```
-
-For selective-planner output validation:
-
-```powershell
-python .\Tools\ai\build_selective_execution_plan.py --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md
-python .\Tools\validation\check_selective_execution_plan.py --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json
-```
-
-For real GPU/NPU evidence, only when explicitly requested by Carmine and preferably through the unified launcher:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity balanced `
-  -UsePrimaryAdvisoryProvider `
-  -Model gpt-oss:20b
-```
-
-The legacy multistep provider wrapper remains available as supporting detail, but it should not be the first entrypoint for a full 0-to-10 flow:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
-  -Profile npu `
-  -RunOllamaProbe `
-  -RunNpuProbe `
-  -RunNpuDecodeSmoke `
-  -UsePrimaryAdvisoryProvider `
-  -Basename <basename> `
-  -ProposalBasename <proposal-basename> `
-  -EvidenceBasename <evidence-basename>
-```
+Focused validators may still be invoked directly only when the task is explicitly scoped to that validator or when debugging the validator itself.
 
 ## Phase 7 - Reporting contract
 
@@ -416,16 +354,19 @@ At the end of a local run, report:
 branch name
 changed files
 line counts for created or modified scripts
-validators run
-validator pass/fail summary
+launcher mode/profile/flags used
+validators or phases run
+validator/phase pass/fail summary
 manifest path
 phase report paths
 compact evidence paths, when generated
+provider/runtime execution status
+patch application status
 risks
 follow-up recommendations
 ```
 
-If a validator was not run, say why.
+If a validator or launcher phase was not run, say why.
 
 ## Phase 8 - PR contract
 
@@ -435,7 +376,7 @@ A local AI-generated PR should include:
 summary
 scope
 changed files
-validation commands and results
+launcher mode/profile/flags or focused validation command
 provider execution statement
 visibility/manifest statement
 risk notes
@@ -462,4 +403,4 @@ The expected work is:
 exercise the unified full 0-to-10 process with selected modes, evidence collectors, optional GPU/NPU provider run, deterministic recommendations, workload quality routing, memory/context surfaces, patch-spec generation, review-safe patch bundle generation and explicit apply/validation when authorized
 ```
 
-GPU/NPU execution remains explicit. If Carmine cannot run the local provider workflow, GitHub-only agents must stop at report-only/docs/validator work and request the exact local command/evidence bundle needed next.
+GPU/NPU execution remains explicit. If Carmine cannot run the local provider workflow, GitHub-only agents must stop at report-only/docs/validator work and request the exact unified launcher command/evidence bundle needed next.
