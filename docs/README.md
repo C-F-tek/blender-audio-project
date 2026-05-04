@@ -18,6 +18,7 @@ LOCAL_AI_RUN_BOOTSTRAP.md        # local checkout only
 LOCAL_AI_TASKS/README.md         # task entrypoints
 LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+WORKFLOW_HELPER_SCRIPTS_POLICY.md
 PROJECT_STATUS_POINT.md
 DATA_FLOW.md
 LOCAL_AI_WORKFLOW.md
@@ -35,6 +36,7 @@ target file
 |---|---|
 | Unified full 0-to-10 local AI workflow | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
 | Unified launcher manifest/phase contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
+| Workflow helper/push-capable script policy | `WORKFLOW_HELPER_SCRIPTS_POLICY.md` |
 | Local AI task routing/index | `LOCAL_AI_TASKS/README.md` |
 | Markdown cleanup and pruning governance | `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |
 
@@ -89,6 +91,7 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 | Task runbooks | `LOCAL_AI_TASKS/README.md` | Current/historical task entrypoints. |
 | Unified local AI launcher | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Active 0-to-10 local AI execution guide. |
 | Unified launcher contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Compact manifest/phase/status contract for the launcher. |
+| Workflow helper policy | `WORKFLOW_HELPER_SCRIPTS_POLICY.md` | Classification and guardrails for shell/GUI/push-capable helpers. |
 | Execution plans | `EXECUTION_PLANS/README.md` | Durable state records. |
 | Evidence | `LOCAL_VALIDATION_EVIDENCE/` | Review snapshots, not source docs. |
 | Generated/index context | `indexAI/**`, `Tools/npu/npu_code_*.md` | Regenerate; do not hand-edit. |
@@ -100,6 +103,7 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 |---|---|
 | `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | Markdown lifecycle, pruning policy, missing-index review and add-before-prune rules. |
 | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Compact launcher manifest, phase-status, visibility, Full0To10 and external-controls contract. |
+| `WORKFLOW_HELPER_SCRIPTS_POLICY.md` | Shell/GUI/debug/push-capable helper classification and guardrails. |
 | `PROJECT_STATUS_POINT.md` | Current status checkpoint and recommended tasks. |
 | `DATA_FLOW.md` | App-agnostic data/report/provider flow. |
 | `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow and evidence handling. |
