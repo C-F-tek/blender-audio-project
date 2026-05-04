@@ -41,6 +41,29 @@ output/ai_packets/<DataStamp>/npu_real_workload_report.md
 output/ai_packets/<DataStamp>/ollama_gpu_real_workload_report.md
 ```
 
+## Exposed launcher parameters
+
+The launcher exposes the AI packet location:
+
+```powershell
+-AiPacketsRoot output/ai_packets
+-AiPacketsDir  output/ai_packets/<DataStamp>
+```
+
+Default resolution:
+
+```powershell
+if ([string]::IsNullOrWhiteSpace($AiPacketsRoot)) {
+  $AiPacketsRoot = "output/ai_packets"
+}
+
+if ([string]::IsNullOrWhiteSpace($AiPacketsDir)) {
+  $AiPacketsDir = Join-Path $AiPacketsRoot $DataStamp
+}
+```
+
+`--report-dir` must be passed to `check_ai_workload_report_quality.py` only inside the `Invoke-Python @(...)` argument array. It must never be emitted as a standalone/orphan PowerShell statement.
+
 ## Workload-quality gate
 
 The quality gate reads the run folder:

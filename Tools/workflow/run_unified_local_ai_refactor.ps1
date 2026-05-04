@@ -30,6 +30,8 @@ param(
     [string]$TaskFile = ".\docs\LOCAL_AI_TASKS\docs-md-obsolete-pruning-next-step.md",
     [string]$TaskBranch = "",
     [string]$Stamp = "",
+    [string]$AiPacketsRoot = "output/ai_packets",
+    [string]$AiPacketsDir = "",
     [ValidateSet("core", "npu", "docs")]
     [string]$Profile = "docs",
     [string]$Model = "gpt-oss:20b",
@@ -157,6 +159,7 @@ function Show-LauncherIntro {
     Write-Host "Full 0-to-10 selectable profile: use -Full0To10; disable individual steps only with explicit -No* flags."
     Write-Host "Debug tail: enabled by default; use -Prod to disable transcript and execution-tail evidence."
     Write-Host "Startup check output: Tools/workflow/startup_check.py supports --output, --text-output and --repo-root."
+    Write-Host "AI packets output: use -AiPacketsRoot/-AiPacketsDir; default is output/ai_packets/<DataStamp>."
     Write-Host ""
 }
 
@@ -836,8 +839,8 @@ $ValidationDir = "output/validation"
 New-Item -ItemType Directory -Force -Path $PipelineDir | Out-Null
 New-Item -ItemType Directory -Force -Path $ValidationDir | Out-Null
 New-Item -ItemType Directory -Force -Path "output/ai_pipeline" | Out-Null
-$AiPacketsRoot = "output/ai_packets"
-$AiPacketsDir = Join-Path $AiPacketsRoot $DataStamp
+if ([string]::IsNullOrWhiteSpace($AiPacketsRoot)) { $AiPacketsRoot = "output/ai_packets" }
+if ([string]::IsNullOrWhiteSpace($AiPacketsDir)) { $AiPacketsDir = Join-Path $AiPacketsRoot $DataStamp }
 $OllamaWorkloadReport = Join-Path $AiPacketsDir "ollama_gpu_real_workload_report.md"
 $NpuWorkloadReport = Join-Path $AiPacketsDir "npu_real_workload_report.md"
 New-Item -ItemType Directory -Force -Path $AiPacketsDir | Out-Null
@@ -1068,8 +1071,6 @@ if (($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoW
 
 if ($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality)) {
     Assert-FileExists ".\Tools\validation\check_ai_workload_report_quality.py"
-            "--report-dir",
-            $AiPacketsDir,
     $PhaseStatus.workload_quality = Invoke-Checked "Build AI workload quality routing report" {
         Invoke-Python @(".\Tools\validation\check_ai_workload_report_quality.py", "--repo-root", ".", "--output", $WorkloadQualityReport)
     } -SoftFail:$ContinueOnValidationError
@@ -1138,6 +1139,8 @@ if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-Mo
         "-ProposalBasename", $ProposalBaseName,
         "-MaxContextChars", "$MaxContextChars",
         "-ExtraContextFile", ($ContextFiles -join ",")
+    "--report-dir",
+    $AiPacketsDir,
     )
     if ($Model -ne "") { $RunnerArgs += @("-Model", $Model) }
     if ($FullContextGoldenPath) { $RunnerArgs += "-FullContextGoldenPath" }
