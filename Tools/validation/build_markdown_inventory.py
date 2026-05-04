@@ -72,6 +72,17 @@ GITHUB_TEMPLATE_PREFIXES = (
 GITHUB_TEMPLATE_FILES = {
     ".github/PULL_REQUEST_TEMPLATE.md",
 }
+HISTORICAL_TASK_BASENAME_PREFIXES = (
+    "balanced-full-run-complete-",
+    "next-chat-handoff-",
+    "post-pr",
+    "project-complete-",
+    "shared-runtime-toolbox-",
+    "shared-toolbox-refactor-",
+)
+HISTORICAL_TASK_BASENAMES = {
+    "pr109-pythonpath-module-execution-note-2026-05-02.md",
+}
 
 
 def repo_relative(path: Path, repo_root: Path) -> str:
@@ -99,6 +110,15 @@ def is_github_template(rel_path: str) -> bool:
     return rel_path in GITHUB_TEMPLATE_FILES or any(rel_path.startswith(prefix) for prefix in GITHUB_TEMPLATE_PREFIXES)
 
 
+def is_historical_local_ai_task(rel_path: str) -> bool:
+    if not rel_path.startswith(TASK_PREFIX):
+        return False
+    basename = Path(rel_path).name
+    return basename in HISTORICAL_TASK_BASENAMES or any(
+        basename.startswith(prefix) for prefix in HISTORICAL_TASK_BASENAME_PREFIXES
+    )
+
+
 def classify_markdown(rel_path: str) -> str:
     if rel_path in ROOT_POLICY_DOCS:
         return "root_policy_or_entrypoint"
@@ -110,6 +130,8 @@ def classify_markdown(rel_path: str) -> str:
         return "local_tool_history"
     if rel_path.startswith(EVIDENCE_PREFIX):
         return "compact_evidence"
+    if is_historical_local_ai_task(rel_path):
+        return "historical_local_ai_task"
     if rel_path.startswith(TASK_PREFIX):
         return "local_ai_task_entrypoint"
     if rel_path.startswith(EXECUTION_PLAN_PREFIX):
@@ -138,6 +160,8 @@ def lifecycle_for(category: str, rel_path: str) -> str:
         return "local_history_delete_candidate"
     if category == "compact_evidence":
         return "evidence_snapshot"
+    if category == "historical_local_ai_task":
+        return "historical_task_record"
     if category == "local_ai_task_entrypoint":
         return "current_or_historical_task"
     if category == "execution_plan":
@@ -244,6 +268,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             "This inventory is evidence for review. It does not delete or rewrite Markdown files.",
             "A missing index reference is not automatically obsolete; it means the file needs owner/lifecycle review.",
             "GitHub templates and root community docs are repository controls, not prune candidates.",
+            "Historical local AI task records are classified separately from current task entrypoints.",
         ],
     }
 
