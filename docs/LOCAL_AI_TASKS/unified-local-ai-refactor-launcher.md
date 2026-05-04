@@ -93,6 +93,77 @@ final validation
 local generated-artifact reset planning
 ```
 
+## Visibility contract: functions, tools, phases and evidence
+
+The unified launcher must make every important action visible through machine-readable and human-readable outputs. No phase may be hidden behind a long opaque bundle.
+
+For each selected phase, the run should expose at least one of:
+
+```text
+phase_status entry in unified_local_ai_refactor_manifest.json
+phase_reports entry in unified_local_ai_refactor_manifest.json
+context_files entry in unified_local_ai_refactor_manifest.json
+report_files entry in unified_local_ai_refactor_manifest.json
+compact Markdown summary
+CSV/JSON inventory with stable path references
+```
+
+The required visibility surfaces are:
+
+| Area | Tool/script | Expected visible output |
+|---|---|---|
+| Launcher manifest | `Tools/workflow/run_unified_local_ai_refactor.ps1` | `unified_local_ai_refactor_manifest.json` with selected modes, flags, status, reports and context files. |
+| Markdown inventory | `Tools/validation/build_markdown_inventory.py` | JSON plus Markdown inventory, including long-file classification when available. |
+| Link validation | `Tools/validation/check_docs_links.py` | JSON docs-link report. |
+| Script/tool inventory | `Tools/validation/build_script_inventory.py` | JSON, CSV and Markdown surfaces for script/function/class visibility. |
+| Report contract | `Tools/validation/check_validation_report_contract.py` | JSON contract report for current run artifacts. |
+| Workload quality | `Tools/validation/check_ai_workload_report_quality.py` | `ai_workload_report_quality.json` when provider routing is requested. |
+| Semantic chunks | `Tools/npu/build_semantic_code_chunks.py` | semantic chunk manifest, not only raw chunk files. |
+| Context pack | `Tools/ai/build_ai_context_pack.py` | bounded context pack Markdown/JSON and evidence summary. |
+| Agent state / memory | `Tools/ai/build_agent_state_packet.py` | agent-state packet and optional SQLite memory handoff manifest. |
+| Official pipeline adapter | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | packet/proposal manifest under the run pipeline directory. |
+| Ollama advisory | `Tools/workflow/run_post_validation_ai_packet.ps1` | advisory packet/proposals plus manifest under AI pipeline output. |
+| Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals when selected. |
+| Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | integrated full-toolbox report when `-Full0To10` enables it. |
+| Patch specs | patch-spec builder/validator wrappers invoked by the pipeline | review-only patch-spec manifest and validation report. |
+| Reset | launcher reset mode | reset plan JSON/Markdown; deletion only with explicit confirmation. |
+
+When adding a new phase or wrapper, update this table and the manifest contract in the same PR.
+
+## Length and readability policy
+
+Large local-AI artifacts are allowed only as generated evidence, not as normal first-read documentation. The operator and the next AI agent must be able to understand a run from compact manifests before opening long files.
+
+Policy:
+
+```text
+Normal maintained docs should stay compact and navigable.
+Generated evidence may be longer, but must have a compact index/manifest.
+Long Markdown files must be classified by inventory and either split, summarized or marked as historical/evidence.
+No active runbook should require opening an 8000-line bundle before the manifest/summary has been read.
+Do not create new monolithic AI-to-AI bundles without a companion summary and deterministic manifest.
+Do not commit output/**, SQLite DBs or raw local cache files.
+```
+
+Operational thresholds:
+
+| File type | Preferred maximum | Required action when exceeded |
+|---|---:|---|
+| Active operator runbook | ~500 lines | Split into task-specific docs or move verbose evidence to generated artifacts. |
+| Maintained source documentation | ~700 lines | Add table of contents, split sections or create subordinate docs. |
+| Generated compact evidence | ~1200 lines | Add a summary/manifest and classify as evidence snapshot. |
+| Large historical/evidence bundle | Any size only if unavoidable | Must be historical/evidence, indexed, and not used as the first operational entrypoint. |
+
+A document that is too long to open quickly is not an acceptable primary interface. The primary interface is always:
+
+```text
+launcher command
+manifest
+phase reports
+compact summary
+then detailed evidence only when needed
+```
+
 ## What a valid Full0To10 run means
 
 A full 0-to-10 run is valid only when the requested capabilities are either completed or explicitly disabled by a `-No*` flag.
@@ -448,6 +519,7 @@ run FFmpeg runtime
 delete local artifacts unless explicit reset confirmation is supplied
 commit SQLite DB files
 commit output/** files
+create long primary runbooks or monolithic evidence without a compact manifest
 ```
 
 ## Agent instruction
