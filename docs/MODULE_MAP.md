@@ -38,21 +38,23 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 
 ## AI navigation order
 
-1. Read `README.md`.
-2. Read `AGENTS.md`.
-3. Read `docs/README.md`.
-4. Read `docs/PROJECT_AI_CONSCIOUSNESS.md`.
-5. Read this file.
-6. Read `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` before promoting workflow helpers.
-7. Read `docs/DATA_FLOW.md`.
-8. Read `docs/REFACTORING_AND_REUSE_PLAN.md`.
-9. Read `docs/SHARED_SCRIPTING_UTILITIES.md`.
-10. Read `docs/QUALITY_GATE.md`.
-11. For NPU helper work, read `Tools/npu/pipeline/README.md`.
+1. Read `AGENTS.md`.
+2. Read `README.md`.
+3. Read `WORKFLOW.md`.
+4. Read `docs/README.md`.
+5. Read `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md`.
+6. For local AI runs, read `docs/LOCAL_AI_RUN_BOOTSTRAP.md`.
+7. Read `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` for full 0-to-10 or launcher work.
+8. Read `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` before changing launcher manifest fields.
+9. Read this file to locate repository areas.
+10. Read `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` before promoting workflow helpers.
+11. Read `docs/DATA_FLOW.md` and `docs/LOCAL_AI_WORKFLOW.md` for provider/data semantics.
 12. Read `Tools/validation/README.md` when changing validators/workflows.
-13. Read `Scripting/README.md` for Blender package work.
-14. Read the README of the target package under `Scripting/`.
-15. Inspect the actual script before editing.
+13. For NPU helper work, read `Tools/npu/pipeline/README.md`.
+14. Read `Scripting/README.md` only for Blender package work.
+15. Read the README of the target package and inspect the actual script before editing.
+
+`docs/PROJECT_AI_CONSCIOUSNESS.md` is historical/orientation material. It must not override the canonical flow, launcher contract or guardrails above.
 
 ## Current code organization
 
