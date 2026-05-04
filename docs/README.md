@@ -143,10 +143,35 @@ PROJECT_AUDIT.md
 
 ## Validation for doc changes
 
+Run the inventory before link/contract checks so lifecycle, oversized Markdown and control-character drift are visible:
+
 ```powershell
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+python .\Tools\validation\build_markdown_inventory.py `
+  --repo-root . `
+  --output .\output\validation\markdown_inventory_doc_change.json `
+  --markdown-output .\output\validation\markdown_inventory_doc_change.md
+
+python .\Tools\validation\check_docs_links.py `
+  --repo-root . `
+  --output .\output\validation\docs_links.json
+
+python .\Tools\validation\check_validation_report_contract.py `
+  --repo-root . `
+  --report-file .\output\validation\markdown_inventory_doc_change.json `
+  --report-file .\output\validation\docs_links.json `
+  --output .\output\validation\validation_report_contract_doc_change.json
+
 git diff --check
+```
+
+Review these fields before merging documentation-only changes:
+
+```text
+missing_index_count
+prune_candidate_count
+control_character_file_count
+long_markdown_file_count
+hard_review_markdown_file_count
 ```
 
 Do not commit `output/**`, generated DB files, renders or raw local reports.
