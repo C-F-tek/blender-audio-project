@@ -17,6 +17,7 @@ If a task conflicts with `AGENTS.md`, preserve hard guardrails and stop with a c
 |---|---|
 | Full toolbox, 0-10, tutto su tutto, multi-phase, full repository run | `full-toolbox-0-to-10-semi-automatic-procedure.md` |
 | Code/script refactor, helper reuse, function discovery, line-count inventory | `code-refactor-0-to-10-procedure.md` |
+| Markdown refactor inside the 0-10 refactor flow | `code-refactor-0-to-10-procedure.md` plus `code-refactor-md-lane-extension.md` |
 | Documentation cleanup, Markdown pruning, obsolete/redundant MD review | `../DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` plus `build_markdown_inventory.py` |
 | GPU/NPU evidence diagnostics | `gpu-npu-parallel-evidence-runbook.md` |
 | Full-context local AI/NPU golden path | `full-context-ai-npu-golden-path.md` |
@@ -27,6 +28,8 @@ If a task conflicts with `AGENTS.md`, preserve hard guardrails and stop with a c
 |---|---|
 | `full-toolbox-0-to-10-semi-automatic-procedure.md` | Canonical full-toolbox process: evidence -> recommendations -> decision -> patch plan -> patch bundle -> explicit apply -> validation -> PR. |
 | `code-refactor-0-to-10-procedure.md` | Canonical code/refactor process with line counts, script/tool discovery, helper reuse and compact evidence. |
+| `code-refactor-md-lane-extension.md` | Markdown/documentation refactor lane to run inside the canonical code-refactor 0 -> 10 procedure. |
+| `docs-md-obsolete-pruning-next-step.md` | Follow-up triage task for obsolete/superseded Markdown after the entrypoint reduction baseline. |
 | `gpu-npu-parallel-evidence-runbook.md` | GPU/NPU evidence and planner diagnostics. |
 | `full-context-ai-npu-golden-path.md` | Full-context local AI/NPU path with chunks, context packs, memory state, multistep providers and proposals. |
 | `full-context-golden-docs-contract.md` | Contract validation for the full-context golden path. |
