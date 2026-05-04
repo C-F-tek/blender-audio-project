@@ -10,14 +10,18 @@
   installer.
 
   Safe execution order:
-    baseline -> smoke -> validation -> md -> json -> python -> chunks -> context_pack -> agent_state -> official -> provider -> patch_specs -> evidence -> contract -> full_validation
+    baseline -> smoke -> reset -> validation -> md -> json -> python -> chunks -> context_pack -> agent_state -> official -> provider -> patch_specs -> evidence -> contract -> full_validation
 
-  The script is report/proposal-only. It never applies patches, commits, pushes,
-  merges, runs Blender or runs FFmpeg.
+  The script is report/proposal-only by default. It never applies patches,
+  commits, pushes, merges, runs Blender or runs FFmpeg.
+
+  Reset mode is safe by default: it writes a reset plan only. Real deletion
+  requires -ApplyReset and -ConfirmResetText "DELETE LOCAL AI ARTIFACTS".
 
 .EXAMPLES
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Interactive
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Mode smoke,md,python,contract,full_validation
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Mode reset -ResetBeforeDate 2026-05-03
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Mode all -UseOllamaAdvisory -UsePrimaryAdvisoryProvider -GeneratePatchSpecs
 #>
 [CmdletBinding()]
@@ -45,6 +49,11 @@ param(
     [switch]$GeneratePatchSpecs,
     [switch]$FullContextGoldenPath,
     [switch]$ContinueOnValidationError,
+    [datetime]$ResetBeforeDate = [datetime]::MinValue,
+    [switch]$ApplyReset,
+    [string]$ConfirmResetText = "",
+    [switch]$IncludeMemoryReset,
+    [switch]$IncludeGeneratedIndexReset,
     [int]$MatrixWorkers = 12,
     [int]$RepeatCases = 2
 )
@@ -53,12 +62,13 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $ModeOrder = @(
-    "smoke", "validation", "md", "json", "python", "chunks", "context_pack",
+    "smoke", "reset", "validation", "md", "json", "python", "chunks", "context_pack",
     "agent_state", "official", "provider", "patch_specs", "evidence", "contract", "full_validation"
 )
 
 $ModeDescriptions = [ordered]@{
     smoke = "Fast smoke checks: git diff --check and startup_check.py when available."
+    reset = "Plan cleanup for old local artifacts/output; deletion requires explicit confirmation."
     validation = "Run broad local validation after refactor when the project wrapper exists."
     md = "Build Markdown inventory, docs link report and Markdown cleanup evidence."
     json = "Validate task-scoped JSON/report contracts for reports produced in this run."
@@ -82,6 +92,7 @@ $ModeAliases = @{
     provider_advisory = "provider"; ollama = "provider"; gpu = "provider"; npu = "provider"
     planner = "official"; patch_planner = "patch_specs"; patch_plan = "patch_specs"
     tests = "validation"; test = "validation"; validate = "validation"; validate_all = "full_validation"
+    clean = "reset"; cleanup = "reset"; purge = "reset"; pulizia = "reset"
     full = "all"
 }
 
@@ -98,9 +109,11 @@ function Show-LauncherIntro {
     Write-Host "  - smoke and full local validation wrappers;"
     Write-Host "  - semantic chunks, context packs and agent-state packets;"
     Write-Host "  - official local AI pipeline adapter;"
-    Write-Host "  - optional Ollama/provider advisory and review-only patch specs."
+    Write-Host "  - optional Ollama/provider advisory and review-only patch specs;"
+    Write-Host "  - reset planning for old local artifacts, output, memory and generated context."
     Write-Host ""
     Write-Host "Guardrails: no patch apply, no commit, no push, no merge, no Blender, no FFmpeg."
+    Write-Host "Reset guardrail: no delete unless -ApplyReset and exact -ConfirmResetText are supplied."
     Write-Host ""
 }
 
@@ -110,7 +123,7 @@ function Show-ModeCatalog {
         Write-Host ("  {0,-15} {1}" -f $name, $ModeDescriptions[$name])
     }
     Write-Host ""
-    Write-Host "Examples: smoke,md,python,contract,full_validation | md,json,python,official,patch_specs | all"
+    Write-Host "Examples: smoke,md,python,contract,full_validation | reset | md,json,python,official,patch_specs | all"
     Write-Host ""
 }
 
@@ -196,6 +209,94 @@ function Add-OptionalModeWarning {
     }
 }
 
+function Convert-ToRepoRelativePath {
+    param([string]$Root, [string]$PathValue)
+    $full = [System.IO.Path]::GetFullPath($PathValue)
+    $rootFull = [System.IO.Path]::GetFullPath($Root)
+    if (-not $rootFull.EndsWith([System.IO.Path]::DirectorySeparatorChar)) { $rootFull += [System.IO.Path]::DirectorySeparatorChar }
+    if ($full.StartsWith($rootFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $full.Substring($rootFull.Length).Replace("\", "/")
+    }
+    return $full.Replace("\", "/")
+}
+
+function Get-ResetCandidates {
+    param([string]$Root, [datetime]$BeforeDate, [switch]$IncludeMemory, [switch]$IncludeGeneratedIndex)
+    $patterns = @(
+        @{ category = "local_ai_runs"; path = "output/local_ai_runs" },
+        @{ category = "ai_pipeline"; path = "output/ai_pipeline" },
+        @{ category = "validation_reports"; path = "output/validation" },
+        @{ category = "ai_context_packs"; path = "output/ai_context_packs" },
+        @{ category = "patch_specs"; path = "output/patch_specs" }
+    )
+    if ($IncludeMemory) {
+        $patterns += @{ category = "agent_memory"; path = "indexAI/agent_memory" }
+    }
+    if ($IncludeGeneratedIndex) {
+        $patterns += @{ category = "generated_index_context"; path = "indexAI/code_chunks" }
+        $patterns += @{ category = "generated_project_chunks"; path = "indexAI/project_code_chunks" }
+    }
+
+    $items = @()
+    foreach ($entry in $patterns) {
+        $rootPath = Join-Path $Root $entry.path
+        if (-not (Test-Path -LiteralPath $rootPath)) { continue }
+        $files = Get-ChildItem -LiteralPath $rootPath -Recurse -File -Force -ErrorAction SilentlyContinue
+        foreach ($file in $files) {
+            if ($BeforeDate -ne [datetime]::MinValue -and $file.LastWriteTime -ge $BeforeDate) { continue }
+            $items += [ordered]@{
+                path = Convert-ToRepoRelativePath $Root $file.FullName
+                category = $entry.category
+                last_write_time = $file.LastWriteTime.ToString("o")
+                size_bytes = $file.Length
+            }
+        }
+    }
+    return @($items | Sort-Object category, path)
+}
+
+function Write-ResetPlan {
+    param(
+        [object[]]$Candidates,
+        [string]$OutputJson,
+        [string]$OutputMd,
+        [datetime]$BeforeDate,
+        [bool]$Apply,
+        [string]$Root
+    )
+    $totalBytes = 0
+    foreach ($item in $Candidates) { $totalBytes += [int64]$item.size_bytes }
+    $report = [ordered]@{
+        schema_version = 1
+        kind = "local_ai_reset_plan"
+        repo_root = $Root
+        passed = $true
+        apply_reset = $Apply
+        reset_before_date = $(if ($BeforeDate -eq [datetime]::MinValue) { $null } else { $BeforeDate.ToString("o") })
+        candidate_count = $Candidates.Count
+        total_size_bytes = $totalBytes
+        candidates = $Candidates
+        warnings = @("Reset mode is report-only unless -ApplyReset and exact -ConfirmResetText are supplied.")
+        errors = @()
+    }
+    ($report | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $OutputJson -Encoding UTF8
+
+    $lines = @()
+    $lines += "# Local AI Reset Plan"
+    $lines += ""
+    $lines += "- Apply reset: `$Apply`"
+    $lines += "- Candidate count: `$($Candidates.Count)`"
+    $lines += "- Total bytes: `$totalBytes`"
+    $lines += "- Reset before date: `$(if ($BeforeDate -eq [datetime]::MinValue) { 'not set' } else { $BeforeDate.ToString('o') })`"
+    $lines += ""
+    $lines += "| Path | Category | Last write time | Size bytes |"
+    $lines += "|---|---|---|---:|"
+    foreach ($item in $Candidates) {
+        $lines += "| `$($item.path)` | `$($item.category)` | `$($item.last_write_time)` | $($item.size_bytes) |"
+    }
+    $lines | Set-Content -LiteralPath $OutputMd -Encoding UTF8
+}
+
 Show-LauncherIntro
 $RepoRoot = Resolve-RepoRoot
 Set-Location $RepoRoot
@@ -230,6 +331,10 @@ Add-OptionalModeWarning "smoke" ".\Tools\workflow\startup_check.py" ([ref]$Warni
 Add-OptionalModeWarning "chunks" ".\Tools\npu\build_semantic_code_chunks.py" ([ref]$Warnings)
 Add-OptionalModeWarning "context_pack" ".\Tools\ai\build_ai_context_pack.py" ([ref]$Warnings)
 Add-OptionalModeWarning "agent_state" ".\Tools\ai\build_agent_state_packet.py" ([ref]$Warnings)
+
+if ($ApplyReset -and $ConfirmResetText -ne "DELETE LOCAL AI ARTIFACTS") {
+    throw "-ApplyReset requires -ConfirmResetText 'DELETE LOCAL AI ARTIFACTS'"
+}
 
 $Status = (& git status --porcelain)
 if ($LASTEXITCODE -ne 0) { throw "git status failed" }
@@ -272,6 +377,7 @@ Write-Host "[INFO] Ollama advisory: $UseOllamaAdvisory"
 Write-Host "[INFO] Primary advisory provider: $UsePrimaryAdvisoryProvider"
 Write-Host "[INFO] Multistep provider workflow: $RunMultistepProviderWorkflow"
 Write-Host "[INFO] Patch specs: $GeneratePatchSpecs"
+Write-Host "[INFO] Reset apply: $ApplyReset"
 foreach ($warning in $Warnings) { Write-Warning $warning }
 
 $PhaseStatus.baseline_compile = Invoke-Checked "Baseline compile validation/inventory tools" {
@@ -287,6 +393,23 @@ if (Test-ModeEnabled "smoke") {
         } -SoftFail:$ContinueOnValidationError
         if (Test-Path $StartupCheck) { $ReportFiles += $StartupCheck; $PhaseReports.startup_check = $StartupCheck }
     }
+}
+
+if (Test-ModeEnabled "reset") {
+    $ResetJson = "$ValidationDir/local_ai_reset_plan_${ModeName}_$Stamp.json"
+    $ResetMd = "$ValidationDir/local_ai_reset_plan_${ModeName}_$Stamp.md"
+    $Candidates = Get-ResetCandidates -Root $RepoRoot -BeforeDate $ResetBeforeDate -IncludeMemory:$IncludeMemoryReset -IncludeGeneratedIndex:$IncludeGeneratedIndexReset
+    Write-ResetPlan -Candidates $Candidates -OutputJson $ResetJson -OutputMd $ResetMd -BeforeDate $ResetBeforeDate -Apply:$ApplyReset -Root $RepoRoot
+    if ($ApplyReset) {
+        foreach ($item in $Candidates) {
+            $target = Join-Path $RepoRoot $item.path
+            if (Test-Path -LiteralPath $target -PathType Leaf) { Remove-Item -LiteralPath $target -Force }
+        }
+    }
+    $ReportFiles += $ResetJson
+    $ContextFiles = Add-ExistingContextFile $ContextFiles $ResetMd
+    $PhaseReports.reset_plan = $ResetJson
+    $PhaseStatus.reset_plan = $true
 }
 
 if (Test-ModeEnabled "validation") {
@@ -449,6 +572,7 @@ $Manifest = [ordered]@{
     task_branch = $TaskBranch
     run_dir = $RunDir.Replace("\", "/")
     provider_execution_requested = [bool]($UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke -or (Test-ModeEnabled "provider"))
+    reset_apply_requested = [bool]$ApplyReset
     patch_application_performed = $false
     patch_specs_requested = [bool]($GeneratePatchSpecs -or (Test-ModeEnabled "patch_specs"))
     build_evidence_requested = [bool]($BuildEvidence -or (Test-ModeEnabled "evidence"))
@@ -466,6 +590,7 @@ Write-Host "[OK] Unified local-AI launcher complete" -ForegroundColor Green
 Write-Host "[OK] Manifest: $ManifestPath"
 Write-Host "[OK] Mode: $($ResolvedModes -join ',')"
 Write-Host "[OK] Provider execution requested: $($Manifest.provider_execution_requested)"
+Write-Host "[OK] Reset apply requested: $($Manifest.reset_apply_requested)"
 Write-Host "[OK] Patch specs requested: $($Manifest.patch_specs_requested)"
 Write-Host "[OK] Patch application performed: False"
 Write-Host "[OK] Reports: $($ReportFiles -join ', ')"
