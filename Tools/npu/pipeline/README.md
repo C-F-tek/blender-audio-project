@@ -59,6 +59,19 @@ provider execution behavior changes
 | `migration_readiness.py` | Deterministic gates for future runtime wiring readiness. |
 | `reports.py` | Helper-boundary reports, common validation report envelopes and runtime-output manifests. |
 
+## Historical/generated NPU context docs
+
+These Markdown files are not canonical reading-path docs. They are historical/generated tool context and must not be hand-promoted to current provider policy without a fresh validation task:
+
+| File | Status |
+|---|---|
+| `../dual_ai_blender_agent_brief.md` | Historical dual-AI Blender agent brief. |
+| `../generated_implementation_notes.md` | Generated implementation notes. |
+| `../npu_dual_ai_technical_notes.md` | Historical deterministic technical notes. |
+| `../npu_music_context.md` | Generated music context. |
+| `../ollama_music_insights.md` | Generated/local provider insight note. |
+| `../npu_music_chunks/` | Generated music/context chunk folder. |
+
 ## Validation
 
 Focused helper validation workflow:
