@@ -4,28 +4,67 @@
 
 This document defines the recommended local Git/GitHub workflow after AI-assisted refactoring, documentation updates, or pipeline changes.
 
-It is optimized for this repository's current workflow:
+It is optimized for the current IA-Carmine workflow:
 
 ```text
 pull latest
-run focused validation
-run AI pipeline dry-run matrix when needed
-regenerate AI/NPU indexes
-commit generated indexes only
+choose unified launcher mode/intensity
+run focused validation or full 0-to-10 flow
+inspect manifest-first outputs
+promote only compact evidence when needed
+commit intended docs/source/index changes
 push results
 share reports for review
 ```
 
-## One-command unattended workflow
+## Primary one-command workflow
 
-For a longer unattended run, use the local runner:
+Use the unified launcher as the primary local validation and local-AI orchestration entrypoint:
 
 ```powershell
 cd C:\Users\carmi\blender\blender-audio-project
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity balanced `
+  -Model gpt-oss:20b
+```
+
+Quick validation/docs run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Mode md,python,contract,full_validation `
+  -RunIntensity quick
+```
+
+Dry-run check for launcher planning:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -DryRun `
+  -SkipGitSync `
+  -NoBranch `
+  -AllowDirty
+```
+
+The primary run artifact is:
+
+```text
+output/local_ai_runs/<stamp>_<mode>_unified/pipeline/unified_local_ai_refactor_manifest.json
+```
+
+Read this manifest before opening long reports.
+
+## Supporting legacy validation wrapper
+
+The older validation wrapper remains available as a supporting focused tool:
+
+```powershell
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
 ```
 
-This script runs the broad local validation batch, including syntax checks, AI pipeline checks, NPU helper smoke/unit checks, generated artifact policies, dry-run matrix checks, package/JSON checks, index regeneration and Git status/diff reporting.
+Use this when explicitly validating the legacy validation batch itself or when the unified launcher delegates to it.
 
 It writes logs and summaries under:
 
@@ -83,22 +122,44 @@ Tools/ai/pipeline/
 Tools/validation/
 Tools/npu/
 Tools/npu/pipeline/
+Tools/workflow/
 ```
 
-Use the focused NPU helper workflow before the full runner when working on NPU helper contracts. Use the full runner especially after changes to the modular AI artifact pipeline, shared Blender compatibility helpers or validation workflows.
+Use focused NPU helper workflow before the full runner when working on NPU helper contracts. Use the unified launcher for broad validation and full local-AI evidence flows.
+
+## Visibility-first rule
+
+Every run must be reviewed in this order:
+
+```text
+launcher command
+unified_local_ai_refactor_manifest.json
+phase_status / phase_reports
+compact Markdown or CSV summaries
+detailed evidence only when needed
+```
+
+Do not begin review from a long bundle.
 
 ## Step 1: update local repository
 
 ```powershell
 cd C:\Users\carmi\blender\blender-audio-project
-git pull --rebase origin master
+git fetch origin
+git status --short
+```
+
+For master:
+
+```powershell
+git switch master
+git pull --ff-only origin master
 ```
 
 For a PR branch:
 
 ```powershell
-git fetch origin
-git checkout <branch>
+git switch <branch>
 git pull --ff-only
 ```
 
@@ -112,11 +173,19 @@ git log --oneline -n 20
 Expected before validation:
 
 ```text
-working tree clean
+working tree clean or intentionally dirty with -AllowDirty
 branch aligned with target remote branch
 ```
 
 ## Step 2: run validation block
+
+Preferred unified block:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Mode md,json,python,chunks,context_pack,agent_state,official,contract,full_validation `
+  -RunIntensity quick
+```
 
 Focused NPU helper block when applicable:
 
@@ -124,7 +193,7 @@ Focused NPU helper block when applicable:
 powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
 ```
 
-Manual full validation block:
+Manual full validation block remains available when debugging individual validators:
 
 ```powershell
 python .\Tools\validation\check_python_syntax.py --repo-root .
@@ -149,7 +218,17 @@ python .\Tools\validation\check_json_artifacts.py --repo-root .
 
 ## Step 3: inspect reports
 
-AI pipeline reports:
+Primary inspection:
+
+```powershell
+$ManifestPath = Get-ChildItem .\output\local_ai_runs -Recurse -Filter unified_local_ai_refactor_manifest.json |
+  Sort-Object LastWriteTime -Descending |
+  Select-Object -First 1 -ExpandProperty FullName
+
+Get-Content $ManifestPath -Raw | ConvertFrom-Json | Select-Object mode, full_0_to_10_requested, run_intensity, provider_execution_requested, quality_gate_passed, phase_reports, errors, warnings
+```
+
+Focused AI pipeline reports:
 
 ```powershell
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
@@ -188,7 +267,9 @@ guardrail_remediation_loop
 steps
 ```
 
-## Step 4: regenerate AI/NPU indexes
+## Step 4: regenerate AI/NPU indexes only when needed
+
+Generated indexes are not source-of-truth docs. Regenerate only when structural/code changes require it:
 
 ```powershell
 python .\Tools\npu\build_project_ai_index.py
@@ -212,20 +293,38 @@ indexAI/project_code_chunks/
 Tools/npu/npu_code_chunks/
 ```
 
+Policy:
+
+```text
+Do not hand-edit generated indexes.
+Do not commit generated chunks unless repository policy for that path explicitly tracks them.
+Do not regenerate indexes just because a docs-only PR ran validation.
+```
+
 ## Step 5: inspect Git changes
 
 ```powershell
 git status
 git diff --stat
+git diff --check
 ```
 
-If validation produced only local output reports, they should normally remain uncommitted unless intentionally tracked.
+If validation produced only local output reports, they should normally remain uncommitted.
 
-If only generated AI/NPU indexes changed, continue with Step 6.
+If generated indexes changed, commit them only when intentional and useful for review.
 
 If source files changed unexpectedly, stop and review before committing.
 
-## Step 6: commit generated indexes
+## Step 6: commit intended changes
+
+For documentation/source changes:
+
+```powershell
+git add <intended-files>
+git commit -m "<scope>: <message>"
+```
+
+For intentional generated AI/NPU index regeneration:
 
 ```powershell
 git add Tools/npu/npu_code_context.md `
@@ -241,7 +340,7 @@ If chunks are tracked and changed, inspect `git status` and add them intentional
 
 ## Step 7: push
 
-For master:
+For master, only after explicit approval when required by project guardrails:
 
 ```powershell
 git push origin master
@@ -263,18 +362,25 @@ git log --oneline -n 20
 Expected final state:
 
 ```text
-working tree clean
+working tree clean except intentionally ignored local artifacts
 branch up to date with remote
-latest commit is index regeneration or intended documentation/source update
+latest commit is intended documentation/source/index update
 ```
 
 ## What to share for review
 
-Share these outputs:
+Share these first:
 
 ```powershell
 git status
 git log --oneline -n 20
+$ManifestPath
+Get-Content $ManifestPath -Raw
+```
+
+Then share focused reports if relevant:
+
+```powershell
 Get-Content .\output\validation\ai_pipeline_modules.json -Raw
 Get-Content .\output\validation\npu_pipeline_modules.json -Raw
 Get-Content .\output\validation\npu_pipeline_helper_tests.json -Raw
@@ -403,3 +509,5 @@ Do not commit output validation reports unless explicitly needed.
 Do not modify Blender runtime packages while validating AI pipeline or NPU helper refactors.
 
 Do not wire `Tools/npu/pipeline/` helpers into `Tools/npu/run_dual_ai_pipeline.py` until focused NPU helper validation, full local validation and index regeneration pass.
+
+Do not treat push-capable workflow helpers as default validation commands. Any push-capable helper must require explicit user intent and visible git status review.
