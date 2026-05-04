@@ -1238,3 +1238,16 @@ output/ai_packets/<DataStamp>
 
 When the root folder is passed, every immediate timestamp folder under `output/ai_packets` is inspected. Only concrete workload report files are selected; packet directories are never passed as context files.
 
+
+### Launcher directory variable contract
+
+The root launcher reference `FULL_RUN_UNICA_TUTTO_SU_TUTTO.md` is the canonical executable reference for full-run variables.
+
+Directory naming rule:
+
+- PowerShell variable: `$OutputDir`
+- Launcher parameter: `-OutputDir`
+- Python directory argument: `--output-dir`
+- Compact evidence variable/parameter: `$EvidenceDir` / `-EvidenceDir`
+
+The full run must preserve the `TUTTO SU TUTTO` policy while keeping runtime output, compact evidence and AI packets explicitly separated.

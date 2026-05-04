@@ -321,6 +321,7 @@ def check_ai_workload_report_quality(
         "policy": "selected_output_folder_workload_reports_only",
         "mode": "report_only_workload_quality_gate",
         "selection_mode": selection_mode,
+        "report_dir_cli_supported": True,
         "report_dir": relative_or_absolute_path(report_dir, repo_root),
         "packet_dirs": [
             relative_or_absolute_path(item, repo_root)

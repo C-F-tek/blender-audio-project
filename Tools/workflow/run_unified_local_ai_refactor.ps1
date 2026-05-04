@@ -30,7 +30,9 @@ param(
     [string]$TaskFile = ".\docs\LOCAL_AI_TASKS\docs-md-obsolete-pruning-next-step.md",
     [string]$TaskBranch = "",
     [string]$Stamp = "",
-    [string]$AiPacketsRoot = "output/ai_packets",
+    [string]$OutputDir = "output",
+    [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
+    [string]$AiPacketsRoot = "",
     [string]$AiPacketsDir = "",
     [ValidateSet("core", "npu", "docs")]
     [string]$Profile = "docs",
@@ -556,7 +558,11 @@ function Start-UnifiedLauncherExecutionTranscript {
         $safeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
     }
 
-    $transcriptDir = Join-Path $Root ("output/local_ai_runs/{0}_unified_launcher_transcript" -f $safeStamp)
+    $transcriptOutputDir = "output"
+    if (-not [string]::IsNullOrWhiteSpace($Script:UnifiedLauncherOutputDir)) {
+        $transcriptOutputDir = $Script:UnifiedLauncherOutputDir
+    }
+    $transcriptDir = Join-Path $Root (Join-Path $transcriptOutputDir ("local_ai_runs/{0}_unified_launcher_transcript" -f $safeStamp))
     $transcriptPath = Join-Path $transcriptDir ("unified_launcher_console_{0}.log" -f $safeStamp)
 
     try {
@@ -629,7 +635,11 @@ function Write-UnifiedLauncherExecutionTailEvidence {
         $_ -match "AVVISO|WARNING|Warning|failed with exit code|Fatal|fatal|Passed: False|Patch plan count: 0|provider.*failed|did not pass"
     } | Select-Object -Last 80)
 
-    $evidenceDir = Join-Path $Root "docs/LOCAL_VALIDATION_EVIDENCE"
+    $evidenceDirRelative = "docs/LOCAL_VALIDATION_EVIDENCE"
+    if (-not [string]::IsNullOrWhiteSpace($Script:UnifiedLauncherEvidenceDir)) {
+        $evidenceDirRelative = $Script:UnifiedLauncherEvidenceDir
+    }
+    $evidenceDir = Join-Path $Root $evidenceDirRelative
     New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
 
     $jsonPath = Join-Path $evidenceDir ("unified_launcher_execution_tail_{0}.json" -f $safeStamp)
@@ -741,6 +751,18 @@ if ($Full0To10) {
 
 if ([string]::IsNullOrWhiteSpace($Stamp)) { $Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
 $DataStamp = $Stamp
+# IA_CARMINE_OUTPUT_DIR_EVIDENCE_DIR_FALLBACK_BEGIN
+if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = "output" }
+if ([string]::IsNullOrWhiteSpace($EvidenceDir)) { $EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE" }
+if ([string]::IsNullOrWhiteSpace($AiPacketsRoot)) { $AiPacketsRoot = Join-Path $OutputDir "ai_packets" }
+if ([string]::IsNullOrWhiteSpace($AiPacketsDir)) { $AiPacketsDir = Join-Path $AiPacketsRoot $DataStamp }
+$RunDir = Join-Path (Join-Path $OutputDir "local_ai_runs") ("{0}_unified_launcher" -f $Stamp)
+$ManifestPath = Join-Path $RunDir ("unified_launcher_manifest_{0}.json" -f $Stamp)
+$ReportFiles = @()
+$ContextFiles = @()
+$Script:UnifiedLauncherOutputDir = $OutputDir
+$Script:UnifiedLauncherEvidenceDir = $EvidenceDir
+# IA_CARMINE_OUTPUT_DIR_EVIDENCE_DIR_FALLBACK_END
 Start-UnifiedLauncherExecutionTranscript -StampValue $Stamp -Root $RepoRoot -ProdMode ([bool]$Prod)
 if ($RunIntensity -ne "custom") {
     if ($RunIntensity -eq "quick") {
@@ -1119,6 +1141,8 @@ if ($RunLegacyFullToolboxIntegrated) {
     $LegacyFullToolboxReport = ".\output\validation\agent_review_full_toolbox_decision_loop_${Stamp}_integrated.json"
     $LegacyArgs = @{
         RepoRoot = "."
+        OutputRoot = $OutputDir
+        EvidenceDir = $EvidenceDir
         Stamp = $Stamp
         BudgetMinutes = $BudgetMinutes
         MaxRounds = $MaxRounds

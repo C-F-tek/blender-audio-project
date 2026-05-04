@@ -401,3 +401,20 @@ The next AI-generated patch plan must include at least:
 5. Preserve FULL RUN UNICA / TUTTO SU TUTTO behavior.
 6. Preserve report/proposal-only default: no patch apply without explicit apply command.
 ```
+
+## Big patch launcher contract
+
+This repository now treats the root full-run script as the executable reference for the canonical all-lanes run.
+
+Contract additions:
+
+- `$OutputDir` is the PowerShell launcher variable for local runtime output.
+- `-OutputDir` is the launcher parameter to be wired by the workflow.
+- Python tools continue to use `--output-dir` when they accept an output directory.
+- `$EvidenceDir` is the compact evidence directory.
+- `$AiPacketsRoot` defaults to `$OutputDir/ai_packets` when not explicitly supplied.
+- `$AiPacketsDir` defaults to `$AiPacketsRoot/$DataStamp` when not explicitly supplied.
+- Early failure-tail evidence must work even before the normal run manifest is fully built.
+- `check_ai_workload_report_quality.py` must accept `--report-dir` and report `report_dir_cli_supported=true`.
+
+The previous observed failure is therefore classified as a launcher/checker contract regression if it reappears after this patch.
