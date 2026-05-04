@@ -90,6 +90,8 @@ HISTORICAL_DOC_BASENAMES = {
     "codex_project_status_handoff.md",
 }
 ALLOWED_CONTROL_CHARACTERS = {"\n", "\r", "\t"}
+LONG_MARKDOWN_WARNING_LINES = 400
+LONG_MARKDOWN_HARD_REVIEW_LINES = 700
 
 
 def repo_relative(path: Path, repo_root: Path) -> str:
@@ -115,6 +117,14 @@ def first_heading(text: str) -> str | None:
 
 def control_character_count(text: str) -> int:
     return sum(1 for char in text if ord(char) < 32 and char not in ALLOWED_CONTROL_CHARACTERS)
+
+
+def length_class(line_count: int) -> str:
+    if line_count >= LONG_MARKDOWN_HARD_REVIEW_LINES:
+        return "hard_review_required"
+    if line_count >= LONG_MARKDOWN_WARNING_LINES:
+        return "split_recommended"
+    return "ok"
 
 
 def is_github_template(rel_path: str) -> bool:
@@ -239,6 +249,7 @@ def requires_index_review(category: str, index_hits: list[str]) -> bool:
 def inventory_item(path: Path, repo_root: Path, index_texts: dict[str, str]) -> dict[str, Any]:
     rel = repo_relative(path, repo_root)
     text = read_text(path)
+    lines = len(text.splitlines())
     category = classify_markdown(rel)
     lifecycle = lifecycle_for(category, rel)
     index_hits = indexed_by(rel, index_texts)
@@ -248,12 +259,15 @@ def inventory_item(path: Path, repo_root: Path, index_texts: dict[str, str]) -> 
         "category": category,
         "lifecycle": lifecycle,
         "heading": first_heading(text),
-        "lines": len(text.splitlines()),
+        "lines": lines,
         "size_bytes": path.stat().st_size,
         "indexed_by": index_hits,
         "indexed": bool(index_hits) or rel in CANONICAL_INDEX_FILES,
         "prune_candidate": is_prune_candidate(category, lifecycle, index_hits),
         "requires_index_review": requires_index_review(category, index_hits),
+        "length_class": length_class(lines),
+        "split_recommended": lines >= LONG_MARKDOWN_WARNING_LINES,
+        "hard_review_required": lines >= LONG_MARKDOWN_HARD_REVIEW_LINES,
         "control_character_count": control_chars,
         "has_control_characters": control_chars > 0,
     }
@@ -268,13 +282,17 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 
     by_category: dict[str, int] = {}
     by_lifecycle: dict[str, int] = {}
+    by_length_class: dict[str, int] = {}
     for item in items:
         by_category[item["category"]] = by_category.get(item["category"], 0) + 1
         by_lifecycle[item["lifecycle"]] = by_lifecycle.get(item["lifecycle"], 0) + 1
+        by_length_class[item["length_class"]] = by_length_class.get(item["length_class"], 0) + 1
 
     missing_index = [item for item in items if item["requires_index_review"]]
     prune_candidates = [item for item in items if item["prune_candidate"]]
     control_character_files = [item for item in items if item["has_control_characters"]]
+    long_markdown_files = [item for item in items if item["split_recommended"]]
+    hard_review_markdown_files = [item for item in items if item["hard_review_required"]]
 
     return {
         "schema_version": 1,
@@ -288,12 +306,19 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "indexed_source_files": sorted(index_texts),
         "category_counts": by_category,
         "lifecycle_counts": by_lifecycle,
+        "length_class_counts": by_length_class,
+        "long_markdown_warning_lines": LONG_MARKDOWN_WARNING_LINES,
+        "long_markdown_hard_review_lines": LONG_MARKDOWN_HARD_REVIEW_LINES,
         "missing_index_count": len(missing_index),
         "prune_candidate_count": len(prune_candidates),
         "control_character_file_count": len(control_character_files),
+        "long_markdown_file_count": len(long_markdown_files),
+        "hard_review_markdown_file_count": len(hard_review_markdown_files),
         "missing_index": missing_index,
         "prune_candidates": prune_candidates,
         "control_character_files": control_character_files,
+        "long_markdown_files": long_markdown_files,
+        "hard_review_markdown_files": hard_review_markdown_files,
         "items": items,
         "errors": [],
         "warnings": [
@@ -304,6 +329,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             "Historical project handoff records are excluded from maintained source-doc index review.",
             "Superseded root guides are retained but point to their canonical replacement.",
             "Markdown control characters indicate likely copy/paste or escaping corruption and require focused review.",
+            "Long Markdown files should be split, summarized or demoted to historical/generated context before they become unreviewable.",
         ],
     }
 
@@ -317,6 +343,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Missing index review count: `{report['missing_index_count']}`")
     lines.append(f"- Prune candidate count: `{report['prune_candidate_count']}`")
     lines.append(f"- Control-character file count: `{report['control_character_file_count']}`")
+    lines.append(f"- Long Markdown file count: `{report['long_markdown_file_count']}`")
+    lines.append(f"- Hard-review Markdown file count: `{report['hard_review_markdown_file_count']}`")
     lines.append("- Provider execution performed: `False`")
     lines.append("- Patch application performed: `False`")
     lines.append("")
@@ -326,6 +354,13 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append("|---|---:|")
     for category, count in sorted(report["category_counts"].items()):
         lines.append(f"| `{category}` | {count} |")
+    lines.append("")
+    lines.append("## Length class counts")
+    lines.append("")
+    lines.append("| Length class | Count |")
+    lines.append("|---|---:|")
+    for length_name, count in sorted(report["length_class_counts"].items()):
+        lines.append(f"| `{length_name}` | {count} |")
     lines.append("")
     lines.append("## Missing index review")
     lines.append("")
@@ -355,6 +390,22 @@ def render_markdown(report: dict[str, Any]) -> str:
     else:
         lines.append("No prune candidates.")
     lines.append("")
+    lines.append("## Long Markdown review")
+    lines.append("")
+    lines.append(f"Warning threshold: `{report['long_markdown_warning_lines']}` lines.")
+    lines.append(f"Hard-review threshold: `{report['long_markdown_hard_review_lines']}` lines.")
+    lines.append("")
+    if report["long_markdown_files"]:
+        lines.append("| Path | Category | Lifecycle | Length class | Lines |")
+        lines.append("|---|---|---|---|---:|")
+        for item in report["long_markdown_files"]:
+            lines.append(
+                f"| `{item['path']}` | `{item['category']}` | `{item['lifecycle']}` | "
+                f"`{item['length_class']}` | {item['lines']} |"
+            )
+    else:
+        lines.append("No Markdown files above the long-file threshold.")
+    lines.append("")
     lines.append("## Control-character review")
     lines.append("")
     if report["control_character_files"]:
@@ -370,12 +421,12 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append("")
     lines.append("## Full Markdown map")
     lines.append("")
-    lines.append("| Path | Category | Lifecycle | Indexed | Lines | Control chars |")
-    lines.append("|---|---|---|---|---:|---:|")
+    lines.append("| Path | Category | Lifecycle | Indexed | Lines | Length class | Control chars |")
+    lines.append("|---|---|---|---|---:|---|---:|")
     for item in report["items"]:
         lines.append(
             f"| `{item['path']}` | `{item['category']}` | `{item['lifecycle']}` | "
-            f"`{item['indexed']}` | {item['lines']} | {item['control_character_count']} |"
+            f"`{item['indexed']}` | {item['lines']} | `{item['length_class']}` | {item['control_character_count']} |"
         )
     lines.append("")
     return "\n".join(lines)
