@@ -9,7 +9,39 @@ The policy applies to generic memory records produced by:
 ```text
 Tools/ai/build_agent_state_packet.py
 Tools/ai/review_agent_memory.py
+Tools/ai/build_agent_memory_inventory.py
 indexAI/agent_memory/agent_memory.sqlite
+```
+
+The unified launcher is the preferred entrypoint for full memory-aware local AI runs:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+## Active memory components
+
+These files are active memory/context helpers and must not be treated as forgotten or obsolete simply because they are not all user-facing commands.
+
+| File | Role | User-facing status |
+|---|---|---|
+| `Tools/ai/agent_state.py` | Generic memory record and microtask packet model. | Internal library. |
+| `Tools/ai/build_agent_state_packet.py` | Builds task-local agent-state packets and optional memory handoff context. | Supporting CLI, invoked by unified launcher. |
+| `Tools/ai/review_agent_memory.py` | Reviews local memory for keep/promote/quarantine/drop decisions. | Supporting CLI. |
+| `Tools/ai/build_agent_memory_inventory.py` | Builds memory inventory / visibility reports. | Supporting CLI. |
+| `Tools/ai/agent_memory_policy.py` | Deterministic retention and promotion policy logic. | Internal policy module. |
+| `Tools/ai/agent_memory_routing_policy.py` | Routing policy for memory selection and context placement. | Internal policy module. |
+| `Tools/ai/agent_runtime_sqlite_memory.py` | SQLite-backed runtime memory helpers. | Internal/local runtime helper. |
+| `Tools/npu/ai_memory_context.py` | NPU-side memory/context integration helper. | Runtime-adjacent helper; provider execution remains explicit. |
+
+Policy:
+
+```text
+Do not remove these references unless the corresponding files are removed from the repo.
+Do not commit SQLite DBs or local memory output files.
+Do not select quarantined/private/local-only records into provider prompts.
+Expose memory input/output in the unified launcher manifest when used.
 ```
 
 ## Storage
@@ -223,6 +255,12 @@ Review local memory:
 python .\Tools\ai\review_agent_memory.py --repo-root .
 ```
 
+Build memory inventory:
+
+```powershell
+python .\Tools\ai\build_agent_memory_inventory.py --repo-root . --output .\output\validation\agent_memory_inventory.json
+```
+
 Validate the policy and the local DB when it exists:
 
 ```powershell
@@ -233,6 +271,14 @@ Build a task packet with SQLite memory:
 
 ```powershell
 python .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan Blender/audio smoke tests" --memory-db .\indexAI\agent_memory\agent_memory.sqlite --save-inputs-to-memory-db --memory-note "Keep runtime packages unchanged until smoke passes."
+```
+
+Preferred unified launcher memory-aware run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Mode agent_state,context_pack,contract,full_validation `
+  -SaveInputsToMemoryDb
 ```
 
 ## Blender/Audio Rule
