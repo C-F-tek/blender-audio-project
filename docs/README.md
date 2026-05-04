@@ -66,6 +66,7 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 | `PROJECT_AI_CONSCIOUSNESS.md` | Compact operational memory and architecture boundary for AI agents. |
 | `REFACTORING_AND_REUSE_PLAN.md` | Progressive encapsulation and reuse/refactoring strategy. |
 | `QUALITY_GATE.md` | Cross-domain quality gates for packages, validators, generated Python and report contracts. |
+| `INDEX_REGEN_POLICY.md` | App/local ownership and regeneration policy for AI/NPU indexes. |
 | `DATA_FLOW.md` | App-agnostic data/report/provider flow. |
 | `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow and evidence handling. |
 | `LOCAL_RUNS_TESTING_AND_EVIDENCE.md` | Local run, testing and evidence practices across workflows. |
@@ -90,12 +91,22 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 | `AI_PIPELINE_ARCHITECTURE.md` | Modular AI artifact pipeline map. |
 | `AI_PIPELINE_REFACTOR_STATUS.md` | Stable refactor status marker. |
 | `AI_ARTIFACT_SCHEMAS.md` | AI artifact schema notes. |
+| `AGENT_REVIEW_CODE_PATCH_PLAN.md` | Manual-review, report-only code patch-plan lane and docs follow-up bridge. |
 | `GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | Future generated Python adapter template. |
 | `PATCH_SPEC_WORKFLOW.md` | Safe JSON patch-spec workflow. |
 | `AI_REFERENCE_ONBOARDING.md` | AI-to-AI reference onboarding. |
 | `AI_REFERENCE_SOURCE_MAP.md` | Source map for AI references and evidence. |
 | `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this repo. |
 | `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | External agent engineering patterns mapped to project actions. |
+
+## Historical reports and handoffs
+
+These are retained for evidence/history but are not canonical reading-path docs:
+
+| File | Replacement/current source |
+|---|---|
+| `CODE_CONSULTATION_REPORT.md` | Current state is tracked by `PROJECT_STATUS_POINT.md`, `MODULE_MAP.md`, `REFACTORING_AND_REUSE_PLAN.md`, validation reports and live repository inspection. |
+| `codex_project_status_handoff.md` | Historical 2026-04-29 handoff; use current root/docs/task indexes. |
 
 ## Blender/audio docs
 
