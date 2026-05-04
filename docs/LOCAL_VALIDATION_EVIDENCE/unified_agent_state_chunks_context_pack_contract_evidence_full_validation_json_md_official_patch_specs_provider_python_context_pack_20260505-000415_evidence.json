@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "kind": "ai_context_pack_evidence",
+  "generated_at": "2026-05-05T00:04:20",
+  "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "profile": "core_ai_backend",
+  "profile_description": "Core backend orchestration, validation and evidence context.",
+  "source_pack": "output/ai_context_packs/unified_agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_context_pack_20260505-000415.json",
+  "source_pack_markdown": "output/ai_context_packs/unified_agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_context_pack_20260505-000415.md",
+  "passed": true,
+  "errors": [],
+  "warnings": [
+    "context content truncated for README.md",
+    "context content truncated for WORKFLOW.md",
+    "context content truncated for docs/DATA_FLOW.md",
+    "context content truncated for docs/LOCAL_AI_WORKFLOW.md",
+    "context content truncated for docs/JSON_SCHEMAS.md",
+    "context content truncated for Tools/ai/build_workload_quality_lane_routing.py",
+    "context content truncated for Tools/ai/suggest_repository_updates.py",
+    "context content truncated for Tools/ai/build_github_evidence_bundle.py",
+    "context content truncated for Tools/validation/README.md",
+    "context content truncated for docs/TECH_DEBT_TRACKER.md"
+  ],
+  "provider_execution_performed": false,
+  "apply_mode": "context_only",
+  "file_count": 11,
+  "included_file_count": 11,
+  "truncated_file_count": 10,
+  "total_included_chars": 43093,
+  "validation_command_count": 3,
+  "required_missing": [],
+  "forbidden_path_count": 0,
+  "blender_runtime_touched": false,
+  "included_paths": [
+    {
+      "path": "README.md",
+      "role": "project_identity",
+      "required": true,
+      "included": true,
+      "truncated": true,
+      "sha256": "7955f99cf853412e658dcb30f3426fd9b64dacf98ba084bd285fa33f5138ccc7",
+      "included_chars": 4000
+    },
+    {
+      "path": "WORKFLOW.md",
+      "role": "operational_workflow",
+      "required": true,
+      "included": true,
+      "truncated": true,
+      "sha256": "7ba82c404878664b1277a1f05361f17c8083a37c254b5fc624a98a2c03be022a",
+      "included_chars": 4000
+    },
+    {
+      "path": "docs/DATA_FLOW.md",
+      "role": "data_flow",
+      "required": true,
+      "included": true,
+      "truncated": true,
+      "sha256": "fd245182ff73262a0489053d06428351dc2c1013827849672e56b991a3438527",
+      "included_chars": 4000
+    },
+    {
+      "path": "docs/LOCAL_AI_WORKFLOW.md",
+      "role": "ai_workflow",
+      "required": true,
+      "included": true,
+      "truncated": true,
+      "sha256": "f95c9c9e2a0f60ea72faec410b1c30560fe9deded71c7aeafe3d5a72895c5744",
+      "included_chars": 4000
+    },
+    {
+      "path": "docs/JSON_SCHEMAS.md",
+      "role": "schema_notes",
+      "required": true,
+      "included": true,
+      "truncated": true,
+      "sha256": "169ef47912b7d3660f10134707816fb3f9fd62b4e77ab32683bd76346be737ea",
+      "included_chars": 4000
+    },
+    {
+      "path": "Tools/ai/build_workload_quality_lane_routing.py",
+      "role": "lane_routing",
+      "required": true,
+      "included": true,
+      "truncated": true,
+      "sha256": "6e37d8b66e0e10b8eb3a2f3650e9cb2be99394e1d228f8ed75b52b8a234311f8",
+      "included_chars": 4000
+    },
+    {
+      "path": "Tools/ai/suggest_repository_updates.py",
+      "role": "advisory_packet",
+      "required": true,
+      "included": true,
+      "truncated": true,
+      "sha256": "018d0317758643b36ce5129fb86c30572dbcd3931d4c5d6a0c32a5ef7543fb3e",
+      "included_chars": 4000
+    },
+    {
+      "path": "Tools/ai/build_github_evidence_bundle.py",
+      "role": "evidence_builder",
+      "required": true,
+      "included": true,
+      "truncated": true,
+      "sha256": "62e9e3f3e41503f51b93aba98261d2d145b26aec7609630caabb6064d1f8fa5d",
+      "included_chars": 4000
+    },
+    {
+      "path": "Tools/validation/README.md",
+      "role": "validation_commands",
+      "required": true,
+      "included": true,
+      "truncated": true,
+      "sha256": "83e6c7157f9c6afb6d046796c0c4a46587c808c6433622e9522ee9d1bf7ab90e",
+      "included_chars": 4000
+    },
+    {
+      "path": "docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md",
+      "role": "baseline_evidence",
+      "required": false,
+      "included": true,
+      "truncated": false,
+      "sha256": "3de2189fc03564c8a6653d4754d8409e74db216abd2976002d80407d28182ea4",
+      "included_chars": 3093
+    },
+    {
+      "path": "docs/TECH_DEBT_TRACKER.md",
+      "role": "debt_tracker",
+      "required": false,
+      "included": true,
+      "truncated": true,
+      "sha256": "729677aa26ba9210201198381f757bfb02c897f15b85c3a46b8634b694cc5d9e",
+      "included_chars": 4000
+    }
+  ],
+  "decision": {
+    "context_pack_built": true,
+    "provider_execution_seen": false,
+    "forbidden_paths_blocked": true,
+    "source_writes_performed": false
+  },
+  "evidence_json": "docs/LOCAL_VALIDATION_EVIDENCE/unified_agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_context_pack_20260505-000415_evidence.json",
+  "evidence_markdown": "docs/LOCAL_VALIDATION_EVIDENCE/unified_agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_context_pack_20260505-000415_evidence.md"
+}
