@@ -25,6 +25,7 @@ legacy full toolbox integrated lane via run_agent_review_full_toolbox_decision_l
 no automatic patch apply
 no automatic commit/push/merge
 no Blender/FFmpeg execution
+manifest fields for full_0_to_10_requested, run_intensity, workload_quality_routing_ok, quality_gate_passed, memory_in_enabled and memory_out_enabled
 ```
 
 Recent relevant commits on this branch:
@@ -37,6 +38,63 @@ b3f1ac3 docs: point root README to unified local AI launcher
 74b6a9b docs: update agent contract for unified 0-to-10 launcher
 c2e1c1a docs: route local AI workflows through unified launcher
 d3c2796 docs: update documentation index for unified 0-to-10 launcher
+1199242 docs(workflow): clarify current launcher parameter wiring
+```
+
+## Verified code-reference state
+
+Compared against `Tools/workflow/run_unified_local_ai_refactor.ps1` in PR #187.
+
+Current exposed parameters include:
+
+```text
+-RunIntensity
+-BudgetMinutes
+-MaxRounds
+-FilesPerRound
+-MaxContextFiles
+-MaxCharsPerFile
+-MaxNewTokens
+-KeepAlive
+-NpuAuditorEveryRounds
+-NpuAuditorTimeoutSeconds
+-NpuMaxContextChars
+-NpuMaxPromptChars
+-NpuMaxNewTokens
+-NpuFinalWaitSeconds
+-MinRecommendations
+-MinPatchPlans
+-MaxRecommendations
+-MaxPatchPlans
+-RepositoryConsistencyMapWorkers
+-ProviderMaxContextChars
+-ContextPackMaxTotalChars
+-ContextPackMaxFileChars
+-AgentStateMaxMemoryChars
+-MemoryDb
+-SaveInputsToMemoryDb
+-MatrixWorkers
+-RepeatCases
+```
+
+Confirmed wiring:
+
+```text
+BudgetMinutes, MaxRounds, FilesPerRound, MaxContextFiles, MaxCharsPerFile, MaxNewTokens, KeepAlive and NPU auditor knobs are passed to run_agent_review_full_toolbox_decision_loop_integrated.ps1.
+Full0To10 enables UseOllamaAdvisory, UsePrimaryAdvisoryProvider, FullContextGoldenPath, BuildWorkloadQualityReport, RunMultistepProviderWorkflow, RunOllamaProbe, RunNpuProbe, RunNpuDecodeSmoke, SaveInputsToMemoryDb, BuildEvidence, GeneratePatchSpecs and RunLegacyFullToolboxIntegrated unless disabled.
+Manifest records full_0_to_10_requested, run_intensity, intensity parameters, workload_quality_routing_ok, memory_in_enabled, memory_out_enabled and quality_gate_passed.
+```
+
+Confirmed gaps to fix next:
+
+```text
+ContextPackMaxTotalChars is exposed but context_pack still calls build_ai_context_pack.py with --max-total-chars 64000.
+ContextPackMaxFileChars is exposed but context_pack still calls build_ai_context_pack.py with --max-file-chars 4000.
+AgentStateMaxMemoryChars is exposed but agent_state still calls build_agent_state_packet.py with --max-memory-chars 24000.
+ProviderMaxContextChars is exposed and preset-adjusted but official adapter and Ollama packet still use MaxContextChars.
+Output paths are still hardcoded to output/local_ai_runs, output/validation, output/ai_pipeline and output/patch_specs.
+Official/Ollama/context-pack basenames are still generated internally and cannot yet be overridden from CLI.
+External context/report/artifact files are not yet accepted from CLI.
 ```
 
 ## User requirement for next step
@@ -137,6 +195,31 @@ if ([string]::IsNullOrWhiteSpace($ContextPackBasename)) { $ContextPackBasename =
 if ([string]::IsNullOrWhiteSpace($ContextPackEvidenceBasename)) { $ContextPackEvidenceBasename = "${ContextPackBasename}_evidence" }
 ```
 
+## Required wiring replacements
+
+These replacements are mandatory, not optional:
+
+```text
+context_pack call:
+  "--max-total-chars", "64000" -> "--max-total-chars", "$ContextPackMaxTotalChars"
+  "--max-file-chars", "4000" -> "--max-file-chars", "$ContextPackMaxFileChars"
+
+agent_state call:
+  "--max-memory-chars", "24000" -> "--max-memory-chars", "$AgentStateMaxMemoryChars"
+
+official adapter call:
+  "-MaxContextChars", "$MaxContextChars" -> chosen official/provider context variable, defaulting to $ProviderMaxContextChars or $MaxContextChars.
+
+Ollama packet call:
+  "-MaxContextChars", "$MaxContextChars" -> chosen Ollama/provider context variable, defaulting to $ProviderMaxContextChars or $MaxContextChars.
+
+output dirs:
+  $RunDir = "output/local_ai_runs/..." -> $LocalRunsOutputDir
+  $ValidationDir = "output/validation" -> $ValidationOutputDir
+  New-Item output/ai_pipeline -> $AiPipelineOutputDir
+  output/patch_specs references -> $PatchSpecOutputDir where used by generated patch-spec phases.
+```
+
 ## Manifest additions
 
 Add these manifest fields:
@@ -218,6 +301,16 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_uni
   -NoBranch `
   -AllowDirty
 ```
+
+Additional wiring validation after patch:
+
+```powershell
+Select-String -Path .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Pattern '64000|4000|24000|output/local_ai_runs|output/validation|output\\ai_pipeline|output/ai_pipeline' |
+  Select-Object LineNumber, Line
+```
+
+Expected: only acceptable defaults in parameter declarations, not hardcoded subordinate call arguments.
 
 Git checks:
 
