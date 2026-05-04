@@ -89,6 +89,7 @@ HISTORICAL_TASK_BASENAMES = {
 HISTORICAL_DOC_BASENAMES = {
     "codex_project_status_handoff.md",
 }
+ALLOWED_CONTROL_CHARACTERS = {"\n", "\r", "\t"}
 
 
 def repo_relative(path: Path, repo_root: Path) -> str:
@@ -110,6 +111,10 @@ def first_heading(text: str) -> str | None:
         if stripped.startswith("# "):
             return stripped[2:].strip() or None
     return None
+
+
+def control_character_count(text: str) -> int:
+    return sum(1 for char in text if ord(char) < 32 and char not in ALLOWED_CONTROL_CHARACTERS)
 
 
 def is_github_template(rel_path: str) -> bool:
@@ -237,6 +242,7 @@ def inventory_item(path: Path, repo_root: Path, index_texts: dict[str, str]) -> 
     category = classify_markdown(rel)
     lifecycle = lifecycle_for(category, rel)
     index_hits = indexed_by(rel, index_texts)
+    control_chars = control_character_count(text)
     item: dict[str, Any] = {
         "path": rel,
         "category": category,
@@ -248,6 +254,8 @@ def inventory_item(path: Path, repo_root: Path, index_texts: dict[str, str]) -> 
         "indexed": bool(index_hits) or rel in CANONICAL_INDEX_FILES,
         "prune_candidate": is_prune_candidate(category, lifecycle, index_hits),
         "requires_index_review": requires_index_review(category, index_hits),
+        "control_character_count": control_chars,
+        "has_control_characters": control_chars > 0,
     }
     if rel in SUPERSEDED_ROOT_GUIDES:
         item["superseded_by"] = SUPERSEDED_ROOT_GUIDES[rel]
@@ -266,6 +274,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 
     missing_index = [item for item in items if item["requires_index_review"]]
     prune_candidates = [item for item in items if item["prune_candidate"]]
+    control_character_files = [item for item in items if item["has_control_characters"]]
 
     return {
         "schema_version": 1,
@@ -281,8 +290,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "lifecycle_counts": by_lifecycle,
         "missing_index_count": len(missing_index),
         "prune_candidate_count": len(prune_candidates),
+        "control_character_file_count": len(control_character_files),
         "missing_index": missing_index,
         "prune_candidates": prune_candidates,
+        "control_character_files": control_character_files,
         "items": items,
         "errors": [],
         "warnings": [
@@ -292,6 +303,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             "Historical local AI task records are classified separately from current task entrypoints.",
             "Historical project handoff records are excluded from maintained source-doc index review.",
             "Superseded root guides are retained but point to their canonical replacement.",
+            "Markdown control characters indicate likely copy/paste or escaping corruption and require focused review.",
         ],
     }
 
@@ -304,6 +316,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Markdown files: `{report['markdown_count']}`")
     lines.append(f"- Missing index review count: `{report['missing_index_count']}`")
     lines.append(f"- Prune candidate count: `{report['prune_candidate_count']}`")
+    lines.append(f"- Control-character file count: `{report['control_character_file_count']}`")
     lines.append("- Provider execution performed: `False`")
     lines.append("- Patch application performed: `False`")
     lines.append("")
@@ -342,14 +355,27 @@ def render_markdown(report: dict[str, Any]) -> str:
     else:
         lines.append("No prune candidates.")
     lines.append("")
+    lines.append("## Control-character review")
+    lines.append("")
+    if report["control_character_files"]:
+        lines.append("| Path | Category | Lifecycle | Control chars | Lines |")
+        lines.append("|---|---|---|---:|---:|")
+        for item in report["control_character_files"]:
+            lines.append(
+                f"| `{item['path']}` | `{item['category']}` | `{item['lifecycle']}` | "
+                f"{item['control_character_count']} | {item['lines']} |"
+            )
+    else:
+        lines.append("No Markdown files with non-whitespace control characters.")
+    lines.append("")
     lines.append("## Full Markdown map")
     lines.append("")
-    lines.append("| Path | Category | Lifecycle | Indexed | Lines |")
-    lines.append("|---|---|---|---|---:|")
+    lines.append("| Path | Category | Lifecycle | Indexed | Lines | Control chars |")
+    lines.append("|---|---|---|---|---:|---:|")
     for item in report["items"]:
         lines.append(
             f"| `{item['path']}` | `{item['category']}` | `{item['lifecycle']}` | "
-            f"`{item['indexed']}` | {item['lines']} |"
+            f"`{item['indexed']}` | {item['lines']} | {item['control_character_count']} |"
         )
     lines.append("")
     return "\n".join(lines)
