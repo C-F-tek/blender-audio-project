@@ -75,7 +75,7 @@ Interactive phase picker:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Interactive
 ```
 
-Legacy 0-to-10 scripts/runbooks are no longer the first operator path. Use them only as internal lanes or historical detail unless the user explicitly requests a legacy manual procedure.
+Legacy monolithic 0-to-10 scripts/runbooks are not an active operator path. Historical details belong in git history or compact evidence, not in parallel maintained entrypoints.
 
 ## Provider policy
 
