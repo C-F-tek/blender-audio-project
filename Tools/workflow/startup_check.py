@@ -228,18 +228,40 @@ def build_report(project: Path = PROJECT_DIR, root: Path = ROOT) -> dict:
         add(checks, "Workflow session", "WARN", str(exc))
 
     statuses = [item.status for item in checks]
+    errors = [
+        f"{item.name}: {item.detail}"
+        for item in checks
+        if item.status in {"DOWN", "MISS"}
+    ]
+    warnings = [
+        f"{item.name}: {item.detail}"
+        for item in checks
+        if item.status == "WARN"
+    ]
+    passed = not errors
     report = {
+        "schema_version": 1,
+        "kind": "startup_check",
+        "repo_root": str(root),
         "generated_at": now_iso(),
         "project": str(project),
         "root": str(root),
-        "ok": not any(status in {"DOWN", "MISS"} for status in statuses),
-        "warning_count": sum(1 for status in statuses if status in {"WARN", "DOWN", "MISS"}),
+        "passed": passed,
+        "ok": passed,
+        "warning_count": len(warnings) + len(errors),
+        "errors": errors,
+        "warnings": warnings,
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+        "blender_runtime_execution_performed": False,
+        "ffmpeg_execution_performed": False,
         "checks": [asdict(item) for item in checks],
     }
     return report
 
 
-def format_report(report: dict) -> str:
+def format_report(report: dict, report_json: Path | str = REPORT_JSON) -> str:
     lines = [
         "=" * 78,
         "SPAZIOTEMPO STARTUP SERVICE CHECK",
@@ -254,29 +276,54 @@ def format_report(report: dict) -> str:
         lines.append(f"[{item.get('status')}] {item.get('name')}: {item.get('detail')}{path}")
     lines.append("")
     lines.append(f"Warnings: {report.get('warning_count', 0)}")
-    lines.append(f"Report:   {REPORT_JSON}")
+    lines.append(f"Report:   {report_json}")
     return "\n".join(lines)
 
 
-def save_report(report: dict) -> None:
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
-    REPORT_JSON.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
-    REPORT_TXT.write_text(format_report(report), encoding="utf-8")
+def save_report(report: dict, report_json: Path | str = REPORT_JSON, report_txt: Path | str | None = None) -> tuple[Path, Path]:
+    json_path = Path(report_json)
+    txt_path = Path(report_txt) if report_txt else json_path.with_suffix(".txt")
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    txt_path.parent.mkdir(parents=True, exist_ok=True)
+    report["report_json"] = str(json_path)
+    report["report_txt"] = str(txt_path)
+    json_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+    txt_path.write_text(format_report(report, json_path), encoding="utf-8")
+    return json_path, txt_path
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Spaziotempo startup service check")
-    parser.add_argument("--project", default=str(PROJECT_DIR))
-    parser.add_argument("--root", default=str(ROOT))
-    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--project", default=str(PROJECT_DIR), help="Project directory to inspect.")
+    parser.add_argument(
+        "--root",
+        "--repo-root",
+        dest="root",
+        default=str(ROOT),
+        help="Repository/workspace root. --repo-root is a compatibility alias used by IA-Carmine launchers.",
+    )
+    parser.add_argument(
+        "--output",
+        default=str(REPORT_JSON),
+        help="JSON report output path. Defaults to output/workflow_logs/startup_check.json.",
+    )
+    parser.add_argument(
+        "--text-output",
+        default="",
+        help="Optional text report output path. Defaults to the JSON output path with .txt suffix.",
+    )
+    parser.add_argument("--json", action="store_true", help="Print the JSON report to stdout.")
     args = parser.parse_args()
 
+    output_path = Path(args.output).resolve(strict=False)
+    text_output_path = Path(args.text_output).resolve(strict=False) if args.text_output else output_path.with_suffix(".txt")
+
     report = build_report(Path(args.project).resolve(strict=False), Path(args.root).resolve(strict=False))
-    save_report(report)
+    save_report(report, output_path, text_output_path)
     if args.json:
         print(json.dumps(report, indent=2, ensure_ascii=False))
     else:
-        print(format_report(report))
+        print(format_report(report, output_path))
     return 0
 
 
