@@ -25,6 +25,49 @@ This file is report-only. It does not authorize deletion by itself.
 
 No other Markdown file should be treated as a first reading step unless a task file explicitly scopes it.
 
+## Source-of-truth hierarchy
+
+Markdown must not become more authoritative than the script, validator or runtime code it describes.
+
+Use this hierarchy when resolving conflicts:
+
+| Rank | Source | Authority |
+|---:|---|---|
+| 1 | Runtime/source code | Actual behavior and supported contracts. |
+| 2 | Workflow scripts | Official local command entrypoints and parameters. |
+| 3 | Validation scripts | Report schemas, required fields and pass/fail behavior. |
+| 4 | Nearest package/tool README | Package-local usage and ownership. |
+| 5 | `docs/README.md` | Reading order and stable documentation index. |
+| 6 | Task runbooks | Task-specific orchestration instructions. |
+| 7 | Historical/evidence/generated docs | Context only; never current truth. |
+
+Rules:
+
+```text
+if Markdown command examples disagree with script parameters, the script wins
+if a task runbook duplicates a long command block, prefer a script wrapper or canonical runbook link
+if a Markdown file references a script path, the path must exist or be marked historical/superseded
+if a document describes generated indexes, the generator and index policy are authoritative
+if a historical report describes repo state, current repo inspection and validation reports win
+```
+
+Future validator target:
+
+```text
+Tools/validation/check_docs_script_references.py
+```
+
+Expected role:
+
+```text
+scan Markdown for .py/.ps1/.sh/.bat/.cmd references
+extract python/powershell command blocks
+verify referenced files exist
+flag output/**, stale or non-canonical script references
+flag long command blocks that should move to official wrappers or canonical runbooks
+emit JSON and Markdown reports under output/validation
+```
+
 ## Repository Markdown families
 
 | Family | Pattern | Owner | Lifecycle |
@@ -115,6 +158,7 @@ control-character files require focused cleanup before being promoted
 | Validation command catalog | `Tools/validation/README.md` | Task docs list only focused commands. |
 | Git/GitHub local workflow | `docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Root/local legacy guides should point here as superseded. |
 | Code consultation status | `PROJECT_STATUS_POINT.md`, `MODULE_MAP.md`, `REFACTORING_AND_REUSE_PLAN.md`, live repo inspection | Long consultation reports are historical, not current truth. |
+| Script-backed commands | Official workflow/validation scripts | Markdown examples must not override script parameters. |
 
 ## Add-before-prune rule
 
@@ -130,7 +174,7 @@ When adding or updating Markdown:
    - `generated_context`
    - `evidence_snapshot`
    - `local_history_delete_candidate`
-4. Replace repeated commands with links to canonical runbooks.
+4. Replace repeated commands with links to canonical runbooks or official script wrappers.
 5. Run Markdown inventory and docs link validation.
 6. Do not delete files without explicit user approval.
 
@@ -170,11 +214,12 @@ output/**/*.md
 ## First cleanup sequence
 
 1. Reduce root entrypoints to a single reading flow.
-2. Preserve long command blocks only in canonical task runbooks.
+2. Preserve long command blocks only in canonical task runbooks or official script wrappers.
 3. Add Markdown and script inventories to the workflow/refactor evidence path.
 4. Use inventory output to identify missing-index, long-file, control-character and prune candidates.
 5. Mark obsolete material before any deletion.
-6. Create a separate deletion PR only after explicit approval.
+6. Add script-reference validation before any broad command-block rewrite.
+7. Create a separate deletion PR only after explicit approval.
 
 ## Acceptance criteria
 
@@ -188,6 +233,8 @@ legacy guides point to canonical replacements
 long Markdown files are surfaced by inventory before refactor/prune decisions
 control-character corruption is surfaced before promotion
 script/tool inventory is available for refactor planning
+Markdown does not override script-backed behavior
+script-reference validation is planned before broad command-block rewrites
 no output/**, renders/**, *.db or *.sqlite files are committed
 no deletion is performed without explicit approval
 ```
