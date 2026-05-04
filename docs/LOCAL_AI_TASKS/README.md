@@ -17,6 +17,7 @@ If a task conflicts with `AGENTS.md`, preserve hard guardrails and stop with a c
 |---|---|
 | Full toolbox, 0-10, tutto su tutto, multi-phase, full repository run | `full-toolbox-0-to-10-semi-automatic-procedure.md` |
 | Code/script refactor, helper reuse, function discovery, line-count inventory | `code-refactor-0-to-10-procedure.md` |
+| Local-machine validation/evidence contract inside 0 -> 10 refactor | `code-refactor-0-to-10-procedure.md` plus `code-refactor-local-machine-validation-addendum.md` |
 | Markdown refactor inside the 0-10 refactor flow | `code-refactor-0-to-10-procedure.md` plus `code-refactor-md-lane-extension.md` |
 | Documentation cleanup, Markdown pruning, obsolete/redundant MD review | `../DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` plus `build_markdown_inventory.py` |
 | GPU/NPU evidence diagnostics | `gpu-npu-parallel-evidence-runbook.md` |
@@ -28,6 +29,7 @@ If a task conflicts with `AGENTS.md`, preserve hard guardrails and stop with a c
 |---|---|
 | `full-toolbox-0-to-10-semi-automatic-procedure.md` | Canonical full-toolbox process: evidence -> recommendations -> decision -> patch plan -> patch bundle -> explicit apply -> validation -> PR. |
 | `code-refactor-0-to-10-procedure.md` | Canonical code/refactor process with line counts, script/tool discovery, helper reuse and compact evidence. |
+| `code-refactor-local-machine-validation-addendum.md` | Local-machine validation/evidence addendum for task-scoped report contracts and compact evidence handoff. |
 | `code-refactor-md-lane-extension.md` | Markdown/documentation refactor lane to run inside the canonical code-refactor 0 -> 10 procedure. |
 | `docs-md-obsolete-pruning-next-step.md` | Follow-up triage task for obsolete/superseded Markdown after the entrypoint reduction baseline. |
 | `gpu-npu-parallel-evidence-runbook.md` | GPU/NPU evidence and planner diagnostics. |
@@ -39,6 +41,16 @@ If a task conflicts with `AGENTS.md`, preserve hard guardrails and stop with a c
 | `enrich-local-ai-memory-chunks-context-wrapper.md` | Plan memory, semantic chunks, context packs and wrapper enrichment. |
 | `improve-gpu-planner-nonempty-recommendations.md` | GPU planner non-empty recommendation diagnostics. |
 | `heavy-gpu-local-ai-diagnostics-handoff.md` | Handoff for heavy local GPU diagnostics when GitHub-only agents cannot execute providers. |
+
+## Local validation evidence policy
+
+The local-machine validation contract lives at:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/LOCAL_MACHINE_VALIDATION.md
+```
+
+Use it whenever a run creates ignored local reports under `output/**` and needs a Git-trackable compact evidence handoff.
 
 ## Historical task files
 
