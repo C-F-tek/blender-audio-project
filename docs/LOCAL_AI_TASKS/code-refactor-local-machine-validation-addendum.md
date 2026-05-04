@@ -33,7 +33,7 @@ When running the parent 0 -> 10 procedure, add these reads to the step `1. Read 
 
 ```powershell
 Get-Content .\docs\LOCAL_VALIDATION_EVIDENCE\LOCAL_MACHINE_VALIDATION.md -TotalCount 260
-Get-Content .\docs\LOCAL_AI_TASKS\code-refactor-local-machine-validation-addendum.md -TotalCount 220
+Get-Content .\docs\LOCAL_AI_TASKS\code-refactor-local-machine-validation-addendum.md -TotalCount 260
 ```
 
 For Markdown/documentation refactors, also read:
@@ -41,6 +41,41 @@ For Markdown/documentation refactors, also read:
 ```powershell
 Get-Content .\docs\LOCAL_AI_TASKS\code-refactor-md-lane-extension.md -TotalCount 260
 ```
+
+## 10-minute refactor run profile
+
+Use this bounded profile when the objective is quick discovery, Markdown cleanup, script/tool inventory review, or a first-pass refactor proposal.
+
+It is intentionally shorter than the canonical 30-minute balanced run and must preserve the same guardrails:
+
+```text
+manual-review-only
+no automatic patch application
+no Blender runtime
+no raw output/** commit
+provider execution only if explicitly requested by the parent run
+```
+
+Recommended 10-minute profile values for the parent `run_agent_gpu_npu_parallel_orchestrator.py` step:
+
+```powershell
+--budget-minutes 10 `
+--max-rounds 8 `
+--files-per-round 6 `
+--max-context-files 120 `
+--max-chars-per-file 5000 `
+--max-new-tokens 2400 `
+--keep-alive 15m `
+--npu-auditor-every-rounds 3 `
+--max-concurrent-npu-audits 1 `
+--npu-auditor-timeout-seconds 240 `
+--npu-max-context-chars 6000 `
+--npu-max-prompt-chars 1000 `
+--npu-max-new-tokens 256 `
+--npu-final-wait-seconds 90
+```
+
+Use the 30-minute profile only after the 10-minute profile shows that the evidence inputs are clean and useful.
 
 ## Insert before final report-contract validation
 
@@ -135,4 +170,5 @@ local validation policy is explicit and readable
 current-task validation is separated from old output drift
 compact evidence is defined as the GitHub handoff surface
 Markdown lane includes both Markdown inventory and script inventory
+10-minute profile is available for bounded first-pass refactor runs
 ```
