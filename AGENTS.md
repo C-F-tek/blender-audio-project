@@ -35,6 +35,8 @@ README.md
 WORKFLOW.md
 docs/README.md
 docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
+docs/LOCAL_AI_TASKS/README.md
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/PROJECT_STATUS_POINT.md
 docs/DATA_FLOW.md
 docs/LOCAL_AI_WORKFLOW.md
@@ -44,12 +46,14 @@ nearest package/tool README
 target file
 ```
 
-For full toolbox or refactor runs, use:
+For full toolbox, refactor, provider or 0-to-10 local AI runs, use the unified launcher as the active entrypoint:
 
 ```text
-docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
-docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
+
+Legacy runbooks such as `full-toolbox-0-to-10-semi-automatic-procedure.md` and `code-refactor-0-to-10-procedure.md` are historical/supporting references unless the human explicitly asks for a legacy manual flow.
 
 ## Current provider posture
 
@@ -59,6 +63,42 @@ NPU/OpenVINO is a validated smoke/probe/diagnostic lane, not general advisory.
 Provider execution must be explicit and report-bound.
 Blender runtime is frozen unless explicitly scoped.
 ```
+
+## Unified 0-to-10 rule
+
+A valid `-Full0To10` run must include every major phase unless the operator disables a phase explicitly with a `-No*` flag.
+
+Expected by default:
+
+```text
+pipeline adapter ufficiale eseguito
+packet/proposals generati
+Ollama advisory usato
+patch specs creati e validati
+primary provider routing completo
+workload quality routing presente
+multistep provider workflow richiesto
+probe Ollama/NPU richiesti
+context pack presente
+SQLite memory IN/OUT presente quando non disabilitata
+quality gate registrato nel manifest
+patch_application_performed=false
+```
+
+Disablers must be explicit:
+
+```text
+-NoOllamaProbe
+-NoNpuProbe
+-NoNpuDecodeSmoke
+-NoMultistepProvider
+-NoWorkloadQuality
+-NoMemoryWrite
+-NoEvidence
+-NoPatchSpecs
+```
+
+Do not accept silent fallback such as provider requested but quality routing missing.
 
 ## Important folders
 
