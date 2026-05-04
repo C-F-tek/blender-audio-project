@@ -52,6 +52,9 @@ ROOT_POLICY_DOCS = {
     "CHANGELOG.md",
     "AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md",
 }
+SUPERSEDED_ROOT_GUIDES = {
+    "guida_git_github_blender_audio_project.md": "docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md",
+}
 
 EVIDENCE_PREFIX = "docs/LOCAL_VALIDATION_EVIDENCE/"
 TASK_PREFIX = "docs/LOCAL_AI_TASKS/"
@@ -131,6 +134,8 @@ def classify_markdown(rel_path: str) -> str:
         return "root_policy_or_entrypoint"
     if rel_path in ROOT_COMMUNITY_DOCS:
         return "root_community_doc"
+    if rel_path in SUPERSEDED_ROOT_GUIDES:
+        return "superseded_root_guide"
     if is_github_template(rel_path):
         return "github_template"
     if rel_path == ".aider.chat.history.md":
@@ -165,6 +170,8 @@ def lifecycle_for(category: str, rel_path: str) -> str:
         return "canonical_entrypoint"
     if category in {"root_community_doc", "github_template"}:
         return "repository_community_control"
+    if category == "superseded_root_guide":
+        return "superseded_by_canonical_doc"
     if category == "local_tool_history":
         return "local_history_delete_candidate"
     if category == "compact_evidence":
@@ -230,7 +237,7 @@ def inventory_item(path: Path, repo_root: Path, index_texts: dict[str, str]) -> 
     category = classify_markdown(rel)
     lifecycle = lifecycle_for(category, rel)
     index_hits = indexed_by(rel, index_texts)
-    return {
+    item: dict[str, Any] = {
         "path": rel,
         "category": category,
         "lifecycle": lifecycle,
@@ -242,6 +249,9 @@ def inventory_item(path: Path, repo_root: Path, index_texts: dict[str, str]) -> 
         "prune_candidate": is_prune_candidate(category, lifecycle, index_hits),
         "requires_index_review": requires_index_review(category, index_hits),
     }
+    if rel in SUPERSEDED_ROOT_GUIDES:
+        item["superseded_by"] = SUPERSEDED_ROOT_GUIDES[rel]
+    return item
 
 
 def build_report(repo_root: Path) -> dict[str, Any]:
@@ -281,6 +291,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             "GitHub templates and root community docs are repository controls, not prune candidates.",
             "Historical local AI task records are classified separately from current task entrypoints.",
             "Historical project handoff records are excluded from maintained source-doc index review.",
+            "Superseded root guides are retained but point to their canonical replacement.",
         ],
     }
 
