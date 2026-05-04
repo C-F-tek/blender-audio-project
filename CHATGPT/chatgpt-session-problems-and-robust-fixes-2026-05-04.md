@@ -180,6 +180,35 @@ required_provider_artifact_missing
 
 This avoids missing-file cascades and keeps evidence bundles complete.
 
+## Problem 8: chat Markdown fence nesting corrupts copy/paste readability
+
+Observed failure mode:
+
+```text
+Long ChatGPT answers containing multiple nested triple-backtick code fences can render incorrectly in the chat UI.
+When a response itself describes Markdown that contains fenced blocks, the outer and inner fences may interact visually.
+The result is over-formatted output, broken sections, or commands that are hard to copy safely.
+```
+
+Robust fix:
+
+```text
+For chat responses, avoid nested triple-backtick fences.
+Prefer one of these formats:
+- plain text labels followed by short indented command blocks;
+- separate downloadable/repository MD files for long procedures;
+- patch bundles for complex scripts;
+- single-backtick inline paths/flags for short references.
+```
+
+Operational rule:
+
+```text
+When the user asks to rewrite a previous answer because of formatting, do not repeat large nested fenced Markdown blocks.
+Rewrite in compact sections with plain text and indented commands.
+If a long Markdown procedure is needed, write it to a repository .md file and link/commit it instead of dumping the whole procedure into chat.
+```
+
 ## Operational rule for future ChatGPT sessions
 
 At session start, inspect:
