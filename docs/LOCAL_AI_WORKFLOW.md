@@ -15,29 +15,9 @@ Tools/workflow/run_unified_local_ai_refactor.ps1
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-Balanced full run:
+All local-AI run profiles are launcher modes, profiles or flags. This includes quick tests, full runs, deep runs, provider probes, memory handoff, patch specs, reset and full validation.
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity balanced `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
-```
-
-Quick 5-minute style run:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity quick `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
-```
-
-Use older wrappers as internal lanes or supporting tools. Do not start full 0-to-10 local AI work from a legacy wrapper unless the user explicitly asks for that legacy/manual flow.
+Do not start full local-AI work from legacy wrappers. Supporting wrappers remain implementation lanes behind the launcher and must be visible in launcher manifest/status/report surfaces when used.
 
 ## Current provider mapping
 
@@ -48,7 +28,7 @@ OpenVINO -> NPU -> probe / guardrail / decode diagnostic
 
 The mapping is intentional. Do not introduce OpenVINO GPU as the primary lane.
 
-## Hybrid master-AI / local-pipeline model
+## Hybrid master-AI / unified local-pipeline model
 
 The current model is hybrid.
 
@@ -56,24 +36,24 @@ The current model is hybrid.
 Chat / GitHub-only AI / Codex-style control plane
   -> strategic planning, review, issue/PR orchestration, small edits, human-facing summaries
 
-Local AI/NPU prototype pipeline
+Unified local AI pipeline
   -> heavy local context processing, validators, advisory packets, repository proposals, compact evidence
 
 Human / master AI
   -> approves promotion from advisory/proposal outputs to patch specs, reviewed replacements, apply or merge
 ```
 
-This is not an immediate full replacement for Codex/GitHub-only AI. During the transition, the master/control-plane AI coordinates GitHub work and reviews local evidence, while the project-owned local pipeline handles token-heavy local analysis and report/proposal generation.
+This is not an immediate full replacement for Codex/GitHub-only AI. During the transition, the master/control-plane AI coordinates GitHub work and reviews local evidence, while the unified local pipeline handles token-heavy local analysis and report/proposal generation.
 
 Migration stages:
 
 ```text
-Stage 0: GitHub/chat master AI controls workflow; local pipeline prepares evidence and proposals.
-Stage 1: Local pipeline consumes Markdown task entrypoints and produces advisory packet/proposals.
-Stage 2: Local pipeline emits draft patch specs from validated proposals.
+Stage 0: GitHub/chat master AI controls workflow; unified launcher prepares evidence and proposals.
+Stage 1: Unified launcher consumes task entrypoints and produces advisory packet/proposals.
+Stage 2: Unified launcher emits draft patch specs from validated proposals.
 Stage 3: Reviewed patch specs can be dry-run validated.
 Stage 4: Apply/merge remains explicit and human/master-AI controlled.
-Stage 5: Future local automation may replace more chat/GitHub-only work after quality gates mature.
+Stage 5: Future automation may replace more chat/GitHub-only work after quality gates mature.
 ```
 
 ## Visibility-first rule
@@ -83,7 +63,7 @@ Every local-AI run must be inspectable from compact surfaces before detailed evi
 Required reading order after a run:
 
 ```text
-launcher command
+launcher command from unified-local-ai-refactor-launcher.md
 unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
 compact Markdown or CSV summaries
@@ -165,7 +145,7 @@ Repository context and local reports
   -> workload quality gate when provider routing is requested
   -> quality-based advisory routing
   -> report-only local pipeline adapter
-  -> explicit multistep provider workflow for heavy local analysis when requested
+  -> explicit multistep provider workflow when selected
   -> primary advisory packet/proposals when explicitly requested and quality-gated
   -> repository proposals
   -> agent review evidence sufficiency and manual-review patch plans
@@ -178,31 +158,31 @@ Repository context and local reports
 
 ## Unified phase / tool visibility map
 
-| Area | Tool/script | Visible output |
-|---|---|---|
-| Unified launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` | run manifest with selected modes, flags, reports, context and phase status. |
-| Markdown inventory | `Tools/validation/build_markdown_inventory.py` | JSON and Markdown inventory. |
-| Link validation | `Tools/validation/check_docs_links.py` | JSON link report. |
-| Script inventory | `Tools/validation/build_script_inventory.py` | JSON, CSV and Markdown function/class inventory. |
-| Report contracts | `Tools/validation/check_validation_report_contract.py` | JSON contract report. |
-| Workload quality | `Tools/validation/check_ai_workload_report_quality.py` | `ai_workload_report_quality.json`. |
-| Semantic chunks | `Tools/npu/build_semantic_code_chunks.py` | semantic chunk manifest. |
-| Context pack | `Tools/ai/build_ai_context_pack.py` | bounded Markdown/JSON context pack and evidence summary. |
-| Agent state/memory | `Tools/ai/build_agent_state_packet.py` | agent-state packet and optional SQLite memory handoff. |
-| Official adapter | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | packet/proposals and adapter manifest. |
-| Ollama advisory | `Tools/workflow/run_post_validation_ai_packet.ps1` | advisory packet/proposals and manifest. |
-| Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals when selected. |
-| Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | historical/supporting full-toolbox report when explicitly selected. |
-| Patch specs | patch-spec builders/validators | review-only patch-spec manifest and validation report. |
-| Reset | unified launcher reset mode | reset plan JSON/Markdown. |
+| Area | Tool/script | Visible output | Launcher status |
+|---|---|---|---|
+| Unified launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` | run manifest with selected modes, flags, reports, context and phase status | canonical |
+| Markdown inventory | `Tools/validation/build_markdown_inventory.py` | JSON and Markdown inventory | `md` mode |
+| Link validation | `Tools/validation/check_docs_links.py` | JSON link report | `md` / validation phases |
+| Script inventory | `Tools/validation/build_script_inventory.py` | JSON, CSV and Markdown function/class inventory | `python` mode |
+| Report contracts | `Tools/validation/check_validation_report_contract.py` | JSON contract report | `json` / `contract` phases |
+| Workload quality | `Tools/validation/check_ai_workload_report_quality.py` | `ai_workload_report_quality.json` | provider quality gate |
+| Semantic chunks | `Tools/npu/build_semantic_code_chunks.py` | semantic chunk manifest | `chunks` mode |
+| Context pack | `Tools/ai/build_ai_context_pack.py` | bounded Markdown/JSON context pack and evidence summary | `context_pack` mode |
+| Agent state/memory | `Tools/ai/build_agent_state_packet.py` | agent-state packet and optional SQLite memory handoff | `agent_state` mode |
+| Official adapter | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | packet/proposals and adapter manifest | `official` mode / implementation lane |
+| Ollama advisory | `Tools/workflow/run_post_validation_ai_packet.ps1` | advisory packet/proposals and manifest | provider/advisory implementation lane |
+| Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals | provider implementation lane |
+| Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | integrated full-toolbox report when selected | supporting selected phase only, not entrypoint |
+| Patch specs | patch-spec builders/validators | review-only patch-spec manifest and validation report | `patch_specs` mode |
+| Reset | unified launcher reset mode | reset plan JSON/Markdown | `reset` mode |
 
 If a new phase is added to the launcher, update this table and the launcher manifest contract in the same PR.
 
 ## Multistep heavy-work policy
 
-For large Markdown files, large code files, repository-wide consistency checks, or generated artifacts that may exceed a safe single-pass context, multistep mode is the preferred local execution pattern.
+For large Markdown files, large code files, repository-wide consistency checks, or generated artifacts that may exceed a safe single-pass context, multistep behavior must still be selected through the unified launcher.
 
-Use multistep mode for:
+Use multistep behavior for:
 
 ```text
 large docs/code consistency reviews
@@ -218,8 +198,8 @@ The expected heavy-work flow is:
 ```text
 master-AI writes or updates docs/LOCAL_AI_TASKS/*.md
 unified launcher builds manifest/context/report surfaces
-local adapter runs report-only/proposal-only analysis
-optional explicit multistep provider workflow produces provider evidence
+official adapter lane runs report-only/proposal-only analysis
+optional explicit multistep provider lane produces provider evidence
 proposal validators check output contracts
 master-AI/human reviews proposals before patch specs or apply
 ```
@@ -235,91 +215,46 @@ NPU remains probe / guardrail / decode diagnostic
 Ollama/GPU remains primary advisory behind quality gate
 ```
 
-## Local Markdown task runner
+## Supporting wrapper policy
 
-The unified launcher is the first entrypoint for full 0-to-10 flows. The older Markdown task wrappers remain useful for task-scoped adapter runs.
-
-Task-scoped wrapper:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
-  -TaskBranch codex/full-context-ai-npu-golden-run
-```
-
-The project-owned runner path invokes the local pipeline adapter:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
-  -TaskBranch codex/full-context-ai-npu-golden-run `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
-```
-
-Default adapter behavior:
+These wrappers are not first entrypoints:
 
 ```text
-reads the generated local_ai_prompt.md
-uses it as context for report-only/proposal-only repository tools
-writes outputs under output/local_ai_runs/<run>/pipeline/
-validates repository proposals when produced
-does not apply patches
-does not execute providers unless explicit provider flags are passed
+Tools/workflow/run_local_ai_markdown_task.ps1
+Tools/workflow/run_local_ai_task_via_pipeline.ps1
+Tools/workflow/run_post_validation_ai_packet.ps1
+Tools/workflow/run_parallel_ai_provider_multistep.ps1
+Tools/workflow/run_local_validation_after_refactor.ps1
+Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1
 ```
 
-Explicit multistep adapter mode:
+They may be used only as:
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
-  -PromptFile .\output\local_ai_runs\<run>\local_ai_prompt.md `
-  -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
-  -RunDir .\output\local_ai_runs\<run> `
-  -Profile npu `
-  -RunMultistepProviderWorkflow `
-  -RunOllamaProbe `
-  -RunNpuProbe `
-  -RunNpuDecodeSmoke `
-  -UsePrimaryAdvisoryProvider `
-  -BuildEvidence
+```text
+launcher implementation lanes
+focused validator/debug targets
+historical compatibility lanes explicitly selected by the launcher
 ```
 
-## Provider multistep lane
+A wrapper promoted into the active flow must appear in:
 
-The multistep provider wrapper is a supporting lane, not the first full 0-to-10 entrypoint:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
-  -Profile npu `
-  -RunOllamaProbe `
-  -RunNpuProbe `
-  -RunNpuDecodeSmoke `
-  -UsePrimaryAdvisoryProvider `
-  -Basename parallel_gpu_npu_multistep_real_npu_v2 `
-  -ProposalBasename parallel_gpu_npu_multistep_real_npu_v2_proposals `
-  -EvidenceBasename parallel_gpu_npu_multistep_real_npu_v2_evidence
+```text
+launcher mode/profile/flag
+unified manifest phase_status
+unified manifest phase_reports when reports are produced
+this visibility map
+UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md when manifest shape changes
 ```
-
-This lane performs:
-
-| Step | Action | Output family |
-|---|---|---|
-| 1 | Workload quality gate | `output/validation/ai_workload_report_quality.json` |
-| 2 | Parallel provider probes / diagnostics | `output/validation/local_provider_probe.json`, `output/validation/npu_decode_smoke_diagnostic.json` |
-| 3 | Quality-based routing and NPU remediation | `output/validation/ai_workload_quality_lane_routing.json`, `output/validation/npu_decode_quality_remediation.json` |
-| 4 | Primary advisory packet/proposals | `output/ai_packets/*` |
-| 5 | Pushable evidence bundle | `docs/LOCAL_VALIDATION_EVIDENCE/*` |
-
-Use this wrapper only for explicit provider diagnostics/evidence or when the unified launcher calls it as a selected phase. Do not use it as an implicit replacement for report-only local task processing.
 
 ## Key tools
 
 | File | Role |
 |---|---|
 | `Tools/workflow/run_unified_local_ai_refactor.ps1` | Canonical local AI orchestrator and full 0-to-10 entrypoint. |
-| `Tools/workflow/run_local_ai_markdown_task.ps1` | Builds task-scoped non-interactive local AI run packets from Markdown task entrypoints. |
-| `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | Project-owned adapter from local task prompt to report-only/proposal-only pipeline outputs; can explicitly call multistep provider workflow. |
+| `Tools/workflow/run_local_ai_markdown_task.ps1` | Supporting task packet wrapper; not an active first entrypoint. |
+| `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | Official adapter implementation lane behind launcher `official` mode. |
 | `Tools/workflow/run_local_ai_core_tool_activation.ps1` | Supporting app-agnostic activation lane retained for focused/legacy validation; prefer the unified launcher. |
-| `docs/LOCAL_AI_TASKS/` | Markdown task entrypoints for non-interactive local runs. |
+| `docs/LOCAL_AI_TASKS/` | Markdown task inputs and router docs; execution still routes through unified launcher. |
 | `Tools/validation/build_markdown_inventory.py` | Builds Markdown lifecycle/length/pruning inventory. |
 | `Tools/validation/build_script_inventory.py` | Builds script/tool/function/class/method inventory. |
 | `Tools/ai/select_semantic_code_chunks.py` | Selects bounded task-focused semantic chunks from the generated semantic chunk index. |
@@ -354,37 +289,21 @@ Use this wrapper only for explicit provider diagnostics/evidence or when the uni
 | `Tools/ai/build_dry_run_matrix_evidence_bundle.py` | Summarizes ignored dry-run matrix reports into compact Git-trackable evidence. |
 | `Tools/validation/check_dry_run_matrix_evidence_bundle.py` | Validates dry-run matrix evidence without executing providers or matrix cases. |
 | `Tools/ai/build_github_evidence_bundle.py` | Summarizes long ignored `output/` reports into tracked docs evidence. |
-| `Tools/workflow/run_post_validation_ai_packet.ps1` | Builds packet/proposals and supports primary advisory provider mode. |
-| `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | Supporting parallel GPU/NPU multistep lane for explicit provider evidence. |
+| `Tools/workflow/run_post_validation_ai_packet.ps1` | Advisory packet implementation lane behind launcher provider/advisory phases. |
+| `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | Parallel GPU/NPU multistep implementation lane behind launcher provider phases. |
 
 ## Evidence workflow
 
 Because `output/` is ignored, use compact evidence bundles. Add only the specific compact evidence files produced by the intended run.
 
-```powershell
-python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename latest_ai_workflow_evidence
-
-git add `
-  .\docs\LOCAL_VALIDATION_EVIDENCE\latest_ai_workflow_evidence.json `
-  .\docs\LOCAL_VALIDATION_EVIDENCE\latest_ai_workflow_evidence.md
-
-git commit -m "test: add local ai workflow evidence bundle"
-git push
-```
-
 Do not bulk-add the whole evidence directory unless a human explicitly reviewed every changed evidence file.
 
-For the AI pipeline dry-run matrix:
-
-```powershell
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 2
-python .\Tools\ai\build_dry_run_matrix_evidence_bundle.py --repo-root . --basename ai_pipeline_dry_run_matrix_evidence
-python .\Tools\validation\check_dry_run_matrix_evidence_bundle.py --repo-root . --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\ai_pipeline_dry_run_matrix_evidence.json --output .\output\validation\dry_run_matrix_evidence_bundle.json
-```
+For evidence commands, use the unified launcher runbook or tool-specific README. This workflow document intentionally avoids duplicating executable commands.
 
 ## Requirements for safe local generation
 
 - Start full 0-to-10 flows from the unified launcher.
+- Route quick tests, full tests, provider tests and full validation through launcher modes/profiles whenever possible.
 - Provider execution must be explicit.
 - Advisory context must be quality-filtered before content is read.
 - NPU promotion to advisory requires workload quality evidence, not just decode smoke.
@@ -406,8 +325,8 @@ python .\Tools\validation\check_dry_run_matrix_evidence_bundle.py --repo-root . 
 ## AI rules
 
 - Treat local AI output as draft material until validated.
-- Use the unified launcher for full 0-to-10 local AI runs.
-- Use multistep mode for large MD/code analysis and large artifact generation.
+- Use the unified launcher for all full/quick/deep local AI runs.
+- Use launcher-selected multistep mode for large MD/code analysis and large artifact generation.
 - Keep generated packages or workflow outputs separated by task/version.
 - Do not merge unrelated generated packages automatically.
 - Preserve full analysis JSON files.
@@ -418,7 +337,7 @@ python .\Tools\validation\check_dry_run_matrix_evidence_bundle.py --repo-root . 
 
 ## Legacy Blender/audio workflow
 
-The historical workflow remains available:
+The historical Blender/audio workflow remains available as a downstream application domain:
 
 ```text
 Audio input
@@ -430,7 +349,7 @@ Audio input
   -> manual or assisted refinement
 ```
 
-However, this is now a downstream application domain, not the core local AI architecture.
+It is not the core local AI architecture and must not override unified launcher flow.
 
 ## Not specified
 
