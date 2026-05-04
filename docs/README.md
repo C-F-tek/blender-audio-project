@@ -30,6 +30,8 @@ nearest package/tool README
 target file
 ```
 
+This documentation index is descriptive only. It must not carry executable PowerShell command blocks because task commands and launcher flags change faster than stable documentation indexes.
+
 ## Current canonical task runbooks
 
 | Need | File |
@@ -42,36 +44,37 @@ target file
 
 Legacy monolithic 0-to-10 runbooks are no longer indexed as active documentation. Use git history or compact evidence when forensic comparison is required.
 
-## Canonical local command
+## Operational command policy
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity balanced `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
+Current commands live in task runbooks and tool-specific READMEs, not in this index.
+
+Primary command source:
+
+```text
+LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-Quick run:
+Tool-specific command sources:
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity quick `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
+```text
+../Tools/validation/README.md
+../Tools/npu/pipeline/README.md
 ```
+
+If this index needs to mention a workflow, link to the canonical document instead of copying executable commands.
 
 ## Inventories before broad changes
 
-```powershell
-python .\Tools\validation\build_markdown_inventory.py --repo-root . --output .\output\validation\markdown_inventory.json --markdown-output .\output\validation\markdown_inventory.md
-python .\Tools\validation\build_script_inventory.py --repo-root . --output .\output\validation\script_inventory.json --csv-output .\output\validation\script_inventory.csv --markdown-output .\output\validation\script_inventory.md
-```
+Use Markdown and script inventories before broad documentation cleanup or refactor planning.
 
-Use Markdown inventory for obsolete/redundant docs. Use script inventory for tool/script discovery, CSV review, function/class/method visibility and refactor planning.
+Inventory roles:
+
+| Inventory | Purpose |
+|---|---|
+| Markdown inventory | Obsolete/redundant docs, missing indexes, length and lifecycle classification. |
+| Script inventory | Tool/script discovery, CSV review, function/class/method visibility and refactor planning. |
+
+Commands for these inventories live in the unified launcher runbook and validator README.
 
 ## Documentation families
 
@@ -153,10 +156,6 @@ PROJECT_AUDIT.md
 
 ## Validation for doc changes
 
-```powershell
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
-git diff --check
-```
+Use the unified launcher `md,contract,full_validation` flow or the validator README for exact commands.
 
 Do not commit `output/**`, generated DB files, renders or raw local reports.
