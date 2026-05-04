@@ -17,6 +17,7 @@ DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 LOCAL_AI_RUN_BOOTSTRAP.md        # local checkout only
 LOCAL_AI_TASKS/README.md         # task entrypoints
 LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 PROJECT_STATUS_POINT.md
 DATA_FLOW.md
 LOCAL_AI_WORKFLOW.md
@@ -33,6 +34,7 @@ target file
 | Need | File |
 |---|---|
 | Unified full 0-to-10 local AI workflow | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
+| Unified launcher manifest/phase contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
 | Local AI task routing/index | `LOCAL_AI_TASKS/README.md` |
 | Markdown cleanup and pruning governance | `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |
 
@@ -86,6 +88,7 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 | Stable docs | `README.md` | Maintained source documentation. |
 | Task runbooks | `LOCAL_AI_TASKS/README.md` | Current/historical task entrypoints. |
 | Unified local AI launcher | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Active 0-to-10 local AI execution guide. |
+| Unified launcher contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Compact manifest/phase/status contract for the launcher. |
 | Execution plans | `EXECUTION_PLANS/README.md` | Durable state records. |
 | Evidence | `LOCAL_VALIDATION_EVIDENCE/` | Review snapshots, not source docs. |
 | Generated/index context | `indexAI/**`, `Tools/npu/npu_code_*.md` | Regenerate; do not hand-edit. |
@@ -96,10 +99,11 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 | File | Purpose |
 |---|---|
 | `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | Markdown lifecycle, pruning policy, missing-index review and add-before-prune rules. |
+| `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Compact launcher manifest, phase-status, visibility, Full0To10 and external-controls contract. |
 | `PROJECT_STATUS_POINT.md` | Current status checkpoint and recommended tasks. |
 | `DATA_FLOW.md` | App-agnostic data/report/provider flow. |
 | `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow and evidence handling. |
-| `JSON_SCHEMAS.md` | JSON/report contract notes. |
+| `JSON_SCHEMAS.md` | Broad historical JSON/report contract notes; prefer compact contract docs for active workflows. |
 | `LOCAL_AI_CORE_TOOL_ACTIVATION.md` | App-agnostic activation lane for chunks, packs, broker packets, proposals and evidence. |
 | `AI_WORKLOAD_REPORT_QUALITY_GATE.md` | Workload quality-gate contract. |
 | `AI_CONTEXT_PACKS.md` | Task-scoped context packs and compact evidence. |
