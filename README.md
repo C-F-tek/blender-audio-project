@@ -10,6 +10,7 @@ AGENTS.md
   -> WORKFLOW.md
   -> docs/README.md
   -> docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
+  -> docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
   -> task-specific docs / package README / target source file
 ```
 
@@ -37,6 +38,50 @@ Provider posture:
 | NPU/OpenVINO | OpenVINO GenAI | Probe, guardrail and decode-smoke diagnostics. Not general advisory. |
 | Blender runtime | Blender Python | Legacy/application target. Frozen unless explicitly scoped. |
 
+## Unified local AI entrypoint
+
+The active local AI operator entrypoint is:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/workflow/run_unified_local_ai_refactor.ps1
+```
+
+Full selectable 0-to-10 run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity balanced `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+Quick 5-minute style run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity quick `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+Deep run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity deep `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+Legacy 0-to-10 runbooks remain historical/supporting references. Do not start new local AI runs from `full-toolbox-0-to-10-semi-automatic-procedure.md` or `code-refactor-0-to-10-procedure.md` unless the user explicitly requests that legacy/manual flow.
+
 ## Operating rules
 
 Do not infer project state from the repository name. Current core/backend work must not:
@@ -59,12 +104,11 @@ Use compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/` instead of raw `out
 |---|---|
 | Agent contract and guardrails | `AGENTS.md` |
 | Operational lifecycle | `WORKFLOW.md` |
-| Documentation map and pruning | `docs/README.md`, then `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |
-| Full toolbox 0→10 run | `docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` |
-| Code/refactor run | `docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md` |
+| Unified full 0-to-10 local AI run | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
 | Validators and inventories | `Tools/validation/README.md` |
 | NPU/helper package | `Tools/npu/pipeline/README.md` |
 | Repository area map | `docs/MODULE_MAP.md` |
+| Documentation map and pruning | `docs/README.md`, then `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |
 
 ## Inventory and evidence
 
