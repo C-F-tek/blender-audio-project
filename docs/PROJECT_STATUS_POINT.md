@@ -6,13 +6,42 @@ This document records the current technical status of `IA-Carmine Local AI Orche
 
 The current GitHub repository slug is still `C-F-tek/blender-audio-project`, but the project identity has moved beyond Blender/audio. The repository is now centered on local AI orchestration, provider-lane routing, quality-gated advisory context, NPU/GPU diagnostics, validation reports and compact GitHub evidence bundles.
 
+## Current status summary
+
+The active local-AI operator model is now unified around one launcher:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+```
+
+The unified launcher owns the active selectable 0-to-10 flow. Older monolithic full-toolbox and code-refactor 0-to-10 runbooks are obsolete and must not be used as active starting points.
+
+Current operator posture:
+
+```text
+manifest-first review
+phase-selectable local runs
+Full0To10 profile for complete loops
+quick/balanced/deep/custom intensities
+workload quality gate before primary advisory routing
+Ollama/GPU advisory only when explicit and quality-gated
+NPU/OpenVINO probe/diagnostic only unless future quality gates prove usable advisory text
+SQLite memory local-only, explicit and non-committed
+patch specs generated as review-only artifacts
+patch application remains separate and explicit
+```
+
 ## Current GitHub/code baseline
 
-Current `master` / `origin/master` state verified on 2026-05-01:
+Current `master` / `origin/master` state originally verified on 2026-05-01:
 
 ```text
 2d2e2b9 test(ai): add final evidence bundle builder smoke
 ```
+
+This status document has since been updated on the unified-launcher documentation branch. Re-check `git log --oneline -n 20` locally before using old commit examples as operational truth.
 
 Recent merged work after the original PR #48 provider baseline includes these current layers:
 
@@ -74,28 +103,31 @@ npu_decode_smoke_passed: true
 
 ## Current self-improvement pipeline status
 
-The current project-owned local AI loop is now broader than the PR #48 provider baseline:
+The current project-owned local AI loop is now broader than the PR #48 provider baseline and is routed through the unified launcher:
 
 ```text
-Markdown task entrypoint
+unified launcher
+  -> Markdown/task input
   -> semantic code chunk index
   -> selected semantic chunks
   -> selected-chunks evidence
   -> bounded context pack
-  -> SQLite-backed agent state packet
+  -> SQLite-backed agent state packet when enabled
   -> enrichment plan / adapter manifest / NPU knowledge-broker packet
-  -> explicit multistep GPU/NPU provider workflow
+  -> workload quality gate
+  -> explicit multistep GPU/NPU provider workflow when selected
   -> advisory/proposals
-  -> agent review evidence sufficiency and manual-review documentation patch plans
-  -> deterministic full-context golden proposal generator
+  -> agent review evidence sufficiency and manual-review patch plans
+  -> deterministic proposal generation
   -> evidence bundle with patch-plan and artifact manifest summaries
-  -> manual-review-only patch-spec candidates
+  -> review-only patch-spec candidates
 ```
 
 Important current source additions:
 
 | File | Role |
 |---|---|
+| `Tools/workflow/run_unified_local_ai_refactor.ps1` | Canonical local-AI launcher for selectable phases and Full0To10 profiles. |
 | `Tools/ai/select_semantic_code_chunks.py` | Builds bounded selected semantic chunk bundles from the generated semantic chunk index. |
 | `Tools/validation/check_selected_semantic_chunks.py` | Validates selected chunk bundles and can emit compact selected-chunks evidence. |
 | `Tools/ai/build_selective_execution_plan.py` | Report-only planner that recommends validators and candidate patch specs from context/evidence. |
@@ -104,12 +136,12 @@ Important current source additions:
 | `Tools/validation/check_full_context_golden_proposals.py` | Validates semantic coverage of full-context golden proposal reports. |
 | `Tools/ai/build_local_ai_enrichment_plan.py` | Builds reusable app-agnostic enrichment plans for local AI runs. |
 | `Tools/npu/build_npu_knowledge_broker_packet.py` | Builds NPU knowledge-broker/context-oracle packets without promoting NPU to primary advisory. |
-| `Tools/workflow/run_local_ai_core_tool_activation.ps1` | Orchestrates the app-agnostic local AI core/tool activation lane. |
+| `Tools/workflow/run_local_ai_core_tool_activation.ps1` | Supporting legacy/core activation wrapper; prefer the unified launcher. |
 | `Tools/ai/build_agent_review_evidence_sufficiency.py` | Summarizes whether agent review evidence is ready for manual-review patch planning. |
 | `Tools/ai/build_agent_review_patch_plan.py` | Builds manual-review-only documentation patch plans. |
 | `Tools/ai/run_agent_gpu_deep_planning_review.py` | Runs explicit GPU planner review flows for local-only diagnostics. |
 | `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` | Coordinates explicit GPU/NPU planning/evidence orchestration. |
-| `Tools/validation/run_agent_review_patch_plan_full_validation.py` | Canonical provider-free validation wrapper for documentation patch-plan evidence. |
+| `Tools/validation/run_agent_review_patch_plan_full_validation.py` | Provider-free validation wrapper for documentation patch-plan evidence. |
 
 Important current evidence additions:
 
@@ -242,29 +274,45 @@ risks
 | GHO-004 | in progress | JSON/schema docs should include new evidence/routing/smoke report contracts. |
 | GHO-005 | addressed for current milestone | Compact evidence bundle now replaces pasted long local reports. |
 | GHO-006 | in progress | Provider adapter work remains explicit and quality-gated through the local task adapter and multistep workflow flags. |
-| GHO-007 | in progress | Memory policy is now used by the local AI task adapter through SQLite-backed agent state packets; durable promotion rules remain separate. |
+| GHO-007 | in progress | Memory policy is now used by local AI task flows through SQLite-backed agent state packets; durable promotion rules remain separate. |
 | GHO-008 | in progress | NPU is validated for decode smoke, not yet for general advisory lane. |
 | GHO-009 | in progress | Selected semantic chunks, context packs and full-context golden proposals now exist; promote reviewed proposal families one at a time. |
-| GHO-010 | in progress | Local AI core/tool activation, agent-review patch planning and evidence-bundle summaries now exist; keep using compact evidence instead of ignored output reports. |
+| GHO-010 | in progress | Unified launcher, agent-review patch planning and evidence-bundle summaries now exist; keep using compact evidence instead of ignored output reports. |
 
 ## Current local owner batch
 
-For new work, start from updated `master`:
+For new local work, start from the target branch and then use the unified launcher:
 
 ```powershell
 git fetch origin
-git switch master
-git pull --ff-only origin master
+git switch <branch-or-master>
+git pull --ff-only
 git status
 ```
 
-Recommended local core activation run when Carmine can execute the workstation workflow:
+Recommended quick full local-AI run:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_core_tool_activation.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity quick `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
 ```
 
-After documentation/source changes:
+Recommended balanced local-AI run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity balanced `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+After documentation/source changes, regenerate indexes only when structural changes justify it:
 
 ```powershell
 python .\Tools\npu\build_project_ai_index.py
@@ -275,13 +323,14 @@ git diff --stat
 
 ## Recommended next technical directions
 
-1. Continue from local AI core/tool activation outputs and agent-review documentation patch plans.
+1. Continue from unified launcher outputs and agent-review documentation patch plans.
 2. Keep improving evidence bundles so patch plans, selected chunks and artifact manifests are visible in compact GitHub evidence.
 3. Promote one validated patch-plan/proposal family at a time into focused implementation PRs.
 4. Continue improving the selective planner so it can rank validators and distinguish GitHub-only from local-only next actions.
 5. Open a follow-up milestone for NPU advisory promotion only if a real workload quality gate can classify NPU output as `usable_text`.
 6. Decide whether to rename the GitHub repository to match the new working title.
 7. Keep Blender runtime out of core provider orchestration work.
+8. Keep pruning obsolete MD so active docs remain readable by human and AI agents.
 
 ## Do not do yet
 
@@ -303,7 +352,8 @@ The repository has crossed from Blender/audio project into a local AI orchestrat
 The active architecture is now validated around:
 
 ```text
-Ollama/GPU primary advisory
+unified local-AI launcher as primary operator entrypoint
+Ollama/GPU primary advisory when explicit and quality-gated
 NPU/OpenVINO explicit probe and decode-smoke diagnostics
 quality-based advisory context filtering
 parallel provider workflow
@@ -311,9 +361,9 @@ compact GitHub evidence bundles
 task-scoped AI context packs for safer continuation
 selected semantic chunks for focused context
 full-context golden proposal generation for controlled next steps
-local AI core/tool activation
+local AI core/tool activation as a supporting lane
 agent-review patch-plan evidence
-evidence bundles that include patch-plan and artifact manifest summaries
+review-only patch specs
 ```
 
 Blender/audio remains important as a legacy/current application domain, but not as the project identity or architecture boundary.
