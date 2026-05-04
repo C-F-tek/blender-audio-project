@@ -1072,7 +1072,7 @@ if (($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoW
 if ($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality)) {
     Assert-FileExists ".\Tools\validation\check_ai_workload_report_quality.py"
     $PhaseStatus.workload_quality = Invoke-Checked "Build AI workload quality routing report" {
-        Invoke-Python @(".\Tools\validation\check_ai_workload_report_quality.py", "--repo-root", ".", "--output", $WorkloadQualityReport)
+        Invoke-Python @(".\Tools\validation\check_ai_workload_report_quality.py", "--repo-root", ".", "--report-dir", $AiPacketsDir, "--output", $WorkloadQualityReport)
     } -SoftFail:$ContinueOnValidationError
     if (Test-Path -LiteralPath $WorkloadQualityReport -PathType Leaf) {
         $ReportFiles += $WorkloadQualityReport
@@ -1139,8 +1139,6 @@ if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-Mo
         "-ProposalBasename", $ProposalBaseName,
         "-MaxContextChars", "$MaxContextChars",
         "-ExtraContextFile", ($ContextFiles -join ",")
-    "--report-dir",
-    $AiPacketsDir,
     )
     if ($Model -ne "") { $RunnerArgs += @("-Model", $Model) }
     if ($FullContextGoldenPath) { $RunnerArgs += "-FullContextGoldenPath" }
