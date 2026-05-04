@@ -40,6 +40,16 @@ param(
     [switch]$NoBranch,
     [switch]$AllowDirty,
     [switch]$DryRun,
+    [switch]$Full0To10,
+    [switch]$BuildWorkloadQualityReport,
+    [switch]$NoOllamaProbe,
+    [switch]$NoNpuProbe,
+    [switch]$NoNpuDecodeSmoke,
+    [switch]$NoMultistepProvider,
+    [switch]$NoWorkloadQuality,
+    [switch]$NoMemoryWrite,
+    [switch]$NoEvidence,
+    [switch]$NoPatchSpecs,
     [switch]$UseOllamaAdvisory,
     [switch]$UsePrimaryAdvisoryProvider,
     [switch]$RunMultistepProviderWorkflow,
@@ -118,6 +128,7 @@ function Show-LauncherIntro {
     Write-Host "Guardrails: no patch apply, no commit, no push, no merge, no Blender, no FFmpeg."
     Write-Host "Reset guardrail: no delete unless -ApplyReset and exact -ConfirmResetText are supplied."
     Write-Host "Python policy: set PYTHONPATH to repo root; use -PythonExe, IA_CARMINE_PYTHON, .venv, venv; auto-bootstrap .venv with py -3.12/3.13 before fallback."
+    Write-Host "Full 0-to-10 selectable profile: use -Full0To10; disable individual steps only with explicit -No* flags."
     Write-Host ""
 }
 
@@ -395,8 +406,29 @@ $ResolvedPythonExe = Resolve-PythonExe -Requested $PythonExe -Root $RepoRoot
 Write-Host "[INFO] PYTHONPATH: $env:PYTHONPATH"
 Write-Host "[INFO] Python: $ResolvedPythonExe"
 
-if ($Interactive -or @($Mode).Count -eq 0) { $ResolvedModes = @(Read-InteractiveModes) } else { $ResolvedModes = @(Normalize-ModeList $Mode) }
-if (@($ResolvedModes).Count -eq 0) { throw "No modes selected. Use -Interactive or -Mode all." }
+if ($Full0To10) { $ResolvedModes = @() } elseif ($Interactive -or @($Mode).Count -eq 0) { $ResolvedModes = @(Read-InteractiveModes) } else { $ResolvedModes = @(Normalize-ModeList $Mode) }
+if (@($ResolvedModes).Count -eq 0 -and -not $Full0To10) { throw "No modes selected. Use -Interactive or -Mode all." }
+
+if ($Full0To10) {
+    $Full0To10Modes = @("md", "json", "python", "chunks", "context_pack", "agent_state", "official", "provider", "patch_specs", "evidence", "contract", "full_validation")
+    if ($NoPatchSpecs) { $Full0To10Modes = @($Full0To10Modes | Where-Object { $_ -ne "patch_specs" }) }
+    if ($NoEvidence) { $Full0To10Modes = @($Full0To10Modes | Where-Object { $_ -ne "evidence" }) }
+    $ResolvedModes = @($Full0To10Modes)
+
+    $UseOllamaAdvisory = $true
+    $UsePrimaryAdvisoryProvider = $true
+    $FullContextGoldenPath = $true
+
+    if (-not $NoWorkloadQuality) { $BuildWorkloadQualityReport = $true }
+    if (-not $NoMultistepProvider) { $RunMultistepProviderWorkflow = $true }
+    if (-not $NoOllamaProbe) { $RunOllamaProbe = $true }
+    if (-not $NoNpuProbe) { $RunNpuProbe = $true }
+    if (-not $NoNpuDecodeSmoke) { $RunNpuDecodeSmoke = $true }
+    if (-not $NoMemoryWrite) { $SaveInputsToMemoryDb = $true }
+    if (-not $NoEvidence) { $BuildEvidence = $true }
+    if (-not $NoPatchSpecs) { $GeneratePatchSpecs = $true }
+}
+
 
 if ([string]::IsNullOrWhiteSpace($Stamp)) { $Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
 $ModeName = ((@($ResolvedModes) | Sort-Object -Unique) -join "_")
@@ -605,6 +637,29 @@ $ContextFiles = Add-ExistingContextFile $ContextFiles "docs/DOCUMENTATION_MAP_AN
 $ContextFiles = Add-ExistingContextFile $ContextFiles "docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md"
 $ContextFiles = Add-ExistingContextFile $ContextFiles "docs/LOCAL_AI_TASKS/code-refactor-local-machine-validation-addendum.md"
 
+$WorkloadQualityReport = "$ValidationDir/ai_workload_report_quality.json"
+$WorkloadQualityRoutingOk = $false
+if ($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality)) {
+    Assert-FileExists ".\Tools\validation\check_ai_workload_report_quality.py"
+    $PhaseStatus.workload_quality = Invoke-Checked "Build AI workload quality routing report" {
+        Invoke-Python @(".\Tools\validation\check_ai_workload_report_quality.py", "--repo-root", ".", "--output", $WorkloadQualityReport)
+    } -SoftFail:$ContinueOnValidationError
+    if (Test-Path -LiteralPath $WorkloadQualityReport -PathType Leaf) {
+        $ReportFiles += $WorkloadQualityReport
+        $PhaseReports.workload_quality = $WorkloadQualityReport
+        $WorkloadQualityRoutingOk = $true
+    }
+}
+if ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality -and -not (Test-Path -LiteralPath $WorkloadQualityReport -PathType Leaf)) {
+    if ($DryRun) {
+        Write-Host "[DRY-RUN] Primary provider requires workload quality routing report; generation planned: output/validation/ai_workload_report_quality.json"
+        $WorkloadQualityRoutingOk = $true
+    } else {
+        throw "Primary advisory provider requested but workload quality routing report is missing: output/validation/ai_workload_report_quality.json"
+    }
+}
+
+
 if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-ModeEnabled "patch_specs") -or (Test-ModeEnabled "evidence") -or $UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $GeneratePatchSpecs -or $BuildEvidence) {
     $BaseName = "unified_${ModeName}_$Stamp"
     $ProposalBaseName = "unified_${ModeName}_proposals_$Stamp"
@@ -670,6 +725,7 @@ $Manifest = [ordered]@{
     repo_root = $RepoRoot
     mode = $ResolvedModes
     mode_name = $ModeName
+    full_0_to_10_requested = [bool]$Full0To10
     available_modes = @($ModeDescriptions.Keys)
     profile = $Profile
     model = $Model
@@ -682,6 +738,16 @@ $Manifest = [ordered]@{
     task_branch = $TaskBranch
     run_dir = $RunDir.Replace("\", "/")
     provider_execution_requested = [bool]($UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke -or (Test-ModeEnabled "provider"))
+    primary_provider_requested = [bool]$UsePrimaryAdvisoryProvider
+    workload_quality_report = $WorkloadQualityReport
+    workload_quality_routing_ok = [bool]$WorkloadQualityRoutingOk
+    multistep_provider_workflow_requested = [bool]$RunMultistepProviderWorkflow
+    ollama_probe_requested = [bool]$RunOllamaProbe
+    npu_probe_requested = [bool]$RunNpuProbe
+    npu_decode_smoke_requested = [bool]$RunNpuDecodeSmoke
+    memory_in_enabled = [bool](Test-ModeEnabled "agent_state")
+    memory_out_enabled = [bool]$SaveInputsToMemoryDb
+    quality_gate_passed = [bool](((-not $UsePrimaryAdvisoryProvider) -or $NoWorkloadQuality) -or $WorkloadQualityRoutingOk)
     reset_apply_requested = [bool]$ApplyReset
     patch_application_performed = $false
     patch_specs_requested = [bool]($GeneratePatchSpecs -or (Test-ModeEnabled "patch_specs"))
