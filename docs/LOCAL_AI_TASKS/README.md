@@ -36,6 +36,25 @@ patch-spec generation
 
 Supporting wrappers may exist, but they are implementation lanes behind the launcher or explicitly scoped helper tools.
 
+## Current stable reading order
+
+Use this order for current IA-Carmine local-AI work:
+
+```text
+1. CHATGPT/README.md
+2. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
+3. docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+4. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+5. docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
+6. docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
+7. docs/LOCAL_AI_TASKS/post-broker-runtime-telemetry-followup-2026-05-05.md
+8. docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
+9. FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
+10. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+Do not start from historical PR handoffs or legacy master-branch runbooks.
+
 ## Required context
 
 Every active task file must preserve hard guardrails from:
@@ -51,14 +70,15 @@ If a task conflicts with `AGENTS.md`, preserve hard guardrails and stop with a c
 
 Every local-AI run must be inspectable from compact surfaces before opening detailed evidence.
 
-Required reading order:
+Required reading order for a run:
 
 ```text
-1. launcher command from unified-local-ai-refactor-launcher.md
+1. launcher command from unified-local-ai-refactor-launcher.md or FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
 2. unified_local_ai_refactor_manifest.json
 3. phase_status / phase_reports
-4. compact Markdown or CSV summaries
-5. detailed evidence only when needed
+4. production bundle and telemetry summary
+5. compact Markdown or CSV summaries
+6. detailed evidence only when needed
 ```
 
 A run is not operationally clear if the next agent must open a giant bundle to understand what happened.
@@ -112,7 +132,9 @@ Current unified-flow tools and their visibility surfaces:
 | Official adapter | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | packet/proposals and adapter manifest | `official` mode |
 | Ollama advisory | `Tools/workflow/run_post_validation_ai_packet.ps1` | advisory packet/proposals and manifest | `provider` / advisory flag |
 | Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals | `provider` / Full0To10 flag |
-| Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | integrated full-toolbox report when selected | supporting selected phase only, not entrypoint |
+| Integrated decision lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | integrated full-toolbox report when selected | supporting selected phase only, not entrypoint |
+| Runtime broker | `Tools/ai/agent_runtime_tool_broker.py` | runtime tool broker JSON/MD report | supporting full-toolbox lane |
+| Production bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | shared toolbox AI-to-AI bundle and final summary | production handoff |
 | Reset | unified launcher reset mode | reset plan JSON/Markdown | `reset` mode |
 
 If a tool is referenced in docs but missing from the repository, mark it optional/future or remove the reference in the same change.
@@ -121,24 +143,31 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 
 | User intent | Active path |
 |---|---|
-| Full selectable 0-to-10 local AI workflow | unified launcher runbook, `Full0To10` profile |
-| Fast 5-minute style full loop | unified launcher runbook, quick intensity/profile |
-| Deep full-toolbox/provider loop | unified launcher runbook, deep intensity/profile |
+| Full selectable 0-to-10 local AI workflow | `FULL_RUN_UNICA_TUTTO_SU_TUTTO.md`, unified launcher runbook, `Full0To10` profile |
+| Fast 5-minute style full loop | unified launcher runbook, quick/custom intensity |
+| Deep full-toolbox/provider loop | unified launcher runbook, deep/custom intensity |
 | Custom intensity/limits | unified launcher runbook, custom intensity and explicit numeric knobs |
 | Interactive phase picker | unified launcher runbook, interactive mode |
 | Local generated-artifact cleanup/reset | unified launcher runbook, reset mode |
-| Documentation cleanup, Markdown pruning, obsolete/redundant MD review | unified launcher runbook, MD/contract/full-validation phases |
-| GPU/NPU evidence diagnostics | unified launcher runbook, provider/probe phases; supporting background may live in `gpu-npu-parallel-evidence-runbook.md` |
-| Full-context local AI/NPU golden path | unified launcher runbook; supporting background may live in `full-context-ai-npu-golden-path.md` |
-| Forgotten script visibility audit | `forgotten-scripts-documentation-audit.md` as audit input; execution still through launcher or focused validator tooling |
+| Documentation cleanup, Markdown pruning, obsolete/redundant MD review | unified launcher `md/json/contract/full_validation` phases plus this index |
+| GPU/NPU evidence diagnostics | unified launcher provider/probe phases; current flow is in `current-code-flow-guide-2026-05-05.md` |
+| Runtime broker telemetry fix | `fix-final-runtime-broker-telemetry-task-2026-05-05.md` |
+| Tool discovery and promotion | `tool-inventory-placement-audit-2026-05-05.md` and `project-tool-promotion-and-insertion-guide-2026-05-05.md` |
+| Full-context local AI/NPU golden path | supporting background only; prefer unified launcher for execution |
 
 ## Maintained task files
 
 | File | Status | Purpose |
 |---|---|---|
 | `unified-local-ai-refactor-launcher.md` | canonical active | Operator guide for one entrypoint: selectable phases, `Full0To10`, intensity profiles, reset planning, SQLite memory, semantic chunks, context packs, provider advisory, patch specs and validation. |
+| `full-toolbox-0-to-10-semi-automatic-procedure.md` | active procedure | Long-form full toolbox procedure; should remain aligned with `FULL_RUN_UNICA_TUTTO_SU_TUTTO.md`. |
+| `fix-final-runtime-broker-telemetry-task-2026-05-05.md` | active P0 task | Fix final telemetry so runtime broker report is preserved in Git-trackable runtime usage telemetry. |
+| `post-broker-runtime-telemetry-followup-2026-05-05.md` | active diagnostic follow-up | Evidence analysis after run `20260505-002508`: provider/bundle OK, broker telemetry not absorbed. |
+| `tool-inventory-placement-audit-2026-05-05.md` | active audit | Repository-wide tool/candidate audit, including tools outside `Tools/**`. |
+| `project-tool-promotion-and-insertion-guide-2026-05-05.md` | active guide | How to promote scripts into project tools, broker tools and full-run lanes. |
+| `current-code-flow-guide-2026-05-05.md` | active guide | Current code flow from launcher to provider, broker, bundle and evidence. |
 | `docs-md-obsolete-pruning-next-step.md` | active task input | Follow-up triage task for obsolete/superseded Markdown after the entrypoint reduction baseline. |
-| `forgotten-scripts-documentation-audit.md` | active audit | Identify scripts that exist in `Tools/**` but are not visible enough in Markdown catalogs; classify without deleting. |
+| `forgotten-scripts-documentation-audit.md` | active audit | Identify scripts that exist but are not visible enough in Markdown catalogs; classify without deleting. |
 | `validation-readme-reduction-next-step.md` | active follow-up | Reduce `Tools/validation/README.md` to a compact catalog and remove long procedural/control-character-prone blocks. |
 | `next-chat-unified-launcher-external-controls.md` | active follow-up | Add external CLI controls for launcher output dirs, context/report/artifact inputs and basenames. |
 | `gpu-npu-parallel-evidence-runbook.md` | supporting detail | GPU/NPU evidence and planner diagnostics background. Prefer unified launcher for execution. |
@@ -149,28 +178,26 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 | `selected-review-workflow-ai-tools-patch-specs.md` | scoped helper | Review workflow/AI tools for safe patch-spec candidates. |
 | `enrich-local-ai-memory-chunks-context-wrapper.md` | supporting/memory detail | Plan memory, semantic chunks, context packs and wrapper enrichment. |
 | `improve-gpu-planner-nonempty-recommendations.md` | supporting diagnostic | GPU planner non-empty recommendation diagnostics. |
-| `heavy-gpu-local-ai-diagnostics-handoff.md` | historical handoff | Handoff for heavy local GPU diagnostics when GitHub-only agents cannot execute providers. |
 
-## Obsolete active-start runbooks
+## Removed superseded active-start runbooks
 
-The following legacy active-start documents were removed from the branch because the unified launcher owns the active flow:
+The following legacy active-start documents were removed from this branch because the stable layer now owns the active flow:
 
 ```text
+post-pr114-next-task-handoff.md
+next-chat-handoff-after-balanced-full-run-2026-05-02.md
+next-chat-handoff-after-pr115-large-code-refactor-2026-05-02.md
+heavy-gpu-local-ai-diagnostics-handoff.md
 code-refactor-local-machine-validation-addendum.md
 code-refactor-md-lane-extension.md
-```
-
-Additional oversized 0-to-10 documents should be removed after local `git rm` and link/reference cleanup:
-
-```text
-full-toolbox-0-to-10-semi-automatic-procedure.md
-code-refactor-0-to-10-procedure.md
 ```
 
 Current policy:
 
 ```text
 Use run_unified_local_ai_refactor.ps1 as the only operator entrypoint.
+Use FULL_RUN_UNICA_TUTTO_SU_TUTTO.md and current-code-flow-guide-2026-05-05.md for current flow.
+Use tool-inventory-placement-audit-2026-05-05.md and project-tool-promotion-and-insertion-guide-2026-05-05.md for project-tool promotion.
 Do not create new parallel 0-to-10 entrypoints unless the user explicitly asks for a separate runner.
 If historical details are needed, recover them from git history or compact evidence, not from active task docs.
 ```
@@ -184,15 +211,16 @@ Expected default full profile:
 ```text
 pipeline adapter ufficiale eseguito
 packet/proposals generati
-Ollama advisory usato
+Ollama advisory usato or explicitly diagnosed as degraded
 patch specs creati e validati
-primary provider routing completo
+primary provider routing completo or explicit recovered provider diagnostic
 workload quality routing presente
 multistep provider workflow richiesto
 probe Ollama/NPU richiesti
 context pack presente
 SQLite memory IN/OUT presente quando non disabilitata
 quality gate registrato nel manifest
+runtime broker report produced and absorbed into telemetry
 patch_application_performed=false
 ```
 
@@ -258,18 +286,15 @@ Use it whenever a run creates ignored local reports under `output/**` and needs 
 
 ## Historical task files
 
-These remain useful as past state or scoped handoffs, but must not become the first reading path unless explicitly referenced:
+Historical handoffs and generated evidence remain useful as past state, but must not become the first reading path unless explicitly referenced.
+
+Rules:
 
 ```text
-issue-57-docs-congruence-cleanup.md
-issue-62-hybrid-master-ai-local-pipeline.md
-post-pr*.md
-next-chat-handoff-*.md
-shared-*-next-task-*.md
-project-complete-*.md
+Do not promote historical PR handoffs back to active entrypoints.
+Do not use generated evidence snapshots as canonical workflow docs.
+Do not delete production evidence automatically; evidence pruning requires a separate explicit evidence-retention decision.
 ```
-
-Historical files may be marked `superseded` or `historical` in future cleanup, but deletion requires explicit user approval.
 
 ## Agent anti-laziness checklist
 
@@ -286,6 +311,11 @@ Tools/ai/build_agent_state_packet.py
 Tools/ai/agent_state.py
 Tools/npu/build_semantic_code_chunks.py
 Tools/ai/build_ai_context_pack.py
+Tools/ai/agent_runtime_tool_broker.py
+Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
+docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
+docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/forgotten-scripts-documentation-audit.md
 docs/LOCAL_AI_TASKS/enrich-local-ai-memory-chunks-context-wrapper.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
