@@ -65,6 +65,7 @@ param(
     [switch]$AllowDirty,
     [switch]$DryRun,
     [switch]$Full0To10,
+    [switch]$Prod,
     [switch]$BuildWorkloadQualityReport,
     [switch]$NoOllamaProbe,
     [switch]$NoNpuProbe,
@@ -154,6 +155,8 @@ function Show-LauncherIntro {
     Write-Host "Reset guardrail: no delete unless -ApplyReset and exact -ConfirmResetText are supplied."
     Write-Host "Python policy: set PYTHONPATH to repo root; use -PythonExe, IA_CARMINE_PYTHON, .venv, venv; auto-bootstrap .venv with py -3.12/3.13 before fallback."
     Write-Host "Full 0-to-10 selectable profile: use -Full0To10; disable individual steps only with explicit -No* flags."
+    Write-Host "Debug tail: enabled by default; use -Prod to disable transcript and execution-tail evidence."
+    Write-Host "Startup check output: Tools/workflow/startup_check.py supports --output, --text-output and --repo-root."
     Write-Host ""
 }
 
@@ -520,6 +523,183 @@ function Write-ProviderWorkloadReportsFromProbe {
     }
 }
 
+
+# IA_CARMINE_EXECUTION_TAIL_PATCH_BEGIN
+$Script:UnifiedLauncherTranscriptPath = $null
+$Script:UnifiedLauncherTranscriptStarted = $false
+$Script:UnifiedLauncherExecutionTailWritten = $false
+
+function Start-UnifiedLauncherExecutionTranscript {
+    param(
+        [string]$StampValue,
+        [string]$Root,
+        [bool]$ProdMode
+    )
+
+    if ($ProdMode) {
+        Write-Host "[INFO] Prod mode: unified launcher debug transcript/tail evidence disabled."
+        return
+    }
+
+    if ($Script:UnifiedLauncherTranscriptStarted) {
+        return
+    }
+
+    $safeStamp = $StampValue
+    if ([string]::IsNullOrWhiteSpace($safeStamp)) {
+        $safeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    }
+
+    $transcriptDir = Join-Path $Root ("output/local_ai_runs/{0}_unified_launcher_transcript" -f $safeStamp)
+    $transcriptPath = Join-Path $transcriptDir ("unified_launcher_console_{0}.log" -f $safeStamp)
+
+    try {
+        New-Item -ItemType Directory -Force -Path $transcriptDir | Out-Null
+        Start-Transcript -Path $transcriptPath -Force | Out-Null
+        $Script:UnifiedLauncherTranscriptPath = $transcriptPath
+        $Script:UnifiedLauncherTranscriptStarted = $true
+        Write-Host "[INFO] Unified launcher transcript: $transcriptPath"
+    } catch {
+        Write-Warning ("Could not start unified launcher transcript: {0}" -f $_.Exception.Message)
+        $Script:UnifiedLauncherTranscriptPath = $null
+        $Script:UnifiedLauncherTranscriptStarted = $false
+    }
+}
+
+function Write-UnifiedLauncherExecutionTailEvidence {
+    param(
+        [string]$StampValue,
+        [string]$Root,
+        [string]$RunDirValue,
+        [string]$ManifestPathValue,
+        [string[]]$ResolvedModesValue,
+        [string[]]$ReportFilesValue,
+        [string[]]$ContextFilesValue,
+        [bool]$ProviderExecutionRequested,
+        [bool]$PatchSpecsRequested,
+        [bool]$ProdMode,
+        [string]$FailureMessage = ""
+    )
+
+    if ($ProdMode) {
+        Write-Host "[INFO] Prod mode: unified launcher execution-tail evidence disabled."
+        return
+    }
+
+    if ($Script:UnifiedLauncherExecutionTailWritten) {
+        Write-Host "[INFO] Unified launcher execution-tail evidence already written."
+        return
+    }
+
+    if ($Script:UnifiedLauncherTranscriptStarted) {
+        try {
+            Stop-Transcript | Out-Null
+        } catch {
+            Write-Warning ("Could not stop unified launcher transcript: {0}" -f $_.Exception.Message)
+        }
+        $Script:UnifiedLauncherTranscriptStarted = $false
+    }
+
+    if ([string]::IsNullOrWhiteSpace($Script:UnifiedLauncherTranscriptPath)) {
+        Write-Warning "Unified launcher transcript path is empty; execution-tail evidence not written."
+        return
+    }
+
+    if (-not (Test-Path -LiteralPath $Script:UnifiedLauncherTranscriptPath -PathType Leaf)) {
+        Write-Warning ("Unified launcher transcript is missing; execution-tail evidence not written: {0}" -f $Script:UnifiedLauncherTranscriptPath)
+        return
+    }
+
+    $safeStamp = $StampValue
+    if ([string]::IsNullOrWhiteSpace($safeStamp)) {
+        $safeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    }
+
+    $allLines = @(Get-Content -LiteralPath $Script:UnifiedLauncherTranscriptPath -Encoding UTF8 -ErrorAction SilentlyContinue)
+    $tailLineCount = [Math]::Min(220, $allLines.Count)
+    $tailLines = @($allLines | Select-Object -Last $tailLineCount)
+
+    $warningLines = @($allLines | Where-Object {
+        $_ -match "AVVISO|WARNING|Warning|failed with exit code|Fatal|fatal|Passed: False|Patch plan count: 0|provider.*failed|did not pass"
+    } | Select-Object -Last 80)
+
+    $evidenceDir = Join-Path $Root "docs/LOCAL_VALIDATION_EVIDENCE"
+    New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
+
+    $jsonPath = Join-Path $evidenceDir ("unified_launcher_execution_tail_{0}.json" -f $safeStamp)
+    $mdPath = Join-Path $evidenceDir ("unified_launcher_execution_tail_{0}.md" -f $safeStamp)
+
+    $normalizedTranscriptPath = $Script:UnifiedLauncherTranscriptPath.Replace('\', '/')
+
+    $report = [ordered]@{
+        schema_version = 1
+        kind = "unified_launcher_execution_tail"
+        generated_at = (Get-Date).ToString("o")
+        stamp = $safeStamp
+        passed = [string]::IsNullOrWhiteSpace($FailureMessage)
+        prod_mode = $false
+        debug_tail_enabled = $true
+        provider_execution_requested = $ProviderExecutionRequested
+        patch_specs_requested = $PatchSpecsRequested
+        patch_application_performed = $false
+        source_writes_performed = $false
+        blender_runtime_execution_performed = $false
+        ffmpeg_execution_performed = $false
+        run_dir = $RunDirValue
+        manifest = $ManifestPathValue
+        transcript_path = $normalizedTranscriptPath
+        transcript_line_count = $allLines.Count
+        tail_line_count = $tailLineCount
+        anomaly_line_count = $warningLines.Count
+        failure_message = $FailureMessage
+        resolved_modes = @($ResolvedModesValue)
+        report_files = @($ReportFilesValue)
+        context_files = @($ContextFilesValue)
+        anomaly_lines = @($warningLines)
+        tail = @($tailLines)
+        errors = @()
+        warnings = @()
+    }
+
+    ($report | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $jsonPath -Encoding UTF8
+
+    $mdLines = New-Object System.Collections.Generic.List[string]
+    [void]$mdLines.Add("# Unified launcher execution tail")
+    [void]$mdLines.Add("")
+    [void]$mdLines.Add(('- Stamp: `{0}`' -f $safeStamp))
+    [void]$mdLines.Add('- Prod mode: `False`')
+    [void]$mdLines.Add('- Debug tail enabled: `True`')
+    [void]$mdLines.Add(('- Provider execution requested: `{0}`' -f $ProviderExecutionRequested))
+    [void]$mdLines.Add(('- Patch specs requested: `{0}`' -f $PatchSpecsRequested))
+    [void]$mdLines.Add(('- Transcript: `{0}`' -f $normalizedTranscriptPath))
+    [void]$mdLines.Add(('- Transcript line count: `{0}`' -f $allLines.Count))
+    [void]$mdLines.Add(('- Tail line count: `{0}`' -f $tailLineCount))
+    [void]$mdLines.Add(('- Anomaly line count: `{0}`' -f $warningLines.Count))
+    if (-not [string]::IsNullOrWhiteSpace($FailureMessage)) { [void]$mdLines.Add(('- Failure message: `{0}`' -f $FailureMessage)) }
+    [void]$mdLines.Add("")
+    [void]$mdLines.Add("## Anomaly lines")
+    [void]$mdLines.Add("")
+    [void]$mdLines.Add('```text')
+    foreach ($line in $warningLines) {
+        [void]$mdLines.Add($line)
+    }
+    [void]$mdLines.Add('```')
+    [void]$mdLines.Add("")
+    [void]$mdLines.Add("## Tail")
+    [void]$mdLines.Add("")
+    [void]$mdLines.Add('```text')
+    foreach ($line in $tailLines) {
+        [void]$mdLines.Add($line)
+    }
+    [void]$mdLines.Add('```')
+    $mdLines | Set-Content -LiteralPath $mdPath -Encoding UTF8
+
+    $Script:UnifiedLauncherExecutionTailWritten = $true
+    Write-Host "[OK] Execution tail evidence: $jsonPath"
+    Write-Host "[OK] Execution tail markdown: $mdPath"
+}
+# IA_CARMINE_EXECUTION_TAIL_PATCH_END
+
 Show-LauncherIntro
 $RepoRoot = Resolve-RepoRoot
 Set-Location $RepoRoot
@@ -554,6 +734,7 @@ if ($Full0To10) {
 
 
 if ([string]::IsNullOrWhiteSpace($Stamp)) { $Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
+Start-UnifiedLauncherExecutionTranscript -StampValue $Stamp -Root $RepoRoot -ProdMode ([bool]$Prod)
 if ($RunIntensity -ne "custom") {
     if ($RunIntensity -eq "quick") {
         $BudgetMinutes = 5
@@ -654,6 +835,30 @@ $ValidationDir = "output/validation"
 New-Item -ItemType Directory -Force -Path $PipelineDir | Out-Null
 New-Item -ItemType Directory -Force -Path $ValidationDir | Out-Null
 New-Item -ItemType Directory -Force -Path "output/ai_pipeline" | Out-Null
+
+trap {
+    $Script:UnifiedLauncherFailureMessage = $_.Exception.Message
+    if (Get-Command Write-UnifiedLauncherExecutionTailEvidence -ErrorAction SilentlyContinue) {
+        try {
+            Write-UnifiedLauncherExecutionTailEvidence `
+                -StampValue $Stamp `
+                -Root $RepoRoot `
+                -RunDirValue $RunDir `
+                -ManifestPathValue "$PipelineDir/unified_local_ai_refactor_manifest.json" `
+                -ResolvedModesValue $ResolvedModes `
+                -ReportFilesValue $ReportFiles `
+                -ContextFilesValue $ContextFiles `
+                -ProviderExecutionRequested ([bool]$UsePrimaryAdvisoryProvider) `
+                -PatchSpecsRequested ([bool]$GeneratePatchSpecs) `
+                -ProdMode ([bool]$Prod) `
+                -FailureMessage $Script:UnifiedLauncherFailureMessage
+        } catch {
+            Write-Warning ("Could not write unified launcher failure tail evidence: {0}" -f $_.Exception.Message)
+        }
+    }
+    throw
+}
+
 
 $ContextFiles = @()
 $ReportFiles = @()
@@ -1045,3 +1250,16 @@ Write-Host "[OK] Patch specs requested: $($Manifest.patch_specs_requested)"
 Write-Host "[OK] Patch application performed: False"
 Write-Host "[OK] Reports: $($ReportFiles -join ', ')"
 Write-Host "[OK] Context files: $($ContextFiles -join ', ')"
+
+Write-UnifiedLauncherExecutionTailEvidence `
+    -StampValue $Stamp `
+    -Root $RepoRoot `
+    -RunDirValue $RunDir `
+    -ManifestPathValue "$PipelineDir/unified_local_ai_refactor_manifest.json" `
+    -ResolvedModesValue $ResolvedModes `
+    -ReportFilesValue $ReportFiles `
+    -ContextFilesValue $ContextFiles `
+    -ProviderExecutionRequested ([bool]$UsePrimaryAdvisoryProvider) `
+    -PatchSpecsRequested ([bool]$GeneratePatchSpecs) `
+    -ProdMode ([bool]$Prod) `
+    -FailureMessage ""
