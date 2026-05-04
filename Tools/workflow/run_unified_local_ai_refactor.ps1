@@ -1136,6 +1136,7 @@ if ($RunLegacyFullToolboxIntegrated) {
         RepositoryConsistencyMapWorkers = $RepositoryConsistencyMapWorkers
     }
     if ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality) { $LegacyArgs.RunGpuNpuProvider = $true }
+    if ($StrictRealRunActivationEnabled) { $LegacyArgs.RequireProviderArtifacts = $true }
     if ($NoMemoryWrite) { $LegacyArgs.SkipMemoryReload = $true }
     if ($NoEvidence) { $LegacyArgs.SkipSharedToolboxBundle = $true }
     $PhaseStatus.legacy_full_toolbox_integrated = Invoke-Checked "Run legacy full-toolbox integrated 0-to-10 lane" {
