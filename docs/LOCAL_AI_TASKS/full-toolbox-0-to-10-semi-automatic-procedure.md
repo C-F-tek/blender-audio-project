@@ -1,4 +1,4 @@
-﻿# IA-Carmine Full Toolbox 0 -> 10 Semi-Automatic Procedure
+# IA-Carmine Full Toolbox 0 -> 10 Semi-Automatic Procedure
 
 ## Purpose
 ## Root launcher reference
@@ -379,7 +379,7 @@ Required order:
 Do not commit `output/**`. Commit only regenerated source/index files and explicit evidence under `docs/LOCAL_VALIDATION_EVIDENCE`.
 
 
-### Full run unica â€” TUTTO SU TUTTO canonical command
+### Full run unica - TUTTO SU TUTTO canonical command
 
 The current canonical full run is not the conservative/read-only variant. It is the all-lanes run.
 
@@ -482,7 +482,7 @@ Git destructive actions remain separate explicit commands
 
 # Procedure variants
 
-## Variant A ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Expanded/manual 0 -> 10 full toolbox run
+## Variant A - Expanded/manual 0 -> 10 full toolbox run
 
 This is the full manual 0 -> 10 flow. It is the expanded version of the procedure Carmine used before the integrated wrapper existed.
 
@@ -890,7 +890,7 @@ Get-Content ".\output\validation\full_toolbox_agent_review_decision_loop_${Stamp
 
 ---
 
-## Variant B ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Integrated no-provider semi-automatic flow
+## Variant B - Integrated no-provider semi-automatic flow
 
 Use this when existing orchestrator/GPU artifacts are valid enough and the goal is to test the deterministic decision and patch-plan path quickly.
 
@@ -928,7 +928,7 @@ patch_plan_count >= 1
 fatal_report_failure_count=0
 ```
 
-## Variant C ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Integrated provider semi-automatic flow
+## Variant C - Integrated provider semi-automatic flow
 
 Use when a fresh full GPU/NPU run is needed.
 
@@ -964,7 +964,7 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
   -NpuFinalWaitSeconds 120
 ```
 
-## Variant D ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Patch bundle builder from a real patch plan
+## Variant D - Patch bundle builder from a real patch plan
 
 Use after a successful decision loop has produced:
 
@@ -1061,7 +1061,7 @@ git commit -m "docs(ai): apply review patch bundle notes"
 git push
 ```
 
-## Variant E ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Evidence-only commit
+## Variant E - Evidence-only commit
 
 After a full toolbox run, commit only compact Git-trackable evidence when useful:
 
