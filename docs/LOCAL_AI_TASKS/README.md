@@ -65,6 +65,24 @@ shared-*-next-task-*.md
 project-complete-*.md
 ```
 
+Explicit historical task records from the current Markdown inventory:
+
+| File | Historical role |
+|---|---|
+| `balanced-full-run-complete-2026-05-02.md` | Completed balanced full-run handoff/state record. |
+| `post-pr107-next-chat-handoff-2026-05-02.md` | Post-PR107 continuation handoff. |
+| `post-pr108-next-chat-handoff-2026-05-02.md` | Post-PR108 continuation handoff. |
+| `post-pr109-next-refactor-handoff-2026-05-02.md` | Post-PR109 refactor continuation handoff. |
+| `post-pr115-next-chat-handoff.md` | Post-PR115 continuation handoff. |
+| `next-chat-handoff-after-balanced-full-run-2026-05-02.md` | Balanced full-run continuation handoff. |
+| `next-chat-handoff-after-pr115-large-code-refactor-2026-05-02.md` | Large code-refactor continuation handoff. |
+| `pr109-pythonpath-module-execution-note-2026-05-02.md` | Historical PR109 Python module execution note. |
+| `project-complete-ai-to-ai-procedure.md` | Historical project-complete AI-to-AI procedure. |
+| `project-complete-ai-to-ai-review-request.md` | Historical project-complete AI-to-AI review request. |
+| `shared-runtime-toolbox-ai-to-ai-next-task-2026-05-03.md` | Historical shared runtime toolbox next-task handoff. |
+| `shared-runtime-toolbox-orchestration-architecture.md` | Historical shared runtime toolbox architecture note. |
+| `shared-toolbox-refactor-duplication-audit-next-task-2026-05-03.md` | Historical shared toolbox refactor audit handoff. |
+
 Historical files may be marked `superseded` or `historical` in future cleanup, but deletion requires explicit user approval.
 
 ## Inventory commands used by current flows
