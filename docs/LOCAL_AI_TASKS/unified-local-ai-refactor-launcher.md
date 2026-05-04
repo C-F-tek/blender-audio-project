@@ -2,7 +2,7 @@
 
 This is the canonical operator-facing runbook for `Tools/workflow/run_unified_local_ai_refactor.ps1`.
 
-It replaces scattered 0-to-10 operating profiles as the active entrypoint. Historical 0-to-10 documents may remain as evidence or background, but new local AI runs should start here unless the user explicitly requests a legacy script.
+It replaces scattered 0-to-10 operating profiles as the active entrypoint. Historical 0-to-10 documents are not active entrypoints. If legacy behavior is needed, it must be reached as a selected launcher lane or recovered from git history/compact evidence for forensic comparison.
 
 ## Absolute first instruction
 
@@ -69,6 +69,32 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_uni
   -SkipGitSync `
   -NoBranch
 ```
+
+## One-flow rule
+
+All local-AI execution profiles are launcher profiles, modes or flags.
+
+This includes:
+
+```text
+quick tests
+smoke tests
+full runs
+deep runs
+provider runs
+Ollama advisory
+NPU probes
+multistep provider workflow
+SQLite memory handoff
+context packs
+semantic chunks
+patch-spec generation
+reset cleanup
+full validation
+legacy full-toolbox integrated behavior
+```
+
+Do not promote or document a second active operator entrypoint. Supporting wrappers may exist, but they must be called by the launcher or explicitly documented as implementation detail.
 
 ## What the launcher is
 
@@ -230,7 +256,7 @@ Mode catalog:
 |---|---|
 | `smoke` | Fast health checks. |
 | `reset` | Plan or explicitly apply cleanup of old local generated artifacts. |
-| `validation` | Run broader local validation wrapper. |
+| `validation` | Run broader local validation wrapper through launcher selection. |
 | `md` | Build Markdown inventory and docs link report. |
 | `json` | Validate JSON/report contracts from the current run. |
 | `python` | Build script/tool inventory with CSV and Markdown outputs. |
