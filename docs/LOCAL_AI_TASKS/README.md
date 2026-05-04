@@ -145,6 +145,8 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 |---|---|---|
 | `unified-local-ai-refactor-launcher.md` | canonical active | Operator guide for one entrypoint: selectable phases, `-Full0To10`, intensity profiles, reset planning, SQLite memory, semantic chunks, context packs, provider advisory, patch specs and validation. |
 | `docs-md-obsolete-pruning-next-step.md` | active task input | Follow-up triage task for obsolete/superseded Markdown after the entrypoint reduction baseline. |
+| `validation-readme-reduction-next-step.md` | active follow-up | Reduce `Tools/validation/README.md` to a compact catalog and remove long procedural/control-character-prone blocks. |
+| `next-chat-unified-launcher-external-controls.md` | active follow-up | Add external CLI controls for launcher output dirs, context/report/artifact inputs and basenames. |
 | `gpu-npu-parallel-evidence-runbook.md` | supporting/legacy detail | GPU/NPU evidence and planner diagnostics background. Prefer unified launcher for execution. |
 | `full-context-ai-npu-golden-path.md` | supporting/legacy detail | Full-context local AI/NPU path background. Prefer unified launcher for execution. |
 | `full-context-golden-docs-contract.md` | supporting contract | Contract validation for the full-context golden path. |
