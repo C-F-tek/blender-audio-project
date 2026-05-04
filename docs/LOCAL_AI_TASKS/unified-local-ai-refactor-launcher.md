@@ -34,6 +34,12 @@ Primary script:
 Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
+Weekly cleanup installer:
+
+```text
+Tools/workflow/install_weekly_local_ai_reset_task.ps1
+```
+
 ## What it must never do
 
 The launcher is report/proposal-only by default.
@@ -297,6 +303,52 @@ Real deletion requires both:
 
 Never delete source files, docs, scripts, branch history or tracked project files through reset mode.
 
+## Weekly cleanup during test phase
+
+While the local AI workflow is still in test mode, generated artifacts may be cleaned weekly.
+
+Helper script:
+
+```text
+Tools/workflow/install_weekly_local_ai_reset_task.ps1
+```
+
+Default behavior is dry-run: it prints the Windows Scheduled Task configuration and does not install anything.
+
+Dry-run plan:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\install_weekly_local_ai_reset_task.ps1 `
+  -RetentionDays 7 `
+  -IncludeMemoryReset `
+  -IncludeGeneratedIndexReset
+```
+
+Install weekly cleanup for Monday 03:30:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\install_weekly_local_ai_reset_task.ps1 `
+  -Install `
+  -Force `
+  -DayOfWeek Monday `
+  -At 03:30 `
+  -RetentionDays 7 `
+  -IncludeMemoryReset `
+  -IncludeGeneratedIndexReset
+```
+
+The scheduled task invokes reset mode with:
+
+```text
+-ApplyReset
+-ConfirmResetText "DELETE LOCAL AI ARTIFACTS"
+-SkipGitSync
+-NoBranch
+-AllowDirty
+```
+
+This is intentionally local-only cleanup. It must not be used to delete source files, docs, scripts, tracked project files or Git history.
+
 ## Full practical examples
 
 Dry-run parser and smoke check:
@@ -393,6 +445,7 @@ Before proposing changes to this launcher or to the local AI flow, explicitly ch
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
+Tools/workflow/install_weekly_local_ai_reset_task.ps1
 Tools/workflow/run_local_ai_task_via_pipeline.ps1
 Tools/workflow/run_post_validation_ai_packet.ps1
 Tools/ai/build_agent_state_packet.py
