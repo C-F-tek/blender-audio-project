@@ -11,38 +11,98 @@ docs/LOCAL_AI_RUN_BOOTSTRAP.md
 
 If a task conflicts with `AGENTS.md`, preserve hard guardrails and stop with a conflict report.
 
+## Canonical local AI entrypoint
+
+The active 0-to-10 entrypoint is now the unified launcher:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/workflow/run_unified_local_ai_refactor.ps1
+```
+
+Canonical full run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity balanced `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+Quick run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity quick `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+Deep run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity deep `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+The unified launcher replaces scattered active 0-to-10 runbooks. Legacy documents remain useful as historical background, but agents should not start from them unless the user explicitly asks for a legacy/manual procedure.
+
 ## First entrypoints
 
 | User intent | Start here |
 |---|---|
-| One console-style launcher to choose MD/JSON/Python/refactor/test/provider/reset phases | `unified-local-ai-refactor-launcher.md` |
-| Full toolbox, 0-10, tutto su tutto, multi-phase, full repository run | `full-toolbox-0-to-10-semi-automatic-procedure.md` |
-| Code/script refactor, helper reuse, function discovery, line-count inventory | `code-refactor-0-to-10-procedure.md` |
-| Local-machine validation/evidence contract inside 0 -> 10 refactor | `code-refactor-0-to-10-procedure.md` plus `code-refactor-local-machine-validation-addendum.md` |
-| Markdown refactor inside the 0-10 refactor flow | `code-refactor-0-to-10-procedure.md` plus `code-refactor-md-lane-extension.md` |
-| Documentation cleanup, Markdown pruning, obsolete/redundant MD review | `../DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` plus `build_markdown_inventory.py` |
-| GPU/NPU evidence diagnostics | `gpu-npu-parallel-evidence-runbook.md` |
-| Full-context local AI/NPU golden path | `full-context-ai-npu-golden-path.md` |
+| Full selectable 0-to-10 local AI workflow | `unified-local-ai-refactor-launcher.md` with `-Full0To10` |
+| Fast 5-minute style full loop | `unified-local-ai-refactor-launcher.md` with `-Full0To10 -RunIntensity quick` |
+| Deep full-toolbox/provider loop | `unified-local-ai-refactor-launcher.md` with `-Full0To10 -RunIntensity deep` |
+| Custom intensity/limits | `unified-local-ai-refactor-launcher.md` with `-RunIntensity custom` and explicit numeric knobs |
+| Interactive phase picker | `unified-local-ai-refactor-launcher.md` with `-Interactive` |
+| Local generated-artifact cleanup/reset | `unified-local-ai-refactor-launcher.md` with `-Mode reset` |
+| Documentation cleanup, Markdown pruning, obsolete/redundant MD review | `unified-local-ai-refactor-launcher.md` with `-Mode md,contract,full_validation` |
+| GPU/NPU evidence diagnostics | `unified-local-ai-refactor-launcher.md`; legacy details may be read from `gpu-npu-parallel-evidence-runbook.md` |
+| Full-context local AI/NPU golden path | `unified-local-ai-refactor-launcher.md`; legacy details may be read from `full-context-ai-npu-golden-path.md` |
 
 ## Current maintained task files
 
-| File | Purpose |
-|---|---|
-| `unified-local-ai-refactor-launcher.md` | Canonical operator guide for `run_unified_local_ai_refactor.ps1`: one entrypoint, selectable phases, interactive prompt, reset planning, SQLite memory, semantic chunks, context packs, provider advisory, patch specs and validation. |
-| `full-toolbox-0-to-10-semi-automatic-procedure.md` | Canonical full-toolbox process: evidence -> recommendations -> decision -> patch plan -> patch bundle -> explicit apply -> validation -> PR. |
-| `code-refactor-0-to-10-procedure.md` | Canonical code/refactor process with line counts, script/tool discovery, helper reuse and compact evidence. |
-| `code-refactor-local-machine-validation-addendum.md` | Local-machine validation/evidence addendum for task-scoped report contracts and compact evidence handoff. |
-| `code-refactor-md-lane-extension.md` | Markdown/documentation refactor lane to run inside the canonical code-refactor 0 -> 10 procedure. |
-| `docs-md-obsolete-pruning-next-step.md` | Follow-up triage task for obsolete/superseded Markdown after the entrypoint reduction baseline. |
-| `gpu-npu-parallel-evidence-runbook.md` | GPU/NPU evidence and planner diagnostics. |
-| `full-context-ai-npu-golden-path.md` | Full-context local AI/NPU path with chunks, context packs, memory state, multistep providers and proposals. |
-| `full-context-golden-docs-contract.md` | Contract validation for the full-context golden path. |
-| `apply-agent-review-doc-patch-plan.md` | Apply low-risk documentation patch plans after manual review. |
-| `consistency-local-ai-contracts-and-powershell.md` | Compare local AI contract docs with PowerShell runners. |
-| `selected-review-workflow-ai-tools-patch-specs.md` | Review workflow/AI tools for safe patch-spec candidates. |
-| `enrich-local-ai-memory-chunks-context-wrapper.md` | Plan memory, semantic chunks, context packs and wrapper enrichment. |
-| `improve-gpu-planner-nonempty-recommendations.md` | GPU planner non-empty recommendation diagnostics. |
-| `heavy-gpu-local-ai-diagnostics-handoff.md` | Handoff for heavy local GPU diagnostics when GitHub-only agents cannot execute providers. |
+| File | Status | Purpose |
+|---|---|---|
+| `unified-local-ai-refactor-launcher.md` | canonical active | Operator guide for one entrypoint: selectable phases, `-Full0To10`, intensity profiles, reset planning, SQLite memory, semantic chunks, context packs, provider advisory, patch specs and validation. |
+| `docs-md-obsolete-pruning-next-step.md` | active task input | Follow-up triage task for obsolete/superseded Markdown after the entrypoint reduction baseline. |
+| `gpu-npu-parallel-evidence-runbook.md` | supporting/legacy detail | GPU/NPU evidence and planner diagnostics background. Prefer unified launcher for execution. |
+| `full-context-ai-npu-golden-path.md` | supporting/legacy detail | Full-context local AI/NPU path background. Prefer unified launcher for execution. |
+| `full-context-golden-docs-contract.md` | supporting contract | Contract validation for the full-context golden path. |
+| `apply-agent-review-doc-patch-plan.md` | scoped helper | Apply low-risk documentation patch plans after manual review. |
+| `consistency-local-ai-contracts-and-powershell.md` | scoped helper | Compare local AI contract docs with PowerShell runners. |
+| `selected-review-workflow-ai-tools-patch-specs.md` | scoped helper | Review workflow/AI tools for safe patch-spec candidates. |
+| `enrich-local-ai-memory-chunks-context-wrapper.md` | supporting/memory detail | Plan memory, semantic chunks, context packs and wrapper enrichment. |
+| `improve-gpu-planner-nonempty-recommendations.md` | supporting diagnostic | GPU planner non-empty recommendation diagnostics. |
+| `heavy-gpu-local-ai-diagnostics-handoff.md` | historical handoff | Handoff for heavy local GPU diagnostics when GitHub-only agents cannot execute providers. |
+
+## Superseded active-start runbooks
+
+These files may remain as historical expansion or scoped design references, but must not be treated as the first operational path anymore:
+
+```text
+full-toolbox-0-to-10-semi-automatic-procedure.md
+code-refactor-0-to-10-procedure.md
+code-refactor-local-machine-validation-addendum.md
+code-refactor-md-lane-extension.md
+```
+
+Current policy:
+
+```text
+Use run_unified_local_ai_refactor.ps1 as the operator entrypoint.
+Use old 0-to-10 docs only to understand historical details or specific validation semantics.
+Do not create new parallel 0-to-10 entrypoints unless the user explicitly asks for a separate runner.
+```
 
 ## Unified launcher flow
 
@@ -62,7 +122,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_uni
   -GeneratePatchSpecs
 ```
 
-Supported modes are documented in `unified-local-ai-refactor-launcher.md` and include:
+Supported modes include:
 
 ```text
 smoke
@@ -86,7 +146,41 @@ all
 The safe combined order is:
 
 ```text
-baseline -> smoke -> reset -> validation -> md -> json -> python -> chunks -> context_pack -> agent_state -> official -> provider -> patch_specs -> evidence -> contract -> full_validation
+baseline -> smoke -> reset -> validation -> md -> json -> python -> chunks -> context_pack -> agent_state -> workload_quality -> legacy_full_toolbox_integrated -> official -> provider -> patch_specs -> evidence -> contract -> full_validation
+```
+
+## Full0To10 rule
+
+`-Full0To10` must include every major step by default. Missing phases are allowed only when the operator explicitly disables them with a `-No*` flag.
+
+Expected default full profile:
+
+```text
+pipeline adapter ufficiale eseguito
+packet/proposals generati
+Ollama advisory usato
+patch specs creati e validati
+primary provider routing completo
+workload quality routing presente
+multistep provider workflow richiesto
+probe Ollama/NPU richiesti
+context pack presente
+SQLite memory IN/OUT presente quando non disabilitata
+quality gate registrato nel manifest
+patch_application_performed=false
+```
+
+Disablers:
+
+```text
+-NoOllamaProbe
+-NoNpuProbe
+-NoNpuDecodeSmoke
+-NoMultistepProvider
+-NoWorkloadQuality
+-NoMemoryWrite
+-NoEvidence
+-NoPatchSpecs
 ```
 
 ## SQLite memory / context enrichment must be explicit
@@ -181,27 +275,17 @@ python .\Tools\validation\build_script_inventory.py --repo-root . --output .\out
 
 `build_script_inventory.py` complements the older Python line-count CSV: it adds descriptions, functions, classes, methods, language and category for the full script/tool surface.
 
-## Runner expectation
-
-Project-owned local runner pattern:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
-  -TaskFile .\docs\LOCAL_AI_TASKS\<task>.md `
-  -TaskBranch codex/<task-branch> `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}"'
-```
-
-Generated outputs under `output/**` are local-only unless converted into compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/`.
-
 ## Agent anti-laziness checklist
 
 Before editing local-AI flow docs or wrappers, check these files explicitly:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
+Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1
 Tools/workflow/run_local_ai_task_via_pipeline.ps1
 Tools/workflow/run_post_validation_ai_packet.ps1
+Tools/workflow/run_parallel_ai_provider_multistep.ps1
+Tools/validation/check_ai_workload_report_quality.py
 Tools/ai/build_agent_state_packet.py
 Tools/ai/agent_state.py
 Tools/npu/build_semantic_code_chunks.py
