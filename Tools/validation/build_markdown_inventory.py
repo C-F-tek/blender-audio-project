@@ -55,6 +55,20 @@ ROOT_POLICY_DOCS = {
 SUPERSEDED_ROOT_GUIDES = {
     "guida_git_github_blender_audio_project.md": "docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md",
 }
+HISTORICAL_REPLACEMENTS = {
+    "docs/CODE_CONSULTATION_REPORT.md": [
+        "docs/PROJECT_STATUS_POINT.md",
+        "docs/MODULE_MAP.md",
+        "docs/REFACTORING_AND_REUSE_PLAN.md",
+    ],
+    "docs/codex_project_status_handoff.md": [
+        "AGENTS.md",
+        "README.md",
+        "WORKFLOW.md",
+        "docs/README.md",
+        "docs/LOCAL_AI_TASKS/README.md",
+    ],
+}
 
 EVIDENCE_PREFIX = "docs/LOCAL_VALIDATION_EVIDENCE/"
 TASK_PREFIX = "docs/LOCAL_AI_TASKS/"
@@ -85,9 +99,6 @@ HISTORICAL_TASK_BASENAME_PREFIXES = (
 )
 HISTORICAL_TASK_BASENAMES = {
     "pr109-pythonpath-module-execution-note-2026-05-02.md",
-}
-HISTORICAL_DOC_BASENAMES = {
-    "codex_project_status_handoff.md",
 }
 ALLOWED_CONTROL_CHARACTERS = {"\n", "\r", "\t"}
 LONG_MARKDOWN_WARNING_LINES = 400
@@ -141,7 +152,7 @@ def is_historical_local_ai_task(rel_path: str) -> bool:
 
 
 def is_historical_project_doc(rel_path: str) -> bool:
-    return rel_path.startswith("docs/") and Path(rel_path).name in HISTORICAL_DOC_BASENAMES
+    return rel_path in HISTORICAL_REPLACEMENTS
 
 
 def classify_markdown(rel_path: str) -> str:
@@ -273,6 +284,8 @@ def inventory_item(path: Path, repo_root: Path, index_texts: dict[str, str]) -> 
     }
     if rel in SUPERSEDED_ROOT_GUIDES:
         item["superseded_by"] = SUPERSEDED_ROOT_GUIDES[rel]
+    if rel in HISTORICAL_REPLACEMENTS:
+        item["replaced_by"] = HISTORICAL_REPLACEMENTS[rel]
     return item
 
 
