@@ -754,9 +754,15 @@ $DataStamp = $Stamp
 # IA_CARMINE_OUTPUT_DIR_EVIDENCE_DIR_FALLBACK_BEGIN
 if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = "output" }
 if ([string]::IsNullOrWhiteSpace($EvidenceDir)) { $EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE" }
+$ValidationDir = Join-Path $OutputDir "validation"
+$PipelineDir = Join-Path $OutputDir "ai_pipeline"
+$AnalysisDir = Join-Path $OutputDir "analysis"
+$PatchSpecsDir = Join-Path $OutputDir "patch_specs"
+$LocalAiRunsDir = Join-Path $OutputDir "local_ai_runs"
+$AiContextPacksDir = Join-Path $OutputDir "ai_context_packs"
 if ([string]::IsNullOrWhiteSpace($AiPacketsRoot)) { $AiPacketsRoot = Join-Path $OutputDir "ai_packets" }
 if ([string]::IsNullOrWhiteSpace($AiPacketsDir)) { $AiPacketsDir = Join-Path $AiPacketsRoot $DataStamp }
-$RunDir = Join-Path (Join-Path $OutputDir "local_ai_runs") ("{0}_unified_launcher" -f $Stamp)
+$RunDir = Join-Path $LocalAiRunsDir ("{0}_unified_launcher" -f $Stamp)
 $ManifestPath = Join-Path $RunDir ("unified_launcher_manifest_{0}.json" -f $Stamp)
 $ReportFiles = @()
 $ContextFiles = @()

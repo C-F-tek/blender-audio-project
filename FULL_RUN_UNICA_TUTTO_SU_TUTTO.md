@@ -418,3 +418,20 @@ Contract additions:
 - `check_ai_workload_report_quality.py` must accept `--report-dir` and report `report_dir_cli_supported=true`.
 
 The previous observed failure is therefore classified as a launcher/checker contract regression if it reappears after this patch.
+
+### Early fallback directory variables
+
+The launcher must initialize every canonical `$OutputDir`-derived directory before dirty-tree or other early-failure paths:
+
+    $ValidationDir
+    $PipelineDir
+    $AnalysisDir
+    $PatchSpecsDir
+    $LocalAiRunsDir
+    $AiContextPacksDir
+    $AiPacketsRoot
+    $AiPacketsDir
+    $RunDir
+    $ManifestPath
+
+This prevents execution-tail evidence from failing while reporting the real preflight error.
