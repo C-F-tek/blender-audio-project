@@ -3,36 +3,26 @@
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
 .DESCRIPTION
-  This is the single independent entrypoint for choosing what to run over the
-  same task Markdown input.
+  One independent entrypoint for local repository refactor/review runs.
 
-  It behaves like a small console installer: if -Mode is omitted or -Interactive
-  is passed, it prints available phases and asks what to execute. The selected
-  phases are then normalized and executed in a fixed safe order.
+  The task Markdown input stays the same. The operator chooses phases from the
+  command line or from an interactive console prompt, similar to a console
+  installer.
 
-  Logical order when multiple phases are selected:
-    baseline -> smoke -> validation -> md -> json -> python -> chunks -> context_pack -> agent_state -> official -> provider -> patch_specs -> evidence -> full_validation -> final_contract
+  Safe execution order:
+    baseline -> smoke -> validation -> md -> json -> python -> chunks -> context_pack -> agent_state -> official -> provider -> patch_specs -> evidence -> contract -> full_validation
 
-  The script is report/proposal-only. It does not apply patches, run Blender,
-  run FFmpeg, commit, push or merge.
+  The script is report/proposal-only. It never applies patches, commits, pushes,
+  merges, runs Blender or runs FFmpeg.
 
 .EXAMPLES
-  Interactive console selection:
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Interactive
-
-  Comma-separated modes:
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Mode smoke,md,python,contract,full_validation
-
-  Array-like modes:
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Mode smoke md python contract full_validation
-
-  Full combined advisory run:
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Mode all -UseOllamaAdvisory -UsePrimaryAdvisoryProvider -GeneratePatchSpecs
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Interactive
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Mode smoke,md,python,contract,full_validation
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Mode all -UseOllamaAdvisory -UsePrimaryAdvisoryProvider -GeneratePatchSpecs
 #>
 [CmdletBinding()]
 param(
     [string[]]$Mode = @(),
-
     [string]$TaskFile = ".\docs\LOCAL_AI_TASKS\docs-md-obsolete-pruning-next-step.md",
     [string]$TaskBranch = "",
     [string]$Stamp = "",
@@ -40,13 +30,11 @@ param(
     [string]$Profile = "docs",
     [string]$Model = "gpt-oss:20b",
     [int]$MaxContextChars = 12000,
-
     [switch]$Interactive,
     [switch]$SkipGitSync,
     [switch]$NoBranch,
     [switch]$AllowDirty,
     [switch]$DryRun,
-
     [switch]$UseOllamaAdvisory,
     [switch]$UsePrimaryAdvisoryProvider,
     [switch]$RunMultistepProviderWorkflow,
@@ -65,25 +53,11 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $ModeOrder = @(
-    "baseline",
-    "smoke",
-    "validation",
-    "md",
-    "json",
-    "python",
-    "chunks",
-    "context_pack",
-    "agent_state",
-    "official",
-    "provider",
-    "patch_specs",
-    "evidence",
-    "contract",
-    "full_validation"
+    "smoke", "validation", "md", "json", "python", "chunks", "context_pack",
+    "agent_state", "official", "provider", "patch_specs", "evidence", "contract", "full_validation"
 )
 
 $ModeDescriptions = [ordered]@{
-    baseline = "Compile core inventory/contract tools and prepare run state. Always executed."
     smoke = "Fast smoke checks: git diff --check and startup_check.py when available."
     validation = "Run broad local validation after refactor when the project wrapper exists."
     md = "Build Markdown inventory, docs link report and Markdown cleanup evidence."
@@ -91,9 +65,9 @@ $ModeDescriptions = [ordered]@{
     python = "Build full script/tool inventory with CSV/Markdown review surfaces."
     chunks = "Build/select semantic chunks for focused code/document context."
     context_pack = "Build bounded AI context pack for backend/core/provider work."
-    agent_state = "Build local agent-state packet and optional SQLite-memory handoff context."
+    agent_state = "Build local agent-state packet and optional memory handoff context."
     official = "Run the official project-owned local AI task pipeline adapter."
-    provider = "Run explicit advisory/provider path; Ollama remains advisory unless separately applied later."
+    provider = "Run explicit advisory/provider path; Ollama remains advisory."
     patch_specs = "Generate review-only patch specs from proposals. No apply."
     evidence = "Build compact GitHub evidence bundle when explicitly requested."
     contract = "Run current task-scoped report-contract validation."
@@ -102,27 +76,12 @@ $ModeDescriptions = [ordered]@{
 }
 
 $ModeAliases = @{
-    py = "python"
-    ps1 = "python"
-    scripts = "python"
-    script = "python"
-    markdown = "md"
-    docs = "md"
-    documentazione = "md"
-    report = "json"
-    reports = "json"
-    json_contract = "json"
-    provider_advisory = "provider"
-    ollama = "provider"
-    gpu = "provider"
-    npu = "provider"
-    planner = "official"
-    patch_planner = "patch_specs"
-    patch_plan = "patch_specs"
-    tests = "validation"
-    test = "validation"
-    validate = "validation"
-    validate_all = "full_validation"
+    py = "python"; ps1 = "python"; scripts = "python"; script = "python"
+    markdown = "md"; docs = "md"; documentazione = "md"
+    report = "json"; reports = "json"; json_contract = "json"
+    provider_advisory = "provider"; ollama = "provider"; gpu = "provider"; npu = "provider"
+    planner = "official"; patch_planner = "patch_specs"; patch_plan = "patch_specs"
+    tests = "validation"; test = "validation"; validate = "validation"; validate_all = "full_validation"
     full = "all"
 }
 
@@ -132,36 +91,31 @@ function Show-LauncherIntro {
     Write-Host "================================================"
     Write-Host "One task Markdown input; selectable phases; report/proposal-only by default."
     Write-Host ""
-    Write-Host "What this launcher can do:"
-    Write-Host "  - inventory and triage Markdown documentation;"
-    Write-Host "  - inventory Python/PowerShell/shell/tool scripts;"
-    Write-Host "  - validate JSON/report contracts;"
-    Write-Host "  - run smoke and broad validation wrappers;"
-    Write-Host "  - build semantic chunks, context packs and agent-state packets;"
-    Write-Host "  - call the official local AI pipeline adapter;"
-    Write-Host "  - optionally run Ollama/advisory provider paths;"
-    Write-Host "  - optionally generate review-only patch specs/evidence."
+    Write-Host "Capabilities:"
+    Write-Host "  - Markdown inventory, link validation, long/corrupt MD review;"
+    Write-Host "  - script/tool inventory for Python, PowerShell, shell, batch files;"
+    Write-Host "  - JSON/report-contract validation;"
+    Write-Host "  - smoke and full local validation wrappers;"
+    Write-Host "  - semantic chunks, context packs and agent-state packets;"
+    Write-Host "  - official local AI pipeline adapter;"
+    Write-Host "  - optional Ollama/provider advisory and review-only patch specs."
     Write-Host ""
-    Write-Host "Hard guardrails: no patch apply, no commit, no push, no merge, no Blender runtime, no FFmpeg runtime."
+    Write-Host "Guardrails: no patch apply, no commit, no push, no merge, no Blender, no FFmpeg."
     Write-Host ""
 }
 
 function Show-ModeCatalog {
     Write-Host "Available modes:" -ForegroundColor Cyan
-    foreach ($name in ($ModeDescriptions.Keys)) {
+    foreach ($name in $ModeDescriptions.Keys) {
         Write-Host ("  {0,-15} {1}" -f $name, $ModeDescriptions[$name])
     }
     Write-Host ""
-    Write-Host "Examples:"
-    Write-Host "  smoke,md,python,contract,full_validation"
-    Write-Host "  md,json,python,official,patch_specs"
-    Write-Host "  all"
+    Write-Host "Examples: smoke,md,python,contract,full_validation | md,json,python,official,patch_specs | all"
     Write-Host ""
 }
 
 function Normalize-ModeList {
     param([string[]]$Values)
-
     $items = @()
     foreach ($value in $Values) {
         if ([string]::IsNullOrWhiteSpace($value)) { continue }
@@ -172,18 +126,12 @@ function Normalize-ModeList {
             $items += $item
         }
     }
-
     if ($items.Count -eq 0) { return @() }
-    if ($items -contains "all") { return @($ModeOrder | Where-Object { $_ -ne "baseline" }) }
-
+    if ($items -contains "all") { return @($ModeOrder) }
     $unknown = @($items | Where-Object { $ModeDescriptions.Keys -notcontains $_ })
-    if ($unknown.Count -gt 0) {
-        throw "Unknown mode(s): $($unknown -join ', '). Use -Interactive to list modes."
-    }
-
+    if ($unknown.Count -gt 0) { throw "Unknown mode(s): $($unknown -join ', '). Use -Interactive to list modes." }
     $ordered = @()
     foreach ($known in $ModeOrder) {
-        if ($known -eq "baseline") { continue }
         if ($items -contains $known -and $ordered -notcontains $known) { $ordered += $known }
     }
     return $ordered
@@ -232,11 +180,6 @@ function Test-ModeEnabled {
     return $ResolvedModes -contains $Name
 }
 
-function New-SafeModeName {
-    if ($ResolvedModes.Count -eq 0) { return "interactive" }
-    return (($ResolvedModes | Sort-Object -Unique) -join "_")
-}
-
 function Add-ExistingContextFile {
     param([string[]]$Current, [string]$PathValue)
     if ([string]::IsNullOrWhiteSpace($PathValue)) { return $Current }
@@ -246,33 +189,23 @@ function Add-ExistingContextFile {
     return @($Current + $normalized)
 }
 
-function Add-OptionalModeFromTool {
+function Add-OptionalModeWarning {
     param([string]$ModeName, [string]$ToolPath, [ref]$Warnings)
     if ((Test-ModeEnabled $ModeName) -and -not (Test-Path -LiteralPath $ToolPath -PathType Leaf)) {
         $Warnings.Value += "Mode '$ModeName' requested but tool is missing: $ToolPath"
-        return $false
     }
-    return $true
 }
 
 Show-LauncherIntro
-
 $RepoRoot = Resolve-RepoRoot
 Set-Location $RepoRoot
 $env:PYTHONPATH = $RepoRoot
 
-if ($Interactive -or $Mode.Count -eq 0) {
-    $ResolvedModes = Read-InteractiveModes
-} else {
-    $ResolvedModes = Normalize-ModeList $Mode
-}
-
-if ($ResolvedModes.Count -eq 0) {
-    throw "No modes selected. Use -Interactive or -Mode all."
-}
+if ($Interactive -or $Mode.Count -eq 0) { $ResolvedModes = Read-InteractiveModes } else { $ResolvedModes = Normalize-ModeList $Mode }
+if ($ResolvedModes.Count -eq 0) { throw "No modes selected. Use -Interactive or -Mode all." }
 
 if ([string]::IsNullOrWhiteSpace($Stamp)) { $Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
-$ModeName = New-SafeModeName
+$ModeName = (($ResolvedModes | Sort-Object -Unique) -join "_")
 if ([string]::IsNullOrWhiteSpace($TaskBranch)) { $TaskBranch = "codex/local-ai-$ModeName-$Stamp" }
 
 $Required = @(
@@ -292,11 +225,11 @@ $Required = @(
 foreach ($Path in $Required) { Assert-FileExists $Path }
 
 $Warnings = @()
-[void](Add-OptionalModeFromTool "validation" ".\Tools\workflow\run_local_validation_after_refactor.ps1" ([ref]$Warnings))
-[void](Add-OptionalModeFromTool "smoke" ".\Tools\workflow\startup_check.py" ([ref]$Warnings))
-[void](Add-OptionalModeFromTool "chunks" ".\Tools\npu\build_semantic_code_chunks.py" ([ref]$Warnings))
-[void](Add-OptionalModeFromTool "context_pack" ".\Tools\ai\build_ai_context_pack.py" ([ref]$Warnings))
-[void](Add-OptionalModeFromTool "agent_state" ".\Tools\ai\build_agent_state_packet.py" ([ref]$Warnings))
+Add-OptionalModeWarning "validation" ".\Tools\workflow\run_local_validation_after_refactor.ps1" ([ref]$Warnings)
+Add-OptionalModeWarning "smoke" ".\Tools\workflow\startup_check.py" ([ref]$Warnings)
+Add-OptionalModeWarning "chunks" ".\Tools\npu\build_semantic_code_chunks.py" ([ref]$Warnings)
+Add-OptionalModeWarning "context_pack" ".\Tools\ai\build_ai_context_pack.py" ([ref]$Warnings)
+Add-OptionalModeWarning "agent_state" ".\Tools\ai\build_agent_state_packet.py" ([ref]$Warnings)
 
 $Status = (& git status --porcelain)
 if ($LASTEXITCODE -ne 0) { throw "git status failed" }
@@ -339,16 +272,10 @@ Write-Host "[INFO] Ollama advisory: $UseOllamaAdvisory"
 Write-Host "[INFO] Primary advisory provider: $UsePrimaryAdvisoryProvider"
 Write-Host "[INFO] Multistep provider workflow: $RunMultistepProviderWorkflow"
 Write-Host "[INFO] Patch specs: $GeneratePatchSpecs"
-
-if ($Warnings.Count -gt 0) {
-    foreach ($warning in $Warnings) { Write-Warning $warning }
-}
+foreach ($warning in $Warnings) { Write-Warning $warning }
 
 $PhaseStatus.baseline_compile = Invoke-Checked "Baseline compile validation/inventory tools" {
-    python -m py_compile `
-        .\Tools\validation\build_markdown_inventory.py `
-        .\Tools\validation\build_script_inventory.py `
-        .\Tools\validation\check_validation_report_contract.py
+    python -m py_compile .\Tools\validation\build_markdown_inventory.py .\Tools\validation\build_script_inventory.py .\Tools\validation\check_validation_report_contract.py
 }
 
 if (Test-ModeEnabled "smoke") {
@@ -461,7 +388,7 @@ if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-Mo
         "-Profile", $Profile,
         "-Basename", $BaseName,
         "-ProposalBasename", $ProposalBaseName,
-        "-MaxContextChars", "$MaxContextChars,
+        "-MaxContextChars", "$MaxContextChars",
         "-ExtraContextFile", ($ContextFiles -join ",")
     )
     if ($Model -ne "") { $RunnerArgs += @("-Model", $Model) }
@@ -474,7 +401,6 @@ if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-Mo
     if ($BuildEvidence -or (Test-ModeEnabled "evidence")) { $RunnerArgs += "-BuildEvidence" }
     if ($GeneratePatchSpecs -or (Test-ModeEnabled "patch_specs")) { $RunnerArgs += "-GeneratePatchSpecs" }
     if ($DryRun) { $RunnerArgs += "-DryRun" }
-
     $PhaseStatus.official_pipeline = Invoke-Checked "Run official local AI pipeline adapter" { powershell.exe @RunnerArgs } -SoftFail:$ContinueOnValidationError
     $PhaseReports.official_packet = "$PipelineDir/$BaseName.json"
     $PhaseReports.official_proposals = "$PipelineDir/$ProposalBaseName.json"
