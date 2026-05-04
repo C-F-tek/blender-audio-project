@@ -64,6 +64,38 @@ DEFAULT_REPORT_TEMPLATES: tuple[str, ...] = (
     "output/analysis/shared_toolbox_gpu_contract_replay_{stamp}.json",
 )
 
+FULL_TOOLBOX_REPORT_TEMPLATES: tuple[str, ...] = (
+    "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_integrated.json",
+    "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_workflow.json",
+    "output/validation/agent_review_warning_policy_{stamp}.json",
+    "output/ai_pipeline/full_toolbox_{stamp}_agent_review_decision_loop.json",
+    "output/patch_specs/full_toolbox_{stamp}_agent_review_patch_plan.json",
+    "output/ai_pipeline/full_toolbox_{stamp}_deterministic_recommendations.json",
+    "output/ai_pipeline/full_toolbox_{stamp}_bridge_orchestrator.json",
+    "output/ai_pipeline/full_toolbox_{stamp}_orchestrator.json",
+    "output/ai_pipeline/full_toolbox_{stamp}_parallel_gpu.json",
+    "output/validation/local_provider_probe.json",
+    "output/validation/ai_workload_report_quality.json",
+    "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_{stamp}.json",
+    "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_{stamp}.json",
+    "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_{stamp}.json",
+    "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_{stamp}_cloud_semantic_deterministic_chunk_manifest.json",
+)
+
+FULL_TOOLBOX_ARTIFACT_TEMPLATES: tuple[str, ...] = (
+    "output/patch_specs/full_toolbox_{stamp}_agent_review_patch_plan.md",
+    "output/ai_pipeline/full_toolbox_{stamp}_agent_review_decision_loop.md",
+    "output/ai_pipeline/full_toolbox_{stamp}_deterministic_recommendations.md",
+    "output/ai_pipeline/full_toolbox_{stamp}_orchestrator.md",
+    "output/ai_pipeline/full_toolbox_{stamp}_parallel_gpu.md",
+    "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_integrated.md",
+    "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_workflow.md",
+    "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_{stamp}.md",
+    "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_{stamp}.md",
+    "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_{stamp}.md",
+    "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_{stamp}_cloud_semantic_deterministic_chunk_manifest.md",
+)
+
 DEFAULT_ARTIFACT_TEMPLATES: tuple[str, ...] = (
     "docs/LOCAL_AI_TASKS/shared-runtime-toolbox-ai-to-ai-next-task-2026-05-03.md",
     "docs/LOCAL_AI_TASKS/shared-runtime-toolbox-orchestration-architecture.md",
@@ -172,11 +204,13 @@ def existing_paths(repo_root: Path, raw_paths: list[str], *, label: str, include
 
 
 def report_templates_for_stamp(stamp: str) -> list[str]:
-    return [item.format(stamp=stamp) for item in DEFAULT_REPORT_TEMPLATES]
+    templates = list(DEFAULT_REPORT_TEMPLATES) + list(FULL_TOOLBOX_REPORT_TEMPLATES)
+    return [item.format(stamp=stamp) for item in templates]
 
 
 def artifact_templates_for_stamp(stamp: str) -> list[str]:
-    return [item.format(stamp=stamp) for item in DEFAULT_ARTIFACT_TEMPLATES]
+    templates = list(DEFAULT_ARTIFACT_TEMPLATES) + list(FULL_TOOLBOX_ARTIFACT_TEMPLATES)
+    return [item.format(stamp=stamp) for item in templates]
 
 
 def coalesce_list(*values: list[str]) -> list[str]:
@@ -292,6 +326,102 @@ def build_remaining_gaps(
     return gaps
 
 
+def extract_full_run_patch_plan_summary(repo_root: Path, report_paths: list[str]) -> dict[str, Any]:
+    # Promote full-run patch-plan summary into the production bundle final summary.
+    for rel in report_paths:
+        path = resolve_repo_path(repo_root, rel)
+        data, parse_error = read_json_object(path)
+        if parse_error or not data:
+            continue
+        if data.get("kind") != "agent_review_patch_plan":
+            continue
+        raw_summary = data.get("patch_plan_summary")
+        summary_items = raw_summary if isinstance(raw_summary, list) else []
+        return {
+            "seen": True,
+            "source": repo_relative(path, repo_root),
+            "passed": data.get("passed"),
+            "patch_plan_count": data.get("patch_plan_count") or len(summary_items),
+            "fallback_used": data.get("fallback_used"),
+            "manual_review_required": data.get("manual_review_required"),
+            "provider_execution_performed": data.get("provider_execution_performed"),
+            "patch_application_performed": data.get("patch_application_performed"),
+            "source_writes_performed": data.get("source_writes_performed"),
+            "summary_count": len(summary_items),
+            "top_items": summary_items[:20],
+            "warnings": data.get("warnings") if isinstance(data.get("warnings"), list) else [],
+            "errors": data.get("errors") if isinstance(data.get("errors"), list) else [],
+        }
+    return {
+        "seen": False,
+        "source": "",
+        "patch_plan_count": 0,
+        "summary_count": 0,
+        "top_items": [],
+        "warnings": [],
+        "errors": ["full-run patch plan report not found in production bundle inputs"],
+    }
+
+
+def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str]) -> dict[str, Any]:
+    # Summarize provider/GPU/NPU diagnostics without hiding recovered failures.
+    diagnostics: list[dict[str, Any]] = []
+    provider_execution_seen = False
+    gpu_primary_advisory_succeeded = False
+    deterministic_recovery_used = False
+
+    for rel in report_paths:
+        path = resolve_repo_path(repo_root, rel)
+        data, parse_error = read_json_object(path)
+        if parse_error or not data:
+            continue
+
+        kind = str(data.get("kind") or "")
+        passed = data.get("passed")
+        provider_execution_seen = provider_execution_seen or data.get("provider_execution_performed") is True
+
+        if kind in {
+            "agent_gpu_npu_parallel_orchestrator",
+            "agent_gpu_parallel_report",
+            "local_provider_probe",
+            "ai_workload_report_quality",
+        }:
+            errors = data.get("errors") if isinstance(data.get("errors"), list) else []
+            warnings = data.get("warnings") if isinstance(data.get("warnings"), list) else []
+            diagnostics.append(
+                {
+                    "path": repo_relative(path, repo_root),
+                    "kind": kind,
+                    "passed": passed,
+                    "provider_execution_requested": data.get("provider_execution_requested"),
+                    "provider_execution_performed": data.get("provider_execution_performed"),
+                    "classification": data.get("classification"),
+                    "provider_error": data.get("provider_error"),
+                    "recommendation_count": data.get("recommendation_count"),
+                    "errors": errors[:20],
+                    "warnings": warnings[:20],
+                }
+            )
+            if kind == "agent_gpu_parallel_report" and passed is True and int(data.get("recommendation_count") or 0) > 0:
+                gpu_primary_advisory_succeeded = True
+
+        if kind in {
+            "deterministic_recommendation_synthesizer",
+            "agent_review_decision_loop",
+            "agent_review_patch_plan",
+        } and passed is True:
+            if int(data.get("recommendation_count") or 0) > 0 or int(data.get("patch_plan_count") or 0) > 0:
+                deterministic_recovery_used = True
+
+    provider_failure_detected = any(item.get("passed") is False for item in diagnostics)
+    return {
+        "provider_execution_seen": provider_execution_seen,
+        "gpu_primary_advisory_succeeded": gpu_primary_advisory_succeeded,
+        "provider_failure_detected": provider_failure_detected,
+        "deterministic_recovery_used": deterministic_recovery_used,
+        "diagnostics": diagnostics,
+    }
+
 def build_final_summary(
     *,
     repo_root: Path,
@@ -306,6 +436,8 @@ def build_final_summary(
     chunked_file_index: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     facts = collect_report_facts(repo_root, report_paths)
+    patch_plan_summary = extract_full_run_patch_plan_summary(repo_root, report_paths)
+    provider_diagnostics = extract_provider_diagnostics_summary(repo_root, report_paths)
     tool_capabilities = runtime_tool_capabilities()
     tool_requests = facts.get("tool_requests_executed_or_proposed") or default_tool_requests()
     remaining_gaps = build_remaining_gaps(missing_reports, missing_artifacts, facts)
@@ -328,6 +460,14 @@ def build_final_summary(
         "recommended_next_task_md": recommended_next_task_md,
         "compact_bundle_paths": bundle_paths,
         "provider_execution_performed": bool(facts.get("provider_execution_performed")),
+        "provider_diagnostics": provider_diagnostics,
+        "gpu_primary_advisory_succeeded": bool(provider_diagnostics.get("gpu_primary_advisory_succeeded")),
+        "provider_failure_detected": bool(provider_diagnostics.get("provider_failure_detected")),
+        "deterministic_recovery_used": bool(provider_diagnostics.get("deterministic_recovery_used")),
+        "patch_plan_summary": patch_plan_summary,
+        "patch_plan_summary_seen": bool(patch_plan_summary.get("seen")),
+        "patch_plan_count": patch_plan_summary.get("patch_plan_count", 0),
+        "manual_review_required": patch_plan_summary.get("manual_review_required"),
         "patch_application_performed": bool(facts.get("patch_application_performed")),
         "source_writes_performed": bool(facts.get("source_writes_performed")),
         "sqlite_write_performed": bool(facts.get("sqlite_write_performed")),
@@ -354,6 +494,31 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
         "blender_runtime_execution_performed",
     ):
         lines.append(f"- {key}: {summary.get(key)}")
+    lines.append("")
+    lines.append("## Provider diagnostics")
+    lines.append("")
+    provider = summary.get("provider_diagnostics") or {}
+    lines.append(f"- Provider execution seen: `{provider.get('provider_execution_seen')}`")
+    lines.append(f"- GPU primary advisory succeeded: `{provider.get('gpu_primary_advisory_succeeded')}`")
+    lines.append(f"- Provider failure detected: `{provider.get('provider_failure_detected')}`")
+    lines.append(f"- Deterministic recovery used: `{provider.get('deterministic_recovery_used')}`")
+    for item in provider.get("diagnostics", [])[:12]:
+        lines.append(
+            f"- `{item.get('path')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}` "
+            f"provider_execution_performed=`{item.get('provider_execution_performed')}` errors=`{item.get('errors')}`"
+        )
+    lines.append("")
+    lines.append("## Patch plan summary")
+    lines.append("")
+    patch_summary = summary.get("patch_plan_summary") or {}
+    lines.append(f"- Seen: `{patch_summary.get('seen')}`")
+    lines.append(f"- Source: `{patch_summary.get('source')}`")
+    lines.append(f"- Patch plan count: `{patch_summary.get('patch_plan_count')}`")
+    lines.append(f"- Manual review required: `{patch_summary.get('manual_review_required')}`")
+    lines.append(f"- Patch application performed: `{patch_summary.get('patch_application_performed')}`")
+    for item in patch_summary.get("top_items", [])[:20]:
+        if isinstance(item, dict):
+            lines.append(f"- `{item.get('id') or item.get('recommendation_id')}` status=`{item.get('status')}` targets=`{item.get('target_files')}`")
     lines.append("")
     lines.append("## Tools available")
     lines.append("")

@@ -1284,3 +1284,29 @@ Operational rule:
     one completed full run -> one shared toolbox AI-to-AI bundle -> one telemetry/capability/chunk-manifest set -> optional evidence commit.
 
 When the user asks to push telemetry/evidence after a full run, stage only files under docs/LOCAL_VALIDATION_EVIDENCE that match the run stamp and belong to this production communication set. Do not stage output/**.
+
+### Full-run provider/bundle/broker acceptance
+
+After a completed full run, inspect the production bundle and telemetry for these acceptance criteria:
+
+    shared_toolbox_ai_to_ai_bundle_<STAMP>.md:
+      patch_plan_summary_seen: True
+
+    shared_toolbox_ai_to_ai_final_summary_<STAMP>.json:
+      provider_diagnostics.provider_execution_seen: True
+      provider_diagnostics.gpu_primary_advisory_succeeded: True or explicit recovered failure
+      provider_diagnostics.deterministic_recovery_used: True when GPU/Ollama failed
+
+    runtime_tool_usage_telemetry_<STAMP>.json:
+      summary.tool_call_entry_count >= 3
+      summary.executed_count >= 3
+      summary.failed_count = 0
+      summary.blocked_count = 0
+
+Minimal broker bootstrap tools:
+
+    check_python_syntax
+    build_python_line_count_csv
+    check_validation_report_contract
+
+If GPU/Ollama primary advisory fails, the run may still pass by deterministic recovery, but the production bundle must expose the recovered provider failure explicitly.

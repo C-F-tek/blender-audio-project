@@ -480,3 +480,30 @@ Git policy:
     - Never commit output/**.
     - Never commit output/validation/patch_bundles/**.
     - Never commit raw checkpoints, DB files, renders or generated local runtime caches.
+
+## Full-run provider, bundle and broker completion contract
+
+A production full run is complete only when the handoff proves three independent facts:
+
+    provider_diagnostics_present = true
+    patch_plan_summary_seen = true
+    runtime_tool_usage_telemetry.executed_count >= 3
+
+Provider diagnostics must distinguish:
+
+    provider_execution_seen
+    gpu_primary_advisory_succeeded
+    provider_failure_detected
+    deterministic_recovery_used
+
+The shared production bundle must promote the full-run patch plan summary from:
+
+    output/patch_specs/full_toolbox_<STAMP>_agent_review_patch_plan.json
+
+The runtime toolbox must be exercised by a minimal report-only broker bootstrap before the production bundle is built. The default bootstrap tools are:
+
+    check_python_syntax
+    build_python_line_count_csv
+    check_validation_report_contract
+
+The bootstrap remains report-only and must not perform provider execution, patch application, source writes, Git writes, Blender runtime or persistent memory writes.

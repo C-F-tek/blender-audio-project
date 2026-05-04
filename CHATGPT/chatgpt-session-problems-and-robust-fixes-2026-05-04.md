@@ -246,3 +246,22 @@ Operational rule:
 
     Do not describe the decision-loop evidence as the whole handoff. It is important but partial.
     The shared toolbox AI-to-AI bundle is the production bundle for cross-session communication.
+
+## Problem 10: full-run green status can hide degraded provider or zero broker usage
+
+Observed failure mode:
+
+    A full run can pass because deterministic recovery produced recommendations and patch plans, while GPU/Ollama primary advisory failed and runtime tool usage telemetry stayed at zero.
+
+Robust fix:
+
+    Treat a full run as production-complete only if the shared production bundle exposes:
+
+    - provider diagnostics;
+    - patch plan summary;
+    - runtime broker/tool usage telemetry with executed report-only tool calls.
+
+Operational rule:
+
+    A green decision loop is necessary but not sufficient.
+    Check shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md, runtime_tool_usage_telemetry_<STAMP>.json/md and runtime_tool_capability_manifest_<STAMP>.json/md before declaring full operational success.

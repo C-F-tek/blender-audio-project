@@ -322,6 +322,10 @@ $RuntimeToolTelemetryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage
 $RuntimeToolTelemetryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.md"
 $RuntimeToolCapabilityJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_capability_manifest_$Stamp.json"
 $RuntimeToolCapabilityMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_capability_manifest_$Stamp.md"
+$RuntimeToolBootstrapRequestJson = ".\output\validation\runtime_tool_bootstrap_requests_$Stamp.json"
+$RuntimeToolBrokerJson = ".\output\validation\runtime_tool_broker_full_toolbox_$Stamp.json"
+$RuntimeToolBrokerMd = ".\output\validation\runtime_tool_broker_full_toolbox_$Stamp.md"
+$RuntimeToolOutputDir = ".\output\ai_runtime_tools\$Stamp"
 $EvidenceChunkBase = "full_toolbox_${Stamp}_cloud_semantic_deterministic"
 $EvidenceChunkDir = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunks"
 $EvidenceChunkManifestJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunk_manifest.json"
@@ -637,6 +641,79 @@ if (-not $SkipPostValidationPacket) {
 } else {
     [void]$Warnings.Add("post-validation AI packet skipped by request")
 }
+
+
+# IA_CARMINE_RUNTIME_TOOL_BROKER_BOOTSTRAP_BEGIN
+$RuntimeToolBootstrapPayload = [ordered]@{
+    schema_version = 1
+    kind = "runtime_tool_bootstrap_requests"
+    generated_at = (Get-Date).ToString("o")
+    stamp = $Stamp
+    purpose = "Exercise minimal report-only runtime tool broker activation during full-toolbox runs."
+    provider_execution_performed = $false
+    patch_application_performed = $false
+    source_writes_performed = $false
+    tool_requests = @(
+        [ordered]@{
+            id = "full_toolbox_bootstrap_python_syntax"
+            tool = "check_python_syntax"
+            reason = "Exercise brokered Python syntax validation as a report-only runtime tool."
+            args = [ordered]@{}
+        },
+        [ordered]@{
+            id = "full_toolbox_bootstrap_python_line_count"
+            tool = "build_python_line_count_csv"
+            reason = "Exercise brokered Python inventory as a report-only runtime tool."
+            args = [ordered]@{
+                exclude_dir = ".venv,venv,__pycache__"
+            }
+        },
+        [ordered]@{
+            id = "full_toolbox_bootstrap_validation_contract"
+            tool = "check_validation_report_contract"
+            reason = "Exercise brokered validation report contract check against full-run decision outputs."
+            args = [ordered]@{
+                report_file = "$DecisionLoopJson,$PatchPlanJson"
+            }
+        }
+    )
+}
+Write-JsonArtifact -Path $RuntimeToolBootstrapRequestJson -Payload $RuntimeToolBootstrapPayload
+
+Invoke-RepoPython -Label "Runtime tool broker bootstrap activation" -ArgsList @(
+    ".\Tools\ai\agent_runtime_tool_broker.py",
+    "--repo-root", ".",
+    "--request-file", $RuntimeToolBootstrapRequestJson,
+    "--tool-output-dir", $RuntimeToolOutputDir,
+    "--stamp", $Stamp,
+    "--timeout-seconds", "240",
+    "--output", $RuntimeToolBrokerJson,
+    "--markdown-output", $RuntimeToolBrokerMd
+)
+Add-ExistingPath -List $Reports -Path $RuntimeToolBrokerJson
+Add-ExistingPath -List $Artifacts -Path $RuntimeToolBrokerMd
+
+Invoke-RepoPython -Label "Runtime tool usage telemetry pre-bundle" -ArgsList @(
+    ".\Tools\ai\build_runtime_tool_usage_telemetry.py",
+    "--repo-root", ".",
+    "--stamp", $Stamp,
+    "--orchestrator", $OrchOut,
+    "--gpu-report", $GpuOut,
+    "--gpu-npu-sync", $GpuNpuSyncJson,
+    "--decision-loop", $DecisionLoopJson,
+    "--broker-report", $RuntimeToolBrokerJson,
+    "--output", $RuntimeToolTelemetryJson,
+    "--markdown-output", $RuntimeToolTelemetryMd
+)
+
+Invoke-RepoPython -Label "Runtime tool capability manifest pre-bundle" -ArgsList @(
+    ".\Tools\ai\build_runtime_tool_capability_manifest.py",
+    "--repo-root", ".",
+    "--tool-usage", $RuntimeToolTelemetryJson,
+    "--output", $RuntimeToolCapabilityJson,
+    "--markdown-output", $RuntimeToolCapabilityMd
+)
+# IA_CARMINE_RUNTIME_TOOL_BROKER_BOOTSTRAP_END
 
 if (-not $SkipSharedToolboxBundle) {
     Invoke-RepoPython -Label "Shared toolbox AI-to-AI bundle" -ArgsList @(
