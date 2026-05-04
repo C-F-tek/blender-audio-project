@@ -4,7 +4,7 @@ Single operational documentation index for `IA-Carmine Local AI Orchestration Wo
 
 The repository slug is still `C-F-tek/blender-audio-project`, but the active architecture is local AI orchestration, provider-lane routing, validation, evidence, telemetry and manual-review patch planning. Blender/audio remains the first application domain, not the architectural boundary.
 
-Lifecycle, pruning, oversized Markdown and corruption rules are owned by `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md`. This file owns the reading order and stable index only.
+Lifecycle, pruning, oversized Markdown and corruption rules are owned by `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md`. This file owns the reading order and stable index only. Runtime code, workflow scripts and validators remain authoritative for behavior, command parameters and report contracts.
 
 ## Single reading flow
 
