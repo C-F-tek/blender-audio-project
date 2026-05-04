@@ -435,3 +435,48 @@ The launcher must initialize every canonical `$OutputDir`-derived directory befo
     $ManifestPath
 
 This prevents execution-tail evidence from failing while reporting the real preflight error.
+
+## Production AI-to-AI communication standard
+
+The production communication artifact for a successful full run is the shared toolbox bundle:
+
+    docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.md
+
+This bundle is the standard post-run handoff between local IA-Carmine and the next AI/chat/operator session.
+
+It must be treated as the primary production communication bundle because it carries the run in a compact, AI-readable form:
+
+    - workflow and integrated decision-loop references;
+    - deterministic recommendations and patch-plan references;
+    - runtime tool usage telemetry;
+    - runtime tool capability manifest references;
+    - semantic chunk manifest references;
+    - provider/probe/advisory state;
+    - guardrail state: patch application, source writes, SQLite writes, Blender/FFmpeg execution;
+    - evidence files selected for Git-trackable handoff.
+
+The standard communication set for a full run is:
+
+    docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.md
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.md
+    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.md
+    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_<STAMP>_cloud_semantic_deterministic_chunk_manifest.json
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_<STAMP>_cloud_semantic_deterministic_chunk_manifest.md
+
+The decision-loop evidence remains important, but it is not the whole production handoff by itself:
+
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_<STAMP>.md
+
+Git policy:
+
+    - Commit the production communication set only when the run completed and the user explicitly wants telemetry/evidence pushed.
+    - Never commit output/**.
+    - Never commit output/validation/patch_bundles/**.
+    - Never commit raw checkpoints, DB files, renders or generated local runtime caches.

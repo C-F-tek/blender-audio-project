@@ -1251,3 +1251,36 @@ Directory naming rule:
 - Compact evidence variable/parameter: `$EvidenceDir` / `-EvidenceDir`
 
 The full run must preserve the `TUTTO SU TUTTO` policy while keeping runtime output, compact evidence and AI packets explicitly separated.
+
+### Production AI-to-AI communication bundle
+
+For a completed full run, the standard production communication artifact is not only the decision-loop evidence.
+
+The canonical AI-to-AI handoff is:
+
+    docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.md
+
+This pair is the first bundle to send to the next AI/chat/operator session when continuing work from a completed local run.
+
+The production communication set also includes:
+
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.md
+    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.md
+    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_<STAMP>_cloud_semantic_deterministic_chunk_manifest.json
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_<STAMP>_cloud_semantic_deterministic_chunk_manifest.md
+
+Decision-loop evidence remains required but partial:
+
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_<STAMP>.md
+
+Operational rule:
+
+    one completed full run -> one shared toolbox AI-to-AI bundle -> one telemetry/capability/chunk-manifest set -> optional evidence commit.
+
+When the user asks to push telemetry/evidence after a full run, stage only files under docs/LOCAL_VALIDATION_EVIDENCE that match the run stamp and belong to this production communication set. Do not stage output/**.

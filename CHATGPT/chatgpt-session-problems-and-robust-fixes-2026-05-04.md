@@ -220,3 +220,29 @@ CHATGPT/chatgpt-session-problems-and-robust-fixes-*.md
 ```
 
 Then inspect the active branch, latest commits and `git status --short` before giving run commands.
+
+## Problem 9: production bundle omitted from standard handoff language
+
+Observed failure mode:
+
+    Chat guidance focused on the decision-loop telemetry pair and treated the shared toolbox AI-to-AI bundle as optional or secondary.
+
+Correct interpretation:
+
+    For a completed IA-Carmine full run, shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md is the standard production communication bundle.
+
+Robust fix:
+
+    When continuing work from a completed full run, request or inspect the production communication set first:
+
+    - shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+    - full_toolbox_run_telemetry_summary_<STAMP>.json/md
+    - runtime_tool_usage_telemetry_<STAMP>.json/md
+    - runtime_tool_capability_manifest_<STAMP>.json/md
+    - full_toolbox_<STAMP>_cloud_semantic_deterministic_chunk_manifest.json/md
+    - full_toolbox_agent_review_decision_loop_<STAMP>.json/md
+
+Operational rule:
+
+    Do not describe the decision-loop evidence as the whole handoff. It is important but partial.
+    The shared toolbox AI-to-AI bundle is the production bundle for cross-session communication.
