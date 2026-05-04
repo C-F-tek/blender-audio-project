@@ -51,7 +51,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_uni
   -NoBranch
 ```
 
-Custom intensity:
+Custom legacy-lane intensity:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
@@ -64,10 +64,6 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_uni
   -MaxCharsPerFile 4000 `
   -MaxNewTokens 1600 `
   -KeepAlive 8m `
-  -ProviderMaxContextChars 9000 `
-  -ContextPackMaxTotalChars 32000 `
-  -ContextPackMaxFileChars 2500 `
-  -AgentStateMaxMemoryChars 12000 `
   -Model gpt-oss:20b `
   -SkipGitSync `
   -NoBranch
@@ -208,12 +204,12 @@ A disabled phase must appear as intentionally disabled, not missing by accident.
 
 | Intensity | Intended use | Effective profile |
 |---|---|---|
-| `quick` | Fast validation/proposal loop, about 5 minutes when providers cooperate. | Lower rounds, files, context, tokens and keep-alive. |
+| `quick` | Fast validation/proposal loop, about 5 minutes when providers cooperate. | Lower legacy-lane rounds, files, context, tokens and keep-alive. |
 | `balanced` | Default practical full run. | Current project defaults. |
-| `deep` | Heavier full review. | Larger context, more rounds and larger memory/context pack surfaces. |
+| `deep` | Heavier full review. | Larger legacy-lane context, more rounds and larger memory/context profile values. |
 | `custom` | Operator-defined. | Use explicit numeric parameters. |
 
-Legacy/full-toolbox inherited parameters exposed by the launcher:
+Legacy/full-toolbox inherited parameters currently exposed by the launcher:
 
 ```text
 -BudgetMinutes
@@ -240,11 +236,19 @@ Legacy/full-toolbox inherited parameters exposed by the launcher:
 -AgentStateMaxMemoryChars
 ```
 
-These parameters exist so the unified launcher can replace older standalone 0-to-10/full-toolbox scripts without losing intensity control.
+Current wiring status:
+
+```text
+Budget/round/file/context/token/NPU auditor knobs are wired into the legacy full-toolbox integrated lane.
+RunIntensity presets update ProviderMaxContextChars, ContextPackMaxTotalChars, ContextPackMaxFileChars and AgentStateMaxMemoryChars in the manifest.
+The subordinate context_pack, agent_state, official adapter and Ollama packet calls still need one more patch to pass every external/intensity knob through instead of using their current hardcoded/default values.
+```
+
+Do not claim full pass-through configurability until the next external-controls patch lands.
 
 ## External controls planned for the next launcher patch
 
-The next patch should add CLI pass-through controls for all major input/output surfaces:
+The next patch should add CLI pass-through controls for all major input/output surfaces and finish wiring the already-declared intensity parameters into subordinate calls:
 
 ```text
 -OutputRoot
@@ -267,7 +271,17 @@ The next patch should add CLI pass-through controls for all major input/output s
 -ContextPackEvidenceBasename
 ```
 
-These controls are documented as the next step because the operator must be able to choose phase, intensity, input context, report inputs, artifact inputs and output destinations from the launch command.
+This patch must also replace these current hardcoded/default subordinate values:
+
+```text
+context pack: --max-total-chars 64000 -> $ContextPackMaxTotalChars
+context pack: --max-file-chars 4000 -> $ContextPackMaxFileChars
+agent state: --max-memory-chars 24000 -> $AgentStateMaxMemoryChars
+official adapter: -MaxContextChars $MaxContextChars -> chosen provider/official context value
+Ollama packet: -MaxContextChars $MaxContextChars -> chosen provider/Ollama context value
+output dirs: output/local_ai_runs, output/validation, output/ai_pipeline, output/patch_specs -> external directory parameters
+basenames: generated defaults -> operator-supplied basename parameters when provided
+```
 
 ## SQLite memory policy
 
@@ -351,19 +365,33 @@ Every run writes:
 output/local_ai_runs/<stamp>_<mode>_unified/pipeline/unified_local_ai_refactor_manifest.json
 ```
 
-The manifest must include:
+The current manifest includes these verified fields:
 
 ```text
-selected modes
+schema_version
+kind
+generated_at
+repo_root
+mode
+mode_name
 full_0_to_10_requested
+available_modes
+profile
+model
 run_intensity
-profile/model
-Python executable and PYTHONPATH
-intensity parameters
-provider flags
+legacy/intensity parameters
+python_exe
+python_exe_requested
+pythonpath
+ia_carmine_python_env
+stamp
+task_file
+task_branch
+run_dir
+provider_execution_requested
+primary_provider_requested
 workload_quality_report
 workload_quality_routing_ok
-primary_provider_requested
 multistep_provider_workflow_requested
 ollama_probe_requested
 npu_probe_requested
@@ -371,14 +399,21 @@ npu_decode_smoke_requested
 memory_in_enabled
 memory_out_enabled
 quality_gate_passed
+reset_apply_requested
+patch_application_performed=false
+patch_specs_requested
+build_evidence_requested
+memory_db
+save_inputs_to_memory_db
 context_files
 report_files
 phase_status
 phase_reports
 warnings
 errors
-patch_application_performed=false
 ```
+
+After the external-controls patch, the manifest must also include selected external paths, basenames and external context/report/artifact inputs.
 
 ## Stop conditions
 
