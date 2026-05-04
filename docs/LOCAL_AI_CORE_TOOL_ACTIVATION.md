@@ -2,6 +2,12 @@
 
 This document defines the priority activation lane for IA-Carmine repository work.
 
+It is a policy and tool-visibility document, not a command catalog. Current executable commands live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
 ## Intent
 
 The project should use local AI core/tools to produce concrete artifacts that can be validated, reviewed and iterated on.
@@ -10,7 +16,7 @@ The activation lane is app-agnostic. It is not Blender-specific, audio-specific 
 
 ## Primary entrypoint
 
-The primary operator entrypoint is now the unified launcher:
+The primary operator entrypoint is the unified launcher:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
@@ -18,22 +24,7 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
-Canonical full activation through the unified launcher:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity balanced `
-  -Model gpt-oss:20b
-```
-
-Quick focused activation without provider execution:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode chunks,context_pack,agent_state,official,contract,full_validation `
-  -RunIntensity quick
-```
+All activation profiles must be selected as launcher modes, profiles or flags.
 
 The older core activation wrapper remains a supporting lane:
 
@@ -41,7 +32,7 @@ The older core activation wrapper remains a supporting lane:
 Tools/workflow/run_local_ai_core_tool_activation.ps1
 ```
 
-Use it only when a task explicitly targets that wrapper or when validating legacy activation behavior.
+Use it only when a task explicitly targets that wrapper or when the unified launcher delegates to it. Do not document it as a parallel full-run entrypoint.
 
 ## Philosophy
 
@@ -53,6 +44,7 @@ provider execution explicit-only
 app-agnostic core before domain runtime
 macro patch as draft/spec, never automatic apply
 manifest-first visibility
+launcher-first execution
 ```
 
 The core/tool workflow should produce real artifacts:
@@ -78,10 +70,10 @@ These artifacts give the repo concrete material for review and tests instead of 
 | Area | Tool/script | Status |
 |---|---|---|
 | Unified launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` | Canonical entrypoint. |
-| Core activation wrapper | `Tools/workflow/run_local_ai_core_tool_activation.ps1` | Supporting/legacy lane. |
-| Semantic chunks | `Tools/npu/build_semantic_code_chunks.py` | Supporting tool, provider-free. |
-| Context pack | `Tools/ai/build_ai_context_pack.py` | Supporting tool, provider-free. |
-| Agent state packet | `Tools/ai/build_agent_state_packet.py` | Supporting tool, optional SQLite memory. |
+| Core activation wrapper | `Tools/workflow/run_local_ai_core_tool_activation.ps1` | Supporting/legacy lane only. |
+| Semantic chunks | `Tools/npu/build_semantic_code_chunks.py` | Supporting tool, provider-free, launcher `chunks` phase. |
+| Context pack | `Tools/ai/build_ai_context_pack.py` | Supporting tool, provider-free, launcher `context_pack` phase. |
+| Agent state packet | `Tools/ai/build_agent_state_packet.py` | Supporting tool, optional SQLite memory, launcher `agent_state` phase. |
 | Memory inventory | `Tools/ai/build_agent_memory_inventory.py` | Supporting visibility tool. |
 | Agent memory policy | `Tools/ai/agent_memory_policy.py` | Internal deterministic policy module. |
 | Agent memory routing | `Tools/ai/agent_memory_routing_policy.py` | Internal routing policy module. |
@@ -90,8 +82,8 @@ These artifacts give the repo concrete material for review and tests instead of 
 | Code interpreter report | `Tools/ai/build_code_interpreter_report.py` | Supporting capability report. |
 | Refactor duplication audit | `Tools/ai/build_refactor_duplication_audit.py` | Supporting audit tool. |
 | Official adapter | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | Launcher/internal adapter lane. |
-| Ollama advisory packet | `Tools/workflow/run_post_validation_ai_packet.ps1` | Explicit advisory lane. |
-| Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | Explicit provider/probe lane. |
+| Ollama advisory packet | `Tools/workflow/run_post_validation_ai_packet.ps1` | Explicit advisory implementation lane. |
+| Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | Explicit provider/probe implementation lane. |
 | NPU knowledge broker | `Tools/npu/build_npu_knowledge_broker_packet.py` | Supporting packet builder. |
 | Evidence bundle | `Tools/ai/build_github_evidence_bundle.py` | Compact GitHub evidence builder. |
 
@@ -103,17 +95,7 @@ docs/LOCAL_AI_TASKS/forgotten-scripts-documentation-audit.md
 
 ## Provider execution
 
-Provider execution is opt-in only through the unified launcher or explicit provider wrapper flags.
-
-Provider-safe unified command:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -UseOllamaAdvisory `
-  -UsePrimaryAdvisoryProvider `
-  -RunIntensity balanced
-```
+Provider execution is opt-in only through the unified launcher modes/flags or a focused provider wrapper explicitly scoped by the operator.
 
 Expected provider roles:
 
@@ -133,22 +115,7 @@ manual_review_only for proposals and patch specs
 
 ## Macro patch lane
 
-Macro patch mode is allowed only as draft/spec generation.
-
-Preferred route:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode official,provider,patch_specs,contract,full_validation `
-  -GeneratePatchSpecs
-```
-
-Legacy wrapper route, only when explicitly targeted:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_core_tool_activation.ps1 `
-  -GenerateMacroPatchDrafts
-```
+Macro patch mode is allowed only as draft/spec generation and must route through the unified launcher when used as part of a broad activation flow.
 
 Macro patch mode may produce:
 
@@ -173,9 +140,9 @@ Macro patch promotion remains a separate reviewed step.
 
 ## Documentation patch-plan lane
 
-For documentation-only manual-review patch plans, use the narrower task-specific lane rather than the full activation runner.
+For documentation-only manual-review patch plans, use the task-scoped review lane and preserve launcher-first visibility when part of broad local-AI work.
 
-Canonical task and wrapper:
+Relevant task/wrapper:
 
 ```text
 docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md
@@ -199,17 +166,9 @@ manual-review-only
 task-scoped evidence only
 ```
 
-Use it when a GPU/NPU review has produced a manual-review patch plan and the next step is to apply small documentation corrections, not to run providers again.
-
 ## AI workload report quality gate
 
-The local AI core/tool activation lane should use the AI workload report quality gate after provider/probe reports exist and before generated workload reports influence advisory packets.
-
-Validator:
-
-```powershell
-python .\Tools\validation\check_ai_workload_report_quality.py --repo-root . --output .\output\validation\ai_workload_report_quality.json
-```
+The local AI core/tool activation lane must use the AI workload report quality gate after provider/probe reports exist and before generated workload reports influence advisory packets.
 
 Expected routing semantics:
 
@@ -219,6 +178,8 @@ NPU/OpenVINO unusable_output -> excluded from advisory context
 ```
 
 The quality gate remains report-only. It must not execute providers, promote NPU to advisory, introduce OpenVINO GPU as primary lane or apply patches.
+
+Broad activation runs must expose quality-gate state in the unified launcher manifest.
 
 ## Expected outputs
 
@@ -256,37 +217,26 @@ docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
 ```
 
-## Validation block
+## Validation ownership
 
-Unified validation path:
+Broad activation validation uses the unified launcher.
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode chunks,context_pack,agent_state,official,contract,full_validation `
-  -RunIntensity quick
-```
+Focused validator commands belong in `Tools/validation/README.md` and should be used only when debugging or validating a specific validator/report contract.
 
-Focused validator commands:
+The broad-run acceptance signal is the launcher manifest, especially:
 
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-python .\Tools\validation\check_local_ai_adapter_manifest.py --repo-root . --manifest .\output\local_ai_runs\<run>\pipeline\local_ai_core_tool_activation_adapter_manifest.json --output .\output\validation\local_ai_core_tool_activation_adapter_manifest_contract.json
-python .\Tools\validation\check_npu_knowledge_broker_packet.py --repo-root . --packet .\output\ai_pipeline\local_ai_core_tool_activation_npu_knowledge_broker_packet.json --output .\output\validation\local_ai_core_tool_activation_npu_knowledge_broker_packet_contract.json --min-candidates 3 --max-candidates 24
-python .\Tools\validation\check_github_evidence_bundle.py --repo-root . --bundle .\docs\LOCAL_VALIDATION_EVIDENCE\local_ai_core_tool_activation_evidence.json --output .\output\validation\local_ai_core_tool_activation_github_evidence_bundle.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
-git diff --check
-```
-
-For macro patch drafts:
-
-```powershell
-python .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest .\output\patch_specs\local_ai_core_tool_activation_patch_specs_manifest.json --output .\output\validation\local_ai_core_tool_activation_macro_patch_drafts.json
-```
-
-For agent-review documentation patch plans:
-
-```powershell
-python .\Tools\validation\run_agent_review_patch_plan_full_validation.py --repo-root . --min-patch-plans 12 --expect-fallback
+```text
+phase_status
+phase_reports
+context_files
+report_files
+provider_execution_requested
+workload_quality_routing_ok
+quality_gate_passed
+patch_specs_requested
+patch_application_performed
+errors
+warnings
 ```
 
 ## Commit policy
@@ -323,6 +273,7 @@ provider-free by default
 manual-review-only for macro patch
 destructive-operation-free
 manifest-first
+launcher-first
 ```
 
 The documentation patch-plan lane inherits the same guardrails and additionally stays task-scoped to the explicit patch-plan evidence bundle.
@@ -340,56 +291,3 @@ docs_contract_drift
 ```
 
 If a report uses different terms, document the mapping or add a compatibility field instead of silently changing meaning.
-
-<!-- IA-CARMINE:PATCH-PLAN-APPLICATION:START -->
-
-## IA-Carmine patch-plan application notes
-
-This managed block was generated from `output/patch_specs/agent_review_patch_plan.json`.
-It records the manual-review patch-plan decisions for this file without applying runtime/provider changes.
-
-### `det_doc_doc_001` — `doc_doc`
-
-- Source: `gpu_recommendation`
-- Status: `ready_for_manual_review`
-- Risk: `low`
-- Target file: `docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md`
-- Manual review required: `True`
-- Rationale: contract doc exists and missing terms are explicit
-- Strategy: Add a compact cross-reference for `provider_execution_performed`, `patch_application_performed`, `manual_review_only`, `code_contract_drift`, `docs_contract_drift`. Link or summarize the canonical source instead of duplicating large contract sections.
-- Validation commands:
-  - `python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json`
-  - `python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json`
-  - `git diff --check`
-  - `git status --short`
-- Stop conditions:
-  - Stop if the missing terms are already present after refreshing master.
-  - Stop if the edit would duplicate large generated artifacts.
-  - Stop if the patch would touch output/**, generated indexes, SQLite, full analysis JSON, provider settings or Blender runtime.
-
-<!-- IA-CARMINE:PATCH-PLAN-APPLICATION:END -->
-
-<!-- IA-CARMINE:AGENT-REVIEW-PATCH-PLAN:BEGIN id=det_doc_doc_001:docs-local_ai_core_tool_activation.md -->
-
-### IA-Carmine agent-review patch note
-
-This managed note records an evidence-backed manual-review patch plan. It is intentionally compact and idempotent.
-
-- Plan id: `det_doc_doc_001`
-- Area: `doc_doc`
-- Source: `gpu_recommendation`
-- Risk: `low`
-- Target: `docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md`
-- Rationale: contract doc exists and missing terms are explicit
-- Strategy: Add a compact cross-reference for `provider_execution_performed`, `patch_application_performed`, `manual_review_only`, `code_contract_drift`, `docs_contract_drift`. Link or summarize the canonical source instead of duplicating large contract sections.
-- Validation commands:
-  - `python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json`
-  - `python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json`
-  - `git diff --check`
-  - `git status --short`
-- Stop conditions:
-  - Stop if the missing terms are already present after refreshing master.
-  - Stop if the edit would duplicate large generated artifacts.
-  - Stop if the patch would touch output/**, generated indexes, SQLite, full analysis JSON, provider settings or Blender runtime.
-
-<!-- IA-CARMINE:AGENT-REVIEW-PATCH-PLAN:END id=det_doc_doc_001:docs-local_ai_core_tool_activation.md -->
