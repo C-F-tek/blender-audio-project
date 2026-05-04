@@ -2,7 +2,7 @@
 
 `C-F-tek/blender-audio-project` is now primarily a local AI orchestration, validation and guardrail workbench. The repository name is historical: Blender/audio remains the first application domain, but the active architecture is app-agnostic AI/backend orchestration.
 
-## Canonical flow
+## Canonical reading flow
 
 ```text
 AGENTS.md
@@ -10,11 +10,12 @@ AGENTS.md
   -> WORKFLOW.md
   -> docs/README.md
   -> docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
+  -> docs/LOCAL_AI_RUN_BOOTSTRAP.md
   -> docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
   -> task-specific docs / package README / target source file
 ```
 
-For local AI runs, read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` immediately after `AGENTS.md`.
+The root README is descriptive only. It must not carry executable PowerShell command blocks because launcher options change faster than project identity docs.
 
 ## Current architecture
 
@@ -38,7 +39,7 @@ Provider posture:
 | NPU/OpenVINO | OpenVINO GenAI | Probe, guardrail and decode-smoke diagnostics. Not general advisory. |
 | Blender runtime | Blender Python | Legacy/application target. Frozen unless explicitly scoped. |
 
-## Unified local AI entrypoint
+## Canonical local AI entrypoint
 
 The active local AI operator entrypoint is:
 
@@ -47,38 +48,7 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
-Full selectable 0-to-10 run:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity balanced `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
-```
-
-Quick 5-minute style run:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity quick `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
-```
-
-Deep run:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity deep `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
-```
+Use that runbook for current commands, `-Full0To10`, intensity profiles, provider flags, reset mode, memory controls, patch-spec generation and validation modes.
 
 Legacy monolithic 0-to-10 runbooks are removed from active documentation. Historical details must be recovered from git history or compact evidence when needed; do not recreate parallel active-start runbooks.
 
@@ -105,21 +75,36 @@ Use compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/` instead of raw `out
 | Agent contract and guardrails | `AGENTS.md` |
 | Operational lifecycle | `WORKFLOW.md` |
 | Unified full 0-to-10 local AI run | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
+| Unified launcher manifest contract | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
 | Validators and inventories | `Tools/validation/README.md` |
 | NPU/helper package | `Tools/npu/pipeline/README.md` |
 | Repository area map | `docs/MODULE_MAP.md` |
 | Documentation map and pruning | `docs/README.md`, then `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |
+| Workflow helper policy | `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` |
 
 ## Inventory and evidence
 
-Current documentation cleanup and refactoring should use both inventories:
+Current documentation cleanup and refactoring use:
 
-```powershell
-python .\Tools\validation\build_markdown_inventory.py --repo-root . --output .\output\validation\markdown_inventory.json --markdown-output .\output\validation\markdown_inventory.md
-python .\Tools\validation\build_script_inventory.py --repo-root . --output .\output\validation\script_inventory.json --csv-output .\output\validation\script_inventory.csv --markdown-output .\output\validation\script_inventory.md
+```text
+Markdown inventory
+script/function/class/method inventory
+validation report contracts
+compact GitHub evidence bundles
 ```
 
-The Markdown inventory controls obsolete/redundant docs. The script inventory controls tool/script discovery, function/class visibility and refactor planning.
+Commands for these tools live in the unified launcher runbook and tool-specific README files, not in this root README.
+
+## GitHub / PR description policy
+
+GitHub PR descriptions and repository-facing summaries should point to the canonical launcher runbook instead of duplicating executable commands.
+
+Required wording principle:
+
+```text
+Root/project descriptions describe purpose and canonical docs.
+Operational commands live in docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md.
+```
 
 ## Legacy Blender/audio role
 
