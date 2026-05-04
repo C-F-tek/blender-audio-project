@@ -1,8 +1,8 @@
 # Unified Local AI Refactor Launcher
 
-This is the operator-facing runbook for `Tools/workflow/run_unified_local_ai_refactor.ps1`.
+This is the canonical operator-facing runbook for `Tools/workflow/run_unified_local_ai_refactor.ps1`.
 
-Use this file when an agent or operator needs one entrypoint for Markdown refactor, JSON/report contracts, Python/script inventory, smoke tests, validation, SQLite memory/context enrichment, provider advisory and patch-planner proposal generation.
+It replaces scattered 0-to-10 operating profiles as the active entrypoint. Historical 0-to-10 documents may remain as evidence or background, but new local AI runs should start here unless the user explicitly requests a legacy script.
 
 ## Absolute first instruction
 
@@ -16,31 +16,386 @@ docs/LOCAL_AI_TASKS/README.md
 
 If any of these files are missing, stop. Do not infer their contents.
 
+## Canonical command
+
+Full selectable 0-to-10 flow:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity balanced `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+Quick 5-minute style run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity quick `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+Deep run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity deep `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
+Custom intensity:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -RunIntensity custom `
+  -BudgetMinutes 5 `
+  -MaxRounds 4 `
+  -FilesPerRound 4 `
+  -MaxContextFiles 80 `
+  -MaxCharsPerFile 4000 `
+  -MaxNewTokens 1600 `
+  -KeepAlive 8m `
+  -ProviderMaxContextChars 9000 `
+  -ContextPackMaxTotalChars 32000 `
+  -ContextPackMaxFileChars 2500 `
+  -AgentStateMaxMemoryChars 12000 `
+  -Model gpt-oss:20b `
+  -SkipGitSync `
+  -NoBranch
+```
+
 ## What the launcher is
 
-`run_unified_local_ai_refactor.ps1` is a console-style selector, similar to a minimal installer prompt.
+The launcher is a console-style selector and orchestrator for local AI project work. It controls what phases run and how much intensity they use.
 
-The task Markdown file remains stable. The operator chooses what phases to execute.
-
-Default task file:
+It covers:
 
 ```text
-docs/LOCAL_AI_TASKS/docs-md-obsolete-pruning-next-step.md
+Markdown inventory and link validation
+JSON/report contract validation
+Python/script inventory
+semantic chunks
+bounded context packs
+agent-state packet and optional SQLite memory input/output
+official local AI task pipeline adapter
+Ollama advisory
+primary provider routing
+multistep provider workflow
+Ollama/NPU probes
+review-only patch specs
+compact evidence
+final validation
+local generated-artifact reset planning
 ```
 
-Primary script:
+## What a valid Full0To10 run means
+
+A full 0-to-10 run is valid only when the requested capabilities are either completed or explicitly disabled by a `-No*` flag.
+
+Expected true/default states for `-Full0To10`:
 
 ```text
-Tools/workflow/run_unified_local_ai_refactor.ps1
+pipeline adapter ufficiale eseguito
+packet/proposals generati
+Ollama advisory usato
+patch specs creati e validati
+primary provider routing completo
+workload quality routing presente
+multistep provider workflow richiesto
+probe Ollama/NPU richiesti
+context pack presente
+SQLite memory IN/OUT presente quando non disabilitata
+quality gate registrato nel manifest
+patch_application_performed=false
 ```
 
-Weekly cleanup installer:
+If `-UsePrimaryAdvisoryProvider` or `-Full0To10` is used, the launcher must not silently degrade when workload quality routing is missing. It must build `output/validation/ai_workload_report_quality.json` or fail clearly. In `-DryRun`, it may mark that generation as planned.
+
+## Active modes
+
+Safe execution order:
 
 ```text
-Tools/workflow/install_weekly_local_ai_reset_task.ps1
+baseline
+  -> smoke
+  -> reset
+  -> validation
+  -> md
+  -> json
+  -> python
+  -> chunks
+  -> context_pack
+  -> agent_state
+  -> workload_quality
+  -> legacy_full_toolbox_integrated
+  -> official
+  -> provider
+  -> multistep provider/probes
+  -> patch_specs
+  -> evidence
+  -> contract
+  -> full_validation
 ```
 
-## What it must never do
+Mode catalog:
+
+| Mode | Purpose |
+|---|---|
+| `smoke` | Fast health checks. |
+| `reset` | Plan or explicitly apply cleanup of old local generated artifacts. |
+| `validation` | Run broader local validation wrapper. |
+| `md` | Build Markdown inventory and docs link report. |
+| `json` | Validate JSON/report contracts from the current run. |
+| `python` | Build script/tool inventory with CSV and Markdown outputs. |
+| `chunks` | Build semantic chunks for focused context. |
+| `context_pack` | Build bounded AI context packs. |
+| `agent_state` | Build local agent-state packet and optional SQLite-backed memory context. |
+| `official` | Run the project-owned local AI task pipeline adapter. |
+| `provider` | Run advisory/provider path. |
+| `patch_specs` | Generate review-only patch specs from proposals. |
+| `evidence` | Build compact evidence artifacts when requested. |
+| `contract` | Validate task-scoped reports. |
+| `full_validation` | Final diff/status and consistency checks. |
+| `all` | Run all standard safe phases. |
+
+## Full0To10 profile
+
+`-Full0To10` resolves the full mode set automatically and must not ask for interactive mode selection.
+
+It enables, unless explicitly disabled:
+
+```text
+md,json,python,chunks,context_pack,agent_state,official,provider,patch_specs,evidence,contract,full_validation
+UseOllamaAdvisory
+UsePrimaryAdvisoryProvider
+BuildWorkloadQualityReport
+RunMultistepProviderWorkflow
+RunOllamaProbe
+RunNpuProbe
+RunNpuDecodeSmoke
+FullContextGoldenPath
+BuildEvidence
+GeneratePatchSpecs
+SaveInputsToMemoryDb
+RunLegacyFullToolboxIntegrated
+```
+
+Explicit disablers:
+
+```text
+-NoOllamaProbe
+-NoNpuProbe
+-NoNpuDecodeSmoke
+-NoMultistepProvider
+-NoWorkloadQuality
+-NoMemoryWrite
+-NoEvidence
+-NoPatchSpecs
+```
+
+A disabled phase must appear as intentionally disabled, not missing by accident.
+
+## Run intensity profiles
+
+| Intensity | Intended use | Effective profile |
+|---|---|---|
+| `quick` | Fast validation/proposal loop, about 5 minutes when providers cooperate. | Lower rounds, files, context, tokens and keep-alive. |
+| `balanced` | Default practical full run. | Current project defaults. |
+| `deep` | Heavier full review. | Larger context, more rounds and larger memory/context pack surfaces. |
+| `custom` | Operator-defined. | Use explicit numeric parameters. |
+
+Legacy/full-toolbox inherited parameters exposed by the launcher:
+
+```text
+-BudgetMinutes
+-MaxRounds
+-FilesPerRound
+-MaxContextFiles
+-MaxCharsPerFile
+-MaxNewTokens
+-KeepAlive
+-NpuAuditorEveryRounds
+-NpuAuditorTimeoutSeconds
+-NpuMaxContextChars
+-NpuMaxPromptChars
+-NpuMaxNewTokens
+-NpuFinalWaitSeconds
+-MinRecommendations
+-MinPatchPlans
+-MaxRecommendations
+-MaxPatchPlans
+-RepositoryConsistencyMapWorkers
+-ProviderMaxContextChars
+-ContextPackMaxTotalChars
+-ContextPackMaxFileChars
+-AgentStateMaxMemoryChars
+```
+
+These parameters exist so the unified launcher can replace older standalone 0-to-10/full-toolbox scripts without losing intensity control.
+
+## External controls planned for the next launcher patch
+
+The next patch should add CLI pass-through controls for all major input/output surfaces:
+
+```text
+-OutputRoot
+-ValidationOutputDir
+-AiPipelineOutputDir
+-AiPacketsOutputDir
+-PatchSpecOutputDir
+-LocalRunsOutputDir
+-EvidenceOutputDir
+-ExternalContextFile
+-ExternalReportFile
+-ExternalArtifactFile
+-OfficialBasename
+-OfficialProposalBasename
+-OllamaBasename
+-OllamaProposalBasename
+-MultistepBasename
+-MultistepProposalBasename
+-ContextPackBasename
+-ContextPackEvidenceBasename
+```
+
+These controls are documented as the next step because the operator must be able to choose phase, intensity, input context, report inputs, artifact inputs and output destinations from the launch command.
+
+## SQLite memory policy
+
+SQLite memory is an active local AI enrichment capability.
+
+Relevant files:
+
+```text
+Tools/ai/agent_state.py
+Tools/ai/build_agent_state_packet.py
+Tools/ai/review_agent_memory.py
+Tools/ai/agent_memory_policy.py
+```
+
+Default memory DB path:
+
+```text
+indexAI/agent_memory/agent_memory.sqlite
+```
+
+Policy:
+
+```text
+SQLite DB files are local/private runtime state.
+Do not commit .sqlite/.db files.
+Do not commit output/** files.
+Commit only compact evidence or documented summaries when explicitly allowed.
+```
+
+`-SaveInputsToMemoryDb` is expected in `-Full0To10` unless `-NoMemoryWrite` is supplied.
+
+## Provider and Ollama behavior
+
+Provider execution must be explicit through `-Full0To10`, `-UseOllamaAdvisory`, `-UsePrimaryAdvisoryProvider` or the provider modes/flags.
+
+Expected provider role:
+
+```text
+advisory/recommendation/proposal generation only
+no automatic source patch application
+no automatic commit/push
+```
+
+Ollama advisory is local advisory. Primary provider routing requires workload quality routing.
+
+## Legacy full-toolbox lane
+
+The unified launcher may call the integrated legacy full-toolbox lane through:
+
+```text
+Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1
+```
+
+This is not a separate operator entrypoint anymore. It is an internal selectable lane of the unified launcher so legacy full-toolbox controls remain available without splitting the workflow.
+
+## Reset mode
+
+`reset` is for local generated artifacts and stale run outputs.
+
+Default behavior is plan-only. Real deletion requires both:
+
+```text
+-ApplyReset
+-ConfirmResetText "DELETE LOCAL AI ARTIFACTS"
+```
+
+Reset may include memory/generated-index candidates only when explicitly requested:
+
+```text
+-IncludeMemoryReset
+-IncludeGeneratedIndexReset
+```
+
+Never delete source files, docs, scripts, branch history or tracked project files through reset mode.
+
+## Output contract
+
+Every run writes:
+
+```text
+output/local_ai_runs/<stamp>_<mode>_unified/pipeline/unified_local_ai_refactor_manifest.json
+```
+
+The manifest must include:
+
+```text
+selected modes
+full_0_to_10_requested
+run_intensity
+profile/model
+Python executable and PYTHONPATH
+intensity parameters
+provider flags
+workload_quality_report
+workload_quality_routing_ok
+primary_provider_requested
+multistep_provider_workflow_requested
+ollama_probe_requested
+npu_probe_requested
+npu_decode_smoke_requested
+memory_in_enabled
+memory_out_enabled
+quality_gate_passed
+context_files
+report_files
+phase_status
+phase_reports
+warnings
+errors
+patch_application_performed=false
+```
+
+## Stop conditions
+
+Stop or report failure if a requested phase needs a missing tool:
+
+```text
+agent_state requested but build_agent_state_packet.py or agent_state.py is missing
+chunks requested but build_semantic_code_chunks.py is missing
+context_pack requested but build_ai_context_pack.py is missing
+provider requested but run_post_validation_ai_packet.ps1 is missing
+official requested but run_local_ai_task_via_pipeline.ps1 is missing
+primary provider requested but workload quality routing cannot be generated
+reset apply requested without exact confirmation text
+working tree dirty and -AllowDirty was not supplied
+```
+
+## Guardrails
 
 The launcher is report/proposal-only by default.
 
@@ -60,383 +415,6 @@ commit SQLite DB files
 commit output/** files
 ```
 
-## Safe execution order
-
-When multiple modes are selected, they must run in this order:
-
-```text
-baseline
-  -> smoke
-  -> reset
-  -> validation
-  -> md
-  -> json
-  -> python
-  -> chunks
-  -> context_pack
-  -> agent_state
-  -> official
-  -> provider
-  -> patch_specs
-  -> evidence
-  -> contract
-  -> full_validation
-```
-
-This order prevents agents from using stale evidence, stale context or stale inventories.
-
-## Mode catalog
-
-| Mode | Purpose | Main expected tools |
-|---|---|---|
-| `smoke` | Fast initial health checks. | `git diff --check`, optional `Tools/workflow/startup_check.py` |
-| `reset` | Plan or explicitly apply cleanup of old local generated artifacts. | internal reset planner in launcher |
-| `validation` | Run broader local validation wrapper. | `Tools/workflow/run_local_validation_after_refactor.ps1` |
-| `md` | Build Markdown inventory, links report and MD cleanup evidence. | `Tools/validation/build_markdown_inventory.py`, `Tools/validation/check_docs_links.py` |
-| `json` | Validate JSON/report contracts from current run. | `Tools/validation/check_validation_report_contract.py` |
-| `python` | Build script/tool inventory with CSV and Markdown outputs. | `Tools/validation/build_script_inventory.py` |
-| `chunks` | Build semantic chunks for focused context. | `Tools/npu/build_semantic_code_chunks.py` |
-| `context_pack` | Build bounded AI context packs. | `Tools/ai/build_ai_context_pack.py` |
-| `agent_state` | Build agent-state packet using local files and optional SQLite memory. | `Tools/ai/build_agent_state_packet.py`, `Tools/ai/agent_state.py` |
-| `official` | Run the official local AI task pipeline adapter. | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` |
-| `provider` | Run explicit advisory/provider path. | `Tools/workflow/run_post_validation_ai_packet.ps1`, optional Ollama/GPU advisory |
-| `patch_specs` | Generate review-only patch specs from proposals. | pipeline adapter patch-spec path |
-| `evidence` | Build compact evidence artifacts when requested. | pipeline adapter evidence path |
-| `contract` | Validate task-scoped reports. | `Tools/validation/check_validation_report_contract.py` |
-| `full_validation` | Final diff/status consistency checks. | `git diff --check`, `git status --short` |
-| `all` | Run every available phase in safe order. | all of the above |
-
-## Interactive mode
-
-If no mode is supplied, or `-Interactive` is supplied, the launcher prints available modes and asks for a selection.
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Interactive
-```
-
-Valid prompt examples:
-
-```text
-smoke,md,python,contract,full_validation
-md,json,python,official,patch_specs
-all
-reset
-```
-
-## Command-line mode syntax
-
-Comma-separated syntax is supported:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode smoke,md,python,contract,full_validation
-```
-
-Array-style syntax is also supported:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode smoke md python contract full_validation
-```
-
-Useful aliases:
-
-| Alias | Canonical mode |
-|---|---|
-| `docs`, `markdown`, `documentazione` | `md` |
-| `scripts`, `script`, `py`, `ps1` | `python` |
-| `report`, `reports`, `json_contract` | `json` |
-| `ollama`, `gpu`, `npu`, `provider_advisory` | `provider` |
-| `patch_plan`, `patch_planner` | `patch_specs` |
-| `test`, `tests`, `validate` | `validation` |
-| `cleanup`, `pulizia`, `purge`, `clean` | `reset` |
-| `full` | `all` |
-
-## SQLite memory must not be forgotten
-
-SQLite memory is part of the intended local AI enrichment flow.
-
-Relevant task:
-
-```text
-docs/LOCAL_AI_TASKS/enrich-local-ai-memory-chunks-context-wrapper.md
-```
-
-Relevant tools:
-
-```text
-Tools/ai/agent_state.py
-Tools/ai/build_agent_state_packet.py
-Tools/ai/review_agent_memory.py
-Tools/ai/agent_memory_policy.py
-```
-
-Relevant options supported by `build_agent_state_packet.py`:
-
-```text
---memory-db
---memory-db-limit
---save-inputs-to-memory-db
---memory-note
---include-file
-```
-
-Default local memory DB path used by the project flow:
-
-```text
-indexAI/agent_memory/agent_memory.sqlite
-```
-
-Policy:
-
-```text
-SQLite DB is local/private runtime state.
-Do not commit .sqlite/.db files.
-Commit only compact evidence or documented summaries when explicitly allowed.
-```
-
-## Agent-state flow
-
-The `agent_state` mode should create local context from:
-
-```text
-selected files
-operator notes
-optional SQLite memory DB
-optional semantic chunk manifest
-optional context pack outputs
-```
-
-The expected conceptual command is:
-
-```powershell
-python .\Tools\ai\build_agent_state_packet.py `
-  --repo-root . `
-  --objective "Unified local AI refactor run" `
-  --memory-db .\indexAI\agent_memory\agent_memory.sqlite `
-  --save-inputs-to-memory-db `
-  --memory-note "Unified launcher report-only run." `
-  --include-file .\AGENTS.md `
-  --include-file .\docs\LOCAL_AI_RUN_BOOTSTRAP.md
-```
-
-If `agent_state` is requested and `Tools/ai/build_agent_state_packet.py` or `Tools/ai/agent_state.py` is missing, the run must stop or report the missing capability. Do not silently claim memory support.
-
-## Semantic chunks and context packs
-
-The enrichment flow is:
-
-```text
-master task MD
-  -> optional semantic chunks
-  -> optional bounded context pack
-  -> optional SQLite-backed agent-state packet
-  -> official local AI task pipeline
-  -> optional provider/Ollama advisory
-  -> proposals / patch specs / evidence
-```
-
-Relevant tools:
-
-```text
-Tools/npu/build_semantic_code_chunks.py
-Tools/ai/build_ai_context_pack.py
-Tools/ai/build_agent_state_packet.py
-Tools/workflow/run_local_ai_task_via_pipeline.ps1
-Tools/workflow/run_post_validation_ai_packet.ps1
-```
-
-## Provider and Ollama behavior
-
-Provider execution must be explicit.
-
-Ollama advisory is enabled by flags such as:
-
-```text
--UseOllamaAdvisory
--UsePrimaryAdvisoryProvider
--RunMultistepProviderWorkflow
--RunOllamaProbe
-```
-
-Expected provider role:
-
-```text
-advisory/recommendation/proposal generation only
-no automatic source patch application
-no automatic commit/push
-```
-
-## Reset mode
-
-`reset` is for cleaning local generated artifacts and stale run outputs.
-
-By default it creates only a plan:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode reset `
-  -ResetBeforeDate 2026-05-03 `
-  -SkipGitSync `
-  -NoBranch
-```
-
-Possible reset categories:
-
-```text
-output/local_ai_runs/**
-output/ai_pipeline/**
-output/validation/**
-output/ai_context_packs/**
-output/patch_specs/**
-indexAI/agent_memory/** when -IncludeMemoryReset is supplied
-indexAI/code_chunks/** when -IncludeGeneratedIndexReset is supplied
-indexAI/project_code_chunks/** when -IncludeGeneratedIndexReset is supplied
-```
-
-Real deletion requires both:
-
-```text
--ApplyReset
--ConfirmResetText "DELETE LOCAL AI ARTIFACTS"
-```
-
-Never delete source files, docs, scripts, branch history or tracked project files through reset mode.
-
-## Weekly cleanup during test phase
-
-While the local AI workflow is still in test mode, generated artifacts may be cleaned weekly.
-
-Helper script:
-
-```text
-Tools/workflow/install_weekly_local_ai_reset_task.ps1
-```
-
-Default behavior is dry-run: it prints the Windows Scheduled Task configuration and does not install anything.
-
-Dry-run plan:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\install_weekly_local_ai_reset_task.ps1 `
-  -RetentionDays 7 `
-  -IncludeMemoryReset `
-  -IncludeGeneratedIndexReset
-```
-
-Install weekly cleanup for Monday 03:30:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\install_weekly_local_ai_reset_task.ps1 `
-  -Install `
-  -Force `
-  -DayOfWeek Monday `
-  -At 03:30 `
-  -RetentionDays 7 `
-  -IncludeMemoryReset `
-  -IncludeGeneratedIndexReset
-```
-
-The scheduled task invokes reset mode with:
-
-```text
--ApplyReset
--ConfirmResetText "DELETE LOCAL AI ARTIFACTS"
--SkipGitSync
--NoBranch
--AllowDirty
-```
-
-This is intentionally local-only cleanup. It must not be used to delete source files, docs, scripts, tracked project files or Git history.
-
-## Full practical examples
-
-Dry-run parser and smoke check:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode smoke,md,python,contract,full_validation `
-  -DryRun
-```
-
-Local report-only run:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode smoke,md,python,contract,full_validation `
-  -SkipGitSync `
-  -NoBranch
-```
-
-Full enriched proposal run with Ollama advisory and patch specs:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode md,python,chunks,context_pack,agent_state,official,provider,patch_specs,contract,full_validation `
-  -UseOllamaAdvisory `
-  -UsePrimaryAdvisoryProvider `
-  -GeneratePatchSpecs `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
-```
-
-Reset plan including memory/generated-index candidates:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode reset `
-  -ResetBeforeDate 2026-05-03 `
-  -IncludeMemoryReset `
-  -IncludeGeneratedIndexReset `
-  -SkipGitSync `
-  -NoBranch
-```
-
-## Output contract
-
-Every run writes:
-
-```text
-output/local_ai_runs/<stamp>_<mode>_unified/pipeline/unified_local_ai_refactor_manifest.json
-```
-
-The manifest must include:
-
-```text
-selected modes
-available modes
-profile/model
-stamp
-task file
-branch/run dir
-provider_execution_requested
-reset_apply_requested
-patch_application_performed=false
-patch_specs_requested
-build_evidence_requested
-context_files
-report_files
-phase_status
-phase_reports
-warnings
-errors
-```
-
-## Stop conditions
-
-Stop or report failure if a requested phase needs a missing tool:
-
-```text
-agent_state requested but build_agent_state_packet.py or agent_state.py is missing
-chunks requested but build_semantic_code_chunks.py is missing
-context_pack requested but build_ai_context_pack.py is missing
-provider requested but run_post_validation_ai_packet.ps1 is missing
-official requested but run_local_ai_task_via_pipeline.ps1 is missing
-reset apply requested without exact confirmation text
-working tree dirty and -AllowDirty was not supplied
-```
-
 ## Agent instruction
 
 A lazy agent must not skip this mapping.
@@ -445,14 +423,15 @@ Before proposing changes to this launcher or to the local AI flow, explicitly ch
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
-Tools/workflow/install_weekly_local_ai_reset_task.ps1
+Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1
+Tools/workflow/run_parallel_ai_provider_multistep.ps1
 Tools/workflow/run_local_ai_task_via_pipeline.ps1
 Tools/workflow/run_post_validation_ai_packet.ps1
+Tools/validation/check_ai_workload_report_quality.py
 Tools/ai/build_agent_state_packet.py
 Tools/ai/agent_state.py
 Tools/npu/build_semantic_code_chunks.py
 Tools/ai/build_ai_context_pack.py
-docs/LOCAL_AI_TASKS/enrich-local-ai-memory-chunks-context-wrapper.md
 ```
 
 If a tool is referenced in documentation but not available in the repository, either remove that reference or mark it clearly as future/optional. Do not describe non-existent capabilities as active.
