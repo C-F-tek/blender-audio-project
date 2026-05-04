@@ -55,6 +55,76 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_uni
 
 The unified launcher replaces scattered active 0-to-10 runbooks. Legacy documents remain useful as historical background, but agents should not start from them unless the user explicitly asks for a legacy/manual procedure.
 
+## Visibility-first rule
+
+Every local-AI run must be inspectable from compact surfaces before opening detailed evidence.
+
+Required reading order:
+
+```text
+1. launcher command
+2. unified_local_ai_refactor_manifest.json
+3. phase_status / phase_reports
+4. compact Markdown or CSV summaries
+5. detailed evidence only when needed
+```
+
+A run is not considered operationally clear if the next agent must open a giant bundle to understand what happened.
+
+Each active phase should expose at least one visible output:
+
+```text
+phase_status
+phase_reports
+context_files
+report_files
+compact Markdown summary
+CSV/JSON inventory
+```
+
+## Length policy
+
+Active docs must remain readable. Long files are allowed only when they are generated evidence or historical snapshots with a compact manifest.
+
+| File type | Preferred maximum | Required action when exceeded |
+|---|---:|---|
+| Active operator runbook | ~500 lines | Split, summarize or move verbose content to supporting docs. |
+| Maintained source documentation | ~700 lines | Add structure or split into subordinate docs. |
+| Generated compact evidence | ~1200 lines | Add manifest/summary and classify as evidence. |
+| Large historical/evidence bundle | Any size only if unavoidable | Must not be used as the first operational entrypoint. |
+
+Policy:
+
+```text
+No active runbook should require opening an 8000-line bundle.
+Do not create new monolithic AI-to-AI bundles without a companion manifest.
+Do not use generated evidence snapshots as canonical workflow docs.
+Prefer manifest + index + focused report over one huge Markdown file.
+```
+
+## Function/tool visibility map
+
+Current unified-flow tools and their visibility surfaces:
+
+| Area | Tool/script | Visible output |
+|---|---|---|
+| Unified launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` | run manifest with selected modes, flags, reports, context and phase status. |
+| Markdown inventory | `Tools/validation/build_markdown_inventory.py` | JSON and Markdown inventory. |
+| Link validation | `Tools/validation/check_docs_links.py` | JSON link report. |
+| Script inventory | `Tools/validation/build_script_inventory.py` | JSON, CSV and Markdown function/class inventory. |
+| Report contracts | `Tools/validation/check_validation_report_contract.py` | JSON contract report. |
+| Workload quality | `Tools/validation/check_ai_workload_report_quality.py` | `ai_workload_report_quality.json`. |
+| Semantic chunks | `Tools/npu/build_semantic_code_chunks.py` | semantic chunk manifest. |
+| Context pack | `Tools/ai/build_ai_context_pack.py` | bounded Markdown/JSON context pack and evidence summary. |
+| Agent state/memory | `Tools/ai/build_agent_state_packet.py` | agent-state packet and optional SQLite memory handoff. |
+| Official adapter | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | packet/proposals and adapter manifest. |
+| Ollama advisory | `Tools/workflow/run_post_validation_ai_packet.ps1` | advisory packet/proposals and manifest. |
+| Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals when selected. |
+| Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | integrated full-toolbox report when selected. |
+| Reset | unified launcher reset mode | reset plan JSON/Markdown. |
+
+If a tool is referenced in docs but missing from the repository, mark it optional/future or remove the reference in the same change.
+
 ## First entrypoints
 
 | User intent | Start here |
