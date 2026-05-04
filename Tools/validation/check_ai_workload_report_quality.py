@@ -3,8 +3,9 @@
 
 Default contract:
 - The important input is an output packet folder, by default output/ai_packets.
-- A launcher should pass a run-scoped folder such as output/ai_packets/<DATASTAMP>.
-- The tool selects existing known workload reports from that folder.
+- A launcher may pass a run-scoped folder such as output/ai_packets/<DATASTAMP>.
+- A launcher may also pass output/ai_packets; the tool then scans all immediate timestamp packet folders.
+- The tool selects existing known workload reports from the selected folder set.
 - Missing known reports are serialized as unselected/unavailable warnings by default.
 - Explicit --report lane=path remains strict: a caller-selected missing report is blocking.
 
@@ -62,38 +63,77 @@ def relative_or_absolute_path(path: Path, repo_root: Path) -> str:
         return path.resolve().as_posix()
 
 
+
+def output_packet_report_dirs(repo_root: Path, report_dir: Path) -> list[Path]:
+    """Return concrete packet directories selected by --report-dir.
+
+    If --report-dir points to output/ai_packets, accept all immediate child
+    directories as run packet folders. If it points to output/ai_packets/<stamp>,
+    keep the selection scoped to that single run directory.
+    """
+    resolved_dir = report_dir if report_dir.is_absolute() else repo_root / report_dir
+    if not resolved_dir.exists() or not resolved_dir.is_dir():
+        return [resolved_dir]
+
+    dirs: list[Path] = [resolved_dir]
+    try:
+        for child in sorted(resolved_dir.iterdir()):
+            if child.is_dir():
+                dirs.append(child)
+    except OSError:
+        pass
+
+    seen: set[str] = set()
+    unique: list[Path] = []
+    for item in dirs:
+        key = str(item.resolve(strict=False)).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(item)
+    return unique
+
+
 def collect_output_folder_report_specs(
     repo_root: Path,
     report_dir: Path,
     *,
     include_missing_known_reports: bool = False,
 ) -> tuple[list[tuple[str, str]], list[dict[str, Any]]]:
-    resolved_dir = report_dir if report_dir.is_absolute() else repo_root / report_dir
     selected: list[tuple[str, str]] = []
     unselected: list[dict[str, Any]] = []
+    selected_paths: set[str] = set()
 
-    for lane, filename in KNOWN_WORKLOAD_REPORTS:
-        candidate = resolved_dir / filename
-        if candidate.exists() or include_missing_known_reports:
-            selected.append((lane, str(candidate)))
-        else:
-            unselected.append({
-                "lane": lane,
-                "path": relative_or_absolute_path(candidate, repo_root),
-                "reason": "known_workload_report_missing_from_selected_output_folder",
-            })
+    for packet_dir in output_packet_report_dirs(repo_root, report_dir):
+        for lane, filename in KNOWN_WORKLOAD_REPORTS:
+            candidate = packet_dir / filename
+            key = str(candidate.resolve(strict=False)).lower()
+            if candidate.exists() or include_missing_known_reports:
+                if key not in selected_paths:
+                    selected_paths.add(key)
+                    selected.append((lane, str(candidate)))
+            else:
+                unselected.append({
+                    "lane": lane,
+                    "packet_dir": relative_or_absolute_path(packet_dir, repo_root),
+                    "path": relative_or_absolute_path(candidate, repo_root),
+                    "reason": "known_workload_report_missing_from_selected_output_folder",
+                })
 
-    known_names = {filename for _, filename in KNOWN_WORKLOAD_REPORTS}
-    if resolved_dir.exists():
-        for candidate in sorted(resolved_dir.glob("*workload_report*.md")):
-            if candidate.name in known_names:
-                continue
-            lane = candidate.stem.replace("_real_workload_report", "").replace("_workload_report", "")
-            lane = lane.replace("-", "_") or "unknown"
-            selected.append((lane, str(candidate)))
+        known_names = {filename for _, filename in KNOWN_WORKLOAD_REPORTS}
+        if packet_dir.exists() and packet_dir.is_dir():
+            for candidate in sorted(packet_dir.glob("*workload_report*.md")):
+                if candidate.name in known_names:
+                    continue
+                key = str(candidate.resolve(strict=False)).lower()
+                if key in selected_paths:
+                    continue
+                lane = candidate.stem.replace("_real_workload_report", "").replace("_workload_report", "")
+                lane = lane.replace("-", "_") or "unknown"
+                selected_paths.add(key)
+                selected.append((lane, str(candidate)))
 
     return selected, unselected
-
 
 def text_metrics(text: str) -> dict[str, Any]:
     total = len(text)
@@ -282,6 +322,10 @@ def check_ai_workload_report_quality(
         "mode": "report_only_workload_quality_gate",
         "selection_mode": selection_mode,
         "report_dir": relative_or_absolute_path(report_dir, repo_root),
+        "packet_dirs": [
+            relative_or_absolute_path(item, repo_root)
+            for item in output_packet_report_dirs(repo_root, report_dir)
+        ],
         "selected_reports": [
             {
                 "lane": lane,

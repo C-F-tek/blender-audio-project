@@ -1159,3 +1159,14 @@ declared-but-not-executed requests
 ```
 
 A GPU planner may declare tool requests without broker execution. That state is valid telemetry and must not appear as a missing or empty telemetry channel.
+
+### Recursive AI packets root selection
+
+The workload-quality gate accepts both:
+
+```text
+output/ai_packets
+output/ai_packets/<DataStamp>
+```
+
+When the root folder is passed, every immediate timestamp folder under `output/ai_packets` is inspected. Only concrete workload report files are selected; packet directories are never passed as context files.

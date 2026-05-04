@@ -59,6 +59,15 @@ def main() -> int:
         encoding="utf-8",
     )
 
+    legacy_report = ai_packets_root / "legacy_workload_report.md"
+    legacy_report.write_text(
+        "Legacy workload report fixture\n\n"
+        "This root-level fixture validates that output/ai_packets remains acceptable as a root report folder. "
+        "The checker must inspect concrete workload report files in the root and in timestamp child folders "
+        "without treating directories as context files.\n",
+        encoding="utf-8",
+    )
+
     quality_output = output.with_name(output.stem + "_quality.json")
     cmd = [
         sys.executable,
@@ -66,7 +75,7 @@ def main() -> int:
         "--repo-root",
         str(repo_root),
         "--report-dir",
-        str(ai_packets_dir),
+        str(ai_packets_root),
         "--output",
         str(quality_output),
     ]
@@ -86,8 +95,13 @@ def main() -> int:
         errors.append(f"quality checker returned {result.returncode}: {result.stdout[-1200:]}")
     if quality.get("passed") is not True:
         errors.append(f"quality report did not pass: {quality.get('errors')}")
-    if not str(quality.get("report_dir", "")).replace("\\", "/").endswith("/" + data_stamp):
-        errors.append("quality report_dir is not DataStamp-scoped")
+    if not str(quality.get("report_dir", "")).replace("\\", "/").endswith("_ai_packets"):
+        errors.append("quality report_dir is not the selected AI packets root")
+    selected_paths = [str(item.get("path", "")).replace("\\", "/") for item in quality.get("selected_reports", [])]
+    if not any(data_stamp in item and item.endswith("npu_real_workload_report.md") for item in selected_paths):
+        errors.append("stamp-scoped npu fixture was not selected from a child packet directory")
+    if not any(item.endswith("legacy_workload_report.md") for item in selected_paths):
+        errors.append("root-level workload report fixture was not selected")
     if "npu" not in quality.get("usable_lanes", []):
         errors.append("npu fixture was not selected as usable")
     if "ollama" in quality.get("unusable_lanes", []):

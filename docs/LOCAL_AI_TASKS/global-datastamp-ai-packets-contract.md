@@ -92,3 +92,11 @@ bundle source = output/ai_packets/<DataStamp>
 ```
 
 No other timestamp should be generated during the same run for this packet folder.
+
+## Recursive AI packets root selection
+
+`--report-dir output/ai_packets` is valid and means: inspect the root packet folder plus all immediate timestamp packet folders under it.
+
+`--report-dir output/ai_packets/<DataStamp>` remains valid and means: inspect only that run-scoped packet folder.
+
+The tool must select concrete workload report files only. Directories must never be treated as context files.
