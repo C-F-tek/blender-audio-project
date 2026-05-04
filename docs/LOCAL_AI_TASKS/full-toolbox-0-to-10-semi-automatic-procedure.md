@@ -374,6 +374,39 @@ Required order:
 Do not commit `output/**`. Commit only regenerated source/index files and explicit evidence under `docs/LOCAL_VALIDATION_EVIDENCE`.
 
 
+### Strict real-run tool activation
+
+Every real run must activate all declared probes, tools and provider lanes unless an explicit `-No*` flag disables a specific lane.
+
+A real run is any launcher execution that is not `-DryRun` and is not limited to `smoke` or reset planning.
+
+Strict real-run activation enables:
+
+```text
+RunOllamaProbe
+RunNpuProbe
+RunNpuDecodeSmoke
+RunMultistepProviderWorkflow
+BuildWorkloadQualityReport
+BuildEvidence
+GeneratePatchSpecs
+UseOllamaAdvisory
+UsePrimaryAdvisoryProvider
+RunLegacyFullToolboxIntegrated
+```
+
+The policy does not fake successful provider execution. If a required provider lane does not produce its required files, the workflow must create schema-valid failure artifacts so the bundle contains a complete diagnosis instead of a missing-file cascade.
+
+Required provider artifacts include:
+
+```text
+output/ai_pipeline/full_toolbox_<Stamp>_orchestrator.json
+output/ai_pipeline/full_toolbox_<Stamp>_parallel_gpu.json
+output/ai_pipeline/agent_review_evidence_sufficiency.json
+```
+
+`-NoStrictRealRunActivation` is reserved for local maintenance/debug runs only.
+
 ## Global guardrails
 
 Never do without explicit user command:

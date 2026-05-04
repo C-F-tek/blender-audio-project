@@ -67,6 +67,7 @@ param(
     [switch]$AllowDirty,
     [switch]$DryRun,
     [switch]$Full0To10,
+    [switch]$NoStrictRealRunActivation,
     [switch]$Prod,
     [switch]$BuildWorkloadQualityReport,
     [switch]$NoOllamaProbe,
@@ -160,6 +161,7 @@ function Show-LauncherIntro {
     Write-Host "Debug tail: enabled by default; use -Prod to disable transcript and execution-tail evidence."
     Write-Host "Startup check output: Tools/workflow/startup_check.py supports --output, --text-output and --repo-root."
     Write-Host "AI packets output: use -AiPacketsRoot/-AiPacketsDir; default is output/ai_packets/<DataStamp>."
+    Write-Host "Strict real-run activation: every non-smoke/non-reset real run enables all declared probes/tools/lanes unless an explicit -No* flag disables one."
     Write-Host ""
 }
 
@@ -873,6 +875,27 @@ $ContextFiles = @()
 $ReportFiles = @()
 $PhaseReports = [ordered]@{}
 $PhaseStatus = [ordered]@{}
+
+
+# IA_CARMINE_STRICT_REAL_RUN_ACTIVATION_BEGIN
+$StrictActivationExcludedModes = @("smoke", "reset")
+$StrictActivationRealModes = @($ResolvedModes | Where-Object { $StrictActivationExcludedModes -notcontains $_ })
+$StrictRealRunActivationEnabled = (-not [bool]$DryRun) -and (-not [bool]$NoStrictRealRunActivation) -and ($StrictActivationRealModes.Count -gt 0)
+
+if ($StrictRealRunActivationEnabled) {
+    if (-not $NoOllamaProbe) { $RunOllamaProbe = $true }
+    if (-not $NoNpuProbe) { $RunNpuProbe = $true }
+    if (-not $NoNpuDecodeSmoke) { $RunNpuDecodeSmoke = $true }
+    if (-not $NoMultistepProvider) { $RunMultistepProviderWorkflow = $true }
+    if (-not $NoWorkloadQuality) { $BuildWorkloadQualityReport = $true }
+    if (-not $NoEvidence) { $BuildEvidence = $true }
+    if (-not $NoPatchSpecs) { $GeneratePatchSpecs = $true }
+
+    $UseOllamaAdvisory = $true
+    $UsePrimaryAdvisoryProvider = $true
+    $RunLegacyFullToolboxIntegrated = $true
+}
+# IA_CARMINE_STRICT_REAL_RUN_ACTIVATION_END
 
 Write-Host "[INFO] Resolved modes: $($ResolvedModes -join ',')"
 Write-Host "[INFO] Stamp: $Stamp"
