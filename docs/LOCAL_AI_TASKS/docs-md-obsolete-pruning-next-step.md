@@ -1,6 +1,6 @@
 # Local AI Entrypoint: Markdown Obsolete Pruning Next Step
 
-This task starts after the entrypoint reduction and script inventory PR.
+This task starts after the entrypoint reduction, unified launcher and script inventory PR work.
 
 ## Purpose
 
@@ -16,6 +16,7 @@ obsolete/superseded candidates
 historical task classification
 candidate deletion list requiring explicit approval
 validator/catalog cleanup proposal
+visibility/length policy compliance report
 ```
 
 ## Required reading order
@@ -28,9 +29,16 @@ docs/README.md
 docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/LOCAL_AI_TASKS/README.md
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 Tools/validation/README.md
+```
+
+Supporting historical references, read only when triaging old 0-to-10 duplication:
+
+```text
 docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
 docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md
+docs/LOCAL_AI_TASKS/code-refactor-local-machine-validation-addendum.md
 ```
 
 If any required file is missing, stop and report.
@@ -46,6 +54,7 @@ update indexes
 produce compact evidence
 produce patch bundle proposal
 shorten Tools/validation/README.md into a catalog if local patch apply is available
+add visibility-first and length-policy metadata to active docs
 ```
 
 Forbidden without explicit approval:
@@ -78,7 +87,23 @@ Create a branch:
 git switch -c codex/docs-md-obsolete-pruning-$Stamp
 ```
 
+## Preferred unified launcher path
+
+For a modern docs-pruning run, prefer the unified launcher instead of manually chaining old commands:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Mode md,python,contract,full_validation `
+  -RunIntensity quick `
+  -SkipGitSync `
+  -NoBranch
+```
+
+If provider-backed advisory is explicitly wanted later, use `-Full0To10` or add provider flags through the unified launcher. Do not start from legacy 0-to-10 runbooks as active entrypoints.
+
 ## Inventories
+
+When running manually, use these inventories:
 
 ```powershell
 python .\Tools\validation\build_markdown_inventory.py `
@@ -109,6 +134,33 @@ $ScriptInv | Select-Object passed, script_count, syntax_warning_count, errors, w
 $ScriptInv.category_counts
 ```
 
+## Visibility-first rule
+
+Every report or proposed bundle must be readable from compact surfaces before opening detailed evidence.
+
+Required order:
+
+```text
+launcher command or manual command list
+manifest or inventory summary
+phase/report references
+compact Markdown/CSV summary
+detailed evidence only when needed
+```
+
+Do not create new monolithic AI-to-AI bundles without a companion manifest.
+
+## Length policy
+
+Active task files should remain compact.
+
+| File type | Preferred maximum | Required action when exceeded |
+|---|---:|---|
+| Active task/runbook | ~500 lines | Split or link supporting docs. |
+| Maintained source doc | ~700 lines | Add structure or split. |
+| Generated compact evidence | ~1200 lines | Add manifest/summary. |
+| Large evidence/historical bundle | Any size only if indexed | Never first entrypoint. |
+
 ## Obsolete triage rules
 
 Classify every candidate as exactly one:
@@ -138,6 +190,8 @@ Required sections:
 ```text
 inventory summary
 single reading flow check
+visibility-first compliance check
+length-policy compliance check
 stable docs requiring index update
 task-current list
 task-historical list
@@ -207,8 +261,11 @@ docs/LOCAL_VALIDATION_EVIDENCE/docs_md_obsolete_triage_bundle_$Stamp.md
 ```text
 no file deleted
 single reading flow preserved
+unified launcher remains the active local-AI entrypoint
 obsolete/superseded candidates listed
 script inventory included in refactor evidence path
+visibility-first compliance checked
+length-policy compliance checked
 Tools/validation README reduction either applied or listed as next patch
 local validation commands included
 raw output/** not committed
