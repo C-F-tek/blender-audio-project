@@ -80,7 +80,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_uni
   -NoBranch
 ```
 
-Legacy 0-to-10 runbooks remain historical/supporting references. Do not start new local AI runs from `full-toolbox-0-to-10-semi-automatic-procedure.md` or `code-refactor-0-to-10-procedure.md` unless the user explicitly requests that legacy/manual flow.
+Legacy monolithic 0-to-10 runbooks are removed from active documentation. Historical details must be recovered from git history or compact evidence when needed; do not recreate parallel active-start runbooks.
 
 ## Operating rules
 
