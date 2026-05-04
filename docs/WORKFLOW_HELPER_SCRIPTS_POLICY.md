@@ -11,21 +11,38 @@ Tools/workflow/run_unified_local_ai_refactor.ps1
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-This policy covers shell, GUI, debug, diagnostics and push-capable helpers.
+This policy covers shell, GUI, debug, diagnostics, supporting workflow wrappers and push-capable helpers.
 
 ## Canonical vs supporting
 
 | Script | Classification | Policy |
 |---|---|---|
 | `Tools/workflow/run_unified_local_ai_refactor.ps1` | canonical-entrypoint | Primary headless operator flow. |
-| `Tools/workflow/run_local_validation_after_refactor.ps1` | supporting validation wrapper | Use directly only for focused legacy validation. |
-| `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | supporting adapter | Usually called by launcher or task wrapper. |
-| `Tools/workflow/run_post_validation_ai_packet.ps1` | supporting advisory wrapper | Provider/advisory path; explicit use only. |
-| `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | supporting provider/probe wrapper | Explicit provider/probe evidence only. |
-| `Tools/workflow/run_docs_md_refactor_10min.ps1` | legacy/superseded helper | Prefer unified launcher `md` mode. |
-| `Tools/workflow/run_local_ai_markdown_task.ps1` | supporting task wrapper | Useful for task-scoped adapter runs. |
+| `Tools/workflow/run_local_validation_after_refactor.ps1` | supporting validation wrapper | Use directly only for focused legacy validation. Prefer launcher `validation` / `full_validation` modes for normal flow. |
+| `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | launcher-internal/supporting adapter | Usually called by launcher or task wrapper; not a standalone 0-to-10 entrypoint. |
+| `Tools/workflow/run_post_validation_ai_packet.ps1` | launcher-internal/supporting advisory wrapper | Provider/advisory path; explicit use only. |
+| `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | launcher-internal/supporting provider/probe wrapper | Explicit provider/probe evidence only; prefer launcher `provider` / Full0To10 paths. |
+| `Tools/workflow/run_docs_md_refactor_10min.ps1` | legacy/superseded helper | Prefer unified launcher `md` mode. Do not document as active start path. |
+| `Tools/workflow/run_local_ai_markdown_task.ps1` | supporting task wrapper | Useful for task-scoped adapter runs; not a replacement for Full0To10. |
 | `Tools/workflow/startup_preflight.ps1` | diagnostic-only | Startup/preflight helper. |
 | `Tools/workflow/startup_check.py` | diagnostic-only | Startup check helper. |
+
+## Promotion rule
+
+A helper can become part of the active flow only if the unified launcher records it visibly.
+
+Required surfaces:
+
+```text
+launcher parameter or selected mode
+phase_status entry
+phase_reports entry when a report is produced
+manifest field for any provider/memory/patch/evidence behavior
+runbook mention in unified-local-ai-refactor-launcher.md
+contract mention in UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md when manifest shape changes
+```
+
+No helper may become a hidden side-channel for provider execution, SQLite writes, patch application, evidence generation or git push.
 
 ## Shell and GUI helpers
 
@@ -158,6 +175,7 @@ hide patch application
 hide git branch/remote target
 promote a GUI/shell helper above the unified launcher
 remove a script reference without confirming the script is absent or obsolete
+create a new parallel active-start runbook instead of extending the unified launcher
 ```
 
 ## Acceptance criteria
@@ -168,5 +186,6 @@ supporting helpers are visible but not over-promoted
 push-capable helpers have explicit risk warnings
 diagnostics are separated from normal validation
 script inventory is the source for broad helper audits
+helpers wired into launcher are visible in manifest/status/report surfaces
 no helper is deleted without explicit approval
 ```
