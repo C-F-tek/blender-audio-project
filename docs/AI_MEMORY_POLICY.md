@@ -13,12 +13,14 @@ Tools/ai/build_agent_memory_inventory.py
 indexAI/agent_memory/agent_memory.sqlite
 ```
 
-The unified launcher is the preferred entrypoint for full memory-aware local AI runs:
+The active memory-aware local-AI entrypoint is:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
+
+This policy is not a command catalog. Current memory-aware run commands live in the unified launcher runbook.
 
 ## Active memory components
 
@@ -55,6 +57,24 @@ indexAI/agent_memory/agent_memory.sqlite
 This path is generated local data and must stay untracked.
 
 JSONL memory is allowed when append-only reviewability matters more than lookup speed.
+
+## Launcher integration
+
+Memory is part of the unified flow through launcher modes and flags.
+
+Expected surfaces when memory is enabled:
+
+```text
+mode includes agent_state or Full0To10 implies agent_state
+memory_db recorded in unified manifest
+memory_in_enabled recorded in unified manifest
+memory_out_enabled recorded in unified manifest
+save_inputs_to_memory_db recorded in unified manifest
+agent-state packet path recorded in phase_reports/context_files when produced
+SQLite DB remains untracked
+```
+
+`Full0To10` should include memory IN/OUT unless explicitly disabled with the documented `NoMemoryWrite`/memory controls in the unified launcher runbook.
 
 ## Record Shape
 
@@ -150,12 +170,6 @@ Suggested metadata:
 }
 ```
 
-Reason:
-
-```text
-The rule is durable, has a clear scope and is useful for future validators.
-```
-
 ### Quarantine
 
 Use `quarantine` when a record may contain secrets, private local data, unsafe instructions or blocked content.
@@ -177,12 +191,6 @@ Suggested metadata:
 }
 ```
 
-Reason:
-
-```text
-The memory selector must not place the content back into prompts or generated docs.
-```
-
 ### Promote
 
 Use `promote_candidate` when a memory is stable enough to become durable documentation.
@@ -190,20 +198,14 @@ Use `promote_candidate` when a memory is stable enough to become durable documen
 Example record summary:
 
 ```text
-PR #31, #32 and #33 established the generated artifact path policy, artifact report scanning and generic generated Python policy. Local runtime validation remains workstation-owned.
+A PR established an artifact path policy, report scanning rule or validated runtime decision that future agents must preserve.
 ```
 
-Suggested promotion target:
+Suggested promotion targets:
 
 ```text
 docs/PROJECT_STATUS_POINT.md
 docs/TECH_DEBT_TRACKER.md
-```
-
-Reason:
-
-```text
-This is project state, not temporary chat context.
 ```
 
 ### Drop
@@ -214,23 +216,6 @@ Example record summary:
 
 ```text
 Temporary branch name from a completed GitHub-only PR, duplicated by the merged PR body and no longer needed.
-```
-
-Suggested metadata:
-
-```json
-{
-  "kind": "temporary_workflow_note",
-  "scope": "completed-branch",
-  "tags": ["duplicate", "obsolete"],
-  "confidence": "medium"
-}
-```
-
-Reason:
-
-```text
-The durable source is the merged PR or stable documentation; retaining the duplicate note increases noise.
 ```
 
 ## GitHub-only handling
@@ -247,38 +232,17 @@ avoid claiming runtime validation without logs
 leave SQLite DB and generated indexes untouched
 ```
 
-## Commands
+## Validation ownership
 
-Review local memory:
+Use the unified launcher runbook for current memory-aware commands.
 
-```powershell
-python .\Tools\ai\review_agent_memory.py --repo-root .
-```
+Focused memory tools may be invoked directly only when debugging or validating that specific tool. Direct focused invocations must still preserve:
 
-Build memory inventory:
-
-```powershell
-python .\Tools\ai\build_agent_memory_inventory.py --repo-root . --output .\output\validation\agent_memory_inventory.json
-```
-
-Validate the policy and the local DB when it exists:
-
-```powershell
-python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
-```
-
-Build a task packet with SQLite memory:
-
-```powershell
-python .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan Blender/audio smoke tests" --memory-db .\indexAI\agent_memory\agent_memory.sqlite --save-inputs-to-memory-db --memory-note "Keep runtime packages unchanged until smoke passes."
-```
-
-Preferred unified launcher memory-aware run:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode agent_state,context_pack,contract,full_validation `
-  -SaveInputsToMemoryDb
+```text
+no SQLite DB commit
+no output/** commit
+no provider execution unless explicit
+manifest/report visibility when routed through launcher
 ```
 
 ## Blender/Audio Rule
