@@ -1,0 +1,248 @@
+# Forgotten Scripts Documentation Audit
+
+## Purpose
+
+Identify repository scripts that appear operationally relevant but are not visible enough in current Markdown entrypoints.
+
+This is a documentation/audit task only. It does not delete, rename, deprecate or execute scripts.
+
+## Source of this audit
+
+GitHub code search found script files under these areas:
+
+```text
+Tools/workflow/
+Tools/workflow/gui/
+Tools/ai/
+Tools/validation/
+Tools/npu/
+```
+
+Follow-up searches for exact script names in `*.md` returned no obvious Markdown references for several tools. Those tools are therefore candidates for documentation triage.
+
+## Classification policy
+
+Every script candidate should be classified as exactly one:
+
+| Status | Meaning | Action |
+|---|---|---|
+| `canonical-entrypoint` | User/operator should run it directly. | Add to main runbook and visibility map. |
+| `launcher-internal` | Called by `run_unified_local_ai_refactor.ps1`. | Document under unified launcher internals. |
+| `supporting-tool` | Useful focused tool, not primary. | Add to tool catalog. |
+| `diagnostic-only` | Local diagnostic/probe/smoke script. | Document as explicit local-only diagnostic. |
+| `gui-or-shell-helper` | Interactive UI/shell wrapper. | Document separately from headless launcher. |
+| `legacy-superseded` | Replaced by unified launcher. | Mark historical/supporting; do not start from it. |
+| `unsafe-or-write-capable` | Can push, write source, or mutate external state. | Document guardrails and require explicit approval. |
+| `delete-candidate` | Appears obsolete after code/reference review. | Do not delete without explicit user approval. |
+
+## Candidate group: workflow shell / GUI helpers
+
+These were found in code search but not clearly referenced in current Markdown docs:
+
+```text
+Tools/workflow/workflow_shell.py
+Tools/workflow/workflow_shell_with_push.py
+Tools/workflow/workflow_debug.py
+Tools/workflow/gui/workflow_gui_modern.py
+Tools/workflow/gui/workflow_gui_with_push.py
+```
+
+Initial classification:
+
+```text
+workflow_shell.py                 gui-or-shell-helper
+workflow_shell_with_push.py       unsafe-or-write-capable, gui-or-shell-helper
+workflow_debug.py                 diagnostic-only
+workflow_gui_modern.py            gui-or-shell-helper
+workflow_gui_with_push.py         unsafe-or-write-capable, gui-or-shell-helper
+```
+
+Documentation action:
+
+```text
+Add a small shell/GUI helper catalog.
+Clarify that the unified launcher remains the headless canonical entrypoint.
+Any push-capable wrapper must require explicit user intent and must not be invoked by documentation examples as a default flow.
+```
+
+## Candidate group: workflow context/domain helpers
+
+These were found in code search but not clearly surfaced in current Markdown docs:
+
+```text
+Tools/workflow/asset_inventory.py
+Tools/workflow/scene_brief.py
+Tools/workflow/artifact_consult.py
+Tools/workflow/project_awareness.py
+Tools/workflow/smart_ai_context.py
+Tools/workflow/ai_runtime_diagnostics.py
+```
+
+Initial classification:
+
+```text
+asset_inventory.py        supporting-tool
+scene_brief.py            supporting-tool, application-domain helper
+artifact_consult.py       supporting-tool
+project_awareness.py      supporting-tool
+smart_ai_context.py       supporting-tool
+ai_runtime_diagnostics.py diagnostic-only
+```
+
+Documentation action:
+
+```text
+Add to a workflow helper catalog or MODULE_MAP.
+Do not promote them above the unified launcher.
+Clarify which are application-domain helpers versus AI orchestration helpers.
+```
+
+## Candidate group: GPU/NPU/orchestrator diagnostics
+
+These were found in code search but exact Markdown references were not obvious in the current search pass:
+
+```text
+Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py
+Tools/ai/run_npu_gpu_deep_review_auditor.py
+Tools/validation/run_gpu_runner_provider_error_smoke.py
+Tools/validation/run_orchestrator_direct_gpu_counter_smoke.py
+Tools/validation/run_orchestrator_gpu_runtime_tool_routing_smoke.py
+```
+
+Initial classification:
+
+```text
+run_agent_gpu_npu_parallel_orchestrator.py            launcher-internal or legacy-superseded; verify before editing docs
+run_npu_gpu_deep_review_auditor.py                   diagnostic-only
+run_gpu_runner_provider_error_smoke.py               diagnostic-only
+run_orchestrator_direct_gpu_counter_smoke.py         diagnostic-only
+run_orchestrator_gpu_runtime_tool_routing_smoke.py   diagnostic-only
+```
+
+Documentation action:
+
+```text
+Document as explicit diagnostics/probes only.
+Do not present them as replacement entrypoints for the unified launcher.
+If the unified launcher calls them or supersedes them, state that relation directly.
+```
+
+## Candidate group: memory, inventory and evidence helpers
+
+These were found in code search but exact Markdown references were not obvious in the current search pass:
+
+```text
+Tools/ai/build_agent_memory_inventory.py
+Tools/ai/build_code_interpreter_report.py
+Tools/ai/build_agent_agnostic_tool_inventory.py
+Tools/ai/build_refactor_duplication_audit.py
+Tools/ai/github_evidence_bundle_reports.py
+```
+
+Initial classification:
+
+```text
+build_agent_memory_inventory.py       supporting-tool, memory visibility
+build_code_interpreter_report.py      supporting-tool, code-interpreter visibility
+build_agent_agnostic_tool_inventory.py supporting-tool, toolbox visibility
+build_refactor_duplication_audit.py   supporting-tool, refactor/documentation audit
+github_evidence_bundle_reports.py     library/helper for evidence bundles
+```
+
+Documentation action:
+
+```text
+Add memory/toolbox/evidence helper catalog entries.
+For libraries, document as internal helper modules rather than user commands.
+```
+
+## Candidate group: runtime/memory internals that must not be treated as missing
+
+These scripts/modules are part of active memory/runtime context and must not be removed just because they are not user-facing:
+
+```text
+Tools/ai/agent_runtime_sqlite_memory.py
+Tools/ai/agent_memory_routing_policy.py
+Tools/ai/agent_memory_policy.py
+Tools/ai/agent_state.py
+Tools/npu/ai_memory_context.py
+```
+
+Documentation action:
+
+```text
+Keep them connected to AI_MEMORY_POLICY, LOCAL_AI_TASKS/README and the unified launcher memory section.
+Do not commit SQLite DBs generated by these tools.
+```
+
+## Candidate group: provider/runtime helper modules
+
+These modules are probably internal helpers and should be documented as such if missing from architecture docs:
+
+```text
+Tools/npu/ollama_runtime.py
+Tools/npu/npu_runtime.py
+Tools/npu/build_provider_result_report.py
+Tools/npu/run_npu_review.py
+Tools/npu/pipeline/config.py
+Tools/npu/pipeline/prompts.py
+Tools/npu/pipeline/providers.py
+Tools/npu/pipeline/io_utils.py
+Tools/npu/pipeline/validators.py
+```
+
+Documentation action:
+
+```text
+Link from Tools/npu/pipeline/README.md or MODULE_MAP.
+Do not imply provider execution unless a command explicitly loads/runs a provider.
+Metadata-only and validation-only paths must remain clearly separated from provider execution.
+```
+
+## Required next checks
+
+On a local workstation, generate fresh script inventory:
+
+```powershell
+python .\Tools\validation\build_script_inventory.py `
+  --repo-root . `
+  --output .\output\validation\script_inventory_forgotten_scripts.json `
+  --csv-output .\output\validation\script_inventory_forgotten_scripts.csv `
+  --markdown-output .\output\validation\script_inventory_forgotten_scripts.md
+```
+
+Then compare inventory to docs:
+
+```powershell
+$Inv = Get-Content .\output\validation\script_inventory_forgotten_scripts.json -Raw | ConvertFrom-Json
+$Inv.scripts |
+  Where-Object { $_.path -match '^(Tools/workflow|Tools/ai|Tools/validation|Tools/npu)/' } |
+  Select-Object path, language, category, line_count |
+  Sort-Object path |
+  Format-Table -AutoSize
+```
+
+## Documentation update targets
+
+Preferred target files for follow-up documentation:
+
+```text
+docs/MODULE_MAP.md
+docs/LOCAL_AI_TASKS/README.md
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+Tools/validation/README.md
+Tools/npu/pipeline/README.md
+```
+
+## Acceptance criteria
+
+```text
+No script deleted.
+No script promoted to canonical entrypoint unless truly intended.
+Push-capable wrappers documented as explicit-risk helpers.
+Diagnostic/probe scripts separated from normal flow.
+Internal helper libraries separated from executable commands.
+Unified launcher remains primary local-AI entrypoint.
+Forgotten scripts either indexed, marked internal, or queued for deletion review.
+```
