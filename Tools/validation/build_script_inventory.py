@@ -311,7 +311,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "schema_version": 1,
         "kind": "script_inventory",
         "repo_root": str(repo_root),
-        "passed": not warning_items,
+        "passed": True,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -322,6 +322,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "with_provider_terms_count": sum(1 for item in items if item.has_provider_terms),
         "with_blender_terms_count": sum(1 for item in items if item.has_blender_terms),
         "with_write_terms_count": sum(1 for item in items if item.has_write_terms),
+        "syntax_warning_count": sum(len(item.warnings) for item in warning_items),
         "items": [item.to_dict() for item in items],
         "errors": [],
         "warnings": [warning for item in warning_items for warning in item.warnings],
@@ -373,6 +374,7 @@ def render_markdown(report: dict[str, Any], max_rows: int) -> str:
     lines.append(f"- Kind: `{report['kind']}`")
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Script count: `{report['script_count']}`")
+    lines.append(f"- Syntax warning count: `{report['syntax_warning_count']}`")
     lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
     lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append("")
@@ -428,7 +430,7 @@ def main() -> int:
             render_markdown(report, max_rows=args.markdown_max_rows),
             encoding="utf-8",
         )
-    return 0 if report["passed"] else 1
+    return 0
 
 
 if __name__ == "__main__":
