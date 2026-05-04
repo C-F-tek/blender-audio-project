@@ -6,6 +6,8 @@ Compact contract for `Tools/workflow/run_unified_local_ai_refactor.ps1` and its 
 
 This file exists so agents do not need to inspect long historical JSON-schema notes before understanding the unified launcher contract.
 
+For launcher manifest semantics, this compact contract is canonical. If this file conflicts with broad historical notes in `docs/JSON_SCHEMAS.md`, prefer this file for the unified launcher and update `JSON_SCHEMAS.md` later as a schema catalog task.
+
 ## Producer
 
 ```text
