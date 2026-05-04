@@ -4,6 +4,13 @@ This document defines the report/schema contract for the AI workload report qual
 
 The gate is app-agnostic and report-only. It classifies already-generated workload reports before they are used as advisory context by packet/proposal builders.
 
+This file is a contract document, not a command catalog. Current executable examples live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+```
+
 ## Purpose
 
 The gate prevents corrupted or non-linguistic provider output from influencing repository suggestions.
@@ -70,23 +77,7 @@ Default output:
 output/validation/ai_workload_report_quality.json
 ```
 
-## Required command
-
-```powershell
-python .\Tools\validation\check_ai_workload_report_quality.py `
-  --repo-root . `
-  --output .\output\validation\ai_workload_report_quality.json
-```
-
-Optional explicit input reports:
-
-```powershell
-python .\Tools\validation\check_ai_workload_report_quality.py `
-  --repo-root . `
-  --report npu=output/ai_packets/npu_real_workload_report.md `
-  --report ollama=output/ai_packets/ollama_gpu_real_workload_report.md `
-  --output .\output\validation\ai_workload_report_quality.json
-```
+The producer may be called directly only for focused validator debugging or when the validator README explicitly scopes it. Broad local-AI runs must route it through the unified launcher.
 
 ## Report contract
 
@@ -241,13 +232,7 @@ unusable NPU workload reports remain visible in routing metadata but are exclude
 output/validation/npu_review_metadata.json
 ```
 
-Command without provider loading:
-
-```powershell
-python .\Tools\npu\run_npu_review.py `
-  --metadata-only `
-  --metadata-out .\output\validation\npu_review_metadata.json
-```
+Metadata-only paths are focused diagnostics, not full local-AI entrypoints. If they are needed in a broad local-AI run, they should be represented by launcher provider/probe phase status and manifest paths.
 
 Required sidecar fields:
 
@@ -313,22 +298,19 @@ commit SQLite memory DBs
 hand-edit generated indexes
 ```
 
-## Validation block
+## Validation ownership
 
-```powershell
-python .\Tools\validation\check_ai_workload_report_quality.py --repo-root . --output .\output\validation\ai_workload_report_quality.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-git diff --check
-```
+Broad local-AI validation uses the unified launcher.
 
-Unified launcher dry-run check:
+Focused quality-gate validation uses `Tools/validation/README.md` when debugging the validator or validating its contract directly.
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -DryRun `
-  -SkipGitSync `
-  -NoBranch `
-  -AllowDirty
+The acceptance signal for broad runs is not a pasted command block; it is the launcher manifest fields:
+
+```text
+workload_quality_report
+workload_quality_routing_ok
+quality_gate_passed
+phase_reports.workload_quality
+errors
+warnings
 ```
