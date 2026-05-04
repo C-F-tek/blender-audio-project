@@ -12,6 +12,7 @@ Before running or modifying this launcher, read and obey:
 AGENTS.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/LOCAL_AI_TASKS/README.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
 If any of these files are missing, stop. Do not infer their contents.
@@ -92,6 +93,16 @@ compact evidence
 final validation
 local generated-artifact reset planning
 ```
+
+## Contract document
+
+The compact machine-readable contract for the launcher manifest is:
+
+```text
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+```
+
+Use that document for manifest fields, Full0To10 status semantics, quality-gate requirements, memory fields and future external-controls fields. `docs/JSON_SCHEMAS.md` remains the broad historical schema/reference file and should not be the first entrypoint for launcher-specific work.
 
 ## Visibility contract: functions, tools, phases and evidence
 
@@ -482,6 +493,12 @@ phase_status
 phase_reports
 warnings
 errors
+```
+
+For the compact contract, see:
+
+```text
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
 After the external-controls patch, the manifest must also include selected external paths, basenames and external context/report/artifact inputs.
