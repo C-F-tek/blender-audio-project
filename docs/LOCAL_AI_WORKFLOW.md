@@ -192,7 +192,7 @@ Repository context and local reports
 | Official adapter | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | packet/proposals and adapter manifest. |
 | Ollama advisory | `Tools/workflow/run_post_validation_ai_packet.ps1` | advisory packet/proposals and manifest. |
 | Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals when selected. |
-| Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | integrated full-toolbox report when selected. |
+| Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | historical/supporting full-toolbox report when explicitly selected. |
 | Patch specs | patch-spec builders/validators | review-only patch-spec manifest and validation report. |
 | Reset | unified launcher reset mode | reset plan JSON/Markdown. |
 
@@ -318,7 +318,7 @@ Use this wrapper only for explicit provider diagnostics/evidence or when the uni
 | `Tools/workflow/run_unified_local_ai_refactor.ps1` | Canonical local AI orchestrator and full 0-to-10 entrypoint. |
 | `Tools/workflow/run_local_ai_markdown_task.ps1` | Builds task-scoped non-interactive local AI run packets from Markdown task entrypoints. |
 | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | Project-owned adapter from local task prompt to report-only/proposal-only pipeline outputs; can explicitly call multistep provider workflow. |
-| `Tools/workflow/run_local_ai_core_tool_activation.ps1` | App-agnostic activation lane for local AI core/tools and compact evidence. |
+| `Tools/workflow/run_local_ai_core_tool_activation.ps1` | Supporting app-agnostic activation lane retained for focused/legacy validation; prefer the unified launcher. |
 | `docs/LOCAL_AI_TASKS/` | Markdown task entrypoints for non-interactive local runs. |
 | `Tools/validation/build_markdown_inventory.py` | Builds Markdown lifecycle/length/pruning inventory. |
 | `Tools/validation/build_script_inventory.py` | Builds script/tool/function/class/method inventory. |
@@ -359,14 +359,20 @@ Use this wrapper only for explicit provider diagnostics/evidence or when the uni
 
 ## Evidence workflow
 
-Because `output/` is ignored, use compact evidence bundles:
+Because `output/` is ignored, use compact evidence bundles. Add only the specific compact evidence files produced by the intended run.
 
 ```powershell
 python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename latest_ai_workflow_evidence
-git add docs/LOCAL_VALIDATION_EVIDENCE/
+
+git add `
+  .\docs\LOCAL_VALIDATION_EVIDENCE\latest_ai_workflow_evidence.json `
+  .\docs\LOCAL_VALIDATION_EVIDENCE\latest_ai_workflow_evidence.md
+
 git commit -m "test: add local ai workflow evidence bundle"
 git push
 ```
+
+Do not bulk-add the whole evidence directory unless a human explicitly reviewed every changed evidence file.
 
 For the AI pipeline dry-run matrix:
 
