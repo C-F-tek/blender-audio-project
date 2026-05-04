@@ -117,7 +117,7 @@ function Show-LauncherIntro {
     Write-Host ""
     Write-Host "Guardrails: no patch apply, no commit, no push, no merge, no Blender, no FFmpeg."
     Write-Host "Reset guardrail: no delete unless -ApplyReset and exact -ConfirmResetText are supplied."
-    Write-Host "Python policy: use -PythonExe, IA_CARMINE_PYTHON, .venv, venv, then python fallback."
+    Write-Host "Python policy: set PYTHONPATH to repo root; use -PythonExe, IA_CARMINE_PYTHON, .venv, venv; auto-bootstrap .venv with py -3.12/3.13 before fallback."
     Write-Host ""
 }
 
@@ -325,36 +325,61 @@ function Write-ResetPlan {
 
 
 function Resolve-PythonExe {
-    param([string]$Requested, [string]$Root)
+    param(
+        [string]$Requested,
+        [string]$Root
+    )
 
     $candidates = @()
+
     if (-not [string]::IsNullOrWhiteSpace($Requested)) {
         $candidates += $Requested
     }
+
     if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) {
         $candidates += $env:IA_CARMINE_PYTHON
     }
 
+    $localVenv = Join-Path $Root ".venv"
+    $localVenvPython = Join-Path $localVenv "Scripts/python.exe"
+
     $candidates += @(
-        (Join-Path $Root ".venv/Scripts/python.exe"),
+        $localVenvPython,
         (Join-Path $Root "venv/Scripts/python.exe"),
-        (Join-Path $Root ".venv314/Scripts/python.exe"),
-        "python"
+        (Join-Path $Root ".venv314/Scripts/python.exe")
     )
 
     foreach ($candidate in $candidates) {
         if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
-
-        if ($candidate -eq "python") {
-            return "python"
-        }
 
         if (Test-Path -LiteralPath $candidate -PathType Leaf) {
             return (Resolve-Path -LiteralPath $candidate).Path
         }
     }
 
-    throw "No usable Python interpreter found. Set -PythonExe or IA_CARMINE_PYTHON."
+    if (-not (Test-Path -LiteralPath $localVenvPython -PathType Leaf)) {
+        $pyLauncher = Get-Command py -ErrorAction SilentlyContinue
+        if ($pyLauncher) {
+            Write-Host "[INFO] Local .venv not found; attempting bootstrap with py -3.12."
+            & py -3.12 -m venv $localVenv
+
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $localVenvPython -PathType Leaf)) {
+                Write-Host "[INFO] py -3.12 bootstrap failed or unavailable; attempting py -3.13."
+                & py -3.13 -m venv $localVenv
+            }
+
+            if (Test-Path -LiteralPath $localVenvPython -PathType Leaf) {
+                return (Resolve-Path -LiteralPath $localVenvPython).Path
+            }
+        }
+    }
+
+    $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
+    if ($pythonCommand) {
+        return "python"
+    }
+
+    throw "No usable Python interpreter found. Set -PythonExe, IA_CARMINE_PYTHON, or install py launcher with Python 3.12/3.13."
 }
 
 function Invoke-Python {
@@ -367,6 +392,7 @@ $RepoRoot = Resolve-RepoRoot
 Set-Location $RepoRoot
 $env:PYTHONPATH = $RepoRoot
 $ResolvedPythonExe = Resolve-PythonExe -Requested $PythonExe -Root $RepoRoot
+Write-Host "[INFO] PYTHONPATH: $env:PYTHONPATH"
 Write-Host "[INFO] Python: $ResolvedPythonExe"
 
 if ($Interactive -or @($Mode).Count -eq 0) { $ResolvedModes = @(Read-InteractiveModes) } else { $ResolvedModes = @(Normalize-ModeList $Mode) }
@@ -505,9 +531,9 @@ if (Test-ModeEnabled "md") {
 
 if (Test-ModeEnabled "json") {
     $JsonContract = "$ValidationDir/validation_report_contract_json_${ModeName}_$Stamp.json"
-    $Args = @(".\Tools\validation\check_validation_report_contract.py", "--repo-root", ".", "--output", $JsonContract)
-    foreach ($Report in $ReportFiles) { $Args += @("--report-file", $Report) }
-    $PhaseStatus.json_contract = Invoke-Checked "Validate current JSON/report contracts" { Invoke-Python $Args } -SoftFail:$ContinueOnValidationError
+    $JsonContractArgs = @(".\Tools\validation\check_validation_report_contract.py", "--repo-root", ".", "--output", $JsonContract)
+    foreach ($Report in $ReportFiles) { $JsonContractArgs += @("--report-file", $Report) }
+    $PhaseStatus.json_contract = Invoke-Checked "Validate current JSON/report contracts" { Invoke-Python -PythonArgs $JsonContractArgs } -SoftFail:$ContinueOnValidationError
     $ReportFiles += $JsonContract
     $PhaseReports.json_contract = $JsonContract
 }
@@ -649,6 +675,7 @@ $Manifest = [ordered]@{
     model = $Model
     python_exe = $ResolvedPythonExe
     python_exe_requested = $PythonExe
+    pythonpath = $env:PYTHONPATH
     ia_carmine_python_env = $env:IA_CARMINE_PYTHON
     stamp = $Stamp
     task_file = $TaskFile.Replace("\", "/")
@@ -680,4 +707,5 @@ Write-Host "[OK] Patch specs requested: $($Manifest.patch_specs_requested)"
 Write-Host "[OK] Patch application performed: False"
 Write-Host "[OK] Reports: $($ReportFiles -join ', ')"
 Write-Host "[OK] Context files: $($ContextFiles -join ', ')"
+
 

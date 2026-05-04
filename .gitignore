@@ -75,3 +75,6 @@ indexAI/patch_library/*_npu_service_capsule.md
 # Runtime/output
 output/
 renders/
+
+# Local Python virtual environment
+.venv/
