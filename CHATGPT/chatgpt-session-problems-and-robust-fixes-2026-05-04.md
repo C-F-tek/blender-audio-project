@@ -265,3 +265,36 @@ Operational rule:
 
     A green decision loop is necessary but not sufficient.
     Check shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md, runtime_tool_usage_telemetry_<STAMP>.json/md and runtime_tool_capability_manifest_<STAMP>.json/md before declaring full operational success.
+
+## Problem 11: broker report produced but not absorbed by final runtime telemetry
+
+Observed in run `20260505-002508`:
+
+    output/validation/runtime_tool_broker_full_toolbox_20260505-002508.json exists and passed.
+    docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_20260505-002508.md lists the broker report.
+    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_20260505-002508.json has broker_reports=[].
+    runtime telemetry executed_count=0.
+    runtime telemetry records only declared GPU planner counters.
+
+Interpretation:
+
+    The runtime broker activation path is partially wired: broker output is produced, but the final Git-trackable telemetry artifact is regenerated or finalized without --broker-report.
+
+Robust fix direction:
+
+    Patch the final telemetry generation path so the final runtime_tool_usage_telemetry_<STAMP>.json always receives the broker report when RuntimeToolBrokerJson exists.
+
+Likely targets:
+
+    Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1
+    Tools/workflow/run_unified_local_ai_refactor.ps1
+    Tools/ai/build_runtime_tool_usage_telemetry.py only if the CLI parsing or broker-report collection is still insufficient.
+
+Acceptance:
+
+    runtime_tool_usage_telemetry_<STAMP>.json inputs.broker_reports.Count >= 1
+    runtime_tool_usage_telemetry_<STAMP>.json summary.executed_count >= 3
+    failed_count = 0
+    blocked_count = 0
+
+Do not treat the run as production-complete until this is true.
