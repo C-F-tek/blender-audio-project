@@ -53,7 +53,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_uni
   -NoBranch
 ```
 
-The unified launcher replaces scattered active 0-to-10 runbooks. Legacy documents remain useful as historical background, but agents should not start from them unless the user explicitly asks for a legacy/manual procedure.
+The unified launcher replaces scattered active 0-to-10 runbooks. Legacy documents should not be used as entrypoints unless explicitly restored from history for forensic comparison.
 
 ## Visibility-first rule
 
@@ -136,8 +136,8 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 | Interactive phase picker | `unified-local-ai-refactor-launcher.md` with `-Interactive` |
 | Local generated-artifact cleanup/reset | `unified-local-ai-refactor-launcher.md` with `-Mode reset` |
 | Documentation cleanup, Markdown pruning, obsolete/redundant MD review | `unified-local-ai-refactor-launcher.md` with `-Mode md,contract,full_validation` |
-| GPU/NPU evidence diagnostics | `unified-local-ai-refactor-launcher.md`; legacy details may be read from `gpu-npu-parallel-evidence-runbook.md` |
-| Full-context local AI/NPU golden path | `unified-local-ai-refactor-launcher.md`; legacy details may be read from `full-context-ai-npu-golden-path.md` |
+| GPU/NPU evidence diagnostics | `unified-local-ai-refactor-launcher.md`; supporting detail may be read from `gpu-npu-parallel-evidence-runbook.md` |
+| Full-context local AI/NPU golden path | `unified-local-ai-refactor-launcher.md`; supporting detail may be read from `full-context-ai-npu-golden-path.md` |
 | Forgotten script visibility audit | `forgotten-scripts-documentation-audit.md` |
 
 ## Current maintained task files
@@ -149,8 +149,8 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 | `forgotten-scripts-documentation-audit.md` | active audit | Identify scripts that exist in `Tools/**` but are not visible enough in Markdown catalogs; classify without deleting. |
 | `validation-readme-reduction-next-step.md` | active follow-up | Reduce `Tools/validation/README.md` to a compact catalog and remove long procedural/control-character-prone blocks. |
 | `next-chat-unified-launcher-external-controls.md` | active follow-up | Add external CLI controls for launcher output dirs, context/report/artifact inputs and basenames. |
-| `gpu-npu-parallel-evidence-runbook.md` | supporting/legacy detail | GPU/NPU evidence and planner diagnostics background. Prefer unified launcher for execution. |
-| `full-context-ai-npu-golden-path.md` | supporting/legacy detail | Full-context local AI/NPU path background. Prefer unified launcher for execution. |
+| `gpu-npu-parallel-evidence-runbook.md` | supporting detail | GPU/NPU evidence and planner diagnostics background. Prefer unified launcher for execution. |
+| `full-context-ai-npu-golden-path.md` | supporting detail | Full-context local AI/NPU path background. Prefer unified launcher for execution. |
 | `full-context-golden-docs-contract.md` | supporting contract | Contract validation for the full-context golden path. |
 | `apply-agent-review-doc-patch-plan.md` | scoped helper | Apply low-risk documentation patch plans after manual review. |
 | `consistency-local-ai-contracts-and-powershell.md` | scoped helper | Compare local AI contract docs with PowerShell runners. |
@@ -159,23 +159,28 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 | `improve-gpu-planner-nonempty-recommendations.md` | supporting diagnostic | GPU planner non-empty recommendation diagnostics. |
 | `heavy-gpu-local-ai-diagnostics-handoff.md` | historical handoff | Handoff for heavy local GPU diagnostics when GitHub-only agents cannot execute providers. |
 
-## Superseded active-start runbooks
+## Removed obsolete active-start runbooks
 
-These files may remain as historical expansion or scoped design references, but must not be treated as the first operational path anymore:
+The following legacy active-start documents were removed from the branch because the unified launcher now owns the active 0-to-10 flow:
+
+```text
+code-refactor-local-machine-validation-addendum.md
+code-refactor-md-lane-extension.md
+```
+
+Additional oversized 0-to-10 documents should be removed only after link/reference cleanup:
 
 ```text
 full-toolbox-0-to-10-semi-automatic-procedure.md
 code-refactor-0-to-10-procedure.md
-code-refactor-local-machine-validation-addendum.md
-code-refactor-md-lane-extension.md
 ```
 
 Current policy:
 
 ```text
 Use run_unified_local_ai_refactor.ps1 as the operator entrypoint.
-Use old 0-to-10 docs only to understand historical details or specific validation semantics.
 Do not create new parallel 0-to-10 entrypoints unless the user explicitly asks for a separate runner.
+If historical details are needed, recover them from git history or compact evidence, not from active task docs.
 ```
 
 ## Unified launcher flow
