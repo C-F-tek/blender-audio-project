@@ -63,6 +63,8 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 |---|---|
 | `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | Markdown lifecycle, pruning policy, missing-index review and add-before-prune rules. |
 | `PROJECT_STATUS_POINT.md` | Current status checkpoint and recommended tasks. |
+| `PROJECT_AI_CONSCIOUSNESS.md` | Compact operational memory and architecture boundary for AI agents. |
+| `REFACTORING_AND_REUSE_PLAN.md` | Progressive encapsulation and reuse/refactoring strategy. |
 | `DATA_FLOW.md` | App-agnostic data/report/provider flow. |
 | `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow and evidence handling. |
 | `LOCAL_RUNS_TESTING_AND_EVIDENCE.md` | Local run, testing and evidence practices across workflows. |
