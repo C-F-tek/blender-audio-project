@@ -29,7 +29,7 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | `Tools/ai/` | AI artifact validation and state packets | Validates AI-produced artifacts and builds generic agent state/memory packets. |
 | `Tools/ai/pipeline/` | Modular AI artifact pipeline | Focused modules for defaults, models, preflight, scheduling, reports, guardrails and orchestration. |
 | `Tools/validation/` | Repository validators | Non-invasive syntax, docs, AI pipeline, NPU helper, generated artifact and policy validators. |
-| `Tools/workflow/` | Local workflow runners and helper shells | Unified launcher is canonical; additional shell/GUI/helper scripts are supporting and must be classified before promotion. |
+| `Tools/workflow/` | Local workflow runners and helper shells | Unified launcher is canonical; additional shell/GUI/helper scripts are supporting and governed by `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md`. |
 | `Tools/repo_patch_runner/` | Structured patch runner tooling | Supports repository modification workflows. |
 | `indexAI/` | Generated AI-oriented project index | Generated context and patch material. Do not hand-refactor as source. |
 | `patch_specs/` | Patch specification artifacts | Structured patch records and applied patch metadata. |
@@ -43,15 +43,16 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 3. Read `docs/README.md`.
 4. Read `docs/PROJECT_AI_CONSCIOUSNESS.md`.
 5. Read this file.
-6. Read `docs/DATA_FLOW.md`.
-7. Read `docs/REFACTORING_AND_REUSE_PLAN.md`.
-8. Read `docs/SHARED_SCRIPTING_UTILITIES.md`.
-9. Read `docs/QUALITY_GATE.md`.
-10. For NPU helper work, read `Tools/npu/pipeline/README.md`.
-11. Read `Tools/validation/README.md` when changing validators/workflows.
-12. Read `Scripting/README.md` for Blender package work.
-13. Read the README of the target package under `Scripting/`.
-14. Inspect the actual script before editing.
+6. Read `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` before promoting workflow helpers.
+7. Read `docs/DATA_FLOW.md`.
+8. Read `docs/REFACTORING_AND_REUSE_PLAN.md`.
+9. Read `docs/SHARED_SCRIPTING_UTILITIES.md`.
+10. Read `docs/QUALITY_GATE.md`.
+11. For NPU helper work, read `Tools/npu/pipeline/README.md`.
+12. Read `Tools/validation/README.md` when changing validators/workflows.
+13. Read `Scripting/README.md` for Blender package work.
+14. Read the README of the target package under `Scripting/`.
+15. Inspect the actual script before editing.
 
 ## Current code organization
 
@@ -108,6 +109,12 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 
 The unified launcher remains the canonical headless entrypoint. The following scripts exist as supporting helpers and must not be promoted to primary flow without explicit review.
 
+Policy file:
+
+```text
+docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md
+```
+
 | File | Initial classification | Notes |
 |---|---|---|
 | `Tools/workflow/run_unified_local_ai_refactor.ps1` | canonical-entrypoint | Active local-AI entrypoint. |
@@ -122,7 +129,6 @@ The unified launcher remains the canonical headless entrypoint. The following sc
 | `Tools/workflow/workflow_shell.py` | gui-or-shell-helper | Interactive helper; not canonical headless flow. |
 | `Tools/workflow/workflow_shell_with_push.py` | unsafe-or-write-capable, gui-or-shell-helper | Push-capable; requires explicit user intent. |
 | `Tools/workflow/workflow_debug.py` | diagnostic-only | Debug helper. |
-| `Tools/workflow/workflow_shell_with_push.py` | unsafe-or-write-capable | Do not use as default example. |
 | `Tools/workflow/gui/workflow_gui_modern.py` | gui-or-shell-helper | GUI helper. |
 | `Tools/workflow/gui/workflow_gui_with_push.py` | unsafe-or-write-capable, gui-or-shell-helper | Push-capable GUI helper; explicit intent required. |
 | `Tools/workflow/asset_inventory.py` | supporting-tool | Asset inventory helper. |
@@ -186,7 +192,7 @@ docs/LOCAL_AI_TASKS/forgotten-scripts-documentation-audit.md
 
 | File | Main responsibility |
 |---|---|
-| `Tools/workflow/run_local_validation_after_refactor.ps1` | Full local validation workflow after AI-assisted refactors. |
+| `Tools/workflow/run_local_validation_after_refactor.ps1` | Supporting full local validation workflow after AI-assisted refactors. Prefer unified launcher for normal operator flow. |
 | `Tools/workflow/run_npu_pipeline_helper_validation.ps1` | Focused NPU helper validation workflow for smoke, unit, docs and syntax checks. |
 
 ## Generated package model
@@ -234,6 +240,7 @@ Scripting/<package_name>/
 - For AI context or generated implementation packets, inspect `Tools/npu/` and `indexAI/` first.
 - For reusable behavior, add a shared module first and migrate package usage only after validation.
 - For NPU helper work, keep `Tools/npu/pipeline/` runtime-free until local validation and index regeneration are green.
+- For workflow helpers, read `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` before promotion, examples or push-capable use.
 
 ## Refactoring guidance
 
