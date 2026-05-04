@@ -1,8 +1,44 @@
 # Local AI Tasks
 
-Markdown entrypoints for non-interactive local AI runs.
+Markdown task files and operator entrypoints for local AI work.
 
-Every task file must point back to:
+This index is a router, not a command source. Executable commands for full runs, quick tests, deep tests, reset, provider probes, memory and patch-spec generation live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+## Non-negotiable rule
+
+There is one active local-AI operator entrypoint:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+All test/full-run/provider/memory/patch-spec/reset flows must be expressed as launcher modes, profiles or flags.
+
+Do not create or promote separate active-start runbooks for:
+
+```text
+full toolbox runs
+code-refactor runs
+Markdown-refactor runs
+provider probes
+full validation
+quick tests
+deep tests
+reset cleanup
+SQLite memory handoff
+patch-spec generation
+```
+
+Supporting wrappers may exist, but they are implementation lanes behind the launcher or explicitly scoped helper tools.
+
+## Required context
+
+Every active task file must preserve hard guardrails from:
 
 ```text
 AGENTS.md
@@ -11,50 +47,6 @@ docs/LOCAL_AI_RUN_BOOTSTRAP.md
 
 If a task conflicts with `AGENTS.md`, preserve hard guardrails and stop with a conflict report.
 
-## Canonical local AI entrypoint
-
-The active 0-to-10 entrypoint is now the unified launcher:
-
-```text
-docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/workflow/run_unified_local_ai_refactor.ps1
-```
-
-Canonical full run:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity balanced `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
-```
-
-Quick run:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity quick `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
-```
-
-Deep run:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Full0To10 `
-  -RunIntensity deep `
-  -Model gpt-oss:20b `
-  -SkipGitSync `
-  -NoBranch
-```
-
-The unified launcher replaces scattered active 0-to-10 runbooks. Legacy documents should not be used as entrypoints unless explicitly restored from history for forensic comparison.
-
 ## Visibility-first rule
 
 Every local-AI run must be inspectable from compact surfaces before opening detailed evidence.
@@ -62,16 +54,16 @@ Every local-AI run must be inspectable from compact surfaces before opening deta
 Required reading order:
 
 ```text
-1. launcher command
+1. launcher command from unified-local-ai-refactor-launcher.md
 2. unified_local_ai_refactor_manifest.json
 3. phase_status / phase_reports
 4. compact Markdown or CSV summaries
 5. detailed evidence only when needed
 ```
 
-A run is not considered operationally clear if the next agent must open a giant bundle to understand what happened.
+A run is not operationally clear if the next agent must open a giant bundle to understand what happened.
 
-Each active phase should expose at least one visible output:
+Each active launcher phase must expose at least one visible output:
 
 ```text
 phase_status
@@ -106,45 +98,45 @@ Prefer manifest + index + focused report over one huge Markdown file.
 
 Current unified-flow tools and their visibility surfaces:
 
-| Area | Tool/script | Visible output |
-|---|---|---|
-| Unified launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` | run manifest with selected modes, flags, reports, context and phase status. |
-| Markdown inventory | `Tools/validation/build_markdown_inventory.py` | JSON and Markdown inventory. |
-| Link validation | `Tools/validation/check_docs_links.py` | JSON link report. |
-| Script inventory | `Tools/validation/build_script_inventory.py` | JSON, CSV and Markdown function/class inventory. |
-| Report contracts | `Tools/validation/check_validation_report_contract.py` | JSON contract report. |
-| Workload quality | `Tools/validation/check_ai_workload_report_quality.py` | `ai_workload_report_quality.json`. |
-| Semantic chunks | `Tools/npu/build_semantic_code_chunks.py` | semantic chunk manifest. |
-| Context pack | `Tools/ai/build_ai_context_pack.py` | bounded Markdown/JSON context pack and evidence summary. |
-| Agent state/memory | `Tools/ai/build_agent_state_packet.py` | agent-state packet and optional SQLite memory handoff. |
-| Official adapter | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | packet/proposals and adapter manifest. |
-| Ollama advisory | `Tools/workflow/run_post_validation_ai_packet.ps1` | advisory packet/proposals and manifest. |
-| Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals when selected. |
-| Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | integrated full-toolbox report when selected. |
-| Reset | unified launcher reset mode | reset plan JSON/Markdown. |
+| Area | Tool/script | Visible output | Launcher status |
+|---|---|---|---|
+| Unified launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` | run manifest with selected modes, flags, reports, context and phase status | canonical |
+| Markdown inventory | `Tools/validation/build_markdown_inventory.py` | JSON and Markdown inventory | `md` mode |
+| Link validation | `Tools/validation/check_docs_links.py` | JSON link report | `md` / validation modes |
+| Script inventory | `Tools/validation/build_script_inventory.py` | JSON, CSV and Markdown function/class inventory | `python` mode |
+| Report contracts | `Tools/validation/check_validation_report_contract.py` | JSON contract report | `json` / `contract` modes |
+| Workload quality | `Tools/validation/check_ai_workload_report_quality.py` | `ai_workload_report_quality.json` | provider quality gate |
+| Semantic chunks | `Tools/npu/build_semantic_code_chunks.py` | semantic chunk manifest | `chunks` mode |
+| Context pack | `Tools/ai/build_ai_context_pack.py` | bounded Markdown/JSON context pack and evidence summary | `context_pack` mode |
+| Agent state/memory | `Tools/ai/build_agent_state_packet.py` | agent-state packet and optional SQLite memory handoff | `agent_state` mode |
+| Official adapter | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | packet/proposals and adapter manifest | `official` mode |
+| Ollama advisory | `Tools/workflow/run_post_validation_ai_packet.ps1` | advisory packet/proposals and manifest | `provider` / advisory flag |
+| Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals | `provider` / Full0To10 flag |
+| Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | integrated full-toolbox report when selected | supporting selected phase only, not entrypoint |
+| Reset | unified launcher reset mode | reset plan JSON/Markdown | `reset` mode |
 
 If a tool is referenced in docs but missing from the repository, mark it optional/future or remove the reference in the same change.
 
-## First entrypoints
+## Intent router
 
-| User intent | Start here |
+| User intent | Active path |
 |---|---|
-| Full selectable 0-to-10 local AI workflow | `unified-local-ai-refactor-launcher.md` with `-Full0To10` |
-| Fast 5-minute style full loop | `unified-local-ai-refactor-launcher.md` with `-Full0To10 -RunIntensity quick` |
-| Deep full-toolbox/provider loop | `unified-local-ai-refactor-launcher.md` with `-Full0To10 -RunIntensity deep` |
-| Custom intensity/limits | `unified-local-ai-refactor-launcher.md` with `-RunIntensity custom` and explicit numeric knobs |
-| Interactive phase picker | `unified-local-ai-refactor-launcher.md` with `-Interactive` |
-| Local generated-artifact cleanup/reset | `unified-local-ai-refactor-launcher.md` with `-Mode reset` |
-| Documentation cleanup, Markdown pruning, obsolete/redundant MD review | `unified-local-ai-refactor-launcher.md` with `-Mode md,contract,full_validation` |
-| GPU/NPU evidence diagnostics | `unified-local-ai-refactor-launcher.md`; supporting detail may be read from `gpu-npu-parallel-evidence-runbook.md` |
-| Full-context local AI/NPU golden path | `unified-local-ai-refactor-launcher.md`; supporting detail may be read from `full-context-ai-npu-golden-path.md` |
-| Forgotten script visibility audit | `forgotten-scripts-documentation-audit.md` |
+| Full selectable 0-to-10 local AI workflow | unified launcher runbook, `Full0To10` profile |
+| Fast 5-minute style full loop | unified launcher runbook, quick intensity/profile |
+| Deep full-toolbox/provider loop | unified launcher runbook, deep intensity/profile |
+| Custom intensity/limits | unified launcher runbook, custom intensity and explicit numeric knobs |
+| Interactive phase picker | unified launcher runbook, interactive mode |
+| Local generated-artifact cleanup/reset | unified launcher runbook, reset mode |
+| Documentation cleanup, Markdown pruning, obsolete/redundant MD review | unified launcher runbook, MD/contract/full-validation phases |
+| GPU/NPU evidence diagnostics | unified launcher runbook, provider/probe phases; supporting background may live in `gpu-npu-parallel-evidence-runbook.md` |
+| Full-context local AI/NPU golden path | unified launcher runbook; supporting background may live in `full-context-ai-npu-golden-path.md` |
+| Forgotten script visibility audit | `forgotten-scripts-documentation-audit.md` as audit input; execution still through launcher or focused validator tooling |
 
-## Current maintained task files
+## Maintained task files
 
 | File | Status | Purpose |
 |---|---|---|
-| `unified-local-ai-refactor-launcher.md` | canonical active | Operator guide for one entrypoint: selectable phases, `-Full0To10`, intensity profiles, reset planning, SQLite memory, semantic chunks, context packs, provider advisory, patch specs and validation. |
+| `unified-local-ai-refactor-launcher.md` | canonical active | Operator guide for one entrypoint: selectable phases, `Full0To10`, intensity profiles, reset planning, SQLite memory, semantic chunks, context packs, provider advisory, patch specs and validation. |
 | `docs-md-obsolete-pruning-next-step.md` | active task input | Follow-up triage task for obsolete/superseded Markdown after the entrypoint reduction baseline. |
 | `forgotten-scripts-documentation-audit.md` | active audit | Identify scripts that exist in `Tools/**` but are not visible enough in Markdown catalogs; classify without deleting. |
 | `validation-readme-reduction-next-step.md` | active follow-up | Reduce `Tools/validation/README.md` to a compact catalog and remove long procedural/control-character-prone blocks. |
@@ -159,16 +151,16 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 | `improve-gpu-planner-nonempty-recommendations.md` | supporting diagnostic | GPU planner non-empty recommendation diagnostics. |
 | `heavy-gpu-local-ai-diagnostics-handoff.md` | historical handoff | Handoff for heavy local GPU diagnostics when GitHub-only agents cannot execute providers. |
 
-## Removed obsolete active-start runbooks
+## Obsolete active-start runbooks
 
-The following legacy active-start documents were removed from the branch because the unified launcher now owns the active 0-to-10 flow:
+The following legacy active-start documents were removed from the branch because the unified launcher owns the active flow:
 
 ```text
 code-refactor-local-machine-validation-addendum.md
 code-refactor-md-lane-extension.md
 ```
 
-Additional oversized 0-to-10 documents should be removed only after link/reference cleanup:
+Additional oversized 0-to-10 documents should be removed after local `git rm` and link/reference cleanup:
 
 ```text
 full-toolbox-0-to-10-semi-automatic-procedure.md
@@ -178,59 +170,14 @@ code-refactor-0-to-10-procedure.md
 Current policy:
 
 ```text
-Use run_unified_local_ai_refactor.ps1 as the operator entrypoint.
+Use run_unified_local_ai_refactor.ps1 as the only operator entrypoint.
 Do not create new parallel 0-to-10 entrypoints unless the user explicitly asks for a separate runner.
 If historical details are needed, recover them from git history or compact evidence, not from active task docs.
 ```
 
-## Unified launcher flow
-
-The preferred single operator entrypoint is:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Interactive
-```
-
-The same launcher also accepts explicit modes:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  -Mode md,python,chunks,context_pack,agent_state,official,provider,patch_specs,contract,full_validation `
-  -UseOllamaAdvisory `
-  -UsePrimaryAdvisoryProvider `
-  -GeneratePatchSpecs
-```
-
-Supported modes include:
-
-```text
-smoke
-reset
-validation
-md
-json
-python
-chunks
-context_pack
-agent_state
-official
-provider
-patch_specs
-evidence
-contract
-full_validation
-all
-```
-
-The safe combined order is:
-
-```text
-baseline -> smoke -> reset -> validation -> md -> json -> python -> chunks -> context_pack -> agent_state -> workload_quality -> legacy_full_toolbox_integrated -> official -> provider -> patch_specs -> evidence -> contract -> full_validation
-```
-
 ## Full0To10 rule
 
-`-Full0To10` must include every major step by default. Missing phases are allowed only when the operator explicitly disables them with a `-No*` flag.
+`Full0To10` must include every major step by default. Missing phases are allowed only when the operator explicitly disables them with a `No*` flag.
 
 Expected default full profile:
 
@@ -249,20 +196,9 @@ quality gate registrato nel manifest
 patch_application_performed=false
 ```
 
-Disablers:
+Explicit disablers are documented in the unified launcher runbook and launcher contract.
 
-```text
--NoOllamaProbe
--NoNpuProbe
--NoNpuDecodeSmoke
--NoMultistepProvider
--NoWorkloadQuality
--NoMemoryWrite
--NoEvidence
--NoPatchSpecs
-```
-
-## SQLite memory / context enrichment must be explicit
+## SQLite memory / context enrichment
 
 SQLite-backed memory is an active local-AI enrichment capability, not a future placeholder.
 
@@ -306,19 +242,9 @@ no deletion
 writes local_ai_reset_plan_*.json/.md under output/validation
 ```
 
-Deletion requires both:
+Deletion requires the explicit confirmation flags documented in the unified launcher runbook.
 
-```text
--ApplyReset
--ConfirmResetText "DELETE LOCAL AI ARTIFACTS"
-```
-
-Reset may include memory/generated-index candidates only when explicitly requested:
-
-```text
--IncludeMemoryReset
--IncludeGeneratedIndexReset
-```
+Reset may include memory/generated-index candidates only when explicitly requested.
 
 ## Local validation evidence policy
 
@@ -332,7 +258,7 @@ Use it whenever a run creates ignored local reports under `output/**` and needs 
 
 ## Historical task files
 
-These remain useful as past state or scoped handoffs, but should not become the first reading path unless explicitly referenced:
+These remain useful as past state or scoped handoffs, but must not become the first reading path unless explicitly referenced:
 
 ```text
 issue-57-docs-congruence-cleanup.md
@@ -344,15 +270,6 @@ project-complete-*.md
 ```
 
 Historical files may be marked `superseded` or `historical` in future cleanup, but deletion requires explicit user approval.
-
-## Inventory commands used by current flows
-
-```powershell
-python .\Tools\validation\build_markdown_inventory.py --repo-root . --output .\output\validation\markdown_inventory.json --markdown-output .\output\validation\markdown_inventory.md
-python .\Tools\validation\build_script_inventory.py --repo-root . --output .\output\validation\script_inventory.json --csv-output .\output\validation\script_inventory.csv --markdown-output .\output\validation\script_inventory.md
-```
-
-`build_script_inventory.py` complements the older Python line-count CSV: it adds descriptions, functions, classes, methods, language and category for the full script/tool surface.
 
 ## Agent anti-laziness checklist
 
