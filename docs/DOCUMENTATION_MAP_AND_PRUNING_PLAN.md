@@ -22,15 +22,17 @@ This file is report-only. It does not authorize deletion by itself.
 | 8 | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Unified local AI entrypoint | Canonical active local AI / 0-to-10 runbook. |
 | 9 | `Tools/validation/README.md` | Validator catalog | Tool commands and contracts only. |
 
-Supporting/historical local-AI runbooks:
+Legacy monolithic 0-to-10 runbooks have been removed from the active documentation set. The unified launcher is now the only active 0-to-10 entrypoint.
+
+Historical detail, when needed, must come from:
 
 ```text
-docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
-docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md
-docs/LOCAL_AI_TASKS/code-refactor-local-machine-validation-addendum.md
+git history
+compact evidence under docs/LOCAL_VALIDATION_EVIDENCE/
+scoped task handoffs that are explicitly referenced by the current task
 ```
 
-These files may preserve historical detail and validation semantics, but they are not the active starting point. New local AI runs start from `run_unified_local_ai_refactor.ps1` through `unified-local-ai-refactor-launcher.md`.
+Do not recreate parallel active-start runbooks for full-toolbox, code-refactor or Markdown-refactor flows.
 
 ## Visibility-first documentation rule
 
@@ -83,7 +85,7 @@ Do not create new monolithic AI-to-AI bundles without companion manifests.
 |---|---|---|---|
 | Root entrypoints | `AGENTS.md`, `README.md`, `WORKFLOW.md` | Root flow | Canonical, concise |
 | Stable docs | `docs/*.md` | `docs/README.md` | Maintained source docs |
-| Task runbooks | `docs/LOCAL_AI_TASKS/*.md` | `docs/LOCAL_AI_TASKS/README.md` | Current or historical |
+| Task runbooks | `docs/LOCAL_AI_TASKS/*.md` | `docs/LOCAL_AI_TASKS/README.md` | Current task input, supporting detail or historical handoff |
 | Execution plans | `docs/EXECUTION_PLANS/**/*.md` | `docs/EXECUTION_PLANS/README.md` | State records |
 | Evidence | `docs/LOCAL_VALIDATION_EVIDENCE/*` | Evidence builders | Snapshot evidence, not source docs |
 | Tool READMEs | `Tools/**/README.md` | Nearest tool/package | Package-local |
@@ -114,8 +116,8 @@ The script inventory must be included in future refactor evidence together with 
 |---|---|---|
 | Provider lane policy | `AGENTS.md` for hard rule, `WORKFLOW.md` for lifecycle | Other docs link or summarize one line. |
 | Unified full 0-to-10 procedure | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | No copied command blocks in entrypoints. |
-| Legacy full-toolbox procedure | `LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` | Historical/supporting only; do not use as first entrypoint. |
-| Legacy code/refactor procedure | `LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md` | Historical/supporting only; include line-count and script inventory semantics in unified flow. |
+| Historical full-toolbox procedure | git history / compact evidence | Do not restore as active runbook. Extract only compact durable rules into canonical docs. |
+| Historical code/refactor procedure | git history / compact evidence | Do not restore as active runbook. Keep line-count/script-inventory semantics in unified flow. |
 | Evidence bundle policy | `WORKFLOW.md` and unified launcher runbook | Evidence snapshots are not source docs. |
 | Patch bundle policy | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` plus unified launcher runbook | Do not duplicate generated bundle internals everywhere. |
 | Historical Blender role | `README.md` and `MODULE_MAP.md` | Detailed instructions stay under Blender/domain docs. |
@@ -171,14 +173,14 @@ Tools/npu/npu_code_index.md
 output/**/*.md
 ```
 
-## First cleanup sequence
+## Current cleanup sequence
 
-1. Reduce root entrypoints to a single reading flow.
-2. Preserve long command blocks only in the canonical unified launcher or in supporting historical docs.
-3. Add Markdown and script inventories to the workflow/refactor evidence path.
+1. Keep root entrypoints focused on the single reading flow.
+2. Keep the canonical unified launcher as the only active full 0-to-10 command surface.
+3. Add Markdown and script inventories to workflow/refactor evidence paths.
 4. Use inventory output to identify missing-index, long-file and prune candidates.
-5. Mark obsolete material before any deletion.
-6. Create a separate deletion PR only after explicit approval.
+5. Remove obsolete monolithic active-start docs after explicit approval.
+6. Validate links and report contracts after deletion.
 
 ## Acceptance criteria
 
@@ -192,5 +194,5 @@ script/tool inventory is available for refactor planning
 each active phase exposes status/report/summary visibility
 long files are classified and not used as primary entrypoints
 no output/**, renders/**, *.db or *.sqlite files are committed
-no deletion is performed without explicit approval
+no obsolete monolithic 0-to-10 runbook remains indexed as active documentation
 ```
