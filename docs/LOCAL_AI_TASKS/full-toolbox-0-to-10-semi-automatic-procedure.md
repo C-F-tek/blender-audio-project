@@ -274,45 +274,57 @@ Expected duplicate count: `0`.
 
 ### Global DataStamp and AI packets contract
 
-Every unified launcher run must resolve one timestamp only:
+Every unified launcher run must resolve one timestamp only. The run stamp is the single global version key for all run-scoped folders introduced by this contract.
 
 ```powershell
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $DataStamp = $Stamp
+```
 
 The run-scoped AI packets directory is:
 
+```powershell
 $AiPacketsRoot = ".\output\ai_packets"
 $AiPacketsDir = Join-Path $AiPacketsRoot $DataStamp
+```
 
 Contract:
 
+```text
 output/ai_packets/<DataStamp> is the run packet directory.
 It is a directory, not a context file.
 Never pass output/ai_packets/<DataStamp> as -ExtraContextFile.
 Only concrete files inside the directory may be used as context/report inputs.
+```
 
 Allowed packet files include:
 
+```text
 output/ai_packets/<DataStamp>/npu_real_workload_report.md
 output/ai_packets/<DataStamp>/ollama_gpu_real_workload_report.md
+```
 
 The workload-quality gate must receive the directory through:
 
+```powershell
 --report-dir $AiPacketsDir
+```
 
-The official/local advisory context must receive only concrete files. Before passing -ExtraContextFile, sanitize context inputs:
+The official/local advisory context must receive only concrete files. Before passing `-ExtraContextFile`, sanitize context inputs:
 
+```powershell
 $ContextFiles = @($ContextFiles | Where-Object {
     $ContextPath = [string]$_
     -not (Test-Path -LiteralPath $ContextPath -PathType Container)
 })
+```
 
 Git policy remains unchanged:
 
+```text
 Do not commit output/**.
 Commit only source, docs, tests, and compact evidence explicitly listed by evidence_to_commit.
-
+```
 ### Runtime tool capability manifest
 
 Every cloud/AI-to-AI handoff must carry the tool body, not only the evidence mind.
@@ -403,7 +415,7 @@ patch application only through explicit --apply or explicit source-edit instruct
 
 # Procedure variants
 
-## Variant A Ã¢â‚¬â€ Expanded/manual 0 -> 10 full toolbox run
+## Variant A ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Expanded/manual 0 -> 10 full toolbox run
 
 This is the full manual 0 -> 10 flow. It is the expanded version of the procedure Carmine used before the integrated wrapper existed.
 
@@ -811,7 +823,7 @@ Get-Content ".\output\validation\full_toolbox_agent_review_decision_loop_${Stamp
 
 ---
 
-## Variant B Ã¢â‚¬â€ Integrated no-provider semi-automatic flow
+## Variant B ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Integrated no-provider semi-automatic flow
 
 Use this when existing orchestrator/GPU artifacts are valid enough and the goal is to test the deterministic decision and patch-plan path quickly.
 
@@ -849,7 +861,7 @@ patch_plan_count >= 1
 fatal_report_failure_count=0
 ```
 
-## Variant C Ã¢â‚¬â€ Integrated provider semi-automatic flow
+## Variant C ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Integrated provider semi-automatic flow
 
 Use when a fresh full GPU/NPU run is needed.
 
@@ -885,7 +897,7 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
   -NpuFinalWaitSeconds 120
 ```
 
-## Variant D Ã¢â‚¬â€ Patch bundle builder from a real patch plan
+## Variant D ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Patch bundle builder from a real patch plan
 
 Use after a successful decision loop has produced:
 
@@ -982,7 +994,7 @@ git commit -m "docs(ai): apply review patch bundle notes"
 git push
 ```
 
-## Variant E Ã¢â‚¬â€ Evidence-only commit
+## Variant E ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Evidence-only commit
 
 After a full toolbox run, commit only compact Git-trackable evidence when useful:
 
