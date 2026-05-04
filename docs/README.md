@@ -65,6 +65,7 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 | `PROJECT_STATUS_POINT.md` | Current status checkpoint and recommended tasks. |
 | `DATA_FLOW.md` | App-agnostic data/report/provider flow. |
 | `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow and evidence handling. |
+| `LOCAL_RUNS_TESTING_AND_EVIDENCE.md` | Local run, testing and evidence practices across workflows. |
 | `JSON_SCHEMAS.md` | JSON/report contract notes. |
 | `LOCAL_AI_CORE_TOOL_ACTIVATION.md` | App-agnostic activation lane for chunks, packs, broker packets, proposals and evidence. |
 | `AI_WORKLOAD_REPORT_QUALITY_GATE.md` | Workload quality-gate contract. |
@@ -73,6 +74,9 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 | `AI_MEMORY_POLICY.md` | Memory retention, promotion and quarantine policy. |
 | `GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Local Git/GitHub validation workflow. |
 | `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | GitHub-only continuation and local-validation handoff. |
+| `NPU_GPU_PARALLELISM_PLAN.md` | NPU/GPU parallelism plan and lane boundaries. |
+| `SMART_GUARDRAIL_APP.md` | Smart guardrail application concept and integration notes. |
+| `TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md` | Tool-agnostic artifact expansion roadmap. |
 | `MODULE_MAP.md` | Repository area map. |
 | `TECH_DEBT_TRACKER.md` | Known debt and remediation queue. |
 
