@@ -33,6 +33,30 @@ param(
     [ValidateSet("core", "npu", "docs")]
     [string]$Profile = "docs",
     [string]$Model = "gpt-oss:20b",
+    [ValidateSet("quick", "balanced", "deep", "custom")]
+    [string]$RunIntensity = "balanced",
+    [int]$BudgetMinutes = 30,
+    [int]$MaxRounds = 20,
+    [int]$FilesPerRound = 8,
+    [int]$MaxContextFiles = 220,
+    [int]$MaxCharsPerFile = 6000,
+    [int]$MaxNewTokens = 3600,
+    [string]$KeepAlive = "35m",
+    [int]$NpuAuditorEveryRounds = 3,
+    [int]$NpuAuditorTimeoutSeconds = 420,
+    [int]$NpuMaxContextChars = 8000,
+    [int]$NpuMaxPromptChars = 1200,
+    [int]$NpuMaxNewTokens = 384,
+    [int]$NpuFinalWaitSeconds = 180,
+    [int]$MinRecommendations = 1,
+    [int]$MinPatchPlans = 1,
+    [int]$MaxRecommendations = 20,
+    [int]$MaxPatchPlans = 20,
+    [int]$RepositoryConsistencyMapWorkers = 8,
+    [int]$ProviderMaxContextChars = 0,
+    [int]$ContextPackMaxTotalChars = 64000,
+    [int]$ContextPackMaxFileChars = 4000,
+    [int]$AgentStateMaxMemoryChars = 24000,
     [int]$MaxContextChars = 12000,
     [string]$PythonExe = "",
     [switch]$Interactive,
@@ -53,6 +77,7 @@ param(
     [switch]$UseOllamaAdvisory,
     [switch]$UsePrimaryAdvisoryProvider,
     [switch]$RunMultistepProviderWorkflow,
+    [switch]$RunLegacyFullToolboxIntegrated,
     [switch]$RunOllamaProbe,
     [switch]$RunNpuProbe,
     [switch]$RunNpuDecodeSmoke,
@@ -427,10 +452,55 @@ if ($Full0To10) {
     if (-not $NoMemoryWrite) { $SaveInputsToMemoryDb = $true }
     if (-not $NoEvidence) { $BuildEvidence = $true }
     if (-not $NoPatchSpecs) { $GeneratePatchSpecs = $true }
+    $RunLegacyFullToolboxIntegrated = $true
 }
 
 
 if ([string]::IsNullOrWhiteSpace($Stamp)) { $Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
+if ($RunIntensity -ne "custom") {
+    if ($RunIntensity -eq "quick") {
+        $BudgetMinutes = 5
+        $MaxRounds = 4
+        $FilesPerRound = 4
+        $MaxContextFiles = 80
+        $MaxCharsPerFile = 4000
+        $MaxNewTokens = 1600
+        $KeepAlive = "8m"
+        $NpuAuditorEveryRounds = 2
+        $NpuAuditorTimeoutSeconds = 180
+        $NpuMaxContextChars = 4000
+        $NpuMaxPromptChars = 800
+        $NpuMaxNewTokens = 256
+        $NpuFinalWaitSeconds = 90
+        $ProviderMaxContextChars = 9000
+        $ContextPackMaxTotalChars = 32000
+        $ContextPackMaxFileChars = 2500
+        $AgentStateMaxMemoryChars = 12000
+        $RepositoryConsistencyMapWorkers = 8
+    } elseif ($RunIntensity -eq "balanced") {
+        if ($ProviderMaxContextChars -eq 0) { $ProviderMaxContextChars = $MaxContextChars }
+    } elseif ($RunIntensity -eq "deep") {
+        $BudgetMinutes = 30
+        $MaxRounds = 20
+        $FilesPerRound = 8
+        $MaxContextFiles = 220
+        $MaxCharsPerFile = 6000
+        $MaxNewTokens = 3600
+        $KeepAlive = "35m"
+        $NpuAuditorEveryRounds = 3
+        $NpuAuditorTimeoutSeconds = 420
+        $NpuMaxContextChars = 8000
+        $NpuMaxPromptChars = 1200
+        $NpuMaxNewTokens = 384
+        $NpuFinalWaitSeconds = 180
+        $ProviderMaxContextChars = 24000
+        $ContextPackMaxTotalChars = 128000
+        $ContextPackMaxFileChars = 8000
+        $AgentStateMaxMemoryChars = 48000
+        $RepositoryConsistencyMapWorkers = 12
+    }
+}
+if ($ProviderMaxContextChars -eq 0) { $ProviderMaxContextChars = $MaxContextChars }
 $ModeName = ((@($ResolvedModes) | Sort-Object -Unique) -join "_")
 if ([string]::IsNullOrWhiteSpace($TaskBranch)) { $TaskBranch = "codex/local-ai-$ModeName-$Stamp" }
 
@@ -660,6 +730,41 @@ if ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality -and -not (Test-Pat
 }
 
 
+$LegacyFullToolboxReport = ""
+if ($RunLegacyFullToolboxIntegrated) {
+    $LegacyFullToolboxReport = ".\output\validation\agent_review_full_toolbox_decision_loop_${Stamp}_integrated.json"
+    $LegacyArgs = @{
+        RepoRoot = "."
+        Stamp = $Stamp
+        BudgetMinutes = $BudgetMinutes
+        MaxRounds = $MaxRounds
+        FilesPerRound = $FilesPerRound
+        MaxContextFiles = $MaxContextFiles
+        MaxCharsPerFile = $MaxCharsPerFile
+        MaxNewTokens = $MaxNewTokens
+        KeepAlive = $KeepAlive
+        NpuAuditorEveryRounds = $NpuAuditorEveryRounds
+        NpuAuditorTimeoutSeconds = $NpuAuditorTimeoutSeconds
+        NpuMaxContextChars = $NpuMaxContextChars
+        NpuMaxPromptChars = $NpuMaxPromptChars
+        NpuMaxNewTokens = $NpuMaxNewTokens
+        NpuFinalWaitSeconds = $NpuFinalWaitSeconds
+        MinRecommendations = $MinRecommendations
+        MinPatchPlans = $MinPatchPlans
+        RepositoryConsistencyMapWorkers = $RepositoryConsistencyMapWorkers
+    }
+    if ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality) { $LegacyArgs.RunGpuNpuProvider = $true }
+    if ($NoMemoryWrite) { $LegacyArgs.SkipMemoryReload = $true }
+    if ($NoEvidence) { $LegacyArgs.SkipSharedToolboxBundle = $true }
+    $PhaseStatus.legacy_full_toolbox_integrated = Invoke-Checked "Run legacy full-toolbox integrated 0-to-10 lane" {
+        & .\Tools\workflow\run_agent_review_full_toolbox_decision_loop_integrated.ps1 @LegacyArgs
+    } -SoftFail:$ContinueOnValidationError
+    if (Test-Path -LiteralPath $LegacyFullToolboxReport -PathType Leaf) {
+        $ReportFiles += $LegacyFullToolboxReport
+        $PhaseReports.legacy_full_toolbox_integrated = $LegacyFullToolboxReport
+    }
+}
+
 if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-ModeEnabled "patch_specs") -or (Test-ModeEnabled "evidence") -or $UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $GeneratePatchSpecs -or $BuildEvidence) {
     $BaseName = "unified_${ModeName}_$Stamp"
     $ProposalBaseName = "unified_${ModeName}_proposals_$Stamp"
@@ -729,6 +834,30 @@ $Manifest = [ordered]@{
     available_modes = @($ModeDescriptions.Keys)
     profile = $Profile
     model = $Model
+    run_intensity = $RunIntensity
+    budget_minutes = $BudgetMinutes
+    max_rounds = $MaxRounds
+    files_per_round = $FilesPerRound
+    max_context_files = $MaxContextFiles
+    max_chars_per_file = $MaxCharsPerFile
+    max_new_tokens = $MaxNewTokens
+    keep_alive = $KeepAlive
+    npu_auditor_every_rounds = $NpuAuditorEveryRounds
+    npu_auditor_timeout_seconds = $NpuAuditorTimeoutSeconds
+    npu_max_context_chars = $NpuMaxContextChars
+    npu_max_prompt_chars = $NpuMaxPromptChars
+    npu_max_new_tokens = $NpuMaxNewTokens
+    npu_final_wait_seconds = $NpuFinalWaitSeconds
+    min_recommendations = $MinRecommendations
+    min_patch_plans = $MinPatchPlans
+    max_recommendations = $MaxRecommendations
+    max_patch_plans = $MaxPatchPlans
+    repository_consistency_map_workers = $RepositoryConsistencyMapWorkers
+    provider_max_context_chars = $ProviderMaxContextChars
+    context_pack_max_total_chars = $ContextPackMaxTotalChars
+    context_pack_max_file_chars = $ContextPackMaxFileChars
+    agent_state_max_memory_chars = $AgentStateMaxMemoryChars
+    legacy_full_toolbox_integrated_requested = [bool]$RunLegacyFullToolboxIntegrated
     python_exe = $ResolvedPythonExe
     python_exe_requested = $PythonExe
     pythonpath = $env:PYTHONPATH
