@@ -54,6 +54,8 @@ param(
     [string]$ConfirmResetText = "",
     [switch]$IncludeMemoryReset,
     [switch]$IncludeGeneratedIndexReset,
+    [string]$MemoryDb = ".\\indexAI\\agent_memory\\agent_memory.sqlite",
+    [switch]$SaveInputsToMemoryDb,
     [int]$MatrixWorkers = 12,
     [int]$RepeatCases = 2
 )
@@ -264,49 +266,71 @@ function Write-ResetPlan {
         [bool]$Apply,
         [string]$Root
     )
+
     $totalBytes = 0
-    foreach ($item in $Candidates) { $totalBytes += [int64]$item.size_bytes }
+    foreach ($item in @($Candidates)) {
+        $totalBytes += [int64]$item.size_bytes
+    }
+
+    $resetBefore = $null
+    $resetBeforeText = "not set"
+    if ($BeforeDate -ne [datetime]::MinValue) {
+        $resetBefore = $BeforeDate.ToString("o")
+        $resetBeforeText = $resetBefore
+    }
+
     $report = [ordered]@{
         schema_version = 1
         kind = "local_ai_reset_plan"
         repo_root = $Root
         passed = $true
         apply_reset = $Apply
-        reset_before_date = $(if ($BeforeDate -eq [datetime]::MinValue) { $null } else { $BeforeDate.ToString("o") })
-        candidate_count = $Candidates.Count
+        reset_before_date = $resetBefore
+        candidate_count = @($Candidates).Count
         total_size_bytes = $totalBytes
         candidates = $Candidates
         warnings = @("Reset mode is report-only unless -ApplyReset and exact -ConfirmResetText are supplied.")
         errors = @()
     }
-    ($report | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $OutputJson -Encoding UTF8
 
-    $lines = @()
-    $lines += "# Local AI Reset Plan"
-    $lines += ""
-    $lines += "- Apply reset: `$Apply`"
-    $lines += "- Candidate count: `$($Candidates.Count)`"
-    $lines += "- Total bytes: `$totalBytes`"
-    $lines += "- Reset before date: `$(if ($BeforeDate -eq [datetime]::MinValue) { 'not set' } else { $BeforeDate.ToString('o') })`"
-    $lines += ""
-    $lines += "| Path | Category | Last write time | Size bytes |"
-    $lines += "|---|---|---|---:|"
-    foreach ($item in $Candidates) {
-        $lines += "| `$($item.path)` | `$($item.category)` | `$($item.last_write_time)` | $($item.size_bytes) |"
+    ($report | ConvertTo-Json -Depth 8) |
+        Set-Content -LiteralPath $OutputJson -Encoding UTF8
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    [void]$lines.Add("# Local AI Reset Plan")
+    [void]$lines.Add("")
+    [void]$lines.Add(("- Apply reset: ``{0}``" -f $Apply))
+    [void]$lines.Add(("- Candidate count: ``{0}``" -f @($Candidates).Count))
+    [void]$lines.Add(("- Total bytes: ``{0}``" -f $totalBytes))
+    [void]$lines.Add(("- Reset before date: ``{0}``" -f $resetBeforeText))
+    [void]$lines.Add("")
+    [void]$lines.Add("| Path | Category | Last write time | Size bytes |")
+    [void]$lines.Add("|---|---|---|---:|")
+
+    foreach ($item in @($Candidates)) {
+        [void]$lines.Add((
+            "| ``{0}`` | ``{1}`` | ``{2}`` | {3} |" -f
+            $item.path,
+            $item.category,
+            $item.last_write_time,
+            $item.size_bytes
+        ))
     }
+
     $lines | Set-Content -LiteralPath $OutputMd -Encoding UTF8
 }
+
 
 Show-LauncherIntro
 $RepoRoot = Resolve-RepoRoot
 Set-Location $RepoRoot
 $env:PYTHONPATH = $RepoRoot
 
-if ($Interactive -or $Mode.Count -eq 0) { $ResolvedModes = Read-InteractiveModes } else { $ResolvedModes = Normalize-ModeList $Mode }
-if ($ResolvedModes.Count -eq 0) { throw "No modes selected. Use -Interactive or -Mode all." }
+if ($Interactive -or @($Mode).Count -eq 0) { $ResolvedModes = @(Read-InteractiveModes) } else { $ResolvedModes = @(Normalize-ModeList $Mode) }
+if (@($ResolvedModes).Count -eq 0) { throw "No modes selected. Use -Interactive or -Mode all." }
 
 if ([string]::IsNullOrWhiteSpace($Stamp)) { $Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
-$ModeName = (($ResolvedModes | Sort-Object -Unique) -join "_")
+$ModeName = ((@($ResolvedModes) | Sort-Object -Unique) -join "_")
 if ([string]::IsNullOrWhiteSpace($TaskBranch)) { $TaskBranch = "codex/local-ai-$ModeName-$Stamp" }
 
 $Required = @(
@@ -398,10 +422,10 @@ if (Test-ModeEnabled "smoke") {
 if (Test-ModeEnabled "reset") {
     $ResetJson = "$ValidationDir/local_ai_reset_plan_${ModeName}_$Stamp.json"
     $ResetMd = "$ValidationDir/local_ai_reset_plan_${ModeName}_$Stamp.md"
-    $Candidates = Get-ResetCandidates -Root $RepoRoot -BeforeDate $ResetBeforeDate -IncludeMemory:$IncludeMemoryReset -IncludeGeneratedIndex:$IncludeGeneratedIndexReset
-    Write-ResetPlan -Candidates $Candidates -OutputJson $ResetJson -OutputMd $ResetMd -BeforeDate $ResetBeforeDate -Apply:$ApplyReset -Root $RepoRoot
+    $Candidates = @(Get-ResetCandidates -Root $RepoRoot -BeforeDate $ResetBeforeDate -IncludeMemory:$IncludeMemoryReset -IncludeGeneratedIndex:$IncludeGeneratedIndexReset)
+    Write-ResetPlan -Candidates @($Candidates) -OutputJson $ResetJson -OutputMd $ResetMd -BeforeDate $ResetBeforeDate -Apply:$ApplyReset -Root $RepoRoot
     if ($ApplyReset) {
-        foreach ($item in $Candidates) {
+        foreach ($item in @($Candidates)) {
             $target = Join-Path $RepoRoot $item.path
             if (Test-Path -LiteralPath $target -PathType Leaf) { Remove-Item -LiteralPath $target -Force }
         }
@@ -478,8 +502,21 @@ if (Test-ModeEnabled "agent_state") {
     $AgentStateDir = "$PipelineDir/agent_state"
     New-Item -ItemType Directory -Force -Path $AgentStateDir | Out-Null
     $AgentStateBase = "unified_${ModeName}_agent_state_$Stamp"
+    $AgentArgs = @(
+        ".\Tools\ai\build_agent_state_packet.py",
+        "--repo-root", ".",
+        "--objective", "Unified local AI refactor run $ModeName",
+        "--output-dir", $AgentStateDir,
+        "--packet-name", $AgentStateBase,
+        "--max-memory-chars", "24000",
+        "--memory-note", "Unified launcher report-only run.",
+        "--memory-db", $MemoryDb
+    )
+    if ($SaveInputsToMemoryDb) {
+        $AgentArgs += "--save-inputs-to-memory-db"
+    }
     $PhaseStatus.agent_state = Invoke-Checked "Build agent state packet" {
-        python .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Unified local AI refactor run $ModeName" --output-dir $AgentStateDir --packet-name $AgentStateBase --max-memory-chars 24000 --memory-note "Unified launcher report-only run."
+        python @AgentArgs
     } -SoftFail:$ContinueOnValidationError
     $ContextFiles = Add-ExistingContextFile $ContextFiles "$AgentStateDir/$AgentStateBase.md"
     $ContextFiles = Add-ExistingContextFile $ContextFiles "$AgentStateDir/$AgentStateBase.json"
@@ -576,6 +613,8 @@ $Manifest = [ordered]@{
     patch_application_performed = $false
     patch_specs_requested = [bool]($GeneratePatchSpecs -or (Test-ModeEnabled "patch_specs"))
     build_evidence_requested = [bool]($BuildEvidence -or (Test-ModeEnabled "evidence"))
+    memory_db = $MemoryDb
+    save_inputs_to_memory_db = [bool]$SaveInputsToMemoryDb
     context_files = $ContextFiles
     report_files = $ReportFiles
     phase_status = $PhaseStatus
