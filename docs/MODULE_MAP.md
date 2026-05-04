@@ -29,7 +29,7 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | `Tools/ai/` | AI artifact validation and state packets | Validates AI-produced artifacts and builds generic agent state/memory packets. |
 | `Tools/ai/pipeline/` | Modular AI artifact pipeline | Focused modules for defaults, models, preflight, scheduling, reports, guardrails and orchestration. |
 | `Tools/validation/` | Repository validators | Non-invasive syntax, docs, AI pipeline, NPU helper, generated artifact and policy validators. |
-| `Tools/workflow/` | Local workflow runners | Full local validation runner and focused NPU helper validation runner. |
+| `Tools/workflow/` | Local workflow runners and helper shells | Unified launcher is canonical; additional shell/GUI/helper scripts are supporting and must be classified before promotion. |
 | `Tools/repo_patch_runner/` | Structured patch runner tooling | Supports repository modification workflows. |
 | `indexAI/` | Generated AI-oriented project index | Generated context and patch material. Do not hand-refactor as source. |
 | `patch_specs/` | Patch specification artifacts | Structured patch records and applied patch metadata. |
@@ -91,6 +91,63 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | `Tools/ai/build_agent_state_packet.py` | CLI for task-local agent state packets | Keep non-invasive; no Blender, GPU, NPU or FFmpeg execution. |
 | `Tools/ai/agent_memory_policy.py` | Memory retention, quarantine and promotion-candidate rules | Keep deterministic and non-destructive. |
 | `Tools/ai/review_agent_memory.py` | CLI for memory policy reports | Writes reports only; promotion into docs remains manual. |
+
+### AI inventory, memory and evidence helpers
+
+| File | Main responsibility | Documentation status |
+|---|---|---|
+| `Tools/ai/build_agent_memory_inventory.py` | Build memory inventory / visibility report. | Supporting tool; add to future memory/toolbox catalog. |
+| `Tools/ai/build_agent_agnostic_tool_inventory.py` | Build agent-agnostic tool inventory. | Supporting tool; candidate for unified toolbox visibility. |
+| `Tools/ai/build_code_interpreter_report.py` | Build code-interpreter capability/report surface. | Supporting tool; not a launcher replacement. |
+| `Tools/ai/build_refactor_duplication_audit.py` | Audit duplication across refactor surfaces. | Supporting audit tool. |
+| `Tools/ai/github_evidence_bundle_reports.py` | Helper module for evidence bundle report summaries. | Internal helper; document as library, not user command. |
+| `Tools/ai/agent_runtime_sqlite_memory.py` | Runtime SQLite memory support. | Internal/local state helper; do not commit DB outputs. |
+| `Tools/ai/agent_memory_routing_policy.py` | Memory routing policy logic. | Internal policy helper. |
+
+### Workflow helper scripts
+
+The unified launcher remains the canonical headless entrypoint. The following scripts exist as supporting helpers and must not be promoted to primary flow without explicit review.
+
+| File | Initial classification | Notes |
+|---|---|---|
+| `Tools/workflow/run_unified_local_ai_refactor.ps1` | canonical-entrypoint | Active local-AI entrypoint. |
+| `Tools/workflow/run_local_validation_after_refactor.ps1` | supporting-tool | Full local validation wrapper. |
+| `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | launcher-internal/supporting-tool | Official local AI task adapter. |
+| `Tools/workflow/run_post_validation_ai_packet.ps1` | launcher-internal/supporting-tool | Advisory packet builder. |
+| `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | launcher-internal/supporting-tool | Explicit multistep provider workflow. |
+| `Tools/workflow/run_docs_md_refactor_10min.ps1` | legacy-superseded/supporting-tool | Prefer unified launcher `md` mode. |
+| `Tools/workflow/run_local_ai_markdown_task.ps1` | supporting-tool | Markdown task helper. |
+| `Tools/workflow/startup_preflight.ps1` | diagnostic-only | Startup/preflight wrapper. |
+| `Tools/workflow/startup_check.py` | diagnostic-only | Startup check used by launcher/smoke paths. |
+| `Tools/workflow/workflow_shell.py` | gui-or-shell-helper | Interactive helper; not canonical headless flow. |
+| `Tools/workflow/workflow_shell_with_push.py` | unsafe-or-write-capable, gui-or-shell-helper | Push-capable; requires explicit user intent. |
+| `Tools/workflow/workflow_debug.py` | diagnostic-only | Debug helper. |
+| `Tools/workflow/workflow_shell_with_push.py` | unsafe-or-write-capable | Do not use as default example. |
+| `Tools/workflow/gui/workflow_gui_modern.py` | gui-or-shell-helper | GUI helper. |
+| `Tools/workflow/gui/workflow_gui_with_push.py` | unsafe-or-write-capable, gui-or-shell-helper | Push-capable GUI helper; explicit intent required. |
+| `Tools/workflow/asset_inventory.py` | supporting-tool | Asset inventory helper. |
+| `Tools/workflow/scene_brief.py` | supporting-tool/application-domain | Scene brief helper. |
+| `Tools/workflow/artifact_consult.py` | supporting-tool | Artifact consultation helper. |
+| `Tools/workflow/project_awareness.py` | supporting-tool | Project-awareness context helper. |
+| `Tools/workflow/smart_ai_context.py` | supporting-tool | Smart AI context helper. |
+| `Tools/workflow/ai_runtime_diagnostics.py` | diagnostic-only | Runtime diagnostics helper. |
+| `Tools/workflow/git_auto_push.py` | unsafe-or-write-capable | Any push behavior requires explicit user intent. |
+
+For the audit trail, see:
+
+```text
+docs/LOCAL_AI_TASKS/forgotten-scripts-documentation-audit.md
+```
+
+### GPU/NPU diagnostics and smokes
+
+| File | Initial classification | Notes |
+|---|---|---|
+| `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` | launcher-internal or legacy-superseded | Verify current caller before changing docs. |
+| `Tools/ai/run_npu_gpu_deep_review_auditor.py` | diagnostic-only | Explicit local diagnostic. |
+| `Tools/validation/run_gpu_runner_provider_error_smoke.py` | diagnostic-only | Provider error smoke. |
+| `Tools/validation/run_orchestrator_direct_gpu_counter_smoke.py` | diagnostic-only | GPU counter smoke. |
+| `Tools/validation/run_orchestrator_gpu_runtime_tool_routing_smoke.py` | diagnostic-only | Runtime tool routing smoke. |
 
 ### NPU helper package
 
