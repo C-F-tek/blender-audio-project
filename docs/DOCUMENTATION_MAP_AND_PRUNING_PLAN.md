@@ -23,18 +23,24 @@ This file is report-only. It does not authorize deletion by itself.
 | 9 | `docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md` | Code/refactor runbook | Long procedural doc allowed. |
 | 10 | `Tools/validation/README.md` | Validator catalog | Tool commands and contracts only. |
 
+No other Markdown file should be treated as a first reading step unless a task file explicitly scopes it.
+
 ## Repository Markdown families
 
 | Family | Pattern | Owner | Lifecycle |
 |---|---|---|---|
-| Root entrypoints | `AGENTS.md`, `README.md`, `WORKFLOW.md` | Root flow | Canonical, concise |
-| Stable docs | `docs/*.md` | `docs/README.md` | Maintained source docs |
-| Task runbooks | `docs/LOCAL_AI_TASKS/*.md` | `docs/LOCAL_AI_TASKS/README.md` | Current or historical |
-| Execution plans | `docs/EXECUTION_PLANS/**/*.md` | `docs/EXECUTION_PLANS/README.md` | State records |
-| Evidence | `docs/LOCAL_VALIDATION_EVIDENCE/*` | Evidence builders | Snapshot evidence, not source docs |
-| Tool READMEs | `Tools/**/README.md` | Nearest tool/package | Package-local |
-| Generated/index context | `indexAI/**/*.md`, `Tools/npu/npu_code_*.md` | Generators | Regenerated, not hand-edited |
+| Root entrypoints | `AGENTS.md`, `README.md`, `WORKFLOW.md` | Root flow | `canonical_entrypoint` |
+| Root community controls | `CONTRIBUTING.md`, `SECURITY.md`, `SUPPORT.md`, GitHub templates | GitHub/repository controls | `repository_community_control` |
+| Stable docs | `docs/*.md` | `docs/README.md` | `maintained_source_doc` |
+| Task runbooks | `docs/LOCAL_AI_TASKS/*.md` | `docs/LOCAL_AI_TASKS/README.md` | `current_or_historical_task` or `historical_task_record` |
+| Historical project handoffs/reports | Dated or superseded reports under `docs/` | `docs/README.md` historical section | `historical_project_record` |
+| Execution plans | `docs/EXECUTION_PLANS/**/*.md` | `docs/EXECUTION_PLANS/README.md` | `state_record` |
+| Evidence | `docs/LOCAL_VALIDATION_EVIDENCE/*` | Evidence builders | `evidence_snapshot`; not source docs |
+| Tool READMEs | `Tools/**/README.md` | Nearest tool/package | `maintained_source_doc` or package-local context |
+| Generated/index context | `indexAI/**/*.md`, `Tools/npu/npu_code_*.md`, generated NPU chunks | Generators/package README | `generated_context`; do not hand-edit |
+| Superseded local/root guides | Root guides replaced by current docs | Canonical replacement path | `superseded_by_canonical_doc` |
 | Blender/application docs | `Scripting/**/*.md` | Package README | Application-domain only |
+| Local tool history | `.aider.chat.history.md` and equivalent local logs | Local tools | `local_history_delete_candidate`; delete requires approval |
 
 ## Inventory tools
 
@@ -49,10 +55,52 @@ Inventory roles:
 
 | Tool | Purpose | Output policy |
 |---|---|---|
-| `build_markdown_inventory.py` | Classify `.md` files by family/lifecycle, missing index status and prune candidates. | Local `output/**` unless converted to compact evidence. |
+| `build_markdown_inventory.py` | Classify `.md` files by family/lifecycle, missing index status, prune candidates, long-file status and control-character diagnostics. | Local `output/**` unless converted to compact evidence. |
 | `build_script_inventory.py` | Censisce scripts/tools with language, category, lines, description, functions, classes and methods. | Local `output/**`; CSV is for refactor review, not automatic source change. |
 
 The script inventory must be included in future refactor evidence together with the existing Python line-count CSV. Line count shows size; script inventory shows callable surface and intent.
+
+## Inventory lifecycle classes
+
+The Markdown inventory may emit these lifecycle values:
+
+| Lifecycle | Meaning | Action |
+|---|---|---|
+| `canonical_entrypoint` | First-path file in the reading chain. | Keep short; link outward. |
+| `maintained_source_doc` | Stable documentation currently maintained. | Must be indexed from `docs/README.md` or nearest owner README. |
+| `repository_community_control` | GitHub/community control docs and templates. | Keep out of prune candidates unless explicitly replaced. |
+| `current_or_historical_task` | Task runbook requiring owner review. | Index in `LOCAL_AI_TASKS/README.md` or classify as historical. |
+| `historical_task_record` | Past local-AI task/handoff retained for continuity. | Do not use as default reading path. |
+| `historical_project_record` | Past project report/handoff replaced by current docs/live inspection. | Keep only as historical reference; list replacement/current docs. |
+| `state_record` | Execution-plan state. | Keep under execution-plan owner. |
+| `evidence_snapshot` | Git-trackable compact evidence. | Not source documentation. |
+| `generated_context` | Generated/index/chunk context. | Regenerate; do not hand-edit. |
+| `tool_context_review` | Tool-local context requiring owner/package review. | Link from nearest tool README or demote to generated context. |
+| `superseded_by_canonical_doc` | Retained legacy guide with explicit replacement. | Do not delete without approval; prefer canonical replacement. |
+| `local_history_delete_candidate` | Local tool history/log material. | Delete only with explicit approval. |
+| `review_needed` | Not yet classified. | Inspect before indexing or pruning. |
+
+## Oversize and corruption diagnostics
+
+Long Markdown is technical debt because it is hard to open, hard to review through GitHub/API and unsafe as a first reading surface.
+
+Inventory thresholds:
+
+| Field | Meaning |
+|---|---|
+| `split_recommended` | File is at or above 400 lines. Prefer split, summary or demotion. |
+| `hard_review_required` | File is at or above 700 lines. It must not be a default entrypoint. |
+| `control_character_count` | Non-whitespace control characters were found. Treat as copy/paste or escaping corruption until reviewed. |
+
+Rules:
+
+```text
+canonical entrypoints should stay short
+long procedural content belongs in task runbooks only
+long evidence/generated chunks must be classified as evidence/generated, not source docs
+long historical reports must point to current replacement docs
+control-character files require focused cleanup before being promoted
+```
 
 ## Duplication map
 
@@ -65,6 +113,8 @@ The script inventory must be included in future refactor evidence together with 
 | Patch bundle policy | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` plus full-toolbox runbook | Do not duplicate generated bundle internals everywhere. |
 | Historical Blender role | `README.md` and `MODULE_MAP.md` | Detailed instructions stay under Blender/domain docs. |
 | Validation command catalog | `Tools/validation/README.md` | Task docs list only focused commands. |
+| Git/GitHub local workflow | `docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md` | Root/local legacy guides should point here as superseded. |
+| Code consultation status | `PROJECT_STATUS_POINT.md`, `MODULE_MAP.md`, `REFACTORING_AND_REUSE_PLAN.md`, live repo inspection | Long consultation reports are historical, not current truth. |
 
 ## Add-before-prune rule
 
@@ -73,11 +123,13 @@ When adding or updating Markdown:
 1. Check whether the content belongs in an existing canonical file.
 2. If a new file is needed, add it to the correct index.
 3. Mark older overlap as one of:
-   - `superseded by <path>`
-   - `historical evidence`
+   - `superseded_by_canonical_doc`
+   - `historical_project_record`
+   - `historical_task_record`
    - `application-domain only`
-   - `generated, do not hand-edit`
-   - `delete candidate, requires explicit approval`
+   - `generated_context`
+   - `evidence_snapshot`
+   - `local_history_delete_candidate`
 4. Replace repeated commands with links to canonical runbooks.
 5. Run Markdown inventory and docs link validation.
 6. Do not delete files without explicit user approval.
@@ -111,6 +163,7 @@ docs/LOCAL_VALIDATION_EVIDENCE/*.md
 indexAI/**/*.md
 Tools/npu/npu_code_context.md
 Tools/npu/npu_code_index.md
+Tools/npu/npu_music_chunks/**/*.md
 output/**/*.md
 ```
 
@@ -119,7 +172,7 @@ output/**/*.md
 1. Reduce root entrypoints to a single reading flow.
 2. Preserve long command blocks only in canonical task runbooks.
 3. Add Markdown and script inventories to the workflow/refactor evidence path.
-4. Use inventory output to identify missing-index and prune candidates.
+4. Use inventory output to identify missing-index, long-file, control-character and prune candidates.
 5. Mark obsolete material before any deletion.
 6. Create a separate deletion PR only after explicit approval.
 
@@ -130,6 +183,10 @@ single reading flow is explicit
 root entrypoints are shorter than before
 stable docs are indexed or intentionally excluded
 evidence/generated MD is not treated as source documentation
+historical reports point to current replacement docs
+legacy guides point to canonical replacements
+long Markdown files are surfaced by inventory before refactor/prune decisions
+control-character corruption is surfaced before promotion
 script/tool inventory is available for refactor planning
 no output/**, renders/**, *.db or *.sqlite files are committed
 no deletion is performed without explicit approval
