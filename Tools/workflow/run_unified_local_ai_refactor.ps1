@@ -734,6 +734,7 @@ if ($Full0To10) {
 
 
 if ([string]::IsNullOrWhiteSpace($Stamp)) { $Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
+$DataStamp = $Stamp
 Start-UnifiedLauncherExecutionTranscript -StampValue $Stamp -Root $RepoRoot -ProdMode ([bool]$Prod)
 if ($RunIntensity -ne "custom") {
     if ($RunIntensity -eq "quick") {
@@ -835,6 +836,11 @@ $ValidationDir = "output/validation"
 New-Item -ItemType Directory -Force -Path $PipelineDir | Out-Null
 New-Item -ItemType Directory -Force -Path $ValidationDir | Out-Null
 New-Item -ItemType Directory -Force -Path "output/ai_pipeline" | Out-Null
+$AiPacketsRoot = "output/ai_packets"
+$AiPacketsDir = Join-Path $AiPacketsRoot $DataStamp
+$OllamaWorkloadReport = Join-Path $AiPacketsDir "ollama_gpu_real_workload_report.md"
+$NpuWorkloadReport = Join-Path $AiPacketsDir "npu_real_workload_report.md"
+New-Item -ItemType Directory -Force -Path $AiPacketsDir | Out-Null
 
 trap {
     $Script:UnifiedLauncherFailureMessage = $_.Exception.Message
@@ -862,11 +868,14 @@ trap {
 
 $ContextFiles = @()
 $ReportFiles = @()
+$ContextFiles += $AiPacketsDir.Replace("\\", "/")
 $PhaseReports = [ordered]@{}
 $PhaseStatus = [ordered]@{}
 
 Write-Host "[INFO] Resolved modes: $($ResolvedModes -join ',')"
 Write-Host "[INFO] Stamp: $Stamp"
+Write-Host "[INFO] DataStamp: $DataStamp"
+Write-Host "[INFO] AI packets dir: $AiPacketsDir"
 Write-Host "[INFO] Branch: $TaskBranch"
 Write-Host "[INFO] TaskFile: $TaskFile"
 Write-Host "[INFO] RunDir: $RunDir"
@@ -1012,8 +1021,8 @@ $ContextFiles = Add-ExistingContextFile $ContextFiles "docs/LOCAL_AI_TASKS/code-
 $WorkloadQualityReport = "$ValidationDir/ai_workload_report_quality.json"
 $WorkloadQualityRoutingOk = $false
 
-$CanonicalOllamaWorkloadReport = "output/ai_packets/ollama_gpu_real_workload_report.md"
-$CanonicalNpuWorkloadReport = "output/ai_packets/npu_real_workload_report.md"
+$CanonicalOllamaWorkloadReport = $OllamaWorkloadReport
+$CanonicalNpuWorkloadReport = $NpuWorkloadReport
 $LocalProviderProbeReport = "output/validation/local_provider_probe.json"
 
 if (($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality) -or $RunOllamaProbe -or $RunNpuProbe) -and -not $NoWorkloadQuality) {
@@ -1059,6 +1068,8 @@ if (($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoW
 
 if ($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality)) {
     Assert-FileExists ".\Tools\validation\check_ai_workload_report_quality.py"
+            "--report-dir",
+            $AiPacketsDir,
     $PhaseStatus.workload_quality = Invoke-Checked "Build AI workload quality routing report" {
         Invoke-Python @(".\Tools\validation\check_ai_workload_report_quality.py", "--repo-root", ".", "--output", $WorkloadQualityReport)
     } -SoftFail:$ContinueOnValidationError

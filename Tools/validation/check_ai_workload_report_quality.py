@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
 """Validate textual quality of AI workload reports.
 
-This validator is report-only. It evaluates already-generated AI workload output
-files, such as NPU/OpenVINO and Ollama/GPU reports, and classifies each report as
-usable or unusable for downstream packet/proposal context.
+Default contract:
+- The important input is an output packet folder, by default output/ai_packets.
+- A launcher should pass a run-scoped folder such as output/ai_packets/<DATASTAMP>.
+- The tool selects existing known workload reports from that folder.
+- Missing known reports are serialized as unselected/unavailable warnings by default.
+- Explicit --report lane=path remains strict: a caller-selected missing report is blocking.
 
-It does not execute providers, does not call Ollama/NPU/GPU, and does not modify
-legacy runtime outputs.
+This validator is report-only. It does not execute providers, does not call
+Ollama/NPU/GPU, and does not modify legacy runtime outputs.
 """
 from __future__ import annotations
 
 import argparse
-import json
 import string
 from pathlib import Path
 from typing import Any
 
 from report_utils import resolve_output_path, write_json_report
 
-DEFAULT_REPORTS = (
-    ("npu", "output/ai_packets/npu_real_workload_report.md"),
-    ("ollama", "output/ai_packets/ollama_gpu_real_workload_report.md"),
+DEFAULT_REPORT_DIR = "output/ai_packets"
+KNOWN_WORKLOAD_REPORTS = (
+    ("npu", "npu_real_workload_report.md"),
+    ("ollama", "ollama_gpu_real_workload_report.md"),
 )
 
 LANE_ROLES = {
@@ -50,6 +53,46 @@ def split_path_values(items: list[str]) -> list[str]:
             if normalized:
                 out.append(normalized)
     return out
+
+
+def relative_or_absolute_path(path: Path, repo_root: Path) -> str:
+    try:
+        return path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError:
+        return path.resolve().as_posix()
+
+
+def collect_output_folder_report_specs(
+    repo_root: Path,
+    report_dir: Path,
+    *,
+    include_missing_known_reports: bool = False,
+) -> tuple[list[tuple[str, str]], list[dict[str, Any]]]:
+    resolved_dir = report_dir if report_dir.is_absolute() else repo_root / report_dir
+    selected: list[tuple[str, str]] = []
+    unselected: list[dict[str, Any]] = []
+
+    for lane, filename in KNOWN_WORKLOAD_REPORTS:
+        candidate = resolved_dir / filename
+        if candidate.exists() or include_missing_known_reports:
+            selected.append((lane, str(candidate)))
+        else:
+            unselected.append({
+                "lane": lane,
+                "path": relative_or_absolute_path(candidate, repo_root),
+                "reason": "known_workload_report_missing_from_selected_output_folder",
+            })
+
+    known_names = {filename for _, filename in KNOWN_WORKLOAD_REPORTS}
+    if resolved_dir.exists():
+        for candidate in sorted(resolved_dir.glob("*workload_report*.md")):
+            if candidate.name in known_names:
+                continue
+            lane = candidate.stem.replace("_real_workload_report", "").replace("_workload_report", "")
+            lane = lane.replace("-", "_") or "unknown"
+            selected.append((lane, str(candidate)))
+
+    return selected, unselected
 
 
 def text_metrics(text: str) -> dict[str, Any]:
@@ -116,7 +159,7 @@ def advisory_use(lane: str, usable: bool) -> dict[str, Any]:
 
 
 def classify_report(path: Path, *, lane: str, repo_root: Path) -> dict[str, Any]:
-    rel_path = path.relative_to(repo_root).as_posix() if path.is_absolute() and path.is_relative_to(repo_root) else str(path)
+    rel_path = relative_or_absolute_path(path, repo_root)
     role = lane_role(lane)
     if not path.exists():
         return {
@@ -126,10 +169,10 @@ def classify_report(path: Path, *, lane: str, repo_root: Path) -> dict[str, Any]
             "compute_lane": role["compute_lane"],
             "exists": False,
             "usable": False,
-            "classification": "missing",
+            "classification": "missing_explicit_report",
             "advisory_use": advisory_use(lane, False),
             "provider_execution_performed": False,
-            "errors": ["report file is missing"],
+            "errors": ["explicitly selected report file is missing"],
             "warnings": [],
             "metrics": {},
         }
@@ -184,11 +227,18 @@ def quality_decision(results: list[dict[str, Any]]) -> dict[str, Any]:
         "npu_excluded_from_primary_advisory": npu_excluded,
         "provider_execution_seen": False,
         "source_writes_performed": False,
-        "routing_policy": "usable_text_lanes_only_for_advisory_context",
+        "routing_policy": "selected_output_folder_workload_reports_only",
     }
 
 
-def check_ai_workload_report_quality(repo_root: Path, report_specs: list[tuple[str, str]]) -> dict[str, Any]:
+def check_ai_workload_report_quality(
+    repo_root: Path,
+    report_specs: list[tuple[str, str]],
+    *,
+    selection_mode: str,
+    report_dir: Path,
+    unselected_known_reports: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     results: list[dict[str, Any]] = []
     for lane, raw_path in report_specs:
         path = Path(raw_path)
@@ -206,6 +256,16 @@ def check_ai_workload_report_quality(repo_root: Path, report_specs: list[tuple[s
         for item in results
         for warning in item.get("warnings", [])
     ]
+
+    unselected = list(unselected_known_reports or [])
+    for item in unselected:
+        warnings.append(
+            f"{item.get('lane', 'unknown')}: known workload report not selected: {item.get('reason', 'unavailable')}"
+        )
+
+    if not results:
+        warnings.append("no workload reports selected from output folder")
+
     usable_lanes = [item["lane"] for item in results if item.get("usable")]
     unusable_lanes = [item["lane"] for item in results if not item.get("usable")]
 
@@ -218,8 +278,18 @@ def check_ai_workload_report_quality(repo_root: Path, report_specs: list[tuple[s
         "warnings": warnings,
         "provider_execution_performed": False,
         "source_writes_performed": False,
-        "policy": "usable_text_lanes_only_for_advisory_context",
+        "policy": "selected_output_folder_workload_reports_only",
         "mode": "report_only_workload_quality_gate",
+        "selection_mode": selection_mode,
+        "report_dir": relative_or_absolute_path(report_dir, repo_root),
+        "selected_reports": [
+            {
+                "lane": lane,
+                "path": relative_or_absolute_path(Path(raw_path), repo_root),
+            }
+            for lane, raw_path in report_specs
+        ],
+        "unselected_known_reports": unselected,
         "usable_lanes": usable_lanes,
         "unusable_lanes": unusable_lanes,
         "decision": quality_decision(results),
@@ -235,21 +305,49 @@ def check_ai_workload_report_quality(repo_root: Path, report_specs: list[tuple[s
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--report", action="append", default=[], help="Report spec as lane=path. Repeatable or comma-separated.")
+    parser.add_argument("--report-dir", default=DEFAULT_REPORT_DIR)
+    parser.add_argument("--report", action="append", default=[], help="Strict report spec as lane=path. Repeatable or comma-separated.")
+    parser.add_argument(
+        "--include-missing-known-reports",
+        action="store_true",
+        help="Include missing known lane reports as explicit selected reports. Missing selected reports then fail.",
+    )
     parser.add_argument("--output", help="Optional JSON report path.")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
+    report_dir = Path(args.report_dir)
+    if not report_dir.is_absolute():
+        report_dir = repo_root / report_dir
+
     specs: list[tuple[str, str]] = []
+    selection_mode = "output_folder"
+    unselected_known_reports: list[dict[str, Any]] = []
+
     for item in split_path_values(list(args.report or [])):
         if "=" not in item:
             parser.error(f"Invalid --report value, expected lane=path: {item}")
         lane, raw_path = item.split("=", 1)
         specs.append((lane.strip(), raw_path.strip()))
-    if not specs:
-        specs = list(DEFAULT_REPORTS)
 
-    report = check_ai_workload_report_quality(repo_root, specs)
+    if specs:
+        selection_mode = "explicit_reports"
+    else:
+        specs, unselected_known_reports = collect_output_folder_report_specs(
+            repo_root,
+            report_dir,
+            include_missing_known_reports=args.include_missing_known_reports,
+        )
+        if args.include_missing_known_reports:
+            selection_mode = "output_folder_with_missing_known_reports"
+
+    report = check_ai_workload_report_quality(
+        repo_root,
+        specs,
+        selection_mode=selection_mode,
+        report_dir=report_dir,
+        unselected_known_reports=unselected_known_reports,
+    )
     output = resolve_output_path(repo_root, args.output) if args.output else None
     text = write_json_report(report, output)
     print(text, end="")
