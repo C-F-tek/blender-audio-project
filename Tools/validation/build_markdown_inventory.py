@@ -37,13 +37,41 @@ CANONICAL_INDEX_FILES = [
     "Tools/npu/pipeline/README.md",
 ]
 
+ROOT_COMMUNITY_DOCS = {
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "LICENSE.md",
+    "SECURITY.md",
+    "SUPPORT.md",
+}
+
+ROOT_POLICY_DOCS = {
+    "AGENTS.md",
+    "README.md",
+    "WORKFLOW.md",
+    "CHANGELOG.md",
+    "AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md",
+}
+
 EVIDENCE_PREFIX = "docs/LOCAL_VALIDATION_EVIDENCE/"
 TASK_PREFIX = "docs/LOCAL_AI_TASKS/"
 EXECUTION_PLAN_PREFIX = "docs/EXECUTION_PLANS/"
 GENERATED_INDEX_PREFIXES = (
     "indexAI/",
     "Tools/npu/npu_code_",
+    "Tools/npu/npu_music_chunks/",
 )
+GENERATED_NPU_DOCS = {
+    "Tools/npu/generated_implementation_notes.md",
+    "Tools/npu/npu_music_context.md",
+    "Tools/npu/ollama_music_insights.md",
+}
+GITHUB_TEMPLATE_PREFIXES = (
+    ".github/ISSUE_TEMPLATE/",
+)
+GITHUB_TEMPLATE_FILES = {
+    ".github/PULL_REQUEST_TEMPLATE.md",
+}
 
 
 def repo_relative(path: Path, repo_root: Path) -> str:
@@ -67,19 +95,31 @@ def first_heading(text: str) -> str | None:
     return None
 
 
+def is_github_template(rel_path: str) -> bool:
+    return rel_path in GITHUB_TEMPLATE_FILES or any(rel_path.startswith(prefix) for prefix in GITHUB_TEMPLATE_PREFIXES)
+
+
 def classify_markdown(rel_path: str) -> str:
-    if rel_path in {"AGENTS.md", "README.md", "WORKFLOW.md", "CHANGELOG.md", "AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md"}:
+    if rel_path in ROOT_POLICY_DOCS:
         return "root_policy_or_entrypoint"
+    if rel_path in ROOT_COMMUNITY_DOCS:
+        return "root_community_doc"
+    if is_github_template(rel_path):
+        return "github_template"
+    if rel_path == ".aider.chat.history.md":
+        return "local_tool_history"
     if rel_path.startswith(EVIDENCE_PREFIX):
         return "compact_evidence"
     if rel_path.startswith(TASK_PREFIX):
         return "local_ai_task_entrypoint"
     if rel_path.startswith(EXECUTION_PLAN_PREFIX):
         return "execution_plan"
-    if any(rel_path.startswith(prefix) for prefix in GENERATED_INDEX_PREFIXES):
+    if rel_path in GENERATED_NPU_DOCS or any(rel_path.startswith(prefix) for prefix in GENERATED_INDEX_PREFIXES):
         return "generated_or_index_context"
     if rel_path.endswith("/README.md") and rel_path.startswith("Tools/"):
         return "tool_readme"
+    if rel_path.startswith("Tools/npu/"):
+        return "npu_tool_context_doc"
     if rel_path.startswith("Scripting/"):
         return "blender_application_doc"
     if rel_path.startswith("docs/"):
@@ -92,6 +132,10 @@ def classify_markdown(rel_path: str) -> str:
 def lifecycle_for(category: str, rel_path: str) -> str:
     if rel_path in {"AGENTS.md", "README.md", "WORKFLOW.md", "docs/README.md", "docs/LOCAL_AI_TASKS/README.md"}:
         return "canonical_entrypoint"
+    if category in {"root_community_doc", "github_template"}:
+        return "repository_community_control"
+    if category == "local_tool_history":
+        return "local_history_delete_candidate"
     if category == "compact_evidence":
         return "evidence_snapshot"
     if category == "local_ai_task_entrypoint":
@@ -100,6 +144,8 @@ def lifecycle_for(category: str, rel_path: str) -> str:
         return "state_record"
     if category == "generated_or_index_context":
         return "generated_context"
+    if category == "npu_tool_context_doc":
+        return "tool_context_review"
     if category in {"stable_project_doc", "root_policy_or_entrypoint", "tool_readme"}:
         return "maintained_source_doc"
     return "review_needed"
@@ -131,22 +177,35 @@ def collect_markdown(repo_root: Path) -> list[Path]:
     return sorted(files, key=lambda item: repo_relative(item, repo_root).lower())
 
 
+def is_prune_candidate(category: str, lifecycle: str, index_hits: list[str]) -> bool:
+    if index_hits:
+        return False
+    return lifecycle == "local_history_delete_candidate" or category == "misc_markdown"
+
+
+def requires_index_review(category: str, index_hits: list[str]) -> bool:
+    if index_hits:
+        return False
+    return category in {"stable_project_doc", "tool_readme", "local_ai_task_entrypoint", "npu_tool_context_doc"}
+
+
 def inventory_item(path: Path, repo_root: Path, index_texts: dict[str, str]) -> dict[str, Any]:
     rel = repo_relative(path, repo_root)
     text = read_text(path)
     category = classify_markdown(rel)
+    lifecycle = lifecycle_for(category, rel)
     index_hits = indexed_by(rel, index_texts)
     return {
         "path": rel,
         "category": category,
-        "lifecycle": lifecycle_for(category, rel),
+        "lifecycle": lifecycle,
         "heading": first_heading(text),
         "lines": len(text.splitlines()),
         "size_bytes": path.stat().st_size,
         "indexed_by": index_hits,
         "indexed": bool(index_hits) or rel in CANONICAL_INDEX_FILES,
-        "prune_candidate": category in {"misc_markdown", "tool_or_runtime_doc"} and not index_hits,
-        "requires_index_review": category in {"stable_project_doc", "tool_readme", "local_ai_task_entrypoint"} and not index_hits,
+        "prune_candidate": is_prune_candidate(category, lifecycle, index_hits),
+        "requires_index_review": requires_index_review(category, index_hits),
     }
 
 
@@ -184,6 +243,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "warnings": [
             "This inventory is evidence for review. It does not delete or rewrite Markdown files.",
             "A missing index reference is not automatically obsolete; it means the file needs owner/lifecycle review.",
+            "GitHub templates and root community docs are repository controls, not prune candidates.",
         ],
     }
 
@@ -219,6 +279,20 @@ def render_markdown(report: dict[str, Any]) -> str:
             )
     else:
         lines.append("No missing index review candidates.")
+    lines.append("")
+    lines.append("## Prune candidates")
+    lines.append("")
+    if report["prune_candidates"]:
+        lines.append("| Path | Category | Lifecycle | Lines | Heading |")
+        lines.append("|---|---|---|---:|---|")
+        for item in report["prune_candidates"]:
+            heading = (item.get("heading") or "").replace("|", "\\|")
+            lines.append(
+                f"| `{item['path']}` | `{item['category']}` | `{item['lifecycle']}` | "
+                f"{item['lines']} | {heading} |"
+            )
+    else:
+        lines.append("No prune candidates.")
     lines.append("")
     lines.append("## Full Markdown map")
     lines.append("")
