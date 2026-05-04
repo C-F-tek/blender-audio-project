@@ -17,6 +17,40 @@ OpenVINO/NPU workload report -> unusable_output when numeric/hex-like -> exclude
 
 NPU remains valid as a probe, decode diagnostic, guardrail and knowledge broker. Passing local NPU resource/probe checks does not promote NPU output to primary advisory context.
 
+## Unified launcher requirement
+
+The canonical local-AI entrypoint is:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+When the unified launcher is run with any of these provider/advisory intents:
+
+```text
+-Full0To10
+-UsePrimaryAdvisoryProvider
+provider mode with primary advisory routing
+```
+
+then workload quality routing is required unless explicitly disabled by the operator:
+
+```text
+-NoWorkloadQuality
+```
+
+Required launcher behavior:
+
+```text
+real run: build or read output/validation/ai_workload_report_quality.json before primary advisory context is trusted
+real run: fail clearly if primary provider routing is requested and the quality report cannot be produced/read
+dry run: mark workload quality generation as planned instead of failing on the missing file
+manifest: expose workload_quality_report, workload_quality_routing_ok and quality_gate_passed
+```
+
+Silent degradation is not allowed. A run must not say primary provider routing is complete while workload quality routing is absent.
+
 ## Producer
 
 ```text
@@ -163,6 +197,21 @@ provider_execution_seen = false
 source_writes_performed = false
 ```
 
+## Manifest visibility contract
+
+The unified launcher manifest must include:
+
+```text
+primary_provider_requested
+workload_quality_report
+workload_quality_routing_ok
+quality_gate_passed
+phase_reports.workload_quality when generated
+phase_status.workload_quality or equivalent status when selected
+```
+
+For `-Full0To10`, missing workload quality is acceptable only when the operator explicitly supplies `-NoWorkloadQuality`. Otherwise it is an execution failure for real runs and a planned step for dry runs.
+
 ## Advisory routing consumers
 
 Primary consumers:
@@ -173,6 +222,7 @@ Tools/ai/build_workload_quality_lane_routing.py
 Tools/ai/suggest_repository_updates.py
 Tools/ai/build_repository_change_proposals.py
 Tools/ai/build_github_evidence_bundle.py
+Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
 Routing contract:
@@ -270,4 +320,15 @@ python .\Tools\validation\check_ai_workload_report_quality.py --repo-root . --ou
 python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
 python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
 git diff --check
+```
+
+Unified launcher dry-run check:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -Full0To10 `
+  -DryRun `
+  -SkipGitSync `
+  -NoBranch `
+  -AllowDirty
 ```
