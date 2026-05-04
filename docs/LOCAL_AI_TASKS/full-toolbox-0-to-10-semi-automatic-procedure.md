@@ -1,6 +1,14 @@
-# IA-Carmine Full Toolbox 0 -> 10 Semi-Automatic Procedure
+﻿# IA-Carmine Full Toolbox 0 -> 10 Semi-Automatic Procedure
 
 ## Purpose
+## Root launcher reference
+
+Canonical full-run launcher variable reference:
+
+    FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
+
+This root document contains the complete TUTTO SU TUTTO launcher variable inventory, canonical single-script run command, output-dir naming rule, and current run evidence for provider workload probe / workload-quality routing failures.
+
 
 This is the post-PR171 canonical procedure for the IA-Carmine full toolbox loop.
 
@@ -371,7 +379,7 @@ Required order:
 Do not commit `output/**`. Commit only regenerated source/index files and explicit evidence under `docs/LOCAL_VALIDATION_EVIDENCE`.
 
 
-### Full run unica — TUTTO SU TUTTO canonical command
+### Full run unica â€” TUTTO SU TUTTO canonical command
 
 The current canonical full run is not the conservative/read-only variant. It is the all-lanes run.
 
@@ -474,7 +482,7 @@ Git destructive actions remain separate explicit commands
 
 # Procedure variants
 
-## Variant A ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Expanded/manual 0 -> 10 full toolbox run
+## Variant A ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Expanded/manual 0 -> 10 full toolbox run
 
 This is the full manual 0 -> 10 flow. It is the expanded version of the procedure Carmine used before the integrated wrapper existed.
 
@@ -882,7 +890,7 @@ Get-Content ".\output\validation\full_toolbox_agent_review_decision_loop_${Stamp
 
 ---
 
-## Variant B ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Integrated no-provider semi-automatic flow
+## Variant B ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Integrated no-provider semi-automatic flow
 
 Use this when existing orchestrator/GPU artifacts are valid enough and the goal is to test the deterministic decision and patch-plan path quickly.
 
@@ -920,7 +928,7 @@ patch_plan_count >= 1
 fatal_report_failure_count=0
 ```
 
-## Variant C ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Integrated provider semi-automatic flow
+## Variant C ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Integrated provider semi-automatic flow
 
 Use when a fresh full GPU/NPU run is needed.
 
@@ -956,7 +964,7 @@ $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
   -NpuFinalWaitSeconds 120
 ```
 
-## Variant D ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Patch bundle builder from a real patch plan
+## Variant D ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Patch bundle builder from a real patch plan
 
 Use after a successful decision loop has produced:
 
@@ -1053,7 +1061,7 @@ git commit -m "docs(ai): apply review patch bundle notes"
 git push
 ```
 
-## Variant E ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Evidence-only commit
+## Variant E ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Evidence-only commit
 
 After a full toolbox run, commit only compact Git-trackable evidence when useful:
 
@@ -1229,3 +1237,4 @@ output/ai_packets/<DataStamp>
 ```
 
 When the root folder is passed, every immediate timestamp folder under `output/ai_packets` is inspected. Only concrete workload report files are selected; packet directories are never passed as context files.
+
