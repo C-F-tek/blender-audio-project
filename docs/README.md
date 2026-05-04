@@ -65,6 +65,7 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 | `PROJECT_STATUS_POINT.md` | Current status checkpoint and recommended tasks. |
 | `PROJECT_AI_CONSCIOUSNESS.md` | Compact operational memory and architecture boundary for AI agents. |
 | `REFACTORING_AND_REUSE_PLAN.md` | Progressive encapsulation and reuse/refactoring strategy. |
+| `QUALITY_GATE.md` | Cross-domain quality gates for packages, validators, generated Python and report contracts. |
 | `DATA_FLOW.md` | App-agnostic data/report/provider flow. |
 | `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow and evidence handling. |
 | `LOCAL_RUNS_TESTING_AND_EVIDENCE.md` | Local run, testing and evidence practices across workflows. |
@@ -106,7 +107,6 @@ BLENDER_SCRIPT_ENTRYPOINTS.md
 AUDIO_ANALYSIS_PIPELINE.md
 AI_GENERATED_PACKAGE_STANDARD.md
 PACKAGE_CREATION_WORKFLOW.md
-QUALITY_GATE.md
 RENDER_WORKFLOW.md
 FFMPEG_WORKFLOW.md
 COMPATIBILITY.md
