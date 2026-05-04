@@ -6,6 +6,13 @@
 
 During GitHub-only review on PR #187, a full-file replacement attempt was intentionally stopped because the GitHub contents API returned a SHA mismatch on this long file. Do not force-update it blindly.
 
+This file is a task brief, not a command catalog. Current executable commands live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+```
+
 ## Objective
 
 Reduce `Tools/validation/README.md` to a compact validator catalog.
@@ -20,7 +27,7 @@ inventory builder catalog
 AI/provider/report validator catalog
 NPU/helper validator catalog
 Blender/generated-file validator catalog
-minimal command examples
+minimal command ownership notes
 guardrails
 ```
 
@@ -41,7 +48,7 @@ The current README has these policy problems:
 ```text
 long procedural blocks make it function as a runbook instead of a catalog
 old provider/multistep command chains can look like primary entrypoints
-AI workload / NPU command examples include control-character corruption in fetched content
+AI workload / NPU command examples may include control-character corruption in fetched content
 no compact visibility-first front matter
 no length-policy statement
 ```
@@ -71,18 +78,22 @@ Sections:
 ## Guardrails
 ```
 
-## Validation
+## Validation ownership
 
-After local edit:
+After local edit, validate through the unified launcher where possible. Focused validator checks may be run from `Tools/validation/README.md` only to debug or validate the catalog itself.
 
-```powershell
-$null = [scriptblock]::Create((Get-Content .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Raw))
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links_validation_readme_reduction.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract_validation_readme_reduction.json
-git diff --check
-git status --short
+Required evidence surfaces:
+
+```text
+launcher manifest when launcher was used
+docs link report
+validation report contract
+final git diff --check result
+final git status summary
 ```
 
 ## Guardrail
 
 Do not delete validator command references entirely unless the corresponding tool is absent from the repo. Prefer compact catalog rows over long copied command blocks.
+
+Do not make `Tools/validation/README.md` another full-run or provider-runbook. It must remain a validator catalog with references back to the unified launcher.
