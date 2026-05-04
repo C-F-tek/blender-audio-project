@@ -40,16 +40,7 @@ target file
 | Local AI task routing/index | `LOCAL_AI_TASKS/README.md` |
 | Markdown cleanup and pruning governance | `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |
 
-Legacy/supporting runbooks:
-
-```text
-LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
-LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md
-LOCAL_AI_TASKS/code-refactor-local-machine-validation-addendum.md
-LOCAL_AI_TASKS/code-refactor-md-lane-extension.md
-```
-
-These files remain useful for historical details and scoped validation semantics, but the active execution path is the unified launcher.
+Legacy monolithic 0-to-10 runbooks are no longer indexed as active documentation. Use git history or compact evidence when forensic comparison is required.
 
 ## Canonical local command
 
@@ -88,7 +79,7 @@ Use Markdown inventory for obsolete/redundant docs. Use script inventory for too
 |---|---|---|
 | Root entrypoints | `../AGENTS.md`, `../README.md`, `../WORKFLOW.md` | Short canonical flow only; no long runbooks. |
 | Stable docs | `README.md` | Maintained source documentation. |
-| Task runbooks | `LOCAL_AI_TASKS/README.md` | Current/historical task entrypoints. |
+| Task runbooks | `LOCAL_AI_TASKS/README.md` | Current task input, supporting detail and historical handoffs only. |
 | Unified local AI launcher | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Active 0-to-10 local AI execution guide. |
 | Unified launcher contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Compact manifest/phase/status contract for the launcher. |
 | Workflow helper policy | `WORKFLOW_HELPER_SCRIPTS_POLICY.md` | Classification and guardrails for shell/GUI/push-capable helpers. |
