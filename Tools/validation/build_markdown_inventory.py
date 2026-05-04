@@ -83,6 +83,9 @@ HISTORICAL_TASK_BASENAME_PREFIXES = (
 HISTORICAL_TASK_BASENAMES = {
     "pr109-pythonpath-module-execution-note-2026-05-02.md",
 }
+HISTORICAL_DOC_BASENAMES = {
+    "codex_project_status_handoff.md",
+}
 
 
 def repo_relative(path: Path, repo_root: Path) -> str:
@@ -119,6 +122,10 @@ def is_historical_local_ai_task(rel_path: str) -> bool:
     )
 
 
+def is_historical_project_doc(rel_path: str) -> bool:
+    return rel_path.startswith("docs/") and Path(rel_path).name in HISTORICAL_DOC_BASENAMES
+
+
 def classify_markdown(rel_path: str) -> str:
     if rel_path in ROOT_POLICY_DOCS:
         return "root_policy_or_entrypoint"
@@ -144,6 +151,8 @@ def classify_markdown(rel_path: str) -> str:
         return "npu_tool_context_doc"
     if rel_path.startswith("Scripting/"):
         return "blender_application_doc"
+    if is_historical_project_doc(rel_path):
+        return "historical_project_handoff"
     if rel_path.startswith("docs/"):
         return "stable_project_doc"
     if rel_path.startswith("Tools/"):
@@ -162,6 +171,8 @@ def lifecycle_for(category: str, rel_path: str) -> str:
         return "evidence_snapshot"
     if category == "historical_local_ai_task":
         return "historical_task_record"
+    if category == "historical_project_handoff":
+        return "historical_project_record"
     if category == "local_ai_task_entrypoint":
         return "current_or_historical_task"
     if category == "execution_plan":
@@ -269,6 +280,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             "A missing index reference is not automatically obsolete; it means the file needs owner/lifecycle review.",
             "GitHub templates and root community docs are repository controls, not prune candidates.",
             "Historical local AI task records are classified separately from current task entrypoints.",
+            "Historical project handoff records are excluded from maintained source-doc index review.",
         ],
     }
 
