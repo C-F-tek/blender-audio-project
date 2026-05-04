@@ -138,6 +138,7 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 | Documentation cleanup, Markdown pruning, obsolete/redundant MD review | `unified-local-ai-refactor-launcher.md` with `-Mode md,contract,full_validation` |
 | GPU/NPU evidence diagnostics | `unified-local-ai-refactor-launcher.md`; legacy details may be read from `gpu-npu-parallel-evidence-runbook.md` |
 | Full-context local AI/NPU golden path | `unified-local-ai-refactor-launcher.md`; legacy details may be read from `full-context-ai-npu-golden-path.md` |
+| Forgotten script visibility audit | `forgotten-scripts-documentation-audit.md` |
 
 ## Current maintained task files
 
@@ -145,6 +146,7 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 |---|---|---|
 | `unified-local-ai-refactor-launcher.md` | canonical active | Operator guide for one entrypoint: selectable phases, `-Full0To10`, intensity profiles, reset planning, SQLite memory, semantic chunks, context packs, provider advisory, patch specs and validation. |
 | `docs-md-obsolete-pruning-next-step.md` | active task input | Follow-up triage task for obsolete/superseded Markdown after the entrypoint reduction baseline. |
+| `forgotten-scripts-documentation-audit.md` | active audit | Identify scripts that exist in `Tools/**` but are not visible enough in Markdown catalogs; classify without deleting. |
 | `validation-readme-reduction-next-step.md` | active follow-up | Reduce `Tools/validation/README.md` to a compact catalog and remove long procedural/control-character-prone blocks. |
 | `next-chat-unified-launcher-external-controls.md` | active follow-up | Add external CLI controls for launcher output dirs, context/report/artifact inputs and basenames. |
 | `gpu-npu-parallel-evidence-runbook.md` | supporting/legacy detail | GPU/NPU evidence and planner diagnostics background. Prefer unified launcher for execution. |
@@ -362,6 +364,7 @@ Tools/ai/build_agent_state_packet.py
 Tools/ai/agent_state.py
 Tools/npu/build_semantic_code_chunks.py
 Tools/ai/build_ai_context_pack.py
+docs/LOCAL_AI_TASKS/forgotten-scripts-documentation-audit.md
 docs/LOCAL_AI_TASKS/enrich-local-ai-memory-chunks-context-wrapper.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
