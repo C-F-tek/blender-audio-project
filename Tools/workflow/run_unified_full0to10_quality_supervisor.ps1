@@ -2,8 +2,10 @@ param(
     [string]$RepoRoot = ".",
     [string]$OutputDir = "output/validation/full0to10_quality_supervisor",
     [string]$PatchSpecs,
+    [switch]$RunLauncher,
     [switch]$SkipLauncher,
     [switch]$NoExternalProbes,
+    [switch]$AllowGitSyncBranching,
     [ValidateSet("quick", "balanced", "deep", "custom")]
     [string]$RunIntensity = "quick",
     [string]$Model = "gpt-oss:20b",
@@ -31,10 +33,7 @@ function Invoke-QualityStack {
         [bool]$DisableExternal
     )
 
-    $Args = @(
-        "-RepoRoot", $Root,
-        "-OutputDir", $OutDir
-    )
+    $Args = @("-RepoRoot", $Root, "-OutputDir", $OutDir)
     if ($Specs) {
         $Args += @("-PatchSpecs", $Specs)
     }
@@ -64,10 +63,18 @@ if ($PatchSpecs) {
     $PatchSpecsPath = Resolve-RepoPath -Base $RepoRoot -PathValue $PatchSpecs
 }
 
+$EffectiveRunLauncher = [bool]$RunLauncher -and -not [bool]$SkipLauncher
+if ($SkipLauncher) {
+    Write-Host "[Full0To10] -SkipLauncher supplied; launcher disabled."
+}
+if (-not $RunLauncher) {
+    Write-Host "[Full0To10] Safe default: launcher disabled. Pass -RunLauncher explicitly to run it."
+}
+
 Invoke-QualityStack -Phase "preflight" -Root $RepoRoot -OutDir $PreflightDir -Specs $PatchSpecsPath -DisableExternal ([bool]$NoExternalProbes)
 
-if ($SkipLauncher) {
-    Write-Host "[Full0To10] SkipLauncher enabled; no provider/runtime launcher executed."
+if (-not $EffectiveRunLauncher) {
+    Write-Host "[Full0To10] Quality-only mode; no provider/runtime launcher executed."
 }
 else {
     $Supervisor = Join-Path $RepoRoot "Tools/workflow/run_unified_full0to10_with_contract_gate.ps1"
@@ -82,10 +89,10 @@ else {
         "-GateOutputDir", (Join-Path $LauncherDir "contract_gate")
     )
 
-    if ($SkipGitSync) {
+    if ($SkipGitSync -or -not $AllowGitSyncBranching) {
         $SupervisorArgs += "-SkipGitSync"
     }
-    if ($NoBranch) {
+    if ($NoBranch -or -not $AllowGitSyncBranching) {
         $SupervisorArgs += "-NoBranch"
     }
     if ($ForwardedArgs.Count -gt 0) {
