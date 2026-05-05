@@ -8,7 +8,11 @@ The repository slug is still `C-F-tek/blender-audio-project`, but the active arc
 
 All documentation that describes full local-AI work must preserve the same doctrine: **TUTTO SU TUTTO**.
 
-A full run means whole-repository coverage across active lanes, not a partial scan. Intensity profiles may reduce cost or expand depth, but they must not reduce semantic scope. When the project gains a stable new lane, registry, validator, broker capability, provider diagnostic, evidence surface or memory/context tool, that capability becomes a candidate expansion of `tutto` and must be either wired into the full-run contract or explicitly excluded with rationale.
+A full run means whole-repository coverage across active lanes, not a partial scan. Intensity profiles may reduce cost or expand depth, but they must not reduce semantic scope.
+
+Full0To10 is opt-out by lane: provider/probe/workload-quality, runtime telemetry, capability manifests, discovery, index repair visibility and CSV/count surfaces are included by default unless explicitly disabled, diagnosed unavailable, represented as dry-run planned state or excluded by a documented operator decision.
+
+When the project gains a stable new lane, registry, validator, broker capability, provider diagnostic, evidence surface, memory/context tool, discovery/index surface or CSV/count surface, that capability becomes a candidate expansion of `tutto` and must be either wired into the full-run contract or explicitly excluded with rationale.
 
 ## Single reading flow
 
@@ -16,12 +20,18 @@ Use this flow unless a task file says otherwise:
 
 ```text
 ../AGENTS.md
+../CHATGPT.md
+../CHATGPT/README.md
+LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ../README.md
 ../WORKFLOW.md
 README.md
 DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 LOCAL_AI_RUN_BOOTSTRAP.md        # local checkout only
 LOCAL_AI_TASKS/README.md         # task entrypoints
+LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
@@ -45,10 +55,12 @@ This documentation index is descriptive only. It must not carry executable Power
 
 | Need | File |
 |---|---|
+| Current operational bridge | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
+| Active refactor/reuse planning | `LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` |
+| Refactor/reuse run coherence note | `LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md` |
+| Recent telemetry baseline / broker resolved context | `LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` |
 | Unified full 0-to-10 local AI workflow | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
 | Current code/tool/evidence flow | `LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` |
-| Runtime broker telemetry P0 validation | `LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md` |
-| Post-broker evidence interpretation | `LOCAL_AI_TASKS/post-broker-runtime-telemetry-followup-2026-05-05.md` |
 | Project-wide tool placement audit | `LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md` |
 | Project tool promotion/insertion rules | `LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` |
 | Unified launcher manifest/phase contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
@@ -57,6 +69,17 @@ This documentation index is descriptive only. It must not carry executable Power
 | Markdown cleanup and pruning governance | `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |
 
 Legacy monolithic 0-to-10 runbooks are no longer indexed as active documentation. Use git history or compact evidence when forensic comparison is required.
+
+## Current active work
+
+```text
+Task: LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+Run: 20260505-143844
+Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Mode: review-only until explicit human instruction
+```
+
+The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository.
 
 ## Operational command policy
 
@@ -71,11 +94,12 @@ LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 Task-specific command sources:
 
 ```text
-LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ../FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
 ```
 
-Historical/supporting references such as `LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` may be read for forensic comparison only. They must not override the unified launcher runbook or the compact launcher contract.
+Historical/supporting references such as `LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md`, `LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md` and `LOCAL_AI_TASKS/post-broker-runtime-telemetry-followup-2026-05-05.md` may be read for forensic comparison or regression review only. They must not override the unified launcher runbook, current operational state or the compact launcher contract.
 
 Tool-specific command sources:
 
@@ -88,7 +112,7 @@ If this index needs to mention a workflow, link to the canonical document instea
 
 ## Inventories before broad changes
 
-Use Markdown and script inventories before broad documentation cleanup or refactor planning.
+Use Markdown, script, discovery and count surfaces before broad documentation cleanup or refactor planning.
 
 Inventory roles:
 
@@ -96,10 +120,22 @@ Inventory roles:
 |---|---|
 | Markdown inventory | Obsolete/redundant docs, missing indexes, length and lifecycle classification. |
 | Script inventory | Tool/script discovery, CSV review, function/class/method visibility and refactor planning. |
+| Python line-count CSV/MD | Size evidence for refactor planning and review reporting. |
+| Function/class/method CSV | Method/class/helper reuse visibility and duplication triage. |
+| Auto-discovery/index repair report | Detect scanner/index drift and plan repairs before changing generated indexes. |
 | Tool placement audit | Repository-wide classification of canonical and non-canonical tools, including scripts outside `Tools/**`. |
 | Tool promotion guide | Rules for promoting scripts into project tools, broker tools and full-run lanes. |
 
 Commands for these inventories live in the unified launcher runbook and validator README.
+
+Policy:
+
+```text
+CSV/count outputs are evidence surfaces, not source authority.
+Generated indexes and code chunks are not hand-maintained source.
+Do not commit output/** or indexAI/code_chunks/**.
+Index repair is plan/report-first unless explicitly requested.
+```
 
 ## Documentation families
 
@@ -108,10 +144,13 @@ Commands for these inventories live in the unified launcher runbook and validato
 | Root entrypoints | `../AGENTS.md`, `../README.md`, `../WORKFLOW.md` | Short canonical flow only; no long runbooks. |
 | Stable docs | `README.md` | Maintained source documentation. |
 | Task runbooks | `LOCAL_AI_TASKS/README.md` | Current task input, supporting detail and historical handoffs only. |
+| Current operational state | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` | Compact current state bridge for PR #187 and run `20260505-143844`. |
+| Refactor/reuse planning | `LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` | Active review-only task for helper/class/tool reuse planning. |
+| Recent telemetry state | `LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` | Recent baseline and resolved broker context. |
 | Unified local AI launcher | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Active 0-to-10 local AI execution guide. |
-| Current code flow | `LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` | Current launcher/provider/broker/bundle/evidence flow. |
+| Current code flow | `LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` | Current launcher/provider/broker/bundle/evidence/discovery/CSV flow. |
 | Tool governance | `LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md`, `LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` | Tool discovery, placement and promotion rules. |
-| Broker telemetry follow-up | `LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md` | Active P0 validation task until a post-fix run confirms broker telemetry absorption. |
+| Broker telemetry follow-up | `LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` | Broker telemetry is resolved unless a new regression is found. |
 | Unified launcher contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Compact manifest/phase/status contract for the launcher. |
 | Workflow helper policy | `WORKFLOW_HELPER_SCRIPTS_POLICY.md` | Classification and guardrails for shell/GUI/push-capable helpers. |
 | Execution plans | `EXECUTION_PLANS/README.md` | Durable state records. |
