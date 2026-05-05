@@ -29,6 +29,8 @@ patch specs
 reset
 tool promotion
 runtime broker telemetry
+telemetry summary
+AI-to-AI bundle
 ```
 
 Primary current runbook:
@@ -52,6 +54,7 @@ docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
 docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+docs/LOCAL_AI_TASKS/next-chat-unified-launcher-external-controls.md
 ```
 
 No other local-AI runner is an active first entrypoint. Supporting wrappers may be called by the launcher, but they must not be used as separate operator paths unless a future PR explicitly promotes them into the launcher manifest/phase contract.
@@ -79,6 +82,8 @@ context packs
 semantic chunks
 patch-spec generation
 runtime broker telemetry
+runtime capability manifest
+telemetry summary
 project-tool promotion evidence
 reset cleanup
 legacy full-toolbox integrated behavior
@@ -99,6 +104,14 @@ historical PR handoff or master-branch code-refactor runbooks
 
 They are implementation lanes, historical material or scoped helpers behind the unified launcher.
 
+## TUTTO SU TUTTO rule
+
+Every full local-AI run is **TUTTO SU TUTTO**.
+
+`quick`, `balanced`, `deep` and `custom` are intensity profiles only. They may change runtime budget, token/context limits, round count and depth. They must not silently remove lanes from the full flow.
+
+The perimeter of `tutto` can expand. When a new stable validator, broker tool, provider diagnostic, memory/context surface, project-tool registry, repository-consistency check, telemetry surface or evidence builder is promoted, it must be added to the full-run contract or explicitly excluded with rationale.
+
 ## Current operating chain
 
 ```text
@@ -112,6 +125,8 @@ unified launcher command from unified-local-ai-refactor-launcher.md
   -> deterministic recommendations
   -> review-only patch specs / patch bundles
   -> runtime broker report and telemetry
+  -> runtime tool capability manifest
+  -> full toolbox telemetry summary
   -> shared production AI-to-AI bundle
   -> explicit apply only after review
   -> validation
@@ -128,7 +143,7 @@ Eyes / evidence collectors
 Immune system / validators
 Memory / SQLite-backed local state when enabled
 Muscles / patch bundle apply lane only after explicit review
-Bloodstream / compact evidence
+Bloodstream / compact evidence and telemetry
 Hands / GitHub + CLI
 ```
 
@@ -149,6 +164,7 @@ opening huge evidence bundles before the manifest/summary
 starting from superseded 0-to-10 runbooks
 using a supporting wrapper as an active first entrypoint
 triggering audio/media output during AI/tooling runs
+inferring run success from file existence instead of telemetry
 ```
 
 ## Visibility-first rule
@@ -161,8 +177,9 @@ Required reading order after a run:
 launcher command
 unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
-production AI-to-AI bundle
 runtime tool telemetry and capability manifest
+full toolbox telemetry summary
+production AI-to-AI bundle
 compact Markdown or CSV summaries
 detailed evidence only when needed
 ```
@@ -170,6 +187,41 @@ detailed evidence only when needed
 A run is not operationally clear if the next agent must open a giant bundle to understand what happened.
 
 Do not create new monolithic AI-to-AI bundles without a companion manifest/summary.
+
+## Telemetry-first AI rule
+
+Telemetry is a primary input for local and cloud AI agents.
+
+The next AI must inspect:
+
+```text
+runtime_tool_usage_telemetry_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md
+full_toolbox_run_telemetry_summary_<STAMP>.json/md
+shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+```
+
+before declaring a lane successful, failed, blocked, degraded, intentionally disabled or unavailable.
+
+Important fields:
+
+```text
+tool_call_entry_count
+executed_count
+failed_count
+blocked_count
+broker_reports
+provider_advisory_state
+provider_failure_reasons
+degraded_provider_components
+gpu_metrics_source
+round_duration_source
+patch_application_performed
+source_writes_performed
+```
+
+File existence alone is not evidence of successful execution.
 
 ## Length policy for local-run docs and evidence
 
@@ -398,6 +450,8 @@ phase report paths
 compact evidence paths, when generated
 provider/runtime execution status
 runtime broker telemetry status
+runtime tool capability manifest status
+full toolbox telemetry summary status
 audio/media output status
 patch application status
 risks
@@ -417,6 +471,8 @@ changed files
 launcher mode/profile/flags or focused validation command
 provider execution statement
 runtime broker telemetry statement
+runtime capability manifest statement
+full toolbox telemetry summary statement
 audio/media output statement
 visibility/manifest statement
 risk notes
@@ -437,10 +493,16 @@ The preferred current end-to-end local task is tracked in:
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-The current P0 validation task is tracked in:
+The previously critical broker telemetry task is closed and validated by run `20260505-073332`:
 
 ```text
 docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+```
+
+The current technical follow-up is tracked in:
+
+```text
+docs/LOCAL_AI_TASKS/next-chat-unified-launcher-external-controls.md
 ```
 
 The audio/media output guardrail is tracked in:
@@ -452,7 +514,7 @@ docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
 The expected work is:
 
 ```text
-exercise the unified full 0-to-10 process with selected modes, evidence collectors, optional GPU/NPU provider run, deterministic recommendations, workload quality routing, memory/context surfaces, runtime broker telemetry, patch-spec generation, review-safe patch bundle generation and explicit apply/validation when authorized
+exercise the unified full 0-to-10 process with selected modes, evidence collectors, optional GPU/NPU provider run, deterministic recommendations, workload quality routing, memory/context surfaces, runtime broker telemetry, runtime capability manifest, full toolbox telemetry summary, patch-spec generation, review-safe patch bundle generation and explicit apply/validation when authorized
 ```
 
 GPU/NPU execution remains explicit. Audio/media output remains forbidden unless an explicit application-domain task enables it. If Carmine cannot run the local provider workflow, GitHub-only agents must stop at report-only/docs/validator work and request the exact unified launcher command/evidence bundle needed next.
