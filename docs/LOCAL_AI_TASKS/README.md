@@ -47,10 +47,11 @@ Use this order for current IA-Carmine local-AI work:
 4. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 5. docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 6. docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
-7. docs/LOCAL_AI_TASKS/post-broker-runtime-telemetry-followup-2026-05-05.md
-8. docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
-9. FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
-10. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+7. docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
+8. docs/LOCAL_AI_TASKS/post-broker-runtime-telemetry-followup-2026-05-05.md
+9. docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
+10. FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
+11. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
 Do not start from historical PR handoffs or legacy master-branch runbooks.
@@ -62,6 +63,7 @@ Every active task file must preserve hard guardrails from:
 ```text
 AGENTS.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md
+docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
 ```
 
 If a task conflicts with `AGENTS.md`, preserve hard guardrails and stop with a conflict report.
@@ -149,11 +151,13 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 | Custom intensity/limits | unified launcher runbook, custom intensity and explicit numeric knobs |
 | Interactive phase picker | unified launcher runbook, interactive mode |
 | Local generated-artifact cleanup/reset | unified launcher runbook, reset mode |
-| Documentation cleanup, Markdown pruning, obsolete/redundant MD review | unified launcher `md/json/contract/full_validation` phases plus this index |
+| Documentation cleanup, Markdown pruning, obsolete/redundant MD review | unified launcher `md,json,contract,full_validation` phases plus this index |
 | GPU/NPU evidence diagnostics | unified launcher provider/probe phases; current flow is in `current-code-flow-guide-2026-05-05.md` |
 | Runtime broker telemetry fix | `fix-final-runtime-broker-telemetry-task-2026-05-05.md` |
+| Audio/media output guardrail review | `no-audio-media-output-guardrail-2026-05-05.md` |
 | Tool discovery and promotion | `tool-inventory-placement-audit-2026-05-05.md` and `project-tool-promotion-and-insertion-guide-2026-05-05.md` |
 | Full-context local AI/NPU golden path | supporting background only; prefer unified launcher for execution |
+| Blender/audio/render/encode output | Application-domain task only; not part of normal AI/tooling runs. |
 
 ## Maintained task files
 
@@ -162,6 +166,7 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 | `unified-local-ai-refactor-launcher.md` | canonical active | Operator guide for one entrypoint: selectable phases, `Full0To10`, intensity profiles, reset planning, SQLite memory, semantic chunks, context packs, provider advisory, patch specs and validation. |
 | `full-toolbox-0-to-10-semi-automatic-procedure.md` | active procedure | Long-form full toolbox procedure; should remain aligned with `FULL_RUN_UNICA_TUTTO_SU_TUTTO.md`. |
 | `fix-final-runtime-broker-telemetry-task-2026-05-05.md` | active P0 task | Fix final telemetry so runtime broker report is preserved in Git-trackable runtime usage telemetry. |
+| `no-audio-media-output-guardrail-2026-05-05.md` | active guardrail | Prevents unintended audio playback/export, FFmpeg muxing, Blender render or media generation in AI/tooling runs. |
 | `post-broker-runtime-telemetry-followup-2026-05-05.md` | active diagnostic follow-up | Evidence analysis after run `20260505-002508`: provider/bundle OK, broker telemetry not absorbed. |
 | `tool-inventory-placement-audit-2026-05-05.md` | active audit | Repository-wide tool/candidate audit, including tools outside `Tools/**`. |
 | `project-tool-promotion-and-insertion-guide-2026-05-05.md` | active guide | How to promote scripts into project tools, broker tools and full-run lanes. |
@@ -201,6 +206,7 @@ Current policy:
 Use run_unified_local_ai_refactor.ps1 as the only operator entrypoint.
 Use FULL_RUN_UNICA_TUTTO_SU_TUTTO.md and current-code-flow-guide-2026-05-05.md for current flow.
 Use tool-inventory-placement-audit-2026-05-05.md and project-tool-promotion-and-insertion-guide-2026-05-05.md for project-tool promotion.
+Use no-audio-media-output-guardrail-2026-05-05.md to classify audio/media output side effects.
 Do not create new parallel 0-to-10 entrypoints unless the user explicitly asks for a separate runner.
 If historical details are needed, recover them from git history or compact evidence, not from active task docs.
 ```
@@ -228,6 +234,36 @@ patch_application_performed=false
 ```
 
 Explicit disablers are documented in the unified launcher runbook and launcher contract.
+
+## Audio/media output guardrail
+
+Normal AI/tooling runs must not produce application-domain media output.
+
+For these task classes:
+
+```text
+documentation cleanup
+provider diagnostics
+tool promotion
+broker telemetry
+patch planning
+evidence generation
+repository validation
+```
+
+forbidden side effects are:
+
+```text
+audio playback
+audio export
+WAV/MP3/AAC conversion
+FFmpeg encode or mux operation
+Blender render
+video generation
+media output side effect
+```
+
+Use `no-audio-media-output-guardrail-2026-05-05.md` for the detailed policy.
 
 ## SQLite memory / context enrichment
 
@@ -319,6 +355,7 @@ Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
 docs/LOCAL_AI_TASKS/forgotten-scripts-documentation-audit.md
 docs/LOCAL_AI_TASKS/enrich-local-ai-memory-chunks-context-wrapper.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
