@@ -10,21 +10,23 @@ This document is architectural guidance, not a command catalog. Current executab
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
 ```
+
+Large validator/tool catalogs such as `Tools/validation/README.md` are references only and must not become primary operational entrypoints if too large or truncated.
 
 ## Design goal
 
 The project should support multiple execution targets without coupling orchestration to one provider:
 
 ```text
-unified launcher
+run-unica launcher
   -> pipeline orchestration
   -> provider interface
   -> provider implementation
   -> normalized provider diagnostics
   -> validated artifact/evidence
   -> runtime telemetry and capability context
+  -> discovery/index/CSV-count context when repository visibility is involved
   -> shared AI-to-AI bundle / patch-plan handoff
   -> downstream application workflow when explicitly scoped
 ```
@@ -39,11 +41,22 @@ Core pipeline code should not assume that the model is always:
 - NPU-only;
 - GPU-only.
 
-## Full-run provider doctrine
+## Run-unica provider doctrine
 
 Provider-agnostic does not mean provider-invisible.
 
-When provider output influences full-run evidence, recommendations, patch plans or patch specs, the handoff must preserve provider state through telemetry/capability/bundle surfaces:
+Current doctrine:
+
+```text
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters, not scope
+-No* flags = explicit opt-out from selected lanes
+CSV/index/discovery surfaces are evidence lanes when relevant
+large Markdown must not be a primary operational entrypoint
+```
+
+When provider output influences run-unica evidence, recommendations, patch plans or patch specs, the handoff must preserve provider state through telemetry/capability/bundle surfaces:
 
 ```text
 provider_advisory_state
@@ -57,11 +70,13 @@ runtime tool usage telemetry when tools execute
 runtime capability manifest when tool capability matters
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
+CSV/count summaries when inventory lanes ran
+discovery/index repair reports when relevant
 ```
 
-Telemetry is the completeness accessory. It does not replace provider artifacts or validation reports; it explains whether provider lanes executed, failed, degraded, were blocked, were disabled or were planned-only.
+Telemetry is the completeness accessory. It does not replace provider artifacts or validation reports; it explains whether provider lanes executed, failed, degraded, were blocked, were disabled, unavailable or planned-only.
 
-`Full0To10` remains **TUTTO SU TUTTO**. A provider-specific wrapper or dry-run cannot narrow full-run scope or serve as proof that the full run passed.
+`Full0To10` remains **TUTTO SU TUTTO**. A provider-specific wrapper or dry-run cannot narrow run-unica scope or serve as proof that the full run passed.
 
 ## Local application areas
 
@@ -88,7 +103,8 @@ The orchestration layer should decide:
 - which output artifact is expected;
 - which validator must run;
 - how failures are reported;
-- how provider/telemetry state is surfaced into the launcher manifest and bundle.
+- how provider/telemetry state is surfaced into the launcher manifest and bundle;
+- how discovery/index/CSV-count state is surfaced when repository visibility is involved.
 
 It should not contain provider-specific inference code.
 
@@ -117,7 +133,8 @@ Expected artifact properties:
 - warnings and errors;
 - target files, if patch-related;
 - safe write plan, if file generation is involved;
-- provider/telemetry companion references when derived from a full run.
+- provider/telemetry companion references when derived from a run-unica execution;
+- discovery/index/CSV-count companion references when derived from repository-wide evidence.
 
 ## Recommended pipeline stages
 
@@ -125,16 +142,17 @@ Expected artifact properties:
 1. collect source inputs
 2. build compact context
 3. select provider or dry-run mode
-4. generate model output when explicitly requested
+4. generate model output when explicitly requested or selected by Full0To10/provider lanes
 5. normalize raw output and diagnostics
 6. parse JSON or structured text
 7. validate schema
 8. validate repository paths
-9. validate Blender compatibility when relevant
+9. validate Blender compatibility when explicitly scoped
 10. write artifact to safe output location
 11. generate report
-12. attach telemetry/capability context when part of full-run handoff
-13. update status only after validation succeeds
+12. attach telemetry/capability context when part of run-unica handoff
+13. attach CSV/index/discovery context when repository visibility is part of the evidence
+14. update status only after validation succeeds
 ```
 
 ## Provider fallback rule
@@ -151,7 +169,7 @@ error: <short diagnostic>
 artifact_written: false
 ```
 
-Fallback providers are allowed only when the report clearly states that fallback happened. Full-run handoff must also expose fallback/degradation in telemetry and AI-to-AI bundle state.
+Fallback providers are allowed only when the report clearly states that fallback happened. Run-unica handoff must also expose fallback/degradation in telemetry and AI-to-AI bundle state.
 
 ## Runtime-agnostic implementation rules
 
@@ -163,7 +181,8 @@ Fallback providers are allowed only when the report clearly states that fallback
 - Keep generated Python policy checks separate from generation.
 - Keep Blender runtime execution separate from artifact planning.
 - Keep NPU helper package provider-free until a validated migration phase wires it into runtime execution.
-- Keep telemetry and capability context separate from provider implementation but attached to full-run handoff.
+- Keep telemetry and capability context separate from provider implementation but attached to run-unica handoff.
+- Keep discovery/index/CSV-count context separate from provider implementation but attached when repository visibility affects recommendations or patch plans.
 
 ## Good local pattern
 
@@ -176,7 +195,8 @@ StageConfig
   -> RepositoryPathValidator
   -> ArtifactWriter
   -> ValidationReport
-  -> Telemetry/Capability companion when used in full-run evidence
+  -> Telemetry/Capability companion when used in run-unica evidence
+  -> Discovery/CSV/Index companion when repository visibility is part of the evidence
 ```
 
 ## Bad local pattern
@@ -189,6 +209,7 @@ single script
   -> no schema validation
   -> no report
   -> no telemetry/capability context for downstream patch plan
+  -> no discovery/index/CSV context for repository-wide recommendations
 ```
 
 ## Acceptance criteria for new pipeline modules
@@ -202,7 +223,8 @@ A new pipeline module is acceptable only if it:
 - reports errors structurally;
 - integrates with existing validators where possible;
 - is documented in the relevant README or docs file;
-- exposes manifest/report/telemetry/bundle visibility when promoted into the full-run perimeter.
+- exposes manifest/report/telemetry/bundle visibility when promoted into the run-unica perimeter;
+- exposes discovery/index/CSV-count visibility when it affects repository-wide inventory or refactor/reuse planning.
 
 ## Validation ownership
 
@@ -210,7 +232,6 @@ Use focused validation before broad workflows, but keep command ownership in:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
 ```
 
 Focused direct validation is appropriate only when changing provider-agnostic pipeline modules or validators themselves. Broad local-AI validation should route through the unified launcher.
@@ -226,7 +247,8 @@ When converting an existing script into reusable pipeline logic:
 5. add an adapter layer;
 6. run focused validation;
 7. update docs and status markers;
-8. add telemetry/capability/bundle references if the module enters full-run evidence;
-9. only then consider wiring the new module into runtime flow.
+8. add telemetry/capability/bundle references if the module enters run-unica evidence;
+9. add discovery/index/CSV references if the module affects repository-wide visibility;
+10. only then consider wiring the new module into runtime flow.
 
-Do not claim full-run success from provider-agnostic dry-runs alone.
+Do not claim run-unica Full0To10 success from provider-agnostic dry-runs alone.
