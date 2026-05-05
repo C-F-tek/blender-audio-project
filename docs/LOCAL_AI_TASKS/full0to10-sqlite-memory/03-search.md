@@ -1,13 +1,22 @@
 # Search
 
-Ricerca FTS/hybrid-ready:
+Ricerca FTS:
 
 ```powershell
-python .\Toolsiull0to10_memory_tool.py search `
-  --db .\outputi_runtime_memory\operational_context.sqlite `
+python .\Tools\ai\full0to10_memory_tool.py search `
+  --db .\output\ai_runtime_memory\operational_context.sqlite `
   --namespace repo_docs `
-  --query "Full0To10 bundle telemetry"
+  --query "Full0To10 bundle telemetry" `
+  --mode fts
 ```
 
-In questa patch `hybrid_score` coincide con FTS score. La cache embedding è nello
-schema per la patch provider successiva.
+Ricerca hybrid con provider hash offline:
+
+```powershell
+python .\Tools\ai\full0to10_memory_tool.py search `
+  --db .\output\ai_runtime_memory\operational_context.sqlite `
+  --namespace repo_docs `
+  --query "Full0To10 bundle telemetry" `
+  --mode hybrid `
+  --embedding-provider hash
+```

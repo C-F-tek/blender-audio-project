@@ -13,6 +13,7 @@ if str(AI_DIR) not in sys.path:
     sys.path.insert(0, str(AI_DIR))
 
 from full0to10_sqlite_memory.db import connect  # noqa: E402
+from full0to10_sqlite_memory.embedding import embed_missing_chunks  # noqa: E402
 from full0to10_sqlite_memory.ingest import memory_add_file, memory_add_text  # noqa: E402
 from full0to10_sqlite_memory.manifest import build_memory_manifest  # noqa: E402
 from full0to10_sqlite_memory.render import render_markdown  # noqa: E402
@@ -36,7 +37,7 @@ def write_report(report: dict[str, object], output: str | None, markdown_output:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("init", "add-text", "add-file", "search", "manifest"))
+    parser.add_argument("command", choices=("init", "add-text", "add-file", "search", "manifest", "embed-missing"))
     parser.add_argument("--db", required=True)
     parser.add_argument("--namespace", default="default")
     parser.add_argument("--text")
@@ -45,6 +46,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--query")
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--mode", default="hybrid", choices=("fts", "hybrid"))
+    parser.add_argument("--embedding-provider", default="none", choices=("none", "hash", "ollama"))
+    parser.add_argument("--embedding-model", default="hash-local-v1")
+    parser.add_argument("--ollama-url", default="http://127.0.0.1:11434")
     parser.add_argument("--output")
     parser.add_argument("--markdown-output")
     return parser.parse_args()
@@ -68,7 +72,25 @@ def main() -> int:
     elif args.command == "search":
         if not args.query:
             raise SystemExit("--query is required")
-        report = memory_search(conn, args.namespace, args.query, limit=args.limit, mode=args.mode)
+        report = memory_search(
+            conn,
+            args.namespace,
+            args.query,
+            limit=args.limit,
+            mode=args.mode,
+            embedding_provider=args.embedding_provider,
+            embedding_model=args.embedding_model,
+            ollama_url=args.ollama_url,
+        )
+    elif args.command == "embed-missing":
+        report = embed_missing_chunks(
+            conn,
+            args.namespace,
+            args.embedding_model,
+            args.embedding_provider if args.embedding_provider != "none" else "hash",
+            args.ollama_url,
+            args.limit,
+        )
     else:
         report = build_memory_manifest(conn, db_path)
     write_report(report, args.output, args.markdown_output)
