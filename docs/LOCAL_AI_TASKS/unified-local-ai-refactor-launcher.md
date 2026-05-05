@@ -70,6 +70,46 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_uni
   -NoBranch
 ```
 
+## Full-run coverage rule: TUTTO SU TUTTO
+
+Every `-Full0To10` run variation is a full coverage run.
+
+`-RunIntensity quick|balanced|deep|custom` may change only execution budget, round count, file/context limits, token budget, keep-alive and similar capacity knobs. It must not silently remove core lanes or reduce the semantic scope of the run.
+
+All full-run variations must still cover, unless an explicit `-No*` flag disables a capability:
+
+```text
+Markdown inventory and docs links
+JSON/report contract validation
+Python/script inventory
+semantic chunks
+context pack
+agent-state and memory handoff
+repository consistency and validation evidence
+runtime tool broker telemetry
+runtime tool capability manifest
+provider probes and provider diagnostics
+GPU/Ollama advisory path
+NPU probe/decode diagnostics when enabled
+multistep provider workflow
+legacy full-toolbox integrated lane
+workload quality routing
+patch-spec generation and validation
+compact evidence bundle
+final validation
+shared AI-to-AI bundle summary
+```
+
+A quick full run is therefore TUTTO SU TUTTO with smaller budgets, not a partial smoke. A smoke run remains a separate `smoke` mode and must not be represented as a full run.
+
+A full-run report is incomplete if a core lane is missing without one of these conditions:
+
+```text
+explicit -No* disabler
+clear unavailable-tool/provider failure recorded in manifest, warnings or phase report
+DryRun planned-but-not-executed state
+```
+
 ## One-flow rule
 
 All local-AI execution profiles are launcher profiles, modes or flags.
@@ -310,12 +350,14 @@ A disabled phase must appear as intentionally disabled, not missing by accident.
 
 ## Run intensity profiles
 
+All intensity profiles preserve full-run coverage. Intensity changes capacity, not scope.
+
 | Intensity | Intended use | Effective profile |
 |---|---|---|
-| `quick` | Fast validation/proposal loop, about 5 minutes when providers cooperate. | Lower legacy-lane rounds, files, context, tokens and keep-alive. |
-| `balanced` | Default practical full run. | Current project defaults. |
-| `deep` | Heavier full review. | Larger legacy-lane context, more rounds and larger memory/context profile values. |
-| `custom` | Operator-defined. | Use explicit numeric parameters. |
+| `quick` | Fast full-coverage validation/proposal loop, about 5 minutes when providers cooperate. | Lower legacy-lane rounds, files, context, tokens and keep-alive while still running every Full0To10 lane. |
+| `balanced` | Default practical full run. | Current project defaults with every Full0To10 lane enabled unless explicitly disabled. |
+| `deep` | Heavier full review. | Larger legacy-lane context, more rounds and larger memory/context profile values with every Full0To10 lane enabled unless explicitly disabled. |
+| `custom` | Operator-defined capacity. | Use explicit numeric parameters without reducing the Full0To10 lane set. |
 
 Legacy/full-toolbox inherited parameters currently exposed by the launcher:
 
