@@ -22,6 +22,26 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 
 This policy is not a command catalog. Current memory-aware run commands live in the unified launcher runbook.
 
+## Full-run memory doctrine
+
+Memory/context is part of **TUTTO SU TUTTO** when enabled by the unified launcher.
+
+`Full0To10` should include memory input/output surfaces unless explicit memory disablers are used. A memory lane must not silently disappear from a full run.
+
+Memory output must be visible through compact, non-private surfaces:
+
+```text
+unified manifest memory fields
+phase_status / phase_reports
+agent-state packet path
+runtime telemetry / full toolbox telemetry summary when relevant
+shared AI-to-AI bundle reference when used for handoff
+```
+
+SQLite DB files remain private local runtime state. They are never the handoff artifact and must not be committed.
+
+Telemetry is the completeness accessory that explains whether memory/context was enabled, disabled, skipped or unavailable. It does not replace the memory evidence or agent-state packet; it accompanies them.
+
 ## Active memory components
 
 These files are active memory/context helpers and must not be treated as forgotten or obsolete simply because they are not all user-facing commands.
@@ -44,6 +64,7 @@ Do not remove these references unless the corresponding files are removed from t
 Do not commit SQLite DBs or local memory output files.
 Do not select quarantined/private/local-only records into provider prompts.
 Expose memory input/output in the unified launcher manifest when used.
+Expose memory/context handoff state in telemetry or bundle surfaces when it contributes to a production run.
 ```
 
 ## Storage
@@ -71,6 +92,7 @@ memory_in_enabled recorded in unified manifest
 memory_out_enabled recorded in unified manifest
 save_inputs_to_memory_db recorded in unified manifest
 agent-state packet path recorded in phase_reports/context_files when produced
+memory/context contribution referenced in telemetry/bundle when part of production handoff
 SQLite DB remains untracked
 ```
 
@@ -227,8 +249,8 @@ When working from GitHub-only access:
 ```text
 document memory policy examples
 update stable docs with clearly sourced merged-PR facts
-mark local validation pending
-avoid claiming runtime validation without logs
+mark local validation pending unless compact evidence exists
+avoid claiming runtime validation without logs or telemetry
 leave SQLite DB and generated indexes untouched
 ```
 
@@ -243,6 +265,7 @@ no SQLite DB commit
 no output/** commit
 no provider execution unless explicit
 manifest/report visibility when routed through launcher
+telemetry/capability visibility when memory contributes to full-run handoff
 ```
 
 ## Blender/Audio Rule
