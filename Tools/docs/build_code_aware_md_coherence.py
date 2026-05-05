@@ -247,8 +247,21 @@ def classify_missing_ref(ref: str, source_doc: str = "") -> tuple[str, str]:
         return "low", "chatgpt-advisory-or-handoff"
     if target.startswith("patches/") or "patch_bundles/" in lower_target:
         return "low", "patch-bundle-template"
+    if "*" in target or "<" in target or ">" in target:
+        return "low", "placeholder-template"
     if "/some_" in lower_target or target.startswith("some_") or "your_app_" in lower_target:
         return "low", "placeholder-template"
+    if "check_example_contract.py" in lower_target:
+        return "low", "placeholder-template"
+    historical_sources = (
+        "macro-local-validation-prototype",
+        "open-pr-triage",
+        "pr109-prelocal",
+        "local_runs_testing_and_evidence",
+        "full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles",
+    )
+    if any(token in lower_source for token in historical_sources):
+        return "medium", "historical-or-handoff"
     if "next-chat" in lower_target or "handoff" in lower_target:
         return "medium", "historical-or-handoff"
     if target.endswith((".py", ".ps1")):
@@ -301,13 +314,14 @@ def analyze_markdown(repo: Path, scripts: dict[str, Any], max_lines: int) -> dic
                 ))
         for script, flags in py_cmds:
             if script not in python_scripts:
+                severity, classification = classify_missing_ref(script, rel)
                 findings.append(Finding(
-                    "high",
+                    severity,
                     "markdown_python_command_missing_script",
                     rel,
                     script,
                     "Documented Python command points to a missing script.",
-                    "active-current",
+                    classification,
                 ))
                 continue
             known = set(python_scripts[script].get("args") or [])
@@ -323,13 +337,14 @@ def analyze_markdown(repo: Path, scripts: dict[str, Any], max_lines: int) -> dic
                     ))
         for script, flags in ps_cmds:
             if script not in powershell_scripts:
+                severity, classification = classify_missing_ref(script, rel)
                 findings.append(Finding(
-                    "high",
+                    severity,
                     "markdown_powershell_command_missing_script",
                     rel,
                     script,
                     "Documented PowerShell command points to a missing script.",
-                    "active-current",
+                    classification,
                 ))
                 continue
             known = set(powershell_scripts[script].get("params") or [])
