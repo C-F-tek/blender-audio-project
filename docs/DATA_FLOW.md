@@ -4,24 +4,26 @@
 
 This document describes the current data movement across `IA-Carmine Local AI Orchestration Workbench`.
 
-The project still contains Blender/audio-reactive workflows, but the active architectural flow is now app-agnostic local AI orchestration: launcher-selected phases, reports, provider lanes, quality gates, explicit probes, advisory packets, runtime broker telemetry, capability manifests and compact GitHub evidence.
+The project still contains Blender/audio-reactive workflows, but the active architectural flow is now app-agnostic local AI orchestration: run-unica parameters, reports, provider lanes, quality gates, probes, advisory packets, runtime broker telemetry, capability manifests, discovery/index/CSV evidence and compact GitHub evidence.
 
 ## Current core AI orchestration flow
 
 ```text
 unified launcher command
-  -> selected modes / Full0To10 profile / intensity knobs
+  -> run unica parameters / Full0To10 perimeter / explicit -No* opt-outs
   -> unified_local_ai_refactor_manifest.json
   -> local source/docs/context
-  -> Markdown and script inventories when selected
+  -> Markdown and script inventories
+  -> CSV/count evidence surfaces
+  -> auto-discovery and index-drift reports when relevant
   -> semantic code chunks and selected focused chunks when useful
   -> task-scoped AI context pack when useful
-  -> SQLite-backed agent state packet when requested
+  -> SQLite-backed agent state packet when enabled
   -> validation reports
-  -> workload report quality gate when provider routing is requested
+  -> workload report quality gate for Full0To10/provider lanes
   -> advisory lane routing
   -> trusted/excluded context selection
-  -> explicit provider probes or primary advisory generation
+  -> provider probes and primary advisory generation unless disabled or diagnosed unavailable
   -> post-validation AI packet and proposals
   -> full-context golden proposal families when requested
   -> proposal-derived draft patch specs
@@ -44,13 +46,58 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 
 The manifest is the first review object. Telemetry and capability manifests are the next AI reasoning surfaces. Detailed reports are opened only after manifest and telemetry show which phases produced them.
 
-## TUTTO SU TUTTO data-flow rule
+## Run unica / TUTTO SU TUTTO data-flow rule
+
+The primary model is one parameterized run:
+
+```text
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters
+-No* flags = explicit opt-out from selected lanes
+```
 
 `-Full0To10` data flow is **TUTTO SU TUTTO**.
 
-Every full-run intensity must preserve the same semantic data surfaces. `quick`, `balanced`, `deep` and `custom` may change volume, context size and runtime budget, but they must not silently remove core data flows.
+Every intensity preset must preserve the same semantic data surfaces. `quick`, `balanced`, `deep` and `custom` may change volume, context size, token limits and runtime budget, but they must not silently remove core data flows.
 
-The full-run perimeter can expand. When a new production-ready data surface appears, such as a registry, broker tool report, provider diagnostic, repository-consistency map, memory/context builder or telemetry summary, it must be added to this document and to the launcher contract, or explicitly excluded with rationale.
+The full-run perimeter can expand. When a new production-ready data surface appears, such as a registry, broker tool report, provider diagnostic, repository-consistency map, memory/context builder, discovery/index report, CSV/count surface or telemetry summary, it must be added to this document and to the launcher contract, or explicitly excluded with rationale.
+
+## Discovery, index and CSV/count flow
+
+Discovery and count surfaces are data-flow evidence, not source authority.
+
+```text
+Markdown inventory
+  -> docs lifecycle, obsolete/redundant docs, missing index review
+
+script inventory
+  -> tool/function/class/method visibility
+  -> JSON/CSV/MD outputs
+
+Python line-count CSV/MD
+  -> sizing evidence
+  -> refactor planning
+  -> PR/report line-count support
+
+function/class/method CSV
+  -> duplication and helper-reuse triage
+  -> superclass/base-class opportunity review
+
+auto-discovery/index repair report
+  -> scanner/index visibility drift detection
+  -> repair plan/report before any regeneration
+```
+
+Policy:
+
+```text
+Do not commit output/**.
+Do not commit indexAI/code_chunks/**.
+Do not hand-edit generated indexes or chunks as source.
+Index repair is plan/report-first unless explicitly requested.
+CSV/count surfaces support review and sizing; they do not override source code or canonical docs.
+```
 
 ## Provider-lane flow
 
@@ -59,7 +106,7 @@ Ollama/GPU workload report
   -> quality gate: usable_text
   -> advisory lane: ollama
   -> provider mapping: GPU/CUDA
-  -> primary advisory packet generation when explicitly requested
+  -> primary advisory packet generation for Full0To10 unless disabled/unavailable
   -> provider diagnostics and degradation state in telemetry/bundle
 ```
 
@@ -68,7 +115,7 @@ NPU/OpenVINO workload report
   -> quality gate: unusable_output for old real workload report
   -> excluded from advisory context
   -> remediation report
-  -> explicit NPU probe / decode smoke diagnostic
+  -> NPU probe / decode smoke diagnostic for Full0To10 unless disabled/unavailable
   -> possible future promotion only after quality-gated usable workload output
   -> provider diagnostics and exclusion reason in telemetry/bundle
 ```
@@ -81,6 +128,8 @@ OpenVINO -> NPU
 ```
 
 OpenVINO GPU is not a primary lane.
+
+Provider execution is explicit when the operator selects `-Full0To10` or provider/probe modes. It is not an extra per-lane opt-in after `-Full0To10` is selected.
 
 ## Runtime telemetry flow
 
@@ -107,6 +156,7 @@ which tools executed
 which tools failed
 which tools were blocked
 which provider lanes degraded
+which discovery/index/count surfaces were present, skipped or degraded
 which reports were absorbed into the bundle
 which source writes or patch applications did not happen
 ```
@@ -165,10 +215,13 @@ npu_decode_smoke_passed: true
 
 | Data | Producer | Consumer | Notes |
 |---|---|---|---|
-| Unified manifest | `Tools/workflow/run_unified_local_ai_refactor.ps1` | human/AI review | First review object for selected modes, phase status, reports, context, providers and guardrails. |
+| Unified manifest | `Tools/workflow/run_unified_local_ai_refactor.ps1` | human/AI review | First review object for run-unica parameters, phase status, reports, context, providers and guardrails. |
 | Source/docs context | repository files | inventories, context packs, advisory packet builder | Non-workload files are trusted unless normal file read fails. |
 | Markdown inventory | `Tools/validation/build_markdown_inventory.py` | docs cleanup, pruning, link review | Generated under `output/**`; do not commit unless compact evidence is intentionally built. |
 | Script inventory | `Tools/validation/build_script_inventory.py` | tool/function visibility, refactor review | JSON/CSV/Markdown inventory under `output/**`. |
+| Python line-count CSV/MD | validation/broker inventory lanes | PR review, refactor sizing, line-count reporting | Evidence surface; not source authority. |
+| Function/class/method CSV | script inventory lanes | duplication, helper reuse and base-class opportunity review | Evidence surface for refactor/reuse planning. |
+| Auto-discovery/index repair report | scanner/index validators and repair planners | local AI agents, maintainers | Plan/report-first when index drift is suspected; generated indexes remain non-source. |
 | Semantic code chunks | `Tools/npu/build_semantic_code_chunks.py` | selected chunk builder, local AI task adapter | Generated context under index/output paths; do not hand-edit. |
 | Selected semantic chunks | `Tools/ai/select_semantic_code_chunks.py` | context pack builder, local AI task adapter, provider packets | Bounded focused context under ignored `output/ai_context_packs/`; validator can emit compact tracked evidence. |
 | AI context pack | `Tools/ai/build_ai_context_pack.py` | human/AI task planning, proposal builders | Bounded task-scoped context under ignored `output/ai_context_packs/` plus compact tracked evidence. |
@@ -178,13 +231,13 @@ npu_decode_smoke_passed: true
 | Lane routing report | `Tools/ai/build_workload_quality_lane_routing.py` | packet builder, evidence bundle | Declares trusted/excluded context and primary advisory provider. |
 | Provider diagnostics | provider/probe tools and sync analyzers | telemetry summary, bundle, AI agents | Must expose advisory state, failure reasons, degraded components and GPU/NPU timing source. |
 | NPU remediation report | `Tools/validation/check_npu_decode_quality_remediation.py` | maintainer, proposals, evidence | Explains why NPU is excluded and what must happen before promotion. |
-| NPU decode smoke report | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | evidence bundle and future promotion gates | Explicit-run diagnostic; does not imply NPU general advisory quality. |
-| Local provider probe report | `Tools/ai/run_local_provider_probe.py` | evidence bundle | Explicit GPU/Ollama and NPU/OpenVINO probe evidence. |
+| NPU decode smoke report | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | evidence bundle and future promotion gates | Full0To10 diagnostic unless disabled/unavailable; does not imply NPU general advisory quality. |
+| Local provider probe report | `Tools/ai/run_local_provider_probe.py` | evidence bundle | Full0To10/provider probe evidence unless disabled/unavailable. |
 | Runtime broker report | `Tools/ai/agent_runtime_tool_broker.py` | runtime telemetry, full toolbox bundle | Shows broker-requested tool calls and guardrail outcomes. |
 | Runtime tool usage telemetry | `Tools/ai/build_runtime_tool_usage_telemetry.py` | AI agents, telemetry summary, bundle | Counts executed/failed/blocked broker calls and carries broker report inputs. |
 | Runtime tool capability manifest | `Tools/ai/build_runtime_tool_capability_manifest.py` | AI agents, bundle, cloud handoff | Describes available tools, allowed args and execution guardrails. |
 | Full toolbox run telemetry summary | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | AI agents, bundle, PR review | Cross-run summary of provider, GPU/NPU, broker, patch-plan and guardrail state. |
-| Shared AI-to-AI bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | next local/cloud AI, PR review | Production handoff surface; must carry diagnostics, telemetry, capability and patch-plan summary. |
+| Shared AI-to-AI bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | next local/cloud AI, PR review | Production handoff surface; must carry diagnostics, telemetry, capability, discovery/count and patch-plan summary. |
 | Post-validation AI packet | `Tools/ai/suggest_repository_updates.py` | maintainer / proposal builder | Uses quality-approved advisory context only. |
 | Repository change proposals | `Tools/ai/build_repository_change_proposals.py` | maintainer, future trusted patch builders | Advisory only; no auto-apply. Includes `suggestion_outputs` descriptors for code/MD/JSON/PowerShell targets. |
 | Full-context golden proposals | `Tools/ai/build_full_context_golden_proposals.py` | maintainer, validators, future patch-spec promotion | Deterministic P1-P6 proposal families; manual-review-only and no source mutation. |
@@ -215,13 +268,14 @@ This is now one application domain over the local AI orchestration workbench, no
 
 ## Rules for AI systems
 
-- Start full local AI flows from the unified launcher manifest path.
-- Preserve TUTTO SU TUTTO coverage for all full-run intensities.
+- Start local AI flows from the unified launcher manifest path.
+- Preserve run unica semantics: parameters change capacity, not scope.
+- Preserve TUTTO SU TUTTO coverage for `Full0To10` unless a lane is explicitly disabled, unavailable or excluded with rationale.
 - Add new stable data surfaces to this flow when the full-run perimeter expands.
 - Read telemetry/capability surfaces before declaring run success or failure.
 - Exclude unusable workload reports from advisory context before reading their content.
 - Treat NPU short smoke success as diagnostic evidence, not as general advisory promotion.
-- Keep provider execution explicit and report-bound.
+- Keep provider execution report-bound and opt-out inside Full0To10, not implicit outside selected workflows.
 - Do not overwrite large analysis JSON files unless explicitly requested.
 - Treat `indexAI/` and generated manifests as generated context.
 - Preserve local path configurability.
@@ -239,6 +293,8 @@ This is now one application domain over the local AI orchestration workbench, no
 - runtime tool capability manifest;
 - full toolbox run telemetry summary;
 - shared AI-to-AI bundle final summary;
+- discovery/index repair reports;
+- Python line-count and function/class/method CSV surfaces;
 - selected semantic chunks report/evidence beyond the focused contract already present;
 - full-context golden proposal report beyond the focused validator already present;
 - legacy audio analysis JSON;
@@ -249,4 +305,4 @@ This is now one application domain over the local AI orchestration workbench, no
 
 ## Recommended next improvement
 
-Keep the unified launcher contract and docs indexes aligned with the actual runner, finish external-control pass-through for subordinate launcher calls, and keep telemetry/capability manifests as first-class AI handoff inputs. Promote full-context golden proposal families P1-P6 one at a time only after the relevant telemetry, provider diagnostics and guardrails are visible in compact evidence.
+Inspect the `20260505-143844` refactor/reuse runtime bundle, classify recommendations and patch plans, then select a review-first refactor/reuse patch family only after telemetry, provider diagnostics, workload quality, discovery/index and CSV/count evidence have been reviewed. External-control pass-through remains a follow-up unless explicitly selected.
