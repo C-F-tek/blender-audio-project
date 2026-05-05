@@ -32,25 +32,29 @@ def build_readiness(records: dict[str, Any], evidence_index: dict[str, Any]) -> 
         "provider_invocation_plan",
         "provider_workload_report_contract",
         "provider_expected_telemetry_contract",
+        "provider_execution_bridge",
+        "provider_real_run_gate",
+        "provider_command_plan",
     )
     for role in json_roles:
         record = records.get(role, {})
         if record.get("exists") and record.get("type") == "json" and not contract_passed(record):
-            score -= 10
+            score -= 8
             warnings.append(f"{role}_not_passed")
 
-    permit = records.get("provider_run_permit", {}).get("json") or {}
-    if permit.get("provider_execution_performed") is True:
-        score -= 40
-        blockers.append("provider_governor_executed_provider")
+    bridge = records.get("provider_execution_bridge", {}).get("json") or {}
+    if bridge.get("provider_execution_performed") is True:
+        score -= 50
+        blockers.append("provider_execution_bridge_executed_provider")
 
-    invocation = records.get("provider_invocation_plan", {}).get("json") or {}
-    if invocation.get("generation_executes_now") is True:
+    gate = records.get("provider_real_run_gate", {}).get("json") or {}
+    if gate.get("real_run_allowed") is True:
+        warnings.append("real_run_gate_allowed_review_required")
+
+    command = records.get("provider_command_plan", {}).get("json") or {}
+    if command.get("all_commands_are_non_executing") is not True:
         score -= 40
-        blockers.append("provider_invocation_plan_executes_generation")
-    if invocation.get("readiness", {}).get("ready_for_bundle_inclusion") is not True:
-        score -= 10
-        warnings.append("provider_invocation_plan_not_bundle_ready")
+        blockers.append("provider_command_plan_contains_executing_command")
 
     score = max(0, score)
     report = {

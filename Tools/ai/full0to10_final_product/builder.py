@@ -7,6 +7,7 @@ from typing import Any
 
 from full0to10_accelerator_control.builder import build_accelerator_control
 from full0to10_effective_use.builder import build_effective_use_optimization
+from full0to10_provider_execution_bridge.builder import build_provider_execution_bridge
 from full0to10_provider_governor.builder import build_provider_governor
 from full0to10_provider_invocation_plan.builder import build_provider_invocation_plan
 from full0to10_quality_gate.builder import build_quality_gate
@@ -38,16 +39,18 @@ def build_final_tool_product(
     accelerator_dir = ensure_dir(output_dir / "accelerator_control")
     governor_dir = ensure_dir(output_dir / "provider_governor")
     invocation_dir = ensure_dir(output_dir / "provider_invocation_plan")
+    bridge_dir = ensure_dir(output_dir / "provider_execution_bridge")
 
     accelerator_control = build_accelerator_control(repo_root, accelerator_dir, request, no_external_probes, timeout_seconds)
     provider_governor = build_provider_governor(repo_root, governor_dir, request, False, False, no_external_probes, timeout_seconds)
     invocation_plan = build_provider_invocation_plan(repo_root, invocation_dir, request, False, False, no_external_probes, timeout_seconds)
+    execution_bridge = build_provider_execution_bridge(repo_root, bridge_dir, request, False, False, no_external_probes, timeout_seconds)
     effective_summary = build_effective_use_optimization(repo_root, effective_dir, request, None, no_external_probes, timeout_seconds)
 
     quality_gate = build_quality_gate(repo_root, None)
     write_json(quality_dir / "full0to10_quality_gate.json", quality_gate)
 
-    records = product_artifacts(effective_dir, quality_dir, accelerator_dir, governor_dir, invocation_dir, repo_root)
+    records = product_artifacts(effective_dir, quality_dir, accelerator_dir, governor_dir, invocation_dir, bridge_dir, repo_root)
     evidence = build_evidence_index(repo_root, records)
     readiness = build_readiness(records, evidence)
 
@@ -69,15 +72,15 @@ def build_final_tool_product(
         "readme": repo_relative(readme_path, repo_root),
         "accelerator_control": accelerator_control["outputs"].get("control"),
         "provider_governor": provider_governor["outputs"].get("governor"),
-        "provider_run_permit": provider_governor["outputs"].get("permit"),
         "provider_invocation_plan": invocation_plan["outputs"].get("plan"),
-        "provider_workload_report_contract": invocation_plan["outputs"].get("workload_contract"),
-        "provider_expected_telemetry_contract": invocation_plan["outputs"].get("telemetry_contract"),
+        "provider_execution_bridge": execution_bridge["outputs"].get("bridge"),
+        "provider_real_run_gate": execution_bridge["outputs"].get("real_run_gate"),
+        "provider_command_plan": execution_bridge["outputs"].get("command_plan"),
     }
 
     manifest: dict[str, Any] = {
         "kind": "full0to10_final_tool_product_manifest",
-        "passed": evidence["passed"] and readiness["passed"] and effective_summary["passed"] and invocation_plan["passed"],
+        "passed": evidence["passed"] and readiness["passed"] and effective_summary["passed"] and execution_bridge["passed"],
         "request": request,
         "outputs": outputs,
         "evidence": evidence,
@@ -85,6 +88,7 @@ def build_final_tool_product(
         "accelerator_control": accelerator_control,
         "provider_governor": provider_governor,
         "provider_invocation_plan": invocation_plan,
+        "provider_execution_bridge": execution_bridge,
         "effective_use_summary": effective_summary,
         "quality_gate": quality_gate,
         "output_records": [

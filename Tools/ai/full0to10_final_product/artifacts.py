@@ -25,6 +25,7 @@ def product_artifacts(
     accelerator_dir: Path,
     governor_dir: Path,
     invocation_dir: Path,
+    bridge_dir: Path,
     repo_root: Path,
 ) -> dict[str, Any]:
     paths = {
@@ -35,15 +36,15 @@ def product_artifacts(
         "optimization": effective_dir / "full0to10_effective_use_optimization.json",
         "quality_gate": quality_dir / "full0to10_quality_gate.json",
         "accelerator_control": accelerator_dir / "full0to10_accelerator_control.json",
-        "accelerator_telemetry": accelerator_dir / "full0to10_accelerator_telemetry.json",
         "provider_governor": governor_dir / "full0to10_provider_governor.json",
         "provider_run_permit": governor_dir / "full0to10_provider_run_permit.json",
-        "provider_governor_telemetry": governor_dir / "full0to10_provider_governor_telemetry.json",
         "provider_invocation_plan": invocation_dir / "full0to10_provider_invocation_plan.json",
-        "provider_invocation_markdown": invocation_dir / "full0to10_provider_invocation_plan.md",
         "provider_workload_report_contract": invocation_dir / "full0to10_provider_workload_report_contract.json",
         "provider_expected_telemetry_contract": invocation_dir / "full0to10_provider_expected_telemetry_contract.json",
-        "provider_dry_run_steps": invocation_dir / "full0to10_provider_dry_run_steps.json",
+        "provider_execution_bridge": bridge_dir / "full0to10_provider_execution_bridge.json",
+        "provider_real_run_gate": bridge_dir / "full0to10_provider_real_run_gate.json",
+        "provider_command_plan": bridge_dir / "full0to10_provider_command_plan.json",
+        "provider_workload_output_paths": bridge_dir / "full0to10_provider_workload_output_paths.json",
     }
     records = {}
     for role, path in paths.items():

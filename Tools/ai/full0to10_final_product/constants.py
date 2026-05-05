@@ -26,6 +26,9 @@ REQUIRED_PRODUCT_EVIDENCE = (
     "provider_invocation_plan",
     "provider_workload_report_contract",
     "provider_expected_telemetry_contract",
+    "provider_execution_bridge",
+    "provider_real_run_gate",
+    "provider_command_plan",
 )
 
 FINAL_PRODUCT_SECTIONS = (
@@ -39,6 +42,7 @@ FINAL_PRODUCT_SECTIONS = (
     "accelerator_control",
     "provider_governor",
     "provider_invocation_plan",
+    "provider_execution_bridge",
     "readiness",
     "next_run",
 )
