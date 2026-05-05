@@ -4,12 +4,14 @@ This file is the first local-run bootstrap for AI assistants working inside a ch
 
 Use it before changing files during local runs. It is intentionally operational and conservative.
 
-## FIRST ENTRY — Unified Local AI 0-to-10
+## FIRST ENTRY — Unified Local AI run unica
 
 When Carmine asks for any of these phrases, open the unified launcher runbook first:
 
 ```text
 Tutto su tutto
+run unica
+run completa
 full toolbox
 0-10
 cassetta degli attrezzi completa
@@ -18,7 +20,6 @@ multi-script
 multi-fase
 semi-automatic process
 flusso unico
-run completa
 quick test
 smoke
 full validation
@@ -31,6 +32,11 @@ tool promotion
 runtime broker telemetry
 telemetry summary
 AI-to-AI bundle
+auto-discovery
+index repair
+CSV count
+line count
+function/class/method inventory
 ```
 
 Primary current runbook:
@@ -49,26 +55,57 @@ Current stable supporting docs:
 
 ```text
 FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
-docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
 docs/LOCAL_AI_TASKS/next-chat-unified-launcher-external-controls.md
 ```
 
 No other local-AI runner is an active first entrypoint. Supporting wrappers may be called by the launcher, but they must not be used as separate operator paths unless a future PR explicitly promotes them into the launcher manifest/phase contract.
 
+## Current active branch phase
+
+```text
+Branch: codex/unified-local-ai-refactor-launcher
+PR: #187 feat(workflow): add unified local AI refactor launcher
+Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+Run: 20260505-143844
+Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Mode: review-only until explicit human instruction
+```
+
+The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Inspect the bundle before selecting any refactor/reuse patch.
+
+## Run unica rule
+
+The primary operating model is not a set of separate profiles. It is one parameterized run:
+
+```text
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters
+-No* flags = explicit opt-out from selected lanes
+```
+
+`quick`, `balanced`, `deep` and `custom` change budgets, limits, rounds, context, tokens, wait times and other execution parameters. They do not create smaller semantic scopes and must not remove lanes silently.
+
+If the operator does not want a lane, the operator disables it explicitly with a `-No*` flag or documents the exclusion.
+
 ## One-flow rule
 
-All local-AI execution profiles must be modeled as launcher modes, profiles or flags.
+All local-AI execution variants must be modeled as launcher modes, parameters, presets or flags behind the run unica.
 
 This includes:
 
 ```text
 quick tests
 smoke tests
-full runs
+complete runs
 deep runs
 full validation
 documentation cleanup
@@ -80,11 +117,15 @@ multistep provider workflow
 SQLite memory handoff
 context packs
 semantic chunks
+selected chunk evidence
 patch-spec generation
 runtime broker telemetry
 runtime capability manifest
 telemetry summary
 project-tool promotion evidence
+auto-discovery and index-drift evidence
+index repair planning/reporting
+CSV/count surfaces
 reset cleanup
 legacy full-toolbox integrated behavior
 ```
@@ -106,11 +147,11 @@ They are implementation lanes, historical material or scoped helpers behind the 
 
 ## TUTTO SU TUTTO rule
 
-Every full local-AI run is **TUTTO SU TUTTO**.
+Every run unica with `-Full0To10` is **TUTTO SU TUTTO**.
 
-`quick`, `balanced`, `deep` and `custom` are intensity profiles only. They may change runtime budget, token/context limits, round count and depth. They must not silently remove lanes from the full flow.
+`Full0To10` is opt-out by lane, not opt-in per capability. Once `-Full0To10` is selected, the default assumption is that provider/probe/workload-quality, telemetry, discovery, index and CSV/count lanes are included. If the operator does not want a lane, the operator must disable it explicitly with `-No*` flags or a documented exclusion.
 
-The perimeter of `tutto` can expand. When a new stable validator, broker tool, provider diagnostic, memory/context surface, project-tool registry, repository-consistency check, telemetry surface or evidence builder is promoted, it must be added to the full-run contract or explicitly excluded with rationale.
+The perimeter of `tutto` can expand. When a new stable validator, broker tool, provider diagnostic, memory/context surface, project-tool registry, repository-consistency check, telemetry surface, discovery/index surface, CSV/count surface or evidence builder is promoted, it must be added to the run unica full-run contract or explicitly excluded with rationale.
 
 ## Current operating chain
 
@@ -118,10 +159,11 @@ The perimeter of `tutto` can expand. When a new stable validator, broker tool, p
 unified launcher command from unified-local-ai-refactor-launcher.md
   -> manifest-first run visibility
   -> inventories / reports / context packs / memory packet
-  -> workload quality routing when provider is requested
+  -> discovery, index-drift and CSV/count evidence when relevant
+  -> workload quality routing for Full0To10/provider lanes
   -> official pipeline adapter when selected
-  -> Ollama advisory / primary provider lane when explicitly enabled
-  -> multistep provider probes when selected
+  -> Ollama advisory / primary provider lane unless disabled or diagnosed unavailable
+  -> multistep provider probes unless disabled or diagnosed unavailable
   -> deterministic recommendations
   -> review-only patch specs / patch bundles
   -> runtime broker report and telemetry
@@ -156,7 +198,7 @@ The bootstrap prevents these common failures:
 ```text
 starting from stale context
 editing runtime files during documentation/backend tasks
-running providers implicitly
+running providers implicitly outside Full0To10/provider-selected workflows
 forgetting active execution plans
 forgetting compact evidence bundles
 mixing GitHub-only review with local workstation evidence
@@ -165,6 +207,8 @@ starting from superseded 0-to-10 runbooks
 using a supporting wrapper as an active first entrypoint
 triggering audio/media output during AI/tooling runs
 inferring run success from file existence instead of telemetry
+silently dropping a full-run lane that should be opt-out
+mistaking quick/balanced/deep/custom for separate scopes instead of parameters
 ```
 
 ## Visibility-first rule
@@ -180,7 +224,7 @@ phase_status / phase_reports
 runtime tool telemetry and capability manifest
 full toolbox telemetry summary
 production AI-to-AI bundle
-compact Markdown or CSV summaries
+compact Markdown or CSV/count summaries
 detailed evidence only when needed
 ```
 
@@ -222,6 +266,34 @@ source_writes_performed
 ```
 
 File existence alone is not evidence of successful execution.
+
+## Discovery, index repair and CSV/count rule
+
+Discovery and count surfaces are evidence lanes for full runs.
+
+Expected surfaces when relevant:
+
+```text
+Markdown inventory JSON/MD
+script inventory JSON/CSV/MD
+function/class/method inventory CSV
+Python line-count CSV/MD
+semantic chunk manifest JSON/MD
+selected chunk evidence JSON/MD
+repository consistency map/smoke JSON/MD
+auto-discovery report when scanner/index visibility drift is suspected
+index repair plan/report when generated indexes are stale or missing
+```
+
+Policy:
+
+```text
+CSV/count outputs are evidence surfaces, not source authority.
+Generated indexes and code chunks are not hand-maintained source.
+Do not commit output/**.
+Do not commit indexAI/code_chunks/**.
+Index repair is plan/report-first unless explicitly requested.
+```
 
 ## Length policy for local-run docs and evidence
 
@@ -286,11 +358,15 @@ At the start of every local AI run, read these files in order:
 AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 WORKFLOW.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/README.md
 docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_TASKS/README.md
+docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
@@ -325,12 +401,12 @@ Classify the task before editing:
 | Task class | Allowed scope | Provider execution |
 |---|---|---|
 | docs/workflow-state | Markdown docs, execution plans, issue/PR handoff notes | No |
-| validation/evidence | validators, report-only builders, compact evidence docs | No implicit providers |
+| validation/evidence | validators, report-only builders, compact evidence docs | No implicit providers outside Full0To10/provider-selected flows |
 | provider diagnostics | explicit-run scripts and diagnostics only | Through launcher provider/probe phases only |
 | runtime broker/tooling | broker-safe report-only tools and telemetry | Through launcher/broker only |
-| tool promotion | docs, registry, report-only wrappers and safe validation | No implicit providers |
-| core AI/backend | app-agnostic AI orchestration and validators | Explicit only when selected |
-| unified full 0-to-10 | full evidence -> recommendation -> patch-plan -> patch-bundle process | Provider only through explicit unified launcher command/flag |
+| tool promotion | docs, registry, report-only wrappers and safe validation | No implicit providers outside Full0To10/provider-selected flows |
+| core AI/backend | app-agnostic AI orchestration and validators | Full0To10/provider-selected flows are opt-out by lane |
+| unified run unica / Full0To10 | full evidence -> recommendation -> patch-plan -> patch-bundle process | Provider/probe/workload-quality lanes included by default unless disabled/unavailable |
 | Blender/audio/media runtime | Blender scripts, audio output, FFmpeg, render or encode behavior | Only when explicitly scoped as application-domain work |
 
 When the task is documentation/workflow-state, do not touch Python runtime code unless a validator/doc contract requires it and the reason is documented.
@@ -349,17 +425,15 @@ Ready To Jazz
 Scripting/shared/blender_compat.py
 full analysis JSON
 generated indexes manually
-provider behavior
 prompt prose
 models
 temperatures
-provider orchestration
 production render/deploy actions
 ```
 
-Do not execute Ollama/OpenVINO/GPU/NPU providers implicitly.
+Do not execute Ollama/OpenVINO/GPU/NPU providers outside Full0To10/provider-selected workflows.
 
-Provider execution is valid only with explicit launcher flags and must produce compact evidence or manifests under:
+Provider execution is valid when the operator selects `-Full0To10` or provider/probe modes, and must produce compact evidence or manifests under:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/
@@ -420,16 +494,18 @@ Mapping:
 | Need | Launcher route |
 |---|---|
 | Documentation/workflow-state cleanup | `md,contract,full_validation` phases |
-| Quick full loop | `Full0To10` with quick intensity |
-| Balanced full loop | `Full0To10` with balanced intensity |
-| Deep full loop | `Full0To10` with deep intensity |
-| Provider evidence | `Full0To10` or provider mode with explicit provider/probe flags |
+| Quick run unica | `Full0To10` with quick intensity parameters |
+| Balanced run unica | `Full0To10` with balanced intensity parameters |
+| Deep run unica | `Full0To10` with deep intensity parameters |
+| Custom run unica | `Full0To10` with explicit operator parameters |
+| Provider evidence | `Full0To10` or provider mode; provider/probe/workload-quality lanes included unless disabled/unavailable |
 | Runtime broker telemetry | `Full0To10` or full-toolbox decision loop with broker telemetry evidence |
 | Tool promotion/inventory | `python`, `context_pack`, `agent_state` and report-only validation phases |
 | Patch-spec generation | `patch_specs` phase or `Full0To10` default |
 | Reset planning/apply | `reset` mode with reset guardrails |
 | Script/tool inventory | `python` phase |
 | Semantic chunks/context/memory | `chunks`, `context_pack`, `agent_state` phases |
+| Discovery/index/CSV-count evidence | inventory, chunks, repository-consistency and validation phases; index repair stays plan/report-first |
 | Audio/media runtime | No default launcher validation path; requires explicit application-domain task. |
 
 Focused validators may still be invoked directly only when the task is explicitly scoped to that validator or when debugging the validator itself.
@@ -452,6 +528,7 @@ provider/runtime execution status
 runtime broker telemetry status
 runtime tool capability manifest status
 full toolbox telemetry summary status
+discovery/index/CSV-count evidence status
 audio/media output status
 patch application status
 risks
@@ -473,6 +550,7 @@ provider execution statement
 runtime broker telemetry statement
 runtime capability manifest statement
 full toolbox telemetry summary statement
+discovery/index/CSV-count evidence statement
 audio/media output statement
 visibility/manifest statement
 risk notes
@@ -487,19 +565,25 @@ No runtime files, provider behavior, generated indexes, full analysis JSON, Blen
 
 ## Current local task pointer
 
-The preferred current end-to-end local task is tracked in:
+The current review-first local task is tracked in:
 
 ```text
-docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+```
+
+Current compact state:
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ```
 
 The previously critical broker telemetry task is closed and validated by run `20260505-073332`:
 
 ```text
-docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 ```
 
-The current technical follow-up is tracked in:
+The external-controls task remains a follow-up, not the current active task unless explicitly selected:
 
 ```text
 docs/LOCAL_AI_TASKS/next-chat-unified-launcher-external-controls.md
@@ -511,10 +595,10 @@ The audio/media output guardrail is tracked in:
 docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
 ```
 
-The expected work is:
+The expected current work is:
 
 ```text
-exercise the unified full 0-to-10 process with selected modes, evidence collectors, optional GPU/NPU provider run, deterministic recommendations, workload quality routing, memory/context surfaces, runtime broker telemetry, runtime capability manifest, full toolbox telemetry summary, patch-spec generation, review-safe patch bundle generation and explicit apply/validation when authorized
+inspect the 20260505-143844 refactor/reuse runtime bundle, classify recommendations and patch plans, verify telemetry/capability/provider/workload/discovery/index/CSV surfaces, then select review-first refactor/reuse changes only after evidence review
 ```
 
-GPU/NPU execution remains explicit. Audio/media output remains forbidden unless an explicit application-domain task enables it. If Carmine cannot run the local provider workflow, GitHub-only agents must stop at report-only/docs/validator work and request the exact unified launcher command/evidence bundle needed next.
+GPU/NPU execution is included by default in Full0To10 when available and quality-gated, unless explicitly disabled or diagnosed unavailable. Audio/media output remains forbidden unless an explicit application-domain task enables it. If Carmine cannot run the local provider workflow, GitHub-only agents must stop at report-only/docs/validator work and request the exact unified launcher command/evidence bundle needed next.
