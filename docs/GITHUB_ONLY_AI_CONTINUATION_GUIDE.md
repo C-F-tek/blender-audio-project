@@ -10,9 +10,9 @@ This document is policy guidance, not a command catalog. Current executable exam
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
-Tools/npu/pipeline/README.md
 ```
+
+Large tool catalogs such as `Tools/validation/README.md` may be useful references, but they must not be treated as primary operational entrypoints if they are too large or truncated.
 
 ## Current collaboration mode
 
@@ -32,19 +32,34 @@ A GitHub-only agent should:
 The active project model is:
 
 ```text
-one canonical launcher flow
-Full0To10 = TUTTO SU TUTTO
-quick/balanced/deep/custom = intensity, not scope
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters, not scope
+-No* flags = explicit opt-out from selected lanes
 smoke = separate non-full mode
-perimeter of tutto can expand explicitly
+CSV/index/discovery surfaces are evidence lanes when relevant
+large Markdown must not be a primary operational entrypoint
 telemetry accompanies evidence and patch plans for completeness
 ```
 
 GitHub-only agents can update docs, contracts, PR bodies and small low-risk code when requested. They cannot prove runtime behavior without committed/pasted evidence.
 
+## Current branch phase
+
+```text
+Branch: codex/unified-local-ai-refactor-launcher
+PR: #187 feat(workflow): add unified local AI refactor launcher
+Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+Run: 20260505-143844
+Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Mode: review-only until explicit human instruction
+```
+
+The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Do not infer bundle contents from file existence alone.
+
 ## North star
 
-Keep the app core, backend, AI pipeline, NPU pipeline, multistep orchestration, guardrails, memory policy, telemetry, capability manifests and validation contracts app-agnostic before touching artist-facing Blender runtime workflows.
+Keep the app core, backend, AI pipeline, NPU pipeline, multistep orchestration, guardrails, memory policy, telemetry, capability manifests, discovery/index/CSV evidence and validation contracts app-agnostic before touching artist-facing Blender runtime workflows.
 
 The project can repeat these core loops multiple times:
 
@@ -57,6 +72,7 @@ runtime broker telemetry
 runtime capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle completeness
+discovery/index/CSV-count visibility
 documentation and execution plans
 local workstation proof when available
 index regeneration only when explicitly scoped
@@ -97,6 +113,15 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
+Current compact state documents:
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
+```
+
 Do not restart from old PR chains, historical branch names or legacy helper-contract assumptions.
 
 ## What a GitHub-only agent may do
@@ -111,7 +136,8 @@ Safe work:
 - add or update execution plans under `docs/EXECUTION_PLANS/`;
 - update tech debt and status documents when the evidence is in committed files or maintainer-provided reports;
 - update telemetry/capability/evidence contracts;
-- create patch plans or patch specs for later review without applying them.
+- create patch plans or patch specs for later review without applying them;
+- classify large Markdown as catalog/supporting/evidence and add compact bridges when needed.
 
 Allowed but higher care:
 
@@ -124,6 +150,7 @@ Do not do these from GitHub-only mode:
 
 - do not edit full frame-by-frame analysis JSON files;
 - do not hand-edit generated indexes under `indexAI/` or generated NPU context/index files;
+- do not commit `indexAI/code_chunks/**`;
 - do not claim Blender runtime compatibility without a local Blender smoke report;
 - do not begin Ready To Jazz migration or broad `blender_compat.py` adoption;
 - do not change NPU/Ollama provider execution behavior without an explicit narrow scope and local validation plan;
@@ -131,7 +158,8 @@ Do not do these from GitHub-only mode:
 - do not add external dependencies, CI workflows or heavy automation without explicit maintainer approval;
 - do not mark local validation as passing unless the report is committed or the maintainer provides its contents;
 - do not treat dry-run matrix, focused validator output or file existence as proof that `Full0To10` passed;
-- do not queue or apply patch specs without explicit approval.
+- do not queue or apply patch specs without explicit approval;
+- do not keep an oversized Markdown file as a primary operational entrypoint.
 
 ## Telemetry and evidence handling in GitHub-only mode
 
@@ -145,14 +173,18 @@ pasted by the maintainer
 included in a PR body/comment with concrete fields
 ```
 
-Required companion surfaces for full-run evidence/patch-plan review:
+Required companion surfaces for run-unica evidence/patch-plan review:
 
 ```text
+launcher manifest
+phase_status / phase_reports
 runtime_tool_usage_telemetry_<STAMP>.json/md
 runtime_tool_capability_manifest_<STAMP>.json/md
 full_toolbox_run_telemetry_summary_<STAMP>.json/md
 shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
 shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+CSV/count summaries when inventory lanes ran
+discovery/index repair reports when relevant
 ```
 
 A GitHub-only agent must not infer success from:
@@ -163,6 +195,7 @@ patch plan exists
 dry-run report exists
 provider report exists
 NPU smoke exists
+large Markdown mentions it
 ```
 
 It must inspect fields such as:
@@ -186,22 +219,25 @@ source_writes_performed
 
 When working GitHub-only on the current branch, prioritize:
 
-1. Keep canonical MD contracts aligned with code and evidence.
+1. Keep canonical MD contracts aligned with run-unica doctrine and code/evidence.
 2. Keep PR #187 body aligned with current branch state.
-3. Continue demoting obsolete/historical runbooks from active entrypoints.
+3. Continue demoting obsolete, historical or too-large runbooks from active entrypoints.
 4. Keep telemetry/capability/final-summary contracts attached to evidence and patch plans.
-5. Document local validation as pending unless committed/pasted evidence proves it.
-6. Avoid requesting local sync or runs until the maintainer asks for them.
+5. Keep discovery/index/CSV-count surfaces visible in refactor/reuse and full-run handoff docs.
+6. Document local validation as pending unless committed/pasted evidence proves it.
+7. Avoid requesting local sync or runs until the maintainer asks for them.
+8. Inspect the `20260505-143844` refactor/reuse runtime bundle when it is available through PR release asset, upload or local handoff.
 
 Good follow-up targets:
 
 ```text
-docs/QUALITY_GATE.md
-docs/JSON_SCHEMAS.md
-docs/TECH_DEBT_TRACKER.md
 docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md
-docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md
-Tools/validation/README.md
+docs/AI_REFERENCE_ONBOARDING.md
+docs/AI_REFERENCE_SOURCE_MAP.md
+docs/AI_ARTIFACT_SCHEMAS.md
+docs/PATCH_SPEC_WORKFLOW.md
+docs/QUALITY_GATE.md
+Tools/validation/README.md as catalog/reference only
 Tools/npu/pipeline/README.md
 ```
 
@@ -236,6 +272,7 @@ what local validation is unavailable or still required
 whether indexes must be regenerated later
 what evidence is missing because the agent has no local workstation
 which telemetry/capability/final-summary artifacts were reviewed, if any
+which discovery/index/CSV-count surfaces were reviewed, if any
 ```
 
 Use honest validation language:
@@ -273,15 +310,14 @@ safe to review, not proven on workstation
 
 ## State updates to keep durable
 
-When a macro step changes direction, update these files first:
+When a macro step changes direction, update compact/current-state files first:
 
 ```text
-docs/EXECUTION_PLANS/
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
 docs/TECH_DEBT_TRACKER.md
 docs/PROJECT_STATUS_POINT.md
-docs/AI_PIPELINE_REFACTOR_STATUS.md
-docs/JSON_SCHEMAS.md
-docs/AI_ARTIFACT_SCHEMAS.md
 docs/README.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 ```
@@ -291,5 +327,5 @@ Only update status documents when there is evidence in committed code, validatio
 ## Short prompt for future GitHub-only agents
 
 ```text
-You are working GitHub-only on C-F-tek/blender-audio-project / IA-Carmine. Read AGENTS.md, WORKFLOW.md, docs/README.md, docs/LOCAL_AI_RUN_BOOTSTRAP.md, docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md and docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md first. Continue core/backend/AI/NPU/guardrail/memory/telemetry work before Ready To Jazz or blender_compat adoption. Current active branch family is codex/unified-local-ai-refactor-launcher / PR #187. Do not restart from old PR #41-#47 assumptions. Do not ask for local sync or runs while the maintainer is away unless requested. Do not hand-edit generated indexes or full analysis JSON. Make small PR updates, state local validation limits honestly, and treat telemetry/capability/final-summary artifacts as required companions for full-run evidence and patch plans.
+You are working GitHub-only on C-F-tek/blender-audio-project / IA-Carmine. Read AGENTS.md, CHATGPT.md, CHATGPT/README.md, docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md, docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md, WORKFLOW.md, docs/README.md, docs/LOCAL_AI_RUN_BOOTSTRAP.md, docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md and docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md first. Continue core/backend/AI/NPU/guardrail/memory/telemetry/discovery/index/CSV work before Ready To Jazz or blender_compat adoption. Current active branch family is codex/unified-local-ai-refactor-launcher / PR #187. Current active task is refactor/reuse run 20260505-143844. Do not restart from old PR #41-#47 assumptions. Do not ask for local sync or runs while the maintainer is away unless requested. Do not hand-edit generated indexes, indexAI/code_chunks/** or full analysis JSON. Make small PR updates, state local validation limits honestly, and treat telemetry/capability/final-summary plus discovery/index/CSV-count artifacts as required companions for run-unica evidence and patch plans.
 ```
