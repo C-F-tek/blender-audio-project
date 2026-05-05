@@ -22,23 +22,24 @@ Source-of-truth remains code, tests, validation reports, runtime bundle evidence
 Recommended read order:
 
 ```text
-1. CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
-2. docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-3. docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
-4. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
-5. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-6. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
-7. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
-8. docs/LOCAL_AI_TASKS/project-tool-registry.md
-9. docs/TECH_DEBT_TRACKER.md
-10. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
-11. CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md
-12. CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md
-13. docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
-14. docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
-15. FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
-16. docs/LOCAL_AI_TASKS/ai-patch-delivery-policy.md
-17. docs/LOCAL_AI_TASKS/global-datastamp-ai-packets-contract.md
+1. docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+2. CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
+3. docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+4. docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+5. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+6. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+7. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+8. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+9. docs/LOCAL_AI_TASKS/project-tool-registry.md
+10. docs/TECH_DEBT_TRACKER.md
+11. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
+12. CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md
+13. CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md
+14. docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
+15. docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
+16. FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
+17. docs/LOCAL_AI_TASKS/ai-patch-delivery-policy.md
+18. docs/LOCAL_AI_TASKS/global-datastamp-ai-packets-contract.md
 ```
 
 Current active follow-up:
@@ -56,6 +57,7 @@ ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
 Current compact context notes:
 
 ```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 ```
