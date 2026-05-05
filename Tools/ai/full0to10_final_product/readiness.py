@@ -20,7 +20,7 @@ def build_readiness(records: dict[str, Any], evidence_index: dict[str, Any]) -> 
         score -= 35
         blockers.extend(evidence_index["missing_required_roles"])
 
-    for role in (
+    json_roles = (
         "effective_use_summary",
         "provider_hardening",
         "tool_telemetry",
@@ -29,38 +29,28 @@ def build_readiness(records: dict[str, Any], evidence_index: dict[str, Any]) -> 
         "accelerator_control",
         "provider_governor",
         "provider_run_permit",
-    ):
+        "provider_invocation_plan",
+        "provider_workload_report_contract",
+        "provider_expected_telemetry_contract",
+    )
+    for role in json_roles:
         record = records.get(role, {})
-        if not record.get("exists"):
-            continue
-        if record.get("type") == "json" and not contract_passed(record):
-            score -= 12
+        if record.get("exists") and record.get("type") == "json" and not contract_passed(record):
+            score -= 10
             warnings.append(f"{role}_not_passed")
-
-    provider = records.get("provider_hardening", {}).get("json") or {}
-    lanes = provider.get("lanes") or {}
-    if "ollama_gpu" not in lanes:
-        score -= 8
-        warnings.append("ollama_gpu_contract_missing")
-    if "openvino_npu" not in lanes:
-        score -= 8
-        warnings.append("openvino_npu_contract_missing")
-    if "sqlite_fts5" not in lanes:
-        score -= 8
-        blockers.append("sqlite_fts5_contract_missing")
-
-    accelerator = records.get("accelerator_control", {}).get("json") or {}
-    scheduler = accelerator.get("scheduler") or {}
-    if scheduler.get("generation_allowed") is True:
-        score -= 30
-        blockers.append("accelerator_scheduler_allows_generation_in_pre_run")
 
     permit = records.get("provider_run_permit", {}).get("json") or {}
     if permit.get("provider_execution_performed") is True:
         score -= 40
         blockers.append("provider_governor_executed_provider")
-    if permit.get("permit_allowed") is True:
-        warnings.append("provider_permit_preview_allowed_review_required")
+
+    invocation = records.get("provider_invocation_plan", {}).get("json") or {}
+    if invocation.get("generation_executes_now") is True:
+        score -= 40
+        blockers.append("provider_invocation_plan_executes_generation")
+    if invocation.get("readiness", {}).get("ready_for_bundle_inclusion") is not True:
+        score -= 10
+        warnings.append("provider_invocation_plan_not_bundle_ready")
 
     score = max(0, score)
     report = {

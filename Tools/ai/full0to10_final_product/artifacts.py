@@ -24,6 +24,7 @@ def product_artifacts(
     quality_dir: Path,
     accelerator_dir: Path,
     governor_dir: Path,
+    invocation_dir: Path,
     repo_root: Path,
 ) -> dict[str, Any]:
     paths = {
@@ -35,10 +36,14 @@ def product_artifacts(
         "quality_gate": quality_dir / "full0to10_quality_gate.json",
         "accelerator_control": accelerator_dir / "full0to10_accelerator_control.json",
         "accelerator_telemetry": accelerator_dir / "full0to10_accelerator_telemetry.json",
-        "accelerator_markdown": accelerator_dir / "full0to10_accelerator_control.md",
         "provider_governor": governor_dir / "full0to10_provider_governor.json",
         "provider_run_permit": governor_dir / "full0to10_provider_run_permit.json",
         "provider_governor_telemetry": governor_dir / "full0to10_provider_governor_telemetry.json",
+        "provider_invocation_plan": invocation_dir / "full0to10_provider_invocation_plan.json",
+        "provider_invocation_markdown": invocation_dir / "full0to10_provider_invocation_plan.md",
+        "provider_workload_report_contract": invocation_dir / "full0to10_provider_workload_report_contract.json",
+        "provider_expected_telemetry_contract": invocation_dir / "full0to10_provider_expected_telemetry_contract.json",
+        "provider_dry_run_steps": invocation_dir / "full0to10_provider_dry_run_steps.json",
     }
     records = {}
     for role, path in paths.items():

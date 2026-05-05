@@ -14,7 +14,7 @@ def render_product_markdown(request: str, evidence: dict[str, Any], readiness: d
         "",
         "## Deliverable scope",
         "",
-        "This package is the final-tool-product staging output. It is built from local tools, SQLite FTS5 memory, provider contracts, accelerator control, provider governor, telemetry, and quality evidence. It is not provider-generated text.",
+        "This package is the final-tool-product staging output. It includes SQLite FTS5 evidence, accelerator control, provider governor, invocation dry-run plan, telemetry contracts, and quality evidence. It is not provider-generated text.",
         "",
         "## Evidence index",
         "",
@@ -25,29 +25,17 @@ def render_product_markdown(request: str, evidence: dict[str, Any], readiness: d
     lines.extend(
         [
             "",
-            "## SQLite memory",
+            "## Provider invocation plan",
             "",
-            "SQLite FTS5 is the deterministic local context layer.",
-            "",
-            "## Runtime tools",
-            "",
-            "Runtime tool usage must be represented by JSON telemetry before any real run.",
+            "The package includes a dry-run invocation plan, workload report contract, expected telemetry contract, NPU audit hooks and non-executing steps.",
             "",
             "## GPU/Ollama",
             "",
-            "Ollama/GPU is explicit primary advisory only after quality gates and provider governor permit.",
+            "Ollama/GPU can only run in a future explicit real-run lane after permit and workload contract are satisfied.",
             "",
             "## NPU/OpenVINO",
             "",
-            "NPU/OpenVINO remains sampled-auditor/diagnostic. GPU.0 remains secondary unless promoted.",
-            "",
-            "## Accelerator control",
-            "",
-            "The package includes GPU body, GPU mind, NPU auditor, GPU.0 contract and scheduler evidence.",
-            "",
-            "## Provider governor",
-            "",
-            "The governor produces a run permit decision and budget. This package never executes providers.",
+            "NPU is wired as auditor. GPU.0 stays diagnostic/secondary.",
             "",
             "## Readiness",
             "",
@@ -62,7 +50,7 @@ def render_product_markdown(request: str, evidence: dict[str, Any], readiness: d
     for blocker in readiness["blockers"] or ["None"]:
         lines.append(f"- {blocker}")
     lines.extend(["", "## Next run", ""])
-    lines.append("Next run should include accelerator control and provider governor evidence, then decide whether generation is allowed.")
+    lines.append("Next loop can attach this dry-run plan to the unified bundle and later introduce a strictly gated real provider invocation.")
     lines.append("")
     return "\n".join(lines)
 
@@ -74,10 +62,8 @@ def render_readme(manifest: dict[str, Any]) -> str:
             "",
             f"- Passed: `{manifest['passed']}`",
             f"- Product markdown: `{manifest['outputs']['product_markdown']}`",
-            f"- Evidence index: `{manifest['outputs']['evidence_index']}`",
-            f"- Readiness: `{manifest['outputs']['readiness']}`",
-            f"- Accelerator control: `{manifest['outputs'].get('accelerator_control')}`",
-            f"- Provider governor: `{manifest['outputs'].get('provider_governor')}`",
+            f"- Provider invocation plan: `{manifest['outputs'].get('provider_invocation_plan')}`",
+            f"- Workload contract: `{manifest['outputs'].get('provider_workload_report_contract')}`",
             "",
             "This directory is generated output and should not be committed.",
             "",

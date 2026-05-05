@@ -23,6 +23,9 @@ REQUIRED_PRODUCT_EVIDENCE = (
     "accelerator_control",
     "provider_governor",
     "provider_run_permit",
+    "provider_invocation_plan",
+    "provider_workload_report_contract",
+    "provider_expected_telemetry_contract",
 )
 
 FINAL_PRODUCT_SECTIONS = (
@@ -35,6 +38,7 @@ FINAL_PRODUCT_SECTIONS = (
     "npu_openvino",
     "accelerator_control",
     "provider_governor",
+    "provider_invocation_plan",
     "readiness",
     "next_run",
 )
