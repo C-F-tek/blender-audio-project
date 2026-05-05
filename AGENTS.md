@@ -8,10 +8,11 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 
 1. read `AGENTS.md`;
 2. read `CHATGPT.md` and `CHATGPT/README.md` when resuming ChatGPT-assisted, local-AI, full-toolbox or handoff-driven work;
-3. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
-4. follow hard guardrails unless the human explicitly approves a normally restricted action;
-5. report task/request conflicts before modifying files;
-6. inspect the target source/document before proposing a patch.
+3. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for the current branch phase when present;
+4. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
+5. follow hard guardrails unless the human explicitly approves a normally restricted action;
+6. report task/request conflicts before modifying files;
+7. inspect the target source/document before proposing a patch.
 
 ## Repository identity
 
@@ -33,6 +34,7 @@ The repository name is historical. Do not infer that Blender/audio is the curren
 AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 CHATGPT/next-chat-handoff-*.md           # when present and relevant
 CHATGPT/chatgpt-session-problems-and-robust-fixes-*.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md          # local checkout only
@@ -43,6 +45,8 @@ docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_TASKS/README.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/PROJECT_STATUS_POINT.md
@@ -61,16 +65,36 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
-Current supporting flow documentation lives in:
+Current compact operational state lives in:
 
 ```text
-FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
-docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
-docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
-docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+```
+
+Current active task:
+
+```text
+docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
 ```
 
 Historical PR handoffs and old master-branch runbooks are not active entrypoints. If historical details are needed, recover them from git history or compact evidence, not from active task docs.
+
+## Current active branch phase
+
+```text
+Branch: codex/unified-local-ai-refactor-launcher
+PR: #187 feat(workflow): add unified local AI refactor launcher
+Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+Run: 20260505-143844
+Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Mode: review-only until explicit human instruction
+```
+
+The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Do not infer bundle contents from file existence alone.
+
+The earlier broker telemetry gap is resolved/historical unless a new regression is found. Use `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` for the recent telemetry baseline.
 
 ## ChatGPT operational memory
 
@@ -100,6 +124,7 @@ Keep CHATGPT notes small, plain Markdown and useful to local context pack builde
 Ollama/GPU is the primary advisory lane when explicitly enabled and quality-gated.
 NPU/OpenVINO is a validated smoke/probe/diagnostic lane, not general advisory.
 Provider execution must be explicit and report-bound.
+Visible provider degradation can be acceptable when quality-gated and recovered in telemetry/bundle evidence.
 Blender runtime is frozen unless explicitly scoped.
 ```
 
