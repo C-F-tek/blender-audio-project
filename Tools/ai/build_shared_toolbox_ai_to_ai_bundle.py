@@ -420,6 +420,60 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
         "provider_failure_detected": provider_failure_detected,
         "deterministic_recovery_used": deterministic_recovery_used,
         "diagnostics": diagnostics,
+        **classify_provider_advisory_state({
+            "provider_execution_seen": provider_execution_seen,
+            "gpu_primary_advisory_succeeded": gpu_primary_advisory_succeeded,
+            "provider_failure_detected": provider_failure_detected,
+            "deterministic_recovery_used": deterministic_recovery_used,
+            "diagnostics": diagnostics,
+        }),
+    }
+
+
+def classify_provider_advisory_state(provider_diagnostics: dict[str, Any]) -> dict[str, Any]:
+    # Classify provider state without hiding recovered/degraded runs.
+    diagnostics = provider_diagnostics.get("diagnostics") if isinstance(provider_diagnostics, dict) else []
+    diagnostics = diagnostics if isinstance(diagnostics, list) else []
+    failure_reasons: list[str] = []
+    degraded_components: list[str] = []
+
+    for item in diagnostics:
+        if not isinstance(item, dict):
+            continue
+        path = str(item.get("path") or "")
+        kind = str(item.get("kind") or "")
+        passed = item.get("passed")
+        errors = item.get("errors") if isinstance(item.get("errors"), list) else []
+        provider_error = item.get("provider_error")
+
+        if passed is False:
+            degraded_components.append(path or kind or "provider_report")
+        if provider_error:
+            failure_reasons.append(f"{path or kind}: {provider_error}")
+        for error in errors[:5]:
+            if error:
+                failure_reasons.append(f"{path or kind}: {error}")
+
+    gpu_ok = bool(provider_diagnostics.get("gpu_primary_advisory_succeeded"))
+    provider_seen = bool(provider_diagnostics.get("provider_execution_seen"))
+    failure_seen = bool(provider_diagnostics.get("provider_failure_detected"))
+    recovered = bool(provider_diagnostics.get("deterministic_recovery_used"))
+
+    if gpu_ok:
+        state = "primary_gpu_advisory_succeeded"
+    elif provider_seen and failure_seen and recovered:
+        state = "recovered_degraded_provider"
+    elif provider_seen and failure_seen:
+        state = "provider_failed_without_recovery"
+    elif provider_seen:
+        state = "provider_seen_without_primary_gpu_advisory"
+    else:
+        state = "provider_not_seen"
+
+    return {
+        "provider_advisory_state": state,
+        "provider_failure_reasons": failure_reasons[:20],
+        "degraded_provider_components": degraded_components[:20],
     }
 
 def build_final_summary(
@@ -463,6 +517,9 @@ def build_final_summary(
         "provider_diagnostics": provider_diagnostics,
         "gpu_primary_advisory_succeeded": bool(provider_diagnostics.get("gpu_primary_advisory_succeeded")),
         "provider_failure_detected": bool(provider_diagnostics.get("provider_failure_detected")),
+        "provider_advisory_state": provider_diagnostics.get("provider_advisory_state"),
+        "provider_failure_reasons": provider_diagnostics.get("provider_failure_reasons", []),
+        "degraded_provider_components": provider_diagnostics.get("degraded_provider_components", []),
         "deterministic_recovery_used": bool(provider_diagnostics.get("deterministic_recovery_used")),
         "patch_plan_summary": patch_plan_summary,
         "patch_plan_summary_seen": bool(patch_plan_summary.get("seen")),
@@ -502,6 +559,12 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
     lines.append(f"- GPU primary advisory succeeded: `{provider.get('gpu_primary_advisory_succeeded')}`")
     lines.append(f"- Provider failure detected: `{provider.get('provider_failure_detected')}`")
     lines.append(f"- Deterministic recovery used: `{provider.get('deterministic_recovery_used')}`")
+    lines.append(f"- Provider advisory state: `{provider.get('provider_advisory_state')}`")
+    reasons = provider.get("provider_failure_reasons") or []
+    if reasons:
+        lines.append("- Provider failure reasons:")
+        for reason in reasons[:12]:
+            lines.append(f"  - {reason}")
     for item in provider.get("diagnostics", [])[:12]:
         lines.append(
             f"- `{item.get('path')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}` "
