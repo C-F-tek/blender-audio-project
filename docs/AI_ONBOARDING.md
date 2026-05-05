@@ -39,6 +39,8 @@ As of 2026-04-30:
 
 Not yet complete:
 
+The entries below are planned or future-facing candidates, not guaranteed existing files in the current checkout. Their absence is expected until a dedicated implementation PR creates and validates them.
+
 ```text
 Scripting/shared/blender_compat.py
 Scripting/shared/config_model.py
@@ -93,6 +95,7 @@ This emits a compact Git-trackable evidence bundle under `docs/LOCAL_VALIDATION_
 - Do not add dependencies, CI changes, long Blender renders or GPU-heavy jobs without explicit approval.
 - Do not assume Blender version compatibility unless it is documented or tested; mark it `not specified`.
 - Do not wire `Tools/npu/pipeline/` helpers into `Tools/npu/run_dual_ai_pipeline.py` until local validation, index regeneration and migration readiness gates are green.
+- Do not treat planned files listed in `Not yet complete` as stale broken links; verify whether they are explicitly future-facing before changing code or docs.
 - Do not commit ignored `output/**` validation reports; commit only compact task-scoped evidence when a workflow explicitly writes it under `docs/LOCAL_VALIDATION_EVIDENCE/`.
 
 ## Task routing
