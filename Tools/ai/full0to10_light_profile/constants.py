@@ -17,6 +17,7 @@ REQUIRED_STEPS = (
     "provider_telemetry_semantic",
     "memory_visibility_assertion",
     "provider_tool_feedback_loop",
+    "final_product_quality_package",
 )
 
 SAFETY_FALSE_FIELDS = (
@@ -32,5 +33,5 @@ NEXT_LOOP_ACTIONS = (
     "add provider telemetry semantic validator",
     "add GPU.0/NPU normalized device visibility check",
     "add provider tool feedback loop report-only",
-    "build final product quality package",
+    "finalize LightFull0To10 product quality package",
 )

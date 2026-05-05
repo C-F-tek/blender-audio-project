@@ -160,6 +160,13 @@ $Steps.Add((Invoke-PythonStep -Name "provider_tool_feedback_loop" -PythonScript 
 if (-not $SkipFinalProduct) {
     $FinalArgs = @("--repo-root", $RepoRoot, "--output-dir", (Join-Path $OutputPath "final_product"), "--request", "Light Full0To10 final product evidence", "--no-external-probes", "--timeout-seconds", "$TimeoutSeconds", "--output", (Join-Path $OutputPath "final_product.from_cli.json"))
     $Steps.Add((Invoke-PythonStep -Name "final_tool_product" -PythonScript (Join-Path $RepoRoot "Tools/ai/build_full0to10_final_tool_product.py") -Arguments $FinalArgs -Optional))
+    $FinalProductQualityArgs = @(
+        "--run-root", $OutputPath,
+        "--output-dir", (Join-Path $OutputPath "final_product_quality"),
+        "--output", (Join-Path $OutputPath "final_product_quality/full0to10_final_product_quality_package.json")
+    )
+    $Steps.Add((Invoke-PythonStep -Name "final_product_quality_package" -PythonScript (Join-Path $RepoRoot "Tools/ai/build_full0to10_final_product_quality_package.py") -Arguments $FinalProductQualityArgs -Optional))
+
 }
 
 $Failed = @($Steps | Where-Object { $_.status -eq "failed" -or $_.status -eq "missing_required" })
