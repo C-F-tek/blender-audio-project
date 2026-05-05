@@ -17,6 +17,30 @@ This README is a package catalog and migration policy. Current executable comman
 
 Focused NPU helper commands may be used only when debugging this package or validating one helper contract directly. They must not be presented as replacements for the unified launcher.
 
+## Current doctrine
+
+```text
+Full0To10 = TUTTO SU TUTTO
+quick/balanced/deep/custom = intensity, not scope
+NPU helper validation != full-run proof
+NPU smoke success != NPU advisory promotion
+telemetry accompanies evidence and patch plans for completeness
+```
+
+Telemetry does not replace NPU reports, provider diagnostics or evidence. It explains whether the related lanes executed, failed, were blocked, degraded, disabled, excluded or planned-only.
+
+When an NPU helper, provider descriptor, provider result report or runtime-output manifest enters a production full-run handoff, the handoff must also expose state through:
+
+```text
+unified launcher manifest
+phase_status / phase_reports
+provider diagnostics
+runtime tool usage telemetry when tools execute
+runtime capability manifest when capabilities matter
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+```
+
 ## Current scope
 
 Allowed:
@@ -55,21 +79,21 @@ provider behavior changes
 
 ## Module map
 
-| Module | Responsibility |
-|---|---|
-| `config.py` | Repository paths, track defaults and data-only pipeline configuration. |
-| `artifact_paths.py` | Generated artifact path normalization, allowed-prefix validation and legacy runtime-output policy. |
-| `io_utils.py` | UTF-8 text and JSON-object read/write helpers plus legacy-compatible aliases. |
-| `legacy_compat.py` | Equivalence helpers for comparing legacy functions with new helpers before runtime wiring. |
-| `fixtures.py` | Deterministic fixture payloads for tests, dry-runs and contract examples. |
-| `prompts.py` | Deterministic prompt payload builders. |
-| `context_builder.py` | Bounded context slices and compact context bundle metrics. |
-| `providers.py` | Planned provider request/result envelopes and provider preflight report normalization. |
-| `runner.py` | Planned stage-plan reports. |
-| `validators.py` | Contract-level validators that preserve unknown future fields. |
-| `artifact_writer.py` | Validated generated-artifact write helpers. |
-| `migration_readiness.py` | Deterministic gates for future runtime wiring readiness. |
-| `reports.py` | Helper-boundary reports, validation envelopes and runtime-output manifests. |
+| Module | Responsibility | Full-run handoff note |
+|---|---|---|
+| `config.py` | Repository paths, track defaults and data-only pipeline configuration. | No runtime claim by itself. |
+| `artifact_paths.py` | Generated artifact path normalization, allowed-prefix validation and legacy runtime-output policy. | Path policy only; no provider execution. |
+| `io_utils.py` | UTF-8 text and JSON-object read/write helpers plus legacy-compatible aliases. | Filesystem helper only. |
+| `legacy_compat.py` | Equivalence helpers for comparing legacy functions with new helpers before runtime wiring. | Focused validation only. |
+| `fixtures.py` | Deterministic fixture payloads for tests, dry-runs and contract examples. | Fixture evidence is not runtime proof. |
+| `prompts.py` | Deterministic prompt payload builders. | Prompt payloads are not provider execution. |
+| `context_builder.py` | Bounded context slices and compact context bundle metrics. | Context lane needs manifest/bundle reference if used in full-run handoff. |
+| `providers.py` | Planned provider request/result envelopes and provider preflight report normalization. | Provider state must flow to telemetry/bundle if used in full-run evidence. |
+| `runner.py` | Planned stage-plan reports. | Planned-only unless an explicit runtime wrapper executes. |
+| `validators.py` | Contract-level validators that preserve unknown future fields. | Validation reports do not prove provider execution. |
+| `artifact_writer.py` | Validated generated-artifact write helpers. | Writes must remain scoped and report-visible. |
+| `migration_readiness.py` | Deterministic gates for future runtime wiring readiness. | Gate reports are advisory until local runtime validation. |
+| `reports.py` | Helper-boundary reports, validation envelopes and runtime-output manifests. | Runtime-output manifests must be bundled with telemetry when promoted. |
 
 ## Runtime-adjacent scripts outside this package
 
@@ -79,7 +103,7 @@ provider behavior changes
 | `Tools/npu/npu_runtime.py` | runtime-adjacent helper | Keep separate from planned provider descriptors. |
 | `Tools/npu/run_npu_review.py` | explicit local diagnostic/review helper | Not the unified launcher. |
 | `Tools/npu/run_npu_context.ps1` | explicit local context/review wrapper | Useful local helper; not the canonical full 0-to-10 path. |
-| `Tools/npu/build_provider_result_report.py` | supporting report builder | Converts provider result data into report surfaces. |
+| `Tools/npu/build_provider_result_report.py` | supporting report builder | Converts provider result data into report surfaces; bundle/telemetry visibility required when promoted. |
 | `Tools/ai/run_npu_gpu_deep_review_auditor.py` | diagnostic-only | Explicit heavy local diagnostic. |
 | `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` | legacy/integrated orchestration lane | Prefer unified launcher; verify current caller before changing behavior. |
 
@@ -89,6 +113,7 @@ Policy:
 planned helper modules may be validated without providers
 runtime-adjacent helpers must not be called implicitly by validators
 provider execution must be visible in launcher manifest or explicit local evidence
+provider failure/degradation/exclusion must be visible in telemetry/bundle when it affects evidence or patch plans
 broad validation belongs to the unified launcher
 ```
 
@@ -105,6 +130,8 @@ Focused helper validation remains allowed only for package debugging and should 
 Focused package validation must not execute Blender, provider calls, GPU jobs or FFmpeg.
 
 Full local validation should normally be routed through the unified launcher. Legacy direct full-validation wrappers are supporting detail only.
+
+Focused helper validation is not proof that `Full0To10` passed.
 
 ## Migration policy
 
@@ -125,6 +152,7 @@ Current safe next layer:
 NPU validator/report contract consistency
 runtime-output manifest/reporting as additive observability
 provider result report cataloging without implicit provider execution
+telemetry/bundle visibility for any promoted provider result report
 ```
 
 Still future work:
@@ -135,13 +163,19 @@ provider result parsing/reporting
 prompt prose extraction
 full artifact writer runtime migration
 memory/guardrail runtime integration
+strict full-run telemetry completeness validation
 ```
 
 Every runtime bridge phase must keep provider/model behavior stable unless a later execution plan explicitly scopes and validates that behavior change.
+
+Every runtime bridge phase that contributes to full-run evidence must also declare how its result appears in manifest, provider diagnostics, telemetry summary and shared AI-to-AI bundle.
 
 ## Cross-reference
 
 ```text
 docs/LOCAL_AI_TASKS/forgotten-scripts-documentation-audit.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md
+docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md
+docs/QUALITY_GATE.md
 ```
