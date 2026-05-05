@@ -3,7 +3,7 @@
 
 Run from PowerShell after Blender has rendered the frame sequence:
 
-    python .\encode_final_youtube.py
+    python ./encode_final_youtube.py
 
 This script uses explicit Rec.709/bt709 tags and yuv420p.
 It also keeps audio in sync when the first rendered frame is not frame 1.
