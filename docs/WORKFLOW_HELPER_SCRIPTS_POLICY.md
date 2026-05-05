@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Classify workflow helper scripts that exist in the repository but must not be confused with the canonical local-AI entrypoint.
+Classify workflow helper scripts that exist in the repository but must not be confused with the canonical run-unica local-AI entrypoint.
 
 Canonical local-AI entrypoint:
 
@@ -13,38 +13,51 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 
 This policy covers shell, GUI, debug, diagnostics, supporting workflow wrappers and push-capable helpers.
 
+## Current doctrine
+
+```text
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters, not scope
+-No* flags = explicit opt-out from selected lanes
+CSV/index/discovery surfaces are evidence lanes when relevant
+large Markdown must not be a primary operational entrypoint
+```
+
 ## Canonical vs supporting
 
 | Script | Classification | Policy |
 |---|---|---|
-| `Tools/workflow/run_unified_local_ai_refactor.ps1` | canonical-entrypoint | Primary headless operator flow. |
+| `Tools/workflow/run_unified_local_ai_refactor.ps1` | canonical-entrypoint | Primary headless run-unica operator flow. |
 | `Tools/workflow/run_local_validation_after_refactor.ps1` | supporting validation wrapper | Use directly only for focused legacy validation. Prefer launcher `validation` / `full_validation` modes for normal flow. |
-| `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | launcher-internal/supporting adapter | Usually called by launcher or task wrapper; not a standalone 0-to-10 entrypoint. |
-| `Tools/workflow/run_post_validation_ai_packet.ps1` | launcher-internal/supporting advisory wrapper | Provider/advisory path; explicit use only. |
-| `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | launcher-internal/supporting provider/probe wrapper | Explicit provider/probe evidence only; prefer launcher `provider` / Full0To10 paths. |
+| `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | launcher-internal/supporting adapter | Usually called by launcher or task wrapper; not a standalone run-unica or 0-to-10 entrypoint. |
+| `Tools/workflow/run_post_validation_ai_packet.ps1` | launcher-internal/supporting advisory wrapper | Provider/advisory implementation lane for `Full0To10` or explicit provider modes. |
+| `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | launcher-internal/supporting provider/probe wrapper | Provider/probe implementation lane for `Full0To10` or explicit provider modes. |
 | `Tools/workflow/run_docs_md_refactor_10min.ps1` | legacy/superseded helper | Prefer unified launcher `md` mode. Do not document as active start path. |
-| `Tools/workflow/run_local_ai_markdown_task.ps1` | supporting task wrapper | Useful for task-scoped adapter runs; not a replacement for Full0To10. |
+| `Tools/workflow/run_local_ai_markdown_task.ps1` | supporting task wrapper | Useful for task-scoped adapter runs; not a replacement for the run unica. |
 | `Tools/workflow/startup_preflight.ps1` | diagnostic-only | Startup/preflight helper. |
 | `Tools/workflow/startup_check.py` | diagnostic-only | Startup check helper. |
 
-## Full-run helper rule
+## Run-unica helper rule
 
-Helpers may support the full-run flow, but they must not redefine it.
+Helpers may support the run-unica flow, but they must not redefine it.
 
 A helper is non-compliant if it:
 
 ```text
 turns quick Full0To10 into a partial run
-omits a full-run lane without an explicit No* disabler or visible warning
-runs provider diagnostics outside explicit provider/probe controls
+omits a run-unica lane without an explicit No* disabler, unavailable diagnostic, dry-run planned state or visible warning
+runs provider diagnostics outside Full0To10/provider-selected controls
 hides runtime broker telemetry
 hides runtime capability manifests
 hides full toolbox telemetry summary
+hides CSV/count evidence surfaces when inventory lanes run
+hides discovery/index repair visibility when relevant
 bypasses the shared AI-to-AI bundle
-turns a smoke helper into evidence for a full run
+turns a smoke helper into evidence for a run-unica Full0To10 run
 ```
 
-`TUTTO SU TUTTO` remains owned by the unified launcher and its contract. Helper scripts may adjust implementation details, but they cannot narrow the full-run semantic scope.
+`TUTTO SU TUTTO` remains owned by the unified launcher and its contract. Helper scripts may adjust implementation details, but they cannot narrow the run-unica semantic perimeter.
 
 ## Promotion rule
 
@@ -58,15 +71,16 @@ phase_status entry
 phase_reports entry when a report is produced
 manifest field for any provider/memory/patch/evidence behavior
 runtime telemetry or capability manifest when broker/tool execution is involved
+CSV/JSON/Markdown evidence surface when inventory/discovery/count behavior is involved
 runbook mention in unified-local-ai-refactor-launcher.md
 contract mention in UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md when manifest shape changes
 ```
 
-No helper may become a hidden side-channel for provider execution, SQLite writes, patch application, evidence generation or git push.
+No helper may become a hidden side-channel for provider execution, SQLite writes, patch application, evidence generation, index regeneration or git push.
 
 ## Telemetry and capability rule
 
-Any helper that executes tools, probes providers, contributes evidence, builds patch specs or participates in full-run handoff must make its output machine-readable.
+Any helper that executes tools, probes providers, contributes evidence, builds patch specs or participates in run-unica handoff must make its output machine-readable.
 
 Acceptable surfaces:
 
@@ -77,6 +91,7 @@ runtime_tool_usage_telemetry_<STAMP>.json/md
 runtime_tool_capability_manifest_<STAMP>.json/md
 full_toolbox_run_telemetry_summary_<STAMP>.json/md
 shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+CSV/JSON/Markdown inventory or discovery reports when relevant
 ```
 
 Future AI agents must be able to answer:
@@ -88,10 +103,33 @@ what was blocked
 what was intentionally disabled
 what provider/tool capability was available
 what was degraded
+what discovery/index/count surface was produced or skipped
 whether source writes or patch application happened
 ```
 
 File existence alone is not sufficient evidence.
+
+## Large Markdown rule
+
+Policy owner:
+
+```text
+docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
+```
+
+A helper policy, tool README or generated report that is too large to be reliably opened must not become a primary operational entrypoint.
+
+Large files may remain as:
+
+```text
+catalog/reference
+historical/supporting material
+generated evidence with compact manifest/summary
+application-domain documentation
+forensic material
+```
+
+If a helper adds a large report or README, it must also add compact manifest/summary visibility.
 
 ## Shell and GUI helpers
 
@@ -107,7 +145,7 @@ Policy:
 
 ```text
 may be used for local operator convenience
-must not be documented as the default full 0-to-10 path
+must not be documented as the default run-unica path
 must not hide provider execution or patch application
 must not bypass telemetry/capability reporting when executing tools
 must keep git status/diff visibility before write/push operations
@@ -191,7 +229,7 @@ If it becomes part of the unified launcher, also update:
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
-If it becomes part of `Full0To10`, also update the full-run perimeter docs:
+If it becomes part of `Full0To10` / run unica, also update the perimeter docs:
 
 ```text
 AGENTS.md
@@ -202,28 +240,27 @@ docs/DATA_FLOW.md
 docs/LOCAL_AI_WORKFLOW.md
 ```
 
+If it introduces or changes large Markdown output, also update:
+
+```text
+docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
+docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
+```
+
 ## Audit command
 
-Use script inventory before promoting or deleting helpers:
+Use script inventory before promoting or deleting helpers. Commands live in the unified launcher runbook and validator catalog.
 
-```powershell
-python .\Tools\validation\build_script_inventory.py `
-  --repo-root . `
-  --output .\output\validation\script_inventory_workflow_helpers.json `
-  --csv-output .\output\validation\script_inventory_workflow_helpers.csv `
-  --markdown-output .\output\validation\script_inventory_workflow_helpers.md
+Preferred evidence surfaces:
+
+```text
+script inventory JSON/CSV/MD
+Python line-count CSV/MD
+function/class/method inventory CSV
+Markdown inventory JSON/MD for docs affected by helper policy
 ```
 
-Review relevant rows:
-
-```powershell
-$Inv = Get-Content .\output\validation\script_inventory_workflow_helpers.json -Raw | ConvertFrom-Json
-$Inv.scripts |
-  Where-Object { $_.path -like 'Tools/workflow/*' } |
-  Select-Object path, language, category, line_count |
-  Sort-Object path |
-  Format-Table -AutoSize
-```
+Do not commit `output/**` inventory outputs directly; promote compact evidence only when needed.
 
 ## Stop conditions
 
@@ -235,10 +272,12 @@ hide a provider execution path
 hide patch application
 hide git branch/remote target
 hide telemetry or capability reporting for executed tools
+hide CSV/count or discovery/index surfaces introduced by a helper
 promote a GUI/shell helper above the unified launcher
 remove a script reference without confirming the script is absent or obsolete
 create a new parallel active-start runbook instead of extending the unified launcher
 narrow Full0To10 coverage through a helper-specific shortcut
+turn a too-large helper README/report into a primary operational entrypoint
 ```
 
 ## Acceptance criteria
@@ -251,6 +290,8 @@ diagnostics are separated from normal validation
 script inventory is the source for broad helper audits
 helpers wired into launcher are visible in manifest/status/report surfaces
 helpers executing tools expose telemetry/capability surfaces when relevant
-no helper narrows TUTTO SU TUTTO full-run coverage
+helpers producing inventory/discovery/count outputs expose CSV/JSON/Markdown summaries
+no helper narrows TUTTO SU TUTTO run-unica coverage
+large helper docs/reports have compact bridges or are marked catalog/evidence/supporting
 no helper is deleted without explicit approval
 ```
