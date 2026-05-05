@@ -81,14 +81,33 @@ def repo_relative(path: Path, repo: Path) -> str:
 def normalize_ref(raw: str) -> str:
     value = raw.strip().strip("'\"`.,:;()[]{}<>")
     value = value.replace("\\", "/")
+
+    # Treat repo-root-like absolute paths in documentation as repository-relative.
+    # Examples: `/Tools/x.py` -> `Tools/x.py`, `/docs/y.md` -> `docs/y.md`.
+    root_like_prefixes = (
+        "/AGENTS.md",
+        "/CHATGPT.md",
+        "/README.md",
+        "/WORKFLOW.md",
+        "/FULL_RUN_UNICA_TUTTO_SU_TUTTO.md",
+        "/CHATGPT/",
+        "/Tools/",
+        "/docs/",
+        "/Scripting/",
+        "/indexAI/",
+        "/output/",
+        "/renders/",
+    )
+    if any(value == prefix[1:] or value.startswith(prefix) for prefix in root_like_prefixes):
+        value = value.lstrip("/")
+
     while value.startswith("./"):
         value = value[2:]
     while value.startswith("../"):
         value = value[3:]
-    if value.startswith(".//"):
+    while value.startswith(".//"):
         value = value[3:]
     return value
-
 
 def is_excluded_rel(rel: str) -> bool:
     rel = rel.replace("\\", "/")
@@ -214,19 +233,29 @@ def collect_doc_command_refs(text: str) -> tuple[list[tuple[str, list[str]]], li
     return py_refs, ps_refs
 
 
-def classify_missing_ref(ref: str) -> tuple[str, str]:
-    if ref.startswith("output/") or "/output/" in ref:
+def classify_missing_ref(ref: str, source_doc: str = "") -> tuple[str, str]:
+    source = source_doc.replace("\\", "/")
+    target = ref.replace("\\", "/")
+    lower_source = source.lower()
+    lower_target = target.lower()
+
+    if target.startswith("output/") or "/output/" in target:
         return "low", "evidence-only"
-    if ref.startswith("docs/LOCAL_VALIDATION_EVIDENCE/"):
+    if target.startswith("docs/LOCAL_VALIDATION_EVIDENCE/"):
         return "low", "evidence-only"
-    if "next-chat" in ref or "handoff" in ref:
+    if source.startswith("CHATGPT/") or "next-chat" in lower_source or "handoff" in lower_source:
+        return "low", "chatgpt-advisory-or-handoff"
+    if target.startswith("patches/") or "patch_bundles/" in lower_target:
+        return "low", "patch-bundle-template"
+    if "/some_" in lower_target or target.startswith("some_") or "your_app_" in lower_target:
+        return "low", "placeholder-template"
+    if "next-chat" in lower_target or "handoff" in lower_target:
         return "medium", "historical-or-handoff"
-    if ref.endswith((".py", ".ps1")):
+    if target.endswith((".py", ".ps1")):
         return "high", "active-current"
-    if ref.endswith(".md"):
+    if target.endswith(".md"):
         return "medium", "stale-or-historical"
     return "low", "unknown"
-
 
 def analyze_markdown(repo: Path, scripts: dict[str, Any], max_lines: int) -> dict[str, Any]:
     findings: list[Finding] = []
@@ -261,7 +290,7 @@ def analyze_markdown(repo: Path, scripts: dict[str, Any], max_lines: int) -> dic
                 continue
             target = repo / ref
             if not target.exists():
-                severity, classification = classify_missing_ref(ref)
+                severity, classification = classify_missing_ref(ref, rel)
                 findings.append(Finding(
                     severity,
                     "markdown_reference_missing",
