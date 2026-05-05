@@ -42,6 +42,9 @@ docs/README.md
 docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_TASKS/README.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
+docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/PROJECT_STATUS_POINT.md
 docs/DATA_FLOW.md
 docs/LOCAL_AI_WORKFLOW.md
@@ -58,7 +61,16 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
-Legacy runbooks such as `full-toolbox-0-to-10-semi-automatic-procedure.md` and `code-refactor-0-to-10-procedure.md` are historical/supporting references unless the human explicitly asks for a legacy manual flow.
+Current supporting flow documentation lives in:
+
+```text
+FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
+docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+```
+
+Historical PR handoffs and old master-branch runbooks are not active entrypoints. If historical details are needed, recover them from git history or compact evidence, not from active task docs.
 
 ## ChatGPT operational memory
 
@@ -100,15 +112,16 @@ Expected by default:
 ```text
 pipeline adapter ufficiale eseguito
 packet/proposals generati
-Ollama advisory usato
+Ollama advisory usato or explicitly diagnosed as degraded
 patch specs creati e validati
-primary provider routing completo
+primary provider routing completo or explicit recovered provider diagnostic
 workload quality routing presente
 multistep provider workflow richiesto
 probe Ollama/NPU richiesti
 context pack presente
 SQLite memory IN/OUT presente quando non disabilitata
 quality gate registrato nel manifest
+runtime broker report produced and absorbed into telemetry
 patch_application_performed=false
 ```
 
