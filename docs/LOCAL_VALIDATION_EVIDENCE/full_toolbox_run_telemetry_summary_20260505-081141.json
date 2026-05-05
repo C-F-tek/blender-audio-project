@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "kind": "full_toolbox_run_telemetry_summary",
+  "generated_at": "2026-05-05T08:27:10",
+  "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "stamp": "20260505-081141",
+  "passed": true,
+  "errors": [],
+  "warnings": [],
+  "provider_execution_performed": true,
+  "patch_application_performed": false,
+  "source_writes_performed": false,
+  "sqlite_write_performed": false,
+  "persistent_memory_write_performed": false,
+  "manual_review_required": true,
+  "inputs": {
+    "decision_loop": "output/ai_pipeline/full_toolbox_20260505-081141_agent_review_decision_loop.json",
+    "recommendations": "output/ai_pipeline/full_toolbox_20260505-081141_deterministic_recommendations.json",
+    "patch_plan": "output/patch_specs/full_toolbox_20260505-081141_agent_review_patch_plan.json",
+    "repository_consistency": "output/analysis/repository_consistency_map_full_toolbox_20260505-081141.json",
+    "repository_consistency_smoke": "output/validation/repository_consistency_map_smoke_full_toolbox_20260505-081141.json",
+    "gpu_npu_sync": "output/analysis/gpu_npu_run_sync_full_toolbox_20260505-081141.json",
+    "orchestrator": "output/ai_pipeline/full_toolbox_20260505-081141_orchestrator.json",
+    "gpu_report": "output/ai_pipeline/full_toolbox_20260505-081141_parallel_gpu.json"
+  },
+  "run_parameters": {
+    "budget_minutes": 13,
+    "max_rounds": 600,
+    "files_per_round": 8,
+    "max_context_files": 760,
+    "max_chars_per_file": 9000,
+    "max_new_tokens": 3800,
+    "npu_auditor_every_rounds": 3,
+    "repository_consistency_map_workers": 1
+  },
+  "workflow_summary": {
+    "passed": true,
+    "recommendation_count": 3,
+    "patch_plan_count": 3,
+    "deterministic_synthesizer_used": false,
+    "patch_plan_fallback_used": null,
+    "bundle_validation_passed": true,
+    "evidence_to_commit": [
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_memory_tool_regeneration_bundle_20260505-081141.json",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_memory_tool_regeneration_bundle_20260505-081141.md",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_memory_tool_regeneration_python_line_count_20260505-081141.csv",
+      "docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260505-081255.csv",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_toolbox_agent_review_decision_loop_20260505-081141.json",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_toolbox_agent_review_decision_loop_20260505-081141.md",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\shared_toolbox_ai_to_ai_bundle_20260505-081141.json",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\shared_toolbox_ai_to_ai_bundle_20260505-081141.md"
+    ]
+  },
+  "recommendations_first20": [
+    {
+      "id": "rec_doc_code_001",
+      "area": "doc_code",
+      "risk": "low",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/AI_ONBOARDING.md"
+      ],
+      "source": "gpu_provider",
+      "repository_consistency_kind": null,
+      "repository_consistency_severity": null
+    },
+    {
+      "id": "rec_doc_code_003",
+      "area": "doc_code",
+      "risk": "low",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/AI_REFERENCE_ONBOARDING.md"
+      ],
+      "source": "gpu_provider",
+      "repository_consistency_kind": null,
+      "repository_consistency_severity": null
+    },
+    {
+      "id": "rec_doc_code_005",
+      "area": "doc_code",
+      "risk": "low",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/AI_REFERENCE_SOURCE_MAP.md"
+      ],
+      "source": "gpu_provider",
+      "repository_consistency_kind": null,
+      "repository_consistency_severity": null
+    }
+  ],
+  "patch_plans_first20": [
+    {
+      "id": "rec_doc_code_001",
+      "area": "doc_code",
+      "target_files": [
+        "docs/AI_ONBOARDING.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": null,
+      "repository_consistency_severity": null
+    },
+    {
+      "id": "rec_doc_code_003",
+      "area": "doc_code",
+      "target_files": [
+        "docs/AI_REFERENCE_ONBOARDING.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": null,
+      "repository_consistency_severity": null
+    },
+    {
+      "id": "rec_doc_code_005",
+      "area": "doc_code",
+      "target_files": [
+        "docs/AI_REFERENCE_SOURCE_MAP.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": null,
+      "repository_consistency_severity": null
+    }
+  ],
+  "repository_consistency": {
+    "finding_count": 9321,
+    "severity_counts": {
+      "high": 2345,
+      "low": 44,
+      "medium": 6932
+    },
+    "finding_kind_counts": {
+      "documented_python_script_without_obvious_smoke": 44,
+      "md_cli_arg_not_in_argparse": 2,
+      "md_mentions_missing_markdown_path": 6930,
+      "md_mentions_missing_powershell_path": 205,
+      "md_mentions_missing_python_path": 2113,
+      "md_python_command_script_missing": 27
+    },
+    "performance": {
+      "workers_requested": 1,
+      "markdown_scan_workers": 1,
+      "python_scan_workers": 1,
+      "file_discovery_seconds": 1.85,
+      "path_index_seconds": 1.03,
+      "markdown_scan_seconds": 36.814,
+      "python_inventory_seconds": 2.297,
+      "findings_build_seconds": 0.019,
+      "report_assembly_seconds": 0.0,
+      "total_build_report_seconds": 42.01
+    },
+    "smoke_passed": true,
+    "smoke_mapper_report_reused": true,
+    "smoke_elapsed_seconds": 0.034
+  },
+  "gpu_npu": {
+    "sync_metrics": {
+      "gpu_round_count": 22,
+      "npu_audit_count": 6,
+      "npu_audit_success_count": 6,
+      "npu_audit_round_coverage": 0.273,
+      "avg_gpu_round_seconds": 36.557,
+      "p50_gpu_round_seconds": 36.557,
+      "p90_gpu_round_seconds": 36.557,
+      "avg_npu_audit_seconds": 103.333,
+      "p50_npu_audit_seconds": 100.0,
+      "p90_npu_audit_seconds": 106.0,
+      "npu_to_gpu_avg_duration_ratio": 2.827,
+      "gpu_elapsed_seconds": 804.249,
+      "provider_execution_performed": true,
+      "patch_application_performed": false,
+      "source_writes_performed": false,
+      "gpu_metrics_source": "gpu_elapsed_divided_by_round_count"
+    },
+    "performance": {
+      "analyzer_elapsed_seconds": 0.001,
+      "gpu": {
+        "elapsed_seconds": 804.249,
+        "round_count": 22,
+        "round_duration_source": "gpu_elapsed_divided_by_round_count",
+        "round_duration_sample_count": 1,
+        "avg_round_seconds": 36.557,
+        "p50_round_seconds": 36.557,
+        "p90_round_seconds": 36.557,
+        "max_round_seconds": 36.557,
+        "round_durations_total_seconds": 36.557,
+        "provider_empty_response_count": 0,
+        "schema_repair_retry_attempt_count": 0,
+        "schema_repair_retry_accept_count": 0,
+        "runtime_tool_counters": {
+          "runtime_tool_request_count": 72,
+          "runtime_tool_execution_count": 0,
+          "runtime_tool_failed_count": 0,
+          "runtime_tool_blocked_count": 0,
+          "runtime_tool_provider_request_count": 72,
+          "runtime_tool_provider_request_execution_count": 0,
+          "deterministic_runtime_tool_fallback_request_count": 0,
+          "deterministic_runtime_tool_fallback_execution_count": 0
+        },
+        "embedded_performance": {}
+      },
+      "npu": {
+        "audit_count": 6,
+        "audit_requested_count": 0,
+        "audit_success_count": 6,
+        "duration_sample_count": 6,
+        "avg_audit_seconds": 103.333,
+        "p50_audit_seconds": 100.0,
+        "p90_audit_seconds": 106.0,
+        "max_audit_seconds": 108.0,
+        "audit_durations_total_seconds": 620.0,
+        "status_counts": {
+          "finished": 6
+        },
+        "classification_counts": {
+          "usable_audit_text": 6
+        },
+        "lane_diagnostics": {}
+      },
+      "sync": {
+        "npu_to_gpu_avg_duration_ratio": 2.827,
+        "npu_audit_round_coverage": 0.273,
+        "gpu_metrics_source": "gpu_elapsed_divided_by_round_count"
+      },
+      "guardrails": {
+        "report_only": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "blender_runtime_execution_performed": false,
+        "sqlite_write_performed": false
+      }
+    },
+    "operational_opinions": [
+      "NPU should remain an advisory sampled auditor, not a lockstep reviewer for every GPU round.",
+      "Audit coverage is intentionally sparse; this is acceptable only if findings are high-signal and evidence-backed.",
+      "GPU round timing is inferred; add direct per-round timing to the GPU runner for stronger diagnostics."
+    ],
+    "refactoring_suggestions": [
+      {
+        "priority": "high",
+        "area": "gpu_runner_timing",
+        "recommendation": "Add per-round elapsed_seconds to each GPU planner round record.",
+        "evidence": "gpu_metrics_source=gpu_elapsed_divided_by_round_count",
+        "guardrail": "report_only_no_provider_setting_change"
+      },
+      {
+        "priority": "medium",
+        "area": "npu_cadence",
+        "recommendation": "Increase npu_auditor_every_rounds or reduce NPU context/tokens before increasing GPU budget.",
+        "evidence": "npu_to_gpu_avg_duration_ratio=2.827",
+        "guardrail": "keep_max_concurrent_npu_audits_1"
+      }
+    ]
+  },
+  "guardrails": {
+    "report_only": true,
+    "committable_location": "docs/LOCAL_VALIDATION_EVIDENCE",
+    "raw_output_commit_allowed": false,
+    "provider_execution_performed": true,
+    "patch_application_performed": false,
+    "source_writes_performed": false,
+    "sqlite_write_performed": false,
+    "persistent_memory_write_performed": false
+  }
+}
