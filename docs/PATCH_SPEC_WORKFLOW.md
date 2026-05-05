@@ -2,24 +2,64 @@
 
 ## Purpose
 
-This document explains the repository patch-spec workflow used by `blender-audio-project`.
+This document explains the repository patch-spec workflow used by `IA-Carmine Local AI Orchestration Workbench`.
 
-The workflow allows small, reviewable file modifications to be described as JSON specs, validated with a dry run, applied safely, shown as a Git diff, and optionally queued for automatic application by GitHub Actions.
+The workflow allows small, reviewable file modifications to be described as JSON specs, validated with a dry run, reviewed as a Git diff, and applied only after an explicit human or trusted-agent approval.
+
+This document is a contract/policy document, not the primary command catalog. Current executable examples for broad local-AI runs live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+```
+
+## Full-run patch-plan doctrine
+
+Patch specs and patch plans are not complete by themselves when they originate from full-run evidence.
+
+For `Full0To10`, patch-plan and patch-spec artifacts must travel with telemetry and capability context:
+
+```text
+evidence artifacts
+patch-plan artifacts
+patch-spec artifacts when produced
+runtime tool usage telemetry
+runtime tool capability manifest
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+```
+
+Telemetry is an obligatory completeness accessory. It does not replace evidence, patch plans or patch specs; it explains whether the producing lanes executed, failed, were blocked, degraded, disabled or planned-only.
+
+A full-run-derived patch plan/spec is incomplete when the handoff cannot show:
+
+```text
+which tools executed
+which tools failed
+which tools were blocked
+which capabilities were available
+which provider lanes degraded
+whether deterministic recovery was used
+whether source writes happened
+whether patch application happened
+```
+
+File existence alone is not proof that a patch plan/spec is valid.
 
 ## Main files
 
 | Path | Role |
 |---|---|
-| `Tools/repo_patch_runner/apply_repo_mods.py` | Safe repository patch runner. |
+| `Tools/repo_patch_runner/apply_repo_mods.py` | Safe repository patch runner. Explicit apply tool, not automatic full-run behavior. |
 | `Tools/ai/build_patch_specs_from_proposals.py` | Builds inert proposal-derived draft specs under `output/patch_specs/`. |
 | `Tools/validation/check_patch_spec_drafts.py` | Validates draft specs before any review-to-concrete promotion. |
 | `Tools/ai/promote_patch_spec_draft.py` | Promotes one draft plus an explicit replacement plan into a reviewed dry-run-passing spec. |
 | `Tools/validation/check_reviewed_patch_specs.py` | Revalidates reviewed specs and reruns dry-run without applying patches. |
-| `output/patch_specs/` | Ignored local workspace for generated draft patch specs. |
-| `patch_specs/inbox/` | Queue of patch specs waiting to be applied. |
+| `output/patch_specs/` | Ignored local workspace for generated draft/reviewed patch specs. |
+| `patch_specs/inbox/` | Queue of patch specs waiting to be applied. Use only after explicit approval. |
 | `patch_specs/applied/` | Patch specs already applied by the GitHub Action. |
 | `patch_specs/README.md` | Existing quick workflow notes. |
-| `.github/workflows/apply_repo_mods.yml` | GitHub Action that applies queued specs on push or manual dispatch. |
+| `.github/workflows/apply_repo_mods.yml` | GitHub Action that applies queued specs on push or manual dispatch. High-risk; not default full-run path. |
 
 ## What the runner does
 
@@ -38,9 +78,23 @@ The workflow allows small, reviewable file modifications to be described as JSON
 - print line counts before/after;
 - show `git diff` after applying changes.
 
+## Manual apply policy
+
+Patch application is not a normal Full0To10 side effect.
+
+The default full-run state is:
+
+```text
+patch_application_performed=false
+source_writes_performed=false
+manual_review_only=true
+```
+
+Local apply, queueing a spec under `patch_specs/inbox/`, pushing a queued spec, or triggering the GitHub Action requires an explicit human or trusted-agent approval scoped to that apply/queue action.
+
 ## Local dry run
 
-Always dry-run first:
+Always dry-run first when a spec is intentionally being reviewed for apply:
 
 ```powershell
 python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_specs\inbox\example.json --dry-run
@@ -48,13 +102,13 @@ python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_specs\inbox\e
 
 ## Local apply with diff
 
-Apply locally and print diff:
+Apply locally only after explicit approval:
 
 ```powershell
 python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_specs\inbox\example.json --write --show-diff
 ```
 
-Apply locally without backup when the patch is generated and already reviewed:
+Apply locally without backup only when the patch is generated, reviewed, dry-run clean and explicitly authorized:
 
 ```powershell
 python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_specs\inbox\example.json --write --no-backup --show-diff
@@ -81,6 +135,14 @@ Apply repo patch specs
 ```
 
 Manual dispatch is also supported through the `spec_path` input.
+
+Policy:
+
+```text
+Do not queue or push patch_specs/inbox/*.json as part of normal Full0To10.
+Do not treat the GitHub Action queue as a default apply lane.
+Use it only after explicit approval for a reviewed spec.
+```
 
 ## Minimal spec format
 
@@ -190,7 +252,8 @@ Avoid patch specs for:
 - artistic Blender scene behavior changes;
 - patches requiring runtime reasoning;
 - binary files;
-- generated full frame-by-frame analysis JSON files.
+- generated full frame-by-frame analysis JSON files;
+- full-run evidence/patch handoffs that lack telemetry/capability context.
 
 ## AI usage policy
 
@@ -200,18 +263,14 @@ AI agents may generate patch specs when:
 - the target anchor is explicit;
 - before/after validation strings are included;
 - the patch can be dry-run before application;
-- line count and diff can be reviewed.
+- line count and diff can be reviewed;
+- full-run-derived proposals include telemetry/capability context.
 
-AI agents should not push queued specs without human approval.
+AI agents should not push queued specs without explicit human approval.
 
 ## Proposal-derived draft specs
 
-Validated repository proposals can be converted into draft patch-spec shells:
-
-```powershell
-python .\Tools\ai\build_patch_specs_from_proposals.py --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output-dir output\patch_specs --basename proposal_patch_specs
-python .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest .\output\patch_specs\proposal_patch_specs_manifest.json --output .\output\validation\patch_spec_drafts.json
-```
+Validated repository proposals can be converted into draft patch-spec shells by the appropriate launcher/patch-spec lane or focused tool.
 
 These drafts are intentionally inert:
 
@@ -223,14 +282,11 @@ These drafts are intentionally inert:
 
 The draft validator rejects concrete replacements and queued inbox paths.
 
+If the proposals come from full-run evidence, the draft manifest or surrounding handoff must reference the companion telemetry/capability/final summary surfaces.
+
 ## Review-to-concrete promotion
 
-Promotion from draft to a concrete reviewed spec requires a separate replacement plan:
-
-```powershell
-python .\Tools\ai\promote_patch_spec_draft.py --repo-root . --draft .\Tools\ai\fixtures\patch_spec_review_draft.json --replacement-plan .\Tools\ai\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
-python .\Tools\validation\check_reviewed_patch_specs.py --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_fixture_manifest.json --output .\output\validation\reviewed_patch_specs.json
-```
+Promotion from draft to a concrete reviewed spec requires a separate replacement plan.
 
 The promotion tool:
 
@@ -245,37 +301,34 @@ Reviewed specs are still not queued patches. Choosing local apply or GitHub Acti
 
 ## Local workflow for AI-assisted patching
 
-```powershell
-# 1. create patch spec under patch_specs/inbox/
-python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_specs\inbox\my_patch.json --dry-run
+Use this flow only after explicit apply/patch-spec review approval:
 
-# 2. apply locally when dry-run is clean
-python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_specs\inbox\my_patch.json --write --show-diff
-
-# 3. validate repository
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_package_structure.py --repo-root .
-python .\Tools\validation\check_json_artifacts.py --repo-root .
-
-# 4. inspect and commit manually
-git status
-git diff --stat
-git diff
+```text
+1. create or review patch spec
+2. dry-run patch spec
+3. inspect expected changes
+4. apply locally only when approved
+5. validate repository
+6. inspect git status and diff
+7. commit manually when approved
 ```
 
 ## Remote queue workflow
 
-```powershell
-# create or copy a reviewed spec into patch_specs/inbox/
-git add patch_specs/inbox/my_patch.json
-git commit -m "queue repo patch spec"
-git push origin master
-```
+Remote queueing is a high-risk explicit action, not a default full-run behavior.
 
-The GitHub Action will apply the spec and create the final commit if the patch succeeds.
+```text
+1. create or copy a reviewed spec into patch_specs/inbox/
+2. review risk and target branch
+3. commit queue entry intentionally
+4. push only after explicit approval
+5. let GitHub Action dry-run/apply/commit if configured
+```
 
 ## Current recommendation
 
 Use patch specs for mechanical documentation and validation-policy edits.
 
-For source-code refactors, prefer normal commits unless the edit is small, exact and easy to validate.
+For source-code refactors, prefer normal reviewed commits unless the edit is small, exact and easy to validate.
+
+For full-run-derived patch plans/specs, require evidence plus telemetry/capability bundle context before treating the recommendation as complete.
