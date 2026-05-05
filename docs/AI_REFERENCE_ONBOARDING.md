@@ -6,20 +6,46 @@ This document explains how external AI, NPU, validation and agent-engineering re
 
 The repository should not vendor full external documentation trees. Instead, it exposes a curated, versioned documentation layer that tells agents which project files are authoritative, which external concepts are adopted, and how those concepts map to this codebase.
 
+This document is reference onboarding, not a command catalog. Current executable examples live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+Tools/npu/pipeline/README.md
+```
+
+## Current doctrine
+
+All external concepts must be mapped to the current IA-Carmine operating model:
+
+```text
+one canonical launcher flow
+Full0To10 = TUTTO SU TUTTO
+quick/balanced/deep/custom = intensity, not scope
+smoke = separate non-full mode
+perimeter of tutto can expand explicitly
+telemetry accompanies evidence and patch plans for completeness
+```
+
+Telemetry is not a replacement for validation reports, evidence or patch plans. It is the required companion that explains whether provider/tool/patch-plan lanes executed, failed, were blocked, degraded, disabled or planned-only.
+
 ## Operating model
 
 AI agents entering the repository should use this order:
 
 1. read `AGENTS.md`;
-2. read `WORKFLOW.md`;
+2. read `README.md` and `WORKFLOW.md`;
 3. read `docs/README.md`;
-4. read this document;
-5. read `docs/AI_REFERENCE_SOURCE_MAP.md`;
-6. read the specific project guide matching the task:
+4. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md`;
+5. read `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md`;
+6. read `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` when launcher/manifest semantics are involved;
+7. read this document;
+8. read `docs/AI_REFERENCE_SOURCE_MAP.md`;
+9. read the specific project guide matching the task:
    - `docs/AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md`;
    - `docs/AI_GUARDRAILS_VALIDATION_GUIDE.md`;
    - `docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md`;
-7. read the existing project-specific contracts:
+10. read the existing project-specific contracts:
    - `docs/AI_EXTERNAL_KNOWLEDGE.md`;
    - `docs/AI_PIPELINE_ARCHITECTURE.md`;
    - `docs/AI_PIPELINE_REFACTOR_STATUS.md`;
@@ -27,7 +53,7 @@ AI agents entering the repository should use this order:
    - `docs/QUALITY_GATE.md`;
    - `docs/JSON_SCHEMAS.md`;
    - `docs/AI_ARTIFACT_SCHEMAS.md`;
-8. for manual-review documentation patch plans, read:
+11. for manual-review documentation patch plans, read:
    - `docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md`;
    - `Tools/validation/run_agent_review_patch_plan_full_validation.py`;
    - `docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md`.
@@ -50,7 +76,7 @@ This layer is not:
 - a replacement for local validation;
 - a runtime dependency;
 - a permission to perform destructive changes;
-- a reason to bypass `AGENTS.md`, execution plans or validators.
+- a reason to bypass `AGENTS.md`, the unified launcher, execution plans, validators or telemetry/capability handoff surfaces.
 
 ## Repository policy
 
@@ -63,7 +89,7 @@ docs/references/
 
 These folders are optional local study locations. Their absence in the committed branch is expected and must not be treated as a broken documentation reference, missing source artifact or request to copy external material into the repository.
 
-The committed repository should contain only:
+The committed repository should contain only curated project-specific reference notes, such as:
 
 ```text
 docs/AI_REFERENCE_ONBOARDING.md
@@ -71,6 +97,7 @@ docs/AI_REFERENCE_SOURCE_MAP.md
 docs/AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md
 docs/AI_GUARDRAILS_VALIDATION_GUIDE.md
 docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md
+docs/OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md
 ```
 
 This keeps remote AI agents effective without bloating the repository.
@@ -93,7 +120,28 @@ Rules:
 - keep full local reports under ignored `output/**`;
 - commit only compact task-scoped evidence under `docs/LOCAL_VALIDATION_EVIDENCE/`;
 - keep provider execution explicit-only and disabled for documentation-only patch plans;
-- keep patch application manual-review-only.
+- keep patch application manual-review-only;
+- when a documentation patch plan is derived from full-run evidence, include or reference the companion telemetry/capability/final-summary artifacts.
+
+## Full-run evidence and reference rules
+
+A full-run reference or handoff is incomplete if it only points to evidence or a patch plan.
+
+Use the full group:
+
+```text
+launcher manifest
+phase_status / phase_reports
+evidence artifacts
+patch-plan artifacts when produced
+runtime_tool_usage_telemetry_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md
+full_toolbox_run_telemetry_summary_<STAMP>.json/md
+shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+```
+
+GitHub-only agents may rely on local/runtime facts only when those facts are committed, pasted by the maintainer or included in a PR/comment with concrete fields.
 
 ## Recommended agent behavior
 
@@ -107,7 +155,8 @@ When an AI agent uses this reference layer, it should:
 6. preserve current Blender package behavior;
 7. keep NPU helper work provider-free unless a validated phase says otherwise;
 8. update `docs/README.md` when adding stable documentation;
-9. report uncertainty rather than inventing unsupported repository state.
+9. report uncertainty rather than inventing unsupported repository state;
+10. attach telemetry/capability/final-summary context when reviewing full-run evidence or patch plans.
 
 ## Task routing
 
@@ -116,9 +165,10 @@ When an AI agent uses this reference layer, it should:
 | AI artifact pipeline changes | `docs/AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md` |
 | NPU/OpenVINO/local inference changes | `docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md` |
 | JSON validation, guardrails, evals | `docs/AI_GUARDRAILS_VALIDATION_GUIDE.md` |
-| Agent instructions or AI onboarding | `docs/AI_REFERENCE_SOURCE_MAP.md` and `AGENTS.md` |
+| Agent instructions or AI onboarding | `docs/AI_REFERENCE_SOURCE_MAP.md`, `docs/AI_ONBOARDING.md` and `AGENTS.md` |
 | Manual-review documentation patch plans | `docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md` and `Tools/validation/run_agent_review_patch_plan_full_validation.py` |
 | Generated Blender script rules | `docs/QUALITY_GATE.md`, `docs/COMPATIBILITY.md`, `docs/AI_GENERATED_PACKAGE_STANDARD.md` |
+| Full-run evidence or patch-plan review | `docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md`, `docs/QUALITY_GATE.md`, telemetry/capability/final-summary artifacts |
 
 ## Safe extension rule
 
@@ -129,8 +179,9 @@ Instead:
 1. add the source to `docs/AI_REFERENCE_SOURCE_MAP.md`;
 2. describe only the project-relevant concept;
 3. map it to local files and validators;
-4. add a focused project rule if needed;
-5. keep the original source as an external reference.
+4. add telemetry/capability/handoff implications if it affects full-run evidence or patch plans;
+5. add a focused project rule if needed;
+6. keep the original source as an external reference.
 
 <!-- IA-CARMINE:PATCH-PLAN-APPLICATION:START -->
 
