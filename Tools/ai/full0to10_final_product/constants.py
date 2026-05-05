@@ -21,6 +21,8 @@ REQUIRED_PRODUCT_EVIDENCE = (
     "optimization",
     "quality_gate",
     "accelerator_control",
+    "provider_governor",
+    "provider_run_permit",
 )
 
 FINAL_PRODUCT_SECTIONS = (
@@ -32,6 +34,7 @@ FINAL_PRODUCT_SECTIONS = (
     "gpu_ollama",
     "npu_openvino",
     "accelerator_control",
+    "provider_governor",
     "readiness",
     "next_run",
 )

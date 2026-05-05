@@ -7,6 +7,7 @@ from typing import Any
 
 from full0to10_accelerator_control.builder import build_accelerator_control
 from full0to10_effective_use.builder import build_effective_use_optimization
+from full0to10_provider_governor.builder import build_provider_governor
 from full0to10_quality_gate.builder import build_quality_gate
 
 from .artifacts import product_artifacts
@@ -41,27 +42,16 @@ def build_final_tool_product(
     effective_dir = ensure_dir(output_dir / "effective_use")
     quality_dir = ensure_dir(output_dir / "quality_gate")
     accelerator_dir = ensure_dir(output_dir / "accelerator_control")
+    governor_dir = ensure_dir(output_dir / "provider_governor")
 
-    accelerator_control = build_accelerator_control(
-        repo_root,
-        accelerator_dir,
-        request,
-        no_external_probes=no_external_probes,
-        timeout_seconds=timeout_seconds,
-    )
-    effective_summary = build_effective_use_optimization(
-        repo_root,
-        effective_dir,
-        request,
-        None,
-        no_external_probes=no_external_probes,
-        timeout_seconds=timeout_seconds,
-    )
+    accelerator_control = build_accelerator_control(repo_root, accelerator_dir, request, no_external_probes, timeout_seconds)
+    provider_governor = build_provider_governor(repo_root, governor_dir, request, False, False, no_external_probes, timeout_seconds)
+    effective_summary = build_effective_use_optimization(repo_root, effective_dir, request, None, no_external_probes, timeout_seconds)
 
     quality_gate = build_quality_gate(repo_root, None)
     write_json(quality_dir / "full0to10_quality_gate.json", quality_gate)
 
-    records = product_artifacts(effective_dir, quality_dir, accelerator_dir, repo_root)
+    records = product_artifacts(effective_dir, quality_dir, accelerator_dir, governor_dir, repo_root)
     evidence = build_evidence_index(repo_root, records)
     readiness = build_readiness(records, evidence)
 
@@ -83,16 +73,19 @@ def build_final_tool_product(
         "readme": repo_relative(readme_path, repo_root),
         "effective_use_summary": effective_summary["outputs"].get("summary"),
         "accelerator_control": accelerator_control["outputs"].get("control"),
+        "provider_governor": provider_governor["outputs"].get("governor"),
+        "provider_run_permit": provider_governor["outputs"].get("permit"),
     }
 
     manifest: dict[str, Any] = {
         "kind": "full0to10_final_tool_product_manifest",
-        "passed": evidence["passed"] and readiness["passed"] and effective_summary["passed"] and accelerator_control["passed"],
+        "passed": evidence["passed"] and readiness["passed"] and effective_summary["passed"] and accelerator_control["passed"] and provider_governor["passed"],
         "request": request,
         "outputs": outputs,
         "evidence": evidence,
         "readiness": readiness,
         "accelerator_control": accelerator_control,
+        "provider_governor": provider_governor,
         "effective_use_summary": effective_summary,
         "quality_gate": quality_gate,
         "output_records": [

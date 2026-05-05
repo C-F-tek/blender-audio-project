@@ -20,7 +20,16 @@ def build_readiness(records: dict[str, Any], evidence_index: dict[str, Any]) -> 
         score -= 35
         blockers.extend(evidence_index["missing_required_roles"])
 
-    for role in ("effective_use_summary", "provider_hardening", "tool_telemetry", "optimization", "quality_gate", "accelerator_control"):
+    for role in (
+        "effective_use_summary",
+        "provider_hardening",
+        "tool_telemetry",
+        "optimization",
+        "quality_gate",
+        "accelerator_control",
+        "provider_governor",
+        "provider_run_permit",
+    ):
         record = records.get(role, {})
         if not record.get("exists"):
             continue
@@ -45,12 +54,13 @@ def build_readiness(records: dict[str, Any], evidence_index: dict[str, Any]) -> 
     if scheduler.get("generation_allowed") is True:
         score -= 30
         blockers.append("accelerator_scheduler_allows_generation_in_pre_run")
-    if not accelerator.get("gpu_body"):
-        score -= 8
-        warnings.append("gpu_body_contract_missing")
-    if not accelerator.get("gpu_mind"):
-        score -= 8
-        warnings.append("gpu_mind_contract_missing")
+
+    permit = records.get("provider_run_permit", {}).get("json") or {}
+    if permit.get("provider_execution_performed") is True:
+        score -= 40
+        blockers.append("provider_governor_executed_provider")
+    if permit.get("permit_allowed") is True:
+        warnings.append("provider_permit_preview_allowed_review_required")
 
     score = max(0, score)
     report = {

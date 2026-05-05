@@ -19,7 +19,13 @@ def read_json(path: Path) -> dict[str, Any] | None:
     return data if isinstance(data, dict) else None
 
 
-def product_artifacts(effective_dir: Path, quality_dir: Path, accelerator_dir: Path, repo_root: Path) -> dict[str, Any]:
+def product_artifacts(
+    effective_dir: Path,
+    quality_dir: Path,
+    accelerator_dir: Path,
+    governor_dir: Path,
+    repo_root: Path,
+) -> dict[str, Any]:
     paths = {
         "effective_use_summary": effective_dir / "full0to10_effective_use_summary.json",
         "quality_product": effective_dir / "full0to10_effective_use_quality_product.md",
@@ -30,6 +36,9 @@ def product_artifacts(effective_dir: Path, quality_dir: Path, accelerator_dir: P
         "accelerator_control": accelerator_dir / "full0to10_accelerator_control.json",
         "accelerator_telemetry": accelerator_dir / "full0to10_accelerator_telemetry.json",
         "accelerator_markdown": accelerator_dir / "full0to10_accelerator_control.md",
+        "provider_governor": governor_dir / "full0to10_provider_governor.json",
+        "provider_run_permit": governor_dir / "full0to10_provider_run_permit.json",
+        "provider_governor_telemetry": governor_dir / "full0to10_provider_governor_telemetry.json",
     }
     records = {}
     for role, path in paths.items():

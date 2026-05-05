@@ -14,7 +14,7 @@ def render_product_markdown(request: str, evidence: dict[str, Any], readiness: d
         "",
         "## Deliverable scope",
         "",
-        "This package is the final-tool-product staging output. It is built from local tools, SQLite FTS5 memory, provider contracts, accelerator control, telemetry, and quality evidence. It is not provider-generated text.",
+        "This package is the final-tool-product staging output. It is built from local tools, SQLite FTS5 memory, provider contracts, accelerator control, provider governor, telemetry, and quality evidence. It is not provider-generated text.",
         "",
         "## Evidence index",
         "",
@@ -27,23 +27,27 @@ def render_product_markdown(request: str, evidence: dict[str, Any], readiness: d
             "",
             "## SQLite memory",
             "",
-            "SQLite FTS5 is treated as the deterministic local context layer. The product must include memory DB location, namespace usage, and search-derived evidence.",
+            "SQLite FTS5 is the deterministic local context layer.",
             "",
             "## Runtime tools",
             "",
-            "Runtime tool usage must be represented by JSON telemetry and included in the final package before any real run.",
+            "Runtime tool usage must be represented by JSON telemetry before any real run.",
             "",
             "## GPU/Ollama",
             "",
-            "Ollama/GPU is the explicit primary advisory mind only after quality gates pass. No implicit generation is allowed in this package.",
+            "Ollama/GPU is explicit primary advisory only after quality gates and provider governor permit.",
             "",
             "## NPU/OpenVINO",
             "",
-            "NPU/OpenVINO remains sampled-auditor/diagnostic. OpenVINO GPU.0 remains secondary unless explicitly promoted by a later patch.",
+            "NPU/OpenVINO remains sampled-auditor/diagnostic. GPU.0 remains secondary unless promoted.",
             "",
             "## Accelerator control",
             "",
-            "The package includes GPU body, GPU mind, NPU auditor, GPU.0 contract and scheduler evidence. Scheduler generation must stay disabled in pre-run packages.",
+            "The package includes GPU body, GPU mind, NPU auditor, GPU.0 contract and scheduler evidence.",
+            "",
+            "## Provider governor",
+            "",
+            "The governor produces a run permit decision and budget. This package never executes providers.",
             "",
             "## Readiness",
             "",
@@ -58,7 +62,7 @@ def render_product_markdown(request: str, evidence: dict[str, Any], readiness: d
     for blocker in readiness["blockers"] or ["None"]:
         lines.append(f"- {blocker}")
     lines.extend(["", "## Next run", ""])
-    lines.append("Next run should include this final product package and accelerator control as evidence, then decide whether provider generation is allowed.")
+    lines.append("Next run should include accelerator control and provider governor evidence, then decide whether generation is allowed.")
     lines.append("")
     return "\n".join(lines)
 
@@ -73,6 +77,7 @@ def render_readme(manifest: dict[str, Any]) -> str:
             f"- Evidence index: `{manifest['outputs']['evidence_index']}`",
             f"- Readiness: `{manifest['outputs']['readiness']}`",
             f"- Accelerator control: `{manifest['outputs'].get('accelerator_control')}`",
+            f"- Provider governor: `{manifest['outputs'].get('provider_governor')}`",
             "",
             "This directory is generated output and should not be committed.",
             "",
