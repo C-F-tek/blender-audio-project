@@ -1,14 +1,13 @@
-# Tools/docs
+# Tools/docs — Markdown/code coherence
 
-Strumenti locali per manutenzione documentazione IA-Carmine.
+Strumenti locali per confrontare documentazione Markdown e codice reale.
 
-## Tool disponibili
+## Comandi
 
-- `split_large_markdown.py`: divide file Markdown oltre il budget righe in entrypoint + cartella parti.
+```powershell
+python .\\Tools\\docs\\build_code_aware_md_coherence.py --repo-root . --max-lines 400
+python .\\Tools\\docs\\apply_md_code_coherence_refactor.py --repo-root . --apply
+python .\\Tools\\validation\\check_md_code_coherence.py --repo-root . --max-high 0
+```
 
-## Guardrail
-
-- Dry-run di default.
-- `--apply` richiesto per scrivere modifiche.
-- Report locali sotto `output/validation/**`.
-- Nessun commit automatico.
+Gli output completi vanno sotto `output/validation/**` e non devono essere committati.
