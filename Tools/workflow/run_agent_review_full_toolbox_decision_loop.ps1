@@ -848,6 +848,7 @@ Invoke-RepoPython -Label "Runtime tool usage telemetry" -ArgsList @(
     "--gpu-report", $GpuOut,
     "--gpu-npu-sync", $GpuNpuSyncJson,
     "--decision-loop", $DecisionLoopJson,
+    "--broker-report", $RuntimeToolBrokerJson,
     "--output", $RuntimeToolTelemetryJson,
     "--markdown-output", $RuntimeToolTelemetryMd
 )

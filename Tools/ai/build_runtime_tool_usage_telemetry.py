@@ -313,6 +313,27 @@ def collect_broker_pointer_entries(repo_root: Path, raw_items: Any, caller: str,
     return entries
 
 
+def append_default_broker_report_if_present(repo_root: Path, stamp: str, values: Any) -> list[str]:
+    # Preserve final broker telemetry even if a caller omits --broker-report.
+    paths = split_path_values(values)
+    if not stamp:
+        return paths
+
+    default_path = repo_root / "output" / "validation" / f"runtime_tool_broker_full_toolbox_{stamp}.json"
+    if not default_path.exists():
+        return paths
+
+    default_rel = repo_rel(repo_root, default_path)
+    normalized_existing = {
+        repo_rel(repo_root, resolve_output_path(repo_root, item))
+        for item in paths
+        if item
+    }
+    if default_rel not in normalized_existing:
+        paths.append(default_rel)
+    return paths
+
+
 def collect_explicit_broker_reports(repo_root: Path, values: Any) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     entries: list[dict[str, Any]] = []
     warnings: list[str] = []
@@ -525,7 +546,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     entries: list[dict[str, Any]] = []
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('runtime_tool_bootstrap_results'), 'orchestrator', 'orchestrator_bootstrap'))
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('runtime_tool_bootstrap_result'), 'orchestrator', 'orchestrator_bootstrap'))
-    explicit_broker_entries, explicit_broker_warnings, explicit_broker_paths = collect_explicit_broker_reports(repo_root, getattr(args, 'broker_report', []))
+    broker_report_values = append_default_broker_report_if_present(repo_root, args.stamp, getattr(args, 'broker_report', []))
+    explicit_broker_entries, explicit_broker_warnings, explicit_broker_paths = collect_explicit_broker_reports(repo_root, broker_report_values)
     entries.extend(explicit_broker_entries)
     warnings.extend(explicit_broker_warnings)
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('gpu_runtime_tool_results'), 'gpu', 'gpu_runtime_tool_broker'))
