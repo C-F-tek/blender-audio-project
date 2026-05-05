@@ -42,6 +42,25 @@ Every script candidate should be classified as exactly one:
 | `unsafe-or-write-capable` | Can push, write source, or mutate external state. | Document guardrails and require explicit approval. |
 | `delete-candidate` | Appears obsolete after code/reference review. | Do not delete without explicit user approval. |
 
+## Full-run visibility rule
+
+A script is not fully documented when it is promoted into the full-run perimeter but lacks visible output surfaces.
+
+If a script participates in `Full0To10`, broker execution, provider diagnostics, patch planning, evidence generation, registry building or AI-to-AI handoff, its documentation must identify at least one of:
+
+```text
+launcher mode or flag
+manifest phase_status key
+manifest phase_reports key
+runtime telemetry surface
+runtime capability manifest surface
+full toolbox telemetry summary surface
+shared AI-to-AI bundle surface
+compact evidence output
+```
+
+Telemetry is a completeness accessory for evidence and patch plans. It does not replace them, but it must accompany promoted operational scripts so a future AI can distinguish executed, failed, blocked, degraded, disabled and planned-only states.
+
 ## Candidate group: workflow shell / GUI helpers
 
 These were found in code search but not clearly referenced in current Markdown docs:
@@ -70,6 +89,7 @@ Documentation action:
 Add or maintain a small shell/GUI helper catalog.
 Clarify that the unified launcher remains the headless canonical entrypoint.
 Any push-capable wrapper must require explicit user intent and must not be invoked by documentation examples as a default flow.
+Push/write-capable helpers must not bypass manifest, telemetry, capability or git visibility surfaces.
 ```
 
 ## Candidate group: workflow context/domain helpers
@@ -100,6 +120,7 @@ Documentation action:
 Document in MODULE_MAP or workflow helper policy.
 Do not promote them above the unified launcher.
 Clarify which are application-domain helpers versus AI orchestration helpers.
+Record outputs in manifest/context/report/telemetry surfaces if they become full-run lanes.
 ```
 
 ## Candidate group: GPU/NPU/orchestrator diagnostics
@@ -128,6 +149,7 @@ Documentation action:
 Document as explicit diagnostics/probes only.
 Do not present them as replacement entrypoints for the unified launcher.
 If the unified launcher calls them or supersedes them, state that relation directly.
+If their reports feed telemetry or AI-to-AI bundle state, document the exact field/surface.
 ```
 
 ## Candidate group: memory, inventory and evidence helpers
@@ -155,6 +177,7 @@ Documentation action:
 ```text
 Add memory/toolbox/evidence helper catalog entries.
 For libraries, document as internal helper modules rather than user commands.
+If promoted to broker/full-run lanes, document runtime telemetry and capability-manifest surfaces.
 ```
 
 ## Candidate group: runtime/memory internals that must not be treated as missing
@@ -194,6 +217,7 @@ Documentation action:
 Link from Tools/npu/pipeline/README.md or MODULE_MAP.
 Do not imply provider execution unless a command explicitly loads/runs a provider.
 Metadata-only and validation-only paths must remain clearly separated from provider execution.
+If provider/runtime helper outputs become part of the full-run handoff, document provider diagnostics and telemetry fields.
 ```
 
 ## Required next checks
@@ -212,6 +236,15 @@ Tools/validation/README.md
 Tools/npu/pipeline/README.md
 ```
 
+For scripts promoted into `Full0To10`, also verify:
+
+```text
+manifest visibility
+telemetry/capability visibility
+compact evidence visibility
+AI-to-AI bundle inclusion or explicit exclusion
+```
+
 ## Acceptance criteria
 
 ```text
@@ -222,4 +255,6 @@ Diagnostic/probe scripts separated from normal flow.
 Internal helper libraries separated from executable commands.
 Unified launcher remains primary local-AI entrypoint.
 Forgotten scripts either indexed, marked internal, or queued for deletion review.
+Full-run scripts expose manifest/report/telemetry/capability/evidence surfaces.
+Telemetry accompanies full-run evidence and patch plans when operational scripts are involved.
 ```
