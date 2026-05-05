@@ -8,6 +8,16 @@ The repository slug remains `C-F-tek/blender-audio-project`, but the active arch
 
 Blender/audio remains the first application domain. It is not the boundary of the active architecture.
 
+## Current doctrine
+
+The active operating doctrine is **TUTTO SU TUTTO** through one unified local-AI flow.
+
+`-Full0To10` means whole-repository coverage across active lanes. `quick`, `balanced`, `deep` and `custom` are intensity profiles only: they change budgets and depth, not semantic scope.
+
+The perimeter of `tutto` is expandable. When a new tool, broker capability, validation lane, provider diagnostic, evidence surface, repository-consistency check or memory/context builder becomes production-ready, it must be added to the full-run contract or explicitly excluded with rationale.
+
+Telemetry is AI-critical evidence. Future local/cloud AI agents must use telemetry to decide whether a lane was executed, failed, blocked, degraded, skipped intentionally or unavailable; file existence alone is not enough.
+
 ## Current branch context
 
 Current consolidation branch:
@@ -20,16 +30,18 @@ Recent relevant commits on this branch include:
 
 | Commit | Meaning |
 |---|---|
-| `a85bbf4` | Preserves broker report in final runtime telemetry. Code patch pushed; runtime validation still pending. |
-| `b98deff` | Marks broker telemetry fix as pushed and awaiting post-fix validation. |
-| `fef7eb0` | Adds no-audio/media-output guardrail for AI/tooling runs. |
-| `bcef5a2` | Indexes the no-audio/media guardrail in the local task router. |
-| `1d4d1c2` | Adds the audio/media guardrail to local bootstrap. |
-| `ef259f0` | Aligns root README with stable guardrails. |
-| `5b6ec8c` | Aligns workflow with broker and media guardrails. |
-| `2944feb` | Aligns pruning map with the stable tool layer. |
+| `a85bbf4` | Preserves broker report in final runtime telemetry. Validated by run `20260505-073332`. |
+| `c420c5c` | Improves provider diagnostics and patch-plan target hygiene. Validated by run `20260505-081141`. |
+| `9b01b92` | Uses real `rounds[*].elapsed_seconds` as GPU sync timing source. Smoke-validated locally. |
+| `30c3dd7` | Includes full-toolbox diagnostics in shared bundle templates. |
+| `0bbd829` | Clarifies planned shared module references in onboarding docs. |
+| `db56fa0` | Clarifies optional local reference folders in AI reference onboarding. |
+| `7c31754` | Codifies full-run coverage and patch bundle policy in `AGENTS.md`. |
+| `2cf03d9` | Adds expandable TUTTO SU TUTTO doctrine to local task index. |
+| `78691f8` | Demotes legacy full-toolbox semi-automatic procedure snapshot from active entrypoint. |
+| `fcea9f2` | Promotes telemetry as AI reasoning evidence in current code-flow docs. |
 
-GitHub-only agents must not infer local runtime validation from these commits. Runtime validation requires a new local run after `a85bbf4`.
+GitHub-only agents must not infer local runtime success without evidence. When local validation exists, cite the exact run stamp and reported fields.
 
 ## Active local-AI entrypoint
 
@@ -60,12 +72,14 @@ docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
 manifest-first review
 phase-selectable local runs
 Full0To10 profile for complete loops
-quick/balanced/deep/custom intensities
+quick/balanced/deep/custom intensities without scope reduction
 workload quality gate before primary advisory routing
 Ollama/GPU advisory only when explicit and quality-gated
 NPU/OpenVINO probe/guardrail/decode diagnostic only
 SQLite memory local-only, explicit and non-committed
 runtime broker report and telemetry surfaced in compact evidence
+runtime capability manifest surfaced in compact evidence
+full toolbox telemetry summary carried with AI-to-AI bundle
 patch specs generated as review-only artifacts
 patch application remains separate and explicit
 no audio/media output during normal AI/tooling runs
@@ -81,19 +95,30 @@ no audio/media output during normal AI/tooling runs
 
 Provider execution must be explicit and report-bound. A full tooling run must not silently treat degraded provider lanes as successful advisory output.
 
+Validated provider-diagnostic state from run `20260505-081141`:
+
+```text
+provider_advisory_state=recovered_degraded_provider
+provider_failure_detected=true
+deterministic_recovery_used=true
+provider_failure_reasons includes: output/validation/local_provider_probe.json: ollama: probe failed
+patch_application_performed=false
+source_writes_performed=false
+```
+
 ## Runtime broker telemetry status
 
 Current P0:
 
 ```text
-fix final runtime broker telemetry
+closed
 ```
 
 Status:
 
 ```text
 CODE_PATCH_PUSHED
-RUNTIME_VALIDATION_PENDING
+RUNTIME_VALIDATED
 ```
 
 Relevant files:
@@ -104,22 +129,21 @@ Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1
 docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
 ```
 
-Historical pre-fix run:
+Validated run:
 
 ```text
-20260505-002508
+20260505-073332
 ```
 
-That run is useful as baseline evidence only. It predates `a85bbf4` and cannot validate the broker telemetry fix.
-
-Acceptance for the next local post-fix run:
+Validated telemetry fields:
 
 ```text
-runtime_tool_usage_telemetry_<STAMP>.json
-  inputs.broker_reports.Count >= 1
-  summary.executed_count >= 3
-  summary.failed_count = 0
-  summary.blocked_count = 0
+runtime_tool_usage_telemetry_20260505-073332.json
+  inputs.broker_reports includes output/validation/runtime_tool_broker_full_toolbox_20260505-073332.json
+  summary.tool_call_entry_count=3
+  summary.executed_count=3
+  summary.failed_count=0
+  summary.blocked_count=0
 ```
 
 Expected broker-executed tools:
@@ -129,6 +153,41 @@ check_python_syntax
 build_python_line_count_csv
 check_validation_report_contract
 ```
+
+Do not relabel broker telemetry as open unless a newer run regresses these fields.
+
+## Telemetry and AI handoff status
+
+Telemetry is now part of the production AI-to-AI contract.
+
+Required handoff surfaces:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json/md
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json/md
+docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.json/md
+docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+output/analysis/shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+```
+
+AI-critical fields include:
+
+```text
+tool_call_entry_count
+executed_count
+failed_count
+blocked_count
+broker_reports
+provider_advisory_state
+provider_failure_reasons
+degraded_provider_components
+gpu_metrics_source
+round_duration_source
+patch_application_performed
+source_writes_performed
+```
+
+A next AI must not infer success from file presence alone. It must inspect telemetry and capability manifests.
 
 ## Audio/media output status
 
@@ -159,6 +218,8 @@ If a non-application run produces audio/media output, classify it as a guardrail
 Current tool governance layer:
 
 ```text
+docs/LOCAL_AI_TASKS/project-tool-registry.md
+docs/LOCAL_AI_TASKS/project-tool-registry-generation-task.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
@@ -250,7 +311,7 @@ Production bundle and telemetry are the preferred handoff surfaces for full-run 
 
 | Blocker / limit | Impact | Correct handling |
 |---|---|---|
-| Broker telemetry runtime validation pending | Cannot close P0 until a post-`a85bbf4` local run proves broker reports are absorbed. | Run locally later; GitHub-only agents must not claim closure. |
+| External launcher controls not fully passed through | Some exposed knobs are documented/manifested but not yet wired into all subordinate calls. | Patch with ZIP bundle or focused workflow patch; validate PowerShell parser and dry-run locally. |
 | Repository slug still says `blender-audio-project` | Name no longer reflects active architecture. | Docs use `IA-Carmine Local AI Orchestration Workbench`; repo rename needs explicit confirmation. |
 | Ollama/provider health can degrade locally | Advisory lane may be unavailable in a given run. | Require workload quality routing and explicit diagnostics. |
 | NPU smoke/probe does not prove general advisory quality | Prevents unsafe NPU promotion. | Keep NPU as probe/guardrail/diagnostic until quality gates prove usable advisory text. |
@@ -263,22 +324,27 @@ Production bundle and telemetry are the preferred handoff surfaces for full-run 
 |---|---|---|
 | Unified launcher | active | Canonical local-AI entrypoint. |
 | Full0To10 procedure | active | Current flow: everything active by default unless explicit `No*` flag disables it. |
-| Runtime broker telemetry | code patched / validation pending | `a85bbf4` pushed; needs local post-fix run. |
+| Runtime broker telemetry | closed / validated | `a85bbf4`; run `20260505-073332`. |
+| Provider diagnostics | closed / validated | `c420c5c`; run `20260505-081141`. |
+| GPU sync timing source | patched / smoke validated | `rounds[*].elapsed_seconds` is now primary source. |
+| AI-to-AI bundle completeness | patched | Full-toolbox diagnostics added to bundle templates. |
+| Project tool registry | seeded | Stable `docs/LOCAL_AI_TASKS/project-tool-registry.md` exists. |
 | Tool governance | active | Tool placement audit and promotion guide are indexed. |
 | Audio/media output guardrail | active | No media output during AI/tooling runs. |
-| Documentation pruning | active | Legacy active-start runbooks removed or de-indexed. |
+| Documentation pruning | active | Legacy active-start runbooks removed, de-indexed or demoted. |
 | Provider lane health | diagnostic | GPU/Ollama advisory explicit and quality-gated; NPU probe/diagnostic only. |
 | Blender/audio domain | frozen for core AI work | Explicit application-domain tasks only. |
 
 ## Recommended next technical directions
 
-1. Validate broker telemetry with a new local run after `a85bbf4`.
+1. Finish external-control pass-through for the unified launcher subordinate calls.
 2. Keep pruning obsolete MD from active entrypoints while preserving compact evidence.
-3. Add a stable project-tool registry after the placement audit matures.
+3. Enrich `project-tool-registry.md` from the next full-run evidence and tool inventory.
 4. Promote only safe report-only tools to broker level.
-5. Filter patch-plan noise from archived evidence docs in a future quality improvement.
-6. Keep no-audio/media guardrail visible in runbooks and PR reports.
-7. Continue using compact production AI-to-AI bundles for cross-session communication.
+5. Continue making telemetry/capability manifests first-class AI handoff inputs.
+6. Filter patch-plan noise from archived evidence docs in a future quality improvement.
+7. Keep no-audio/media guardrail visible in runbooks and PR reports.
+8. Continue using compact production AI-to-AI bundles for cross-session communication.
 
 ## Do not do yet
 
@@ -305,10 +371,13 @@ The active architecture is now validated around:
 
 ```text
 unified local-AI launcher as primary operator entrypoint
+TUTTO SU TUTTO full-run doctrine with expandable perimeter
 Ollama/GPU advisory when explicit and quality-gated
 NPU/OpenVINO probe and decode-smoke diagnostics
 quality-based advisory context filtering
 runtime broker report and telemetry
+runtime tool capability manifest
+full toolbox telemetry summary
 compact GitHub evidence bundles
 production AI-to-AI bundles
 task-scoped context packs
