@@ -2,9 +2,48 @@
 
 ## Purpose
 
-This document defines the minimum quality checks for Blender packages, AI-generated scripts, documentation updates, shared utilities, model-output parsing and generated-file validators in this repository.
+This document defines the minimum quality checks for Blender packages, AI-generated scripts, documentation updates, shared utilities, model-output parsing, generated-file validators and local-AI full-run handoffs in this repository.
 
 The goal is to keep generated work useful, testable, maintainable and safe to review without breaking existing working packages.
+
+This document is a policy guide, not a command catalog. Current executable examples live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+```
+
+## Full-run quality gate
+
+`Full0To10` means **TUTTO SU TUTTO**.
+
+A full-run quality gate passes only when the handoff can show what happened across active lanes. Evidence, recommendations, patch plans and patch specs are incomplete without companion telemetry/capability context.
+
+Required full-run handoff group:
+
+```text
+launcher manifest
+phase_status / phase_reports
+evidence artifacts
+patch-plan artifacts when produced
+runtime tool usage telemetry when tools/broker lanes ran
+runtime tool capability manifest when capabilities matter
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+```
+
+Telemetry is a completeness accessory. It does not replace validators, evidence or patch plans; it explains whether the producing lanes executed, failed, were blocked, degraded, disabled or planned-only.
+
+Never accept these as proof by themselves:
+
+```text
+file exists
+patch plan exists
+dry-run matrix passed
+provider report exists
+NPU smoke passed
+reviewed patch spec exists
+```
 
 ## Quality levels
 
@@ -14,6 +53,7 @@ The goal is to keep generated work useful, testable, maintainable and safe to re
 | Prototype | Runs partially or targets a single test | Acceptable for experiments. |
 | Candidate | Structured package/script with documented inputs and validators | Acceptable for application-level validation. |
 | Stable reference | Tested workflow used as a reference | Example: `Scripting/v61b/`. |
+| Full-run handoff | Evidence + patch plan + telemetry/capability/final summary | Required for production local-AI handoff. |
 
 ## Architecture Boundary — Input-Agnostic / Output-Application-Agnostic
 
@@ -44,6 +84,7 @@ input-domain validation
 output-application validation
 generated Python script policy
 artifact/report contract validation
+runtime telemetry and capability interpretation
 ```
 
 ## Minimum quality gate for a new package
@@ -85,9 +126,9 @@ For Blender/audio packages, additionally document:
 
 ## Minimum documentation quality
 
-Every serious package or validator should answer:
+Every serious package, validator or full-run lane should answer:
 
-1. What does this package or validator create/check?
+1. What does this package, validator or lane create/check?
 2. Which file is the entry point?
 3. Which input file types are expected, if any?
 4. Which JSON files or schemas are expected, if any?
@@ -98,6 +139,7 @@ Every serious package or validator should answer:
 9. What is not specified yet?
 10. What was tested?
 11. What should the next AI or developer avoid changing?
+12. Which telemetry/capability/final-summary surfaces accompany this lane when it enters full-run handoff?
 
 ## Blender validation checklist
 
@@ -113,6 +155,8 @@ Before calling a Blender package candidate valid:
 - Render settings are explicit.
 - Console output is reviewed.
 - A short render test is performed when practical.
+
+Blender runtime validation is application-domain work. It must not be silently included in core local-AI tooling runs.
 
 ## Generated Python script policy checklist
 
@@ -135,41 +179,7 @@ runtime renderer
 media format
 ```
 
-The current generic reference is:
-
-```text
-Tools/validation/generated_file_policy.py
-Tools/validation/generated_python_policy.py
-Tools/validation/check_generated_python_policy.py
-```
-
-The first application-specific adapter is Blender:
-
-```text
-Tools/validation/check_generated_blender_script_policy.py
-```
-
-Before running an AI-generated Blender Python script, use:
-
-```powershell
-python .\Tools\validation\check_generated_python_policy.py --repo-root . --path .\output\some_generated_scene.py --output .\output\validation\generated_python_policy.json
-```
-
-```powershell
-python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --path .\output\some_generated_scene.py --output .\output\validation\generated_blender_script_policy.json
-```
-
-Sample-only smoke:
-
-```powershell
-python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
-```
-
-```powershell
-python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
-```
-
-Current generic Python blocking rules:
+The current generic Python blocking rules:
 
 - generated Python must parse successfully before adapter validation.
 
@@ -191,6 +201,13 @@ Current Blender warning rules:
 - `bpy.ops.wm.save_as_mainfile()` should be reviewed unless explicitly requested;
 - generic Python warning rules also apply through the Blender adapter.
 
+Command ownership:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+```
+
 ## Generic generated-file policy checklist
 
 When adding policy for another file/application context:
@@ -201,7 +218,7 @@ When adding policy for another file/application context:
 4. include deterministic in-memory samples;
 5. keep warnings separate from blocking errors;
 6. avoid broad, ambiguous regex rules that block legitimate generated output;
-7. add explicit validation commands and report paths to documentation;
+7. add explicit validation ownership and report paths to documentation;
 8. avoid running external tools unless the validator is explicitly a smoke test.
 
 ## Generic generated artifact path policy checklist
@@ -212,24 +229,6 @@ Current validator:
 
 ```text
 Tools/validation/check_generated_artifact_path_policy.py
-```
-
-Default command:
-
-```powershell
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
-```
-
-Explicit destination check:
-
-```powershell
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --path .\output\some_generated_artifact.json --output .\output\validation\generated_artifact_path_policy.json
-```
-
-Generated report scan:
-
-```powershell
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
 ```
 
 Default allowed destinations:
@@ -246,7 +245,9 @@ Tools/npu/npu_code_index.md
 Tools/npu/npu_code_manifest.json
 ```
 
-Do not broaden these defaults casually. Use `--allowed-prefix` or `--allowed-exact-path` for deliberate workflow-specific extensions, then document why the destination is safe.
+Do not broaden these defaults casually. Use workflow-specific allowed prefixes only when deliberately scoped, then document why the destination is safe.
+
+Do not use `patch_specs/inbox/` as a normal full-run output. Queueing/applying patch specs remains an explicit reviewed action.
 
 ## AI model-output JSON checklist
 
@@ -263,36 +264,17 @@ Current guarantees:
 - does not invent missing fields;
 - does not return `{}` silently on failure.
 
-Use this validator after parser or model-output caller changes:
-
-```powershell
-python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
-```
-
 Do not use prompt/model-based JSON repair as the default path. It is slower, non-deterministic and can invent fields. Use deterministic local parsing first.
 
 ## AI dry-run matrix report contract checklist
 
-The dry-run matrix report is a report contract, not an output-application adapter and not an input-domain validator.
+The dry-run matrix report is a report contract, not an output-application adapter, not an input-domain validator and not proof of `Full0To10`.
 
 Current generated report:
 
 ```text
 output/ai_pipeline/dry_run_matrix_report.json
 output/ai_pipeline/dry_run_matrix_report.md
-```
-
-Validate the JSON contract after running the matrix:
-
-```powershell
-python .\Tools\validation\check_ai_pipeline_report_contract.py --repo-root . --report .\output\ai_pipeline\dry_run_matrix\base\ai_pipeline_dry_run_report.json --require-dry-run --output .\output\validation\ai_pipeline_report_contract.json
-python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
-```
-
-Explicit report validation:
-
-```powershell
-python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --matrix-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\ai_dry_run_matrix_contract.json
 ```
 
 Minimum root fields:
@@ -330,39 +312,50 @@ Quality rules:
 - keep warnings separate from blocking errors;
 - do not run the dry-run matrix from the contract validator;
 - do not rewrite generated artifacts from the contract validator;
-- validate `agent_state_packet` metadata only when present.
-- validate referenced per-case schema-v6 reports without changing their field meanings.
+- validate `agent_state_packet` metadata only when present;
+- validate referenced per-case schema-v6 reports without changing their field meanings;
+- never report dry-run matrix success as full-run success.
 
-Minimum schema-v6 report fields for per-case dry-run reports:
-
-```text
-schema_version
-generated_at
-repo_root
-output_dir
-dry_run
-passed
-preflight
-step_count
-summary
-schedule
-lanes
-wave_entrypoint_review
-smart_context
-agent_state_packet
-guardrail_remediation_loop
-steps
-post_run_expected_outputs
-```
-
-For `--require-dry-run`, every step must keep:
+For dry-run reports, every step must keep:
 
 ```text
 dry_run=true
 planned_only=true
 ```
 
+## Runtime telemetry/capability checklist
+
+For full-run, provider, broker, recommendation or patch-plan handoff, inspect or provide:
+
+```text
+runtime_tool_usage_telemetry_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md
+full_toolbox_run_telemetry_summary_<STAMP>.json/md
+shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+```
+
+Minimum semantics to verify:
+
+```text
+tool_call_entry_count
+executed_count
+failed_count
+blocked_count
+broker_reports
+provider_advisory_state
+provider_failure_reasons
+degraded_provider_components
+deterministic_recovery_used
+gpu_metrics_source
+round_duration_source
+patch_application_performed
+source_writes_performed
+```
+
 ## FFmpeg validation checklist
+
+FFmpeg validation is application-domain work and must be explicitly scoped.
 
 - Frame sequence path is explicit.
 - Start frame number is explicit.
@@ -384,7 +377,8 @@ An AI-generated change is acceptable only if it includes:
 - test status;
 - risks;
 - follow-up recommendations;
-- line counts for created or modified scripts.
+- line counts for created or modified scripts;
+- telemetry/capability/final-summary context when it derives from full-run evidence or patch plans.
 
 ## Non-destructive rule
 
@@ -415,7 +409,9 @@ Reject or review carefully when a generated change:
 - deletes generated context or analysis data;
 - adds paid or external AI GitHub Actions without explicit opt-in;
 - uses prompt-based repair where deterministic parsing is available;
-- hardens report schemas so much that additive future fields fail validation.
+- hardens report schemas so much that additive future fields fail validation;
+- claims full-run success from dry-run, focused validator, provider report, NPU smoke or file existence alone;
+- presents evidence or patch plans without telemetry/capability/final-summary context when the output derives from a full run.
 
 ## Current reference
 
@@ -434,6 +430,15 @@ The current report-contract validator reference is:
 
 ```text
 Tools/validation/check_ai_dry_run_matrix_contract.py
+```
+
+The current full-run telemetry/handoff reference is:
+
+```text
+Tools/ai/build_runtime_tool_usage_telemetry.py
+Tools/ai/build_runtime_tool_capability_manifest.py
+Tools/ai/build_full_toolbox_run_telemetry_summary.py
+Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
 ```
 
 The generated-file policy architecture is intended to outgrow Blender and audio/WAV inputs through small, validated adapters.
