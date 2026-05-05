@@ -3,6 +3,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$PatchSpecs,
     [string]$OutputDir = "output/validation/full0to10_markdown_split_shadow",
+    [string]$ShadowRoot = "output/validation/full0to10_markdown_split_shadow_files",
     [int]$MaxSpecs = 200,
     [switch]$ApplyShadow
 )
@@ -20,6 +21,7 @@ function Resolve-RepoPath {
 $RepoRoot = (Resolve-Path $RepoRoot).Path
 $PatchSpecsPath = Resolve-RepoPath -Base $RepoRoot -PathValue $PatchSpecs
 $OutputPath = Resolve-RepoPath -Base $RepoRoot -PathValue $OutputDir
+$ShadowPath = Resolve-RepoPath -Base $RepoRoot -PathValue $ShadowRoot
 New-Item -ItemType Directory -Force -Path $OutputPath | Out-Null
 
 $Json = Join-Path $OutputPath "full0to10_markdown_split_shadow.json"
@@ -29,6 +31,7 @@ $Args = @(
     "--repo-root", $RepoRoot,
     "--patch-specs", $PatchSpecsPath,
     "--max-specs", $MaxSpecs,
+    "--shadow-root", $ShadowPath,
     "--output", $Json,
     "--markdown-output", $Md
 )
@@ -44,3 +47,4 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "[OK] Markdown split shadow JSON: $Json"
 Write-Host "[OK] Markdown split shadow MD: $Md"
+Write-Host "[OK] Markdown split shadow files: $ShadowPath"

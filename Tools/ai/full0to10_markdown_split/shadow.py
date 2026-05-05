@@ -1,6 +1,7 @@
-"""Build shadow split file plans for Markdown."""
+"""Build quarantined shadow split file plans for Markdown."""
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -8,8 +9,20 @@ from .constants import MAX_CHILD_FILENAME_CHARS, MAX_SECTIONS, SHADOW_SUFFIX
 from .headings import Section, slugify, split_sections
 
 
-def shadow_dir_for(target: Path) -> Path:
-    return target.with_name(target.name + SHADOW_SUFFIX)
+def repo_relative(path: Path, repo_root: Path) -> str:
+    try:
+        return path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError:
+        return path.name
+
+
+def shadow_dir_for(target: Path, repo_root: Path, shadow_root: Path | None) -> Path:
+    if shadow_root is None:
+        return target.with_name(target.name + SHADOW_SUFFIX)
+    rel = repo_relative(target, repo_root).replace("/", "__").replace("\\", "__")
+    digest = hashlib.sha1(rel.encode("utf-8", errors="replace")).hexdigest()[:10]
+    safe_name = f"{rel}.{digest}{SHADOW_SUFFIX}"
+    return shadow_root / safe_name
 
 
 def child_name(section: Section) -> str:
@@ -22,24 +35,17 @@ def child_name(section: Section) -> str:
 
 
 def readme_text(target: Path, sections: list[Section]) -> str:
-    lines = [
-        f"# {target.name} split",
-        "",
-        f"Source: `{target.as_posix()}`",
-        "",
-        "## Sections",
-        "",
-    ]
+    lines = [f"# {target.name} split", "", f"Source: `{target.as_posix()}`", "", "## Sections", ""]
     for section in sections:
         lines.append(f"- [{section.title}]({child_name(section)})")
     lines.append("")
     return "\n".join(lines)
 
 
-def build_shadow_plan(target: Path) -> dict[str, Any]:
+def build_shadow_plan(target: Path, repo_root: Path, shadow_root: Path | None) -> dict[str, Any]:
     text = target.read_text(encoding="utf-8", errors="replace")
     sections = split_sections(text)[:MAX_SECTIONS]
-    out_dir = shadow_dir_for(target)
+    out_dir = shadow_dir_for(target, repo_root, shadow_root)
     files = [{"path": (out_dir / "README.md").as_posix(), "content": readme_text(target, sections)}]
     seen: set[str] = {"README.md"}
     for section in sections:

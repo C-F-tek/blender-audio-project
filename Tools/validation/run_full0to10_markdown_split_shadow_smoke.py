@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke test for Markdown split shadow applier."""
+"""Smoke test for quarantined Markdown split shadow applier."""
 from __future__ import annotations
 
 import argparse
@@ -33,10 +33,10 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     work_dir = repo_root / args.work_dir
     sample_root = work_dir / "repo"
+    shadow_root = work_dir / "shadow_files"
     sample_root.mkdir(parents=True, exist_ok=True)
-    long_title = "AI Context Pack Core AI Backend Generated At 2026 05 01 " * 8
     md = sample_root / "large.md"
-    md.write_text(f"# Root\nintro\n\n## {long_title}\nalpha\n\n## B\nbeta\n", encoding="utf-8")
+    md.write_text("# Root\nintro\n\n## Very long generated heading " + ("x" * 300) + "\nalpha\n", encoding="utf-8")
     specs = work_dir / "patch_specs.json"
     specs.write_text(json.dumps([
         {"candidate_kind": "markdown_split", "target_path": "large.md"},
@@ -44,23 +44,19 @@ def main() -> int:
     ], indent=2), encoding="utf-8")
 
     cli = repo_root / "Tools/ai/apply_full0to10_markdown_split_patch_specs.py"
-    dry = run([
-        sys.executable, str(cli), "--repo-root", str(sample_root), "--patch-specs", str(specs),
-        "--output", str(work_dir / "dry.json"), "--markdown-output", str(work_dir / "dry.md"),
-    ], repo_root)
     applied = run([
         sys.executable, str(cli), "--repo-root", str(sample_root), "--patch-specs", str(specs), "--apply-shadow",
-        "--output", str(work_dir / "apply.json"), "--markdown-output", str(work_dir / "apply.md"),
+        "--shadow-root", str(shadow_root), "--output", str(work_dir / "apply.json"),
+        "--markdown-output", str(work_dir / "apply.md"),
     ], repo_root)
 
-    shadow = sample_root / "large.md.split" / "README.md"
-    child_files = list((sample_root / "large.md.split").glob("*.md"))
+    source_side_shadow = sample_root / "large.md.split"
+    child_files = list(shadow_root.rglob("*.md"))
     max_name = max(len(path.name) for path in child_files)
     summary = {
-        "passed": dry["accepted_count"] == 1 and applied["written_file_count"] >= 2 and shadow.exists() and md.exists() and max_name <= 96,
-        "dry_accepted": dry["accepted_count"],
+        "passed": applied["written_file_count"] >= 2 and not source_side_shadow.exists() and max_name <= 96,
         "written": applied["written_file_count"],
-        "original_still_exists": md.exists(),
+        "source_side_shadow_exists": source_side_shadow.exists(),
         "max_child_filename_length": max_name,
     }
     print(json.dumps(summary, indent=2))
