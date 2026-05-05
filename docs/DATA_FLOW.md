@@ -4,7 +4,7 @@
 
 This document describes the current data movement across `IA-Carmine Local AI Orchestration Workbench`.
 
-The project still contains Blender/audio-reactive workflows, but the active architectural flow is now app-agnostic local AI orchestration: launcher-selected phases, reports, provider lanes, quality gates, explicit probes, advisory packets and compact GitHub evidence.
+The project still contains Blender/audio-reactive workflows, but the active architectural flow is now app-agnostic local AI orchestration: launcher-selected phases, reports, provider lanes, quality gates, explicit probes, advisory packets, runtime broker telemetry, capability manifests and compact GitHub evidence.
 
 ## Current core AI orchestration flow
 
@@ -26,7 +26,12 @@ unified launcher command
   -> full-context golden proposal families when requested
   -> proposal-derived draft patch specs
   -> explicit replacement plan and reviewed dry-run spec
+  -> runtime broker report
+  -> runtime tool usage telemetry
+  -> runtime tool capability manifest
+  -> full toolbox run telemetry summary
   -> compact evidence bundle under docs/LOCAL_VALIDATION_EVIDENCE/
+  -> shared production AI-to-AI bundle
   -> manual review / PR / merge
 ```
 
@@ -37,7 +42,15 @@ Tools/workflow/run_unified_local_ai_refactor.ps1
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-The manifest is the first review object. Detailed reports are opened only after the manifest shows which phases produced them.
+The manifest is the first review object. Telemetry and capability manifests are the next AI reasoning surfaces. Detailed reports are opened only after manifest and telemetry show which phases produced them.
+
+## TUTTO SU TUTTO data-flow rule
+
+`-Full0To10` data flow is **TUTTO SU TUTTO**.
+
+Every full-run intensity must preserve the same semantic data surfaces. `quick`, `balanced`, `deep` and `custom` may change volume, context size and runtime budget, but they must not silently remove core data flows.
+
+The full-run perimeter can expand. When a new production-ready data surface appears, such as a registry, broker tool report, provider diagnostic, repository-consistency map, memory/context builder or telemetry summary, it must be added to this document and to the launcher contract, or explicitly excluded with rationale.
 
 ## Provider-lane flow
 
@@ -47,6 +60,7 @@ Ollama/GPU workload report
   -> advisory lane: ollama
   -> provider mapping: GPU/CUDA
   -> primary advisory packet generation when explicitly requested
+  -> provider diagnostics and degradation state in telemetry/bundle
 ```
 
 ```text
@@ -56,6 +70,7 @@ NPU/OpenVINO workload report
   -> remediation report
   -> explicit NPU probe / decode smoke diagnostic
   -> possible future promotion only after quality-gated usable workload output
+  -> provider diagnostics and exclusion reason in telemetry/bundle
 ```
 
 Current mapping:
@@ -66,6 +81,54 @@ OpenVINO -> NPU
 ```
 
 OpenVINO GPU is not a primary lane.
+
+## Runtime telemetry flow
+
+```text
+runtime broker requests
+  -> Tools/ai/agent_runtime_tool_broker.py
+  -> runtime_tool_broker_full_toolbox_<STAMP>.json/md
+  -> Tools/ai/build_runtime_tool_usage_telemetry.py
+  -> runtime_tool_usage_telemetry_<STAMP>.json/md
+  -> Tools/ai/build_runtime_tool_capability_manifest.py
+  -> runtime_tool_capability_manifest_<STAMP>.json/md
+  -> Tools/ai/build_full_toolbox_run_telemetry_summary.py
+  -> full_toolbox_run_telemetry_summary_<STAMP>.json/md
+  -> Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
+  -> shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+  -> shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+```
+
+Telemetry answers AI-critical questions:
+
+```text
+which tools were available
+which tools executed
+which tools failed
+which tools were blocked
+which provider lanes degraded
+which reports were absorbed into the bundle
+which source writes or patch applications did not happen
+```
+
+Important fields:
+
+```text
+tool_call_entry_count
+executed_count
+failed_count
+blocked_count
+broker_reports
+provider_advisory_state
+provider_failure_reasons
+degraded_provider_components
+gpu_metrics_source
+round_duration_source
+patch_application_performed
+source_writes_performed
+```
+
+AI agents must not infer run success from output file presence alone.
 
 ## Parallel multistep workflow flow
 
@@ -113,9 +176,15 @@ npu_decode_smoke_passed: true
 | Workload reports | local provider workload scripts | quality gate | Generated text reports from provider lanes. |
 | Workload quality report | `Tools/validation/check_ai_workload_report_quality.py` | lane routing, remediation, packet builder | Determines `usable_lanes` and `unusable_lanes`. |
 | Lane routing report | `Tools/ai/build_workload_quality_lane_routing.py` | packet builder, evidence bundle | Declares trusted/excluded context and primary advisory provider. |
+| Provider diagnostics | provider/probe tools and sync analyzers | telemetry summary, bundle, AI agents | Must expose advisory state, failure reasons, degraded components and GPU/NPU timing source. |
 | NPU remediation report | `Tools/validation/check_npu_decode_quality_remediation.py` | maintainer, proposals, evidence | Explains why NPU is excluded and what must happen before promotion. |
 | NPU decode smoke report | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | evidence bundle and future promotion gates | Explicit-run diagnostic; does not imply NPU general advisory quality. |
 | Local provider probe report | `Tools/ai/run_local_provider_probe.py` | evidence bundle | Explicit GPU/Ollama and NPU/OpenVINO probe evidence. |
+| Runtime broker report | `Tools/ai/agent_runtime_tool_broker.py` | runtime telemetry, full toolbox bundle | Shows broker-requested tool calls and guardrail outcomes. |
+| Runtime tool usage telemetry | `Tools/ai/build_runtime_tool_usage_telemetry.py` | AI agents, telemetry summary, bundle | Counts executed/failed/blocked broker calls and carries broker report inputs. |
+| Runtime tool capability manifest | `Tools/ai/build_runtime_tool_capability_manifest.py` | AI agents, bundle, cloud handoff | Describes available tools, allowed args and execution guardrails. |
+| Full toolbox run telemetry summary | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | AI agents, bundle, PR review | Cross-run summary of provider, GPU/NPU, broker, patch-plan and guardrail state. |
+| Shared AI-to-AI bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | next local/cloud AI, PR review | Production handoff surface; must carry diagnostics, telemetry, capability and patch-plan summary. |
 | Post-validation AI packet | `Tools/ai/suggest_repository_updates.py` | maintainer / proposal builder | Uses quality-approved advisory context only. |
 | Repository change proposals | `Tools/ai/build_repository_change_proposals.py` | maintainer, future trusted patch builders | Advisory only; no auto-apply. Includes `suggestion_outputs` descriptors for code/MD/JSON/PowerShell targets. |
 | Full-context golden proposals | `Tools/ai/build_full_context_golden_proposals.py` | maintainer, validators, future patch-spec promotion | Deterministic P1-P6 proposal families; manual-review-only and no source mutation. |
@@ -147,6 +216,9 @@ This is now one application domain over the local AI orchestration workbench, no
 ## Rules for AI systems
 
 - Start full local AI flows from the unified launcher manifest path.
+- Preserve TUTTO SU TUTTO coverage for all full-run intensities.
+- Add new stable data surfaces to this flow when the full-run perimeter expands.
+- Read telemetry/capability surfaces before declaring run success or failure.
 - Exclude unusable workload reports from advisory context before reading their content.
 - Treat NPU short smoke success as diagnostic evidence, not as general advisory promotion.
 - Keep provider execution explicit and report-bound.
@@ -163,6 +235,10 @@ This is now one application domain over the local AI orchestration workbench, no
 
 - unified launcher manifest/phase contract beyond the compact contract doc;
 - provider probe report;
+- runtime tool usage telemetry;
+- runtime tool capability manifest;
+- full toolbox run telemetry summary;
+- shared AI-to-AI bundle final summary;
 - selected semantic chunks report/evidence beyond the focused contract already present;
 - full-context golden proposal report beyond the focused validator already present;
 - legacy audio analysis JSON;
@@ -173,4 +249,4 @@ This is now one application domain over the local AI orchestration workbench, no
 
 ## Recommended next improvement
 
-Keep the unified launcher contract and docs indexes aligned with the actual runner, then promote the full-context golden proposal families P1-P6 one at a time. Add direct raw-output validators for provider probe reports and continue shaping the suggestion/proposal loop from context packs through reviewed dry-run specs toward approved local apply or queue workflows.
+Keep the unified launcher contract and docs indexes aligned with the actual runner, finish external-control pass-through for subordinate launcher calls, and keep telemetry/capability manifests as first-class AI handoff inputs. Promote full-context golden proposal families P1-P6 one at a time only after the relevant telemetry, provider diagnostics and guardrails are visible in compact evidence.
