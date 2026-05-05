@@ -9,12 +9,16 @@ Use it when an issue is real but not fixed immediately. The goal is to prevent d
 ## Current doctrine
 
 ```text
-Full0To10 = TUTTO SU TUTTO
-quick/balanced/deep/custom = intensity, not scope
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters, not scope
+-No* flags = explicit opt-out from selected lanes
 telemetry accompanies evidence and patch plans for completeness
+CSV/index/discovery surfaces are evidence lanes when relevant
+large Markdown must not be a primary operational entrypoint
 ```
 
-Technical debt that affects manifest visibility, runtime telemetry, capability manifests, full toolbox telemetry summary or shared AI-to-AI bundles should be tracked here when not fixed immediately.
+Technical debt that affects manifest visibility, runtime telemetry, capability manifests, full toolbox telemetry summary, shared AI-to-AI bundles, discovery/index/CSV surfaces or oversized Markdown entrypoints should be tracked here when not fixed immediately.
 
 ## Status values
 
@@ -44,7 +48,7 @@ P3 low
 | TD-003 | Blender shared compatibility | P2 | resolved | `Scripting/shared/blender_compat.py` needed runtime validation inside Blender. | Premature adoption could break audio strips or node creation. | Blender 5.1.1 no-render smoke passed for frame range, noise node and VSE audio strip creation; package migration remains a separate task. | 2026-04-29 |
 | TD-004 | Ready To Jazz package | P2 | open | Large standalone/monolithic script. | Harder patching and reuse. | Do not split yet; finish the app-agnostic AI/NPU/backend core first, then migrate one call site at a time after workstation validation. | 2026-04-30 |
 | TD-005 | `v61b_backgood` backup folder | P3 | open | Backup-style folder appears in package validation context. | Validator noise and AI confusion. | Decide whether to archive, exclude, or document it after checking for unique fixes locally. | 2026-04-30 |
-| TD-006 | Formal JSON schemas | P2 | in_progress | JSON contracts are documented but not fully enforced, and `docs/JSON_SCHEMAS.md` is large with managed blocks. | AI artifacts can drift, and API-only rewrites risk damaging managed sections. | Use a patch-spec/local patch to add telemetry/capability/full-run schema contracts without rewriting the entire file; keep strict checks warning-first until local samples are reviewed. | 2026-05-05 |
+| TD-006 | Formal JSON schemas | P2 | in_progress | JSON contracts are documented but not fully enforced, and `docs/JSON_SCHEMAS.md` is large with managed blocks. | AI artifacts can drift, and API-only rewrites risk damaging managed sections. | Treat `docs/JSON_SCHEMAS.md` as schema notebook/catalog, not a primary entrypoint. Use `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` for current launcher semantics and add compact bridge docs instead of broad rewrites. | 2026-05-05 |
 | TD-007 | NPU pipeline decomposition | P2 | in_progress | Some NPU orchestration files remain large. | Harder testing and provider replacement. | Helper package work is active under `Tools/npu/pipeline/`; IO, path/contract, prompt-payload, context-summary, support-file write-planning, exact legacy-output policy and provider-preflight normalization groups are being migrated incrementally before provider execution phases. | 2026-04-30 |
 | TD-008 | Documentation link validation | P3 | resolved | Many docs reference other docs, but no link checker existed. | Broken AI onboarding path. | `Tools/validation/check_docs_links.py` added; run after documentation changes. | 2026-04-29 |
 | TD-009 | Refactor status consistency | P2 | resolved | Pipeline status is duplicated across docs and `refactor_status.py`. | Future inconsistency can confuse agents. | `Tools/validation/check_refactor_status_consistency.py` added; run after AI pipeline/status docs changes. | 2026-04-29 |
@@ -64,20 +68,21 @@ P3 low
 | TD-023 | Full-run perimeter expansion governance | P2 | in_progress | The `TUTTO SU TUTTO` perimeter is intentionally expandable, but new lanes need a mechanical promotion/exclusion checklist. | New tools or evidence surfaces can be omitted silently or over-promoted into the full run. | Keep `project-tool-registry.md`, promotion guide, module map and launcher contract aligned. Any new lane must be included in Full0To10 or explicitly excluded with rationale and telemetry/bundle visibility note. | 2026-05-05 |
 | TD-024 | Obsolete MD drift after PR187 | P2 | in_progress | Many older docs contained legacy runbooks, old PR chains, old local commands or proof-of-work definitions without telemetry. | AI agents may restart from obsolete flows or request local commands while GitHub-only. | Continue MD/CODE audit; demote historical runbooks, remove active-start drift, and update onboarding/schema/status docs to reference launcher-first telemetry-complete handoff. | 2026-05-05 |
 | TD-025 | Python string patch hygiene | P1 | in_progress | Real `SyntaxWarning` findings showed Windows-style command examples with invalid escape sequences such as `\T` and `\e`; an attempted patch bundle also exposed fragility around multiline/triple-quote edits. | Future AI or manual patches may overcorrect by introducing raw multiline/triple-quoted strings, changing indentation, corrupting embedded Markdown/code fences or masking syntax warnings instead of fixing the exact command literal. | Treat triple-quote/raw multiline rewrites as high-risk for command-example cleanup. Prefer minimal one-line literal edits, POSIX-style relative examples like `./Tools/...`, or explicit doubled backslashes. Validate with `python -m py_compile`, `git diff --check`, line counts and focused diff review. | 2026-05-05 |
+| TD-026 | Large Markdown operational drift | P1 | in_progress | Some Markdown files are too large or too catalog-like to be opened reliably by future chats, local AI context packs or GitHub-only reviewers. Examples include `Tools/validation/README.md` and `docs/JSON_SCHEMAS.md`. | Oversized docs can become false primary entrypoints, hide stale commands, or force agents to rely on truncated content. | Keep oversized docs out of the primary reading path. Classify them as catalog/schema/historical/supporting/evidence, add compact bridge docs, and use Markdown inventory/length reports to find more candidates. | 2026-05-05 |
 
 ## Add a new item
 
 Use the next ID:
 
 ```text
-TD-026
+TD-027
 ```
 
 Template:
 
 | ID | Area | Priority | Status | Symptom | Risk | Recommended action | Last reviewed |
 |---|---|---:|---|---|---|---|---|
-| TD-026 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
+| TD-027 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
 
 ## Rules
 
@@ -88,4 +93,5 @@ Template:
 - Review this file after major refactors.
 - Mark GitHub-only limitations explicitly when local validation cannot be performed.
 - Track missing telemetry/capability/final-summary enforcement when it affects full-run evidence or patch-plan completeness.
+- Track oversized Markdown that cannot be opened reliably as operational drift until it is split, summarized or demoted from primary entrypoints.
 - Treat triple-quote/raw multiline rewrites as high-risk when fixing Python command examples or embedded Markdown/code fences; prefer minimal literal edits and validate with `py_compile` plus focused diff review.
