@@ -16,6 +16,8 @@ A `-Full0To10` run must traverse every active lane that participates in project 
 
 The scope of `tutto` may expand. When a new lane becomes stable, for example a new broker tool, registry validator, memory/context surface, repository-consistency check, provider diagnostic or evidence builder, it must be wired into the full-run contract or documented as explicitly excluded. Silent omission is a workflow defect.
 
+Full0To10 is opt-out by lane: once selected, provider/probe/workload-quality, telemetry, discovery, index and CSV/count lanes are included by default unless disabled with explicit `-No*` flags, diagnosed unavailable, represented as dry-run planned state or excluded by a documented operator decision.
+
 ## Canonical lifecycle
 
 ```text
@@ -116,12 +118,13 @@ If a command becomes outdated, update the owning runbook/tool README only. Do no
 ## Provider policy
 
 ```text
-Ollama -> GPU/CUDA -> primary advisory provider only when explicitly requested and quality-gated
-OpenVINO -> NPU -> probe / guardrail / decode diagnostic
+Full0To10 -> provider/probe/workload-quality lanes included by default unless explicitly disabled or diagnosed unavailable
+Ollama -> GPU/CUDA -> primary advisory provider lane for Full0To10 when available and quality-gated
+OpenVINO -> NPU -> probe / guardrail / decode diagnostic lane for Full0To10 when available
 Blender/audio/media runtime -> application target, frozen unless explicitly scoped
 ```
 
-Provider execution must stay explicit and report-bound.
+Provider execution is explicit when the operator selects `-Full0To10` or a provider mode/flag. It is not an additional per-lane opt-in after Full0To10 is selected.
 
 A full 0-to-10 run must not silently degrade if provider quality routing is missing. It must build workload quality routing evidence or fail clearly; dry-run may mark the routing report as planned.
 
@@ -231,9 +234,9 @@ force-push or rewrite history
 merge to master/protected branch
 change secrets, permissions, billing or visibility
 deploy production
-run heavy Blender/GPU workloads automatically
+run heavy Blender/GPU workloads outside an explicitly selected full/provider workflow
 run audio playback/export, FFmpeg encode/mux, Blender render or media generation
-change provider/model execution from explicit to implicit
+change provider/model execution from Full0To10 opt-out semantics to silent opt-in
 ```
 
 Never commit:
@@ -271,7 +274,7 @@ follow-up
 root docs are command-free
 commands live in owning runbooks/tool READMEs
 unified launcher remains the active local-AI entrypoint
-provider execution remains explicit
+Full0To10 remains opt-out by lane, not opt-in per capability
 runtime broker telemetry is surfaced when relevant
 audio/media output is forbidden in normal AI/tooling runs
 patch application remains explicit
