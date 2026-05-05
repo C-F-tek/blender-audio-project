@@ -10,11 +10,18 @@ Blender/audio remains the first application domain. It is not the boundary of th
 
 ## Current doctrine
 
-The active operating doctrine is **TUTTO SU TUTTO** through one unified local-AI flow.
+The active operating doctrine is **run unica parametrica + TUTTO SU TUTTO**.
 
-`-Full0To10` means whole-repository coverage across active lanes. `quick`, `balanced`, `deep` and `custom` are intensity profiles only: they change budgets and depth, not semantic scope.
+```text
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters
+-No* flags = explicit opt-out from selected lanes
+```
 
-The perimeter of `tutto` is expandable. When a new tool, broker capability, validation lane, provider diagnostic, evidence surface, repository-consistency check or memory/context builder becomes production-ready, it must be added to the full-run contract or explicitly excluded with rationale.
+`-Full0To10` means whole-repository coverage across active lanes. `quick`, `balanced`, `deep` and `custom` change budgets, limits, rounds, context, tokens and depth; they do not change semantic scope.
+
+The perimeter of `tutto` is expandable. When a new tool, broker capability, validation lane, provider diagnostic, evidence surface, repository-consistency check, memory/context builder, discovery/index surface or CSV/count surface becomes production-ready, it must be added to the run unica full-run contract or explicitly excluded with rationale.
 
 Telemetry is AI-critical evidence. Future local/cloud AI agents must use telemetry to decide whether a lane was executed, failed, blocked, degraded, skipped intentionally or unavailable; file existence alone is not enough.
 
@@ -24,6 +31,16 @@ Current consolidation branch:
 
 ```text
 codex/unified-local-ai-refactor-launcher
+```
+
+Current active phase:
+
+```text
+PR: #187 feat(workflow): add unified local AI refactor launcher
+Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+Run: 20260505-143844
+Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Mode: review-only until explicit human instruction
 ```
 
 Recent relevant commits on this branch include:
@@ -45,7 +62,7 @@ GitHub-only agents must not infer local runtime success without evidence. When l
 
 ## Active local-AI entrypoint
 
-The active local-AI operator model is unified around one launcher:
+The active local-AI operator model is unified around one parameterized launcher:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
@@ -53,30 +70,35 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
-The unified launcher owns the selectable 0-to-10 flow. Older monolithic full-toolbox, code-refactor and Markdown-refactor 0-to-10 runbooks are not active starting points.
+The unified launcher owns the run unica. Older monolithic full-toolbox, code-refactor and Markdown-refactor 0-to-10 runbooks are not active starting points.
 
 Current supporting docs:
 
 ```text
 FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
-docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
 ```
 
 ## Current operator posture
 
 ```text
 manifest-first review
-phase-selectable local runs
-Full0To10 profile for complete loops
-quick/balanced/deep/custom intensities without scope reduction
+one parameterized run unica
+Full0To10 perimeter = TUTTO SU TUTTO
+quick/balanced/deep/custom as parameters, not scope profiles
+provider/probe/workload-quality lanes included by default in Full0To10 unless disabled/unavailable
+CSV/count and discovery/index surfaces included when relevant
 workload quality gate before primary advisory routing
-Ollama/GPU advisory only when explicit and quality-gated
-NPU/OpenVINO probe/guardrail/decode diagnostic only
-SQLite memory local-only, explicit and non-committed
+Ollama/GPU advisory quality-gated and opt-out under Full0To10
+NPU/OpenVINO probe/guardrail/decode diagnostic opt-out under Full0To10
+SQLite memory local-only and non-committed
 runtime broker report and telemetry surfaced in compact evidence
 runtime capability manifest surfaced in compact evidence
 full toolbox telemetry summary carried with AI-to-AI bundle
@@ -89,11 +111,13 @@ no audio/media output during normal AI/tooling runs
 
 | Lane | Provider | Role | Current meaning |
 |---|---|---|---|
-| GPU/CUDA | Ollama | Primary advisory provider when explicitly requested and quality-gated. | Advisory lane, not implicit execution. |
-| NPU/OpenVINO | OpenVINO GenAI | Probe, guardrail and decode diagnostics. | Not promoted to general advisory lane. |
+| GPU/CUDA | Ollama | Primary advisory provider for Full0To10 when available and quality-gated. | Included by default unless disabled or diagnosed unavailable. |
+| NPU/OpenVINO | OpenVINO GenAI | Probe, guardrail and decode diagnostics. | Included by default for diagnostics unless disabled or diagnosed unavailable; not promoted to general advisory lane. |
 | Blender/audio/media runtime | Blender Python, FFmpeg, audio tools | Application-domain runtime. | Frozen unless explicitly scoped. |
 
-Provider execution must be explicit and report-bound. A full tooling run must not silently treat degraded provider lanes as successful advisory output.
+Provider execution is explicit when the operator selects `-Full0To10` or provider/probe modes. It is not an additional per-lane opt-in after Full0To10 is selected.
+
+A full tooling run must not silently treat degraded provider lanes as successful advisory output.
 
 Validated provider-diagnostic state from run `20260505-081141`:
 
@@ -121,12 +145,10 @@ CODE_PATCH_PUSHED
 RUNTIME_VALIDATED
 ```
 
-Relevant files:
+Relevant compact context:
 
 ```text
-Tools/ai/build_runtime_tool_usage_telemetry.py
-Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1
-docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 ```
 
 Validated run:
@@ -155,6 +177,34 @@ check_validation_report_contract
 ```
 
 Do not relabel broker telemetry as open unless a newer run regresses these fields.
+
+## Discovery, index repair and CSV/count status
+
+Discovery and count surfaces are evidence lanes, not source authority.
+
+Expected surfaces when relevant:
+
+```text
+Markdown inventory JSON/MD
+script inventory JSON/CSV/MD
+function/class/method inventory CSV
+Python line-count CSV/MD
+semantic chunk manifest JSON/MD
+selected chunk evidence JSON/MD
+repository consistency map/smoke JSON/MD
+auto-discovery report when scanner/index visibility drift is suspected
+index repair plan/report when generated indexes are stale or missing
+```
+
+Policy:
+
+```text
+Do not commit output/**.
+Do not commit indexAI/code_chunks/**.
+Do not hand-edit generated indexes/chunks as source.
+Index repair is plan/report-first unless explicitly requested.
+CSV/count outputs support review and sizing but do not override source code or canonical docs.
+```
 
 ## Telemetry and AI handoff status
 
@@ -241,7 +291,7 @@ Important rule:
 Not every project tool is broker-safe.
 ```
 
-Audio/Blender/FFmpeg tools can be project tools, but they must not be automatically executed by broker or full-run tooling lanes unless an explicit application-domain task enables them.
+Audio/Blender/FFmpeg tools can be project tools, but they must not be automatically executed by broker or run unica tooling lanes unless an explicit application-domain task enables them.
 
 Examples of application-domain tools that are not broker-safe by default:
 
@@ -261,12 +311,15 @@ Current documentation consolidation has removed or de-indexed old active-start r
 
 ```text
 AGENTS.md
+CHATGPT.md
+CHATGPT/README.md
 README.md
 WORKFLOW.md
 docs/README.md
 docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/LOCAL_AI_TASKS/README.md
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
@@ -300,18 +353,20 @@ renders/**
 *.db
 *.sqlite
 *.sqlite3
+indexAI/code_chunks/**
 raw checkpoints
 large full analysis JSON outside compact evidence policy
 generated audio/video/media output
 ```
 
-Production bundle and telemetry are the preferred handoff surfaces for full-run communication.
+Production bundle and telemetry are the preferred handoff surfaces for run-unica communication.
 
 ## Current blockers and limits
 
 | Blocker / limit | Impact | Correct handling |
 |---|---|---|
-| External launcher controls not fully passed through | Some exposed knobs are documented/manifested but not yet wired into all subordinate calls. | Patch with ZIP bundle or focused workflow patch; validate PowerShell parser and dry-run locally. |
+| Runtime bundle `20260505-143844` not committed | GitHub-only agents may not inspect the ZIP through standard repo files. | Use PR comment/compact docs until the bundle is locally inspected or uploaded. |
+| External launcher controls not fully passed through | Some exposed knobs are documented/manifested but not yet wired into all subordinate calls. | Follow-up patch; do not treat as current P1 unless selected. |
 | Repository slug still says `blender-audio-project` | Name no longer reflects active architecture. | Docs use `IA-Carmine Local AI Orchestration Workbench`; repo rename needs explicit confirmation. |
 | Ollama/provider health can degrade locally | Advisory lane may be unavailable in a given run. | Require workload quality routing and explicit diagnostics. |
 | NPU smoke/probe does not prove general advisory quality | Prevents unsafe NPU promotion. | Keep NPU as probe/guardrail/diagnostic until quality gates prove usable advisory text. |
@@ -322,29 +377,32 @@ Production bundle and telemetry are the preferred handoff surfaces for full-run 
 
 | Area | Status | Notes |
 |---|---|---|
-| Unified launcher | active | Canonical local-AI entrypoint. |
-| Full0To10 procedure | active | Current flow: everything active by default unless explicit `No*` flag disables it. |
+| Unified launcher / run unica | active | Canonical local-AI entrypoint. |
+| Full0To10 perimeter | active | Everything active by default unless explicit `No*` flag, unavailable diagnostic or documented exclusion disables it. |
+| Refactor/reuse full-run review | active P1 | Run `20260505-143844`; inspect runtime bundle before selecting patch. |
+| Discovery/index/CSV-count surfaces | active evidence surfaces | Included when relevant; no generated-index commit unless explicitly requested. |
 | Runtime broker telemetry | closed / validated | `a85bbf4`; run `20260505-073332`. |
-| Provider diagnostics | closed / validated | `c420c5c`; run `20260505-081141`. |
+| Provider diagnostics | closed / validated baseline | `c420c5c`; run `20260505-081141`. New runs may still degrade but must expose diagnostics. |
 | GPU sync timing source | patched / smoke validated | `rounds[*].elapsed_seconds` is now primary source. |
 | AI-to-AI bundle completeness | patched | Full-toolbox diagnostics added to bundle templates. |
 | Project tool registry | seeded | Stable `docs/LOCAL_AI_TASKS/project-tool-registry.md` exists. |
 | Tool governance | active | Tool placement audit and promotion guide are indexed. |
 | Audio/media output guardrail | active | No media output during AI/tooling runs. |
 | Documentation pruning | active | Legacy active-start runbooks removed, de-indexed or demoted. |
-| Provider lane health | diagnostic | GPU/Ollama advisory explicit and quality-gated; NPU probe/diagnostic only. |
+| Provider lane health | diagnostic | GPU/Ollama advisory quality-gated; NPU probe/diagnostic only. |
 | Blender/audio domain | frozen for core AI work | Explicit application-domain tasks only. |
 
 ## Recommended next technical directions
 
-1. Finish external-control pass-through for the unified launcher subordinate calls.
-2. Keep pruning obsolete MD from active entrypoints while preserving compact evidence.
-3. Enrich `project-tool-registry.md` from the next full-run evidence and tool inventory.
-4. Promote only safe report-only tools to broker level.
-5. Continue making telemetry/capability manifests first-class AI handoff inputs.
-6. Filter patch-plan noise from archived evidence docs in a future quality improvement.
-7. Keep no-audio/media guardrail visible in runbooks and PR reports.
-8. Continue using compact production AI-to-AI bundles for cross-session communication.
+1. Inspect the `20260505-143844` refactor/reuse runtime bundle and classify recommendations/patch plans.
+2. Select a review-first refactor/reuse patch family only after evidence review.
+3. Keep pruning obsolete MD from active entrypoints while preserving compact evidence.
+4. Enrich `project-tool-registry.md` from the next run-unica evidence and tool inventory.
+5. Promote only safe report-only tools to broker level.
+6. Continue making telemetry/capability manifests first-class AI handoff inputs.
+7. Filter patch-plan noise from archived evidence docs in a future quality improvement.
+8. Keep no-audio/media guardrail visible in runbooks and PR reports.
+9. Finish external-control pass-through as a follow-up after the current refactor/reuse phase or when explicitly selected.
 
 ## Do not do yet
 
@@ -354,13 +412,13 @@ Do not do these without explicit scope approval:
 rewrite Blender runtime packages
 split Ready To Jazz monolith
 migrate package imports broadly
-change provider execution from explicit to implicit
 edit full frame-level analysis JSON files
 hand-edit generated AI/NPU indexes
 claim NPU as general advisory lane based on smoke success
 run audio playback/export, FFmpeg encode/mux, Blender render or media generation during AI/tooling work
 rename the GitHub repository
 merge to master
+change Full0To10 from opt-out-by-lane to silent opt-in per capability
 ```
 
 ## Final technical position
@@ -370,10 +428,11 @@ The repository has crossed from a Blender/audio project into a local AI orchestr
 The active architecture is now validated around:
 
 ```text
-unified local-AI launcher as primary operator entrypoint
-TUTTO SU TUTTO full-run doctrine with expandable perimeter
-Ollama/GPU advisory when explicit and quality-gated
-NPU/OpenVINO probe and decode-smoke diagnostics
+run unica parameterized local-AI launcher as primary operator entrypoint
+TUTTO SU TUTTO perimeter with expandable coverage
+quick/balanced/deep/custom as execution parameters, not scopes
+Ollama/GPU advisory quality-gated and included by default in Full0To10 when available
+NPU/OpenVINO probe and decode-smoke diagnostics included by default in Full0To10 when available
 quality-based advisory context filtering
 runtime broker report and telemetry
 runtime tool capability manifest
@@ -383,6 +442,8 @@ production AI-to-AI bundles
 task-scoped context packs
 SQLite-backed local agent state
 selected semantic chunks
+CSV/count evidence surfaces
+auto-discovery and index repair reports/plans
 deterministic recommendations
 review-only patch specs
 manual patch application
