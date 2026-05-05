@@ -13,9 +13,7 @@ $ErrorActionPreference = "Stop"
 
 function Resolve-RepoPath {
     param([string]$Base, [string]$PathValue)
-    if ([System.IO.Path]::IsPathRooted($PathValue)) {
-        return $PathValue
-    }
+    if ([System.IO.Path]::IsPathRooted($PathValue)) { return $PathValue }
     return (Join-Path $Base $PathValue)
 }
 
@@ -32,32 +30,24 @@ $RunArgs = @(
     "-MaxRepoQualityFiles", "$MaxRepoQualityFiles",
     "-TimeoutSeconds", "$TimeoutSeconds"
 )
-
-if ($NoExternalProbes) {
-    $RunArgs += "-NoExternalProbes"
-}
-if ($Strict) {
-    $RunArgs += "-Strict"
-}
-if ($SkipFinalProduct) {
-    $RunArgs += "-SkipFinalProduct"
-}
+if ($NoExternalProbes) { $RunArgs += "-NoExternalProbes" }
+if ($Strict) { $RunArgs += "-Strict" }
+if ($SkipFinalProduct) { $RunArgs += "-SkipFinalProduct" }
 
 $LightRunScript = Join-Path $RepoRoot "Tools/workflow/run_full0to10_light_evidence_only.ps1"
-Write-Host "[RUN] LightFull0To10 profile"
+Write-Host "[RUN] LightFull0To10 evidence profile"
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $LightRunScript @RunArgs
 $LightExit = $LASTEXITCODE
 
 $RunReport = Join-Path $RunDir "full0to10_light_evidence_only_run.json"
-$PromotionJson = Join-Path $PromotionDir "full0to10_light_evidence_promotion.json"
-$PromotionMd = Join-Path $PromotionDir "full0to10_light_evidence_promotion.md"
+$PromotionOut = Join-Path $PromotionDir "full0to10_light_profile_promotion.from_cli.json"
 
-$SummaryScript = Join-Path $RepoRoot "Tools/ai/summarize_full0to10_light_evidence.py"
-& python $SummaryScript --run-report $RunReport --output $PromotionJson --markdown-output $PromotionMd
+$Builder = Join-Path $RepoRoot "Tools/ai/build_full0to10_light_profile_promotion.py"
+& python $Builder --run-report $RunReport --output-dir $PromotionDir --output $PromotionOut
 $PromotionExit = $LASTEXITCODE
 
-Write-Host ("[OK] Promotion JSON: {0}" -f $PromotionJson)
-Write-Host ("[OK] Promotion MD: {0}" -f $PromotionMd)
+Write-Host ("[OK] Promotion JSON: {0}" -f $PromotionOut)
+Write-Host ("[OK] Promotion dir: {0}" -f $PromotionDir)
 
 if ($Strict -and ($LightExit -ne 0 -or $PromotionExit -ne 0)) {
     throw "Unified LightFull0To10 profile failed in strict mode."
