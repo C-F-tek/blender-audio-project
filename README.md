@@ -2,6 +2,14 @@
 
 `C-F-tek/blender-audio-project` is now primarily a local AI orchestration, validation and guardrail workbench. The repository name is historical: Blender/audio remains the first application domain, but the active architecture is app-agnostic AI/backend orchestration.
 
+## Current operating doctrine: TUTTO SU TUTTO
+
+The project now treats full local AI runs as serious whole-repository operations: **TUTTO SU TUTTO**.
+
+A full run is not a narrow smoke, not a single-lane provider call and not a partial documentation scan. Every `-Full0To10` variation must cover all active repository lanes unless a capability is explicitly disabled, unavailable or recorded as degraded.
+
+The meaning of `tutto` is intentionally expandable. New stable lanes, registries, validators, broker tools, provider diagnostics, evidence surfaces, memory/context builders and repository-consistency checks must be added to the full-run contract when they become production-ready. Expansion must be explicit in docs, manifests and evidence summaries; silent scope reduction is not allowed.
+
 ## Canonical reading flow
 
 ```text
