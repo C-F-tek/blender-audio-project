@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "kind": "runtime_tool_usage_telemetry",
+  "generated_at": "2026-05-05T07:51:59",
+  "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "stamp": "20260505-073332",
+  "passed": true,
+  "errors": [],
+  "warnings": [],
+  "provider_execution_performed": false,
+  "patch_application_performed": false,
+  "source_writes_performed": false,
+  "sqlite_write_performed": false,
+  "persistent_memory_write_performed": false,
+  "manual_review_required": true,
+  "inputs": {
+    "orchestrator": "output/ai_pipeline/full_toolbox_20260505-073332_orchestrator.json",
+    "gpu_report": "output/ai_pipeline/full_toolbox_20260505-073332_parallel_gpu.json",
+    "gpu_npu_sync": "output/analysis/gpu_npu_run_sync_full_toolbox_20260505-073332.json",
+    "decision_loop": "output/ai_pipeline/full_toolbox_20260505-073332_agent_review_decision_loop.json",
+    "broker_reports": [
+      "output/validation/runtime_tool_broker_full_toolbox_20260505-073332.json"
+    ]
+  },
+  "decision_loop_summary": {
+    "passed": true,
+    "recommendation_count": 5,
+    "patch_plan_count": 5
+  },
+  "gpu_npu_sync_metrics": {
+    "gpu_round_count": 38,
+    "npu_audit_count": 8,
+    "npu_audit_success_count": 8,
+    "npu_audit_round_coverage": 0.211,
+    "avg_gpu_round_seconds": 26.376,
+    "p50_gpu_round_seconds": 26.376,
+    "p90_gpu_round_seconds": 26.376,
+    "avg_npu_audit_seconds": 104.25,
+    "p50_npu_audit_seconds": 104.0,
+    "p90_npu_audit_seconds": 106.0,
+    "npu_to_gpu_avg_duration_ratio": 3.952,
+    "gpu_elapsed_seconds": 1002.294,
+    "provider_execution_performed": true,
+    "patch_application_performed": false,
+    "source_writes_performed": false,
+    "gpu_metrics_source": "gpu_elapsed_divided_by_round_count"
+  },
+  "summary": {
+    "tool_call_entry_count": 3,
+    "executed_count": 3,
+    "failed_count": 0,
+    "blocked_count": 0,
+    "total_reported_tool_elapsed_seconds": 0.0,
+    "by_caller_ai": {
+      "orchestrator": {
+        "count": 3,
+        "executed": 3,
+        "failed": 0,
+        "blocked": 0,
+        "elapsed_seconds": 0.0
+      }
+    },
+    "by_tool": {
+      "check_python_syntax": {
+        "count": 1,
+        "executed": 1,
+        "failed": 0,
+        "blocked": 0,
+        "elapsed_seconds": 0.0
+      },
+      "build_python_line_count_csv": {
+        "count": 1,
+        "executed": 1,
+        "failed": 0,
+        "blocked": 0,
+        "elapsed_seconds": 0.0
+      },
+      "check_validation_report_contract": {
+        "count": 1,
+        "executed": 1,
+        "failed": 0,
+        "blocked": 0,
+        "elapsed_seconds": 0.0
+      }
+    },
+    "by_phase": {
+      "explicit_runtime_tool_broker_bootstrap": {
+        "count": 3,
+        "executed": 3,
+        "failed": 0,
+        "blocked": 0,
+        "elapsed_seconds": 0.0
+      }
+    },
+    "runtime_tool_request_count": 136,
+    "runtime_tool_execution_count": 0,
+    "runtime_tool_failed_count": 0,
+    "runtime_tool_blocked_count": 0,
+    "runtime_tool_provider_request_count": 136,
+    "runtime_tool_provider_request_execution_count": 0,
+    "deterministic_runtime_tool_fallback_request_count": 0,
+    "deterministic_runtime_tool_fallback_execution_count": 0,
+    "declared_not_executed_count": 136
+  },
+  "declared_runtime_tool_counters": {
+    "runtime_tool_request_count": 136,
+    "runtime_tool_execution_count": 0,
+    "runtime_tool_failed_count": 0,
+    "runtime_tool_blocked_count": 0,
+    "runtime_tool_provider_request_count": 136,
+    "runtime_tool_provider_request_execution_count": 0,
+    "deterministic_runtime_tool_fallback_request_count": 0,
+    "deterministic_runtime_tool_fallback_execution_count": 0,
+    "declared_not_executed_count": 136
+  },
+  "tool_calls": [
+    {
+      "caller_ai": "orchestrator",
+      "phase": "explicit_runtime_tool_broker_bootstrap",
+      "round": 1,
+      "broker_source": "agent_runtime_tool_broker",
+      "broker_report": "output/validation/runtime_tool_broker_full_toolbox_20260505-073332.json",
+      "tool_request_id": "full_toolbox_bootstrap_python_syntax",
+      "tool": "check_python_syntax",
+      "reason": "Exercise brokered Python syntax validation as a report-only runtime tool.",
+      "requested_args": {},
+      "status": null,
+      "executed": true,
+      "blocked": false,
+      "failed": null,
+      "elapsed_seconds": 0.0,
+      "started_at": null,
+      "finished_at": null,
+      "result": {
+        "passed": null,
+        "returncode": 0,
+        "ok": null,
+        "kind": null,
+        "output_paths": [],
+        "stdout_tail": "ath\": \"Tools/validation/check_ai_dry_run_matrix_contract.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"Tools/validation/check_ai_dry_run_matrix_outputs.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"Tools/validation/check_ai_model_json.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"Tools/validation/check_ai_pipeline_modules.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"Tools/validation/check_ai_pipeline_report_contract.py\",\n      \"ok\": true,\n      \"error\": null\n    },\n    {\n      \"path\": \"Tools/va...[truncated]",
+        "stderr_tail": "C:\\Users\\carmi\\blender\\blender-audio-project\\Scripting\\ready_to_jazz_wow_youtube_profiles_audio_sync\\encode_final_youtube.py:6: SyntaxWarning: \"\\e\" is an invalid escape sequence. Such sequences will not work in the future. Did you mean \"\\\\e\"? A raw string is also an option.\n  python .\\encode_final_youtube.py\nC:\\Users\\carmi\\blender\\blender-audio-project\\Tools\\validation\\apply_docs_contract_drift_fixes.py:42: SyntaxWarning: \"\\T\" is an invalid escape sequence. Such sequences will not work in the future. Did you mean \"\\\\T\"? A raw string is also an option.\n  python .\\Tools\\validation\\check_ai_workl...[truncated]",
+        "error": "",
+        "summary": "{\"decision\": {}, \"errors\": [], \"guardrails\": {}, \"kind\": \"python_syntax\", \"passed\": true, \"warnings\": []}"
+      }
+    },
+    {
+      "caller_ai": "orchestrator",
+      "phase": "explicit_runtime_tool_broker_bootstrap",
+      "round": 1,
+      "broker_source": "agent_runtime_tool_broker",
+      "broker_report": "output/validation/runtime_tool_broker_full_toolbox_20260505-073332.json",
+      "tool_request_id": "full_toolbox_bootstrap_python_line_count",
+      "tool": "build_python_line_count_csv",
+      "reason": "Exercise brokered Python inventory as a report-only runtime tool.",
+      "requested_args": {},
+      "status": null,
+      "executed": true,
+      "blocked": false,
+      "failed": null,
+      "elapsed_seconds": 0.0,
+      "started_at": null,
+      "finished_at": null,
+      "result": {
+        "passed": null,
+        "returncode": 0,
+        "ok": null,
+        "kind": null,
+        "output_paths": [],
+        "stdout_tail": "{\n  \"schema_version\": 1,\n  \"kind\": \"python_line_count_csv\",\n  \"generated_at\": \"2026-05-05T07:51:56\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"provider_execution_performed\": false,\n  \"patch_application_performed\": false,\n  \"source_writes_performed\": false,\n  \"csv_written\": \"output/ai_runtime_tools/20260505-073332/full_toolbox_bootstrap_python_line_count_python_line_count.csv\",\n  \"file_count\": 325,\n  \"total_lines\": 95611,\n  \"top_files\": [\n    {\n      \"File\": \"Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/m...[truncated]",
+        "stderr_tail": "",
+        "error": "",
+        "summary": "{\"decision\": {}, \"errors\": [], \"guardrails\": {\"blender_runtime_executed\": false, \"blender_runtime_execution_performed\": false, \"manual_review_required\": true, \"patch_application_performed\": false, \"patches_applied\": false, \"provider_execution_performed\": false, \"providers_executed\": false, \"report_only\": true, \"source_files_modified\": false, \"source_writes_performed\": false, \"sqlite_write_performed\": false}, \"kind\": \"python_line_count_csv\", \"passed\": true, \"warnings\": []}"
+      }
+    },
+    {
+      "caller_ai": "orchestrator",
+      "phase": "explicit_runtime_tool_broker_bootstrap",
+      "round": 1,
+      "broker_source": "agent_runtime_tool_broker",
+      "broker_report": "output/validation/runtime_tool_broker_full_toolbox_20260505-073332.json",
+      "tool_request_id": "full_toolbox_bootstrap_validation_contract",
+      "tool": "check_validation_report_contract",
+      "reason": "Exercise brokered validation report contract check against full-run decision outputs.",
+      "requested_args": {},
+      "status": null,
+      "executed": true,
+      "blocked": false,
+      "failed": null,
+      "elapsed_seconds": 0.0,
+      "started_at": null,
+      "finished_at": null,
+      "result": {
+        "passed": null,
+        "returncode": 0,
+        "ok": null,
+        "kind": null,
+        "output_paths": [],
+        "stdout_tail": "{\n  \"schema_version\": 1,\n  \"kind\": \"validation_report_contract\",\n  \"repo_root\": \"C:/Users/carmi/blender/blender-audio-project\",\n  \"report_dir\": \"output/ai_runtime_tools/20260505-073332\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"report_count\": 2,\n  \"ignored_count\": 0,\n  \"ignored_files\": [],\n  \"ignored_patterns\": [\n    \"*_stdout.json\",\n    \"*_request_*.json\",\n    \"*_tool_requests.json\"\n  ],\n  \"require_recommended\": false,\n  \"required_common_fields\": [\n    \"schema_version\",\n    \"repo_root\",\n    \"passed\"\n  ],\n  \"recommended_common_fields\": [\n    \"kind\",\n    \"errors\"\n  ],\n  \"results\":...[truncated]",
+        "stderr_tail": "",
+        "error": "",
+        "summary": "{\"decision\": {}, \"errors\": [], \"guardrails\": {}, \"kind\": \"validation_report_contract\", \"passed\": true, \"warnings\": []}"
+      }
+    }
+  ],
+  "truncated_tool_call_count": 0,
+  "guardrails": {
+    "report_only": true,
+    "committable_location": "docs/LOCAL_VALIDATION_EVIDENCE",
+    "raw_output_commit_allowed": false,
+    "provider_execution_performed": false,
+    "patch_application_performed": false,
+    "source_writes_performed": false,
+    "sqlite_write_performed": false,
+    "persistent_memory_write_performed": false
+  }
+}
