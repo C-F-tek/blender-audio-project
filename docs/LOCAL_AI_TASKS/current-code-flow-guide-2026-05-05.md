@@ -6,6 +6,21 @@ Branch: `codex/unified-local-ai-refactor-launcher`
 
 Purpose: describe the current code/tool flow after the full-run, provider bundle and broker telemetry work.
 
+## Operating doctrine
+
+The current IA-Carmine flow is a single full-run system: **TUTTO SU TUTTO**.
+
+There is one active operator flow:
+
+    Tools/workflow/run_unified_local_ai_refactor.ps1
+    docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+
+All quick, balanced, deep and custom full runs must traverse the same semantic lane set. Intensity changes budget and depth, not scope. A quick full run is still a whole-repository run with reduced capacity; smoke remains a separate mode.
+
+The perimeter of `tutto` may expand. When a new production-ready broker tool, provider diagnostic, validation lane, memory/context surface, repository-consistency check, registry or evidence builder is promoted, it must be wired into this flow or explicitly documented as excluded.
+
+Telemetry is part of the run payload, not a side note. AI agents must be able to reason from telemetry about what actually executed, what failed, what was blocked, what was degraded, what was skipped intentionally and which tools/capabilities were available.
+
 ## High-level flow
 
 The current IA-Carmine full-run flow is:
@@ -15,9 +30,11 @@ The current IA-Carmine full-run flow is:
       -> static inventories and validations
       -> context pack and agent state
       -> provider/probe/workload quality lanes
+      -> repository consistency evidence
       -> full-toolbox decision loop
       -> patch plan proposal lane
       -> runtime broker telemetry lane
+      -> runtime capability manifest
       -> shared production AI-to-AI bundle
       -> production evidence under docs/LOCAL_VALIDATION_EVIDENCE
 
@@ -141,11 +158,14 @@ Important distinction:
     provider_execution_requested can be true even if primary advisory is degraded.
     A run may pass through deterministic recovery if diagnostics are explicit and patch application remains false.
 
-Known current evidence from `20260505-002508`:
+Known production evidence from `20260505-081141`:
 
-    local_provider_probe passed=false with "ollama: probe failed"
-    workload quality passed with usable lane npu
-    shared bundle exposed provider diagnostics
+    local_provider_probe reported "ollama: probe failed"
+    provider_advisory_state=recovered_degraded_provider
+    provider_failure_reasons and degraded_provider_components were exposed in the shared final summary
+    deterministic recovery remained valid
+    patch_application_performed=false
+    source_writes_performed=false
 
 ## Full-toolbox decision loop
 
@@ -193,6 +213,43 @@ Acceptance:
     shared_toolbox_ai_to_ai_bundle_<STAMP>.md has patch_plan_summary_seen=True
     patch_plan_count >= 1
 
+## Telemetry and AI reasoning contract
+
+Telemetry is evidence for AI agents. It must travel with the bundle so the next local/cloud AI can distinguish real execution from missing output, intentional skip, degraded provider and failed tool execution.
+
+Required telemetry/capability surfaces:
+
+    runtime_tool_usage_telemetry_<STAMP>.json/md
+    runtime_tool_capability_manifest_<STAMP>.json/md
+    full_toolbox_run_telemetry_summary_<STAMP>.json/md
+    shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+    shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+
+These surfaces answer different AI-critical questions:
+
+    usage telemetry: which broker/tool calls executed, failed or were blocked
+    capability manifest: which tools were available and under which guardrails
+    run telemetry summary: cross-run performance, provider, GPU/NPU and bundle state
+    shared bundle: what evidence and recommendations should be handed to the next AI
+    final summary: compact pass/fail, provider degradation and patch-plan status
+
+Telemetry must expose:
+
+    tool_call_entry_count
+    executed_count
+    failed_count
+    blocked_count
+    broker_reports
+    provider_advisory_state
+    provider_failure_reasons
+    degraded_provider_components
+    gpu_metrics_source
+    round_duration_source
+    patch_application_performed
+    source_writes_performed
+
+AI agents must not infer success from file existence alone. They must use telemetry fields to decide whether a lane was executed, degraded, blocked, intentionally disabled or unavailable.
+
 ## Runtime broker flow
 
 Broker:
@@ -223,13 +280,16 @@ Expected artifacts:
     docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json
     docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md
 
-Current known bug:
+Closed production fix:
 
-    The broker report can be produced and listed in the shared bundle, but final runtime usage telemetry may still have broker_reports=[] and executed_count=0.
+    Commit a85bbf4 preserved broker report inputs in final runtime telemetry.
+    Run 20260505-073332 validated broker_reports propagation with executed_count=3, failed_count=0, blocked_count=0.
 
-Active follow-up:
+Current expected state:
 
-    docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+    inputs.broker_reports has at least one broker report when the broker lane ran.
+    summary.executed_count reflects broker executions.
+    broker telemetry is absorbed into the AI-to-AI production bundle.
 
 ## Production AI-to-AI bundle flow
 
@@ -259,7 +319,10 @@ Production-complete requires:
 
     patch_plan_summary_seen=True
     provider_diagnostics present
-    runtime broker telemetry executed_count >= 3
+    runtime broker telemetry executed_count >= 3 when broker lane ran
+    runtime broker capability manifest present
+    repository consistency map/smoke present when produced
+    full toolbox telemetry summary present
     patch_application_performed=false
     source_writes_performed=false
 
@@ -337,16 +400,15 @@ Allowed compact production evidence examples:
 
 ## Current known next step
 
-Next code patch:
+Next technical patch:
 
-    fix(ai): preserve broker report in final runtime telemetry
+    finish external-control pass-through for the unified launcher subordinate calls
 
-Then rerun a short full-toolbox smoke/full run and verify:
+Related follow-up:
 
-    inputs.broker_reports.Count >= 1
-    summary.executed_count >= 3
-    summary.failed_count = 0
-    summary.blocked_count = 0
+    docs/LOCAL_AI_TASKS/next-chat-unified-launcher-external-controls.md
+
+Do not relabel old broker-telemetry loss as an open issue; it was closed by a85bbf4 and validated by run 20260505-073332.
 
 ## Related docs
 
