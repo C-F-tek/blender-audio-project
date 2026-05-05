@@ -39,7 +39,7 @@ docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md
 Validator:
 
 ```powershell
-python .\Tools\validation\check_ai_workload_report_quality.py --repo-root . --output .\output\validation\ai_workload_report_quality.json
+python ./Tools/validation/check_ai_workload_report_quality.py --repo-root . --output ./output/validation/ai_workload_report_quality.json
 ```
 
 Core report kind and policy:
@@ -59,7 +59,7 @@ source_writes_performed=false
 NPU review metadata can be emitted without provider loading:
 
 ```powershell
-python .\Tools\npu\run_npu_review.py --metadata-only --metadata-out .\output\validation\npu_review_metadata.json
+python ./Tools/npu/run_npu_review.py --metadata-only --metadata-out ./output/validation/npu_review_metadata.json
 ```
 
 The `npu_review_metadata` sidecar records advisory role and quality-gate status.
@@ -122,7 +122,7 @@ The local AI core/tool activation lane should use the AI workload report quality
 Validator:
 
 ```powershell
-python .\Tools\validation\check_ai_workload_report_quality.py --repo-root . --output .\output\validation\ai_workload_report_quality.json
+python ./Tools/validation/check_ai_workload_report_quality.py --repo-root . --output ./output/validation/ai_workload_report_quality.json
 ```
 
 Expected routing semantics:

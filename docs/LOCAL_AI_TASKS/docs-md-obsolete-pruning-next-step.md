@@ -1,6 +1,12 @@
 # Local AI Entrypoint: Markdown Obsolete Pruning Next Step
 
-This task starts after the entrypoint reduction and script inventory PR.
+This task starts after the entrypoint reduction, unified launcher and script inventory PR work.
+
+This file is a task brief. It is not a command catalog. Current executable commands live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
 
 ## Purpose
 
@@ -16,6 +22,8 @@ obsolete/superseded candidates
 historical task classification
 candidate deletion list requiring explicit approval
 validator/catalog cleanup proposal
+visibility/length policy compliance report
+telemetry and capability handoff compliance report
 ```
 
 ## Required reading order
@@ -28,10 +36,21 @@ docs/README.md
 docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/LOCAL_AI_TASKS/README.md
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/DATA_FLOW.md
+docs/LOCAL_AI_WORKFLOW.md
 Tools/validation/README.md
-docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
-docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md
 ```
+
+Supporting historical references, read only when triaging old 0-to-10 duplication:
+
+```text
+docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
+git history or compact evidence for removed code-refactor 0-to-10 runbooks
+```
+
+The removed file `docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md` is not expected to exist on this branch. Do not recreate it as an active runbook.
 
 If any required file is missing, stop and report.
 
@@ -46,6 +65,8 @@ update indexes
 produce compact evidence
 produce patch bundle proposal
 shorten Tools/validation/README.md into a catalog if local patch apply is available
+add visibility-first and length-policy metadata to active docs
+add telemetry-first and capability-manifest metadata to active docs
 ```
 
 Forbidden without explicit approval:
@@ -61,53 +82,105 @@ run providers
 merge to master
 ```
 
-## Preflight
+## Launcher route
 
-```powershell
-git fetch origin
-git switch master
-git pull --ff-only origin master
-git status --short
-$env:PYTHONPATH = (Get-Location).Path
-$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+Use the unified launcher for this task.
+
+Required launcher phases:
+
+```text
+md
+python
+contract
+full_validation
 ```
 
-Create a branch:
+Optional phases when explicitly requested:
 
-```powershell
-git switch -c codex/docs-md-obsolete-pruning-$Stamp
+```text
+context_pack
+agent_state
+evidence
+patch_specs
+provider
 ```
 
-## Inventories
+If provider-backed advisory is explicitly wanted later, use `Full0To10` or provider flags through the unified launcher. Do not start from legacy 0-to-10 runbooks as active entrypoints.
 
-```powershell
-python .\Tools\validation\build_markdown_inventory.py `
-  --repo-root . `
-  --output .\output\validation\markdown_inventory_$Stamp.json `
-  --markdown-output .\output\validation\markdown_inventory_$Stamp.md
+## TUTTO SU TUTTO check
 
-python .\Tools\validation\build_script_inventory.py `
-  --repo-root . `
-  --output .\output\validation\script_inventory_$Stamp.json `
-  --csv-output .\output\validation\script_inventory_$Stamp.csv `
-  --markdown-output .\output\validation\script_inventory_$Stamp.md
+Every Markdown cleanup must preserve the current full-run doctrine:
+
+```text
+Full0To10 = TUTTO SU TUTTO
+quick/balanced/deep/custom = intensity only
+smoke = separate non-full mode
 ```
 
-Inspect:
+If an MD file narrows the full-run perimeter, promotes a supporting wrapper as the active entrypoint, or treats old semi-automatic runbooks as canonical, classify it as stale and update/demote it.
 
-```powershell
-$MdInv = Get-Content ".\output\validation\markdown_inventory_$Stamp.json" -Raw | ConvertFrom-Json
-$ScriptInv = Get-Content ".\output\validation\script_inventory_$Stamp.json" -Raw | ConvertFrom-Json
+When a production-ready lane is added, the cleanup must either include it in the full-run perimeter or record an explicit exclusion rationale.
 
-$MdInv | Select-Object passed, markdown_count, missing_index_count, prune_candidate_count, errors, warnings
-$MdInv.category_counts
-$MdInv.lifecycle_counts
-$MdInv.missing_index | Select-Object path, category, lifecycle, lines, heading | Format-Table -AutoSize
-$MdInv.prune_candidates | Select-Object path, category, lifecycle, lines, heading | Format-Table -AutoSize
+## Inventory ownership
 
-$ScriptInv | Select-Object passed, script_count, syntax_warning_count, errors, warnings
-$ScriptInv.category_counts
+Markdown and script inventories are produced by the launcher or by focused validator commands owned by `Tools/validation/README.md`.
+
+For this task, report inventory results through compact surfaces:
+
+```text
+unified launcher manifest
+phase_status
+phase_reports
+Markdown inventory summary
+script inventory summary / CSV
+telemetry summary when full-run evidence is involved
+capability manifest when tools are involved
+triage report if created
 ```
+
+## Visibility-first rule
+
+Every report or proposed bundle must be readable from compact surfaces before opening detailed evidence.
+
+Required order:
+
+```text
+launcher command
+manifest or inventory summary
+phase/report references
+telemetry and capability surfaces when relevant
+compact Markdown/CSV summary
+detailed evidence only when needed
+```
+
+Do not create new monolithic AI-to-AI bundles without a companion manifest.
+
+## Telemetry accessory rule
+
+Telemetry accompanies evidence and patch plans for completeness.
+
+A documentation cleanup or patch-plan review is incomplete when it references a full-run evidence set but omits the companion telemetry/capability surfaces:
+
+```text
+runtime_tool_usage_telemetry_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md
+full_toolbox_run_telemetry_summary_<STAMP>.json/md
+shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+```
+
+Telemetry does not replace evidence or patch plans. It explains whether the evidence/patch plan came from an executed, degraded, failed, blocked, skipped or planned-only lane.
+
+## Length policy
+
+Active task files should remain compact.
+
+| File type | Preferred maximum | Required action when exceeded |
+|---|---:|---|
+| Active task/runbook | ~500 lines | Split or link supporting docs. |
+| Maintained source doc | ~700 lines | Add structure or split. |
+| Generated compact evidence | ~1200 lines | Add manifest/summary. |
+| Large evidence/historical bundle | Any size only if indexed | Never first entrypoint. |
 
 ## Obsolete triage rules
 
@@ -138,6 +211,10 @@ Required sections:
 ```text
 inventory summary
 single reading flow check
+TUTTO SU TUTTO scope check
+telemetry/capability handoff check
+visibility-first compliance check
+length-policy compliance check
 stable docs requiring index update
 task-current list
 task-historical list
@@ -162,54 +239,36 @@ inventory builder catalog
 AI/provider/report validator catalog
 NPU/helper validator catalog
 Blender/generated-file validator catalog
-standard minimal validation block
+minimal validation ownership notes
 guardrails
 ```
 
 Move or link long procedural blocks to existing canonical runbooks instead of keeping them in the README.
 
-## Validation
-
-```powershell
-python -m py_compile .\Tools\validation\build_markdown_inventory.py .\Tools\validation\build_script_inventory.py
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links_$Stamp.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract_$Stamp.json
-git diff --check
-git status --short
-```
-
 ## Optional compact evidence bundle
 
 Do not commit raw `output/**`.
 
-If evidence is needed for GitHub-only review, build a compact bundle using the existing evidence tooling and include these inputs:
+If evidence is needed for GitHub-only review, build a compact bundle through the unified launcher or evidence tooling and include only compact tracked summaries under:
 
 ```text
-output/validation/markdown_inventory_$Stamp.json
-output/validation/markdown_inventory_$Stamp.md
-output/validation/script_inventory_$Stamp.json
-output/validation/script_inventory_$Stamp.csv
-output/validation/script_inventory_$Stamp.md
-output/validation/docs_links_$Stamp.json
-output/validation/validation_report_contract_$Stamp.json
-docs/DOCUMENTATION_OBSOLETE_TRIAGE.md
-```
-
-Expected committed evidence, only if needed:
-
-```text
-docs/LOCAL_VALIDATION_EVIDENCE/docs_md_obsolete_triage_bundle_$Stamp.json
-docs/LOCAL_VALIDATION_EVIDENCE/docs_md_obsolete_triage_bundle_$Stamp.md
+docs/LOCAL_VALIDATION_EVIDENCE/
 ```
 
 ## Acceptance criteria
 
 ```text
-no file deleted
+no file deleted unless explicitly approved
 single reading flow preserved
+unified launcher remains the active local-AI entrypoint
+TUTTO SU TUTTO doctrine preserved
 obsolete/superseded candidates listed
 script inventory included in refactor evidence path
+telemetry/capability surfaces included when full-run evidence is used
+visibility-first compliance checked
+length-policy compliance checked
 Tools/validation README reduction either applied or listed as next patch
-local validation commands included
+launcher validation evidence referenced
 raw output/** not committed
+removed code-refactor runbooks are not recreated as active docs
 ```

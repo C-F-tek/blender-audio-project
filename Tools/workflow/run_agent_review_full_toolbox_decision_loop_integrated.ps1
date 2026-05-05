@@ -4,6 +4,7 @@ param(
     [string]$OutputRoot = "output",
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
     [switch]$RunGpuNpuProvider,
+    [switch]$RequireProviderArtifacts,
     [switch]$SkipMemoryReload,
     [switch]$SkipPostValidationPacket,
     [switch]$SkipSharedToolboxBundle,
@@ -96,6 +97,7 @@ $RunnerParams = @{
     RepositoryConsistencyMapWorkers = $RepositoryConsistencyMapWorkers
 }
 if ($RunGpuNpuProvider) { $RunnerParams.RunGpuNpuProvider = $true }
+if ($RequireProviderArtifacts) { $RunnerParams.RequireProviderArtifacts = $true }
 if ($SkipMemoryReload) { $RunnerParams.SkipMemoryReload = $true }
 if ($SkipPostValidationPacket) { $RunnerParams.SkipPostValidationPacket = $true }
 if ($SkipSharedToolboxBundle) { $RunnerParams.SkipSharedToolboxBundle = $true }
@@ -104,6 +106,7 @@ Write-Host "=== Integrated Agent Review Full Toolbox Decision Loop ==="
 Write-Host "Repo: $RepoRootPath"
 Write-Host "Stamp: $Stamp"
 Write-Host "RunGpuNpuProvider: $RunGpuNpuProvider"
+Write-Host "RequireProviderArtifacts: $RequireProviderArtifacts"
 Write-Host "Integration: base workflow + agent_review_warning_policy ledger"
 
 & .\Tools\workflow\run_agent_review_full_toolbox_decision_loop.ps1 @RunnerParams
@@ -206,6 +209,7 @@ $IntegratedReport = [ordered]@{
         warning_policy_integrated = $true
         provider_execution_requires_explicit_flag = $true
         run_gpu_npu_provider = [bool]$RunGpuNpuProvider
+        require_provider_artifacts = [bool]$RequireProviderArtifacts
         patch_application_performed = $false
         source_writes_performed = $false
         sqlite_write_performed = $false

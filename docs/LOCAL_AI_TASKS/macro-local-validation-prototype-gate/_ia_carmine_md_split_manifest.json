@@ -1,0 +1,19 @@
+{
+  "kind": "ia_carmine_markdown_split_manifest",
+  "source_path": "docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate.md",
+  "target_dir": "docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate",
+  "max_lines": 400,
+  "original_line_count": 675,
+  "part_count": 2,
+  "generated_at": "2026-05-05T23:00:59",
+  "parts": [
+    {
+      "path": "docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md",
+      "lines": 362
+    },
+    {
+      "path": "docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md",
+      "lines": 332
+    }
+  ]
+}

@@ -4,6 +4,7 @@ param(
     [string]$OutputRoot = "output",
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
     [switch]$RunGpuNpuProvider,
+    [switch]$RequireProviderArtifacts,
     [switch]$SkipMemoryReload,
     [switch]$SkipPostValidationPacket,
     [switch]$SkipSharedToolboxBundle,
@@ -77,6 +78,179 @@ function Add-ExistingPath {
     }
 }
 
+
+# IA_CARMINE_REQUIRED_PROVIDER_ARTIFACTS_BEGIN
+function Write-JsonArtifact {
+    param(
+        [string]$Path,
+        [object]$Payload
+    )
+
+    $Parent = Split-Path -Parent $Path
+    if ($Parent) {
+        New-Item -ItemType Directory -Force -Path $Parent | Out-Null
+    }
+    ($Payload | ConvertTo-Json -Depth 12) | Set-Content -LiteralPath $Path -Encoding UTF8
+}
+
+function Write-TextArtifact {
+    param(
+        [string]$Path,
+        [string[]]$Lines
+    )
+
+    $Parent = Split-Path -Parent $Path
+    if ($Parent) {
+        New-Item -ItemType Directory -Force -Path $Parent | Out-Null
+    }
+    $Lines | Set-Content -LiteralPath $Path -Encoding UTF8
+}
+
+function Ensure-RequiredProviderArtifacts {
+    param(
+        [string]$StampValue,
+        [bool]$RunProvider,
+        [bool]$RequireArtifacts,
+        [string]$EvidencePath,
+        [string]$OrchestratorPath,
+        [string]$OrchestratorMarkdownPath,
+        [string]$GpuPath,
+        [string]$GpuMarkdownPath
+    )
+
+    if (-not $RunProvider -or -not $RequireArtifacts) {
+        return
+    }
+
+    $GeneratedAt = (Get-Date).ToString("o")
+    $Missing = @()
+    if (-not (Test-Path -LiteralPath $EvidencePath -PathType Leaf)) { $Missing += $EvidencePath }
+    if (-not (Test-Path -LiteralPath $OrchestratorPath -PathType Leaf)) { $Missing += $OrchestratorPath }
+    if (-not (Test-Path -LiteralPath $GpuPath -PathType Leaf)) { $Missing += $GpuPath }
+
+    if ($Missing.Count -eq 0) {
+        return
+    }
+
+    foreach ($Item in $Missing) {
+        [void]$Warnings.Add("required provider artifact fallback generated: $Item")
+    }
+
+    if (-not (Test-Path -LiteralPath $OrchestratorPath -PathType Leaf)) {
+        $OrchPayload = [ordered]@{
+            schema_version = 1
+            kind = "agent_gpu_npu_parallel_orchestrator"
+            generated_at = $GeneratedAt
+            stamp = $StampValue
+            passed = $false
+            provider_execution_requested = $true
+            provider_execution_performed = $false
+            patch_application_performed = $false
+            source_writes_performed = $false
+            classification = "required_provider_artifact_missing"
+            reason = "Strict real-run activation required an orchestrator report, but the provider lane did not produce one."
+            errors = @("required orchestrator artifact missing before fallback generation")
+            warnings = @()
+            outputs = [ordered]@{
+                evidence = $EvidencePath
+                gpu_report = $GpuPath
+            }
+            guardrails = [ordered]@{
+                report_only = $true
+                provider_execution_performed = $false
+                patch_application_performed = $false
+                source_writes_performed = $false
+                blender_runtime_execution_performed = $false
+                ffmpeg_execution_performed = $false
+            }
+        }
+        Write-JsonArtifact -Path $OrchestratorPath -Payload $OrchPayload
+        Write-TextArtifact -Path $OrchestratorMarkdownPath -Lines @(
+            "# Required provider orchestrator fallback",
+            "",
+            '- Passed: `False`',
+            '- Provider execution requested: `True`',
+            '- Provider execution performed: `False`',
+            '- Classification: `required_provider_artifact_missing`',
+            "",
+            "Strict real-run activation required an orchestrator report, but the provider lane did not produce one."
+        )
+    }
+
+    if (-not (Test-Path -LiteralPath $GpuPath -PathType Leaf)) {
+        $GpuPayload = [ordered]@{
+            schema_version = 1
+            kind = "agent_gpu_parallel_report"
+            generated_at = $GeneratedAt
+            stamp = $StampValue
+            passed = $false
+            provider_execution_requested = $true
+            provider_execution_performed = $false
+            patch_application_performed = $false
+            source_writes_performed = $false
+            classification = "required_provider_artifact_missing"
+            provider_error = "GPU primary advisory output was required by strict real-run activation but was not produced."
+            provider_empty_response = $true
+            recommendation_count = 0
+            recommendations = @()
+            errors = @("required GPU provider artifact missing before fallback generation")
+            warnings = @()
+            guardrails = [ordered]@{
+                report_only = $true
+                provider_execution_performed = $false
+                patch_application_performed = $false
+                source_writes_performed = $false
+                blender_runtime_execution_performed = $false
+                ffmpeg_execution_performed = $false
+            }
+        }
+        Write-JsonArtifact -Path $GpuPath -Payload $GpuPayload
+        Write-TextArtifact -Path $GpuMarkdownPath -Lines @(
+            "# Required GPU provider fallback",
+            "",
+            '- Passed: `False`',
+            '- Provider execution requested: `True`',
+            '- Provider execution performed: `False`',
+            '- Classification: `required_provider_artifact_missing`',
+            "",
+            "Strict real-run activation required GPU primary advisory output, but the provider lane did not produce it."
+        )
+    }
+
+    if (-not (Test-Path -LiteralPath $EvidencePath -PathType Leaf)) {
+        $EvidencePayload = [ordered]@{
+            schema_version = 1
+            kind = "agent_review_evidence_sufficiency"
+            generated_at = $GeneratedAt
+            stamp = $StampValue
+            passed = $false
+            evidence_sufficient = $false
+            provider_execution_requested = $true
+            provider_execution_performed = $false
+            patch_application_performed = $false
+            source_writes_performed = $false
+            classification = "required_provider_artifact_missing"
+            reason = "Strict real-run activation required evidence sufficiency output, but the provider/orchestrator lane did not produce one."
+            errors = @("required evidence sufficiency artifact missing before fallback generation")
+            warnings = @()
+            checks = [ordered]@{
+                orchestrator_report_exists = (Test-Path -LiteralPath $OrchestratorPath -PathType Leaf)
+                gpu_report_exists = (Test-Path -LiteralPath $GpuPath -PathType Leaf)
+            }
+            guardrails = [ordered]@{
+                report_only = $true
+                provider_execution_performed = $false
+                patch_application_performed = $false
+                source_writes_performed = $false
+                blender_runtime_execution_performed = $false
+                ffmpeg_execution_performed = $false
+            }
+        }
+        Write-JsonArtifact -Path $EvidencePath -Payload $EvidencePayload
+    }
+}
+# IA_CARMINE_REQUIRED_PROVIDER_ARTIFACTS_END
+
 function Read-JsonFile {
     param([string]$Path)
     if (-not (Test-Path $Path)) {
@@ -148,6 +322,10 @@ $RuntimeToolTelemetryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage
 $RuntimeToolTelemetryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_usage_telemetry_$Stamp.md"
 $RuntimeToolCapabilityJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_capability_manifest_$Stamp.json"
 $RuntimeToolCapabilityMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\runtime_tool_capability_manifest_$Stamp.md"
+$RuntimeToolBootstrapRequestJson = ".\output\validation\runtime_tool_bootstrap_requests_$Stamp.json"
+$RuntimeToolBrokerJson = ".\output\validation\runtime_tool_broker_full_toolbox_$Stamp.json"
+$RuntimeToolBrokerMd = ".\output\validation\runtime_tool_broker_full_toolbox_$Stamp.md"
+$RuntimeToolOutputDir = ".\output\ai_runtime_tools\$Stamp"
 $EvidenceChunkBase = "full_toolbox_${Stamp}_cloud_semantic_deterministic"
 $EvidenceChunkDir = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunks"
 $EvidenceChunkManifestJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunk_manifest.json"
@@ -158,6 +336,7 @@ Write-Host "=== Agent Review Full Toolbox Decision Loop ==="
 Write-Host "Repo: $RepoRootPath"
 Write-Host "Stamp: $Stamp"
 Write-Host "RunGpuNpuProvider: $RunGpuNpuProvider"
+Write-Host "RequireProviderArtifacts: $RequireProviderArtifacts"
 Write-Host "RepositoryConsistencyMapWorkers: $RepositoryConsistencyMapWorkers"
 Write-Host "MaxRecommendations: $MaxRecommendations"
 Write-Host "MaxPatchPlans: $MaxPatchPlans"
@@ -348,6 +527,15 @@ if ($RunGpuNpuProvider) {
     }
 }
 
+Ensure-RequiredProviderArtifacts -StampValue $Stamp `
+    -RunProvider ([bool]$RunGpuNpuProvider) `
+    -RequireArtifacts ([bool]$RequireProviderArtifacts) `
+    -EvidencePath $Evidence `
+    -OrchestratorPath $OrchOut `
+    -OrchestratorMarkdownPath $OrchMd `
+    -GpuPath $GpuOut `
+    -GpuMarkdownPath $GpuMd
+
 if (Test-Path $GpuOut) {
     Invoke-RepoPython -Label "Replay GPU planner JSON contract" -ArgsList @(
         ".\Tools\ai\replay_gpu_planner_json_contract.py",
@@ -453,6 +641,79 @@ if (-not $SkipPostValidationPacket) {
 } else {
     [void]$Warnings.Add("post-validation AI packet skipped by request")
 }
+
+
+# IA_CARMINE_RUNTIME_TOOL_BROKER_BOOTSTRAP_BEGIN
+$RuntimeToolBootstrapPayload = [ordered]@{
+    schema_version = 1
+    kind = "runtime_tool_bootstrap_requests"
+    generated_at = (Get-Date).ToString("o")
+    stamp = $Stamp
+    purpose = "Exercise minimal report-only runtime tool broker activation during full-toolbox runs."
+    provider_execution_performed = $false
+    patch_application_performed = $false
+    source_writes_performed = $false
+    tool_requests = @(
+        [ordered]@{
+            id = "full_toolbox_bootstrap_python_syntax"
+            tool = "check_python_syntax"
+            reason = "Exercise brokered Python syntax validation as a report-only runtime tool."
+            args = [ordered]@{}
+        },
+        [ordered]@{
+            id = "full_toolbox_bootstrap_python_line_count"
+            tool = "build_python_line_count_csv"
+            reason = "Exercise brokered Python inventory as a report-only runtime tool."
+            args = [ordered]@{
+                exclude_dir = ".venv,venv,__pycache__"
+            }
+        },
+        [ordered]@{
+            id = "full_toolbox_bootstrap_validation_contract"
+            tool = "check_validation_report_contract"
+            reason = "Exercise brokered validation report contract check against full-run decision outputs."
+            args = [ordered]@{
+                report_file = "$DecisionLoopJson,$PatchPlanJson"
+            }
+        }
+    )
+}
+Write-JsonArtifact -Path $RuntimeToolBootstrapRequestJson -Payload $RuntimeToolBootstrapPayload
+
+Invoke-RepoPython -Label "Runtime tool broker bootstrap activation" -ArgsList @(
+    ".\Tools\ai\agent_runtime_tool_broker.py",
+    "--repo-root", ".",
+    "--request-file", $RuntimeToolBootstrapRequestJson,
+    "--tool-output-dir", $RuntimeToolOutputDir,
+    "--stamp", $Stamp,
+    "--timeout-seconds", "240",
+    "--output", $RuntimeToolBrokerJson,
+    "--markdown-output", $RuntimeToolBrokerMd
+)
+Add-ExistingPath -List $Reports -Path $RuntimeToolBrokerJson
+Add-ExistingPath -List $Artifacts -Path $RuntimeToolBrokerMd
+
+Invoke-RepoPython -Label "Runtime tool usage telemetry pre-bundle" -ArgsList @(
+    ".\Tools\ai\build_runtime_tool_usage_telemetry.py",
+    "--repo-root", ".",
+    "--stamp", $Stamp,
+    "--orchestrator", $OrchOut,
+    "--gpu-report", $GpuOut,
+    "--gpu-npu-sync", $GpuNpuSyncJson,
+    "--decision-loop", $DecisionLoopJson,
+    "--broker-report", $RuntimeToolBrokerJson,
+    "--output", $RuntimeToolTelemetryJson,
+    "--markdown-output", $RuntimeToolTelemetryMd
+)
+
+Invoke-RepoPython -Label "Runtime tool capability manifest pre-bundle" -ArgsList @(
+    ".\Tools\ai\build_runtime_tool_capability_manifest.py",
+    "--repo-root", ".",
+    "--tool-usage", $RuntimeToolTelemetryJson,
+    "--output", $RuntimeToolCapabilityJson,
+    "--markdown-output", $RuntimeToolCapabilityMd
+)
+# IA_CARMINE_RUNTIME_TOOL_BROKER_BOOTSTRAP_END
 
 if (-not $SkipSharedToolboxBundle) {
     Invoke-RepoPython -Label "Shared toolbox AI-to-AI bundle" -ArgsList @(
@@ -587,6 +848,7 @@ Invoke-RepoPython -Label "Runtime tool usage telemetry" -ArgsList @(
     "--gpu-report", $GpuOut,
     "--gpu-npu-sync", $GpuNpuSyncJson,
     "--decision-loop", $DecisionLoopJson,
+    "--broker-report", $RuntimeToolBrokerJson,
     "--output", $RuntimeToolTelemetryJson,
     "--markdown-output", $RuntimeToolTelemetryMd
 )

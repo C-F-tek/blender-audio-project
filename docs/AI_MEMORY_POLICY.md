@@ -9,7 +9,62 @@ The policy applies to generic memory records produced by:
 ```text
 Tools/ai/build_agent_state_packet.py
 Tools/ai/review_agent_memory.py
+Tools/ai/build_agent_memory_inventory.py
 indexAI/agent_memory/agent_memory.sqlite
+```
+
+The active memory-aware local-AI entrypoint is:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+This policy is not a command catalog. Current memory-aware run commands live in the unified launcher runbook.
+
+## Full-run memory doctrine
+
+Memory/context is part of **TUTTO SU TUTTO** when enabled by the unified launcher.
+
+`Full0To10` should include memory input/output surfaces unless explicit memory disablers are used. A memory lane must not silently disappear from a full run.
+
+Memory output must be visible through compact, non-private surfaces:
+
+```text
+unified manifest memory fields
+phase_status / phase_reports
+agent-state packet path
+runtime telemetry / full toolbox telemetry summary when relevant
+shared AI-to-AI bundle reference when used for handoff
+```
+
+SQLite DB files remain private local runtime state. They are never the handoff artifact and must not be committed.
+
+Telemetry is the completeness accessory that explains whether memory/context was enabled, disabled, skipped or unavailable. It does not replace the memory evidence or agent-state packet; it accompanies them.
+
+## Active memory components
+
+These files are active memory/context helpers and must not be treated as forgotten or obsolete simply because they are not all user-facing commands.
+
+| File | Role | User-facing status |
+|---|---|---|
+| `Tools/ai/agent_state.py` | Generic memory record and microtask packet model. | Internal library. |
+| `Tools/ai/build_agent_state_packet.py` | Builds task-local agent-state packets and optional memory handoff context. | Supporting CLI, invoked by unified launcher. |
+| `Tools/ai/review_agent_memory.py` | Reviews local memory for keep/promote/quarantine/drop decisions. | Supporting CLI. |
+| `Tools/ai/build_agent_memory_inventory.py` | Builds memory inventory / visibility reports. | Supporting CLI. |
+| `Tools/ai/agent_memory_policy.py` | Deterministic retention and promotion policy logic. | Internal policy module. |
+| `Tools/ai/agent_memory_routing_policy.py` | Routing policy for memory selection and context placement. | Internal policy module. |
+| `Tools/ai/agent_runtime_sqlite_memory.py` | SQLite-backed runtime memory helpers. | Internal/local runtime helper. |
+| `Tools/npu/ai_memory_context.py` | NPU-side memory/context integration helper. | Runtime-adjacent helper; provider execution remains explicit. |
+
+Policy:
+
+```text
+Do not remove these references unless the corresponding files are removed from the repo.
+Do not commit SQLite DBs or local memory output files.
+Do not select quarantined/private/local-only records into provider prompts.
+Expose memory input/output in the unified launcher manifest when used.
+Expose memory/context handoff state in telemetry or bundle surfaces when it contributes to a production run.
 ```
 
 ## Storage
@@ -23,6 +78,25 @@ indexAI/agent_memory/agent_memory.sqlite
 This path is generated local data and must stay untracked.
 
 JSONL memory is allowed when append-only reviewability matters more than lookup speed.
+
+## Launcher integration
+
+Memory is part of the unified flow through launcher modes and flags.
+
+Expected surfaces when memory is enabled:
+
+```text
+mode includes agent_state or Full0To10 implies agent_state
+memory_db recorded in unified manifest
+memory_in_enabled recorded in unified manifest
+memory_out_enabled recorded in unified manifest
+save_inputs_to_memory_db recorded in unified manifest
+agent-state packet path recorded in phase_reports/context_files when produced
+memory/context contribution referenced in telemetry/bundle when part of production handoff
+SQLite DB remains untracked
+```
+
+`Full0To10` should include memory IN/OUT unless explicitly disabled with the documented `NoMemoryWrite`/memory controls in the unified launcher runbook.
 
 ## Record Shape
 
@@ -118,12 +192,6 @@ Suggested metadata:
 }
 ```
 
-Reason:
-
-```text
-The rule is durable, has a clear scope and is useful for future validators.
-```
-
 ### Quarantine
 
 Use `quarantine` when a record may contain secrets, private local data, unsafe instructions or blocked content.
@@ -145,12 +213,6 @@ Suggested metadata:
 }
 ```
 
-Reason:
-
-```text
-The memory selector must not place the content back into prompts or generated docs.
-```
-
 ### Promote
 
 Use `promote_candidate` when a memory is stable enough to become durable documentation.
@@ -158,20 +220,14 @@ Use `promote_candidate` when a memory is stable enough to become durable documen
 Example record summary:
 
 ```text
-PR #31, #32 and #33 established the generated artifact path policy, artifact report scanning and generic generated Python policy. Local runtime validation remains workstation-owned.
+A PR established an artifact path policy, report scanning rule or validated runtime decision that future agents must preserve.
 ```
 
-Suggested promotion target:
+Suggested promotion targets:
 
 ```text
 docs/PROJECT_STATUS_POINT.md
 docs/TECH_DEBT_TRACKER.md
-```
-
-Reason:
-
-```text
-This is project state, not temporary chat context.
 ```
 
 ### Drop
@@ -184,23 +240,6 @@ Example record summary:
 Temporary branch name from a completed GitHub-only PR, duplicated by the merged PR body and no longer needed.
 ```
 
-Suggested metadata:
-
-```json
-{
-  "kind": "temporary_workflow_note",
-  "scope": "completed-branch",
-  "tags": ["duplicate", "obsolete"],
-  "confidence": "medium"
-}
-```
-
-Reason:
-
-```text
-The durable source is the merged PR or stable documentation; retaining the duplicate note increases noise.
-```
-
 ## GitHub-only handling
 
 GitHub-only agents cannot inspect the local SQLite database, local `output/` reports, Blender runtime logs, GPU/NPU activity or workstation audio files.
@@ -210,29 +249,23 @@ When working from GitHub-only access:
 ```text
 document memory policy examples
 update stable docs with clearly sourced merged-PR facts
-mark local validation pending
-avoid claiming runtime validation without logs
+mark local validation pending unless compact evidence exists
+avoid claiming runtime validation without logs or telemetry
 leave SQLite DB and generated indexes untouched
 ```
 
-## Commands
+## Validation ownership
 
-Review local memory:
+Use the unified launcher runbook for current memory-aware commands.
 
-```powershell
-python .\Tools\ai\review_agent_memory.py --repo-root .
-```
+Focused memory tools may be invoked directly only when debugging or validating that specific tool. Direct focused invocations must still preserve:
 
-Validate the policy and the local DB when it exists:
-
-```powershell
-python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
-```
-
-Build a task packet with SQLite memory:
-
-```powershell
-python .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan Blender/audio smoke tests" --memory-db .\indexAI\agent_memory\agent_memory.sqlite --save-inputs-to-memory-db --memory-note "Keep runtime packages unchanged until smoke passes."
+```text
+no SQLite DB commit
+no output/** commit
+no provider execution unless explicit
+manifest/report visibility when routed through launcher
+telemetry/capability visibility when memory contributes to full-run handoff
 ```
 
 ## Blender/Audio Rule

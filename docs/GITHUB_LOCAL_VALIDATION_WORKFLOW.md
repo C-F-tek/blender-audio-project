@@ -2,404 +2,316 @@
 
 ## Purpose
 
-This document defines the recommended local Git/GitHub workflow after AI-assisted refactoring, documentation updates, or pipeline changes.
+This document defines the local Git/GitHub review lifecycle after AI-assisted refactoring, documentation updates or pipeline changes.
 
-It is optimized for this repository's current workflow:
+It is policy and review guidance, not a command catalog. Current executable commands live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+Large tool catalogs such as `Tools/validation/README.md` and `Tools/npu/pipeline/README.md` are references only and must not become primary operational entrypoints if too large or truncated.
+
+## Primary rule
+
+Use the unified launcher as the primary local validation and local-AI orchestration entrypoint:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+The primary model is one parameterized run:
+
+```text
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters, not scope
+-No* flags = explicit opt-out from selected lanes
+CSV/index/discovery surfaces are evidence lanes when relevant
+large Markdown must not be a primary operational entrypoint
+```
+
+Supporting wrappers may exist, but they are not first entrypoints.
+
+## Run-unica validation doctrine
+
+`Full0To10` means **TUTTO SU TUTTO**.
+
+`quick`, `balanced`, `deep` and `custom` are parameter presets or operator values only. They must not silently narrow scope.
+
+A broad validation proof is incomplete if it only says that files exist or that a focused dry-run passed. When a PR is derived from a run-unica execution, provider lane, broker/tool lane, evidence bundle, recommendation or patch plan, the review must include companion telemetry/capability surfaces and, when relevant, discovery/index/CSV-count surfaces.
+
+Telemetry is a completeness accessory for evidence and patch plans. It does not replace validation reports; it explains whether lanes executed, failed, were blocked, degraded, disabled, unavailable or planned-only.
+
+## Recommended lifecycle
 
 ```text
 pull latest
-run focused validation
-run AI pipeline dry-run matrix when needed
-regenerate AI/NPU indexes
-commit generated indexes only
+choose unified launcher mode/parameters/presets
+run focused validation or run-unica Full0To10 flow through launcher
+inspect manifest-first outputs
+inspect telemetry/capability/final-summary surfaces when relevant
+inspect CSV/count and discovery/index summaries when relevant
+promote only compact evidence when needed
+commit intended docs/source/index changes
 push results
-share reports for review
+share manifest/reports/telemetry for review
 ```
 
-## One-command unattended workflow
+## Manifest-first inspection
 
-For a longer unattended run, use the local runner:
-
-```powershell
-cd C:\Users\carmi\blender\blender-audio-project
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -ContinueOnError
-```
-
-This script runs the broad local validation batch, including syntax checks, AI pipeline checks, NPU helper smoke/unit checks, generated artifact policies, dry-run matrix checks, package/JSON checks, index regeneration and Git status/diff reporting.
-
-It writes logs and summaries under:
+The primary run artifact is:
 
 ```text
-output/local_validation/
+output/local_ai_runs/<stamp>_<mode>_unified/pipeline/unified_local_ai_refactor_manifest.json
 ```
 
-It does not commit or push automatically.
+Read this before opening long reports.
 
-Use this variant when the repository is already pulled and you do not want the script to call Git:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError
-```
-
-## Focused NPU helper validation
-
-For changes under `Tools/npu/pipeline/`, `Tools/validation/check_npu_pipeline_*.py`, or the NPU decomposition docs, run the focused workflow first:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
-```
-
-This workflow runs:
+Review order:
 
 ```text
-NPU helper import/contract smoke
-NPU helper unit-test report
-NPU helper documentation/module alignment
-Python syntax validation
+launcher command
+unified_local_ai_refactor_manifest.json
+phase_status / phase_reports
+runtime tool usage telemetry when tools/broker lanes ran
+runtime tool capability manifest when capabilities matter
+full toolbox telemetry summary for run-unica/production handoff
+shared AI-to-AI bundle/final summary for production handoff
+compact Markdown or CSV/count summaries
+discovery/index repair reports when relevant
+detailed evidence only when needed
 ```
 
-Expected reports:
+Do not begin review from a long evidence bundle or oversized Markdown catalog.
+
+## Validation routing
+
+| Need | Preferred route |
+|---|---|
+| Quick docs/source validation | unified launcher quick parameter preset with relevant validation phases |
+| Run-unica Full0To10 review | unified launcher Full0To10 with selected presets/parameters |
+| Deep provider/repo review | unified launcher Full0To10 with deep/custom parameters; provider/probe lanes included unless disabled/unavailable |
+| NPU helper-only work | focused NPU helper validation, then unified launcher full validation if broader scope changed |
+| Validator debugging | direct focused validator command from validator catalog/reference |
+| GitHub evidence handoff | compact evidence builder through launcher/tool README, never bulk-add raw output |
+| Discovery/index/CSV-count review | inventory/chunks/repository-consistency phases through launcher; index repair remains plan/report-first |
+
+Focused validation is not proof that `Full0To10` passed.
+
+## Supporting wrappers
+
+These scripts remain available only as implementation lanes or focused debugging targets:
 
 ```text
-output/validation/npu_pipeline_modules.json
-output/validation/npu_pipeline_helper_tests.json
-output/validation/npu_pipeline_docs.json
-output/validation/python_syntax.json
+Tools/workflow/run_local_validation_after_refactor.ps1
+Tools/workflow/run_npu_pipeline_helper_validation.ps1
+Tools/workflow/run_local_ai_task_via_pipeline.ps1
+Tools/workflow/run_post_validation_ai_packet.ps1
+Tools/workflow/run_parallel_ai_provider_multistep.ps1
 ```
 
-It does not execute Blender, NPU, GPU, Ollama, FFmpeg or provider calls.
-
-## When to use this workflow
-
-Use it after changes to:
+Policy:
 
 ```text
-AGENTS.md
-README.md
-docs/
-Scripting/shared/
-Tools/ai/
-Tools/ai/pipeline/
-Tools/validation/
-Tools/npu/
-Tools/npu/pipeline/
+Do not document them as primary local validation commands.
+Do not use them as run-unica substitutes.
+If launcher delegates to them, their outputs must be visible in the launcher manifest.
+If their output feeds evidence/patch plans, companion telemetry/capability state must be visible in the handoff.
+If they produce inventory/discovery/count artifacts, compact CSV/JSON/Markdown references must be visible in the handoff.
 ```
 
-Use the focused NPU helper workflow before the full runner when working on NPU helper contracts. Use the full runner especially after changes to the modular AI artifact pipeline, shared Blender compatibility helpers or validation workflows.
+## Repository sync preflight
 
-## Step 1: update local repository
-
-```powershell
-cd C:\Users\carmi\blender\blender-audio-project
-git pull --rebase origin master
-```
-
-For a PR branch:
-
-```powershell
-git fetch origin
-git checkout <branch>
-git pull --ff-only
-```
-
-Check state:
-
-```powershell
-git status
-git log --oneline -n 20
-```
-
-Expected before validation:
+Before local validation, confirm:
 
 ```text
-working tree clean
-branch aligned with target remote branch
+current branch
+remote sync state
+working tree status
+whether dirty changes are intentional
+Python/venv selected by launcher
+ignored output/cache/state files are not staged
 ```
 
-## Step 2: run validation block
+For PR work, validate on the PR branch unless the task explicitly says to start a new branch from `master`.
 
-Focused NPU helper block when applicable:
+## Report review
 
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
-```
-
-Manual full validation block:
-
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_ai_model_json.py --repo-root . --output .\output\validation\ai_model_json.json
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
-python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
-python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
-python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
-python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
-python .\Tools\validation\check_refactor_status_consistency.py --repo-root . --output .\output\validation\refactor_status_consistency.json
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
-python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
-python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
-python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
-python .\Tools\validation\check_package_structure.py --repo-root .
-python .\Tools\validation\check_json_artifacts.py --repo-root .
-```
-
-## Step 3: inspect reports
-
-AI pipeline reports:
-
-```powershell
-Get-Content .\output\validation\ai_pipeline_modules.json -Raw
-Get-Content .\output\validation\generated_python_policy.json -Raw
-Get-Content .\output\validation\generated_artifact_path_policy.json -Raw
-Get-Content .\output\validation\generated_blender_script_policy.json -Raw
-Get-Content .\output\validation\ai_dry_run_matrix_contract.json -Raw
-Get-Content .\output\ai_pipeline\dry_run_matrix_report.json -Raw
-Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
-```
-
-NPU helper reports:
-
-```powershell
-Get-Content .\output\validation\npu_pipeline_modules.json -Raw
-Get-Content .\output\validation\npu_pipeline_helper_tests.json -Raw
-Get-Content .\output\validation\npu_pipeline_docs.json -Raw
-```
-
-The Markdown reports are intended for quick human review. JSON reports remain the machine-readable source.
-
-For individual dry-run cases:
-
-```powershell
-Get-ChildItem .\output\ai_pipeline\dry_run_matrix -Recurse -Filter ai_pipeline_dry_run_report.json
-```
-
-Important report fields:
+Primary fields to check in the unified manifest:
 
 ```text
-passed
-summary
-schedule
-lanes
-guardrail_remediation_loop
-steps
+mode
+mode_name
+full_0_to_10_requested
+run_intensity
+provider_execution_requested
+primary_provider_requested
+workload_quality_routing_ok
+quality_gate_passed
+memory_in_enabled
+memory_out_enabled
+patch_specs_requested
+patch_application_performed
+phase_status
+phase_reports
+context_files
+report_files
+errors
+warnings
 ```
 
-## Step 4: regenerate AI/NPU indexes
-
-```powershell
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
-```
-
-Expected generated files:
+Companion telemetry/final-summary fields to check when available:
 
 ```text
-indexAI/project_code_index.md
-indexAI/project_code_manifest.json
-Tools/npu/npu_code_context.md
-Tools/npu/npu_code_index.md
-Tools/npu/npu_code_manifest.json
+tool_call_entry_count
+executed_count
+failed_count
+blocked_count
+broker_reports
+runtime capability manifest path
+provider_advisory_state
+provider_failure_detected
+provider_failure_reasons
+degraded_provider_components
+deterministic_recovery_used
+gpu_metrics_source
+round_duration_source
+source_writes_performed
+patch_application_performed
 ```
 
-Generated chunk folders may also change:
+Discovery/index/CSV-count surfaces to check when relevant:
 
 ```text
-indexAI/project_code_chunks/
-Tools/npu/npu_code_chunks/
+Markdown inventory JSON/MD
+script inventory JSON/CSV/MD
+Python line-count CSV/MD
+function/class/method inventory CSV
+semantic chunk manifest JSON/MD
+selected chunk evidence JSON/MD
+repository consistency map/smoke JSON/MD
+auto-discovery report
+index repair plan/report
 ```
 
-## Step 5: inspect Git changes
+A broad validation run is not acceptable if these surfaces are missing or if selected phases vanish silently.
 
-```powershell
+## Evidence policy
+
+Because `output/` is ignored, promote only compact evidence files under:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/
+```
+
+Do not bulk-add the whole evidence directory. Add only reviewed evidence files that directly support the PR.
+
+When adding run-unica evidence or patch-plan evidence, also include or reference:
+
+```text
+runtime telemetry
+runtime capability manifest
+full toolbox telemetry summary
+shared AI-to-AI final summary
+CSV/count summaries when inventory lanes ran
+discovery/index repair reports when relevant
+```
+
+Do not commit:
+
+```text
+output/**
+renders/**
+*.db
+*.sqlite
+raw provider outputs
+unreviewed generated indexes
+indexAI/code_chunks/**
+```
+
+## Index regeneration
+
+Regenerate generated indexes only when structural source/doc/workflow changes require it and the task explicitly scopes regeneration.
+
+Generated indexes are not source-of-truth docs. Do not hand-edit generated chunks or manifests.
+
+`indexAI/code_chunks/**` must not be committed as ordinary source.
+
+Index repair is plan/report-first unless explicitly requested.
+
+## Git change inspection
+
+Before committing, inspect:
+
+```text
 git status
 git diff --stat
+git diff --check
 ```
 
-If validation produced only local output reports, they should normally remain uncommitted unless intentionally tracked.
-
-If only generated AI/NPU indexes changed, continue with Step 6.
+If validation produced only local output reports, they should normally remain uncommitted.
 
 If source files changed unexpectedly, stop and review before committing.
 
-## Step 6: commit generated indexes
+## PR report contract
 
-```powershell
-git add Tools/npu/npu_code_context.md `
-        Tools/npu/npu_code_index.md `
-        Tools/npu/npu_code_manifest.json `
-        indexAI/project_code_index.md `
-        indexAI/project_code_manifest.json
-
-git commit -m "chore: regenerate ai and npu indexes"
-```
-
-If chunks are tracked and changed, inspect `git status` and add them intentionally.
-
-## Step 7: push
-
-For master:
-
-```powershell
-git push origin master
-```
-
-For a feature branch or PR branch:
-
-```powershell
-git push origin <branch>
-```
-
-Confirm:
-
-```powershell
-git status
-git log --oneline -n 20
-```
-
-Expected final state:
+A PR should state:
 
 ```text
-working tree clean
-branch up to date with remote
-latest commit is index regeneration or intended documentation/source update
+summary
+scope
+changed files
+launcher mode/parameters/flags or focused validator used
+manifest path when available
+phase reports/evidence paths when available
+runtime telemetry/capability/final-summary paths when relevant
+discovery/index/CSV-count evidence when relevant
+provider execution statement
+patch application statement
+source writes statement
+risk notes
+follow-up
 ```
 
-## What to share for review
-
-Share these outputs:
-
-```powershell
-git status
-git log --oneline -n 20
-Get-Content .\output\validation\ai_pipeline_modules.json -Raw
-Get-Content .\output\validation\npu_pipeline_modules.json -Raw
-Get-Content .\output\validation\npu_pipeline_helper_tests.json -Raw
-Get-Content .\output\validation\npu_pipeline_docs.json -Raw
-Get-Content .\output\ai_pipeline\dry_run_matrix_report.json -Raw
-Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
-Get-ChildItem .\output\local_validation -File | Sort-Object LastWriteTime -Descending | Select-Object -First 5
-```
-
-If any dry-run failed, also share the failed case report:
-
-```powershell
-Get-Content .\output\ai_pipeline\dry_run_matrix\<case>\ai_pipeline_dry_run_report.json -Raw
-```
-
-## Optional Blender compatibility smoke check
-
-`Scripting/shared/blender_compat.py` is intentionally import-safe outside Blender, but its Blender-facing functions require `bpy`.
-
-Normal Python validation should compile it:
-
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-```
-
-Manual Blender validation can be done later in a disposable scene by testing:
+For docs/workflow-state cleanup PRs, explicitly state:
 
 ```text
-create_sound_strip
-clear_sequence_editor
-set_frame_range_from_seconds
-safe_create_noise_texture_node
+No runtime files, provider behavior, generated indexes, full analysis JSON, Blender scripts or audio/media outputs touched.
 ```
 
-Do not migrate runtime package code to `blender_compat.py` before this manual Blender validation.
+## Optional Blender compatibility smoke
 
-A non-invasive smoke helper is available:
+Blender-facing validation is application-domain work and must not be silently included in core local-AI validation.
 
-```powershell
-python .\Tools\validation\check_blender_shared_compat_smoke.py --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
-```
+Outside Blender, import/syntax smokes may be run as focused validators. Real Blender runtime validation requires explicit Blender scope.
 
-Outside Blender it only validates import safety and marks runtime checks as skipped. Run the same script with Blender Python or `blender --background --python` to validate audio-strip and node behavior.
+## Troubleshooting policy
 
-## Troubleshooting
-
-### `git commit` says nothing to commit
-
-This is fine if indexes did not change.
-
-Check:
-
-```powershell
-git status
-git diff --stat
-```
-
-### Dry-run matrix fails
-
-Run with continued execution to collect all failures:
-
-```powershell
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
-```
-
-Then inspect:
-
-```powershell
-Get-Content .\output\ai_pipeline\dry_run_matrix_report.json -Raw
-Get-Content .\output\ai_pipeline\dry_run_matrix_report.md -Raw
-```
-
-### Pipeline module smoke validator fails
-
-Inspect:
-
-```powershell
-Get-Content .\output\validation\ai_pipeline_modules.json -Raw
-```
-
-Most likely failure classes:
+When a focused validator, NPU helper or provider lane fails:
 
 ```text
-import path issue
-schema/report mismatch
-step builder mismatch
-entrypoint import issue
+first inspect the launcher manifest if the run used the launcher
+then inspect telemetry/capability/final-summary surfaces if involved
+then inspect discovery/index/CSV-count surfaces if relevant
+then inspect the focused JSON report
+then inspect stderr/logs
+then rerun only the failing focused validator/lane if needed
 ```
 
-### NPU helper validation fails
+Do not jump directly to legacy full wrappers as a workaround.
 
-Run the focused workflow first:
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
-```
-
-Then inspect:
-
-```powershell
-Get-Content .\output\validation\npu_pipeline_modules.json -Raw
-Get-Content .\output\validation\npu_pipeline_helper_tests.json -Raw
-Get-Content .\output\validation\npu_pipeline_docs.json -Raw
-```
-
-Most likely failure classes:
-
-```text
-helper import/export mismatch
-fixture contract drift
-README/module map drift
-legacy compatibility alias mismatch
-migration readiness gate mismatch
-```
-
-### Index generation emits warnings
-
-Warnings should be reviewed but are not always blocking. If a syntax warning appears, inspect the generated manifest for `syntax_warnings`.
-
-## Policy
+## Guardrails
 
 Do not push generated indexes before checking validation results.
 
-Do not commit output validation reports unless explicitly needed.
+Do not commit output validation reports unless explicitly needed as compact evidence.
 
 Do not modify Blender runtime packages while validating AI pipeline or NPU helper refactors.
 
-Do not wire `Tools/npu/pipeline/` helpers into `Tools/npu/run_dual_ai_pipeline.py` until focused NPU helper validation, full local validation and index regeneration pass.
+Do not wire `Tools/npu/pipeline/` helpers into runtime orchestration until focused NPU helper validation, broad launcher validation, quality gates, telemetry/bundle visibility and index review pass.
+
+Do not treat push-capable workflow helpers as default validation commands. Any push-capable helper must require explicit user intent and visible git status review.
+
+Do not claim a run-unica Full0To10 run passed from dry-run, focused validator, oversized Markdown or file existence alone.

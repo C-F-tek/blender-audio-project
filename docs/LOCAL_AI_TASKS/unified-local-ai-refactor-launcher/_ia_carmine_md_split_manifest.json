@@ -1,0 +1,19 @@
+{
+  "kind": "ia_carmine_markdown_split_manifest",
+  "source_path": "docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md",
+  "target_dir": "docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher",
+  "max_lines": 400,
+  "original_line_count": 680,
+  "part_count": 2,
+  "generated_at": "2026-05-05T23:00:59",
+  "parts": [
+    {
+      "path": "docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher/part-001.md",
+      "lines": 364
+    },
+    {
+      "path": "docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher/part-002.md",
+      "lines": 335
+    }
+  ]
+}

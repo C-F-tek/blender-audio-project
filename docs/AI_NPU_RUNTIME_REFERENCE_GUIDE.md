@@ -6,6 +6,14 @@ This guide explains how NPU, OpenVINO-style local inference and runtime fallback
 
 It is a project-specific guide for AI agents. It does not replace upstream OpenVINO or hardware documentation.
 
+This document is reference guidance, not a command catalog. Current executable examples live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+Tools/npu/pipeline/README.md
+```
+
 ## Current project policy
 
 `Tools/npu/pipeline/` is currently an app-agnostic helper package under staged decomposition.
@@ -19,19 +27,47 @@ safe to import
 focused on contracts, paths, config, IO and planning helpers
 ```
 
-It must not be wired into runtime orchestrators unless local validation and regenerated indexes are green.
+It must not be wired into runtime orchestrators unless local validation, quality gates, telemetry/bundle visibility and regenerated indexes are green.
 
 ## Hardware role separation
 
-Recommended local strategy:
+Current project strategy:
 
 | Device | Preferred project role |
 |---|---|
-| NPU | Lightweight local inference, compact review, creative proposal, low-power helper generation. |
-| GPU | Blender rendering, heavy graphics/AI acceleration, image/video workloads. |
-| CPU | Orchestration, validation, JSON/schema processing, fallback inference, FFmpeg CPU encoding. |
+| NPU | Probe, guardrail, decode-smoke diagnostic and future promotion candidate only after quality evidence. |
+| GPU | Primary advisory lane through Ollama when explicitly requested and quality-gated; also Blender/rendering domain when explicitly scoped. |
+| CPU | Orchestration, validation, JSON/schema processing, fallback logic and FFmpeg CPU encoding when application-domain work is explicitly scoped. |
 
 This separation prevents local inference experiments from blocking Blender rendering or corrupting validated pipeline behavior.
+
+## Full-run NPU doctrine
+
+NPU smoke success is not NPU advisory promotion.
+
+In `Full0To10`, NPU/OpenVINO participates as:
+
+```text
+probe
+guardrail
+decode diagnostic
+quality/remediation signal
+future promotion candidate
+```
+
+It must not become a general advisory lane unless a dedicated quality-gated promotion milestone proves usable linguistic output and updates the full-run contract.
+
+When NPU diagnostics contribute to full-run evidence, their state must be visible in:
+
+```text
+unified launcher manifest
+phase_status / phase_reports
+provider diagnostics
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+```
+
+Telemetry is the completeness accessory that explains whether NPU lanes executed, failed, degraded, were excluded, were blocked, were disabled or were planned-only.
 
 ## Runtime-agnostic NPU design
 
@@ -46,6 +82,7 @@ NpuCapability
   -> InputBundle
   -> ProviderResult
   -> ValidationReport
+  -> Telemetry/Bundle companion when used in full-run evidence
 ```
 
 The helper layer may prepare:
@@ -81,7 +118,8 @@ Not allowed without explicit validated phase:
 - direct Blender runtime modification;
 - automatic provider fallback that hides failures;
 - writing source files from model output;
-- changing `Tools/npu/run_dual_ai_pipeline.py` behavior without local validation.
+- changing `Tools/npu/run_dual_ai_pipeline.py` behavior without local validation;
+- using NPU smoke/decode success as proof of advisory readiness.
 
 ## Expected NPU workflow
 
@@ -89,11 +127,12 @@ Not allowed without explicit validated phase:
 1. build compact project context
 2. prepare input bundle
 3. select planned provider descriptor
-4. run provider or dry-run outside helper contracts
-5. normalize provider output
-6. validate structured artifact
+4. run provider/probe only through explicit launcher/provider diagnostic path
+5. normalize provider output and diagnostics
+6. validate structured artifact/report
 7. write safe output report
-8. regenerate indexes after accepted structural changes
+8. carry provider quality and exclusion state into telemetry/bundle handoff when part of full-run evidence
+9. regenerate indexes only after accepted structural changes and explicit local task scope
 ```
 
 ## Failure handling
@@ -111,9 +150,22 @@ error
 fallback_used
 artifact_written
 validation_status
+advisory_role
+quality_gate_required_before_advisory_use
 ```
 
-Do not convert NPU failure into a successful creative artifact unless the fallback provider actually produced a validated artifact and the report states that fallback was used.
+Do not convert NPU failure into a successful creative/advisory artifact unless the fallback provider actually produced a validated artifact and the report states that fallback was used.
+
+Full-run handoff must preserve relevant failure or exclusion state:
+
+```text
+provider_failure_detected
+provider_failure_reasons
+degraded_provider_components
+deterministic_recovery_used
+npu_excluded_from_primary_advisory
+quality_gate_passed
+```
 
 ## Integration with existing docs
 
@@ -123,6 +175,8 @@ For NPU helper work, read:
 AGENTS.md
 WORKFLOW.md
 docs/README.md
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 Tools/npu/pipeline/README.md
 docs/AI_PIPELINE_ARCHITECTURE.md
 docs/AI_PIPELINE_REFACTOR_STATUS.md
@@ -130,28 +184,22 @@ docs/AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md
 docs/AI_GUARDRAILS_VALIDATION_GUIDE.md
 ```
 
-## Validation commands
+## Validation ownership
 
-Focused NPU helper workflow:
+Focused NPU helper validation is owned by:
 
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+```text
+Tools/npu/pipeline/README.md
+Tools/validation/README.md
 ```
 
-Individual checks:
+Broad local-AI validation and provider/probe execution are owned by:
 
-```powershell
-python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
-python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
-python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-General syntax and package checks:
-
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-python .\Tools\validation\check_package_structure.py --repo-root . --output .\output\validation\package_structure.json
-```
+Do not use focused NPU helper commands as proof that `Full0To10` passed.
 
 ## Migration readiness checklist
 
@@ -162,9 +210,11 @@ Before wiring NPU helpers into runtime code, require:
 - fixture or dry-run reports available;
 - provider boundary documented;
 - fallback behavior documented;
-- generated indexes regenerated;
+- telemetry/bundle visibility documented when entering full-run evidence;
+- generated indexes regenerated only when explicitly scoped;
 - no Blender runtime behavior changed unintentionally;
 - no source writes from raw model output;
+- quality-gate evidence for advisory promotion if advisory role is proposed;
 - maintainer approval for runtime wiring.
 
 ## Practical advice for AI agents
@@ -176,5 +226,7 @@ When asked to improve NPU usage:
 3. add or refine pure helpers;
 4. add validation before integration;
 5. document provider boundary;
-6. keep GPU free for Blender unless the task explicitly targets GPU AI;
-7. state when local hardware validation is required.
+6. keep NPU as probe/guardrail/decode diagnostic unless quality evidence promotes it;
+7. keep GPU advisory explicit and quality-gated;
+8. state when local hardware validation is required;
+9. attach telemetry/capability/bundle context when NPU results affect evidence or patch plans.

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document describes the modular AI artifact pipeline architecture in `blender-audio-project`.
+This document describes the modular AI artifact pipeline architecture in `IA-Carmine Local AI Orchestration Workbench`.
 
 It is intended for human maintainers and AI agents. Read it before changing files under:
 
@@ -13,13 +13,22 @@ Tools/validation/check_ai_pipeline_modules.py
 Tools/ai/run_pipeline_dry_run_matrix.py
 ```
 
+This file is an architecture contract, not a command catalog. Current executable examples live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+```
+
 ## Current status
 
-Status: `modular schedule complete, pending local dry-run validation`
+Status: `modular schedule complete, subordinate to unified launcher and full-run evidence contract`
 
 The original monolithic orchestration logic has been split into focused modules. The public CLI and schema-v6 report shape are intended to remain compatible.
 
-The current entrypoint is intentionally thin:
+The local AI artifact pipeline is now an implementation lane inside the wider unified local-AI flow. It must not be treated as a replacement for the full `TUTTO SU TUTTO` launcher path.
+
+The current direct entrypoint remains intentionally thin:
 
 ```text
 Tools/ai/run_parallel_artifact_pipeline.py
@@ -38,6 +47,23 @@ run remediation loop
 build/write report
 return exit code
 ```
+
+## Full-run integration doctrine
+
+`-Full0To10` is **TUTTO SU TUTTO**. The AI artifact pipeline can contribute dry-run reports, planned artifacts and validation evidence, but it is not sufficient to prove a full run by itself.
+
+Dry-run matrix evidence proves planned-only behavior. It does not prove provider execution, broker tool execution, runtime capability availability, patch application state or source-write state.
+
+When pipeline reports influence evidence, recommendations, patch plans or patch specs, the handoff must include companion telemetry/capability surfaces:
+
+```text
+runtime tool usage telemetry
+runtime tool capability manifest
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+```
+
+Telemetry does not replace pipeline reports. It explains whether the lanes that produced or consumed those reports executed, failed, were blocked, degraded, disabled or planned-only.
 
 ## Module map
 
@@ -59,7 +85,7 @@ return exit code
 
 ## Core Extension Policy
 
-The AI pipeline core is app-agnostic infrastructure, not a closed list of files. Add new reusable functions, dataclasses or focused modules when they make validation, reporting, scheduling, provider integration, guardrails or memory policy clearer.
+The AI pipeline core is app-agnostic infrastructure, not a closed list of files. Add new reusable functions, dataclasses or focused modules when they make validation, reporting, scheduling, provider integration, guardrails, telemetry or memory policy clearer.
 
 Good core additions are:
 
@@ -69,11 +95,15 @@ deterministic where practical
 small enough to validate directly
 free of Ready To Jazz or Blender-scene assumptions
 compatible with existing schema-v6 report meanings
+visible through launcher manifest/report surfaces when selected
+compatible with telemetry/capability handoff when part of full-run evidence
 ```
 
-Avoid broad utility modules. Prefer a focused owner such as report helpers, provider preflight helpers, memory policy helpers, artifact manifest helpers or dry-run fixture builders.
+Avoid broad utility modules. Prefer a focused owner such as report helpers, provider preflight helpers, memory policy helpers, artifact manifest helpers, telemetry summary helpers or dry-run fixture builders.
 
 ## Data flow
+
+Direct pipeline flow:
 
 ```text
 CLI args
@@ -85,6 +115,19 @@ CLI args
   -> execute_remediation_loop
   -> build_report
   -> write_report_if_requested
+```
+
+Unified full-run flow around it:
+
+```text
+unified launcher manifest
+  -> selected pipeline/dry-run lanes
+  -> pipeline reports
+  -> validation reports
+  -> compact evidence when selected
+  -> recommendations / patch plans when selected
+  -> runtime telemetry and capability context
+  -> shared AI-to-AI bundle/final summary
 ```
 
 ## Report compatibility
@@ -119,34 +162,29 @@ schedule
 
 These fields are additive and should not break existing consumers.
 
-## Validation commands
+When a schema-v6 pipeline report is used as full-run evidence input, surrounding bundle/telemetry must still expose:
 
-Use these commands after changes to the pipeline:
-
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+```text
+provider_execution_performed
+patch_application_performed
+source_writes_performed
+runtime tool execution state when relevant
+provider degradation state when relevant
 ```
 
-Then run the repository-level checks:
+## Validation ownership
 
-```powershell
-python .\Tools\validation\check_package_structure.py --repo-root .
-python .\Tools\validation\check_json_artifacts.py --repo-root .
-```
+Use the unified launcher and `Tools/validation/README.md` for current commands.
+
+Focused direct validation is appropriate only when changing or debugging the pipeline itself. Broad local-AI validation should route through the unified launcher.
 
 ## Expected dry-run outputs
 
-The dry-run matrix writes:
+The dry-run matrix writes local ignored reports such as:
 
 ```text
 output/ai_pipeline/dry_run_matrix_report.json
-output/ai_pipeline/dry_run_matrix/base/ai_pipeline_dry_run_report.json
-output/ai_pipeline/dry_run_matrix/no_auto_remediation/ai_pipeline_dry_run_report.json
-output/ai_pipeline/dry_run_matrix/no_npu_guardrail/ai_pipeline_dry_run_report.json
-output/ai_pipeline/dry_run_matrix/with_validation/ai_pipeline_dry_run_report.json
-output/ai_pipeline/dry_run_matrix/with_chunks/ai_pipeline_dry_run_report.json
+output/ai_pipeline/dry_run_matrix/<case>/ai_pipeline_dry_run_report.json
 ```
 
 Check these fields first:
@@ -159,6 +197,8 @@ lanes
 guardrail_remediation_loop
 ```
 
+Do not commit raw `output/**` reports. Use compact evidence only when review needs Git-trackable summaries.
+
 ## Modification rules
 
 Allowed low-risk changes:
@@ -170,6 +210,7 @@ report summary additions
 new dry-run cases
 new validation checks
 internal dataclasses that preserve report compatibility
+telemetry/capability references when pipeline outputs join full-run handoff
 ```
 
 Higher-risk changes requiring local dry-run matrix validation:
@@ -189,12 +230,13 @@ running real NPU/GPU/Blender workloads from validation tools
 changing Blender runtime packages
 modifying full frame-level JSON data
 changing existing schema-v6 field meanings
+claiming full-run success from dry-run matrix evidence alone
 ```
 
 ## Current next actions
 
-1. Run the local validation/dry-run matrix.
-2. Regenerate AI/NPU indexes.
-3. Commit regenerated index files only.
-4. Review dry-run reports for failed steps, schedule shape and guardrail loop behavior.
+1. Validate launcher-owned usage of the pipeline through the unified runbook when local execution is available.
+2. Keep dry-run matrix evidence clearly marked as planned-only.
+3. Keep pipeline outputs attached to telemetry/capability/final-summary context when they influence recommendations or patch plans.
+4. Regenerate AI/NPU indexes only when a scoped task requires it.
 5. Only after successful dry-runs, continue with richer lane execution policy or Markdown report output.

@@ -48,6 +48,7 @@ FORBIDDEN_TARGET_PREFIXES = (
     ".git/",
     "indexAI/code_chunks/",
     "indexAI/project_code_chunks/",
+    "docs/LOCAL_VALIDATION_EVIDENCE/",
 )
 FORBIDDEN_TARGET_FRAGMENTS = (
     "full_analysis",

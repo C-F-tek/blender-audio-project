@@ -65,6 +65,18 @@ def safe_float(value: Any, default: float = 0.0) -> float:
     return default
 
 
+def split_path_values(value: Any) -> list[str]:
+    if value is None:
+        return []
+    raw_items = value if isinstance(value, list) else [value]
+    out: list[str] = []
+    for item in raw_items:
+        for part in str(item).split(","):
+            normalized = part.strip().strip("'\"")
+            if normalized:
+                out.append(normalized)
+    return out
+
 def compact_text(value: Any, max_chars: int = MAX_SNIPPET_CHARS) -> str:
     if value is None:
         return ""
@@ -301,6 +313,57 @@ def collect_broker_pointer_entries(repo_root: Path, raw_items: Any, caller: str,
     return entries
 
 
+def append_default_broker_report_if_present(repo_root: Path, stamp: str, values: Any) -> list[str]:
+    # Preserve final broker telemetry even if a caller omits --broker-report.
+    paths = split_path_values(values)
+    if not stamp:
+        return paths
+
+    default_path = repo_root / "output" / "validation" / f"runtime_tool_broker_full_toolbox_{stamp}.json"
+    if not default_path.exists():
+        return paths
+
+    default_rel = repo_rel(repo_root, default_path)
+    normalized_existing = {
+        repo_rel(repo_root, resolve_output_path(repo_root, item))
+        for item in paths
+        if item
+    }
+    if default_rel not in normalized_existing:
+        paths.append(default_rel)
+    return paths
+
+
+def collect_explicit_broker_reports(repo_root: Path, values: Any) -> tuple[list[dict[str, Any]], list[str], list[str]]:
+    entries: list[dict[str, Any]] = []
+    warnings: list[str] = []
+    paths: list[str] = []
+    for index, raw_path in enumerate(split_path_values(values), start=1):
+        path = resolve_output_path(repo_root, raw_path)
+        rel = repo_rel(repo_root, path)
+        paths.append(rel)
+        if not path.exists():
+            warnings.append(f"optional broker report missing: {rel}")
+            continue
+        data, read_errors = read_json_object(path, missing_is_error=True)
+        if read_errors:
+            warnings.extend(f"{rel}: {err}" for err in read_errors)
+            continue
+        if not isinstance(data, dict):
+            warnings.append(f"{rel}: broker report is not a JSON object")
+            continue
+        entries.extend(
+            collect_from_broker_report(
+                repo_root=repo_root,
+                broker_report=data,
+                broker_path=rel,
+                caller="orchestrator",
+                phase="explicit_runtime_tool_broker_bootstrap",
+                round_id=index,
+            )
+        )
+    return entries, warnings, paths
+
 def collect_gpu_declared_requests(gpu_report: dict[str, Any]) -> list[dict[str, Any]]:
     entries: list[dict[str, Any]] = []
     for round_item in safe_list(gpu_report.get('rounds')):
@@ -483,6 +546,10 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     entries: list[dict[str, Any]] = []
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('runtime_tool_bootstrap_results'), 'orchestrator', 'orchestrator_bootstrap'))
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('runtime_tool_bootstrap_result'), 'orchestrator', 'orchestrator_bootstrap'))
+    broker_report_values = append_default_broker_report_if_present(repo_root, args.stamp, getattr(args, 'broker_report', []))
+    explicit_broker_entries, explicit_broker_warnings, explicit_broker_paths = collect_explicit_broker_reports(repo_root, broker_report_values)
+    entries.extend(explicit_broker_entries)
+    warnings.extend(explicit_broker_warnings)
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('gpu_runtime_tool_results'), 'gpu', 'gpu_runtime_tool_broker'))
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('npu_runtime_tool_results'), 'npu', 'npu_runtime_tool_broker'))
     entries.extend(collect_gpu_declared_requests(gpu_report))
@@ -514,6 +581,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             'gpu_report': gpu_path,
             'gpu_npu_sync': sync_path,
             'decision_loop': decision_path,
+            'broker_reports': explicit_broker_paths,
         },
         'decision_loop_summary': {
             'passed': decision_loop.get('passed'),
@@ -589,6 +657,7 @@ def main() -> int:
     parser.add_argument('--gpu-report', required=True)
     parser.add_argument('--gpu-npu-sync', default='')
     parser.add_argument('--decision-loop', default='')
+    parser.add_argument('--broker-report', action='append', default=[], help='Explicit agent_runtime_tool_broker JSON report. Repeatable or comma-separated.')
     parser.add_argument('--max-entries', type=int, default=400)
     parser.add_argument('--output', default=DEFAULT_OUTPUT)
     parser.add_argument('--markdown-output', default=DEFAULT_MARKDOWN)

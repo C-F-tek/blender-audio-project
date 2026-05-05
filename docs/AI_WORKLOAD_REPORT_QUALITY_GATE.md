@@ -4,6 +4,13 @@ This document defines the report/schema contract for the AI workload report qual
 
 The gate is app-agnostic and report-only. It classifies already-generated workload reports before they are used as advisory context by packet/proposal builders.
 
+This file is a contract document, not a command catalog. Current executable examples live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+```
+
 ## Purpose
 
 The gate prevents corrupted or non-linguistic provider output from influencing repository suggestions.
@@ -16,6 +23,69 @@ OpenVINO/NPU workload report -> unusable_output when numeric/hex-like -> exclude
 ```
 
 NPU remains valid as a probe, decode diagnostic, guardrail and knowledge broker. Passing local NPU resource/probe checks does not promote NPU output to primary advisory context.
+
+## Full-run quality doctrine
+
+Workload quality is part of **TUTTO SU TUTTO** when provider/advisory routing participates in `Full0To10`.
+
+The quality gate decides what provider-generated text may influence evidence, recommendations and patch plans. Therefore its result must not remain an isolated report. In production full-run handoff, the quality state must be visible in:
+
+```text
+unified launcher manifest
+phase_status / phase_reports
+provider diagnostics
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+```
+
+Telemetry is the completeness accessory that explains whether provider/advisory context was trusted, excluded, degraded, missing or only planned. It does not replace the quality report; it accompanies the quality report and downstream evidence/patch plans.
+
+A patch plan generated after degraded provider routing is incomplete unless the handoff also records:
+
+```text
+provider_advisory_state
+provider_failure_detected
+provider_failure_reasons
+degraded_provider_components
+deterministic_recovery_used
+workload_quality_routing_ok
+quality_gate_passed
+```
+
+## Unified launcher requirement
+
+The canonical local-AI entrypoint is:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+When the unified launcher is run with any of these provider/advisory intents:
+
+```text
+-Full0To10
+-UsePrimaryAdvisoryProvider
+provider mode with primary advisory routing
+```
+
+then workload quality routing is required unless explicitly disabled by the operator:
+
+```text
+-NoWorkloadQuality
+```
+
+Required launcher behavior:
+
+```text
+real run: build or read output/validation/ai_workload_report_quality.json before primary advisory context is trusted
+real run: fail clearly if primary provider routing is requested and the quality report cannot be produced/read
+dry run: mark workload quality generation as planned instead of failing on the missing file
+manifest: expose workload_quality_report, workload_quality_routing_ok and quality_gate_passed
+telemetry/bundle: expose provider quality/degradation state when provider lanes participate
+```
+
+Silent degradation is not allowed. A run must not say primary provider routing is complete while workload quality routing is absent.
 
 ## Producer
 
@@ -36,23 +106,7 @@ Default output:
 output/validation/ai_workload_report_quality.json
 ```
 
-## Required command
-
-```powershell
-python .\Tools\validation\check_ai_workload_report_quality.py `
-  --repo-root . `
-  --output .\output\validation\ai_workload_report_quality.json
-```
-
-Optional explicit input reports:
-
-```powershell
-python .\Tools\validation\check_ai_workload_report_quality.py `
-  --repo-root . `
-  --report npu=output/ai_packets/npu_real_workload_report.md `
-  --report ollama=output/ai_packets/ollama_gpu_real_workload_report.md `
-  --output .\output\validation\ai_workload_report_quality.json
-```
+The producer may be called directly only for focused validator debugging or when the validator README explicitly scopes it. Broad local-AI runs must route it through the unified launcher.
 
 ## Report contract
 
@@ -163,6 +217,35 @@ provider_execution_seen = false
 source_writes_performed = false
 ```
 
+## Manifest and telemetry visibility contract
+
+The unified launcher manifest must include:
+
+```text
+primary_provider_requested
+workload_quality_report
+workload_quality_routing_ok
+quality_gate_passed
+phase_reports.workload_quality when generated
+phase_status.workload_quality or equivalent status when selected
+```
+
+The production telemetry/bundle surfaces must preserve the downstream meaning of this gate when provider lanes participate:
+
+```text
+provider_advisory_state
+provider_failure_detected
+provider_failure_reasons
+degraded_provider_components
+deterministic_recovery_used
+workload_quality_routing_ok
+quality_gate_passed
+patch_application_performed
+source_writes_performed
+```
+
+For `-Full0To10`, missing workload quality is acceptable only when the operator explicitly supplies `-NoWorkloadQuality`. Otherwise it is an execution failure for real runs and a planned step for dry runs.
+
 ## Advisory routing consumers
 
 Primary consumers:
@@ -173,6 +256,9 @@ Tools/ai/build_workload_quality_lane_routing.py
 Tools/ai/suggest_repository_updates.py
 Tools/ai/build_repository_change_proposals.py
 Tools/ai/build_github_evidence_bundle.py
+Tools/workflow/run_unified_local_ai_refactor.ps1
+Tools/ai/build_full_toolbox_run_telemetry_summary.py
+Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
 ```
 
 Routing contract:
@@ -191,13 +277,7 @@ unusable NPU workload reports remain visible in routing metadata but are exclude
 output/validation/npu_review_metadata.json
 ```
 
-Command without provider loading:
-
-```powershell
-python .\Tools\npu\run_npu_review.py `
-  --metadata-only `
-  --metadata-out .\output\validation\npu_review_metadata.json
-```
+Metadata-only paths are focused diagnostics, not full local-AI entrypoints. If they are needed in a broad local-AI run, they should be represented by launcher provider/probe phase status and manifest paths.
 
 Required sidecar fields:
 
@@ -263,11 +343,22 @@ commit SQLite memory DBs
 hand-edit generated indexes
 ```
 
-## Validation block
+## Validation ownership
 
-```powershell
-python .\Tools\validation\check_ai_workload_report_quality.py --repo-root . --output .\output\validation\ai_workload_report_quality.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-git diff --check
+Broad local-AI validation uses the unified launcher.
+
+Focused quality-gate validation uses `Tools/validation/README.md` when debugging the validator or validating its contract directly.
+
+The acceptance signal for broad runs is not a pasted command block; it is the launcher manifest and telemetry/bundle state:
+
+```text
+workload_quality_report
+workload_quality_routing_ok
+quality_gate_passed
+phase_reports.workload_quality
+provider_advisory_state
+provider_failure_reasons
+degraded_provider_components
+errors
+warnings
 ```
