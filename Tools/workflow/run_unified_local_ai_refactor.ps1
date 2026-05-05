@@ -769,6 +769,16 @@ $ContextFiles = @()
 $Script:UnifiedLauncherOutputDir = $OutputDir
 $Script:UnifiedLauncherEvidenceDir = $EvidenceDir
 # IA_CARMINE_OUTPUT_DIR_EVIDENCE_DIR_FALLBACK_END
+$SmokeOnlyRun = (
+    @($ResolvedModes).Count -eq 1 -and
+    $ResolvedModes -contains "smoke"
+)
+
+if ($SmokeOnlyRun -and -not $Prod) {
+    Write-Host "[INFO] Smoke mode: unified launcher transcript/tail evidence disabled."
+    $Prod = $true
+}
+
 Start-UnifiedLauncherExecutionTranscript -StampValue $Stamp -Root $RepoRoot -ProdMode ([bool]$Prod)
 if ($RunIntensity -ne "custom") {
     if ($RunIntensity -eq "quick") {
