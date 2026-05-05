@@ -35,6 +35,9 @@ read contract
 
 ```text
 AGENTS.md
+CHATGPT.md
+CHATGPT/README.md
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 README.md
 WORKFLOW.md
 docs/README.md
@@ -43,6 +46,8 @@ docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/LOCAL_AI_TASKS/README.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
@@ -55,6 +60,23 @@ Tools/validation/README.md
 ```
 
 For code/provider/refactor work, also read the nearest tool/package README and the target source file.
+
+## Current active work
+
+```text
+Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+Run: 20260505-143844
+Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Mode: review-only until explicit human instruction
+```
+
+The compact operational bridge is:
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+```
+
+The bundle is not committed to the repository. Do not infer its contents from file existence alone.
 
 ## Canonical local AI workflow
 
@@ -77,8 +99,11 @@ Root workflow and README files are descriptive. They should link to command owne
 |---|---|
 | Full local AI / 0-to-10 launcher commands | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
 | Launcher manifest fields | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
+| Current operational bridge | `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
 | Current code/tool/evidence flow | `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` |
-| Runtime broker telemetry validation | `docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md` |
+| Refactor/reuse planning | `docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` |
+| Recent telemetry baseline | `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` |
+| Runtime broker telemetry resolved context | `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` |
 | Audio/media output guardrail | `docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md` |
 | Tool discovery and promotion | `docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md`, `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` |
 | Markdown/script inventories | `Tools/validation/README.md` and unified launcher runbook |
