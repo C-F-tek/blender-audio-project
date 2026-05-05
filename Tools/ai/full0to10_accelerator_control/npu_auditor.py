@@ -3,16 +3,18 @@ from __future__ import annotations
 
 from typing import Any
 
+from .device_visibility import openvino_visibility_summary
+
 
 def build_npu_auditor(capability: dict[str, Any]) -> dict[str, Any]:
     npu = capability.get("npu", {}) if isinstance(capability, dict) else {}
-    devices = npu.get("devices") or []
-    has_npu = any(str(item).upper() == "NPU" for item in devices)
+    visibility = openvino_visibility_summary(capability)
     return {
         "kind": "npu_auditor_contract",
         "passed": True,
         "role": "sampled_auditor_or_diagnostic",
-        "device_visible": has_npu,
+        "device_visible": visibility["npu_visible"],
+        "normalized_devices": visibility["devices"],
         "probe_performed": npu.get("probe_performed"),
         "allowed_actions": [
             "sampled review",
