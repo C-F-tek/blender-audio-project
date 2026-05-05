@@ -16,8 +16,9 @@ read contract
   -> build inventories/context when useful
   -> choose one scope
   -> change minimal files
-  -> validate locally
+  -> validate locally when available
   -> build compact evidence or patch bundle when needed
+  -> record provider/runtime/media side-effect status
   -> open/update PR
   -> human review / merge
 ```
@@ -33,6 +34,10 @@ docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/LOCAL_AI_TASKS/README.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
+docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md
 docs/PROJECT_STATUS_POINT.md
@@ -64,6 +69,10 @@ Root workflow and README files are descriptive. They should link to command owne
 |---|---|
 | Full local AI / 0-to-10 launcher commands | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
 | Launcher manifest fields | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
+| Current code/tool/evidence flow | `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` |
+| Runtime broker telemetry validation | `docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md` |
+| Audio/media output guardrail | `docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md` |
+| Tool discovery and promotion | `docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md`, `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` |
 | Markdown/script inventories | `Tools/validation/README.md` and unified launcher runbook |
 | NPU helper validation | `Tools/npu/pipeline/README.md` |
 | Patch-spec workflow | `docs/PATCH_SPEC_WORKFLOW.md` |
@@ -76,12 +85,44 @@ If a command becomes outdated, update the owning runbook/tool README only. Do no
 ```text
 Ollama -> GPU/CUDA -> primary advisory provider only when explicitly requested and quality-gated
 OpenVINO -> NPU -> probe / guardrail / decode diagnostic
-Blender runtime -> application target, frozen unless explicitly scoped
+Blender/audio/media runtime -> application target, frozen unless explicitly scoped
 ```
 
 Provider execution must stay explicit and report-bound.
 
 A full 0-to-10 run must not silently degrade if provider quality routing is missing. It must build workload quality routing evidence or fail clearly; dry-run may mark the routing report as planned.
+
+## Audio/media output policy
+
+Normal AI/tooling workflows are report/evidence workflows, not media-generation workflows.
+
+Forbidden unless explicitly scoped as application-domain runtime work:
+
+```text
+audio playback
+audio export
+WAV/MP3/AAC conversion
+FFmpeg encode or mux operation
+Blender render
+video generation
+media output side effect
+```
+
+If a non-application run produces audio/media output, classify it as a guardrail breach and record:
+
+```text
+phase
+tool
+path
+tracked/ignored state
+how to disable it
+```
+
+Detailed policy:
+
+```text
+docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
+```
 
 ## Preflight policy
 
@@ -105,6 +146,8 @@ Use inventories before broad documentation or code refactors.
 ```text
 Markdown inventory -> canonical docs, obsolete docs, generated/evidence docs, missing index review.
 Script inventory -> scripts/tools, functions/classes/methods, descriptions, refactor discovery.
+Tool placement audit -> classifies canonical and non-canonical tools, including root scripts and Scripting/**.
+Tool promotion guide -> defines project-tool, broker-tool and full-run-lane promotion requirements.
 ```
 
 Do not commit inventory outputs from `output/**`. Commit compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/` only when needed for review.
@@ -120,6 +163,8 @@ The minimum validation evidence for a PR should state:
 ```text
 which launcher/tool command was run
 whether provider/runtime execution occurred
+whether runtime broker telemetry was produced/absorbed
+whether audio/media output occurred
 where the manifest/report/evidence is located
 whether patch application occurred
 what remains unvalidated locally
@@ -154,6 +199,7 @@ merge to master/protected branch
 change secrets, permissions, billing or visibility
 deploy production
 run heavy Blender/GPU workloads automatically
+run audio playback/export, FFmpeg encode/mux, Blender render or media generation
 change provider/model execution from explicit to implicit
 ```
 
@@ -167,6 +213,7 @@ renders/**
 *.sqlite3
 raw checkpoints
 large full analysis JSON outside compact evidence policy
+generated audio/video/media output
 ```
 
 ## PR report contract
@@ -179,6 +226,8 @@ purpose
 script line counts for created/modified scripts
 validation run or missing
 provider/runtime execution status
+runtime broker telemetry status
+audio/media output status
 risk
 follow-up
 ```
@@ -190,6 +239,8 @@ root docs are command-free
 commands live in owning runbooks/tool READMEs
 unified launcher remains the active local-AI entrypoint
 provider execution remains explicit
+runtime broker telemetry is surfaced when relevant
+audio/media output is forbidden in normal AI/tooling runs
 patch application remains explicit
 long evidence is indexed by compact manifests
 obsolete monolithic runbooks are not active entrypoints
