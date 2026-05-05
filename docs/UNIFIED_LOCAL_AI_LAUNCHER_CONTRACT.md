@@ -138,20 +138,32 @@ The manifest is the first machine-readable entrypoint. Long evidence bundles are
 
 When `full_0_to_10_requested=true`, the manifest should show all default capabilities as either enabled/completed or explicitly disabled by user flags.
 
+Full0To10 always means full coverage: TUTTO SU TUTTO. Intensity profiles may tune budgets and capacity, but they must not silently remove core lanes.
+
 Expected defaults unless disabled:
 
 ```text
+Markdown inventory and docs link validation requested
+JSON/report contract validation requested
+Python/script inventory requested
+semantic chunks requested
+context pack requested
+agent state/memory input-output requested
+repository consistency and validation evidence requested
+runtime tool broker telemetry requested
+runtime tool capability manifest requested
 Ollama advisory requested
 primary provider routing requested
+provider diagnostics requested
 workload quality routing requested
 multistep provider workflow requested
 Ollama probe requested
 NPU probe requested
 NPU decode smoke requested
-context pack requested
-agent state/memory input-output requested
+legacy full-toolbox integrated lane requested
 patch specs requested
 evidence requested
+shared AI-to-AI bundle summary requested
 patch_application_performed=false
 ```
 
@@ -167,6 +179,21 @@ Allowed explicit disablers:
 -NoEvidence
 -NoPatchSpecs
 ```
+
+If a core lane is unavailable, the manifest must record the unavailable-tool/provider failure in `phase_status`, `warnings`, `errors` or a phase report. Missing evidence without an explicit disabler or failure record is a failed full run.
+
+## Run intensity contract
+
+`run_intensity` changes capacity, not scope.
+
+```text
+quick    = full coverage with reduced budget
+balanced = full coverage with default budget
+deep     = full coverage with expanded budget
+custom   = full coverage with operator-supplied budget
+```
+
+A quick Full0To10 run is not a smoke test. Smoke remains a separate mode and must not be used as evidence that the full-run contract passed.
 
 ## Quality gate contract
 
