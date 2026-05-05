@@ -11,6 +11,12 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
+Current compact operational bridge:
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+```
+
 Historical/supporting reference only:
 
 ```text
@@ -19,13 +25,30 @@ docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
 
 That historical procedure must not override the unified launcher, the launcher contract or current telemetry/evidence policy.
 
+## Current active full-run state
+
+Current branch phase:
+
+```text
+Branch: codex/unified-local-ai-refactor-launcher
+PR: #187 feat(workflow): add unified local AI refactor launcher
+Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+Run: 20260505-143844
+Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Mode: review-only until explicit human instruction
+```
+
+The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Do not infer bundle contents from file existence alone.
+
 ## Core policy
 
 ```text
 FULL RUN UNICA = TUTTO SU TUTTO
 ```
 
-A canonical full run activates every declared runtime/tool/provider/advisory/evidence/patch-spec/memory/telemetry lane unless an explicit maintenance/debug `-No*` flag disables one.
+A canonical full run activates every declared runtime/tool/provider/advisory/evidence/patch-spec/memory/telemetry/discovery/index/CSV-count lane unless an explicit maintenance/debug `-No*` flag disables one, the lane is diagnosed unavailable, the run is a dry-run planned state, or the operator documents a deliberate exclusion.
+
+`Full0To10` is opt-out by lane, not opt-in per capability. Once the operator selects `-Full0To10`, the default assumption is that the full perimeter runs. If the operator does not want a lane, the operator says so explicitly.
 
 `quick`, `balanced`, `deep` and `custom` are intensity profiles only. They change capacity, not scope:
 
@@ -53,12 +76,47 @@ repository consistency map/smoke
 project tool registry
 memory/context builders
 semantic chunk manifests
+selected chunk evidence
+Markdown inventory
+script/function/class/method inventory
+Python line-count CSV/Markdown surfaces
+CSV/count summaries
+auto-discovery reports
+index repair plans/reports
 patch-plan validators
 production AI-to-AI bundle components
 telemetry summaries
 ```
 
 Silent omission is a defect.
+
+## Discovery, index repair and CSV/count rule
+
+Discovery and count surfaces are evidence lanes for `TUTTO SU TUTTO`.
+
+Expected surfaces when relevant:
+
+```text
+Markdown inventory JSON/MD
+script inventory JSON/CSV/MD
+function/class/method inventory CSV
+Python line-count CSV/MD
+semantic chunk manifest JSON/MD
+selected chunk evidence JSON/MD when available
+repository consistency map/smoke JSON/MD
+auto-discovery report when scanner/index visibility drift is suspected
+index repair plan/report when generated indexes are stale or missing
+```
+
+Policy:
+
+```text
+CSV/count outputs are evidence surfaces, not source authority.
+Generated indexes and code chunks are not hand-maintained source.
+Do not commit output/**.
+Do not commit indexAI/code_chunks/**.
+Index repair is plan/report-first unless explicitly requested.
+```
 
 ## Telemetry as completeness accessory
 
@@ -75,6 +133,7 @@ runtime telemetry artifacts
 runtime capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
+discovery/index/CSV-count summaries when selected or relevant
 ```
 
 A patch plan without telemetry is incomplete because the next AI cannot reliably know:
@@ -88,6 +147,7 @@ which capability was available
 whether patch application happened
 whether source writes happened
 whether GPU/NPU timings are real or fallback
+whether discovery/index/count evidence was produced, skipped or degraded
 ```
 
 File existence alone is not proof of successful execution.
@@ -137,6 +197,7 @@ renders/**
 *.db
 *.sqlite
 *.sqlite3
+indexAI/code_chunks/**
 ```
 
 ## Current command owner
@@ -169,6 +230,10 @@ runtime tool usage telemetry
 runtime tool capability manifest references
 full toolbox telemetry summary references
 semantic chunk manifest references
+selected chunk evidence references
+script/function/class/method inventory references
+Python line-count CSV/MD references
+auto-discovery/index repair plan references when relevant
 provider/probe/advisory state
 GPU/NPU sync diagnostics
 repository consistency map/smoke when produced
@@ -193,6 +258,16 @@ docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_<STAMP>.j
 docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_<STAMP>.md
 ```
 
+Additional compact evidence may accompany it when relevant:
+
+```text
+script/function/class/method inventory summaries
+Python line-count CSV/MD summaries
+repository consistency map/smoke summaries
+auto-discovery/index repair plan summaries
+selected chunk evidence summaries
+```
+
 The decision-loop evidence remains important, but it is not the whole production handoff by itself. Telemetry and capability data must accompany it.
 
 ## Full-run provider, bundle and broker completion contract
@@ -205,6 +280,7 @@ patch_plan_summary_seen = true
 runtime_tool_usage_telemetry.executed_count >= 3 when broker lane ran
 runtime_tool_capability_manifest present
 full_toolbox_run_telemetry_summary present
+discovery/index/CSV-count surfaces present when selected or relevant
 patch_application_performed = false unless explicitly requested
 source_writes_performed = false unless explicitly requested
 ```
@@ -234,4 +310,4 @@ build_python_line_count_csv
 check_validation_report_contract
 ```
 
-The bootstrap remains report-only and must not perform provider execution, patch application, source writes, Git writes, Blender runtime or persistent memory writes.
+The bootstrap remains report-only and must not perform patch application, source writes, Git writes, Blender runtime or persistent memory writes. Provider/probe lanes belong to the full-run perimeter but must remain report-bound and quality-gated.
