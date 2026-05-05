@@ -36,6 +36,14 @@ patch-spec generation
 
 Supporting wrappers may exist, but they are implementation lanes behind the launcher or explicitly scoped helper tools.
 
+## TUTTO SU TUTTO doctrine
+
+Every full-run task must preserve whole-repository coverage: **TUTTO SU TUTTO**.
+
+`quick`, `balanced`, `deep` and `custom` are budget/intensity profiles. They do not define smaller scopes. A quick full run still traverses all active full-run lanes with reduced capacity; it is not a smoke test.
+
+The set of lanes is allowed to grow. When a new production-ready tool, broker capability, provider diagnostic, registry, evidence builder, memory/context surface or repository-consistency check is promoted, update the full-run contract and this index so the new capability is either included in `tutto` or explicitly excluded.
+
 ## Current stable reading order
 
 Use this order for current IA-Carmine local-AI work:
