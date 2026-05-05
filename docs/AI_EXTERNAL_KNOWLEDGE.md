@@ -6,6 +6,13 @@ This document records external AI-coding knowledge that is useful for this repos
 
 It is intentionally tool-neutral. It should guide local AI agents, remote coding assistants, review agents, and future automation without depending on one specific vendor or IDE.
 
+This document is guidance, not a command catalog. Current executable examples live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+```
+
 ## Source material
 
 This file summarizes knowledge extracted from externally supplied Markdown references, the latest technical audit report, and OpenAI official engineering articles adapted for this repository.
@@ -18,6 +25,35 @@ Source groups:
 | `Tool-AI-Reference.md` | General AI-assisted coding workflow: task decomposition, PRD/task lists, prompt logs, testing and validation loops. |
 | `deep-research-report.md` | External technical audit of `blender-audio-project`: infrastructure risks, packaging, path handling, broad exception handling, import/reload risks and suggested remediation. |
 | `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | OpenAI Harness Engineering and Symphony concepts adapted to this repo: agent-first repositories, task/workspace orchestration, proof-of-work reports, guardrails and workflow versioning. |
+
+## Current project adaptation: flusso unico
+
+External AI-coding guidance is useful only after it is mapped to the current IA-Carmine operating model.
+
+The active model is:
+
+```text
+one canonical launcher flow
+Full0To10 = TUTTO SU TUTTO
+quick/balanced/deep/custom = intensity, not scope
+perimeter of tutto can expand explicitly
+telemetry accompanies evidence and patch plans for completeness
+```
+
+Focused validation remains useful for small edits and validator debugging. It must not be confused with the canonical full-run proof.
+
+For broad local-AI work, proof-of-work now means:
+
+```text
+manifest
+phase reports
+compact evidence
+patch-plan artifacts when produced
+runtime tool usage telemetry
+runtime tool capability manifest
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+```
 
 ## OpenAI Harness Engineering and Symphony notes
 
@@ -33,28 +69,35 @@ Main adopted concepts:
 |---|---|
 | Repository agent-first | Keep `AGENTS.md`, `docs/`, validators, status markers and reports synchronized. |
 | AGENTS.md as index | Keep `AGENTS.md` concise and point to structured docs rather than making it an encyclopedia. |
-| Knowledge in repo | Store workflow, architecture, status, validation and task context in versioned Markdown/JSON. |
-| Mechanical guardrails | Use validators, dry-run matrix, schema reports, status consistency checks and NPU helper smoke/unit/docs validators. |
+| Knowledge in repo | Store workflow, architecture, status, validation, telemetry, capability and task context in versioned Markdown/JSON. |
+| Mechanical guardrails | Use validators, dry-run matrix, schema reports, status consistency checks, telemetry/capability manifests, AI-to-AI bundles and NPU helper smoke/unit/docs validators. |
 | Task tracker as control plane | Use GitHub issues, patch specs, execution plans or checklist docs for complex work. |
 | Workspace per task | Prefer branch/output-folder/task-scope isolation for larger automated work. |
-| Proof of work | Require JSON/Markdown reports, git diff summaries and validation logs. |
-| Technical drift cleanup | Maintain docs, shared utilities, validators and tech debt tracker as recurring work. |
+| Proof of work | Require JSON/Markdown reports, telemetry, capability manifests, git diff summaries and validation logs. |
+| Technical drift cleanup | Maintain docs, shared utilities, validators, telemetry contracts and tech debt tracker as recurring work. |
 
 Adopted repository assets derived from those notes:
 
 ```text
+AGENTS.md
 WORKFLOW.md
 docs/EXECUTION_PLANS/README.md
 docs/TECH_DEBT_TRACKER.md
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 Tools/validation/check_refactor_status_consistency.py
 Tools/validation/check_docs_links.py
-Tools/workflow/run_local_validation_after_refactor.ps1
-Tools/workflow/run_npu_pipeline_helper_validation.ps1
+Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
 Current active extension of these concepts:
 
 ```text
+Tools/ai/agent_runtime_tool_broker.py
+Tools/ai/build_runtime_tool_usage_telemetry.py
+Tools/ai/build_runtime_tool_capability_manifest.py
+Tools/ai/build_full_toolbox_run_telemetry_summary.py
+Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
 Tools/npu/pipeline/                  app-agnostic NPU helper contracts
 Tools/validation/check_npu_pipeline_modules.py
 Tools/validation/check_npu_pipeline_helper_tests.py
@@ -69,73 +112,74 @@ Tools/validation/check_npu_pipeline_docs.py
 
 - repository identity;
 - important folders;
-- safe commands;
-- validation commands;
+- safe commands/command owners;
+- validation ownership;
 - permission boundaries;
 - refactoring rules;
-- expected reporting format.
+- expected reporting format;
+- telemetry/capability handoff expectations.
 
 Keep it short enough to stay useful in AI context windows. Keep detailed task state in `docs/`, execution plans and package-level README files.
 
-### 2. Commands must be concrete
+### 2. Commands must be concrete, but owned by the right document
 
-Prefer copy-pasteable commands over generic language.
+External guidance favors copy-pasteable commands. In this repository, root/canonical docs should usually point to command owners instead of duplicating command blocks.
 
-Good:
-
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-```
-
-Bad:
+Command owners:
 
 ```text
-Run the tests.
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+Tools/npu/pipeline/README.md
 ```
 
-### 3. Prefer focused validation
+### 3. Prefer focused validation for small edits; full-run for full proof
 
-For AI-assisted changes, small checks are better than running heavy workflows every time.
+For AI-assisted changes, focused checks are useful when the change is narrow.
 
-Preferred quick checks:
+For full local-AI work, use the unified launcher and preserve `TUTTO SU TUTTO` coverage.
 
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_package_structure.py --repo-root .
-python .\Tools\validation\check_json_artifacts.py --repo-root .
+Focused checks must not be presented as proof that:
+
+```text
+Full0To10 passed
+providers succeeded
+runtime broker tools executed
+capabilities were available
+patch application did or did not happen
+source writes did or did not happen
 ```
 
-AI pipeline checks:
+Those claims require manifest/telemetry/capability/bundle context.
 
-```powershell
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
-```
+Heavy Blender renders, full AI generation and long GPU workloads remain explicit human decisions.
 
-NPU helper checks:
+### 4. Work in small tasks, but maintain whole-run contracts
 
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
-```
+Avoid project-wide blind rewrites.
 
-Heavy Blender renders, full AI generation and long GPU workloads should be explicit human decisions.
-
-### 4. Work in small tasks
-
-Avoid project-wide prompts and broad rewrites.
-
-Preferred workflow:
+Preferred narrow-edit workflow:
 
 ```text
 specify one task
   -> inspect relevant files
   -> patch minimal files
-  -> run focused validation
+  -> run focused validation when local execution is available
   -> report diff and line counts
   -> decide next task
 ```
 
-This fits the current project direction: controlled encapsulation, not broad rewrites.
+Preferred broad local-AI workflow:
+
+```text
+unified launcher
+  -> manifest
+  -> phase reports
+  -> evidence
+  -> patch plan when produced
+  -> telemetry/capability/final summary
+  -> human/master-AI review
+```
 
 ### 5. Separate engine code from policy code
 
@@ -155,7 +199,7 @@ For this project, that means:
 
 - JSON/path/image-sequence/FFmpeg helpers should remain shared infrastructure.
 - Scene-specific visual choices remain inside the Blender package.
-- AI prompts, providers, validators and artifact writers should be separate.
+- AI prompts, providers, validators, telemetry and artifact writers should be separate.
 - NPU/Ollama provider execution remains a runtime adapter concern, not a helper-contract concern.
 
 ### 6. Keep a prompt/history trail where useful
@@ -166,16 +210,17 @@ For long AI-assisted coding sessions, keep records of:
 - the prompt/task;
 - files changed;
 - validation results;
+- telemetry/capability summary when relevant;
 - follow-up decisions.
 
 Recommended repository-friendly locations:
 
 ```text
-indexAI/patch_library/
-output/ai_pipeline/
-output/local_validation/
 docs/PROJECT_STATUS_POINT.md
 docs/EXECUTION_PLANS/
+docs/LOCAL_VALIDATION_EVIDENCE/
+indexAI/patch_library/ when explicitly scoped
+output/ai_pipeline/ local ignored reports
 ```
 
 Do not store secrets or private credentials in prompt logs.
@@ -206,6 +251,7 @@ The external audit report identified several issues. Some are already resolved o
 - Add non-invasive validation tools.
 - Add pure Python shared utilities that do not alter runtime behavior.
 - Produce patch specs for review.
+- Update telemetry/capability/evidence documentation.
 
 ### Require explicit human approval
 
@@ -217,21 +263,23 @@ The external audit report identified several issues. Some are already resolved o
 - Long Blender renders.
 - GPU-heavy generation.
 - Any operation that modifies full frame-by-frame analysis data.
-- Wiring staged NPU helper modules into runtime orchestrators before local validation and regenerated indexes are green.
+- Wiring staged NPU helper modules into runtime orchestrators before local validation, quality gates, telemetry/bundle visibility and regenerated indexes are green.
+- Queueing or applying patch specs.
 
 ## How external knowledge should influence future work
 
 Use this priority order:
 
 1. preserve working Blender packages;
-2. validate before migration;
-3. create shared utilities additively;
-4. keep AI context compact;
-5. report changed files and line counts;
-6. keep patches small and reversible;
-7. prefer patch specs when a change is mechanical and reviewable;
-8. treat workflow, status and proof-of-work reports as first-class repository artifacts;
-9. prefer focused helper validation before broad full-run validation.
+2. preserve the unified full-run contract;
+3. validate before migration;
+4. create shared utilities additively;
+5. keep AI context compact;
+6. report changed files and line counts;
+7. keep patches small and reversible;
+8. prefer patch specs when a change is mechanical and reviewable;
+9. treat workflow, status, proof-of-work reports, telemetry and capability manifests as first-class repository artifacts;
+10. prefer focused helper validation for narrow edits and full launcher evidence for broad claims.
 
 ## Not adopted
 
