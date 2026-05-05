@@ -79,6 +79,14 @@ def _report_summary(name: str, spec: dict[str, str], path: Path) -> dict[str, An
     }
 
 
+def _has_top_level_openvino_fields(accelerator: dict[str, Any]) -> bool:
+    capability = _dict_path(accelerator, "hardware_capability")
+    return all(
+        key in capability
+        for key in ("openvino_devices", "openvino_cpu", "openvino_gpu0", "openvino_gpu1", "openvino_npu")
+    )
+
+
 def _semantic_flags(reports: dict[str, dict[str, Any]]) -> dict[str, bool]:
     accelerator = reports["accelerator_control"]["data"]
     governor = reports["provider_governor"]["data"]
@@ -91,6 +99,7 @@ def _semantic_flags(reports: dict[str, dict[str, Any]]) -> dict[str, bool]:
         "accelerator_external_probes_disabled": _bool_path(
             accelerator, "hardware_capability", "external_probes_enabled"
         ) is False,
+        "accelerator_has_top_level_openvino_fields": _has_top_level_openvino_fields(accelerator),
         "governor_has_run_permit": bool(governor.get("run_permit")),
         "governor_deny_not_failure": bool(governor.get("deny_is_failure")) is False,
         "invocation_generation_not_now": bool(invocation.get("generation_executes_now")) is False,

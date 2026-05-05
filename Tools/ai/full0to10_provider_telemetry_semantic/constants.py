@@ -33,6 +33,7 @@ REQUIRED_SEMANTIC_FLAGS = (
     "accelerator_has_npu_auditor",
     "accelerator_has_openvino_gpu0",
     "accelerator_external_probes_disabled",
+    "accelerator_has_top_level_openvino_fields",
     "governor_has_run_permit",
     "governor_deny_not_failure",
     "invocation_generation_not_now",

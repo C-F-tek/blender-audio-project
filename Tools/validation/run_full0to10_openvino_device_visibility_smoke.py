@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""Smoke test for OpenVINO NPU/GPU.0 device visibility normalization."""
+"""Static smoke for OpenVINO device visibility normalization."""
 from __future__ import annotations
 
 import argparse
 import json
 import sys
 from pathlib import Path
+
+
+def read(path: Path) -> str:
+    return path.read_text(encoding="utf-8", errors="replace") if path.exists() else ""
 
 
 def parse_args() -> argparse.Namespace:
@@ -16,38 +20,49 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    repo_root = Path(args.repo_root).resolve()
-    ai_dir = repo_root / "Tools" / "ai"
-    if str(ai_dir) not in sys.path:
-        sys.path.insert(0, str(ai_dir))
+    root = Path(args.repo_root).resolve()
+    sys.path.insert(0, str(root / "Tools/ai"))
 
-    from full0to10_accelerator_control.device_visibility import normalized_openvino_devices
-    from full0to10_accelerator_control.gpu0_contract import build_gpu0_contract
-    from full0to10_accelerator_control.npu_auditor import build_npu_auditor
+    from full0to10_hardware_capability.openvino_devices import (  # noqa: WPS433
+        normalize_openvino_device_visibility,
+    )
 
-    cases = [
-        {"npu": {"devices": ["CPU", "GPU.0", "NPU"]}},
-        {"npu": {"result": {"devices": ["CPU", "GPU.0", "NPU"]}}},
-        {"npu": {"result": {"stdout": "{\"import_ok\": true, \"devices\": [\"CPU\", \"GPU.0\", \"NPU\"]}"}}},
-        {"npu": {"stdout": "Available devices: CPU GPU.0 NPU"}},
-    ]
+    sample = {
+        "result": {
+            "stdout": json.dumps({"devices": ["CPU", "GPU.0", "GPU.1", "NPU"]})
+        }
+    }
+    visibility = normalize_openvino_device_visibility(sample)
 
-    results = []
-    for capability in cases:
-        devices = normalized_openvino_devices(capability)
-        npu = build_npu_auditor(capability)
-        gpu0 = build_gpu0_contract(capability)
-        results.append(
-            {
-                "devices": devices,
-                "npu_visible": npu["device_visible"],
-                "gpu0_visible": gpu0["device_visible"],
-            }
-        )
-
-    passed = all(item["npu_visible"] and item["gpu0_visible"] for item in results)
-    print(json.dumps({"passed": passed, "cases": results}, indent=2))
-    return 0 if passed else 1
+    files = {
+        "hardware_builder": root / "Tools/ai/full0to10_hardware_capability/builder.py",
+        "openvino_devices": root / "Tools/ai/full0to10_hardware_capability/openvino_devices.py",
+        "accelerator_visibility": root / "Tools/ai/full0to10_accelerator_control/device_visibility.py",
+        "semantic_constants": root / "Tools/ai/full0to10_provider_telemetry_semantic/constants.py",
+        "semantic_validator": root / "Tools/ai/full0to10_provider_telemetry_semantic/validator.py",
+    }
+    texts = {name: read(path) for name, path in files.items()}
+    joined = "\n".join(texts.values())
+    checks = {
+        "required_files_exist": all(path.exists() for path in files.values()),
+        "sample_devices_normalized": visibility["openvino_devices"] == ["CPU", "GPU.0", "GPU.1", "NPU"],
+        "cpu_top_level_visible": visibility["openvino_cpu"]["device_visible"],
+        "gpu0_top_level_visible": visibility["openvino_gpu0"]["device_visible"],
+        "gpu1_top_level_visible": visibility["openvino_gpu1"]["device_visible"],
+        "npu_top_level_visible": visibility["openvino_npu"]["device_visible"],
+        "builder_exports_top_level_fields": all(
+            token in texts["hardware_builder"]
+            for token in ("openvino_cpu", "openvino_gpu0", "openvino_gpu1", "openvino_npu")
+        ),
+        "semantic_validator_requires_top_level_fields": (
+            "accelerator_has_top_level_openvino_fields" in texts["semantic_constants"]
+            and "openvino_gpu1" in texts["semantic_validator"]
+        ),
+        "no_git_restore_docs": "git restore docs" not in joined.lower(),
+    }
+    report = {"passed": all(checks.values()), "checks": checks, "visibility": visibility}
+    print(json.dumps(report, indent=2))
+    return 0 if report["passed"] else 1
 
 
 if __name__ == "__main__":
