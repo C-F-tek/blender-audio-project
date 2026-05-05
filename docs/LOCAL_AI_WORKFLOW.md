@@ -19,6 +19,16 @@ All local-AI run profiles are launcher modes, profiles or flags. This includes q
 
 Do not start full local-AI work from legacy wrappers. Supporting wrappers remain implementation lanes behind the launcher and must be visible in launcher manifest/status/report surfaces when used.
 
+## TUTTO SU TUTTO workflow contract
+
+The full workflow is **TUTTO SU TUTTO**.
+
+`-Full0To10` means every active repository-understanding lane participates unless it is explicitly disabled, unavailable, or recorded as degraded. `quick`, `balanced`, `deep` and `custom` are intensity profiles only; they change budgets and depth, not the lane set.
+
+The perimeter of `tutto` is expandable. When a new stable lane is promoted, such as a broker tool, validator, provider diagnostic, repository-consistency report, project-tool registry, memory/context builder or evidence surface, update this workflow, the launcher contract and the task index so the new lane is either included in the full flow or explicitly excluded with rationale.
+
+A full workflow is not complete when a lane silently disappears. Missing phases must be visible in manifest, telemetry, warnings or errors.
+
 ## Current provider mapping
 
 ```text
@@ -66,6 +76,8 @@ Required reading order after a run:
 launcher command from unified-local-ai-refactor-launcher.md
 unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
+telemetry summary / runtime tool telemetry / capability manifest
+shared production AI-to-AI bundle
 compact Markdown or CSV summaries
 detailed evidence only when needed
 ```
@@ -81,6 +93,51 @@ context_files
 report_files
 compact Markdown summary
 CSV/JSON inventory
+```
+
+## Telemetry-first AI reasoning rule
+
+Telemetry is a primary reasoning input for local and cloud AI agents.
+
+The next AI must inspect telemetry before deciding that a run succeeded, failed or degraded. File existence alone is insufficient.
+
+Required telemetry/capability surfaces include:
+
+```text
+runtime_tool_usage_telemetry_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md
+full_toolbox_run_telemetry_summary_<STAMP>.json/md
+shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+```
+
+AI-critical fields include:
+
+```text
+tool_call_entry_count
+executed_count
+failed_count
+blocked_count
+broker_reports
+provider_advisory_state
+provider_failure_reasons
+degraded_provider_components
+gpu_metrics_source
+round_duration_source
+patch_application_performed
+source_writes_performed
+```
+
+Use these fields to distinguish:
+
+```text
+executed
+failed
+blocked
+degraded
+intentionally disabled
+unavailable
+planned-only dry run
 ```
 
 ## Length policy
@@ -116,19 +173,22 @@ docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.json
 ```
 
-Validated decisions:
+Validated production states:
 
 ```text
-ollama_gpu_primary_advisory: true
-npu_excluded_when_unusable: true
-provider_execution_seen: true
-npu_decode_smoke_passed: true
+broker telemetry validated by run 20260505-073332
+provider diagnostics and deterministic recovery validated by run 20260505-081141
+GPU sync timing source smoke validated with rounds[*].elapsed_seconds
+ollama_gpu_primary_advisory remains explicit and quality-gated
+npu_excluded_when_unusable=true
+npu_decode_smoke_passed=true in previous evidence
 ```
 
 Operational meaning:
 
-- Ollama/GPU is usable as primary advisory provider when explicitly enabled.
-- The old NPU workload report remains excluded from advisory context because it is numeric/hex-like.
+- Ollama/GPU is usable as primary advisory provider when explicitly enabled and quality-gated.
+- Provider failure must be reported through provider failure reasons and degraded components.
+- The old NPU workload report remains excluded from advisory context when it is numeric/hex-like.
 - NPU/OpenVINO can execute a short decode smoke successfully through the dedicated NPU Python.
 - NPU is not yet promoted to a general advisory lane.
 
@@ -152,7 +212,10 @@ Repository context and local reports
   -> full-context golden proposal families when requested
   -> proposal-derived draft patch specs
   -> reviewed dry-run patch specs from explicit replacement plans
+  -> runtime broker telemetry and capability manifest
+  -> full toolbox telemetry summary
   -> compact evidence bundle with report, patch-plan and artifact-manifest summaries
+  -> shared production AI-to-AI bundle
   -> GitHub/master-AI review
 ```
 
@@ -173,6 +236,10 @@ Repository context and local reports
 | Ollama advisory | `Tools/workflow/run_post_validation_ai_packet.ps1` | advisory packet/proposals and manifest | provider/advisory implementation lane |
 | Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals | provider implementation lane |
 | Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | integrated full-toolbox report when selected | supporting selected phase only, not entrypoint |
+| Runtime broker | `Tools/ai/agent_runtime_tool_broker.py` | broker report and runtime tool usage telemetry | supporting full-toolbox lane |
+| Runtime capability manifest | `Tools/ai/build_runtime_tool_capability_manifest.py` | runtime tool capability manifest JSON/MD | production handoff |
+| Telemetry summary | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | full toolbox run telemetry summary JSON/MD | production handoff |
+| Production bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | shared toolbox AI-to-AI bundle and final summary | production handoff |
 | Patch specs | patch-spec builders/validators | review-only patch-spec manifest and validation report | `patch_specs` mode |
 | Reset | unified launcher reset mode | reset plan JSON/Markdown | `reset` mode |
 
@@ -304,6 +371,7 @@ For evidence commands, use the unified launcher runbook or tool-specific README.
 
 - Start full 0-to-10 flows from the unified launcher.
 - Route quick tests, full tests, provider tests and full validation through launcher modes/profiles whenever possible.
+- Preserve TUTTO SU TUTTO lane coverage for every full-run intensity.
 - Provider execution must be explicit.
 - Advisory context must be quality-filtered before content is read.
 - NPU promotion to advisory requires workload quality evidence, not just decode smoke.
@@ -317,6 +385,7 @@ For evidence commands, use the unified launcher runbook or tool-specific README.
 - Proposal-derived patch specs remain draft-only under `output/patch_specs/` until reviewed and dry-run.
 - Reviewed patch specs are still manual-review-only and must not be queued or applied without a separate explicit approval.
 - Every active phase must expose manifest/report/summary visibility.
+- Telemetry and capability manifests must travel with AI-to-AI handoff bundles.
 - Long bundles must have compact companion manifests.
 - No destructive overwrite of source or analysis data.
 - No Blender runtime changes unless explicitly scoped.
@@ -327,6 +396,7 @@ For evidence commands, use the unified launcher runbook or tool-specific README.
 - Treat local AI output as draft material until validated.
 - Use the unified launcher for all full/quick/deep local AI runs.
 - Use launcher-selected multistep mode for large MD/code analysis and large artifact generation.
+- Use telemetry before declaring a lane successful, failed, blocked, degraded or intentionally skipped.
 - Keep generated packages or workflow outputs separated by task/version.
 - Do not merge unrelated generated packages automatically.
 - Preserve full analysis JSON files.
