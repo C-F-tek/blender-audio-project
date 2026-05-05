@@ -6,14 +6,21 @@ This guide defines how guardrails, schema validation and evaluation-style workfl
 
 It adapts guardrails/evals concepts into local repository rules without adding mandatory external runtime dependencies.
 
+This document is guidance, not a command catalog. Current executable examples live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
+```
+
 ## Core rule
 
-AI-generated output is not accepted because it looks plausible. It is accepted only after it passes the relevant local contracts.
+AI-generated output is not accepted because it looks plausible. It is accepted only after it passes the relevant local contracts and its execution context is visible.
 
 For this project, that means:
 
 ```text
-model output
+model/tool output
   -> parse
   -> normalize
   -> schema validation
@@ -21,6 +28,28 @@ model output
   -> Blender compatibility validation when relevant
   -> generated Python policy validation when relevant
   -> report
+  -> manifest/phase visibility when part of launcher flow
+  -> telemetry/capability companion when tools/providers/patch plans are involved
+  -> shared AI-to-AI bundle when part of production handoff
+```
+
+## Full-run guardrail doctrine
+
+`Full0To10` is **TUTTO SU TUTTO**.
+
+A full-run artifact, recommendation, evidence bundle, patch plan or patch spec is not complete unless the handoff also carries the telemetry/capability context needed to interpret it.
+
+Telemetry is a guardrail accessory. It does not replace schema validation, evidence or patch plans; it explains whether the relevant lanes executed, failed, were blocked, degraded, disabled or planned-only.
+
+Guardrails must prevent these false positives:
+
+```text
+artifact exists -> therefore success
+patch plan exists -> therefore safe to apply
+provider report exists -> therefore provider succeeded
+NPU smoke passed -> therefore NPU is advisory-ready
+dry-run matrix passed -> therefore Full0To10 passed
+reviewed patch spec exists -> therefore queued/apply is authorized
 ```
 
 ## Local validation assets
@@ -29,10 +58,14 @@ model output
 |---|---|
 | `Tools/validation/` | Non-invasive validation scripts. |
 | `docs/JSON_SCHEMAS.md` | Existing JSON schema notes and report contract map. |
-| `docs/AI_ARTIFACT_SCHEMAS.md` | AI artifact schema notes. |
+| `docs/AI_ARTIFACT_SCHEMAS.md` | AI artifact, telemetry and bundle schema notes. |
 | `docs/QUALITY_GATE.md` | Acceptance rules for generated packages. |
-| `Tools/ai/run_pipeline_dry_run_matrix.py` | Repeatable AI pipeline dry-run matrix. |
-| `output/validation/` | Recommended validation report output folder. |
+| `Tools/ai/run_pipeline_dry_run_matrix.py` | Repeatable AI pipeline dry-run matrix. Planned-only proof, not full-run proof. |
+| `Tools/ai/build_runtime_tool_usage_telemetry.py` | Runtime tool usage telemetry. |
+| `Tools/ai/build_runtime_tool_capability_manifest.py` | Runtime tool capability and guardrail manifest. |
+| `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Full-run telemetry summary. |
+| `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production AI-to-AI bundle. |
+| `output/validation/` | Recommended local validation report output folder. Ignored unless compact evidence is promoted. |
 | `docs/EXECUTION_PLANS/` | Durable task records for complex validation/refactor work. |
 
 ## Required validation dimensions
@@ -43,10 +76,11 @@ Generated JSON must parse as JSON.
 
 Generated Python must pass syntax checks before it is considered usable.
 
-Recommended command:
+Command ownership:
 
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/validation/README.md
 ```
 
 ### 2. Schema conformance
@@ -72,6 +106,18 @@ Patch-related artifacts should also include:
 target_files
 safe_write_plan
 review_notes
+manual_review_only
+patch_application_performed
+source_writes_performed
+```
+
+Full-run-derived artifacts should also reference the companion handoff surfaces:
+
+```text
+runtime_tool_usage_telemetry
+runtime_tool_capability_manifest
+full_toolbox_run_telemetry_summary
+shared_ai_to_ai_bundle_or_final_summary
 ```
 
 ### 3. Repository path safety
@@ -83,7 +129,8 @@ Rules:
 - do not write outside the repository root;
 - do not overwrite raw frame-by-frame analysis JSON files;
 - prefer `output/`, `indexAI/patch_library/`, `Scripting/v61b/hotpatch/` or explicit safe folders;
-- use patch specs for mechanical edits when reviewability matters.
+- use patch specs for mechanical edits when reviewability matters;
+- never treat `output/**` or SQLite DB files as Git-tracked handoff artifacts.
 
 ### 4. Blender compatibility
 
@@ -105,13 +152,35 @@ Generated scene scripts should preserve:
 - render configuration;
 - output path configuration.
 
+Blender/audio/media runtime remains application-domain work and must not be triggered by normal AI/tooling full-run validation.
+
 ### 5. Policy validation
 
-Use existing policy validators for generated files:
+Use existing policy validators for generated files. Commands are owned by the unified launcher runbook and `Tools/validation/README.md`.
 
-```powershell
-python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --output .\output\validation\generated_artifact_path_policy.json
+### 6. Telemetry and capability validation
+
+When tools, broker calls, provider lanes or patch plans participate in a production handoff, validate or inspect the companion surfaces:
+
+```text
+runtime_tool_usage_telemetry_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md
+full_toolbox_run_telemetry_summary_<STAMP>.json/md
+shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+```
+
+Required questions:
+
+```text
+which tools executed
+which failed
+which were blocked
+which capabilities were available
+which provider lanes degraded
+whether deterministic recovery was used
+whether source writes happened
+whether patch application happened
 ```
 
 ## Guardrail failure behavior
@@ -136,6 +205,8 @@ Recommended report shape:
 }
 ```
 
+Provider fallback or deterministic recovery must also be visible in telemetry/bundle summaries when relevant.
+
 ## Evaluation-style workflow
 
 For repeatable AI work, prefer a small fixture/eval set:
@@ -143,9 +214,10 @@ For repeatable AI work, prefer a small fixture/eval set:
 ```text
 input fixture
   -> expected artifact shape
-  -> validation command
+  -> validation command owner
   -> report path
   -> pass/fail result
+  -> telemetry/capability companion when the artifact joins full-run handoff
 ```
 
 Good future locations:
@@ -166,7 +238,9 @@ When a prompt or provider changes, the agent should check:
 - whether validation reports still pass;
 - whether generated code policy still passes;
 - whether paths remain safe;
-- whether output quality degraded in obvious ways.
+- whether output quality degraded in obvious ways;
+- whether telemetry reports provider degradation or deterministic recovery;
+- whether the shared AI-to-AI bundle still carries evidence, patch-plan and telemetry references together.
 
 ## Practical acceptance checklist
 
@@ -179,31 +253,8 @@ An AI artifact is acceptable when:
 - it does not require unapproved dependencies;
 - it has a validation report;
 - it states unresolved uncertainty;
-- it does not bypass existing workflow docs.
-
-## Commands
-
-Fast general checks:
-
-```powershell
-python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\output\validation\json_artifacts.json
-python .\Tools\validation\check_package_structure.py --repo-root . --output .\output\validation\package_structure.json
-```
-
-AI pipeline checks:
-
-```powershell
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
-```
-
-NPU helper checks:
-
-```powershell
-python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
-python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
-python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
-```
+- it does not bypass existing workflow docs;
+- it has telemetry/capability companion context when it comes from or feeds a full-run evidence/patch-plan lane.
 
 ## Non-goals
 
