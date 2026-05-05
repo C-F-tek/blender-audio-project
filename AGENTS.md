@@ -140,6 +140,20 @@ Disablers must be explicit:
 
 Do not accept silent fallback such as provider requested but quality routing missing.
 
+## Full-run intensity rule
+
+Every `-Full0To10` variation is TUTTO SU TUTTO.
+
+`-RunIntensity quick|balanced|deep|custom` changes budget, rounds, context limits, token limits and keep-alive only. It must not remove core lanes, downgrade evidence coverage, skip broker telemetry or replace a full run with a smoke run.
+
+A missing full-run lane is valid only when one of these is true:
+
+```text
+explicit -No* disabler is present
+manifest/report records unavailable-tool or provider failure
+-DryRun records the phase as planned but not executed
+```
+
 ## Important folders
 
 | Path | Meaning |
@@ -197,6 +211,21 @@ renders/**
 raw checkpoints
 large full analysis JSON outside compact evidence policy
 ```
+
+## Patch delivery policy
+
+Small documentation edits and tiny code fixes may be patched directly.
+
+For long, multi-file or delicate changes, especially on workflow, broker, memory, GPU/NPU provider or runner code, produce a ZIP patch bundle with:
+
+```text
+README.md
+run_patch_bundle.py
+patches/00_check_repo_ready.py
+patches/01_*.py
+```
+
+Patch bundles must be idempotent where possible, block on unexpected dirty working trees, print resulting line counts for modified scripts and never commit automatically.
 
 ## Refactoring rules
 
