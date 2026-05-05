@@ -1,0 +1,69 @@
+# Semantic Evidence Chunk Manifest
+
+- Passed: `True`
+- Generated at: `2026-05-06T00:46:14`
+- Ollama enabled: `False`
+- Ollama model: `gpt-oss:20b`
+- Chunk files: `109`
+
+## Sources
+
+- `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_20260506-004242.json` chunks=`77` lines=`12879` sha256=`c864da5fd516aa685489f057d8a0ae3e0c08d6dc98e285cc80d1506f4ac69c9c`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0001.md` lines `2-55` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0002.md` lines `56-393` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0003.md` lines `394-542` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0004.md` lines `543-698` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0005.md` lines `699-843` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0006.md` lines `844-949` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0007.md` lines `950-1019` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0008.md` lines `1020-1091` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0009.md` lines `1092-1163` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0010.md` lines `1164-1179` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0011.md` lines `1180-1220` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0012.md` lines `1221-1235` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0013.md` lines `1236-1250` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0014.md` lines `1251-1306` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0015.md` lines `1307-1357` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0016.md` lines `1358-1387` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0017.md` lines `1388-1432` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0018.md` lines `1433-1629` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0019.md` lines `1630-1653` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_json_c864da5fd516_chunk_0020.md` lines `1654-1694` summary_source=`deterministic`
+  - ... 57 more chunks
+- `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_20260506-004242.md` chunks=`23` lines=`4033` sha256=`1c6ca878108bf258e2ebc1cd48150d2c84e572c408d6569c20d633ae72ea7ef3`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0001.md` lines `1-270` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0002.md` lines `271-388` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0003.md` lines `389-462` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0004.md` lines `463-724` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0005.md` lines `725-787` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0006.md` lines `788-1099` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0007.md` lines `1100-1149` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0008.md` lines `1150-1237` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0009.md` lines `1238-1310` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0010.md` lines `1311-1527` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0011.md` lines `1528-1600` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0012.md` lines `1601-1851` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0013.md` lines `1852-2049` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0014.md` lines `2050-2152` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0015.md` lines `2153-2304` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0016.md` lines `2305-2570` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0017.md` lines `2571-2760` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0018.md` lines `2761-2857` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0019.md` lines `2858-3075` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_agent_review_decision_loop_20260506-004242_md_1c6ca878108b_chunk_0020.md` lines `3076-3218` summary_source=`deterministic`
+  - ... 3 more chunks
+- `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_20260506-004242.json` chunks=`3` lines=`659` sha256=`3defd2230b538951148f7590f61fbfea8084f997eafcc5001ecac118b97bbc4c`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_run_telemetry_summary_20260506-004242_json_3defd2230b53_chunk_0001.md` lines `2-295` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_run_telemetry_summary_20260506-004242_json_3defd2230b53_chunk_0002.md` lines `296-631` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_run_telemetry_summary_20260506-004242_json_3defd2230b53_chunk_0003.md` lines `632-659` summary_source=`deterministic`
+- `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_20260506-004242.md` chunks=`1` lines=`71` sha256=`dc072de951745595428a47028c511ae224db1253e57027f9387b9c89a4f8afc9`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/full_toolbox_run_telemetry_summary_20260506-004242_md_dc072de95174_chunk_0001.md` lines `1-71` summary_source=`deterministic`
+- `docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_20260506-004242.json` chunks=`1` lines=`216` sha256=`0b25a0f08fa57f340edd73088522ae5af02737e3fa37ea3494522eac9e42fe05`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/runtime_tool_usage_telemetry_20260506-004242_json_0b25a0f08fa5_chunk_0001.md` lines `2-216` summary_source=`deterministic`
+- `docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_20260506-004242.md` chunks=`1` lines=`33` sha256=`5a4e21b2f4ec273408ab2c9d23420592dee73afe3fc61fe35ae281074f5c6ce3`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/runtime_tool_usage_telemetry_20260506-004242_md_5a4e21b2f4ec_chunk_0001.md` lines `1-33` summary_source=`deterministic`
+- `docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_20260506-004242.json` chunks=`2` lines=`447` sha256=`4a4c7cfa43c8f3d698f5631355afc3f92ecc521a52a88df06a3da1325f35292f`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/runtime_tool_capability_manifest_20260506-004242_json_4a4c7cfa43c8_chunk_0001.md` lines `2-392` summary_source=`deterministic`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/runtime_tool_capability_manifest_20260506-004242_json_4a4c7cfa43c8_chunk_0002.md` lines `393-447` summary_source=`deterministic`
+- `docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_20260506-004242.md` chunks=`1` lines=`194` sha256=`2ecdec169282347ca5453b469da929137990fb33537d276cf68238df4eb3099c`
+  - `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_20260506-004242_cloud_semantic_deterministic_chunks/runtime_tool_capability_manifest_20260506-004242_md_2ecdec169282_chunk_0001.md` lines `1-194` summary_source=`deterministic`
