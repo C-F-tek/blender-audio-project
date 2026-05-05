@@ -27,6 +27,25 @@ This policy covers shell, GUI, debug, diagnostics, supporting workflow wrappers 
 | `Tools/workflow/startup_preflight.ps1` | diagnostic-only | Startup/preflight helper. |
 | `Tools/workflow/startup_check.py` | diagnostic-only | Startup check helper. |
 
+## Full-run helper rule
+
+Helpers may support the full-run flow, but they must not redefine it.
+
+A helper is non-compliant if it:
+
+```text
+turns quick Full0To10 into a partial run
+omits a full-run lane without an explicit No* disabler or visible warning
+runs provider diagnostics outside explicit provider/probe controls
+hides runtime broker telemetry
+hides runtime capability manifests
+hides full toolbox telemetry summary
+bypasses the shared AI-to-AI bundle
+turns a smoke helper into evidence for a full run
+```
+
+`TUTTO SU TUTTO` remains owned by the unified launcher and its contract. Helper scripts may adjust implementation details, but they cannot narrow the full-run semantic scope.
+
 ## Promotion rule
 
 A helper can become part of the active flow only if the unified launcher records it visibly.
@@ -38,11 +57,41 @@ launcher parameter or selected mode
 phase_status entry
 phase_reports entry when a report is produced
 manifest field for any provider/memory/patch/evidence behavior
+runtime telemetry or capability manifest when broker/tool execution is involved
 runbook mention in unified-local-ai-refactor-launcher.md
 contract mention in UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md when manifest shape changes
 ```
 
 No helper may become a hidden side-channel for provider execution, SQLite writes, patch application, evidence generation or git push.
+
+## Telemetry and capability rule
+
+Any helper that executes tools, probes providers, contributes evidence, builds patch specs or participates in full-run handoff must make its output machine-readable.
+
+Acceptable surfaces:
+
+```text
+unified manifest phase_status
+unified manifest phase_reports
+runtime_tool_usage_telemetry_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md
+full_toolbox_run_telemetry_summary_<STAMP>.json/md
+shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+```
+
+Future AI agents must be able to answer:
+
+```text
+what executed
+what failed
+what was blocked
+what was intentionally disabled
+what provider/tool capability was available
+what was degraded
+whether source writes or patch application happened
+```
+
+File existence alone is not sufficient evidence.
 
 ## Shell and GUI helpers
 
@@ -60,6 +109,7 @@ Policy:
 may be used for local operator convenience
 must not be documented as the default full 0-to-10 path
 must not hide provider execution or patch application
+must not bypass telemetry/capability reporting when executing tools
 must keep git status/diff visibility before write/push operations
 ```
 
@@ -89,7 +139,7 @@ must not push generated DB/output/cache files
 A push-capable helper is not allowed to bypass the normal review flow:
 
 ```text
-manifest -> phase reports -> git diff/status -> explicit operator approval -> push
+manifest -> phase reports -> telemetry/capability surfaces when relevant -> git diff/status -> explicit operator approval -> push
 ```
 
 ## Context/domain helpers
@@ -141,6 +191,17 @@ If it becomes part of the unified launcher, also update:
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
+If it becomes part of `Full0To10`, also update the full-run perimeter docs:
+
+```text
+AGENTS.md
+README.md
+WORKFLOW.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/DATA_FLOW.md
+docs/LOCAL_AI_WORKFLOW.md
+```
+
 ## Audit command
 
 Use script inventory before promoting or deleting helpers:
@@ -173,9 +234,11 @@ make a push-capable helper look like the default workflow
 hide a provider execution path
 hide patch application
 hide git branch/remote target
+hide telemetry or capability reporting for executed tools
 promote a GUI/shell helper above the unified launcher
 remove a script reference without confirming the script is absent or obsolete
 create a new parallel active-start runbook instead of extending the unified launcher
+narrow Full0To10 coverage through a helper-specific shortcut
 ```
 
 ## Acceptance criteria
@@ -187,5 +250,7 @@ push-capable helpers have explicit risk warnings
 diagnostics are separated from normal validation
 script inventory is the source for broad helper audits
 helpers wired into launcher are visible in manifest/status/report surfaces
+helpers executing tools expose telemetry/capability surfaces when relevant
+no helper narrows TUTTO SU TUTTO full-run coverage
 no helper is deleted without explicit approval
 ```
