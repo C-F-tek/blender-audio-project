@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the minimum quality checks for Blender packages, AI-generated scripts, documentation updates, shared utilities, model-output parsing, generated-file validators and local-AI full-run handoffs in this repository.
+This document defines the minimum quality checks for Blender packages, AI-generated scripts, documentation updates, shared utilities, model-output parsing, generated-file validators and local-AI run-unica handoffs in this repository.
 
 The goal is to keep generated work useful, testable, maintainable and safe to review without breaking existing working packages.
 
@@ -10,16 +10,26 @@ This document is a policy guide, not a command catalog. Current executable examp
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
 ```
 
-## Full-run quality gate
+Large validator/tool catalogs such as `Tools/validation/README.md` are references only and must not become primary operational entrypoints if too large or truncated.
 
-`Full0To10` means **TUTTO SU TUTTO**.
+## Run-unica quality gate
 
-A full-run quality gate passes only when the handoff can show what happened across active lanes. Evidence, recommendations, patch plans and patch specs are incomplete without companion telemetry/capability context.
+Current doctrine:
 
-Required full-run handoff group:
+```text
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters, not scope
+-No* flags = explicit opt-out from selected lanes
+CSV/index/discovery surfaces are evidence lanes when relevant
+large Markdown must not be a primary operational entrypoint
+```
+
+A run-unica quality gate passes only when the handoff can show what happened across active lanes. Evidence, recommendations, patch plans and patch specs are incomplete without companion telemetry/capability context and relevant discovery/count context.
+
+Required run-unica handoff group:
 
 ```text
 launcher manifest
@@ -30,9 +40,11 @@ runtime tool usage telemetry when tools/broker lanes ran
 runtime tool capability manifest when capabilities matter
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
+CSV/count summaries when inventory lanes ran
+discovery/index repair reports when relevant
 ```
 
-Telemetry is a completeness accessory. It does not replace validators, evidence or patch plans; it explains whether the producing lanes executed, failed, were blocked, degraded, disabled or planned-only.
+Telemetry is a completeness accessory. It does not replace validators, evidence or patch plans; it explains whether the producing lanes executed, failed, were blocked, degraded, disabled, unavailable or planned-only.
 
 Never accept these as proof by themselves:
 
@@ -43,6 +55,7 @@ dry-run matrix passed
 provider report exists
 NPU smoke passed
 reviewed patch spec exists
+large Markdown mentions it
 ```
 
 ## Quality levels
@@ -53,7 +66,7 @@ reviewed patch spec exists
 | Prototype | Runs partially or targets a single test | Acceptable for experiments. |
 | Candidate | Structured package/script with documented inputs and validators | Acceptable for application-level validation. |
 | Stable reference | Tested workflow used as a reference | Example: `Scripting/v61b/`. |
-| Full-run handoff | Evidence + patch plan + telemetry/capability/final summary | Required for production local-AI handoff. |
+| Run-unica handoff | Evidence + patch plan + telemetry/capability/final summary + relevant CSV/index/discovery context | Required for production local-AI handoff. |
 
 ## Architecture Boundary — Input-Agnostic / Output-Application-Agnostic
 
@@ -85,6 +98,7 @@ output-application validation
 generated Python script policy
 artifact/report contract validation
 runtime telemetry and capability interpretation
+CSV/index/discovery evidence interpretation
 ```
 
 ## Minimum quality gate for a new package
@@ -126,7 +140,7 @@ For Blender/audio packages, additionally document:
 
 ## Minimum documentation quality
 
-Every serious package, validator or full-run lane should answer:
+Every serious package, validator or run-unica lane should answer:
 
 1. What does this package, validator or lane create/check?
 2. Which file is the entry point?
@@ -139,7 +153,8 @@ Every serious package, validator or full-run lane should answer:
 9. What is not specified yet?
 10. What was tested?
 11. What should the next AI or developer avoid changing?
-12. Which telemetry/capability/final-summary surfaces accompany this lane when it enters full-run handoff?
+12. Which telemetry/capability/final-summary surfaces accompany this lane when it enters run-unica handoff?
+13. Which CSV/count or discovery/index surfaces accompany this lane when it affects repository-wide visibility or refactor/reuse work?
 
 ## Blender validation checklist
 
@@ -205,8 +220,9 @@ Command ownership:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
 ```
+
+Use validator/tool catalogs only as secondary references.
 
 ## Generic generated-file policy checklist
 
@@ -247,7 +263,9 @@ Tools/npu/npu_code_manifest.json
 
 Do not broaden these defaults casually. Use workflow-specific allowed prefixes only when deliberately scoped, then document why the destination is safe.
 
-Do not use `patch_specs/inbox/` as a normal full-run output. Queueing/applying patch specs remains an explicit reviewed action.
+Do not use `patch_specs/inbox/` as a normal run-unica output. Queueing/applying patch specs remains an explicit reviewed action.
+
+Do not treat `indexAI/code_chunks/**` as commit-ready source. Generated indexes/chunks are regenerated or repaired through explicit plan/report-first flows.
 
 ## AI model-output JSON checklist
 
@@ -314,7 +332,7 @@ Quality rules:
 - do not rewrite generated artifacts from the contract validator;
 - validate `agent_state_packet` metadata only when present;
 - validate referenced per-case schema-v6 reports without changing their field meanings;
-- never report dry-run matrix success as full-run success.
+- never report dry-run matrix success as run-unica Full0To10 success.
 
 For dry-run reports, every step must keep:
 
@@ -325,7 +343,7 @@ planned_only=true
 
 ## Runtime telemetry/capability checklist
 
-For full-run, provider, broker, recommendation or patch-plan handoff, inspect or provide:
+For run-unica, provider, broker, recommendation or patch-plan handoff, inspect or provide:
 
 ```text
 runtime_tool_usage_telemetry_<STAMP>.json/md
@@ -353,6 +371,33 @@ patch_application_performed
 source_writes_performed
 ```
 
+## Discovery/index/CSV-count checklist
+
+For refactor/reuse, repository-wide visibility, documentation cleanup or run-unica handoff, inspect or provide relevant surfaces:
+
+```text
+Markdown inventory JSON/MD
+script inventory JSON/CSV/MD
+Python line-count CSV/MD
+function/class/method inventory CSV
+semantic chunk manifest JSON/MD
+selected chunk evidence JSON/MD
+repository consistency map/smoke JSON/MD
+auto-discovery report
+index repair plan/report
+```
+
+Minimum semantics to verify:
+
+```text
+provider_execution_performed=false for pure inventory/count/report lanes
+source_writes_performed=false unless explicit apply/regeneration is selected
+patch_application_performed=false unless explicit patch apply is selected
+output paths stay under ignored output/** unless compact evidence is intentionally promoted
+indexAI/code_chunks/** is not commit-ready source
+index repair is plan/report-first unless explicitly requested
+```
+
 ## FFmpeg validation checklist
 
 FFmpeg validation is application-domain work and must be explicitly scoped.
@@ -378,7 +423,8 @@ An AI-generated change is acceptable only if it includes:
 - risks;
 - follow-up recommendations;
 - line counts for created or modified scripts;
-- telemetry/capability/final-summary context when it derives from full-run evidence or patch plans.
+- telemetry/capability/final-summary context when it derives from run-unica evidence or patch plans;
+- discovery/index/CSV-count context when it derives from refactor/reuse, inventory or repository-wide evidence.
 
 ## Non-destructive rule
 
@@ -410,8 +456,9 @@ Reject or review carefully when a generated change:
 - adds paid or external AI GitHub Actions without explicit opt-in;
 - uses prompt-based repair where deterministic parsing is available;
 - hardens report schemas so much that additive future fields fail validation;
-- claims full-run success from dry-run, focused validator, provider report, NPU smoke or file existence alone;
-- presents evidence or patch plans without telemetry/capability/final-summary context when the output derives from a full run.
+- claims run-unica Full0To10 success from dry-run, focused validator, provider report, NPU smoke, oversized Markdown or file existence alone;
+- presents evidence or patch plans without telemetry/capability/final-summary context when the output derives from run-unica evidence;
+- presents refactor/reuse or repository-wide plans without relevant discovery/index/CSV-count context.
 
 ## Current reference
 
@@ -432,7 +479,7 @@ The current report-contract validator reference is:
 Tools/validation/check_ai_dry_run_matrix_contract.py
 ```
 
-The current full-run telemetry/handoff reference is:
+The current run-unica telemetry/handoff reference is:
 
 ```text
 Tools/ai/build_runtime_tool_usage_telemetry.py
