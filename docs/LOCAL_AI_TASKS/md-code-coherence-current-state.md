@@ -5,13 +5,13 @@
 - Markdown scanned: `443`
 - Python scripts scanned: `582`
 - PowerShell scripts scanned: `44`
-- Finding count: `805`
-- By severity: `{"high": 261, "low": 163, "medium": 381}`
+- Finding count: `755`
+- By severity: `{"high": 211, "low": 163, "medium": 381}`
 
 ## Finding classes
 
 - `stale-or-historical`: `329`
-- `active-current`: `261`
+- `active-current`: `211`
 - `unknown`: `81`
 - `placeholder-template`: `65`
 - `historical-or-handoff`: `36`
@@ -22,7 +22,7 @@
 
 ## Finding kinds
 
-- `markdown_reference_missing`: `771`
+- `markdown_reference_missing`: `721`
 - `markdown_python_command_missing_script`: `13`
 - `markdown_powershell_flag_not_in_param_block`: `8`
 - `markdown_python_flag_not_in_argparse`: `8`
