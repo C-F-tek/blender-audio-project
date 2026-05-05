@@ -121,9 +121,9 @@ Keep CHATGPT notes small, plain Markdown and useful to local context pack builde
 ## Current provider posture
 
 ```text
-Ollama/GPU is the primary advisory lane when explicitly enabled and quality-gated.
-NPU/OpenVINO is a validated smoke/probe/diagnostic lane, not general advisory.
-Provider execution must be explicit and report-bound.
+Ollama/GPU is the primary advisory lane for Full0To10 unless explicitly disabled or diagnosed unavailable.
+NPU/OpenVINO is a validated smoke/probe/diagnostic lane for Full0To10 unless explicitly disabled or diagnosed unavailable.
+Provider execution is explicit when Full0To10 or a provider mode/flag is selected; it is not an extra per-lane opt-in.
 Visible provider degradation can be acceptable when quality-gated and recovered in telemetry/bundle evidence.
 Blender runtime is frozen unless explicitly scoped.
 ```
