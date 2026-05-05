@@ -13,20 +13,24 @@ This file is report-only. It does not authorize deletion by itself.
 | Rank | File | Role | Rule |
 |---:|---|---|---|
 | 1 | `AGENTS.md` | Hard AI/agent contract | Keep short; guardrails only. |
-| 2 | `README.md` | Human project identity | Keep short; link to workflows. |
-| 3 | `WORKFLOW.md` | Operational lifecycle | Keep short; no scenario-specific long runs. |
-| 4 | `docs/README.md` | Documentation index | Single reading flow and doc family map. |
-| 5 | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | Markdown lifecycle and pruning policy | Cleanup control point. |
-| 6 | `docs/LOCAL_AI_RUN_BOOTSTRAP.md` | Local checkout bootstrap | Local-run prerequisites. |
-| 7 | `docs/LOCAL_AI_TASKS/README.md` | Task routing | Current vs historical task entrypoints. |
-| 8 | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Unified local AI entrypoint | Canonical active local AI / 0-to-10 runbook. |
-| 9 | `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` | Current code/tool/evidence flow | Launcher, provider, broker, telemetry, bundle and evidence flow. |
-| 10 | `docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md` | Tool placement audit | Repository-wide tool/candidate classification, including non-canonical scripts. |
-| 11 | `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` | Tool promotion guide | Rules for project-tool, broker-tool and full-run-lane promotion. |
-| 12 | `docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md` | Audio/media guardrail | Prevents unintended media output in AI/tooling runs. |
-| 13 | `Tools/validation/README.md` | Validator catalog | Tool commands and contracts only. |
+| 2 | `CHATGPT.md` | ChatGPT memory pointer | Current handoff and session-memory index. |
+| 3 | `CHATGPT/README.md` | ChatGPT memory index | Compact reading order for resumed sessions. |
+| 4 | `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` | Current branch state bridge | Start here for PR #187 phase context. |
+| 5 | `README.md` | Human project identity | Keep short; link to workflows. |
+| 6 | `WORKFLOW.md` | Operational lifecycle | Keep short; no scenario-specific long runs. |
+| 7 | `docs/README.md` | Documentation index | Single reading flow and doc family map. |
+| 8 | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | Markdown lifecycle and pruning policy | Cleanup control point. |
+| 9 | `docs/LOCAL_AI_RUN_BOOTSTRAP.md` | Local checkout bootstrap | Local-run prerequisites. |
+| 10 | `docs/LOCAL_AI_TASKS/README.md` | Task routing | Current vs historical task entrypoints. |
+| 11 | `docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` | Current active refactor/reuse task | Review-only current task for run `20260505-143844`. |
+| 12 | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Unified local AI run-unica entrypoint | Canonical parameterized launcher runbook. |
+| 13 | `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` | Current code/tool/evidence flow | Launcher, provider, broker, telemetry, discovery, CSV, bundle and evidence flow. |
+| 14 | `docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md` | Tool placement audit | Repository-wide tool/candidate classification, including non-canonical scripts. |
+| 15 | `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` | Tool promotion guide | Rules for project-tool, broker-tool and full-run-lane promotion. |
+| 16 | `docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md` | Audio/media guardrail | Prevents unintended media output in AI/tooling runs. |
+| 17 | `Tools/validation/README.md` | Validator catalog | Tool commands and contracts only. |
 
-Legacy monolithic 0-to-10 runbooks have been removed or demoted from the active documentation set. The unified launcher is now the only active 0-to-10 entrypoint.
+Legacy monolithic 0-to-10 runbooks have been removed or demoted from the active documentation set. The unified launcher is now the only active run-unica entrypoint.
 
 Historical detail, when needed, must come from:
 
@@ -38,21 +42,28 @@ scoped task handoffs that are explicitly referenced by the current task
 
 Do not recreate parallel active-start runbooks for full-toolbox, code-refactor or Markdown-refactor flows.
 
-## TUTTO SU TUTTO pruning rule
+## Run unica / TUTTO SU TUTTO pruning rule
 
-Markdown that describes a full local-AI run must preserve **TUTTO SU TUTTO**.
+Markdown that describes local-AI execution must preserve the run-unica doctrine:
+
+```text
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters
+-No* flags = explicit opt-out from selected lanes
+```
 
 Allowed distinctions:
 
 ```text
-quick    = full scope with reduced budget
-balanced = full scope with standard budget
-deep     = full scope with expanded budget
-custom   = full scope with operator-defined budget
+quick    = same perimeter with reduced budget
+balanced = same perimeter with standard budget
+deep     = same perimeter with expanded budget
+custom   = same perimeter with operator-defined parameters
 smoke    = separate non-full mode
 ```
 
-Prune or rewrite docs that imply a quick full run is a partial run, that legacy wrappers are first entrypoints, or that a full run may silently skip core lanes.
+Prune or rewrite docs that imply a quick Full0To10 run is a partial run, that legacy wrappers are first entrypoints, or that a run-unica flow may silently skip core lanes.
 
 The perimeter of `tutto` is expandable. When new stable lanes or data surfaces are added, update the canonical docs and demote older docs that describe a smaller stale perimeter as historical/supporting.
 
@@ -69,7 +80,7 @@ phase_status / phase_reports
 runtime tool telemetry and capability manifest
 full toolbox telemetry summary
 production AI-to-AI bundle
-compact Markdown or CSV summaries
+compact Markdown or CSV/count summaries
 detailed evidence only when needed
 ```
 
@@ -82,9 +93,11 @@ context_files
 report_files
 compact Markdown summary
 CSV/JSON inventory
+CSV/count surface
 runtime broker telemetry when broker tools are involved
 runtime capability manifest when broker/capability data is relevant
 full toolbox telemetry summary for production AI-to-AI handoff
+auto-discovery/index repair report when scanner/index drift is suspected
 ```
 
 Do not use a long generated bundle as the first operational interface.
@@ -114,6 +127,35 @@ shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
 shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
 ```
 
+## Discovery/index/CSV pruning rule
+
+Discovery and count surfaces are evidence, not source authority.
+
+Docs are stale if they:
+
+```text
+treat generated indexes or code chunks as manually maintained source
+commit or recommend committing output/** as ordinary source
+commit or recommend committing indexAI/code_chunks/**
+omit Python line-count CSV/MD from refactor/reuse review reporting
+omit function/class/method CSV from duplication/helper-reuse review
+treat index repair as automatic source mutation instead of plan/report-first
+```
+
+Canonical discovery/count surfaces:
+
+```text
+Markdown inventory JSON/MD
+script inventory JSON/CSV/MD
+function/class/method inventory CSV
+Python line-count CSV/MD
+semantic chunk manifest JSON/MD
+selected chunk evidence JSON/MD
+repository consistency map/smoke JSON/MD
+auto-discovery report
+index repair plan/report
+```
+
 ## Length and readability policy
 
 | File type | Preferred maximum | Required action when exceeded |
@@ -137,11 +179,13 @@ Do not create new monolithic AI-to-AI bundles without companion manifests.
 | Family | Pattern | Owner | Lifecycle |
 |---|---|---|---|
 | Root entrypoints | `AGENTS.md`, `README.md`, `WORKFLOW.md` | Root flow | Canonical, concise |
+| ChatGPT memory | `CHATGPT.md`, `CHATGPT/*.md` | ChatGPT memory index | Advisory operational memory |
 | Stable docs | `docs/*.md` | `docs/README.md` | Maintained source docs |
 | Task runbooks | `docs/LOCAL_AI_TASKS/*.md` | `docs/LOCAL_AI_TASKS/README.md` | Current task input, supporting detail or historical handoff |
-| Current code/tool flow | `docs/LOCAL_AI_TASKS/current-code-flow-guide-*.md` | Local AI task index | Current launcher/provider/broker/telemetry/bundle/evidence flow |
+| Current operational state | `docs/LOCAL_AI_TASKS/current-operational-state-*.md` | Local AI task index | Current branch/run state bridge |
+| Current code/tool flow | `docs/LOCAL_AI_TASKS/current-code-flow-guide-*.md` | Local AI task index | Current launcher/provider/broker/telemetry/discovery/bundle/evidence flow |
 | Tool governance | `docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-*.md`, `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-*.md` | Local AI task index | Tool discovery, classification, promotion and insertion |
-| Runtime broker telemetry | `docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-*.md`, `docs/LOCAL_AI_TASKS/post-broker-runtime-telemetry-followup-*.md` | Local AI task index | Historical/validated P0 task and follow-up evidence; not an open P0 unless a newer run regresses. |
+| Runtime broker telemetry | `docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-*.md`, `docs/LOCAL_AI_TASKS/post-broker-runtime-telemetry-followup-*.md`, `docs/LOCAL_AI_TASKS/recent-telemetry-state-*.md` | Local AI task index | Historical/validated P0 task, follow-up evidence and recent baseline; not an open P0 unless a newer run regresses. |
 | Audio/media output guardrail | `docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-*.md` | Local AI task index | Guardrail for AI/tooling runs |
 | Execution plans | `docs/EXECUTION_PLANS/**/*.md` | `docs/EXECUTION_PLANS/README.md` | State records |
 | Evidence | `docs/LOCAL_VALIDATION_EVIDENCE/*` | Evidence builders | Snapshot evidence, not source docs |
@@ -159,6 +203,9 @@ Inventory roles:
 |---|---|---|
 | `build_markdown_inventory.py` | Classify `.md` files by family/lifecycle, missing index status, length class and prune candidates. | Local `output/**` unless converted to compact evidence. |
 | `build_script_inventory.py` | Censisce scripts/tools with language, category, lines, description, functions, classes and methods. | Local `output/**`; CSV is for refactor review, not automatic source change. |
+| Python line-count CSV/MD surface | Size evidence for refactor planning and review reporting. | Evidence surface only. |
+| Function/class/method CSV surface | Helper reuse, duplication and base-class opportunity review. | Evidence surface only. |
+| Auto-discovery/index repair report | Scanner/index drift detection and repair planning. | Plan/report-first; generated indexes are not source. |
 | `tool-inventory-placement-audit-2026-05-05.md` | Classifies canonical and non-canonical tool candidates across the full repository. | Maintained source doc. |
 | `project-tool-promotion-and-insertion-guide-2026-05-05.md` | Defines promotion rules for project tools, broker tools and full-run lanes. | Maintained source doc. |
 
@@ -169,11 +216,12 @@ The script inventory must be included in future refactor evidence together with 
 | Topic | Canonical target | Pruning rule |
 |---|---|---|
 | Provider lane policy | `AGENTS.md` for hard rule, `WORKFLOW.md` for lifecycle | Other docs link or summarize one line. |
-| Unified full 0-to-10 procedure | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | No copied command blocks in entrypoints. |
+| Run unica procedure | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | No copied command blocks in entrypoints. |
 | TUTTO SU TUTTO doctrine | `AGENTS.md`, `README.md`, `WORKFLOW.md`, `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Other docs may summarize but must not narrow scope. |
 | Current code/tool/evidence flow | `LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` | Other docs link or summarize. |
 | Telemetry-first AI handoff | `LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md`, `LOCAL_AI_WORKFLOW.md`, `DATA_FLOW.md` | Do not scatter conflicting success criteria. |
-| Runtime broker telemetry validated state | `PROJECT_STATUS_POINT.md` and `fix-final-runtime-broker-telemetry-task-2026-05-05.md` | Do not relabel as open unless newer evidence regresses. |
+| Discovery/index/CSV-count surfaces | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md`, `DATA_FLOW.md`, `LOCAL_AI_WORKFLOW.md` | Do not treat generated indexes as source or omit count surfaces from refactor review. |
+| Runtime broker telemetry validated state | `PROJECT_STATUS_POINT.md` and `recent-telemetry-state-2026-05-05.md` | Do not relabel as open unless newer evidence regresses. |
 | Tool discovery and promotion | `LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md`, `LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` | Do not duplicate tool registry logic across old handoffs. |
 | Audio/media output guardrail | `LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md` | Other docs link to it; do not bury media side-effect policy in run logs. |
 | Historical full-toolbox procedure | git history / compact evidence | Do not restore as active runbook. Extract only compact durable rules into canonical docs. |
@@ -213,6 +261,8 @@ add or update report-only inventory tooling
 add visibility/length policy
 add guardrails for provider/runtime/broker/media side effects
 update telemetry-first handoff rules
+update run-unica terminology and opt-out semantics
+update discovery/index/CSV evidence rules
 open PRs for review
 ```
 
@@ -253,26 +303,30 @@ Do not link media-runtime instructions from current local-AI operator entrypoint
 ## Current cleanup sequence
 
 1. Keep root entrypoints focused on the single reading flow.
-2. Keep the canonical unified launcher as the only active full 0-to-10 command surface.
+2. Keep the canonical unified launcher as the only active run-unica command surface.
 3. Keep TUTTO SU TUTTO and expandable perimeter doctrine visible in canonical docs.
 4. Keep broker telemetry, capability manifest, provider quality and full toolbox telemetry visible in compact surfaces.
-5. Keep no-audio/media output policy visible in entrypoints and task routing.
-6. Add Markdown and script inventories to workflow/refactor evidence paths.
-7. Use inventory output to identify missing-index, long-file and prune candidates.
-8. Remove obsolete monolithic active-start docs after explicit approval.
-9. Validate links and report contracts after deletion when local execution is available.
+5. Keep discovery/index/CSV-count surfaces visible in refactor/reuse and run-unica docs.
+6. Keep no-audio/media output policy visible in entrypoints and task routing.
+7. Add Markdown and script inventories to workflow/refactor evidence paths.
+8. Use inventory output to identify missing-index, long-file and prune candidates.
+9. Remove obsolete monolithic active-start docs after explicit approval.
+10. Validate links and report contracts after deletion when local execution is available.
 
 ## Acceptance criteria
 
 ```text
 single reading flow is explicit
-unified launcher is the active 0-to-10 entrypoint
-TUTTO SU TUTTO remains full-scope across quick/balanced/deep/custom intensities
+unified launcher is the active run-unica entrypoint
+TUTTO SU TUTTO remains full-scope across quick/balanced/deep/custom parameters
 expandable perimeter is documented for new stable lanes/data surfaces
 root entrypoints are shorter than before
 stable docs are indexed or intentionally excluded
 evidence/generated MD is not treated as source documentation
 script/tool inventory is available for refactor planning
+Python line-count CSV/MD is included in refactor/reuse review evidence
+function/class/method CSV is included in duplication/helper-reuse review evidence
+auto-discovery/index repair is report/plan-first and never silent source mutation
 tool placement and promotion docs are indexed
 each active phase exposes status/report/summary visibility
 runtime broker telemetry is surfaced when relevant
@@ -281,6 +335,6 @@ full toolbox telemetry summary is included in AI-to-AI handoff
 telemetry is used before declaring run success/failure/degradation
 audio/media output is forbidden in normal AI/tooling runs
 long files are classified and not used as primary entrypoints
-no output/**, renders/**, generated media, *.db or *.sqlite files are committed
+no output/**, indexAI/code_chunks/**, renders/**, generated media, *.db or *.sqlite files are committed
 no obsolete monolithic 0-to-10 runbook remains indexed as active documentation
 ```
