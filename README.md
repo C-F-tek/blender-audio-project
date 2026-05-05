@@ -13,7 +13,10 @@ AGENTS.md
   -> docs/README.md
   -> docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
   -> docs/LOCAL_AI_RUN_BOOTSTRAP.md
+  -> docs/LOCAL_AI_TASKS/README.md
   -> docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+  -> docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+  -> docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
   -> task-specific docs / package README / target source file
 ```
 
@@ -45,6 +48,8 @@ local reports / generated artifacts
   -> OpenVINO/NPU probe, guardrail and decode diagnostics
   -> deterministic recommendations
   -> manual-review patch plans / patch bundles
+  -> runtime broker telemetry
+  -> shared production AI-to-AI bundle
   -> PR review / human merge
 ```
 
@@ -54,7 +59,7 @@ Provider posture:
 |---|---|---|
 | GPU/CUDA | Ollama | Primary advisory/planning lane when explicitly requested and quality-gated. |
 | NPU/OpenVINO | OpenVINO GenAI | Probe, guardrail and decode-smoke diagnostics. Not general advisory. |
-| Blender runtime | Blender Python | Legacy/application target. Frozen unless explicitly scoped. |
+| Blender/audio/media runtime | Blender Python / FFmpeg / audio tools | Legacy/application target. Frozen unless explicitly scoped. |
 
 ## Canonical local AI entrypoint
 
@@ -69,14 +74,38 @@ Use that runbook for current commands, `-Full0To10`, intensity profiles, provide
 
 Legacy monolithic 0-to-10 runbooks are removed from active documentation. Historical details must be recovered from git history or compact evidence when needed; do not recreate parallel active-start runbooks.
 
+## Current stable docs
+
+| Need | Start here |
+|---|---|
+| Agent contract and guardrails | `AGENTS.md` |
+| ChatGPT/session memory and handoff notes | `CHATGPT.md`, then `CHATGPT/README.md` |
+| Operational lifecycle | `WORKFLOW.md` |
+| Documentation index | `docs/README.md` |
+| Local checkout bootstrap | `docs/LOCAL_AI_RUN_BOOTSTRAP.md` |
+| Unified full 0-to-10 local AI run | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
+| Current code/tool/evidence flow | `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` |
+| Runtime broker telemetry P0 | `docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md` |
+| No audio/media output guardrail | `docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md` |
+| Tool placement audit | `docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md` |
+| Tool promotion/insertion | `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` |
+| Unified launcher manifest contract | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
+| Validators and inventories | `Tools/validation/README.md` |
+| NPU/helper package | `Tools/npu/pipeline/README.md` |
+| Repository area map | `docs/MODULE_MAP.md` |
+| Documentation map and pruning | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |
+| Workflow helper policy | `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` |
+
 ## Operating rules
 
 Do not infer project state from the repository name. Current core/backend work must not:
 
 ```text
 modify Blender runtime packages
+produce audio playback/export or media output
+run FFmpeg encode/mux or Blender render
 modify full analysis JSON files
-commit output/**, renders/**, *.db or *.sqlite
+commit output/**, renders/**, generated media, *.db or *.sqlite
 hand-edit generated indexes
 change provider/model settings implicitly
 promote NPU/OpenVINO to primary advisory
@@ -85,20 +114,27 @@ merge to master without explicit user command
 
 Use compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/` instead of raw `output/**` reports.
 
-## Primary entrypoints
+## Audio/media output policy
 
-| Need | Start here |
-|---|---|
-| Agent contract and guardrails | `AGENTS.md` |
-| ChatGPT/session memory and handoff notes | `CHATGPT.md`, then `CHATGPT/README.md` |
-| Operational lifecycle | `WORKFLOW.md` |
-| Unified full 0-to-10 local AI run | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
-| Unified launcher manifest contract | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
-| Validators and inventories | `Tools/validation/README.md` |
-| NPU/helper package | `Tools/npu/pipeline/README.md` |
-| Repository area map | `docs/MODULE_MAP.md` |
-| Documentation map and pruning | `docs/README.md`, then `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |
-| Workflow helper policy | `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` |
+Normal AI/tooling runs are evidence/report workflows, not media-generation workflows.
+
+Forbidden unless explicitly scoped as application-domain work:
+
+```text
+audio playback
+audio export
+WAV/MP3/AAC conversion
+FFmpeg encode/mux
+Blender render
+video generation
+media output side effect
+```
+
+Detailed policy:
+
+```text
+docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
+```
 
 ## Inventory and evidence
 
@@ -107,7 +143,9 @@ Current documentation cleanup and refactoring use:
 ```text
 Markdown inventory
 script/function/class/method inventory
+tool placement audit
 validation report contracts
+runtime broker telemetry
 compact GitHub evidence bundles
 ```
 
