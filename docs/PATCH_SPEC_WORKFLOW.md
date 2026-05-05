@@ -10,16 +10,30 @@ This document is a contract/policy document, not the primary command catalog. Cu
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
 ```
 
-## Full-run patch-plan doctrine
+Large validator/tool catalogs such as `Tools/validation/README.md` are references only and must not become primary operational entrypoints if too large or truncated.
 
-Patch specs and patch plans are not complete by themselves when they originate from full-run evidence.
+## Run-unica patch-plan doctrine
 
-For `Full0To10`, patch-plan and patch-spec artifacts must travel with telemetry and capability context:
+Patch specs and patch plans are not complete by themselves when they originate from run-unica evidence.
+
+Current doctrine:
 
 ```text
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters, not scope
+-No* flags = explicit opt-out from selected lanes
+CSV/index/discovery surfaces are evidence lanes when relevant
+large Markdown must not be a primary operational entrypoint
+```
+
+For `Full0To10`, patch-plan and patch-spec artifacts must travel with telemetry, capability and relevant discovery/count context:
+
+```text
+launcher manifest
+phase_status / phase_reports
 evidence artifacts
 patch-plan artifacts
 patch-spec artifacts when produced
@@ -27,11 +41,13 @@ runtime tool usage telemetry
 runtime tool capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
+CSV/count summaries when inventory lanes ran
+discovery/index repair reports when relevant
 ```
 
-Telemetry is an obligatory completeness accessory. It does not replace evidence, patch plans or patch specs; it explains whether the producing lanes executed, failed, were blocked, degraded, disabled or planned-only.
+Telemetry is an obligatory completeness accessory. It does not replace evidence, patch plans or patch specs; it explains whether the producing lanes executed, failed, were blocked, degraded, disabled, unavailable or planned-only.
 
-A full-run-derived patch plan/spec is incomplete when the handoff cannot show:
+A run-unica-derived patch plan/spec is incomplete when the handoff cannot show:
 
 ```text
 which tools executed
@@ -40,6 +56,7 @@ which tools were blocked
 which capabilities were available
 which provider lanes degraded
 whether deterministic recovery was used
+whether discovery/index/CSV-count evidence was produced, skipped or unavailable
 whether source writes happened
 whether patch application happened
 ```
@@ -50,7 +67,7 @@ File existence alone is not proof that a patch plan/spec is valid.
 
 | Path | Role |
 |---|---|
-| `Tools/repo_patch_runner/apply_repo_mods.py` | Safe repository patch runner. Explicit apply tool, not automatic full-run behavior. |
+| `Tools/repo_patch_runner/apply_repo_mods.py` | Safe repository patch runner. Explicit apply tool, not automatic run-unica behavior. |
 | `Tools/ai/build_patch_specs_from_proposals.py` | Builds inert proposal-derived draft specs under `output/patch_specs/`. |
 | `Tools/validation/check_patch_spec_drafts.py` | Validates draft specs before any review-to-concrete promotion. |
 | `Tools/ai/promote_patch_spec_draft.py` | Promotes one draft plus an explicit replacement plan into a reviewed dry-run-passing spec. |
@@ -59,7 +76,7 @@ File existence alone is not proof that a patch plan/spec is valid.
 | `patch_specs/inbox/` | Queue of patch specs waiting to be applied. Use only after explicit approval. |
 | `patch_specs/applied/` | Patch specs already applied by the GitHub Action. |
 | `patch_specs/README.md` | Existing quick workflow notes. |
-| `.github/workflows/apply_repo_mods.yml` | GitHub Action that applies queued specs on push or manual dispatch. High-risk; not default full-run path. |
+| `.github/workflows/apply_repo_mods.yml` | GitHub Action that applies queued specs on push or manual dispatch. High-risk; not default run-unica path. |
 
 ## What the runner does
 
@@ -82,7 +99,7 @@ File existence alone is not proof that a patch plan/spec is valid.
 
 Patch application is not a normal Full0To10 side effect.
 
-The default full-run state is:
+The default run-unica state is:
 
 ```text
 patch_application_performed=false
@@ -253,7 +270,7 @@ Avoid patch specs for:
 - patches requiring runtime reasoning;
 - binary files;
 - generated full frame-by-frame analysis JSON files;
-- full-run evidence/patch handoffs that lack telemetry/capability context.
+- run-unica evidence/patch handoffs that lack telemetry/capability/discovery context.
 
 ## AI usage policy
 
@@ -264,7 +281,7 @@ AI agents may generate patch specs when:
 - before/after validation strings are included;
 - the patch can be dry-run before application;
 - line count and diff can be reviewed;
-- full-run-derived proposals include telemetry/capability context.
+- run-unica-derived proposals include telemetry/capability/discovery context.
 
 AI agents should not push queued specs without explicit human approval.
 
@@ -282,7 +299,7 @@ These drafts are intentionally inert:
 
 The draft validator rejects concrete replacements and queued inbox paths.
 
-If the proposals come from full-run evidence, the draft manifest or surrounding handoff must reference the companion telemetry/capability/final summary surfaces.
+If the proposals come from run-unica evidence, the draft manifest or surrounding handoff must reference the companion telemetry/capability/final summary and relevant discovery/index/CSV-count surfaces.
 
 ## Review-to-concrete promotion
 
@@ -315,7 +332,7 @@ Use this flow only after explicit apply/patch-spec review approval:
 
 ## Remote queue workflow
 
-Remote queueing is a high-risk explicit action, not a default full-run behavior.
+Remote queueing is a high-risk explicit action, not a default run-unica behavior.
 
 ```text
 1. create or copy a reviewed spec into patch_specs/inbox/
@@ -331,4 +348,4 @@ Use patch specs for mechanical documentation and validation-policy edits.
 
 For source-code refactors, prefer normal reviewed commits unless the edit is small, exact and easy to validate.
 
-For full-run-derived patch plans/specs, require evidence plus telemetry/capability bundle context before treating the recommendation as complete.
+For run-unica-derived patch plans/specs, require evidence plus telemetry/capability/discovery bundle context before treating the recommendation as complete.
