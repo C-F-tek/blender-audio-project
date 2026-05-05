@@ -4,7 +4,7 @@ Repository: `C-F-tek/blender-audio-project`
 
 Branch: `codex/unified-local-ai-refactor-launcher`
 
-Purpose: describe the current code/tool flow after the full-run, provider bundle and broker telemetry work.
+Purpose: describe the current code/tool flow after the full-run, provider bundle, broker telemetry and refactor/reuse full-run work.
 
 ## Operating doctrine
 
@@ -17,9 +17,26 @@ There is one active operator flow:
 
 All quick, balanced, deep and custom full runs must traverse the same semantic lane set. Intensity changes budget and depth, not scope. A quick full run is still a whole-repository run with reduced capacity; smoke remains a separate mode.
 
-The perimeter of `tutto` may expand. When a new production-ready broker tool, provider diagnostic, validation lane, memory/context surface, repository-consistency check, registry or evidence builder is promoted, it must be wired into this flow or explicitly documented as excluded.
+The perimeter of `tutto` may expand. When a new production-ready broker tool, provider diagnostic, validation lane, memory/context surface, repository-consistency check, registry, evidence builder, auto-discovery repair, index repair or CSV/count surface is promoted, it must be wired into this flow or explicitly documented as excluded.
 
 Telemetry is part of the run payload, not a side note. AI agents must be able to reason from telemetry about what actually executed, what failed, what was blocked, what was degraded, what was skipped intentionally and which tools/capabilities were available.
+
+## Current active phase
+
+Current active work:
+
+    Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+    Run: 20260505-143844
+    Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+    Mode: review-only until explicit human instruction
+
+Compact bridge docs:
+
+    docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+    docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+    docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+
+The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Do not infer bundle contents from file existence alone.
 
 ## High-level flow
 
@@ -27,7 +44,8 @@ The current IA-Carmine full-run flow is:
 
     user task markdown
       -> unified launcher
-      -> static inventories and validations
+      -> static inventories, discovery and validation
+      -> CSV/count surfaces and index/discovery drift evidence
       -> context pack and agent state
       -> provider/probe/workload quality lanes
       -> repository consistency evidence
@@ -94,6 +112,8 @@ The unified launcher resolves modes such as:
     contract
     full_validation
 
+Discovery/index/CSV surfaces are produced through the inventory, validation, chunks, context, repository-consistency and evidence lanes. If a future dedicated index-repair lane is added, it must remain report/plan-first and must be visible in the manifest.
+
 Main output roots:
 
     output/validation
@@ -111,7 +131,9 @@ Runtime/local artifacts belong under:
 
     output/**
 
-## Static inventory and validation flow
+Generated index/code-chunk artifacts are not source authority and must not be hand-edited as source.
+
+## Static inventory, discovery and validation flow
 
 Typical early phases:
 
@@ -120,10 +142,15 @@ Typical early phases:
     Check docs links
     Validate current JSON/report contracts
     Build script/tool inventory
-    Build semantic code chunks
+    Build Python line-count CSV/Markdown surfaces
+    Build function/class/method inventory CSV surfaces
+    Build semantic code chunks and deterministic manifests
+    Build selected-chunk evidence when available
     Build AI context pack
     Build agent state packet
+    Build repository consistency map/smoke
     Validate task-scoped reports
+    Surface auto-discovery/index drift when suspected
 
 Typical tools:
 
@@ -132,9 +159,31 @@ Typical tools:
     Tools/validation/check_docs_links.py
     Tools/validation/check_json_artifacts.py
     Tools/validation/build_script_inventory.py
+    Tools/validation/check_validation_report_contract.py
     Tools/npu/build_semantic_code_chunks.py
     Tools/ai/build_ai_context_pack.py
     Tools/ai/build_agent_state_packet.py
+
+Expected evidence surfaces:
+
+    Markdown inventory JSON/MD
+    docs link report JSON
+    script inventory JSON/CSV/MD
+    function/class/method inventory CSV
+    Python line-count CSV/MD
+    semantic chunk manifest JSON/MD
+    selected chunk evidence JSON when available
+    repository consistency map JSON/MD
+    repository consistency smoke JSON/MD
+    validation report contract JSON
+    index/discovery drift report or plan when relevant
+
+Policy:
+
+    CSV/count surfaces are evidence surfaces, not source authority.
+    Auto-discovery and index repair must be report/plan-first unless explicitly requested.
+    Do not commit output/** or indexAI/code_chunks/**.
+    Commit only compact evidence under docs/LOCAL_VALIDATION_EVIDENCE when needed.
 
 ## Provider/probe/workload flow
 
@@ -167,6 +216,8 @@ Known production evidence from `20260505-081141`:
     patch_application_performed=false
     source_writes_performed=false
 
+For newer reports, inspect telemetry fields such as `round_duration_source`, `round_duration_sample_count`, `provider_advisory_state`, `provider_failure_reasons` and workload quality status before making timing/provider claims.
+
 ## Full-toolbox decision loop
 
 Main workflow:
@@ -191,6 +242,8 @@ Decision loop should report:
     patch_application_performed=false
     source_writes_performed=false
 
+For run `20260505-143844`, inspect the runtime bundle decision loop before choosing any refactor/reuse patch.
+
 ## Patch-plan/proposal flow
 
 Patch-plan support tools include:
@@ -212,6 +265,19 @@ Acceptance:
 
     shared_toolbox_ai_to_ai_bundle_<STAMP>.md has patch_plan_summary_seen=True
     patch_plan_count >= 1
+    manual_review_required=True
+    patch_application_performed=false
+    source_writes_performed=false
+
+Current classification set:
+
+    SAFE_MECHANICAL
+    MANUAL_REVIEW
+    LOCAL_VALIDATION_REQUIRED
+    BLENDER_RUNTIME_REQUIRED
+    PROVIDER_VALIDATION_REQUIRED
+    DEFER
+    DO_NOT_PROMOTE
 
 ## Telemetry and AI reasoning contract
 
@@ -322,6 +388,7 @@ Production-complete requires:
     runtime broker telemetry executed_count >= 3 when broker lane ran
     runtime broker capability manifest present
     repository consistency map/smoke present when produced
+    discovery/index/CSV surfaces present when selected or relevant
     full toolbox telemetry summary present
     patch_application_performed=false
     source_writes_performed=false
@@ -397,24 +464,38 @@ Allowed compact production evidence examples:
     runtime_tool_capability_manifest_<STAMP>.json/md
     full_toolbox_<STAMP>_cloud_semantic_deterministic_chunk_manifest.json/md
     full_toolbox_agent_review_decision_loop_<STAMP>.json/md
+    script/function/class inventory CSV/MD summaries
+    Python line-count CSV/MD summaries
+    repository consistency map/smoke summaries
+    discovery/index repair plan summaries
 
 ## Current known next step
 
-Next technical patch:
+Current P1:
+
+    inspect the refactor/reuse full-run runtime bundle for 20260505-143844 and classify recommendations/patch plans before selecting a review-first patch
+
+Candidate P1 patch family, pending bundle review:
+
+    centralize report/telemetry helper functions in Tools/validation/report_utils.py
+    reuse them from Tools/ai/build_runtime_tool_usage_telemetry.py
+    reuse them from Tools/ai/build_full_toolbox_run_telemetry_summary.py
+    evaluate Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py separately
+
+Follow-up, not current P1 unless explicitly selected:
 
     finish external-control pass-through for the unified launcher subordinate calls
-
-Related follow-up:
-
     docs/LOCAL_AI_TASKS/next-chat-unified-launcher-external-controls.md
 
 Do not relabel old broker-telemetry loss as an open issue; it was closed by a85bbf4 and validated by run 20260505-073332.
 
 ## Related docs
 
+    docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+    docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+    docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+    docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
     docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
     docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
-    docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
-    docs/LOCAL_AI_TASKS/post-broker-runtime-telemetry-followup-2026-05-05.md
     FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
     CHATGPT/README.md
