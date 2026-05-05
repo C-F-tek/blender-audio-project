@@ -14,6 +14,18 @@ Full0To10 is opt-out by lane: provider/probe/workload-quality, runtime telemetry
 
 When the project gains a stable new lane, registry, validator, broker capability, provider diagnostic, evidence surface, memory/context tool, discovery/index surface or CSV/count surface, that capability becomes a candidate expansion of `tutto` and must be either wired into the full-run contract or explicitly excluded with rationale.
 
+## Large Markdown rule
+
+Markdown that is too large to be reliably opened by a future chat, local AI context pack or GitHub-only reviewer must not be a primary operational entrypoint.
+
+Large Markdown may exist as historical/supporting reference, generated compact evidence with manifest/summary, schema catalog, application-domain documentation or forensic material.
+
+Current policy:
+
+```text
+LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
+```
+
 ## Single reading flow
 
 Use this flow unless a task file says otherwise:
@@ -23,6 +35,7 @@ Use this flow unless a task file says otherwise:
 ../CHATGPT.md
 ../CHATGPT/README.md
 LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
 ../README.md
 ../WORKFLOW.md
 README.md
@@ -41,13 +54,14 @@ WORKFLOW_HELPER_SCRIPTS_POLICY.md
 PROJECT_STATUS_POINT.md
 DATA_FLOW.md
 LOCAL_AI_WORKFLOW.md
-JSON_SCHEMAS.md
 ../Tools/validation/README.md
 ../Tools/npu/pipeline/README.md
 MODULE_MAP.md
 nearest package/tool README
 target file
 ```
+
+`JSON_SCHEMAS.md` is intentionally not part of the primary reading flow. It is a broad schema notebook/catalog. Prefer `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` and compact current-state docs for active run-unica semantics.
 
 This documentation index is descriptive only. It must not carry executable PowerShell command blocks because task commands and launcher flags change faster than stable documentation indexes.
 
@@ -56,6 +70,7 @@ This documentation index is descriptive only. It must not carry executable Power
 | Need | File |
 |---|---|
 | Current operational bridge | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
+| Large Markdown policy | `LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md` |
 | Active refactor/reuse planning | `LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` |
 | Refactor/reuse run coherence note | `LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md` |
 | Recent telemetry baseline / broker resolved context | `LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` |
@@ -145,6 +160,7 @@ Index repair is plan/report-first unless explicitly requested.
 | Stable docs | `README.md` | Maintained source documentation. |
 | Task runbooks | `LOCAL_AI_TASKS/README.md` | Current task input, supporting detail and historical handoffs only. |
 | Current operational state | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` | Compact current state bridge for PR #187 and run `20260505-143844`. |
+| Large Markdown policy | `LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md` | Keeps oversized Markdown out of primary operational paths. |
 | Refactor/reuse planning | `LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` | Active review-only task for helper/class/tool reuse planning. |
 | Recent telemetry state | `LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` | Recent baseline and resolved broker context. |
 | Unified local AI launcher | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Active 0-to-10 local AI execution guide. |
@@ -156,6 +172,7 @@ Index repair is plan/report-first unless explicitly requested.
 | Execution plans | `EXECUTION_PLANS/README.md` | Durable state records. |
 | Evidence | `LOCAL_VALIDATION_EVIDENCE/` | Review snapshots, not source docs. |
 | Generated/index context | `indexAI/**`, `Tools/npu/npu_code_*.md` | Regenerate; do not hand-edit. |
+| Schema notebook/catalog | `JSON_SCHEMAS.md` | Broad/historical schema notes; not a primary operational entrypoint. |
 | Blender/application docs | `Scripting/**/README.md` and Blender docs below | Application-domain only. |
 
 ## Core stable docs
