@@ -142,6 +142,21 @@ $SemanticArgs = @(
 )
 $Steps.Add((Invoke-PythonStep -Name "provider_telemetry_semantic" -PythonScript (Join-Path $RepoRoot "Tools/ai/build_full0to10_provider_telemetry_semantic_validation.py") -Arguments $SemanticArgs -Optional))
 
+$MemoryVisibilityArgs = @(
+    "--repo-root", $RepoRoot,
+    "--output-dir", (Join-Path $OutputPath "memory_visibility"),
+    "--output", (Join-Path $OutputPath "memory_visibility/full0to10_memory_visibility_assertion.json")
+)
+$Steps.Add((Invoke-PythonStep -Name "memory_visibility_assertion" -PythonScript (Join-Path $RepoRoot "Tools/ai/build_full0to10_memory_visibility_assertion.py") -Arguments $MemoryVisibilityArgs -Optional))
+
+$ProviderFeedbackArgs = @(
+    "--run-root", $OutputPath,
+    "--output-dir", (Join-Path $OutputPath "provider_tool_feedback_loop"),
+    "--output", (Join-Path $OutputPath "provider_tool_feedback_loop/full0to10_provider_tool_feedback_loop.json")
+)
+$Steps.Add((Invoke-PythonStep -Name "provider_tool_feedback_loop" -PythonScript (Join-Path $RepoRoot "Tools/ai/build_full0to10_provider_tool_feedback_loop.py") -Arguments $ProviderFeedbackArgs -Optional))
+
+
 if (-not $SkipFinalProduct) {
     $FinalArgs = @("--repo-root", $RepoRoot, "--output-dir", (Join-Path $OutputPath "final_product"), "--request", "Light Full0To10 final product evidence", "--no-external-probes", "--timeout-seconds", "$TimeoutSeconds", "--output", (Join-Path $OutputPath "final_product.from_cli.json"))
     $Steps.Add((Invoke-PythonStep -Name "final_tool_product" -PythonScript (Join-Path $RepoRoot "Tools/ai/build_full0to10_final_tool_product.py") -Arguments $FinalArgs -Optional))

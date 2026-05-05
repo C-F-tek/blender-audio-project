@@ -15,6 +15,8 @@ REQUIRED_STEPS = (
     "provider_invocation_plan",
     "provider_execution_bridge",
     "provider_telemetry_semantic",
+    "memory_visibility_assertion",
+    "provider_tool_feedback_loop",
 )
 
 SAFETY_FALSE_FIELDS = (
@@ -29,5 +31,6 @@ NEXT_LOOP_ACTIONS = (
     "keep NoExternalProbes default for light profile",
     "add provider telemetry semantic validator",
     "add GPU.0/NPU normalized device visibility check",
-    "add SQLite memory visibility assertion to light profile",
+    "add provider tool feedback loop report-only",
+    "build final product quality package",
 )
