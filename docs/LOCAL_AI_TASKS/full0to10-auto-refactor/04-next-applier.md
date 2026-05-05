@@ -1,13 +1,19 @@
 # Next applier
 
-Il passo successivo è un applier controllato che accetti solo patch-spec
-allowlistati.
+Il primo applier controllato è ora disponibile.
 
-Requisiti futuri:
+## Entry point
 
-- preview diff;
-- allowlist target;
-- no delete;
-- no rewrite history;
-- no provider execution;
-- validation obbligatoria post-apply.
+```text
+Tools/ai/apply_full0to10_auto_refactor_patch_specs.py
+Tools/workflow/run_full0to10_auto_refactor_apply.ps1
+```
+
+## Stato
+
+Supporta solo cleanup sicuri:
+
+- trailing whitespace;
+- final newline.
+
+Split Markdown, split codice e contratti hardware restano manual-review.
