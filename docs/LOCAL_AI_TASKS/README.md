@@ -190,6 +190,7 @@ next-chat-handoff-after-pr115-large-code-refactor-2026-05-02.md
 heavy-gpu-local-ai-diagnostics-handoff.md
 shared-toolbox-refactor-duplication-audit-next-task-2026-05-03.md
 shared-runtime-toolbox-ai-to-ai-next-task-2026-05-03.md
+code-refactor-0-to-10-procedure.md
 code-refactor-local-machine-validation-addendum.md
 code-refactor-md-lane-extension.md
 ```
