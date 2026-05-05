@@ -72,9 +72,10 @@ Task-specific command sources:
 
 ```text
 LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
-LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
 ../FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
 ```
+
+Historical/supporting references such as `LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md` may be read for forensic comparison only. They must not override the unified launcher runbook or the compact launcher contract.
 
 Tool-specific command sources:
 
