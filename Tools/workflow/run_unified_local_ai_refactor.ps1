@@ -71,6 +71,7 @@ param(
     [switch]$Full0To10,
     [switch]$NoStrictRealRunActivation,
     [switch]$Prod,
+    [switch]$NoExecutionTail,
     [switch]$BuildWorkloadQualityReport,
     [switch]$NoOllamaProbe,
     [switch]$NoNpuProbe,
@@ -776,6 +777,11 @@ $SmokeOnlyRun = (
 
 if ($SmokeOnlyRun -and -not $Prod) {
     Write-Host "[INFO] Smoke mode: unified launcher transcript/tail evidence disabled."
+    $Prod = $true
+}
+
+if ($NoExecutionTail -and -not $Prod) {
+    Write-Host "[INFO] -NoExecutionTail supplied: unified launcher transcript/tail evidence disabled."
     $Prod = $true
 }
 
