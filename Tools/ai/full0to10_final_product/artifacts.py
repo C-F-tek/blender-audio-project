@@ -1,0 +1,46 @@
+"""Artifact discovery and loading for Full0To10 final product."""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+from .constants import REQUIRED_PRODUCT_EVIDENCE
+from .paths import repo_relative
+
+
+def read_json(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def product_artifacts(effective_dir: Path, quality_dir: Path, repo_root: Path) -> dict[str, Any]:
+    paths = {
+        "effective_use_summary": effective_dir / "full0to10_effective_use_summary.json",
+        "quality_product": effective_dir / "full0to10_effective_use_quality_product.md",
+        "provider_hardening": effective_dir / "full0to10_provider_hardening_contracts.json",
+        "tool_telemetry": effective_dir / "full0to10_effective_use_tool_telemetry.json",
+        "optimization": effective_dir / "full0to10_effective_use_optimization.json",
+        "quality_gate": quality_dir / "full0to10_quality_gate.json",
+    }
+    records = {}
+    for role, path in paths.items():
+        records[role] = {
+            "path": repo_relative(path, repo_root),
+            "exists": path.exists(),
+            "type": "markdown" if path.suffix.lower() == ".md" else "json",
+            "required": role in REQUIRED_PRODUCT_EVIDENCE,
+            "size_bytes": path.stat().st_size if path.exists() else 0,
+        }
+        if path.suffix.lower() == ".json":
+            records[role]["json"] = read_json(path)
+    return records
+
+
+def missing_required(records: dict[str, Any]) -> list[str]:
+    return [role for role, record in records.items() if record.get("required") and not record.get("exists")]
