@@ -63,20 +63,21 @@ P3 low
 | TD-022 | Telemetry completeness contract | P1 | in_progress | Multiple docs now require telemetry/capability/final-summary as accessories for evidence and patch plans, but validators may not yet enforce completeness uniformly. | Future full-run evidence or patch plans may be treated as complete without executed/failed/blocked/degraded/source-write context. | Add or extend validators to check production handoff completeness: runtime usage telemetry, runtime capability manifest, full toolbox telemetry summary, shared AI-to-AI bundle/final summary and patch-plan summary references. | 2026-05-05 |
 | TD-023 | Full-run perimeter expansion governance | P2 | in_progress | The `TUTTO SU TUTTO` perimeter is intentionally expandable, but new lanes need a mechanical promotion/exclusion checklist. | New tools or evidence surfaces can be omitted silently or over-promoted into the full run. | Keep `project-tool-registry.md`, promotion guide, module map and launcher contract aligned. Any new lane must be included in Full0To10 or explicitly excluded with rationale and telemetry/bundle visibility note. | 2026-05-05 |
 | TD-024 | Obsolete MD drift after PR187 | P2 | in_progress | Many older docs contained legacy runbooks, old PR chains, old local commands or proof-of-work definitions without telemetry. | AI agents may restart from obsolete flows or request local commands while GitHub-only. | Continue MD/CODE audit; demote historical runbooks, remove active-start drift, and update onboarding/schema/status docs to reference launcher-first telemetry-complete handoff. | 2026-05-05 |
+| TD-025 | Python string patch hygiene | P1 | in_progress | Real `SyntaxWarning` findings showed Windows-style command examples with invalid escape sequences such as `\T` and `\e`; an attempted patch bundle also exposed fragility around multiline/triple-quote edits. | Future AI or manual patches may overcorrect by introducing raw multiline/triple-quoted strings, changing indentation, corrupting embedded Markdown/code fences or masking syntax warnings instead of fixing the exact command literal. | Treat triple-quote/raw multiline rewrites as high-risk for command-example cleanup. Prefer minimal one-line literal edits, POSIX-style relative examples like `./Tools/...`, or explicit doubled backslashes. Validate with `python -m py_compile`, `git diff --check`, line counts and focused diff review. | 2026-05-05 |
 
 ## Add a new item
 
 Use the next ID:
 
 ```text
-TD-025
+TD-026
 ```
 
 Template:
 
 | ID | Area | Priority | Status | Symptom | Risk | Recommended action | Last reviewed |
 |---|---|---:|---|---|---|---|---|
-| TD-025 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
+| TD-026 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
 
 ## Rules
 
@@ -87,3 +88,4 @@ Template:
 - Review this file after major refactors.
 - Mark GitHub-only limitations explicitly when local validation cannot be performed.
 - Track missing telemetry/capability/final-summary enforcement when it affects full-run evidence or patch-plan completeness.
+- Treat triple-quote/raw multiline rewrites as high-risk when fixing Python command examples or embedded Markdown/code fences; prefer minimal literal edits and validate with `py_compile` plus focused diff review.
