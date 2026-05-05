@@ -50,6 +50,7 @@ FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
 docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
 ```
 
@@ -147,6 +148,7 @@ mixing GitHub-only review with local workstation evidence
 opening huge evidence bundles before the manifest/summary
 starting from superseded 0-to-10 runbooks
 using a supporting wrapper as an active first entrypoint
+triggering audio/media output during AI/tooling runs
 ```
 
 ## Visibility-first rule
@@ -241,6 +243,7 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 docs/PROJECT_STATUS_POINT.md
 docs/DATA_FLOW.md
@@ -276,7 +279,7 @@ Classify the task before editing:
 | tool promotion | docs, registry, report-only wrappers and safe validation | No implicit providers |
 | core AI/backend | app-agnostic AI orchestration and validators | Explicit only when selected |
 | unified full 0-to-10 | full evidence -> recommendation -> patch-plan -> patch-bundle process | Provider only through explicit unified launcher command/flag |
-| Blender runtime | Blender scripts and scene behavior | Only when explicitly scoped |
+| Blender/audio/media runtime | Blender scripts, audio output, FFmpeg, render or encode behavior | Only when explicitly scoped as application-domain work |
 
 When the task is documentation/workflow-state, do not touch Python runtime code unless a validator/doc contract requires it and the reason is documented.
 
@@ -286,6 +289,10 @@ Hard exclusions unless the current task explicitly overrides them:
 
 ```text
 Blender runtime
+Audio playback
+Audio export
+FFmpeg encode or mux operations
+Video/media generation
 Ready To Jazz
 Scripting/shared/blender_compat.py
 full analysis JSON
@@ -349,6 +356,7 @@ runtime behavior changes
 provider prompt/model/temperature changes
 manual generated-index edits
 full analysis JSON edits
+audio/media output generation
 ```
 
 ## Phase 6 - Required validation selection
@@ -370,6 +378,7 @@ Mapping:
 | Reset planning/apply | `reset` mode with reset guardrails |
 | Script/tool inventory | `python` phase |
 | Semantic chunks/context/memory | `chunks`, `context_pack`, `agent_state` phases |
+| Audio/media runtime | No default launcher validation path; requires explicit application-domain task. |
 
 Focused validators may still be invoked directly only when the task is explicitly scoped to that validator or when debugging the validator itself.
 
@@ -389,6 +398,7 @@ phase report paths
 compact evidence paths, when generated
 provider/runtime execution status
 runtime broker telemetry status
+audio/media output status
 patch application status
 risks
 follow-up recommendations
@@ -407,6 +417,7 @@ changed files
 launcher mode/profile/flags or focused validation command
 provider execution statement
 runtime broker telemetry statement
+audio/media output statement
 visibility/manifest statement
 risk notes
 follow-up
@@ -415,7 +426,7 @@ follow-up
 For docs/workflow-state cleanup PRs, explicitly state:
 
 ```text
-No runtime files, provider behavior, generated indexes, full analysis JSON or Blender scripts touched.
+No runtime files, provider behavior, generated indexes, full analysis JSON, Blender scripts or audio/media outputs touched.
 ```
 
 ## Current local task pointer
@@ -432,10 +443,16 @@ The current P0 validation task is tracked in:
 docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
 ```
 
+The audio/media output guardrail is tracked in:
+
+```text
+docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
+```
+
 The expected work is:
 
 ```text
 exercise the unified full 0-to-10 process with selected modes, evidence collectors, optional GPU/NPU provider run, deterministic recommendations, workload quality routing, memory/context surfaces, runtime broker telemetry, patch-spec generation, review-safe patch bundle generation and explicit apply/validation when authorized
 ```
 
-GPU/NPU execution remains explicit. If Carmine cannot run the local provider workflow, GitHub-only agents must stop at report-only/docs/validator work and request the exact unified launcher command/evidence bundle needed next.
+GPU/NPU execution remains explicit. Audio/media output remains forbidden unless an explicit application-domain task enables it. If Carmine cannot run the local provider workflow, GitHub-only agents must stop at report-only/docs/validator work and request the exact unified launcher command/evidence bundle needed next.
