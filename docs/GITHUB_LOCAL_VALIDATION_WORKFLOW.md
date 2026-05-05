@@ -35,6 +35,16 @@ full_validation
 
 Supporting wrappers may exist, but they are not first entrypoints.
 
+## Full-run validation doctrine
+
+`Full0To10` means **TUTTO SU TUTTO**.
+
+`quick`, `balanced`, `deep` and `custom` are intensity profiles only. They must not silently narrow scope.
+
+A broad validation proof is incomplete if it only says that files exist or that a focused dry-run passed. When a PR is derived from a full run, provider lane, broker/tool lane, evidence bundle, recommendation or patch plan, the review must include companion telemetry/capability surfaces.
+
+Telemetry is a completeness accessory for evidence and patch plans. It does not replace validation reports; it explains whether lanes executed, failed, were blocked, degraded, disabled or planned-only.
+
 ## Recommended lifecycle
 
 ```text
@@ -42,10 +52,11 @@ pull latest
 choose unified launcher mode/profile/intensity
 run focused validation or full 0-to-10 flow through launcher
 inspect manifest-first outputs
+inspect telemetry/capability/final-summary surfaces when relevant
 promote only compact evidence when needed
 commit intended docs/source/index changes
 push results
-share manifest/reports for review
+share manifest/reports/telemetry for review
 ```
 
 ## Manifest-first inspection
@@ -64,6 +75,10 @@ Review order:
 launcher command
 unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
+runtime tool usage telemetry when tools/broker lanes ran
+runtime tool capability manifest when capabilities matter
+full toolbox telemetry summary for full-run/production handoff
+shared AI-to-AI bundle/final summary for production handoff
 compact Markdown or CSV summaries
 detailed evidence only when needed
 ```
@@ -80,6 +95,8 @@ Do not begin review from a long evidence bundle.
 | NPU helper-only work | focused NPU helper validation, then unified launcher full validation if broader scope changed |
 | Validator debugging | direct focused validator command from `Tools/validation/README.md` |
 | GitHub evidence handoff | compact evidence builder through launcher/tool README, never bulk-add raw output |
+
+Focused validation is not proof that `Full0To10` passed.
 
 ## Supporting wrappers
 
@@ -99,6 +116,7 @@ Policy:
 Do not document them as primary local validation commands.
 Do not use them as full-run substitutes.
 If launcher delegates to them, their outputs must be visible in the launcher manifest.
+If their output feeds evidence/patch plans, companion telemetry/capability state must be visible in the handoff.
 ```
 
 ## Repository sync preflight
@@ -141,6 +159,26 @@ errors
 warnings
 ```
 
+Companion telemetry/final-summary fields to check when available:
+
+```text
+tool_call_entry_count
+executed_count
+failed_count
+blocked_count
+broker_reports
+runtime capability manifest path
+provider_advisory_state
+provider_failure_detected
+provider_failure_reasons
+degraded_provider_components
+deterministic_recovery_used
+gpu_metrics_source
+round_duration_source
+source_writes_performed
+patch_application_performed
+```
+
 A broad validation run is not acceptable if these surfaces are missing or if selected phases vanish silently.
 
 ## Evidence policy
@@ -152,6 +190,8 @@ docs/LOCAL_VALIDATION_EVIDENCE/
 ```
 
 Do not bulk-add the whole evidence directory. Add only reviewed evidence files that directly support the PR.
+
+When adding full-run evidence or patch-plan evidence, also include or reference the companion telemetry/capability/final-summary artifacts.
 
 Do not commit:
 
@@ -197,8 +237,10 @@ changed files
 launcher mode/profile/flags or focused validator used
 manifest path when available
 phase reports/evidence paths when available
+runtime telemetry/capability/final-summary paths when relevant
 provider execution statement
 patch application statement
+source writes statement
 risk notes
 follow-up
 ```
@@ -221,6 +263,7 @@ When a focused validator, NPU helper or provider lane fails:
 
 ```text
 first inspect the launcher manifest if the run used the launcher
+then inspect telemetry/capability/final-summary surfaces if involved
 then inspect the focused JSON report
 then inspect stderr/logs
 then rerun only the failing focused validator/lane if needed
@@ -236,6 +279,8 @@ Do not commit output validation reports unless explicitly needed as compact evid
 
 Do not modify Blender runtime packages while validating AI pipeline or NPU helper refactors.
 
-Do not wire `Tools/npu/pipeline/` helpers into runtime orchestration until focused NPU helper validation, broad launcher validation and index review pass.
+Do not wire `Tools/npu/pipeline/` helpers into runtime orchestration until focused NPU helper validation, broad launcher validation, quality gates, telemetry/bundle visibility and index review pass.
 
 Do not treat push-capable workflow helpers as default validation commands. Any push-capable helper must require explicit user intent and visible git status review.
+
+Do not claim a full run passed from dry-run, focused validator or file existence alone.
