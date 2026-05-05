@@ -61,6 +61,8 @@ docs/external_references/
 docs/references/
 ```
 
+These folders are optional local study locations. Their absence in the committed branch is expected and must not be treated as a broken documentation reference, missing source artifact or request to copy external material into the repository.
+
 The committed repository should contain only:
 
 ```text
