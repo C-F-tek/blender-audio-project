@@ -20,7 +20,7 @@ def build_readiness(records: dict[str, Any], evidence_index: dict[str, Any]) -> 
         score -= 35
         blockers.extend(evidence_index["missing_required_roles"])
 
-    for role in ("effective_use_summary", "provider_hardening", "tool_telemetry", "optimization", "quality_gate"):
+    for role in ("effective_use_summary", "provider_hardening", "tool_telemetry", "optimization", "quality_gate", "accelerator_control"):
         record = records.get(role, {})
         if not record.get("exists"):
             continue
@@ -39,6 +39,18 @@ def build_readiness(records: dict[str, Any], evidence_index: dict[str, Any]) -> 
     if "sqlite_fts5" not in lanes:
         score -= 8
         blockers.append("sqlite_fts5_contract_missing")
+
+    accelerator = records.get("accelerator_control", {}).get("json") or {}
+    scheduler = accelerator.get("scheduler") or {}
+    if scheduler.get("generation_allowed") is True:
+        score -= 30
+        blockers.append("accelerator_scheduler_allows_generation_in_pre_run")
+    if not accelerator.get("gpu_body"):
+        score -= 8
+        warnings.append("gpu_body_contract_missing")
+    if not accelerator.get("gpu_mind"):
+        score -= 8
+        warnings.append("gpu_mind_contract_missing")
 
     score = max(0, score)
     report = {

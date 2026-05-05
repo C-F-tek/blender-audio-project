@@ -20,6 +20,7 @@ REQUIRED_PRODUCT_EVIDENCE = (
     "tool_telemetry",
     "optimization",
     "quality_gate",
+    "accelerator_control",
 )
 
 FINAL_PRODUCT_SECTIONS = (
@@ -30,6 +31,7 @@ FINAL_PRODUCT_SECTIONS = (
     "runtime_tools",
     "gpu_ollama",
     "npu_openvino",
+    "accelerator_control",
     "readiness",
     "next_run",
 )
