@@ -4,7 +4,7 @@
 
 This document records the current local AI workflow for `IA-Carmine Local AI Orchestration Workbench`.
 
-The workflow is no longer only about generating Blender scripts. It now covers local provider orchestration, GPU/NPU parallelism, workload quality gates, advisory context filtering, explicit provider diagnostics, SQLite-backed agent state, tool/function visibility and compact evidence for GitHub review.
+The workflow is no longer only about generating Blender scripts. It now covers run-unica orchestration, GPU/NPU parallelism, workload quality gates, advisory context filtering, provider diagnostics, SQLite-backed agent state, tool/function visibility, discovery/index repair, CSV/count surfaces and compact evidence for GitHub review.
 
 ## Primary workflow orchestrator
 
@@ -15,28 +15,37 @@ Tools/workflow/run_unified_local_ai_refactor.ps1
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-All local-AI run profiles are launcher modes, profiles or flags. This includes quick tests, full runs, deep runs, provider probes, memory handoff, patch specs, reset and full validation.
+All local-AI execution variants are launcher modes, parameters, presets or flags behind the run unica. This includes quick tests, complete runs, deep runs, provider probes, memory handoff, patch specs, reset, discovery/index repair visibility, CSV/count surfaces and full validation.
 
-Do not start full local-AI work from legacy wrappers. Supporting wrappers remain implementation lanes behind the launcher and must be visible in launcher manifest/status/report surfaces when used.
+Do not start local-AI work from legacy wrappers. Supporting wrappers remain implementation lanes behind the launcher and must be visible in launcher manifest/status/report surfaces when used.
 
-## TUTTO SU TUTTO workflow contract
+## Run unica / TUTTO SU TUTTO workflow contract
 
-The full workflow is **TUTTO SU TUTTO**.
+The primary operating model is one parameterized run:
 
-`-Full0To10` means every active repository-understanding lane participates unless it is explicitly disabled, unavailable, or recorded as degraded. `quick`, `balanced`, `deep` and `custom` are intensity profiles only; they change budgets and depth, not the lane set.
+```text
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters
+-No* flags = explicit opt-out from selected lanes
+```
 
-The perimeter of `tutto` is expandable. When a new stable lane is promoted, such as a broker tool, validator, provider diagnostic, repository-consistency report, project-tool registry, memory/context builder or evidence surface, update this workflow, the launcher contract and the task index so the new lane is either included in the full flow or explicitly excluded with rationale.
+`-Full0To10` means every active repository-understanding lane participates unless it is explicitly disabled, unavailable, represented as dry-run planned state, or excluded with a documented rationale. `quick`, `balanced`, `deep` and `custom` change budgets, limits and depth; they do not change the lane set.
 
-A full workflow is not complete when a lane silently disappears. Missing phases must be visible in manifest, telemetry, warnings or errors.
+The perimeter of `tutto` is expandable. When a new stable lane is promoted, such as a broker tool, validator, provider diagnostic, repository-consistency report, project-tool registry, memory/context builder, discovery/index surface, CSV/count surface or evidence surface, update this workflow, the launcher contract and the task index so the new lane is either included in the run unica full flow or explicitly excluded with rationale.
+
+A run-unica workflow is not complete when a lane silently disappears. Missing phases must be visible in manifest, telemetry, warnings or errors.
 
 ## Current provider mapping
 
 ```text
-Ollama -> GPU/CUDA -> primary advisory provider
-OpenVINO -> NPU -> probe / guardrail / decode diagnostic
+Ollama -> GPU/CUDA -> primary advisory provider for Full0To10 when available and quality-gated
+OpenVINO -> NPU -> probe / guardrail / decode diagnostic for Full0To10 when available
 ```
 
 The mapping is intentional. Do not introduce OpenVINO GPU as the primary lane.
+
+Provider execution is explicit when the operator selects `-Full0To10` or provider/probe modes. It is not an additional per-lane opt-in after `-Full0To10` is selected.
 
 ## Hybrid master-AI / unified local-pipeline model
 
@@ -78,7 +87,7 @@ unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
 telemetry summary / runtime tool telemetry / capability manifest
 shared production AI-to-AI bundle
-compact Markdown or CSV summaries
+compact Markdown or CSV/count summaries
 detailed evidence only when needed
 ```
 
@@ -93,6 +102,8 @@ context_files
 report_files
 compact Markdown summary
 CSV/JSON inventory
+CSV/count surface
+index/discovery report or plan
 ```
 
 ## Telemetry-first AI reasoning rule
@@ -140,6 +151,34 @@ unavailable
 planned-only dry run
 ```
 
+## Discovery, index repair and CSV/count workflow
+
+Discovery and count surfaces are first-class evidence lanes for run-unica planning and review.
+
+Expected surfaces when relevant:
+
+```text
+Markdown inventory JSON/MD
+script inventory JSON/CSV/MD
+function/class/method inventory CSV
+Python line-count CSV/MD
+semantic chunk manifest JSON/MD
+selected chunk evidence JSON/MD
+repository consistency map/smoke JSON/MD
+auto-discovery report when scanner/index visibility drift is suspected
+index repair plan/report when generated indexes are stale or missing
+```
+
+Policy:
+
+```text
+CSV/count outputs are evidence surfaces, not source authority.
+Generated indexes and code chunks are not hand-maintained source.
+Do not commit output/**.
+Do not commit indexAI/code_chunks/**.
+Index repair is plan/report-first unless explicitly requested.
+```
+
 ## Length policy
 
 Long outputs are allowed as generated evidence only when indexed by compact manifests.
@@ -161,16 +200,20 @@ Provider baseline evidence:
 docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json
 ```
 
-Current full-context golden path evidence:
+Current compact state docs:
 
 ```text
-docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_selected_chunks_evidence.json
-docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_core_ai_backend_context_pack_evidence.json
-docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_evidence.json
-docs/LOCAL_VALIDATION_EVIDENCE/full_context_golden_local_ai_context_multistep_evidence.json
-docs/LOCAL_VALIDATION_EVIDENCE/local_ai_core_tool_activation_evidence.json
-docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
-docs/LOCAL_VALIDATION_EVIDENCE/evidence_bundle_master_final_smoke_20260501-232755.json
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+```
+
+Current active review pass:
+
+```text
+Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+Run: 20260505-143844
+Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
 ```
 
 Validated production states:
@@ -179,14 +222,14 @@ Validated production states:
 broker telemetry validated by run 20260505-073332
 provider diagnostics and deterministic recovery validated by run 20260505-081141
 GPU sync timing source smoke validated with rounds[*].elapsed_seconds
-ollama_gpu_primary_advisory remains explicit and quality-gated
+ollama_gpu_primary_advisory is included by default in Full0To10 when available and quality-gated
 npu_excluded_when_unusable=true
 npu_decode_smoke_passed=true in previous evidence
 ```
 
 Operational meaning:
 
-- Ollama/GPU is usable as primary advisory provider when explicitly enabled and quality-gated.
+- Ollama/GPU is usable as primary advisory provider under Full0To10 when available and quality-gated.
 - Provider failure must be reported through provider failure reasons and degraded components.
 - The old NPU workload report remains excluded from advisory context when it is numeric/hex-like.
 - NPU/OpenVINO can execute a short decode smoke successfully through the dedicated NPU Python.
@@ -199,14 +242,16 @@ Repository context and local reports
   -> unified launcher command
   -> manifest-first visibility
   -> Markdown/script inventories
+  -> CSV/count evidence surfaces
+  -> discovery/index drift reports or plans when relevant
   -> semantic code chunks and selected focused chunks when useful
   -> task-scoped AI context pack when useful
-  -> optional SQLite-backed agent state packet
-  -> workload quality gate when provider routing is requested
+  -> SQLite-backed agent state packet when enabled
+  -> workload quality gate for Full0To10/provider lanes
   -> quality-based advisory routing
   -> report-only local pipeline adapter
-  -> explicit multistep provider workflow when selected
-  -> primary advisory packet/proposals when explicitly requested and quality-gated
+  -> multistep provider workflow unless disabled/unavailable
+  -> primary advisory packet/proposals unless disabled/unavailable and quality-gated
   -> repository proposals
   -> agent review evidence sufficiency and manual-review patch plans
   -> full-context golden proposal families when requested
@@ -223,18 +268,20 @@ Repository context and local reports
 
 | Area | Tool/script | Visible output | Launcher status |
 |---|---|---|---|
-| Unified launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` | run manifest with selected modes, flags, reports, context and phase status | canonical |
+| Unified launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` | run manifest with selected parameters, flags, reports, context and phase status | canonical |
 | Markdown inventory | `Tools/validation/build_markdown_inventory.py` | JSON and Markdown inventory | `md` mode |
 | Link validation | `Tools/validation/check_docs_links.py` | JSON link report | `md` / validation phases |
 | Script inventory | `Tools/validation/build_script_inventory.py` | JSON, CSV and Markdown function/class inventory | `python` mode |
+| Python line count | broker/runtime line-count helper and validation reports | CSV and Markdown line-count surfaces | inventory/evidence lane |
+| Discovery/index repair | scanner/index validators and repair planners | report-only discovery/index repair reports | validation/refactor support lane |
 | Report contracts | `Tools/validation/check_validation_report_contract.py` | JSON contract report | `json` / `contract` phases |
 | Workload quality | `Tools/validation/check_ai_workload_report_quality.py` | `ai_workload_report_quality.json` | provider quality gate |
 | Semantic chunks | `Tools/npu/build_semantic_code_chunks.py` | semantic chunk manifest | `chunks` mode |
 | Context pack | `Tools/ai/build_ai_context_pack.py` | bounded Markdown/JSON context pack and evidence summary | `context_pack` mode |
 | Agent state/memory | `Tools/ai/build_agent_state_packet.py` | agent-state packet and optional SQLite memory handoff | `agent_state` mode |
 | Official adapter | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | packet/proposals and adapter manifest | `official` mode / implementation lane |
-| Ollama advisory | `Tools/workflow/run_post_validation_ai_packet.ps1` | advisory packet/proposals and manifest | provider/advisory implementation lane |
-| Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals | provider implementation lane |
+| Ollama advisory | `Tools/workflow/run_post_validation_ai_packet.ps1` | advisory packet/proposals and manifest | provider/advisory implementation lane for Full0To10 unless disabled/unavailable |
+| Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals | provider implementation lane for Full0To10 unless disabled/unavailable |
 | Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | integrated full-toolbox report when selected | supporting selected phase only, not entrypoint |
 | Runtime broker | `Tools/ai/agent_runtime_tool_broker.py` | broker report and runtime tool usage telemetry | supporting full-toolbox lane |
 | Runtime capability manifest | `Tools/ai/build_runtime_tool_capability_manifest.py` | runtime tool capability manifest JSON/MD | production handoff |
@@ -266,7 +313,7 @@ The expected heavy-work flow is:
 master-AI writes or updates docs/LOCAL_AI_TASKS/*.md
 unified launcher builds manifest/context/report surfaces
 official adapter lane runs report-only/proposal-only analysis
-optional explicit multistep provider lane produces provider evidence
+Full0To10/provider lane produces provider evidence unless disabled/unavailable
 proposal validators check output contracts
 master-AI/human reviews proposals before patch specs or apply
 ```
@@ -274,12 +321,12 @@ master-AI/human reviews proposals before patch specs or apply
 Do not use multistep mode to bypass guardrails. It remains:
 
 ```text
-explicit provider execution only
 report-only/proposal-only by default
 no automatic patch apply
 no automatic merge
 NPU remains probe / guardrail / decode diagnostic
 Ollama/GPU remains primary advisory behind quality gate
+Full0To10 provider lanes are opt-out, not extra opt-in
 ```
 
 ## Supporting wrapper policy
@@ -306,7 +353,7 @@ historical compatibility lanes explicitly selected by the launcher
 A wrapper promoted into the active flow must appear in:
 
 ```text
-launcher mode/profile/flag
+launcher mode/parameter/flag
 unified manifest phase_status
 unified manifest phase_reports when reports are produced
 this visibility map
@@ -317,7 +364,7 @@ UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md when manifest shape changes
 
 | File | Role |
 |---|---|
-| `Tools/workflow/run_unified_local_ai_refactor.ps1` | Canonical local AI orchestrator and full 0-to-10 entrypoint. |
+| `Tools/workflow/run_unified_local_ai_refactor.ps1` | Canonical run-unica local AI orchestrator and Full0To10 entrypoint. |
 | `Tools/workflow/run_local_ai_markdown_task.ps1` | Supporting task packet wrapper; not an active first entrypoint. |
 | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | Official adapter implementation lane behind launcher `official` mode. |
 | `Tools/workflow/run_local_ai_core_tool_activation.ps1` | Supporting app-agnostic activation lane retained for focused/legacy validation; prefer the unified launcher. |
@@ -341,8 +388,8 @@ UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md when manifest shape changes
 | `Tools/validation/check_ai_workload_report_quality.py` | Classifies workload reports into usable/unusable lanes. |
 | `Tools/ai/workload_quality.py` | Shared routing helper for trusted/excluded advisory context. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | Builds routing report and declares primary advisory provider. |
-| `Tools/ai/run_local_provider_probe.py` | Explicit local provider probes for Ollama/GPU and NPU/OpenVINO. |
-| `Tools/ai/run_npu_decode_smoke_diagnostic.py` | Explicit OpenVINO/NPU decode smoke through dedicated NPU Python. |
+| `Tools/ai/run_local_provider_probe.py` | Local provider probes for Ollama/GPU and NPU/OpenVINO. Full0To10 lane unless disabled/unavailable. |
+| `Tools/ai/run_npu_decode_smoke_diagnostic.py` | OpenVINO/NPU decode smoke through dedicated NPU Python. Full0To10 diagnostic lane unless disabled/unavailable. |
 | `Tools/validation/check_npu_decode_quality_remediation.py` | NPU remediation report from quality metrics. |
 | `Tools/ai/suggest_repository_updates.py` | Builds advisory packet using quality-approved context only. |
 | `Tools/ai/build_repository_change_proposals.py` | Builds manual-review proposals with code/MD/JSON suggestion descriptors. |
@@ -369,10 +416,10 @@ For evidence commands, use the unified launcher runbook or tool-specific README.
 
 ## Requirements for safe local generation
 
-- Start full 0-to-10 flows from the unified launcher.
-- Route quick tests, full tests, provider tests and full validation through launcher modes/profiles whenever possible.
-- Preserve TUTTO SU TUTTO lane coverage for every full-run intensity.
-- Provider execution must be explicit.
+- Start run-unica local AI flows from the unified launcher.
+- Route quick, complete, deep, custom, provider and validation work through launcher parameters/presets whenever possible.
+- Preserve TUTTO SU TUTTO lane coverage for every Full0To10 intensity.
+- Provider/probe/workload-quality lanes are included by default under Full0To10 unless disabled/unavailable.
 - Advisory context must be quality-filtered before content is read.
 - NPU promotion to advisory requires workload quality evidence, not just decode smoke.
 - Generated evidence belongs under `docs/LOCAL_VALIDATION_EVIDENCE/`.
@@ -384,6 +431,7 @@ For evidence commands, use the unified launcher runbook or tool-specific README.
 - Full-context golden proposal reports remain manual-review-only and do not apply patches by themselves.
 - Proposal-derived patch specs remain draft-only under `output/patch_specs/` until reviewed and dry-run.
 - Reviewed patch specs are still manual-review-only and must not be queued or applied without a separate explicit approval.
+- Discovery/index/CSV-count outputs are evidence surfaces and must not override source/canonical docs.
 - Every active phase must expose manifest/report/summary visibility.
 - Telemetry and capability manifests must travel with AI-to-AI handoff bundles.
 - Long bundles must have compact companion manifests.
@@ -394,7 +442,7 @@ For evidence commands, use the unified launcher runbook or tool-specific README.
 ## AI rules
 
 - Treat local AI output as draft material until validated.
-- Use the unified launcher for all full/quick/deep local AI runs.
+- Use the unified launcher for all run-unica local AI runs.
 - Use launcher-selected multistep mode for large MD/code analysis and large artifact generation.
 - Use telemetry before declaring a lane successful, failed, blocked, degraded or intentionally skipped.
 - Keep generated packages or workflow outputs separated by task/version.
@@ -425,7 +473,7 @@ It is not the core local AI architecture and must not override unified launcher 
 
 - Final repository rename.
 - Final NPU general advisory promotion gate beyond current quality report shape.
-- Final provider orchestration beyond explicit workflow flags.
+- Final provider orchestration beyond run-unica parameters and provider/probe lanes.
 - Final promotion flow from draft patch spec to queued/applied patch.
 - Final validation command for Blender runtime.
 - Final external-controls launcher patch for all output directories and basenames.
