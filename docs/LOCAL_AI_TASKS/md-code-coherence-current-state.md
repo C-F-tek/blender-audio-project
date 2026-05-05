@@ -3,26 +3,26 @@
 ## Scope
 
 - Markdown scanned: `443`
-- Python scripts scanned: `564`
+- Python scripts scanned: `582`
 - PowerShell scripts scanned: `44`
-- Finding count: `1201`
-- By severity: `{"high": 447, "low": 180, "medium": 574}`
+- Finding count: `805`
+- By severity: `{"high": 261, "low": 163, "medium": 381}`
 
 ## Finding classes
 
-- `stale-or-historical`: `512`
-- `active-current`: `447`
-- `unknown`: `97`
+- `stale-or-historical`: `329`
+- `active-current`: `261`
+- `unknown`: `81`
 - `placeholder-template`: `65`
-- `historical-or-handoff`: `46`
+- `historical-or-handoff`: `36`
 - `stale-or-future`: `16`
-- `chatgpt-advisory-or-handoff`: `14`
+- `chatgpt-advisory-or-handoff`: `13`
 - `patch-bundle-template`: `2`
 - `evidence-only`: `2`
 
 ## Finding kinds
 
-- `markdown_reference_missing`: `1167`
+- `markdown_reference_missing`: `771`
 - `markdown_python_command_missing_script`: `13`
 - `markdown_powershell_flag_not_in_param_block`: `8`
 - `markdown_python_flag_not_in_argparse`: `8`

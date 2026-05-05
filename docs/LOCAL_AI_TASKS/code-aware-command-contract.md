@@ -33,13 +33,16 @@ Root docs should link here or to canonical runbooks instead of duplicating long 
 | `Tools/ai/build_full0to10_accelerator_control.py` | `--no-external-probes, --output, --output-dir, --repo-root, --request, --timeout-seconds` |
 | `Tools/ai/build_full0to10_auto_refactor_plan.py` | `--markdown-output, --output, --patch-specs-output, --repo-root, --scan-root` |
 | `Tools/ai/build_full0to10_effective_use_optimization.py` | `--db, --no-external-probes, --output, --output-dir, --repo-root, --request, --timeout-seconds` |
+| `Tools/ai/build_full0to10_final_product_quality_package.py` | `--output, --output-dir, --run-root` |
 | `Tools/ai/build_full0to10_final_tool_product.py` | `--no-external-probes, --output, --output-dir, --repo-root, --request, --timeout-seconds` |
 | `Tools/ai/build_full0to10_hardware_tool_capability.py` | `--markdown-output, --no-external-probes, --output, --repo-root, --timeout-seconds` |
 | `Tools/ai/build_full0to10_light_profile_promotion.py` | `--output, --output-dir, --run-report` |
+| `Tools/ai/build_full0to10_memory_visibility_assertion.py` | `--output, --output-dir, --repo-root` |
 | `Tools/ai/build_full0to10_provider_execution_bridge.py` | `--allow-provider-generation, --no-external-probes, --operator-intent, --output, --output-dir, --repo-root, --request, --timeout-seconds` |
 | `Tools/ai/build_full0to10_provider_governor.py` | `--allow-provider-generation, --no-external-probes, --operator-intent, --output, --output-dir, --repo-root, --request, --strict-permit, --timeout-seconds` |
 | `Tools/ai/build_full0to10_provider_invocation_plan.py` | `--allow-provider-generation, --no-external-probes, --operator-intent, --output, --output-dir, --repo-root, --request, --timeout-seconds` |
 | `Tools/ai/build_full0to10_provider_telemetry_semantic_validation.py` | `--output, --output-dir, --run-root` |
+| `Tools/ai/build_full0to10_provider_tool_feedback_loop.py` | `--output, --output-dir, --run-root` |
 | `Tools/ai/build_full0to10_quality_gate.py` | `--markdown-output, --output, --patch-specs, --repo-root` |
 | `Tools/ai/build_full0to10_quality_stack_summary.py` | `--markdown-output, --output, --repo-root, --search-root` |
 | `Tools/ai/build_full0to10_repo_quality_packet.py` | `--allow-output-outside-output, --input, --max-files, --output, --output-dir, --output-file, --repo-root, --request, --tool, --write-output` |
@@ -180,6 +183,7 @@ Root docs should link here or to canonical runbooks instead of duplicating long 
 | `Tools/validation/run_full0to10_controlled_refactor_applier_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_effective_use_optimization_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_final_product_import_smoke.py` | `--repo-root` |
+| `Tools/validation/run_full0to10_final_product_quality_smoke.py` | `--repo-root` |
 | `Tools/validation/run_full0to10_final_tool_product_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_hardware_tool_capability_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_light_evidence_only_smoke.py` | `--repo-root` |
@@ -188,11 +192,13 @@ Root docs should link here or to canonical runbooks instead of duplicating long 
 | `Tools/validation/run_full0to10_manifest_gate_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_markdown_shadow_guard_smoke.py` | `--repo-root` |
 | `Tools/validation/run_full0to10_markdown_split_shadow_smoke.py` | `--repo-root, --work-dir` |
+| `Tools/validation/run_full0to10_memory_visibility_smoke.py` | `--repo-root` |
 | `Tools/validation/run_full0to10_openvino_device_visibility_smoke.py` | `--repo-root` |
 | `Tools/validation/run_full0to10_provider_execution_bridge_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_provider_governor_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_provider_invocation_plan_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_provider_telemetry_semantic_smoke.py` | `--repo-root` |
+| `Tools/validation/run_full0to10_provider_tool_feedback_loop_smoke.py` | `--repo-root` |
 | `Tools/validation/run_full0to10_quality_gate_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_quality_stack_preflight_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_quality_supervisor_safety_smoke.py` | `--repo-root, --work-dir` |
