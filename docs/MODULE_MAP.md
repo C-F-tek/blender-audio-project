@@ -4,37 +4,46 @@
 
 This document maps the main repository areas and identifies where reusable behavior should eventually live.
 
-Use it before editing code, creating a new Blender package, or asking an AI system to generate patches.
+Use it before editing code, creating a new Blender package, promoting a tool into the full-run perimeter, or asking an AI system to generate patches.
 
 ## Repository areas
 
 | Area | Role | Notes |
 |---|---|---|
-| `analyze_wav.py` | Root audio-analysis script | Produces feature data and frame-level JSON. Candidate for service/CLI split. |
-| `build_track_summary.py` | Root summary builder | Produces compact summaries from analysis JSON. Candidate for importable summary service. |
+| `analyze_wav.py` | Root audio-analysis script | Produces feature data and frame-level JSON. Candidate for service/CLI split. Application-domain tool; not broker-safe by default. |
+| `build_track_summary.py` | Root summary builder | Produces compact summaries from analysis JSON. Candidate for importable summary service. Application-domain tool; not broker-safe by default. |
 | `normalize_scene_spec.py` | Scene-spec normalizer | Contains normalization logic that should eventually move into a reusable scene-spec module. |
-| `Scripting/` | Blender package/script workspace | Contains versioned workflows and AI-generated/refined Blender packages. |
+| `Scripting/` | Blender package/script workspace | Contains versioned workflows and AI-generated/refined Blender packages. Application-domain runtime. |
 | `Scripting/v61b/` | Current reference Blender workflow | Treat as the quality reference for advanced package structure. Do not destructively refactor. |
-| `Scripting/v61b/main_v61b.py` | Main known Blender entry point for v61b | Orchestrates input validation, scene setup, audio strip, objects, atmosphere, physics and animation. |
+| `Scripting/v61b/main_v61b.py` | Main known Blender entry point for v61b | Orchestrates input validation, scene setup, audio strip, objects, atmosphere, physics and animation. Not part of normal AI/tooling full run. |
 | `Scripting/v61b/config.py` | v61b configuration module | Global-heavy but practical. Future shared code should use structured config adapters. |
 | `Scripting/v61b/io_utils.py` | v61b JSON/input/sequencer utilities | Good candidate for shared `json_io.py` and `blender_compat.py`. |
-| `Scripting/v61b/encode_ffmpeg_v61b.py` | v61b FFmpeg encoder | Good candidate for shared `ffmpeg_encoder.py`, `image_sequence.py`, and `render_profiles.py`. |
+| `Scripting/v61b/encode_ffmpeg_v61b.py` | v61b FFmpeg encoder | Good candidate for shared `ffmpeg_encoder.py`, `image_sequence.py`, and `render_profiles.py`. Application-domain runtime. |
 | `Scripting/v61b/spaziotempo/core/` | Scene registry and collection classification | Good model for future shared registry patterns. |
 | `Scripting/v61b/hotpatch/` | Patch and diagnostic scripts | Candidate source for shared diagnostics and hotpatch base helpers. |
 | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/` | Large generated/refined Blender package | Contains a large monolithic scene script and encoding helpers; strong extraction candidate. |
 | `Scripting/_template_audio_reactive_package/` | Template package | Starting point for future generated packages. Should evolve with the shared utility strategy. |
-| `Scripting/shared/` | Shared utility target | Package-neutral path, JSON, FFmpeg, Blender compatibility, render profile, diagnostics and panel helpers should live here. |
-| `Tools/npu/` | AI/NPU/Ollama support tooling | Contains context builders, dual-AI pipeline, NPU review and runtime utilities. |
+| `Scripting/shared/` | Shared utility target | Package-neutral path, JSON, FFmpeg, Blender compatibility, render profile, diagnostics and panel helpers should live here. Some referenced modules remain planned/future-facing until implemented. |
+| `Tools/npu/` | AI/NPU/Ollama support tooling | Contains context builders, dual-AI pipeline, NPU review and runtime utilities. NPU remains probe/diagnostic unless promoted by quality gates. |
 | `Tools/npu/pipeline/` | App-agnostic NPU helper package | Staged helper contracts, validators, fixtures and readiness gates. Not wired into runtime orchestrator until local validation/index regeneration pass. |
-| `Tools/ai/` | AI artifact validation and state packets | Validates AI-produced artifacts and builds generic agent state/memory packets. |
+| `Tools/ai/` | AI orchestration, state, evidence, telemetry and handoff tooling | Builds agent state, memory, provider diagnostics, deterministic recommendations, broker reports, runtime telemetry, capability manifests, telemetry summaries and AI-to-AI bundles. |
 | `Tools/ai/pipeline/` | Modular AI artifact pipeline | Focused modules for defaults, models, preflight, scheduling, reports, guardrails and orchestration. |
 | `Tools/validation/` | Repository validators | Non-invasive syntax, docs, AI pipeline, NPU helper, generated artifact and policy validators. |
 | `Tools/workflow/` | Local workflow runners and helper shells | Unified launcher is canonical; additional shell/GUI/helper scripts are supporting and governed by `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md`. |
-| `Tools/repo_patch_runner/` | Structured patch runner tooling | Supports repository modification workflows. |
+| `Tools/repo_patch_runner/` | Structured patch runner tooling | Supports repository modification workflows. Must remain explicit/manual-review before apply. |
 | `indexAI/` | Generated AI-oriented project index | Generated context and patch material. Do not hand-refactor as source. |
-| `patch_specs/` | Patch specification artifacts | Structured patch records and applied patch metadata. |
+| `patch_specs/` | Patch specification artifacts | Structured patch records and applied patch metadata. Review-only unless explicit apply path is authorized. |
 | `docs/` | Stable documentation | Human and AI-readable project contracts. |
+| `docs/LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable evidence | Review snapshots and production handoff artifacts. Telemetry/capability/bundle files here accompany evidence and patch plans. |
 | `examples/` | Example area | Reserved for reproducible examples and small fixtures. |
+
+## Full-run module doctrine
+
+`-Full0To10` is **TUTTO SU TUTTO**.
+
+Module visibility is part of the contract. A module/tool promoted into a full-run lane must expose its outputs through manifest, telemetry, capability, evidence or bundle surfaces. The perimeter may expand, but expansion must be explicit in docs and manifest/report outputs.
+
+Telemetry is a completeness accessory for evidence and patch plans. It does not replace either; it explains the execution state behind them.
 
 ## AI navigation order
 
@@ -46,13 +55,14 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 6. For local AI runs, read `docs/LOCAL_AI_RUN_BOOTSTRAP.md`.
 7. Read `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` for full 0-to-10 or launcher work.
 8. Read `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` before changing launcher manifest fields.
-9. Read this file to locate repository areas.
-10. Read `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` before promoting workflow helpers.
-11. Read `docs/DATA_FLOW.md` and `docs/LOCAL_AI_WORKFLOW.md` for provider/data semantics.
-12. Read `Tools/validation/README.md` when changing validators/workflows.
-13. For NPU helper work, read `Tools/npu/pipeline/README.md`.
-14. Read `Scripting/README.md` only for Blender package work.
-15. Read the README of the target package and inspect the actual script before editing.
+9. Read `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` before changing broker, provider, telemetry, bundle or evidence flow.
+10. Read this file to locate repository areas.
+11. Read `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` before promoting workflow helpers.
+12. Read `docs/DATA_FLOW.md` and `docs/LOCAL_AI_WORKFLOW.md` for provider/data semantics.
+13. Read `Tools/validation/README.md` when changing validators/workflows.
+14. For NPU helper work, read `Tools/npu/pipeline/README.md`.
+15. Read `Scripting/README.md` only for Blender package work.
+16. Read the README of the target package and inspect the actual script before editing.
 
 `docs/PROJECT_AI_CONSCIOUSNESS.md` is historical/orientation material. It must not override the canonical flow, launcher contract or guardrails above.
 
@@ -81,6 +91,26 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | `spaziotempo/core/registry.py` | Layer/object/feature registry | Shared registry pattern for future packages. |
 | `hotpatch/` | Runtime patches and diagnostics | `Scripting/shared/diagnostics.py`, `hotpatch_base.py`. |
 
+### Local AI orchestration, telemetry and evidence
+
+| File | Main responsibility | Full-run / telemetry role |
+|---|---|---|
+| `Tools/ai/agent_runtime_tool_broker.py` | Runtime broker for safe report-only tool calls. | Produces broker report consumed by telemetry and bundle. |
+| `Tools/ai/build_runtime_tool_usage_telemetry.py` | Runtime tool usage telemetry builder. | Counts executed/failed/blocked calls and preserves broker report inputs. |
+| `Tools/ai/build_runtime_tool_capability_manifest.py` | Capability manifest builder. | Documents available broker/tool capabilities and guardrails. |
+| `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Full toolbox telemetry summary builder. | Cross-run summary of broker/provider/GPU/NPU/patch-plan state. |
+| `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production AI-to-AI bundle builder. | Groups evidence, patch-plan, telemetry, capability and final summary for next AI. |
+| `Tools/ai/build_deterministic_recommendations.py` | Deterministic recommendations and recovery. | Supports degraded-provider recovery and safe recommendations. |
+| `Tools/ai/build_agent_review_patch_plan.py` | Manual-review documentation patch plan. | Patch-plan evidence must be accompanied by telemetry/capability when from full runs. |
+| `Tools/ai/build_agent_state_packet.py` | CLI for task-local agent state packets. | Context/memory surface; no Blender, GPU, NPU or FFmpeg execution. |
+| `Tools/ai/agent_state.py` | Generic memory records and microtask packet model. | Package-neutral local state model. |
+| `Tools/ai/agent_memory_policy.py` | Memory retention, quarantine and promotion-candidate rules. | Deterministic and non-destructive. |
+| `Tools/ai/review_agent_memory.py` | CLI for memory policy reports. | Writes reports only; promotion into docs remains manual. |
+| `Tools/ai/analyze_gpu_npu_run_sync.py` | GPU/NPU sync diagnostics. | Must prefer real `rounds[*].elapsed_seconds` when available. |
+| `Tools/ai/run_local_provider_probe.py` | Local provider probe. | Explicit probe report; no implicit provider promotion. |
+| `Tools/ai/check_local_resource_lanes.py` | Local resource lane checks. | Provider/resource diagnostics. |
+| `Tools/ai/build_workload_quality_lane_routing.py` | Quality-based advisory routing. | Prevents unusable provider output from contaminating advisory context. |
+
 ### NPU and AI tooling
 
 | File | Main responsibility | Refactor target |
@@ -90,10 +120,6 @@ Use it before editing code, creating a new Blender package, or asking an AI syst
 | `Tools/npu/npu_runtime.py` | NPU preflight | Provider/preflight module in a later runtime-wiring phase. |
 | `Tools/npu/build_project_ai_index.py` | Project index generation | Keep as generator; generated output remains non-source. |
 | `Tools/npu/build_ai_service_packet.py` | AI service packet generation | Keep as artifact builder; extract common JSON/path helpers later. |
-| `Tools/ai/agent_state.py` | Generic memory records and microtask packet model | Keep package-neutral; connect to app workers only through explicit packet contracts. |
-| `Tools/ai/build_agent_state_packet.py` | CLI for task-local agent state packets | Keep non-invasive; no Blender, GPU, NPU or FFmpeg execution. |
-| `Tools/ai/agent_memory_policy.py` | Memory retention, quarantine and promotion-candidate rules | Keep deterministic and non-destructive. |
-| `Tools/ai/review_agent_memory.py` | CLI for memory policy reports | Writes reports only; promotion into docs remains manual. |
 
 ### AI inventory, memory and evidence helpers
 
@@ -243,6 +269,7 @@ Scripting/<package_name>/
 - For reusable behavior, add a shared module first and migrate package usage only after validation.
 - For NPU helper work, keep `Tools/npu/pipeline/` runtime-free until local validation and index regeneration are green.
 - For workflow helpers, read `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` before promotion, examples or push-capable use.
+- For full-run lane promotion, require manifest/report visibility plus telemetry/capability/bundle integration or an explicit exclusion rationale.
 
 ## Refactoring guidance
 
