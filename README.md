@@ -8,6 +8,8 @@ The project now treats full local AI runs as serious whole-repository operations
 
 A full run is not a narrow smoke, not a single-lane provider call and not a partial documentation scan. Every `-Full0To10` variation must cover all active repository lanes unless a capability is explicitly disabled, unavailable or recorded as degraded.
 
+Full0To10 is opt-out by lane: once selected, provider/probe/workload-quality, telemetry, discovery, index and CSV/count lanes are included by default. If the operator does not want a lane, the operator must disable it explicitly with `-No*` flags or a documented exclusion.
+
 The meaning of `tutto` is intentionally expandable. New stable lanes, registries, validators, broker tools, provider diagnostics, evidence surfaces, memory/context builders and repository-consistency checks must be added to the full-run contract when they become production-ready. Expansion must be explicit in docs, manifests and evidence summaries; silent scope reduction is not allowed.
 
 ## Canonical reading flow
@@ -59,8 +61,8 @@ local reports / generated artifacts
   -> bounded context and inventory evidence
   -> validation and quality gates
   -> provider lane classification
-  -> Ollama/GPU advisory lane when explicitly enabled and quality-gated
-  -> OpenVINO/NPU probe, guardrail and decode diagnostics
+  -> Ollama/GPU advisory lane for Full0To10 when available and quality-gated
+  -> OpenVINO/NPU probe, guardrail and decode diagnostics for Full0To10 when available
   -> deterministic recommendations
   -> manual-review patch plans / patch bundles
   -> runtime broker telemetry
@@ -72,8 +74,8 @@ Provider posture:
 
 | Lane | Provider | Role |
 |---|---|---|
-| GPU/CUDA | Ollama | Primary advisory/planning lane when explicitly requested and quality-gated. |
-| NPU/OpenVINO | OpenVINO GenAI | Probe, guardrail and decode-smoke diagnostics. Not general advisory. |
+| GPU/CUDA | Ollama | Primary advisory/planning lane for Full0To10 unless explicitly disabled or diagnosed unavailable; quality-gated. |
+| NPU/OpenVINO | OpenVINO GenAI | Probe, guardrail and decode-smoke diagnostics for Full0To10 unless explicitly disabled or diagnosed unavailable. Not general advisory. |
 | Blender/audio/media runtime | Blender Python / FFmpeg / audio tools | Legacy/application target. Frozen unless explicitly scoped. |
 
 ## Canonical local AI entrypoint
@@ -136,7 +138,7 @@ run FFmpeg encode/mux or Blender render
 modify full analysis JSON files
 commit output/**, renders/**, generated media, *.db or *.sqlite
 hand-edit generated indexes
-change provider/model settings implicitly
+change Full0To10 from opt-out-by-lane to silent opt-in per capability
 promote NPU/OpenVINO to primary advisory
 merge to master without explicit user command
 ```
@@ -172,6 +174,8 @@ Current documentation cleanup and refactoring use:
 ```text
 Markdown inventory
 script/function/class/method inventory
+CSV/count evidence surfaces
+auto-discovery and index repair reports/plans
 tool placement audit
 validation report contracts
 runtime broker telemetry
