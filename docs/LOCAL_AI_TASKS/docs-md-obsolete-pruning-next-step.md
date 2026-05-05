@@ -23,6 +23,7 @@ historical task classification
 candidate deletion list requiring explicit approval
 validator/catalog cleanup proposal
 visibility/length policy compliance report
+telemetry and capability handoff compliance report
 ```
 
 ## Required reading order
@@ -36,6 +37,9 @@ docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/LOCAL_AI_TASKS/README.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/DATA_FLOW.md
+docs/LOCAL_AI_WORKFLOW.md
 Tools/validation/README.md
 ```
 
@@ -43,8 +47,10 @@ Supporting historical references, read only when triaging old 0-to-10 duplicatio
 
 ```text
 docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
-docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md
+git history or compact evidence for removed code-refactor 0-to-10 runbooks
 ```
+
+The removed file `docs/LOCAL_AI_TASKS/code-refactor-0-to-10-procedure.md` is not expected to exist on this branch. Do not recreate it as an active runbook.
 
 If any required file is missing, stop and report.
 
@@ -60,6 +66,7 @@ produce compact evidence
 produce patch bundle proposal
 shorten Tools/validation/README.md into a catalog if local patch apply is available
 add visibility-first and length-policy metadata to active docs
+add telemetry-first and capability-manifest metadata to active docs
 ```
 
 Forbidden without explicit approval:
@@ -100,6 +107,20 @@ provider
 
 If provider-backed advisory is explicitly wanted later, use `Full0To10` or provider flags through the unified launcher. Do not start from legacy 0-to-10 runbooks as active entrypoints.
 
+## TUTTO SU TUTTO check
+
+Every Markdown cleanup must preserve the current full-run doctrine:
+
+```text
+Full0To10 = TUTTO SU TUTTO
+quick/balanced/deep/custom = intensity only
+smoke = separate non-full mode
+```
+
+If an MD file narrows the full-run perimeter, promotes a supporting wrapper as the active entrypoint, or treats old semi-automatic runbooks as canonical, classify it as stale and update/demote it.
+
+When a production-ready lane is added, the cleanup must either include it in the full-run perimeter or record an explicit exclusion rationale.
+
 ## Inventory ownership
 
 Markdown and script inventories are produced by the launcher or by focused validator commands owned by `Tools/validation/README.md`.
@@ -112,6 +133,8 @@ phase_status
 phase_reports
 Markdown inventory summary
 script inventory summary / CSV
+telemetry summary when full-run evidence is involved
+capability manifest when tools are involved
 triage report if created
 ```
 
@@ -125,11 +148,28 @@ Required order:
 launcher command
 manifest or inventory summary
 phase/report references
+telemetry and capability surfaces when relevant
 compact Markdown/CSV summary
 detailed evidence only when needed
 ```
 
 Do not create new monolithic AI-to-AI bundles without a companion manifest.
+
+## Telemetry accessory rule
+
+Telemetry accompanies evidence and patch plans for completeness.
+
+A documentation cleanup or patch-plan review is incomplete when it references a full-run evidence set but omits the companion telemetry/capability surfaces:
+
+```text
+runtime_tool_usage_telemetry_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md
+full_toolbox_run_telemetry_summary_<STAMP>.json/md
+shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+```
+
+Telemetry does not replace evidence or patch plans. It explains whether the evidence/patch plan came from an executed, degraded, failed, blocked, skipped or planned-only lane.
 
 ## Length policy
 
@@ -171,6 +211,8 @@ Required sections:
 ```text
 inventory summary
 single reading flow check
+TUTTO SU TUTTO scope check
+telemetry/capability handoff check
 visibility-first compliance check
 length-policy compliance check
 stable docs requiring index update
@@ -219,11 +261,14 @@ docs/LOCAL_VALIDATION_EVIDENCE/
 no file deleted unless explicitly approved
 single reading flow preserved
 unified launcher remains the active local-AI entrypoint
+TUTTO SU TUTTO doctrine preserved
 obsolete/superseded candidates listed
 script inventory included in refactor evidence path
+telemetry/capability surfaces included when full-run evidence is used
 visibility-first compliance checked
 length-policy compliance checked
 Tools/validation README reduction either applied or listed as next patch
 launcher validation evidence referenced
 raw output/** not committed
+removed code-refactor runbooks are not recreated as active docs
 ```
