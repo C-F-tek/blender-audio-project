@@ -17,8 +17,22 @@ CHATGPT/README.md
 Current handoff file:
 
 ```text
-CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md
+CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
 ```
+
+Current active task:
+
+```text
+docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+```
+
+Current runtime bundle to inspect:
+
+```text
+ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+```
+
+The bundle is a runtime artifact published as a GitHub draft release asset from PR #187 and is intentionally not committed to the repository.
 
 Robust chat/tooling recovery notes:
 
@@ -31,7 +45,7 @@ Contract:
 ```text
 - CHATGPT/*.md is durable operational memory.
 - It is advisory but should be read before planning new local AI/full-toolbox work.
-- Source-of-truth remains code, validation reports, canonical docs and current git state.
+- Source-of-truth remains code, validation reports, canonical docs, runtime bundle evidence and current git state.
 - Do not use CHATGPT notes to override AGENTS.md guardrails.
 ```
 
