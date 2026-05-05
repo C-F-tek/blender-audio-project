@@ -26,6 +26,7 @@
 #>
 [CmdletBinding()]
 param(
+    [string]$RepoRoot = ".",
     [string[]]$Mode = @(),
     [string]$TaskFile = ".\docs\LOCAL_AI_TASKS\docs-md-obsolete-pruning-next-step.md",
     [string]$TaskBranch = "",
@@ -101,10 +102,42 @@ param(
     [switch]$SaveInputsToMemoryDb,
     [int]$MatrixWorkers = 12,
     [int]$RepeatCases = 2
+,
+    [switch]$LightFull0To10,
+    [string]$LightFull0To10OutputDir = "output/validation/unified_light_full0to10_profile",
+    [switch]$LightFull0To10NoExternalProbes
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+# IA-CARMINE-LIGHTFULL0TO10-DISPATCH-BEGIN
+if ($LightFull0To10) {
+    $LightProfileScript = Join-Path $PSScriptRoot "run_unified_light_full0to10_profile.ps1"
+    if (-not (Test-Path $LightProfileScript)) {
+        throw "LightFull0To10 profile script not found: $LightProfileScript"
+    }
+
+    if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
+        $ResolvedLightRepoRoot = (Resolve-Path ".").Path
+    } else {
+        $ResolvedLightRepoRoot = (Resolve-Path $RepoRoot).Path
+    }
+
+    $LightArgs = @(
+        "-RepoRoot", $ResolvedLightRepoRoot,
+        "-OutputDir", $LightFull0To10OutputDir
+    )
+
+    if (-not $PSBoundParameters.ContainsKey("LightFull0To10NoExternalProbes") -or $LightFull0To10NoExternalProbes) {
+        $LightArgs += "-NoExternalProbes"
+    }
+
+    Write-Host "[LightFull0To10] Dispatching evidence-only profile..."
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $LightProfileScript @LightArgs
+    exit $LASTEXITCODE
+}
+# IA-CARMINE-LIGHTFULL0TO10-DISPATCH-END
 
 $ModeOrder = @(
     "smoke", "reset", "validation", "md", "json", "python", "chunks", "context_pack",
