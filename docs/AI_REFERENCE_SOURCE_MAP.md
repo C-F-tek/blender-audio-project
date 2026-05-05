@@ -89,6 +89,8 @@ docs/external_references/
 docs/references/
 ```
 
+These folders are intentionally optional local study locations. Their absence in the committed branch is expected and must not be treated as a broken documentation reference, a missing source artifact, or a request to vendor upstream repositories.
+
 Suggested `.gitignore` entries if those folders are used:
 
 ```gitignore
