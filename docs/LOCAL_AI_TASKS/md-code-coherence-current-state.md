@@ -5,23 +5,24 @@
 - Markdown scanned: `443`
 - Python scripts scanned: `564`
 - PowerShell scripts scanned: `44`
-- Finding count: `1181`
-- By severity: `{"high": 457, "low": 142, "medium": 582}`
+- Finding count: `1201`
+- By severity: `{"high": 447, "low": 180, "medium": 574}`
 
 ## Finding classes
 
-- `stale-or-historical`: `559`
-- `active-current`: `457`
-- `unknown`: `119`
+- `stale-or-historical`: `512`
+- `active-current`: `447`
+- `unknown`: `97`
+- `placeholder-template`: `65`
+- `historical-or-handoff`: `46`
 - `stale-or-future`: `16`
-- `placeholder-template`: `10`
-- `chatgpt-advisory-or-handoff`: `10`
-- `historical-or-handoff`: `7`
-- `patch-bundle-template`: `3`
+- `chatgpt-advisory-or-handoff`: `14`
+- `patch-bundle-template`: `2`
+- `evidence-only`: `2`
 
 ## Finding kinds
 
-- `markdown_reference_missing`: `1147`
+- `markdown_reference_missing`: `1167`
 - `markdown_python_command_missing_script`: `13`
 - `markdown_powershell_flag_not_in_param_block`: `8`
 - `markdown_python_flag_not_in_argparse`: `8`
@@ -39,9 +40,7 @@ Historical/evidence-only references must be demoted or described as historical, 
 | Kind | Document | Target | Classification |
 |---|---|---|---|
 | markdown_reference_missing | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` | `ools/ai/build_repository_consistency_map.py` | active-current |
-| markdown_powershell_command_missing_script | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` | `Tools/workflow/some_runner.ps1` | active-current |
 | markdown_reference_missing | `guida_git_github_blender_audio_project.md` | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/_backup_previous_elastic_touch_fix.py` | active-current |
-| markdown_python_command_missing_script | `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md` | `output/validation/patch_bundles/ia_carmine_real_run_strict_tool_activation_bundle/run_patch_bundle.py` | active-current |
 | markdown_reference_missing | `docs/AI_GENERATED_PACKAGE_STANDARD.md` | `config.py` | active-current |
 | markdown_reference_missing | `docs/AI_GENERATED_PACKAGE_STANDARD.md` | `encode_ffmpeg.py` | active-current |
 | markdown_reference_missing | `docs/AI_GENERATED_PACKAGE_STANDARD.md` | `main.py` | active-current |
@@ -118,3 +117,5 @@ Historical/evidence-only references must be demoted or described as historical, 
 | markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `config.py` | active-current |
 | markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `ffmpeg_encoder.py` | active-current |
 | markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `image_sequence.py` | active-current |
+| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `json_io.py` | active-current |
+| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `render_profiles.py` | active-current |

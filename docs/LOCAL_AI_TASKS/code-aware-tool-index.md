@@ -61,7 +61,7 @@ Do not edit by hand when code changes; regenerate from the report.
 | `Tools/validation/run_agnostic_ai_tools_smoke_matrix.py` | 483 | `--dry-run, --include-ollama-live, --include-workflow, --markdown-output, --memory-db, --ollama-max-new-tokens, --output, --repo-root, --timeout-seconds, --work-dir` | 12 | 1 |
 | `Tools/ai/agent_memory_routing_policy.py` | 471 | `--broker-request-output, --clear-operational, --markdown-output, --memory-search-limit, --objective, --operational-query, --output, --persistent-query, --profile, --promotion-ca...` | 14 | 0 |
 | `normalize_scene_spec.py` | 469 | `-` | 14 | 0 |
-| `Tools/docs/build_code_aware_md_coherence.py` | 446 | `--markdown-output, --max-lines, --max-markdown-finding-rows, --output, --repo-root` | 19 | 1 |
+| `Tools/docs/build_code_aware_md_coherence.py` | 461 | `--markdown-output, --max-lines, --max-markdown-finding-rows, --output, --repo-root` | 19 | 1 |
 | `Tools/validation/check_reviewed_patch_specs.py` | 446 | `--manifest, --output, --repo-root, --spec` | 15 | 0 |
 | `Tools/workflow/startup_check.py` | 444 | `--json, --output, --project, --repo-root, --root, --text-output` | 15 | 1 |
 | `Tools/repo_patch_runner/apply_repo_mods.py` | 443 | `--dry-run, --no-backup, --repo-root, --show-diff, --spec, --write` | 19 | 2 |
