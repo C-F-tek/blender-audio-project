@@ -20,8 +20,18 @@ Mode for ChatGPT/cloud work: GitHub-only/API unless local access is explicitly r
 ```text
 Full0To10 = TUTTO SU TUTTO
 quick/balanced/deep/custom = intensity, not scope
+all full-run lanes are included by default
+if the operator does not want a lane, the operator must disable it explicitly with -No* flags or documented exclusion
 telemetry accompanies evidence and patch plans
 AI-to-AI bundle, runtime telemetry, capability manifest and full toolbox telemetry summary are operational handoff surfaces
+```
+
+Provider/probe policy for full runs:
+
+```text
+In a Full0To10 run, provider probes, provider diagnostics, workload quality, runtime broker telemetry and capability manifests are expected by default.
+They do not require a separate per-lane confirmation once Full0To10 is selected.
+They may be skipped only through explicit -No* flags, unavailable-tool/provider diagnostics, dry-run planned state or a documented operator exclusion.
 ```
 
 ## Current active work item
@@ -173,7 +183,7 @@ No commit of *.db, *.sqlite or *.sqlite3.
 No commit of renders/**.
 No Blender runtime.
 No FFmpeg runtime.
-No provider execution without explicit request.
 No automatic patch-spec apply.
 No broad triple-quote/raw multiline rewrites for command-example cleanup.
+Full0To10 is opt-out by lane: provider/probe/telemetry/discovery lanes are included unless explicitly disabled or diagnosed unavailable.
 ```
