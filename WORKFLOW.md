@@ -8,6 +8,14 @@ This file defines durable process and guardrails. It must not carry executable P
 
 Scenario-specific commands live in task runbooks under `docs/LOCAL_AI_TASKS/`. Tool-specific commands live next to the tool package, for example `Tools/validation/README.md` and `Tools/npu/pipeline/README.md`.
 
+## Operational doctrine: TUTTO SU TUTTO
+
+The full local-AI workflow is now whole-repository by default: **TUTTO SU TUTTO**.
+
+A `-Full0To10` run must traverse every active lane that participates in project understanding, validation, provider diagnostics, broker telemetry, recommendations, patch planning, evidence and AI-to-AI handoff. `quick`, `balanced`, `deep` and `custom` are intensity profiles only; they change resource budgets, not workflow scope.
+
+The scope of `tutto` may expand. When a new lane becomes stable, for example a new broker tool, registry validator, memory/context surface, repository-consistency check, provider diagnostic or evidence builder, it must be wired into the full-run contract or documented as explicitly excluded. Silent omission is a workflow defect.
+
 ## Canonical lifecycle
 
 ```text
