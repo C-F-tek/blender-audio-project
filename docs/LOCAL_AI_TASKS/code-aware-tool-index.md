@@ -61,6 +61,7 @@ Do not edit by hand when code changes; regenerate from the report.
 | `Tools/validation/run_agnostic_ai_tools_smoke_matrix.py` | 483 | `--dry-run, --include-ollama-live, --include-workflow, --markdown-output, --memory-db, --ollama-max-new-tokens, --output, --repo-root, --timeout-seconds, --work-dir` | 12 | 1 |
 | `Tools/ai/agent_memory_routing_policy.py` | 471 | `--broker-request-output, --clear-operational, --markdown-output, --memory-search-limit, --objective, --operational-query, --output, --persistent-query, --profile, --promotion-ca...` | 14 | 0 |
 | `normalize_scene_spec.py` | 469 | `-` | 14 | 0 |
+| `Tools/docs/build_code_aware_md_coherence.py` | 446 | `--markdown-output, --max-lines, --max-markdown-finding-rows, --output, --repo-root` | 19 | 1 |
 | `Tools/validation/check_reviewed_patch_specs.py` | 446 | `--manifest, --output, --repo-root, --spec` | 15 | 0 |
 | `Tools/workflow/startup_check.py` | 444 | `--json, --output, --project, --repo-root, --root, --text-output` | 15 | 1 |
 | `Tools/repo_patch_runner/apply_repo_mods.py` | 443 | `--dry-run, --no-backup, --repo-root, --show-diff, --spec, --write` | 19 | 2 |
@@ -74,7 +75,6 @@ Do not edit by hand when code changes; regenerate from the report.
 | `Tools/validation/check_ai_context_pack_contract.py` | 425 | `--evidence, --output, --pack, --repo-root` | 12 | 0 |
 | `Tools/workflow/gui/components/storage_dashboard.py` | 422 | `-` | 26 | 2 |
 | `Tools/workflow/scene_brief.py` | 419 | `-` | 22 | 0 |
-| `Tools/docs/build_code_aware_md_coherence.py` | 417 | `--markdown-output, --max-lines, --max-markdown-finding-rows, --output, --repo-root` | 19 | 1 |
 | `Tools/ai/build_patch_specs_from_proposals.py` | 414 | `--basename, --max-proposals, --output-dir, --proposal, --repo-root` | 14 | 0 |
 | `Tools/ai/schema_repair_context.py` | 411 | `-` | 10 | 0 |
 | `Tools/ai/agent_review_warning_policy.py` | 408 | `--decision-report, --final-report, --markdown-output, --min-patch-plans, --min-recommendations, --output, --repo-root, --report-file` | 14 | 0 |
@@ -132,7 +132,7 @@ Do not edit by hand when code changes; regenerate from the report.
 
 | Path | Lines | Parameters |
 |---|---:|---|
-| `Tools/workflow/run_unified_local_ai_refactor.ps1` | 1353 | `-AgentStateMaxMemoryChars, -AiPacketsDir, -AiPacketsRoot, -AllowDirty, -ApplyReset, -BudgetMinutes, -BuildEvidence, -BuildWorkloadQualityReport, -ConfirmResetText, -ContextPackMaxFileChars, -Contex...` |
+| `Tools/workflow/run_unified_local_ai_refactor.ps1` | 1386 | `-AgentStateMaxMemoryChars, -AiPacketsDir, -AiPacketsRoot, -AllowDirty, -ApplyReset, -BudgetMinutes, -BuildEvidence, -BuildWorkloadQualityReport, -ConfirmResetText, -ContextPackMaxFileChars, -Contex...` |
 | `Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1` | 1033 | `-BudgetMinutes, -EvidenceDir, -FilesPerRound, -KeepAlive, -MaxCharsPerFile, -MaxContextFiles, -MaxNewTokens, -MaxPatchPlans, -MaxRecommendations, -MaxRounds, -MinPatchPlans, -MinRecommendations, -N...` |
 | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | 609 | `-AgentStateBasename, -AgentStateMaxMemoryChars, -AgentStateObjective, -Basename, -BuildAgentStatePacket, -BuildContextPack, -BuildEnrichmentPlan, -BuildEvidence, -BuildSelectedChunksEvidence, -Buil...` |
 | `Tools/workflow/run_ai_cycle_startup_preflight.ps1` | 401 | `-EnableNpuProviderEnvironmentCheck, -EvidenceDir, -ExtraArtifact, -ExtraReport, -InputAuditReport, -MaxIncludedArtifactChars, -MaxIncludedArtifacts, -Objective, -OutputRoot, -RepoRoot, -SkipCodeInt...` |
@@ -145,7 +145,7 @@ Do not edit by hand when code changes; regenerate from the report.
 | `Tools/npu/run_npu_context.ps1` | 238 | `-BuildOnly, -CreativeModel, -DualPhase, -Engine, -IncludeManual, -OllamaModel, -ReviewDomain, -RunDualAI, -RunOllamaMusicAgent, -SkipDualNpu, -SkipDualOllama, -SkipFinal, -TechnicalModel` |
 | `Tools/workflow/run_docs_md_refactor_10min.ps1` | 229 | `-AllowDirty, -DryRun, -LaunchRunner, -NoBranch, -SkipGitSync, -Stamp, -TaskBranch` |
 | `Tools/git/auto_push_generated_data.ps1` | 228 | `-Branch, -DryRun, -FullProject, -IncludeAllGenerated, -IncludeDocs, -IncludeOutputJson, -Message, -PullFirst, -RepoPath` |
-| `Tools/workflow/run_full0to10_light_evidence_only.ps1` | 182 | `-MaxRepoQualityFiles, -NoExternalProbes, -OutputDir, -RepoRoot, -SkipFinalProduct, -SkipMarkdownLineCheck, -Strict, -TimeoutSeconds, -TrackName` |
+| `Tools/workflow/run_full0to10_light_evidence_only.ps1` | 189 | `-MaxRepoQualityFiles, -NoExternalProbes, -OutputDir, -RepoRoot, -SkipFinalProduct, -SkipMarkdownLineCheck, -Strict, -TimeoutSeconds, -TrackName` |
 | `Tools/workflow/run_post_validation_ai_packet.ps1` | 168 | `-Basename, -ContextFile, -MaxContextChars, -Model, -OutputDir, -Profile, -ProposalBasename, -RepoRoot, -ReportFile, -UseOllama, -UsePrimaryAdvisoryProvider` |
 | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | 162 | `-Basename, -ContextFile, -EvidenceBasename, -MaxContextChars, -Model, -OutputDir, -Profile, -ProposalBasename, -RepoRoot, -ReportFile, -RunNpuDecodeSmoke, -RunNpuProbe, -RunOllamaProbe, -UsePrimary...` |
 | `Tools/git/auto_push_generated_artifacts.ps1` | 135 | `-DryRun, -IncludeFullAnalysisJson, -Message, -NoPush, -Paths, -RepoPath` |

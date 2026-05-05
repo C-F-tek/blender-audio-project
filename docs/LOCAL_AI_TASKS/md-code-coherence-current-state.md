@@ -2,24 +2,30 @@
 
 ## Scope
 
-- Markdown scanned: `451`
-- Python scripts scanned: `555`
+- Markdown scanned: `443`
+- Python scripts scanned: `564`
 - PowerShell scripts scanned: `44`
-- Finding count: `2395`
-- By severity: `{"high": 1590, "low": 143, "medium": 662}`
+- Finding count: `1181`
+- By severity: `{"high": 457, "low": 142, "medium": 582}`
 
 ## Finding classes
 
-- `active-current`: `1590`
-- `stale-or-historical`: `650`
-- `unknown`: `143`
-- `historical-or-handoff`: `12`
+- `stale-or-historical`: `559`
+- `active-current`: `457`
+- `unknown`: `119`
+- `stale-or-future`: `16`
+- `placeholder-template`: `10`
+- `chatgpt-advisory-or-handoff`: `10`
+- `historical-or-handoff`: `7`
+- `patch-bundle-template`: `3`
 
 ## Finding kinds
 
-- `markdown_reference_missing`: `1782`
-- `markdown_python_command_missing_script`: `507`
-- `markdown_powershell_command_missing_script`: `104`
+- `markdown_reference_missing`: `1147`
+- `markdown_python_command_missing_script`: `13`
+- `markdown_powershell_flag_not_in_param_block`: `8`
+- `markdown_python_flag_not_in_argparse`: `8`
+- `markdown_powershell_command_missing_script`: `3`
 - `active_markdown_over_line_budget`: `2`
 
 ## Operational decision
@@ -32,24 +38,10 @@ Historical/evidence-only references must be demoted or described as historical, 
 
 | Kind | Document | Target | Classification |
 |---|---|---|---|
-| markdown_reference_missing | `AGENTS.md` | `patches/00_check_repo_ready.py` | active-current |
-| markdown_reference_missing | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` | `/Tools/ai/some_tool.py` | active-current |
-| markdown_reference_missing | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` | `/Tools/validation/some_smoke.py` | active-current |
-| markdown_reference_missing | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` | `/Tools/workflow/some_runner.ps1` | active-current |
-| markdown_reference_missing | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` | `/Tools/workflow/some_script.ps1` | active-current |
 | markdown_reference_missing | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` | `ools/ai/build_repository_consistency_map.py` | active-current |
-| markdown_powershell_command_missing_script | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` | `/Tools/workflow/some_runner.ps1` | active-current |
+| markdown_powershell_command_missing_script | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` | `Tools/workflow/some_runner.ps1` | active-current |
 | markdown_reference_missing | `guida_git_github_blender_audio_project.md` | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/_backup_previous_elastic_touch_fix.py` | active-current |
-| markdown_reference_missing | `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md` | `/Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1` | active-current |
-| markdown_reference_missing | `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md` | `/Tools/workflow/run_unified_local_ai_refactor.ps1` | active-current |
-| markdown_python_command_missing_script | `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md` | `/output/validation/patch_bundles/ia_carmine_real_run_strict_tool_activation_bundle/run_patch_bundle.py` | active-current |
-| markdown_powershell_command_missing_script | `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md` | `/Tools/workflow/run_unified_local_ai_refactor.ps1` | active-current |
-| markdown_powershell_command_missing_script | `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md` | `/Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1` | active-current |
-| markdown_reference_missing | `CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md` | `/Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1` | active-current |
-| markdown_reference_missing | `CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md` | `/Tools/workflow/run_unified_local_ai_refactor.ps1` | active-current |
-| markdown_reference_missing | `docs/AI_CHUNKING_STRATEGY.md` | `/Tools/npu/build_semantic_code_chunks.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_CHUNKING_STRATEGY.md` | `/Tools/npu/build_semantic_code_chunks.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_CHUNKING_STRATEGY.md` | `/Tools/npu/build_semantic_code_chunks.py` | active-current |
+| markdown_python_command_missing_script | `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md` | `output/validation/patch_bundles/ia_carmine_real_run_strict_tool_activation_bundle/run_patch_bundle.py` | active-current |
 | markdown_reference_missing | `docs/AI_GENERATED_PACKAGE_STANDARD.md` | `config.py` | active-current |
 | markdown_reference_missing | `docs/AI_GENERATED_PACKAGE_STANDARD.md` | `encode_ffmpeg.py` | active-current |
 | markdown_reference_missing | `docs/AI_GENERATED_PACKAGE_STANDARD.md` | `main.py` | active-current |
@@ -68,10 +60,6 @@ Historical/evidence-only references must be demoted or described as historical, 
 | markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `scheduler.py` | active-current |
 | markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `schema_report.py` | active-current |
 | markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `steps.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `/Tools/ai/run_parallel_artifact_pipeline.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `/Tools/ai/run_pipeline_dry_run_matrix.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `/Tools/validation/check_ai_pipeline_modules.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `/Tools/validation/check_python_syntax.py` | active-current |
 | markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `artifact_contracts.py` | active-current |
 | markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `defaults.py` | active-current |
 | markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `guardrail_models.py` | active-current |
@@ -81,34 +69,52 @@ Historical/evidence-only references must be demoted or described as historical, 
 | markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `scheduler.py` | active-current |
 | markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `schema_report.py` | active-current |
 | markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `steps.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_PIPELINE_OPTIMIZATION.md` | `/Tools/ai/run_parallel_artifact_pipeline.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_PIPELINE_OPTIMIZATION.md` | `/Tools/ai/run_parallel_artifact_pipeline.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_PIPELINE_OPTIMIZATION.md` | `/Tools/ai/run_parallel_artifact_pipeline.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_PIPELINE_OPTIMIZATION.md` | `/Tools/ai/run_pipeline_dry_run_matrix.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_PIPELINE_OPTIMIZATION.md` | `/Tools/validation/check_python_syntax.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_PIPELINE_OPTIMIZATION.md` | `/Tools/validation/check_ai_pipeline_modules.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_PIPELINE_OPTIMIZATION.md` | `/Tools/ai/run_pipeline_dry_run_matrix.py` | active-current |
-| markdown_reference_missing | `docs/AI_SMART_POLICY.md` | `/Tools/ai/review_agent_memory.py` | active-current |
-| markdown_reference_missing | `docs/AI_SMART_POLICY.md` | `/Tools/validation/check_agent_memory_policy.py` | active-current |
-| markdown_reference_missing | `docs/AI_SMART_POLICY.md` | `/Tools/validation/check_generated_artifact_path_policy.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_SMART_POLICY.md` | `/Tools/validation/check_generated_artifact_path_policy.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_SMART_POLICY.md` | `/Tools/ai/review_agent_memory.py` | active-current |
-| markdown_python_command_missing_script | `docs/AI_SMART_POLICY.md` | `/Tools/validation/check_agent_memory_policy.py` | active-current |
-| markdown_reference_missing | `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` | `/Tools/git/auto_push_generated_artifacts.ps1` | active-current |
-| markdown_reference_missing | `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` | `/your_app_regenerate_indexes.ps1` | active-current |
-| markdown_powershell_command_missing_script | `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` | `/Tools/git/auto_push_generated_artifacts.ps1` | active-current |
-| markdown_powershell_command_missing_script | `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` | `/Tools/git/auto_push_generated_artifacts.ps1` | active-current |
-| markdown_powershell_command_missing_script | `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` | `/Tools/git/auto_push_generated_artifacts.ps1` | active-current |
-| markdown_powershell_command_missing_script | `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` | `/Tools/git/auto_push_generated_artifacts.ps1` | active-current |
-| markdown_powershell_command_missing_script | `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` | `/Tools/git/auto_push_generated_artifacts.ps1` | active-current |
-| markdown_powershell_command_missing_script | `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` | `/Tools/git/auto_push_generated_artifacts.ps1` | active-current |
-| markdown_powershell_command_missing_script | `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` | `/Tools/git/auto_push_generated_artifacts.ps1` | active-current |
-| markdown_powershell_command_missing_script | `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` | `/Tools/git/auto_push_generated_artifacts.ps1` | active-current |
 | markdown_reference_missing | `docs/COMPATIBILITY.md` | `blender_compat.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `/Tools/ai/run_pipeline_dry_run_matrix.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `/Tools/npu/build_npu_code_context.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `/Tools/npu/build_project_ai_index.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `/Tools/validation/check_ai_pipeline_modules.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `/Tools/validation/check_json_artifacts.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `/Tools/validation/check_package_structure.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `/Tools/validation/check_python_syntax.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `artifact_contracts.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `check_ai_pipeline_modules.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `cli.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `compat.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `defaults.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `guardrail_models.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `models.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `orchestrator.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `preflight.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `refactor_status.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `remediation.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `run_pipeline_dry_run_matrix.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `runner.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `scheduler.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `schema_report.py` | active-current |
+| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `steps.py` | active-current |
+| markdown_reference_missing | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | `build_markdown_inventory.py` | active-current |
+| markdown_reference_missing | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | `build_script_inventory.py` | active-current |
+| markdown_reference_missing | `docs/GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | `Tools/validation/check_generated_automation_script_policy.py` | active-current |
+| markdown_reference_missing | `docs/GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | `generated_python_policy.py` | active-current |
+| markdown_reference_missing | `docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | `blender_compat.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `Scripting/shared/diagnostics.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `Scripting/shared/panel_base.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `Scripting/shared/scene_utils.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `Tools/lib/scene_spec.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `blender_compat.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `config.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `encode_ffmpeg_v61b.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `encode_image_sequence_v61b.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `ffmpeg_encoder.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `hotpatch_base.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `image_sequence.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `io_utils.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `json_io.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `main_v61b.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `render_profiles.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `render_setup.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `scene_tuning_panel.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `scene_utils.py` | active-current |
+| markdown_reference_missing | `docs/MODULE_MAP.md` | `spaziotempo/core/registry.py` | active-current |
+| markdown_reference_missing | `docs/PATCH_SPEC_WORKFLOW.md` | `apply_repo_mods.py` | active-current |
+| markdown_reference_missing | `docs/PROJECT_AUDIT.md` | `spaziotempo/core/registry.py` | active-current |
+| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `Tools/lib/scene_spec.py` | active-current |
+| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `blender_compat.py` | active-current |
+| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `check_python_syntax.py` | active-current |
+| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `config.py` | active-current |
+| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `ffmpeg_encoder.py` | active-current |
+| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `image_sequence.py` | active-current |

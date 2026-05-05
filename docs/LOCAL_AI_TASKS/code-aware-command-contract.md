@@ -39,6 +39,7 @@ Root docs should link here or to canonical runbooks instead of duplicating long 
 | `Tools/ai/build_full0to10_provider_execution_bridge.py` | `--allow-provider-generation, --no-external-probes, --operator-intent, --output, --output-dir, --repo-root, --request, --timeout-seconds` |
 | `Tools/ai/build_full0to10_provider_governor.py` | `--allow-provider-generation, --no-external-probes, --operator-intent, --output, --output-dir, --repo-root, --request, --strict-permit, --timeout-seconds` |
 | `Tools/ai/build_full0to10_provider_invocation_plan.py` | `--allow-provider-generation, --no-external-probes, --operator-intent, --output, --output-dir, --repo-root, --request, --timeout-seconds` |
+| `Tools/ai/build_full0to10_provider_telemetry_semantic_validation.py` | `--output, --output-dir, --run-root` |
 | `Tools/ai/build_full0to10_quality_gate.py` | `--markdown-output, --output, --patch-specs, --repo-root` |
 | `Tools/ai/build_full0to10_quality_stack_summary.py` | `--markdown-output, --output, --repo-root, --search-root` |
 | `Tools/ai/build_full0to10_repo_quality_packet.py` | `--allow-output-outside-output, --input, --max-files, --output, --output-dir, --output-file, --repo-root, --request, --tool, --write-output` |
@@ -69,6 +70,7 @@ Root docs should link here or to canonical runbooks instead of duplicating long 
 | `Tools/ai/full0to10_runtime_tool.py` | `--args-file, --args-json, --output, --repo-root` |
 | `Tools/ai/github_evidence_bundle_build_github_evidence_bundle_ready.py` | `--artifact, --basename, --max-included-artifact-chars, --max-included-artifacts, --no-auto-include-related-artifacts, --output-dir, --repo-root, --report, --selected-chunks-evidence` |
 | `Tools/ai/merge_ai_candidates.py` | `--input, --limit, --output` |
+| `Tools/ai/patch_unified_launcher_light_full0to10.py` | `--apply, --backup-dir, --launcher, --repo-root, --report` |
 | `Tools/ai/pipeline/cli.py` | `--agent-state-packet, --analysis-json, --build-chunks, --build-music-summary, --continue-on-error, --dry-run, --gpu-command, --guardrail-auto-remediate, --guardrail-max-passes, --no-guardrail-auto-remediate, --no-npu-...` |
 | `Tools/ai/promote_patch_spec_draft.py` | `--basename, --draft, --output-dir, --replacement-plan, --repo-root` |
 | `Tools/ai/refine_megalithic_review_signals.py` | `--markdown-output, --output, --proposal-output, --proposals, --review` |
@@ -190,6 +192,7 @@ Root docs should link here or to canonical runbooks instead of duplicating long 
 | `Tools/validation/run_full0to10_provider_execution_bridge_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_provider_governor_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_provider_invocation_plan_smoke.py` | `--repo-root, --work-dir` |
+| `Tools/validation/run_full0to10_provider_telemetry_semantic_smoke.py` | `--repo-root` |
 | `Tools/validation/run_full0to10_quality_gate_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_quality_stack_preflight_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_full0to10_quality_supervisor_safety_smoke.py` | `--repo-root, --work-dir` |
@@ -226,6 +229,7 @@ Root docs should link here or to canonical runbooks instead of duplicating long 
 | `Tools/validation/run_startup_check_cli_contract_smoke.py` | `--markdown-output, --output, --repo-root` |
 | `Tools/validation/run_substantive_planning_smoke.py` | `--markdown-output, --min-patch-plans, --min-recommendations, --min-substantive, --output, --patch-plan, --recommendations, --repo-root` |
 | `Tools/validation/run_unified_full0to10_supervisor_gate_smoke.py` | `--repo-root, --work-dir` |
+| `Tools/validation/run_unified_launcher_lightfull0to10_smoke.py` | `--repo-root` |
 | `Tools/workflow/ai_runtime_diagnostics.py` | `--json-out, --md-out, --track-stem` |
 | `Tools/workflow/smart_ai_context.py` | `--include-file, --max-capsule-chars, --max-packet-chars, --output-dir, --repo-root, --task, --track-stem` |
 | `Tools/workflow/startup_check.py` | `--json, --output, --project, --repo-root, --root, --text-output` |
