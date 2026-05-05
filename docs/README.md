@@ -4,6 +4,12 @@ Stable documentation index for `IA-Carmine Local AI Orchestration Workbench`.
 
 The repository slug is still `C-F-tek/blender-audio-project`, but the active architecture is local AI orchestration, provider-lane routing, validation, evidence, telemetry and manual-review patch planning. Blender/audio remains the first application domain, not the architectural boundary.
 
+## Doctrine index: TUTTO SU TUTTO
+
+All documentation that describes full local-AI work must preserve the same doctrine: **TUTTO SU TUTTO**.
+
+A full run means whole-repository coverage across active lanes, not a partial scan. Intensity profiles may reduce cost or expand depth, but they must not reduce semantic scope. When the project gains a stable new lane, registry, validator, broker capability, provider diagnostic, evidence surface or memory/context tool, that capability becomes a candidate expansion of `tutto` and must be either wired into the full-run contract or explicitly excluded with rationale.
+
 ## Single reading flow
 
 Use this flow unless a task file says otherwise:
