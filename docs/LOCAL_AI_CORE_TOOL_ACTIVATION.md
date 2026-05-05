@@ -34,6 +34,33 @@ Tools/workflow/run_local_ai_core_tool_activation.ps1
 
 Use it only when a task explicitly targets that wrapper or when the unified launcher delegates to it. Do not document it as a parallel full-run entrypoint.
 
+## Full-run activation doctrine
+
+Core/tool activation is part of **TUTTO SU TUTTO** when selected by `Full0To10` or by explicit launcher modes.
+
+Activation artifacts are not enough by themselves. When activation produces evidence, recommendations, patch specs or handoff material, the production handoff must also include telemetry/capability surfaces:
+
+```text
+runtime tool usage telemetry
+runtime tool capability manifest
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+```
+
+Telemetry is the completeness accessory that explains the state behind activation artifacts:
+
+```text
+executed
+failed
+blocked
+degraded
+intentionally disabled
+unavailable
+planned-only
+```
+
+It does not replace evidence, patch specs or patch plans. It accompanies them.
+
 ## Philosophy
 
 ```text
@@ -45,6 +72,7 @@ app-agnostic core before domain runtime
 macro patch as draft/spec, never automatic apply
 manifest-first visibility
 launcher-first execution
+telemetry/capability handoff when tools execute
 ```
 
 The core/tool workflow should produce real artifacts:
@@ -60,6 +88,7 @@ adapter manifest
 repository proposals
 NPU knowledge-broker packet
 GitHub evidence bundle
+runtime telemetry and capability manifest when tools execute
 optional macro patch draft specs
 ```
 
@@ -78,6 +107,11 @@ These artifacts give the repo concrete material for review and tests instead of 
 | Agent memory policy | `Tools/ai/agent_memory_policy.py` | Internal deterministic policy module. |
 | Agent memory routing | `Tools/ai/agent_memory_routing_policy.py` | Internal routing policy module. |
 | Runtime SQLite memory | `Tools/ai/agent_runtime_sqlite_memory.py` | Internal/local runtime helper. |
+| Runtime tool broker | `Tools/ai/agent_runtime_tool_broker.py` | Supporting full-toolbox report-only broker. |
+| Runtime usage telemetry | `Tools/ai/build_runtime_tool_usage_telemetry.py` | Required completeness accessory when broker/tools execute. |
+| Runtime capability manifest | `Tools/ai/build_runtime_tool_capability_manifest.py` | Required capability handoff when tool capabilities matter. |
+| Full toolbox telemetry summary | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Production summary for AI handoff. |
+| Shared AI-to-AI bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production handoff bundle. |
 | Tool inventory | `Tools/ai/build_agent_agnostic_tool_inventory.py` | Supporting toolbox visibility tool. |
 | Code interpreter report | `Tools/ai/build_code_interpreter_report.py` | Supporting capability report. |
 | Refactor duplication audit | `Tools/ai/build_refactor_duplication_audit.py` | Supporting audit tool. |
@@ -109,6 +143,7 @@ The provider path must remain advisory/report-only and must preserve:
 
 ```text
 provider_execution_performed is explicit and visible
+provider diagnostics and degradation state are carried into telemetry/bundle surfaces
 patch_application_performed=false unless a separately reviewed patch-apply command is authorized
 manual_review_only for proposals and patch specs
 ```
@@ -138,6 +173,8 @@ commit SQLite DB files
 
 Macro patch promotion remains a separate reviewed step.
 
+A macro patch or patch-plan lane is incomplete as a production handoff unless it is accompanied by the relevant telemetry/capability summary that proves whether the producing tools ran, failed, were blocked or were intentionally skipped.
+
 ## Documentation patch-plan lane
 
 For documentation-only manual-review patch plans, use the task-scoped review lane and preserve launcher-first visibility when part of broad local-AI work.
@@ -166,6 +203,8 @@ manual-review-only
 task-scoped evidence only
 ```
 
+When documentation patch plans originate from full-run evidence, include or reference the companion runtime telemetry/capability/final summary surfaces.
+
 ## AI workload report quality gate
 
 The local AI core/tool activation lane must use the AI workload report quality gate after provider/probe reports exist and before generated workload reports influence advisory packets.
@@ -179,7 +218,7 @@ NPU/OpenVINO unusable_output -> excluded from advisory context
 
 The quality gate remains report-only. It must not execute providers, promote NPU to advisory, introduce OpenVINO GPU as primary lane or apply patches.
 
-Broad activation runs must expose quality-gate state in the unified launcher manifest.
+Broad activation runs must expose quality-gate state in the unified launcher manifest and in telemetry/bundle summaries when provider diagnostics contribute to production handoff.
 
 ## Expected outputs
 
@@ -217,13 +256,26 @@ docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
 ```
 
+For production full-run handoff, companion telemetry/capability artifacts include:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.md
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md
+docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.md
+docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.md
+```
+
 ## Validation ownership
 
 Broad activation validation uses the unified launcher.
 
 Focused validator commands belong in `Tools/validation/README.md` and should be used only when debugging or validating a specific validator/report contract.
 
-The broad-run acceptance signal is the launcher manifest, especially:
+The broad-run acceptance signal is the launcher manifest plus telemetry/capability handoff surfaces, especially:
 
 ```text
 phase_status
@@ -235,6 +287,9 @@ workload_quality_routing_ok
 quality_gate_passed
 patch_specs_requested
 patch_application_performed
+runtime tool usage telemetry
+runtime capability manifest
+full toolbox telemetry summary
 errors
 warnings
 ```
@@ -274,6 +329,7 @@ manual-review-only for macro patch
 destructive-operation-free
 manifest-first
 launcher-first
+telemetry/capability-visible when operational tools execute
 ```
 
 The documentation patch-plan lane inherits the same guardrails and additionally stays task-scoped to the explicit patch-plan evidence bundle.
@@ -288,6 +344,9 @@ patch_application_performed
 manual_review_only
 code_contract_drift
 docs_contract_drift
+runtime_tool_usage_telemetry
+runtime_tool_capability_manifest
+full_toolbox_run_telemetry_summary
 ```
 
 If a report uses different terms, document the mapping or add a compatibility field instead of silently changing meaning.
