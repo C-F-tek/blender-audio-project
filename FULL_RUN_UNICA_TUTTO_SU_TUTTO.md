@@ -1,6 +1,17 @@
-# IA-Carmine — FULL RUN UNICA / TUTTO SU TUTTO
+# IA-Carmine — RUN UNICA / TUTTO SU TUTTO / 0→10
 
-Root-level manifesto for the canonical full local-AI run.
+Root-level manifesto and operating plan for the canonical local-AI run.
+
+This document defines the **0→10 operational lifecycle**. It tells a future AI/operator how to start, what must be produced, how evidence travels, and when the run is complete enough for the next chat/master-AI review.
+
+Executable command syntax belongs in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+Tools/workflow/run_unified_local_ai_refactor.ps1
+```
+
+Do not copy long PowerShell launcher blocks here.
 
 ## Canonical procedure
 
@@ -17,55 +28,421 @@ Current compact operational bridge:
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ```
 
+Large Markdown policy:
+
+```text
+docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
+```
+
 Historical/supporting reference only:
 
 ```text
 docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
 ```
 
-That historical procedure must not override the unified launcher, the launcher contract or current telemetry/evidence policy.
+That historical procedure must not override the unified launcher, the launcher contract, this 0→10 plan, or current telemetry/evidence policy.
 
-## Current active full-run state
+## Current active run-unica state
 
 Current branch phase:
 
 ```text
 Branch: codex/unified-local-ai-refactor-launcher
 PR: #187 feat(workflow): add unified local AI refactor launcher
-Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-Run: 20260505-143844
-Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Current baseline run: 20260505-143844
+Runtime bundle baseline: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
 Mode: review-only until explicit human instruction
 ```
 
-The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Do not infer bundle contents from file existence alone.
+Current next intended complex run family:
+
+```text
+Task family: unused/useful code + tool/class/helper promotion + MD/code consistency
+Expected mode: run unica Full0To10 custom parameters
+Expected artifact: complete evidence/telemetry bundle ZIP plus compact evidence pushed by the maintainer for now
+Patch application: false unless explicitly requested later
+Source writes: false unless explicitly requested later
+```
+
+Runtime bundles are generated artifacts. They may be published as draft release assets or uploaded to the chat, but they are not normal source commits.
 
 ## Core policy
 
 ```text
-FULL RUN UNICA = TUTTO SU TUTTO
+RUN UNICA = one parameterized launcher path
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters, not scope
+-No* flags = explicit opt-out from selected lanes
 ```
 
-A canonical full run activates every declared runtime/tool/provider/advisory/evidence/patch-spec/memory/telemetry/discovery/index/CSV-count lane unless an explicit maintenance/debug `-No*` flag disables one, the lane is diagnosed unavailable, the run is a dry-run planned state, or the operator documents a deliberate exclusion.
+A canonical run-unica `Full0To10` activates every declared runtime/tool/provider/advisory/evidence/patch-spec/memory/telemetry/discovery/index/CSV-count lane unless an explicit maintenance/debug `-No*` flag disables one, the lane is diagnosed unavailable, the run is a dry-run planned state, or the operator documents a deliberate exclusion.
 
 `Full0To10` is opt-out by lane, not opt-in per capability. Once the operator selects `-Full0To10`, the default assumption is that the full perimeter runs. If the operator does not want a lane, the operator says so explicitly.
 
-`quick`, `balanced`, `deep` and `custom` are intensity profiles only. They change capacity, not scope:
+A smoke run is separate and must not be treated as evidence that a run-unica `Full0To10` passed.
+
+## 0→10 operating plan
+
+### 0 — Start from clean state
+
+Before a run, the operator or local AI must verify:
 
 ```text
-quick    = full scope with reduced budget
-balanced = full scope with default budget
-deep     = full scope with expanded budget
-custom   = full scope with operator-defined budget
+correct branch
+remote sync state
+working tree status
+staged local files are intentional
+ignored output/cache/state files are not staged
+no forbidden generated paths are staged
 ```
 
-A smoke run is separate and must not be treated as evidence that a full run passed.
+If local files are staged, decide before running whether they are part of the current documentation/task setup.
+
+Do not continue blindly with unrelated dirty changes.
+
+### 1 — Read compact current state
+
+Read compact entrypoints first:
+
+```text
+AGENTS.md
+CHATGPT.md
+CHATGPT/README.md
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
+README.md
+WORKFLOW.md
+docs/README.md
+docs/LOCAL_AI_RUN_BOOTSTRAP.md
+docs/LOCAL_AI_TASKS/README.md
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+```
+
+Large Markdown files are not first-read operational surfaces. Treat them as catalog/supporting/evidence unless a compact bridge points to a specific section.
+
+### 2 — Select or create the task file
+
+Every serious run must have a task file under:
+
+```text
+docs/LOCAL_AI_TASKS/
+```
+
+The task file must define:
+
+```text
+scope
+objective
+priority areas
+required evidence surfaces
+classification labels
+guardrails
+expected review-only outputs
+patch-plan requirements
+```
+
+For the current complex refactor intelligence family, the task must explicitly ask for:
+
+```text
+unused but useful code
+true dead-code candidates
+reusable functions/classes/methods
+helper extraction candidates
+base-class or mixin opportunities
+project-tool promotion candidates
+broker-tool promotion candidates
+run-unica lane promotion candidates
+MD/code drift caused by obsolete references
+safe mechanical patch candidates
+manual-review refactor candidates
+```
+
+### 3 — Launch run unica Full0To10
+
+Use the unified launcher runbook as command owner.
+
+Required semantic settings:
+
+```text
+-Full0To10
+-NoExecutionTail for long runs
+custom parameters when the operator needs more capacity
+review-only patch-plan behavior
+no patch application
+no Blender runtime
+no FFmpeg runtime
+no media output
+```
+
+The run must preserve the full semantic perimeter. Custom budgets and limits increase or reduce capacity, not scope.
+
+### 4 — Produce complete evidence, telemetry and discovery surfaces
+
+A complete run-unica handoff should produce or explicitly diagnose absence of:
+
+```text
+launcher manifest
+phase_status / phase_reports
+workflow report
+integrated decision-loop report
+deterministic recommendations
+agent-review patch plan
+provider diagnostics
+ai_workload_report_quality
+runtime tool usage telemetry
+runtime tool capability manifest
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+semantic chunk manifest
+selected chunk evidence when available
+Markdown inventory JSON/MD
+script inventory JSON/CSV/MD
+function/class/method inventory CSV when available
+Python line-count CSV/MD
+repository consistency map/smoke
+auto-discovery report when relevant
+index repair plan/report when relevant
+```
+
+If a surface is missing, the run must show whether it was disabled, unavailable, planned-only, degraded or unexpectedly absent.
+
+### 5 — Verify guardrail state
+
+The run is not ready for review until guardrail state is visible:
+
+```text
+patch_application_performed=false unless explicitly requested
+source_writes_performed=false unless explicitly requested
+Blender runtime not executed unless explicitly scoped
+FFmpeg runtime not executed unless explicitly scoped
+SQLite persistent writes absent unless explicitly scoped
+output/** not staged
+indexAI/code_chunks/** not staged
+renders/** not staged
+*.db / *.sqlite / *.sqlite3 not staged
+```
+
+Provider/probe lanes may execute as report-bound run-unica lanes, but they must be quality-gated and visible in telemetry/bundle surfaces.
+
+### 6 — Build bundle ZIP
+
+After the run, produce a complete bundle ZIP for chat/master-AI review.
+
+Recommended naming:
+
+```text
+ia_carmine_<task_family>_full_run_bundle_<STAMP>.zip
+```
+
+For unused/useful/tool-promotion runs:
+
+```text
+ia_carmine_unused_useful_tool_promotion_full_run_bundle_<STAMP>.zip
+```
+
+The ZIP must include all useful artifacts needed for a next AI to reconstruct the run without opening raw local output trees blindly.
+
+Required ZIP content classes:
+
+```text
+manifest and phase reports
+shared AI-to-AI bundle/final summary
+runtime telemetry and capability manifest
+full toolbox telemetry summary
+provider diagnostics and workload quality
+recommendations and patch plan
+script/function/class/method inventories
+Python line-count CSV/MD
+repository consistency reports
+semantic/selected chunk evidence
+auto-discovery/index repair reports when produced
+compact Markdown summaries
+artifact manifest or file list
+```
+
+Do not include raw media, renders, SQLite databases, or unbounded generated output unless explicitly requested for a narrow diagnostic.
+
+### 7 — Promote compact evidence for Git review
+
+For now, the maintainer performs the evidence push manually.
+
+Commit only compact, reviewed, Git-trackable evidence when it is useful for PR review:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/*.json
+docs/LOCAL_VALIDATION_EVIDENCE/*.md
+```
+
+Do not bulk-add the evidence directory. Add selected files only.
+
+Never commit:
+
+```text
+output/**
+output/validation/patch_bundles/**
+renders/**
+*.db
+*.sqlite
+*.sqlite3
+indexAI/code_chunks/**
+indexAI/project_code_chunks/**
+raw audio/video/media output
+```
+
+The ZIP bundle may be uploaded to chat or attached as a draft release asset, but it should not become normal source code.
+
+### 8 — Push selected evidence/state updates
+
+Manual maintainer push is currently the official path for evidence publication.
+
+Before push:
+
+```text
+git status
+git diff --stat
+git diff --check
+review staged files one by one
+```
+
+Push only:
+
+```text
+new/updated task file when needed
+compact evidence selected for review
+current-state or handoff docs when needed
+small documentation corrections caused by evidence
+```
+
+Do not push patch application, generated DBs, raw output, generated code chunks or media artifacts.
+
+### 9 — Send bundle and telemetry to next AI/chat
+
+After the run, send the next AI/chat:
+
+```text
+bundle ZIP
+shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+full_toolbox_run_telemetry_summary_<STAMP>.json/md
+runtime_tool_usage_telemetry_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md
+decision loop JSON/MD
+recommendations JSON/MD
+patch plan JSON/MD
+script/function/class/method inventory CSV/MD/JSON
+Python line-count CSV/MD
+repository consistency reports
+provider diagnostics
+ai_workload_report_quality
+auto-discovery/index repair reports when present
+```
+
+Also paste a compact status block:
+
+```text
+STAMP:
+run passed/failed:
+bundle zip name:
+patch_plan_count:
+recommendation_count:
+provider_advisory_state:
+provider_failure_detected:
+deterministic_recovery_used:
+patch_application_performed:
+source_writes_performed:
+tool_call_entry_count:
+executed_count:
+failed_count:
+blocked_count:
+CSV/count surfaces present:
+script inventory present:
+function/class/method inventory present:
+repository consistency present:
+auto-discovery/index repair present:
+notes/warnings:
+```
+
+### 10 — Master-AI review and next patch selection
+
+The next AI/chat must review the bundle in this order:
+
+```text
+final summary
+runtime telemetry
+capability manifest
+full toolbox telemetry summary
+provider/workload quality
+shared AI-to-AI bundle
+decision loop
+recommendations
+patch plan
+inventory CSV/count surfaces
+repository consistency/discovery/index reports
+```
+
+The output of step 10 is not automatic apply. It is a selected next action:
+
+```text
+SAFE_MECHANICAL documentation patch
+MANUAL_REVIEW refactor patch
+project-tool promotion patch
+broker-tool promotion patch
+run-unica lane promotion patch
+shared-helper extraction patch
+base-class/mixin design patch
+unused-but-useful inventory refinement
+true dead-code deprecation plan
+local validation request
+provider validation request
+Blender runtime validation request
+DEFER / DO_NOT_PROMOTE decision
+```
+
+Patch application remains separate and explicit.
+
+## Classification labels for complex refactor runs
+
+Use these labels for recommendations and patch plans:
+
+```text
+PROMOTE_TO_PROJECT_TOOL
+PROMOTE_TO_BROKER_TOOL
+PROMOTE_TO_RUN_UNICA_LANE
+EXTRACT_SHARED_HELPER
+EXTRACT_BASE_CLASS_OR_MIXIN
+KEEP_APP_DOMAIN
+KEEP_HISTORICAL_SUPPORTING
+DEPRECATE_DOC_ONLY
+DEAD_CODE_CANDIDATE
+UNUSED_BUT_USEFUL
+GENERATED_DO_NOT_TOUCH
+LOCAL_VALIDATION_REQUIRED
+BLENDER_RUNTIME_REQUIRED
+PROVIDER_VALIDATION_REQUIRED
+DEFER
+DO_NOT_PROMOTE
+```
+
+Every item must include:
+
+```text
+target file or component
+evidence source
+rationale
+risk
+validation minimum
+source-write requirement later or none
+provider-validation requirement or none
+Blender-runtime requirement or none
+forbidden path check
+```
 
 ## Expandable perimeter
 
 The meaning of `tutto` is intentionally expandable.
 
-When a new production-ready capability is promoted, it must be added to the full-run perimeter or explicitly excluded with rationale. Examples:
+When a new production-ready capability is promoted, it must be added to the run-unica perimeter or explicitly excluded with rationale. Examples:
 
 ```text
 broker tools
@@ -124,7 +501,7 @@ Telemetry is an obligatory completeness accessory for evidence and patch plans.
 
 It does not replace evidence and it does not replace patch plans. It travels with them so the next AI can understand whether the evidence is complete and whether the patch plan was produced from a real, degraded, blocked or partial run.
 
-Every production handoff should therefore group:
+Every production handoff should group:
 
 ```text
 evidence artifacts
@@ -154,7 +531,7 @@ File existence alone is not proof of successful execution.
 
 ## Explicit disablers
 
-Do not use these flags in the canonical production full run unless the goal is intentionally scoped maintenance/debug:
+Do not use these flags in the canonical production run-unica Full0To10 run unless the goal is intentionally scoped maintenance/debug:
 
 ```text
 -NoStrictRealRunActivation
@@ -198,21 +575,13 @@ renders/**
 *.sqlite
 *.sqlite3
 indexAI/code_chunks/**
+indexAI/project_code_chunks/**
+raw audio/video/media output
 ```
-
-## Current command owner
-
-Current executable examples live in:
-
-```text
-docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-```
-
-Do not duplicate long PowerShell launcher blocks here. The runbook owns command syntax, flags, profiles and validation examples.
 
 ## Production AI-to-AI communication standard
 
-The production communication artifact for a successful full run is the shared toolbox bundle:
+The production communication artifact for a successful run-unica Full0To10 run is the shared toolbox bundle:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json
@@ -239,40 +608,14 @@ GPU/NPU sync diagnostics
 repository consistency map/smoke when produced
 guardrail state: patch application, source writes, SQLite writes, Blender/FFmpeg execution
 evidence files selected for Git-trackable handoff
+bundle ZIP filename or release/upload location when available
 ```
 
-The standard communication set for a full run is:
+The decision-loop evidence remains important, but it is not the whole production handoff by itself. Telemetry, capability, discovery/count surfaces and bundle metadata must accompany it.
 
-```text
-docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json
-docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.md
-docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.json
-docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.md
-docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json
-docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.md
-docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json
-docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md
-docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_<STAMP>_cloud_semantic_deterministic_chunk_manifest.json
-docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_<STAMP>_cloud_semantic_deterministic_chunk_manifest.md
-docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_<STAMP>.json
-docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_agent_review_decision_loop_<STAMP>.md
-```
+## Run-unica provider, bundle and broker completion contract
 
-Additional compact evidence may accompany it when relevant:
-
-```text
-script/function/class/method inventory summaries
-Python line-count CSV/MD summaries
-repository consistency map/smoke summaries
-auto-discovery/index repair plan summaries
-selected chunk evidence summaries
-```
-
-The decision-loop evidence remains important, but it is not the whole production handoff by itself. Telemetry and capability data must accompany it.
-
-## Full-run provider, bundle and broker completion contract
-
-A production full run is complete only when the handoff proves these independent facts:
+A production run-unica Full0To10 run is complete only when the handoff proves these independent facts:
 
 ```text
 provider_diagnostics_present = true
@@ -281,6 +624,8 @@ runtime_tool_usage_telemetry.executed_count >= 3 when broker lane ran
 runtime_tool_capability_manifest present
 full_toolbox_run_telemetry_summary present
 discovery/index/CSV-count surfaces present when selected or relevant
+bundle_zip_produced = true for chat/master-AI review
+selected_compact_evidence_pushed_or_ready = true
 patch_application_performed = false unless explicitly requested
 source_writes_performed = false unless explicitly requested
 ```
@@ -296,7 +641,7 @@ provider_failure_reasons
 degraded_provider_components
 ```
 
-The shared production bundle must promote the full-run patch plan summary from:
+The shared production bundle must promote the run-unica patch plan summary from:
 
 ```text
 output/patch_specs/full_toolbox_<STAMP>_agent_review_patch_plan.json
@@ -310,4 +655,19 @@ build_python_line_count_csv
 check_validation_report_contract
 ```
 
-The bootstrap remains report-only and must not perform patch application, source writes, Git writes, Blender runtime or persistent memory writes. Provider/probe lanes belong to the full-run perimeter but must remain report-bound and quality-gated.
+The bootstrap remains report-only and must not perform patch application, source writes, Git writes, Blender runtime or persistent memory writes. Provider/probe lanes belong to the run-unica perimeter but must remain report-bound and quality-gated.
+
+## Current human/manual evidence push rule
+
+For now, the maintainer pushes selected compact evidence manually.
+
+A future automation may assist, but until explicitly implemented and approved:
+
+```text
+bundle ZIP can be produced locally and uploaded/attached by maintainer
+selected docs/LOCAL_VALIDATION_EVIDENCE artifacts can be manually added, committed and pushed by maintainer
+no automatic bulk evidence commit
+no automatic output/** commit
+no automatic patch apply
+no automatic merge
+```
