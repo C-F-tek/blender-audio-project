@@ -27,6 +27,8 @@ GPU/NPU run
 memory handoff
 patch specs
 reset
+tool promotion
+runtime broker telemetry
 ```
 
 Primary current runbook:
@@ -39,6 +41,16 @@ Primary current launcher:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
+```
+
+Current stable supporting docs:
+
+```text
+FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
+docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
 ```
 
 No other local-AI runner is an active first entrypoint. Supporting wrappers may be called by the launcher, but they must not be used as separate operator paths unless a future PR explicitly promotes them into the launcher manifest/phase contract.
@@ -65,6 +77,8 @@ SQLite memory handoff
 context packs
 semantic chunks
 patch-spec generation
+runtime broker telemetry
+project-tool promotion evidence
 reset cleanup
 legacy full-toolbox integrated behavior
 ```
@@ -79,7 +93,7 @@ run_parallel_ai_provider_multistep.ps1
 run_local_validation_after_refactor.ps1
 run_agent_review_full_toolbox_decision_loop_integrated.ps1
 full-toolbox-0-to-10-semi-automatic-procedure.md
-code-refactor-0-to-10-procedure.md
+historical PR handoff or master-branch code-refactor runbooks
 ```
 
 They are implementation lanes, historical material or scoped helpers behind the unified launcher.
@@ -96,6 +110,8 @@ unified launcher command from unified-local-ai-refactor-launcher.md
   -> multistep provider probes when selected
   -> deterministic recommendations
   -> review-only patch specs / patch bundles
+  -> runtime broker report and telemetry
+  -> shared production AI-to-AI bundle
   -> explicit apply only after review
   -> validation
   -> PR
@@ -143,6 +159,8 @@ Required reading order after a run:
 launcher command
 unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
+production AI-to-AI bundle
+runtime tool telemetry and capability manifest
 compact Markdown or CSV summaries
 detailed evidence only when needed
 ```
@@ -212,12 +230,17 @@ At the start of every local AI run, read these files in order:
 
 ```text
 AGENTS.md
+CHATGPT.md
+CHATGPT/README.md
 WORKFLOW.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/README.md
 docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_TASKS/README.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
+docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 docs/PROJECT_STATUS_POINT.md
 docs/DATA_FLOW.md
@@ -249,6 +272,8 @@ Classify the task before editing:
 | docs/workflow-state | Markdown docs, execution plans, issue/PR handoff notes | No |
 | validation/evidence | validators, report-only builders, compact evidence docs | No implicit providers |
 | provider diagnostics | explicit-run scripts and diagnostics only | Through launcher provider/probe phases only |
+| runtime broker/tooling | broker-safe report-only tools and telemetry | Through launcher/broker only |
+| tool promotion | docs, registry, report-only wrappers and safe validation | No implicit providers |
 | core AI/backend | app-agnostic AI orchestration and validators | Explicit only when selected |
 | unified full 0-to-10 | full evidence -> recommendation -> patch-plan -> patch-bundle process | Provider only through explicit unified launcher command/flag |
 | Blender runtime | Blender scripts and scene behavior | Only when explicitly scoped |
@@ -339,6 +364,8 @@ Mapping:
 | Balanced full loop | `Full0To10` with balanced intensity |
 | Deep full loop | `Full0To10` with deep intensity |
 | Provider evidence | `Full0To10` or provider mode with explicit provider/probe flags |
+| Runtime broker telemetry | `Full0To10` or full-toolbox decision loop with broker telemetry evidence |
+| Tool promotion/inventory | `python`, `context_pack`, `agent_state` and report-only validation phases |
 | Patch-spec generation | `patch_specs` phase or `Full0To10` default |
 | Reset planning/apply | `reset` mode with reset guardrails |
 | Script/tool inventory | `python` phase |
@@ -361,6 +388,7 @@ manifest path
 phase report paths
 compact evidence paths, when generated
 provider/runtime execution status
+runtime broker telemetry status
 patch application status
 risks
 follow-up recommendations
@@ -378,6 +406,7 @@ scope
 changed files
 launcher mode/profile/flags or focused validation command
 provider execution statement
+runtime broker telemetry statement
 visibility/manifest statement
 risk notes
 follow-up
@@ -397,10 +426,16 @@ The preferred current end-to-end local task is tracked in:
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
+The current P0 validation task is tracked in:
+
+```text
+docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+```
+
 The expected work is:
 
 ```text
-exercise the unified full 0-to-10 process with selected modes, evidence collectors, optional GPU/NPU provider run, deterministic recommendations, workload quality routing, memory/context surfaces, patch-spec generation, review-safe patch bundle generation and explicit apply/validation when authorized
+exercise the unified full 0-to-10 process with selected modes, evidence collectors, optional GPU/NPU provider run, deterministic recommendations, workload quality routing, memory/context surfaces, runtime broker telemetry, patch-spec generation, review-safe patch bundle generation and explicit apply/validation when authorized
 ```
 
 GPU/NPU execution remains explicit. If Carmine cannot run the local provider workflow, GitHub-only agents must stop at report-only/docs/validator work and request the exact unified launcher command/evidence bundle needed next.
