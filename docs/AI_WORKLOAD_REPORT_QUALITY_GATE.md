@@ -24,6 +24,34 @@ OpenVINO/NPU workload report -> unusable_output when numeric/hex-like -> exclude
 
 NPU remains valid as a probe, decode diagnostic, guardrail and knowledge broker. Passing local NPU resource/probe checks does not promote NPU output to primary advisory context.
 
+## Full-run quality doctrine
+
+Workload quality is part of **TUTTO SU TUTTO** when provider/advisory routing participates in `Full0To10`.
+
+The quality gate decides what provider-generated text may influence evidence, recommendations and patch plans. Therefore its result must not remain an isolated report. In production full-run handoff, the quality state must be visible in:
+
+```text
+unified launcher manifest
+phase_status / phase_reports
+provider diagnostics
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+```
+
+Telemetry is the completeness accessory that explains whether provider/advisory context was trusted, excluded, degraded, missing or only planned. It does not replace the quality report; it accompanies the quality report and downstream evidence/patch plans.
+
+A patch plan generated after degraded provider routing is incomplete unless the handoff also records:
+
+```text
+provider_advisory_state
+provider_failure_detected
+provider_failure_reasons
+degraded_provider_components
+deterministic_recovery_used
+workload_quality_routing_ok
+quality_gate_passed
+```
+
 ## Unified launcher requirement
 
 The canonical local-AI entrypoint is:
@@ -54,6 +82,7 @@ real run: build or read output/validation/ai_workload_report_quality.json before
 real run: fail clearly if primary provider routing is requested and the quality report cannot be produced/read
 dry run: mark workload quality generation as planned instead of failing on the missing file
 manifest: expose workload_quality_report, workload_quality_routing_ok and quality_gate_passed
+telemetry/bundle: expose provider quality/degradation state when provider lanes participate
 ```
 
 Silent degradation is not allowed. A run must not say primary provider routing is complete while workload quality routing is absent.
@@ -188,7 +217,7 @@ provider_execution_seen = false
 source_writes_performed = false
 ```
 
-## Manifest visibility contract
+## Manifest and telemetry visibility contract
 
 The unified launcher manifest must include:
 
@@ -199,6 +228,20 @@ workload_quality_routing_ok
 quality_gate_passed
 phase_reports.workload_quality when generated
 phase_status.workload_quality or equivalent status when selected
+```
+
+The production telemetry/bundle surfaces must preserve the downstream meaning of this gate when provider lanes participate:
+
+```text
+provider_advisory_state
+provider_failure_detected
+provider_failure_reasons
+degraded_provider_components
+deterministic_recovery_used
+workload_quality_routing_ok
+quality_gate_passed
+patch_application_performed
+source_writes_performed
 ```
 
 For `-Full0To10`, missing workload quality is acceptable only when the operator explicitly supplies `-NoWorkloadQuality`. Otherwise it is an execution failure for real runs and a planned step for dry runs.
@@ -214,6 +257,8 @@ Tools/ai/suggest_repository_updates.py
 Tools/ai/build_repository_change_proposals.py
 Tools/ai/build_github_evidence_bundle.py
 Tools/workflow/run_unified_local_ai_refactor.ps1
+Tools/ai/build_full_toolbox_run_telemetry_summary.py
+Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
 ```
 
 Routing contract:
@@ -304,13 +349,16 @@ Broad local-AI validation uses the unified launcher.
 
 Focused quality-gate validation uses `Tools/validation/README.md` when debugging the validator or validating its contract directly.
 
-The acceptance signal for broad runs is not a pasted command block; it is the launcher manifest fields:
+The acceptance signal for broad runs is not a pasted command block; it is the launcher manifest and telemetry/bundle state:
 
 ```text
 workload_quality_report
 workload_quality_routing_ok
 quality_gate_passed
 phase_reports.workload_quality
+provider_advisory_state
+provider_failure_reasons
+degraded_provider_components
 errors
 warnings
 ```
