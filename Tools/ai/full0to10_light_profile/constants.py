@@ -14,6 +14,7 @@ REQUIRED_STEPS = (
     "provider_governor",
     "provider_invocation_plan",
     "provider_execution_bridge",
+    "provider_telemetry_semantic",
 )
 
 SAFETY_FALSE_FIELDS = (

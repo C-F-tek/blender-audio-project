@@ -135,6 +135,13 @@ $Steps.Add((Invoke-LightStep -Name "provider_governor" -ScriptPath (Join-Path $R
 $Steps.Add((Invoke-LightStep -Name "provider_invocation_plan" -ScriptPath (Join-Path $RepoRoot "Tools/workflow/run_full0to10_provider_invocation_plan.ps1") -Arguments ($ProviderArgs + @("-OutputDir", (Join-Path $OutputPath "provider_invocation_plan"), "-Request", "Light Full0To10 provider dry-run invocation plan")) -Optional))
 $Steps.Add((Invoke-LightStep -Name "provider_execution_bridge" -ScriptPath (Join-Path $RepoRoot "Tools/workflow/run_full0to10_provider_execution_bridge.ps1") -Arguments ($ProviderArgs + @("-OutputDir", (Join-Path $OutputPath "provider_execution_bridge"), "-Request", "Light Full0To10 provider execution bridge")) -Optional))
 
+$SemanticArgs = @(
+    "--run-root", $OutputPath,
+    "--output-dir", (Join-Path $OutputPath "provider_telemetry_semantic"),
+    "--output", (Join-Path $OutputPath "provider_telemetry_semantic/full0to10_provider_telemetry_semantic_validation.json")
+)
+$Steps.Add((Invoke-PythonStep -Name "provider_telemetry_semantic" -PythonScript (Join-Path $RepoRoot "Tools/ai/build_full0to10_provider_telemetry_semantic_validation.py") -Arguments $SemanticArgs -Optional))
+
 if (-not $SkipFinalProduct) {
     $FinalArgs = @("--repo-root", $RepoRoot, "--output-dir", (Join-Path $OutputPath "final_product"), "--request", "Light Full0To10 final product evidence", "--no-external-probes", "--timeout-seconds", "$TimeoutSeconds", "--output", (Join-Path $OutputPath "final_product.from_cli.json"))
     $Steps.Add((Invoke-PythonStep -Name "final_tool_product" -PythonScript (Join-Path $RepoRoot "Tools/ai/build_full0to10_final_tool_product.py") -Arguments $FinalArgs -Optional))
