@@ -31,10 +31,16 @@ REQUIRED_PRODUCT_EVIDENCE = (
     "provider_command_plan",
 )
 
+OPTIONAL_PRODUCT_EVIDENCE = (
+    "track_input_contract",
+    "track_input_template",
+)
+
 FINAL_PRODUCT_SECTIONS = (
     "request",
     "deliverable_scope",
     "evidence_index",
+    "track_inputs",
     "sqlite_memory",
     "runtime_tools",
     "gpu_ollama",

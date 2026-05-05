@@ -14,7 +14,7 @@ def render_product_markdown(request: str, evidence: dict[str, Any], readiness: d
         "",
         "## Deliverable scope",
         "",
-        "This package is the final-tool-product staging output. It includes SQLite FTS5 evidence, accelerator control, provider governor, invocation dry-run plan, execution bridge, command plan, telemetry contracts, and quality evidence.",
+        "This package is the final-tool-product staging output. It includes track input contract, SQLite FTS5 evidence, accelerator control, provider governor, invocation dry-run plan, execution bridge, command plan, telemetry contracts, and quality evidence.",
         "",
         "## Evidence index",
         "",
@@ -24,11 +24,15 @@ def render_product_markdown(request: str, evidence: dict[str, Any], readiness: d
     lines.extend(
         [
             "",
+            "## Track inputs",
+            "",
+            "The track input contract resolves analysis_json, music_context_json and blender_keyframes_json. Missing inputs are warnings by default and can be promoted to blockers by startup guard strict mode.",
+            "",
             "## Provider execution bridge",
             "",
-            "The execution bridge is the final non-executing gate before a future real provider run. It creates a command plan and workload output path contract, but performs no provider execution.",
+            "The execution bridge is the final non-executing gate before a future real provider run.",
             "",
-            "## Real-run status",
+            "## Readiness",
             "",
             f"- Ready for product review: `{readiness['ready_for_tool_product_review']}`",
             f"- Ready for real provider run: `{readiness['ready_for_real_provider_run']}`",
@@ -40,8 +44,9 @@ def render_product_markdown(request: str, evidence: dict[str, Any], readiness: d
     )
     for blocker in readiness["blockers"] or ["None"]:
         lines.append(f"- {blocker}")
-    lines.extend(["", "## Next run", ""])
-    lines.append("Next loop can attach the execution bridge to bundle promotion gates, then later add a real-run lane guarded by explicit flags.")
+    lines.extend(["", "## Warnings", ""])
+    for warning in readiness["warnings"] or ["None"]:
+        lines.append(f"- {warning}")
     lines.append("")
     return "\n".join(lines)
 
@@ -53,7 +58,7 @@ def render_readme(manifest: dict[str, Any]) -> str:
             "",
             f"- Passed: `{manifest['passed']}`",
             f"- Product markdown: `{manifest['outputs']['product_markdown']}`",
-            f"- Provider invocation plan: `{manifest['outputs'].get('provider_invocation_plan')}`",
+            f"- Track input contract: `{manifest['outputs'].get('track_input_contract')}`",
             f"- Provider execution bridge: `{manifest['outputs'].get('provider_execution_bridge')}`",
             "",
             "This directory is generated output and should not be committed.",

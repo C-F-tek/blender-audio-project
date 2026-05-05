@@ -11,6 +11,7 @@ from full0to10_provider_execution_bridge.builder import build_provider_execution
 from full0to10_provider_governor.builder import build_provider_governor
 from full0to10_provider_invocation_plan.builder import build_provider_invocation_plan
 from full0to10_quality_gate.builder import build_quality_gate
+from full0to10_track_inputs.builder import build_track_input_contract
 
 from .artifacts import product_artifacts
 from .constants import EVIDENCE_INDEX, PRODUCT_MANIFEST, PRODUCT_MARKDOWN, README_NAME, READINESS_JSON, SAFETY_FLAGS
@@ -40,7 +41,9 @@ def build_final_tool_product(
     governor_dir = ensure_dir(output_dir / "provider_governor")
     invocation_dir = ensure_dir(output_dir / "provider_invocation_plan")
     bridge_dir = ensure_dir(output_dir / "provider_execution_bridge")
+    track_dir = ensure_dir(output_dir / "track_inputs")
 
+    track_contract = build_track_input_contract(repo_root, track_dir, "current", False, 8)
     accelerator_control = build_accelerator_control(repo_root, accelerator_dir, request, no_external_probes, timeout_seconds)
     provider_governor = build_provider_governor(repo_root, governor_dir, request, False, False, no_external_probes, timeout_seconds)
     invocation_plan = build_provider_invocation_plan(repo_root, invocation_dir, request, False, False, no_external_probes, timeout_seconds)
@@ -50,7 +53,7 @@ def build_final_tool_product(
     quality_gate = build_quality_gate(repo_root, None)
     write_json(quality_dir / "full0to10_quality_gate.json", quality_gate)
 
-    records = product_artifacts(effective_dir, quality_dir, accelerator_dir, governor_dir, invocation_dir, bridge_dir, repo_root)
+    records = product_artifacts(effective_dir, quality_dir, accelerator_dir, governor_dir, invocation_dir, bridge_dir, track_dir, repo_root)
     evidence = build_evidence_index(repo_root, records)
     readiness = build_readiness(records, evidence)
 
@@ -70,12 +73,8 @@ def build_final_tool_product(
         "readiness": repo_relative(readiness_path, repo_root),
         "manifest": repo_relative(manifest_path, repo_root),
         "readme": repo_relative(readme_path, repo_root),
-        "accelerator_control": accelerator_control["outputs"].get("control"),
-        "provider_governor": provider_governor["outputs"].get("governor"),
-        "provider_invocation_plan": invocation_plan["outputs"].get("plan"),
+        "track_input_contract": track_contract["outputs"].get("contract"),
         "provider_execution_bridge": execution_bridge["outputs"].get("bridge"),
-        "provider_real_run_gate": execution_bridge["outputs"].get("real_run_gate"),
-        "provider_command_plan": execution_bridge["outputs"].get("command_plan"),
     }
 
     manifest: dict[str, Any] = {
@@ -85,6 +84,7 @@ def build_final_tool_product(
         "outputs": outputs,
         "evidence": evidence,
         "readiness": readiness,
+        "track_input_contract": track_contract,
         "accelerator_control": accelerator_control,
         "provider_governor": provider_governor,
         "provider_invocation_plan": invocation_plan,
@@ -97,7 +97,7 @@ def build_final_tool_product(
             output_record(readiness_path, repo_root, "readiness"),
         ],
         "errors": evidence["errors"] + readiness["blockers"],
-        "warnings": readiness["warnings"],
+        "warnings": readiness["warnings"] + track_contract["warnings"],
     }
     manifest.update(SAFETY_FLAGS)
     write_json(manifest_path, manifest)

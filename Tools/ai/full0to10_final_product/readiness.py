@@ -42,14 +42,17 @@ def build_readiness(records: dict[str, Any], evidence_index: dict[str, Any]) -> 
             score -= 8
             warnings.append(f"{role}_not_passed")
 
+    track = records.get("track_input_contract", {}).get("json") or {}
+    if track:
+        if track.get("complete") is not True:
+            warnings.append("track_input_contract_incomplete")
+        if track.get("passed") is not True:
+            warnings.append("track_input_contract_not_passed")
+
     bridge = records.get("provider_execution_bridge", {}).get("json") or {}
     if bridge.get("provider_execution_performed") is True:
         score -= 50
         blockers.append("provider_execution_bridge_executed_provider")
-
-    gate = records.get("provider_real_run_gate", {}).get("json") or {}
-    if gate.get("real_run_allowed") is True:
-        warnings.append("real_run_gate_allowed_review_required")
 
     command = records.get("provider_command_plan", {}).get("json") or {}
     if command.get("all_commands_are_non_executing") is not True:

@@ -26,6 +26,7 @@ def product_artifacts(
     governor_dir: Path,
     invocation_dir: Path,
     bridge_dir: Path,
+    track_dir: Path,
     repo_root: Path,
 ) -> dict[str, Any]:
     paths = {
@@ -45,6 +46,8 @@ def product_artifacts(
         "provider_real_run_gate": bridge_dir / "full0to10_provider_real_run_gate.json",
         "provider_command_plan": bridge_dir / "full0to10_provider_command_plan.json",
         "provider_workload_output_paths": bridge_dir / "full0to10_provider_workload_output_paths.json",
+        "track_input_contract": track_dir / "full0to10_track_input_contract.json",
+        "track_input_template": track_dir / "full0to10_track_input_template.json",
     }
     records = {}
     for role, path in paths.items():
