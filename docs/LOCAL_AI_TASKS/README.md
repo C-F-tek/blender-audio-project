@@ -50,19 +50,18 @@ Use this order for current IA-Carmine local-AI work:
 
 ```text
 1. CHATGPT/README.md
-2. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
-3. docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+2. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+3. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 4. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 5. docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 6. docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 7. docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
-8. docs/LOCAL_AI_TASKS/post-broker-runtime-telemetry-followup-2026-05-05.md
-9. docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
+8. docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md
+9. docs/LOCAL_AI_TASKS/post-broker-runtime-telemetry-followup-2026-05-05.md
 10. FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
-11. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-Do not start from historical PR handoffs or legacy master-branch runbooks.
+Do not start from historical PR handoffs, legacy master-branch runbooks, or long semi-automatic procedure snapshots.
 
 ## Required context
 
@@ -172,7 +171,7 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 | File | Status | Purpose |
 |---|---|---|
 | `unified-local-ai-refactor-launcher.md` | canonical active | Operator guide for one entrypoint: selectable phases, `Full0To10`, intensity profiles, reset planning, SQLite memory, semantic chunks, context packs, provider advisory, patch specs and validation. |
-| `full-toolbox-0-to-10-semi-automatic-procedure.md` | active procedure | Long-form full toolbox procedure; should remain aligned with `FULL_RUN_UNICA_TUTTO_SU_TUTTO.md`. |
+| `full-toolbox-0-to-10-semi-automatic-procedure.md` | historical/supporting | Long pre-unified semi-automatic procedure snapshot. It contains useful forensic detail but still includes legacy/manual commands and must not override the unified launcher. |
 | `fix-final-runtime-broker-telemetry-task-2026-05-05.md` | active P0 task | Fix final telemetry so runtime broker report is preserved in Git-trackable runtime usage telemetry. |
 | `no-audio-media-output-guardrail-2026-05-05.md` | active guardrail | Prevents unintended audio playback/export, FFmpeg muxing, Blender render or media generation in AI/tooling runs. |
 | `post-broker-runtime-telemetry-followup-2026-05-05.md` | active diagnostic follow-up | Evidence analysis after run `20260505-002508`: provider/bundle OK, broker telemetry not absorbed. |
