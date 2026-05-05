@@ -82,6 +82,15 @@ def normalize_ref(raw: str) -> str:
     value = raw.strip().strip("'\"`.,:;()[]{}<>")
     value = value.replace("\\", "/")
 
+    # Inline code often contains a command, not only a path:
+    # `python -m py_compile ./Tools/x.py` -> `Tools/x.py`.
+    command_path_match = re.search(
+        r"(?P<path>(?:\.\/|\.\\|\/)?(?:[A-Za-z0-9_.-]+[\\\/])+[A-Za-z0-9_.-]+\.(?:md|py|ps1|json|csv|txt|yaml|yml))",
+        value,
+    )
+    if command_path_match:
+        value = command_path_match.group("path").replace("\\", "/")
+
     # Treat repo-root-like absolute paths in documentation as repository-relative.
     # Examples: `/Tools/x.py` -> `Tools/x.py`, `/docs/y.md` -> `docs/y.md`.
     root_like_prefixes = (
@@ -301,8 +310,9 @@ def analyze_markdown(repo: Path, scripts: dict[str, Any], max_lines: int) -> dic
         for ref in refs:
             if is_excluded_rel(ref):
                 continue
-            target = repo / ref
-            if not target.exists():
+            repo_target = repo / ref
+            doc_relative_target = path.parent / ref
+            if not repo_target.exists() and not doc_relative_target.exists():
                 severity, classification = classify_missing_ref(ref, rel)
                 findings.append(Finding(
                     severity,
