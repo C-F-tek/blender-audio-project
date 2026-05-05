@@ -16,6 +16,7 @@ The meaning of `tutto` is intentionally expandable. New stable lanes, registries
 AGENTS.md
   -> CHATGPT.md
   -> CHATGPT/README.md
+  -> docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
   -> README.md
   -> WORKFLOW.md
   -> docs/README.md
@@ -41,6 +42,12 @@ CHATGPT.md
 CHATGPT/README.md
 CHATGPT/next-chat-handoff-*.md
 CHATGPT/chatgpt-session-problems-and-robust-fixes-*.md
+```
+
+Current compact operational bridge:
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ```
 
 These files are advisory memory. They do not override `AGENTS.md`, source code, validation reports or canonical docs.
@@ -88,12 +95,15 @@ Legacy monolithic 0-to-10 runbooks are removed from active documentation. Histor
 |---|---|
 | Agent contract and guardrails | `AGENTS.md` |
 | ChatGPT/session memory and handoff notes | `CHATGPT.md`, then `CHATGPT/README.md` |
+| Current operational bridge | `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
+| Active refactor/reuse planning task | `docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` |
+| Recent telemetry baseline | `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` |
 | Operational lifecycle | `WORKFLOW.md` |
 | Documentation index | `docs/README.md` |
 | Local checkout bootstrap | `docs/LOCAL_AI_RUN_BOOTSTRAP.md` |
 | Unified full 0-to-10 local AI run | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
 | Current code/tool/evidence flow | `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` |
-| Runtime broker telemetry P0 | `docs/LOCAL_AI_TASKS/fix-final-runtime-broker-telemetry-task-2026-05-05.md` |
+| Runtime broker telemetry resolved context | `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` |
 | No audio/media output guardrail | `docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md` |
 | Tool placement audit | `docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md` |
 | Tool promotion/insertion | `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` |
@@ -103,6 +113,17 @@ Legacy monolithic 0-to-10 runbooks are removed from active documentation. Histor
 | Repository area map | `docs/MODULE_MAP.md` |
 | Documentation map and pruning | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |
 | Workflow helper policy | `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` |
+
+## Current active work
+
+```text
+Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+Run: 20260505-143844
+Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Mode: review-only until explicit human instruction
+```
+
+The bundle is a runtime artifact linked from PR #187 and intentionally not committed to the repository. Inspect the bundle before selecting any refactor/reuse patch.
 
 ## Operating rules
 
