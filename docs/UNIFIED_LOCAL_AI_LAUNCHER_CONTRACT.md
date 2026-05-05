@@ -20,6 +20,18 @@ Tools/workflow/run_unified_local_ai_refactor.ps1
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
+## Current operational bridge
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+```
+
+Current active task:
+
+```text
+docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+```
+
 ## Manifest path pattern
 
 Current default:
@@ -107,6 +119,12 @@ docs_links
 json_contract
 script_inventory
 script_inventory_csv
+python_line_count_csv
+semantic_chunk_manifest
+selected_chunks_evidence
+repository_consistency_map
+repository_consistency_smoke
+discovery_or_index_repair_report
 task_scoped_contract
 official_packet
 official_proposals
@@ -128,7 +146,7 @@ A local-AI run is valid only if a GitHub-only or next local agent can inspect it
 launcher command
 unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
-compact Markdown or CSV summaries
+compact Markdown or CSV/count summaries
 detailed evidence only when needed
 ```
 
@@ -146,10 +164,15 @@ Expected defaults unless disabled:
 Markdown inventory and docs link validation requested
 JSON/report contract validation requested
 Python/script inventory requested
+Python line-count CSV/Markdown surface requested when inventory lanes run
+function/class/method CSV surface requested when script inventory supports it
 semantic chunks requested
+selected chunk evidence requested when chunk selection evidence is available
 context pack requested
 agent state/memory input-output requested
 repository consistency and validation evidence requested
+auto-discovery/index drift visibility requested when scanner/index drift is suspected
+index repair must be plan/report-first unless explicitly requested
 runtime tool broker telemetry requested
 runtime tool capability manifest requested
 Ollama advisory requested
@@ -194,6 +217,34 @@ custom   = full coverage with operator-supplied budget
 ```
 
 A quick Full0To10 run is not a smoke test. Smoke remains a separate mode and must not be used as evidence that the full-run contract passed.
+
+## Discovery, index repair and CSV/count contract
+
+Discovery and count surfaces are evidence lanes, not source authority.
+
+Expected report/summary surfaces when relevant:
+
+```text
+Markdown inventory JSON/MD
+script inventory JSON/CSV/MD
+function/class/method inventory CSV
+Python line-count CSV/MD
+semantic chunk manifest JSON/MD
+selected chunk evidence JSON/MD when available
+repository consistency map/smoke JSON/MD
+auto-discovery report when scanner visibility drift is suspected
+index repair plan/report when generated indexes are stale or missing
+```
+
+Policy:
+
+```text
+Do not commit output/**.
+Do not commit indexAI/code_chunks/**.
+Do not hand-edit generated chunk/index artifacts as source.
+Index repair is plan/report-first unless the user explicitly requests regeneration or apply.
+CSV/count surfaces are sizing and discovery evidence; they do not override source code or canonical docs.
+```
 
 ## Quality gate contract
 
@@ -281,6 +332,7 @@ no Blender runtime by launcher
 no FFmpeg runtime by launcher
 provider execution only when explicit
 reset deletion only with exact confirmation
+index repair/regeneration only when explicit and report-bound
 ```
 
 ## Validation
