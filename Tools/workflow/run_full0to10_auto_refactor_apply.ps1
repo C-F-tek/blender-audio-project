@@ -1,10 +1,11 @@
 param(
     [string]$RepoRoot = ".",
-    [Parameter(Mandatory = $true)]
-    [string]$PatchSpecs,
+    [string]$PatchSpecs = "output/validation/full0to10_auto_refactor_plan/full0to10_auto_refactor_patch_specs.json",
     [string]$OutputDir = "output/validation/full0to10_auto_refactor_apply",
-    [int]$MaxSpecs = 200,
-    [switch]$Apply
+    [switch]$Apply,
+    [int]$MaxSpecs = 0,
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$ForwardedArgs = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -22,22 +23,28 @@ $PatchSpecsPath = Resolve-RepoPath -Base $RepoRoot -PathValue $PatchSpecs
 $OutputPath = Resolve-RepoPath -Base $RepoRoot -PathValue $OutputDir
 New-Item -ItemType Directory -Force -Path $OutputPath | Out-Null
 
-$Json = Join-Path $OutputPath "full0to10_controlled_refactor_apply.json"
-$Md = Join-Path $OutputPath "full0to10_controlled_refactor_apply.md"
-
 $Args = @(
     "--repo-root", $RepoRoot,
     "--patch-specs", $PatchSpecsPath,
-    "--max-specs", $MaxSpecs,
-    "--output", $Json,
-    "--markdown-output", $Md
+    "--output-dir", $OutputPath
 )
 
 if ($Apply) {
     $Args += "--apply"
 }
+if ($MaxSpecs -gt 0) {
+    $Args += @("--max-specs", $MaxSpecs)
+}
+if ($ForwardedArgs.Count -gt 0) {
+    $Args += $ForwardedArgs
+}
 
-& python (Join-Path $RepoRoot "Tools/ai/apply_full0to10_auto_refactor_patch_specs.py") @Args
+$ScriptPath = Join-Path $RepoRoot "Tools/ai/apply_full0to10_auto_refactor_patch_specs.py"
+& python $ScriptPath @Args
+$ExitCode = $LASTEXITCODE
 
-Write-Host "[OK] Controlled refactor JSON: $Json"
-Write-Host "[OK] Controlled refactor MD: $Md"
+if ($ExitCode -ne 0) {
+    throw "Full0To10 controlled refactor applier failed with exit code $ExitCode"
+}
+
+Write-Host "[OK] Controlled refactor applier output: $OutputPath"

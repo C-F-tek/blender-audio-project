@@ -1,11 +1,12 @@
 param(
     [string]$RepoRoot = ".",
-    [Parameter(Mandatory = $true)]
-    [string]$PatchSpecs,
+    [string]$PatchSpecs = "output/validation/full0to10_auto_refactor_plan/full0to10_auto_refactor_patch_specs.json",
     [string]$OutputDir = "output/validation/full0to10_markdown_split_shadow",
-    [string]$ShadowRoot = "output/validation/full0to10_markdown_split_shadow_files",
-    [int]$MaxSpecs = 200,
-    [switch]$ApplyShadow
+    [string]$ShadowRoot = "",
+    [switch]$ApplyShadow,
+    [int]$MaxSpecs = 0,
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$ForwardedArgs = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,33 +19,51 @@ function Resolve-RepoPath {
     return (Join-Path $Base $PathValue)
 }
 
+function Assert-ShadowRootSafe {
+    param([string]$Root, [string]$Shadow)
+    $OutputValidation = (Resolve-Path (Join-Path $Root "output/validation")).Path
+    $ShadowFull = [System.IO.Path]::GetFullPath($Shadow)
+    if (-not $ShadowFull.StartsWith($OutputValidation, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Markdown split shadow root must stay under output/validation. Got: $ShadowFull"
+    }
+}
+
 $RepoRoot = (Resolve-Path $RepoRoot).Path
 $PatchSpecsPath = Resolve-RepoPath -Base $RepoRoot -PathValue $PatchSpecs
 $OutputPath = Resolve-RepoPath -Base $RepoRoot -PathValue $OutputDir
-$ShadowPath = Resolve-RepoPath -Base $RepoRoot -PathValue $ShadowRoot
-New-Item -ItemType Directory -Force -Path $OutputPath | Out-Null
+if (-not $ShadowRoot) {
+    $ShadowRoot = Join-Path $OutputPath "shadow_files"
+}
+$ShadowRootPath = Resolve-RepoPath -Base $RepoRoot -PathValue $ShadowRoot
 
-$Json = Join-Path $OutputPath "full0to10_markdown_split_shadow.json"
-$Md = Join-Path $OutputPath "full0to10_markdown_split_shadow.md"
+New-Item -ItemType Directory -Force -Path (Join-Path $RepoRoot "output/validation") | Out-Null
+New-Item -ItemType Directory -Force -Path $OutputPath, $ShadowRootPath | Out-Null
+Assert-ShadowRootSafe -Root $RepoRoot -Shadow $ShadowRootPath
 
 $Args = @(
     "--repo-root", $RepoRoot,
     "--patch-specs", $PatchSpecsPath,
-    "--max-specs", $MaxSpecs,
-    "--shadow-root", $ShadowPath,
-    "--output", $Json,
-    "--markdown-output", $Md
+    "--output-dir", $OutputPath,
+    "--shadow-root", $ShadowRootPath
 )
 
 if ($ApplyShadow) {
     $Args += "--apply-shadow"
 }
-
-& python (Join-Path $RepoRoot "Tools/ai/apply_full0to10_markdown_split_patch_specs.py") @Args
-if ($LASTEXITCODE -ne 0) {
-    throw "Markdown split shadow failed with exit code $LASTEXITCODE"
+if ($MaxSpecs -gt 0) {
+    $Args += @("--max-specs", $MaxSpecs)
+}
+if ($ForwardedArgs.Count -gt 0) {
+    $Args += $ForwardedArgs
 }
 
-Write-Host "[OK] Markdown split shadow JSON: $Json"
-Write-Host "[OK] Markdown split shadow MD: $Md"
-Write-Host "[OK] Markdown split shadow files: $ShadowPath"
+$ScriptPath = Join-Path $RepoRoot "Tools/ai/apply_full0to10_markdown_split_patch_specs.py"
+& python $ScriptPath @Args
+$ExitCode = $LASTEXITCODE
+
+if ($ExitCode -ne 0) {
+    throw "Full0To10 Markdown split shadow failed with exit code $ExitCode"
+}
+
+Write-Host "[OK] Markdown split shadow output: $OutputPath"
+Write-Host "[OK] Markdown split shadow files: $ShadowRootPath"
