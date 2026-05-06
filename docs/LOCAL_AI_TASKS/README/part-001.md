@@ -20,7 +20,7 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 
 ## Non-negotiable rule
 
-There is one active local-AI operator entrypoint:
+There is one active local-AI operator entrypoint, now present on `master` after PR #187:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
@@ -57,21 +57,17 @@ Current compact operational bridge:
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ```
 
-Current active task:
+Current code-derived baseline:
 
 ```text
-docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-```
-
-Current run/bundle:
-
-```text
-Run: 20260505-143844
-Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Baseline: master after PR #187 merge
+Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Next candidate PR: #192 feat(ai): add full0to10 report-only foundation checks
+Evidence branch to mine/regenerate: #191 docs(ai): add Full0To10 quick evidence bundle 20260506-004242
 Mode: review-only until explicit human instruction
 ```
 
-The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Do not infer its contents from file existence alone.
+Do not treat PR #187 as the current active branch anymore. It is now the merged launcher baseline.
 
 Recent telemetry baseline:
 
@@ -227,6 +223,10 @@ Current unified-flow tools and their visibility surfaces:
 | Runtime broker | `Tools/ai/agent_runtime_tool_broker.py` | runtime tool broker JSON/MD report | supporting full-toolbox lane |
 | Production bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | shared toolbox AI-to-AI bundle and final summary | production handoff |
 | Reset | unified launcher reset mode | reset plan JSON/Markdown | `reset` mode |
+| Full0To10 recursive bundle ZIP | `Tools/ai/build_full_run_evidence_bundle_zip.py` in PR #192 | ZIP plus completeness report | candidate foundation layer |
+| Runtime hardware capability manifest | `Tools/ai/build_runtime_hardware_capability_manifest.py` in PR #192 | CPU/GPU.0/NPU/NVIDIA report-only manifest | candidate foundation layer |
+| Hardware delegation contract | `Tools/validation/check_runtime_hardware_delegation_contract.py` in PR #192 | report-only delegation contract validation | candidate foundation layer |
+| Bundle completeness contract | `Tools/validation/check_full_run_bundle_completeness.py` in PR #192 | ZIP/completeness validation report | candidate foundation layer |
 
 If a tool is referenced in docs but missing from the repository, mark it optional/future or remove the reference in the same change.
 
@@ -255,7 +255,7 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 
 | File | Status | Purpose |
 |---|---|---|
-| `current-operational-state-2026-05-05.md` | active bridge | Compact current state for PR #187, refactor/reuse run `20260505-143844`, guardrails and source-of-truth hierarchy. |
+| `current-operational-state-2026-05-05.md` | active bridge | Compact current state for post-#187 master, PR #192 candidate, PR #191 evidence branch, guardrails and source-of-truth hierarchy. |
 | `refactor-reuse-methods-classes-tools-planning.md` | active P1 task | Analyze method/class/helper/tool reuse, classify patch plans and keep patching review-only. |
 | `refactor-reuse-full-run-documentation-coherence-2026-05-05.md` | active bridge | Coherence note for the refactor/reuse run and bundle. |
 | `recent-telemetry-state-2026-05-05.md` | active baseline | Recent telemetry baseline for `073332` and `081141`; broker telemetry treated as resolved unless a regression appears. |
@@ -283,7 +283,7 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 
 ## Removed superseded active-start runbooks
 
-The following legacy active-start documents were removed from this branch because the stable layer now owns the active flow:
+The following legacy active-start documents were removed because the stable layer now owns the active flow:
 
 ```text
 post-pr114-next-task-handoff.md
@@ -302,7 +302,7 @@ Current policy:
 ```text
 Use run_unified_local_ai_refactor.ps1 as the only operator entrypoint.
 Use current-operational-state-2026-05-05.md, FULL_RUN_UNICA_TUTTO_SU_TUTTO.md and current-code-flow-guide-2026-05-05.md for current flow.
-Use refactor-reuse-methods-classes-tools-planning.md and the 20260505-143844 runtime bundle for the current refactor/reuse pass.
+Use refactor-reuse-methods-classes-tools-planning.md and current telemetry/evidence summaries for refactor/reuse passes.
 Use tool-inventory-placement-audit-2026-05-05.md and project-tool-promotion-and-insertion-guide-2026-05-05.md for project-tool promotion.
 Use no-audio-media-output-guardrail-2026-05-05.md to classify audio/media output side effects.
 Do not create new parallel 0-to-10 entrypoints unless the user explicitly asks for a separate runner.
