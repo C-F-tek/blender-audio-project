@@ -1,24 +1,50 @@
 # Markdown line budget policy
 
-## Scopo
+## Scope
 
-Questa policy stabilisce il limite operativo per la documentazione Markdown attiva del progetto IA-Carmine.
+This policy defines the operational line budget for maintained Markdown in IA-Carmine.
 
-## Regola
+## Rule
 
-- Ogni file Markdown attivo dovrebbe restare entro 400 righe.
-- Se un file supera il limite, deve diventare un entrypoint breve e puntare a una cartella di parti Markdown.
-- La conversione deve essere ricorsiva: anche le parti generate devono rispettare il limite.
-- I file sotto `output/**`, `renders/**`, `indexAI/code_chunks/**`, `indexAI/project_code_chunks/**` e `docs/LOCAL_VALIDATION_EVIDENCE/**` sono esclusi dal controllo standard.
+```text
+active maintained .md hard threshold: <= 500 lines
+preferred active runbook size: <= 400 lines
+generated evidence: may exceed 500 only with compact manifest/summary/index
+```
 
-## Comandi
+If a maintained Markdown file exceeds 500 lines, it must become a compact entrypoint that points to a folder of Markdown parts.
+
+Split layout:
+
+```text
+<file>.md
+<file>.md/part-001.md
+<file>.md/part-002.md
+...
+```
+
+The conversion must be recursive: generated parts must also respect the 500-line hard threshold.
+
+Excluded from normal source-documentation enforcement:
+
+```text
+output/**
+renders/**
+indexAI/code_chunks/**
+indexAI/project_code_chunks/**
+docs/LOCAL_VALIDATION_EVIDENCE/**
+```
+
+These locations may contain generated evidence or runtime artifacts. They are not maintained source documentation.
+
+## Commands
 
 Dry-run:
 
 ```powershell
 python .\Tools\docs\split_large_markdown.py `
   --repo-root . `
-  --max-lines 400
+  --max-lines 500
 ```
 
 Apply:
@@ -26,18 +52,37 @@ Apply:
 ```powershell
 python .\Tools\docs\split_large_markdown.py `
   --repo-root . `
-  --max-lines 400 `
+  --max-lines 500 `
   --apply
 ```
 
-Validazione:
+Validation:
 
 ```powershell
-python .\Toolsalidation\check_markdown_line_limits.py `
+python .\Tools\validation\check_markdown_line_limits.py `
   --repo-root . `
-  --max-lines 400
+  --max-lines 500
+```
+
+## Canonical references
+
+```text
+docs/LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md
+docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
+AGENTS.md
 ```
 
 ## Versioning
 
-Versionare solo file sorgente, documentazione e report compatti intenzionali. Non committare `output/**`.
+Version only source files, maintained documentation and intentional compact evidence.
+
+Do not commit:
+
+```text
+output/**
+indexAI/code_chunks/**
+*.db
+*.sqlite
+renders/**
+generated media
+```
