@@ -120,6 +120,84 @@ def build_peer_mesh_visibility(
     }
 
 
+def build_peer_mesh_lane_state(
+    primary: dict[str, Any],
+    response: dict[str, Any],
+    broker: dict[str, Any],
+    npu: dict[str, Any],
+    npu_broker: dict[str, Any],
+    sources: list[dict[str, Any]],
+    peer_mesh_visibility: dict[str, Any],
+    npu_support_lane: dict[str, Any],
+) -> dict[str, Any]:
+    """Return product-facing lane state separate from legacy workload usability."""
+
+    def add_unique(items: list[str], value: str) -> None:
+        if value and value not in items:
+            items.append(value)
+
+    operational_lanes: list[str] = []
+    support_lanes: list[str] = []
+    degraded_lanes: list[str] = []
+    product_blockers: list[str] = []
+
+    gpu0_broker_exec = safe_int(broker.get("tool_execution_count"))
+    npu_broker_exec = safe_int(npu_broker.get("tool_execution_count"))
+    gpu0_tool_count = safe_int(response.get("tool_request_count"))
+    npu_tool_count = safe_int(npu.get("tool_request_count"))
+
+    if primary.get("passed") is True:
+        add_unique(operational_lanes, "gpu1_ollama_primary_advisory")
+    else:
+        add_unique(product_blockers, "gpu1_primary_advisory_not_proven")
+
+    if response:
+        if response.get("provider_execution_performed") is True:
+            add_unique(operational_lanes, "gpu0_openvino_peer_companion")
+        if response.get("openvino_gpu0_workload_passed") is True or response.get("provider_execution_performed") is True:
+            add_unique(support_lanes, "gpu0_openvino_numeric_tool_peer")
+        if gpu0_tool_count or gpu0_broker_exec:
+            add_unique(support_lanes, "gpu0_brokered_tool_supply")
+        if "gpu0_peer_semantic_model_unconfigured" in response.get("classifications", []):
+            add_unique(degraded_lanes, "gpu0_semantic_companion_model_unconfigured")
+    else:
+        add_unique(product_blockers, "gpu0_peer_response_missing")
+
+    if gpu0_tool_count and gpu0_broker_exec <= 0:
+        add_unique(product_blockers, "gpu0_tool_requests_not_broker_consumed")
+
+    if gpu0_broker_exec or npu_broker_exec:
+        add_unique(operational_lanes, "runtime_tool_broker")
+    if sources:
+        add_unique(operational_lanes, "deterministic_scripts")
+    if npu:
+        add_unique(operational_lanes, "npu_nonblocking_tool_support")
+        if npu_tool_count or npu_broker_exec:
+            add_unique(support_lanes, "npu_brokered_tool_supply")
+        if npu.get("npu_deterministic_tool_fallback_used") is True:
+            add_unique(support_lanes, "npu_deterministic_tool_fallback")
+        if npu_support_lane.get("provider_slow_or_degraded") is True:
+            add_unique(degraded_lanes, "npu_semantic_provider_slow_or_degraded")
+
+    return {
+        "schema_version": 1,
+        "kind": "peer_mesh_lane_state",
+        "operational_lanes": operational_lanes,
+        "support_lanes": support_lanes,
+        "degraded_lanes": degraded_lanes,
+        "product_blockers": product_blockers,
+        "gpu0_broker_tool_execution_count": gpu0_broker_exec,
+        "npu_broker_tool_execution_count": npu_broker_exec,
+        "broker_runtime_tool_execution_count": gpu0_broker_exec + npu_broker_exec,
+        "legacy_usable_lanes_are_workload_quality_only": True,
+        "npu_degraded_is_product_blocker": False,
+        "npu_heavy_audit_authority": False,
+        "all_required_product_lanes_present": not product_blockers,
+        "mesh_visibility": peer_mesh_visibility,
+        "npu_support_lane": npu_support_lane,
+    }
+
+
 def primary_advisory(repo_root: Path, stamp: str, gpu_report_path: Path, gpu_markdown_path: Path) -> dict[str, Any]:
     gpu_report = read_json(gpu_report_path)
     round_count = safe_int(gpu_report.get("round_count"))
@@ -364,8 +442,19 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
     }
     npu_support_lane = npu_support_lane_summary(npu, npu_broker)
     peer_mesh_visibility = build_peer_mesh_visibility(primary, response, broker, npu, npu_broker, sources)
+    peer_mesh_lane_state = build_peer_mesh_lane_state(
+        primary,
+        response,
+        broker,
+        npu,
+        npu_broker,
+        sources,
+        peer_mesh_visibility,
+        npu_support_lane,
+    )
     collaboration_round["mesh_visibility"] = peer_mesh_visibility
     collaboration_round["npu_support_lane"] = npu_support_lane
+    collaboration_round["peer_mesh_lane_state"] = peer_mesh_lane_state
 
     exchange = {
         "schema_version": 1,
@@ -382,6 +471,11 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         "collaboration_round": collaboration_round,
         "peer_mesh_visibility": peer_mesh_visibility,
         "npu_support_lane": npu_support_lane,
+        "peer_mesh_lane_state": peer_mesh_lane_state,
+        "peer_mesh_operational_lanes": peer_mesh_lane_state.get("operational_lanes", []),
+        "peer_mesh_support_lanes": peer_mesh_lane_state.get("support_lanes", []),
+        "peer_mesh_degraded_lanes": peer_mesh_lane_state.get("degraded_lanes", []),
+        "peer_mesh_product_blockers": peer_mesh_lane_state.get("product_blockers", []),
         "contract": contract,
         "classifications": list(dict.fromkeys(classifications)),
         "errors": [],
@@ -437,6 +531,10 @@ def render_exchange(report: dict[str, Any]) -> str:
         f"- Peer mesh all lanes visible: `{report.get('peer_mesh_visibility', {}).get('all_lanes_visible')}`",
         f"- NPU support tool supply: `{report.get('npu_support_lane', {}).get('tool_supply_support')}`",
         f"- NPU slow/degraded non-blocking: `{report.get('npu_support_lane', {}).get('provider_slow_or_degraded')}`",
+        f"- Peer mesh operational lanes: `{report.get('peer_mesh_operational_lanes')}`",
+        f"- Peer mesh support lanes: `{report.get('peer_mesh_support_lanes')}`",
+        f"- Peer mesh degraded lanes: `{report.get('peer_mesh_degraded_lanes')}`",
+        f"- Peer mesh product blockers: `{report.get('peer_mesh_product_blockers')}`",
         "",
     ])
 

@@ -148,3 +148,19 @@ Tools/ai/agent_runtime_tool_broker.py
 ```
 
 The runtime broker is the only production path for GPU1/GPU0/NPU tool execution. GPU0 peer output may be numeric/tool evidence when `IA_CARMINE_GPU0_COMPANION_MODEL_DIR` is not configured, but that state must remain visible as `gpu0_peer_semantic_model_unconfigured`. NPU output remains non-blocking support evidence and must not replace deterministic validators as heavy audit authority.
+
+## Peer mesh operational lanes rule
+
+`usable_lanes` remains a workload-quality/advisory-routing signal and must not be used as the product-level proof that GPU0/GPU1/NPU/broker participated in the run.
+
+The product-facing peer mesh must expose separate lane surfaces:
+
+```text
+peer_mesh_operational_lanes
+peer_mesh_support_lanes
+peer_mesh_degraded_lanes
+peer_mesh_product_blockers
+```
+
+GPU0 numeric/OpenVINO/tool evidence is a valid operational/support lane even when the semantic companion model is not configured. NPU slow, empty or degraded output is a support-lane degradation, not a product blocker, as long as brokered fallback/tool-support evidence and deterministic validators remain available.
+

@@ -182,10 +182,15 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         errors.append("collaboration_round_missing_synchronized_visibility")
         add(classifications, "ai_peer_collaboration_round_missing")
     peer_mesh_contract = evaluate_peer_mesh_visibility(exchange, npu, npu_broker)
+    peer_mesh_lane_state = exchange.get("peer_mesh_lane_state") if isinstance(exchange.get("peer_mesh_lane_state"), dict) else {}
+    peer_mesh_product_blockers = peer_mesh_lane_state.get("product_blockers") if isinstance(peer_mesh_lane_state.get("product_blockers"), list) else []
     errors.extend(peer_mesh_contract["errors"])
+    errors.extend(str(item) for item in peer_mesh_product_blockers if item)
     warnings.extend(peer_mesh_contract["warnings"])
     for item in peer_mesh_contract["classifications"]:
         add(classifications, item)
+    if peer_mesh_lane_state.get("degraded_lanes"):
+        add(classifications, "peer_mesh_degraded_lanes_present_non_blocking")
     if npu_path and npu_path.exists():
         if npu.get("non_blocking") is not True:
             warnings.append(f"npu_micro_lane_non_blocking_flag_missing: {npu_error}")
@@ -218,6 +223,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "errors": errors,
         "warnings": warnings,
         "peer_mesh_visibility_contract": peer_mesh_contract,
+        "peer_mesh_lane_state": peer_mesh_lane_state,
+        "peer_mesh_operational_lanes": peer_mesh_lane_state.get("operational_lanes", []),
+        "peer_mesh_support_lanes": peer_mesh_lane_state.get("support_lanes", []),
+        "peer_mesh_degraded_lanes": peer_mesh_lane_state.get("degraded_lanes", []),
+        "peer_mesh_product_blockers": peer_mesh_lane_state.get("product_blockers", []),
         "provider_execution_performed": bool(primary.get("provider_execution_performed") or response.get("provider_execution_performed")),
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -273,6 +283,10 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(f"- NPU sees GPU1/GPU0/broker context: `{mesh.get('npu_sees_gpu1_gpu0_broker_context')}`")
         lines.append(f"- NPU support tool supply: `{support.get('tool_supply_support')}`")
         lines.append(f"- NPU slow/degraded non-blocking: `{support.get('provider_slow_or_degraded')}`")
+        lines.append(f"- Peer mesh operational lanes: `{report.get('peer_mesh_operational_lanes')}`")
+        lines.append(f"- Peer mesh support lanes: `{report.get('peer_mesh_support_lanes')}`")
+        lines.append(f"- Peer mesh degraded lanes: `{report.get('peer_mesh_degraded_lanes')}`")
+        lines.append(f"- Peer mesh product blockers: `{report.get('peer_mesh_product_blockers')}`")
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {item}" for item in report["errors"])

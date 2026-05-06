@@ -529,6 +529,65 @@ def classify_provider_advisory_state(provider_diagnostics: dict[str, Any]) -> di
         "degraded_provider_components": degraded_components[:20],
     }
 
+
+def extract_peer_mesh_product_state(provider_diagnostics: dict[str, Any]) -> dict[str, Any]:
+    """Derive product-facing peer-mesh state from existing provider diagnostics."""
+
+    operational_lanes: list[str] = []
+    support_lanes: list[str] = []
+    degraded_lanes: list[str] = []
+    product_blockers: list[str] = []
+
+    def add_unique(items: list[str], value: str) -> None:
+        if value and value not in items:
+            items.append(value)
+
+    for item in provider_diagnostics.get("diagnostics", []):
+        if not isinstance(item, dict):
+            continue
+        kind = str(item.get("kind") or "")
+        classifications = item.get("classifications") if isinstance(item.get("classifications"), list) else []
+        mesh = item.get("peer_mesh_visibility") if isinstance(item.get("peer_mesh_visibility"), dict) else {}
+        support = item.get("npu_support_lane") if isinstance(item.get("npu_support_lane"), dict) else {}
+        if kind == "gpu1_primary_advisory" and item.get("passed") is True:
+            add_unique(operational_lanes, "gpu1_ollama_primary_advisory")
+        if kind == "gpu0_peer_response":
+            if item.get("provider_execution_performed") is True:
+                add_unique(operational_lanes, "gpu0_openvino_peer_companion")
+                add_unique(support_lanes, "gpu0_openvino_numeric_tool_peer")
+            if "gpu0_peer_semantic_model_unconfigured" in classifications:
+                add_unique(degraded_lanes, "gpu0_semantic_companion_model_unconfigured")
+        if kind == "agent_runtime_tool_broker" and int(item.get("tool_execution_count") or 0) > 0:
+            add_unique(operational_lanes, "runtime_tool_broker")
+            source_classification = str(item.get("source_classification") or item.get("source") or "")
+            if "gpu0" in source_classification:
+                add_unique(support_lanes, "gpu0_brokered_tool_supply")
+            if "npu" in source_classification:
+                add_unique(support_lanes, "npu_brokered_tool_supply")
+        if kind == "ai_peer_exchange":
+            for lane in item.get("peer_mesh_operational_lanes", []) if isinstance(item.get("peer_mesh_operational_lanes"), list) else []:
+                add_unique(operational_lanes, str(lane))
+            if mesh.get("gpu0_tool_requests_broker_consumed") is True:
+                add_unique(support_lanes, "gpu0_brokered_tool_supply")
+            if mesh.get("npu_tool_requests_broker_consumed") is True:
+                add_unique(support_lanes, "npu_brokered_tool_supply")
+            if support.get("provider_slow_or_degraded") is True:
+                add_unique(degraded_lanes, "npu_semantic_provider_slow_or_degraded")
+            if support.get("product_pass_blocker") is True:
+                add_unique(product_blockers, "npu_support_lane_marked_product_blocker")
+    if operational_lanes and "deterministic_scripts" not in operational_lanes:
+        add_unique(operational_lanes, "deterministic_scripts")
+    return {
+        "operational_lanes": operational_lanes,
+        "support_lanes": support_lanes,
+        "degraded_lanes": degraded_lanes,
+        "product_blockers": product_blockers,
+        "legacy_usable_lanes_are_workload_quality_only": True,
+        "npu_degraded_is_product_blocker": False,
+        "npu_heavy_audit_authority": False,
+    }
+
+
 def build_final_summary(
     *,
     repo_root: Path,
@@ -545,6 +604,7 @@ def build_final_summary(
     facts = collect_report_facts(repo_root, report_paths)
     patch_plan_summary = extract_full_run_patch_plan_summary(repo_root, report_paths)
     provider_diagnostics = extract_provider_diagnostics_summary(repo_root, report_paths)
+    peer_mesh_product_state = extract_peer_mesh_product_state(provider_diagnostics)
     tool_capabilities = runtime_tool_capabilities()
     tool_requests = facts.get("tool_requests_executed_or_proposed") or default_tool_requests()
     remaining_gaps = build_remaining_gaps(missing_reports, missing_artifacts, facts)
@@ -568,6 +628,11 @@ def build_final_summary(
         "compact_bundle_paths": bundle_paths,
         "provider_execution_performed": bool(facts.get("provider_execution_performed")),
         "provider_diagnostics": provider_diagnostics,
+        "peer_mesh_product_state": peer_mesh_product_state,
+        "peer_mesh_operational_lanes": peer_mesh_product_state.get("operational_lanes", []),
+        "peer_mesh_support_lanes": peer_mesh_product_state.get("support_lanes", []),
+        "peer_mesh_degraded_lanes": peer_mesh_product_state.get("degraded_lanes", []),
+        "peer_mesh_product_blockers": peer_mesh_product_state.get("product_blockers", []),
         "gpu_primary_advisory_succeeded": bool(provider_diagnostics.get("gpu_primary_advisory_succeeded")),
         "provider_failure_detected": bool(provider_diagnostics.get("provider_failure_detected")),
         "provider_advisory_state": provider_diagnostics.get("provider_advisory_state"),
@@ -618,6 +683,19 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
         lines.append("- Provider failure reasons:")
         for reason in reasons[:12]:
             lines.append(f"  - {reason}")
+    peer_mesh_state = summary.get("peer_mesh_product_state") if isinstance(summary.get("peer_mesh_product_state"), dict) else {}
+    if peer_mesh_state:
+        lines.append("")
+        lines.append("## Peer mesh product state")
+        lines.append("")
+        lines.append(f"- Peer mesh operational lanes: `{peer_mesh_state.get('operational_lanes')}`")
+        lines.append(f"- Peer mesh support lanes: `{peer_mesh_state.get('support_lanes')}`")
+        lines.append(f"- Peer mesh degraded lanes: `{peer_mesh_state.get('degraded_lanes')}`")
+        lines.append(f"- Peer mesh product blockers: `{peer_mesh_state.get('product_blockers')}`")
+        lines.append(f"- Legacy usable lanes are workload quality only: `{peer_mesh_state.get('legacy_usable_lanes_are_workload_quality_only')}`")
+        lines.append(f"- NPU degraded is product blocker: `{peer_mesh_state.get('npu_degraded_is_product_blocker')}`")
+        lines.append(f"- NPU heavy audit authority: `{peer_mesh_state.get('npu_heavy_audit_authority')}`")
+        lines.append("")
     for item in provider.get("diagnostics", [])[:12]:
         lines.append(
             f"- `{item.get('path')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}` "
