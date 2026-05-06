@@ -18,6 +18,7 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 
 ```text
 Full0To10 = TUTTO SU TUTTO
+LightFull0To10 = evidence-only profile, not provider/runtime proof
 quick/balanced/deep/custom = intensity, not scope
 supporting wrappers are implementation lanes, not first entrypoints
 provider/probe/workload-quality lanes are opt-out in Full0To10
@@ -30,7 +31,9 @@ limitations are backlog to overcome, not reasons to skip available tools
 
 | Script | Classification | Notes |
 |---|---|---|
-| `run_unified_local_ai_refactor.ps1` | canonical-entrypoint | Primary run-unica launcher. |
+| `run_unified_local_ai_refactor.ps1` | canonical-entrypoint | Primary run-unica launcher. Dispatches `-LightFull0To10` profile when selected. |
+| `run_unified_light_full0to10_profile.ps1` | evidence-only profile | Dispatches light evidence run and promotion JSON builder. |
+| `run_full0to10_light_evidence_only.ps1` | evidence-only supporting lane | Produces light evidence report; no provider execution, patch apply, Blender runtime or FFmpeg runtime. |
 | `run_local_validation_after_refactor.ps1` | supporting-tool | Local validation wrapper; not first entrypoint. |
 | `run_local_ai_task_via_pipeline.ps1` | launcher-internal/supporting-tool | Official adapter lane. |
 | `run_post_validation_ai_packet.ps1` | launcher-internal/supporting-tool | Advisory packet lane. |
@@ -51,6 +54,22 @@ limitations are backlog to overcome, not reasons to skip available tools
 | `smart_ai_context.py` | supporting-tool | Smart context helper. |
 | `ai_runtime_diagnostics.py` | diagnostic-only | Runtime diagnostics helper. |
 
+## LightFull0To10 behavior
+
+The light profile is a report/evidence profile for fast visibility and promotion planning.
+
+Verified behavior from `run_full0to10_light_evidence_only.ps1`:
+
+```text
+kind=full0to10_light_evidence_only_run
+provider_execution_performed=false
+patch_application_performed=false
+blender_runtime_execution_performed=false
+ffmpeg_execution_performed=false
+```
+
+It may run optional evidence steps for startup, track input contract, repo quality, Markdown line limits, accelerator/provider governance, provider invocation/bridge planning, memory visibility, provider feedback loop and final product quality. Optional missing scripts are represented as step records and must not be interpreted as silent full-run success.
+
 ## Guardrails
 
 Workflow helpers must not silently:
@@ -64,6 +83,7 @@ commit SQLite DB files
 run Blender or FFmpeg
 produce audio/media output
 change provider/model execution semantics
+claim provider execution from light evidence-only profiles
 ```
 
 Push-capable helpers are not default validation commands and require explicit user intent.
