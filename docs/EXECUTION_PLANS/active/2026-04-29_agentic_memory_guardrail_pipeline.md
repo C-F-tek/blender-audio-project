@@ -4,6 +4,43 @@
 
 active
 
+## Current review note — 2026-05-07
+
+This is one of the oldest remaining execution plans under `active/`. It predates the current post-PR187 Full0To10 baseline and the main runtime architecture contract.
+
+Treat it as **legacy active / architecture-seeded follow-up**. It contains useful memory/guardrail design history, but current work must use:
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+```
+
+Current runtime target:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Mapping from this older plan to the current architecture:
+
+```text
+agent state packet -> shared runtime heap / blackboard candidate
+memory policy -> blackboard retention and promotion policy
+microtask descriptors -> NPU microtask responder / CPU validator task records
+validation state -> deterministic validators / CPU authority
+risk/remaining tasks -> telemetry/event stream and evidence summaries
+```
+
+Do not implement this plan as a separate parallel architecture. Reuse its ideas only through the current blackboard/broker/registry/validator/telemetry model.
+
 ## Goal
 
 Build a generic agentic layer that helps the project AI work beyond token-window limits through structured memory, task-specific context packets, non-blocking guardrail microtasks, and clear CPU/NPU/GPU lane policy.
@@ -60,6 +97,12 @@ medium
 
 The first implementation is low runtime risk because it is pure Python and non-invasive. The overall roadmap is medium risk because later Blender/audio app integration and hardware lanes must be tested carefully.
 
+Current additional risk:
+
+```text
+Do not create a second memory/agentic architecture outside the main blackboard/broker/runtime model.
+```
+
 ## Progress Log
 
 - 2026-04-29: Read stable Markdown documentation, package/tool READMEs and generated Markdown indexes before implementation.
@@ -70,19 +113,22 @@ The first implementation is low runtime risk because it is pure Python and non-i
 - 2026-04-29: Added non-invasive Blender shared compatibility smoke validator; outside Blender it marks runtime checks as skipped.
 - 2026-04-29: Ran Blender 5.1.1 background smoke; found and fixed VSE API change from `sequences` to `strips`.
 - 2026-04-29: Blender 5.1.1 no-render smoke passed for frame range, noise node and VSE audio strip creation.
+- 2026-05-07: Reviewed against the main runtime architecture. Future implementation should flow through shared runtime heap / blackboard, broker, registry, CPU validators and telemetry/event stream.
 
 ## Result
 
-first slice in progress; runtime Blender/audio testing not started yet
+first slice in progress historically; runtime Blender/audio testing was not the current active architecture path.
 
 ## Follow-up
 
-After packet generation is validated, create controlled Blender/audio smoke tasks:
+Next safe follow-up under current architecture:
 
 ```text
-1. build an agent state packet for Blender compatibility testing;
-2. run a manual Blender smoke test for Scripting/shared/blender_compat.py;
-3. build an audio-analysis packet from representative JSON/audio context;
-4. run guardrail review on those packets;
-5. only then decide package adapter or app integration changes.
+1. define blackboard record shapes for agent state packet summaries;
+2. keep SQLite memory local and untracked;
+3. route memory review through deterministic validators;
+4. expose memory/blackboard state in telemetry/evidence summaries;
+5. avoid direct prompt injection or provider-side mutation until validators pass.
 ```
+
+Manual execution-plan cleanup may later move this plan to `completed/` or superseded after explicit approval for file moves.
