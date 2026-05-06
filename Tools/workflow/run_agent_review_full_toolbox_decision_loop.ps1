@@ -270,14 +270,30 @@ function Read-JsonFile {
         return $null
     }
 
-    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+    $EffectivePath = $Path
+    if (-not (Test-Path -LiteralPath $EffectivePath -PathType Leaf)) {
         return $null
     }
 
-    $Raw = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
+    $Extension = [System.IO.Path]::GetExtension($EffectivePath)
+    if ($Extension -ne ".json") {
+        $SiblingJson = [System.IO.Path]::ChangeExtension($EffectivePath, ".json")
+        if (Test-Path -LiteralPath $SiblingJson -PathType Leaf) {
+            if ($script:Warnings -ne $null) {
+                [void]$script:Warnings.Add("Read-JsonFile recovered JSON sidecar for non-JSON path: $EffectivePath -> $SiblingJson")
+            } elseif ($Warnings -ne $null) {
+                [void]$Warnings.Add("Read-JsonFile recovered JSON sidecar for non-JSON path: $EffectivePath -> $SiblingJson")
+            }
+            $EffectivePath = $SiblingJson
+        } else {
+            throw "Read-JsonFile refused non-JSON path without sidecar: $EffectivePath"
+        }
+    }
+
+    $Raw = Get-Content -LiteralPath $EffectivePath -Raw -ErrorAction Stop
 
     if ([string]::IsNullOrWhiteSpace($Raw)) {
-        throw "Read-JsonFile failed: empty JSON file: $Path"
+        throw "Read-JsonFile failed: empty JSON file: $EffectivePath"
     }
 
     try {
@@ -289,9 +305,10 @@ function Read-JsonFile {
         }
         $Preview = $Preview -replace "`r", "\r" -replace "`n", "\n"
 
-        throw "Read-JsonFile failed for path: $Path; length=$($Raw.Length); preview=[$Preview]; error=$($_.Exception.Message)"
+        throw "Read-JsonFile failed for path: $EffectivePath; requested_path=$Path; length=$($Raw.Length); preview=[$Preview]; error=$($_.Exception.Message)"
     }
 }
+
 
 $Reports = [System.Collections.ArrayList]@()
 $Artifacts = [System.Collections.ArrayList]@()
