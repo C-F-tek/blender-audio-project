@@ -62,6 +62,37 @@ def correlated_complete(events: list[dict[str, Any]], request_type: str, respons
     return len(requests & responses)
 
 
+def gpu_peer_exchange_metrics(events: list[dict[str, Any]]) -> dict[str, Any]:
+    gpu1_to_gpu0 = [
+        event
+        for event in events
+        if event.get("source") == "gpu1" and event.get("target") == "gpu0"
+    ]
+    gpu0_to_gpu1 = [
+        event
+        for event in events
+        if event.get("source") == "gpu0" and event.get("target") == "gpu1"
+    ]
+    request_ids = {
+        str(event.get("correlation_id") or "")
+        for event in gpu1_to_gpu0
+        if event.get("correlation_id")
+    }
+    response_ids = {
+        str(event.get("correlation_id") or "")
+        for event in gpu0_to_gpu1
+        if event.get("correlation_id")
+    }
+    return {
+        "gpu1_to_gpu0_event_count": len(gpu1_to_gpu0),
+        "gpu0_to_gpu1_event_count": len(gpu0_to_gpu1),
+        "gpu1_gpu0_bidirectional": bool(gpu1_to_gpu0 and gpu0_to_gpu1),
+        "gpu1_gpu0_correlated_exchange_count": len(request_ids & response_ids),
+        "gpu1_gpu0_request_event_types": sorted({str(event.get("event_type") or "") for event in gpu1_to_gpu0}),
+        "gpu1_gpu0_response_event_types": sorted({str(event.get("event_type") or "") for event in gpu0_to_gpu1}),
+    }
+
+
 def direct_execution_violations(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     violations: list[dict[str, Any]] = []
     for event in events:
@@ -92,6 +123,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     broker_request_count = sum(1 for event in runtime_events if event.get("event_type") == "broker_request")
     broker_result_count = sum(1 for event in runtime_events if event.get("event_type") == "broker_result")
     validation_signal_count = sum(1 for event in runtime_events if event.get("event_type") == "validation_signal")
+    gpu_peer_metrics = gpu_peer_exchange_metrics(runtime_events)
     return {
         "schema_version": 1,
         "kind": "provider_runtime_heap_telemetry",
@@ -107,6 +139,12 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "events_by_type": count_by(runtime_events, "event_type"),
         "interaction_edges": count_edges(runtime_events),
         "tool_catalog_exchange_complete_count": correlated_complete(runtime_events, "tool_catalog_request", "tool_catalog_response"),
+        "gpu1_to_gpu0_event_count": gpu_peer_metrics["gpu1_to_gpu0_event_count"],
+        "gpu0_to_gpu1_event_count": gpu_peer_metrics["gpu0_to_gpu1_event_count"],
+        "gpu1_gpu0_bidirectional": gpu_peer_metrics["gpu1_gpu0_bidirectional"],
+        "gpu1_gpu0_correlated_exchange_count": gpu_peer_metrics["gpu1_gpu0_correlated_exchange_count"],
+        "gpu1_gpu0_request_event_types": gpu_peer_metrics["gpu1_gpu0_request_event_types"],
+        "gpu1_gpu0_response_event_types": gpu_peer_metrics["gpu1_gpu0_response_event_types"],
         "broker_request_count": broker_request_count,
         "broker_result_count": broker_result_count,
         "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
@@ -133,6 +171,10 @@ def render_markdown(report: dict[str, Any]) -> str:
         "event_count",
         "parse_error_count",
         "tool_catalog_exchange_complete_count",
+        "gpu1_to_gpu0_event_count",
+        "gpu0_to_gpu1_event_count",
+        "gpu1_gpu0_bidirectional",
+        "gpu1_gpu0_correlated_exchange_count",
         "broker_request_count",
         "broker_result_count",
         "pending_broker_request_count",
