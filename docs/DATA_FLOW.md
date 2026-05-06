@@ -25,6 +25,7 @@ unified launcher command
   -> advisory lane routing
   -> trusted/excluded context selection
   -> provider probes and primary advisory generation unless disabled or diagnosed unavailable
+  -> provider bridge/gate/readiness planning when selected
   -> post-validation AI packet and proposals
   -> full-context golden proposal families when requested
   -> proposal-derived draft patch specs
@@ -32,6 +33,7 @@ unified launcher command
   -> runtime broker report
   -> runtime tool usage telemetry
   -> runtime/hardware capability manifest
+  -> final tool-product evidence/readiness package when selected
   -> full toolbox run telemetry summary
   -> compact evidence bundle under docs/LOCAL_VALIDATION_EVIDENCE/
   -> shared production AI-to-AI bundle
@@ -54,6 +56,7 @@ The primary model is one parameterized run:
 ```text
 run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
+LightFull0To10 = evidence-only profile, not provider/runtime proof
 quick/balanced/deep/custom = presets or operator parameters
 -No* flags = explicit opt-out from selected lanes
 400-line policy applies to maintained docs and source files
@@ -133,11 +136,39 @@ Current mapping:
 ```text
 Ollama -> GPU/CUDA
 OpenVINO -> NPU
+OpenVINO GPU.0/GPU.1 -> visibility/diagnostic lanes, not primary advisory lanes
 ```
 
-OpenVINO GPU is not a primary lane.
-
 Provider execution is explicit when the operator selects `-Full0To10` or provider/probe modes. It is not an extra per-lane opt-in after `-Full0To10` is selected.
+
+## Provider bridge and capability flow
+
+Current provider bridge/capability outputs distinguish availability, planning and real execution.
+
+```text
+Full0To10 hardware/tool capability manifest
+  -> required tool inventory
+  -> Python environment visibility
+  -> GPU/Ollama/NPU/OpenVINO device visibility/probes
+  -> provider_execution_performed=false
+  -> patch_application_performed=false
+  -> source_writes_performed=false
+```
+
+```text
+Full0To10 provider execution bridge
+  -> provider invocation plan
+  -> real-run gate
+  -> command plan
+  -> workload output paths
+  -> bridge telemetry
+  -> readiness report
+  -> provider_execution_performed=false
+  -> patch_application_performed=false
+  -> source_writes_performed=false
+```
+
+These surfaces are critical because they let later agents see whether a tool/provider was available, planned, gated, skipped or actually executed. Do not treat bridge/readiness/capability evidence as provider runtime proof unless the artifact itself records provider execution.
 
 ## Runtime telemetry flow
 
@@ -196,6 +227,29 @@ source_writes_performed
 
 AI agents must not infer run success from output file presence alone.
 
+## Final tool-product flow
+
+Current code includes a Full0To10 final-product builder:
+
+```text
+Tools/ai/build_full0to10_final_tool_product.py
+Tools/ai/full0to10_final_product/*
+```
+
+It composes track input contract, accelerator control, provider governor, provider invocation plan, provider execution bridge, effective-use optimization summary and quality gate.
+
+It writes:
+
+```text
+product Markdown
+evidence index
+readiness JSON
+manifest JSON
+README
+```
+
+This is the intended direction of the project: tools should produce verifiable product/evidence/readiness packages, not only chat summaries.
+
 ## Parallel multistep workflow flow
 
 `Tools/workflow/run_parallel_ai_provider_multistep.ps1` is a supporting provider lane. It is normally selected through the unified launcher or called directly only for explicit provider diagnostics.
@@ -247,6 +301,9 @@ npu_decode_smoke_passed: true
 | Workload quality report | `Tools/validation/check_ai_workload_report_quality.py` | lane routing, remediation, packet builder | Determines `usable_lanes` and `unusable_lanes`. |
 | Lane routing report | `Tools/ai/build_workload_quality_lane_routing.py` | packet builder, evidence bundle | Declares trusted/excluded context and primary advisory provider. |
 | Provider diagnostics | provider/probe tools and sync analyzers | telemetry summary, bundle, AI agents | Must expose advisory state, failure reasons, degraded components and GPU/NPU timing source. |
+| Provider bridge/readiness report | `Tools/ai/full0to10_provider_execution_bridge/*` | maintainers, telemetry, bundle, future provider runners | Builds invocation/gate/command/workload/telemetry/readiness surfaces; not real provider execution proof by itself. |
+| Hardware/tool capability manifest | `Tools/ai/full0to10_hardware_capability/*` or current runtime hardware capability builder | AI agents, bundle, cloud handoff | Captures tool inventory and CPU/GPU/Ollama/OpenVINO/NPU visibility; not source writes or patch application. |
+| Final tool-product package | `Tools/ai/build_full0to10_final_tool_product.py` | maintainers, AI agents, readiness review | Product/evidence/readiness package that composes Full0To10 contract/governor/bridge/effective-use/quality surfaces. |
 | NPU remediation report | `Tools/validation/check_npu_decode_quality_remediation.py` | maintainer, proposals, evidence | Explains why NPU is excluded and what must happen before promotion. |
 | NPU decode smoke report | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | evidence bundle and future promotion gates | Full0To10 diagnostic unless disabled/unavailable; does not imply NPU general advisory quality. |
 | Local provider probe report | `Tools/ai/run_local_provider_probe.py` | evidence bundle | Full0To10/provider probe evidence unless disabled/unavailable. |
@@ -294,6 +351,7 @@ This is now one application domain over the local AI orchestration workbench, no
 - Exclude unusable workload reports from advisory context before reading their content.
 - Treat NPU short smoke success as diagnostic evidence, not as general advisory promotion.
 - Keep provider execution report-bound and opt-out inside Full0To10, not implicit outside selected workflows.
+- Do not treat LightFull0To10, provider bridge/readiness or capability manifests as real provider execution proof unless the artifact itself records provider execution.
 - Do not overwrite large analysis JSON files unless explicitly requested.
 - Treat `indexAI/` and generated manifests as generated context.
 - Preserve local path configurability.
@@ -307,6 +365,7 @@ This is now one application domain over the local AI orchestration workbench, no
 
 - unified launcher manifest/phase contract beyond the compact contract doc;
 - provider probe report;
+- provider bridge/readiness report;
 - runtime tool usage telemetry;
 - runtime/hardware capability manifest;
 - full toolbox run telemetry summary;
@@ -319,6 +378,7 @@ This is now one application domain over the local AI orchestration workbench, no
 - legacy audio analysis JSON;
 - music context JSON;
 - generated artifact plan/manifest schema;
+- final tool-product manifest/evidence/readiness package;
 - promotion from reviewed dry-run patch spec to approved local apply or GitHub Action queue;
 - richer context-pack profiles and selective execution plans for changed-file workflows.
 
