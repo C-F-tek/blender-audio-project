@@ -35,6 +35,18 @@ if ($Stamp -eq "") {
 }
 
 $env:PYTHONPATH = (Get-Location).Path
+$script:RepoPythonExe = "python"
+if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) {
+    if (Test-Path -LiteralPath $env:IA_CARMINE_PYTHON -PathType Leaf) {
+        $script:RepoPythonExe = $env:IA_CARMINE_PYTHON
+    } else {
+        Write-Warning "IA_CARMINE_PYTHON is set but not found: $env:IA_CARMINE_PYTHON"
+    }
+} elseif (Test-Path -LiteralPath ".\.venv\Scripts\python.exe" -PathType Leaf) {
+    $script:RepoPythonExe = (Resolve-Path ".\.venv\Scripts\python.exe").Path
+} elseif (Test-Path -LiteralPath ".\venv\Scripts\python.exe" -PathType Leaf) {
+    $script:RepoPythonExe = (Resolve-Path ".\venv\Scripts\python.exe").Path
+}
 
 function Read-JsonFile {
     param([string]$Path)
@@ -62,7 +74,7 @@ function Invoke-RepoPython {
     )
     Write-Host ""
     Write-Host "=== $Label ==="
-    python @ArgsList
+    & $script:RepoPythonExe @ArgsList
 }
 
 $WorkflowJson = ".\output\validation\agent_review_full_toolbox_decision_loop_${Stamp}_workflow.json"

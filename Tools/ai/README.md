@@ -42,7 +42,7 @@ tool output should become verifiable product/evidence/readiness material, not ch
 | Context and chunks | `build_ai_context_pack.py`, `select_semantic_code_chunks.py` | Provider-free context evidence. |
 | Agent state and memory | `build_agent_state_packet.py`, `review_agent_memory.py`, `agent_runtime_sqlite_memory.py` | SQLite outputs are local/private and must not be committed. |
 | Provider diagnostics | `run_local_provider_probe.py`, `check_local_resource_lanes.py`, `analyze_gpu_npu_run_sync.py` | Provider state must flow to telemetry/bundle when used in Full0To10 handoff. |
-| AI peer exchange | `build_ai_peer_exchange_packet.py`, `run_gpu0_peer_companion_worker.py` | Wires GPU1 primary advisory to GPU0 companion response, broker requests and peer contract evidence. |
+| AI peer exchange | `build_ai_peer_exchange_packet.py`, `run_gpu0_peer_companion_worker.py`, `run_npu_gpu_deep_review_auditor.py` | Wires GPU1 master advisory/worker output to GPU0 companion response, GPU0/NPU broker requests and peer contract evidence. |
 | Workload routing | `build_workload_quality_lane_routing.py` | Keeps unusable provider output out of advisory context. |
 | Deterministic recommendations | `build_deterministic_recommendations.py` | Supports degraded-provider recovery without hallucinated provider success. |
 | Patch planning/spec support | `build_agent_review_patch_plan.py`, `build_patch_specs_from_proposals.py`, `promote_patch_spec_draft.py` | Review-only unless explicit apply is authorized separately. |
@@ -88,8 +88,8 @@ File existence alone is not proof of successful execution.
 
 ```text
 CPU: parsing, JSON generation, validation, orchestration.
-GPU1/Ollama/RTX 5080: mandatory primary advisory planner when Full0To10 provider execution is selected.
-GPU0/OpenVINO: companion peer worker and controlled tool-request producer.
+GPU1/Ollama/RTX 5080: mandatory primary advisory planner/worker when Full0To10 provider execution is selected.
+GPU0/OpenVINO: companion peer worker and controlled tool-request producer for GPU1 follow-up.
 NPU/OpenVINO: micro-fast task assistant, guardrail and lightweight tool-support lane.
 Deterministic scripts: heavy audit and validation authority.
 External GPU commands: explicit heavy generator path only, never implicit.

@@ -186,7 +186,8 @@ runtime/hardware capability manifest requested
 Ollama advisory requested
 primary provider routing requested
 GPU1/Ollama primary advisory planner requested
-GPU0/OpenVINO companion peer worker requested
+GPU0/OpenVINO companion peer worker and tool-request producer requested
+NPU/OpenVINO non-blocking micro/tool-support lane requested
 AI peer-exchange contract requested
 provider diagnostics requested
 workload quality routing requested

@@ -90,6 +90,8 @@ FULL_TOOLBOX_REPORT_TEMPLATES: tuple[str, ...] = (
     "output/validation/gpu0_peer_response_{stamp}.json",
     "output/validation/gpu0_tool_requests_{stamp}.json",
     "output/validation/gpu0_peer_runtime_tool_broker_{stamp}.json",
+    "output/validation/npu_micro_peer_assistant_{stamp}.json",
+    "output/validation/npu_micro_runtime_tool_broker_{stamp}.json",
     "output/validation/ai_peer_exchange_{stamp}.json",
     "output/validation/ai_peer_exchange_contract_{stamp}.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_{stamp}.json",
@@ -116,6 +118,8 @@ FULL_TOOLBOX_ARTIFACT_TEMPLATES: tuple[str, ...] = (
     "output/validation/gpu1_primary_advisory_{stamp}.md",
     "output/validation/gpu0_peer_response_{stamp}.md",
     "output/validation/gpu0_peer_runtime_tool_broker_{stamp}.md",
+    "output/validation/npu_micro_peer_assistant_{stamp}.md",
+    "output/validation/npu_micro_runtime_tool_broker_{stamp}.md",
     "output/validation/ai_peer_exchange_{stamp}.md",
     "output/validation/ai_peer_exchange_contract_{stamp}.md",
     "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_integrated.md",
@@ -415,6 +419,12 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
             "agent_gpu_parallel_report",
             "local_provider_probe",
             "ai_workload_report_quality",
+            "gpu1_primary_advisory",
+            "gpu0_peer_response",
+            "npu_gpu_deep_review_audit",
+            "agent_runtime_tool_broker",
+            "ai_peer_exchange",
+            "ai_peer_exchange_contract",
         }:
             errors = data.get("errors") if isinstance(data.get("errors"), list) else []
             warnings = data.get("warnings") if isinstance(data.get("warnings"), list) else []
@@ -426,6 +436,11 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
                     "provider_execution_requested": data.get("provider_execution_requested"),
                     "provider_execution_performed": data.get("provider_execution_performed"),
                     "classification": data.get("classification"),
+                    "classifications": data.get("classifications") if isinstance(data.get("classifications"), list) else [],
+                    "role": data.get("role"),
+                    "non_blocking": data.get("non_blocking"),
+                    "tool_request_count": data.get("tool_request_count"),
+                    "tool_execution_count": data.get("tool_execution_count"),
                     "provider_error": data.get("provider_error"),
                     "recommendation_count": data.get("recommendation_count"),
                     "errors": errors[:20],
@@ -433,6 +448,8 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
                 }
             )
             if kind == "agent_gpu_parallel_report" and passed is True and int(data.get("recommendation_count") or 0) > 0:
+                gpu_primary_advisory_succeeded = True
+            if kind == "gpu1_primary_advisory" and passed is True:
                 gpu_primary_advisory_succeeded = True
 
         if kind in {

@@ -37,6 +37,18 @@ if ($Stamp -eq "") {
 }
 
 $env:PYTHONPATH = (Get-Location).Path
+$script:RepoPythonExe = "python"
+if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) {
+    if (Test-Path -LiteralPath $env:IA_CARMINE_PYTHON -PathType Leaf) {
+        $script:RepoPythonExe = $env:IA_CARMINE_PYTHON
+    } else {
+        Write-Warning "IA_CARMINE_PYTHON is set but not found: $env:IA_CARMINE_PYTHON"
+    }
+} elseif (Test-Path -LiteralPath ".\.venv\Scripts\python.exe" -PathType Leaf) {
+    $script:RepoPythonExe = (Resolve-Path ".\.venv\Scripts\python.exe").Path
+} elseif (Test-Path -LiteralPath ".\venv\Scripts\python.exe" -PathType Leaf) {
+    $script:RepoPythonExe = (Resolve-Path ".\venv\Scripts\python.exe").Path
+}
 
 $AiPipelineDir = Join-Path $OutputRoot "ai_pipeline"
 $AnalysisDir = Join-Path $OutputRoot "analysis"
@@ -52,7 +64,7 @@ function Invoke-RepoPython {
     )
     Write-Host ""
     Write-Host "=== $Label ==="
-    python @ArgsList
+    & $script:RepoPythonExe @ArgsList
 }
 
 function Invoke-RepoPowerShell {
@@ -315,6 +327,14 @@ $Gpu0PeerResponseMd = ".\output\validation\gpu0_peer_response_$Stamp.md"
 $Gpu0PeerToolRequestsJson = ".\output\validation\gpu0_tool_requests_$Stamp.json"
 $Gpu0PeerBrokerJson = ".\output\validation\gpu0_peer_runtime_tool_broker_$Stamp.json"
 $Gpu0PeerBrokerMd = ".\output\validation\gpu0_peer_runtime_tool_broker_$Stamp.md"
+$NpuMicroJson = ".\output\validation\npu_micro_peer_assistant_$Stamp.json"
+$NpuMicroMd = ".\output\validation\npu_micro_peer_assistant_$Stamp.md"
+$NpuMicroContextMd = ".\output\ai_pipeline\npu_micro_peer_assistant_context_$Stamp.md"
+$NpuMicroOutputMd = ".\output\ai_pipeline\npu_micro_peer_assistant_output_$Stamp.md"
+$NpuMicroNotesMd = ".\output\ai_pipeline\npu_micro_peer_assistant_notes_$Stamp.md"
+$NpuMicroMetadataJson = ".\output\validation\npu_micro_peer_assistant_metadata_$Stamp.json"
+$NpuMicroBrokerJson = ".\output\validation\npu_micro_runtime_tool_broker_$Stamp.json"
+$NpuMicroBrokerMd = ".\output\validation\npu_micro_runtime_tool_broker_$Stamp.md"
 $AiPeerExchangeJson = ".\output\validation\ai_peer_exchange_$Stamp.json"
 $AiPeerExchangeMd = ".\output\validation\ai_peer_exchange_$Stamp.md"
 $AiPeerExchangeContractJson = ".\output\validation\ai_peer_exchange_contract_$Stamp.json"
@@ -357,6 +377,7 @@ Write-Host "Repo: $RepoRootPath"
 Write-Host "Stamp: $Stamp"
 Write-Host "RunGpuNpuProvider: $RunGpuNpuProvider"
 Write-Host "RequireProviderArtifacts: $RequireProviderArtifacts"
+Write-Host "Python: $script:RepoPythonExe"
 Write-Host "RepositoryConsistencyMapWorkers: $RepositoryConsistencyMapWorkers"
 Write-Host "MaxRecommendations: $MaxRecommendations"
 Write-Host "MaxPatchPlans: $MaxPatchPlans"
@@ -439,6 +460,7 @@ Invoke-RepoPython -Label "Contract script compile" -ArgsList @(
     ".\Tools\ai\build_agent_review_evidence_sufficiency.py",
     ".\Tools\ai\build_ai_peer_exchange_packet.py",
     ".\Tools\ai\run_gpu0_peer_companion_worker.py",
+    ".\Tools\ai\run_npu_gpu_deep_review_auditor.py",
     ".\Tools\ai\run_agent_review_decision_loop.py",
     ".\Tools\ai\build_repository_consistency_map.py",
     ".\Tools\validation\check_ai_peer_exchange_contract.py",
@@ -670,6 +692,38 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         "--markdown-output", $Gpu0PeerBrokerMd
     )
 
+    Invoke-RepoPython -Label "NPU micro peer assistant" -ArgsList @(
+        ".\Tools\ai\run_npu_gpu_deep_review_auditor.py",
+        "--repo-root", ".",
+        "--gpu-review", $GpuOut,
+        "--run-npu",
+        "--runtime-tool-context-report", $Gpu0PeerBrokerJson,
+        "--runtime-tool-context-report", $Gpu0PeerResponseJson,
+        "--context-output", $NpuMicroContextMd,
+        "--npu-output", $NpuMicroOutputMd,
+        "--npu-notes-output", $NpuMicroNotesMd,
+        "--npu-metadata-output", $NpuMicroMetadataJson,
+        "--output", $NpuMicroJson,
+        "--markdown-output", $NpuMicroMd,
+        "--timeout-seconds", "$NpuFinalWaitSeconds",
+        "--max-context-chars", "$NpuMaxContextChars",
+        "--max-prompt-chars", "$NpuMaxPromptChars",
+        "--max-new-tokens", "$NpuMaxNewTokens",
+        "--max-runtime-tool-context-chars", "6000",
+        "--max-npu-tool-requests", "4"
+    )
+
+    Invoke-RepoPython -Label "NPU micro runtime tool broker" -ArgsList @(
+        ".\Tools\ai\agent_runtime_tool_broker.py",
+        "--repo-root", ".",
+        "--request-file", $NpuMicroJson,
+        "--tool-output-dir", (Join-Path $RuntimeToolOutputDir "npu_micro"),
+        "--stamp", $Stamp,
+        "--timeout-seconds", "180",
+        "--output", $NpuMicroBrokerJson,
+        "--markdown-output", $NpuMicroBrokerMd
+    )
+
     Invoke-RepoPython -Label "Finalize AI peer-exchange packet" -ArgsList @(
         ".\Tools\ai\build_ai_peer_exchange_packet.py",
         "--repo-root", ".",
@@ -680,8 +734,11 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         "--source-report", $RepositoryConsistencyJson,
         "--source-report", $CodeInterpreterJson,
         "--source-report", $Gpu0PeerResponseJson,
+        "--source-report", $NpuMicroJson,
         "--response-report", $Gpu0PeerResponseJson,
         "--broker-report", $Gpu0PeerBrokerJson,
+        "--npu-report", $NpuMicroJson,
+        "--npu-broker-report", $NpuMicroBrokerJson,
         "--primary-output", $Gpu1PrimaryAdvisoryJson,
         "--primary-markdown-output", $Gpu1PrimaryAdvisoryMd,
         "--task-output", $Gpu0PeerTaskPacketJson,
@@ -694,6 +751,8 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         "--repo-root", ".",
         "--stamp", $Stamp,
         "--broker-report", $Gpu0PeerBrokerJson,
+        "--npu-response", $NpuMicroJson,
+        "--npu-broker-report", $NpuMicroBrokerJson,
         "--require-broker-execution",
         "--allow-degraded",
         "--output", $AiPeerExchangeContractJson,
@@ -703,6 +762,8 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         $Gpu1PrimaryAdvisoryJson, $Gpu1PrimaryAdvisoryMd, $Gpu0PeerTaskPacketJson,
         $Gpu0PeerResponseJson, $Gpu0PeerResponseMd, $Gpu0PeerToolRequestsJson,
         $Gpu0PeerBrokerJson, $Gpu0PeerBrokerMd, $AiPeerExchangeJson, $AiPeerExchangeMd,
+        $NpuMicroJson, $NpuMicroMd, $NpuMicroBrokerJson, $NpuMicroBrokerMd,
+        $NpuMicroContextMd, $NpuMicroOutputMd, $NpuMicroNotesMd, $NpuMicroMetadataJson,
         $AiPeerExchangeContractJson, $AiPeerExchangeContractMd
     )) {
         Add-ExistingPath -List $Reports -Path $Path
@@ -750,6 +811,8 @@ $ToolReports = @(
     $Gpu0PeerResponseJson,
     $Gpu0PeerToolRequestsJson,
     $Gpu0PeerBrokerJson,
+    $NpuMicroJson,
+    $NpuMicroBrokerJson,
     $AiPeerExchangeJson,
     $AiPeerExchangeContractJson,
     $MemoryWorkflow
@@ -893,6 +956,7 @@ Invoke-RepoPython -Label "Runtime tool usage telemetry pre-bundle" -ArgsList @(
     "--decision-loop", $DecisionLoopJson,
     "--broker-report", $RuntimeToolBrokerJson,
     "--broker-report", $Gpu0PeerBrokerJson,
+    "--broker-report", $NpuMicroBrokerJson,
     "--output", $RuntimeToolTelemetryJson,
     "--markdown-output", $RuntimeToolTelemetryMd
 )
@@ -940,6 +1004,8 @@ $ReportFilesForBundle = @(
     $Gpu0PeerResponseJson,
     $Gpu0PeerToolRequestsJson,
     $Gpu0PeerBrokerJson,
+    $NpuMicroJson,
+    $NpuMicroBrokerJson,
     $AiPeerExchangeJson,
     $AiPeerExchangeContractJson,
     $RecommendationsJson,
@@ -969,6 +1035,8 @@ $BundleArgs = @(
     "--artifact", $DecisionLoopMd,
     "--artifact", $Gpu1PrimaryAdvisoryMd,
     "--artifact", $Gpu0PeerResponseMd,
+    "--artifact", $NpuMicroMd,
+    "--artifact", $NpuMicroBrokerMd,
     "--artifact", $AiPeerExchangeMd,
     "--artifact", $AiPeerExchangeContractMd,
     "--artifact", $PatchPlanMd,
@@ -1055,6 +1123,7 @@ Invoke-RepoPython -Label "Runtime tool usage telemetry" -ArgsList @(
     "--decision-loop", $DecisionLoopJson,
     "--broker-report", $RuntimeToolBrokerJson,
     "--broker-report", $Gpu0PeerBrokerJson,
+    "--broker-report", $NpuMicroBrokerJson,
     "--output", $RuntimeToolTelemetryJson,
     "--markdown-output", $RuntimeToolTelemetryMd
 )
@@ -1078,6 +1147,10 @@ $SemanticChunkSources = @(
     $RuntimeToolCapabilityMd,
     $AiPeerExchangeJson,
     $AiPeerExchangeMd,
+    $NpuMicroJson,
+    $NpuMicroMd,
+    $NpuMicroBrokerJson,
+    $NpuMicroBrokerMd,
     $AiPeerExchangeContractJson,
     $AiPeerExchangeContractMd
 ) | Where-Object { Test-Path $_ }
@@ -1102,6 +1175,7 @@ foreach ($Path in @(
     $DeterministicSmokeJson, $DecisionLoopSmokeJson, $NpuEnvJson, $OrchOut, $GpuOut, $GpuReplayJson,
     $GpuNpuSyncJson, $ProviderEvidenceContractJson, $RecommendationsJson, $BridgeJson, $DecisionLoopJson, $PatchPlanJson,
     $Gpu1PrimaryAdvisoryJson, $Gpu0PeerTaskPacketJson, $Gpu0PeerResponseJson, $Gpu0PeerToolRequestsJson, $Gpu0PeerBrokerJson,
+    $NpuMicroJson, $NpuMicroBrokerJson,
     $AiPeerExchangeJson, $AiPeerExchangeContractJson,
     $BundleValidationJson, $FinalPythonSyntaxJson, $FinalContractJson
 )) {
@@ -1113,6 +1187,7 @@ foreach ($Path in @(
     $NpuEnvMd, $OrchMd, $GpuMd, $GpuReplayMd, $GpuNpuSyncMd, $ProviderEvidenceContractMd, $RecommendationsMd,
     $DecisionLoopMd, $PatchPlanMd, $TelemetrySummaryJson, $TelemetrySummaryMd, $RuntimeToolTelemetryJson, $RuntimeToolTelemetryMd,
     $RuntimeToolCapabilityJson, $RuntimeToolCapabilityMd, $Gpu1PrimaryAdvisoryMd, $Gpu0PeerResponseMd, $Gpu0PeerBrokerMd,
+    $NpuMicroMd, $NpuMicroBrokerMd, $NpuMicroContextMd, $NpuMicroOutputMd, $NpuMicroNotesMd,
     $AiPeerExchangeMd, $AiPeerExchangeContractMd, $EvidenceChunkManifestJson, $EvidenceChunkManifestMd, $BundleJson, $BundleMd
 )) {
     Add-ExistingPath -List $Artifacts -Path $Path

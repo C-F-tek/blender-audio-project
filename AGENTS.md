@@ -118,11 +118,11 @@ promote stable principles into canonical docs/LOCAL_AI_TASKS or contract docs
 Canonical production roles:
 
 ```text
-GPU1 / Ollama / RTX 5080 = mandatory primary advisory planner
-GPU0 / OpenVINO = companion peer worker
+GPU1 / Ollama / RTX 5080 = mandatory primary advisory planner/worker
+GPU0 / OpenVINO = companion peer worker and tool-request producer
 NPU = micro-fast task assistant and lightweight tool-support lane
 deterministic scripts = heavy audit and validation authority
-runtime tool broker = controlled tool execution for GPU1 and GPU0 requests
+runtime tool broker = controlled tool execution for GPU1, GPU0 and NPU requests
 ```
 
 GPU1/Ollama must execute the primary advisory lane for real Full0To10 runs unless explicitly disabled by an operator flag or classified as unavailable/degraded by evidence.
@@ -130,11 +130,14 @@ GPU1/Ollama must execute the primary advisory lane for real Full0To10 runs unles
 GPU0 is not complete when it only performs preflight, smoke, final workload evidence or passive support. GPU0 must move toward peer-worker behavior:
 
 ```text
-GPU1 planner task packet
+GPU1 planner/worker task packet
   -> GPU0 companion execution
   -> GPU0 response/evidence packet
   -> optional GPU0 tool requests
-  -> planner/auditor consumption
+  -> runtime broker execution for GPU0 requests
+  -> non-blocking NPU micro/tool-support signal
+  -> runtime broker execution for NPU requests when present
+  -> GPU1 planner/auditor consumption
   -> final telemetry, bundle and gate evidence
 ```
 
@@ -151,6 +154,7 @@ tool-intelligence support when cheap and available
 ```
 
 Heavy audit, report validation and acceptance decisions stay with deterministic repository scripts unless a task explicitly requests NPU semantic review.
+NPU tool-support output must stay non-blocking, broker-controlled and visible in telemetry/bundle evidence when provider lanes are selected.
 
 ## Provider-capable `.venv` rule
 

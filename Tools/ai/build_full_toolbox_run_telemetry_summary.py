@@ -104,6 +104,8 @@ def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str
 def peer_exchange_summary(peer_exchange: dict[str, Any], peer_contract: dict[str, Any]) -> dict[str, Any]:
     response = peer_exchange.get("gpu0_response") if isinstance(peer_exchange.get("gpu0_response"), dict) else {}
     broker = peer_exchange.get("runtime_tool_broker") if isinstance(peer_exchange.get("runtime_tool_broker"), dict) else {}
+    npu = peer_exchange.get("npu_micro_response") if isinstance(peer_exchange.get("npu_micro_response"), dict) else {}
+    npu_broker = peer_exchange.get("npu_runtime_tool_broker") if isinstance(peer_exchange.get("npu_runtime_tool_broker"), dict) else {}
     return {
         "peer_exchange_seen": bool(peer_exchange),
         "peer_exchange_passed": peer_exchange.get("passed"),
@@ -111,6 +113,9 @@ def peer_exchange_summary(peer_exchange: dict[str, Any], peer_contract: dict[str
         "gpu0_peer_provider_execution_performed": bool(response.get("provider_execution_performed")),
         "gpu0_peer_tool_request_count": safe_int(response.get("tool_request_count")),
         "gpu0_peer_tool_execution_count": safe_int(broker.get("tool_execution_count")),
+        "npu_micro_non_blocking": bool(npu.get("non_blocking")),
+        "npu_micro_tool_request_count": safe_int(npu.get("tool_request_count")),
+        "npu_micro_tool_execution_count": safe_int(npu_broker.get("tool_execution_count")),
         "classifications": peer_exchange.get("classifications") or peer_contract.get("classifications") or [],
     }
 
@@ -276,6 +281,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "gpu_provider_execution_performed": provider_evidence.get("gpu_provider_execution_performed"),
             "npu_provider_execution_performed": provider_evidence.get("npu_provider_execution_performed"),
             "gpu0_peer_provider_execution_performed": peer_evidence.get("gpu0_peer_provider_execution_performed"),
+            "npu_micro_non_blocking": peer_evidence.get("npu_micro_non_blocking"),
             "patch_application_performed": False,
             "source_writes_performed": False,
             "sqlite_write_performed": False,
@@ -305,6 +311,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- AI peer exchange passed: `{peer_evidence.get('peer_exchange_passed')}`")
     lines.append(f"- GPU0 peer provider execution performed: `{peer_evidence.get('gpu0_peer_provider_execution_performed')}`")
     lines.append(f"- GPU0 peer broker tool executions: `{peer_evidence.get('gpu0_peer_tool_execution_count')}`")
+    lines.append(f"- NPU micro non-blocking: `{peer_evidence.get('npu_micro_non_blocking')}`")
+    lines.append(f"- NPU micro broker tool executions: `{peer_evidence.get('npu_micro_tool_execution_count')}`")
     lines.append("")
     lines.append("## Repository consistency performance")
     lines.append("")

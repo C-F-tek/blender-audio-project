@@ -116,7 +116,7 @@ These artifacts give the repo concrete material for review and tests instead of 
 | Agent memory routing | `Tools/ai/agent_memory_routing_policy.py` | Internal routing policy module. |
 | Runtime SQLite memory | `Tools/ai/agent_runtime_sqlite_memory.py` | Internal/local runtime helper. |
 | Full0To10 effective use | `Tools/ai/full0to10_effective_use/*` | Builds provider hardening, optimization, telemetry, quality product and local output/** SQLite memory artifact; no real provider run by default. |
-| AI peer exchange | `Tools/ai/build_ai_peer_exchange_packet.py`, `Tools/ai/run_gpu0_peer_companion_worker.py`, `Tools/validation/check_ai_peer_exchange_contract.py` | Production GPU1/GPU0 peer evidence lane for Full0To10 provider runs. |
+| AI peer exchange | `Tools/ai/build_ai_peer_exchange_packet.py`, `Tools/ai/run_gpu0_peer_companion_worker.py`, `Tools/ai/run_npu_gpu_deep_review_auditor.py`, `Tools/validation/check_ai_peer_exchange_contract.py` | Production GPU1/GPU0/NPU peer evidence lane for Full0To10 provider runs. |
 | Runtime tool broker | `Tools/ai/agent_runtime_tool_broker.py` | Supporting full-toolbox report-only broker. |
 | Runtime usage telemetry | `Tools/ai/build_runtime_tool_usage_telemetry.py` | Required completeness accessory when broker/tools execute. |
 | Runtime/hardware capability manifest | active capability manifest builder/package | Required capability handoff when tool or hardware capabilities matter. |
@@ -146,15 +146,16 @@ Provider execution is opt-in only through the unified launcher modes/flags or a 
 Expected provider roles:
 
 ```text
-GPU1/Ollama/RTX 5080 = mandatory primary advisory planner behind quality gate
-GPU0/OpenVINO = companion peer worker and broker-visible tool-support producer
-NPU/OpenVINO = micro-fast task assistant / guardrail / decode diagnostic / knowledge broker
+GPU1/Ollama/RTX 5080 = mandatory primary advisory planner/worker behind quality gate
+GPU0/OpenVINO = companion peer worker and broker-visible tool-request producer
+NPU/OpenVINO = non-blocking micro-fast task assistant / guardrail / decode diagnostic / knowledge broker / lightweight tool-support lane
 deterministic scripts = heavy audit and validation authority
 ```
 
 The provider path must remain advisory/report-only and must preserve:
 
 ```text
+provider-capable runners prefer IA_CARMINE_PYTHON / .venv before system python
 provider_execution_performed is explicit and visible
 provider diagnostics and degradation state are carried into telemetry/bundle surfaces
 patch_application_performed=false unless a separately reviewed patch-apply command is authorized

@@ -66,7 +66,7 @@ def primary_advisory(repo_root: Path, stamp: str, gpu_report_path: Path, gpu_mar
         "kind": "gpu1_primary_advisory",
         "generated_at": now_iso(),
         "stamp": stamp,
-        "role": "primary_advisory_planner",
+        "role": "gpu1_master_planner_worker",
         "lane": "GPU1/Ollama/RTX5080",
         "passed": proven,
         "provider_execution_performed": provider_performed,
@@ -119,7 +119,7 @@ def build_tasks(primary: dict[str, Any], sources: list[dict[str, Any]]) -> list[
         {
             "id": "gpu0_peer_primary_advisory_quality",
             "role": "companion_peer_worker",
-            "objective": "Verify whether GPU1/Ollama produced usable primary advisory evidence and classify degradation.",
+            "objective": "Verify whether GPU1/Ollama planned and worked on usable primary advisory evidence.",
             "requires_semantic_model": False,
         },
         {
@@ -190,6 +190,8 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
     task_path = resolve_output_path(repo_root, args.task_output.format(stamp=args.stamp))
     response_path = resolve_output_path(repo_root, args.response_report.format(stamp=args.stamp)) if args.response_report else None
     broker_path = resolve_output_path(repo_root, args.broker_report.format(stamp=args.stamp)) if args.broker_report else None
+    npu_path = resolve_output_path(repo_root, args.npu_report.format(stamp=args.stamp)) if args.npu_report else None
+    npu_broker_path = resolve_output_path(repo_root, args.npu_broker_report.format(stamp=args.stamp)) if args.npu_broker_report else None
     contract_path = resolve_output_path(repo_root, args.contract_report.format(stamp=args.stamp)) if args.contract_report else None
     primary = primary_advisory(repo_root, args.stamp, resolve_output_path(repo_root, args.gpu_report), resolve_output_path(repo_root, args.gpu_markdown or ""))
     sources = source_summaries(repo_root, args.source_report)
@@ -202,7 +204,7 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         "kind": "gpu0_peer_task_packet",
         "generated_at": now_iso(),
         "stamp": args.stamp,
-        "source_lane": "gpu1_primary_advisory",
+        "source_lane": "gpu1_master_primary_advisory_worker",
         "target_lane": "gpu0_openvino_peer_worker",
         "passed": bool(tasks),
         "primary_advisory_report": repo_rel(repo_root, primary_path),
@@ -210,6 +212,12 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         "tasks": tasks,
         "tool_request_templates": templates,
         "source_reports": sources,
+        "peer_visibility": {
+            "gpu0_sees_gpu1_primary_advisory": True,
+            "gpu0_sees_deterministic_reports": bool(sources),
+            "gpu0_produces_tool_requests_for_gpu1": True,
+            "runtime_tool_broker_required_for_tool_requests": True,
+        },
         "guardrails": {
             "report_only": True,
             "runtime_tool_broker_required_for_tool_requests": True,
@@ -220,8 +228,11 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
     }
     response = read_json(response_path) if response_path else {}
     broker = read_json(broker_path) if broker_path else {}
+    npu = read_json(npu_path) if npu_path else {}
+    npu_broker = read_json(npu_broker_path) if npu_broker_path else {}
     contract = read_json(contract_path) if contract_path else {}
     classifications = list(primary.get("classifications") or [])
+    warnings: list[str] = []
     if response_path and response_path.exists():
         classifications.extend(str(item) for item in response.get("classifications", []) if item not in classifications)
     else:
@@ -230,6 +241,48 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
     broker_exec = safe_int(broker.get("tool_execution_count"))
     if tool_count and broker_exec <= 0:
         classifications.append("gpu0_tool_requests_not_broker_consumed")
+    if npu_path and npu_path.exists():
+        if npu.get("non_blocking") is not True:
+            warnings.append("npu_micro_lane_present_but_non_blocking_flag_missing")
+        if npu.get("decision", {}).get("npu_primary_advisory") is True:
+            warnings.append("npu_micro_lane_attempted_primary_advisory_promotion")
+    else:
+        warnings.append("npu_micro_lane_missing_or_pending_non_blocking")
+    collaboration_round = {
+        "kind": "ai_peer_collaboration_round",
+        "synchronized_visibility": True,
+        "gpu1": {
+            "role": "gpu1_master_planner_worker",
+            "works_and_plans": True,
+            "sees_gpu0_response": bool(response),
+            "sees_gpu0_broker_results": broker_exec > 0,
+            "sees_npu_micro_signal": bool(npu),
+        },
+        "gpu0": {
+            "role": "gpu0_companion_tool_request_producer",
+            "provider_execution_performed": bool(response.get("provider_execution_performed")),
+            "produces_tool_requests": tool_count > 0,
+            "broker_tool_executions": broker_exec,
+        },
+        "npu": {
+            "role": "npu_support_tool_micro_lane_non_blocking",
+            "non_blocking": True,
+            "report_seen": bool(npu),
+            "provider_execution_requested": bool(npu.get("provider_execution_requested")),
+            "provider_execution_performed": bool(npu.get("provider_execution_performed")),
+            "tool_request_count": safe_int(npu.get("tool_request_count")),
+            "broker_tool_executions": safe_int(npu_broker.get("tool_execution_count")),
+        },
+        "deterministic_scripts": {
+            "role": "tool_agnostic_heavy_audit_and_validation_authority",
+            "source_report_count": len(sources),
+        },
+        "runtime_tool_broker": {
+            "role": "controlled_tool_execution_for_gpu1_gpu0_npu_requests",
+            "gpu0_tool_execution_count": broker_exec,
+            "npu_tool_execution_count": safe_int(npu_broker.get("tool_execution_count")),
+        },
+    }
     exchange = {
         "schema_version": 1,
         "kind": "ai_peer_exchange",
@@ -240,11 +293,14 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         "task_packet": task_packet,
         "gpu0_response": response,
         "runtime_tool_broker": broker,
+        "npu_micro_response": npu,
+        "npu_runtime_tool_broker": npu_broker,
+        "collaboration_round": collaboration_round,
         "contract": contract,
         "classifications": list(dict.fromkeys(classifications)),
         "errors": [],
-        "warnings": [],
-        "provider_execution_performed": bool(primary.get("provider_execution_performed") or response.get("provider_execution_performed")),
+        "warnings": warnings,
+        "provider_execution_performed": bool(primary.get("provider_execution_performed") or response.get("provider_execution_performed") or npu.get("provider_execution_performed")),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "paths": {
@@ -252,6 +308,8 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
             "task_packet": repo_rel(repo_root, task_path),
             "gpu0_response": repo_rel(repo_root, response_path) if response_path else "",
             "gpu0_runtime_tool_broker": repo_rel(repo_root, broker_path) if broker_path else "",
+            "npu_micro_response": repo_rel(repo_root, npu_path) if npu_path else "",
+            "npu_runtime_tool_broker": repo_rel(repo_root, npu_broker_path) if npu_broker_path else "",
             "contract": repo_rel(repo_root, contract_path) if contract_path else "",
         },
         "guardrails": {
@@ -259,6 +317,7 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
             "patch_application_performed": False,
             "source_writes_performed": False,
             "openvino_gpu1_workload_allowed": False,
+            "npu_micro_lane_non_blocking": True,
         },
     }
     return {"primary": primary, "task_packet": task_packet, "exchange": exchange}
@@ -287,6 +346,8 @@ def render_exchange(report: dict[str, Any]) -> str:
         f"- Task count: `{report.get('task_packet', {}).get('task_count')}`",
         f"- GPU0 response passed: `{report.get('gpu0_response', {}).get('passed')}`",
         f"- Broker executions: `{report.get('runtime_tool_broker', {}).get('tool_execution_count')}`",
+        f"- NPU micro lane seen: `{bool(report.get('npu_micro_response'))}`",
+        f"- NPU broker executions: `{report.get('npu_runtime_tool_broker', {}).get('tool_execution_count')}`",
         "",
     ])
 
@@ -300,6 +361,8 @@ def main() -> int:
     parser.add_argument("--source-report", action="append", default=[])
     parser.add_argument("--response-report", default="")
     parser.add_argument("--broker-report", default="")
+    parser.add_argument("--npu-report", default="")
+    parser.add_argument("--npu-broker-report", default="")
     parser.add_argument("--contract-report", default="")
     parser.add_argument("--primary-output", default="output/validation/gpu1_primary_advisory_{stamp}.json")
     parser.add_argument("--primary-markdown-output", default="output/validation/gpu1_primary_advisory_{stamp}.md")

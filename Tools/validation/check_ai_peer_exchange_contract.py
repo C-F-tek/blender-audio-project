@@ -74,12 +74,16 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     tool_requests_path = resolve_output_path(repo_root, args.gpu0_tool_requests.format(stamp=args.stamp))
     broker_path = resolve_output_path(repo_root, args.broker_report.format(stamp=args.stamp)) if args.broker_report else None
     exchange_path = resolve_output_path(repo_root, args.peer_exchange.format(stamp=args.stamp))
+    npu_path = resolve_output_path(repo_root, args.npu_response.format(stamp=args.stamp)) if args.npu_response else None
+    npu_broker_path = resolve_output_path(repo_root, args.npu_broker_report.format(stamp=args.stamp)) if args.npu_broker_report else None
     primary, primary_error = read_json(primary_path)
     task, task_error = read_json(task_path)
     response, response_error = read_json(response_path)
     tool_requests, tool_requests_error = read_json(tool_requests_path)
     broker, broker_error = read_json(broker_path) if broker_path else ({}, "not_configured")
     exchange, exchange_error = read_json(exchange_path)
+    npu, npu_error = read_json(npu_path) if npu_path else ({}, "not_configured")
+    npu_broker, npu_broker_error = read_json(npu_broker_path) if npu_broker_path else ({}, "not_configured")
     errors: list[str] = []
     warnings: list[str] = []
     classifications: list[str] = []
@@ -119,6 +123,21 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     if exchange.get("kind") != "ai_peer_exchange":
         errors.append(f"ai_peer_exchange_invalid: {exchange_error}")
         add(classifications, "ai_peer_exchange_missing")
+    collaboration = exchange.get("collaboration_round") if isinstance(exchange.get("collaboration_round"), dict) else {}
+    if collaboration.get("synchronized_visibility") is not True:
+        errors.append("collaboration_round_missing_synchronized_visibility")
+        add(classifications, "ai_peer_collaboration_round_missing")
+    if npu_path and npu_path.exists():
+        if npu.get("non_blocking") is not True:
+            warnings.append(f"npu_micro_lane_non_blocking_flag_missing: {npu_error}")
+        decision = npu.get("decision") if isinstance(npu.get("decision"), dict) else {}
+        if decision.get("npu_primary_advisory") is True:
+            errors.append("npu_micro_lane_promoted_to_primary_advisory")
+            add(classifications, "npu_micro_lane_guardrail_violation")
+        if npu_broker_path and npu_broker_path.exists() and safe_int(npu.get("tool_request_count")) > 0 and safe_int(npu_broker.get("tool_execution_count")) <= 0:
+            warnings.append(f"npu_micro_tool_requests_not_broker_consumed: {npu_broker_error}")
+    else:
+        warnings.append("npu_micro_lane_missing_or_pending_non_blocking")
     if exchange.get("patch_application_performed") is True or response.get("patch_application_performed") is True:
         errors.append("patch_application_performed_in_peer_exchange")
         add(classifications, "peer_exchange_guardrail_violation")
@@ -148,6 +167,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             evidence(repo_root, "gpu0_peer_response", response_path),
             evidence(repo_root, "gpu0_tool_requests", tool_requests_path),
             evidence(repo_root, "gpu0_runtime_tool_broker", broker_path) if broker_path else {"name": "gpu0_runtime_tool_broker", "path": "", "exists": False, "error": "not_configured"},
+            evidence(repo_root, "npu_micro_response", npu_path) if npu_path else {"name": "npu_micro_response", "path": "", "exists": False, "error": "not_configured"},
+            evidence(repo_root, "npu_runtime_tool_broker", npu_broker_path) if npu_broker_path else {"name": "npu_runtime_tool_broker", "path": "", "exists": False, "error": "not_configured"},
             evidence(repo_root, "ai_peer_exchange", exchange_path),
         ],
         "guardrails": {
@@ -155,6 +176,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "gpu1_primary_advisory_required": True,
             "gpu0_peer_response_required": True,
             "gpu0_broker_execution_required": bool(args.require_broker_execution),
+            "npu_micro_lane_non_blocking": True,
             "npu_micro_lane_not_heavy_authority": True,
             "deterministic_scripts_heavy_audit_authority": True,
             "patch_application_performed": False,
@@ -195,6 +217,8 @@ def main() -> int:
     parser.add_argument("--gpu0-response", default="output/validation/gpu0_peer_response_{stamp}.json")
     parser.add_argument("--gpu0-tool-requests", default="output/validation/gpu0_tool_requests_{stamp}.json")
     parser.add_argument("--broker-report", default="")
+    parser.add_argument("--npu-response", default="")
+    parser.add_argument("--npu-broker-report", default="")
     parser.add_argument("--peer-exchange", default="output/validation/ai_peer_exchange_{stamp}.json")
     parser.add_argument("--require-broker-execution", action="store_true")
     parser.add_argument("--allow-degraded", action="store_true")
