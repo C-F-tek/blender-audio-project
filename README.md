@@ -80,16 +80,42 @@ Provider posture:
 
 ## Canonical local AI entrypoint
 
-The active local AI operator entrypoint is:
+The active local AI operator entrypoint is implemented in code on `master`:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+```
+
+Its canonical runbook is:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
 Use that runbook for current commands, `-Full0To10`, intensity profiles, provider flags, reset mode, memory controls, patch-spec generation and validation modes.
 
 Legacy monolithic 0-to-10 runbooks are removed from active documentation. Historical details must be recovered from git history or compact evidence when needed; do not recreate parallel active-start runbooks.
+
+## Current code-derived state
+
+`master` already includes PR #187. Therefore the unified launcher is no longer a candidate branch artifact; it is the baseline implementation.
+
+Current next candidate after code inspection:
+
+```text
+PR #192 feat(ai): add full0to10 report-only foundation checks
+```
+
+PR #192 adds report-only code for:
+
+```text
+recursive Full0To10 evidence ZIP bundle creation
+bundle completeness validation
+runtime hardware capability manifest for CPU/GPU.0/NPU/NVIDIA visibility
+hardware/delegation report-only contract validation
+```
+
+PR #191 contains useful Full0To10 quick evidence from `20260506-004242`, but the branch diverged after #187 and should be mined, regenerated or summarized before any merge decision.
 
 ## Current stable docs
 
@@ -97,7 +123,7 @@ Legacy monolithic 0-to-10 runbooks are removed from active documentation. Histor
 |---|---|
 | Agent contract and guardrails | `AGENTS.md` |
 | ChatGPT/session memory and handoff notes | `CHATGPT.md`, then `CHATGPT/README.md` |
-| Current operational bridge | `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
+| Current code/state bridge | `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
 | Active refactor/reuse planning task | `docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` |
 | Recent telemetry baseline | `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` |
 | Operational lifecycle | `WORKFLOW.md` |
@@ -119,13 +145,12 @@ Legacy monolithic 0-to-10 runbooks are removed from active documentation. Histor
 ## Current active work
 
 ```text
-Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-Run: 20260505-143844
-Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Baseline: master after PR #187 merge
+Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Current bridge: docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+Next candidate: PR #192 report-only Full0To10 foundation checks
 Mode: review-only until explicit human instruction
 ```
-
-The bundle is a runtime artifact linked from PR #187 and intentionally not committed to the repository. Inspect the bundle before selecting any refactor/reuse patch.
 
 ## Operating rules
 
