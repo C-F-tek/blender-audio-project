@@ -209,6 +209,31 @@ Allowed explicit disablers:
 
 If a core lane is unavailable, the manifest must record the unavailable-tool/provider failure in `phase_status`, `warnings`, `errors` or a phase report. Missing evidence without an explicit disabler or failure record is a failed full run.
 
+## LightFull0To10 contract
+
+Current code also exposes an evidence-only profile through:
+
+```text
+-LightFull0To10
+Tools/workflow/run_unified_light_full0to10_profile.ps1
+Tools/workflow/run_full0to10_light_evidence_only.ps1
+```
+
+This is not a replacement for full provider-capable `Full0To10`. It is a lightweight evidence/profile lane that produces `full0to10_light_evidence_only_run.json/md` plus a promotion JSON.
+
+Observed behavior from code:
+
+```text
+provider_execution_performed=false
+patch_application_performed=false
+blender_runtime_execution_performed=false
+ffmpeg_execution_performed=false
+```
+
+LightFull0To10 may run optional proof/quality steps such as startup guard, track input contract, repo-quality packet, Markdown line-limit check, accelerator/provider governance reports, provider invocation/bridge reports, memory visibility assertion, provider feedback loop and final product quality package. Missing optional step scripts are represented as skipped/failed step records rather than silent full-run success.
+
+`LightFull0To10` is useful for GitHub-reviewable evidence and promotion planning. It must not be cited as proof that provider execution, patch apply, Blender runtime or FFmpeg runtime occurred.
+
 ## Run intensity contract
 
 `run_intensity` changes capacity, not scope.
@@ -266,6 +291,18 @@ Validator:
 
 ```text
 Tools/validation/check_file_line_limits.py
+```
+
+Current behavior of the general validator:
+
+```text
+kind=file_line_limit_report
+provider_execution_performed=false
+patch_application_performed=false
+source_writes_performed=false
+persistent_memory_write_performed=false
+includes .md, .py, .ps1, .psm1, .psd1, .sh, .bat, .cmd, .js, .ts, .tsx, .jsx
+excludes .git, venv/.venv, __pycache__, node_modules, output, renders, indexAI/code_chunks, indexAI/project_code_chunks
 ```
 
 ## Quality gate contract
@@ -364,6 +401,7 @@ Recommended local checks after launcher edits are owned by the unified launcher 
 ```text
 PowerShell syntax check for Tools/workflow/run_unified_local_ai_refactor.ps1
 launcher Full0To10 dry-run when local execution is available
+LightFull0To10 evidence-only run when validating lightweight evidence behavior
 docs link validation
 validation report contract check
 file-line-limit report when maintainability is in scope
