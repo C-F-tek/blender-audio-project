@@ -22,6 +22,10 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         f"- Passed: `{report.get('passed')}`",
         f"- Provider execution performed: `{report.get('provider_execution_performed')}`",
+        f"- Production support: `{report.get('production_support')}`",
+        f"- Iterations: `{report.get('iterations')}`",
+        f"- Minimum seconds: `{report.get('min_seconds')}`",
+        f"- Requested role: `{report.get('requested_role')}`",
         f"- GPU.0 visible: `{report.get('openvino_gpu0_visible')}`",
         f"- GPU.0 probe performed: `{report.get('openvino_gpu0_probe_performed')}`",
         f"- GPU.0 workload performed: `{report.get('openvino_gpu0_workload_performed')}`",
@@ -73,6 +77,13 @@ def main() -> int:
         role=args.role,
         production_support=args.production_support,
     )
+    report["production_support"] = bool(args.production_support)
+    report["iterations"] = int(args.iterations)
+    report["min_seconds"] = float(args.min_seconds)
+    report["requested_role"] = str(args.role)
+    if args.production_support:
+        report["openvino_gpu0_role"] = str(args.role)
+        report["openvino_gpu0_not_primary_advisory"] = False
     report["repo_root"] = str(repo_root)
     output = resolve_path(repo_root, args.output)
     markdown = resolve_path(repo_root, args.markdown_output)

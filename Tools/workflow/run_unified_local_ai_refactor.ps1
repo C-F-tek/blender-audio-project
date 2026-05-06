@@ -1290,6 +1290,32 @@ if ($RunOpenVinoGpu0Workload -or $Full0To10) {
     Write-Host "=== Run OpenVINO GPU.0 secondary workload evidence ==="
     $Gpu0Stamp = $Stamp
     if ([string]::IsNullOrWhiteSpace($Gpu0Stamp)) { $Gpu0Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
+
+# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-LATE-BEGIN
+if ($Full0To10) {
+    $ProviderAcceptanceJson = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.json" -f $DataStamp)
+    $ProviderAcceptanceMd = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.md" -f $DataStamp)
+    $Gpu0ProviderSupportJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
+    $Gpu0FinalWorkloadJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $DataStamp)
+    $ProviderLateGateOk = Invoke-Checked "Full0To10 provider acceptance gate after final GPU0 workload" {
+        & $ResolvedPythonExe .\Tools\validation\check_full0to10_provider_acceptance.py `
+            --repo-root . `
+            --stamp $DataStamp `
+            --gpu0-provider-support $Gpu0ProviderSupportJsonForGate `
+            --gpu0-final-workload $Gpu0FinalWorkloadJsonForGate `
+            --output $ProviderAcceptanceJson `
+            --markdown-output $ProviderAcceptanceMd
+    } -SoftFail
+    if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
+        $ReportFiles += @($ProviderAcceptanceJson, $ProviderAcceptanceMd)
+    }
+    if (-not $ProviderLateGateOk) {
+        if (Get-Variable -Name Warnings -ErrorAction SilentlyContinue) {
+            $Warnings += "Full0To10 provider acceptance late gate failed/degraded; see $ProviderAcceptanceJson"
+        }
+    }
+}
+# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-LATE-END
     $Gpu0Json = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $Gpu0Stamp)
     $Gpu0Md = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.md" -f $Gpu0Stamp)
     Invoke-Python @(
