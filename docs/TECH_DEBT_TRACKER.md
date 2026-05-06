@@ -71,20 +71,21 @@ P3 low
 | TD-025 | Python string patch hygiene | P1 | in_progress | Real `SyntaxWarning` findings showed Windows-style command examples with invalid escape sequences such as `\T` and `\e`; an attempted patch bundle also exposed fragility around multiline/triple-quote edits. | Future AI or manual patches may overcorrect by introducing raw multiline/triple-quoted strings, changing indentation, corrupting embedded Markdown/code fences or masking syntax warnings instead of fixing the exact command literal. | Treat triple-quote/raw multiline rewrites as high-risk for command-example cleanup. Prefer minimal one-line literal edits, POSIX-style relative examples like `./Tools/...`, or explicit doubled backslashes. Validate with `python -m py_compile`, `git diff --check`, line counts and focused diff review. | 2026-05-05 |
 | TD-026 | Large Markdown operational drift | P1 | in_progress | Some Markdown files are too large or too catalog-like to be opened reliably by future chats, local AI context packs or GitHub-only reviewers. Examples include `Tools/validation/README.md` and `docs/JSON_SCHEMAS.md`. | Oversized docs can become false primary entrypoints, hide stale commands, or force agents to rely on truncated content. | Keep oversized docs out of the primary reading path. Classify them as catalog/schema/historical/supporting/evidence, add compact bridge docs, and use Markdown inventory/length reports to find more candidates. | 2026-05-05 |
 | TD-027 | Full-toolbox limitation handling | P1 | in_progress | Historical limitation notes can be misread as reasons to skip tools or shrink Full0To10 scope. | Agents may avoid available tool lanes instead of measuring and overcoming limitations. | Use all available/relevant tools by default. Treat limitations as backlog to overcome. Mark lanes unavailable/degraded only from current code, telemetry, capability manifest, provider diagnostic or validator evidence. | 2026-05-06 |
+| TD-028 | Validation README reduction | P1 | open | `Tools/validation/README.md` remains oversized and contains long command blocks that can be truncated or corrupted by API/chat tooling. | Future agents may treat it as primary command source, copy stale commands, or miss the unified launcher as command owner. | Split or reduce it into a compact catalog under 400 lines, with detailed validator command examples moved to focused docs or generated help surfaces. | 2026-05-06 |
 
 ## Add a new item
 
 Use the next ID:
 
 ```text
-TD-028
+TD-029
 ```
 
 Template:
 
 | ID | Area | Priority | Status | Symptom | Risk | Recommended action | Last reviewed |
 |---|---|---:|---|---|---|---|---|
-| TD-028 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
+| TD-029 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
 
 ## Rules
 
