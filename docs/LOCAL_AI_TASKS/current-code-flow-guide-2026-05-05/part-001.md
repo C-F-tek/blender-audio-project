@@ -67,7 +67,8 @@ The current IA-Carmine full-run flow is:
       -> full-toolbox decision loop
       -> patch plan proposal lane
       -> runtime broker telemetry lane
-      -> runtime capability manifest
+      -> runtime/hardware capability manifest
+      -> final tool-product evidence/readiness when selected
       -> shared production AI-to-AI bundle
       -> production evidence under docs/LOCAL_VALIDATION_EVIDENCE
 
@@ -109,6 +110,21 @@ The unified launcher resolves modes such as:
     full_validation
 
 Discovery/index/CSV/file-line-limit surfaces are produced through the inventory, validation, chunks, context, repository-consistency and evidence lanes. If a future dedicated index-repair lane is added, it must remain report/plan-first and must be visible in the manifest.
+
+The launcher also exposes `-LightFull0To10`, which dispatches:
+
+    Tools/workflow/run_unified_light_full0to10_profile.ps1
+    Tools/workflow/run_full0to10_light_evidence_only.ps1
+
+`LightFull0To10` is evidence-only/profile-oriented. Verified report fields from the script are:
+
+    kind=full0to10_light_evidence_only_run
+    provider_execution_performed=false
+    patch_application_performed=false
+    blender_runtime_execution_performed=false
+    ffmpeg_execution_performed=false
+
+It must not be cited as provider/runtime/apply proof. Use it for lightweight evidence visibility, readiness/promotion planning and code-flow smoke of tool products.
 
 Main output roots:
 
@@ -196,6 +212,16 @@ Validator:
     Tools/validation/check_file_line_limits.py
     docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 
+Current validator behavior:
+
+    kind=file_line_limit_report
+    provider_execution_performed=false
+    patch_application_performed=false
+    source_writes_performed=false
+    persistent_memory_write_performed=false
+    includes .md, .py, .ps1, .psm1, .psd1, .sh, .bat, .cmd, .js, .ts, .tsx, .jsx
+    excludes .git, venv/.venv, __pycache__, node_modules, output, renders, indexAI/code_chunks, indexAI/project_code_chunks
+
 Remediation:
 
     Markdown over 400 lines -> compact index plus <file>.md/part-001.md layout.
@@ -223,6 +249,7 @@ Important distinction:
 
     provider_execution_requested can be true even if primary advisory is degraded.
     A run may pass through deterministic recovery if diagnostics are explicit and patch application remains false.
+    LightFull0To10 provider/governor/bridge reports are evidence/planning surfaces unless their own fields prove execution.
 
 Known production evidence from `20260505-081141`:
 
@@ -234,6 +261,33 @@ Known production evidence from `20260505-081141`:
     source_writes_performed=false
 
 For newer reports, inspect telemetry fields such as `round_duration_source`, `round_duration_sample_count`, `provider_advisory_state`, `provider_failure_reasons` and workload quality status before making timing/provider claims.
+
+## Final tool-product flow
+
+The Full0To10 final-product builder is:
+
+    Tools/ai/build_full0to10_final_tool_product.py
+    Tools/ai/full0to10_final_product/*
+
+Verified from code, it composes:
+
+    track input contract
+    accelerator control
+    provider governor
+    provider invocation plan
+    provider execution bridge
+    effective-use optimization summary
+    quality gate
+
+It writes:
+
+    product Markdown
+    evidence index
+    readiness JSON
+    manifest JSON
+    README
+
+This implements the project idea that tool output should become verifiable product/evidence/readiness material, not chat-only advisory prose.
 
 ## Full-toolbox decision loop
 
@@ -301,7 +355,7 @@ Telemetry is evidence for AI agents. It must travel with the bundle so the next 
 Required telemetry/capability surfaces:
 
     runtime_tool_usage_telemetry_<STAMP>.json/md
-    runtime_tool_capability_manifest_<STAMP>.json/md
+    runtime_tool_capability_manifest_<STAMP>.json/md or runtime_hardware_capability_manifest_<STAMP>.json/md
     full_toolbox_run_telemetry_summary_<STAMP>.json/md
     shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
     shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
@@ -343,7 +397,7 @@ Runtime telemetry:
 
 Capability manifest:
 
-    runtime capability manifest builder for the active run/toolbox lane
+    runtime/hardware capability manifest builder for the active run/toolbox lane
 
 Minimal broker bootstrap tools:
 
@@ -358,8 +412,8 @@ Expected artifacts:
     output/validation/runtime_tool_broker_full_toolbox_<STAMP>.md
     docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json
     docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.md
-    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json
-    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md
+    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json or runtime_hardware_capability_manifest_<STAMP>.json
+    docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md or runtime_hardware_capability_manifest_<STAMP>.md
 
 Closed production fix:
 
