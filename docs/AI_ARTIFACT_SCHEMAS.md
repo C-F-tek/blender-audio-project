@@ -11,12 +11,14 @@ This file is a compact schema guide. `docs/JSON_SCHEMAS.md` remains a broad sche
 AI artifacts that participate in run-unica work follow the current IA-Carmine doctrine:
 
 ```text
+master contains PR #187 unified launcher baseline
 run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 quick/balanced/deep/custom = presets or operator parameters, not scope
 -No* flags = explicit opt-out from selected lanes
-CSV/index/discovery surfaces are evidence lanes when relevant
-large Markdown must not be a primary operational entrypoint
+CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
+400 lines = hard limit for maintained docs and source files
+limitations = backlog to overcome, not reasons to skip available tools
 ```
 
 When a run-unica execution produces evidence, recommendations, patch plans or patch specs, the schema family must also account for the companion artifacts that make the handoff complete:
@@ -25,16 +27,17 @@ When a run-unica execution produces evidence, recommendations, patch plans or pa
 launcher manifest
 phase_status / phase_reports
 runtime tool usage telemetry
-runtime tool capability manifest
+runtime/hardware capability manifest
 full toolbox run telemetry summary
 shared AI-to-AI bundle/final summary
 CSV/count summaries when inventory lanes ran
 discovery/index repair reports when relevant
+file-line-limit reports when maintainability is in scope
 ```
 
 Telemetry is not a replacement schema for evidence or patch plans. It is a companion schema that explains whether the producing lanes executed, failed, were blocked, degraded, disabled, unavailable or planned-only.
 
-A schema entry for a run-unica-derived patch plan/spec is incomplete if it omits the companion telemetry/capability/final-summary and relevant discovery/index/CSV-count context.
+A schema entry for a run-unica-derived patch plan/spec is incomplete if it omits the companion telemetry/capability/final-summary and relevant discovery/index/CSV/file-line-limit context.
 
 ## Required keys
 
@@ -66,7 +69,9 @@ AI artifacts are separate from validation reports. Do not mix input-domain artif
 | `ai_pipeline_dry_run_report.json` | `Tools/ai/run_parallel_artifact_pipeline.py` | `Tools/validation/check_ai_pipeline_report_contract.py` | schema-v6 fields: `schema_version`, `generated_at`, `repo_root`, `output_dir`, `dry_run`, `passed`, `preflight`, `step_count`, `summary`, `schedule`, `lanes`, `steps` | Per-case report contract; use `--require-dry-run` for matrix case reports. |
 | `ai_pipeline_dry_run_matrix_evidence.json` | `Tools/ai/build_dry_run_matrix_evidence_bundle.py` | `Tools/validation/check_dry_run_matrix_evidence_bundle.py` | `schema_version`, `kind`, `provider_execution_performed`, `matrix`, `validation_reports`, `case_summary`, `cases`, `decision` | Compact Git-trackable evidence for a local dry-run matrix. It proves planned-only dry-run behavior, not GPU/NPU provider execution. |
 | `runtime_tool_usage_telemetry_*.json` | `Tools/ai/build_runtime_tool_usage_telemetry.py` | report-contract validation / bundle validation | `schema_version`, `kind`, `generated_at`, `repo_root`, `inputs`, `summary`, `tool_calls`, `warnings`, `errors` | Companion telemetry for broker/tool execution. Must preserve broker report inputs and executed/failed/blocked counts. |
-| `runtime_tool_capability_manifest_*.json` | `Tools/ai/build_runtime_tool_capability_manifest.py` | report-contract validation / bundle validation | `schema_version`, `kind`, `generated_at`, `repo_root`, `tools`, `guardrails`, `warnings`, `errors` | Capability and guardrail context for broker/tool execution. Required when tool capability context matters. |
+| `runtime_tool_capability_manifest_*.json` | current runtime capability manifest builder when present | report-contract validation / bundle validation | `schema_version`, `kind`, `generated_at`, `repo_root`, capability/tool entries, `warnings`, `errors` | Capability and guardrail context for broker/tool execution. Historical builder names must be checked against current code. |
+| `runtime_hardware_capability_manifest_*.json` | `Tools/ai/build_runtime_hardware_capability_manifest.py` in PR #192 or Full0To10 hardware capability package | report-contract validation / bundle validation | `schema_version`, `kind`, `generated_at`, `repo_root`, hardware/capability entries, side-effect guardrails, `warnings`, `errors` | Report-only hardware/capability context for CPU/GPU.0/NPU/NVIDIA-style lanes. |
+| `file_line_limit_report.json` | `Tools/validation/check_file_line_limits.py` | self-report plus JSON parseability | `schema_version`, `kind=file_line_limit_report`, `max_lines`, `checked_file_count`, `violation_count`, `violations`, `errors`, `passed` | Report-only 400-line policy evidence. Does not rewrite, split, delete or apply patches. |
 | `full_toolbox_run_telemetry_summary_*.json` | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | report-contract validation / bundle validation | `schema_version`, `kind`, `generated_at`, `repo_root`, `gpu_npu`, `provider`, `runtime_tools`, `patch_plan`, `guardrails`, `warnings`, `errors` | Production summary that explains provider, GPU/NPU, broker, patch-plan and source-write state. |
 | `shared_toolbox_ai_to_ai_bundle_*.json` | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | bundle/final-summary validation | `schema_version`, `kind`, `generated_at`, `repo_root`, `evidence`, `telemetry`, `capabilities`, `recommendations`, `patch_plan`, `provider_diagnostics`, `guardrails` | Production AI-to-AI handoff. Must group evidence, patch plan, telemetry and capability references. |
 | `shared_toolbox_ai_to_ai_final_summary_*.json` | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | final-summary validation | `passed`, `patch_plan_summary_seen`, `patch_plan_count`, `provider_advisory_state`, `provider_failure_detected`, `deterministic_recovery_used`, `provider_failure_reasons`, `degraded_provider_components`, `patch_application_performed`, `source_writes_performed` | Compact state used by next AI/operator to avoid opening full bundles first. |
@@ -91,7 +96,7 @@ AI artifacts are separate from validation reports. Do not mix input-domain artif
 | `generated_blender_script_policy.json` | `Tools/validation/check_generated_blender_script_policy.py` | self-report plus JSON parseability | `schema_version`, `kind`, `repo_root`, `passed`, `errors`, `rules`, `sample_results` | Blender-specific adapter composed over generic Python policy. |
 | `agent_memory_policy.json` | `Tools/validation/check_agent_memory_policy.py` | self-report plus JSON parseability | `schema_version`, `repo_root`, `passed` | Local DB inspection requires workstation access. |
 
-## Discovery/index/CSV-count schema notes
+## Discovery/index/CSV/file-line schema notes
 
 These surfaces are evidence and visibility schemas, not source schemas.
 
@@ -102,6 +107,7 @@ Markdown inventory JSON/MD
 script inventory JSON/CSV/MD
 function/class/method inventory CSV
 Python line-count CSV/MD
+file-line-limit JSON/MD
 semantic chunk manifest JSON/MD
 selected chunk evidence JSON/MD
 repository consistency map/smoke JSON/MD
@@ -129,9 +135,10 @@ index repair is plan/report-first unless explicitly requested
 - Do not use NPU helper validation reports as proof of provider/runtime execution.
 - Do not hand-edit generated index manifests to satisfy schema notes.
 - Add strict checks only after representative local artifacts are available.
-- Do not treat run-unica evidence as complete without telemetry/capability/final summary and relevant discovery/index/CSV surfaces.
+- Do not treat run-unica evidence as complete without telemetry/capability/final summary and relevant discovery/index/CSV/file-line surfaces.
 - Do not treat patch-plan or patch-spec artifacts as complete if their producing run state is unknown.
 - Do not treat large Markdown, file existence, dry-run matrix success, provider report existence or NPU smoke success as proof of run-unica completion.
+- Treat limitations as backlog to overcome, not as static reasons to skip current tools.
 
 ## GitHub-only limit
 
