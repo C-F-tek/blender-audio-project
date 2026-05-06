@@ -1,6 +1,6 @@
 # AI Tools
 
-`Tools/ai/` contains report-oriented tools for IA-Carmine local AI orchestration, context building, provider diagnostics, deterministic recommendations, telemetry, evidence and AI-to-AI handoff.
+`Tools/ai/` contains report-oriented tools for IA-Carmine local AI orchestration, context building, provider diagnostics, deterministic recommendations, telemetry, evidence, final tool-product packaging and AI-to-AI handoff.
 
 This README is a technical catalog. It is not the primary command source.
 
@@ -21,6 +21,7 @@ CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
 400-line policy applies to maintained docs and source files
 limitations are backlog to overcome, not reasons to skip available tools
 patch application is explicit and separate
+tool output should become verifiable product/evidence/readiness material, not chat-only summary
 ```
 
 ## Package map
@@ -28,6 +29,7 @@ patch application is explicit and separate
 | Area | Role |
 |---|---|
 | `pipeline/` | Modular AI artifact pipeline implementation behind `run_parallel_artifact_pipeline.py`. |
+| `full0to10_final_product/` | Final tool-product package builder: product Markdown, evidence index, readiness, manifest and README. |
 | `full0to10_hardware_capability/` | Full0To10 hardware/capability visibility package. |
 | `full_run_bundle_zip/` | Full-run evidence ZIP support in candidate foundation work. |
 | `runtime_hardware_capability/` | Runtime hardware capability support in candidate foundation work. |
@@ -44,8 +46,25 @@ patch application is explicit and separate
 | Patch planning/spec support | `build_agent_review_patch_plan.py`, `build_patch_specs_from_proposals.py`, `promote_patch_spec_draft.py` | Review-only unless explicit apply is authorized separately. |
 | Runtime broker/telemetry | `agent_runtime_tool_broker.py`, `build_runtime_tool_usage_telemetry.py` | Records executed/failed/blocked tool calls. |
 | Capability and telemetry summary | capability manifest packages/builders, `build_full_toolbox_run_telemetry_summary.py` | Handoff context for available tools/hardware lanes and run state. |
+| Final tool product | `build_full0to10_final_tool_product.py`, `full0to10_final_product/*` | Aggregates contract/governor/invocation/bridge/effective-use/quality evidence into product/evidence/readiness outputs. |
 | Production bundle | `build_shared_toolbox_ai_to_ai_bundle.py` | AI-to-AI evidence/telemetry/patch-plan handoff. |
 | Evidence bundles | `build_github_evidence_bundle.py`, full-run bundle ZIP tools | Compact GitHub evidence only; raw `output/**` stays ignored. |
+
+## Final product behavior
+
+The Full0To10 final-product builder currently composes these internal evidence families:
+
+```text
+track input contract
+accelerator control
+provider governor
+provider invocation plan
+provider execution bridge
+effective-use optimization summary
+quality gate
+```
+
+It writes a product Markdown, evidence index, readiness JSON, manifest and README. This supports the project idea that the toolbox should produce inspectable tool products with readiness/evidence, not only advisory prose.
 
 ## Full-run handoff rule
 
