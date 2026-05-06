@@ -198,6 +198,54 @@ def build_peer_mesh_lane_state(
     }
 
 
+def build_provider_broker_loop(
+    primary: dict[str, Any],
+    response: dict[str, Any],
+    broker: dict[str, Any],
+    npu: dict[str, Any],
+    npu_broker: dict[str, Any],
+    sources: list[dict[str, Any]],
+    peer_mesh_lane_state: dict[str, Any],
+) -> dict[str, Any]:
+    gpu0_exec = safe_int(broker.get("tool_execution_count"))
+    npu_exec = safe_int(npu_broker.get("tool_execution_count"))
+    gpu0_requests = safe_int(response.get("tool_request_count"))
+    npu_requests = safe_int(npu.get("tool_request_count"))
+    product_blockers = compact_list(peer_mesh_lane_state.get("product_blockers"), 20)
+    loop_steps = [
+        {"id": "deterministic_baseline", "from": "input_md_and_static_scripts", "to": "gpu1_primary_advisory", "performed": bool(sources)},
+        {"id": "gpu1_primary_advisory", "from": "GPU1/Ollama/RTX5080", "to": "GPU0/OpenVINO peer task packet", "performed": bool(primary.get("passed"))},
+        {"id": "gpu0_peer_response", "from": "GPU0/OpenVINO", "to": "runtime broker", "performed": bool(response.get("provider_execution_performed") and (gpu0_requests or gpu0_exec))},
+        {"id": "gpu0_broker_execution", "from": "runtime broker", "to": "GPU1/GPU0 read-only context", "performed": gpu0_exec > 0},
+        {"id": "npu_nonblocking_support", "from": "NPU/OpenVINO micro support lane", "to": "runtime broker", "performed": bool(npu and (npu_requests or npu_exec)), "blocking": False},
+        {"id": "npu_broker_execution", "from": "runtime broker", "to": "final peer exchange context", "performed": npu_exec > 0, "blocking": False},
+        {"id": "contract_telemetry_bundle", "from": "deterministic validators", "to": "patch bundle/evidence handoff", "performed": True},
+    ]
+    active = bool(primary.get("passed") and response and gpu0_exec > 0 and peer_mesh_lane_state.get("all_required_product_lanes_present") is True)
+    return {
+        "schema_version": 1,
+        "kind": "provider_broker_loop",
+        "active": active,
+        "topology": "input_md -> deterministic_baseline -> GPU1 -> GPU0 -> broker -> NPU_support -> broker -> contract -> telemetry -> bundle -> patch_plan",
+        "controlled_executor": "runtime_tool_broker",
+        "direct_tool_execution_allowed": False,
+        "provider_lanes": {
+            "gpu1": "primary_advisory_planner_worker",
+            "gpu0": "openvino_peer_companion_tool_request_producer",
+            "npu": "nonblocking_micro_tool_support_lane",
+        },
+        "broker_tool_execution_count": gpu0_exec + npu_exec,
+        "gpu0_broker_tool_execution_count": gpu0_exec,
+        "npu_broker_tool_execution_count": npu_exec,
+        "gpu0_tool_request_count": gpu0_requests,
+        "npu_tool_request_count": npu_requests,
+        "npu_non_blocking": True,
+        "npu_product_pass_blocker": False,
+        "deterministic_scripts_heavy_audit_authority": True,
+        "product_pass_blockers": product_blockers,
+        "loop_steps": loop_steps,
+    }
+
 def primary_advisory(repo_root: Path, stamp: str, gpu_report_path: Path, gpu_markdown_path: Path) -> dict[str, Any]:
     gpu_report = read_json(gpu_report_path)
     round_count = safe_int(gpu_report.get("round_count"))
@@ -452,9 +500,19 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         peer_mesh_visibility,
         npu_support_lane,
     )
+    provider_broker_loop = build_provider_broker_loop(
+        primary,
+        response,
+        broker,
+        npu,
+        npu_broker,
+        sources,
+        peer_mesh_lane_state,
+    )
     collaboration_round["mesh_visibility"] = peer_mesh_visibility
     collaboration_round["npu_support_lane"] = npu_support_lane
     collaboration_round["peer_mesh_lane_state"] = peer_mesh_lane_state
+    collaboration_round["provider_broker_loop"] = provider_broker_loop
 
     exchange = {
         "schema_version": 1,
@@ -472,6 +530,8 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         "peer_mesh_visibility": peer_mesh_visibility,
         "npu_support_lane": npu_support_lane,
         "peer_mesh_lane_state": peer_mesh_lane_state,
+        "provider_broker_loop": provider_broker_loop,
+        "provider_broker_loop_active": provider_broker_loop.get("active"),
         "peer_mesh_operational_lanes": peer_mesh_lane_state.get("operational_lanes", []),
         "peer_mesh_support_lanes": peer_mesh_lane_state.get("support_lanes", []),
         "peer_mesh_degraded_lanes": peer_mesh_lane_state.get("degraded_lanes", []),
@@ -535,6 +595,12 @@ def render_exchange(report: dict[str, Any]) -> str:
         f"- Peer mesh support lanes: `{report.get('peer_mesh_support_lanes')}`",
         f"- Peer mesh degraded lanes: `{report.get('peer_mesh_degraded_lanes')}`",
         f"- Peer mesh product blockers: `{report.get('peer_mesh_product_blockers')}`",
+        f"- Provider-broker loop active: `{report.get('provider_broker_loop', {}).get('active')}`",
+        f"- Provider-broker controlled executor: `{report.get('provider_broker_loop', {}).get('controlled_executor')}`",
+        f"- Provider-broker direct tool execution allowed: `{report.get('provider_broker_loop', {}).get('direct_tool_execution_allowed')}`",
+        f"- Provider-broker topology: `{report.get('provider_broker_loop', {}).get('topology')}`",
+        f"- Provider-broker GPU0 executions: `{report.get('provider_broker_loop', {}).get('gpu0_broker_tool_execution_count')}`",
+        f"- Provider-broker NPU executions: `{report.get('provider_broker_loop', {}).get('npu_broker_tool_execution_count')}`",
         "",
     ])
 

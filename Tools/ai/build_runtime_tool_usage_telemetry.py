@@ -639,6 +639,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     summary = summarize_entries(entries)
     summary.update(declared_counters)
     provider_evidence = provider_evidence_summary(orchestrator, gpu_report)
+    provider_broker_loop = orchestrator.get("provider_broker_loop") if isinstance(orchestrator.get("provider_broker_loop"), dict) else {}
     return {
         'schema_version': 1,
         'kind': 'runtime_tool_usage_telemetry',
@@ -650,6 +651,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         'warnings': warnings,
         'provider_execution_performed': provider_evidence['provider_execution_performed'],
         'provider_evidence': provider_evidence,
+        'provider_broker_loop': provider_broker_loop,
         'patch_application_performed': False,
         'source_writes_performed': False,
         'sqlite_write_performed': False,
@@ -707,6 +709,14 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Declared runtime tool executions: `{summary.get('runtime_tool_execution_count')}`")
     lines.append(f"- Broker runtime tool executions: `{summary.get('broker_executed_count')}`")
     lines.append(f"- Declared not executed count: `{summary.get('declared_not_executed_count')}`")
+    provider_broker_loop = safe_dict(report.get('provider_broker_loop'))
+    if provider_broker_loop:
+        lines.append(f"- Provider-broker loop active: `{provider_broker_loop.get('active')}`")
+        lines.append(f"- Provider-broker loop executor: `{provider_broker_loop.get('controlled_executor')}`")
+        lines.append(f"- Provider-broker loop broker executions: `{provider_broker_loop.get('broker_tool_execution_count')}`")
+        lines.append(f"- Provider-broker loop GPU0 executions: `{provider_broker_loop.get('gpu0_broker_tool_execution_count')}`")
+        lines.append(f"- Provider-broker loop NPU executions: `{provider_broker_loop.get('npu_broker_tool_execution_count')}`")
+        lines.append(f"- Provider-broker loop NPU non-blocking: `{provider_broker_loop.get('npu_non_blocking')}`")
     lines.append('')
     lines.append('## By caller AI')
     lines.append('')

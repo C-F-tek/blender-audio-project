@@ -164,3 +164,30 @@ peer_mesh_product_blockers
 
 GPU0 numeric/OpenVINO/tool evidence is a valid operational/support lane even when the semantic companion model is not configured. NPU slow, empty or degraded output is a support-lane degradation, not a product blocker, as long as brokered fallback/tool-support evidence and deterministic validators remain available.
 
+## Provider-broker loop product contract
+
+The production peer architecture is a provider-broker loop, not independent provider reports followed by a late broker pass.
+
+Required loop:
+
+```text
+input_md -> deterministic_baseline
+deterministic_baseline -> GPU1/Ollama primary advisory
+GPU1 -> GPU0/OpenVINO peer task packet
+GPU0 -> runtime broker -> GPU1/GPU0 read-only context
+GPU1/GPU0/broker context -> NPU/OpenVINO micro support
+NPU -> runtime broker -> final context
+provider_broker_loop -> peer_exchange_contract -> telemetry -> shared AI-to-AI bundle -> review-only patch bundle
+```
+
+Contract rules:
+
+- `runtime_tool_broker` is the only controlled executor.
+- Provider lanes may request tools but must not bypass broker allowlists.
+- GPU1 remains the primary advisory/planner/worker lane.
+- GPU0 is a peer companion and tool-request producer.
+- NPU is a slow/degraded-tolerant support/tool-intelligence lane.
+- NPU degradation is telemetry, not a product pass blocker.
+- Deterministic scripts remain the heavy audit authority.
+- Patch application remains manual/review-only.
+

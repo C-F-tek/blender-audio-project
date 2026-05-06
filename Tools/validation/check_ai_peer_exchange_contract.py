@@ -102,6 +102,66 @@ def evaluate_peer_mesh_visibility(exchange: dict[str, Any], npu: dict[str, Any],
     }
 
 
+def evaluate_provider_broker_loop(exchange: dict[str, Any], provider_broker_loop: dict[str, Any]) -> dict[str, Any]:
+    """Validate the provider -> broker cooperative loop as product contract."""
+
+    collaboration = exchange.get("collaboration_round") if isinstance(exchange.get("collaboration_round"), dict) else {}
+    if not provider_broker_loop and isinstance(collaboration.get("provider_broker_loop"), dict):
+        provider_broker_loop = collaboration["provider_broker_loop"]
+
+    errors: list[str] = []
+    warnings: list[str] = []
+    classifications: list[str] = []
+
+    if not provider_broker_loop:
+        errors.append("provider_broker_loop_missing")
+        add(classifications, "provider_broker_loop_missing")
+        return {
+            "passed": False,
+            "provider_broker_loop": {},
+            "errors": errors,
+            "warnings": warnings,
+            "classifications": classifications,
+        }
+
+    if provider_broker_loop.get("active") is not True:
+        errors.append("provider_broker_loop_not_active")
+        add(classifications, "provider_broker_loop_not_active")
+    if provider_broker_loop.get("controlled_executor") != "runtime_tool_broker":
+        errors.append("provider_broker_loop_controlled_executor_not_runtime_broker")
+        add(classifications, "provider_broker_loop_guardrail_violation")
+    if provider_broker_loop.get("direct_tool_execution_allowed") is not False:
+        errors.append("provider_broker_loop_direct_tool_execution_allowed")
+        add(classifications, "provider_broker_loop_guardrail_violation")
+    if safe_int(provider_broker_loop.get("gpu0_broker_tool_execution_count")) <= 0:
+        errors.append("provider_broker_loop_gpu0_broker_execution_missing")
+        add(classifications, "gpu0_tool_requests_not_broker_consumed")
+    if safe_int(provider_broker_loop.get("broker_tool_execution_count")) <= 0:
+        errors.append("provider_broker_loop_broker_execution_missing")
+        add(classifications, "provider_broker_loop_broker_execution_missing")
+    if provider_broker_loop.get("npu_non_blocking") is not True:
+        warnings.append("provider_broker_loop_npu_non_blocking_flag_missing")
+        add(classifications, "npu_support_lane_degraded")
+    if provider_broker_loop.get("npu_product_pass_blocker") is True:
+        errors.append("provider_broker_loop_npu_marked_product_blocker")
+        add(classifications, "npu_support_lane_guardrail_violation")
+    if provider_broker_loop.get("deterministic_scripts_heavy_audit_authority") is not True:
+        errors.append("provider_broker_loop_deterministic_authority_missing")
+        add(classifications, "deterministic_authority_missing")
+
+    blockers = provider_broker_loop.get("product_pass_blockers")
+    if isinstance(blockers, list):
+        errors.extend(str(item) for item in blockers if item)
+
+    return {
+        "passed": not errors,
+        "provider_broker_loop": provider_broker_loop,
+        "errors": errors,
+        "warnings": warnings,
+        "classifications": classifications,
+    }
+
+
 def evidence(repo_root: Path, name: str, path: Path) -> dict[str, Any]:
     data, error = read_json(path)
     item: dict[str, Any] = {
@@ -184,10 +244,16 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     peer_mesh_contract = evaluate_peer_mesh_visibility(exchange, npu, npu_broker)
     peer_mesh_lane_state = exchange.get("peer_mesh_lane_state") if isinstance(exchange.get("peer_mesh_lane_state"), dict) else {}
     peer_mesh_product_blockers = peer_mesh_lane_state.get("product_blockers") if isinstance(peer_mesh_lane_state.get("product_blockers"), list) else []
+    provider_broker_loop = exchange.get("provider_broker_loop") if isinstance(exchange.get("provider_broker_loop"), dict) else {}
+    provider_broker_loop_contract = evaluate_provider_broker_loop(exchange, provider_broker_loop)
     errors.extend(peer_mesh_contract["errors"])
     errors.extend(str(item) for item in peer_mesh_product_blockers if item)
     warnings.extend(peer_mesh_contract["warnings"])
     for item in peer_mesh_contract["classifications"]:
+        add(classifications, item)
+    errors.extend(provider_broker_loop_contract["errors"])
+    warnings.extend(provider_broker_loop_contract["warnings"])
+    for item in provider_broker_loop_contract["classifications"]:
         add(classifications, item)
     if peer_mesh_lane_state.get("degraded_lanes"):
         add(classifications, "peer_mesh_degraded_lanes_present_non_blocking")
@@ -228,6 +294,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "peer_mesh_support_lanes": peer_mesh_lane_state.get("support_lanes", []),
         "peer_mesh_degraded_lanes": peer_mesh_lane_state.get("degraded_lanes", []),
         "peer_mesh_product_blockers": peer_mesh_lane_state.get("product_blockers", []),
+        "provider_broker_loop_contract": provider_broker_loop_contract,
+        "provider_broker_loop": provider_broker_loop_contract.get("provider_broker_loop", {}),
         "provider_execution_performed": bool(primary.get("provider_execution_performed") or response.get("provider_execution_performed")),
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -252,6 +320,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "npu_slow_or_degraded_not_product_blocker": True,
             "peer_mesh_visibility_required": True,
             "deterministic_scripts_heavy_audit_authority": True,
+            "provider_broker_loop_required": True,
+            "provider_broker_loop_controlled_executor_required": "runtime_tool_broker",
             "patch_application_performed": False,
             "source_writes_performed": False,
         },
@@ -287,6 +357,21 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(f"- Peer mesh support lanes: `{report.get('peer_mesh_support_lanes')}`")
         lines.append(f"- Peer mesh degraded lanes: `{report.get('peer_mesh_degraded_lanes')}`")
         lines.append(f"- Peer mesh product blockers: `{report.get('peer_mesh_product_blockers')}`")
+    loop_contract = report.get("provider_broker_loop_contract") if isinstance(report.get("provider_broker_loop_contract"), dict) else {}
+    if loop_contract:
+        loop = loop_contract.get("provider_broker_loop") if isinstance(loop_contract.get("provider_broker_loop"), dict) else {}
+        lines.extend(["", "## Provider-broker loop", ""])
+        lines.append(f"- Passed: `{loop_contract.get('passed')}`")
+        lines.append(f"- Active: `{loop.get('active')}`")
+        lines.append(f"- Controlled executor: `{loop.get('controlled_executor')}`")
+        lines.append(f"- Direct tool execution allowed: `{loop.get('direct_tool_execution_allowed')}`")
+        lines.append(f"- Broker tool executions: `{loop.get('broker_tool_execution_count')}`")
+        lines.append(f"- GPU0 broker executions: `{loop.get('gpu0_broker_tool_execution_count')}`")
+        lines.append(f"- NPU broker executions: `{loop.get('npu_broker_tool_execution_count')}`")
+        lines.append(f"- NPU non-blocking: `{loop.get('npu_non_blocking')}`")
+        lines.append(f"- NPU product pass blocker: `{loop.get('npu_product_pass_blocker')}`")
+        lines.append(f"- Deterministic scripts heavy audit authority: `{loop.get('deterministic_scripts_heavy_audit_authority')}`")
+        lines.append(f"- Product blockers: `{loop.get('product_pass_blockers')}`")
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {item}" for item in report["errors"])

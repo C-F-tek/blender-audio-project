@@ -22,6 +22,12 @@ CORE_SUMMARY_KEYS = (
     "peer_mesh_support_lanes",
     "peer_mesh_degraded_lanes",
     "peer_mesh_product_blockers",
+    "provider_broker_loop_active",
+    "provider_broker_loop_controlled_executor",
+    "provider_broker_loop_broker_execution_count",
+    "provider_broker_loop_gpu0_broker_execution_count",
+    "provider_broker_loop_npu_broker_execution_count",
+    "provider_broker_loop_product_blockers",
     "primary_advisory_provider",
     "policy",
     "mode",
@@ -53,6 +59,7 @@ CHECK_SUMMARY_KEYS = (
     "npu_support_lane",
     "collaboration_visibility",
     "peer_mesh_lane_state",
+    "provider_broker_loop",
 )
 
 

@@ -444,6 +444,7 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
                     "non_blocking": data.get("non_blocking"),
                     "peer_mesh_visibility": data.get("peer_mesh_visibility"),
                     "npu_support_lane": data.get("npu_support_lane"),
+                    "provider_broker_loop": data.get("provider_broker_loop"),
                     "collaboration_visibility": (data.get("collaboration_round") or {}).get("synchronized_visibility") if isinstance(data.get("collaboration_round"), dict) else None,
                     "tool_request_count": data.get("tool_request_count"),
                     "tool_execution_count": data.get("tool_execution_count"),
@@ -588,6 +589,45 @@ def extract_peer_mesh_product_state(provider_diagnostics: dict[str, Any]) -> dic
     }
 
 
+def extract_provider_broker_loop_product_state(provider_diagnostics: dict[str, Any]) -> dict[str, Any]:
+    """Derive provider-broker loop product state from existing provider diagnostics."""
+
+    for item in provider_diagnostics.get("diagnostics", []):
+        if not isinstance(item, dict):
+            continue
+        loop = item.get("provider_broker_loop")
+        if isinstance(loop, dict) and loop:
+            return {
+                "seen": True,
+                "active": loop.get("active"),
+                "controlled_executor": loop.get("controlled_executor"),
+                "direct_tool_execution_allowed": loop.get("direct_tool_execution_allowed"),
+                "broker_tool_execution_count": loop.get("broker_tool_execution_count"),
+                "gpu0_broker_tool_execution_count": loop.get("gpu0_broker_tool_execution_count"),
+                "npu_broker_tool_execution_count": loop.get("npu_broker_tool_execution_count"),
+                "npu_non_blocking": loop.get("npu_non_blocking"),
+                "npu_product_pass_blocker": loop.get("npu_product_pass_blocker"),
+                "deterministic_scripts_heavy_audit_authority": loop.get("deterministic_scripts_heavy_audit_authority"),
+                "product_pass_blockers": loop.get("product_pass_blockers", []),
+                "topology": loop.get("topology", []),
+            }
+
+    return {
+        "seen": False,
+        "active": False,
+        "controlled_executor": "",
+        "direct_tool_execution_allowed": None,
+        "broker_tool_execution_count": 0,
+        "gpu0_broker_tool_execution_count": 0,
+        "npu_broker_tool_execution_count": 0,
+        "npu_non_blocking": None,
+        "npu_product_pass_blocker": None,
+        "deterministic_scripts_heavy_audit_authority": None,
+        "product_pass_blockers": ["provider_broker_loop_not_found_in_bundle_inputs"],
+        "topology": [],
+    }
+
+
 def build_final_summary(
     *,
     repo_root: Path,
@@ -605,6 +645,7 @@ def build_final_summary(
     patch_plan_summary = extract_full_run_patch_plan_summary(repo_root, report_paths)
     provider_diagnostics = extract_provider_diagnostics_summary(repo_root, report_paths)
     peer_mesh_product_state = extract_peer_mesh_product_state(provider_diagnostics)
+    provider_broker_loop_product_state = extract_provider_broker_loop_product_state(provider_diagnostics)
     tool_capabilities = runtime_tool_capabilities()
     tool_requests = facts.get("tool_requests_executed_or_proposed") or default_tool_requests()
     remaining_gaps = build_remaining_gaps(missing_reports, missing_artifacts, facts)
@@ -629,6 +670,13 @@ def build_final_summary(
         "provider_execution_performed": bool(facts.get("provider_execution_performed")),
         "provider_diagnostics": provider_diagnostics,
         "peer_mesh_product_state": peer_mesh_product_state,
+        "provider_broker_loop_product_state": provider_broker_loop_product_state,
+        "provider_broker_loop_active": provider_broker_loop_product_state.get("active"),
+        "provider_broker_loop_controlled_executor": provider_broker_loop_product_state.get("controlled_executor"),
+        "provider_broker_loop_broker_execution_count": provider_broker_loop_product_state.get("broker_tool_execution_count"),
+        "provider_broker_loop_gpu0_broker_execution_count": provider_broker_loop_product_state.get("gpu0_broker_tool_execution_count"),
+        "provider_broker_loop_npu_broker_execution_count": provider_broker_loop_product_state.get("npu_broker_tool_execution_count"),
+        "provider_broker_loop_product_blockers": provider_broker_loop_product_state.get("product_pass_blockers", []),
         "peer_mesh_operational_lanes": peer_mesh_product_state.get("operational_lanes", []),
         "peer_mesh_support_lanes": peer_mesh_product_state.get("support_lanes", []),
         "peer_mesh_degraded_lanes": peer_mesh_product_state.get("degraded_lanes", []),
