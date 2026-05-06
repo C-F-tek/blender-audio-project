@@ -14,6 +14,36 @@ Full0To10 is opt-out by lane: provider/probe/workload-quality, runtime telemetry
 
 When the project gains a stable new lane, registry, validator, broker capability, provider diagnostic, evidence surface, memory/context tool, discovery/index surface or CSV/count surface, that capability becomes a candidate expansion of `tutto` and must be either wired into the full-run contract or explicitly excluded with rationale.
 
+## Main runtime architecture
+
+The primary runtime target is now documented in:
+
+```text
+MAIN_RUNTIME_ARCHITECTURE.md
+```
+
+This contract defines the target coordination model:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Interpretation:
+
+```text
+providers advise, classify, plan or respond through explicit lanes
+broker unico executor is the execution gateway for registered tools
+deterministic CPU validators remain local pass/fail authority
+telemetry/event stream makes execution, skipped phases and degradation visible
+```
+
 ## Limitation policy
 
 Architectural and operational limitations remain important because they are the backlog to overcome.
@@ -47,6 +77,7 @@ Use this flow unless a task file says otherwise:
 ../CHATGPT.md
 ../CHATGPT/README.md
 LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+MAIN_RUNTIME_ARCHITECTURE.md
 LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
 ../README.md
 ../WORKFLOW.md
@@ -62,6 +93,7 @@ LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+AI_PIPELINE_ARCHITECTURE.md
 WORKFLOW_HELPER_SCRIPTS_POLICY.md
 PROJECT_STATUS_POINT.md
 DATA_FLOW.md
@@ -73,7 +105,7 @@ nearest package/tool README
 target file
 ```
 
-`JSON_SCHEMAS.md` is intentionally not part of the primary reading flow. It is a broad schema notebook/catalog. Prefer `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` and compact current-state docs for active run-unica semantics.
+`JSON_SCHEMAS.md` is intentionally not part of the primary reading flow. It is a broad schema notebook/catalog. Prefer `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md`, `MAIN_RUNTIME_ARCHITECTURE.md` and compact current-state docs for active run-unica semantics.
 
 This documentation index is descriptive only. It must not carry executable PowerShell command blocks because task commands and launcher flags change faster than stable documentation indexes.
 
@@ -82,6 +114,7 @@ This documentation index is descriptive only. It must not carry executable Power
 | Need | File |
 |---|---|
 | Current operational bridge | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
+| Main runtime architecture | `MAIN_RUNTIME_ARCHITECTURE.md` |
 | Large Markdown policy | `LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md` |
 | Active refactor/reuse planning | `LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` |
 | Refactor/reuse run coherence note | `LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md` |
@@ -171,6 +204,7 @@ Index repair is plan/report-first unless explicitly requested.
 | Stable docs | `README.md` | Maintained source documentation. |
 | Task runbooks | `LOCAL_AI_TASKS/README.md` | Current task input, supporting detail and historical handoffs only. |
 | Current operational state | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` | Compact current state bridge for post-#187 master and active candidate PRs. |
+| Main runtime architecture | `MAIN_RUNTIME_ARCHITECTURE.md` | Shared blackboard, GPU1/GPU0/NPU lanes, broker executor, semantic registry, CPU validators and telemetry/event stream. |
 | Large Markdown policy | `LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md` | Keeps oversized Markdown out of primary operational paths. |
 | Refactor/reuse planning | `LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` | Active review-only task for helper/class/tool reuse planning. |
 | Recent telemetry state | `LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` | Recent baseline and resolved broker context. |
@@ -192,6 +226,7 @@ Index repair is plan/report-first unless explicitly requested.
 | File | Purpose |
 |---|---|
 | `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | Markdown lifecycle, pruning policy, missing-index review and add-before-prune rules. |
+| `MAIN_RUNTIME_ARCHITECTURE.md` | Primary shared runtime topology: blackboard, GPU1/GPU0/NPU lanes, broker, semantic registry, CPU validators and telemetry. |
 | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Compact launcher manifest, phase-status, visibility, Full0To10 and external-controls contract. |
 | `WORKFLOW_HELPER_SCRIPTS_POLICY.md` | Shell/GUI/debug/push-capable helper classification and guardrails. |
 | `PROJECT_STATUS_POINT.md` | Current status checkpoint and recommended tasks. |
@@ -212,7 +247,7 @@ Index repair is plan/report-first unless explicitly requested.
 
 | File | Purpose |
 |---|---|
-| `AI_PIPELINE_ARCHITECTURE.md` | Modular AI artifact pipeline map. |
+| `AI_PIPELINE_ARCHITECTURE.md` | Modular AI artifact pipeline map, subordinate to the main runtime architecture and unified launcher. |
 | `AI_PIPELINE_REFACTOR_STATUS.md` | Stable refactor status marker. |
 | `AI_ARTIFACT_SCHEMAS.md` | AI artifact schema notes. |
 | `GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | Future generated Python adapter template. |

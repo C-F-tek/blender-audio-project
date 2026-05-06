@@ -4,6 +4,31 @@
 
 active
 
+## Current review note — 2026-05-07
+
+This older plan predates the current post-PR187 Full0To10 baseline and the main runtime architecture contract.
+
+Treat it as **legacy active / schema-contract follow-up**. It remains useful for validator history, but current schema work must align with:
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+```
+
+Current architecture-target schema families:
+
+```text
+shared runtime heap / blackboard records
+broker unico executor reports
+semantic tools registry snapshots
+deterministic validators / CPU authority summaries
+telemetry/event stream summaries
+GPU1/GPU0/NPU lane status reports
+```
+
+Keep these fields additive and warning-first until current code emits stable samples.
+
 ## Current phase
 
 Phase: dry-run matrix report contract validation
@@ -82,6 +107,12 @@ medium
 
 Risk is medium because schemas can accidentally harden unstable fields or reject useful forward-compatible artifacts. Mitigate this with permissive initial checks and explicit version fields.
 
+Current additional risk:
+
+```text
+Do not harden future blackboard/broker/registry/event-stream fields before code emits real reports and samples.
+```
+
 ## Guardrails
 
 - Add schemas incrementally.
@@ -91,12 +122,13 @@ Risk is medium because schemas can accidentally harden unstable fields or reject
 - Keep validators non-destructive.
 - Keep output reports readable as both JSON and Markdown when applicable.
 - Validate report contracts without executing heavy runtime workloads.
+- Keep main-runtime architecture fields optional/warning-first until implementation exists.
 
 ## Proposed phases
 
 ### Phase 1 — inventory
 
-Status: in progress.
+Status: historically in progress.
 
 Known initial contract families:
 
@@ -109,9 +141,20 @@ music summary
 scene specification
 ```
 
+Additional current target families:
+
+```text
+blackboard state report
+broker execution report
+semantic tools registry snapshot
+runtime event stream summary
+deterministic validator authority report
+provider lane status reports
+```
+
 ### Phase 2 — contract docs
 
-Status: in progress.
+Status: historically in progress.
 
 Initial `agent_state_packet` report metadata contract:
 
@@ -160,7 +203,7 @@ Unknown future fields must be accepted.
 
 ### Phase 3 — validators
 
-Status: in progress.
+Status: historically in progress.
 
 Current validator targets:
 
@@ -198,18 +241,22 @@ check_json_artifacts.py: PASS, checked_count 82
 - 2026-04-30: Ran local TD-006 validation suite on branch `validation-dry-run-matrix-contract`; all required checks passed.
 - 2026-04-30: Verified dry-run matrix report has 6 cases: `base`, `no_auto_remediation`, `no_npu_guardrail`, `with_validation`, `with_chunks`, `with_agent_state_packet`.
 - 2026-04-30: Contract validator passed with one forward-compatibility warning for accepted extra `agent_state_packet` fields: `modified_time`, `size_bytes`.
+- 2026-05-07: Reviewed against the main runtime architecture. Future schemas should include blackboard/broker/registry/validator/telemetry surfaces only after code emits stable reports.
 
 ## Result
 
-Dry-run matrix report contract validation is completed for the current PR branch.
+Dry-run matrix report contract validation is completed for the historical PR branch.
 
 ## Follow-up
 
-After PR #30 is merged, keep future validators split by responsibility:
+After the historical PR state, keep future validators split by responsibility:
 
 ```text
 artifact/report contract validators
 generated Python policy adapters
 output-application validators
 input-domain validators
+blackboard/broker/registry/event-stream validators once implemented
 ```
+
+Manual execution-plan cleanup may later move this plan to `completed/` after explicit approval for file moves.

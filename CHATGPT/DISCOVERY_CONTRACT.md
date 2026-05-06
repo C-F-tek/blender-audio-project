@@ -22,11 +22,14 @@ Recommended read order:
 1. AGENTS.md
 2. CHATGPT.md
 3. CHATGPT/README.md
-4. latest CHATGPT/next-chat-handoff-*.md
-5. latest CHATGPT/chatgpt-session-problems-and-robust-fixes-*.md
-6. docs/LOCAL_AI_RUN_BOOTSTRAP.md
-7. README.md
-8. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+4. docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+5. docs/MAIN_RUNTIME_ARCHITECTURE.md
+6. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+7. latest CHATGPT/next-chat-handoff-*.md
+8. latest CHATGPT/chatgpt-session-problems-and-robust-fixes-*.md
+9. docs/LOCAL_AI_RUN_BOOTSTRAP.md
+10. README.md
+11. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
 ## Meaning
@@ -39,7 +42,8 @@ Recommended read order:
 - robust recovery commands;
 - local run hygiene rules;
 - patch bundle delivery preferences;
-- AI-to-AI coordination notes.
+- AI-to-AI coordination notes;
+- historical runtime evidence pointers.
 ```
 
 ## Authority level
@@ -58,6 +62,37 @@ human explicit commands
 ```
 
 When a CHATGPT note conflicts with canonical contracts, follow canonical contracts and report the conflict.
+
+Historical handoffs must not be treated as current branch state without checking:
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+GitHub branch / PR state
+```
+
+## Main runtime architecture discovery
+
+For provider, workflow, broker, validator, registry, telemetry or Full0To10 runtime work, read:
+
+```text
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+```
+
+Target topology:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+This is an architecture target and coordination contract. It does not authorize provider execution, source writes, patch application or runtime actions without explicit workflow scope.
 
 ## Local AI / context-pack inclusion rule
 

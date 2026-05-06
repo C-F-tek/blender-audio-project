@@ -4,6 +4,42 @@
 
 active
 
+## Current review note — 2026-05-07
+
+This is one of the oldest remaining execution plans under `active/`. It predates the post-PR187 Full0To10 baseline and the main runtime architecture contract.
+
+Treat it as **legacy active / blackboard-memory follow-up**. The useful current interpretation is:
+
+```text
+agent state packet -> shared runtime heap / blackboard candidate
+SQLite memory -> local/private runtime memory store, never committed
+memory policy -> blackboard retention, promotion and quarantine policy
+pipeline packet touchpoint -> report-only visibility surface
+```
+
+Read current state first:
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+```
+
+Current runtime target:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Do not wire memory into provider prompts or mutation paths without deterministic validators and telemetry/evidence reports.
+
 ## Goal
 
 Integrate the generic agent state and memory policy foundation into the real AI pipeline while keeping memory records compact, reviewed and reusable across future scenarios.
@@ -69,6 +105,12 @@ low
 
 The initial plan is non-runtime and documentation/validation focused. Risk becomes medium only when memory selection starts affecting real AI pipeline inputs.
 
+Current added risk:
+
+```text
+Do not create a second persistent-memory authority separate from the main runtime blackboard/telemetry/validator model.
+```
+
 ## Guardrails
 
 - Treat task-local state, durable memory and lane planning as separate concepts.
@@ -77,6 +119,7 @@ The initial plan is non-runtime and documentation/validation focused. Risk becom
 - Do not store large source dumps, raw chat noise or full frame-level JSON as durable memory.
 - Any Blender/audio runtime fact must be validated by smoke/manual test before becoming stable project truth.
 - Keep SQLite memory generated and untracked.
+- Keep blackboard summaries compact and report-only until validator coverage exists.
 
 ## Proposed phases
 
@@ -169,18 +212,21 @@ Important: Phase 2 is still passive. The packet is not injected into prompts and
 - Add optional, disabled-by-default packet input to a real context-building stage only after schema validation proves the report contract.
 - Validate dry-run matrix.
 - Confirm no runtime Blender behavior changes.
+- Map packet summaries into blackboard records rather than direct provider prompt mutation.
 
 ### Phase 4 — promotion policy
 
 - Define which results may be copied to durable docs.
 - Require reviewed summaries for promotion.
 - Keep project-specific facts in docs, not opaque memory.
+- Keep blackboard and telemetry summaries compact and reviewable.
 
 ## Progress log
 
 - 2026-04-29: Plan created from handoff state after agent memory foundation was added and marked `TD-010` in progress.
 - 2026-04-29: Phase 1 packet smoke completed locally. Packet generation worked with and without SQLite; memory review passed; memory policy validator passed; working tree remained clean.
 - 2026-04-29: Phase 2 passive pipeline touchpoint merged. Local validation confirmed the optional packet appears in reports and does not change planned steps or lanes.
+- 2026-05-07: Reviewed against main runtime architecture. Future memory integration should use blackboard summaries, deterministic validators and telemetry/event stream before provider prompt influence.
 
 ## Result
 
@@ -192,4 +238,13 @@ The execution plan remains active because controlled integration and promotion p
 
 ## Follow-up
 
-Next safest task: add schema/contract validation for the new `agent_state_packet` report section under the existing formal JSON schema validation plan. Do not inject the packet into prompts until this contract is validated by the dry-run matrix.
+Next safest task under the current architecture:
+
+```text
+1. add blackboard-state summary records for agent state packets;
+2. validate those summaries with report-only validators;
+3. expose memory/blackboard state in launcher evidence and telemetry;
+4. do not inject packet content into provider prompts until contract validation passes.
+```
+
+Manual execution-plan cleanup may later move this plan to `completed/` after explicit approval for file moves.

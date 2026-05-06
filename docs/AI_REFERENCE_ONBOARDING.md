@@ -35,13 +35,45 @@ telemetry accompanies evidence and patch plans for completeness
 
 Telemetry is not a replacement for validation reports, evidence or patch plans. It is the required companion that explains whether provider/tool/patch-plan lanes executed, failed, were blocked, degraded, disabled, unavailable or planned-only.
 
+## Main runtime architecture mapping
+
+External references must be adapted to this target runtime model:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Canonical local contract:
+
+```text
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+```
+
+Mapping rules:
+
+```text
+agent memory / context -> blackboard summaries and retention policy
+model/router/planner concepts -> GPU1 advisory/planner or GPU0 helper lanes
+small local inference/probe concepts -> NPU microtask responder only when validated
+function/tool calling concepts -> broker unico executor plus semantic tools registry
+schema/eval/guardrail concepts -> deterministic validators / CPU authority
+observability concepts -> telemetry/event stream and compact evidence
+```
+
+External references do not authorize direct repository mutation, provider execution, Blender runtime, FFmpeg runtime, dependency changes or secret/network work.
+
 ## Current branch phase
 
 ```text
 Baseline: master after PR #187 merge
-Current documentation PR: #193 docs(ai): align operational docs with post-PR187 code state
-Next clean report-only foundation candidate: PR #192
-Useful but diverged evidence branch: PR #191
+Current documentation PR: #196 docs(ai): add main runtime architecture contract
 Mode: GitHub-only/API when maintainer is away
 ```
 
@@ -54,13 +86,13 @@ AI agents entering the repository should use this order:
 1. read `AGENTS.md`;
 2. read `CHATGPT.md` and `CHATGPT/README.md`;
 3. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md`;
-4. read `docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md`;
-5. read `docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md`;
-6. read `README.md` and `WORKFLOW.md`;
-7. read `docs/README.md`;
-8. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md`;
-9. read `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md`;
-10. read `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` when launcher/manifest semantics are involved;
+4. read `docs/MAIN_RUNTIME_ARCHITECTURE.md`;
+5. read `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` when launcher/manifest semantics are involved;
+6. read `docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md`;
+7. read `docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md`;
+8. read `README.md`, `WORKFLOW.md` and `docs/README.md`;
+9. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md`;
+10. read `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md`;
 11. read this document;
 12. read `docs/AI_REFERENCE_SOURCE_MAP.md`;
 13. read the specific project guide matching the task:
@@ -154,6 +186,7 @@ shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
 CSV/count summaries when inventory lanes ran
 discovery/index repair reports when relevant
 file-line-limit reports when maintainability is in scope
+blackboard/broker/registry/validator/event-stream reports when implemented
 ```
 
 GitHub-only agents may rely on local/runtime facts only when those facts are committed, pasted by the maintainer or included in a PR/comment with concrete fields.
@@ -196,13 +229,15 @@ When an AI agent uses this reference layer, it should:
 10. attach telemetry/capability/final-summary context when reviewing run-unica evidence or patch plans;
 11. attach CSV/index/discovery/file-line-limit context when reviewing refactor/reuse or repository-wide inventory evidence;
 12. demote or bridge oversized Markdown instead of using it as a primary entrypoint;
-13. treat limitations as measurable backlog and keep tool lanes enabled unless current evidence blocks them.
+13. treat limitations as measurable backlog and keep tool lanes enabled unless current evidence blocks them;
+14. route new tool execution concepts through broker/registry/validator/telemetry architecture instead of ad-hoc scripts.
 
 ## Task routing
 
 | Task | Read first |
 |---|---|
-| AI artifact pipeline changes | `docs/AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md` |
+| Main runtime architecture | `docs/MAIN_RUNTIME_ARCHITECTURE.md` |
+| AI artifact pipeline changes | `docs/AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md`, then `docs/AI_PIPELINE_ARCHITECTURE.md` |
 | NPU/OpenVINO/local inference changes | `docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md` |
 | JSON validation, guardrails, evals | `docs/AI_GUARDRAILS_VALIDATION_GUIDE.md` |
 | Agent instructions or AI onboarding | `docs/AI_REFERENCE_SOURCE_MAP.md`, `docs/AI_ONBOARDING.md` and `AGENTS.md` |
@@ -221,5 +256,6 @@ Instead:
 3. map it to local files and validators;
 4. add telemetry/capability/handoff implications if it affects run-unica evidence or patch plans;
 5. add CSV/index/discovery/file-line-limit implications if it affects repository inventory or refactor/reuse flows;
-6. add a focused project rule if needed;
-7. keep the original source as an external reference.
+6. add blackboard/broker/registry/validator/telemetry implications if it affects runtime architecture;
+7. add a focused project rule if needed;
+8. keep the original source as an external reference.

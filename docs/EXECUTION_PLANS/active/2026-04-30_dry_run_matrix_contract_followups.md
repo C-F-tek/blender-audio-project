@@ -4,6 +4,33 @@
 
 active
 
+## Current review note — 2026-05-07
+
+This is an old execution plan retained under `active/` for compatibility. The work described here was validated locally on 2026-05-01 and should be treated as **legacy active / relocation-needed**, not as the current primary runtime architecture task.
+
+Do not use this plan as the current orchestration source of truth. Read first:
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+```
+
+The current runtime target is:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Keep this plan as historical evidence until a separate explicit execution-plan cleanup moves it to `completed/`.
+
 ## Goal
 
 Plan the next additive checks for `Tools/validation/check_ai_dry_run_matrix_contract.py` and stage a wider local dry-run matrix for workstation validation.
@@ -65,40 +92,14 @@ It exists only to satisfy preflight for dry-run music-summary planning. It must 
 
 ## Expanded dry-run matrix cases staged in PR #34
 
-The matrix now plans these baseline cases before any optional agent-state packet case:
+The matrix now plans baseline cases for default, validation, chunks, music-summary, smart-context, custom track stem, guardrail and NPU/GPU planning surfaces.
 
-| Case | Purpose |
-|---|---|
-| `base` | Default safe dry-run with guardrail and smart context enabled. |
-| `no_auto_remediation` | Verify planning without automatic guardrail remediation. |
-| `no_npu_guardrail` | Verify planning when NPU guardrail is disabled. |
-| `no_smart_context` | Verify planning when smart context is disabled. |
-| `no_wave_review` | Verify planning when first-wave WAV entrypoint review is disabled. |
-| `minimal_no_context_no_guardrail` | Verify the smallest no-op planning shape remains reportable. |
-| `with_validation` | Verify validate-artifacts stage planning. |
-| `validation_no_guardrail` | Verify validation planning when NPU guardrail is disabled. |
-| `with_chunks` | Verify semantic code chunk stage planning. |
-| `chunks_no_smart_context` | Verify chunk planning without smart context. |
-| `with_music_summary_planned` | Verify music intermediate stage planning with a deterministic synthetic analysis JSON. |
-| `music_no_smart_context` | Verify music intermediate planning when smart context is disabled. |
-| `smart_context_small_budget` | Verify smart-context planning with a small packet/capsule budget. |
-| `smart_context_large_budget` | Verify smart-context planning with a larger packet/capsule budget. |
-| `custom_track_stem_ascii` | Verify planning with a custom ASCII track stem. |
-| `custom_track_stem_spaces` | Verify slug/path planning with spaces in track stem. |
-| `custom_smart_task_short` | Verify planning with a short custom smart-context task. |
-| `guardrail_max_passes_zero` | Verify report planning when guardrail remediation max passes is zero. |
-| `guardrail_max_passes_one_no_auto` | Verify guardrail planning with one max pass and auto-remediation disabled. |
-| `guardrail_max_passes_four` | Verify report planning with a larger remediation pass budget. |
-| `with_npu_review_workers_1` | Verify optional NPU artifact review stage planning with one worker. |
-| `with_npu_review_workers_4` | Verify optional NPU artifact review stage planning with the recommended local worker cap. |
-| `with_npu_review_workers_8_warning` | Verify high NPU worker planning emits warnings without executing NPU workloads. |
-| `npu_review_without_guardrail` | Verify NPU review planning when NPU guardrail is disabled. |
-| `with_gpu_command_planned` | Verify optional GPU command planning without executing GPU workloads. |
-| `with_gpu_placeholder_command_planned` | Verify GPU command placeholder formatting for `{brief}` and `{output}` without execution. |
-| `validation_chunks_music` | Verify combined validation, chunk and music-summary planning. |
-| `full_planning_surface` | Verify the widest planned CPU/NPU/GPU dry-run surface without executing heavy workloads. |
-| `full_planning_no_auto_remediation` | Verify widest planned dry-run surface with guardrail auto-remediation disabled. |
-| `with_agent_state_packet` | Optional case only when a local packet exists. |
+The key invariant remains:
+
+```text
+all NPU/GPU-related cases are planned-only through --dry-run
+no provider, Blender or FFmpeg runtime is executed by this matrix
+```
 
 ## Candidate additive contract checks
 
@@ -117,6 +118,20 @@ Future checks should be introduced as warnings first unless a field is already p
 | `results[].agent_state_packet` optional object or null | warning | Optional metadata should not break older reports. | Matrix report with packet present and absent. |
 | `results[].report_path` under allowed generated-artifact destinations | delegate to path policy | Avoid duplicating path-policy logic. | Matrix report plus path-policy validator output. |
 | unknown future fields accepted | rule, not check | Preserve forward compatibility. | Not needed. |
+
+## Main runtime architecture alignment
+
+This matrix remains a dry-run/planned-evidence lane. When integrated with the main runtime architecture, it should publish or reference:
+
+```text
+planned phase schedule
+planned lane usage
+planned artifact paths
+validator outcomes
+telemetry/event-stream pointers when available
+```
+
+It must not claim real GPU1/GPU0/NPU execution unless current telemetry and provider diagnostics prove it.
 
 ## Implementation rule for later PR
 
@@ -192,4 +207,10 @@ passed=true
 Follow-up evidence:
 docs/LOCAL_VALIDATION_EVIDENCE/ai_pipeline_dry_run_matrix_evidence.json
 docs/LOCAL_VALIDATION_EVIDENCE/ai_pipeline_dry_run_matrix_evidence.md
+```
+
+## Follow-up
+
+```text
+Manual execution-plan cleanup should move this file from active/ to completed/ after explicit approval for file moves.
 ```

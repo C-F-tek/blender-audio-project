@@ -26,6 +26,29 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ```
 
+## Main runtime architecture
+
+The launcher must remain compatible with the main runtime architecture contract:
+
+```text
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+```
+
+Target runtime topology:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Current launcher code does not need to implement every runtime component at once. When a component is not yet implemented, the manifest/evidence should either omit it clearly or record it as planned/unavailable, not silently imply execution.
+
 Current compact validator note:
 
 ```text
@@ -91,6 +114,21 @@ warnings
 errors
 ```
 
+Future runtime-architecture fields should be additive, for example:
+
+```text
+blackboard_state_report
+broker_execution_report
+semantic_tools_registry_snapshot
+runtime_event_stream_summary
+deterministic_validator_authority_report
+gpu1_primary_advisory_status
+gpu0_coworker_openvino_status
+npu_microtask_responder_status
+```
+
+Do not add these fields as fake success markers. Add them only when the code can report real state, planned state, unavailable state or explicit skip state.
+
 ## Phase status contract
 
 `phase_status` must be a map keyed by phase name.
@@ -135,6 +173,19 @@ workload_quality
 legacy_full_toolbox_integrated
 patch_specs_manifest
 patch_specs_validation
+```
+
+Expected future keys for the main runtime architecture:
+
+```text
+blackboard_state
+broker_execution
+semantic_tools_registry
+deterministic_validator_authority
+runtime_event_stream
+gpu1_primary_advisory
+gpu0_coworker_openvino
+npu_microtask_responder
 ```
 
 Exact keys may grow, but missing selected-phase reports should be explicit.
@@ -193,6 +244,21 @@ evidence requested
 shared AI-to-AI bundle summary requested
 patch_application_performed=false
 ```
+
+Main runtime architecture coverage should be added progressively:
+
+```text
+shared runtime heap / blackboard state report
+GPU1 primary advisory / planner state
+GPU0 coworker/helper OpenVINO state
+NPU microtask responder state
+broker unico executor event/report surface
+semantic tools registry snapshot
+deterministic validators / CPU authority summary
+telemetry/event stream summary
+```
+
+Until the code implements those surfaces, they are architecture targets, not proof of execution.
 
 Allowed explicit disablers:
 
@@ -392,6 +458,15 @@ no FFmpeg runtime by launcher
 provider execution only when explicit
 reset deletion only with exact confirmation
 index repair/regeneration only when explicit and report-bound
+```
+
+The main runtime architecture must also preserve:
+
+```text
+broker unico executor as guardrail-enforcing execution gateway
+providers as advisory/helper/microtask lanes, not direct mutation authorities
+deterministic validators as CPU authority for pass/fail claims
+telemetry/event stream for executed, skipped and degraded phases
 ```
 
 ## Validation

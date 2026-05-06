@@ -46,7 +46,7 @@ Tools/validation/runtime_hardware_delegation_checks.py
 Repository: C-F-tek/blender-audio-project
 Default branch: master
 Merged baseline: PR #187 feat(workflow): add unified local AI refactor launcher
-Current GitHub-only documentation branch: codex/docs-post-pr187-operational-state
+Current GitHub-only documentation branch: codex/main-runtime-architecture-blackboard
 Mode for ChatGPT/cloud work: GitHub-only/API unless local access is explicitly requested
 ```
 
@@ -56,7 +56,6 @@ Mode for ChatGPT/cloud work: GitHub-only/API unless local access is explicitly r
 PR #187: merged into master; unified launcher is now baseline.
 PR #192: open and mergeable; report-only Full0To10 foundation checks.
 PR #191: open but diverged/non-mergeable; useful evidence branch, not a clean merge candidate as-is.
-PR #186/#180/#173: closed/superseded or stale relative to the post-#187 baseline.
 ```
 
 Operational interpretation:
@@ -66,6 +65,46 @@ Do not treat #187 as the current active branch anymore.
 Treat #187 as the merged baseline for launcher, Full0To10 doctrine, telemetry and compact evidence policy.
 Treat #192 as the next clean report-only foundation candidate after local/API review.
 Treat #191 as evidence to mine or regenerate with the newer bundle-completeness path, not as the preferred direct merge path.
+```
+
+## Main runtime architecture target
+
+The current target runtime architecture is documented in:
+
+```text
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+```
+
+Target topology:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Operational interpretation:
+
+```text
+providers publish observations, diagnostics, recommendations or microtask responses into shared state;
+broker unico executor is the future centralized tool execution gateway;
+semantic tools registry should become the capability source of truth;
+deterministic validators remain CPU authority for pass/fail claims;
+telemetry/event stream must expose executed, skipped, degraded and blocked phases.
+```
+
+Current state:
+
+```text
+This is a documentation-level architecture target on this branch.
+It does not claim that every component is already implemented in code.
+Existing code already has strong adjacent surfaces: unified launcher, runtime telemetry, capability manifest, broker telemetry/evidence and deterministic validators.
+Future implementation should wire missing blackboard/registry/event-stream details incrementally and report-only first.
 ```
 
 ## Launcher code contract now on master
@@ -202,6 +241,7 @@ AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
 docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
@@ -332,8 +372,10 @@ Priority order:
 ```text
 P0: keep post-#187 operational docs aligned with code on master.
 P0: review/validate PR #192 as the next clean report-only foundation layer.
+P0: use docs/MAIN_RUNTIME_ARCHITECTURE.md as the architecture target for blackboard/broker/registry/validator/telemetry work.
 P1: do not merge PR #191 as-is; rebase/regenerate/summarize its evidence after #192 or close/supersede.
 P1: reduce repository-consistency noise incrementally, focused on active docs only.
+P1: implement main runtime architecture incrementally with report-only validators and manifests first.
 P2: decide whether provider-declared runtime tool requests remain advisory-only or become broker-executed feedback.
 ```
 
