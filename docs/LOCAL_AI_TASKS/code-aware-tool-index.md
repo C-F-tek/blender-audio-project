@@ -54,13 +54,13 @@ Do not edit by hand when code changes; regenerate from the report.
 | `Tools/ai/run_megalithic_repo_review.py` | 519 | `--file-sample-limit, --include-all-code, --include-all-docs, --include-index, --include-output, --include-raw, --include-sqlite-memory, --markdown-output, --max-chars-per-file, ...` | 27 | 1 |
 | `Scripting/v61b_backgood/materials.py` | 513 | `-` | 9 | 0 |
 | `Tools/ai/build_agent_review_code_patch_plan.py` | 499 | `--code-contract-drift-report, --code-interpreter-report, --line-count-csv, --markdown-output, --output, --repo-root` | 27 | 0 |
+| `Tools/docs/build_code_aware_md_coherence.py` | 498 | `--markdown-output, --max-lines, --max-markdown-finding-rows, --output, --repo-root` | 21 | 1 |
 | `Tools/validation/ai_pipeline_report_contracts.py` | 497 | `-` | 19 | 0 |
 | `Tools/npu/npu_guardrail_service.py` | 490 | `--device, --hard-fail, --input, --max-chars, --model-dir, --output, --python-exe, --recursive, --soft-fail, --strict, --write-action-queue` | 16 | 0 |
 | `Tools/ai/refine_megalithic_review_signals.py` | 489 | `--markdown-output, --output, --proposal-output, --proposals, --review` | 22 | 0 |
 | `Tools/validation/run_agent_review_patch_plan_full_validation.py` | 487 | `--bundle-basename, --bundle-validation-output, --docs-links-output, --evidence, --evidence-output-dir, --expect-fallback, --git-timeout-seconds, --markdown-output, --min-patch-p...` | 13 | 0 |
 | `Tools/validation/run_agnostic_ai_tools_smoke_matrix.py` | 483 | `--dry-run, --include-ollama-live, --include-workflow, --markdown-output, --memory-db, --ollama-max-new-tokens, --output, --repo-root, --timeout-seconds, --work-dir` | 12 | 1 |
 | `Tools/ai/agent_memory_routing_policy.py` | 471 | `--broker-request-output, --clear-operational, --markdown-output, --memory-search-limit, --objective, --operational-query, --output, --persistent-query, --profile, --promotion-ca...` | 14 | 0 |
-| `Tools/docs/build_code_aware_md_coherence.py` | 471 | `--markdown-output, --max-lines, --max-markdown-finding-rows, --output, --repo-root` | 19 | 1 |
 | `normalize_scene_spec.py` | 469 | `-` | 14 | 0 |
 | `Tools/validation/check_reviewed_patch_specs.py` | 446 | `--manifest, --output, --repo-root, --spec` | 15 | 0 |
 | `Tools/workflow/startup_check.py` | 444 | `--json, --output, --project, --repo-root, --root, --text-output` | 15 | 1 |

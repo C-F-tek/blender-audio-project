@@ -5,24 +5,26 @@
 - Markdown scanned: `443`
 - Python scripts scanned: `582`
 - PowerShell scripts scanned: `44`
-- Finding count: `805`
-- By severity: `{"high": 261, "low": 163, "medium": 381}`
+- Finding count: `548`
+- By severity: `{"high": 58, "low": 167, "medium": 323}`
 
 ## Finding classes
 
-- `stale-or-historical`: `329`
-- `active-current`: `261`
-- `unknown`: `81`
+- `stale-or-historical`: `242`
+- `unknown`: `77`
 - `placeholder-template`: `65`
-- `historical-or-handoff`: `36`
+- `active-current`: `58`
+- `ambiguous-basename-reference`: `45`
+- `historical-or-handoff`: `20`
 - `stale-or-future`: `16`
 - `chatgpt-advisory-or-handoff`: `13`
+- `local-absolute-path`: `8`
 - `patch-bundle-template`: `2`
 - `evidence-only`: `2`
 
 ## Finding kinds
 
-- `markdown_reference_missing`: `771`
+- `markdown_reference_missing`: `514`
 - `markdown_python_command_missing_script`: `13`
 - `markdown_powershell_flag_not_in_param_block`: `8`
 - `markdown_python_flag_not_in_argparse`: `8`
@@ -41,81 +43,59 @@ Historical/evidence-only references must be demoted or described as historical, 
 |---|---|---|---|
 | markdown_reference_missing | `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` | `ools/ai/build_repository_consistency_map.py` | active-current |
 | markdown_reference_missing | `guida_git_github_blender_audio_project.md` | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/_backup_previous_elastic_touch_fix.py` | active-current |
-| markdown_reference_missing | `docs/AI_GENERATED_PACKAGE_STANDARD.md` | `config.py` | active-current |
-| markdown_reference_missing | `docs/AI_GENERATED_PACKAGE_STANDARD.md` | `encode_ffmpeg.py` | active-current |
-| markdown_reference_missing | `docs/AI_GENERATED_PACKAGE_STANDARD.md` | `main.py` | active-current |
 | markdown_reference_missing | `docs/AI_ONBOARDING.md` | `Scripting/shared/config_model.py` | active-current |
 | markdown_reference_missing | `docs/AI_ONBOARDING.md` | `Scripting/shared/diagnostics.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `artifact_contracts.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `cli.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `compat.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `defaults.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `guardrail_models.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `models.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `orchestrator.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `preflight.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `remediation.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `runner.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `scheduler.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `schema_report.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_ARCHITECTURE.md` | `steps.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `artifact_contracts.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `defaults.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `guardrail_models.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `orchestrator.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `preflight.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `remediation.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `scheduler.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `schema_report.py` | active-current |
-| markdown_reference_missing | `docs/AI_PIPELINE_OPTIMIZATION.md` | `steps.py` | active-current |
-| markdown_reference_missing | `docs/COMPATIBILITY.md` | `blender_compat.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `artifact_contracts.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `check_ai_pipeline_modules.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `cli.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `compat.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `defaults.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `guardrail_models.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `models.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `orchestrator.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `preflight.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `refactor_status.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `remediation.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `run_pipeline_dry_run_matrix.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `runner.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `scheduler.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `schema_report.py` | active-current |
-| markdown_reference_missing | `docs/DEVELOPER_GUIDE.md` | `steps.py` | active-current |
-| markdown_reference_missing | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | `build_markdown_inventory.py` | active-current |
-| markdown_reference_missing | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | `build_script_inventory.py` | active-current |
 | markdown_reference_missing | `docs/GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | `Tools/validation/check_generated_automation_script_policy.py` | active-current |
-| markdown_reference_missing | `docs/GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | `generated_python_policy.py` | active-current |
-| markdown_reference_missing | `docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | `blender_compat.py` | active-current |
 | markdown_reference_missing | `docs/MODULE_MAP.md` | `Scripting/shared/diagnostics.py` | active-current |
 | markdown_reference_missing | `docs/MODULE_MAP.md` | `Scripting/shared/panel_base.py` | active-current |
 | markdown_reference_missing | `docs/MODULE_MAP.md` | `Scripting/shared/scene_utils.py` | active-current |
 | markdown_reference_missing | `docs/MODULE_MAP.md` | `Tools/lib/scene_spec.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `blender_compat.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `config.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `encode_ffmpeg_v61b.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `encode_image_sequence_v61b.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `ffmpeg_encoder.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `hotpatch_base.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `image_sequence.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `io_utils.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `json_io.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `main_v61b.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `render_profiles.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `render_setup.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `scene_tuning_panel.py` | active-current |
-| markdown_reference_missing | `docs/MODULE_MAP.md` | `scene_utils.py` | active-current |
 | markdown_reference_missing | `docs/MODULE_MAP.md` | `spaziotempo/core/registry.py` | active-current |
-| markdown_reference_missing | `docs/PATCH_SPEC_WORKFLOW.md` | `apply_repo_mods.py` | active-current |
 | markdown_reference_missing | `docs/PROJECT_AUDIT.md` | `spaziotempo/core/registry.py` | active-current |
 | markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `Tools/lib/scene_spec.py` | active-current |
-| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `blender_compat.py` | active-current |
-| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `check_python_syntax.py` | active-current |
-| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `config.py` | active-current |
-| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `ffmpeg_encoder.py` | active-current |
-| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `image_sequence.py` | active-current |
-| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `json_io.py` | active-current |
-| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `render_profiles.py` | active-current |
+| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `spaziotempo/core/registry.py` | active-current |
+| markdown_reference_missing | `docs/REFACTORING_AND_REUSE_PLAN.md` | `src/spaziotempo_audio/scene_spec.py` | active-current |
+| markdown_reference_missing | `docs/SHARED_SCRIPTING_UTILITIES.md` | `Scripting/shared/config_model.py` | active-current |
+| markdown_reference_missing | `docs/SHARED_SCRIPTING_UTILITIES.md` | `Scripting/shared/diagnostics.py` | active-current |
+| markdown_reference_missing | `docs/SHARED_SCRIPTING_UTILITIES.md` | `Scripting/shared/hotpatch_base.py` | active-current |
+| markdown_reference_missing | `docs/SHARED_SCRIPTING_UTILITIES.md` | `Scripting/shared/panel_base.py` | active-current |
+| markdown_reference_missing | `docs/SHARED_SCRIPTING_UTILITIES.md` | `Scripting/shared/scene_registry.py` | active-current |
+| markdown_reference_missing | `docs/SHARED_SCRIPTING_UTILITIES.md` | `spaziotempo/core/registry.py` | active-current |
+| markdown_reference_missing | `Scripting/README.md` | `Scripting/shared/diagnostics.py` | active-current |
+| markdown_reference_missing | `Tools/repo_patch_runner/README.md` | `Scripting/example.py` | active-current |
+| active_markdown_over_line_budget | `Tools/validation/README.md` | `Tools/validation/README.md` | active-current |
+| markdown_reference_missing | `Tools/validation/README.md` | `alidation/check_ai_workload_report_quality.py` | active-current |
+| active_markdown_over_line_budget | `Tools/npu/npu_music_chunks/chunk_001_music_overview.md` | `Tools/npu/npu_music_chunks/chunk_001_music_overview.md` | active-current |
+| markdown_reference_missing | `Scripting/v61b/PROJECT_STRUCTURE.md` | `spaziotempo/features/water.py` | active-current |
+| markdown_reference_missing | `Scripting/v61b/README.md` | `Scripting/shared/hotpatch_base.py` | active-current |
+| markdown_reference_missing | `Scripting/v61b/README.md` | `Scripting/shared/panel_base.py` | active-current |
+| markdown_reference_missing | `indexAI/scene_scripts/new_plan_luca_vera_master_scene_bundle/README.md` | `/new_plan_luca_vera_master_scene_builder_candidate.py` | active-current |
+| markdown_reference_missing | `indexAI/scene_scripts/parameters_luca_vera_premaster_master_scene_bundle/README.md` | `/parameters_luca_vera_premaster_master_scene_builder_candidate.py` | active-current |
+| markdown_reference_missing | `indexAI/scene_scripts/phazzah_luca_vera_master_scene_bundle/README.md` | `/phazzah_luca_vera_master_scene_builder_candidate.py` | active-current |
+| markdown_reference_missing | `indexAI/scene_scripts/ready_to_jazz_luca_vera_master_scene_bundle/README.md` | `/ready_to_jazz_luca_vera_master_scene_builder_candidate.py` | active-current |
+| markdown_reference_missing | `docs/AGENT_REVIEW_CODE_PATCH_PLAN/part-001.md` | `Tools/validation/example.py` | active-current |
+| markdown_reference_missing | `docs/CODE_CONSULTATION_REPORT/part-001.md` | `Tools/validation/check_docs_paths.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/code-aware-tool-index.md` | `legacy/spaziotempo_album_visual_v3.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/code-aware-tool-index.md` | `legacy/spaziotempo_album_visual_v5.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/code-aware-tool-index.md` | `legacy/spaziotempo_asset_visual_v6.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/code-aware-tool-index.md` | `legacy/spaziotempo_asset_visual_v61.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/markdown-line-budget-policy.md` | `alidation/check_markdown_line_limits.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/md-code-coherence-current-state.md` | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/_backup_previous_elastic_touch_fix.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/md-code-coherence-current-state.md` | `Scripting/shared/config_model.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/md-code-coherence-current-state.md` | `Scripting/shared/diagnostics.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/md-code-coherence-current-state.md` | `Scripting/shared/panel_base.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/md-code-coherence-current-state.md` | `Scripting/shared/scene_utils.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/md-code-coherence-current-state.md` | `Tools/lib/scene_spec.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/md-code-coherence-current-state.md` | `Tools/validation/check_generated_automation_script_policy.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/md-code-coherence-current-state.md` | `ools/ai/build_repository_consistency_map.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/md-code-coherence-current-state.md` | `spaziotempo/core/registry.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/project-tool-registry.md` | `Tools/ai/build_python_line_count_csv.py` | active-current |
+| markdown_reference_missing | `docs/PROJECT_AI_CONSCIOUSNESS/part-001.md` | `Scripting/shared/config_model.py` | active-current |
+| markdown_reference_missing | `docs/PROJECT_AI_CONSCIOUSNESS/part-001.md` | `Scripting/shared/diagnostics.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure/part-003.md` | `scripts/validate_after_patch.ps1` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/full0to10-repo-quality/06-inputpath-normalization.md` | `Tools/a.ps1` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/full0to10-repo-quality/06-inputpath-normalization.md` | `Tools/b.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/markdown-line-budget-download-procedure/02-zip-01-tools.md` | `Dest01/run_patch_bundle.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/markdown-line-budget-download-procedure/03-zip-02-apply.md` | `Dest02/run_patch_bundle.py` | active-current |
+| markdown_reference_missing | `docs/LOCAL_AI_TASKS/markdown-line-budget-download-procedure/04-zip-03-all-in-one.md` | `Dest03/run_patch_bundle.py` | active-current |
+| markdown_reference_missing | `docs/EXECUTION_PLANS/active/2026-04-29_superseded_pr_followups.md` | `Tools/ai_core/json_utils.py` | active-current |
