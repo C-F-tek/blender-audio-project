@@ -72,20 +72,21 @@ P3 low
 | TD-026 | Large Markdown operational drift | P1 | in_progress | Some Markdown files are too large or too catalog-like to be opened reliably by future chats, local AI context packs or GitHub-only reviewers. Examples include `Tools/validation/README.md` and `docs/JSON_SCHEMAS.md`. | Oversized docs can become false primary entrypoints, hide stale commands, or force agents to rely on truncated content. | Keep oversized docs out of the primary reading path. Classify them as catalog/schema/historical/supporting/evidence, add compact bridge docs, and use Markdown inventory/length reports to find more candidates. | 2026-05-05 |
 | TD-027 | Full-toolbox limitation handling | P1 | in_progress | Historical limitation notes can be misread as reasons to skip tools or shrink Full0To10 scope. | Agents may avoid available tool lanes instead of measuring and overcoming limitations. | Use all available/relevant tools by default. Treat limitations as backlog to overcome. Mark lanes unavailable/degraded only from current code, telemetry, capability manifest, provider diagnostic or validator evidence. | 2026-05-06 |
 | TD-028 | Validation README reduction | P1 | open | `Tools/validation/README.md` remains oversized and contains long command blocks that can be truncated or corrupted by API/chat tooling. | Future agents may treat it as primary command source, copy stale commands, or miss the unified launcher as command owner. | Split or reduce it into a compact catalog under 400 lines, with detailed validator command examples moved to focused docs or generated help surfaces. | 2026-05-06 |
+| TD-029 | Effective-use memory write semantics | P2 | open | `full0to10_effective_use` creates/seeds an SQLite DB under `output/ai_runtime_memory/`, while the summary safety flags still report `persistent_memory_write_performed=false`. | Later agents may misread safety flags and miss that local output memory artifacts were written, or may confuse local ignored DB writes with source writes. | Clarify artifact fields or add a distinct `local_output_memory_write_performed` flag while preserving `source_writes_performed=false` and DB non-commit policy. | 2026-05-06 |
 
 ## Add a new item
 
 Use the next ID:
 
 ```text
-TD-029
+TD-030
 ```
 
 Template:
 
 | ID | Area | Priority | Status | Symptom | Risk | Recommended action | Last reviewed |
 |---|---|---:|---|---|---|---|---|
-| TD-029 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
+| TD-030 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
 
 ## Rules
 
