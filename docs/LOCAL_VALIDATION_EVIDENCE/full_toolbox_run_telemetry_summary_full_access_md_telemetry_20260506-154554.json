@@ -1,0 +1,647 @@
+{
+  "schema_version": 1,
+  "kind": "full_toolbox_run_telemetry_summary",
+  "generated_at": "2026-05-06T15:47:27",
+  "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "stamp": "full_access_md_telemetry_20260506-154554",
+  "passed": true,
+  "errors": [],
+  "warnings": [],
+  "provider_execution_performed": true,
+  "patch_application_performed": false,
+  "source_writes_performed": false,
+  "sqlite_write_performed": false,
+  "persistent_memory_write_performed": false,
+  "manual_review_required": true,
+  "inputs": {
+    "decision_loop": "output/ai_pipeline/full_toolbox_full_access_md_telemetry_20260506-154554_agent_review_decision_loop.json",
+    "recommendations": "output/ai_pipeline/full_toolbox_full_access_md_telemetry_20260506-154554_deterministic_recommendations.json",
+    "patch_plan": "output/patch_specs/full_toolbox_full_access_md_telemetry_20260506-154554_agent_review_patch_plan.json",
+    "repository_consistency": "output/analysis/repository_consistency_map_full_toolbox_full_access_md_telemetry_20260506-154554.json",
+    "repository_consistency_smoke": "output/validation/repository_consistency_map_smoke_full_toolbox_full_access_md_telemetry_20260506-154554.json",
+    "gpu_npu_sync": "output/analysis/gpu_npu_run_sync_full_toolbox_full_access_md_telemetry_20260506-154554.json",
+    "orchestrator": "output/ai_pipeline/full_toolbox_full_access_md_telemetry_20260506-154554_orchestrator.json",
+    "gpu_report": "output/ai_pipeline/full_toolbox_full_access_md_telemetry_20260506-154554_parallel_gpu.json"
+  },
+  "run_parameters": {
+    "budget_minutes": 30,
+    "max_rounds": 20,
+    "files_per_round": 8,
+    "max_context_files": 220,
+    "max_chars_per_file": 6000,
+    "max_new_tokens": 3600,
+    "npu_auditor_every_rounds": 3,
+    "repository_consistency_map_workers": 8
+  },
+  "workflow_summary": {
+    "passed": true,
+    "recommendation_count": 20,
+    "patch_plan_count": 20,
+    "deterministic_synthesizer_used": true,
+    "patch_plan_fallback_used": null,
+    "bundle_validation_passed": true,
+    "evidence_to_commit": [
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_memory_tool_regeneration_bundle_full_access_md_telemetry_20260506-154554.json",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_memory_tool_regeneration_bundle_full_access_md_telemetry_20260506-154554.md",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_memory_tool_regeneration_python_line_count_full_access_md_telemetry_20260506-154554.csv",
+      "docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260506-154628.csv",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_toolbox_agent_review_decision_loop_full_access_md_telemetry_20260506-154554.json",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\full_toolbox_agent_review_decision_loop_full_access_md_telemetry_20260506-154554.md",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\shared_toolbox_ai_to_ai_bundle_full_access_md_telemetry_20260506-154554.json",
+      ".\\docs\\LOCAL_VALIDATION_EVIDENCE\\shared_toolbox_ai_to_ai_bundle_full_access_md_telemetry_20260506-154554.md"
+    ]
+  },
+  "recommendations_first20": [
+    {
+      "id": "consistency_001",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_002",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_003",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_004",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_005",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_006",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_007",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_008",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_009",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_010",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_011",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_012",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_013",
+      "area": "md_python",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_042",
+      "area": "md_powershell",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_043",
+      "area": "md_powershell",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_044",
+      "area": "md_powershell",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_045",
+      "area": "md_powershell",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/AUTO_PUSH_GENERATED_ARTIFACTS.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_046",
+      "area": "md_powershell",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_047",
+      "area": "md_powershell",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_048",
+      "area": "md_powershell",
+      "risk": "medium",
+      "status": "ready_for_patch_plan",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/01-startup-params-quality-supervisor.md"
+      ],
+      "source": "repository_consistency_map",
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    }
+  ],
+  "patch_plans_first20": [
+    {
+      "id": "consistency_001",
+      "area": "md_python",
+      "target_files": [
+        "CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_002",
+      "area": "md_python",
+      "target_files": [
+        "CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_003",
+      "area": "md_python",
+      "target_files": [
+        "CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_004",
+      "area": "md_python",
+      "target_files": [
+        "CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_005",
+      "area": "md_python",
+      "target_files": [
+        "CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_006",
+      "area": "md_python",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_007",
+      "area": "md_python",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_008",
+      "area": "md_python",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_009",
+      "area": "md_python",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_010",
+      "area": "md_python",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_011",
+      "area": "md_python",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_012",
+      "area": "md_python",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_013",
+      "area": "md_python",
+      "target_files": [
+        "docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_python_command_script_missing",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_042",
+      "area": "md_powershell",
+      "target_files": [
+        "AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_043",
+      "area": "md_powershell",
+      "target_files": [
+        "AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_044",
+      "area": "md_powershell",
+      "target_files": [
+        "CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_045",
+      "area": "md_powershell",
+      "target_files": [
+        "docs/AUTO_PUSH_GENERATED_ARTIFACTS.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_046",
+      "area": "md_powershell",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_047",
+      "area": "md_powershell",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    },
+    {
+      "id": "consistency_048",
+      "area": "md_powershell",
+      "target_files": [
+        "docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/01-startup-params-quality-supervisor.md"
+      ],
+      "manual_review_required": true,
+      "cosmetic_patch_allowed": false,
+      "repository_consistency_kind": "md_mentions_missing_powershell_path",
+      "repository_consistency_severity": "high"
+    }
+  ],
+  "repository_consistency": {
+    "finding_count": 10107,
+    "severity_counts": {
+      "high": 2566,
+      "low": 46,
+      "medium": 7495
+    },
+    "finding_kind_counts": {
+      "documented_python_script_without_obvious_smoke": 46,
+      "md_cli_arg_not_in_argparse": 2,
+      "md_mentions_missing_markdown_path": 7493,
+      "md_mentions_missing_powershell_path": 226,
+      "md_mentions_missing_python_path": 2299,
+      "md_python_command_script_missing": 41
+    },
+    "performance": {
+      "workers_requested": 8,
+      "markdown_scan_workers": 8,
+      "python_scan_workers": 8,
+      "file_discovery_seconds": 1.909,
+      "path_index_seconds": 1.216,
+      "markdown_scan_seconds": 40.907,
+      "python_inventory_seconds": 2.511,
+      "findings_build_seconds": 0.031,
+      "report_assembly_seconds": 0.0,
+      "total_build_report_seconds": 46.573
+    },
+    "smoke_passed": true,
+    "smoke_mapper_report_reused": true,
+    "smoke_elapsed_seconds": 0.034
+  },
+  "gpu_npu": {
+    "sync_metrics": {
+      "gpu_round_count": 0,
+      "npu_audit_count": 0,
+      "npu_audit_success_count": 0,
+      "npu_audit_round_coverage": 0.0,
+      "avg_gpu_round_seconds": 0.0,
+      "p50_gpu_round_seconds": 0.0,
+      "p90_gpu_round_seconds": 0.0,
+      "avg_npu_audit_seconds": 0.0,
+      "p50_npu_audit_seconds": 0.0,
+      "p90_npu_audit_seconds": 0.0,
+      "npu_to_gpu_avg_duration_ratio": 0.0,
+      "gpu_elapsed_seconds": 2.01,
+      "provider_execution_performed": true,
+      "patch_application_performed": false,
+      "source_writes_performed": false,
+      "gpu_metrics_source": "unavailable"
+    },
+    "performance": {
+      "analyzer_elapsed_seconds": 0.0,
+      "gpu": {
+        "elapsed_seconds": 2.01,
+        "round_count": 0,
+        "round_duration_source": "unavailable",
+        "round_duration_sample_count": 0,
+        "avg_round_seconds": 0.0,
+        "p50_round_seconds": 0.0,
+        "p90_round_seconds": 0.0,
+        "max_round_seconds": 0.0,
+        "round_durations_total_seconds": 0.0,
+        "provider_empty_response_count": 0,
+        "schema_repair_retry_attempt_count": 0,
+        "schema_repair_retry_accept_count": 0,
+        "runtime_tool_counters": {
+          "runtime_tool_request_count": 0,
+          "runtime_tool_execution_count": 0,
+          "runtime_tool_failed_count": 0,
+          "runtime_tool_blocked_count": 0,
+          "runtime_tool_provider_request_count": 0,
+          "runtime_tool_provider_request_execution_count": 0,
+          "deterministic_runtime_tool_fallback_request_count": 0,
+          "deterministic_runtime_tool_fallback_execution_count": 0
+        },
+        "embedded_performance": {}
+      },
+      "npu": {
+        "audit_count": 0,
+        "audit_requested_count": 0,
+        "audit_success_count": 0,
+        "duration_sample_count": 0,
+        "avg_audit_seconds": 0.0,
+        "p50_audit_seconds": 0.0,
+        "p90_audit_seconds": 0.0,
+        "max_audit_seconds": 0.0,
+        "audit_durations_total_seconds": 0.0,
+        "status_counts": {},
+        "classification_counts": {},
+        "lane_diagnostics": {}
+      },
+      "sync": {
+        "npu_to_gpu_avg_duration_ratio": 0.0,
+        "npu_audit_round_coverage": 0.0,
+        "gpu_metrics_source": "unavailable"
+      },
+      "guardrails": {
+        "report_only": true,
+        "provider_execution_performed": false,
+        "patch_application_performed": false,
+        "source_writes_performed": false,
+        "blender_runtime_execution_performed": false,
+        "sqlite_write_performed": false
+      }
+    },
+    "operational_opinions": [
+      "Audit coverage is intentionally sparse; this is acceptable only if findings are high-signal and evidence-backed.",
+      "GPU round timing is not sourced from rounds[*].elapsed_seconds; keep diagnostics degraded until real samples are present."
+    ],
+    "refactoring_suggestions": [
+      {
+        "priority": "high",
+        "area": "gpu_runner_timing",
+        "recommendation": "Use rounds[*].elapsed_seconds as the primary GPU round timing source.",
+        "evidence": "gpu_metrics_source=unavailable",
+        "guardrail": "report_only_no_provider_setting_change"
+      }
+    ]
+  },
+  "guardrails": {
+    "report_only": true,
+    "committable_location": "docs/LOCAL_VALIDATION_EVIDENCE",
+    "raw_output_commit_allowed": false,
+    "provider_execution_performed": true,
+    "patch_application_performed": false,
+    "source_writes_performed": false,
+    "sqlite_write_performed": false,
+    "persistent_memory_write_performed": false
+  }
+}
