@@ -24,6 +24,8 @@ Full0To10 = TUTTO SU TUTTO
 quick/balanced/deep/custom = intensity, not scope
 NPU helper validation != full-run proof
 NPU smoke success != NPU advisory promotion
+400-line policy applies to maintained docs and source files
+limitations are backlog to overcome, not reasons to skip available tools
 telemetry accompanies evidence and patch plans for completeness
 ```
 
@@ -36,9 +38,10 @@ unified launcher manifest
 phase_status / phase_reports
 provider diagnostics
 runtime tool usage telemetry when tools execute
-runtime capability manifest when capabilities matter
+runtime/hardware capability manifest when capabilities matter
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
+file-line-limit report when maintainability is in scope
 ```
 
 ## Current scope
@@ -75,6 +78,7 @@ Ready To Jazz migration
 full analysis JSON mutation
 hand-edited generated indexes
 provider behavior changes
+source files over 400 lines without split/refactor plan
 ```
 
 ## Module map
@@ -117,6 +121,22 @@ provider failure/degradation/exclusion must be visible in telemetry/bundle when 
 broad validation belongs to the unified launcher
 ```
 
+## 400-line policy
+
+Maintained NPU helper docs and source files follow the hard 400-line rule.
+
+```text
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+```
+
+Validator:
+
+```text
+Tools/validation/check_file_line_limits.py
+```
+
 ## Validation ownership
 
 Broad validation route:
@@ -153,6 +173,7 @@ NPU validator/report contract consistency
 runtime-output manifest/reporting as additive observability
 provider result report cataloging without implicit provider execution
 telemetry/bundle visibility for any promoted provider result report
+file-line impact review before runtime wiring or large helper refactors
 ```
 
 Still future work:
@@ -174,6 +195,7 @@ Every runtime bridge phase that contributes to full-run evidence must also decla
 
 ```text
 docs/LOCAL_AI_TASKS/forgotten-scripts-documentation-audit.md
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md
 docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md
