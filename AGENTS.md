@@ -97,6 +97,37 @@ Do not infer runtime bundle contents from file existence alone. Evidence files a
 
 The earlier broker telemetry gap is resolved/historical unless a new regression is found. Use `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` and newer telemetry evidence for the recent baseline.
 
+## 400-line policy for docs and code
+
+Hard limit for maintained files:
+
+```text
+Markdown: <= 400 lines per active .md file
+Python/PowerShell/scripts/source code: <= 400 lines per maintained source file
+```
+
+For Markdown over 400 lines:
+
+```text
+Keep the original file as a compact index.
+Create a sibling folder named exactly like the file, including .md: <file>.md/.
+Move detailed content into <file>.md/part-001.md, part-002.md, ...
+Keep each part under 400 lines.
+```
+
+For code over 400 lines:
+
+```text
+Keep the public entrypoint/wrapper compact.
+Move implementation into a same-purpose package or module folder.
+Split by responsibility, not by arbitrary line number only.
+Keep each module/file under 400 lines.
+Preserve CLI/API compatibility unless the task explicitly allows breaking changes.
+Report resulting line count for every created or modified code/script file.
+```
+
+Existing files already over 400 lines are technical debt. Do not split them blindly during unrelated documentation work; refactor them progressively when touching that area for a code task.
+
 ## ChatGPT operational memory
 
 `CHATGPT/` is a lightweight operational-memory surface for long ChatGPT-assisted repository sessions.
