@@ -1,143 +1,119 @@
 # AI Tools
 
-Additive tools for AI-assisted artifact production.
+`Tools/ai/` contains report-oriented tools for IA-Carmine local AI orchestration, context building, provider diagnostics, deterministic recommendations, telemetry, evidence and AI-to-AI handoff.
 
-These tools do not replace Blender runtime packages and do not modify raw analysis JSON files.
+This README is a technical catalog. It is not the primary command source.
 
-## Commands
+Broad local-AI execution starts from:
 
-Build compact music artifacts:
-
-```powershell
-py .\Tools\ai\build_music_intermediates.py --analysis-json .\output\track_analysis.json --output-dir .\output\ai_pipeline
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-Build semantic chunks:
+## Current doctrine
 
-```powershell
-py .\Tools\npu\build_semantic_code_chunks.py --repo-root .
+```text
+Full0To10 = TUTTO SU TUTTO
+quick/balanced/deep/custom = intensity, not scope
+provider/probe/workload-quality lanes are opt-out in Full0To10
+CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
+400-line policy applies to maintained docs and source files
+limitations are backlog to overcome, not reasons to skip available tools
+patch application is explicit and separate
 ```
 
-Select focused semantic chunks for a task:
+## Package map
 
-```powershell
-py .\Tools\ai\select_semantic_code_chunks.py `
-  --repo-root . `
-  --query "workflow adapter local ai full context enrichment selected chunks sqlite memory provider multistep proposals validators" `
-  --path-boost Tools/workflow `
-  --path-boost Tools/ai `
-  --path-boost Tools/validation `
-  --output .\output\ai_context_packs\selected_chunks_focus.json `
-  --markdown-output .\output\ai_context_packs\selected_chunks_focus.md
+| Area | Role |
+|---|---|
+| `pipeline/` | Modular AI artifact pipeline implementation behind `run_parallel_artifact_pipeline.py`. |
+| `full0to10_hardware_capability/` | Full0To10 hardware/capability visibility package. |
+| `full_run_bundle_zip/` | Full-run evidence ZIP support in candidate foundation work. |
+| `runtime_hardware_capability/` | Runtime hardware capability support in candidate foundation work. |
+
+## Core tool groups
+
+| Tool family | Examples | Notes |
+|---|---|---|
+| Context and chunks | `build_ai_context_pack.py`, `select_semantic_code_chunks.py` | Provider-free context evidence. |
+| Agent state and memory | `build_agent_state_packet.py`, `review_agent_memory.py`, `agent_runtime_sqlite_memory.py` | SQLite outputs are local/private and must not be committed. |
+| Provider diagnostics | `run_local_provider_probe.py`, `check_local_resource_lanes.py`, `analyze_gpu_npu_run_sync.py` | Provider state must flow to telemetry/bundle when used in Full0To10 handoff. |
+| Workload routing | `build_workload_quality_lane_routing.py` | Keeps unusable provider output out of advisory context. |
+| Deterministic recommendations | `build_deterministic_recommendations.py` | Supports degraded-provider recovery without hallucinated provider success. |
+| Patch planning/spec support | `build_agent_review_patch_plan.py`, `build_patch_specs_from_proposals.py`, `promote_patch_spec_draft.py` | Review-only unless explicit apply is authorized separately. |
+| Runtime broker/telemetry | `agent_runtime_tool_broker.py`, `build_runtime_tool_usage_telemetry.py` | Records executed/failed/blocked tool calls. |
+| Capability and telemetry summary | capability manifest packages/builders, `build_full_toolbox_run_telemetry_summary.py` | Handoff context for available tools/hardware lanes and run state. |
+| Production bundle | `build_shared_toolbox_ai_to_ai_bundle.py` | AI-to-AI evidence/telemetry/patch-plan handoff. |
+| Evidence bundles | `build_github_evidence_bundle.py`, full-run bundle ZIP tools | Compact GitHub evidence only; raw `output/**` stays ignored. |
+
+## Full-run handoff rule
+
+A recommendation, patch plan or patch spec produced from run-unica evidence is incomplete unless the handoff includes:
+
+```text
+launcher manifest
+phase_status / phase_reports
+runtime tool usage telemetry
+runtime/hardware capability manifest
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+CSV/index/discovery/file-line evidence when relevant
 ```
 
-Build a bounded context pack:
-
-```powershell
-py .\Tools\ai\build_ai_context_pack.py `
-  --repo-root . `
-  --profile core_ai_backend `
-  --basename project_self_improvement_context_pack `
-  --evidence-basename project_self_improvement_context_pack_evidence
-```
-
-Build a generic agent state packet:
-
-```powershell
-py .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan Blender/audio app smoke tests" --include-file .\docs\AI_SMART_POLICY.md --include-file .\docs\LOCAL_AI_WORKFLOW.md
-```
-
-Use optional SQLite persistent memory:
-
-```powershell
-py .\Tools\ai\build_agent_state_packet.py --repo-root . --objective "Plan Blender/audio app smoke tests" --memory-db .\indexAI\agent_memory\agent_memory.sqlite --save-inputs-to-memory-db --memory-note "Keep NPU guardrails non-blocking."
-```
-
-Review memory retention and promotion candidates:
-
-```powershell
-py .\Tools\ai\review_agent_memory.py --repo-root .
-```
-
-Build a report-only selective execution plan:
-
-```powershell
-py .\Tools\ai\build_selective_execution_plan.py `
-  --repo-root . `
-  --output .\output\ai_pipeline\selective_execution_plan.json `
-  --markdown-output .\output\ai_pipeline\selective_execution_plan.md
-```
-
-Build deterministic full-context golden proposal families:
-
-```powershell
-py .\Tools\ai\build_full_context_golden_proposals.py `
-  --repo-root . `
-  --source-report .\output\local_ai_runs\<run>\pipeline\full_context_golden_local_ai_context_proposals.json `
-  --output .\output\ai_pipeline\full_context_golden_proposals.json `
-  --markdown-output .\output\ai_pipeline\full_context_golden_proposals.md
-```
-
-Build an app-agnostic local AI enrichment plan:
-
-```powershell
-py .\Tools\ai\build_local_ai_enrichment_plan.py --repo-root . --output .\output\ai_pipeline\local_ai_enrichment_plan.json --markdown-output .\output\ai_pipeline\local_ai_enrichment_plan.md
-```
-
-Build NPU knowledge-broker context-oracle packet:
-
-```powershell
-py .\Tools\npu\build_npu_knowledge_broker_packet.py --repo-root . --output .\output\ai_pipeline\npu_knowledge_broker_packet.json --markdown-output .\output\ai_pipeline\npu_knowledge_broker_packet.md
-```
-
-Build agent review evidence sufficiency and patch plans:
-
-```powershell
-py .\Tools\ai\build_agent_review_evidence_sufficiency.py --repo-root . --output .\output\ai_pipeline\agent_review_evidence_sufficiency.json --markdown-output .\output\ai_pipeline\agent_review_evidence_sufficiency.md
-py .\Tools\ai\build_agent_review_patch_plan.py --repo-root . --output .\output\patch_specs\agent_review_patch_plan.json --markdown-output .\output\patch_specs\agent_review_patch_plan.md
-```
-
-Run the safe orchestrator:
-
-```powershell
-py .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate
-```
+File existence alone is not proof of successful execution.
 
 ## Device strategy
 
-- CPU: parsing, JSON generation, validation, orchestration.
-- GPU/Ollama: primary advisory lane only when explicitly requested and quality-gated.
-- NPU/OpenVINO: probe, guardrail, decode diagnostic and possible future lightweight context-preparation helper.
-- External GPU commands: optional explicit heavy generator path, never implicit.
-
-## Current self-improvement loop
-
-The current local AI workbench can now build a bounded, reviewable loop:
-
 ```text
-Markdown task
-  -> semantic chunks
-  -> selected semantic chunks
-  -> context pack
-  -> agent state packet
-  -> enrichment plan
-  -> adapter manifest
-  -> NPU knowledge-broker packet
-  -> explicit multistep GPU/NPU evidence
-  -> repository proposals
-  -> agent review evidence sufficiency
-  -> documentation patch plans
-  -> full-context golden proposal families
-  -> evidence bundles with patch-plan and artifact-manifest summaries
-  -> manual-review-only patch-spec candidates
+CPU: parsing, JSON generation, validation, orchestration.
+GPU/Ollama: primary advisory lane when available and quality-gated.
+NPU/OpenVINO: probe, guardrail and decode diagnostic unless future quality promotion changes the contract.
+External GPU commands: explicit heavy generator path only, never implicit.
 ```
 
-All tools in this folder are expected to remain report-only or explicit-run. They must not apply patches, edit Blender runtime files, edit full analysis JSON files or execute providers implicitly.
+## Safety policy
 
-## Agent state packets
+Tools in this folder should remain report-only or explicit-run by default.
 
-`build_agent_state_packet.py` creates a generic JSON/Markdown packet for app or agent use. It combines included files, persistent JSONL or SQLite memory records and recent CLI notes, then emits planned microtasks for CPU, NPU, GPU and validation lanes.
+They must not silently:
 
-The tool is non-invasive: it does not run Blender, model inference, FFmpeg, GPU work or NPU work. It only writes packet artifacts under the selected output folder.
+```text
+apply patches
+queue patch specs
+edit Blender runtime files
+edit full analysis JSON files
+commit output/**
+commit SQLite DB files
+execute providers outside selected provider/full-run lanes
+run Blender, FFmpeg, audio playback or media generation
+```
 
-`review_agent_memory.py` applies retention, quarantine and promotion-candidate policy. It never deletes memory and never promotes records into documentation automatically.
+## 400-line policy
+
+Maintained tools and docs must stay under 400 lines.
+
+```text
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+```
+
+Validator:
+
+```text
+Tools/validation/check_file_line_limits.py
+```
+
+## Related docs
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+docs/AI_PIPELINE_ARCHITECTURE.md
+docs/AI_PIPELINE_REFACTOR_STATUS.md
+docs/DATA_FLOW.md
+docs/MODULE_MAP.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+```
