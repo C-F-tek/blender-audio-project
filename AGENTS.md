@@ -9,10 +9,11 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 1. read `AGENTS.md`;
 2. read `CHATGPT.md` and `CHATGPT/README.md` when resuming ChatGPT-assisted, local-AI, full-toolbox or handoff-driven work;
 3. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for the current code/state bridge when present;
-4. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
-5. follow hard guardrails unless the human explicitly approves a normally restricted action;
-6. report task/request conflicts before modifying files;
-7. inspect the target source/document before proposing a patch.
+4. read `docs/MAIN_RUNTIME_ARCHITECTURE.md` when working on runtime, provider, broker, validator, telemetry or workflow architecture;
+5. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
+6. follow hard guardrails unless the human explicitly approves a normally restricted action;
+7. report task/request conflicts before modifying files;
+8. inspect the target source/document before proposing a patch.
 
 ## Repository identity
 
@@ -21,9 +22,10 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 | Working title | `IA-Carmine Local AI Orchestration Workbench` |
 | Repository | `C-F-tek/blender-audio-project` |
 | Main language | Python |
-| Active architecture | Local AI orchestration, validation, provider routing, guardrail/evidence workflows |
-| Primary provider lane | `Ollama -> GPU/CUDA -> primary advisory` |
-| Secondary provider lane | `OpenVINO -> NPU -> probe / guardrail / decode diagnostic` |
+| Active architecture | Shared runtime heap / blackboard, provider-lane orchestration, broker execution, semantic tools registry, deterministic CPU validators, telemetry/evidence workflows |
+| Primary provider lane | `GPU1 -> primary advisory / planner` |
+| Secondary provider lane | `GPU0 -> coworker/helper OpenVINO` |
+| Microtask provider lane | `NPU -> microtask responder / probe / guardrail / decode diagnostic` |
 | Legacy domain | Blender audio-reactive scene automation |
 
 The repository name is historical. Do not infer that Blender/audio is the current architectural boundary.
@@ -35,6 +37,7 @@ AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
 CHATGPT/next-chat-handoff-*.md           # when present and relevant
 CHATGPT/chatgpt-session-problems-and-robust-fixes-*.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md          # local checkout only
@@ -49,6 +52,8 @@ docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+docs/AI_PIPELINE_ARCHITECTURE.md
 docs/PROJECT_STATUS_POINT.md
 docs/DATA_FLOW.md
 docs/LOCAL_AI_WORKFLOW.md
@@ -69,6 +74,7 @@ Current compact operational state lives in:
 
 ```text
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
 docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 ```
@@ -89,6 +95,7 @@ Historical PR handoffs and old master-branch runbooks are not active entrypoints
 Baseline: master after PR #187 merge
 Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
 Docs bridge: docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+Main runtime architecture: docs/MAIN_RUNTIME_ARCHITECTURE.md
 Next candidate: PR #192 feat(ai): add full0to10 report-only foundation checks
 Mode: review-only until explicit human instruction
 ```
@@ -96,6 +103,33 @@ Mode: review-only until explicit human instruction
 Do not infer runtime bundle contents from file existence alone. Evidence files and ZIP bundles must be validated through telemetry, manifest and completeness reports.
 
 The earlier broker telemetry gap is resolved/historical unless a new regression is found. Use `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` and newer telemetry evidence for the recent baseline.
+
+## Main runtime architecture target
+
+The primary runtime target is:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Operational meaning:
+
+```text
+provider lanes advise, help, classify or respond through explicit roles;
+broker unico executor is the execution gateway for registered tools;
+semantic tools registry is the capability source of truth;
+deterministic validators on CPU remain local pass/fail authority;
+telemetry/event stream records executed, skipped, degraded and blocked phases.
+```
+
+Architecture targets do not authorize source writes, provider execution, patch application, Blender runtime, FFmpeg runtime, commit, push, merge or delete by themselves.
 
 ## 400-line policy for docs and code
 
@@ -153,8 +187,9 @@ Keep CHATGPT notes small, plain Markdown and useful to local context pack builde
 ## Current provider posture
 
 ```text
-Ollama/GPU is the primary advisory lane for Full0To10 unless explicitly disabled or diagnosed unavailable.
-NPU/OpenVINO is a validated smoke/probe/diagnostic lane for Full0To10 unless explicitly disabled or diagnosed unavailable.
+GPU1 is the target primary advisory/planner lane for Full0To10 when available and explicitly selected by workflow state.
+GPU0/OpenVINO is the target coworker/helper lane, not the deterministic authority and not a silent replacement for GPU1.
+NPU/OpenVINO is a validated smoke/probe/diagnostic/microtask lane for Full0To10 unless explicitly disabled or diagnosed unavailable.
 Provider execution is explicit when Full0To10 or a provider mode/flag is selected; it is not an extra per-lane opt-in.
 Visible provider degradation can be acceptable when quality-gated and recovered in telemetry/bundle evidence.
 Blender runtime is frozen unless explicitly scoped.
@@ -169,7 +204,7 @@ Expected by default:
 ```text
 pipeline adapter ufficiale eseguito
 packet/proposals generati
-Ollama advisory usato or explicitly diagnosed as degraded
+primary advisory used or explicitly diagnosed as degraded
 patch specs creati e validati
 primary provider routing completo or explicit recovered provider diagnostic
 workload quality routing presente
@@ -180,6 +215,17 @@ SQLite memory IN/OUT presente quando non disabilitata
 quality gate registrato nel manifest
 runtime broker report produced and absorbed into telemetry
 patch_application_performed=false
+```
+
+As the main runtime architecture lands, Full0To10 should progressively expose:
+
+```text
+blackboard state report
+broker unico executor report
+semantic tools registry snapshot
+deterministic validators / CPU authority summary
+telemetry/event stream summary
+GPU1/GPU0/NPU lane status reports
 ```
 
 Disablers must be explicit:
@@ -222,6 +268,7 @@ manifest/report records unavailable-tool or provider failure
 | `Tools/npu/pipeline/` | App-agnostic helper package for provider/report/path/prompt contracts. |
 | `Tools/validation/` | Non-invasive validators and inventory builders. |
 | `docs/` | Stable documentation contracts and project state. |
+| `docs/MAIN_RUNTIME_ARCHITECTURE.md` | Main runtime topology and blackboard/broker/registry/validator/telemetry contract. |
 | `docs/LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable summaries of ignored local reports. |
 | `docs/EXECUTION_PLANS/` | Durable task records. |
 | `Scripting/` | Blender application-domain packages. Frozen for core/backend work. |
@@ -292,6 +339,7 @@ keep path/JSON/provider/evidence logic app-agnostic when practical
 keep generated indexes out of source-level refactors
 keep artistic scene behavior separate from infrastructure refactors
 do not migrate Blender packages broadly unless explicitly scoped
+when implementing the main runtime architecture, centralize execution through broker/registry/validator/telemetry surfaces instead of duplicating per-runner logic
 ```
 
 ## Reporting contract
