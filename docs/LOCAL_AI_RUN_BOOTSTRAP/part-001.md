@@ -46,6 +46,7 @@ auto-discovery
 index repair
 CSV count
 line count
+file line limit
 function/class/method inventory
 ```
 
@@ -66,6 +67,7 @@ Current stable supporting docs:
 ```text
 FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
 docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
@@ -73,7 +75,8 @@ docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
-docs/LOCAL_AI_TASKS/next-chat-unified-launcher-external-controls.md
+docs/KNOWN_LIMITATIONS.md
+docs/TECH_DEBT_TRACKER.md
 ```
 
 No other local-AI runner is an active first entrypoint. Supporting wrappers may be called by the launcher, but they must not be used as separate operator paths unless a future PR explicitly promotes them into the launcher manifest/phase contract.
@@ -81,15 +84,16 @@ No other local-AI runner is an active first entrypoint. Supporting wrappers may 
 ## Current active branch phase
 
 ```text
-Branch: codex/unified-local-ai-refactor-launcher
-PR: #187 feat(workflow): add unified local AI refactor launcher
-Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-Run: 20260505-143844
-Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
-Mode: review-only until explicit human instruction
+Baseline: master after PR #187 merge
+Current documentation PR: #193 docs(ai): align operational docs with post-PR187 code state
+Next clean report-only foundation candidate: PR #192
+Useful but diverged evidence branch: PR #191
+Mode: GitHub-only/API when maintainer is away; local validation only when explicitly requested
 ```
 
-The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Inspect the bundle before selecting any refactor/reuse patch.
+PR #187 is not the active branch anymore. It is the merged launcher baseline.
+
+Do not infer runtime bundle contents from file existence alone. Inspect manifest, telemetry, capability, provider diagnostics, workload quality, patch-plan and final-summary fields.
 
 ## Run unica rule
 
@@ -100,6 +104,8 @@ run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 quick/balanced/deep/custom = presets or operator parameters
 -No* flags = explicit opt-out from selected lanes
+400-line policy applies to maintained docs and source files
+limitations are backlog to overcome, not reasons to skip available tools
 ```
 
 `quick`, `balanced`, `deep` and `custom` change budgets, limits, rounds, context, tokens, wait times and other execution parameters. They do not create smaller semantic scopes and must not remove lanes silently.
@@ -130,12 +136,13 @@ semantic chunks
 selected chunk evidence
 patch-spec generation
 runtime broker telemetry
-runtime capability manifest
+runtime/hardware capability manifest
 telemetry summary
 project-tool promotion evidence
 auto-discovery and index-drift evidence
 index repair planning/reporting
 CSV/count surfaces
+file-line-limit surfaces
 reset cleanup
 legacy full-toolbox integrated behavior
 ```
@@ -159,9 +166,9 @@ They are implementation lanes, historical material or scoped helpers behind the 
 
 Every run unica with `-Full0To10` is **TUTTO SU TUTTO**.
 
-`Full0To10` is opt-out by lane, not opt-in per capability. Once `-Full0To10` is selected, the default assumption is that provider/probe/workload-quality, telemetry, discovery, index and CSV/count lanes are included. If the operator does not want a lane, the operator must disable it explicitly with `-No*` flags or a documented exclusion.
+`Full0To10` is opt-out by lane, not opt-in per capability. Once `-Full0To10` is selected, the default assumption is that provider/probe/workload-quality, telemetry, discovery, index, CSV/count and file-line-limit lanes are included when relevant. If the operator does not want a lane, the operator must disable it explicitly with `-No*` flags or a documented exclusion.
 
-The perimeter of `tutto` can expand. When a new stable validator, broker tool, provider diagnostic, memory/context surface, project-tool registry, repository-consistency check, telemetry surface, discovery/index surface, CSV/count surface or evidence builder is promoted, it must be added to the run unica full-run contract or explicitly excluded with rationale.
+The perimeter of `tutto` can expand. When a new stable validator, broker tool, provider diagnostic, memory/context surface, project-tool registry, repository-consistency check, telemetry surface, discovery/index surface, CSV/count surface, file-line-limit surface or evidence builder is promoted, it must be added to the run unica full-run contract or explicitly excluded with rationale.
 
 ## Current operating chain
 
@@ -169,7 +176,7 @@ The perimeter of `tutto` can expand. When a new stable validator, broker tool, p
 unified launcher command from unified-local-ai-refactor-launcher.md
   -> manifest-first run visibility
   -> inventories / reports / context packs / memory packet
-  -> discovery, index-drift and CSV/count evidence when relevant
+  -> discovery, index-drift, CSV/count and file-line-limit evidence when relevant
   -> workload quality routing for Full0To10/provider lanes
   -> official pipeline adapter when selected
   -> Ollama advisory / primary provider lane unless disabled or diagnosed unavailable
@@ -177,7 +184,7 @@ unified launcher command from unified-local-ai-refactor-launcher.md
   -> deterministic recommendations
   -> review-only patch specs / patch bundles
   -> runtime broker report and telemetry
-  -> runtime tool capability manifest
+  -> runtime/hardware capability manifest
   -> full toolbox telemetry summary
   -> shared production AI-to-AI bundle
   -> explicit apply only after review
@@ -219,6 +226,8 @@ triggering audio/media output during AI/tooling runs
 inferring run success from file existence instead of telemetry
 silently dropping a full-run lane that should be opt-out
 mistaking quick/balanced/deep/custom for separate scopes instead of parameters
+using historical limitation notes to skip available tools
+creating new maintained docs/source files over 400 lines
 ```
 
 ## Visibility-first rule
@@ -234,7 +243,7 @@ phase_status / phase_reports
 runtime tool telemetry and capability manifest
 full toolbox telemetry summary
 production AI-to-AI bundle
-compact Markdown or CSV/count summaries
+compact Markdown, CSV/count or file-line-limit summaries
 detailed evidence only when needed
 ```
 
@@ -250,7 +259,7 @@ The next AI must inspect:
 
 ```text
 runtime_tool_usage_telemetry_<STAMP>.json/md
-runtime_tool_capability_manifest_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md or runtime_hardware_capability_manifest_<STAMP>.json/md
 full_toolbox_run_telemetry_summary_<STAMP>.json/md
 shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
 shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
@@ -288,6 +297,7 @@ Markdown inventory JSON/MD
 script inventory JSON/CSV/MD
 function/class/method inventory CSV
 Python line-count CSV/MD
+file-line-limit JSON/MD
 semantic chunk manifest JSON/MD
 selected chunk evidence JSON/MD
 repository consistency map/smoke JSON/MD
@@ -298,23 +308,31 @@ index repair plan/report when generated indexes are stale or missing
 Policy:
 
 ```text
-CSV/count outputs are evidence surfaces, not source authority.
+CSV/count/file-line-limit outputs are evidence surfaces, not source authority.
 Generated indexes and code chunks are not hand-maintained source.
 Do not commit output/**.
 Do not commit indexAI/code_chunks/**.
 Index repair is plan/report-first unless explicitly requested.
 ```
 
-## Length policy for local-run docs and evidence
+## 400-line policy for local-run docs and source
+
+Maintained documentation and source files must stay under 400 lines.
 
 ```text
-Active operator runbook: prefer ~500 lines or less.
-Maintained source docs: prefer ~700 lines or less.
-Generated compact evidence: prefer ~1200 lines or less.
-Large evidence/historical bundles: allowed only when indexed and never as first entrypoint.
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
 ```
 
-Long Markdown files must be classified by the Markdown inventory and either summarized, split, marked historical/evidence or kept out of the primary reading path.
+Validator:
+
+```text
+Tools/validation/check_file_line_limits.py
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+```
+
+Long historical/evidence files may exist only when indexed and kept out of the primary reading path.
 
 ## Hybrid master-AI / local-pipeline model
 
