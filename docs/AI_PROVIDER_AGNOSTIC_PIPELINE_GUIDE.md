@@ -26,7 +26,7 @@ run-unica launcher
   -> normalized provider diagnostics
   -> validated artifact/evidence
   -> runtime telemetry and capability context
-  -> discovery/index/CSV-count context when repository visibility is involved
+  -> discovery/index/CSV-count/file-line context when repository visibility or maintainability is involved
   -> shared AI-to-AI bundle / patch-plan handoff
   -> downstream application workflow when explicitly scoped
 ```
@@ -52,8 +52,9 @@ run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 quick/balanced/deep/custom = presets or operator parameters, not scope
 -No* flags = explicit opt-out from selected lanes
-CSV/index/discovery surfaces are evidence lanes when relevant
-large Markdown must not be a primary operational entrypoint
+CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
+400-line policy applies to maintained docs and source files
+limitations are backlog to overcome, not reasons to skip available tools
 ```
 
 When provider output influences run-unica evidence, recommendations, patch plans or patch specs, the handoff must preserve provider state through telemetry/capability/bundle surfaces:
@@ -67,10 +68,11 @@ deterministic_recovery_used
 workload_quality_routing_ok
 quality_gate_passed
 runtime tool usage telemetry when tools execute
-runtime capability manifest when tool capability matters
+runtime/hardware capability manifest when capability matters
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 CSV/count summaries when inventory lanes ran
+file-line-limit report when maintainability is in scope
 discovery/index repair reports when relevant
 ```
 
@@ -87,6 +89,7 @@ Telemetry is the completeness accessory. It does not replace provider artifacts 
 | `Tools/ai/build_workload_quality_lane_routing.py` | Quality-based advisory routing. |
 | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Provider/broker/GPU/NPU/patch-plan telemetry summary. |
 | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production AI-to-AI handoff bundle. |
+| `Tools/validation/check_file_line_limits.py` | Report-only 400-line policy evidence for maintained docs/source files. |
 | `Tools/validation/` | Non-invasive validation layer for generated outputs and package structure. |
 | `docs/AI_PIPELINE_ARCHITECTURE.md` | Current architecture map. |
 | `docs/AI_PIPELINE_REFACTOR_STATUS.md` | Current status marker. |
@@ -104,7 +107,7 @@ The orchestration layer should decide:
 - which validator must run;
 - how failures are reported;
 - how provider/telemetry state is surfaced into the launcher manifest and bundle;
-- how discovery/index/CSV-count state is surfaced when repository visibility is involved.
+- how discovery/index/CSV-count/file-line state is surfaced when repository visibility or maintainability is involved.
 
 It should not contain provider-specific inference code.
 
@@ -134,7 +137,7 @@ Expected artifact properties:
 - target files, if patch-related;
 - safe write plan, if file generation is involved;
 - provider/telemetry companion references when derived from a run-unica execution;
-- discovery/index/CSV-count companion references when derived from repository-wide evidence.
+- discovery/index/CSV-count/file-line companion references when derived from repository-wide evidence or maintainability evidence.
 
 ## Recommended pipeline stages
 
@@ -147,12 +150,13 @@ Expected artifact properties:
 6. parse JSON or structured text
 7. validate schema
 8. validate repository paths
-9. validate Blender compatibility when explicitly scoped
-10. write artifact to safe output location
-11. generate report
-12. attach telemetry/capability context when part of run-unica handoff
-13. attach CSV/index/discovery context when repository visibility is part of the evidence
-14. update status only after validation succeeds
+9. validate file-line impact when maintainability is in scope
+10. validate Blender compatibility when explicitly scoped
+11. write artifact to safe output location
+12. generate report
+13. attach telemetry/capability context when part of run-unica handoff
+14. attach CSV/index/discovery/file-line context when repository visibility or maintainability is part of the evidence
+15. update status only after validation succeeds
 ```
 
 ## Provider fallback rule
@@ -182,7 +186,8 @@ Fallback providers are allowed only when the report clearly states that fallback
 - Keep Blender runtime execution separate from artifact planning.
 - Keep NPU helper package provider-free until a validated migration phase wires it into runtime execution.
 - Keep telemetry and capability context separate from provider implementation but attached to run-unica handoff.
-- Keep discovery/index/CSV-count context separate from provider implementation but attached when repository visibility affects recommendations or patch plans.
+- Keep discovery/index/CSV-count/file-line context separate from provider implementation but attached when repository visibility or maintainability affects recommendations or patch plans.
+- Keep maintained source files under 400 lines through compact entrypoints and responsibility-based modules.
 
 ## Good local pattern
 
@@ -193,10 +198,11 @@ StageConfig
   -> ArtifactNormalizer
   -> SchemaValidator
   -> RepositoryPathValidator
+  -> FileLineImpactReport when relevant
   -> ArtifactWriter
   -> ValidationReport
   -> Telemetry/Capability companion when used in run-unica evidence
-  -> Discovery/CSV/Index companion when repository visibility is part of the evidence
+  -> Discovery/CSV/Index/File-line companion when repository visibility or maintainability is part of the evidence
 ```
 
 ## Bad local pattern
@@ -209,7 +215,8 @@ single script
   -> no schema validation
   -> no report
   -> no telemetry/capability context for downstream patch plan
-  -> no discovery/index/CSV context for repository-wide recommendations
+  -> no discovery/index/CSV/file-line context for repository-wide recommendations
+  -> maintained source grows beyond 400 lines without split/refactor plan
 ```
 
 ## Acceptance criteria for new pipeline modules
@@ -223,8 +230,9 @@ A new pipeline module is acceptable only if it:
 - reports errors structurally;
 - integrates with existing validators where possible;
 - is documented in the relevant README or docs file;
+- remains under 400 lines or is split by responsibility;
 - exposes manifest/report/telemetry/bundle visibility when promoted into the run-unica perimeter;
-- exposes discovery/index/CSV-count visibility when it affects repository-wide inventory or refactor/reuse planning.
+- exposes discovery/index/CSV-count/file-line visibility when it affects repository-wide inventory, maintainability or refactor/reuse planning.
 
 ## Validation ownership
 
@@ -248,7 +256,7 @@ When converting an existing script into reusable pipeline logic:
 6. run focused validation;
 7. update docs and status markers;
 8. add telemetry/capability/bundle references if the module enters run-unica evidence;
-9. add discovery/index/CSV references if the module affects repository-wide visibility;
+9. add discovery/index/CSV/file-line references if the module affects repository-wide visibility or maintainability;
 10. only then consider wiring the new module into runtime flow.
 
 Do not claim run-unica Full0To10 success from provider-agnostic dry-runs alone.
