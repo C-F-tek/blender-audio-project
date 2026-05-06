@@ -1,17 +1,23 @@
 <!-- IA-CARMINE-MD-SPLIT: index -->
-# README
+# Local AI Tasks
 
-Questo documento è stato diviso automaticamente per rispettare il budget di righe Markdown.
+This document is split to keep Markdown reviewable and compatible with AI context builders.
 
-- File originale: `docs/LOCAL_AI_TASKS/README.md`
-- Limite massimo configurato: `400` righe
-- Indice completo: [`README/README.md`](README/README.md)
+- Original file: `docs/LOCAL_AI_TASKS/README.md`
+- Active Markdown hard threshold: `500` lines
+- Preferred active runbook size: `400` lines
+- Full index: [`README/README.md`](README/README.md)
 
-## Parti
+## Parts
 
 - [`README/part-001.md`](README/part-001.md)
 - [`README/part-002.md`](README/part-002.md)
 
-## Nota operativa
+## Current canonical additions
 
-Mantenere questo file come entrypoint stabile per non rompere i riferimenti esistenti.
+- [`gpu-peer-exchange-operational-principle.md`](gpu-peer-exchange-operational-principle.md)
+- [`md-coherence-only-github-pass-2026-05-06.md`](md-coherence-only-github-pass-2026-05-06.md)
+
+## Operational note
+
+Keep this file as the stable entrypoint so existing references do not break.
