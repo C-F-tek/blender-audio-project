@@ -152,6 +152,16 @@ Next candidate: PR #192 report-only Full0To10 foundation checks
 Mode: review-only until explicit human instruction
 ```
 
+## 400-line rule
+
+Maintained documentation and source files must stay within 400 lines.
+
+```text
+Markdown >400 lines: keep original file as index and move content into <file>.md/part-001.md, part-002.md, ...
+Code/script >400 lines: keep entrypoint compact and move implementation into a same-purpose package/module folder split by responsibility.
+Existing over-400-line files are technical debt and should be refactored progressively when touched for relevant work.
+```
+
 ## Operating rules
 
 Do not infer project state from the repository name. Current core/backend work must not:
