@@ -386,7 +386,24 @@ full0to10_provider_acceptance
 OpenVINO GPU0 provider/final workload evidence
 ```
 
-## Result classification
+## GPU0 companion worker principle
+
+GPU0 is not a passive accelerator, smoke target or final evidence-only lane.
+
+In IA-Carmine production workflows, GPU0 must be treated as a peer/companion worker:
+
+```text
+GPU1 / Ollama = primary planner
+GPU0 / OpenVINO = companion worker
+NPU = auditor / reviewer
+runtime tool broker = controlled tool execution layer
+```
+
+The GPU0 companion worker can receive bounded task packets, produce compact JSON/Markdown evidence, request tools through the runtime broker contract, and feed its report back into GPU1/Ollama and NPU audit lanes as `--report-file` context.
+
+A capability is not production-integrated when GPU0 only performs preflight, isolated smoke, or final workload evidence. For Full0To10 acceptance, GPU0 companion evidence must be visible through workflow reports, provider gates, runtime telemetry, bundle/handoff surfaces, or an explicit degraded/unavailable classification.
+
+This principle applies to provider, advisory, audit, broker, memory, evidence and patch-plan lanes.\n\n## Result classification
 
 Use these labels consistently:
 

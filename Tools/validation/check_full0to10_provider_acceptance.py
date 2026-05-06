@@ -12,16 +12,17 @@ def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
-def resolve(repo_root: Path, value: str | None) -> Path | None:
+def resolve(repo_root: Path, value: str | None, stamp: str = "") -> Path | None:
     if not value:
         return None
-    path = Path(value)
+    raw = str(value).format(stamp=stamp)
+    path = Path(raw)
     if not path.is_absolute():
         path = repo_root / path
     return path.resolve()
 
 
-def rel(path: Path | None, repo_root: Path) -> str:
+def rel(repo_root: Path, path: Path | None) -> str:
     if path is None:
         return ""
     try:
@@ -37,7 +38,7 @@ def load_json(path: Path | None) -> tuple[dict[str, Any] | None, str]:
         return None, "missing"
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return None, f"invalid_json:{type(exc).__name__}: {exc}"
     if not isinstance(data, dict):
         return None, "json_not_object"
@@ -50,76 +51,121 @@ def read_text(path: Path | None) -> str:
     return path.read_text(encoding="utf-8-sig", errors="replace")
 
 
-def evidence_item(name: str, path: Path | None, repo_root: Path) -> dict[str, Any]:
+def add_unique(items: list[str], value: str) -> None:
+    if value and value not in items:
+        items.append(value)
+
+
+def evidence_item(repo_root: Path, name: str, path: Path | None) -> dict[str, Any]:
     data, error = load_json(path)
     item: dict[str, Any] = {
         "name": name,
-        "path": rel(path, repo_root),
+        "path": rel(repo_root, path),
         "exists": bool(path and path.exists()),
         "passed": None,
         "error": error,
     }
     if data is not None:
-        item["passed"] = data.get("passed")
-        item["kind"] = data.get("kind")
-        item["provider_execution_performed"] = data.get("provider_execution_performed")
-        item["production_support"] = data.get("production_support")
-        item["selected_device"] = data.get("selected_device")
-        item["iterations"] = data.get("iterations")
-        item["min_seconds"] = data.get("min_seconds")
-        item["elapsed_seconds"] = data.get("elapsed_seconds")
-        item["classifications"] = data.get("classifications")
-        item["errors"] = data.get("errors")
-        item["warnings"] = data.get("warnings")
+        for key in (
+            "schema_version",
+            "kind",
+            "passed",
+            "provider_execution_performed",
+            "production_support",
+            "production_role",
+            "semantic_execution_mode",
+            "selected_device",
+            "iterations",
+            "min_seconds",
+            "elapsed_seconds",
+            "classifications",
+            "errors",
+            "warnings",
+            "companion_task_count",
+            "tool_request_count",
+            "gpu0_workload_passed",
+        ):
+            if key in data:
+                item[key] = data.get(key)
     return item
 
 
-def add_unique(values: list[str], value: str) -> None:
-    if value and value not in values:
-        values.append(value)
-
-
-def classify_gpu0_support(data: dict[str, Any] | None, error: str, classifications: list[str], errors: list[str], *, label: str) -> None:
+def classify_gpu0_provider_support(data: dict[str, Any] | None, error: str, classifications: list[str], errors: list[str], warnings: list[str]) -> None:
     if data is None:
         add_unique(classifications, "gpu0_support_lane_not_integrated")
-        errors.append(f"gpu0_{label}_missing_or_unreadable: {error}")
+        errors.append(f"gpu0_provider_support_missing_or_unreadable: {error}")
         return
     if data.get("passed") is not True:
         add_unique(classifications, "gpu0_support_lane_not_integrated")
-        errors.append(f"gpu0_{label}_not_passed")
+        errors.append("gpu0_provider_support_not_passed")
     if data.get("selected_device") != "GPU.0":
         add_unique(classifications, "gpu0_support_lane_not_integrated")
-        errors.append(f"gpu0_{label}_selected_device_not_gpu0: {data.get('selected_device')!r}")
-    if data.get("openvino_gpu0_workload_performed") is not True:
-        add_unique(classifications, "gpu0_sustained_workload_not_performed")
-        errors.append(f"gpu0_{label}_workload_not_performed")
-    if data.get("openvino_gpu0_workload_passed") is not True:
-        add_unique(classifications, "gpu0_sustained_workload_not_performed")
-        errors.append(f"gpu0_{label}_workload_not_passed")
-
-
-def classify_gpu0_provider_support(data: dict[str, Any] | None, error: str, classifications: list[str], errors: list[str], warnings: list[str]) -> None:
-    classify_gpu0_support(data, error, classifications, errors, label="provider_support")
-    if data is None:
-        return
+        errors.append(f"gpu0_provider_support_selected_device_not_gpu0: {data.get('selected_device')!r}")
     if data.get("production_support") is not True:
         add_unique(classifications, "gpu0_support_lane_not_integrated")
         errors.append("gpu0_provider_support_missing_production_support_true")
-    iterations = data.get("iterations")
-    min_seconds = data.get("min_seconds")
-    elapsed = data.get("elapsed_seconds")
-    if iterations is None:
+    if data.get("openvino_gpu0_workload_performed") is not True:
+        add_unique(classifications, "gpu0_sustained_workload_not_performed")
+        errors.append("gpu0_provider_support_workload_not_performed")
+    if data.get("openvino_gpu0_workload_passed") is not True:
+        add_unique(classifications, "gpu0_sustained_workload_not_performed")
+        errors.append("gpu0_provider_support_workload_not_passed")
+    if data.get("iterations") is None:
         add_unique(classifications, "gpu0_sustained_workload_not_performed")
         errors.append("gpu0_provider_support_missing_iterations")
-    if min_seconds is None:
+    if data.get("min_seconds") is None:
         add_unique(classifications, "gpu0_sustained_workload_not_performed")
         errors.append("gpu0_provider_support_missing_min_seconds")
+    elapsed = data.get("elapsed_seconds")
+    min_seconds = data.get("min_seconds")
     try:
-        if min_seconds is not None and elapsed is not None and float(elapsed) + 0.0001 < float(min_seconds):
+        if elapsed is not None and min_seconds is not None and float(elapsed) + 0.0001 < float(min_seconds):
             add_unique(classifications, "gpu0_sustained_workload_not_performed")
             errors.append(f"gpu0_provider_support_elapsed_lt_min_seconds: elapsed={elapsed} min_seconds={min_seconds}")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         warnings.append(f"could_not_compare_gpu0_elapsed_seconds: {type(exc).__name__}: {exc}")
+
+
+def classify_gpu0_final_workload(data: dict[str, Any] | None, error: str, classifications: list[str], errors: list[str], warnings: list[str], *, required: bool) -> None:
+    if data is None:
+        msg = f"gpu0_final_workload_not_available_at_gate_time: {error}"
+        if required:
+            add_unique(classifications, "gpu0_final_workload_missing")
+            errors.append(msg)
+        else:
+            warnings.append(msg)
+        return
+    if data.get("passed") is not True:
+        add_unique(classifications, "gpu0_final_workload_failed")
+        errors.append("gpu0_final_workload_not_passed")
+    if data.get("selected_device") != "GPU.0":
+        add_unique(classifications, "gpu0_final_workload_failed")
+        errors.append(f"gpu0_final_workload_selected_device_not_gpu0: {data.get('selected_device')!r}")
+
+
+def classify_gpu0_companion(data: dict[str, Any] | None, error: str, classifications: list[str], errors: list[str]) -> None:
+    if data is None:
+        add_unique(classifications, "gpu0_companion_lane_not_integrated")
+        errors.append(f"gpu0_companion_lane_missing_or_unreadable: {error}")
+        return
+    if data.get("kind") != "gpu0_companion_worker_lane":
+        add_unique(classifications, "gpu0_companion_lane_not_integrated")
+        errors.append("gpu0_companion_invalid_kind")
+    if data.get("passed") is not True:
+        add_unique(classifications, "gpu0_companion_lane_failed")
+        errors.append("gpu0_companion_report_not_passed")
+    if data.get("production_role") != "companion_worker":
+        add_unique(classifications, "gpu0_companion_lane_not_integrated")
+        errors.append("gpu0_companion_role_not_companion_worker")
+    if int(data.get("companion_task_count") or 0) <= 0:
+        add_unique(classifications, "gpu0_companion_lane_not_integrated")
+        errors.append("gpu0_companion_no_tasks")
+    if int(data.get("tool_request_count") or 0) <= 0:
+        add_unique(classifications, "gpu0_companion_lane_not_integrated")
+        errors.append("gpu0_companion_no_tool_requests")
+    if data.get("gpu0_workload_passed") is not True:
+        add_unique(classifications, "gpu0_companion_lane_failed")
+        errors.append("gpu0_companion_workload_not_passed")
 
 
 def classify_evidence_sufficiency(data: dict[str, Any] | None, error: str, classifications: list[str], errors: list[str]) -> None:
@@ -155,12 +201,15 @@ def classify_primary_provider_text(text: str, classifications: list[str], errors
 
 
 def render_markdown(report: dict[str, Any]) -> str:
-    lines = ["# Full0To10 Provider Acceptance Gate", ""]
-    lines.append(f"- Passed: `{report['passed']}`")
-    lines.append(f"- Stamp: `{report['stamp']}`")
-    lines.append(f"- Classifications: `{report['classifications']}`")
-    lines.append("")
-    lines.append("## Errors")
+    lines = [
+        "# Full0To10 Provider Acceptance Gate",
+        "",
+        f"- Passed: `{report['passed']}`",
+        f"- Stamp: `{report['stamp']}`",
+        f"- Classifications: `{report['classifications']}`",
+        "",
+        "## Errors",
+    ]
     lines.extend([f"- {item}" for item in report.get("errors") or []] or ["- none"])
     lines.append("")
     lines.append("## Warnings")
@@ -179,25 +228,29 @@ def main() -> int:
     parser.add_argument("--stamp", required=True)
     parser.add_argument("--gpu0-provider-support", default="")
     parser.add_argument("--gpu0-final-workload", default="")
+    parser.add_argument("--gpu0-companion-lane", default="output/validation/gpu0_companion_task_lane_{stamp}.json")
     parser.add_argument("--evidence-sufficiency", default="output/ai_pipeline/agent_review_evidence_sufficiency.json")
     parser.add_argument("--repository-suggestions-md", default="output/ai_pipeline/repository_update_suggestions.md")
     parser.add_argument("--workload-quality", default="output/validation/ai_workload_quality_lane_routing.json")
+    parser.add_argument("--require-final-workload", action="store_true")
     parser.add_argument("--output", default="")
     parser.add_argument("--markdown-output", default="")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    output = resolve(repo_root, args.output or f"output/validation/full0to10_provider_acceptance_{args.stamp}.json")
-    markdown_output = resolve(repo_root, args.markdown_output or f"output/validation/full0to10_provider_acceptance_{args.stamp}.md")
+    output = resolve(repo_root, args.output or f"output/validation/full0to10_provider_acceptance_{args.stamp}.json", args.stamp)
+    markdown_output = resolve(repo_root, args.markdown_output or f"output/validation/full0to10_provider_acceptance_{args.stamp}.md", args.stamp)
 
-    gpu0_provider_path = resolve(repo_root, args.gpu0_provider_support or f"output/validation/openvino_gpu0_provider_support_{args.stamp}.json")
-    gpu0_final_path = resolve(repo_root, args.gpu0_final_workload or f"output/validation/openvino_gpu0_workload_{args.stamp}.json")
-    evidence_path = resolve(repo_root, args.evidence_sufficiency)
-    suggestions_md_path = resolve(repo_root, args.repository_suggestions_md)
-    workload_quality_path = resolve(repo_root, args.workload_quality)
+    gpu0_provider_path = resolve(repo_root, args.gpu0_provider_support or f"output/validation/openvino_gpu0_provider_support_{args.stamp}.json", args.stamp)
+    gpu0_final_path = resolve(repo_root, args.gpu0_final_workload or f"output/validation/openvino_gpu0_workload_{args.stamp}.json", args.stamp)
+    gpu0_companion_path = resolve(repo_root, args.gpu0_companion_lane, args.stamp)
+    evidence_path = resolve(repo_root, args.evidence_sufficiency, args.stamp)
+    suggestions_md_path = resolve(repo_root, args.repository_suggestions_md, args.stamp)
+    workload_quality_path = resolve(repo_root, args.workload_quality, args.stamp)
 
     gpu0_provider, gpu0_provider_error = load_json(gpu0_provider_path)
     gpu0_final, gpu0_final_error = load_json(gpu0_final_path)
+    gpu0_companion, gpu0_companion_error = load_json(gpu0_companion_path)
     evidence_sufficiency, evidence_error = load_json(evidence_path)
     workload_quality, workload_error = load_json(workload_quality_path)
     suggestions_text = read_text(suggestions_md_path)
@@ -207,14 +260,8 @@ def main() -> int:
     warnings: list[str] = []
 
     classify_gpu0_provider_support(gpu0_provider, gpu0_provider_error, classifications, errors, warnings)
-
-    # Final workload is checked when present. Missing final workload is a warning for early gate invocations,
-    # because the late gate overwrites the same report after the final workload is produced.
-    if gpu0_final is not None:
-        classify_gpu0_support(gpu0_final, gpu0_final_error, classifications, errors, label="final_workload")
-    else:
-        warnings.append(f"gpu0_final_workload_not_available_at_gate_time: {rel(gpu0_final_path, repo_root)} ({gpu0_final_error})")
-
+    classify_gpu0_final_workload(gpu0_final, gpu0_final_error, classifications, errors, warnings, required=bool(args.require_final_workload))
+    classify_gpu0_companion(gpu0_companion, gpu0_companion_error, classifications, errors)
     classify_evidence_sufficiency(evidence_sufficiency, evidence_error, classifications, errors)
     classify_primary_provider_text(suggestions_text, classifications, errors, warnings)
 
@@ -224,8 +271,16 @@ def main() -> int:
         add_unique(classifications, "provider_lane_degraded")
         errors.append("workload_quality_failed")
 
+    evidence = [
+        evidence_item(repo_root, "gpu0_provider_support", gpu0_provider_path),
+        evidence_item(repo_root, "gpu0_final_workload", gpu0_final_path),
+        evidence_item(repo_root, "gpu0_companion_lane", gpu0_companion_path),
+        evidence_item(repo_root, "evidence_sufficiency", evidence_path),
+        evidence_item(repo_root, "workload_quality", workload_quality_path),
+    ]
+
     report = {
-        "schema_version": 2,
+        "schema_version": 4,
         "kind": "full0to10_provider_acceptance_gate",
         "generated_at": now_iso(),
         "stamp": args.stamp,
@@ -234,19 +289,16 @@ def main() -> int:
         "classifications": classifications,
         "errors": errors,
         "warnings": warnings,
-        "evidence": [
-            evidence_item("gpu0_provider_support", gpu0_provider_path, repo_root),
-            evidence_item("gpu0_final_workload", gpu0_final_path, repo_root),
-            evidence_item("evidence_sufficiency", evidence_path, repo_root),
-            evidence_item("workload_quality", workload_quality_path, repo_root),
-        ],
-        "primary_advisory_markdown": rel(suggestions_md_path, repo_root),
+        "evidence": evidence,
+        "primary_advisory_markdown": rel(repo_root, suggestions_md_path),
         "provider_execution_performed": bool(gpu0_provider and gpu0_provider.get("provider_execution_performed") is True),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "guardrails": {
             "report_only": True,
             "acceptance_requires_empty_classifications": True,
+            "gpu0_peer_worker_required": True,
+            "companion_evidence_required": True,
         },
     }
 
@@ -256,7 +308,7 @@ def main() -> int:
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown_output.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({"passed": report["passed"], "classifications": classifications, "output": str(output), "markdown": str(markdown_output)}, indent=2, ensure_ascii=False))
+    print(json.dumps({"passed": report["passed"], "classifications": classifications, "evidence_names": [item["name"] for item in evidence], "output": str(output), "markdown": str(markdown_output)}, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2
 
 

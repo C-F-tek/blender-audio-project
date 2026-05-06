@@ -302,6 +302,11 @@ $GpuNpuSyncJson = ".\output\analysis\gpu_npu_run_sync_full_toolbox_$Stamp.json"
 $GpuNpuSyncMd = ".\output\analysis\gpu_npu_run_sync_full_toolbox_$Stamp.md"
 $ProviderEvidenceContractJson = ".\output\validation\provider_evidence_contract_full_toolbox_$Stamp.json"
 $ProviderEvidenceContractMd = ".\output\validation\provider_evidence_contract_full_toolbox_$Stamp.md"
+$Gpu0CompanionJson = ".\output\validation\gpu0_companion_task_lane_$Stamp.json"
+$Gpu0CompanionMd = ".\output\validation\gpu0_companion_task_lane_$Stamp.md"
+$Gpu0CompanionToolRequestsJson = ".\output\validation\gpu0_companion_tool_requests_$Stamp.json"
+$Gpu0CompanionContractJson = ".\output\validation\gpu0_companion_contract_$Stamp.json"
+$Gpu0CompanionContractMd = ".\output\validation\gpu0_companion_contract_$Stamp.md"
 
 $RecommendationsJson = ".\output\ai_pipeline\full_toolbox_${Stamp}_deterministic_recommendations.json"
 $RecommendationsMd = ".\output\ai_pipeline\full_toolbox_${Stamp}_deterministic_recommendations.md"
@@ -487,6 +492,29 @@ Invoke-RepoPython -Label "Agent review evidence sufficiency" -ArgsList @(
     "--markdown-output", $EvidenceMd
 )
 
+Invoke-RepoPython -Label "GPU0 companion worker task lane" -ArgsList @(
+    ".\Tools\ai\build_gpu0_companion_task_lane.py",
+    "--repo-root", ".",
+    "--stamp", $Stamp,
+    "--output", $Gpu0CompanionJson,
+    "--markdown-output", $Gpu0CompanionMd,
+    "--tool-requests-output", $Gpu0CompanionToolRequestsJson,
+    "--source-report", $Evidence,
+    "--source-report", $RepositoryConsistencyJson,
+    "--source-report", $RepositoryConsistencySmokeJson,
+    "--source-report", $CodeInterpreterJson,
+    "--source-report", $LineCountJson,
+    "--source-report", $PythonSyntaxJson,
+    "--source-report", $NpuEnvJson
+)
+
+Invoke-RepoPython -Label "GPU0 companion worker contract" -ArgsList @(
+    ".\Tools\validation\check_gpu0_companion_contract.py",
+    "--report", $Gpu0CompanionJson,
+    "--output", $Gpu0CompanionContractJson,
+    "--markdown-output", $Gpu0CompanionContractMd
+)
+
 if ($RunGpuNpuProvider) {
     Invoke-RepoPython -Label "GPU primary advisory + NPU auditor orchestrator" -ArgsList @(
         ".\Tools\ai\run_agent_gpu_npu_parallel_orchestrator.py",
@@ -514,6 +542,8 @@ if ($RunGpuNpuProvider) {
         "--report-file", $DeterministicSmokeJson,
         "--report-file", $DecisionLoopSmokeJson,
         "--report-file", $NpuEnvJson,
+        "--report-file", $Gpu0CompanionJson,
+        "--report-file", $Gpu0CompanionContractJson,
         "--report-file", $MemoryWorkflow,
         "--context-root", "docs",
         "--context-root", "Tools\ai",
@@ -605,6 +635,8 @@ $ToolReports = @(
     $GpuReplayJson,
     $GpuNpuSyncJson,
     $ProviderEvidenceContractJson,
+    $Gpu0CompanionJson,
+    $Gpu0CompanionContractJson,
     $MemoryWorkflow
 ) | Where-Object { Test-Path $_ }
 

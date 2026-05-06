@@ -1261,12 +1261,14 @@ if ($Full0To10) {
     $ProviderAcceptanceMd = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.md" -f $DataStamp)
     $Gpu0ProviderSupportJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
     $Gpu0FinalWorkloadJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $DataStamp)
+    $Gpu0CompanionJsonForGate = Join-Path $OutputDir ("validation/gpu0_companion_task_lane_{0}.json" -f $DataStamp)
     $ProviderGateOk = Invoke-Checked "Full0To10 provider acceptance gate" {
         & $ResolvedPythonExe .\Tools\validation\check_full0to10_provider_acceptance.py `
             --repo-root . `
             --stamp $DataStamp `
             --gpu0-provider-support $Gpu0ProviderSupportJsonForGate `
             --gpu0-final-workload $Gpu0FinalWorkloadJsonForGate `
+            --gpu0-companion-lane $Gpu0CompanionJsonForGate `
             --output $ProviderAcceptanceJson `
             --markdown-output $ProviderAcceptanceMd
     } -SoftFail
@@ -1297,12 +1299,14 @@ if ($Full0To10) {
     $ProviderAcceptanceMd = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.md" -f $DataStamp)
     $Gpu0ProviderSupportJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
     $Gpu0FinalWorkloadJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $DataStamp)
+    $Gpu0CompanionJsonForGate = Join-Path $OutputDir ("validation/gpu0_companion_task_lane_{0}.json" -f $DataStamp)
     $ProviderLateGateOk = Invoke-Checked "Full0To10 provider acceptance gate after final GPU0 workload" {
         & $ResolvedPythonExe .\Tools\validation\check_full0to10_provider_acceptance.py `
             --repo-root . `
             --stamp $DataStamp `
             --gpu0-provider-support $Gpu0ProviderSupportJsonForGate `
             --gpu0-final-workload $Gpu0FinalWorkloadJsonForGate `
+            --gpu0-companion-lane $Gpu0CompanionJsonForGate `
             --output $ProviderAcceptanceJson `
             --markdown-output $ProviderAcceptanceMd
     } -SoftFail
