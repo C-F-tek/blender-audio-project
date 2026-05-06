@@ -4,7 +4,7 @@
 
 This document describes the current data movement across `IA-Carmine Local AI Orchestration Workbench`.
 
-The project still contains Blender/audio-reactive workflows, but the active architectural flow is now app-agnostic local AI orchestration: run-unica parameters, reports, provider lanes, quality gates, probes, advisory packets, runtime broker telemetry, capability manifests, discovery/index/CSV evidence and compact GitHub evidence.
+The project still contains Blender/audio-reactive workflows, but the active architectural flow is now app-agnostic local AI orchestration: run-unica parameters, reports, provider lanes, quality gates, probes, advisory packets, runtime broker telemetry, capability manifests, discovery/index/CSV/file-line-limit evidence and compact GitHub evidence.
 
 ## Current core AI orchestration flow
 
@@ -15,6 +15,7 @@ unified launcher command
   -> local source/docs/context
   -> Markdown and script inventories
   -> CSV/count evidence surfaces
+  -> file-line-limit evidence surface
   -> auto-discovery and index-drift reports when relevant
   -> semantic code chunks and selected focused chunks when useful
   -> task-scoped AI context pack when useful
@@ -30,7 +31,7 @@ unified launcher command
   -> explicit replacement plan and reviewed dry-run spec
   -> runtime broker report
   -> runtime tool usage telemetry
-  -> runtime tool capability manifest
+  -> runtime/hardware capability manifest
   -> full toolbox run telemetry summary
   -> compact evidence bundle under docs/LOCAL_VALIDATION_EVIDENCE/
   -> shared production AI-to-AI bundle
@@ -55,13 +56,15 @@ run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 quick/balanced/deep/custom = presets or operator parameters
 -No* flags = explicit opt-out from selected lanes
+400-line policy applies to maintained docs and source files
+limitations are backlog to overcome, not reasons to skip available tools
 ```
 
 `-Full0To10` data flow is **TUTTO SU TUTTO**.
 
 Every intensity preset must preserve the same semantic data surfaces. `quick`, `balanced`, `deep` and `custom` may change volume, context size, token limits and runtime budget, but they must not silently remove core data flows.
 
-The full-run perimeter can expand. When a new production-ready data surface appears, such as a registry, broker tool report, provider diagnostic, repository-consistency map, memory/context builder, discovery/index report, CSV/count surface or telemetry summary, it must be added to this document and to the launcher contract, or explicitly excluded with rationale.
+The full-run perimeter can expand. When a new production-ready data surface appears, such as a registry, broker tool report, provider diagnostic, repository-consistency map, memory/context builder, discovery/index report, CSV/count surface, file-line-limit report or telemetry summary, it must be added to this document and to the launcher contract, or explicitly excluded with rationale.
 
 ## Discovery, index and CSV/count flow
 
@@ -80,6 +83,11 @@ Python line-count CSV/MD
   -> refactor planning
   -> PR/report line-count support
 
+file-line-limit JSON/MD
+  -> 400-line policy evidence
+  -> docs/source maintainability debt
+  -> split/refactor planning
+
 function/class/method CSV
   -> duplication and helper-reuse triage
   -> superclass/base-class opportunity review
@@ -96,7 +104,7 @@ Do not commit output/**.
 Do not commit indexAI/code_chunks/**.
 Do not hand-edit generated indexes or chunks as source.
 Index repair is plan/report-first unless explicitly requested.
-CSV/count surfaces support review and sizing; they do not override source code or canonical docs.
+CSV/count/file-line-limit surfaces support review and sizing; they do not override source code or canonical docs.
 ```
 
 ## Provider-lane flow
@@ -139,13 +147,21 @@ runtime broker requests
   -> runtime_tool_broker_full_toolbox_<STAMP>.json/md
   -> Tools/ai/build_runtime_tool_usage_telemetry.py
   -> runtime_tool_usage_telemetry_<STAMP>.json/md
-  -> Tools/ai/build_runtime_tool_capability_manifest.py
-  -> runtime_tool_capability_manifest_<STAMP>.json/md
+  -> runtime/hardware capability manifest builder for the active lane
+  -> runtime_tool_capability_manifest_<STAMP>.json/md or runtime_hardware_capability_manifest_<STAMP>.json/md
   -> Tools/ai/build_full_toolbox_run_telemetry_summary.py
   -> full_toolbox_run_telemetry_summary_<STAMP>.json/md
   -> Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
   -> shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
   -> shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+```
+
+Current code note:
+
+```text
+Older docs may mention Tools/ai/build_runtime_tool_capability_manifest.py.
+Current code includes the Full0To10 hardware/capability package and PR #192 adds Tools/ai/build_runtime_hardware_capability_manifest.py.
+Treat capability-manifest names through current code/evidence, not historical filename assumptions.
 ```
 
 Telemetry answers AI-critical questions:
@@ -156,7 +172,7 @@ which tools executed
 which tools failed
 which tools were blocked
 which provider lanes degraded
-which discovery/index/count surfaces were present, skipped or degraded
+which discovery/index/count/file-line-limit surfaces were present, skipped or degraded
 which reports were absorbed into the bundle
 which source writes or patch applications did not happen
 ```
@@ -220,6 +236,7 @@ npu_decode_smoke_passed: true
 | Markdown inventory | `Tools/validation/build_markdown_inventory.py` | docs cleanup, pruning, link review | Generated under `output/**`; do not commit unless compact evidence is intentionally built. |
 | Script inventory | `Tools/validation/build_script_inventory.py` | tool/function visibility, refactor review | JSON/CSV/Markdown inventory under `output/**`. |
 | Python line-count CSV/MD | validation/broker inventory lanes | PR review, refactor sizing, line-count reporting | Evidence surface; not source authority. |
+| File line-limit JSON/MD | `Tools/validation/check_file_line_limits.py` | docs/code maintainability review, split/refactor planning | Report-only 400-line policy evidence; no rewrite or delete. |
 | Function/class/method CSV | script inventory lanes | duplication, helper reuse and base-class opportunity review | Evidence surface for refactor/reuse planning. |
 | Auto-discovery/index repair report | scanner/index validators and repair planners | local AI agents, maintainers | Plan/report-first when index drift is suspected; generated indexes remain non-source. |
 | Semantic code chunks | `Tools/npu/build_semantic_code_chunks.py` | selected chunk builder, local AI task adapter | Generated context under index/output paths; do not hand-edit. |
@@ -235,7 +252,7 @@ npu_decode_smoke_passed: true
 | Local provider probe report | `Tools/ai/run_local_provider_probe.py` | evidence bundle | Full0To10/provider probe evidence unless disabled/unavailable. |
 | Runtime broker report | `Tools/ai/agent_runtime_tool_broker.py` | runtime telemetry, full toolbox bundle | Shows broker-requested tool calls and guardrail outcomes. |
 | Runtime tool usage telemetry | `Tools/ai/build_runtime_tool_usage_telemetry.py` | AI agents, telemetry summary, bundle | Counts executed/failed/blocked broker calls and carries broker report inputs. |
-| Runtime tool capability manifest | `Tools/ai/build_runtime_tool_capability_manifest.py` | AI agents, bundle, cloud handoff | Describes available tools, allowed args and execution guardrails. |
+| Runtime/hardware capability manifest | current capability manifest builder for active lane | AI agents, bundle, cloud handoff | Describes available tools/hardware lanes, allowed args and execution guardrails. |
 | Full toolbox run telemetry summary | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | AI agents, bundle, PR review | Cross-run summary of provider, GPU/NPU, broker, patch-plan and guardrail state. |
 | Shared AI-to-AI bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | next local/cloud AI, PR review | Production handoff surface; must carry diagnostics, telemetry, capability, discovery/count and patch-plan summary. |
 | Post-validation AI packet | `Tools/ai/suggest_repository_updates.py` | maintainer / proposal builder | Uses quality-approved advisory context only. |
@@ -273,6 +290,7 @@ This is now one application domain over the local AI orchestration workbench, no
 - Preserve TUTTO SU TUTTO coverage for `Full0To10` unless a lane is explicitly disabled, unavailable or excluded with rationale.
 - Add new stable data surfaces to this flow when the full-run perimeter expands.
 - Read telemetry/capability surfaces before declaring run success or failure.
+- Treat limitations as backlog to overcome, not as reasons to skip available tools.
 - Exclude unusable workload reports from advisory context before reading their content.
 - Treat NPU short smoke success as diagnostic evidence, not as general advisory promotion.
 - Keep provider execution report-bound and opt-out inside Full0To10, not implicit outside selected workflows.
@@ -290,11 +308,12 @@ This is now one application domain over the local AI orchestration workbench, no
 - unified launcher manifest/phase contract beyond the compact contract doc;
 - provider probe report;
 - runtime tool usage telemetry;
-- runtime tool capability manifest;
+- runtime/hardware capability manifest;
 - full toolbox run telemetry summary;
 - shared AI-to-AI bundle final summary;
 - discovery/index repair reports;
 - Python line-count and function/class/method CSV surfaces;
+- file-line-limit report;
 - selected semantic chunks report/evidence beyond the focused contract already present;
 - full-context golden proposal report beyond the focused validator already present;
 - legacy audio analysis JSON;
@@ -305,4 +324,4 @@ This is now one application domain over the local AI orchestration workbench, no
 
 ## Recommended next improvement
 
-Inspect the `20260505-143844` refactor/reuse runtime bundle, classify recommendations and patch plans, then select a review-first refactor/reuse patch family only after telemetry, provider diagnostics, workload quality, discovery/index and CSV/count evidence have been reviewed. External-control pass-through remains a follow-up unless explicitly selected.
+Inspect the current Full0To10 evidence branches and compact runtime bundles, classify recommendations and patch plans, then select review-first refactor/reuse patch families only after telemetry, provider diagnostics, workload quality, discovery/index, CSV/count and file-line-limit evidence have been reviewed.
