@@ -2,6 +2,8 @@
 
 This folder contains shared Blender scripting utilities that can be reused by multiple generated packages under `Scripting/`.
 
+This is application-domain code. It is not part of the normal local-AI run-unica execution path unless an explicit Blender/application task scopes it.
+
 ## Purpose
 
 When a function, helper, panel, encoder, render profile, diagnostic tool, or configuration pattern becomes useful across more than one generated Blender package, it should be extracted from the package-specific folder and moved here.
@@ -92,6 +94,16 @@ compile validation
 
 Do not replace package-specific audio or node code blindly. In particular, validate node creation and VSE audio strip behavior inside the target Blender version.
 
+## 400-line policy
+
+Maintained shared utilities and docs follow the repository 400-line policy.
+
+```text
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+```
+
 ## Suggested future modules
 
 ```text
@@ -113,6 +125,7 @@ Scripting/shared/
 - Do not break the original v61b workflow during extraction.
 - Prefer adding wrappers first, then migrating package code after Blender tests.
 - Treat `blender_compat.py` as available for package adapters, but do not migrate runtime packages until each target call site has its own Blender test.
+- Do not run Blender, FFmpeg or media output from normal AI/tooling validation unless explicitly scoped as application-domain work.
 
 ## Current status
 
