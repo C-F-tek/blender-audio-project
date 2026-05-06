@@ -15,6 +15,7 @@ NPU -> tool_requests -> orchestrator -> broker -> report
 provider -> never direct executor
 orchestrator -> control-plane / routing / scheduling
 broker -> only controlled executor
+runtime heap -> append-only blackboard / visibility mesh
 report -> reinjected read-only evidence
 ```
 
@@ -74,6 +75,19 @@ It is responsible for:
 
 The broker should remain deterministic, narrow, and low-policy. High-level scheduling belongs to the orchestrator.
 
+### Runtime heap / blackboard
+
+The runtime heap is the shared visibility layer for provider collaboration.
+
+It is append-only evidence, not an executor:
+
+- GPU1 can publish a bounded evidence/tool-context request for GPU0.
+- GPU0 and the broker can publish broker result visibility.
+- NPU can publish a non-blocking support signal back to GPU1.
+- Telemetry can summarize events, lane edges and direct-execution violations.
+
+The heap must never execute tools, apply patches or write source. Brokered tool reports remain the execution authority; the heap only records what each lane can see.
+
 ## Supported shared toolbox capabilities
 
 The shared toolbox currently includes report-only capabilities such as:
@@ -86,7 +100,8 @@ The shared toolbox currently includes report-only capabilities such as:
 - Python syntax validation;
 - validation report contract checks;
 - GPU planner JSON contract smoke;
-- code-interpreter report inventory.
+- code-interpreter report inventory;
+- provider runtime heap live signals and telemetry.
 
 Tool execution is always mediated by `Tools/ai/agent_runtime_tool_broker.py`.
 
@@ -125,6 +140,8 @@ It may:
 
 The NPU must not execute tools directly. NPU tool requests are routed through the orchestrator and broker.
 
+In full-toolbox peer exchange, NPU micro support is bounded separately from heavy NPU audit waits and remains non-blocking.
+
 ## Memory model
 
 The memory model is split by scope:
@@ -147,6 +164,7 @@ Permanent guardrails:
 - no implicit persistent SQLite writes;
 - no SQLite/database artifacts committed;
 - no `output/**` artifacts committed except selected compact evidence when explicitly intended;
+- line-count CSV evidence under `docs/LOCAL_VALIDATION_EVIDENCE` is a first-class compact evidence artifact when listed by workflow `evidence_to_commit`;
 - NPU remains non-blocking and non-primary;
 - broker remains the only executor.
 

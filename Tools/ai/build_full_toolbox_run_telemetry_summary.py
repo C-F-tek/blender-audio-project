@@ -9,6 +9,7 @@ without committing output/**.
 from __future__ import annotations
 
 import argparse
+import csv
 import sys
 from pathlib import Path
 from typing import Any
@@ -120,6 +121,70 @@ def peer_exchange_summary(peer_exchange: dict[str, Any], peer_contract: dict[str
     }
 
 
+def runtime_heap_summary(
+    telemetry: dict[str, Any],
+    snapshot: dict[str, Any],
+    live_signals: list[dict[str, Any]],
+) -> dict[str, Any]:
+    live_signal_rows: list[dict[str, Any]] = []
+    for report in live_signals:
+        heap = safe_dict(report.get("heap_snapshot"))
+        live_signal_rows.append(
+            {
+                "mode": report.get("mode"),
+                "passed": report.get("passed"),
+                "event_count": safe_int(report.get("event_count")),
+                "heap_event_count": safe_int(heap.get("event_count")),
+                "pending_broker_request_count": safe_int(heap.get("pending_broker_request_count")),
+            }
+        )
+    return {
+        "telemetry_seen": bool(telemetry),
+        "snapshot_seen": bool(snapshot),
+        "live_signal_count": len(live_signal_rows),
+        "event_count": safe_int(telemetry.get("event_count") or snapshot.get("event_count")),
+        "parse_error_count": safe_int(telemetry.get("parse_error_count") or snapshot.get("parse_error_count")),
+        "direct_execution_violation_count": safe_int(telemetry.get("direct_execution_violation_count")),
+        "pending_broker_request_count": safe_int(telemetry.get("pending_broker_request_count") or snapshot.get("pending_broker_request_count")),
+        "events_by_lane": telemetry.get("events_by_lane") if isinstance(telemetry.get("events_by_lane"), dict) else {},
+        "events_by_type": telemetry.get("events_by_type") if isinstance(telemetry.get("events_by_type"), dict) else {},
+        "interaction_edges": telemetry.get("interaction_edges") if isinstance(telemetry.get("interaction_edges"), dict) else {},
+        "gpu1_to_gpu0_event_count": safe_int(telemetry.get("gpu1_to_gpu0_event_count")),
+        "gpu0_to_gpu1_event_count": safe_int(telemetry.get("gpu0_to_gpu1_event_count")),
+        "gpu1_gpu0_bidirectional": bool(telemetry.get("gpu1_gpu0_bidirectional")),
+        "broker_result_count": safe_int(telemetry.get("broker_result_count")),
+        "live_signals": live_signal_rows,
+    }
+
+
+def line_count_csv_summary(repo_root: Path, value: str) -> tuple[dict[str, Any], list[str]]:
+    if not value:
+        return {"seen": False, "path": "", "row_count": 0, "total_lines": 0, "top_files": []}, []
+    path = resolve_output_path(repo_root, value)
+    path_rel = repo_rel(repo_root, path)
+    if not path.exists():
+        return {"seen": False, "path": path_rel, "row_count": 0, "total_lines": 0, "top_files": []}, [f"line-count CSV missing: {path_rel}"]
+    try:
+        with path.open("r", encoding="utf-8-sig", newline="") as handle:
+            rows = [dict(row) for row in csv.DictReader(handle)]
+    except OSError as exc:
+        return {"seen": False, "path": path_rel, "row_count": 0, "total_lines": 0, "top_files": []}, [f"unable to read line-count CSV {path_rel}: {exc}"]
+    normalized: list[dict[str, Any]] = []
+    for row in rows:
+        file_value = str(row.get("File") or row.get("Path") or "")
+        lines = safe_int(row.get("Lines") or row.get("lines"))
+        if file_value:
+            normalized.append({"file": file_value, "lines": lines})
+    normalized.sort(key=lambda item: (-safe_int(item.get("lines")), str(item.get("file")).lower()))
+    return {
+        "seen": True,
+        "path": path_rel,
+        "row_count": len(normalized),
+        "total_lines": sum(safe_int(item.get("lines")) for item in normalized),
+        "top_files": normalized[:20],
+    }, []
+
+
 def compact_paths(values: Any, limit: int = 12) -> list[str]:
     out: list[str] = []
     for value in safe_list(values):
@@ -179,6 +244,18 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     gpu_report, gpu_errors, gpu_path = read_optional_json(repo_root, args.gpu_report)
     peer_exchange, peer_errors, peer_path = read_optional_json(repo_root, args.peer_exchange)
     peer_contract, peer_contract_errors, peer_contract_path = read_optional_json(repo_root, args.peer_contract)
+    heap_telemetry, heap_telemetry_errors, heap_telemetry_path = read_optional_json(repo_root, args.provider_runtime_heap_telemetry)
+    heap_snapshot, heap_snapshot_errors, heap_snapshot_path = read_optional_json(repo_root, args.provider_runtime_heap_snapshot)
+    heap_live_reports: list[dict[str, Any]] = []
+    heap_live_paths: list[str] = []
+    for raw_path in safe_list(args.provider_runtime_heap_live_signal):
+        live_report, live_errors, live_path = read_optional_json(repo_root, str(raw_path))
+        warnings.extend(live_errors)
+        if live_path:
+            heap_live_paths.append(live_path)
+        if live_report:
+            heap_live_reports.append(live_report)
+    line_count_csv, line_count_csv_warnings = line_count_csv_summary(repo_root, args.line_count_csv)
 
     hard_inputs = {
         "decision_loop": decision_loop,
@@ -195,6 +272,9 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     warnings.extend(gpu_errors)
     warnings.extend(peer_errors)
     warnings.extend(peer_contract_errors)
+    warnings.extend(heap_telemetry_errors)
+    warnings.extend(heap_snapshot_errors)
+    warnings.extend(line_count_csv_warnings)
 
     for name, data in hard_inputs.items():
         if not data:
@@ -214,6 +294,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
 
     provider_evidence = provider_evidence_summary(orchestrator, gpu_report)
     peer_evidence = peer_exchange_summary(peer_exchange, peer_contract)
+    heap_evidence = runtime_heap_summary(heap_telemetry, heap_snapshot, heap_live_reports)
     provider_execution = bool(provider_evidence["provider_execution_performed"])
     return {
         "schema_version": 1,
@@ -242,6 +323,10 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "gpu_report": gpu_path,
             "peer_exchange": peer_path,
             "peer_contract": peer_contract_path,
+            "provider_runtime_heap_telemetry": heap_telemetry_path,
+            "provider_runtime_heap_snapshot": heap_snapshot_path,
+            "provider_runtime_heap_live_signals": heap_live_paths,
+            "line_count_csv": line_count_csv.get("path"),
         },
         "run_parameters": {
             "budget_minutes": args.budget_minutes,
@@ -268,11 +353,14 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
         "gpu_npu": {
             "provider_evidence": provider_evidence,
             "peer_exchange": peer_evidence,
+            "provider_runtime_heap": heap_evidence,
             "sync_metrics": gpu_npu_sync.get("metrics"),
             "performance": compact_performance(gpu_npu_sync),
             "operational_opinions": gpu_npu_sync.get("operational_opinions"),
             "refactoring_suggestions": gpu_npu_sync.get("refactoring_suggestions"),
         },
+        "provider_runtime_heap": heap_evidence,
+        "line_count_csv": line_count_csv,
         "guardrails": {
             "report_only": True,
             "committable_location": "docs/LOCAL_VALIDATION_EVIDENCE",
@@ -282,6 +370,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "npu_provider_execution_performed": provider_evidence.get("npu_provider_execution_performed"),
             "gpu0_peer_provider_execution_performed": peer_evidence.get("gpu0_peer_provider_execution_performed"),
             "npu_micro_non_blocking": peer_evidence.get("npu_micro_non_blocking"),
+            "provider_runtime_heap_direct_execution_violation_count": heap_evidence.get("direct_execution_violation_count"),
             "patch_application_performed": False,
             "source_writes_performed": False,
             "sqlite_write_performed": False,
@@ -313,6 +402,29 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- GPU0 peer broker tool executions: `{peer_evidence.get('gpu0_peer_tool_execution_count')}`")
     lines.append(f"- NPU micro non-blocking: `{peer_evidence.get('npu_micro_non_blocking')}`")
     lines.append(f"- NPU micro broker tool executions: `{peer_evidence.get('npu_micro_tool_execution_count')}`")
+    heap_evidence = safe_dict(report.get("provider_runtime_heap"))
+    lines.append(f"- Runtime heap events: `{heap_evidence.get('event_count')}`")
+    lines.append(f"- Runtime heap live signals: `{heap_evidence.get('live_signal_count')}`")
+    lines.append(f"- Runtime heap direct execution violations: `{heap_evidence.get('direct_execution_violation_count')}`")
+    line_csv = safe_dict(report.get("line_count_csv"))
+    lines.append(f"- Line-count CSV rows: `{line_csv.get('row_count')}`")
+    lines.append("")
+    lines.append("## Provider runtime heap")
+    lines.append("")
+    lines.append(f"- Telemetry seen: `{heap_evidence.get('telemetry_seen')}`")
+    lines.append(f"- Snapshot seen: `{heap_evidence.get('snapshot_seen')}`")
+    lines.append(f"- Pending broker requests: `{heap_evidence.get('pending_broker_request_count')}`")
+    lines.append(f"- Broker results: `{heap_evidence.get('broker_result_count')}`")
+    for item in safe_list(heap_evidence.get("live_signals")):
+        lines.append(f"- `{item.get('mode')}` passed=`{item.get('passed')}` event_count=`{item.get('event_count')}` heap_event_count=`{item.get('heap_event_count')}`")
+    lines.append("")
+    lines.append("## Line-count CSV")
+    lines.append("")
+    lines.append(f"- Seen: `{line_csv.get('seen')}`")
+    lines.append(f"- Path: `{line_csv.get('path')}`")
+    lines.append(f"- Total lines: `{line_csv.get('total_lines')}`")
+    for item in safe_list(line_csv.get("top_files"))[:10]:
+        lines.append(f"- `{item.get('file')}`: `{item.get('lines')}`")
     lines.append("")
     lines.append("## Repository consistency performance")
     lines.append("")
@@ -371,6 +483,10 @@ def main() -> int:
     parser.add_argument("--gpu-report", default="")
     parser.add_argument("--peer-exchange", default="")
     parser.add_argument("--peer-contract", default="")
+    parser.add_argument("--provider-runtime-heap-telemetry", default="")
+    parser.add_argument("--provider-runtime-heap-snapshot", default="")
+    parser.add_argument("--provider-runtime-heap-live-signal", action="append", default=[])
+    parser.add_argument("--line-count-csv", default="")
     parser.add_argument("--evidence-to-commit", action="append", default=[])
     parser.add_argument("--bundle-validation-passed", action="store_true")
     parser.add_argument("--budget-minutes", type=int, default=0)

@@ -94,9 +94,16 @@ FULL_TOOLBOX_REPORT_TEMPLATES: tuple[str, ...] = (
     "output/validation/npu_micro_runtime_tool_broker_{stamp}.json",
     "output/validation/ai_peer_exchange_{stamp}.json",
     "output/validation/ai_peer_exchange_contract_{stamp}.json",
+    "output/validation/provider_runtime_heap_live_signals_init_{stamp}.json",
+    "output/validation/provider_runtime_heap_live_signals_gpu1_request_{stamp}.json",
+    "output/validation/provider_runtime_heap_live_signals_broker_results_{stamp}.json",
+    "output/validation/provider_runtime_heap_live_signals_npu_support_{stamp}.json",
+    "output/validation/provider_runtime_heap_from_peer_reports_{stamp}.json",
+    "output/ai_runtime_heap/{stamp}/snapshot.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_{stamp}.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_{stamp}.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_{stamp}.json",
+    "docs/LOCAL_VALIDATION_EVIDENCE/provider_runtime_heap_telemetry_{stamp}.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_{stamp}_cloud_semantic_deterministic_chunk_manifest.json",
 )
 
@@ -122,11 +129,18 @@ FULL_TOOLBOX_ARTIFACT_TEMPLATES: tuple[str, ...] = (
     "output/validation/npu_micro_runtime_tool_broker_{stamp}.md",
     "output/validation/ai_peer_exchange_{stamp}.md",
     "output/validation/ai_peer_exchange_contract_{stamp}.md",
+    "output/validation/provider_runtime_heap_live_signals_init_{stamp}.md",
+    "output/validation/provider_runtime_heap_live_signals_gpu1_request_{stamp}.md",
+    "output/validation/provider_runtime_heap_live_signals_broker_results_{stamp}.md",
+    "output/validation/provider_runtime_heap_live_signals_npu_support_{stamp}.md",
+    "output/validation/provider_runtime_heap_from_peer_reports_{stamp}.md",
+    "output/ai_runtime_heap/{stamp}/snapshot.md",
     "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_integrated.md",
     "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_workflow.md",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_{stamp}.md",
     "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_{stamp}.md",
     "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_{stamp}.md",
+    "docs/LOCAL_VALIDATION_EVIDENCE/provider_runtime_heap_telemetry_{stamp}.md",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_{stamp}_cloud_semantic_deterministic_chunk_manifest.md",
 )
 
@@ -324,6 +338,28 @@ def collect_report_facts(repo_root: Path, report_paths: list[str]) -> dict[str, 
     }
 
 
+def artifact_hints_from_reports(repo_root: Path, report_paths: list[str]) -> list[str]:
+    """Promote report-declared side artifacts, especially CSV evidence, into bundles."""
+    artifacts: list[str] = []
+    seen: set[str] = set()
+    for rel in report_paths:
+        path = resolve_repo_path(repo_root, rel)
+        data, parse_error = read_json_object(path)
+        if parse_error or not data:
+            continue
+        for key in ("csv_written", "csv_output", "markdown_output", "markdown_report"):
+            value = data.get(key)
+            if not isinstance(value, str) or not value:
+                continue
+            artifact_path = resolve_repo_path(repo_root, value)
+            artifact_rel = repo_relative(artifact_path, repo_root)
+            if artifact_rel in seen or not artifact_path.exists():
+                continue
+            seen.add(artifact_rel)
+            artifacts.append(artifact_rel)
+    return artifacts
+
+
 def default_tool_requests() -> list[dict[str, Any]]:
     return [
         {
@@ -425,6 +461,9 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
             "agent_runtime_tool_broker",
             "ai_peer_exchange",
             "ai_peer_exchange_contract",
+            "provider_runtime_heap_live_signals",
+            "provider_runtime_heap_from_peer_reports",
+            "provider_runtime_heap_telemetry",
         }:
             errors = data.get("errors") if isinstance(data.get("errors"), list) else []
             warnings = data.get("warnings") if isinstance(data.get("warnings"), list) else []
@@ -448,6 +487,10 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
                     "collaboration_visibility": (data.get("collaboration_round") or {}).get("synchronized_visibility") if isinstance(data.get("collaboration_round"), dict) else None,
                     "tool_request_count": data.get("tool_request_count"),
                     "tool_execution_count": data.get("tool_execution_count"),
+                    "event_count": data.get("event_count"),
+                    "broker_result_count": data.get("broker_result_count"),
+                    "pending_broker_request_count": data.get("pending_broker_request_count"),
+                    "direct_execution_violation_count": data.get("direct_execution_violation_count"),
                     "provider_error": data.get("provider_error"),
                     "recommendation_count": data.get("recommendation_count"),
                     "errors": errors[:20],
@@ -576,6 +619,12 @@ def extract_peer_mesh_product_state(provider_diagnostics: dict[str, Any]) -> dic
                 add_unique(degraded_lanes, "npu_semantic_provider_slow_or_degraded")
             if support.get("product_pass_blocker") is True:
                 add_unique(product_blockers, "npu_support_lane_marked_product_blocker")
+        if kind == "provider_runtime_heap_telemetry" and int(item.get("event_count") or 0) > 0:
+            add_unique(operational_lanes, "provider_runtime_heap_blackboard")
+            if int(item.get("broker_result_count") or 0) > 0:
+                add_unique(support_lanes, "provider_runtime_heap_broker_results")
+            if int(item.get("direct_execution_violation_count") or 0) > 0:
+                add_unique(product_blockers, "provider_runtime_heap_direct_execution_violation")
     if operational_lanes and "deterministic_scripts" not in operational_lanes:
         add_unique(operational_lanes, "deterministic_scripts")
     return {
@@ -611,6 +660,36 @@ def extract_provider_broker_loop_product_state(provider_diagnostics: dict[str, A
                 "product_pass_blockers": loop.get("product_pass_blockers", []),
                 "topology": loop.get("topology", []),
             }
+
+    heap_items = [
+        item
+        for item in provider_diagnostics.get("diagnostics", [])
+        if isinstance(item, dict) and item.get("kind") == "provider_runtime_heap_telemetry"
+    ]
+    if heap_items:
+        broker_result_count = sum(int(item.get("broker_result_count") or 0) for item in heap_items)
+        return {
+            "seen": True,
+            "active": any(int(item.get("event_count") or 0) > 0 for item in heap_items),
+            "controlled_executor": "provider_runtime_heap + agent_runtime_tool_broker",
+            "direct_tool_execution_allowed": False,
+            "broker_tool_execution_count": broker_result_count,
+            "gpu0_broker_tool_execution_count": broker_result_count,
+            "npu_broker_tool_execution_count": 0,
+            "npu_non_blocking": True,
+            "npu_product_pass_blocker": False,
+            "deterministic_scripts_heavy_audit_authority": True,
+            "product_pass_blockers": [
+                "provider_runtime_heap_direct_execution_violation"
+                for item in heap_items
+                if int(item.get("direct_execution_violation_count") or 0) > 0
+            ],
+            "topology": [
+                "gpu1 -> gpu0 evidence_request",
+                "broker -> gpu0 broker_result",
+                "npu -> gpu1 evidence_response",
+            ],
+        }
 
     return {
         "seen": False,
@@ -905,7 +984,13 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
         repo_relative(output_dir / f"{basename}.json", repo_root),
         repo_relative(output_dir / f"{basename}.md", repo_root),
     ]
-    artifact_candidates = coalesce_list([args.task_md, args.architecture_md], list(args.artifact or []), artifact_templates_for_stamp(stamp))
+    report_declared_artifacts = artifact_hints_from_reports(repo_root, reports)
+    artifact_candidates = coalesce_list(
+        [args.task_md, args.architecture_md],
+        list(args.artifact or []),
+        report_declared_artifacts,
+        artifact_templates_for_stamp(stamp),
+    )
     artifacts, missing_artifacts = existing_paths(repo_root, artifact_candidates, label="artifact", include_missing_optional=bool(args.include_missing_optional))
 
     recursive_report_roots = [] if args.no_recursive_defaults else list(DEFAULT_RECURSIVE_REPORT_ROOTS)

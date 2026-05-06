@@ -219,6 +219,27 @@ GPU.1 is RTX 5080/Ollama primary lane. Do not assign OpenVINO workload to GPU.1.
 
 After the GPU0 companion work, a GitHub-only MD coherence pass was performed. It added/updated docs and created issue `#195` for future Markdown split/pruning follow-up. It also closed issue `#57` as completed.
 
+## 2026-05-07 PR194 continuation note
+
+The next runtime-heap continuation should treat commit `bcabedf` as the baseline and keep the peer-exchange production chain focused on small parser-safe integrations, not a broad PowerShell-to-Python migration.
+
+Current intended production wiring:
+
+```text
+GPU1/Ollama primary advisory
+  -> live provider runtime heap init
+  -> GPU1->GPU0 live evidence request
+  -> GPU0 peer response
+  -> GPU0 broker live results
+  -> NPU micro support signal
+  -> provider runtime heap telemetry
+  -> full toolbox telemetry, shared bundle and compact evidence
+```
+
+Line-count CSV evidence is part of the compact evidence surface. The workflow should preserve generated `docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_*.csv` files when they appear in `evidence_to_commit`, and bundle builders should discover CSV side artifacts declared by JSON reports.
+
+NPU micro support is bounded separately from heavy NPU audit waits. It remains non-blocking and support-only; deterministic scripts remain the heavy audit authority.
+
 New/current docs to preserve:
 
 ```text

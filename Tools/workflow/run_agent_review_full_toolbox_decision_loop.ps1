@@ -22,6 +22,8 @@ param(
     [int]$NpuMaxContextChars = 8000,
     [int]$NpuMaxPromptChars = 1200,
     [int]$NpuMaxNewTokens = 384,
+    [int]$NpuMicroTimeoutSeconds = 60,
+    [int]$NpuMicroBrokerTimeoutSeconds = 90,
     [int]$NpuFinalWaitSeconds = 180,
     [int]$MinRecommendations = 1,
     [int]$MinPatchPlans = 1,
@@ -88,6 +90,42 @@ function Add-ExistingPath {
     if ($Path -and (Test-Path $Path)) {
         [void]$List.Add($Path)
     }
+}
+
+function Invoke-ProviderRuntimeHeapLiveSignal {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Mode,
+        [Parameter(Mandatory = $true)]
+        [string]$Label,
+        [Parameter(Mandatory = $true)]
+        [string]$JsonOutput,
+        [Parameter(Mandatory = $true)]
+        [string]$MarkdownOutput,
+        [string[]]$ExtraArgs = @()
+    )
+
+    $LiveArgs = @(
+        ".\Tools\ai\provider_runtime_heap_live_signals.py",
+        "--repo-root", ".",
+        "--stamp", $Stamp,
+        "--mode", $Mode,
+        "--events", $ProviderRuntimeHeapEventsJsonl,
+        "--snapshot", $ProviderRuntimeHeapSnapshotJson,
+        "--heap-markdown", $ProviderRuntimeHeapSnapshotMd,
+        "--output", $JsonOutput,
+        "--markdown-output", $MarkdownOutput
+    )
+    if ($ExtraArgs.Count -gt 0) {
+        $LiveArgs += $ExtraArgs
+    }
+
+    Invoke-RepoPython -Label $Label -ArgsList $LiveArgs
+    Add-ExistingPath -List $Reports -Path $JsonOutput
+    Add-ExistingPath -List $Artifacts -Path $MarkdownOutput
+    Add-ExistingPath -List $Reports -Path $ProviderRuntimeHeapSnapshotJson
+    Add-ExistingPath -List $Artifacts -Path $ProviderRuntimeHeapSnapshotMd
+    Add-ExistingPath -List $Artifacts -Path $ProviderRuntimeHeapEventsJsonl
 }
 
 
@@ -414,6 +452,17 @@ $ProviderRuntimeHeapFromPeerReportsJson = ".\output\validation\provider_runtime_
 $ProviderRuntimeHeapFromPeerReportsMd = ".\output\validation\provider_runtime_heap_from_peer_reports_$Stamp.md"
 $ProviderRuntimeHeapTelemetryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\provider_runtime_heap_telemetry_$Stamp.json"
 $ProviderRuntimeHeapTelemetryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\provider_runtime_heap_telemetry_$Stamp.md"
+$ProviderRuntimeHeapEventsJsonl = ".\output\ai_runtime_heap\$Stamp\events.jsonl"
+$ProviderRuntimeHeapSnapshotJson = ".\output\ai_runtime_heap\$Stamp\snapshot.json"
+$ProviderRuntimeHeapSnapshotMd = ".\output\ai_runtime_heap\$Stamp\snapshot.md"
+$ProviderRuntimeHeapLiveInitJson = ".\output\validation\provider_runtime_heap_live_signals_init_$Stamp.json"
+$ProviderRuntimeHeapLiveInitMd = ".\output\validation\provider_runtime_heap_live_signals_init_$Stamp.md"
+$ProviderRuntimeHeapLiveGpu1RequestJson = ".\output\validation\provider_runtime_heap_live_signals_gpu1_request_$Stamp.json"
+$ProviderRuntimeHeapLiveGpu1RequestMd = ".\output\validation\provider_runtime_heap_live_signals_gpu1_request_$Stamp.md"
+$ProviderRuntimeHeapLiveBrokerResultsJson = ".\output\validation\provider_runtime_heap_live_signals_broker_results_$Stamp.json"
+$ProviderRuntimeHeapLiveBrokerResultsMd = ".\output\validation\provider_runtime_heap_live_signals_broker_results_$Stamp.md"
+$ProviderRuntimeHeapLiveNpuSupportJson = ".\output\validation\provider_runtime_heap_live_signals_npu_support_$Stamp.json"
+$ProviderRuntimeHeapLiveNpuSupportMd = ".\output\validation\provider_runtime_heap_live_signals_npu_support_$Stamp.md"
 
 
 Write-Host "=== Agent Review Full Toolbox Decision Loop ==="
@@ -426,6 +475,8 @@ Write-Host "RepositoryConsistencyMapWorkers: $RepositoryConsistencyMapWorkers"
 Write-Host "MaxRecommendations: $MaxRecommendations"
 Write-Host "MaxPatchPlans: $MaxPatchPlans"
 Write-Host "Guardrail: report-only decision loop; provider execution only when -RunGpuNpuProvider is explicitly supplied."
+
+Invoke-ProviderRuntimeHeapLiveSignal -Mode "init" -Label "Provider runtime heap live init" -JsonOutput $ProviderRuntimeHeapLiveInitJson -MarkdownOutput $ProviderRuntimeHeapLiveInitMd
 
 if (-not $SkipMemoryReload) {
     Invoke-RepoPowerShell -Label "Full memory/tool regeneration" -ScriptPath ".\Tools\workflow\run_full_memory_tool_regeneration.ps1" -Params @{
@@ -504,6 +555,7 @@ Invoke-RepoPython -Label "Contract script compile" -ArgsList @(
     ".\Tools\ai\build_agent_review_evidence_sufficiency.py",
     ".\Tools\ai\build_ai_peer_exchange_packet.py",
     ".\Tools\ai\provider_runtime_heap.py",
+    ".\Tools\ai\provider_runtime_heap_live_signals.py",
     ".\Tools\ai\build_provider_runtime_heap_from_peer_reports.py",
     ".\Tools\ai\build_provider_runtime_heap_telemetry.py",
     ".\Tools\ai\run_provider_runtime_heap_gpu_peer_smoke.py",
@@ -715,6 +767,12 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         "--exchange-markdown-output", $AiPeerExchangeMd
     )
 
+    Invoke-ProviderRuntimeHeapLiveSignal -Mode "gpu1-request" -Label "Provider runtime heap GPU1 to GPU0 live request" -JsonOutput $ProviderRuntimeHeapLiveGpu1RequestJson -MarkdownOutput $ProviderRuntimeHeapLiveGpu1RequestMd -ExtraArgs @(
+        "--gpu1-report", $Gpu1PrimaryAdvisoryJson,
+        "--gpu0-task-packet", $Gpu0PeerTaskPacketJson,
+        "--round", "1"
+    )
+
     Invoke-RepoPython -Label "GPU0 peer companion worker" -ArgsList @(
         ".\Tools\ai\run_gpu0_peer_companion_worker.py",
         "--repo-root", ".",
@@ -740,6 +798,11 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         "--markdown-output", $Gpu0PeerBrokerMd
     )
 
+    Invoke-ProviderRuntimeHeapLiveSignal -Mode "broker-results" -Label "Provider runtime heap GPU0 broker live results" -JsonOutput $ProviderRuntimeHeapLiveBrokerResultsJson -MarkdownOutput $ProviderRuntimeHeapLiveBrokerResultsMd -ExtraArgs @(
+        "--broker-report", $Gpu0PeerBrokerJson,
+        "--round", "1"
+    )
+
     Invoke-RepoPython -Label "NPU micro peer assistant" -ArgsList @(
         ".\Tools\ai\run_npu_gpu_deep_review_auditor.py",
         "--repo-root", ".",
@@ -753,12 +816,17 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         "--npu-metadata-output", $NpuMicroMetadataJson,
         "--output", $NpuMicroJson,
         "--markdown-output", $NpuMicroMd,
-        "--timeout-seconds", "$NpuFinalWaitSeconds",
+        "--timeout-seconds", "$NpuMicroTimeoutSeconds",
         "--max-context-chars", "$NpuMaxContextChars",
         "--max-prompt-chars", "$NpuMaxPromptChars",
         "--max-new-tokens", "$NpuMaxNewTokens",
         "--max-runtime-tool-context-chars", "6000",
         "--max-npu-tool-requests", "4"
+    )
+
+    Invoke-ProviderRuntimeHeapLiveSignal -Mode "npu-support" -Label "Provider runtime heap NPU live support" -JsonOutput $ProviderRuntimeHeapLiveNpuSupportJson -MarkdownOutput $ProviderRuntimeHeapLiveNpuSupportMd -ExtraArgs @(
+        "--npu-report", $NpuMicroJson,
+        "--round", "1"
     )
 
     Invoke-RepoPython -Label "NPU micro runtime tool broker" -ArgsList @(
@@ -767,7 +835,7 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         "--request-file", $NpuMicroJson,
         "--tool-output-dir", (Join-Path $RuntimeToolOutputDir "npu_micro"),
         "--stamp", $Stamp,
-        "--timeout-seconds", "180",
+        "--timeout-seconds", "$NpuMicroBrokerTimeoutSeconds",
         "--output", $NpuMicroBrokerJson,
         "--markdown-output", $NpuMicroBrokerMd
     )
@@ -812,7 +880,11 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         $Gpu0PeerBrokerJson, $Gpu0PeerBrokerMd, $AiPeerExchangeJson, $AiPeerExchangeMd,
         $NpuMicroJson, $NpuMicroMd, $NpuMicroBrokerJson, $NpuMicroBrokerMd,
         $NpuMicroContextMd, $NpuMicroOutputMd, $NpuMicroNotesMd, $NpuMicroMetadataJson,
-        $AiPeerExchangeContractJson, $AiPeerExchangeContractMd
+        $AiPeerExchangeContractJson, $AiPeerExchangeContractMd,
+        $ProviderRuntimeHeapLiveGpu1RequestJson, $ProviderRuntimeHeapLiveGpu1RequestMd,
+        $ProviderRuntimeHeapLiveBrokerResultsJson, $ProviderRuntimeHeapLiveBrokerResultsMd,
+        $ProviderRuntimeHeapLiveNpuSupportJson, $ProviderRuntimeHeapLiveNpuSupportMd,
+        $ProviderRuntimeHeapSnapshotJson, $ProviderRuntimeHeapSnapshotMd, $ProviderRuntimeHeapEventsJsonl
     )) {
         Add-ExistingPath -List $Reports -Path $Path
         Add-ExistingPath -List $Artifacts -Path $Path
@@ -893,6 +965,12 @@ $ToolReports = @(
     $NpuMicroBrokerJson,
     $AiPeerExchangeJson,
     $AiPeerExchangeContractJson,
+    $ProviderRuntimeHeapLiveInitJson,
+    $ProviderRuntimeHeapLiveGpu1RequestJson,
+    $ProviderRuntimeHeapLiveBrokerResultsJson,
+    $ProviderRuntimeHeapLiveNpuSupportJson,
+    $ProviderRuntimeHeapSnapshotJson,
+    $ProviderRuntimeHeapTelemetryJson,
     $MemoryWorkflow
 ) | Where-Object { Test-Path $_ }
 
@@ -958,6 +1036,12 @@ if (-not $SkipPostValidationPacket) {
         $ProviderEvidenceContractJson,
         $AiPeerExchangeJson,
         $AiPeerExchangeContractJson,
+        $ProviderRuntimeHeapLiveInitJson,
+        $ProviderRuntimeHeapLiveGpu1RequestJson,
+        $ProviderRuntimeHeapLiveBrokerResultsJson,
+        $ProviderRuntimeHeapLiveNpuSupportJson,
+        $ProviderRuntimeHeapSnapshotJson,
+        $ProviderRuntimeHeapTelemetryJson,
         $RecommendationsJson,
         $BridgeJson,
         $DecisionLoopJson,
@@ -1086,6 +1170,13 @@ $ReportFilesForBundle = @(
     $NpuMicroBrokerJson,
     $AiPeerExchangeJson,
     $AiPeerExchangeContractJson,
+    $ProviderRuntimeHeapFromPeerReportsJson,
+    $ProviderRuntimeHeapTelemetryJson,
+    $ProviderRuntimeHeapLiveInitJson,
+    $ProviderRuntimeHeapLiveGpu1RequestJson,
+    $ProviderRuntimeHeapLiveBrokerResultsJson,
+    $ProviderRuntimeHeapLiveNpuSupportJson,
+    $ProviderRuntimeHeapSnapshotJson,
     $RecommendationsJson,
     $BridgeJson,
     $DecisionLoopJson,
@@ -1117,9 +1208,17 @@ $BundleArgs = @(
     "--artifact", $NpuMicroBrokerMd,
     "--artifact", $AiPeerExchangeMd,
     "--artifact", $AiPeerExchangeContractMd,
+    "--artifact", $ProviderRuntimeHeapFromPeerReportsMd,
+    "--artifact", $ProviderRuntimeHeapTelemetryMd,
+    "--artifact", $ProviderRuntimeHeapLiveInitMd,
+    "--artifact", $ProviderRuntimeHeapLiveGpu1RequestMd,
+    "--artifact", $ProviderRuntimeHeapLiveBrokerResultsMd,
+    "--artifact", $ProviderRuntimeHeapLiveNpuSupportMd,
+    "--artifact", $ProviderRuntimeHeapSnapshotMd,
+    "--artifact", $ProviderRuntimeHeapEventsJsonl,
     "--artifact", $PatchPlanMd,
     "--max-included-artifact-chars", "16000",
-    "--max-included-artifacts", "24"
+    "--max-included-artifacts", "40"
 )
 Invoke-RepoPython -Label "Full toolbox GitHub evidence bundle" -ArgsList $BundleArgs
 
@@ -1160,6 +1259,13 @@ $TelemetryArgs = @(
     "--gpu-report", $GpuOut,
     "--peer-exchange", $AiPeerExchangeJson,
     "--peer-contract", $AiPeerExchangeContractJson,
+    "--provider-runtime-heap-telemetry", $ProviderRuntimeHeapTelemetryJson,
+    "--provider-runtime-heap-snapshot", $ProviderRuntimeHeapSnapshotJson,
+    "--provider-runtime-heap-live-signal", $ProviderRuntimeHeapLiveInitJson,
+    "--provider-runtime-heap-live-signal", $ProviderRuntimeHeapLiveGpu1RequestJson,
+    "--provider-runtime-heap-live-signal", $ProviderRuntimeHeapLiveBrokerResultsJson,
+    "--provider-runtime-heap-live-signal", $ProviderRuntimeHeapLiveNpuSupportJson,
+    "--line-count-csv", $LineCountCsv,
     "--budget-minutes", "$BudgetMinutes",
     "--max-rounds", "$MaxRounds",
     "--files-per-round", "$FilesPerRound",
@@ -1223,6 +1329,18 @@ $SemanticChunkSources = @(
     $RuntimeToolTelemetryMd,
     $RuntimeToolCapabilityJson,
     $RuntimeToolCapabilityMd,
+    $ProviderRuntimeHeapTelemetryJson,
+    $ProviderRuntimeHeapTelemetryMd,
+    $ProviderRuntimeHeapLiveInitJson,
+    $ProviderRuntimeHeapLiveInitMd,
+    $ProviderRuntimeHeapLiveGpu1RequestJson,
+    $ProviderRuntimeHeapLiveGpu1RequestMd,
+    $ProviderRuntimeHeapLiveBrokerResultsJson,
+    $ProviderRuntimeHeapLiveBrokerResultsMd,
+    $ProviderRuntimeHeapLiveNpuSupportJson,
+    $ProviderRuntimeHeapLiveNpuSupportMd,
+    $ProviderRuntimeHeapSnapshotJson,
+    $ProviderRuntimeHeapSnapshotMd,
     $AiPeerExchangeJson,
     $AiPeerExchangeMd,
     $NpuMicroJson,
@@ -1255,6 +1373,9 @@ foreach ($Path in @(
     $Gpu1PrimaryAdvisoryJson, $Gpu0PeerTaskPacketJson, $Gpu0PeerResponseJson, $Gpu0PeerToolRequestsJson, $Gpu0PeerBrokerJson,
     $NpuMicroJson, $NpuMicroBrokerJson,
     $AiPeerExchangeJson, $AiPeerExchangeContractJson,
+    $ProviderRuntimeHeapFromPeerReportsJson, $ProviderRuntimeHeapTelemetryJson, $ProviderRuntimeHeapLiveInitJson,
+    $ProviderRuntimeHeapLiveGpu1RequestJson, $ProviderRuntimeHeapLiveBrokerResultsJson, $ProviderRuntimeHeapLiveNpuSupportJson,
+    $ProviderRuntimeHeapSnapshotJson,
     $BundleValidationJson, $FinalPythonSyntaxJson, $FinalContractJson
 )) {
     Add-ExistingPath -List $Reports -Path $Path
@@ -1266,7 +1387,10 @@ foreach ($Path in @(
     $DecisionLoopMd, $PatchPlanMd, $TelemetrySummaryJson, $TelemetrySummaryMd, $RuntimeToolTelemetryJson, $RuntimeToolTelemetryMd,
     $RuntimeToolCapabilityJson, $RuntimeToolCapabilityMd, $Gpu1PrimaryAdvisoryMd, $Gpu0PeerResponseMd, $Gpu0PeerBrokerMd,
     $NpuMicroMd, $NpuMicroBrokerMd, $NpuMicroContextMd, $NpuMicroOutputMd, $NpuMicroNotesMd,
-    $AiPeerExchangeMd, $AiPeerExchangeContractMd, $EvidenceChunkManifestJson, $EvidenceChunkManifestMd, $BundleJson, $BundleMd
+    $AiPeerExchangeMd, $AiPeerExchangeContractMd, $ProviderRuntimeHeapFromPeerReportsMd, $ProviderRuntimeHeapTelemetryMd,
+    $ProviderRuntimeHeapLiveInitMd, $ProviderRuntimeHeapLiveGpu1RequestMd, $ProviderRuntimeHeapLiveBrokerResultsMd,
+    $ProviderRuntimeHeapLiveNpuSupportMd, $ProviderRuntimeHeapSnapshotMd, $ProviderRuntimeHeapEventsJsonl,
+    $EvidenceChunkManifestJson, $EvidenceChunkManifestMd, $BundleJson, $BundleMd
 )) {
     Add-ExistingPath -List $Artifacts -Path $Path
 }
@@ -1308,6 +1432,8 @@ $EvidenceToCommit = @(
     $RuntimeToolTelemetryMd,
     $RuntimeToolCapabilityJson,
     $RuntimeToolCapabilityMd,
+    $ProviderRuntimeHeapTelemetryJson,
+    $ProviderRuntimeHeapTelemetryMd,
     $EvidenceChunkManifestJson,
     $EvidenceChunkManifestMd
 ) | Where-Object { Test-Path $_ }

@@ -98,6 +98,12 @@ npu_micro_peer_assistant_<stamp>.json/md
 npu_micro_runtime_tool_broker_<stamp>.json/md
 ai_peer_exchange_<stamp>.json/md
 ai_peer_exchange_contract_<stamp>.json/md
+provider_runtime_heap_live_signals_init_<stamp>.json/md
+provider_runtime_heap_live_signals_gpu1_request_<stamp>.json/md
+provider_runtime_heap_live_signals_broker_results_<stamp>.json/md
+provider_runtime_heap_live_signals_npu_support_<stamp>.json/md
+provider_runtime_heap_telemetry_<stamp>.json/md
+python_line_count_<timestamp>.csv
 provider acceptance gate with peer-exchange classifications
 final telemetry and bundle inclusion
 ```
@@ -121,10 +127,14 @@ Markdown task input
   -> full-toolbox decision loop
   -> provider-capable Python selection from IA_CARMINE_PYTHON / .venv
   -> GPU1/Ollama primary advisory report
+  -> provider runtime heap live init
   -> GPU0 peer task packet
+  -> provider runtime heap GPU1->GPU0 evidence request
   -> GPU0 OpenVINO peer response
   -> GPU0 runtime broker tool requests
+  -> provider runtime heap broker results
   -> NPU micro peer assistant over GPU1/GPU0/broker context
+  -> provider runtime heap NPU support signal
   -> NPU runtime broker tool requests
   -> AI peer-exchange report
   -> peer-exchange contract
@@ -138,6 +148,9 @@ Current source surfaces:
 Tools/ai/build_ai_peer_exchange_packet.py
 Tools/ai/run_gpu0_peer_companion_worker.py
 Tools/ai/run_npu_gpu_deep_review_auditor.py
+Tools/ai/provider_runtime_heap.py
+Tools/ai/provider_runtime_heap_live_signals.py
+Tools/ai/build_provider_runtime_heap_telemetry.py
 Tools/validation/check_ai_peer_exchange_contract.py
 Tools/validation/check_full0to10_provider_acceptance.py
 Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1
@@ -190,4 +203,3 @@ Contract rules:
 - NPU degradation is telemetry, not a product pass blocker.
 - Deterministic scripts remain the heavy audit authority.
 - Patch application remains manual/review-only.
-
