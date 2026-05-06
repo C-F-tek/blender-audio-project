@@ -179,25 +179,39 @@ Commit only compact evidence under docs/LOCAL_VALIDATION_EVIDENCE when needed.
 Index repair must be plan/report-first unless the user explicitly asks for regeneration or apply.
 ```
 
-## Length policy
+## 400-line policy for documentation and code
 
-Active docs must remain readable. Long files are allowed only when they are generated evidence or historical snapshots with a compact manifest.
+Maintained documentation and source files must stay small enough for human review and AI-assisted patching.
 
-| File type | Preferred maximum | Required action when exceeded |
-|---|---:|---|
-| Active operator runbook | ~500 lines | Split, summarize or move verbose content to supporting docs. |
-| Maintained source documentation | ~700 lines | Add structure or split into subordinate docs. |
-| Generated compact evidence | ~1200 lines | Add manifest/summary and classify as evidence. |
-| Large historical/evidence bundle | Any size only if unavoidable | Must not be used as the first operational entrypoint. |
-
-Policy:
+Hard limit:
 
 ```text
-No active runbook should require opening an 8000-line bundle.
-Do not create new monolithic AI-to-AI bundles without a companion manifest.
-Do not use generated evidence snapshots as canonical workflow docs.
-Prefer manifest + index + focused report over one huge Markdown file.
+Markdown: <= 400 lines per active .md file
+Python/PowerShell/scripts/source code: <= 400 lines per maintained source file
 ```
+
+Markdown split rule:
+
+```text
+Keep the original file as a compact index.
+Create a sibling folder named exactly like the file, including .md: <file>.md/.
+Move detailed content into <file>.md/part-001.md, part-002.md, ...
+Keep each part under 400 lines.
+The index must list all parts and state that the document was split for the 400-line policy.
+```
+
+Code split rule:
+
+```text
+Keep public entrypoints/wrappers compact.
+Move implementation into a same-purpose package or module folder.
+Split by responsibility, not by arbitrary line number only.
+Keep each module/file under 400 lines.
+Preserve CLI/API compatibility unless the task explicitly allows breaking changes.
+Report resulting line count for every created or modified code/script file.
+```
+
+Existing files already over 400 lines are technical debt. Do not split them blindly during unrelated documentation work; refactor them progressively when touching that area for a code task.
 
 ## Function/tool visibility map
 
