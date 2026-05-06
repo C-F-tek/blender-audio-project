@@ -393,6 +393,11 @@ $EvidenceChunkDir = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunk
 $EvidenceChunkManifestJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunk_manifest.json"
 $EvidenceChunkManifestMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceChunkBase}_chunk_manifest.md"
 $EvidenceChunkZip = ".\output\validation\${EvidenceChunkBase}_chunks.zip"
+$ProviderRuntimeHeapFromPeerReportsJson = ".\output\validation\provider_runtime_heap_from_peer_reports_$Stamp.json"
+$ProviderRuntimeHeapFromPeerReportsMd = ".\output\validation\provider_runtime_heap_from_peer_reports_$Stamp.md"
+$ProviderRuntimeHeapTelemetryJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\provider_runtime_heap_telemetry_$Stamp.json"
+$ProviderRuntimeHeapTelemetryMd = ".\docs\LOCAL_VALIDATION_EVIDENCE\provider_runtime_heap_telemetry_$Stamp.md"
+
 
 Write-Host "=== Agent Review Full Toolbox Decision Loop ==="
 Write-Host "Repo: $RepoRootPath"
@@ -481,6 +486,10 @@ Invoke-RepoPython -Label "Contract script compile" -ArgsList @(
     ".\Tools\ai\build_semantic_evidence_chunks.py",
     ".\Tools\ai\build_agent_review_evidence_sufficiency.py",
     ".\Tools\ai\build_ai_peer_exchange_packet.py",
+    ".\Tools\ai\provider_runtime_heap.py",
+    ".\Tools\ai\build_provider_runtime_heap_from_peer_reports.py",
+    ".\Tools\ai\build_provider_runtime_heap_telemetry.py",
+    ".\Tools\ai\run_provider_runtime_heap_gpu_peer_smoke.py",
     ".\Tools\ai\run_gpu0_peer_companion_worker.py",
     ".\Tools\ai\run_npu_gpu_deep_review_auditor.py",
     ".\Tools\ai\run_agent_review_decision_loop.py",
@@ -810,7 +819,37 @@ if ($RunGpuNpuProvider) {
     if ($RequireProviderArtifacts) {
         $ProviderEvidenceArgs += @("--require-gpu-provider", "--require-npu-auditor")
     }
-    Invoke-RepoPython -Label "Strict provider evidence contract" -ArgsList $ProviderEvidenceArgs
+    
+Invoke-RepoPython -Label "Provider runtime heap from peer reports" -ArgsList @(
+    ".\Tools\ai\build_provider_runtime_heap_from_peer_reports.py",
+    "--repo-root", ".",
+    "--stamp", $Stamp,
+    "--gpu1-report", $Gpu1PrimaryAdvisoryJson,
+    "--gpu0-report", $Gpu0PeerResponseJson,
+    "--gpu0-tool-requests", $Gpu0PeerToolRequestsJson,
+    "--gpu0-broker-report", $Gpu0PeerBrokerJson,
+    "--npu-report", $NpuMicroJson,
+    "--npu-broker-report", $NpuMicroBrokerJson,
+    "--peer-exchange-report", $AiPeerExchangeJson,
+    "--peer-contract-report", $AiPeerExchangeContractJson,
+    "--output", $ProviderRuntimeHeapFromPeerReportsJson,
+    "--markdown-output", $ProviderRuntimeHeapFromPeerReportsMd
+)
+
+Invoke-RepoPython -Label "Provider runtime heap telemetry" -ArgsList @(
+    ".\Tools\ai\build_provider_runtime_heap_telemetry.py",
+    "--repo-root", ".",
+    "--stamp", $Stamp,
+    "--output", $ProviderRuntimeHeapTelemetryJson,
+    "--markdown-output", $ProviderRuntimeHeapTelemetryMd
+)
+
+Add-ExistingPath -List $Reports -Path $ProviderRuntimeHeapFromPeerReportsJson
+Add-ExistingPath -List $Reports -Path $ProviderRuntimeHeapTelemetryJson
+Add-ExistingPath -List $Artifacts -Path $ProviderRuntimeHeapFromPeerReportsMd
+Add-ExistingPath -List $Artifacts -Path $ProviderRuntimeHeapTelemetryMd
+
+Invoke-RepoPython -Label "Strict provider evidence contract" -ArgsList $ProviderEvidenceArgs
 }
 
 $ToolReports = @(
