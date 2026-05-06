@@ -22,7 +22,7 @@ The project should support multiple execution targets without coupling orchestra
 run-unica launcher
   -> pipeline orchestration
   -> provider interface
-  -> provider implementation
+  -> provider implementation or provider execution plan
   -> normalized provider diagnostics
   -> validated artifact/evidence
   -> runtime telemetry and capability context
@@ -50,6 +50,7 @@ Current doctrine:
 ```text
 run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
+LightFull0To10 = evidence-only profile, not provider/runtime proof
 quick/balanced/deep/custom = presets or operator parameters, not scope
 -No* flags = explicit opt-out from selected lanes
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
@@ -86,6 +87,8 @@ Telemetry is the completeness accessory. It does not replace provider artifacts 
 |---|---|
 | `Tools/ai/pipeline/` | Main modular AI artifact pipeline. |
 | `Tools/npu/pipeline/` | App-agnostic NPU helper contracts and provider-free staging helpers. |
+| `Tools/ai/full0to10_provider_execution_bridge/*` | Provider execution bridge planning/gating/readiness artifacts; current safety flags are non-executing. |
+| `Tools/ai/full0to10_final_product/*` | Final tool-product package: product Markdown, evidence index, readiness, manifest and README. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | Quality-based advisory routing. |
 | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Provider/broker/GPU/NPU/patch-plan telemetry summary. |
 | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production AI-to-AI handoff bundle. |
@@ -123,6 +126,21 @@ The provider layer may contain:
 
 Provider results must be normalized before entering artifact validation, telemetry summary or bundle handoff.
 
+### Provider bridge layer
+
+The current `full0to10_provider_execution_bridge` code is a bridge/gate/readiness layer, not proof of model execution by itself.
+
+Verified safety flags from code:
+
+```text
+provider_execution_performed=false
+patch_application_performed=false
+source_writes_performed=false
+persistent_memory_write_performed=false
+```
+
+It builds an invocation plan, real-run gate, command plan, workload output paths, bridge telemetry and readiness report. A future real provider run must set explicit execution state and must not reuse non-executing bridge evidence as runtime proof.
+
 ### Artifact layer
 
 The artifact layer should be provider-independent.
@@ -144,8 +162,8 @@ Expected artifact properties:
 ```text
 1. collect source inputs
 2. build compact context
-3. select provider or dry-run mode
-4. generate model output when explicitly requested or selected by Full0To10/provider lanes
+3. select provider, provider plan or dry-run mode
+4. generate model output only when explicitly requested or selected by Full0To10/provider lanes and permitted by gates
 5. normalize raw output and diagnostics
 6. parse JSON or structured text
 7. validate schema
@@ -184,6 +202,7 @@ Fallback providers are allowed only when the report clearly states that fallback
 - Keep JSON parsing and validation outside provider code.
 - Keep generated Python policy checks separate from generation.
 - Keep Blender runtime execution separate from artifact planning.
+- Keep provider bridge/gate/readiness evidence separate from real provider execution proof.
 - Keep NPU helper package provider-free until a validated migration phase wires it into runtime execution.
 - Keep telemetry and capability context separate from provider implementation but attached to run-unica handoff.
 - Keep discovery/index/CSV-count/file-line context separate from provider implementation but attached when repository visibility or maintainability affects recommendations or patch plans.
@@ -193,8 +212,8 @@ Fallback providers are allowed only when the report clearly states that fallback
 
 ```text
 StageConfig
-  -> ProviderDescriptor
-  -> ProviderResult
+  -> ProviderDescriptor or ProviderExecutionPlan
+  -> ProviderResult when real execution is explicitly permitted
   -> ArtifactNormalizer
   -> SchemaValidator
   -> RepositoryPathValidator
@@ -216,6 +235,7 @@ single script
   -> no report
   -> no telemetry/capability context for downstream patch plan
   -> no discovery/index/CSV/file-line context for repository-wide recommendations
+  -> treats non-executing provider bridge/readiness output as real provider execution
   -> maintained source grows beyond 400 lines without split/refactor plan
 ```
 
@@ -232,7 +252,8 @@ A new pipeline module is acceptable only if it:
 - is documented in the relevant README or docs file;
 - remains under 400 lines or is split by responsibility;
 - exposes manifest/report/telemetry/bundle visibility when promoted into the run-unica perimeter;
-- exposes discovery/index/CSV-count/file-line visibility when it affects repository-wide inventory, maintainability or refactor/reuse planning.
+- exposes discovery/index/CSV-count/file-line visibility when it affects repository-wide inventory, maintainability or refactor/reuse planning;
+- clearly distinguishes plan/gate/readiness evidence from actual provider execution.
 
 ## Validation ownership
 
