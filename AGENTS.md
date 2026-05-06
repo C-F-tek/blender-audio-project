@@ -8,7 +8,7 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 
 1. read `AGENTS.md`;
 2. read `CHATGPT.md` and `CHATGPT/README.md` when resuming ChatGPT-assisted, local-AI, full-toolbox or handoff-driven work;
-3. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for the current branch phase when present;
+3. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for the current code/state bridge when present;
 4. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
 5. follow hard guardrails unless the human explicitly approves a normally restricted action;
 6. report task/request conflicts before modifying files;
@@ -73,28 +73,29 @@ docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.m
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 ```
 
-Current active task:
+Current active baseline:
 
 ```text
-docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+master contains PR #187 unified launcher and Full0To10 doctrine.
+PR #192 is the next report-only foundation candidate.
+PR #191 is a diverged evidence branch; mine/regenerate/summarize it before any merge decision.
 ```
 
 Historical PR handoffs and old master-branch runbooks are not active entrypoints. If historical details are needed, recover them from git history or compact evidence, not from active task docs.
 
-## Current active branch phase
+## Current code-derived branch phase
 
 ```text
-Branch: codex/unified-local-ai-refactor-launcher
-PR: #187 feat(workflow): add unified local AI refactor launcher
-Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-Run: 20260505-143844
-Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Baseline: master after PR #187 merge
+Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Docs bridge: docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+Next candidate: PR #192 feat(ai): add full0to10 report-only foundation checks
 Mode: review-only until explicit human instruction
 ```
 
-The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Do not infer bundle contents from file existence alone.
+Do not infer runtime bundle contents from file existence alone. Evidence files and ZIP bundles must be validated through telemetry, manifest and completeness reports.
 
-The earlier broker telemetry gap is resolved/historical unless a new regression is found. Use `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` for the recent telemetry baseline.
+The earlier broker telemetry gap is resolved/historical unless a new regression is found. Use `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` and newer telemetry evidence for the recent baseline.
 
 ## ChatGPT operational memory
 
