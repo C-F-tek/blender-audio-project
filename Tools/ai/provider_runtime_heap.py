@@ -343,10 +343,29 @@ def render_markdown(snapshot: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def parse_payload(raw: str) -> dict[str, Any]:
+def parse_payload(raw: str = "", payload_file: str = "") -> dict[str, Any]:
+    if payload_file:
+        path = Path(payload_file)
+        if not path.is_absolute():
+            path = Path.cwd() / path
+        try:
+            raw = path.read_text(encoding="utf-8-sig")
+        except OSError as exc:
+            raise ValueError(f"payload file unreadable: {path}; error={type(exc).__name__}: {exc}") from exc
+
     if not raw:
         return {}
-    data = json.loads(raw)
+
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        preview = raw[:500].replace("\r", "\\r").replace("\n", "\\n")
+        source = f"file={payload_file}" if payload_file else "inline --payload-json"
+        raise ValueError(
+            f"payload JSON parse failed from {source}; length={len(raw)}; "
+            f"preview=[{preview}]; error={exc}"
+        ) from exc
+
     if not isinstance(data, dict):
         raise ValueError("payload JSON must be an object")
     return data
@@ -371,6 +390,7 @@ def build_parser() -> argparse.ArgumentParser:
     append.add_argument("--round", type=int, default=None)
     append.add_argument("--correlation-id", default="")
     append.add_argument("--payload-json", default="{}")
+    append.add_argument("--payload-file", default="")
 
     sub.add_parser("snapshot")
     sub.add_parser("tool-catalog")
@@ -398,7 +418,7 @@ def main() -> int:
             event_type=args.event_type,
             round_id=args.round,
             correlation_id=args.correlation_id or None,
-            payload=parse_payload(args.payload_json),
+            payload=parse_payload(args.payload_json, args.payload_file),
         )
         result = {"passed": True, "event": event, "snapshot": heap.write_snapshot()}
     elif args.command == "tool-catalog":
