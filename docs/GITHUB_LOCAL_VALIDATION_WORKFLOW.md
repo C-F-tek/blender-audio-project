@@ -28,8 +28,9 @@ run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 quick/balanced/deep/custom = presets or operator parameters, not scope
 -No* flags = explicit opt-out from selected lanes
-CSV/index/discovery surfaces are evidence lanes when relevant
-large Markdown must not be a primary operational entrypoint
+CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
+400-line policy applies to maintained docs and source files
+limitations are backlog to overcome, not reasons to skip available tools
 ```
 
 Supporting wrappers may exist, but they are not first entrypoints.
@@ -40,9 +41,11 @@ Supporting wrappers may exist, but they are not first entrypoints.
 
 `quick`, `balanced`, `deep` and `custom` are parameter presets or operator values only. They must not silently narrow scope.
 
-A broad validation proof is incomplete if it only says that files exist or that a focused dry-run passed. When a PR is derived from a run-unica execution, provider lane, broker/tool lane, evidence bundle, recommendation or patch plan, the review must include companion telemetry/capability surfaces and, when relevant, discovery/index/CSV-count surfaces.
+A broad validation proof is incomplete if it only says that files exist or that a focused dry-run passed. When a PR is derived from a run-unica execution, provider lane, broker/tool lane, evidence bundle, recommendation or patch plan, the review must include companion telemetry/capability surfaces and, when relevant, discovery/index/CSV-count/file-line-limit surfaces.
 
 Telemetry is a completeness accessory for evidence and patch plans. It does not replace validation reports; it explains whether lanes executed, failed, were blocked, degraded, disabled, unavailable or planned-only.
+
+A lane/tool is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
 
 ## Recommended lifecycle
 
@@ -52,7 +55,7 @@ choose unified launcher mode/parameters/presets
 run focused validation or run-unica Full0To10 flow through launcher
 inspect manifest-first outputs
 inspect telemetry/capability/final-summary surfaces when relevant
-inspect CSV/count and discovery/index summaries when relevant
+inspect CSV/count, file-line-limit and discovery/index summaries when relevant
 promote only compact evidence when needed
 commit intended docs/source/index changes
 push results
@@ -76,10 +79,10 @@ launcher command
 unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
 runtime tool usage telemetry when tools/broker lanes ran
-runtime tool capability manifest when capabilities matter
+runtime/hardware capability manifest when capabilities matter
 full toolbox telemetry summary for run-unica/production handoff
 shared AI-to-AI bundle/final summary for production handoff
-compact Markdown or CSV/count summaries
+compact Markdown, CSV/count or file-line-limit summaries
 discovery/index repair reports when relevant
 detailed evidence only when needed
 ```
@@ -96,7 +99,7 @@ Do not begin review from a long evidence bundle or oversized Markdown catalog.
 | NPU helper-only work | focused NPU helper validation, then unified launcher full validation if broader scope changed |
 | Validator debugging | direct focused validator command from validator catalog/reference |
 | GitHub evidence handoff | compact evidence builder through launcher/tool README, never bulk-add raw output |
-| Discovery/index/CSV-count review | inventory/chunks/repository-consistency phases through launcher; index repair remains plan/report-first |
+| Discovery/index/CSV/file-line review | inventory/chunks/repository-consistency phases through launcher; file-line-limit report when maintainability is in scope; index repair remains plan/report-first |
 
 Focused validation is not proof that `Full0To10` passed.
 
@@ -119,7 +122,7 @@ Do not document them as primary local validation commands.
 Do not use them as run-unica substitutes.
 If launcher delegates to them, their outputs must be visible in the launcher manifest.
 If their output feeds evidence/patch plans, companion telemetry/capability state must be visible in the handoff.
-If they produce inventory/discovery/count artifacts, compact CSV/JSON/Markdown references must be visible in the handoff.
+If they produce inventory/discovery/count/file-line artifacts, compact CSV/JSON/Markdown references must be visible in the handoff.
 ```
 
 ## Repository sync preflight
@@ -170,7 +173,7 @@ executed_count
 failed_count
 blocked_count
 broker_reports
-runtime capability manifest path
+runtime/hardware capability manifest path
 provider_advisory_state
 provider_failure_detected
 provider_failure_reasons
@@ -182,12 +185,13 @@ source_writes_performed
 patch_application_performed
 ```
 
-Discovery/index/CSV-count surfaces to check when relevant:
+Discovery/index/CSV/file-line surfaces to check when relevant:
 
 ```text
 Markdown inventory JSON/MD
 script inventory JSON/CSV/MD
 Python line-count CSV/MD
+file-line-limit JSON/MD
 function/class/method inventory CSV
 semantic chunk manifest JSON/MD
 selected chunk evidence JSON/MD
@@ -212,10 +216,11 @@ When adding run-unica evidence or patch-plan evidence, also include or reference
 
 ```text
 runtime telemetry
-runtime capability manifest
+runtime/hardware capability manifest
 full toolbox telemetry summary
 shared AI-to-AI final summary
 CSV/count summaries when inventory lanes ran
+file-line-limit report when maintainability is in scope
 discovery/index repair reports when relevant
 ```
 
@@ -240,6 +245,23 @@ Generated indexes are not source-of-truth docs. Do not hand-edit generated chunk
 `indexAI/code_chunks/**` must not be committed as ordinary source.
 
 Index repair is plan/report-first unless explicitly requested.
+
+## 400-line validation
+
+Maintained documentation and source files follow a hard 400-line policy.
+
+```text
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+```
+
+Validator:
+
+```text
+Tools/validation/check_file_line_limits.py
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+```
 
 ## Git change inspection
 
@@ -267,7 +289,7 @@ launcher mode/parameters/flags or focused validator used
 manifest path when available
 phase reports/evidence paths when available
 runtime telemetry/capability/final-summary paths when relevant
-discovery/index/CSV-count evidence when relevant
+discovery/index/CSV/file-line evidence when relevant
 provider execution statement
 patch application statement
 source writes statement
@@ -294,7 +316,7 @@ When a focused validator, NPU helper or provider lane fails:
 ```text
 first inspect the launcher manifest if the run used the launcher
 then inspect telemetry/capability/final-summary surfaces if involved
-then inspect discovery/index/CSV-count surfaces if relevant
+then inspect discovery/index/CSV/file-line surfaces if relevant
 then inspect the focused JSON report
 then inspect stderr/logs
 then rerun only the failing focused validator/lane if needed
@@ -315,3 +337,5 @@ Do not wire `Tools/npu/pipeline/` helpers into runtime orchestration until focus
 Do not treat push-capable workflow helpers as default validation commands. Any push-capable helper must require explicit user intent and visible git status review.
 
 Do not claim a run-unica Full0To10 run passed from dry-run, focused validator, oversized Markdown or file existence alone.
+
+Do not treat historical limitation notes as reasons to skip available tools.
