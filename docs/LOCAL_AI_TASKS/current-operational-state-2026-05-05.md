@@ -134,6 +134,58 @@ Relevant explicit disablers:
 -NoPatchSpecs
 ```
 
+## 400-line policy for documentation and code
+
+Hard limit for maintained files:
+
+```text
+Markdown: <= 400 lines per active .md file
+Python/PowerShell/scripts/source code: <= 400 lines per maintained source file
+```
+
+For Markdown over 400 lines:
+
+```text
+Keep the original file as a compact index.
+Create a sibling folder named exactly like the file, including .md: <file>.md/.
+Move detailed content into <file>.md/part-001.md, part-002.md, ...
+Keep each part under 400 lines.
+The index must list all parts and state that the document was split for the 400-line policy.
+```
+
+Markdown example:
+
+```text
+docs/LOCAL_AI_TASKS/example.md
+docs/LOCAL_AI_TASKS/example.md/part-001.md
+docs/LOCAL_AI_TASKS/example.md/part-002.md
+```
+
+For code over 400 lines:
+
+```text
+Keep the public entrypoint/wrapper compact.
+Move implementation into a same-purpose package or module folder.
+Split by responsibility, not by arbitrary line number only.
+Keep each module/file under 400 lines.
+Preserve CLI/API compatibility unless the task explicitly allows breaking changes.
+Report resulting line count for every created or modified code/script file.
+```
+
+Code examples:
+
+```text
+Tools/ai/example_tool.py                 # thin wrapper under 400 lines
+Tools/ai/example_tool/cli.py             # under 400 lines
+Tools/ai/example_tool/core.py            # under 400 lines
+Tools/ai/example_tool/reports.py         # under 400 lines
+
+Tools/workflow/example_runner.ps1        # thin wrapper under 400 lines
+Tools/workflow/example_runner/phase.ps1  # under 400 lines
+```
+
+Existing files already over 400 lines are technical debt. Do not split them blindly in documentation-only work; refactor them progressively when touching that area for a code task.
+
 ## Canonical entrypoint
 
 ```text
