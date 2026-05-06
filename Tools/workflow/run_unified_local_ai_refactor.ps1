@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
@@ -1223,12 +1223,63 @@ if ($RunLegacyFullToolboxIntegrated) {
     if ($StrictRealRunActivationEnabled) { $LegacyArgs.RequireProviderArtifacts = $true }
     if ($NoMemoryWrite) { $LegacyArgs.SkipMemoryReload = $true }
     if ($NoEvidence) { $LegacyArgs.SkipSharedToolboxBundle = $true }
+# IA-CARMINE-GPU0-PROVIDER-SUPPORT-BEGIN
+if ($Full0To10 -or $RunOpenVinoGpu0Workload) {
+    $Gpu0ProviderSupportJson = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
+    $Gpu0ProviderSupportMd = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.md" -f $DataStamp)
+    $Gpu0SupportOk = Invoke-Checked "Run OpenVINO GPU.0 provider support lane" {
+        & $ResolvedPythonExe .\Tools\ai\build_openvino_gpu0_workload_report.py `
+            --repo-root . `
+            --output $Gpu0ProviderSupportJson `
+            --markdown-output $Gpu0ProviderSupportMd `
+            --iterations 96 `
+            --min-seconds 3 `
+            --role provider_support_diagnostic `
+            --production-support
+    } -SoftFail
+    if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
+        $ReportFiles += @($Gpu0ProviderSupportJson, $Gpu0ProviderSupportMd)
+    }
+    if (-not $Gpu0SupportOk) {
+        if (Get-Variable -Name Warnings -ErrorAction SilentlyContinue) {
+            $Warnings += "GPU0 provider support lane failed or degraded; see $Gpu0ProviderSupportJson"
+        }
+    }
+}
+# IA-CARMINE-GPU0-PROVIDER-SUPPORT-END
+
     $PhaseStatus.legacy_full_toolbox_integrated = Invoke-Checked "Run legacy full-toolbox integrated 0-to-10 lane" {
         & .\Tools\workflow\run_agent_review_full_toolbox_decision_loop_integrated.ps1 @LegacyArgs
     } -SoftFail:$ContinueOnValidationError
     if (Test-Path -LiteralPath $LegacyFullToolboxReport -PathType Leaf) {
         $ReportFiles += $LegacyFullToolboxReport
         $PhaseReports.legacy_full_toolbox_integrated = $LegacyFullToolboxReport
+
+# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-BEGIN
+if ($Full0To10) {
+    $ProviderAcceptanceJson = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.json" -f $DataStamp)
+    $ProviderAcceptanceMd = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.md" -f $DataStamp)
+    $Gpu0ProviderSupportJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
+    $Gpu0FinalWorkloadJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $DataStamp)
+    $ProviderGateOk = Invoke-Checked "Full0To10 provider acceptance gate" {
+        & $ResolvedPythonExe .\Tools\validation\check_full0to10_provider_acceptance.py `
+            --repo-root . `
+            --stamp $DataStamp `
+            --gpu0-provider-support $Gpu0ProviderSupportJsonForGate `
+            --gpu0-final-workload $Gpu0FinalWorkloadJsonForGate `
+            --output $ProviderAcceptanceJson `
+            --markdown-output $ProviderAcceptanceMd
+    } -SoftFail
+    if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
+        $ReportFiles += @($ProviderAcceptanceJson, $ProviderAcceptanceMd)
+    }
+    if (-not $ProviderGateOk) {
+        if (Get-Variable -Name Warnings -ErrorAction SilentlyContinue) {
+            $Warnings += "Full0To10 provider acceptance gate failed/degraded; see $ProviderAcceptanceJson"
+        }
+    }
+}
+# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-END
     }
 }
 

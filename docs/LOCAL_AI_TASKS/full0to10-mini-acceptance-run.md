@@ -339,6 +339,53 @@ $M.errors
 
 The manifest must show `full_0_to_10_requested=True`, `run_intensity=quick`, and visible phase/evidence surfaces for the new capability.
 
+
+## Production provider support hardening
+
+For GPU0/provider work, acceptance is not satisfied by a final isolated micro workload alone.
+
+A valid Full0To10 quick acceptance must now include:
+
+```text
+OpenVINO GPU0 provider support lane before or inside provider/advisory flow
+sustained GPU0 workload evidence with production_support=true
+full0to10_provider_acceptance JSON/MD gate
+provider warnings promoted to classifications
+```
+
+The provider acceptance gate must classify and fail/degrade the run when it sees:
+
+```text
+provider_lane_degraded
+ollama_probe_failed
+primary_advisory_not_executed
+blocked_missing_refined_review_input
+gpu0_support_lane_not_integrated
+gpu0_sustained_workload_not_performed
+```
+
+GPU0 Resource Monitor staying at 0% during provider/advisory phases is an operator-visible warning. It is not the sole proof of failure, but it requires checking the provider support lane report and the provider acceptance gate.
+
+Expected new report files:
+
+```text
+output/validation/openvino_gpu0_provider_support_<stamp>.json
+output/validation/openvino_gpu0_provider_support_<stamp>.md
+output/validation/full0to10_provider_acceptance_<stamp>.json
+output/validation/full0to10_provider_acceptance_<stamp>.md
+```
+
+The final compact bundle must include telemetry surfaces:
+
+```text
+runtime_tool_usage_telemetry
+runtime_tool_capability_manifest
+full_toolbox_run_telemetry_summary
+shared_toolbox_ai_to_ai_bundle
+full0to10_provider_acceptance
+OpenVINO GPU0 provider/final workload evidence
+```
+
 ## Result classification
 
 Use these labels consistently:

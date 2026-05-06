@@ -289,6 +289,53 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     refined_path = resolve_path(repo_root, args.refined_review)
     proposals_path = resolve_path(repo_root, args.refined_proposals)
+    if not refined_path.exists():
+        missing = repo_rel(refined_path, repo_root)
+        proposal_missing = not proposals_path.exists()
+        return {
+            "schema_version": 1,
+            "kind": "agent_review_evidence_sufficiency",
+            "generated_at": now_iso(),
+            "repo_root": str(repo_root),
+            "passed": False,
+            "errors": [f"blocked_missing_refined_review_input: {missing}"],
+            "warnings": [
+                "Evidence sufficiency input is missing; Full0To10 must classify this instead of raising a traceback.",
+            ],
+            "provider_execution_performed": False,
+            "patch_application_performed": False,
+            "source_writes_performed": False,
+            "apply_mode": "report_only_evidence_sufficiency",
+            "inputs": {
+                "refined_review": missing,
+                "refined_review_exists": False,
+                "refined_proposals": repo_rel(proposals_path, repo_root),
+                "refined_proposals_exists": not proposal_missing,
+                "refined_proposal_count": None,
+                "context_reports": [load_optional_report(repo_root, value) for value in args.report_file],
+            },
+            "areas": {
+                "doc_code": {"area": "doc_code", "item_count": 0, "ready_for_manual_patch_count": 0, "needs_more_context_count": 0, "items": []},
+                "doc_doc": {"area": "doc_doc", "item_count": 0, "ready_for_manual_patch_count": 0, "needs_more_context_count": 0, "items": []},
+                "code_code": {"area": "code_code", "item_count": 0, "ready_for_manual_patch_count": 0, "needs_more_context_count": 0, "items": []},
+            },
+            "decision": {
+                "ready_for_manual_patch_count": 0,
+                "needs_more_context_count": 0,
+                "recommended_mode": "blocked_missing_refined_review_input",
+                "sufficient_for_real_pr": False,
+                "next_steps": ["Generate refined review/proposals or rewire this lane to current-run reports before acceptance."],
+            },
+            "guardrails": {
+                "report_only": True,
+                "provider_execution_performed": False,
+                "patch_application_performed": False,
+                "real_github_pr_created": False,
+                "sqlite_write_performed": False,
+                "persistent_memory_write_performed": False,
+                "manual_review_required": True,
+            },
+        }
     refined = load_json_object(refined_path)
     proposals = load_json_object(proposals_path) if proposals_path.exists() else {}
     doc_code = analyze_doc_code(refined, repo_root)
@@ -400,7 +447,7 @@ def main() -> int:
             ensure_ascii=False,
         )
     )
-    return 0
+    return 0 if report.get("passed") else 2
 
 
 if __name__ == "__main__":
