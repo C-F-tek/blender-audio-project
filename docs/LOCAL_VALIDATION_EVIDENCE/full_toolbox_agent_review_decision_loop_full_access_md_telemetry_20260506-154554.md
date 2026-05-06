@@ -1,4 +1,4 @@
-# Local Validation Evidence Bundle
+﻿# Local Validation Evidence Bundle
 
 - Generated at: `2026-05-06T15:47:26`
 - Kind: `github_validation_evidence_bundle`
@@ -229,7 +229,7 @@
 - Patch application performed: `False`
 - Source writes performed: `False`
 
-#### consistency_001 — md_python
+#### consistency_001 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -237,7 +237,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:324` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:324`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_002 — md_python
+#### consistency_002 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -245,7 +245,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:327` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:327`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_003 — md_python
+#### consistency_003 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -253,7 +253,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:333` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:333`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_004 — md_python
+#### consistency_004 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -261,7 +261,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:338` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:338`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_005 — md_python
+#### consistency_005 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -269,7 +269,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md:141` targeting `output/validation/patch_bundles/ia_carmine_real_run_strict_tool_activation_bundle/run_patch_bundle.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md:141`. Target `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md` and resolve `output/validation/patch_bundles/ia_carmine_real_run_strict_tool_activation_bundle/run_patch_bundle.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_006 — md_python
+#### consistency_006 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -277,7 +277,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md:14` targeting `output/validation/patch_bundles/full0to10_chained_md_budget_repo_quality_patch_bundle/run_patch_bundle.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md:14`. Target `docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md` and resolve `output/validation/patch_bundles/full0to10_chained_md_budget_repo_quality_patch_bundle/run_patch_bundle.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_007 — md_python
+#### consistency_007 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -285,7 +285,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md:173` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md:173`. Target `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_008 — md_python
+#### consistency_008 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -293,7 +293,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:25` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:25`. Target `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_009 — md_python
+#### consistency_009 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -301,7 +301,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:101` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:101`. Target `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_010 — md_python
+#### consistency_010 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -309,7 +309,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md:77` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md:77`. Target `docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_011 — md_python
+#### consistency_011 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -317,7 +317,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md:154` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md:154`. Target `docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_012 — md_python
+#### consistency_012 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -325,7 +325,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md:311` targeting `Tools/validation/check_example_contract.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md:311`. Target `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` and resolve `Tools/validation/check_example_contract.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_013 — md_python
+#### consistency_013 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -333,7 +333,7 @@
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md:256` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md:256`. Target `docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-#### consistency_042 — md_powershell
+#### consistency_042 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -341,7 +341,7 @@
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:292` targeting `some_script.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:292`. Target `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` and resolve `some_script.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-#### consistency_043 — md_powershell
+#### consistency_043 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -349,7 +349,7 @@
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:325` targeting `some_runner.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:325`. Target `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` and resolve `some_runner.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-#### consistency_044 — md_powershell
+#### consistency_044 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -357,7 +357,7 @@
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md:29` targeting `run_patch_bundle.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md:29`. Target `CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md` and resolve `run_patch_bundle.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-#### consistency_045 — md_powershell
+#### consistency_045 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -365,7 +365,7 @@
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md:106` targeting `your_app_regenerate_indexes.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md:106`. Target `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` and resolve `your_app_regenerate_indexes.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-#### consistency_046 — md_powershell
+#### consistency_046 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -373,7 +373,7 @@
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md:183` targeting `Tools/workflow/example_runner.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md:183`. Target `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` and resolve `Tools/workflow/example_runner.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-#### consistency_047 — md_powershell
+#### consistency_047 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -381,7 +381,7 @@
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md:184` targeting `Tools/workflow/example_runner/phase.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md:184`. Target `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` and resolve `Tools/workflow/example_runner/phase.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-#### consistency_048 — md_powershell
+#### consistency_048 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Status: `ready_for_manual_review`
@@ -440,16 +440,16 @@ run_unified_full0to10_quality_supervisor.ps1` without formatting-only edits. Map
 <!-- IA-CARMINE-MD-SPLIT: index -->
 # gpu-npu-parallel-evidence-runbook
 
-Questo documento è stato diviso automaticamente per rispettare il budget di righe Markdown.
+Questo documento Ã¨ stato diviso automaticamente per rispettare il budget di righe Markdown.
 
 - File originale: `docs/LOCAL_AI_TASKS/gpu-npu-parallel-evidence-runbook.md`
 - Limite massimo configurato: `400` righe
-- Indice completo: [`gpu-npu-parallel-evidence-runbook/README.md`](gpu-npu-parallel-evidence-runbook/README.md)
+- Indice completo: `gpu-npu-parallel-evidence-runbook/README.md` (`gpu-npu-parallel-evidence-runbook/README.md`, generated evidence path not committed)
 
 ## Parti
 
-- [`gpu-npu-parallel-evidence-runbook/part-001.md`](gpu-npu-parallel-evidence-runbook/part-001.md)
-- [`gpu-npu-parallel-evidence-runbook/part-002.md`](gpu-npu-parallel-evidence-runbook/part-002.md)
+- `gpu-npu-parallel-evidence-runbook/part-001.md` (`gpu-npu-parallel-evidence-runbook/part-001.md`, generated evidence path not committed)
+- `gpu-npu-parallel-evidence-runbook/part-002.md` (`gpu-npu-parallel-evidence-runbook/part-002.md`, generated evidence path not committed)
 
 ## Nota operativa
 
@@ -2007,133 +2007,133 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 
 ## Patch plans
 
-### consistency_001 — md_python
+### consistency_001 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:324` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:324`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_002 — md_python
+### consistency_002 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:327` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:327`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_003 — md_python
+### consistency_003 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:333` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:333`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_004 — md_python
+### consistency_004 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:338` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:338`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_005 — md_python
+### consistency_005 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md:141` targeting `output/validation/patch_bundles/ia_carmine_real_run_strict_tool_activation_bundle/run_patch_bundle.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md:141`. Target `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md` and resolve `output/validation/patch_bundles/ia_carmine_real_run_strict_tool_activation_bundle/run_patch_bundle.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_006 — md_python
+### consistency_006 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md:14` targeting `output/validation/patch_bundles/full0to10_chained_md_budget_repo_quality_patch_bundle/run_patch_bundle.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md:14`. Target `docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md` and resolve `output/validation/patch_bundles/full0to10_chained_md_budget_repo_quality_patch_bundle/run_patch_bundle.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_007 — md_python
+### consistency_007 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md:173` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md:173`. Target `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_008 — md_python
+### consistency_008 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:25` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:25`. Target `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_009 — md_python
+### consistency_009 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:101` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:101`. Target `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_010 — md_python
+### consistency_010 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md:77` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md:77`. Target `docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_011 — md_python
+### consistency_011 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md:154` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md:154`. Target `docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_012 — md_python
+### consistency_012 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md:311` targeting `Tools/validation/check_example_contract.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md:311`. Target `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` and resolve `Tools/validation/check_example_contract.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_013 — md_python
+### consistency_013 â€” md_python
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md']`
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md:256` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md:256`. Target `docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_042 — md_powershell
+### consistency_042 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md']`
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:292` targeting `some_script.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:292`. Target `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` and resolve `some_script.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-### consistency_043 — md_powershell
+### consistency_043 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md']`
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:325` targeting `some_runner.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:325`. Target `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` and resolve `some_runner.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-### consistency_044 — md_powershell
+### consistency_044 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md']`
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md:29` targeting `run_patch_bundle.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md:29`. Target `CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md` and resolve `run_patch_bundle.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-### consistency_045 — md_powershell
+### consistency_045 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['docs/AUTO_PUSH_GENERATED_ARTIFACTS.md']`
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md:106` targeting `your_app_regenerate_indexes.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md:106`. Target `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` and resolve `your_app_regenerate_indexes.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-### consistency_046 — md_powershell
+### consistency_046 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md']`
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md:183` targeting `Tools/workflow/example_runner.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md:183`. Target `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` and resolve `Tools/workflow/example_runner.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-### consistency_047 — md_powershell
+### consistency_047 â€” md_powershell
 - Source: `gpu_recommendation`
 - Risk: `medium`
 - Target files: `['docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md']`
@@ -2614,7 +2614,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 
 ## Recommendations
 
-### consistency_001 — md_python
+### consistency_001 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2622,7 +2622,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:324` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:324`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_002 — md_python
+### consistency_002 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2630,7 +2630,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:327` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:327`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_003 — md_python
+### consistency_003 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2638,7 +2638,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:333` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:333`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_004 — md_python
+### consistency_004 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2646,7 +2646,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:338` targeting `Tools/ai/agent_memory_tools.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md:338`. Target `CHATGPT/2026-05-05-newconcept-hardware-memory/02-sqlite-heap-memory-design.md` and resolve `Tools/ai/agent_memory_tools.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_005 — md_python
+### consistency_005 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2654,7 +2654,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md:141` targeting `output/validation/patch_bundles/ia_carmine_real_run_strict_tool_activation_bundle/run_patch_bundle.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md:141`. Target `CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md` and resolve `output/validation/patch_bundles/ia_carmine_real_run_strict_tool_activation_bundle/run_patch_bundle.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_006 — md_python
+### consistency_006 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2662,7 +2662,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md:14` targeting `output/validation/patch_bundles/full0to10_chained_md_budget_repo_quality_patch_bundle/run_patch_bundle.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md:14`. Target `docs/LOCAL_AI_TASKS/full-run-tutto-su-tutto/14-markdown-line-budget-download-bundles.md` and resolve `output/validation/patch_bundles/full0to10_chained_md_budget_repo_quality_patch_bundle/run_patch_bundle.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_007 — md_python
+### consistency_007 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2670,7 +2670,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md:173` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md:173`. Target `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-001.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_008 — md_python
+### consistency_008 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2678,7 +2678,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:25` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:25`. Target `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_009 — md_python
+### consistency_009 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2686,7 +2686,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:101` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md:101`. Target `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate/part-002.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_010 — md_python
+### consistency_010 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2694,7 +2694,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md:77` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md:77`. Target `docs/LOCAL_AI_TASKS/open-pr-triage-2026-05-02.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_011 — md_python
+### consistency_011 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2702,7 +2702,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md:154` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md:154`. Target `docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_012 — md_python
+### consistency_012 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2710,7 +2710,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md:311` targeting `Tools/validation/check_example_contract.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md:311`. Target `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` and resolve `Tools/validation/check_example_contract.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_013 — md_python
+### consistency_013 â€” md_python
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2718,7 +2718,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_python_command_script_missing` at `docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md:256` targeting `Tools/validation/check_markdown_command_hygiene.py`.
 - Strategy: Build a focused patch plan for `md_python_command_script_missing` using mapper evidence `docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md:256`. Target `docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-001.md` and resolve `Tools/validation/check_markdown_command_hygiene.py` without formatting-only edits. Mapper recommendation: Update the command to a real script path or remove the obsolete command.
 
-### consistency_042 — md_powershell
+### consistency_042 â€” md_powershell
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2726,7 +2726,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:292` targeting `some_script.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:292`. Target `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` and resolve `some_script.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-### consistency_043 — md_powershell
+### consistency_043 â€” md_powershell
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2734,7 +2734,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:325` targeting `some_runner.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md:325`. Target `AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md` and resolve `some_runner.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-### consistency_044 — md_powershell
+### consistency_044 â€” md_powershell
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2742,7 +2742,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md:29` targeting `run_patch_bundle.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md:29`. Target `CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md` and resolve `run_patch_bundle.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-### consistency_045 — md_powershell
+### consistency_045 â€” md_powershell
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2750,7 +2750,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md:106` targeting `your_app_regenerate_indexes.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md:106`. Target `docs/AUTO_PUSH_GENERATED_ARTIFACTS.md` and resolve `your_app_regenerate_indexes.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-### consistency_046 — md_powershell
+### consistency_046 â€” md_powershell
 - Source: `repository_consistency_map`
 - Status: `ready_for_patch_plan`
 - Risk: `medium`
@@ -2758,7 +2758,7 @@ Report-only decision loop. No provider execution, patch application, SQLite writ
 - Rationale: Repository consistency mapper reported high `md_mentions_missing_powershell_path` at `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md:183` targeting `Tools/workflow/example_runner.ps1`.
 - Strategy: Build a focused patch plan for `md_mentions_missing_powershell_path` using mapper evidence `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md:183`. Target `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` and resolve `Tools/workflow/example_runner.ps1` without formatting-only edits. Mapper recommendation: Correct the documentation reference or restore the missing target if it is still required.
 
-### consistency_047 — md_powershell
+### consistency_047 â€” md_powershell
 - Source: `repository_consistency_ma
 ```
 
@@ -3140,7 +3140,7 @@ Strict real-run activation required GPU primary advisory output, but the provide
 - Apply mode: `manual_review_only`
 - Proposal count: `1`
 
-## P-NEXT-NPU-OBSERVABILITY — Add additive NPU observability before provider execution changes
+## P-NEXT-NPU-OBSERVABILITY â€” Add additive NPU observability before provider execution changes
 
 - Priority: `P2`
 - Area: `npu_backend`
@@ -3209,26 +3209,26 @@ These are proposals only. They must not be auto-applied without explicit review.
 
 ## Largest files
 
-- `Tools/npu/run_dual_ai_pipeline.py` — `1774` lines, risk `high`
-- `Scripting/v61b/scene_tuning_panel.py` — `1262` lines, risk `high`
-- `Tools/workflow/workflow_state.py` — `1230` lines, risk `high`
-- `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` — `1179` lines, risk `high`
-- `Tools/ai/run_agent_gpu_deep_planning_supervised.py` — `1129` lines, risk `high`
-- `Scripting/v61b/animation.py` — `1079` lines, risk `high`
-- `Tools/ai/build_deterministic_recommendations.py` — `909` lines, risk `high`
-- `Tools/ai/run_agent_gpu_deep_planning_review.py` — `902` lines, risk `high`
-- `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` — `850` lines, risk `high`
-- `Tools/workflow/gui/workflow_gui.py` — `738` lines, risk `medium`
-- `Scripting/v61b/physics_setup.py` — `737` lines, risk `medium`
-- `Scripting/v61b/asset_setup.py` — `725` lines, risk `medium`
-- `Tools/ai/build_refactor_duplication_audit.py` — `725` lines, risk `medium`
-- `Tools/ai/agent_runtime_tool_broker.py` — `715` lines, risk `medium`
-- `Tools/npu/build_music_context.py` — `711` lines, risk `medium`
-- `Tools/ai/run_npu_gpu_deep_review_auditor.py` — `694` lines, risk `medium`
-- `Tools/ai/build_repository_consistency_map.py` — `687` lines, risk `medium`
-- `Tools/ai/build_runtime_tool_usage_telemetry.py` — `675` lines, risk `medium`
-- `Scripting/v61b/materials.py` — `657` lines, risk `medium`
-- `Tools/npu/run_npu_review.py` — `631` lines, risk `medium`
+- `Tools/npu/run_dual_ai_pipeline.py` â€” `1774` lines, risk `high`
+- `Scripting/v61b/scene_tuning_panel.py` â€” `1262` lines, risk `high`
+- `Tools/workflow/workflow_state.py` â€” `1230` lines, risk `high`
+- `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` â€” `1179` lines, risk `high`
+- `Tools/ai/run_agent_gpu_deep_planning_supervised.py` â€” `1129` lines, risk `high`
+- `Scripting/v61b/animation.py` â€” `1079` lines, risk `high`
+- `Tools/ai/build_deterministic_recommendations.py` â€” `909` lines, risk `high`
+- `Tools/ai/run_agent_gpu_deep_planning_review.py` â€” `902` lines, risk `high`
+- `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` â€” `850` lines, risk `high`
+- `Tools/workflow/gui/workflow_gui.py` â€” `738` lines, risk `medium`
+- `Scripting/v61b/physics_setup.py` â€” `737` lines, risk `medium`
+- `Scripting/v61b/asset_setup.py` â€” `725` lines, risk `medium`
+- `Tools/ai/build_refactor_duplication_audit.py` â€” `725` lines, risk `medium`
+- `Tools/ai/agent_runtime_tool_broker.py` â€” `715` lines, risk `medium`
+- `Tools/npu/build_music_context.py` â€” `711` lines, risk `medium`
+- `Tools/ai/run_npu_gpu_deep_review_auditor.py` â€” `694` lines, risk `medium`
+- `Tools/ai/build_repository_consistency_map.py` â€” `687` lines, risk `medium`
+- `Tools/ai/build_runtime_tool_usage_telemetry.py` â€” `675` lines, risk `medium`
+- `Scripting/v61b/materials.py` â€” `657` lines, risk `medium`
+- `Tools/npu/run_npu_review.py` â€” `631` lines, risk `medium`
 
 ## Recommendations
 
@@ -3446,7 +3446,7 @@ This is static interpretation only. It does not execute repository code or apply
 
 ## Recommendations
 
-### det_doc_code_001 — doc_code
+### det_doc_code_001 â€” doc_code
 - Source: `deterministic_evidence_synthesizer`
 - Status: `ready_for_patch_plan`
 - Risk: `low`
@@ -3482,3 +3482,4 @@ git add docs/LOCAL_VALIDATION_EVIDENCE/
 git commit -m "test: add local ai workflow evidence bundle"
 git push
 ```
+
