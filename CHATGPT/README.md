@@ -17,49 +17,66 @@ Discovery contract:
 AI agents should scan CHATGPT/*.md early when resuming repository work.
 These notes are advisory memory, not source-of-truth code.
 Source-of-truth remains code, tests, validation reports, runtime bundle evidence and canonical docs.
+Historical handoffs must be checked against current operational state and GitHub state before acting.
 ```
 
 Recommended read order:
 
 ```text
-1. docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
-2. CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
-3. docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-4. docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
-5. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
-6. docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
-7. docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
-8. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-9. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
-10. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
-11. docs/LOCAL_AI_TASKS/project-tool-registry.md
-12. docs/TECH_DEBT_TRACKER.md
-13. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
-14. CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md
-15. CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md
-16. docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
-17. docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
-18. FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
-19. docs/LOCAL_AI_TASKS/ai-patch-delivery-policy.md
-20. docs/LOCAL_AI_TASKS/global-datastamp-ai-packets-contract.md
+1. AGENTS.md
+2. CHATGPT.md
+3. docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+4. docs/MAIN_RUNTIME_ARCHITECTURE.md
+5. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+6. docs/AI_PIPELINE_ARCHITECTURE.md
+7. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+8. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+9. docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+10. docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+11. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+12. docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
+13. docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+14. docs/LOCAL_AI_TASKS/project-tool-registry.md
+15. docs/TECH_DEBT_TRACKER.md
+16. CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
+17. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
+18. CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md
+19. CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md
+20. AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md
 ```
 
 Current active follow-up:
 
 ```text
-Inspect the refactor/reuse full-run runtime bundle for run 20260505-143844, classify recommendations and patch plans, and select a controlled review-first mega patch for method/class/helper/tool reuse.
+Use docs/MAIN_RUNTIME_ARCHITECTURE.md as the architecture target for shared runtime heap / blackboard, GPU1 planner, GPU0 OpenVINO helper, NPU microtask responder, broker executor, semantic tools registry, deterministic CPU validators and telemetry/event stream work.
+Keep implementation incremental, report-only first and congruent with the unified launcher and Full0To10 doctrine.
 ```
 
-Current runtime bundle:
+Historical refactor/reuse full-run handoff:
+
+```text
+CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
+```
+
+Historical runtime bundle:
 
 ```text
 ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+```
+
+The historical handoff and bundle remain useful forensic/evidence context, but they are not current branch state by themselves. Prefer:
+
+```text
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
 Current compact context notes:
 
 ```text
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
 docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
@@ -83,11 +100,21 @@ Use every relevant Full0To10 lane by default.
 Mark a lane unavailable/degraded only from current code, telemetry, capability manifest, provider diagnostic or validator evidence.
 ```
 
+Main runtime architecture policy:
+
+```text
+Provider lanes do not directly mutate repository state.
+Broker unico executor is the target execution gateway for registered tools.
+Semantic tools registry is the target capability source of truth.
+Deterministic validators / CPU authority decide local pass/fail claims.
+Telemetry/event stream must make executed, skipped, degraded and blocked phases visible.
+```
+
 Bundle handling policy:
 
 ```text
-The bundle is a runtime artifact published as a GitHub draft release asset from PR #187.
-It is intentionally not committed to the repository.
+Runtime bundles are local/GitHub release artifacts, not source files.
+They are intentionally not committed to the repository.
 Do not infer bundle contents from file existence alone.
 Inspect manifest, decision loop, recommendations, patch plan, telemetry, capability manifest, full toolbox telemetry summary, shared AI-to-AI bundle, provider diagnostics and workload quality before selecting patches.
 ```
