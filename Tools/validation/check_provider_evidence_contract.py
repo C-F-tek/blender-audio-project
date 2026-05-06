@@ -151,6 +151,33 @@ def probe_evidence(probe: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def openvino_gpu0_secondary_evidence(report: dict[str, Any]) -> dict[str, Any]:
+    visible = bool(report.get("openvino_gpu0_visible"))
+    probe_performed = bool(report.get("openvino_gpu0_probe_performed"))
+    workload_performed = bool(report.get("openvino_gpu0_workload_performed"))
+    workload_passed = bool(report.get("openvino_gpu0_workload_passed"))
+    provider_performed = bool(report.get("openvino_gpu0_provider_execution_performed") or report.get("provider_execution_performed"))
+    gpu1_workload = bool(report.get("openvino_gpu1_workload_performed"))
+    real = bool(report and visible and probe_performed and workload_performed and workload_passed and provider_performed and not gpu1_workload)
+    return {
+        "real": real,
+        "present": bool(report),
+        "passed": report.get("passed"),
+        "openvino_gpu0_visible": visible,
+        "openvino_gpu0_probe_performed": probe_performed,
+        "openvino_gpu0_workload_performed": workload_performed,
+        "openvino_gpu0_workload_passed": workload_passed,
+        "openvino_gpu0_provider_execution_performed": provider_performed,
+        "openvino_gpu0_role": report.get("openvino_gpu0_role"),
+        "openvino_gpu0_not_primary_advisory": report.get("openvino_gpu0_not_primary_advisory"),
+        "openvino_gpu1_reserved_visible": bool(report.get("openvino_gpu1_reserved_visible")),
+        "openvino_gpu1_workload_performed": gpu1_workload,
+        "selected_device": report.get("selected_device"),
+        "available_devices": report.get("available_devices") if isinstance(report.get("available_devices"), list) else [],
+        "errors": safe_list(report.get("errors")),
+        "warnings": safe_list(report.get("warnings")),
+    }
+
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     errors: list[str] = []
@@ -161,16 +188,19 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     gpu_npu_sync, sync_errors, sync_path = read_optional_json(repo_root, args.gpu_npu_sync, required=False)
     local_probe, probe_errors, probe_path = read_optional_json(repo_root, args.local_provider_probe, required=False)
     hardware_manifest, hardware_errors, hardware_path = read_optional_json(repo_root, args.hardware_manifest, required=False)
+    openvino_gpu0_workload, gpu0_errors, gpu0_path = read_optional_json(repo_root, args.openvino_gpu0_workload, required=False)
 
     errors.extend(orch_errors)
     errors.extend(gpu_errors)
     warnings.extend(sync_errors)
     warnings.extend(probe_errors)
     warnings.extend(hardware_errors)
+    warnings.extend(gpu0_errors)
 
     gpu = gpu_provider_evidence(gpu_report)
     npu = npu_provider_evidence(orchestrator)
     probe = probe_evidence(local_probe)
+    openvino_gpu0_secondary = openvino_gpu0_secondary_evidence(openvino_gpu0_workload)
     hardware_policy = hardware_manifest.get("hardware_lane_policy") if isinstance(hardware_manifest.get("hardware_lane_policy"), dict) else {}
     cuda_primary = hardware_policy.get("cuda_gpu_primary", {}) if isinstance(hardware_policy.get("cuda_gpu_primary"), dict) else {}
     openvino_gpu0 = hardware_policy.get("openvino_gpu0", {}) if isinstance(hardware_policy.get("openvino_gpu0"), dict) else {}
@@ -190,6 +220,19 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             f"audit_count={npu['audit_count']} load_attempt_count={npu['load_attempt_count']} "
             f"success_count={npu['success_count']} lane_mode={npu['lane_mode']}"
         )
+    if args.require_openvino_gpu0_secondary and not openvino_gpu0_secondary["real"]:
+        errors.append(
+            "OpenVINO GPU.0 secondary workload evidence missing or degraded: "
+            f"visible={openvino_gpu0_secondary['openvino_gpu0_visible']} "
+            f"probe={openvino_gpu0_secondary['openvino_gpu0_probe_performed']} "
+            f"workload={openvino_gpu0_secondary['openvino_gpu0_workload_performed']} "
+            f"passed={openvino_gpu0_secondary['openvino_gpu0_workload_passed']} "
+            f"provider={openvino_gpu0_secondary['openvino_gpu0_provider_execution_performed']} "
+            f"selected={openvino_gpu0_secondary['selected_device']} "
+            f"errors={openvino_gpu0_secondary['errors']}"
+        )
+    if args.forbid_openvino_gpu1_workload and openvino_gpu0_secondary["openvino_gpu1_workload_performed"]:
+        errors.append("hardware policy violation: OpenVINO GPU.1 workload was performed, but GPU.1 is reserved for CUDA/Ollama")
     if is_fallback_artifact(gpu_report):
         errors.append("GPU report is a required_provider_artifact_missing fallback, not real provider evidence")
     if is_fallback_artifact(orchestrator):
@@ -231,14 +274,24 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "gpu_npu_sync": sync_path,
             "local_provider_probe": probe_path,
             "hardware_manifest": hardware_path,
+            "openvino_gpu0_workload": gpu0_path,
         },
+        "cuda_gpu_primary_real": gpu["real"],
+        "openvino_gpu0_secondary_real": openvino_gpu0_secondary["real"],
+        "npu_auditor_real": npu["real"],
+        "openvino_gpu1_reserved_visible": bool(openvino_gpu1_reserved.get("visible") or openvino_gpu0_secondary.get("openvino_gpu1_reserved_visible")),
         "gpu": gpu,
+        "openvino_gpu0_secondary": openvino_gpu0_secondary,
         "npu": npu,
         "local_probe": probe,
         "hardware_policy": hardware_policy,
         "gpu_npu_sync_metrics": gpu_npu_sync.get("metrics") if isinstance(gpu_npu_sync.get("metrics"), dict) else {},
         "decision": {
             "gpu_provider_ready": gpu["real"],
+            "openvino_gpu0_secondary_ready": openvino_gpu0_secondary["real"],
+            "gpu0_does_not_satisfy_cuda_primary": True,
+            "npu_probe_only_is_not_auditor_evidence": True,
+            "openvino_gpu1_workload_forbidden": True,
             "npu_auditor_ready": npu["real"],
             "probe_only_is_not_provider_evidence": True,
             "strict_provider_contract_satisfied": not errors,
@@ -259,6 +312,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 def render_markdown(report: dict[str, Any]) -> str:
     gpu = report.get("gpu", {}) if isinstance(report.get("gpu"), dict) else {}
     npu = report.get("npu", {}) if isinstance(report.get("npu"), dict) else {}
+    gpu0 = report.get("openvino_gpu0_secondary", {}) if isinstance(report.get("openvino_gpu0_secondary"), dict) else {}
     lines = ["# Provider Evidence Contract", ""]
     lines.append(f"- Passed: `{report.get('passed')}`")
     lines.append(f"- Stamp: `{report.get('stamp')}`")
@@ -266,6 +320,12 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- GPU real provider evidence: `{gpu.get('real')}`")
     lines.append(f"- GPU round count: `{gpu.get('round_count')}`")
     lines.append(f"- GPU provider error: `{gpu.get('provider_error')}`")
+    lines.append(f"- OpenVINO GPU.0 secondary real evidence: `{gpu0.get('real')}`")
+    lines.append(f"- OpenVINO GPU.0 visible: `{gpu0.get('openvino_gpu0_visible')}`")
+    lines.append(f"- OpenVINO GPU.0 workload performed: `{gpu0.get('openvino_gpu0_workload_performed')}`")
+    lines.append(f"- OpenVINO GPU.0 workload passed: `{gpu0.get('openvino_gpu0_workload_passed')}`")
+    lines.append(f"- OpenVINO GPU.1 reserved visible: `{gpu0.get('openvino_gpu1_reserved_visible')}`")
+    lines.append(f"- OpenVINO GPU.1 workload performed: `{gpu0.get('openvino_gpu1_workload_performed')}`")
     lines.append(f"- NPU real auditor evidence: `{npu.get('real')}`")
     lines.append(f"- NPU audit count: `{npu.get('audit_count')}`")
     lines.append(f"- NPU success count: `{npu.get('success_count')}`")
@@ -292,7 +352,10 @@ def main() -> int:
     parser.add_argument("--gpu-npu-sync", default="")
     parser.add_argument("--local-provider-probe", default="output/validation/local_provider_probe.json")
     parser.add_argument("--hardware-manifest", default="output/validation/runtime_hardware_capability_manifest.json")
+    parser.add_argument("--openvino-gpu0-workload", default="output/validation/openvino_gpu0_workload.json")
     parser.add_argument("--require-gpu-provider", action="store_true")
+    parser.add_argument("--require-openvino-gpu0-secondary", action="store_true")
+    parser.add_argument("--forbid-openvino-gpu1-workload", action="store_true", default=True)
     parser.add_argument("--require-npu-auditor", action="store_true")
     parser.add_argument("--output", default="output/validation/provider_evidence_contract.json")
     parser.add_argument("--markdown-output", default="output/validation/provider_evidence_contract.md")

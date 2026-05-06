@@ -1229,39 +1229,88 @@ if ($RunLegacyFullToolboxIntegrated) {
     }
 }
 
-if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-ModeEnabled "patch_specs") -or (Test-ModeEnabled "evidence") -or $UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $GeneratePatchSpecs -or $BuildEvidence) {
-    $BaseName = "unified_${ModeName}_$Stamp"
-    $ProposalBaseName = "unified_${ModeName}_proposals_$Stamp"
-    $ContextFiles = @($ContextFiles | Where-Object {
-        $ContextPath = [string]$_
-        -not (Test-Path -LiteralPath $ContextPath -PathType Container)
-    })
 
-    $RunnerArgs = @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass",
-        "-File", ".\Tools\workflow\run_local_ai_task_via_pipeline.ps1",
+# IA-CARMINE-GPU0-WORKLOAD-BEFORE-OFFICIAL-BEGIN
+if ($RunOpenVinoGpu0Workload -or $Full0To10) {
+    Write-Host ""
+    Write-Host "=== Run OpenVINO GPU.0 secondary workload evidence ==="
+    $Gpu0Stamp = $Stamp
+    if ([string]::IsNullOrWhiteSpace($Gpu0Stamp)) { $Gpu0Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
+    $Gpu0Json = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $Gpu0Stamp)
+    $Gpu0Md = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.md" -f $Gpu0Stamp)
+    Invoke-Python @(
+        "Tools/ai/build_openvino_gpu0_workload_report.py",
+        "--repo-root", ".",
+        "--output", $Gpu0Json,
+        "--markdown-output", $Gpu0Md
+    )
+    if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
+        $ReportFiles += $Gpu0Json
+        $ReportFiles += $Gpu0Md
+    }
+    if (Get-Variable -Name PhaseReports -ErrorAction SilentlyContinue) {
+        $PhaseReports += $Gpu0Json
+        $PhaseReports += $Gpu0Md
+    }
+}
+# IA-CARMINE-GPU0-WORKLOAD-BEFORE-OFFICIAL-END
+if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-ModeEnabled "patch_specs") -or (Test-ModeEnabled "evidence") -or $UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $GeneratePatchSpecs -or $BuildEvidence) {
+    # IA-CARMINE-OFFICIAL-PHASE-VISIBILITY-BEGIN
+    Write-Host ""
+    Write-Host "=== Run official local AI pipeline adapter ==="
+    $OfficialStamp = $Stamp
+    if ([string]::IsNullOrWhiteSpace($OfficialStamp)) { $OfficialStamp = Get-Date -Format "yyyyMMdd-HHmmss" }
+    $OfficialRepoRoot = $RepoRoot
+    if (Get-Variable -Name ResolvedRepoRoot -ErrorAction SilentlyContinue) { $OfficialRepoRoot = $ResolvedRepoRoot }
+    if ([string]::IsNullOrWhiteSpace($OfficialRepoRoot)) { $OfficialRepoRoot = (Resolve-Path ".").Path }
+    $OfficialAdapterScript = Join-Path $OfficialRepoRoot "Tools/workflow/run_local_ai_task_via_pipeline.ps1"
+    $OfficialRunDir = Join-Path $OutputDir ("local_ai_runs/{0}_official_adapter" -f $OfficialStamp)
+    $OfficialBasename = "{0}_official_adapter" -f $OfficialStamp
+    $OfficialArgs = @(
         "-PromptFile", $TaskFile,
         "-TaskFile", $TaskFile,
-        "-RunDir", $RunDir,
+        "-RunDir", $OfficialRunDir,
+        "-RepoRoot", $OfficialRepoRoot,
         "-Profile", $Profile,
-        "-Basename", $BaseName,
-        "-ProposalBasename", $ProposalBaseName,
-        "-MaxContextChars", "$MaxContextChars",
-        "-ExtraContextFile", ($ContextFiles -join ",")
+        "-Basename", $OfficialBasename,
+        "-ProposalBasename", ("{0}_proposals" -f $OfficialBasename),
+        "-Model", $Model,
+        "-MaxContextChars", ([string]$MaxContextChars)
     )
-    if ($Model -ne "") { $RunnerArgs += @("-Model", $Model) }
-    if ($FullContextGoldenPath) { $RunnerArgs += "-FullContextGoldenPath" }
-    if ($UsePrimaryAdvisoryProvider -or $UseOllamaAdvisory -or (Test-ModeEnabled "provider")) { $RunnerArgs += "-UsePrimaryAdvisoryProvider" }
-    if ($RunMultistepProviderWorkflow) { $RunnerArgs += "-RunMultistepProviderWorkflow" }
-    if ($RunOllamaProbe) { $RunnerArgs += "-RunOllamaProbe" }
-    if ($RunNpuProbe) { $RunnerArgs += "-RunNpuProbe" }
-    if ($RunNpuDecodeSmoke) { $RunnerArgs += "-RunNpuDecodeSmoke" }
-    if ($BuildEvidence -or (Test-ModeEnabled "evidence")) { $RunnerArgs += "-BuildEvidence" }
-    if ($GeneratePatchSpecs -or (Test-ModeEnabled "patch_specs")) { $RunnerArgs += "-GeneratePatchSpecs" }
-    if ($DryRun) { $RunnerArgs += "-DryRun" }
-    $PhaseStatus.official_pipeline = Invoke-Checked "Run official local AI pipeline adapter" { powershell.exe @RunnerArgs } -SoftFail:$ContinueOnValidationError
-    $PhaseReports.official_packet = "$PipelineDir/$BaseName.json"
-    $PhaseReports.official_proposals = "$PipelineDir/$ProposalBaseName.json"
+    if ($FullContextGoldenPath) { $OfficialArgs += "-FullContextGoldenPath" }
+    if ($UsePrimaryAdvisoryProvider) { $OfficialArgs += "-UsePrimaryAdvisoryProvider" }
+    if ($RunMultistepProviderWorkflow) { $OfficialArgs += "-RunMultistepProviderWorkflow" }
+    if ($RunOllamaProbe) { $OfficialArgs += "-RunOllamaProbe" }
+    if ($RunNpuProbe) { $OfficialArgs += "-RunNpuProbe" }
+    if ($RunNpuDecodeSmoke) { $OfficialArgs += "-RunNpuDecodeSmoke" }
+    if ($BuildEvidence) { $OfficialArgs += "-BuildEvidence" }
+    if ($GeneratePatchSpecs) { $OfficialArgs += "-GeneratePatchSpecs" }
+    if ($DryRun) { $OfficialArgs += "-DryRun" }
+    if (Get-Command Invoke-UnifiedExternalPhaseCommand -ErrorAction SilentlyContinue) {
+        $OfficialPhase = Invoke-UnifiedExternalPhaseCommand -RepoRoot $OfficialRepoRoot -PhaseName "official" -StampValue $OfficialStamp -OutputDir $OutputDir -FilePath $OfficialAdapterScript -Arguments $OfficialArgs -TimeoutSeconds $OfficialAdapterTimeoutSeconds -Skip:$SkipOfficialAdapter
+        if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
+            $ReportFiles += $OfficialPhase.json
+            $ReportFiles += $OfficialPhase.markdown
+        }
+        if (Get-Variable -Name PhaseReports -ErrorAction SilentlyContinue) {
+            $PhaseReports += $OfficialPhase.json
+            $PhaseReports += $OfficialPhase.markdown
+        }
+        if (Get-Variable -Name PhaseStatus -ErrorAction SilentlyContinue) {
+            $PhaseStatus["official"] = $OfficialPhase.status
+        }
+        if ($OfficialPhase.status -eq "timeout" -or $OfficialPhase.status -eq "skipped") {
+            if (Get-Variable -Name Warnings -ErrorAction SilentlyContinue) {
+                $Warnings += ("official phase {0}; report={1}" -f $OfficialPhase.status, $OfficialPhase.json)
+            }
+        }
+        if ($OfficialPhase.status -eq "failed" -and -not $ContinueOnValidationError) {
+            throw ("official phase failed; report={0}" -f $OfficialPhase.json)
+        }
+    } else {
+        throw "unified_phase_visibility.ps1 helper was not loaded"
+    }
+    # IA-CARMINE-OFFICIAL-PHASE-VISIBILITY-END
 }
 
 if ($UseOllamaAdvisory -or (Test-ModeEnabled "provider")) {
