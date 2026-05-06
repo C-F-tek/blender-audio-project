@@ -12,9 +12,9 @@ Sorgente indice: [`../current-code-flow-guide-2026-05-05.md`](../current-code-fl
 
 Repository: `C-F-tek/blender-audio-project`
 
-Branch: `codex/unified-local-ai-refactor-launcher`
+Baseline: `master` after PR #187 merge
 
-Purpose: describe the current code/tool flow after the full-run, provider bundle, broker telemetry and refactor/reuse full-run work.
+Purpose: describe the current code/tool flow after the unified launcher, provider bundle, broker telemetry and refactor/reuse full-run work.
 
 ## Operating doctrine
 
@@ -27,26 +27,30 @@ There is one active operator flow:
 
 All quick, balanced, deep and custom full runs must traverse the same semantic lane set. Intensity changes budget and depth, not scope. A quick full run is still a whole-repository run with reduced capacity; smoke remains a separate mode.
 
-The perimeter of `tutto` may expand. When a new production-ready broker tool, provider diagnostic, validation lane, memory/context surface, repository-consistency check, registry, evidence builder, auto-discovery repair, index repair or CSV/count surface is promoted, it must be wired into this flow or explicitly documented as excluded.
+The perimeter of `tutto` may expand. When a new production-ready broker tool, provider diagnostic, validation lane, memory/context surface, repository-consistency check, registry, evidence builder, auto-discovery repair, index repair, file-line-limit surface or CSV/count surface is promoted, it must be wired into this flow or explicitly documented as excluded.
 
 Telemetry is part of the run payload, not a side note. AI agents must be able to reason from telemetry about what actually executed, what failed, what was blocked, what was degraded, what was skipped intentionally and which tools/capabilities were available.
+
+Limitations are backlog to overcome, not reasons to skip available tools. A lane/tool is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
 
 ## Current active phase
 
 Current active work:
 
-    Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-    Run: 20260505-143844
-    Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
-    Mode: review-only until explicit human instruction
+    Current documentation PR: #193 docs(ai): align operational docs with post-PR187 code state
+    Next clean report-only foundation candidate: PR #192
+    Useful but diverged evidence branch: PR #191
+    Mode: GitHub-only/API when maintainer is away
 
 Compact bridge docs:
 
     docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+    docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
     docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
     docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+    docs/KNOWN_LIMITATIONS.md
 
-The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Do not infer bundle contents from file existence alone.
+PR #187 is no longer the active branch. It is the merged baseline on `master`.
 
 ## High-level flow
 
@@ -56,6 +60,7 @@ The current IA-Carmine full-run flow is:
       -> unified launcher
       -> static inventories, discovery and validation
       -> CSV/count surfaces and index/discovery drift evidence
+      -> file-line-limit maintainability evidence
       -> context pack and agent state
       -> provider/probe/workload quality lanes
       -> repository consistency evidence
@@ -80,30 +85,11 @@ Integrated warning policy wrapper:
 
 ## Operator entrypoint
 
-For current branch work, run with:
+Canonical command family is owned by:
 
-    -SkipGitSync
-    -NoBranch
+    docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 
-Reason:
-
-    Without these flags the launcher may switch back to master and create a runtime branch from master, losing branch-specific fixes.
-
-Canonical command family:
-
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-      -Mode all `
-      -Full0To10 `
-      -SkipGitSync `
-      -NoBranch `
-      -Stamp $Stamp `
-      -TaskFile $TaskFile `
-      -OutputDir $OutputDir `
-      -EvidenceDir $EvidenceDir `
-      -AiPacketsRoot $AiPacketsRoot `
-      -AiPacketsDir $AiPacketsDir `
-      -Profile core `
-      -RunIntensity custom
+The root/flow docs should not duplicate executable command blocks that can drift from launcher implementation.
 
 ## Launcher phases
 
@@ -122,7 +108,7 @@ The unified launcher resolves modes such as:
     contract
     full_validation
 
-Discovery/index/CSV surfaces are produced through the inventory, validation, chunks, context, repository-consistency and evidence lanes. If a future dedicated index-repair lane is added, it must remain report/plan-first and must be visible in the manifest.
+Discovery/index/CSV/file-line-limit surfaces are produced through the inventory, validation, chunks, context, repository-consistency and evidence lanes. If a future dedicated index-repair lane is added, it must remain report/plan-first and must be visible in the manifest.
 
 Main output roots:
 
@@ -154,6 +140,7 @@ Typical early phases:
     Build script/tool inventory
     Build Python line-count CSV/Markdown surfaces
     Build function/class/method inventory CSV surfaces
+    Build file-line-limit report when maintainability is in scope
     Build semantic code chunks and deterministic manifests
     Build selected-chunk evidence when available
     Build AI context pack
@@ -169,6 +156,7 @@ Typical tools:
     Tools/validation/check_docs_links.py
     Tools/validation/check_json_artifacts.py
     Tools/validation/build_script_inventory.py
+    Tools/validation/check_file_line_limits.py
     Tools/validation/check_validation_report_contract.py
     Tools/npu/build_semantic_code_chunks.py
     Tools/ai/build_ai_context_pack.py
@@ -181,6 +169,7 @@ Expected evidence surfaces:
     script inventory JSON/CSV/MD
     function/class/method inventory CSV
     Python line-count CSV/MD
+    file-line-limit JSON/MD
     semantic chunk manifest JSON/MD
     selected chunk evidence JSON when available
     repository consistency map JSON/MD
@@ -190,10 +179,28 @@ Expected evidence surfaces:
 
 Policy:
 
-    CSV/count surfaces are evidence surfaces, not source authority.
+    CSV/count and file-line-limit surfaces are evidence surfaces, not source authority.
     Auto-discovery and index repair must be report/plan-first unless explicitly requested.
     Do not commit output/** or indexAI/code_chunks/**.
     Commit only compact evidence under docs/LOCAL_VALIDATION_EVIDENCE when needed.
+
+## 400-line maintainability flow
+
+Current policy:
+
+    Maintained Markdown <= 400 lines.
+    Maintained Python/PowerShell/scripts/source files <= 400 lines.
+
+Validator:
+
+    Tools/validation/check_file_line_limits.py
+    docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+
+Remediation:
+
+    Markdown over 400 lines -> compact index plus <file>.md/part-001.md layout.
+    Code over 400 lines -> compact entrypoint plus responsibility-based modules/package.
+    Existing oversized files -> technical debt, not blind split targets.
 
 ## Provider/probe/workload flow
 
@@ -251,8 +258,6 @@ Decision loop should report:
     provider_execution_performed
     patch_application_performed=false
     source_writes_performed=false
-
-For run `20260505-143844`, inspect the runtime bundle decision loop before choosing any refactor/reuse patch.
 
 ## Patch-plan/proposal flow
 
@@ -338,7 +343,7 @@ Runtime telemetry:
 
 Capability manifest:
 
-    Tools/ai/build_runtime_tool_capability_manifest.py
+    runtime capability manifest builder for the active run/toolbox lane
 
 Minimal broker bootstrap tools:
 
