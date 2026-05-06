@@ -265,10 +265,32 @@ function Ensure-RequiredProviderArtifacts {
 
 function Read-JsonFile {
     param([string]$Path)
-    if (-not (Test-Path $Path)) {
+
+    if ([string]::IsNullOrWhiteSpace($Path)) {
         return $null
     }
-    return Get-Content $Path -Raw | ConvertFrom-Json
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return $null
+    }
+
+    $Raw = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
+
+    if ([string]::IsNullOrWhiteSpace($Raw)) {
+        throw "Read-JsonFile failed: empty JSON file: $Path"
+    }
+
+    try {
+        return $Raw | ConvertFrom-Json -ErrorAction Stop
+    } catch {
+        $Preview = $Raw
+        if ($Preview.Length -gt 500) {
+            $Preview = $Preview.Substring(0, 500)
+        }
+        $Preview = $Preview -replace "`r", "\r" -replace "`n", "\n"
+
+        throw "Read-JsonFile failed for path: $Path; length=$($Raw.Length); preview=[$Preview]; error=$($_.Exception.Message)"
+    }
 }
 
 $Reports = [System.Collections.ArrayList]@()
