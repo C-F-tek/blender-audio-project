@@ -42,9 +42,10 @@ Activation artifacts are not enough by themselves. When activation produces evid
 
 ```text
 runtime tool usage telemetry
-runtime tool capability manifest
+runtime/hardware capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
+file-line-limit report when maintainability is in scope
 ```
 
 Telemetry is the completeness accessory that explains the state behind activation artifacts:
@@ -61,6 +62,8 @@ planned-only
 
 It does not replace evidence, patch specs or patch plans. It accompanies them.
 
+Limitations are backlog to overcome, not reasons to skip available tools. A lane/tool is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
+
 ## Philosophy
 
 ```text
@@ -73,6 +76,7 @@ macro patch as draft/spec, never automatic apply
 manifest-first visibility
 launcher-first execution
 telemetry/capability handoff when tools execute
+400-line maintainability visibility
 ```
 
 The core/tool workflow should produce real artifacts:
@@ -89,6 +93,7 @@ repository proposals
 NPU knowledge-broker packet
 GitHub evidence bundle
 runtime telemetry and capability manifest when tools execute
+file-line-limit report when maintainability is in scope
 optional macro patch draft specs
 ```
 
@@ -109,7 +114,8 @@ These artifacts give the repo concrete material for review and tests instead of 
 | Runtime SQLite memory | `Tools/ai/agent_runtime_sqlite_memory.py` | Internal/local runtime helper. |
 | Runtime tool broker | `Tools/ai/agent_runtime_tool_broker.py` | Supporting full-toolbox report-only broker. |
 | Runtime usage telemetry | `Tools/ai/build_runtime_tool_usage_telemetry.py` | Required completeness accessory when broker/tools execute. |
-| Runtime capability manifest | `Tools/ai/build_runtime_tool_capability_manifest.py` | Required capability handoff when tool capabilities matter. |
+| Runtime/hardware capability manifest | active capability manifest builder/package | Required capability handoff when tool or hardware capabilities matter. |
+| File line-limit report | `Tools/validation/check_file_line_limits.py` | Report-only 400-line policy validator; no rewrite/delete/split. |
 | Full toolbox telemetry summary | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Production summary for AI handoff. |
 | Shared AI-to-AI bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production handoff bundle. |
 | Tool inventory | `Tools/ai/build_agent_agnostic_tool_inventory.py` | Supporting toolbox visibility tool. |
@@ -261,19 +267,26 @@ For production full-run handoff, companion telemetry/capability artifacts includ
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json
 docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.md
-docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json
-docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json or runtime_hardware_capability_manifest_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md or runtime_hardware_capability_manifest_<STAMP>.md
 docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.md
 docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json
 docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.md
 ```
 
+For maintainability checks, expected report-only outputs are:
+
+```text
+output/validation/file_line_limit_report.json
+output/validation/file_line_limit_report.md
+```
+
 ## Validation ownership
 
 Broad activation validation uses the unified launcher.
 
-Focused validator commands belong in `Tools/validation/README.md` and should be used only when debugging or validating a specific validator/report contract.
+Focused validator commands belong in compact task docs and validator catalogs. Prefer compact current docs first; treat large catalogs as references.
 
 The broad-run acceptance signal is the launcher manifest plus telemetry/capability handoff surfaces, especially:
 
@@ -288,7 +301,8 @@ quality_gate_passed
 patch_specs_requested
 patch_application_performed
 runtime tool usage telemetry
-runtime capability manifest
+runtime/hardware capability manifest
+file-line-limit report when maintainability is in scope
 full toolbox telemetry summary
 errors
 warnings
@@ -330,6 +344,7 @@ destructive-operation-free
 manifest-first
 launcher-first
 telemetry/capability-visible when operational tools execute
+400-line-policy visible when maintainability is in scope
 ```
 
 The documentation patch-plan lane inherits the same guardrails and additionally stays task-scoped to the explicit patch-plan evidence bundle.
@@ -345,7 +360,8 @@ manual_review_only
 code_contract_drift
 docs_contract_drift
 runtime_tool_usage_telemetry
-runtime_tool_capability_manifest
+runtime_or_hardware_capability_manifest
+file_line_limit_report
 full_toolbox_run_telemetry_summary
 ```
 
