@@ -160,15 +160,22 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     gpu_report, gpu_errors, gpu_path = read_optional_json(repo_root, args.gpu_report, required=True)
     gpu_npu_sync, sync_errors, sync_path = read_optional_json(repo_root, args.gpu_npu_sync, required=False)
     local_probe, probe_errors, probe_path = read_optional_json(repo_root, args.local_provider_probe, required=False)
+    hardware_manifest, hardware_errors, hardware_path = read_optional_json(repo_root, args.hardware_manifest, required=False)
 
     errors.extend(orch_errors)
     errors.extend(gpu_errors)
     warnings.extend(sync_errors)
     warnings.extend(probe_errors)
+    warnings.extend(hardware_errors)
 
     gpu = gpu_provider_evidence(gpu_report)
     npu = npu_provider_evidence(orchestrator)
     probe = probe_evidence(local_probe)
+    hardware_policy = hardware_manifest.get("hardware_lane_policy") if isinstance(hardware_manifest.get("hardware_lane_policy"), dict) else {}
+    cuda_primary = hardware_policy.get("cuda_gpu_primary", {}) if isinstance(hardware_policy.get("cuda_gpu_primary"), dict) else {}
+    openvino_gpu0 = hardware_policy.get("openvino_gpu0", {}) if isinstance(hardware_policy.get("openvino_gpu0"), dict) else {}
+    openvino_npu = hardware_policy.get("openvino_npu", {}) if isinstance(hardware_policy.get("openvino_npu"), dict) else {}
+    openvino_gpu1_reserved = hardware_policy.get("openvino_gpu1_reserved", {}) if isinstance(hardware_policy.get("openvino_gpu1_reserved"), dict) else {}
 
     if args.require_gpu_provider and not gpu["real"]:
         errors.append(
@@ -191,6 +198,17 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         errors.append(f"GPU subprocess returned non-zero exit code: {orchestrator.get('gpu_returncode')}")
     if local_probe and local_probe.get("passed") is False:
         warnings.append(f"local provider probe degraded: {local_probe.get('errors')}")
+    if hardware_policy:
+        if cuda_primary.get("exclusive") is not True:
+            errors.append("hardware policy violation: CUDA/Ollama primary GPU must be exclusive")
+        if cuda_primary.get("openvino_workload_allowed") is not False:
+            errors.append("hardware policy violation: CUDA/Ollama primary GPU must not allow OpenVINO workload")
+        if openvino_gpu0.get("not_primary_advisory") is not True:
+            errors.append("hardware policy violation: OpenVINO GPU.0 must not satisfy primary GPU advisory")
+        if openvino_npu.get("probe_only_is_not_auditor_evidence") is not True:
+            errors.append("hardware policy violation: NPU probe-only evidence must not satisfy auditor evidence")
+        if openvino_gpu1_reserved.get("openvino_workload_allowed") is not False:
+            errors.append("hardware policy violation: OpenVINO GPU.1/RTX must be reserved for CUDA/Ollama")
 
     provider_execution_observed = bool(gpu["real"] or npu["real"])
     return {
@@ -212,10 +230,12 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "gpu_report": gpu_path,
             "gpu_npu_sync": sync_path,
             "local_provider_probe": probe_path,
+            "hardware_manifest": hardware_path,
         },
         "gpu": gpu,
         "npu": npu,
         "local_probe": probe,
+        "hardware_policy": hardware_policy,
         "gpu_npu_sync_metrics": gpu_npu_sync.get("metrics") if isinstance(gpu_npu_sync.get("metrics"), dict) else {},
         "decision": {
             "gpu_provider_ready": gpu["real"],
@@ -271,6 +291,7 @@ def main() -> int:
     parser.add_argument("--gpu-report", required=True)
     parser.add_argument("--gpu-npu-sync", default="")
     parser.add_argument("--local-provider-probe", default="output/validation/local_provider_probe.json")
+    parser.add_argument("--hardware-manifest", default="output/validation/runtime_hardware_capability_manifest.json")
     parser.add_argument("--require-gpu-provider", action="store_true")
     parser.add_argument("--require-npu-auditor", action="store_true")
     parser.add_argument("--output", default="output/validation/provider_evidence_contract.json")
