@@ -21,6 +21,7 @@ architecture split: complete
 schema compatibility intent: preserved
 direct dry-run matrix: focused validation only
 Full0To10 proof: requires unified launcher evidence plus telemetry/capability handoff
+file-line evidence: required when pipeline maintainability is in scope
 AI/NPU index regeneration: local-only follow-up when explicitly required
 Blender runtime changes: not part of this refactor
 ```
@@ -45,12 +46,13 @@ status = get_pipeline_refactor_status()
 
 ## Validation ownership
 
-Current command examples live in:
+Current broad command examples live in:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
 ```
+
+Focused validator references are allowed, but large validator catalogs are not first operational entrypoints.
 
 Broad local-AI validation should route through the unified launcher. Focused direct validation is appropriate only when changing or debugging the AI artifact pipeline itself.
 
@@ -62,6 +64,7 @@ pipeline dry-run report path when focused pipeline validation was used
 manifest path when launcher was used
 phase_status / phase_reports when launcher was used
 whether telemetry/capability/final-summary surfaces were produced
+whether file-line-limit evidence was produced when maintainability is in scope
 whether provider execution occurred
 whether patch application occurred
 whether source writes occurred
@@ -74,12 +77,29 @@ If this refactor status contributes to recommendations, patch plans or patch spe
 ```text
 pipeline report or compact evidence
 runtime tool usage telemetry
-runtime tool capability manifest
+runtime/hardware capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
+file-line-limit report when maintainability is in scope
 ```
 
 Telemetry is the completeness accessory. It does not replace the pipeline report; it explains whether the related lanes executed, failed, were blocked, degraded, disabled or planned-only.
+
+## 400-line policy
+
+Maintained pipeline source and documentation follow the hard 400-line policy.
+
+```text
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+```
+
+Validator:
+
+```text
+Tools/validation/check_file_line_limits.py
+```
 
 ## Files changed by this refactor family
 
@@ -113,6 +133,7 @@ Validation helpers:
 ```text
 Tools/validation/check_ai_pipeline_modules.py
 Tools/ai/run_pipeline_dry_run_matrix.py
+Tools/validation/check_file_line_limits.py
 ```
 
 Documentation:
@@ -120,6 +141,7 @@ Documentation:
 ```text
 docs/AI_PIPELINE_ARCHITECTURE.md
 docs/AI_PIPELINE_REFACTOR_STATUS.md
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 ```
 
 ## Safe next actions
@@ -128,10 +150,11 @@ docs/AI_PIPELINE_REFACTOR_STATUS.md
 1. Validate focused pipeline behavior locally only when the pipeline changes.
 2. Use the unified launcher for broad local-AI validation.
 3. Keep dry-run matrix evidence clearly marked as planned-only.
-4. Regenerate AI/NPU indexes only when a scoped local task requires it.
-5. Do not commit output/**, SQLite DBs or raw local reports.
-6. Do not push to master or merge from this status document.
-7. Continue richer lane policy only after manifest, report and telemetry surfaces are clear.
+4. Include file-line evidence when maintainability is in scope.
+5. Regenerate AI/NPU indexes only when a scoped local task requires it.
+6. Do not commit output/**, SQLite DBs or raw local reports.
+7. Do not push to master or merge from this status document.
+8. Continue richer lane policy only after manifest, report and telemetry surfaces are clear.
 ```
 
 ## Guardrails
@@ -147,4 +170,5 @@ commit generated indexes without explicit validation context
 push to master
 merge to protected branches
 claim Full0To10 success from dry-run matrix alone
+skip file-line evidence when maintainability is in scope
 ```
