@@ -222,6 +222,30 @@ def build_script_maps(repo: Path) -> dict[str, Any]:
     return {"python": python_scripts, "powershell": powershell_scripts}
 
 
+def build_existing_file_index(repo: Path) -> dict[str, Any]:
+    suffixes = (".md", ".py", ".ps1", ".json", ".csv", ".txt", ".yaml", ".yml")
+    paths = sorted(repo_relative(path, repo) for path in iter_repo_files(repo, suffixes))
+    basename_counts = Counter(Path(rel).name for rel in paths)
+    return {
+        "paths": set(paths),
+        "basename_counts": basename_counts,
+    }
+
+
+def reference_exists(repo: Path, source_path: Path, ref: str, file_index: dict[str, Any]) -> bool:
+    check_ref = ref.lstrip("/") if ref.startswith("/") else ref
+
+    if (repo / check_ref).exists():
+        return True
+    if (source_path.parent / check_ref).exists():
+        return True
+
+    if "/" not in check_ref and "\\" not in check_ref:
+        return file_index["basename_counts"].get(Path(check_ref).name, 0) == 1
+
+    return False
+
+
 def collect_md_refs(text: str) -> set[str]:
     refs = {normalize_ref(m.group("path")) for m in PATH_RE.finditer(text)}
     refs.update(normalize_ref(m.group(1)) for m in INLINE_PATH_RE.finditer(text))
@@ -273,6 +297,10 @@ def classify_missing_ref(ref: str, source_doc: str = "") -> tuple[str, str]:
         return "medium", "historical-or-handoff"
     if "next-chat" in lower_target or "handoff" in lower_target:
         return "medium", "historical-or-handoff"
+    if lower_target.startswith("users/") or "/users/" in lower_target:
+        return "low", "local-absolute-path"
+    if "/" not in target and "\\" not in target and target.endswith((".py", ".ps1")):
+        return "medium", "ambiguous-basename-reference"
     if target.endswith((".py", ".ps1")):
         return "high", "active-current"
     if target.endswith(".md"):
@@ -284,6 +312,7 @@ def analyze_markdown(repo: Path, scripts: dict[str, Any], max_lines: int) -> dic
     docs: dict[str, Any] = {}
     python_scripts = scripts["python"]
     powershell_scripts = scripts["powershell"]
+    file_index = build_existing_file_index(repo)
     for path in iter_repo_files(repo, (".md",)):
         rel = repo_relative(path, repo)
         text = safe_read(path)
@@ -310,9 +339,7 @@ def analyze_markdown(repo: Path, scripts: dict[str, Any], max_lines: int) -> dic
         for ref in refs:
             if is_excluded_rel(ref):
                 continue
-            repo_target = repo / ref
-            doc_relative_target = path.parent / ref
-            if not repo_target.exists() and not doc_relative_target.exists():
+            if not reference_exists(repo, path, ref, file_index):
                 severity, classification = classify_missing_ref(ref, rel)
                 findings.append(Finding(
                     severity,
