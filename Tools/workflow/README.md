@@ -22,6 +22,7 @@ LightFull0To10 = evidence-only profile, not provider/runtime proof
 quick/balanced/deep/custom = intensity, not scope
 supporting wrappers are implementation lanes, not first entrypoints
 provider/probe/workload-quality lanes are opt-out in Full0To10
+GPU1/GPU0 peer exchange must enter telemetry, bundle and acceptance evidence
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
 400-line policy applies to maintained docs and source files
 limitations are backlog to overcome, not reasons to skip available tools
@@ -97,6 +98,7 @@ launcher manifest
 phase_status / phase_reports
 runtime tool usage telemetry when tools execute
 runtime/hardware capability manifest when capabilities matter
+AI peer-exchange report and contract when provider execution is selected
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when relevant

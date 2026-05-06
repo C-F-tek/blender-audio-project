@@ -84,6 +84,9 @@ def evidence_item(repo_root: Path, name: str, path: Path | None) -> dict[str, An
             "companion_task_count",
             "tool_request_count",
             "gpu0_workload_passed",
+            "response_count",
+            "task_count",
+            "tool_execution_count",
         ):
             if key in data:
                 item[key] = data.get(key)
@@ -168,6 +171,58 @@ def classify_gpu0_companion(data: dict[str, Any] | None, error: str, classificat
         errors.append("gpu0_companion_workload_not_passed")
 
 
+def classify_ai_peer_exchange(
+    peer: dict[str, Any] | None,
+    peer_error: str,
+    contract: dict[str, Any] | None,
+    contract_error: str,
+    classifications: list[str],
+    errors: list[str],
+    warnings: list[str],
+) -> None:
+    if peer is None:
+        add_unique(classifications, "gpu1_gpu0_peer_exchange_missing")
+        errors.append(f"ai_peer_exchange_missing_or_unreadable: {peer_error}")
+        return
+    if peer.get("kind") != "ai_peer_exchange":
+        add_unique(classifications, "gpu1_gpu0_peer_exchange_missing")
+        errors.append("ai_peer_exchange_invalid_kind")
+    primary = peer.get("primary_advisory") if isinstance(peer.get("primary_advisory"), dict) else {}
+    response = peer.get("gpu0_response") if isinstance(peer.get("gpu0_response"), dict) else {}
+    broker = peer.get("runtime_tool_broker") if isinstance(peer.get("runtime_tool_broker"), dict) else {}
+    if primary.get("passed") is not True:
+        add_unique(classifications, "gpu1_primary_advisory_not_proven")
+        errors.append("gpu1_primary_advisory_not_proven")
+    if response.get("kind") != "gpu0_peer_response":
+        add_unique(classifications, "gpu1_gpu0_peer_exchange_missing")
+        errors.append("gpu0_peer_response_missing_from_exchange")
+    elif response.get("passed") is not True:
+        add_unique(classifications, "gpu0_peer_response_degraded")
+        errors.append("gpu0_peer_response_not_passed")
+    if response.get("provider_execution_performed") is not True:
+        add_unique(classifications, "gpu0_peer_openvino_execution_not_proven")
+        errors.append("gpu0_peer_openvino_execution_not_proven")
+    tool_request_count = int(response.get("tool_request_count") or 0)
+    broker_execution_count = int(broker.get("tool_execution_count") or 0)
+    if tool_request_count > 0 and broker_execution_count <= 0:
+        add_unique(classifications, "gpu0_tool_requests_not_broker_consumed")
+        errors.append("gpu0_tool_requests_not_broker_consumed")
+    for item in peer.get("classifications") or []:
+        text = str(item)
+        if text and text not in classifications:
+            add_unique(classifications, text)
+    if contract is None:
+        add_unique(classifications, "ai_peer_exchange_contract_missing")
+        errors.append(f"ai_peer_exchange_contract_missing_or_unreadable: {contract_error}")
+    elif contract.get("passed") is not True:
+        add_unique(classifications, "ai_peer_exchange_contract_failed")
+        errors.append("ai_peer_exchange_contract_failed")
+        for item in contract.get("classifications") or []:
+            add_unique(classifications, str(item))
+    if not response.get("semantic_execution_mode"):
+        warnings.append("gpu0_peer_semantic_execution_mode_missing")
+
+
 def classify_evidence_sufficiency(data: dict[str, Any] | None, error: str, classifications: list[str], errors: list[str]) -> None:
     if data is None:
         add_unique(classifications, "blocked_missing_refined_review_input")
@@ -229,6 +284,8 @@ def main() -> int:
     parser.add_argument("--gpu0-provider-support", default="")
     parser.add_argument("--gpu0-final-workload", default="")
     parser.add_argument("--gpu0-companion-lane", default="output/validation/gpu0_companion_task_lane_{stamp}.json")
+    parser.add_argument("--ai-peer-exchange", default="output/validation/ai_peer_exchange_{stamp}.json")
+    parser.add_argument("--ai-peer-contract", default="output/validation/ai_peer_exchange_contract_{stamp}.json")
     parser.add_argument("--evidence-sufficiency", default="output/ai_pipeline/agent_review_evidence_sufficiency.json")
     parser.add_argument("--repository-suggestions-md", default="output/ai_pipeline/repository_update_suggestions.md")
     parser.add_argument("--workload-quality", default="output/validation/ai_workload_quality_lane_routing.json")
@@ -244,6 +301,8 @@ def main() -> int:
     gpu0_provider_path = resolve(repo_root, args.gpu0_provider_support or f"output/validation/openvino_gpu0_provider_support_{args.stamp}.json", args.stamp)
     gpu0_final_path = resolve(repo_root, args.gpu0_final_workload or f"output/validation/openvino_gpu0_workload_{args.stamp}.json", args.stamp)
     gpu0_companion_path = resolve(repo_root, args.gpu0_companion_lane, args.stamp)
+    ai_peer_exchange_path = resolve(repo_root, args.ai_peer_exchange, args.stamp)
+    ai_peer_contract_path = resolve(repo_root, args.ai_peer_contract, args.stamp)
     evidence_path = resolve(repo_root, args.evidence_sufficiency, args.stamp)
     suggestions_md_path = resolve(repo_root, args.repository_suggestions_md, args.stamp)
     workload_quality_path = resolve(repo_root, args.workload_quality, args.stamp)
@@ -251,6 +310,8 @@ def main() -> int:
     gpu0_provider, gpu0_provider_error = load_json(gpu0_provider_path)
     gpu0_final, gpu0_final_error = load_json(gpu0_final_path)
     gpu0_companion, gpu0_companion_error = load_json(gpu0_companion_path)
+    ai_peer_exchange, ai_peer_exchange_error = load_json(ai_peer_exchange_path)
+    ai_peer_contract, ai_peer_contract_error = load_json(ai_peer_contract_path)
     evidence_sufficiency, evidence_error = load_json(evidence_path)
     workload_quality, workload_error = load_json(workload_quality_path)
     suggestions_text = read_text(suggestions_md_path)
@@ -262,6 +323,7 @@ def main() -> int:
     classify_gpu0_provider_support(gpu0_provider, gpu0_provider_error, classifications, errors, warnings)
     classify_gpu0_final_workload(gpu0_final, gpu0_final_error, classifications, errors, warnings, required=bool(args.require_final_workload))
     classify_gpu0_companion(gpu0_companion, gpu0_companion_error, classifications, errors)
+    classify_ai_peer_exchange(ai_peer_exchange, ai_peer_exchange_error, ai_peer_contract, ai_peer_contract_error, classifications, errors, warnings)
     classify_evidence_sufficiency(evidence_sufficiency, evidence_error, classifications, errors)
     classify_primary_provider_text(suggestions_text, classifications, errors, warnings)
 
@@ -275,12 +337,14 @@ def main() -> int:
         evidence_item(repo_root, "gpu0_provider_support", gpu0_provider_path),
         evidence_item(repo_root, "gpu0_final_workload", gpu0_final_path),
         evidence_item(repo_root, "gpu0_companion_lane", gpu0_companion_path),
+        evidence_item(repo_root, "ai_peer_exchange", ai_peer_exchange_path),
+        evidence_item(repo_root, "ai_peer_exchange_contract", ai_peer_contract_path),
         evidence_item(repo_root, "evidence_sufficiency", evidence_path),
         evidence_item(repo_root, "workload_quality", workload_quality_path),
     ]
 
     report = {
-        "schema_version": 4,
+        "schema_version": 5,
         "kind": "full0to10_provider_acceptance_gate",
         "generated_at": now_iso(),
         "stamp": args.stamp,
@@ -299,6 +363,9 @@ def main() -> int:
             "acceptance_requires_empty_classifications": True,
             "gpu0_peer_worker_required": True,
             "companion_evidence_required": True,
+            "ai_peer_exchange_required": True,
+            "runtime_tool_broker_consumption_required": True,
+            "deterministic_scripts_heavy_audit_authority": True,
         },
     }
 

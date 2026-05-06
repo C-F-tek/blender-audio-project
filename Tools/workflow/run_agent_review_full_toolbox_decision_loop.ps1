@@ -307,6 +307,18 @@ $Gpu0CompanionMd = ".\output\validation\gpu0_companion_task_lane_$Stamp.md"
 $Gpu0CompanionToolRequestsJson = ".\output\validation\gpu0_companion_tool_requests_$Stamp.json"
 $Gpu0CompanionContractJson = ".\output\validation\gpu0_companion_contract_$Stamp.json"
 $Gpu0CompanionContractMd = ".\output\validation\gpu0_companion_contract_$Stamp.md"
+$Gpu1PrimaryAdvisoryJson = ".\output\validation\gpu1_primary_advisory_$Stamp.json"
+$Gpu1PrimaryAdvisoryMd = ".\output\validation\gpu1_primary_advisory_$Stamp.md"
+$Gpu0PeerTaskPacketJson = ".\output\validation\gpu0_peer_task_packet_$Stamp.json"
+$Gpu0PeerResponseJson = ".\output\validation\gpu0_peer_response_$Stamp.json"
+$Gpu0PeerResponseMd = ".\output\validation\gpu0_peer_response_$Stamp.md"
+$Gpu0PeerToolRequestsJson = ".\output\validation\gpu0_tool_requests_$Stamp.json"
+$Gpu0PeerBrokerJson = ".\output\validation\gpu0_peer_runtime_tool_broker_$Stamp.json"
+$Gpu0PeerBrokerMd = ".\output\validation\gpu0_peer_runtime_tool_broker_$Stamp.md"
+$AiPeerExchangeJson = ".\output\validation\ai_peer_exchange_$Stamp.json"
+$AiPeerExchangeMd = ".\output\validation\ai_peer_exchange_$Stamp.md"
+$AiPeerExchangeContractJson = ".\output\validation\ai_peer_exchange_contract_$Stamp.json"
+$AiPeerExchangeContractMd = ".\output\validation\ai_peer_exchange_contract_$Stamp.md"
 
 $RecommendationsJson = ".\output\ai_pipeline\full_toolbox_${Stamp}_deterministic_recommendations.json"
 $RecommendationsMd = ".\output\ai_pipeline\full_toolbox_${Stamp}_deterministic_recommendations.md"
@@ -425,8 +437,11 @@ Invoke-RepoPython -Label "Contract script compile" -ArgsList @(
     ".\Tools\ai\build_runtime_tool_capability_manifest.py",
     ".\Tools\ai\build_semantic_evidence_chunks.py",
     ".\Tools\ai\build_agent_review_evidence_sufficiency.py",
+    ".\Tools\ai\build_ai_peer_exchange_packet.py",
+    ".\Tools\ai\run_gpu0_peer_companion_worker.py",
     ".\Tools\ai\run_agent_review_decision_loop.py",
     ".\Tools\ai\build_repository_consistency_map.py",
+    ".\Tools\validation\check_ai_peer_exchange_contract.py",
     ".\Tools\validation\run_repository_consistency_map_smoke.py",
     ".\Tools\validation\run_gpu_planner_json_contract_smoke.py",
     ".\Tools\validation\run_deterministic_recommendation_synthesizer_smoke.py",
@@ -545,6 +560,9 @@ if ($RunGpuNpuProvider) {
         "--report-file", $Gpu0CompanionJson,
         "--report-file", $Gpu0CompanionContractJson,
         "--report-file", $MemoryWorkflow,
+        "--enable-runtime-tool-broker",
+        "--runtime-tool-output-dir", $RuntimeToolOutputDir,
+        "--runtime-tool-timeout-seconds", "300",
         "--context-root", "docs",
         "--context-root", "Tools\ai",
         "--context-root", "Tools\validation",
@@ -604,6 +622,96 @@ if (Test-Path $OrchOut) {
     )
 }
 
+if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
+    Invoke-RepoPython -Label "Build AI peer-exchange packet" -ArgsList @(
+        ".\Tools\ai\build_ai_peer_exchange_packet.py",
+        "--repo-root", ".",
+        "--stamp", $Stamp,
+        "--gpu-report", $GpuOut,
+        "--gpu-markdown", $GpuMd,
+        "--source-report", $Evidence,
+        "--source-report", $RepositoryConsistencyJson,
+        "--source-report", $RepositoryConsistencySmokeJson,
+        "--source-report", $CodeInterpreterJson,
+        "--source-report", $LineCountJson,
+        "--source-report", $PythonSyntaxJson,
+        "--source-report", $NpuEnvJson,
+        "--source-report", $Gpu0CompanionJson,
+        "--source-report", $Gpu0CompanionContractJson,
+        "--primary-output", $Gpu1PrimaryAdvisoryJson,
+        "--primary-markdown-output", $Gpu1PrimaryAdvisoryMd,
+        "--task-output", $Gpu0PeerTaskPacketJson,
+        "--exchange-output", $AiPeerExchangeJson,
+        "--exchange-markdown-output", $AiPeerExchangeMd
+    )
+
+    Invoke-RepoPython -Label "GPU0 peer companion worker" -ArgsList @(
+        ".\Tools\ai\run_gpu0_peer_companion_worker.py",
+        "--repo-root", ".",
+        "--stamp", $Stamp,
+        "--task-packet", $Gpu0PeerTaskPacketJson,
+        "--primary-advisory", $Gpu1PrimaryAdvisoryJson,
+        "--output", $Gpu0PeerResponseJson,
+        "--markdown-output", $Gpu0PeerResponseMd,
+        "--tool-requests-output", $Gpu0PeerToolRequestsJson,
+        "--iterations", "32",
+        "--min-seconds", "1",
+        "--allow-degraded"
+    )
+
+    Invoke-RepoPython -Label "GPU0 peer runtime tool broker" -ArgsList @(
+        ".\Tools\ai\agent_runtime_tool_broker.py",
+        "--repo-root", ".",
+        "--request-file", $Gpu0PeerToolRequestsJson,
+        "--tool-output-dir", (Join-Path $RuntimeToolOutputDir "gpu0_peer"),
+        "--stamp", $Stamp,
+        "--timeout-seconds", "240",
+        "--output", $Gpu0PeerBrokerJson,
+        "--markdown-output", $Gpu0PeerBrokerMd
+    )
+
+    Invoke-RepoPython -Label "Finalize AI peer-exchange packet" -ArgsList @(
+        ".\Tools\ai\build_ai_peer_exchange_packet.py",
+        "--repo-root", ".",
+        "--stamp", $Stamp,
+        "--gpu-report", $GpuOut,
+        "--gpu-markdown", $GpuMd,
+        "--source-report", $Evidence,
+        "--source-report", $RepositoryConsistencyJson,
+        "--source-report", $CodeInterpreterJson,
+        "--source-report", $Gpu0PeerResponseJson,
+        "--response-report", $Gpu0PeerResponseJson,
+        "--broker-report", $Gpu0PeerBrokerJson,
+        "--primary-output", $Gpu1PrimaryAdvisoryJson,
+        "--primary-markdown-output", $Gpu1PrimaryAdvisoryMd,
+        "--task-output", $Gpu0PeerTaskPacketJson,
+        "--exchange-output", $AiPeerExchangeJson,
+        "--exchange-markdown-output", $AiPeerExchangeMd
+    )
+
+    Invoke-RepoPython -Label "AI peer-exchange contract" -ArgsList @(
+        ".\Tools\validation\check_ai_peer_exchange_contract.py",
+        "--repo-root", ".",
+        "--stamp", $Stamp,
+        "--broker-report", $Gpu0PeerBrokerJson,
+        "--require-broker-execution",
+        "--allow-degraded",
+        "--output", $AiPeerExchangeContractJson,
+        "--markdown-output", $AiPeerExchangeContractMd
+    )
+    foreach ($Path in @(
+        $Gpu1PrimaryAdvisoryJson, $Gpu1PrimaryAdvisoryMd, $Gpu0PeerTaskPacketJson,
+        $Gpu0PeerResponseJson, $Gpu0PeerResponseMd, $Gpu0PeerToolRequestsJson,
+        $Gpu0PeerBrokerJson, $Gpu0PeerBrokerMd, $AiPeerExchangeJson, $AiPeerExchangeMd,
+        $AiPeerExchangeContractJson, $AiPeerExchangeContractMd
+    )) {
+        Add-ExistingPath -List $Reports -Path $Path
+        Add-ExistingPath -List $Artifacts -Path $Path
+    }
+} elseif ($RunGpuNpuProvider) {
+    [void]$Warnings.Add("AI peer-exchange skipped because GPU primary report is missing: $GpuOut")
+}
+
 if ($RunGpuNpuProvider) {
     $ProviderEvidenceArgs = @(
         ".\Tools\validation\check_provider_evidence_contract.py",
@@ -637,6 +745,13 @@ $ToolReports = @(
     $ProviderEvidenceContractJson,
     $Gpu0CompanionJson,
     $Gpu0CompanionContractJson,
+    $Gpu1PrimaryAdvisoryJson,
+    $Gpu0PeerTaskPacketJson,
+    $Gpu0PeerResponseJson,
+    $Gpu0PeerToolRequestsJson,
+    $Gpu0PeerBrokerJson,
+    $AiPeerExchangeJson,
+    $AiPeerExchangeContractJson,
     $MemoryWorkflow
 ) | Where-Object { Test-Path $_ }
 
@@ -680,6 +795,8 @@ if (-not $SkipPostValidationPacket) {
         $GpuReplayMd,
         $GpuNpuSyncMd,
         $ProviderEvidenceContractMd,
+        $AiPeerExchangeMd,
+        $AiPeerExchangeContractMd,
         $DecisionLoopMd,
         $PatchPlanMd
     ) | Where-Object { Test-Path $_ }
@@ -698,6 +815,8 @@ if (-not $SkipPostValidationPacket) {
         $GpuReplayJson,
         $GpuNpuSyncJson,
         $ProviderEvidenceContractJson,
+        $AiPeerExchangeJson,
+        $AiPeerExchangeContractJson,
         $RecommendationsJson,
         $BridgeJson,
         $DecisionLoopJson,
@@ -773,6 +892,7 @@ Invoke-RepoPython -Label "Runtime tool usage telemetry pre-bundle" -ArgsList @(
     "--gpu-npu-sync", $GpuNpuSyncJson,
     "--decision-loop", $DecisionLoopJson,
     "--broker-report", $RuntimeToolBrokerJson,
+    "--broker-report", $Gpu0PeerBrokerJson,
     "--output", $RuntimeToolTelemetryJson,
     "--markdown-output", $RuntimeToolTelemetryMd
 )
@@ -814,6 +934,14 @@ $ReportFilesForBundle = @(
     $NpuEnvJson,
     $GpuReplayJson,
     $GpuNpuSyncJson,
+    $ProviderEvidenceContractJson,
+    $Gpu1PrimaryAdvisoryJson,
+    $Gpu0PeerTaskPacketJson,
+    $Gpu0PeerResponseJson,
+    $Gpu0PeerToolRequestsJson,
+    $Gpu0PeerBrokerJson,
+    $AiPeerExchangeJson,
+    $AiPeerExchangeContractJson,
     $RecommendationsJson,
     $BridgeJson,
     $DecisionLoopJson,
@@ -839,6 +967,10 @@ $BundleArgs = @(
     "--artifact", $LineCountAllMd,
     "--artifact", $LineCountCsv,
     "--artifact", $DecisionLoopMd,
+    "--artifact", $Gpu1PrimaryAdvisoryMd,
+    "--artifact", $Gpu0PeerResponseMd,
+    "--artifact", $AiPeerExchangeMd,
+    "--artifact", $AiPeerExchangeContractMd,
     "--artifact", $PatchPlanMd,
     "--max-included-artifact-chars", "16000",
     "--max-included-artifacts", "24"
@@ -880,6 +1012,8 @@ $TelemetryArgs = @(
     "--gpu-npu-sync", $GpuNpuSyncJson,
     "--orchestrator", $OrchOut,
     "--gpu-report", $GpuOut,
+    "--peer-exchange", $AiPeerExchangeJson,
+    "--peer-contract", $AiPeerExchangeContractJson,
     "--budget-minutes", "$BudgetMinutes",
     "--max-rounds", "$MaxRounds",
     "--files-per-round", "$FilesPerRound",
@@ -920,6 +1054,7 @@ Invoke-RepoPython -Label "Runtime tool usage telemetry" -ArgsList @(
     "--gpu-npu-sync", $GpuNpuSyncJson,
     "--decision-loop", $DecisionLoopJson,
     "--broker-report", $RuntimeToolBrokerJson,
+    "--broker-report", $Gpu0PeerBrokerJson,
     "--output", $RuntimeToolTelemetryJson,
     "--markdown-output", $RuntimeToolTelemetryMd
 )
@@ -940,7 +1075,11 @@ $SemanticChunkSources = @(
     $RuntimeToolTelemetryJson,
     $RuntimeToolTelemetryMd,
     $RuntimeToolCapabilityJson,
-    $RuntimeToolCapabilityMd
+    $RuntimeToolCapabilityMd,
+    $AiPeerExchangeJson,
+    $AiPeerExchangeMd,
+    $AiPeerExchangeContractJson,
+    $AiPeerExchangeContractMd
 ) | Where-Object { Test-Path $_ }
 $SemanticChunkArgs = @(
     ".\Tools\ai\build_semantic_evidence_chunks.py",
@@ -962,6 +1101,8 @@ foreach ($Path in @(
     $MemoryWorkflow, $Evidence, $ProviderEvidenceContractJson, $RepositoryConsistencyJson, $RepositoryConsistencySmokeJson, $LineCountJson, $PythonSyntaxJson, $CodeInterpreterJson, $GpuContractSmokeJson,
     $DeterministicSmokeJson, $DecisionLoopSmokeJson, $NpuEnvJson, $OrchOut, $GpuOut, $GpuReplayJson,
     $GpuNpuSyncJson, $ProviderEvidenceContractJson, $RecommendationsJson, $BridgeJson, $DecisionLoopJson, $PatchPlanJson,
+    $Gpu1PrimaryAdvisoryJson, $Gpu0PeerTaskPacketJson, $Gpu0PeerResponseJson, $Gpu0PeerToolRequestsJson, $Gpu0PeerBrokerJson,
+    $AiPeerExchangeJson, $AiPeerExchangeContractJson,
     $BundleValidationJson, $FinalPythonSyntaxJson, $FinalContractJson
 )) {
     Add-ExistingPath -List $Reports -Path $Path
@@ -971,7 +1112,8 @@ foreach ($Path in @(
     $CodeInterpreterMd, $GpuContractSmokeMd, $DeterministicSmokeMd, $DecisionLoopSmokeMd,
     $NpuEnvMd, $OrchMd, $GpuMd, $GpuReplayMd, $GpuNpuSyncMd, $ProviderEvidenceContractMd, $RecommendationsMd,
     $DecisionLoopMd, $PatchPlanMd, $TelemetrySummaryJson, $TelemetrySummaryMd, $RuntimeToolTelemetryJson, $RuntimeToolTelemetryMd,
-    $RuntimeToolCapabilityJson, $RuntimeToolCapabilityMd, $EvidenceChunkManifestJson, $EvidenceChunkManifestMd, $BundleJson, $BundleMd
+    $RuntimeToolCapabilityJson, $RuntimeToolCapabilityMd, $Gpu1PrimaryAdvisoryMd, $Gpu0PeerResponseMd, $Gpu0PeerBrokerMd,
+    $AiPeerExchangeMd, $AiPeerExchangeContractMd, $EvidenceChunkManifestJson, $EvidenceChunkManifestMd, $BundleJson, $BundleMd
 )) {
     Add-ExistingPath -List $Artifacts -Path $Path
 }

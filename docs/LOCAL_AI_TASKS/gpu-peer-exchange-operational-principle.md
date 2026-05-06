@@ -83,3 +83,37 @@ gpu1_gpu0_roundtrip_missing
 gpu0_tool_requests_not_broker_consumed
 npu_gpu1_checkpoint_context_missing
 ```
+
+## Current production chain
+
+The maintained implementation path is not a smoke-only lane. It is wired through the Full0To10 production chain:
+
+```text
+Markdown task input
+  -> unified local AI launcher
+  -> full-toolbox decision loop
+  -> GPU1/Ollama primary advisory report
+  -> GPU0 peer task packet
+  -> GPU0 OpenVINO peer response
+  -> GPU0 runtime broker tool requests
+  -> AI peer-exchange report
+  -> peer-exchange contract
+  -> Full0To10 provider acceptance gate
+  -> runtime telemetry, shared AI-to-AI bundle and compact evidence
+```
+
+Current source surfaces:
+
+```text
+Tools/ai/build_ai_peer_exchange_packet.py
+Tools/ai/run_gpu0_peer_companion_worker.py
+Tools/validation/check_ai_peer_exchange_contract.py
+Tools/validation/check_full0to10_provider_acceptance.py
+Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1
+Tools/workflow/run_unified_local_ai_refactor.ps1
+Tools/ai/build_full_toolbox_run_telemetry_summary.py
+Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
+Tools/ai/agent_runtime_tool_broker.py
+```
+
+The runtime broker is the only production path for GPU1/GPU0 tool execution. GPU0 peer output may be numeric/tool evidence when `IA_CARMINE_GPU0_COMPANION_MODEL_DIR` is not configured, but that state must remain visible as `gpu0_peer_semantic_model_unconfigured`.

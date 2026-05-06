@@ -101,6 +101,20 @@ def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str
     }
 
 
+def peer_exchange_summary(peer_exchange: dict[str, Any], peer_contract: dict[str, Any]) -> dict[str, Any]:
+    response = peer_exchange.get("gpu0_response") if isinstance(peer_exchange.get("gpu0_response"), dict) else {}
+    broker = peer_exchange.get("runtime_tool_broker") if isinstance(peer_exchange.get("runtime_tool_broker"), dict) else {}
+    return {
+        "peer_exchange_seen": bool(peer_exchange),
+        "peer_exchange_passed": peer_exchange.get("passed"),
+        "peer_contract_passed": peer_contract.get("passed"),
+        "gpu0_peer_provider_execution_performed": bool(response.get("provider_execution_performed")),
+        "gpu0_peer_tool_request_count": safe_int(response.get("tool_request_count")),
+        "gpu0_peer_tool_execution_count": safe_int(broker.get("tool_execution_count")),
+        "classifications": peer_exchange.get("classifications") or peer_contract.get("classifications") or [],
+    }
+
+
 def compact_paths(values: Any, limit: int = 12) -> list[str]:
     out: list[str] = []
     for value in safe_list(values):
@@ -158,6 +172,8 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     gpu_npu_sync, gpu_npu_errors, gpu_npu_path = read_optional_json(repo_root, args.gpu_npu_sync)
     orchestrator, orchestrator_errors, orchestrator_path = read_optional_json(repo_root, args.orchestrator)
     gpu_report, gpu_errors, gpu_path = read_optional_json(repo_root, args.gpu_report)
+    peer_exchange, peer_errors, peer_path = read_optional_json(repo_root, args.peer_exchange)
+    peer_contract, peer_contract_errors, peer_contract_path = read_optional_json(repo_root, args.peer_contract)
 
     hard_inputs = {
         "decision_loop": decision_loop,
@@ -172,6 +188,8 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     warnings.extend(gpu_npu_errors)
     warnings.extend(orchestrator_errors)
     warnings.extend(gpu_errors)
+    warnings.extend(peer_errors)
+    warnings.extend(peer_contract_errors)
 
     for name, data in hard_inputs.items():
         if not data:
@@ -190,6 +208,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     }
 
     provider_evidence = provider_evidence_summary(orchestrator, gpu_report)
+    peer_evidence = peer_exchange_summary(peer_exchange, peer_contract)
     provider_execution = bool(provider_evidence["provider_execution_performed"])
     return {
         "schema_version": 1,
@@ -216,6 +235,8 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "gpu_npu_sync": gpu_npu_path,
             "orchestrator": orchestrator_path,
             "gpu_report": gpu_path,
+            "peer_exchange": peer_path,
+            "peer_contract": peer_contract_path,
         },
         "run_parameters": {
             "budget_minutes": args.budget_minutes,
@@ -241,6 +262,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
         },
         "gpu_npu": {
             "provider_evidence": provider_evidence,
+            "peer_exchange": peer_evidence,
             "sync_metrics": gpu_npu_sync.get("metrics"),
             "performance": compact_performance(gpu_npu_sync),
             "operational_opinions": gpu_npu_sync.get("operational_opinions"),
@@ -253,6 +275,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "provider_execution_performed": provider_execution,
             "gpu_provider_execution_performed": provider_evidence.get("gpu_provider_execution_performed"),
             "npu_provider_execution_performed": provider_evidence.get("npu_provider_execution_performed"),
+            "gpu0_peer_provider_execution_performed": peer_evidence.get("gpu0_peer_provider_execution_performed"),
             "patch_application_performed": False,
             "source_writes_performed": False,
             "sqlite_write_performed": False,
@@ -278,6 +301,10 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- NPU audit success count: `{provider_evidence.get('npu_audit_success_count')}`")
     if provider_evidence.get("provider_degraded_reasons"):
         lines.append(f"- Provider degraded reasons: `{provider_evidence.get('provider_degraded_reasons')}`")
+    peer_evidence = safe_dict(safe_dict(report.get("gpu_npu")).get("peer_exchange"))
+    lines.append(f"- AI peer exchange passed: `{peer_evidence.get('peer_exchange_passed')}`")
+    lines.append(f"- GPU0 peer provider execution performed: `{peer_evidence.get('gpu0_peer_provider_execution_performed')}`")
+    lines.append(f"- GPU0 peer broker tool executions: `{peer_evidence.get('gpu0_peer_tool_execution_count')}`")
     lines.append("")
     lines.append("## Repository consistency performance")
     lines.append("")
@@ -334,6 +361,8 @@ def main() -> int:
     parser.add_argument("--gpu-npu-sync", default="")
     parser.add_argument("--orchestrator", default="")
     parser.add_argument("--gpu-report", default="")
+    parser.add_argument("--peer-exchange", default="")
+    parser.add_argument("--peer-contract", default="")
     parser.add_argument("--evidence-to-commit", action="append", default=[])
     parser.add_argument("--bundle-validation-passed", action="store_true")
     parser.add_argument("--budget-minutes", type=int, default=0)

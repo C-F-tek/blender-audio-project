@@ -74,6 +74,8 @@ multistep_provider_workflow_requested
 ollama_probe_requested
 npu_probe_requested
 npu_decode_smoke_requested
+ai_peer_exchange_required
+ai_peer_exchange_contract_passed
 memory_in_enabled
 memory_out_enabled
 quality_gate_passed
@@ -133,6 +135,8 @@ ollama_packet
 ollama_proposals
 workload_quality
 legacy_full_toolbox_integrated
+ai_peer_exchange
+ai_peer_exchange_contract
 patch_specs_manifest
 patch_specs_validation
 ```
@@ -181,6 +185,9 @@ runtime tool broker telemetry requested
 runtime/hardware capability manifest requested
 Ollama advisory requested
 primary provider routing requested
+GPU1/Ollama primary advisory planner requested
+GPU0/OpenVINO companion peer worker requested
+AI peer-exchange contract requested
 provider diagnostics requested
 workload quality routing requested
 multistep provider workflow requested
@@ -435,4 +442,3 @@ validation report contract check
 file-line-limit report when maintainability is in scope
 git diff --check
 ```
-

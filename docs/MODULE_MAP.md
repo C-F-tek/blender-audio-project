@@ -124,6 +124,8 @@ Telemetry is a completeness accessory for evidence and patch plans. It does not 
 | `Tools/ai/run_local_provider_probe.py` | Local provider probe. | Full0To10/provider probe report unless disabled or unavailable; no implicit provider promotion. |
 | `Tools/ai/check_local_resource_lanes.py` | Local resource lane checks. | Provider/resource diagnostics. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | Quality-based advisory routing. | Prevents unusable provider output from contaminating advisory context. |
+| `Tools/ai/build_ai_peer_exchange_packet.py` | GPU1/GPU0 peer exchange packet and summary builder. | Production Full0To10 evidence lane; no patch apply. |
+| `Tools/ai/run_gpu0_peer_companion_worker.py` | OpenVINO GPU.0 companion worker and tool-request packet builder. | GPU0 peer support lane; preserves GPU1 as primary planner. |
 
 ### NPU and AI tooling
 
@@ -146,6 +148,7 @@ Telemetry is a completeness accessory for evidence and patch plans. It does not 
 | `Tools/ai/github_evidence_bundle_reports.py` | Helper module for evidence bundle report summaries. | Internal helper; document as library, not user command. |
 | `Tools/ai/agent_runtime_sqlite_memory.py` | Runtime SQLite memory support. | Internal/local state helper; do not commit DB outputs. |
 | `Tools/ai/agent_memory_routing_policy.py` | Memory routing policy logic. | Internal policy helper. |
+| `Tools/validation/check_ai_peer_exchange_contract.py` | Validate GPU1/GPU0 peer exchange, broker consumption and acceptance evidence. | Report-only validator. |
 
 ### Workflow helper scripts
 

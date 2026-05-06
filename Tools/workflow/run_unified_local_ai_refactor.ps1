@@ -1254,6 +1254,21 @@ if ($Full0To10 -or $RunOpenVinoGpu0Workload) {
     if (Test-Path -LiteralPath $LegacyFullToolboxReport -PathType Leaf) {
         $ReportFiles += $LegacyFullToolboxReport
         $PhaseReports.legacy_full_toolbox_integrated = $LegacyFullToolboxReport
+        foreach ($PeerReport in @(
+            (Join-Path $OutputDir ("validation/gpu1_primary_advisory_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/gpu0_peer_task_packet_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/gpu0_peer_response_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/gpu0_tool_requests_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/gpu0_peer_runtime_tool_broker_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/ai_peer_exchange_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/ai_peer_exchange_contract_{0}.json" -f $DataStamp))
+        )) {
+            if (Test-Path -LiteralPath $PeerReport -PathType Leaf) {
+                $ReportFiles += $PeerReport
+            }
+        }
+        $PhaseReports.ai_peer_exchange = Join-Path $OutputDir ("validation/ai_peer_exchange_{0}.json" -f $DataStamp)
+        $PhaseReports.ai_peer_exchange_contract = Join-Path $OutputDir ("validation/ai_peer_exchange_contract_{0}.json" -f $DataStamp)
 
 # IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-BEGIN
 if ($Full0To10) {
@@ -1262,6 +1277,8 @@ if ($Full0To10) {
     $Gpu0ProviderSupportJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
     $Gpu0FinalWorkloadJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $DataStamp)
     $Gpu0CompanionJsonForGate = Join-Path $OutputDir ("validation/gpu0_companion_task_lane_{0}.json" -f $DataStamp)
+    $AiPeerExchangeJsonForGate = Join-Path $OutputDir ("validation/ai_peer_exchange_{0}.json" -f $DataStamp)
+    $AiPeerContractJsonForGate = Join-Path $OutputDir ("validation/ai_peer_exchange_contract_{0}.json" -f $DataStamp)
     $ProviderGateOk = Invoke-Checked "Full0To10 provider acceptance gate" {
         & $ResolvedPythonExe .\Tools\validation\check_full0to10_provider_acceptance.py `
             --repo-root . `
@@ -1269,11 +1286,16 @@ if ($Full0To10) {
             --gpu0-provider-support $Gpu0ProviderSupportJsonForGate `
             --gpu0-final-workload $Gpu0FinalWorkloadJsonForGate `
             --gpu0-companion-lane $Gpu0CompanionJsonForGate `
+            --ai-peer-exchange $AiPeerExchangeJsonForGate `
+            --ai-peer-contract $AiPeerContractJsonForGate `
             --output $ProviderAcceptanceJson `
             --markdown-output $ProviderAcceptanceMd
     } -SoftFail
     if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
         $ReportFiles += @($ProviderAcceptanceJson, $ProviderAcceptanceMd)
+    }
+    if (Get-Variable -Name PhaseReports -ErrorAction SilentlyContinue) {
+        $PhaseReports.full0to10_provider_acceptance = $ProviderAcceptanceJson
     }
     if (-not $ProviderGateOk) {
         if (Get-Variable -Name Warnings -ErrorAction SilentlyContinue) {
@@ -1293,33 +1315,6 @@ if ($RunOpenVinoGpu0Workload -or $Full0To10) {
     $Gpu0Stamp = $Stamp
     if ([string]::IsNullOrWhiteSpace($Gpu0Stamp)) { $Gpu0Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
 
-# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-LATE-BEGIN
-if ($Full0To10) {
-    $ProviderAcceptanceJson = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.json" -f $DataStamp)
-    $ProviderAcceptanceMd = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.md" -f $DataStamp)
-    $Gpu0ProviderSupportJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
-    $Gpu0FinalWorkloadJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $DataStamp)
-    $Gpu0CompanionJsonForGate = Join-Path $OutputDir ("validation/gpu0_companion_task_lane_{0}.json" -f $DataStamp)
-    $ProviderLateGateOk = Invoke-Checked "Full0To10 provider acceptance gate after final GPU0 workload" {
-        & $ResolvedPythonExe .\Tools\validation\check_full0to10_provider_acceptance.py `
-            --repo-root . `
-            --stamp $DataStamp `
-            --gpu0-provider-support $Gpu0ProviderSupportJsonForGate `
-            --gpu0-final-workload $Gpu0FinalWorkloadJsonForGate `
-            --gpu0-companion-lane $Gpu0CompanionJsonForGate `
-            --output $ProviderAcceptanceJson `
-            --markdown-output $ProviderAcceptanceMd
-    } -SoftFail
-    if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
-        $ReportFiles += @($ProviderAcceptanceJson, $ProviderAcceptanceMd)
-    }
-    if (-not $ProviderLateGateOk) {
-        if (Get-Variable -Name Warnings -ErrorAction SilentlyContinue) {
-            $Warnings += "Full0To10 provider acceptance late gate failed/degraded; see $ProviderAcceptanceJson"
-        }
-    }
-}
-# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-LATE-END
     $Gpu0Json = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $Gpu0Stamp)
     $Gpu0Md = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.md" -f $Gpu0Stamp)
     Invoke-Python @(
@@ -1336,6 +1331,42 @@ if ($Full0To10) {
         $PhaseReports += $Gpu0Json
         $PhaseReports += $Gpu0Md
     }
+
+# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-LATE-BEGIN
+if ($Full0To10) {
+    $ProviderAcceptanceJson = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.json" -f $DataStamp)
+    $ProviderAcceptanceMd = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.md" -f $DataStamp)
+    $Gpu0ProviderSupportJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
+    $Gpu0FinalWorkloadJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $DataStamp)
+    $Gpu0CompanionJsonForGate = Join-Path $OutputDir ("validation/gpu0_companion_task_lane_{0}.json" -f $DataStamp)
+    $AiPeerExchangeJsonForGate = Join-Path $OutputDir ("validation/ai_peer_exchange_{0}.json" -f $DataStamp)
+    $AiPeerContractJsonForGate = Join-Path $OutputDir ("validation/ai_peer_exchange_contract_{0}.json" -f $DataStamp)
+    $ProviderLateGateOk = Invoke-Checked "Full0To10 provider acceptance gate after final GPU0 workload" {
+        & $ResolvedPythonExe .\Tools\validation\check_full0to10_provider_acceptance.py `
+            --repo-root . `
+            --stamp $DataStamp `
+            --gpu0-provider-support $Gpu0ProviderSupportJsonForGate `
+            --gpu0-final-workload $Gpu0FinalWorkloadJsonForGate `
+            --gpu0-companion-lane $Gpu0CompanionJsonForGate `
+            --ai-peer-exchange $AiPeerExchangeJsonForGate `
+            --ai-peer-contract $AiPeerContractJsonForGate `
+            --require-final-workload `
+            --output $ProviderAcceptanceJson `
+            --markdown-output $ProviderAcceptanceMd
+    } -SoftFail
+    if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
+        $ReportFiles += @($ProviderAcceptanceJson, $ProviderAcceptanceMd)
+    }
+    if (Get-Variable -Name PhaseReports -ErrorAction SilentlyContinue) {
+        $PhaseReports.full0to10_provider_acceptance_after_gpu0_workload = $ProviderAcceptanceJson
+    }
+    if (-not $ProviderLateGateOk) {
+        if (Get-Variable -Name Warnings -ErrorAction SilentlyContinue) {
+            $Warnings += "Full0To10 provider acceptance late gate failed/degraded; see $ProviderAcceptanceJson"
+        }
+    }
+}
+# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-LATE-END
 }
 # IA-CARMINE-GPU0-WORKLOAD-BEFORE-OFFICIAL-END
 if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-ModeEnabled "patch_specs") -or (Test-ModeEnabled "evidence") -or $UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $GeneratePatchSpecs -or $BuildEvidence) {
@@ -1470,6 +1501,12 @@ $Manifest = [ordered]@{
     run_dir = $RunDir.Replace("\", "/")
     provider_execution_requested = [bool]($UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke -or (Test-ModeEnabled "provider"))
     primary_provider_requested = [bool]$UsePrimaryAdvisoryProvider
+    ai_peer_exchange_required = [bool]$Full0To10
+    gpu1_primary_advisory_role = "mandatory_primary_advisory_planner"
+    gpu0_companion_peer_role = "openvino_companion_peer_worker"
+    npu_micro_lane_role = "micro_fast_task_assistant"
+    deterministic_script_role = "heavy_audit_authority"
+    runtime_tool_broker_role = "controlled_gpu1_gpu0_tool_execution"
     workload_quality_report = $WorkloadQualityReport
     workload_quality_routing_ok = [bool]$WorkloadQualityRoutingOk
     multistep_provider_workflow_requested = [bool]$RunMultistepProviderWorkflow

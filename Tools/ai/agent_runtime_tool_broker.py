@@ -585,6 +585,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
         "request_file": repo_rel(request_path, repo_root),
+        "request_kind": requests_data.get("kind"),
+        "source": requests_data.get("source") or requests_data.get("source_lane") or requests_data.get("target_lane"),
         "tool_output_dir": repo_rel(out_dir, repo_root),
         "passed": not failed and not dangerous_guardrail,
         "errors": [f"{item.get('id')}: {err}" for item in failed for err in item.get("errors", [])]
