@@ -162,6 +162,7 @@ Markdown inventory JSON/MD
 script inventory JSON/CSV/MD
 function/class/method inventory CSV
 Python line-count CSV/MD
+file line-limit JSON/MD report
 semantic chunk manifest
 selected chunk evidence
 repository consistency map/smoke
@@ -211,6 +212,13 @@ Preserve CLI/API compatibility unless the task explicitly allows breaking change
 Report resulting line count for every created or modified code/script file.
 ```
 
+Validator note:
+
+```text
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+Tools/validation/check_file_line_limits.py
+```
+
 Existing files already over 400 lines are technical debt. Do not split them blindly during unrelated documentation work; refactor them progressively when touching that area for a code task.
 
 ## Function/tool visibility map
@@ -224,6 +232,7 @@ Current unified-flow tools and their visibility surfaces:
 | Link validation | `Tools/validation/check_docs_links.py` | JSON link report | `md` / validation modes |
 | Script inventory | `Tools/validation/build_script_inventory.py` | JSON, CSV and Markdown function/class inventory | `python` mode |
 | Python line count | broker/runtime line-count helper and validation reports | CSV and Markdown line-count surfaces | inventory/evidence lane |
+| File line-limit report | `Tools/validation/check_file_line_limits.py` | JSON and optional Markdown line-limit report | validation/evidence lane |
 | Report contracts | `Tools/validation/check_validation_report_contract.py` | JSON contract report | `json` / `contract` modes |
 | Workload quality | `Tools/validation/check_ai_workload_report_quality.py` | `ai_workload_report_quality.json` | provider quality gate |
 | Semantic chunks | `Tools/npu/build_semantic_code_chunks.py` | semantic chunk manifest | `chunks` mode |
@@ -270,6 +279,7 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 | File | Status | Purpose |
 |---|---|---|
 | `current-operational-state-2026-05-05.md` | active bridge | Compact current state for post-#187 master, PR #192 candidate, PR #191 evidence branch, guardrails and source-of-truth hierarchy. |
+| `file-line-limit-validator-2026-05-06.md` | active validator note | Compact contract for `Tools/validation/check_file_line_limits.py` and 400-line evidence policy. |
 | `refactor-reuse-methods-classes-tools-planning.md` | active P1 task | Analyze method/class/helper/tool reuse, classify patch plans and keep patching review-only. |
 | `refactor-reuse-full-run-documentation-coherence-2026-05-05.md` | active bridge | Coherence note for the refactor/reuse run and bundle. |
 | `recent-telemetry-state-2026-05-05.md` | active baseline | Recent telemetry baseline for `073332` and `081141`; broker telemetry treated as resolved unless a regression appears. |
