@@ -26,10 +26,10 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ```
 
-Current active task:
+Current compact validator note:
 
 ```text
-docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 ```
 
 ## Manifest path pattern
@@ -120,6 +120,7 @@ json_contract
 script_inventory
 script_inventory_csv
 python_line_count_csv
+file_line_limit_report
 semantic_chunk_manifest
 selected_chunks_evidence
 repository_consistency_map
@@ -146,7 +147,7 @@ A local-AI run is valid only if a GitHub-only or next local agent can inspect it
 launcher command
 unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
-compact Markdown or CSV/count summaries
+compact Markdown, CSV/count or file-line-limit summaries
 detailed evidence only when needed
 ```
 
@@ -158,6 +159,8 @@ When `full_0_to_10_requested=true`, the manifest should show all default capabil
 
 Full0To10 always means full coverage: TUTTO SU TUTTO. Intensity profiles may tune budgets and capacity, but they must not silently remove core lanes.
 
+Limitations are backlog to overcome, not reasons to skip available tools. A lane/tool is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
+
 Expected defaults unless disabled:
 
 ```text
@@ -165,6 +168,7 @@ Markdown inventory and docs link validation requested
 JSON/report contract validation requested
 Python/script inventory requested
 Python line-count CSV/Markdown surface requested when inventory lanes run
+file-line-limit JSON/Markdown surface requested when maintainability is in scope
 function/class/method CSV surface requested when script inventory supports it
 semantic chunks requested
 selected chunk evidence requested when chunk selection evidence is available
@@ -174,7 +178,7 @@ repository consistency and validation evidence requested
 auto-discovery/index drift visibility requested when scanner/index drift is suspected
 index repair must be plan/report-first unless explicitly requested
 runtime tool broker telemetry requested
-runtime tool capability manifest requested
+runtime/hardware capability manifest requested
 Ollama advisory requested
 primary provider routing requested
 provider diagnostics requested
@@ -218,9 +222,9 @@ custom   = full coverage with operator-supplied budget
 
 A quick Full0To10 run is not a smoke test. Smoke remains a separate mode and must not be used as evidence that the full-run contract passed.
 
-## Discovery, index repair and CSV/count contract
+## Discovery, index repair, CSV/count and file-line contract
 
-Discovery and count surfaces are evidence lanes, not source authority.
+Discovery, count and line-limit surfaces are evidence lanes, not source authority.
 
 Expected report/summary surfaces when relevant:
 
@@ -229,6 +233,7 @@ Markdown inventory JSON/MD
 script inventory JSON/CSV/MD
 function/class/method inventory CSV
 Python line-count CSV/MD
+file-line-limit JSON/MD
 semantic chunk manifest JSON/MD
 selected chunk evidence JSON/MD when available
 repository consistency map/smoke JSON/MD
@@ -243,7 +248,24 @@ Do not commit output/**.
 Do not commit indexAI/code_chunks/**.
 Do not hand-edit generated chunk/index artifacts as source.
 Index repair is plan/report-first unless the user explicitly requests regeneration or apply.
-CSV/count surfaces are sizing and discovery evidence; they do not override source code or canonical docs.
+CSV/count/file-line-limit surfaces are sizing and discovery evidence; they do not override source code or canonical docs.
+File-line-limit reports do not rewrite, split, delete or apply patches.
+```
+
+## 400-line policy
+
+Maintained docs and source files follow a hard 400-line policy:
+
+```text
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+```
+
+Validator:
+
+```text
+Tools/validation/check_file_line_limits.py
 ```
 
 ## Quality gate contract
@@ -337,12 +359,13 @@ index repair/regeneration only when explicit and report-bound
 
 ## Validation
 
-Recommended local checks after launcher edits:
+Recommended local checks after launcher edits are owned by the unified launcher runbook and focused validator docs. Include at least:
 
-```powershell
-$null = [scriptblock]::Create((Get-Content .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Raw))
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 -Full0To10 -DryRun -SkipGitSync -NoBranch -AllowDirty
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links_unified_launcher_contract.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract_unified_launcher_contract.json
+```text
+PowerShell syntax check for Tools/workflow/run_unified_local_ai_refactor.ps1
+launcher Full0To10 dry-run when local execution is available
+docs link validation
+validation report contract check
+file-line-limit report when maintainability is in scope
 git diff --check
 ```
