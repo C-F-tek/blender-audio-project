@@ -14,7 +14,7 @@ For run-unica, provider, broker, recommendation or patch-plan handoff, inspect o
 
 ```text
 runtime_tool_usage_telemetry_<STAMP>.json/md
-runtime_tool_capability_manifest_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md or runtime_hardware_capability_manifest_<STAMP>.json/md
 full_toolbox_run_telemetry_summary_<STAMP>.json/md
 shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
 shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
@@ -38,7 +38,7 @@ patch_application_performed
 source_writes_performed
 ```
 
-## Discovery/index/CSV-count checklist
+## Discovery/index/CSV/file-line checklist
 
 For refactor/reuse, repository-wide visibility, documentation cleanup or run-unica handoff, inspect or provide relevant surfaces:
 
@@ -46,6 +46,7 @@ For refactor/reuse, repository-wide visibility, documentation cleanup or run-uni
 Markdown inventory JSON/MD
 script inventory JSON/CSV/MD
 Python line-count CSV/MD
+file-line-limit JSON/MD
 function/class/method inventory CSV
 semantic chunk manifest JSON/MD
 selected chunk evidence JSON/MD
@@ -63,6 +64,7 @@ patch_application_performed=false unless explicit patch apply is selected
 output paths stay under ignored output/** unless compact evidence is intentionally promoted
 indexAI/code_chunks/** is not commit-ready source
 index repair is plan/report-first unless explicitly requested
+file-line-limit reports do not rewrite, split or delete files
 ```
 
 ## FFmpeg validation checklist
@@ -90,8 +92,9 @@ An AI-generated change is acceptable only if it includes:
 - risks;
 - follow-up recommendations;
 - line counts for created or modified scripts;
+- 400-line policy impact for maintained docs/source files;
 - telemetry/capability/final-summary context when it derives from run-unica evidence or patch plans;
-- discovery/index/CSV-count context when it derives from refactor/reuse, inventory or repository-wide evidence.
+- discovery/index/CSV/file-line context when it derives from refactor/reuse, inventory or repository-wide evidence.
 
 ## Non-destructive rule
 
@@ -119,13 +122,15 @@ Reject or review carefully when a generated change:
 - uses obsolete Blender APIs such as `ShaderNodeTexMusgrave`;
 - opens, saves or quits Blender sessions unexpectedly;
 - mixes input analysis, output application control, rendering and encoding in one oversized function;
+- creates new maintained docs/source files over 400 lines;
 - deletes generated context or analysis data;
 - adds paid or external AI GitHub Actions without explicit opt-in;
 - uses prompt-based repair where deterministic parsing is available;
 - hardens report schemas so much that additive future fields fail validation;
 - claims run-unica Full0To10 success from dry-run, focused validator, provider report, NPU smoke, oversized Markdown or file existence alone;
+- treats historical limitation notes as reasons to skip currently available tools;
 - presents evidence or patch plans without telemetry/capability/final-summary context when the output derives from run-unica evidence;
-- presents refactor/reuse or repository-wide plans without relevant discovery/index/CSV-count context.
+- presents refactor/reuse or repository-wide plans without relevant discovery/index/CSV/file-line context.
 
 ## Current reference
 
@@ -146,11 +151,18 @@ The current report-contract validator reference is:
 Tools/validation/check_ai_dry_run_matrix_contract.py
 ```
 
+The current file-line policy reference is:
+
+```text
+Tools/validation/check_file_line_limits.py
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+```
+
 The current run-unica telemetry/handoff reference is:
 
 ```text
 Tools/ai/build_runtime_tool_usage_telemetry.py
-Tools/ai/build_runtime_tool_capability_manifest.py
+runtime/hardware capability manifest builder from current code/evidence
 Tools/ai/build_full_toolbox_run_telemetry_summary.py
 Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
 ```
