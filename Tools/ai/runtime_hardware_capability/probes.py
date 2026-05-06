@@ -31,6 +31,20 @@ def command_json(cmd: list[str], timeout: int = 20) -> dict[str, Any]:
     }
 
 
+def _safe_openvino_property(core: Any, device: str, name: str) -> Any:
+    try:
+        value = core.get_property(device, name)
+    except Exception as exc:  # noqa: BLE001 - diagnostics must not fail the manifest.
+        return {"error": f"{type(exc).__name__}: {exc}"}
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    if isinstance(value, (list, tuple, set)):
+        return [str(item) for item in value]
+    if isinstance(value, dict):
+        return {str(key): str(item) for key, item in value.items()}
+    return str(value)
+
+
 def detect_openvino_devices() -> dict[str, Any]:
     """Detect OpenVINO devices without running model inference."""
     try:
@@ -39,14 +53,20 @@ def detect_openvino_devices() -> dict[str, Any]:
         except ImportError:
             from openvino.runtime import Core  # type: ignore
     except Exception as exc:
-        return {"available": False, "devices": [], "error": f"{type(exc).__name__}: {exc}"}
+        return {"available": False, "devices": [], "device_details": {}, "error": f"{type(exc).__name__}: {exc}"}
 
     try:
         core = Core()
         devices = [str(device) for device in core.available_devices]
+        details: dict[str, Any] = {}
+        for device in devices:
+            details[device] = {
+                "full_device_name": _safe_openvino_property(core, device, "FULL_DEVICE_NAME"),
+                "optimization_capabilities": _safe_openvino_property(core, device, "OPTIMIZATION_CAPABILITIES"),
+            }
     except Exception as exc:
-        return {"available": False, "devices": [], "error": f"{type(exc).__name__}: {exc}"}
-    return {"available": True, "devices": devices, "error": None}
+        return {"available": False, "devices": [], "device_details": {}, "error": f"{type(exc).__name__}: {exc}"}
+    return {"available": True, "devices": devices, "device_details": details, "error": None}
 
 
 def cpu_diagnostics() -> dict[str, Any]:
