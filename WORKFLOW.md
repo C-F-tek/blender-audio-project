@@ -6,7 +6,7 @@ Root operational lifecycle for `IA-Carmine Local AI Orchestration Workbench`.
 
 This file defines durable process and guardrails. It must not carry executable PowerShell command blocks because launcher flags, validation options and local paths change faster than root workflow policy.
 
-Scenario-specific commands live in task runbooks under `docs/LOCAL_AI_TASKS/`. Tool-specific commands live next to the tool package, for example `Tools/validation/README.md` and `Tools/npu/pipeline/README.md`.
+Scenario-specific commands live in task runbooks under `docs/LOCAL_AI_TASKS/`. Tool-specific command catalogs are references after compact runbooks; do not treat oversized catalogs as primary operational entrypoints.
 
 ## Operational doctrine: TUTTO SU TUTTO
 
@@ -14,9 +14,11 @@ The full local-AI workflow is now whole-repository by default: **TUTTO SU TUTTO*
 
 A `-Full0To10` run must traverse every active lane that participates in project understanding, validation, provider diagnostics, broker telemetry, recommendations, patch planning, evidence and AI-to-AI handoff. `quick`, `balanced`, `deep` and `custom` are intensity profiles only; they change resource budgets, not workflow scope.
 
-The scope of `tutto` may expand. When a new lane becomes stable, for example a new broker tool, registry validator, memory/context surface, repository-consistency check, provider diagnostic or evidence builder, it must be wired into the full-run contract or documented as explicitly excluded. Silent omission is a workflow defect.
+The scope of `tutto` may expand. When a new lane becomes stable, for example a new broker tool, registry validator, memory/context surface, repository-consistency check, provider diagnostic, CSV/count surface, file-line-limit report or evidence builder, it must be wired into the full-run contract or documented as explicitly excluded. Silent omission is a workflow defect.
 
-Full0To10 is opt-out by lane: once selected, provider/probe/workload-quality, telemetry, discovery, index and CSV/count lanes are included by default unless disabled with explicit `-No*` flags, diagnosed unavailable, represented as dry-run planned state or excluded by a documented operator decision.
+Full0To10 is opt-out by lane: once selected, provider/probe/workload-quality, telemetry, discovery, index, CSV/count and file-line-limit lanes are included by default when relevant unless disabled with explicit `-No*` flags, diagnosed unavailable, represented as dry-run planned state or excluded by a documented operator decision.
+
+Limitations are backlog to overcome, not reasons to skip available tools. A lane/tool is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
 
 ## Canonical lifecycle
 
@@ -40,6 +42,8 @@ AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 README.md
 WORKFLOW.md
 docs/README.md
@@ -58,27 +62,28 @@ docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md
 docs/PROJECT_STATUS_POINT.md
 docs/DATA_FLOW.md
 docs/LOCAL_AI_WORKFLOW.md
-Tools/validation/README.md
 ```
 
 For code/provider/refactor work, also read the nearest tool/package README and the target source file.
 
 ## Current active work
 
-```text
-Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-Run: 20260505-143844
-Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
-Mode: review-only until explicit human instruction
-```
-
-The compact operational bridge is:
+Current compact operational bridge:
 
 ```text
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ```
 
-The bundle is not committed to the repository. Do not infer its contents from file existence alone.
+Current branch state:
+
+```text
+master contains PR #187 unified launcher baseline
+PR #193 updates operational docs from post-#187 code state
+PR #192 is the next clean report-only foundation candidate
+PR #191 is useful but diverged evidence to mine/regenerate/summarize
+```
+
+Do not infer bundle contents from file existence alone.
 
 ## Canonical local AI workflow
 
@@ -106,9 +111,10 @@ Root workflow and README files are descriptive. They should link to command owne
 | Refactor/reuse planning | `docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` |
 | Recent telemetry baseline | `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` |
 | Runtime broker telemetry resolved context | `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` |
+| 400-line/file-line-limit validation | `docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md` |
 | Audio/media output guardrail | `docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md` |
 | Tool discovery and promotion | `docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md`, `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` |
-| Markdown/script inventories | `Tools/validation/README.md` and unified launcher runbook |
+| Markdown/script inventories | unified launcher runbook first; `Tools/validation/README.md` as catalog/reference |
 | NPU helper validation | `Tools/npu/pipeline/README.md` |
 | Patch-spec workflow | `docs/PATCH_SPEC_WORKFLOW.md` |
 | Local checkout/bootstrap notes | `docs/LOCAL_AI_RUN_BOOTSTRAP.md` |
@@ -182,6 +188,7 @@ Use inventories before broad documentation or code refactors.
 ```text
 Markdown inventory -> canonical docs, obsolete docs, generated/evidence docs, missing index review.
 Script inventory -> scripts/tools, functions/classes/methods, descriptions, refactor discovery.
+Python line-count and file-line-limit reports -> maintainability and split/refactor evidence.
 Tool placement audit -> classifies canonical and non-canonical tools, including root scripts and Scripting/**.
 Tool promotion guide -> defines project-tool, broker-tool and full-run-lane promotion requirements.
 ```
@@ -192,7 +199,7 @@ Do not commit inventory outputs from `output/**`. Commit compact evidence under 
 
 For full workflow, provider, full-toolbox or code-refactor runs, prefer the unified launcher.
 
-For focused validator work, use `Tools/validation/README.md` as the command catalog.
+For focused validator work, use compact task docs first and large validator catalogs only as references.
 
 The minimum validation evidence for a PR should state:
 
@@ -200,6 +207,7 @@ The minimum validation evidence for a PR should state:
 which launcher/tool command was run
 whether provider/runtime execution occurred
 whether runtime broker telemetry was produced/absorbed
+whether file-line-limit evidence was relevant or produced
 whether audio/media output occurred
 where the manifest/report/evidence is located
 whether patch application occurred
@@ -223,6 +231,23 @@ Patch application remains manual-review-only unless the user explicitly requests
 Regenerate generated indexes only after structural source/doc/workflow changes when the index is required for review or the next run.
 
 Generated index files are not manually maintained source. Do not hand-edit generated chunks or manifests.
+
+## 400-line policy
+
+Maintained documentation and source files must remain under 400 lines.
+
+```text
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+```
+
+Validator:
+
+```text
+Tools/validation/check_file_line_limits.py
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+```
 
 ## Guardrails
 
@@ -260,6 +285,7 @@ Every PR should state:
 changed files
 purpose
 script line counts for created/modified scripts
+400-line policy impact
 validation run or missing
 provider/runtime execution status
 runtime broker telemetry status
@@ -276,7 +302,9 @@ commands live in owning runbooks/tool READMEs
 unified launcher remains the active local-AI entrypoint
 Full0To10 remains opt-out by lane, not opt-in per capability
 runtime broker telemetry is surfaced when relevant
+file-line-limit evidence is available when maintainability is in scope
 audio/media output is forbidden in normal AI/tooling runs
+limitations are backlog to overcome, not tool-skip reasons
 patch application remains explicit
 long evidence is indexed by compact manifests
 obsolete monolithic runbooks are not active entrypoints

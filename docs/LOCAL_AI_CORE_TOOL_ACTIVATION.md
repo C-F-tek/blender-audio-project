@@ -42,9 +42,10 @@ Activation artifacts are not enough by themselves. When activation produces evid
 
 ```text
 runtime tool usage telemetry
-runtime tool capability manifest
+runtime/hardware capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
+file-line-limit report when maintainability is in scope
 ```
 
 Telemetry is the completeness accessory that explains the state behind activation artifacts:
@@ -61,6 +62,8 @@ planned-only
 
 It does not replace evidence, patch specs or patch plans. It accompanies them.
 
+Limitations are backlog to overcome, not reasons to skip available tools. A lane/tool is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
+
 ## Philosophy
 
 ```text
@@ -73,6 +76,8 @@ macro patch as draft/spec, never automatic apply
 manifest-first visibility
 launcher-first execution
 telemetry/capability handoff when tools execute
+400-line maintainability visibility
+product/evidence/readiness output over chat-only summaries
 ```
 
 The core/tool workflow should produce real artifacts:
@@ -83,12 +88,15 @@ selected-chunks evidence
 context pack
 agent state packet
 memory inventory / memory handoff when enabled
+effective-use quality product and telemetry when selected
 enrichment plan
 adapter manifest
 repository proposals
 NPU knowledge-broker packet
 GitHub evidence bundle
 runtime telemetry and capability manifest when tools execute
+file-line-limit report when maintainability is in scope
+final tool-product product/evidence/readiness package when selected
 optional macro patch draft specs
 ```
 
@@ -107,10 +115,13 @@ These artifacts give the repo concrete material for review and tests instead of 
 | Agent memory policy | `Tools/ai/agent_memory_policy.py` | Internal deterministic policy module. |
 | Agent memory routing | `Tools/ai/agent_memory_routing_policy.py` | Internal routing policy module. |
 | Runtime SQLite memory | `Tools/ai/agent_runtime_sqlite_memory.py` | Internal/local runtime helper. |
+| Full0To10 effective use | `Tools/ai/full0to10_effective_use/*` | Builds provider hardening, optimization, telemetry, quality product and local output/** SQLite memory artifact; no real provider run by default. |
 | Runtime tool broker | `Tools/ai/agent_runtime_tool_broker.py` | Supporting full-toolbox report-only broker. |
 | Runtime usage telemetry | `Tools/ai/build_runtime_tool_usage_telemetry.py` | Required completeness accessory when broker/tools execute. |
-| Runtime capability manifest | `Tools/ai/build_runtime_tool_capability_manifest.py` | Required capability handoff when tool capabilities matter. |
+| Runtime/hardware capability manifest | active capability manifest builder/package | Required capability handoff when tool or hardware capabilities matter. |
+| File line-limit report | `Tools/validation/check_file_line_limits.py` | Report-only 400-line policy validator; no rewrite/delete/split. |
 | Full toolbox telemetry summary | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Production summary for AI handoff. |
+| Full0To10 final product | `Tools/ai/full0to10_final_product/*` | Builds product Markdown, evidence index, readiness JSON, manifest and README. |
 | Shared AI-to-AI bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production handoff bundle. |
 | Tool inventory | `Tools/ai/build_agent_agnostic_tool_inventory.py` | Supporting toolbox visibility tool. |
 | Code interpreter report | `Tools/ai/build_code_interpreter_report.py` | Supporting capability report. |
@@ -136,7 +147,7 @@ Expected provider roles:
 ```text
 Ollama/GPU = primary advisory provider behind quality gate
 NPU/OpenVINO = probe / guardrail / decode diagnostic / knowledge broker
-OpenVINO GPU != primary lane
+OpenVINO GPU.0 = secondary/diagnostic unless explicitly promoted
 ```
 
 The provider path must remain advisory/report-only and must preserve:
@@ -147,6 +158,8 @@ provider diagnostics and degradation state are carried into telemetry/bundle sur
 patch_application_performed=false unless a separately reviewed patch-apply command is authorized
 manual_review_only for proposals and patch specs
 ```
+
+Effective-use, quality-product, bridge/readiness and capability artifacts must not be treated as provider runtime proof when their safety flags say `provider_execution_performed=false`.
 
 ## Macro patch lane
 
@@ -261,19 +274,42 @@ For production full-run handoff, companion telemetry/capability artifacts includ
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json
 docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.md
-docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json
-docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json or runtime_hardware_capability_manifest_<STAMP>.json
+docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.md or runtime_hardware_capability_manifest_<STAMP>.md
 docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.json
 docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.md
 docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json
 docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.md
 ```
 
+For maintainability checks, expected report-only outputs are:
+
+```text
+output/validation/file_line_limit_report.json
+output/validation/file_line_limit_report.md
+```
+
+For Full0To10 product/effective-use lanes, expected local outputs may include:
+
+```text
+full0to10_effective_use_quality_product.md
+full0to10_provider_hardening_contracts.json
+full0to10_effective_use_optimization.json
+full0to10_effective_use_tool_telemetry.json
+full0to10_final_tool_product.md
+full0to10_final_product_evidence_index.json
+full0to10_final_product_readiness.json
+full0to10_final_tool_product_manifest.json
+output/ai_runtime_memory/full0to10_effective_use.sqlite
+```
+
+These are local output/product surfaces unless a compact reviewed evidence artifact is intentionally promoted. Do not commit SQLite DB files.
+
 ## Validation ownership
 
 Broad activation validation uses the unified launcher.
 
-Focused validator commands belong in `Tools/validation/README.md` and should be used only when debugging or validating a specific validator/report contract.
+Focused validator commands belong in compact task docs and validator catalogs. Prefer compact current docs first; treat large catalogs as references.
 
 The broad-run acceptance signal is the launcher manifest plus telemetry/capability handoff surfaces, especially:
 
@@ -288,7 +324,8 @@ quality_gate_passed
 patch_specs_requested
 patch_application_performed
 runtime tool usage telemetry
-runtime capability manifest
+runtime/hardware capability manifest
+file-line-limit report when maintainability is in scope
 full toolbox telemetry summary
 errors
 warnings
@@ -330,6 +367,7 @@ destructive-operation-free
 manifest-first
 launcher-first
 telemetry/capability-visible when operational tools execute
+400-line-policy visible when maintainability is in scope
 ```
 
 The documentation patch-plan lane inherits the same guardrails and additionally stays task-scoped to the explicit patch-plan evidence bundle.
@@ -345,7 +383,8 @@ manual_review_only
 code_contract_drift
 docs_contract_drift
 runtime_tool_usage_telemetry
-runtime_tool_capability_manifest
+runtime_or_hardware_capability_manifest
+file_line_limit_report
 full_toolbox_run_telemetry_summary
 ```
 

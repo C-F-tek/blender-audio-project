@@ -20,7 +20,7 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 
 ## Non-negotiable rule
 
-There is one active local-AI operator entrypoint:
+There is one active local-AI operator entrypoint, now present on `master` after PR #187:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
@@ -57,21 +57,17 @@ Current compact operational bridge:
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ```
 
-Current active task:
+Current code-derived baseline:
 
 ```text
-docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-```
-
-Current run/bundle:
-
-```text
-Run: 20260505-143844
-Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Baseline: master after PR #187 merge
+Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Next candidate PR: #192 feat(ai): add full0to10 report-only foundation checks
+Evidence branch to mine/regenerate: #191 docs(ai): add Full0To10 quick evidence bundle 20260506-004242
 Mode: review-only until explicit human instruction
 ```
 
-The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Do not infer its contents from file existence alone.
+Do not treat PR #187 as the current active branch anymore. It is now the merged launcher baseline.
 
 Recent telemetry baseline:
 
@@ -166,6 +162,7 @@ Markdown inventory JSON/MD
 script inventory JSON/CSV/MD
 function/class/method inventory CSV
 Python line-count CSV/MD
+file line-limit JSON/MD report
 semantic chunk manifest
 selected chunk evidence
 repository consistency map/smoke
@@ -183,25 +180,46 @@ Commit only compact evidence under docs/LOCAL_VALIDATION_EVIDENCE when needed.
 Index repair must be plan/report-first unless the user explicitly asks for regeneration or apply.
 ```
 
-## Length policy
+## 400-line policy for documentation and code
 
-Active docs must remain readable. Long files are allowed only when they are generated evidence or historical snapshots with a compact manifest.
+Maintained documentation and source files must stay small enough for human review and AI-assisted patching.
 
-| File type | Preferred maximum | Required action when exceeded |
-|---|---:|---|
-| Active operator runbook | ~500 lines | Split, summarize or move verbose content to supporting docs. |
-| Maintained source documentation | ~700 lines | Add structure or split into subordinate docs. |
-| Generated compact evidence | ~1200 lines | Add manifest/summary and classify as evidence. |
-| Large historical/evidence bundle | Any size only if unavoidable | Must not be used as the first operational entrypoint. |
-
-Policy:
+Hard limit:
 
 ```text
-No active runbook should require opening an 8000-line bundle.
-Do not create new monolithic AI-to-AI bundles without a companion manifest.
-Do not use generated evidence snapshots as canonical workflow docs.
-Prefer manifest + index + focused report over one huge Markdown file.
+Markdown: <= 400 lines per active .md file
+Python/PowerShell/scripts/source code: <= 400 lines per maintained source file
 ```
+
+Markdown split rule:
+
+```text
+Keep the original file as a compact index.
+Create a sibling folder named exactly like the file, including .md: <file>.md/.
+Move detailed content into <file>.md/part-001.md, part-002.md, ...
+Keep each part under 400 lines.
+The index must list all parts and state that the document was split for the 400-line policy.
+```
+
+Code split rule:
+
+```text
+Keep public entrypoints/wrappers compact.
+Move implementation into a same-purpose package or module folder.
+Split by responsibility, not by arbitrary line number only.
+Keep each module/file under 400 lines.
+Preserve CLI/API compatibility unless the task explicitly allows breaking changes.
+Report resulting line count for every created or modified code/script file.
+```
+
+Validator note:
+
+```text
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+Tools/validation/check_file_line_limits.py
+```
+
+Existing files already over 400 lines are technical debt. Do not split them blindly during unrelated documentation work; refactor them progressively when touching that area for a code task.
 
 ## Function/tool visibility map
 
@@ -214,6 +232,7 @@ Current unified-flow tools and their visibility surfaces:
 | Link validation | `Tools/validation/check_docs_links.py` | JSON link report | `md` / validation modes |
 | Script inventory | `Tools/validation/build_script_inventory.py` | JSON, CSV and Markdown function/class inventory | `python` mode |
 | Python line count | broker/runtime line-count helper and validation reports | CSV and Markdown line-count surfaces | inventory/evidence lane |
+| File line-limit report | `Tools/validation/check_file_line_limits.py` | JSON and optional Markdown line-limit report | validation/evidence lane |
 | Report contracts | `Tools/validation/check_validation_report_contract.py` | JSON contract report | `json` / `contract` modes |
 | Workload quality | `Tools/validation/check_ai_workload_report_quality.py` | `ai_workload_report_quality.json` | provider quality gate |
 | Semantic chunks | `Tools/npu/build_semantic_code_chunks.py` | semantic chunk manifest | `chunks` mode |
@@ -227,6 +246,10 @@ Current unified-flow tools and their visibility surfaces:
 | Runtime broker | `Tools/ai/agent_runtime_tool_broker.py` | runtime tool broker JSON/MD report | supporting full-toolbox lane |
 | Production bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | shared toolbox AI-to-AI bundle and final summary | production handoff |
 | Reset | unified launcher reset mode | reset plan JSON/Markdown | `reset` mode |
+| Full0To10 recursive bundle ZIP | `Tools/ai/build_full_run_evidence_bundle_zip.py` in PR #192 | ZIP plus completeness report | candidate foundation layer |
+| Runtime hardware capability manifest | `Tools/ai/build_runtime_hardware_capability_manifest.py` in PR #192 | CPU/GPU.0/NPU/NVIDIA report-only manifest | candidate foundation layer |
+| Hardware delegation contract | `Tools/validation/check_runtime_hardware_delegation_contract.py` in PR #192 | report-only delegation contract validation | candidate foundation layer |
+| Bundle completeness contract | `Tools/validation/check_full_run_bundle_completeness.py` in PR #192 | ZIP/completeness validation report | candidate foundation layer |
 
 If a tool is referenced in docs but missing from the repository, mark it optional/future or remove the reference in the same change.
 
@@ -255,7 +278,8 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 
 | File | Status | Purpose |
 |---|---|---|
-| `current-operational-state-2026-05-05.md` | active bridge | Compact current state for PR #187, refactor/reuse run `20260505-143844`, guardrails and source-of-truth hierarchy. |
+| `current-operational-state-2026-05-05.md` | active bridge | Compact current state for post-#187 master, PR #192 candidate, PR #191 evidence branch, guardrails and source-of-truth hierarchy. |
+| `file-line-limit-validator-2026-05-06.md` | active validator note | Compact contract for `Tools/validation/check_file_line_limits.py` and 400-line evidence policy. |
 | `refactor-reuse-methods-classes-tools-planning.md` | active P1 task | Analyze method/class/helper/tool reuse, classify patch plans and keep patching review-only. |
 | `refactor-reuse-full-run-documentation-coherence-2026-05-05.md` | active bridge | Coherence note for the refactor/reuse run and bundle. |
 | `recent-telemetry-state-2026-05-05.md` | active baseline | Recent telemetry baseline for `073332` and `081141`; broker telemetry treated as resolved unless a regression appears. |
@@ -283,7 +307,7 @@ If a tool is referenced in docs but missing from the repository, mark it optiona
 
 ## Removed superseded active-start runbooks
 
-The following legacy active-start documents were removed from this branch because the stable layer now owns the active flow:
+The following legacy active-start documents were removed because the stable layer now owns the active flow:
 
 ```text
 post-pr114-next-task-handoff.md
@@ -302,7 +326,7 @@ Current policy:
 ```text
 Use run_unified_local_ai_refactor.ps1 as the only operator entrypoint.
 Use current-operational-state-2026-05-05.md, FULL_RUN_UNICA_TUTTO_SU_TUTTO.md and current-code-flow-guide-2026-05-05.md for current flow.
-Use refactor-reuse-methods-classes-tools-planning.md and the 20260505-143844 runtime bundle for the current refactor/reuse pass.
+Use refactor-reuse-methods-classes-tools-planning.md and current telemetry/evidence summaries for refactor/reuse passes.
 Use tool-inventory-placement-audit-2026-05-05.md and project-tool-promotion-and-insertion-guide-2026-05-05.md for project-tool promotion.
 Use no-audio-media-output-guardrail-2026-05-05.md to classify audio/media output side effects.
 Do not create new parallel 0-to-10 entrypoints unless the user explicitly asks for a separate runner.

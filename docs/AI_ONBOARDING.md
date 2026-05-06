@@ -17,12 +17,14 @@ Tool/validator catalogs may be larger reference files and should not be treated 
 ## Current doctrine
 
 ```text
+master contains PR #187 unified launcher baseline
 run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 quick/balanced/deep/custom = presets or operator parameters, not scope
 -No* flags = explicit opt-out from selected lanes
-CSV/index/discovery surfaces are evidence lanes when relevant
-large Markdown must not be a primary operational entrypoint
+CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
+400 lines = hard limit for maintained docs and source files
+limitations = backlog to overcome, not reasons to skip available tools
 ```
 
 Telemetry is not a replacement for evidence or patch plans. It is the required accessory that tells future agents whether lanes executed, failed, were blocked, degraded, disabled, unavailable or planned-only.
@@ -30,15 +32,14 @@ Telemetry is not a replacement for evidence or patch plans. It is the required a
 ## Current branch phase
 
 ```text
-Branch: codex/unified-local-ai-refactor-launcher
-PR: #187 feat(workflow): add unified local AI refactor launcher
-Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-Run: 20260505-143844
-Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
-Mode: review-only until explicit human instruction
+Baseline: master after PR #187 merge
+Current documentation PR: #193 docs(ai): align operational docs with post-PR187 code state
+Next clean report-only foundation candidate: PR #192
+Useful but diverged evidence branch: PR #191
+Mode: GitHub-only/API when maintainer is away
 ```
 
-The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository. Do not infer bundle contents from file existence alone.
+Do not treat `codex/unified-local-ai-refactor-launcher` or PR #187 as the active branch anymore. PR #187 is the merged baseline.
 
 ## Source-of-truth order
 
@@ -46,25 +47,24 @@ Use this priority when documents disagree:
 
 1. `AGENTS.md` for repository rules, safety limits and required validation.
 2. `CHATGPT.md` and `CHATGPT/README.md` for current chat/session handoff routing.
-3. `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for current branch state.
+3. `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for current code/state bridge.
 4. `docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md` for oversized Markdown handling.
-5. `README.md` and `WORKFLOW.md` for human/project identity and lifecycle.
-6. `docs/README.md` for documentation navigation.
-7. `docs/LOCAL_AI_RUN_BOOTSTRAP.md` for local checkout bootstrap.
-8. `docs/LOCAL_AI_TASKS/README.md` for task routing.
-9. `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` for the run-unica entrypoint.
-10. `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` for launcher manifest/phase contract.
-11. `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` for current broker/provider/telemetry/bundle/discovery/CSV/evidence flow.
-12. `docs/MODULE_MAP.md`, `docs/DATA_FLOW.md`, `docs/LOCAL_AI_WORKFLOW.md` and target package/tool READMEs for architecture and migration direction.
-13. The target source file itself.
-14. Generated indexes under `indexAI/` and `Tools/npu/*_index.md` as derived context only.
-15. `docs/PROJECT_AI_CONSCIOUSNESS.md` only as historical/orientation material; it must not override current contracts.
+5. `docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md` for the 400-line validator contract.
+6. `README.md` and `WORKFLOW.md` for human/project identity and lifecycle.
+7. `docs/README.md` for documentation navigation.
+8. `docs/LOCAL_AI_RUN_BOOTSTRAP.md` for local checkout bootstrap.
+9. `docs/LOCAL_AI_TASKS/README.md` for task routing.
+10. `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` for the run-unica entrypoint.
+11. `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` for launcher manifest/phase contract.
+12. `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` for current broker/provider/telemetry/bundle/discovery/CSV/evidence flow.
+13. `docs/MODULE_MAP.md`, `docs/DATA_FLOW.md`, `docs/LOCAL_AI_WORKFLOW.md` and target package/tool READMEs for architecture and migration direction.
+14. The target source file itself.
+15. Generated indexes under `indexAI/` and `Tools/npu/*_index.md` as derived context only.
+16. `docs/PROJECT_AI_CONSCIOUSNESS.md` only as historical/orientation material; it must not override current contracts.
 
 If a status document says a file is missing but the file exists, treat the file tree as current evidence and update the stale document in a small documentation patch.
 
 ## Current baseline
-
-As of PR #187 / branch `codex/unified-local-ai-refactor-launcher`:
 
 | Area | Baseline |
 |---|---|
@@ -73,6 +73,7 @@ As of PR #187 / branch `codex/unified-local-ai-refactor-launcher`:
 | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Compact launcher manifest and phase contract. |
 | `Tools/ai/` | AI orchestration, provider diagnostics, deterministic recommendations, broker reports, runtime telemetry, capability manifests, telemetry summaries and AI-to-AI bundle tooling. |
 | `Tools/validation/` | Non-invasive validators and report-contract checks. Its README is a catalog/reference, not a primary entrypoint if too large/truncated. |
+| `Tools/validation/check_file_line_limits.py` | Report-only 400-line policy validator for maintained docs and source files. |
 | `Tools/npu/` | AI/NPU/Ollama context and review tooling. NPU remains probe/guardrail/decode diagnostic unless future quality-gated promotion exists. |
 | `Tools/npu/pipeline/` | Additive app-agnostic helper package. It is not runtime-provider wiring by default. |
 | `Scripting/v61b/` | Stable reference Blender package. Do not destructively refactor. |
@@ -82,7 +83,7 @@ As of PR #187 / branch `codex/unified-local-ai-refactor-launcher`:
 | `indexAI/` | Generated AI context. Do not hand-refactor as source. Do not commit `indexAI/code_chunks/**`. |
 | `docs/JSON_SCHEMAS.md` | Broad schema notebook/catalog. Prefer compact contracts for active run-unica semantics. |
 
-Not yet complete:
+Not yet complete / still debt to overcome:
 
 ```text
 Scripting/shared/blender_compat.py
@@ -92,6 +93,7 @@ runtime adoption of Tools/npu/pipeline/ helpers inside Tools/npu/run_dual_ai_pip
 full production JSON schemas
 automated Blender runtime validation
 strict validation of every telemetry/bundle completeness path
+existing oversized docs/source files above 400 lines
 ```
 
 These are planned or future-facing candidates. Their absence is expected until a dedicated implementation PR creates and validates them.
@@ -114,6 +116,7 @@ shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
 shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
 CSV/count summaries when inventory lanes ran
 discovery/index repair reports when relevant
+file-line-limit reports when maintainability is in scope
 ```
 
 Never infer success only from:
@@ -128,19 +131,27 @@ reviewed patch spec exists
 large Markdown mentions it
 ```
 
-## Large Markdown rule
+## 400-line rule
 
-Markdown that is too large to be reliably opened by a future chat, local AI context pack or GitHub-only reviewer must not be a primary operational entrypoint.
-
-Examples currently treated as catalog/supporting rather than primary:
+Active maintained Markdown and source files must stay under 400 lines.
 
 ```text
-docs/JSON_SCHEMAS.md
-Tools/validation/README.md
-docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
+Markdown over 400 lines -> compact index + <file>.md/part-001.md, part-002.md, ...
+Code over 400 lines -> compact entrypoint + responsibility-based package/module split
 ```
 
 Use compact bridge docs and manifests first.
+
+## Tool usage and limitation rule
+
+Use every relevant available tool lane by default.
+
+```text
+A limitation is backlog to overcome.
+A limitation is not a static prohibition.
+A tool/lane is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
+Historical notes about missing tools are obsolete unless current evidence confirms them.
+```
 
 ## Common traps
 
@@ -169,7 +180,7 @@ Use compact bridge docs and manifests first.
 | NPU/AI pipeline refactor | Split provider, prompt, validation and artifact-writing concerns without changing CLI behavior. |
 | NPU helper package work | Keep helpers app-agnostic, run focused helper validation when local execution is available, and defer runtime wiring to a later proven phase. |
 | GitHub-only work | Read `docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`; do not ask for local sync/runs while maintainer is away unless requested. |
-| Run-unica evidence or patch-plan review | Inspect manifest, evidence, telemetry, capability manifest, full toolbox summary, CSV/index/discovery surfaces and shared AI-to-AI bundle together. |
+| Run-unica evidence or patch-plan review | Inspect manifest, evidence, telemetry, capability manifest, full toolbox summary, CSV/index/discovery/file-line-limit surfaces and shared AI-to-AI bundle together. |
 
 ## Reporting template
 

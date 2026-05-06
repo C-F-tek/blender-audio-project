@@ -2,240 +2,275 @@
 
 ## Purpose
 
-This guide defines a practical development workflow for `blender-audio-project`.
+Practical development guide for `IA-Carmine Local AI Orchestration Workbench`.
 
-The repository contains working Blender packages, generated AI artifacts, local AI/NPU tooling and documentation. Development should prioritize small, traceable changes that do not break existing render workflows.
+The repository slug remains `blender-audio-project`, but the active architecture is local AI orchestration, validation, evidence, telemetry, provider diagnostics, tool governance and manual-review patch planning.
+
+Blender/audio remains the first application domain. It is not the boundary of current backend/tooling development.
+
+This guide is not a command catalog. Current executable examples live in:
+
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+## Current doctrine
+
+```text
+master contains PR #187 unified launcher baseline
+run_unified_local_ai_refactor.ps1 = run unica
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = presets or operator parameters, not scope
+-No* flags = explicit opt-out from selected lanes
+CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
+400-line policy applies to maintained docs and source files
+limitations are backlog to overcome, not reasons to skip available tools
+```
 
 ## Recommended workflow
 
-1. Pull the latest `master` branch.
-2. Read `README.md` and `AGENTS.md`.
-3. Read `docs/README.md`, `docs/PROJECT_AI_CONSCIOUSNESS.md` and `docs/AI_ONBOARDING.md`.
-4. Read `docs/AI_PIPELINE_REFACTOR_STATUS.md` and `docs/AI_PIPELINE_ARCHITECTURE.md` before changing AI pipeline code.
+1. Read `AGENTS.md`, `CHATGPT.md` and `CHATGPT/README.md`.
+2. Read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md`.
+3. Read `docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md`.
+4. Read `README.md`, `WORKFLOW.md` and `docs/README.md`.
 5. Read `docs/MODULE_MAP.md` and `docs/DATA_FLOW.md`.
-6. Read `docs/REFACTORING_AND_REUSE_PLAN.md` when touching reusable logic.
-7. Identify the target area: root tool, Blender package, shared utility, AI/NPU tool, generated artifact or documentation.
-8. Inspect the target file before editing.
-9. Make a focused change.
-10. Run the smallest relevant validation.
-11. Test inside Blender when the change touches Blender runtime behavior.
-12. Document assumptions, results, risks and line counts for scripts.
-13. Commit with a clear message.
+6. Read the nearest package/tool README and inspect the target source file.
+7. Make the smallest coherent change.
+8. Keep maintained docs/source files under 400 lines.
+9. Validate locally when available, or state GitHub-only limits honestly.
+10. Report changed files, purpose, validation status, risks and script line counts.
 
-## Working with Blender scripts
+## Working with run-unica tooling
 
-Rules:
-
-- Keep local paths configurable.
-- Add comments around Blender API compatibility-sensitive code.
-- Prefer functions with clear responsibility.
-- Avoid global side effects where a parameter or config object is practical.
-- Do not destructively refactor working packages only for style.
-- Keep object creation, material creation, animation, render settings and encoding separated where possible.
-- Isolate Blender-version compatibility in helper functions.
-
-## Working with shared utilities
-
-Shared utilities live under:
+Primary local-AI entrypoint:
 
 ```text
-Scripting/shared/
+Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
-Use shared utilities for reusable operational behavior:
-
-- path resolution;
-- JSON loading/writing;
-- input validation;
-- Blender API compatibility wrappers;
-- image-sequence scanning;
-- FFmpeg command building;
-- render profile definitions;
-- diagnostics;
-- hotpatch support;
-- scene registry patterns.
-
-Do not migrate an existing working package to a new shared utility until the utility has been tested.
-
-Safe order:
+Primary runbook:
 
 ```text
-create shared utility
-  -> validate utility
-  -> add optional package adapter
-  -> test package
-  -> migrate one call site
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-## Working with the AI artifact pipeline
+Supporting wrappers must not become new first entrypoints unless explicitly promoted into the launcher contract.
 
-The AI artifact pipeline entrypoint is:
+When a change affects run-unica evidence, provider diagnostics, patch plans or patch specs, keep the handoff complete:
 
 ```text
-Tools/ai/run_parallel_artifact_pipeline.py
+launcher manifest
+phase_status / phase_reports
+runtime tool usage telemetry
+runtime/hardware capability manifest
+full toolbox telemetry summary
+shared AI-to-AI bundle/final summary
+CSV/index/discovery/file-line evidence when relevant
 ```
 
-It should remain thin. Implementation belongs under:
+## Working with AI pipeline code
+
+Current AI pipeline code is under:
 
 ```text
+Tools/ai/
 Tools/ai/pipeline/
-```
-
-Current status marker:
-
-```text
-modular_schedule_complete_pending_local_validation
 ```
 
 Read before editing:
 
 ```text
-docs/AI_PIPELINE_REFACTOR_STATUS.md
 docs/AI_PIPELINE_ARCHITECTURE.md
+docs/AI_PIPELINE_REFACTOR_STATUS.md
+docs/AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md
+docs/AI_GUARDRAILS_VALIDATION_GUIDE.md
 Tools/ai/pipeline/refactor_status.py
 ```
 
-Module responsibilities:
+Keep pipeline modules:
 
-| Module | Role |
-|---|---|
-| `defaults.py` | Central constants and defaults. |
-| `models.py` | Pipeline dataclasses and lane enum. |
-| `runner.py` | Low-level subprocess execution. |
-| `compat.py` | Schema-v6 compatibility adapters. |
-| `artifact_contracts.py` | Expected artifacts and planned outputs. |
-| `cli.py` | CLI parser. |
-| `preflight.py` | Pre-run checks. |
-| `steps.py` | Step and command builders. |
-| `scheduler.py` | Serial/parallel scheduling policy. |
-| `orchestrator.py` | Concrete serial/parallel execution helpers. |
-| `schema_report.py` | Report generation. |
-| `guardrail_models.py` | Typed guardrail queue models. |
-| `remediation.py` | Auto-safe remediation loop. |
-| `refactor_status.py` | Machine-readable status marker. |
-
-AI pipeline validation:
-
-```powershell
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+```text
+provider-agnostic
+import-safe
+fixture/dry-run testable
+report-oriented
+schema/validator friendly
+under 400 lines or split by responsibility
 ```
 
-Important rule: do not change schema-v6 field meanings without running the dry-run matrix locally.
+Provider output must not bypass validation, telemetry/capability context or manual review.
+
+## Working with AI/NPU tooling
+
+For `Tools/npu/` and `Tools/npu/pipeline/`:
+
+- keep helper modules provider-free unless explicitly scoped;
+- keep prompts separate from validators;
+- keep generated artifacts separate from maintained source;
+- preserve deterministic fallbacks;
+- keep model outputs out of source modules;
+- document expected inputs/outputs;
+- keep NPU as probe/guardrail/decode diagnostic unless a quality-gated promotion changes the contract.
+
+Read:
+
+```text
+docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md
+Tools/npu/pipeline/README.md
+```
+
+Do not wire helpers into runtime orchestrators without focused validation, broad launcher validation, quality gates, telemetry/bundle visibility and maintainer approval.
+
+## Working with validators
+
+Validators live under:
+
+```text
+Tools/validation/
+```
+
+New validators should be:
+
+```text
+report-only by default
+non-destructive
+schema_version/kind based
+clear about source_writes_performed and patch_application_performed
+safe under GitHub-only review
+under 400 lines or split by responsibility
+```
+
+Current line-limit validator:
+
+```text
+Tools/validation/check_file_line_limits.py
+```
+
+Large validator catalogs are references. Keep compact task notes for new validator contracts when useful.
+
+## Working with Blender/application code
+
+Blender/audio scripts remain application-domain assets.
+
+Rules:
+
+- keep local paths configurable;
+- isolate Blender-version compatibility;
+- avoid destructive refactors of working packages;
+- separate object creation, materials, animation, render settings and encoding where practical;
+- do not run Blender, FFmpeg or media output during normal AI/tooling work;
+- test inside Blender only when the task explicitly enters application-domain runtime work.
+
+Reference areas:
+
+```text
+Scripting/v61b/
+Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/
+Scripting/shared/
+```
 
 ## Working with root tools
 
-Root scripts such as `analyze_wav.py`, `build_track_summary.py` and `normalize_scene_spec.py` should gradually move toward this shape:
+Root scripts such as these are application-domain tools, not default broker tools:
+
+```text
+analyze_wav.py
+build_track_summary.py
+normalize_scene_spec.py
+```
+
+Future direction:
 
 ```text
 importable service function
   -> CLI wrapper
   -> explicit input/output paths
-  -> predictable JSON output
+  -> predictable JSON/report output
 ```
 
-Do not break the existing command-line behavior during this transition.
-
-## Working with AI/NPU tooling
-
-For files under `Tools/npu/`:
-
-- keep provider/runtime code separate from prompts;
-- keep prompts separate from validators;
-- keep generated artifacts separate from hand-maintained code;
-- preserve deterministic fallbacks;
-- keep large model outputs out of source modules;
-- document every expected input/output file.
-
-Longer-term target:
-
-```text
-Tools/npu/pipeline/
-  config.py
-  context_builder.py
-  prompts.py
-  providers.py
-  validators.py
-  artifact_writer.py
-  runner.py
-```
+Preserve existing CLI behavior unless a task explicitly allows a breaking change.
 
 ## Working with generated data
 
-- Do not commit heavy render outputs unless explicitly required.
-- Do not overwrite full frame-by-frame analysis JSON files without explicit instruction.
-- Keep compact summaries separate from full data.
-- Keep output paths configurable.
-- Treat `indexAI/` as generated context unless a specific source file inside it is intentionally curated.
-- Regenerate indexes after major structural changes.
+Do not commit:
 
-## Working with README and documentation files
+```text
+output/**
+renders/**
+*.db
+*.sqlite
+*.sqlite3
+indexAI/code_chunks/**
+raw provider outputs
+generated audio/video/media output
+```
 
-When code structure changes, update the nearest documentation:
+Treat `indexAI/` as generated context unless a specific curated source file is clearly documented.
+
+Index repair/regeneration is plan/report-first unless explicitly requested.
+
+## Documentation update map
 
 | Change | Documentation to update |
 |---|---|
-| New package under `Scripting/` | package `README.md`, `Scripting/README.md`, `docs/MODULE_MAP.md` |
-| New shared utility | `Scripting/shared/README.md`, `docs/SHARED_SCRIPTING_UTILITIES.md`, `docs/REFACTORING_AND_REUSE_PLAN.md` |
-| New AI pipeline module | `docs/AI_PIPELINE_ARCHITECTURE.md`, `docs/AI_PIPELINE_REFACTOR_STATUS.md`, `docs/PROJECT_AI_CONSCIOUSNESS.md` |
-| New entry point | `docs/BLENDER_SCRIPT_ENTRYPOINTS.md` or the closest workflow document. |
-| New JSON contract | `docs/JSON_SCHEMAS.md` |
-| New render or encode workflow | `docs/RENDER_WORKFLOW.md`, `docs/FFMPEG_WORKFLOW.md` |
-| New AI/NPU workflow | `docs/LOCAL_AI_WORKFLOW.md`, `docs/AI_PIPELINE_OPTIMIZATION.md` |
-| New validation workflow | `docs/QUALITY_GATE.md`, `Tools/validation/README.md` |
+| New launcher mode/manifest field | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md`, launcher runbook, current code-flow guide. |
+| New validator | Compact task note if needed, `docs/AI_ARTIFACT_SCHEMAS.md`, `docs/MODULE_MAP.md`, nearest README. |
+| New run-unica evidence lane | `docs/DATA_FLOW.md`, `docs/LOCAL_AI_WORKFLOW.md`, `docs/LOCAL_AI_TASKS/README.md`. |
+| New AI pipeline module | `docs/AI_PIPELINE_ARCHITECTURE.md`, `docs/AI_PIPELINE_REFACTOR_STATUS.md`, nearest package README. |
+| New NPU helper | `Tools/npu/pipeline/README.md`, `docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md`. |
+| New shared Blender utility | `Scripting/shared/README.md`, `docs/SHARED_SCRIPTING_UTILITIES.md`, `docs/MODULE_MAP.md`. |
+| New application-domain entrypoint | nearest package README and relevant Blender/application docs. |
+| New JSON/report contract | `docs/AI_ARTIFACT_SCHEMAS.md` or compact contract doc; avoid making `docs/JSON_SCHEMAS.md` a primary entrypoint. |
 
-## Commit style
+## 400-line rule
 
-Use concise commit messages:
+Maintained documentation and source files must stay under 400 lines.
 
 ```text
-docs: refresh repository readmes
-docs: add refactoring and reuse plan
-feat(shared): add json io helpers
-feat(shared): add ffmpeg profile builder
-feat(ai): add artifact pipeline dry-run matrix
-refactor(ai): slim artifact pipeline orchestrator
-refactor(npu): split prompt builders
-fix(blender): add node compatibility fallback
-test: add package structure validation
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
 ```
 
-## Test notes
+Use `Tools/validation/check_file_line_limits.py` for report-only measurement.
 
-When reporting a change, include:
+## Commit/report style
 
-- changed files;
-- reason for the change;
-- Blender version tested, when relevant;
-- command or action used;
-- result;
-- line count for scripts created or modified;
-- risks or missing validation.
+Use concise commits, for example:
+
+```text
+docs(ai): align module map with current validation flow
+feat(validation): add file line limit report
+refactor(ai): split provider report helpers
+fix(blender): add node compatibility fallback
+test(ai): add pipeline helper validation
+```
+
+Every implementation report should include:
+
+```text
+changed files
+purpose
+line counts for created/modified scripts
+400-line policy impact
+validation status or GitHub-only limitation
+provider/runtime/media execution status
+risks
+follow-up
+```
 
 ## Minimal validation checklist
 
 | Change type | Minimum validation |
 |---|---|
-| Markdown/docs only | Review paths and links. |
-| Pure Python utility | `python .\Tools\validation\check_python_syntax.py --repo-root .`. |
-| Root CLI | Run with a small input or dry-run mode if available. |
-| AI artifact pipeline | `check_ai_pipeline_modules.py` plus `run_pipeline_dry_run_matrix.py`. |
-| Blender module | Import/run inside Blender, or run a controlled manual test. |
-| FFmpeg utility | Print command and run a short encode test. |
-| NPU/Ollama pipeline | Dry-run or deterministic fallback path. |
-| Generated package | Open target package, verify inputs, frame range, audio strip and output path. |
-
-## Standard local validation block
-
-```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
-python .\Tools\validation\check_package_structure.py --repo-root .
-python .\Tools\validation\check_json_artifacts.py --repo-root .
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
-```
+| Markdown/docs only | Link/path review and file-line-limit check when maintainability is in scope. |
+| Pure Python utility | Python syntax/import-focused validation. |
+| Validator | Focused validator run plus JSON parseability/report contract review. |
+| AI pipeline | Focused AI pipeline validation and dry-run matrix when local execution is available. |
+| NPU helper | Focused NPU helper validation; no provider proof unless provider run is explicit. |
+| Blender module | Blender runtime smoke only when explicitly scoped. |
+| FFmpeg utility | Print command or short encode only when explicitly scoped. |
+| Generated package | Application-domain package validation, not normal AI/tooling validation. |
 
 ## Not specified
 
@@ -243,3 +278,4 @@ python .\Tools\npu\build_npu_code_context.py
 - Branch protection policy.
 - Complete Blender headless CI.
 - Full JSON schema enforcement for every artifact.
+- Automatic patch application from run-unica outputs.

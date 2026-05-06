@@ -2,7 +2,7 @@
 
 `Scripting/` is the main workspace for Blender scene packages generated, refined or maintained from audio-analysis data and AI-assisted workflows.
 
-This folder is not a generic script dump. Each subfolder should be treated as a potential Blender package, workflow snapshot, generated scene implementation or reusable support area.
+This is application-domain code. It is not part of the normal local-AI run-unica execution path unless an explicit Blender/audio/media task scopes it.
 
 ## Current roles
 
@@ -11,7 +11,7 @@ This folder is not a generic script dump. Each subfolder should be treated as a 
 - Store AI-generated or AI-refined packages.
 - Keep package-specific documentation near the code.
 - Preserve multiple project variants when they represent different tracks, visual concepts or render strategies.
-- Provide a shared utility target for reusable operational code.
+- Provide a shared utility target for reusable application-domain code.
 
 ## Known project/package areas
 
@@ -32,8 +32,9 @@ Each non-shared package should document:
 - expected output folders;
 - Blender version assumptions;
 - FFmpeg/render workflow;
-- known limitations;
-- line counts for generated scripts when relevant.
+- known limitations as backlog to overcome;
+- line counts for generated scripts when relevant;
+- 400-line policy status for maintained source files.
 
 ## Preferred package structure
 
@@ -86,16 +87,17 @@ Do not move code out of a working package destructively. First create the shared
 
 When an AI system creates or edits a package:
 
-1. Read the root `README.md`.
-2. Read `AGENTS.md`.
+1. Read `AGENTS.md`.
+2. Read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md`.
 3. Read `docs/MODULE_MAP.md`.
-4. Read `docs/REFACTORING_AND_REUSE_PLAN.md`.
-5. Read this file.
-6. Read the target package README.
-7. Inspect the target script before editing.
-8. Prefer focused patches over complete rewrites.
-9. Keep paths configurable.
-10. Report changed files, risks, tests and script line counts.
+4. Read `docs/DATA_FLOW.md`.
+5. Read `docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md`.
+6. Read this file.
+7. Read the target package README.
+8. Inspect the target script before editing.
+9. Prefer focused patches over complete rewrites.
+10. Keep paths configurable.
+11. Report changed files, risks, tests and script line counts.
 
 ## Versioned folders and generated packages
 
@@ -105,15 +107,47 @@ Named folders such as `ready_to_jazz_wow_youtube_profiles_audio_sync/` may repre
 
 Do not collapse separate generated packages into one folder unless that is explicitly requested.
 
+## 400-line policy
+
+Maintained application-domain docs and source files follow the repository 400-line policy.
+
+```text
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+```
+
+## Guardrails
+
+Normal AI/tooling runs must not trigger:
+
+```text
+Blender render
+FFmpeg encode or mux
+audio playback/export
+media output side effects
+patch application
+```
+
+These actions require an explicit application-domain task or explicit apply command.
+
 ## Future local AI objective
 
 The intended direction is to reduce dependency on manual remote-AI coding loops by using local tools where practical:
 
 - local code indexing;
 - compact context generation;
-- NPU technical review;
-- GPU/Ollama creative or implementation planning;
+- NPU technical review/probe diagnostics;
+- GPU/Ollama advisory planning when quality-gated;
 - deterministic fallback generation;
-- validated patch application.
+- review-only patch planning;
+- explicit patch application only after approval.
 
-The detailed roadmap is documented in `docs/LOCAL_AI_WORKFLOW.md`, `docs/AI_PIPELINE_OPTIMIZATION.md` and `docs/REFACTORING_AND_REUSE_PLAN.md`.
+The current roadmap is documented in:
+
+```text
+docs/LOCAL_AI_WORKFLOW.md
+docs/AI_PIPELINE_OPTIMIZATION.md
+docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+```

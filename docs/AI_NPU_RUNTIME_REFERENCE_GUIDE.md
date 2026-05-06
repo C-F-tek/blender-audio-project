@@ -10,9 +10,9 @@ This document is reference guidance, not a command catalog. Current executable e
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
-Tools/npu/pipeline/README.md
 ```
+
+Large validator/tool catalogs such as `Tools/validation/README.md` are references only and must not become primary operational entrypoints if too large or truncated.
 
 ## Current project policy
 
@@ -27,7 +27,7 @@ safe to import
 focused on contracts, paths, config, IO and planning helpers
 ```
 
-It must not be wired into runtime orchestrators unless local validation, quality gates, telemetry/bundle visibility and regenerated indexes are green.
+It must not be wired into runtime orchestrators unless local validation, quality gates, telemetry/bundle visibility, file-line impact review and regenerated indexes are green.
 
 ## Hardware role separation
 
@@ -63,11 +63,14 @@ When NPU diagnostics contribute to full-run evidence, their state must be visibl
 unified launcher manifest
 phase_status / phase_reports
 provider diagnostics
+runtime/hardware capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 ```
 
 Telemetry is the completeness accessory that explains whether NPU lanes executed, failed, degraded, were excluded, were blocked, were disabled or were planned-only.
+
+Limitations are backlog to overcome, not reasons to skip available NPU/probe/tool lanes.
 
 ## Runtime-agnostic NPU design
 
@@ -83,6 +86,7 @@ NpuCapability
   -> ProviderResult
   -> ValidationReport
   -> Telemetry/Bundle companion when used in full-run evidence
+  -> FileLineImpactReport when maintainability is in scope
 ```
 
 The helper layer may prepare:
@@ -119,7 +123,8 @@ Not allowed without explicit validated phase:
 - automatic provider fallback that hides failures;
 - writing source files from model output;
 - changing `Tools/npu/run_dual_ai_pipeline.py` behavior without local validation;
-- using NPU smoke/decode success as proof of advisory readiness.
+- using NPU smoke/decode success as proof of advisory readiness;
+- growing maintained NPU helper/source files beyond 400 lines without split/refactor plan.
 
 ## Expected NPU workflow
 
@@ -132,7 +137,8 @@ Not allowed without explicit validated phase:
 6. validate structured artifact/report
 7. write safe output report
 8. carry provider quality and exclusion state into telemetry/bundle handoff when part of full-run evidence
-9. regenerate indexes only after accepted structural changes and explicit local task scope
+9. include file-line-limit evidence when maintainability is in scope
+10. regenerate indexes only after accepted structural changes and explicit local task scope
 ```
 
 ## Failure handling
@@ -175,6 +181,8 @@ For NPU helper work, read:
 AGENTS.md
 WORKFLOW.md
 docs/README.md
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 Tools/npu/pipeline/README.md
@@ -186,17 +194,23 @@ docs/AI_GUARDRAILS_VALIDATION_GUIDE.md
 
 ## Validation ownership
 
-Focused NPU helper validation is owned by:
+Focused NPU helper validation is described by:
 
 ```text
 Tools/npu/pipeline/README.md
-Tools/validation/README.md
 ```
 
 Broad local-AI validation and provider/probe execution are owned by:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+File-line validation is described by:
+
+```text
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+Tools/validation/check_file_line_limits.py
 ```
 
 Do not use focused NPU helper commands as proof that `Full0To10` passed.
@@ -211,6 +225,7 @@ Before wiring NPU helpers into runtime code, require:
 - provider boundary documented;
 - fallback behavior documented;
 - telemetry/bundle visibility documented when entering full-run evidence;
+- file-line impact reviewed under the 400-line policy;
 - generated indexes regenerated only when explicitly scoped;
 - no Blender runtime behavior changed unintentionally;
 - no source writes from raw model output;
@@ -229,4 +244,5 @@ When asked to improve NPU usage:
 6. keep NPU as probe/guardrail/decode diagnostic unless quality evidence promotes it;
 7. keep GPU advisory explicit and quality-gated;
 8. state when local hardware validation is required;
-9. attach telemetry/capability/bundle context when NPU results affect evidence or patch plans.
+9. attach telemetry/capability/bundle context when NPU results affect evidence or patch plans;
+10. keep maintained NPU helper/source files under 400 lines or split by responsibility.

@@ -25,8 +25,9 @@ run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 quick/balanced/deep/custom = presets or operator parameters, not scope
 -No* flags = explicit opt-out from selected lanes
-CSV/index/discovery surfaces are evidence lanes when relevant
-large Markdown must not be a primary operational entrypoint
+CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
+400-line policy applies to maintained docs and source files
+limitations are backlog to overcome, not reasons to skip available tools
 ```
 
 For `Full0To10`, patch-plan and patch-spec artifacts must travel with telemetry, capability and relevant discovery/count context:
@@ -38,10 +39,11 @@ evidence artifacts
 patch-plan artifacts
 patch-spec artifacts when produced
 runtime tool usage telemetry
-runtime tool capability manifest
+runtime/hardware capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 CSV/count summaries when inventory lanes ran
+file-line-limit report when maintainability is in scope
 discovery/index repair reports when relevant
 ```
 
@@ -57,6 +59,7 @@ which capabilities were available
 which provider lanes degraded
 whether deterministic recovery was used
 whether discovery/index/CSV-count evidence was produced, skipped or unavailable
+whether file-line-limit evidence was produced when maintainability is in scope
 whether source writes happened
 whether patch application happened
 ```
@@ -72,6 +75,7 @@ File existence alone is not proof that a patch plan/spec is valid.
 | `Tools/validation/check_patch_spec_drafts.py` | Validates draft specs before any review-to-concrete promotion. |
 | `Tools/ai/promote_patch_spec_draft.py` | Promotes one draft plus an explicit replacement plan into a reviewed dry-run-passing spec. |
 | `Tools/validation/check_reviewed_patch_specs.py` | Revalidates reviewed specs and reruns dry-run without applying patches. |
+| `Tools/validation/check_file_line_limits.py` | Report-only 400-line policy validator. Does not rewrite, split, delete or apply patches. |
 | `output/patch_specs/` | Ignored local workspace for generated draft/reviewed patch specs. |
 | `patch_specs/inbox/` | Queue of patch specs waiting to be applied. Use only after explicit approval. |
 | `patch_specs/applied/` | Patch specs already applied by the GitHub Action. |
@@ -270,7 +274,17 @@ Avoid patch specs for:
 - patches requiring runtime reasoning;
 - binary files;
 - generated full frame-by-frame analysis JSON files;
-- run-unica evidence/patch handoffs that lack telemetry/capability/discovery context.
+- run-unica evidence/patch handoffs that lack telemetry/capability/discovery/file-line context.
+
+## 400-line policy interaction
+
+Patch specs must not create or expand maintained docs/source files beyond 400 lines without also planning the required split/refactor.
+
+```text
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Existing oversized files -> technical debt; patch only focused sections unless the task explicitly scopes a split/refactor.
+```
 
 ## AI usage policy
 
@@ -281,7 +295,8 @@ AI agents may generate patch specs when:
 - before/after validation strings are included;
 - the patch can be dry-run before application;
 - line count and diff can be reviewed;
-- run-unica-derived proposals include telemetry/capability/discovery context.
+- 400-line policy impact is known;
+- run-unica-derived proposals include telemetry/capability/discovery/file-line context.
 
 AI agents should not push queued specs without explicit human approval.
 
@@ -299,7 +314,7 @@ These drafts are intentionally inert:
 
 The draft validator rejects concrete replacements and queued inbox paths.
 
-If the proposals come from run-unica evidence, the draft manifest or surrounding handoff must reference the companion telemetry/capability/final summary and relevant discovery/index/CSV-count surfaces.
+If the proposals come from run-unica evidence, the draft manifest or surrounding handoff must reference the companion telemetry/capability/final summary and relevant discovery/index/CSV-count/file-line surfaces.
 
 ## Review-to-concrete promotion
 
@@ -348,4 +363,4 @@ Use patch specs for mechanical documentation and validation-policy edits.
 
 For source-code refactors, prefer normal reviewed commits unless the edit is small, exact and easy to validate.
 
-For run-unica-derived patch plans/specs, require evidence plus telemetry/capability/discovery bundle context before treating the recommendation as complete.
+For run-unica-derived patch plans/specs, require evidence plus telemetry/capability/discovery/file-line bundle context before treating the recommendation as complete.

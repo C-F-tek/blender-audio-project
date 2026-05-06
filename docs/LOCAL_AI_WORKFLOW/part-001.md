@@ -14,7 +14,7 @@ Sorgente indice: [`../LOCAL_AI_WORKFLOW.md`](../LOCAL_AI_WORKFLOW.md)
 
 This document records the current local AI workflow for `IA-Carmine Local AI Orchestration Workbench`.
 
-The workflow is no longer only about generating Blender scripts. It now covers run-unica orchestration, GPU/NPU parallelism, workload quality gates, advisory context filtering, provider diagnostics, SQLite-backed agent state, tool/function visibility, discovery/index repair, CSV/count surfaces and compact evidence for GitHub review.
+The workflow is no longer only about generating Blender scripts. It now covers run-unica orchestration, GPU/NPU parallelism, workload quality gates, advisory context filtering, provider diagnostics, SQLite-backed agent state, tool/function visibility, discovery/index repair, CSV/count/file-line-limit surfaces and compact evidence for GitHub review.
 
 ## Primary workflow orchestrator
 
@@ -25,7 +25,7 @@ Tools/workflow/run_unified_local_ai_refactor.ps1
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-All local-AI execution variants are launcher modes, parameters, presets or flags behind the run unica. This includes quick tests, complete runs, deep runs, provider probes, memory handoff, patch specs, reset, discovery/index repair visibility, CSV/count surfaces and full validation.
+All local-AI execution variants are launcher modes, parameters, presets or flags behind the run unica. This includes quick tests, complete runs, deep runs, provider probes, memory handoff, patch specs, reset, discovery/index repair visibility, CSV/count/file-line-limit surfaces and full validation.
 
 Do not start local-AI work from legacy wrappers. Supporting wrappers remain implementation lanes behind the launcher and must be visible in launcher manifest/status/report surfaces when used.
 
@@ -34,15 +34,18 @@ Do not start local-AI work from legacy wrappers. Supporting wrappers remain impl
 The primary operating model is one parameterized run:
 
 ```text
+master contains PR #187 unified launcher baseline
 run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 quick/balanced/deep/custom = presets or operator parameters
 -No* flags = explicit opt-out from selected lanes
+400-line policy applies to maintained docs and source files
+limitations are backlog to overcome, not reasons to skip available tools
 ```
 
 `-Full0To10` means every active repository-understanding lane participates unless it is explicitly disabled, unavailable, represented as dry-run planned state, or excluded with a documented rationale. `quick`, `balanced`, `deep` and `custom` change budgets, limits and depth; they do not change the lane set.
 
-The perimeter of `tutto` is expandable. When a new stable lane is promoted, such as a broker tool, validator, provider diagnostic, repository-consistency report, project-tool registry, memory/context builder, discovery/index surface, CSV/count surface or evidence surface, update this workflow, the launcher contract and the task index so the new lane is either included in the run unica full flow or explicitly excluded with rationale.
+The perimeter of `tutto` is expandable. When a new stable lane is promoted, such as a broker tool, validator, provider diagnostic, repository-consistency report, project-tool registry, memory/context builder, discovery/index surface, CSV/count/file-line-limit surface or evidence surface, update this workflow, the launcher contract and the task index so the new lane is either included in the run unica full flow or explicitly excluded with rationale.
 
 A run-unica workflow is not complete when a lane silently disappears. Missing phases must be visible in manifest, telemetry, warnings or errors.
 
@@ -97,7 +100,7 @@ unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
 telemetry summary / runtime tool telemetry / capability manifest
 shared production AI-to-AI bundle
-compact Markdown or CSV/count summaries
+compact Markdown or CSV/count/file-line-limit summaries
 detailed evidence only when needed
 ```
 
@@ -113,6 +116,7 @@ report_files
 compact Markdown summary
 CSV/JSON inventory
 CSV/count surface
+file-line-limit surface
 index/discovery report or plan
 ```
 
@@ -126,7 +130,7 @@ Required telemetry/capability surfaces include:
 
 ```text
 runtime_tool_usage_telemetry_<STAMP>.json/md
-runtime_tool_capability_manifest_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md or runtime_hardware_capability_manifest_<STAMP>.json/md
 full_toolbox_run_telemetry_summary_<STAMP>.json/md
 shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
 shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
@@ -172,6 +176,7 @@ Markdown inventory JSON/MD
 script inventory JSON/CSV/MD
 function/class/method inventory CSV
 Python line-count CSV/MD
+file-line-limit JSON/MD
 semantic chunk manifest JSON/MD
 selected chunk evidence JSON/MD
 repository consistency map/smoke JSON/MD
@@ -182,22 +187,28 @@ index repair plan/report when generated indexes are stale or missing
 Policy:
 
 ```text
-CSV/count outputs are evidence surfaces, not source authority.
+CSV/count/file-line-limit outputs are evidence surfaces, not source authority.
 Generated indexes and code chunks are not hand-maintained source.
 Do not commit output/**.
 Do not commit indexAI/code_chunks/**.
 Index repair is plan/report-first unless explicitly requested.
 ```
 
-## Length policy
+## 400-line policy
 
-Long outputs are allowed as generated evidence only when indexed by compact manifests.
+Maintained documentation and source files follow a hard 400-line limit.
 
 ```text
-Active operator runbook: prefer ~500 lines.
-Maintained source documentation: prefer ~700 lines.
-Generated compact evidence: prefer ~1200 lines.
-Large historical/evidence bundles: allowed only when indexed and never as first entrypoint.
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+```
+
+Validator:
+
+```text
+Tools/validation/check_file_line_limits.py
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 ```
 
 Do not create new monolithic AI-to-AI bundles without a companion manifest/summary.
@@ -216,14 +227,7 @@ Current compact state docs:
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
-```
-
-Current active review pass:
-
-```text
-Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-Run: 20260505-143844
-Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 ```
 
 Validated production states:
@@ -244,6 +248,7 @@ Operational meaning:
 - The old NPU workload report remains excluded from advisory context when it is numeric/hex-like.
 - NPU/OpenVINO can execute a short decode smoke successfully through the dedicated NPU Python.
 - NPU is not yet promoted to a general advisory lane.
+- Limitations remain visible as backlog to overcome and do not disable available tools.
 
 ## Current workflow
 
@@ -253,6 +258,7 @@ Repository context and local reports
   -> manifest-first visibility
   -> Markdown/script inventories
   -> CSV/count evidence surfaces
+  -> file-line-limit evidence surfaces
   -> discovery/index drift reports or plans when relevant
   -> semantic code chunks and selected focused chunks when useful
   -> task-scoped AI context pack when useful
@@ -283,6 +289,7 @@ Repository context and local reports
 | Link validation | `Tools/validation/check_docs_links.py` | JSON link report | `md` / validation phases |
 | Script inventory | `Tools/validation/build_script_inventory.py` | JSON, CSV and Markdown function/class inventory | `python` mode |
 | Python line count | broker/runtime line-count helper and validation reports | CSV and Markdown line-count surfaces | inventory/evidence lane |
+| File line-limit report | `Tools/validation/check_file_line_limits.py` | JSON and optional Markdown line-limit report | validation/evidence lane |
 | Discovery/index repair | scanner/index validators and repair planners | report-only discovery/index repair reports | validation/refactor support lane |
 | Report contracts | `Tools/validation/check_validation_report_contract.py` | JSON contract report | `json` / `contract` phases |
 | Workload quality | `Tools/validation/check_ai_workload_report_quality.py` | `ai_workload_report_quality.json` | provider quality gate |
@@ -294,7 +301,7 @@ Repository context and local reports
 | Multistep provider | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | provider workflow report/proposals | provider implementation lane for Full0To10 unless disabled/unavailable |
 | Legacy integrated lane | `Tools/workflow/run_agent_review_full_toolbox_decision_loop_integrated.ps1` | integrated full-toolbox report when selected | supporting selected phase only, not entrypoint |
 | Runtime broker | `Tools/ai/agent_runtime_tool_broker.py` | broker report and runtime tool usage telemetry | supporting full-toolbox lane |
-| Runtime capability manifest | `Tools/ai/build_runtime_tool_capability_manifest.py` | runtime tool capability manifest JSON/MD | production handoff |
+| Runtime/hardware capability manifest | active capability manifest builder/package | runtime or hardware capability manifest JSON/MD | production handoff |
 | Telemetry summary | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | full toolbox run telemetry summary JSON/MD | production handoff |
 | Production bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | shared toolbox AI-to-AI bundle and final summary | production handoff |
 | Patch specs | patch-spec builders/validators | review-only patch-spec manifest and validation report | `patch_specs` mode |

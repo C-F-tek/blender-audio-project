@@ -14,6 +14,18 @@ Full0To10 is opt-out by lane: provider/probe/workload-quality, runtime telemetry
 
 When the project gains a stable new lane, registry, validator, broker capability, provider diagnostic, evidence surface, memory/context tool, discovery/index surface or CSV/count surface, that capability becomes a candidate expansion of `tutto` and must be either wired into the full-run contract or explicitly excluded with rationale.
 
+## Limitation policy
+
+Architectural and operational limitations remain important because they are the backlog to overcome.
+
+They must not be used as static reasons to skip available tools. Use all relevant tool lanes by default; mark a lane unavailable or degraded only when current code, manifests, telemetry, provider diagnostics or validator reports prove it.
+
+Canonical limitation/backlog file:
+
+```text
+KNOWN_LIMITATIONS.md
+```
+
 ## Large Markdown rule
 
 Markdown that is too large to be reliably opened by a future chat, local AI context pack or GitHub-only reviewer must not be a primary operational entrypoint.
@@ -88,13 +100,11 @@ Legacy monolithic 0-to-10 runbooks are no longer indexed as active documentation
 ## Current active work
 
 ```text
-Task: LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-Run: 20260505-143844
-Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
+Baseline: master after PR #187 merge
+Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Next candidate: PR #192 report-only Full0To10 foundation checks
 Mode: review-only until explicit human instruction
 ```
-
-The runtime bundle is a GitHub draft release asset linked from PR #187 and is intentionally not committed to the repository.
 
 ## Operational command policy
 
@@ -140,6 +150,7 @@ Inventory roles:
 | Auto-discovery/index repair report | Detect scanner/index drift and plan repairs before changing generated indexes. |
 | Tool placement audit | Repository-wide classification of canonical and non-canonical tools, including scripts outside `Tools/**`. |
 | Tool promotion guide | Rules for promoting scripts into project tools, broker tools and full-run lanes. |
+| File line-limit report | Report-only check for the 400-line policy on docs and source files. |
 
 Commands for these inventories live in the unified launcher runbook and validator README.
 
@@ -159,13 +170,14 @@ Index repair is plan/report-first unless explicitly requested.
 | Root entrypoints | `../AGENTS.md`, `../README.md`, `../WORKFLOW.md` | Short canonical flow only; no long runbooks. |
 | Stable docs | `README.md` | Maintained source documentation. |
 | Task runbooks | `LOCAL_AI_TASKS/README.md` | Current task input, supporting detail and historical handoffs only. |
-| Current operational state | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` | Compact current state bridge for PR #187 and run `20260505-143844`. |
+| Current operational state | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` | Compact current state bridge for post-#187 master and active candidate PRs. |
 | Large Markdown policy | `LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md` | Keeps oversized Markdown out of primary operational paths. |
 | Refactor/reuse planning | `LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` | Active review-only task for helper/class/tool reuse planning. |
 | Recent telemetry state | `LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` | Recent baseline and resolved broker context. |
 | Unified local AI launcher | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Active 0-to-10 local AI execution guide. |
 | Current code flow | `LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` | Current launcher/provider/broker/bundle/evidence/discovery/CSV flow. |
 | Tool governance | `LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md`, `LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` | Tool discovery, placement and promotion rules. |
+| Limitations backlog | `KNOWN_LIMITATIONS.md` | Current limits to overcome; not a static prohibition list. |
 | Broker telemetry follow-up | `LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` | Broker telemetry is resolved unless a new regression is found. |
 | Unified launcher contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Compact manifest/phase/status contract for the launcher. |
 | Workflow helper policy | `WORKFLOW_HELPER_SCRIPTS_POLICY.md` | Classification and guardrails for shell/GUI/push-capable helpers. |
