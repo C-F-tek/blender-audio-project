@@ -571,6 +571,8 @@ def summarize_entries(entries: list[dict[str, Any]]) -> dict[str, Any]:
     executed_count = 0
     failed_count = 0
     blocked_count = 0
+    broker_entry_count = 0
+    broker_executed_count = 0
     for entry in entries:
         caller = str(entry.get('caller_ai') or 'unknown')
         phase = str(entry.get('phase') or 'unknown')
@@ -581,6 +583,9 @@ def summarize_entries(entries: list[dict[str, Any]]) -> dict[str, Any]:
         executed = entry.get('executed') is True or result.get('returncode') == 0 or result.get('passed') is True
         failed = entry.get('failed') is True or result.get('failed') is True or result.get('returncode') not in (None, 0)
         blocked = entry.get('blocked') is True
+        broker_phase = "broker" in phase
+        broker_entry_count += 1 if broker_phase else 0
+        broker_executed_count += 1 if broker_phase and executed else 0
         executed_count += 1 if executed else 0
         failed_count += 1 if failed else 0
         blocked_count += 1 if blocked else 0
@@ -596,6 +601,8 @@ def summarize_entries(entries: list[dict[str, Any]]) -> dict[str, Any]:
         'executed_count': executed_count,
         'failed_count': failed_count,
         'blocked_count': blocked_count,
+        'broker_entry_count': broker_entry_count,
+        'broker_executed_count': broker_executed_count,
         'total_reported_tool_elapsed_seconds': round(total_elapsed, 3),
         'by_caller_ai': by_caller,
         'by_tool': by_tool,
@@ -697,7 +704,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Blocked count: `{summary.get('blocked_count')}`")
     lines.append(f"- Total reported tool elapsed seconds: `{summary.get('total_reported_tool_elapsed_seconds')}`")
     lines.append(f"- Declared runtime tool requests: `{summary.get('runtime_tool_request_count')}`")
-    lines.append(f"- Broker runtime tool executions: `{summary.get('runtime_tool_execution_count')}`")
+    lines.append(f"- Declared runtime tool executions: `{summary.get('runtime_tool_execution_count')}`")
+    lines.append(f"- Broker runtime tool executions: `{summary.get('broker_executed_count')}`")
     lines.append(f"- Declared not executed count: `{summary.get('declared_not_executed_count')}`")
     lines.append('')
     lines.append('## By caller AI')
