@@ -52,6 +52,7 @@ Markdown task / prompt
   -> proposal contract validation
   -> optional patch-spec draft manifest
   -> adapter manifest
+  -> task-scoped telemetry JSON/Markdown
   -> task-scoped GitHub evidence bundle
   -> evidence bundle validation
 ```
@@ -66,6 +67,7 @@ advisory packet JSON
 suggestion manifest JSON
 repository change proposals JSON
 repository change proposal validation report
+task-scoped telemetry JSON
 optional patch-spec draft manifest
 selected-chunk validation when built
 enrichment-plan validation when built
@@ -73,13 +75,14 @@ agent-state memory manifest when built
 standard validation reports passed into the adapter
 ```
 
-Missing optional reports are warned and skipped, not fabricated.
+Missing optional standard reports are skipped, not fabricated.
 
 ## Guardrails
 
 ```text
 provider_execution_performed_by_adapter=false
 patch_application_performed=false
+source_writes_performed=false
 no Blender runtime
 no FFmpeg runtime
 no Git commit/push/merge
@@ -88,6 +91,28 @@ no SQLite DB commit
 ```
 
 Patch-spec generation remains draft-only under `output/patch_specs/`.
+
+## Telemetry contract
+
+Current adapter telemetry is emitted beside the task packet:
+
+```text
+output/local_ai_runs/<run>/pipeline/<basename>_telemetry.json
+output/local_ai_runs/<run>/pipeline/<basename>_telemetry.md
+```
+
+The telemetry records:
+
+```text
+expected output checks
+proposal validation summary
+provider execution requested/performed flags
+patch application/source write flags
+evidence request state
+scenario flags
+```
+
+When `-BuildEvidence` is selected, telemetry JSON is included as a report and telemetry Markdown is included as an artifact in the compact evidence bundle. This lets a pushed compact bundle prove the patch/spec/proposal state without committing raw `output/**`.
 
 ## Smoke command
 
@@ -101,6 +126,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_loc
   -Profile docs `
   -Basename "md_task_review_bundle_smoke_$Stamp" `
   -ProposalBasename "md_task_review_bundle_smoke_${Stamp}_proposals" `
+  -FullContextGoldenPath `
   -GeneratePatchSpecs `
   -BuildEvidence
 ```

@@ -112,6 +112,8 @@ Telemetry is a completeness accessory for evidence and patch plans. It does not 
 | `Tools/ai/full0to10_hardware_capability/` | Full0To10 hardware/capability package. | Capability visibility for CPU/GPU/NPU/NVIDIA-style lanes and report-only contracts. |
 | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Full toolbox telemetry summary builder. | Cross-run summary of broker/provider/GPU/NPU/patch-plan state. |
 | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production AI-to-AI bundle builder. | Groups evidence, patch-plan, telemetry, capability and final summary for next AI. |
+| `Tools/ai/code_interpreter_report/` | Implementation package for static code-interpreter reports. | Keeps `build_code_interpreter_report.py` as a compact entrypoint. |
+| `Tools/ai/repository_consistency_map/` | Implementation package for repository consistency mapping. | Keeps `build_repository_consistency_map.py` as a compact entrypoint. |
 | `Tools/ai/build_deterministic_recommendations.py` | Deterministic recommendations and recovery. | Supports degraded-provider recovery and safe recommendations. |
 | `Tools/ai/build_agent_review_patch_plan.py` | Manual-review documentation patch plan. | Patch-plan evidence must be accompanied by telemetry/capability when from run-unica outputs. |
 | `Tools/ai/build_agent_state_packet.py` | CLI for task-local agent state packets. | Context/memory surface; no Blender, GPU, NPU or FFmpeg execution. |
@@ -160,6 +162,7 @@ docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md
 | `Tools/workflow/run_unified_local_ai_refactor.ps1` | canonical-entrypoint | Active run-unica local-AI entrypoint. |
 | `Tools/workflow/run_local_validation_after_refactor.ps1` | supporting-tool | Full local validation wrapper. |
 | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | launcher-internal/supporting-tool | Official local AI task adapter. |
+| `Tools/workflow/run_local_ai_task_via_pipeline/*.ps1` | launcher-internal/supporting-library | Split adapter responsibilities: paths, context, enrichment, validation, manifest, evidence and telemetry. |
 | `Tools/workflow/run_post_validation_ai_packet.ps1` | launcher-internal/supporting-tool | Advisory packet builder. |
 | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | launcher-internal/supporting-tool | Explicit multistep provider workflow. |
 | `Tools/workflow/run_docs_md_refactor_10min.ps1` | legacy-superseded/supporting-tool | Prefer unified launcher `md` mode. |

@@ -55,6 +55,7 @@ Mode for ChatGPT/cloud work: GitHub-only/API unless local access is explicitly r
 ```text
 PR #187: merged into master; unified launcher is now baseline.
 PR #192: open and mergeable; report-only Full0To10 foundation checks.
+PR #194: draft and mergeable; local branch `codex/md-bundle-telemetry-refactor` hardens the Markdown-to-telemetry/evidence path and splits several large report-only tools.
 PR #191: open but diverged/non-mergeable; useful evidence branch, not a clean merge candidate as-is.
 PR #186/#180/#173: closed/superseded or stale relative to the post-#187 baseline.
 ```
@@ -65,7 +66,30 @@ Operational interpretation:
 Do not treat #187 as the current active branch anymore.
 Treat #187 as the merged baseline for launcher, Full0To10 doctrine, telemetry and compact evidence policy.
 Treat #192 as the next clean report-only foundation candidate after local/API review.
+Treat #194 as the current Markdown task pipeline hardening candidate until merged.
 Treat #191 as evidence to mine or regenerate with the newer bundle-completeness path, not as the preferred direct merge path.
+```
+
+## Current draft PR #194 state
+
+PR #194 adds the current local Markdown pipeline hardening layer.
+
+Code/docs changed by that branch:
+
+```text
+Tools/workflow/run_local_ai_task_via_pipeline.ps1 is now a thin adapter.
+Tools/workflow/run_local_ai_task_via_pipeline/*.ps1 holds paths, context, enrichment, validation, manifest, evidence and telemetry responsibilities.
+Tools/ai/build_code_interpreter_report.py delegates to Tools/ai/code_interpreter_report/*.
+Tools/ai/build_repository_consistency_map.py delegates to Tools/ai/repository_consistency_map/*.
+Tools/validation/check_local_ai_adapter_manifest.py recognizes telemetry outputs and emits explicit guardrail flags.
+docs/LOCAL_VALIDATION_EVIDENCE/md_bundle_telemetry_smoke_20260506-152951_evidence.* proves the MD -> telemetry -> evidence smoke.
+```
+
+Operational interpretation:
+
+```text
+Markdown task runs should be able to prove proposals, patch specs, telemetry and compact evidence from a single review cycle.
+Raw output remains runtime-only; compact evidence is the review/push surface.
 ```
 
 ## Launcher code contract now on master
