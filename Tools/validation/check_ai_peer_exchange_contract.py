@@ -48,6 +48,60 @@ def add(items: list[str], value: str) -> None:
         items.append(value)
 
 
+def evaluate_peer_mesh_visibility(exchange: dict[str, Any], npu: dict[str, Any], npu_broker: dict[str, Any]) -> dict[str, Any]:
+    # Validate GPU1/GPU0/NPU mesh visibility without letting slow NPU block output.
+    collaboration = exchange.get("collaboration_round") if isinstance(exchange.get("collaboration_round"), dict) else {}
+    mesh = exchange.get("peer_mesh_visibility") if isinstance(exchange.get("peer_mesh_visibility"), dict) else {}
+    if not mesh and isinstance(collaboration.get("mesh_visibility"), dict):
+        mesh = collaboration["mesh_visibility"]
+    npu_support = exchange.get("npu_support_lane") if isinstance(exchange.get("npu_support_lane"), dict) else {}
+    if not npu_support and isinstance(collaboration.get("npu_support_lane"), dict):
+        npu_support = collaboration["npu_support_lane"]
+
+    errors: list[str] = []
+    warnings: list[str] = []
+    classifications: list[str] = []
+
+    required_true = {
+        "gpu1_sees_gpu0_response": mesh.get("gpu1_sees_gpu0_response"),
+        "gpu1_sees_gpu0_broker_results": mesh.get("gpu1_sees_gpu0_broker_results"),
+        "gpu0_sees_gpu1_primary_advisory": mesh.get("gpu0_sees_gpu1_primary_advisory"),
+        "runtime_tool_broker_visible_to_all_lanes": mesh.get("runtime_tool_broker_visible_to_all_lanes"),
+    }
+    for key, value in required_true.items():
+        if value is not True:
+            errors.append(f"peer_mesh_visibility_missing:{key}")
+            add(classifications, "peer_mesh_visibility_incomplete")
+
+    if npu:
+        if mesh.get("npu_sees_gpu1_gpu0_broker_context") is not True:
+            errors.append("peer_mesh_visibility_missing:npu_sees_gpu1_gpu0_broker_context")
+            add(classifications, "npu_context_visibility_missing")
+        if npu.get("non_blocking") is not True:
+            warnings.append("npu_support_lane_non_blocking_flag_missing")
+            add(classifications, "npu_support_lane_degraded")
+        if safe_int(npu.get("tool_request_count")) > 0 and safe_int(npu_broker.get("tool_execution_count")) <= 0:
+            warnings.append("npu_support_tool_requests_not_broker_consumed_non_blocking")
+            add(classifications, "npu_support_tool_supply_degraded")
+        provider_requested = bool(npu.get("provider_execution_requested"))
+        provider_performed = bool(npu.get("provider_execution_performed"))
+        if provider_requested and not provider_performed:
+            warnings.append("npu_provider_slow_or_degraded_non_blocking_support_lane")
+            add(classifications, "npu_provider_slow_or_degraded_non_blocking")
+    if npu_support.get("product_pass_blocker") is True:
+        errors.append("npu_support_lane_marked_product_blocker")
+        add(classifications, "npu_support_lane_guardrail_violation")
+
+    return {
+        "passed": not errors,
+        "mesh_visibility": mesh,
+        "npu_support_lane": npu_support,
+        "errors": errors,
+        "warnings": warnings,
+        "classifications": classifications,
+    }
+
+
 def evidence(repo_root: Path, name: str, path: Path) -> dict[str, Any]:
     data, error = read_json(path)
     item: dict[str, Any] = {
@@ -127,6 +181,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     if collaboration.get("synchronized_visibility") is not True:
         errors.append("collaboration_round_missing_synchronized_visibility")
         add(classifications, "ai_peer_collaboration_round_missing")
+    peer_mesh_contract = evaluate_peer_mesh_visibility(exchange, npu, npu_broker)
+    errors.extend(peer_mesh_contract["errors"])
+    warnings.extend(peer_mesh_contract["warnings"])
+    for item in peer_mesh_contract["classifications"]:
+        add(classifications, item)
     if npu_path and npu_path.exists():
         if npu.get("non_blocking") is not True:
             warnings.append(f"npu_micro_lane_non_blocking_flag_missing: {npu_error}")
@@ -158,6 +217,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "classifications": classifications,
         "errors": errors,
         "warnings": warnings,
+        "peer_mesh_visibility_contract": peer_mesh_contract,
         "provider_execution_performed": bool(primary.get("provider_execution_performed") or response.get("provider_execution_performed")),
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -178,6 +238,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "gpu0_broker_execution_required": bool(args.require_broker_execution),
             "npu_micro_lane_non_blocking": True,
             "npu_micro_lane_not_heavy_authority": True,
+            "npu_support_tool_supply_non_blocking": True,
+            "npu_slow_or_degraded_not_product_blocker": True,
+            "peer_mesh_visibility_required": True,
             "deterministic_scripts_heavy_audit_authority": True,
             "patch_application_performed": False,
             "source_writes_performed": False,
@@ -198,6 +261,18 @@ def render_markdown(report: dict[str, Any]) -> str:
     ]
     for item in report.get("evidence", []):
         lines.append(f"- `{item.get('name')}` exists=`{item.get('exists')}` passed=`{item.get('passed')}` path=`{item.get('path')}`")
+    mesh_contract = report.get("peer_mesh_visibility_contract") if isinstance(report.get("peer_mesh_visibility_contract"), dict) else {}
+    if mesh_contract:
+        lines.extend(["", "## Peer mesh visibility", ""])
+        lines.append(f"- Passed: `{mesh_contract.get('passed')}`")
+        mesh = mesh_contract.get("mesh_visibility") if isinstance(mesh_contract.get("mesh_visibility"), dict) else {}
+        support = mesh_contract.get("npu_support_lane") if isinstance(mesh_contract.get("npu_support_lane"), dict) else {}
+        lines.append(f"- GPU1 sees GPU0 response: `{mesh.get('gpu1_sees_gpu0_response')}`")
+        lines.append(f"- GPU1 sees NPU support signal: `{mesh.get('gpu1_sees_npu_support_signal')}`")
+        lines.append(f"- GPU0 sees GPU1 primary advisory: `{mesh.get('gpu0_sees_gpu1_primary_advisory')}`")
+        lines.append(f"- NPU sees GPU1/GPU0/broker context: `{mesh.get('npu_sees_gpu1_gpu0_broker_context')}`")
+        lines.append(f"- NPU support tool supply: `{support.get('tool_supply_support')}`")
+        lines.append(f"- NPU slow/degraded non-blocking: `{support.get('provider_slow_or_degraded')}`")
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {item}" for item in report["errors"])

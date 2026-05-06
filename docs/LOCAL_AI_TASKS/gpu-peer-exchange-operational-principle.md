@@ -60,6 +60,24 @@ Heavy audit, report validation and acceptance decisions should remain with deter
 
 When provider lanes are selected, the NPU support lane should see the GPU1/GPU0 roundtrip and broker evidence as read-only context, may emit lightweight tool requests, and must remain non-blocking.
 
+## Mesh visibility and slow NPU support rule
+
+The final product must make the GPU1/GPU0/NPU collaboration visible as a mesh, not as disconnected artifacts.
+
+Required visibility:
+
+```text
+GPU1 sees GPU0 response and GPU0 broker results
+GPU1 sees NPU support signal and NPU broker results when present
+GPU0 sees GPU1 primary advisory and deterministic source reports
+NPU sees GPU1/GPU0/broker context as read-only input
+runtime broker remains visible as the only tool execution channel
+```
+
+The NPU lane is allowed to be slow, empty, timed out or dependency-degraded. That state must be classified and surfaced, but it must remain non-blocking when the NPU still supplies deterministic fallback/tool-support requests or when deterministic scripts already provide heavy audit authority.
+
+The NPU must not become the heavy audit authority and must not mark product pass/fail directly. Its production role is support intelligence and brokered tool-supply amplification.
+
 ## Runtime broker rule
 
 The runtime tool broker may consume tool requests from GPU1, GPU0 and NPU support reports.

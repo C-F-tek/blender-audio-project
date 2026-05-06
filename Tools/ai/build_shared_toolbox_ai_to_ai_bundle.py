@@ -442,6 +442,9 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
                     "source_classification": data.get("source_classification"),
                     "request_kind": data.get("request_kind"),
                     "non_blocking": data.get("non_blocking"),
+                    "peer_mesh_visibility": data.get("peer_mesh_visibility"),
+                    "npu_support_lane": data.get("npu_support_lane"),
+                    "collaboration_visibility": (data.get("collaboration_round") or {}).get("synchronized_visibility") if isinstance(data.get("collaboration_round"), dict) else None,
                     "tool_request_count": data.get("tool_request_count"),
                     "tool_execution_count": data.get("tool_execution_count"),
                     "provider_error": data.get("provider_error"),
@@ -619,7 +622,10 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
         lines.append(
             f"- `{item.get('path')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}` "
             f"source=`{item.get('source')}` source_classification=`{item.get('source_classification')}` "
-            f"provider_execution_performed=`{item.get('provider_execution_performed')}` errors=`{item.get('errors')}`"
+            f"provider_execution_performed=`{item.get('provider_execution_performed')}` "
+            f"collaboration_visibility=`{item.get('collaboration_visibility')}` "
+            f"peer_mesh=`{bool(item.get('peer_mesh_visibility'))}` "
+            f"npu_support=`{bool(item.get('npu_support_lane'))}` errors=`{item.get('errors')}`"
         )
     lines.append("")
     lines.append("## Patch plan summary")

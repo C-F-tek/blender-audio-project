@@ -47,6 +47,79 @@ def compact_list(value: Any, limit: int = 8) -> list[Any]:
     return value[:limit] if isinstance(value, list) else []
 
 
+def npu_support_lane_summary(npu: dict[str, Any], npu_broker: dict[str, Any]) -> dict[str, Any]:
+    # Summarize NPU as non-blocking tool-support, not heavy authority.
+    auditor = npu.get("npu_auditor") if isinstance(npu.get("npu_auditor"), dict) else {}
+    classification = str(auditor.get("classification") or npu.get("classification") or "")
+    tool_request_count = safe_int(npu.get("tool_request_count") or auditor.get("tool_request_count"))
+    broker_execution_count = safe_int(npu_broker.get("tool_execution_count"))
+    provider_performed = bool(npu.get("provider_execution_performed"))
+    provider_requested = bool(npu.get("provider_execution_requested"))
+    fallback_used = bool(npu.get("npu_deterministic_tool_fallback_used") or auditor.get("npu_deterministic_tool_fallback_used"))
+    slow_or_degraded = bool(
+        provider_requested
+        and not provider_performed
+        and (
+            npu.get("provider_empty_response")
+            or npu.get("dependency_missing")
+            or classification in {"provider_empty_response", "unusable_output", "dependency_missing_openvino_genai", "npu_python_missing"}
+        )
+    )
+    return {
+        "role": "npu_non_blocking_tool_support_lane",
+        "non_blocking": True,
+        "blocking": False,
+        "heavy_audit_authority": False,
+        "tool_supply_support": bool(tool_request_count or broker_execution_count or fallback_used),
+        "tool_request_count": tool_request_count,
+        "broker_tool_execution_count": broker_execution_count,
+        "provider_execution_requested": provider_requested,
+        "provider_execution_performed": provider_performed,
+        "provider_slow_or_degraded": slow_or_degraded,
+        "classification": classification,
+        "deterministic_fallback_used": fallback_used,
+        "product_pass_blocker": False,
+    }
+
+
+def build_peer_mesh_visibility(
+    primary: dict[str, Any],
+    response: dict[str, Any],
+    broker: dict[str, Any],
+    npu: dict[str, Any],
+    npu_broker: dict[str, Any],
+    sources: list[dict[str, Any]],
+) -> dict[str, Any]:
+    # Record what each AI lane can see in the peer-exchange round.
+    gpu0_tool_request_count = safe_int(response.get("tool_request_count"))
+    gpu0_broker_execution_count = safe_int(broker.get("tool_execution_count"))
+    npu_tool_request_count = safe_int(npu.get("tool_request_count"))
+    npu_broker_execution_count = safe_int(npu_broker.get("tool_execution_count"))
+    npu_seen = bool(npu)
+    gpu0_seen = bool(response)
+    gpu0_broker_seen = bool(broker)
+    npu_broker_seen = bool(npu_broker)
+    return {
+        "schema_version": 1,
+        "kind": "ai_peer_mesh_visibility",
+        "all_lanes_visible": bool(primary and gpu0_seen and gpu0_broker_seen and (not npu_seen or npu_broker_seen)),
+        "gpu1_sees_gpu0_response": gpu0_seen,
+        "gpu1_sees_gpu0_broker_results": gpu0_broker_execution_count > 0,
+        "gpu1_sees_npu_support_signal": npu_seen,
+        "gpu1_sees_npu_broker_results": npu_broker_execution_count > 0,
+        "gpu0_sees_gpu1_primary_advisory": bool(primary),
+        "gpu0_sees_deterministic_reports": bool(sources),
+        "gpu0_produces_tool_requests_for_gpu1": gpu0_tool_request_count > 0,
+        "gpu0_tool_requests_broker_consumed": bool(gpu0_tool_request_count and gpu0_broker_execution_count > 0),
+        "npu_sees_gpu1_gpu0_broker_context": npu_seen,
+        "npu_support_tool_requests_available": npu_tool_request_count > 0,
+        "npu_tool_requests_broker_consumed": bool(npu_tool_request_count and npu_broker_execution_count > 0),
+        "deterministic_scripts_visible_to_gpu0": bool(sources),
+        "runtime_tool_broker_visible_to_all_lanes": bool(gpu0_broker_seen or npu_broker_seen),
+        "npu_non_blocking_support_lane": True,
+    }
+
+
 def primary_advisory(repo_root: Path, stamp: str, gpu_report_path: Path, gpu_markdown_path: Path) -> dict[str, Any]:
     gpu_report = read_json(gpu_report_path)
     round_count = safe_int(gpu_report.get("round_count"))
@@ -216,7 +289,13 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
             "gpu0_sees_gpu1_primary_advisory": True,
             "gpu0_sees_deterministic_reports": bool(sources),
             "gpu0_produces_tool_requests_for_gpu1": True,
+            "gpu0_must_return_response_for_gpu1": True,
+            "gpu1_must_consume_gpu0_response": True,
+            "npu_must_see_gpu1_gpu0_broker_context_when_present": True,
+            "npu_is_non_blocking_tool_support_lane": True,
+            "npu_slow_or_degraded_must_not_block_product": True,
             "runtime_tool_broker_required_for_tool_requests": True,
+            "runtime_tool_broker_visible_to_gpu1_gpu0_npu": True,
         },
         "guardrails": {
             "report_only": True,
@@ -283,6 +362,11 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
             "npu_tool_execution_count": safe_int(npu_broker.get("tool_execution_count")),
         },
     }
+    npu_support_lane = npu_support_lane_summary(npu, npu_broker)
+    peer_mesh_visibility = build_peer_mesh_visibility(primary, response, broker, npu, npu_broker, sources)
+    collaboration_round["mesh_visibility"] = peer_mesh_visibility
+    collaboration_round["npu_support_lane"] = npu_support_lane
+
     exchange = {
         "schema_version": 1,
         "kind": "ai_peer_exchange",
@@ -296,6 +380,8 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         "npu_micro_response": npu,
         "npu_runtime_tool_broker": npu_broker,
         "collaboration_round": collaboration_round,
+        "peer_mesh_visibility": peer_mesh_visibility,
+        "npu_support_lane": npu_support_lane,
         "contract": contract,
         "classifications": list(dict.fromkeys(classifications)),
         "errors": [],
@@ -348,6 +434,9 @@ def render_exchange(report: dict[str, Any]) -> str:
         f"- Broker executions: `{report.get('runtime_tool_broker', {}).get('tool_execution_count')}`",
         f"- NPU micro lane seen: `{bool(report.get('npu_micro_response'))}`",
         f"- NPU broker executions: `{report.get('npu_runtime_tool_broker', {}).get('tool_execution_count')}`",
+        f"- Peer mesh all lanes visible: `{report.get('peer_mesh_visibility', {}).get('all_lanes_visible')}`",
+        f"- NPU support tool supply: `{report.get('npu_support_lane', {}).get('tool_supply_support')}`",
+        f"- NPU slow/degraded non-blocking: `{report.get('npu_support_lane', {}).get('provider_slow_or_degraded')}`",
         "",
     ])
 
