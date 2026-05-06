@@ -17,8 +17,9 @@ This file is an architecture contract, not a command catalog. Current executable
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
 ```
+
+Large validator catalogs such as `Tools/validation/README.md` are references only and must not become primary operational entrypoints if too large or truncated.
 
 ## Current status
 
@@ -58,12 +59,15 @@ When pipeline reports influence evidence, recommendations, patch plans or patch 
 
 ```text
 runtime tool usage telemetry
-runtime tool capability manifest
+runtime/hardware capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
+CSV/index/discovery/file-line evidence when repository visibility or maintainability is in scope
 ```
 
 Telemetry does not replace pipeline reports. It explains whether the lanes that produced or consumed those reports executed, failed, were blocked, degraded, disabled or planned-only.
+
+Limitations are backlog to overcome, not reasons to skip available tools.
 
 ## Module map
 
@@ -97,9 +101,10 @@ free of Ready To Jazz or Blender-scene assumptions
 compatible with existing schema-v6 report meanings
 visible through launcher manifest/report surfaces when selected
 compatible with telemetry/capability handoff when part of full-run evidence
+under 400 lines per maintained source file or split by responsibility
 ```
 
-Avoid broad utility modules. Prefer a focused owner such as report helpers, provider preflight helpers, memory policy helpers, artifact manifest helpers, telemetry summary helpers or dry-run fixture builders.
+Avoid broad utility modules. Prefer a focused owner such as report helpers, provider preflight helpers, memory policy helpers, artifact manifest helpers, telemetry summary helpers, file-line evidence helpers or dry-run fixture builders.
 
 ## Data flow
 
@@ -127,6 +132,7 @@ unified launcher manifest
   -> compact evidence when selected
   -> recommendations / patch plans when selected
   -> runtime telemetry and capability context
+  -> discovery/index/CSV/file-line context when relevant
   -> shared AI-to-AI bundle/final summary
 ```
 
@@ -170,11 +176,28 @@ patch_application_performed
 source_writes_performed
 runtime tool execution state when relevant
 provider degradation state when relevant
+file-line-limit state when maintainability is relevant
+```
+
+## 400-line policy
+
+Maintained pipeline source and docs follow the hard 400-line policy.
+
+```text
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+```
+
+Validator:
+
+```text
+Tools/validation/check_file_line_limits.py
 ```
 
 ## Validation ownership
 
-Use the unified launcher and `Tools/validation/README.md` for current commands.
+Use the unified launcher runbook for current broad commands.
 
 Focused direct validation is appropriate only when changing or debugging the pipeline itself. Broad local-AI validation should route through the unified launcher.
 
@@ -211,6 +234,7 @@ new dry-run cases
 new validation checks
 internal dataclasses that preserve report compatibility
 telemetry/capability references when pipeline outputs join full-run handoff
+file-line evidence references when maintainability is in scope
 ```
 
 Higher-risk changes requiring local dry-run matrix validation:
@@ -231,6 +255,7 @@ changing Blender runtime packages
 modifying full frame-level JSON data
 changing existing schema-v6 field meanings
 claiming full-run success from dry-run matrix evidence alone
+creating or expanding maintained pipeline files beyond 400 lines without split/refactor plan
 ```
 
 ## Current next actions
@@ -238,5 +263,6 @@ claiming full-run success from dry-run matrix evidence alone
 1. Validate launcher-owned usage of the pipeline through the unified runbook when local execution is available.
 2. Keep dry-run matrix evidence clearly marked as planned-only.
 3. Keep pipeline outputs attached to telemetry/capability/final-summary context when they influence recommendations or patch plans.
-4. Regenerate AI/NPU indexes only when a scoped task requires it.
-5. Only after successful dry-runs, continue with richer lane execution policy or Markdown report output.
+4. Keep file-line evidence visible when pipeline/docs maintainability is in scope.
+5. Regenerate AI/NPU indexes only when a scoped task requires it.
+6. Only after successful dry-runs, continue with richer lane execution policy or Markdown report output.
