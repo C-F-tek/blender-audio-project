@@ -221,6 +221,10 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         broker_report = read_json(broker_output)
         if broker_report:
             broker_report["output"] = repo_rel(repo_root, broker_output)
+            # The broker output may not echo the original request packet. Keep
+            # the generated tool_requests attached here so broker_result events
+            # can be routed back to the provider lane that created the request.
+            broker_report.setdefault("tool_requests", packet.get("tool_requests", []))
             broker_result_events = append_broker_results(heap, broker_report)
 
     snapshot = heap.write_snapshot()
