@@ -21,6 +21,31 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 
 Large validator catalogs such as `Tools/validation/README.md` are references only and must not become primary operational entrypoints if too large or truncated.
 
+## Relationship to the main runtime architecture
+
+The canonical runtime topology is defined in:
+
+```text
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+```
+
+The AI artifact pipeline is one implementation lane inside that wider runtime. It should publish compact state, report references and planned artifacts into the shared runtime heap / blackboard model rather than becoming an isolated orchestration island.
+
+Current target topology:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Pipeline reports are not final authority by themselves. They become useful when joined with broker execution state, semantic tool registry metadata, deterministic validator results and telemetry/event stream summaries.
+
 ## Current status
 
 Status: `modular schedule complete, subordinate to unified launcher and full-run evidence contract`
@@ -63,6 +88,7 @@ runtime/hardware capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when repository visibility or maintainability is in scope
+main runtime blackboard / broker / registry / validator / telemetry state when available
 ```
 
 Telemetry does not replace pipeline reports. It explains whether the lanes that produced or consumed those reports executed, failed, were blocked, degraded, disabled or planned-only.
@@ -101,6 +127,7 @@ free of Ready To Jazz or Blender-scene assumptions
 compatible with existing schema-v6 report meanings
 visible through launcher manifest/report surfaces when selected
 compatible with telemetry/capability handoff when part of full-run evidence
+compatible with the shared runtime heap / blackboard contract when runtime state is introduced
 under 400 lines per maintained source file or split by responsibility
 ```
 
@@ -134,6 +161,7 @@ unified launcher manifest
   -> runtime telemetry and capability context
   -> discovery/index/CSV/file-line context when relevant
   -> shared AI-to-AI bundle/final summary
+  -> main runtime blackboard / broker / registry / CPU-validator state when available
 ```
 
 ## Report compatibility
@@ -177,6 +205,7 @@ source_writes_performed
 runtime tool execution state when relevant
 provider degradation state when relevant
 file-line-limit state when maintainability is relevant
+blackboard/broker/registry/validator/telemetry state when relevant
 ```
 
 ## 400-line policy
@@ -235,6 +264,7 @@ new validation checks
 internal dataclasses that preserve report compatibility
 telemetry/capability references when pipeline outputs join full-run handoff
 file-line evidence references when maintainability is in scope
+blackboard/broker/registry contract references when integrating the main runtime architecture
 ```
 
 Higher-risk changes requiring local dry-run matrix validation:
@@ -256,6 +286,7 @@ modifying full frame-level JSON data
 changing existing schema-v6 field meanings
 claiming full-run success from dry-run matrix evidence alone
 creating or expanding maintained pipeline files beyond 400 lines without split/refactor plan
+silently bypassing the broker unico executor once runtime execution is centralized
 ```
 
 ## Current next actions
@@ -266,3 +297,4 @@ creating or expanding maintained pipeline files beyond 400 lines without split/r
 4. Keep file-line evidence visible when pipeline/docs maintainability is in scope.
 5. Regenerate AI/NPU indexes only when a scoped task requires it.
 6. Only after successful dry-runs, continue with richer lane execution policy or Markdown report output.
+7. When implementing the main runtime architecture, add blackboard, broker, registry, validator-authority and telemetry surfaces incrementally with deterministic reports first.
