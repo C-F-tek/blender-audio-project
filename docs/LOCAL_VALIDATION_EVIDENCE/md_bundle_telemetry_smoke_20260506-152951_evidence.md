@@ -1,6 +1,6 @@
 # Local Validation Evidence Bundle
 
-- Generated at: `2026-05-06T15:29:52`
+- Generated at: `2026-05-06T15:32:40`
 - Kind: `github_validation_evidence_bundle`
 
 ## Decision summary
@@ -66,7 +66,7 @@
 
 - `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_adapter_manifest.json` exists=`True` size=`7117` suffix=`.json` preview_chars=`1500`
 - `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_telemetry.json` exists=`True` size=`7495` suffix=`.json` preview_chars=`1500`
-- `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json` exists=`True` size=`101710` suffix=`.json` preview_chars=`1500`
+- `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json` exists=`True` size=`105317` suffix=`.json` preview_chars=`1500`
 - `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_manifest.json` exists=`True` size=`6247` suffix=`.json` preview_chars=`1500`
 - `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_proposals.json` exists=`True` size=`5912` suffix=`.json` preview_chars=`1500`
 - `output/validation/md_bundle_telemetry_smoke_20260506-152951_repository_change_proposals_contract.json` exists=`True` size=`2297` suffix=`.json` preview_chars=`1500`
@@ -359,7 +359,7 @@ Apply source/docs changes in a normal reviewed commit only after focused validat
 - Exists: `True`
 - Suffix: `.md`
 - Size bytes: `2219`
-- SHA-256: `03fdeb7bf01d3c42438342744afefcb9c0fad524c77688091c11db6c20b2bb87`
+- SHA-256: `4c2f8d722172077834c7d4a2ce23794d197892c0b2006bd6fbf9cc5f1701db6f`
 - Content included: `True`
 - Content truncated: `False`
 
@@ -382,7 +382,7 @@ Apply source/docs changes in a normal reviewed commit only after focused validat
 | Name | Kind | Required | Exists | Bytes | Path |
 |---|---|---:|---:|---:|---|
 | `adapter_manifest` | `manifest` | `True` | `True` | `7117` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_adapter_manifest.json` |
-| `packet_json` | `packet` | `True` | `True` | `101710` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json` |
+| `packet_json` | `packet` | `True` | `True` | `105317` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json` |
 | `packet_markdown` | `packet` | `True` | `True` | `3307` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.md` |
 | `packet_manifest` | `manifest` | `True` | `True` | `6247` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_manifest.json` |
 | `proposals_json` | `proposal` | `True` | `True` | `5912` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_proposals.json` |
@@ -404,14 +404,14 @@ Apply source/docs changes in a normal reviewed commit only after focused validat
 - Exists: `True`
 - Suffix: `.md`
 - Size bytes: `3307`
-- SHA-256: `6722d53d44c4fbef9871e704082a666e2eee3f766074a79d33683cfed4ccff6e`
+- SHA-256: `114c78922a3e63b910321ec6c476cf3db00140b5dabc1df533d51d52e1d596a6`
 - Content included: `True`
 - Content truncated: `False`
 
 ```text
 # Post-Validation AI Work Packet
 
-- Generated at: `2026-05-06T15:29:52`
+- Generated at: `2026-05-06T15:32:39`
 - Repo: `C:\Users\carmi\blender\blender-audio-project`
 - Profile: `docs`
 - Ollama used: `False`
@@ -479,14 +479,14 @@ Apply source/docs changes in a normal reviewed commit only after focused validat
 - Exists: `True`
 - Suffix: `.md`
 - Size bytes: `2344`
-- SHA-256: `41a00ffc3e245bbeef1bdee3b0e5e09bf46cae38e5b42ade0eb064d50f8c1786`
+- SHA-256: `bd07ce4a2a36d36f0d2a6c75a4e197b482eb5475917252ae4d4e21604ee474ae`
 - Content included: `True`
 - Content truncated: `False`
 
 ```text
 # Repository Change Proposals
 
-- Generated at: `2026-05-06T15:29:52`
+- Generated at: `2026-05-06T15:32:40`
 - Profile: `docs`
 - Apply mode: `manual_review_only`
 - Proposal count: `1`
