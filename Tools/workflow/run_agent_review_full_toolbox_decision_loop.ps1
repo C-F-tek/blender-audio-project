@@ -133,7 +133,7 @@ function Ensure-RequiredProviderArtifacts {
     }
 
     foreach ($Item in $Missing) {
-        [void]$Warnings.Add("required provider artifact fallback generated: $Item")
+        [void]$Errors.Add("required provider artifact missing: $Item")
     }
 
     if (-not (Test-Path -LiteralPath $OrchestratorPath -PathType Leaf)) {
@@ -265,6 +265,7 @@ $Warnings = [System.Collections.ArrayList]@()
 $Errors = [System.Collections.ArrayList]@()
 
 $Evidence = ".\output\ai_pipeline\agent_review_evidence_sufficiency.json"
+$EvidenceMd = ".\output\ai_pipeline\agent_review_evidence_sufficiency.md"
 $RefinedReview = ".\output\ai_pipeline\local_ai_core_tool_activation_megalithic_refined_review_v3.json"
 $MemoryWorkflow = ".\output\validation\full_memory_tool_regeneration_${Stamp}_workflow.json"
 $MemoryBundleJson = ".\docs\LOCAL_VALIDATION_EVIDENCE\full_memory_tool_regeneration_bundle_${Stamp}.json"
@@ -299,6 +300,8 @@ $GpuReplayJson = ".\output\analysis\gpu_json_contract_replay_full_toolbox_$Stamp
 $GpuReplayMd = ".\output\analysis\gpu_json_contract_replay_full_toolbox_$Stamp.md"
 $GpuNpuSyncJson = ".\output\analysis\gpu_npu_run_sync_full_toolbox_$Stamp.json"
 $GpuNpuSyncMd = ".\output\analysis\gpu_npu_run_sync_full_toolbox_$Stamp.md"
+$ProviderEvidenceContractJson = ".\output\validation\provider_evidence_contract_full_toolbox_$Stamp.json"
+$ProviderEvidenceContractMd = ".\output\validation\provider_evidence_contract_full_toolbox_$Stamp.md"
 
 $RecommendationsJson = ".\output\ai_pipeline\full_toolbox_${Stamp}_deterministic_recommendations.json"
 $RecommendationsMd = ".\output\ai_pipeline\full_toolbox_${Stamp}_deterministic_recommendations.md"
@@ -416,12 +419,14 @@ Invoke-RepoPython -Label "Contract script compile" -ArgsList @(
     ".\Tools\ai\build_runtime_tool_usage_telemetry.py",
     ".\Tools\ai\build_runtime_tool_capability_manifest.py",
     ".\Tools\ai\build_semantic_evidence_chunks.py",
+    ".\Tools\ai\build_agent_review_evidence_sufficiency.py",
     ".\Tools\ai\run_agent_review_decision_loop.py",
     ".\Tools\ai\build_repository_consistency_map.py",
     ".\Tools\validation\run_repository_consistency_map_smoke.py",
     ".\Tools\validation\run_gpu_planner_json_contract_smoke.py",
     ".\Tools\validation\run_deterministic_recommendation_synthesizer_smoke.py",
-    ".\Tools\validation\run_agent_review_decision_loop_smoke.py"
+    ".\Tools\validation\run_agent_review_decision_loop_smoke.py",
+    ".\Tools\validation\check_provider_evidence_contract.py"
 )
 
 Invoke-RepoPython -Label "GPU planner JSON contract smoke" -ArgsList @(
@@ -467,6 +472,19 @@ Invoke-RepoPython -Label "Repository consistency map smoke" -ArgsList @(
     "--output", $RepositoryConsistencySmokeJson,
     "--markdown-output", $RepositoryConsistencySmokeMd,
     "--workers", "$RepositoryConsistencyMapWorkers"
+)
+
+Invoke-RepoPython -Label "Agent review evidence sufficiency" -ArgsList @(
+    ".\Tools\ai\build_agent_review_evidence_sufficiency.py",
+    "--repo-root", ".",
+    "--refined-review", $RefinedReview,
+    "--report-file", $RepositoryConsistencyJson,
+    "--report-file", $RepositoryConsistencySmokeJson,
+    "--report-file", $CodeInterpreterJson,
+    "--report-file", $LineCountJson,
+    "--report-file", $PythonSyntaxJson,
+    "--output", $Evidence,
+    "--markdown-output", $EvidenceMd
 )
 
 if ($RunGpuNpuProvider) {
@@ -556,6 +574,24 @@ if (Test-Path $OrchOut) {
     )
 }
 
+if ($RunGpuNpuProvider) {
+    $ProviderEvidenceArgs = @(
+        ".\Tools\validation\check_provider_evidence_contract.py",
+        "--repo-root", ".",
+        "--stamp", $Stamp,
+        "--orchestrator", $OrchOut,
+        "--gpu-report", $GpuOut,
+        "--gpu-npu-sync", $GpuNpuSyncJson,
+        "--local-provider-probe", ".\output\validation\local_provider_probe.json",
+        "--output", $ProviderEvidenceContractJson,
+        "--markdown-output", $ProviderEvidenceContractMd
+    )
+    if ($RequireProviderArtifacts) {
+        $ProviderEvidenceArgs += @("--require-gpu-provider", "--require-npu-auditor")
+    }
+    Invoke-RepoPython -Label "Strict provider evidence contract" -ArgsList $ProviderEvidenceArgs
+}
+
 $ToolReports = @(
     $RepositoryConsistencyJson,
     $RepositoryConsistencySmokeJson,
@@ -568,6 +604,7 @@ $ToolReports = @(
     $NpuEnvJson,
     $GpuReplayJson,
     $GpuNpuSyncJson,
+    $ProviderEvidenceContractJson,
     $MemoryWorkflow
 ) | Where-Object { Test-Path $_ }
 
@@ -610,6 +647,7 @@ if (-not $SkipPostValidationPacket) {
         $CodeInterpreterMd,
         $GpuReplayMd,
         $GpuNpuSyncMd,
+        $ProviderEvidenceContractMd,
         $DecisionLoopMd,
         $PatchPlanMd
     ) | Where-Object { Test-Path $_ }
@@ -627,6 +665,7 @@ if (-not $SkipPostValidationPacket) {
         $NpuEnvJson,
         $GpuReplayJson,
         $GpuNpuSyncJson,
+        $ProviderEvidenceContractJson,
         $RecommendationsJson,
         $BridgeJson,
         $DecisionLoopJson,
@@ -888,17 +927,17 @@ foreach ($Path in $SemanticChunkSources) {
 Invoke-RepoPython -Label "Semantic evidence chunking for cloud handoff" -ArgsList $SemanticChunkArgs
 
 foreach ($Path in @(
-    $MemoryWorkflow, $RepositoryConsistencyJson, $RepositoryConsistencySmokeJson, $LineCountJson, $PythonSyntaxJson, $CodeInterpreterJson, $GpuContractSmokeJson,
+    $MemoryWorkflow, $Evidence, $ProviderEvidenceContractJson, $RepositoryConsistencyJson, $RepositoryConsistencySmokeJson, $LineCountJson, $PythonSyntaxJson, $CodeInterpreterJson, $GpuContractSmokeJson,
     $DeterministicSmokeJson, $DecisionLoopSmokeJson, $NpuEnvJson, $OrchOut, $GpuOut, $GpuReplayJson,
-    $GpuNpuSyncJson, $RecommendationsJson, $BridgeJson, $DecisionLoopJson, $PatchPlanJson,
+    $GpuNpuSyncJson, $ProviderEvidenceContractJson, $RecommendationsJson, $BridgeJson, $DecisionLoopJson, $PatchPlanJson,
     $BundleValidationJson, $FinalPythonSyntaxJson, $FinalContractJson
 )) {
     Add-ExistingPath -List $Reports -Path $Path
 }
 foreach ($Path in @(
-    $MemoryBundleJson, $MemoryBundleMd, $MemoryLineCountCsv, $RepositoryConsistencyMd, $RepositoryConsistencySmokeMd, $LineCountAllMd, $LineCountCsv,
+    $MemoryBundleJson, $MemoryBundleMd, $MemoryLineCountCsv, $EvidenceMd, $ProviderEvidenceContractMd, $RepositoryConsistencyMd, $RepositoryConsistencySmokeMd, $LineCountAllMd, $LineCountCsv,
     $CodeInterpreterMd, $GpuContractSmokeMd, $DeterministicSmokeMd, $DecisionLoopSmokeMd,
-    $NpuEnvMd, $OrchMd, $GpuMd, $GpuReplayMd, $GpuNpuSyncMd, $RecommendationsMd,
+    $NpuEnvMd, $OrchMd, $GpuMd, $GpuReplayMd, $GpuNpuSyncMd, $ProviderEvidenceContractMd, $RecommendationsMd,
     $DecisionLoopMd, $PatchPlanMd, $TelemetrySummaryJson, $TelemetrySummaryMd, $RuntimeToolTelemetryJson, $RuntimeToolTelemetryMd,
     $RuntimeToolCapabilityJson, $RuntimeToolCapabilityMd, $EvidenceChunkManifestJson, $EvidenceChunkManifestMd, $BundleJson, $BundleMd
 )) {
@@ -918,7 +957,7 @@ foreach ($ReportPath in $Reports) {
             ([int]$DecisionSummary.recommendation_count -ge $MinRecommendations) -and
             ([int]$DecisionSummary.patch_plan_count -ge $MinPatchPlans)
         )
-        if (($ProviderAdvisoryReports -contains $ReportPath) -and $DecisionLaneReady) {
+        if (($ProviderAdvisoryReports -contains $ReportPath) -and $DecisionLaneReady -and (-not [bool]$RequireProviderArtifacts)) {
             [void]$ProviderAdvisoryFailures.Add($ReportPath)
             [void]$Warnings.Add("${ReportPath}: passed=false degraded to provider advisory warning because decision loop passed with sufficient recommendations/patch plans")
         } else {
@@ -987,6 +1026,8 @@ $WorkflowReport = [ordered]@{
     guardrails = [ordered]@{
         provider_execution_requires_explicit_flag = $true
         run_gpu_npu_provider = [bool]$RunGpuNpuProvider
+        require_provider_artifacts = [bool]$RequireProviderArtifacts
+        strict_provider_failures_block_workflow = [bool]$RequireProviderArtifacts
         patch_application_performed = $false
         source_writes_performed = $false
         sqlite_write_performed = $false

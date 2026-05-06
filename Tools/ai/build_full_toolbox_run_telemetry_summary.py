@@ -46,6 +46,61 @@ def safe_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def safe_int(value: Any, default: int = 0) -> int:
+    if isinstance(value, bool):
+        return default
+    try:
+        if value in (None, ""):
+            return default
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str, Any]) -> dict[str, Any]:
+    gpu_round_count = safe_int(gpu_report.get("round_count"))
+    gpu_provider_performed = bool(
+        gpu_report.get("provider_execution_performed")
+        and gpu_round_count > 0
+        and str(gpu_report.get("classification") or "") != "required_provider_artifact_missing"
+        and not bool(gpu_report.get("provider_empty_response"))
+    )
+    npu_audit_count = safe_int(orchestrator.get("npu_audit_count"))
+    npu_success_count = safe_int(orchestrator.get("npu_audit_success_count"))
+    npu_provider_performed = npu_success_count > 0
+    degraded_reasons = []
+    if isinstance(orchestrator.get("provider_degraded_reasons"), list):
+        degraded_reasons.extend(str(item) for item in orchestrator.get("provider_degraded_reasons"))
+    if not gpu_provider_performed and (orchestrator or gpu_report):
+        degraded_reasons.append(
+            "gpu_not_confirmed:"
+            f"performed={gpu_report.get('provider_execution_performed')};"
+            f"round_count={gpu_round_count};"
+            f"classification={gpu_report.get('classification')};"
+            f"passed={gpu_report.get('passed')}"
+        )
+    if orchestrator.get("npu_lane_mode") in {"skipped", "metadata_only", "degraded"} and npu_success_count == 0:
+        degraded_reasons.append(
+            "npu_auditor_not_confirmed:"
+            f"audit_count={npu_audit_count};success_count={npu_success_count};"
+            f"lane_mode={orchestrator.get('npu_lane_mode')}"
+        )
+    return {
+        "provider_execution_requested": bool(orchestrator.get("provider_execution_performed") or gpu_report.get("provider_execution_requested")),
+        "provider_execution_performed": bool(gpu_provider_performed or npu_provider_performed),
+        "gpu_provider_execution_performed": gpu_provider_performed,
+        "gpu_round_count": gpu_round_count,
+        "gpu_returncode": orchestrator.get("gpu_returncode"),
+        "gpu_classification": gpu_report.get("classification"),
+        "gpu_provider_empty_response": bool(gpu_report.get("provider_empty_response")),
+        "npu_provider_execution_performed": npu_provider_performed,
+        "npu_audit_count": npu_audit_count,
+        "npu_audit_success_count": npu_success_count,
+        "npu_lane_mode": orchestrator.get("npu_lane_mode"),
+        "provider_degraded_reasons": degraded_reasons,
+    }
+
+
 def compact_paths(values: Any, limit: int = 12) -> list[str]:
     out: list[str] = []
     for value in safe_list(values):
@@ -134,7 +189,8 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
         "evidence_to_commit": compact_paths(args.evidence_to_commit, limit=32),
     }
 
-    provider_execution = bool(orchestrator.get("provider_execution_performed") or gpu_report.get("provider_execution_performed"))
+    provider_evidence = provider_evidence_summary(orchestrator, gpu_report)
+    provider_execution = bool(provider_evidence["provider_execution_performed"])
     return {
         "schema_version": 1,
         "kind": "full_toolbox_run_telemetry_summary",
@@ -145,6 +201,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
         "errors": errors,
         "warnings": warnings,
         "provider_execution_performed": provider_execution,
+        "provider_evidence": provider_evidence,
         "patch_application_performed": False,
         "source_writes_performed": False,
         "sqlite_write_performed": False,
@@ -183,6 +240,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "smoke_elapsed_seconds": repository_smoke.get("elapsed_seconds"),
         },
         "gpu_npu": {
+            "provider_evidence": provider_evidence,
             "sync_metrics": gpu_npu_sync.get("metrics"),
             "performance": compact_performance(gpu_npu_sync),
             "operational_opinions": gpu_npu_sync.get("operational_opinions"),
@@ -193,6 +251,8 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "committable_location": "docs/LOCAL_VALIDATION_EVIDENCE",
             "raw_output_commit_allowed": False,
             "provider_execution_performed": provider_execution,
+            "gpu_provider_execution_performed": provider_evidence.get("gpu_provider_execution_performed"),
+            "npu_provider_execution_performed": provider_evidence.get("npu_provider_execution_performed"),
             "patch_application_performed": False,
             "source_writes_performed": False,
             "sqlite_write_performed": False,
@@ -211,6 +271,13 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Deterministic synthesizer used: `{workflow.get('deterministic_synthesizer_used')}`")
     lines.append(f"- Patch plan fallback used: `{workflow.get('patch_plan_fallback_used')}`")
     lines.append(f"- Provider execution performed: `{report.get('provider_execution_performed')}`")
+    provider_evidence = safe_dict(report.get("provider_evidence"))
+    lines.append(f"- GPU provider execution performed: `{provider_evidence.get('gpu_provider_execution_performed')}`")
+    lines.append(f"- GPU round count: `{provider_evidence.get('gpu_round_count')}`")
+    lines.append(f"- NPU provider execution performed: `{provider_evidence.get('npu_provider_execution_performed')}`")
+    lines.append(f"- NPU audit success count: `{provider_evidence.get('npu_audit_success_count')}`")
+    if provider_evidence.get("provider_degraded_reasons"):
+        lines.append(f"- Provider degraded reasons: `{provider_evidence.get('provider_degraded_reasons')}`")
     lines.append("")
     lines.append("## Repository consistency performance")
     lines.append("")

@@ -426,6 +426,49 @@ def collect_npu_declared_requests(orchestrator: dict[str, Any]) -> list[dict[str
             )
     return entries
 
+def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str, Any]) -> dict[str, Any]:
+    gpu_round_count = safe_int(gpu_report.get('round_count'))
+    gpu_provider_performed = bool(
+        gpu_report.get('provider_execution_performed')
+        and gpu_round_count > 0
+        and str(gpu_report.get('classification') or '') != 'required_provider_artifact_missing'
+        and not bool(gpu_report.get('provider_empty_response'))
+    )
+    npu_success_count = safe_int(orchestrator.get('npu_audit_success_count'))
+    npu_audit_count = safe_int(orchestrator.get('npu_audit_count'))
+    npu_provider_performed = npu_success_count > 0
+    degraded_reasons = []
+    raw_reasons = orchestrator.get('provider_degraded_reasons')
+    if isinstance(raw_reasons, list):
+        degraded_reasons.extend(str(item) for item in raw_reasons)
+    if not gpu_provider_performed and (orchestrator or gpu_report):
+        degraded_reasons.append(
+            'gpu_not_confirmed:'
+            f"performed={gpu_report.get('provider_execution_performed')};"
+            f"round_count={gpu_round_count};"
+            f"classification={gpu_report.get('classification')};"
+            f"passed={gpu_report.get('passed')}"
+        )
+    if orchestrator.get('npu_lane_mode') in {'skipped', 'metadata_only', 'degraded'} and npu_success_count == 0:
+        degraded_reasons.append(
+            'npu_auditor_not_confirmed:'
+            f"audit_count={npu_audit_count};success_count={npu_success_count};"
+            f"lane_mode={orchestrator.get('npu_lane_mode')}"
+        )
+    return {
+        'provider_execution_performed': bool(gpu_provider_performed or npu_provider_performed),
+        'gpu_provider_execution_performed': gpu_provider_performed,
+        'gpu_round_count': gpu_round_count,
+        'gpu_classification': gpu_report.get('classification'),
+        'gpu_provider_empty_response': bool(gpu_report.get('provider_empty_response')),
+        'npu_provider_execution_performed': npu_provider_performed,
+        'npu_audit_count': npu_audit_count,
+        'npu_audit_success_count': npu_success_count,
+        'npu_lane_mode': orchestrator.get('npu_lane_mode'),
+        'provider_degraded_reasons': degraded_reasons,
+    }
+
+
 def extract_declared_runtime_tool_counters(gpu_report: dict[str, Any], gpu_npu_sync: dict[str, Any]) -> dict[str, int]:
     # Extract planner-declared runtime tool counters even when no broker entry exists.
     candidates: list[dict[str, Any]] = []
@@ -561,6 +604,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     max_entries = max(1, int(args.max_entries))
     summary = summarize_entries(entries)
     summary.update(declared_counters)
+    provider_evidence = provider_evidence_summary(orchestrator, gpu_report)
     return {
         'schema_version': 1,
         'kind': 'runtime_tool_usage_telemetry',
@@ -570,7 +614,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         'passed': not errors,
         'errors': errors,
         'warnings': warnings,
-        'provider_execution_performed': False,
+        'provider_execution_performed': provider_evidence['provider_execution_performed'],
+        'provider_evidence': provider_evidence,
         'patch_application_performed': False,
         'source_writes_performed': False,
         'sqlite_write_performed': False,
@@ -597,7 +642,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             'report_only': True,
             'committable_location': 'docs/LOCAL_VALIDATION_EVIDENCE',
             'raw_output_commit_allowed': False,
-            'provider_execution_performed': False,
+            'provider_execution_performed': provider_evidence['provider_execution_performed'],
+            'gpu_provider_execution_performed': provider_evidence['gpu_provider_execution_performed'],
+            'npu_provider_execution_performed': provider_evidence['npu_provider_execution_performed'],
             'patch_application_performed': False,
             'source_writes_performed': False,
             'sqlite_write_performed': False,
@@ -610,6 +657,12 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ['# Runtime Tool Usage Telemetry', '']
     lines.append(f"- Passed: `{report.get('passed')}`")
     lines.append(f"- Stamp: `{report.get('stamp')}`")
+    provider_evidence = safe_dict(report.get('provider_evidence'))
+    lines.append(f"- Provider execution performed: `{report.get('provider_execution_performed')}`")
+    lines.append(f"- GPU provider execution performed: `{provider_evidence.get('gpu_provider_execution_performed')}`")
+    lines.append(f"- NPU provider execution performed: `{provider_evidence.get('npu_provider_execution_performed')}`")
+    if provider_evidence.get('provider_degraded_reasons'):
+        lines.append(f"- Provider degraded reasons: `{provider_evidence.get('provider_degraded_reasons')}`")
     summary = safe_dict(report.get('summary'))
     lines.append(f"- Tool call entries: `{summary.get('tool_call_entry_count')}`")
     lines.append(f"- Executed count: `{summary.get('executed_count')}`")

@@ -935,6 +935,29 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         + orchestrator_runtime_tool_bootstrap_result_count
         + runtime_tool_provider_request_result_count
     )
+    gpu_provider_execution_performed = bool(
+        gpu_report.get("provider_execution_performed")
+        and gpu_process.returncode == 0
+        and safe_int(gpu_report.get("round_count")) > 0
+        and str(gpu_report.get("classification") or "") != "required_provider_artifact_missing"
+    )
+    npu_provider_execution_performed = bool(npu_success_count > 0)
+    provider_execution_observed = bool(gpu_provider_execution_performed or npu_provider_execution_performed)
+    provider_degraded_reasons: list[str] = []
+    if not gpu_provider_execution_performed:
+        provider_degraded_reasons.append(
+            "gpu_provider_not_confirmed:"
+            f"returncode={gpu_process.returncode};"
+            f"round_count={safe_int(gpu_report.get('round_count'))};"
+            f"performed={gpu_report.get('provider_execution_performed')};"
+            f"classification={gpu_report.get('classification')}"
+        )
+    if getattr(args, "run_npu_auditor_provider", False) and not npu_provider_execution_performed:
+        provider_degraded_reasons.append(
+            "npu_auditor_not_confirmed:"
+            f"audit_count={len(audit_records)};success_count={npu_success_count};"
+            f"lane_mode={npu_lane_diagnostics(args, audit_records).get('mode')}"
+        )
     report = {
         "schema_version": 1,
         "kind": "agent_gpu_npu_parallel_orchestrator",
@@ -943,7 +966,10 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "passed": not errors and gpu_process.returncode == 0,
         "errors": errors,
         "warnings": warnings,
-        "provider_execution_performed": True,
+        "provider_execution_performed": provider_execution_observed,
+        "gpu_provider_execution_performed": gpu_provider_execution_performed,
+        "npu_provider_execution_performed": npu_provider_execution_performed,
+        "provider_degraded_reasons": provider_degraded_reasons,
         "patch_application_performed": False,
         "source_writes_performed": False,
         "apply_mode": "report_only_parallel_gpu_planner_npu_auditor",
@@ -1055,6 +1081,10 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "runtime_tool_execution_count": runtime_tool_execution_count,
             "runtime_tool_result_count": runtime_tool_result_count,
             "manual_review_required": True,
+            "provider_execution_performed": provider_execution_observed,
+            "gpu_provider_execution_performed": gpu_provider_execution_performed,
+            "npu_provider_execution_performed": npu_provider_execution_performed,
+            "provider_degraded_reasons": provider_degraded_reasons,
         },
         "guardrails": {
             "gpu_continues_without_waiting_for_npu": True,
@@ -1065,6 +1095,9 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
             "runtime_tool_broker_report_only": True,
+            "provider_execution_performed": provider_execution_observed,
+            "gpu_provider_execution_performed": gpu_provider_execution_performed,
+            "npu_provider_execution_performed": npu_provider_execution_performed,
             "orchestrator_controls_gpu_runtime_tools": not bool(getattr(args, "gpu_runner_direct_runtime_tool_broker", False)),
             "gpu_runner_direct_runtime_tool_broker": bool(getattr(args, "gpu_runner_direct_runtime_tool_broker", False)),
             "npu_runtime_tools_execute_via_broker": True,
