@@ -18,6 +18,10 @@ from Tools.ai.github_evidence_bundle_io import (
 CORE_SUMMARY_KEYS = (
     "usable_lanes",
     "unusable_lanes",
+    "peer_mesh_operational_lanes",
+    "peer_mesh_support_lanes",
+    "peer_mesh_degraded_lanes",
+    "peer_mesh_product_blockers",
     "primary_advisory_provider",
     "policy",
     "mode",
@@ -45,6 +49,10 @@ CHECK_SUMMARY_KEYS = (
     "provider_envelope",
     "promotion_gate",
     "required_promotion_gate",
+    "peer_mesh_visibility",
+    "npu_support_lane",
+    "collaboration_visibility",
+    "peer_mesh_lane_state",
 )
 
 
@@ -124,6 +132,16 @@ def add_nested_summary_fields(summary: dict[str, Any], data: dict[str, Any]) -> 
             {"used": ollama.get("used"), "model": ollama.get("model"), "error": ollama.get("error"), "text_preview": (ollama.get("text") or "")[:500]},
             max_string=500,
         )
+
+    for key in (
+        "peer_mesh_visibility",
+        "npu_support_lane",
+        "collaboration_visibility",
+        "peer_mesh_lane_state",
+    ):
+        value = data.get(key)
+        if isinstance(value, dict):
+            summary[key] = compact_value(value, max_string=900)
 
 
 def base_report_summary(data: dict[str, Any]) -> dict[str, Any]:
