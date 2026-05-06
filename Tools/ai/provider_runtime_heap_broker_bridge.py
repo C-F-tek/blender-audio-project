@@ -136,19 +136,43 @@ def read_json(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def broker_result_target_from_source(value: object) -> str:
+    lane = str(value or "").strip().lower()
+    if lane in {"gpu1", "gpu0", "npu", "broker", "deterministic", "telemetry", "orchestrator"}:
+        return lane
+    return "orchestrator"
+
+
+def request_sources_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for request in broker_report.get("tool_requests", []):
+        if not isinstance(request, dict):
+            continue
+        request_id = str(request.get("id") or request.get("request_id") or "")
+        if not request_id:
+            continue
+        heap_event = safe_dict(request.get("heap_event"))
+        source = request.get("source") or heap_event.get("source") or "orchestrator"
+        mapping[request_id] = broker_result_target_from_source(source)
+    return mapping
+
+
 def append_broker_results(heap: ProviderRuntimeHeap, broker_report: dict[str, Any]) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
+    source_by_request_id = request_sources_by_id(broker_report)
     for result in broker_report.get("tool_results", []):
         if not isinstance(result, dict):
             continue
         result_id = str(result.get("id") or result.get("request_id") or "")
+        target_lane = source_by_request_id.get(result_id, "orchestrator")
         event = heap.append_event(
             source="broker",
-            target=str(broker_report.get("source") or "") or None,
+            target=target_lane,
             event_type="broker_result",
             correlation_id=result_id,
             payload={
                 "request_id": result_id,
+                "target_lane": target_lane,
                 "tool": result.get("tool"),
                 "executed": result.get("executed"),
                 "blocked": result.get("blocked"),
