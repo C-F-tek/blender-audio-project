@@ -114,6 +114,15 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# IA-CARMINE-UNIFIED-PHASE-VISIBILITY-IMPORT-BEGIN
+$UnifiedPhaseVisibilityScript = Join-Path $PSScriptRoot "unified_phase_visibility.ps1"
+if (Test-Path -LiteralPath $UnifiedPhaseVisibilityScript -PathType Leaf) {
+    . $UnifiedPhaseVisibilityScript
+} else {
+    Write-Warning "Unified phase visibility helper not found: $UnifiedPhaseVisibilityScript"
+}
+# IA-CARMINE-UNIFIED-PHASE-VISIBILITY-IMPORT-END
+
 # IA-CARMINE-LIGHTFULL0TO10-DISPATCH-BEGIN
 if ($LightFull0To10) {
     $LightProfileScript = Join-Path $PSScriptRoot "run_unified_light_full0to10_profile.ps1"
@@ -1328,8 +1337,8 @@ if ($RunOpenVinoGpu0Workload -or $Full0To10) {
         $ReportFiles += $Gpu0Md
     }
     if (Get-Variable -Name PhaseReports -ErrorAction SilentlyContinue) {
-        $PhaseReports += $Gpu0Json
-        $PhaseReports += $Gpu0Md
+        $PhaseReports.openvino_gpu0_workload = $Gpu0Json.Replace("\", "/")
+        $PhaseReports.openvino_gpu0_workload_markdown = $Gpu0Md.Replace("\", "/")
     }
 
 # IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-LATE-BEGIN
@@ -1408,8 +1417,8 @@ if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-Mo
             $ReportFiles += $OfficialPhase.markdown
         }
         if (Get-Variable -Name PhaseReports -ErrorAction SilentlyContinue) {
-            $PhaseReports += $OfficialPhase.json
-            $PhaseReports += $OfficialPhase.markdown
+            $PhaseReports.official_phase_status = $OfficialPhase.json.Replace("\", "/")
+            $PhaseReports.official_phase_status_markdown = $OfficialPhase.markdown.Replace("\", "/")
         }
         if (Get-Variable -Name PhaseStatus -ErrorAction SilentlyContinue) {
             $PhaseStatus["official"] = $OfficialPhase.status
