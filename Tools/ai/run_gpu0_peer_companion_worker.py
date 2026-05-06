@@ -14,6 +14,7 @@ if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
 from Tools.ai.runtime_hardware_capability.workloads import run_openvino_gpu0_tensor_test
+from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap
 from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
 
 
@@ -198,6 +199,73 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], dict[str, An
     return report, request_packet
 
 
+
+def append_runtime_heap_events(
+    args: argparse.Namespace,
+    repo_root: Path,
+    report: dict[str, Any],
+    request_packet: dict[str, Any],
+) -> list[dict[str, Any]]:
+    if not getattr(args, "runtime_heap_stamp", ""):
+        return []
+    heap = ProviderRuntimeHeap.from_args(
+        repo_root,
+        args.runtime_heap_stamp,
+        getattr(args, "runtime_heap_events", ""),
+        getattr(args, "runtime_heap_snapshot", ""),
+        getattr(args, "runtime_heap_markdown", ""),
+    )
+    events: list[dict[str, Any]] = []
+    correlation_id = f"{args.runtime_heap_stamp}:gpu1-gpu0-live-evidence"
+    events.append(
+        heap.append_event(
+            source="gpu0",
+            target="gpu1",
+            event_type="evidence_response",
+            round_id=1,
+            correlation_id=correlation_id,
+            payload={
+                "summary": "GPU0 coworker produced live response for GPU1 through runtime heap.",
+                "gpu0_report": report.get("stamp"),
+                "passed": report.get("passed"),
+                "provider_execution_performed": report.get("provider_execution_performed"),
+                "response_count": report.get("response_count"),
+                "tool_request_count": report.get("tool_request_count"),
+                "classifications": report.get("classifications", []),
+                "direct_execution": False,
+                "broker_required": True,
+            },
+        )
+    )
+    for request in safe_list(request_packet.get("tool_requests")):
+        if not isinstance(request, dict):
+            continue
+        request_id = str(request.get("id") or request.get("request_id") or "")
+        events.append(
+            heap.append_event(
+                source="gpu0",
+                target="broker",
+                event_type="broker_request",
+                round_id=1,
+                correlation_id=request_id,
+                payload={
+                    "request_id": request_id,
+                    "tool": request.get("tool"),
+                    "args": request.get("args", {}),
+                    "reason": request.get("reason"),
+                    "source": "gpu0_peer_companion_live",
+                    "direct_execution": False,
+                    "broker_required": True,
+                },
+            )
+        )
+    snapshot = heap.write_snapshot()
+    report["runtime_heap_live_event_count"] = len(events)
+    report["runtime_heap_live_event_log"] = snapshot.get("event_log")
+    return events
+
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     lines = [
         "# GPU0 Peer Companion Response",
@@ -237,9 +305,14 @@ def main() -> int:
     parser.add_argument("--iterations", type=int, default=24)
     parser.add_argument("--min-seconds", type=float, default=1.0)
     parser.add_argument("--allow-degraded", action="store_true")
+    parser.add_argument("--runtime-heap-stamp", default="")
+    parser.add_argument("--runtime-heap-events", default="")
+    parser.add_argument("--runtime-heap-snapshot", default="")
+    parser.add_argument("--runtime-heap-markdown", default="")
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
     report, requests = build_report(args)
+    append_runtime_heap_events(args, repo_root, report, requests)
     output = resolve_output_path(repo_root, args.output.format(stamp=args.stamp))
     markdown = resolve_output_path(repo_root, args.markdown_output.format(stamp=args.stamp))
     request_output = resolve_output_path(repo_root, args.tool_requests_output.format(stamp=args.stamp))
