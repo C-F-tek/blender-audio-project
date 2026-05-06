@@ -26,6 +26,7 @@ unified launcher command
   -> trusted/excluded context selection
   -> provider probes and primary advisory generation unless disabled or diagnosed unavailable
   -> provider bridge/gate/readiness planning when selected
+  -> effective-use local memory/product surfaces when selected
   -> post-validation AI packet and proposals
   -> full-context golden proposal families when requested
   -> proposal-derived draft patch specs
@@ -170,6 +171,40 @@ Full0To10 provider execution bridge
 
 These surfaces are critical because they let later agents see whether a tool/provider was available, planned, gated, skipped or actually executed. Do not treat bridge/readiness/capability evidence as provider runtime proof unless the artifact itself records provider execution.
 
+## Effective-use memory/product flow
+
+Current code includes an effective-use lane:
+
+```text
+Tools/ai/full0to10_effective_use/*
+Tools/ai/full0to10_sqlite_memory/*
+```
+
+It builds:
+
+```text
+provider hardening contracts
+effective-use optimization JSON
+tool telemetry JSON
+quality product Markdown
+SQLite FTS5 memory DB under output/ai_runtime_memory/
+```
+
+The SQLite memory code creates the DB directory, opens SQLite, enables WAL/foreign keys, initializes schema, inserts memory items/chunks/FTS rows and commits. This is a real local output DB write, but it is not a source write and must not be committed.
+
+Current semantic caveat:
+
+```text
+summary safety flags may still say persistent_memory_write_performed=false
+```
+
+Treat that flag as incomplete for local output DB writes until TD-029 is resolved. Preserve the stronger operational rule:
+
+```text
+output/** SQLite artifacts are local/private and non-commit-ready.
+source_writes_performed=false means source files were not modified.
+```
+
 ## Runtime telemetry flow
 
 ```text
@@ -297,6 +332,7 @@ npu_decode_smoke_passed: true
 | Selected semantic chunks | `Tools/ai/select_semantic_code_chunks.py` | context pack builder, local AI task adapter, provider packets | Bounded focused context under ignored `output/ai_context_packs/`; validator can emit compact tracked evidence. |
 | AI context pack | `Tools/ai/build_ai_context_pack.py` | human/AI task planning, proposal builders | Bounded task-scoped context under ignored `output/ai_context_packs/` plus compact tracked evidence. |
 | Agent state packet | `Tools/ai/build_agent_state_packet.py` | local AI task adapter, advisory packet builder | Can use SQLite memory locally; generated SQLite DB files stay untracked. |
+| Effective-use SQLite memory | `Tools/ai/full0to10_effective_use/*`, `Tools/ai/full0to10_sqlite_memory/*` | effective-use quality product, local memory/search evidence | Writes SQLite FTS5 DB under `output/ai_runtime_memory/`; local/private output artifact, not source and not commit-ready. |
 | Workload reports | local provider workload scripts | quality gate | Generated text reports from provider lanes. |
 | Workload quality report | `Tools/validation/check_ai_workload_report_quality.py` | lane routing, remediation, packet builder | Determines `usable_lanes` and `unusable_lanes`. |
 | Lane routing report | `Tools/ai/build_workload_quality_lane_routing.py` | packet builder, evidence bundle | Declares trusted/excluded context and primary advisory provider. |
@@ -352,6 +388,7 @@ This is now one application domain over the local AI orchestration workbench, no
 - Treat NPU short smoke success as diagnostic evidence, not as general advisory promotion.
 - Keep provider execution report-bound and opt-out inside Full0To10, not implicit outside selected workflows.
 - Do not treat LightFull0To10, provider bridge/readiness or capability manifests as real provider execution proof unless the artifact itself records provider execution.
+- Do not treat local output SQLite memory writes as source writes, and do not commit generated DB files.
 - Do not overwrite large analysis JSON files unless explicitly requested.
 - Treat `indexAI/` and generated manifests as generated context.
 - Preserve local path configurability.
@@ -366,6 +403,7 @@ This is now one application domain over the local AI orchestration workbench, no
 - unified launcher manifest/phase contract beyond the compact contract doc;
 - provider probe report;
 - provider bridge/readiness report;
+- effective-use SQLite memory/product report;
 - runtime tool usage telemetry;
 - runtime/hardware capability manifest;
 - full toolbox run telemetry summary;
