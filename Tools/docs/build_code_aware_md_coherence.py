@@ -38,11 +38,6 @@ ACTIVE_MD_ROOTS = (
     "CHATGPT/",
     "Tools/",
 )
-REFERENCE_SCAN_EXCLUDED_DOCS = {
-    "docs/LOCAL_AI_TASKS/md-code-coherence-current-state.md",
-    "docs/LOCAL_AI_TASKS/code-aware-tool-index.md",
-    "docs/LOCAL_AI_TASKS/code-aware-command-contract.md",
-}
 PATH_RE = re.compile(
     r"(?P<path>(?:\.\\|\./)?(?:[A-Za-z0-9_.-]+[\\/])+[A-Za-z0-9_.-]+\.(?:md|py|ps1|json|csv|txt|yaml|yml))"
 )
@@ -293,10 +288,7 @@ def analyze_markdown(repo: Path, scripts: dict[str, Any], max_lines: int) -> dic
         rel = repo_relative(path, repo)
         text = safe_read(path)
         lines = line_count(text)
-        if rel in REFERENCE_SCAN_EXCLUDED_DOCS:
-            refs = []
-        else:
-            refs = sorted(collect_md_refs(text))
+        refs = sorted(collect_md_refs(text))
         py_cmds, ps_cmds = collect_doc_command_refs(text)
         docs[rel] = {
             "path": rel,
