@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "kind": "provider_evidence_contract",
+  "generated_at": "2026-05-06T16:36:31",
+  "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "stamp": "provider_strict_md_telemetry_20260506-162137",
+  "passed": true,
+  "errors": [],
+  "warnings": [
+    "local provider probe degraded: ['ollama: probe failed']"
+  ],
+  "provider_execution_requested": true,
+  "provider_execution_performed": true,
+  "patch_application_performed": false,
+  "source_writes_performed": false,
+  "manual_review_required": true,
+  "inputs": {
+    "orchestrator": "output/ai_pipeline/full_toolbox_provider_strict_md_telemetry_20260506-162137_orchestrator.json",
+    "gpu_report": "output/ai_pipeline/full_toolbox_provider_strict_md_telemetry_20260506-162137_parallel_gpu.json",
+    "gpu_npu_sync": "output/analysis/gpu_npu_run_sync_full_toolbox_provider_strict_md_telemetry_20260506-162137.json",
+    "local_provider_probe": "output/validation/local_provider_probe.json"
+  },
+  "gpu": {
+    "real": true,
+    "passed": true,
+    "provider_execution_performed": true,
+    "round_count": 20,
+    "recommendation_count": 0,
+    "provider_empty_response": false,
+    "classification": null,
+    "provider_error": ""
+  },
+  "npu": {
+    "real": true,
+    "audit_count": 5,
+    "requested_count": 5,
+    "load_attempt_count": 5,
+    "success_count": 5,
+    "lane_mode": "slow",
+    "lane": {
+      "mode": "slow",
+      "provider_requested": true,
+      "audit_count": 5,
+      "finished_count": 5,
+      "running_count": 0,
+      "success_count": 5,
+      "failed_count": 0,
+      "avg_elapsed_seconds": 104.0,
+      "max_elapsed_seconds": 106.0,
+      "slow_threshold_seconds": 60.0,
+      "base_auditor_every_rounds": 3,
+      "slow_auditor_every_rounds": 4,
+      "effective_auditor_every_rounds": 4,
+      "non_blocking": true
+    }
+  },
+  "local_probe": {
+    "present": true,
+    "passed": false,
+    "provider_execution_performed": true,
+    "lane_count": 2,
+    "lanes": {
+      "ollama": {
+        "passed": false,
+        "provider_execution_performed": true,
+        "text_chars": 0,
+        "error": "",
+        "selected_model": "gpt-oss:20b"
+      },
+      "npu": {
+        "passed": true,
+        "provider_execution_performed": true,
+        "text_chars": 72,
+        "error": "",
+        "selected_model": null
+      }
+    }
+  },
+  "gpu_npu_sync_metrics": {
+    "gpu_round_count": 20,
+    "npu_audit_count": 5,
+    "npu_audit_success_count": 5,
+    "npu_audit_round_coverage": 0.25,
+    "avg_gpu_round_seconds": 27.114,
+    "p50_gpu_round_seconds": 27.114,
+    "p90_gpu_round_seconds": 27.114,
+    "avg_npu_audit_seconds": 104.0,
+    "p50_npu_audit_seconds": 104.0,
+    "p90_npu_audit_seconds": 106.0,
+    "npu_to_gpu_avg_duration_ratio": 3.836,
+    "gpu_elapsed_seconds": 542.273,
+    "provider_execution_performed": true,
+    "patch_application_performed": false,
+    "source_writes_performed": false,
+    "gpu_metrics_source": "gpu_elapsed_divided_by_round_count"
+  },
+  "decision": {
+    "gpu_provider_ready": true,
+    "npu_auditor_ready": true,
+    "probe_only_is_not_provider_evidence": true,
+    "strict_provider_contract_satisfied": true,
+    "recommended_next_action": "continue_bundle_review"
+  },
+  "guardrails": {
+    "report_only": true,
+    "provider_settings_changed": false,
+    "patch_application_performed": false,
+    "source_writes_performed": false,
+    "blender_runtime_execution_performed": false,
+    "ffmpeg_execution_performed": false,
+    "raw_output_commit_allowed": false
+  }
+}
