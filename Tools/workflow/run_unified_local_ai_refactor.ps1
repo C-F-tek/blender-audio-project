@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
@@ -105,7 +105,10 @@ param(
 ,
     [switch]$LightFull0To10,
     [string]$LightFull0To10OutputDir = "output/validation/unified_light_full0to10_profile",
-    [switch]$LightFull0To10NoExternalProbes
+    [switch]$LightFull0To10NoExternalProbes,
+    [int]$OfficialAdapterTimeoutSeconds = 1800,
+    [switch]$SkipOfficialAdapter,
+    [switch]$RunOpenVinoGpu0Workload
 )
 
 Set-StrictMode -Version Latest
@@ -1433,3 +1436,4 @@ Write-UnifiedLauncherExecutionTailEvidence `
     -PatchSpecsRequested ([bool]$GeneratePatchSpecs) `
     -ProdMode ([bool]$Prod) `
     -FailureMessage ""
+

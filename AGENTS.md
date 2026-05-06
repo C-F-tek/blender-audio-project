@@ -1,4 +1,4 @@
-# AGENTS.md
+﻿# AGENTS.md
 
 This is the primary repository contract for AI assistants, local agents, automated review systems and GitHub-only assistants working on this repository.
 
@@ -160,6 +160,54 @@ Visible provider degradation can be acceptable when quality-gated and recovered 
 Blender runtime is frozen unless explicitly scoped.
 ```
 
+## Production-grade tool promotion rule
+
+A new capability is not complete when code is merely inserted.
+
+AI agents must promote every added or changed tool/lane through the full production path before calling it done:
+
+```text
+implemented code
+  -> wired into the canonical operator entrypoint
+  -> visible in CLI/help/runbook/operator docs
+  -> environment preflight documented when dependencies/providers matter
+  -> activated by the intended profile or explicit flag
+  -> emits compact JSON/Markdown evidence
+  -> appears in phase_status / phase_reports or equivalent manifest surfaces
+  -> is understood by contract validators
+  -> is included in evidence/bundle/handoff when relevant
+  -> has clear unavailable/degraded/disabled classification when it cannot run. Do not stop at an internal module, helper function, isolated smoke script or hidden command.
+
+For provider, GPU, NPU, broker, memory, patch-spec, evidence and workflow lanes, the capability must be reachable from the active workflow path or explicitly documented as non-production/future work.
+
+For Full0To10, promoted lanes must be included by default unless disabled by explicit operator flags or classified as unavailable/degraded through manifest, telemetry, phase reports or validator evidence.
+
+Provider-capable .venv rule
+
+The project .venv must be treated as the visible default local Python environment for launcher/provider work.
+
+Before running provider, GPU0, NPU, OpenVINO or Full0To10 validation, agents must verify:
+
+$env:IA_CARMINE_PYTHON = "<repo>\.venv\Scripts\python.exe"
+$env:PYTHONPATH = "<repo>"
+
+& $env:IA_CARMINE_PYTHON -c "import sys; print(sys.executable); import numpy, openvino; from openvino import Core; c=Core(); print(c.available_devices)"
+
+Required provider runtime packages for OpenVINO/GPU0/NPU lanes:
+
+numpy
+openvino
+openvino-genai
+
+Expected IA-Carmine workstation visibility when the provider-capable .venv is correct:
+
+['CPU', 'GPU.0', 'GPU.1', 'NPU']
+
+If .venv is missing numpy, openvino or openvino-genai, classify the result as provider_python_environment_missing_dependency, not as GPU0/NPU provider failure.
+
+If GPU.0 is not visible after imports succeed, classify the result as OpenVINO device/runtime visibility failure.
+
+GPU.1 may be visible through OpenVINO, but it is reserved for CUDA/Ollama and must not receive OpenVINO workload.
 ## Unified 0-to-10 rule
 
 A valid `-Full0To10` run must include every major phase unless the operator disables a phase explicitly with a `-No*` flag.
@@ -313,3 +361,4 @@ follow-up recommendations
 ```
 
 A workflow change is incomplete unless it produces compact evidence or clearly states which checks are missing.
+
