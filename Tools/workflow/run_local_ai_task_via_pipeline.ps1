@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Run a local Markdown AI task through the project-owned report-only AI pipeline.
 
@@ -150,6 +150,25 @@ function Add-ContextFileIfPresent {
         return @($Current + $rel)
     }
     return $Current
+}
+
+function Add-ExistingBundlePathArg {
+    param(
+        [string[]]$ArgsList,
+        [string]$Kind,
+        [string]$PathValue,
+        [string]$Root
+    )
+    if ([string]::IsNullOrWhiteSpace($PathValue)) {
+        return $ArgsList
+    }
+    $full = Resolve-PlannedPath $PathValue
+    if (-not (Test-Path -LiteralPath $full -PathType Leaf)) {
+        Write-Warning "Bundle $Kind not found, not adding: $PathValue"
+        return $ArgsList
+    }
+    $rel = Get-RepoRelativePath $Root $full
+    return @($ArgsList + @("--$Kind", $rel))
 }
 
 
@@ -500,6 +519,8 @@ Invoke-CommandChecked -Label "Build advisory packet and repository proposals" -B
 $ProposalPath = Join-Path $PipelineDir "$ProposalBasename.json"
 $ProposalRel = Get-RepoRelativePath $RepoRootPath $ProposalPath
 $ProposalValidationOutput = "output/validation/${Basename}_repository_change_proposals_contract.json"
+$PatchManifest = ""
+$PatchManifestMd = ""
 
 if (Test-Path -LiteralPath $ProposalPath -PathType Leaf) {
     Invoke-CommandChecked -Label "Validate repository change proposals" -Block {
@@ -513,6 +534,7 @@ else {
 if ($GeneratePatchSpecs -and (Test-Path -LiteralPath $ProposalPath -PathType Leaf)) {
     $PatchBasename = "${Basename}_patch_specs"
     $PatchManifest = "output/patch_specs/${PatchBasename}_manifest.json"
+    $PatchManifestMd = "output/patch_specs/${PatchBasename}_manifest.md"
     Invoke-CommandChecked -Label "Build draft patch specs from proposals" -Block {
         python .\Tools\ai\build_patch_specs_from_proposals.py --repo-root . --proposal $ProposalRel --output-dir output\patch_specs --basename $PatchBasename
     }
@@ -521,11 +543,14 @@ if ($GeneratePatchSpecs -and (Test-Path -LiteralPath $ProposalPath -PathType Lea
     }
 }
 
+$EvidenceJson = ""
+$EvidenceMd = ""
+$EvidenceValidationOutput = ""
 if ($BuildEvidence) {
     if ([string]::IsNullOrWhiteSpace($EvidenceBasename)) { $EvidenceBasename = "${Basename}_evidence" }
-    Invoke-CommandChecked -Label "Build compact GitHub evidence bundle" -Block {
-        python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename $EvidenceBasename
-    }
+    $EvidenceJson = "docs/LOCAL_VALIDATION_EVIDENCE/$EvidenceBasename.json"
+    $EvidenceMd = "docs/LOCAL_VALIDATION_EVIDENCE/$EvidenceBasename.md"
+    $EvidenceValidationOutput = "output/validation/${EvidenceBasename}_validation.json"
 }
 
 $ManifestPath = Join-Path $PipelineDir "${Basename}_adapter_manifest.json"
@@ -590,12 +615,72 @@ $Manifest = [ordered]@{
         multistep_proposals_json = "$PipelineRel/$MultistepProposalBasename.json"
         multistep_proposals_markdown = "$PipelineRel/$MultistepProposalBasename.md"
         multistep_evidence_json = "docs/LOCAL_VALIDATION_EVIDENCE/$MultistepEvidenceBasename.json"
-        evidence_json = "docs/LOCAL_VALIDATION_EVIDENCE/$EvidenceBasename.json"
+        patch_specs_manifest = $PatchManifest.Replace("\", "/")
+        patch_specs_manifest_markdown = $PatchManifestMd.Replace("\", "/")
+        evidence_json = $EvidenceJson
+        evidence_markdown = $EvidenceMd
+        evidence_validation = $EvidenceValidationOutput
     }
     warnings = @()
     errors = @()
 }
 ($Manifest | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $ManifestPath -Encoding UTF8
+
+if ($BuildEvidence) {
+    $ManifestRel = Get-RepoRelativePath $RepoRootPath $ManifestPath
+    $EvidenceArgs = @(
+        "-m", "Tools.ai.build_github_evidence_bundle",
+        "--repo-root", ".",
+        "--basename", $EvidenceBasename,
+        "--no-auto-discover-selected-chunks-evidence"
+    )
+
+    foreach ($path in @(
+        $ManifestRel,
+        "$PipelineRel/$Basename.json",
+        "$PipelineRel/${Basename}_manifest.json",
+        "$PipelineRel/$ProposalBasename.json",
+        $ProposalValidationOutput,
+        $PatchManifest,
+        $EnrichmentOutputs.enrichment_plan_validation,
+        $EnrichmentOutputs.selected_chunks_validation,
+        $EnrichmentOutputs.agent_state_memory_manifest
+    )) {
+        $EvidenceArgs = Add-ExistingBundlePathArg -ArgsList $EvidenceArgs -Kind "report" -PathValue $path -Root $RepoRootPath
+    }
+
+    foreach ($path in @($ReportFiles)) {
+        $EvidenceArgs = Add-ExistingBundlePathArg -ArgsList $EvidenceArgs -Kind "report" -PathValue $path -Root $RepoRootPath
+    }
+
+    foreach ($path in @(
+        $PromptRel,
+        $TaskRel,
+        "$PipelineRel/$Basename.md",
+        "$PipelineRel/$ProposalBasename.md",
+        $PatchManifestMd,
+        $EnrichmentOutputs.enrichment_plan_markdown,
+        $EnrichmentOutputs.selected_chunks_markdown,
+        $EnrichmentOutputs.context_pack_markdown,
+        $EnrichmentOutputs.agent_state_markdown
+    )) {
+        $EvidenceArgs = Add-ExistingBundlePathArg -ArgsList $EvidenceArgs -Kind "artifact" -PathValue $path -Root $RepoRootPath
+    }
+
+    foreach ($path in @($EnrichmentOutputs.selected_chunks_evidence_json)) {
+        $EvidenceArgs = Add-ExistingBundlePathArg -ArgsList $EvidenceArgs -Kind "selected-chunks-evidence" -PathValue $path -Root $RepoRootPath
+    }
+
+    Invoke-CommandChecked -Label "Build task-scoped compact GitHub evidence bundle" -Block {
+        python @EvidenceArgs
+    }
+    Invoke-CommandChecked -Label "Validate task-scoped compact GitHub evidence bundle" -Block {
+        python -m Tools.validation.check_github_evidence_bundle `
+            --repo-root . `
+            --bundle $EvidenceJson `
+            --output $EvidenceValidationOutput
+    }
+}
 
 Write-Host ""
 Write-Host "[OK] Local pipeline adapter complete" -ForegroundColor Green

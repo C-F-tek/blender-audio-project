@@ -88,16 +88,27 @@ def is_quality_report(data: dict[str, Any] | None) -> bool:
     return isinstance(data, dict) and data.get("kind") == "ai_workload_report_quality"
 
 
+def _dedupe_strings(items: Iterable[Any]) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        value = str(item)
+        if value and value not in seen:
+            out.append(value)
+            seen.add(value)
+    return out
+
+
 def usable_lanes(report: dict[str, Any] | None) -> list[str]:
     if not is_quality_report(report):
         return []
-    return [str(item) for item in report.get("usable_lanes") or []]
+    return _dedupe_strings(report.get("usable_lanes") or [])
 
 
 def unusable_lanes(report: dict[str, Any] | None) -> list[str]:
     if not is_quality_report(report):
         return []
-    return [str(item) for item in report.get("unusable_lanes") or []]
+    return _dedupe_strings(report.get("unusable_lanes") or [])
 
 
 def result_items(report: dict[str, Any] | None) -> list[dict[str, Any]]:

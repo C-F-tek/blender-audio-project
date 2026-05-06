@@ -184,10 +184,10 @@ def summarize_selected_chunks_evidence(path: Path, repo_root: Path) -> dict[str,
     return {"path": rel, "exists": True, "json_ok": True, "kind": data.get("kind"), "passed": data.get("passed"), "summary": summary}
 
 
-def discover_selected_chunks_evidence(repo_root: Path, explicit_paths: list[str]) -> list[Path]:
+def discover_selected_chunks_evidence(repo_root: Path, explicit_paths: list[str], *, auto_discover: bool = True) -> list[Path]:
     """Discover compact selected-chunks evidence files under docs evidence."""
     candidates = split_path_values(explicit_paths)
-    if not candidates:
+    if auto_discover and not candidates:
         candidates = list(DEFAULT_SELECTED_CHUNKS_EVIDENCE)
         evidence_dir = repo_root / "docs" / "LOCAL_VALIDATION_EVIDENCE"
         if evidence_dir.exists():

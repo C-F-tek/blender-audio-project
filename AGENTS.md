@@ -255,6 +255,10 @@ Patch bundles must be idempotent where possible, block on unexpected dirty worki
 ## Refactoring rules
 
 ```text
+search the repository thoroughly before adding new scripts, tools, builders or validators
+reuse existing modules, helpers, packages and workflow surfaces whenever practical
+avoid duplicate implementations and parallel active entrypoints
+extend existing tools instead of creating near-equivalent replacements
 prefer existing helpers before creating new ones
 keep path/JSON/provider/evidence logic app-agnostic when practical
 keep generated indexes out of source-level refactors

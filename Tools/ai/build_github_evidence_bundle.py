@@ -71,6 +71,7 @@ def build_bundle(
     recursive_include_unstamped: bool = False,
     recursive_max_files: int = DEFAULT_RECURSIVE_MAX_FILES,
     chunk_large_files_lines: int = 0,
+    auto_discover_selected_chunks_evidence: bool = True,
 ) -> tuple[dict[str, Any], str]:
     """Build and write the JSON/Markdown evidence bundle.
 
@@ -104,7 +105,11 @@ def build_bundle(
 
     reports = [summarize_report(path, repo_root) for path in resolved_reports]
     artifact_manifest = [summarize_artifact(path, repo_root) for path in resolved_reports]
-    selected_paths = discover_selected_chunks_evidence(repo_root, selected_chunks_paths)
+    selected_paths = discover_selected_chunks_evidence(
+        repo_root,
+        selected_chunks_paths,
+        auto_discover=auto_discover_selected_chunks_evidence,
+    )
     selected_chunks_evidence = [summarize_selected_chunks_evidence(path, repo_root) for path in selected_paths]
     included_artifacts = build_included_artifacts(
         repo_root,
@@ -193,6 +198,11 @@ def parse_args() -> argparse.Namespace:
         default=[],
         help="Compact selected-chunks evidence JSON path. Repeatable or comma-separated. If omitted, docs/LOCAL_VALIDATION_EVIDENCE/*selected_chunks_evidence.json is discovered when present.",
     )
+    parser.add_argument(
+        "--no-auto-discover-selected-chunks-evidence",
+        action="store_true",
+        help="Do not discover old docs/LOCAL_VALIDATION_EVIDENCE/*selected_chunks_evidence.json when no explicit selected-chunks evidence path is supplied.",
+    )
     return parser.parse_args()
 
 
@@ -219,6 +229,7 @@ def main() -> int:
         bool(args.recursive_include_unstamped),
         int(args.recursive_max_files),
         int(args.chunk_large_files_lines),
+        not bool(args.no_auto_discover_selected_chunks_evidence),
     )
     print(json.dumps({"passed": True, "outputs": outputs.splitlines(), "decision": bundle["decision"]}, indent=2))
     return 0
