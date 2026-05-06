@@ -230,13 +230,13 @@ def collect_from_broker_report(
                 caller=caller,
                 phase=phase,
                 round_id=round_id,
-                broker_source=str(broker_report.get('source') or broker_report.get('kind') or phase),
+                broker_source=str(broker_report.get('source') or broker_report.get('source_classification') or broker_report.get('kind') or phase),
                 broker_path=broker_path,
                 request=request,
                 result=raw_result,
             )
         )
-    if not entries and broker_report.get('tool_request_count') or broker_report.get('requested_tool_count'):
+    if (not entries) and (broker_report.get('tool_request_count') or broker_report.get('requested_tool_count')):
         entries.append(
             {
                 'caller_ai': caller,

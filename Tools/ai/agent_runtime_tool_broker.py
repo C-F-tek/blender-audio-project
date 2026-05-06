@@ -670,6 +670,10 @@ def render_markdown(report: dict[str, Any]) -> str:
     for key in (
         "passed",
         "dry_run",
+        "request_file",
+        "request_kind",
+        "source",
+        "source_classification",
         "tool_request_count",
         "tool_execution_count",
         "blocked_tool_count",

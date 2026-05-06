@@ -438,6 +438,9 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
                     "classification": data.get("classification"),
                     "classifications": data.get("classifications") if isinstance(data.get("classifications"), list) else [],
                     "role": data.get("role"),
+                    "source": data.get("source"),
+                    "source_classification": data.get("source_classification"),
+                    "request_kind": data.get("request_kind"),
                     "non_blocking": data.get("non_blocking"),
                     "tool_request_count": data.get("tool_request_count"),
                     "tool_execution_count": data.get("tool_execution_count"),
@@ -615,6 +618,7 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
     for item in provider.get("diagnostics", [])[:12]:
         lines.append(
             f"- `{item.get('path')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}` "
+            f"source=`{item.get('source')}` source_classification=`{item.get('source_classification')}` "
             f"provider_execution_performed=`{item.get('provider_execution_performed')}` errors=`{item.get('errors')}`"
         )
     lines.append("")
