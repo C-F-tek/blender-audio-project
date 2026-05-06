@@ -72,6 +72,10 @@ AI artifacts are separate from validation reports. Do not mix input-domain artif
 | `runtime_tool_capability_manifest_*.json` | current runtime capability manifest builder when present | report-contract validation / bundle validation | `schema_version`, `kind`, `generated_at`, `repo_root`, capability/tool entries, `warnings`, `errors` | Capability and guardrail context for broker/tool execution. Historical builder names must be checked against current code. |
 | `runtime_hardware_capability_manifest_*.json` | `Tools/ai/build_runtime_hardware_capability_manifest.py` in PR #192 or Full0To10 hardware capability package | report-contract validation / bundle validation | `schema_version`, `kind`, `generated_at`, `repo_root`, hardware/capability entries, side-effect guardrails, `warnings`, `errors` | Report-only hardware/capability context for CPU/GPU.0/NPU/NVIDIA-style lanes. |
 | `file_line_limit_report.json` | `Tools/validation/check_file_line_limits.py` | self-report plus JSON parseability | `schema_version`, `kind=file_line_limit_report`, `max_lines`, `checked_file_count`, `violation_count`, `violations`, `errors`, `passed` | Report-only 400-line policy evidence. Does not rewrite, split, delete or apply patches. |
+| `full0to10_quality_gate.json` | `Tools/ai/full0to10_quality_gate/*` | report-contract validation / future focused validator | `kind=full0to10_quality_gate`, `passed`, `checks`, `split_advisory`, `readiness`, `errors`, `warnings` | Report-only quality/readiness gate. Checks required scripts, source-side split-dir quarantine and report visibility. |
+| `full0to10_effective_use_summary.json` | `Tools/ai/full0to10_effective_use/*` | report-contract validation / future focused validator | `kind=full0to10_effective_use_optimization_summary`, `passed`, `outputs`, `provider_contracts`, `optimization`, `memory_report`, `tool_telemetry`, `errors`, `warnings` | Builds provider hardening, optimization, telemetry and quality product. Also writes local SQLite FTS5 DB under `output/**`; DB is not commit-ready. |
+| `full0to10_effective_use_memory_product` | `Tools/ai/full0to10_effective_use/memory_product.py` | future focused validator | `kind`, `passed`, `db_path`, `namespace`, `seed_count`, `search`, `manifest`, side-effect flags | Uses SQLite FTS5 memory add/search. Current safety flag semantics need refinement for local output DB writes; see TD-029. |
+| `full0to10_final_tool_product_manifest.json` | `Tools/ai/full0to10_final_product/*` | report-contract validation / future focused validator | `kind=full0to10_final_tool_product_manifest`, `passed`, `request`, `outputs`, `evidence`, `readiness`, component reports, `errors`, `warnings` | Product/evidence/readiness package, not provider runtime proof by itself. |
 | `full_toolbox_run_telemetry_summary_*.json` | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | report-contract validation / bundle validation | `schema_version`, `kind`, `generated_at`, `repo_root`, `gpu_npu`, `provider`, `runtime_tools`, `patch_plan`, `guardrails`, `warnings`, `errors` | Production summary that explains provider, GPU/NPU, broker, patch-plan and source-write state. |
 | `shared_toolbox_ai_to_ai_bundle_*.json` | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | bundle/final-summary validation | `schema_version`, `kind`, `generated_at`, `repo_root`, `evidence`, `telemetry`, `capabilities`, `recommendations`, `patch_plan`, `provider_diagnostics`, `guardrails` | Production AI-to-AI handoff. Must group evidence, patch plan, telemetry and capability references. |
 | `shared_toolbox_ai_to_ai_final_summary_*.json` | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | final-summary validation | `passed`, `patch_plan_summary_seen`, `patch_plan_count`, `provider_advisory_state`, `provider_failure_detected`, `deterministic_recovery_used`, `provider_failure_reasons`, `degraded_provider_components`, `patch_application_performed`, `source_writes_performed` | Compact state used by next AI/operator to avoid opening full bundles first. |
@@ -122,6 +126,7 @@ provider_execution_performed=false for pure inventory/count/report lanes
 source_writes_performed=false unless explicit apply/regeneration is selected
 patch_application_performed=false unless explicit patch apply is selected
 output paths stay under ignored output/** unless compact evidence is intentionally promoted
+SQLite DB files under output/** are local/private and non-commit-ready
 indexAI/code_chunks/** is not commit-ready source
 index repair is plan/report-first unless explicitly requested
 ```
@@ -137,6 +142,8 @@ index repair is plan/report-first unless explicitly requested
 - Add strict checks only after representative local artifacts are available.
 - Do not treat run-unica evidence as complete without telemetry/capability/final summary and relevant discovery/index/CSV/file-line surfaces.
 - Do not treat patch-plan or patch-spec artifacts as complete if their producing run state is unknown.
+- Do not treat quality/product/readiness artifacts as provider runtime proof when their safety flags say otherwise.
+- Do not treat local output SQLite DB writes as source writes, and do not commit generated DB files.
 - Do not treat large Markdown, file existence, dry-run matrix success, provider report existence or NPU smoke success as proof of run-unica completion.
 - Treat limitations as backlog to overcome, not as static reasons to skip current tools.
 
