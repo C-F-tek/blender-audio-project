@@ -23,37 +23,39 @@ Blender/audio remains the first application domain. It is not the boundary of th
 The active operating doctrine is **run unica parametrica + TUTTO SU TUTTO**.
 
 ```text
+master contains PR #187 unified launcher baseline
 run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 quick/balanced/deep/custom = presets or operator parameters
 -No* flags = explicit opt-out from selected lanes
+400-line policy applies to maintained docs and source files
+limitations are backlog to overcome, not reasons to skip available tools
 ```
 
 `-Full0To10` means whole-repository coverage across active lanes. `quick`, `balanced`, `deep` and `custom` change budgets, limits, rounds, context, tokens and depth; they do not change semantic scope.
 
-The perimeter of `tutto` is expandable. When a new tool, broker capability, validation lane, provider diagnostic, evidence surface, repository-consistency check, memory/context builder, discovery/index surface or CSV/count surface becomes production-ready, it must be added to the run unica full-run contract or explicitly excluded with rationale.
+The perimeter of `tutto` is expandable. When a new tool, broker capability, validation lane, provider diagnostic, evidence surface, repository-consistency check, memory/context builder, discovery/index surface, file-line-limit surface or CSV/count surface becomes production-ready, it must be added to the run unica full-run contract or explicitly excluded with rationale.
 
 Telemetry is AI-critical evidence. Future local/cloud AI agents must use telemetry to decide whether a lane was executed, failed, blocked, degraded, skipped intentionally or unavailable; file existence alone is not enough.
 
 ## Current branch context
 
-Current consolidation branch:
+Current repository baseline:
 
 ```text
-codex/unified-local-ai-refactor-launcher
+master after PR #187 merge
 ```
 
 Current active phase:
 
 ```text
-PR: #187 feat(workflow): add unified local AI refactor launcher
-Task: docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-Run: 20260505-143844
-Runtime bundle: ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
-Mode: review-only until explicit human instruction
+Current documentation PR: #193 docs(ai): align operational docs with post-PR187 code state
+Next clean report-only foundation candidate: PR #192
+Useful but diverged evidence branch: PR #191
+Mode: GitHub-only/API when maintainer is away
 ```
 
-Recent relevant commits on this branch include:
+Recent relevant baseline commits include:
 
 | Commit | Meaning |
 |---|---|
@@ -87,6 +89,7 @@ Current supporting docs:
 ```text
 FULL_RUN_UNICA_TUTTO_SU_TUTTO.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
 docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
@@ -94,6 +97,7 @@ docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
+docs/KNOWN_LIMITATIONS.md
 ```
 
 ## Current operator posture
@@ -104,7 +108,7 @@ one parameterized run unica
 Full0To10 perimeter = TUTTO SU TUTTO
 quick/balanced/deep/custom as parameters, not scope profiles
 provider/probe/workload-quality lanes included by default in Full0To10 unless disabled/unavailable
-CSV/count and discovery/index surfaces included when relevant
+CSV/count, file-line-limit and discovery/index surfaces included when relevant
 workload quality gate before primary advisory routing
 Ollama/GPU advisory quality-gated and opt-out under Full0To10
 NPU/OpenVINO probe/guardrail/decode diagnostic opt-out under Full0To10
@@ -114,6 +118,7 @@ runtime capability manifest surfaced in compact evidence
 full toolbox telemetry summary carried with AI-to-AI bundle
 patch specs generated as review-only artifacts
 patch application remains separate and explicit
+limitations stay visible as backlog to overcome
 no audio/media output during normal AI/tooling runs
 ```
 
@@ -199,6 +204,7 @@ Markdown inventory JSON/MD
 script inventory JSON/CSV/MD
 function/class/method inventory CSV
 Python line-count CSV/MD
+file line-limit JSON/MD report
 semantic chunk manifest JSON/MD
 selected chunk evidence JSON/MD
 repository consistency map/smoke JSON/MD
@@ -213,8 +219,34 @@ Do not commit output/**.
 Do not commit indexAI/code_chunks/**.
 Do not hand-edit generated indexes/chunks as source.
 Index repair is plan/report-first unless explicitly requested.
-CSV/count outputs support review and sizing but do not override source code or canonical docs.
+CSV/count and file-line-limit outputs support review and sizing but do not override source code or canonical docs.
 ```
+
+## 400-line and limitations status
+
+Maintained docs and source files should remain under 400 lines.
+
+```text
+Docs over 400 lines -> compact index + <file>.md/part-001.md layout
+Code over 400 lines -> compact entrypoint + responsibility-based module/package split
+Existing oversized files -> technical debt, not blind split targets
+```
+
+Use:
+
+```text
+Tools/validation/check_file_line_limits.py
+docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+```
+
+Limitations remain active as technical backlog:
+
+```text
+docs/KNOWN_LIMITATIONS.md
+docs/TECH_DEBT_TRACKER.md
+```
+
+They do not disable tools. A tool/lane is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
 
 ## Telemetry and AI handoff status
 
@@ -344,6 +376,7 @@ stable docs are indexed
 historical evidence is not source documentation
 no obsolete monolithic 0-to-10 runbook remains active
 no audio/media runtime instructions from AI/tooling entrypoints unless explicitly scoped
+active maintained docs stay under 400 lines or are split into index + parts
 ```
 
 ## Evidence and artifact policy

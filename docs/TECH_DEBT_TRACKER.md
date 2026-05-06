@@ -16,9 +16,10 @@ quick/balanced/deep/custom = presets or operator parameters, not scope
 telemetry accompanies evidence and patch plans for completeness
 CSV/index/discovery surfaces are evidence lanes when relevant
 large Markdown must not be a primary operational entrypoint
+limitations are overcome backlog, not static reasons to skip available tools
 ```
 
-Technical debt that affects manifest visibility, runtime telemetry, capability manifests, full toolbox telemetry summary, shared AI-to-AI bundles, discovery/index/CSV surfaces or oversized Markdown entrypoints should be tracked here when not fixed immediately.
+Technical debt that affects manifest visibility, runtime telemetry, capability manifests, full toolbox telemetry summary, shared AI-to-AI bundles, discovery/index/CSV surfaces, oversized Markdown entrypoints or measurable capability limits should be tracked here when not fixed immediately.
 
 ## Status values
 
@@ -69,20 +70,23 @@ P3 low
 | TD-024 | Obsolete MD drift after PR187 | P2 | in_progress | Many older docs contained legacy runbooks, old PR chains, old local commands or proof-of-work definitions without telemetry. | AI agents may restart from obsolete flows or request local commands while GitHub-only. | Continue MD/CODE audit; demote historical runbooks, remove active-start drift, and update onboarding/schema/status docs to reference launcher-first telemetry-complete handoff. | 2026-05-05 |
 | TD-025 | Python string patch hygiene | P1 | in_progress | Real `SyntaxWarning` findings showed Windows-style command examples with invalid escape sequences such as `\T` and `\e`; an attempted patch bundle also exposed fragility around multiline/triple-quote edits. | Future AI or manual patches may overcorrect by introducing raw multiline/triple-quoted strings, changing indentation, corrupting embedded Markdown/code fences or masking syntax warnings instead of fixing the exact command literal. | Treat triple-quote/raw multiline rewrites as high-risk for command-example cleanup. Prefer minimal one-line literal edits, POSIX-style relative examples like `./Tools/...`, or explicit doubled backslashes. Validate with `python -m py_compile`, `git diff --check`, line counts and focused diff review. | 2026-05-05 |
 | TD-026 | Large Markdown operational drift | P1 | in_progress | Some Markdown files are too large or too catalog-like to be opened reliably by future chats, local AI context packs or GitHub-only reviewers. Examples include `Tools/validation/README.md` and `docs/JSON_SCHEMAS.md`. | Oversized docs can become false primary entrypoints, hide stale commands, or force agents to rely on truncated content. | Keep oversized docs out of the primary reading path. Classify them as catalog/schema/historical/supporting/evidence, add compact bridge docs, and use Markdown inventory/length reports to find more candidates. | 2026-05-05 |
+| TD-027 | Full-toolbox limitation handling | P1 | in_progress | Historical limitation notes can be misread as reasons to skip tools or shrink Full0To10 scope. | Agents may avoid available tool lanes instead of measuring and overcoming limitations. | Use all available/relevant tools by default. Treat limitations as backlog to overcome. Mark lanes unavailable/degraded only from current code, telemetry, capability manifest, provider diagnostic or validator evidence. | 2026-05-06 |
+| TD-028 | Validation README reduction | P1 | open | `Tools/validation/README.md` remains oversized and contains long command blocks that can be truncated or corrupted by API/chat tooling. | Future agents may treat it as primary command source, copy stale commands, or miss the unified launcher as command owner. | Split or reduce it into a compact catalog under 400 lines, with detailed validator command examples moved to focused docs or generated help surfaces. | 2026-05-06 |
+| TD-029 | Effective-use memory write semantics | P2 | open | `full0to10_effective_use` creates/seeds an SQLite DB under `output/ai_runtime_memory/`, while the summary safety flags still report `persistent_memory_write_performed=false`. | Later agents may misread safety flags and miss that local output memory artifacts were written, or may confuse local ignored DB writes with source writes. | Clarify artifact fields or add a distinct `local_output_memory_write_performed` flag while preserving `source_writes_performed=false` and DB non-commit policy. | 2026-05-06 |
 
 ## Add a new item
 
 Use the next ID:
 
 ```text
-TD-027
+TD-030
 ```
 
 Template:
 
 | ID | Area | Priority | Status | Symptom | Risk | Recommended action | Last reviewed |
 |---|---|---:|---|---|---|---|---|
-| TD-027 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
+| TD-030 | area | P2 | open | symptom | risk | action | YYYY-MM-DD |
 
 ## Rules
 
@@ -94,4 +98,5 @@ Template:
 - Mark GitHub-only limitations explicitly when local validation cannot be performed.
 - Track missing telemetry/capability/final-summary enforcement when it affects full-run evidence or patch-plan completeness.
 - Track oversized Markdown that cannot be opened reliably as operational drift until it is split, summarized or demoted from primary entrypoints.
+- Treat limitations as backlog to overcome; do not use historical limitation notes to skip available Full0To10 tool lanes.
 - Treat triple-quote/raw multiline rewrites as high-risk when fixing Python command examples or embedded Markdown/code fences; prefer minimal literal edits and validate with `py_compile` plus focused diff review.

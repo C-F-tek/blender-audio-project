@@ -10,8 +10,9 @@ This document is guidance, not a command catalog. Current executable examples li
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
 ```
+
+`Tools/validation/README.md` is a validator catalog/reference. Do not treat it as the primary operational entrypoint if it is oversized or truncated.
 
 ## Core rule
 
@@ -25,6 +26,7 @@ model/tool output
   -> normalize
   -> schema validation
   -> path validation
+  -> file-line-limit visibility when maintainability is in scope
   -> Blender compatibility validation when relevant
   -> generated Python policy validation when relevant
   -> report
@@ -41,6 +43,8 @@ A full-run artifact, recommendation, evidence bundle, patch plan or patch spec i
 
 Telemetry is a guardrail accessory. It does not replace schema validation, evidence or patch plans; it explains whether the relevant lanes executed, failed, were blocked, degraded, disabled or planned-only.
 
+Limitations are backlog to overcome, not reasons to skip available tools. A lane/tool is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
+
 Guardrails must prevent these false positives:
 
 ```text
@@ -50,6 +54,7 @@ provider report exists -> therefore provider succeeded
 NPU smoke passed -> therefore NPU is advisory-ready
 dry-run matrix passed -> therefore Full0To10 passed
 reviewed patch spec exists -> therefore queued/apply is authorized
+historical limitation note exists -> therefore skip current tool lane
 ```
 
 ## Local validation assets
@@ -57,12 +62,14 @@ reviewed patch spec exists -> therefore queued/apply is authorized
 | Local asset | Role |
 |---|---|
 | `Tools/validation/` | Non-invasive validation scripts. |
-| `docs/JSON_SCHEMAS.md` | Existing JSON schema notes and report contract map. |
+| `Tools/validation/check_file_line_limits.py` | Report-only 400-line policy validator for maintained docs and source files. |
+| `docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md` | Compact contract note for the line-limit validator. |
+| `docs/JSON_SCHEMAS.md` | Existing JSON schema notes and report contract map; broad catalog only. |
 | `docs/AI_ARTIFACT_SCHEMAS.md` | AI artifact, telemetry and bundle schema notes. |
 | `docs/QUALITY_GATE.md` | Acceptance rules for generated packages. |
 | `Tools/ai/run_pipeline_dry_run_matrix.py` | Repeatable AI pipeline dry-run matrix. Planned-only proof, not full-run proof. |
 | `Tools/ai/build_runtime_tool_usage_telemetry.py` | Runtime tool usage telemetry. |
-| `Tools/ai/build_runtime_tool_capability_manifest.py` | Runtime tool capability and guardrail manifest. |
+| Runtime/hardware capability manifest builders | Runtime or hardware lane capability and guardrail manifests from current code/evidence. |
 | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Full-run telemetry summary. |
 | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production AI-to-AI bundle. |
 | `output/validation/` | Recommended local validation report output folder. Ignored unless compact evidence is promoted. |
@@ -80,7 +87,6 @@ Command ownership:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
 ```
 
 ### 2. Schema conformance
@@ -115,9 +121,10 @@ Full-run-derived artifacts should also reference the companion handoff surfaces:
 
 ```text
 runtime_tool_usage_telemetry
-runtime_tool_capability_manifest
+runtime_or_hardware_capability_manifest
 full_toolbox_run_telemetry_summary
 shared_ai_to_ai_bundle_or_final_summary
+file_line_limit_report when maintainability is in scope
 ```
 
 ### 3. Repository path safety
@@ -156,7 +163,7 @@ Blender/audio/media runtime remains application-domain work and must not be trig
 
 ### 5. Policy validation
 
-Use existing policy validators for generated files. Commands are owned by the unified launcher runbook and `Tools/validation/README.md`.
+Use existing policy validators for generated files. Commands are owned by the unified launcher runbook and compact task docs.
 
 ### 6. Telemetry and capability validation
 
@@ -164,10 +171,11 @@ When tools, broker calls, provider lanes or patch plans participate in a product
 
 ```text
 runtime_tool_usage_telemetry_<STAMP>.json/md
-runtime_tool_capability_manifest_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md or runtime_hardware_capability_manifest_<STAMP>.json/md
 full_toolbox_run_telemetry_summary_<STAMP>.json/md
 shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
 shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
+file_line_limit_report.json/md when maintainability is in scope
 ```
 
 Required questions:
@@ -181,6 +189,7 @@ which provider lanes degraded
 whether deterministic recovery was used
 whether source writes happened
 whether patch application happened
+which docs/source files exceed 400 lines when maintainability is in scope
 ```
 
 ## Guardrail failure behavior
@@ -240,7 +249,8 @@ When a prompt or provider changes, the agent should check:
 - whether paths remain safe;
 - whether output quality degraded in obvious ways;
 - whether telemetry reports provider degradation or deterministic recovery;
-- whether the shared AI-to-AI bundle still carries evidence, patch-plan and telemetry references together.
+- whether the shared AI-to-AI bundle still carries evidence, patch-plan and telemetry references together;
+- whether file-line-limit evidence changed when maintainability is in scope.
 
 ## Practical acceptance checklist
 

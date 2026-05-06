@@ -26,14 +26,14 @@ Use it before editing code, creating a new Blender package, promoting a tool int
 | `Scripting/shared/` | Shared utility target | Package-neutral path, JSON, FFmpeg, Blender compatibility, render profile, diagnostics and panel helpers should live here. Some referenced modules remain planned/future-facing until implemented. |
 | `Tools/npu/` | AI/NPU/Ollama support tooling | Contains context builders, dual-AI pipeline, NPU review and runtime utilities. NPU remains probe/diagnostic unless promoted by quality gates. |
 | `Tools/npu/pipeline/` | App-agnostic NPU helper package | Staged helper contracts, validators, fixtures and readiness gates. Not wired into runtime orchestrator until local validation/index regeneration pass. |
-| `Tools/ai/` | AI orchestration, state, evidence, telemetry and handoff tooling | Builds agent state, memory, provider diagnostics, deterministic recommendations, broker reports, runtime telemetry, capability manifests, telemetry summaries and AI-to-AI bundles. |
+| `Tools/ai/` | AI orchestration, state, evidence, telemetry and handoff tooling | Builds agent state, memory, provider diagnostics, deterministic recommendations, broker reports, runtime telemetry, hardware/capability manifests, telemetry summaries and AI-to-AI bundles. |
 | `Tools/ai/pipeline/` | Modular AI artifact pipeline | Focused modules for defaults, models, preflight, scheduling, reports, guardrails and orchestration. |
-| `Tools/validation/` | Repository validators | Non-invasive syntax, docs, AI pipeline, NPU helper, generated artifact and policy validators. `README.md` is a catalog/reference, not a primary operational entrypoint if too large for context. |
+| `Tools/validation/` | Repository validators | Non-invasive syntax, docs, AI pipeline, NPU helper, generated artifact, file-line-limit and policy validators. `README.md` is a catalog/reference, not a primary operational entrypoint if too large for context. |
 | `Tools/workflow/` | Local workflow runners and helper shells | Unified launcher is canonical; additional shell/GUI/helper scripts are supporting and governed by `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md`. |
 | `Tools/repo_patch_runner/` | Structured patch runner tooling | Supports repository modification workflows. Must remain explicit/manual-review before apply. |
 | `indexAI/` | Generated AI-oriented project index | Generated context and patch material. Do not hand-refactor as source. Do not commit `indexAI/code_chunks/**`. |
 | `patch_specs/` | Patch specification artifacts | Structured patch records and applied patch metadata. Review-only unless explicit apply path is authorized. |
-| `docs/` | Stable documentation | Human and AI-readable project contracts. Large Markdown must not be primary entrypoint without a compact bridge. |
+| `docs/` | Stable documentation | Human and AI-readable project contracts. Large Markdown must not be primary entrypoint without a compact bridge. Maintained docs follow the 400-line policy. |
 | `docs/LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable evidence | Review snapshots and production handoff artifacts. Telemetry/capability/bundle files here accompany evidence and patch plans. |
 | `examples/` | Example area | Reserved for reproducible examples and small fixtures. |
 
@@ -44,7 +44,8 @@ run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 quick/balanced/deep/custom = presets or operator parameters, not scope
 -No* flags = explicit opt-out from selected lanes
-CSV/index/discovery surfaces are evidence lanes when relevant
+CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
+limitations are backlog to overcome, not reasons to skip available tools
 ```
 
 Module visibility is part of the contract. A module/tool promoted into a run-unica lane must expose its outputs through manifest, telemetry, capability, evidence or bundle surfaces. The perimeter may expand, but expansion must be explicit in docs and manifest/report outputs.
@@ -58,21 +59,22 @@ Telemetry is a completeness accessory for evidence and patch plans. It does not 
 3. Read `CHATGPT/README.md`.
 4. Read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md`.
 5. Read `docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md`.
-6. Read `README.md`.
-7. Read `WORKFLOW.md`.
-8. Read `docs/README.md`.
-9. Read `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md`.
-10. For local AI runs, read `docs/LOCAL_AI_RUN_BOOTSTRAP.md`.
-11. Read `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` for run-unica work.
-12. Read `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` before changing launcher manifest fields.
-13. Read `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` before changing broker, provider, telemetry, bundle, discovery, CSV or evidence flow.
-14. Read this file to locate repository areas.
-15. Read `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` before promoting workflow helpers.
-16. Read `docs/DATA_FLOW.md` and `docs/LOCAL_AI_WORKFLOW.md` for provider/data semantics.
-17. Use `Tools/validation/README.md` as validator/tool catalog when changing validators/workflows; do not treat it as primary entrypoint if too large/truncated.
-18. For NPU helper work, read `Tools/npu/pipeline/README.md`.
-19. Read `Scripting/README.md` only for Blender package work.
-20. Read the README of the target package and inspect the actual script before editing.
+6. Read `docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md`.
+7. Read `README.md`.
+8. Read `WORKFLOW.md`.
+9. Read `docs/README.md`.
+10. Read `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md`.
+11. For local AI runs, read `docs/LOCAL_AI_RUN_BOOTSTRAP.md`.
+12. Read `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` for run-unica work.
+13. Read `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` before changing launcher manifest fields.
+14. Read `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` before changing broker, provider, telemetry, bundle, discovery, CSV or evidence flow.
+15. Read this file to locate repository areas.
+16. Read `docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md` before promoting workflow helpers.
+17. Read `docs/DATA_FLOW.md` and `docs/LOCAL_AI_WORKFLOW.md` for provider/data semantics.
+18. Use `Tools/validation/README.md` as validator/tool catalog when changing validators/workflows; do not treat it as primary entrypoint if too large/truncated.
+19. For NPU helper work, read `Tools/npu/pipeline/README.md`.
+20. Read `Scripting/README.md` only for Blender package work.
+21. Read the README of the target package and inspect the actual script before editing.
 
 `docs/PROJECT_AI_CONSCIOUSNESS.md` is historical/orientation material. It must not override the canonical flow, launcher contract or guardrails above.
 
@@ -107,7 +109,7 @@ Telemetry is a completeness accessory for evidence and patch plans. It does not 
 |---|---|---|
 | `Tools/ai/agent_runtime_tool_broker.py` | Runtime broker for safe report-only tool calls. | Produces broker report consumed by telemetry and bundle. |
 | `Tools/ai/build_runtime_tool_usage_telemetry.py` | Runtime tool usage telemetry builder. | Counts executed/failed/blocked calls and preserves broker report inputs. |
-| `Tools/ai/build_runtime_tool_capability_manifest.py` | Capability manifest builder. | Documents available broker/tool capabilities and guardrails. |
+| `Tools/ai/full0to10_hardware_capability/` | Full0To10 hardware/capability package. | Capability visibility for CPU/GPU/NPU/NVIDIA-style lanes and report-only contracts. |
 | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Full toolbox telemetry summary builder. | Cross-run summary of broker/provider/GPU/NPU/patch-plan state. |
 | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production AI-to-AI bundle builder. | Groups evidence, patch-plan, telemetry, capability and final summary for next AI. |
 | `Tools/ai/build_deterministic_recommendations.py` | Deterministic recommendations and recovery. | Supports degraded-provider recovery and safe recommendations. |
@@ -220,6 +222,7 @@ docs/LOCAL_AI_TASKS/forgotten-scripts-documentation-audit.md
 | `Tools/validation/check_generated_python_policy.py` | CLI validator for generic generated Python policy | Keep as the language-level layer before application adapters. |
 | `Tools/validation/check_generated_artifact_path_policy.py` | Generic safe-destination validator for generated artifact paths | Use before allowing generated outputs outside existing safe prefixes. |
 | `Tools/validation/check_generated_blender_script_policy.py` | Blender-specific generated Python script policy adapter | Compose generic Python rules with Blender assumptions here, not in the generic policy engine. |
+| `Tools/validation/check_file_line_limits.py` | Report-only 400-line policy validator | Measures maintained docs/source file length; no rewrite, split or delete. |
 | `Tools/validation/check_ai_dry_run_matrix_contract.py` | Dry-run matrix report contract validator | Keep as report-contract validation, not runtime execution. |
 | `Tools/validation/check_npu_pipeline_modules.py` | NPU helper import/contract smoke validator | Keep provider-free, Blender-free and runtime-free. |
 | `Tools/validation/check_npu_pipeline_helper_tests.py` | JSON-report wrapper for NPU helper unit tests | Keep deterministic and temporary-directory only. |
@@ -305,4 +308,4 @@ Do not combine broad code motion, behavior changes, and artistic scene changes i
 
 ## Not specified
 
-A full function-level module index is not manually maintained here. Generate it from code when needed by using the project indexing tools, script inventory, Python line-count CSV and function/class/method inventory surfaces.
+A full function-level module index is not manually maintained here. Generate it from code when needed by using the project indexing tools, script inventory, Python line-count CSV, file-line-limit reports and function/class/method inventory surfaces.

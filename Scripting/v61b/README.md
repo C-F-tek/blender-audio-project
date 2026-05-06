@@ -4,6 +4,8 @@
 
 It should be treated as a working production-oriented package and as the qualitative model for future generated packages.
 
+This is application-domain runtime code. It must not be executed by normal local-AI run-unica validation unless an explicit Blender/audio/media task scopes it.
+
 ## Role in the project
 
 `v61b` is the current reference for:
@@ -96,23 +98,37 @@ Correct migration order:
 - Keep render output mode and encoding mode separate.
 - Keep artistic behavior changes separate from infrastructure refactors.
 - Keep hotpatches focused and reversible.
+- Do not run Blender render, FFmpeg encode/mux or audio/media output from normal AI/tooling validation.
 
 ## Encoding notes
 
 The current package contains FFmpeg support for image-sequence encoding. This logic should eventually become shared and profile-based, but existing scripts should remain operational until the shared encoder is validated.
 
+## 400-line policy
+
+Maintained package docs and source files follow the repository 400-line policy.
+
+```text
+Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
+Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+```
+
+Large existing scripts are technical debt and should be split only through focused package work, not during unrelated AI/tooling documentation updates.
+
 ## AI generation guidance
 
 When an AI system edits `v61b`:
 
-1. read the root documentation and `AGENTS.md`;
+1. read `AGENTS.md` and current operational docs;
 2. read this README;
 3. inspect the target source file;
 4. avoid broad rewrites;
 5. preserve current entry points;
 6. report changed files, purpose, risks, tests and line counts;
-7. document any Blender-version assumption.
+7. document any Blender-version assumption;
+8. state whether Blender/FFmpeg/media runtime was not run or was explicitly scoped.
 
 ## Not specified
 
-A full function-level index is not manually maintained here. Use the project code index generators when detailed symbol-level context is required.
+A full function-level index is not manually maintained here. Use the project code index generators, script inventory, line-count and file-line-limit reports when detailed symbol-level context is required.
