@@ -334,6 +334,27 @@ def append_default_broker_report_if_present(repo_root: Path, stamp: str, values:
     return paths
 
 
+def classify_broker_caller_phase(
+    broker_report: dict[str, Any],
+    broker_path: str,
+    default_caller: str,
+    default_phase: str,
+) -> tuple[str, str]:
+    source = str(broker_report.get("source") or broker_report.get("source_classification") or "").lower()
+    path_text = broker_path.lower()
+    marker = f"{source} {path_text}"
+
+    if "gpu0" in marker:
+        return "gpu0", "gpu0_peer_runtime_tool_broker"
+    if "npu" in marker:
+        return "npu", "npu_micro_runtime_tool_broker"
+    if "gpu1" in marker:
+        return "gpu", "gpu1_runtime_tool_broker"
+    if "gpu" in marker:
+        return "gpu", "gpu_runtime_tool_broker"
+    return default_caller, default_phase
+
+
 def collect_explicit_broker_reports(repo_root: Path, values: Any) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     entries: list[dict[str, Any]] = []
     warnings: list[str] = []
@@ -352,13 +373,19 @@ def collect_explicit_broker_reports(repo_root: Path, values: Any) -> tuple[list[
         if not isinstance(data, dict):
             warnings.append(f"{rel}: broker report is not a JSON object")
             continue
+        caller, phase = classify_broker_caller_phase(
+            data,
+            rel,
+            "orchestrator",
+            "explicit_runtime_tool_broker_bootstrap",
+        )
         entries.extend(
             collect_from_broker_report(
                 repo_root=repo_root,
                 broker_report=data,
                 broker_path=rel,
-                caller="orchestrator",
-                phase="explicit_runtime_tool_broker_bootstrap",
+                caller=caller,
+                phase=phase,
                 round_id=index,
             )
         )

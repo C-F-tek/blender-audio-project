@@ -418,6 +418,42 @@ def extract_tool_requests(data: dict[str, Any]) -> list[dict[str, Any]]:
     return [item for item in requests if isinstance(item, dict)]
 
 
+def first_tool_request_source(tool_requests: list[dict[str, Any]]) -> str:
+    for item in tool_requests:
+        source = str(item.get("source") or "").strip()
+        if source:
+            return source
+    return ""
+
+
+def infer_request_source(requests_data: dict[str, Any], request_path: Path) -> str:
+    for key in ("source", "source_lane", "target_lane"):
+        value = str(requests_data.get(key) or "").strip()
+        if value:
+            return value
+
+    tool_request_source = first_tool_request_source(extract_tool_requests(requests_data))
+    if tool_request_source:
+        return tool_request_source
+
+    kind = str(requests_data.get("kind") or "").strip()
+    if kind == "gpu0_peer_tool_requests":
+        return "gpu0_peer_companion"
+    if kind == "npu_gpu_deep_review_audit":
+        return "npu_micro_peer_assistant"
+    if kind == "agent_runtime_tool_requests":
+        return "gpu1_primary_advisory"
+
+    path_text = request_path.as_posix().lower()
+    if "gpu0" in path_text:
+        return "gpu0_peer_companion"
+    if "npu_micro" in path_text or "/npu_" in path_text:
+        return "npu_micro_peer_assistant"
+    if "gpu1" in path_text:
+        return "gpu1_primary_advisory"
+    return kind or "unknown"
+
+
 def execute_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str]:
     try:
         completed = subprocess.run(
@@ -546,6 +582,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     request_path = resolve_path(repo_root, args.request_file)
     requests_data = read_json_report(request_path)
     tool_requests = extract_tool_requests(requests_data)
+    request_source = infer_request_source(requests_data, request_path)
     stamp = args.stamp or datetime.now().strftime("%Y%m%d-%H%M%S")
     out_dir = resolve_path(repo_root, args.tool_output_dir or f"output/ai_runtime_tools/{stamp}")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -586,7 +623,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "repo_root": str(repo_root),
         "request_file": repo_rel(request_path, repo_root),
         "request_kind": requests_data.get("kind"),
-        "source": requests_data.get("source") or requests_data.get("source_lane") or requests_data.get("target_lane"),
+        "source": request_source,
+        "source_classification": request_source,
         "tool_output_dir": repo_rel(out_dir, repo_root),
         "passed": not failed and not dangerous_guardrail,
         "errors": [f"{item.get('id')}: {err}" for item in failed for err in item.get("errors", [])]

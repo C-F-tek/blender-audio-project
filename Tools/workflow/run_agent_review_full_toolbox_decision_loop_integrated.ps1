@@ -119,6 +119,7 @@ Write-Host "Repo: $RepoRootPath"
 Write-Host "Stamp: $Stamp"
 Write-Host "RunGpuNpuProvider: $RunGpuNpuProvider"
 Write-Host "RequireProviderArtifacts: $RequireProviderArtifacts"
+Write-Host "Python: $script:RepoPythonExe"
 Write-Host "Integration: base workflow + agent_review_warning_policy ledger"
 
 & .\Tools\workflow\run_agent_review_full_toolbox_decision_loop.ps1 @RunnerParams
