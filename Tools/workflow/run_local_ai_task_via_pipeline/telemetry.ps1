@@ -98,8 +98,110 @@ function ConvertTo-LocalAiPipelineTelemetryMarkdown {
         $lines += "| ``$($summary.name)`` | ``$($summary.exists)`` | ``$($summary.json_ok)`` | ``$($summary.passed)`` | ``$($summary.error_count)`` | ``$($summary.warning_count)`` | ``$($summary.path)`` |"
     }
 
+    $lines += ""
+    $lines += "## Provider Execution Evidence"
+    $lines += ""
+    $lines += "| Name | Exists | JSON OK | Provider execution performed | Signals | Path |"
+    $lines += "|---|---:|---:|---:|---|---|"
+    foreach ($entry in @($Telemetry.guardrails.provider_execution_evidence)) {
+        $signals = ""
+        if ($null -ne $entry.signals) { $signals = (@($entry.signals) -join ", ") }
+        $lines += "| ``$($entry.name)`` | ``$($entry.exists)`` | ``$($entry.json_ok)`` | ``$($entry.provider_execution_performed)`` | ``$signals`` | ``$($entry.path)`` |"
+    }
+
     return ($lines -join [Environment]::NewLine) + [Environment]::NewLine
 }
+
+function Get-LocalAiOptionalProperty {
+    param(
+        [object]$Object,
+        [string]$Name
+    )
+    if ($null -eq $Object) { return $null }
+    $property = $Object.PSObject.Properties[$Name]
+    if ($null -eq $property) { return $null }
+    return $property.Value
+}
+
+function Test-LocalAiProviderExecutionSignal {
+    param([object]$Value)
+    if ($null -eq $Value) { return $false }
+    if ($Value -is [bool]) { return [bool]$Value }
+    if ($Value -is [string]) {
+        return $Value.Trim().ToLowerInvariant() -eq "true"
+    }
+    return $false
+}
+
+function Add-LocalAiProviderSignal {
+    param(
+        [System.Collections.Generic.List[string]]$Signals,
+        [string]$Signal
+    )
+    if (-not [string]::IsNullOrWhiteSpace($Signal) -and -not $Signals.Contains($Signal)) {
+        $Signals.Add($Signal) | Out-Null
+    }
+}
+
+function Get-LocalAiProviderExecutionEvidence {
+    param(
+        [string]$Name,
+        [string]$PathValue
+    )
+    $normalized = ""
+    $signals = [System.Collections.Generic.List[string]]::new()
+    $item = [ordered]@{
+        name = $Name
+        path = ""
+        exists = $false
+        json_ok = $false
+        provider_execution_performed = $false
+        signals = @()
+        error = ""
+    }
+    if ([string]::IsNullOrWhiteSpace($PathValue)) { return $item }
+    $normalized = $PathValue.Replace("\", "/")
+    $item.path = $normalized
+    $full = Resolve-PlannedPath $normalized
+    if (-not (Test-Path -LiteralPath $full -PathType Leaf)) { return $item }
+    $item.exists = $true
+    try {
+        $data = Get-Content -LiteralPath $full -Raw -Encoding UTF8 | ConvertFrom-Json
+        $item.json_ok = $true
+        if (Test-LocalAiProviderExecutionSignal (Get-LocalAiOptionalProperty -Object $data -Name "provider_execution_performed")) {
+            Add-LocalAiProviderSignal -Signals $signals -Signal "root.provider_execution_performed"
+        }
+        $ollama = Get-LocalAiOptionalProperty -Object $data -Name "ollama"
+        if (Test-LocalAiProviderExecutionSignal (Get-LocalAiOptionalProperty -Object $ollama -Name "used")) {
+            Add-LocalAiProviderSignal -Signals $signals -Signal "ollama.used"
+        }
+        $providerReport = Get-LocalAiOptionalProperty -Object $data -Name "provider_result_report"
+        if (Test-LocalAiProviderExecutionSignal (Get-LocalAiOptionalProperty -Object $providerReport -Name "provider_execution_performed")) {
+            Add-LocalAiProviderSignal -Signals $signals -Signal "provider_result_report.provider_execution_performed"
+        }
+        foreach ($lane in @((Get-LocalAiOptionalProperty -Object $data -Name "lane_reports"))) {
+            if (Test-LocalAiProviderExecutionSignal (Get-LocalAiOptionalProperty -Object $lane -Name "provider_execution_performed")) {
+                $laneName = [string](Get-LocalAiOptionalProperty -Object $lane -Name "lane")
+                if ([string]::IsNullOrWhiteSpace($laneName)) { $laneName = "unknown" }
+                Add-LocalAiProviderSignal -Signals $signals -Signal "lane_reports.$laneName.provider_execution_performed"
+            }
+        }
+        $item.signals = @($signals)
+        $item.provider_execution_performed = (@($signals).Count -gt 0)
+    }
+    catch {
+        $item.error = ("{0}: {1}" -f $_.Exception.GetType().Name, $_.Exception.Message)
+    }
+    return $item
+}
+
+$ProviderExecutionEvidence = @(
+    (Get-LocalAiProviderExecutionEvidence -Name "packet" -PathValue "$PipelineRel/$Basename.json"),
+    (Get-LocalAiProviderExecutionEvidence -Name "multistep_packet" -PathValue "$PipelineRel/$MultistepBasename.json"),
+    (Get-LocalAiProviderExecutionEvidence -Name "local_provider_probe" -PathValue "output/validation/local_provider_probe.json"),
+    (Get-LocalAiProviderExecutionEvidence -Name "npu_decode_smoke" -PathValue "output/validation/npu_decode_smoke_diagnostic.json")
+)
+$ProviderExecutionPerformed = (@($ProviderExecutionEvidence | Where-Object { $_.provider_execution_performed }).Count -gt 0)
 
 $TelemetryJsonPath = Resolve-PlannedPath $TelemetryJson
 $TelemetryMdPath = Resolve-PlannedPath $TelemetryMd
@@ -162,8 +264,10 @@ $Telemetry = [ordered]@{
     }
     guardrails = [ordered]@{
         provider_execution_requested = [bool]($UsePrimaryAdvisoryProvider -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke)
-        provider_execution_performed = $false
+        provider_execution_performed = [bool]$ProviderExecutionPerformed
         provider_execution_performed_by_adapter = $false
+        provider_execution_detected_from_reports = [bool]$ProviderExecutionPerformed
+        provider_execution_evidence = $ProviderExecutionEvidence
         patch_application_performed = $false
         source_writes_performed = $false
         blender_runtime_execution_performed = $false

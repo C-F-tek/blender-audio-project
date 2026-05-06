@@ -187,9 +187,14 @@ def render_git_push_helper(lines: list[str]) -> None:
     lines.append("## Git push helper")
     lines.append("")
     lines.append("```powershell")
-    lines.append("git add docs/LOCAL_VALIDATION_EVIDENCE/")
+    lines.append("git status --short")
+    lines.append("# Replace <bundle_basename> with the generated evidence bundle basename.")
+    lines.append("git add -- `")
+    lines.append("  .\\docs\\LOCAL_VALIDATION_EVIDENCE\\<bundle_basename>.json `")
+    lines.append("  .\\docs\\LOCAL_VALIDATION_EVIDENCE\\<bundle_basename>.md")
     lines.append('git commit -m "test: add local ai workflow evidence bundle"')
     lines.append("git push")
+    lines.append("# Never use: git add docs/LOCAL_VALIDATION_EVIDENCE/")
     lines.append("```")
 
 

@@ -39,6 +39,12 @@ $Manifest = [ordered]@{
     run_npu_probe = [bool]$RunNpuProbe
     run_npu_decode_smoke = [bool]$RunNpuDecodeSmoke
     provider_execution_requested = [bool]($UsePrimaryAdvisoryProvider -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke)
+    provider_execution_detection_report_paths = @(
+        "$PipelineRel/$Basename.json",
+        "$PipelineRel/$MultistepBasename.json",
+        "output/validation/local_provider_probe.json",
+        "output/validation/npu_decode_smoke_diagnostic.json"
+    )
     patch_application_performed = $false
     provider_execution_performed_by_adapter = $false
     build_evidence_requested = [bool]$BuildEvidence
