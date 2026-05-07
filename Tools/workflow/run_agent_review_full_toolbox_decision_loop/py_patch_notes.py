@@ -51,7 +51,7 @@ def run_patch_notes_quality_product(ctx: WorkflowContext) -> None:
         "--commit",
         git_output(ctx.repo_root, "rev-parse", "--short", "HEAD"),
         "--issue",
-        "198",
+        str(getattr(ctx.args, "IssueNumber", "") or ""),
         "--request",
         f"Build manual-review patch notes quality product for {ctx.args.Stamp}.",
         "--output",
