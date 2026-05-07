@@ -66,6 +66,9 @@ SWITCHES = (
     "UseLegacyPowerShellImplementation",
     "SkipNpuMicroProvider",
     "SkipNpuLiveToolSeed",
+    "BuildEvidence",
+    "GeneratePatchSpecs",
+    "ContinueOnValidationError",
 )
 
 
