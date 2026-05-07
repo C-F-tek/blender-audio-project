@@ -5,6 +5,7 @@ param(
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
     [switch]$RunGpuNpuProvider,
     [switch]$RequireProviderArtifacts,
+    [switch]$RunLegacyNpuAuditorProvider,
     [switch]$SkipMemoryReload,
     [switch]$SkipPostValidationPacket,
     [switch]$SkipSharedToolboxBundle,
@@ -110,6 +111,7 @@ $RunnerParams = @{
 }
 if ($RunGpuNpuProvider) { $RunnerParams.RunGpuNpuProvider = $true }
 if ($RequireProviderArtifacts) { $RunnerParams.RequireProviderArtifacts = $true }
+if ($RunLegacyNpuAuditorProvider) { $RunnerParams.RunLegacyNpuAuditorProvider = $true }
 if ($SkipMemoryReload) { $RunnerParams.SkipMemoryReload = $true }
 if ($SkipPostValidationPacket) { $RunnerParams.SkipPostValidationPacket = $true }
 if ($SkipSharedToolboxBundle) { $RunnerParams.SkipSharedToolboxBundle = $true }
@@ -119,6 +121,7 @@ Write-Host "Repo: $RepoRootPath"
 Write-Host "Stamp: $Stamp"
 Write-Host "RunGpuNpuProvider: $RunGpuNpuProvider"
 Write-Host "RequireProviderArtifacts: $RequireProviderArtifacts"
+Write-Host "RunLegacyNpuAuditorProvider: $RunLegacyNpuAuditorProvider"
 Write-Host "Python: $script:RepoPythonExe"
 Write-Host "Integration: base workflow + agent_review_warning_policy ledger"
 

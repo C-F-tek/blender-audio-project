@@ -86,6 +86,7 @@ param(
     [switch]$UsePrimaryAdvisoryProvider,
     [switch]$RunMultistepProviderWorkflow,
     [switch]$RunLegacyFullToolboxIntegrated,
+    [switch]$RunLegacyNpuAuditorProvider,
     [switch]$RunOllamaProbe,
     [switch]$RunNpuProbe,
     [switch]$RunNpuDecodeSmoke,
@@ -998,6 +999,7 @@ Write-Host "[INFO] RunDir: $RunDir"
 Write-Host "[INFO] Ollama advisory: $UseOllamaAdvisory"
 Write-Host "[INFO] Primary advisory provider: $UsePrimaryAdvisoryProvider"
 Write-Host "[INFO] Multistep provider workflow: $RunMultistepProviderWorkflow"
+Write-Host "[INFO] Legacy NPU auditor provider: $RunLegacyNpuAuditorProvider"
 Write-Host "[INFO] Patch specs: $GeneratePatchSpecs"
 Write-Host "[INFO] Reset apply: $ApplyReset"
 foreach ($warning in $Warnings) { Write-Warning $warning }
@@ -1230,6 +1232,7 @@ if ($RunLegacyFullToolboxIntegrated) {
     }
     if ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality) { $LegacyArgs.RunGpuNpuProvider = $true }
     if ($StrictRealRunActivationEnabled) { $LegacyArgs.RequireProviderArtifacts = $true }
+    if ($RunLegacyNpuAuditorProvider) { $LegacyArgs.RunLegacyNpuAuditorProvider = $true }
     if ($NoMemoryWrite) { $LegacyArgs.SkipMemoryReload = $true }
     if ($NoEvidence) { $LegacyArgs.SkipSharedToolboxBundle = $true }
 # IA-CARMINE-GPU0-PROVIDER-SUPPORT-BEGIN
@@ -1500,6 +1503,7 @@ $Manifest = [ordered]@{
     context_pack_max_file_chars = $ContextPackMaxFileChars
     agent_state_max_memory_chars = $AgentStateMaxMemoryChars
     legacy_full_toolbox_integrated_requested = [bool]$RunLegacyFullToolboxIntegrated
+    legacy_npu_auditor_provider_requested = [bool]$RunLegacyNpuAuditorProvider
     python_exe = $ResolvedPythonExe
     python_exe_requested = $PythonExe
     pythonpath = $env:PYTHONPATH

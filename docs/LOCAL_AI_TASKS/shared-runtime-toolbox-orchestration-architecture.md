@@ -49,13 +49,14 @@ The orchestrator is the control-plane.
 It is responsible for:
 
 - launching GPU planning;
-- launching NPU audits;
+- launching GPU0 peer-support work at startup and from GPU checkpoints;
+- launching NPU micro-support work at startup and from GPU checkpoints, with legacy NPU audits only when explicitly requested;
 - collecting checkpoint reports;
 - collecting GPU and NPU `tool_requests`;
 - scheduling report-only tool execution;
 - passing requests to the broker;
 - reinjecting broker reports into later context;
-- preserving non-blocking behavior for NPU audits;
+- preserving non-blocking behavior for NPU support;
 - surfacing guardrail counters in final reports.
 
 The orchestrator decides when a request is executed, but it does not implement the tools themselves.
@@ -128,10 +129,11 @@ The architectural preference is to keep this path symmetrical with the NPU path.
 
 ## NPU path
 
-The NPU auditor is non-blocking and non-primary.
+The production NPU lane is a bounded micro-support lane. The legacy NPU auditor remains available for diagnostics, but it is not enabled by default in Full0To10.
 
 It may:
 
+- start from the orchestrator `round_000` bootstrap seed so NPU readiness is visible at the beginning of the run;
 - read GPU checkpoints;
 - read runtime toolbox context;
 - classify provider states;
@@ -140,7 +142,16 @@ It may:
 
 The NPU must not execute tools directly. NPU tool requests are routed through the orchestrator and broker.
 
-In full-toolbox peer exchange, NPU micro support is bounded separately from heavy NPU audit waits and remains non-blocking.
+NPU provider text evidence and NPU micro tool-support evidence are separate success surfaces. A timed-out or empty NPU provider response is recorded as provider degradation, but the micro lane can still be operationally successful when it emits valid brokered tool requests and the runtime heap closes the matching broker results with zero pending requests.
+
+In full-toolbox peer exchange, NPU micro support sees GPU1/GPU0/broker/runtime-heap context, may emit brokered tool requests, and remains non-blocking. Heavy NPU audit waits require an explicit legacy-auditor flag and must not be confused with product NPU support.
+
+The orchestrator owns both synchronization points:
+
+```text
+startup barrier: GPU1 primary process + GPU0 peer support + NPU micro support + deterministic/broker bootstrap
+close barrier: harvest or terminate active GPU0/NPU/legacy support subprocesses before final telemetry and bundle reports
+```
 
 ## Memory model
 

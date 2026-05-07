@@ -127,6 +127,52 @@ def npu_provider_evidence(orchestrator: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def npu_micro_support_evidence(orchestrator: dict[str, Any]) -> dict[str, Any]:
+    supports = [item for item in safe_list(orchestrator.get("npu_micro_supports")) if isinstance(item, dict)]
+    provider_success_count = sum(
+        1
+        for item in supports
+        if item.get("provider_execution_performed") is True
+        or item.get("provider_execution_succeeded") is True
+        or item.get("classification") == "usable_audit_text"
+    )
+    requested_count = sum(1 for item in supports if item.get("provider_execution_requested") is True)
+    overlap_count = sum(1 for item in supports if item.get("launched_while_gpu1_active") is True)
+    tool_request_count = sum(safe_int(item.get("npu_tool_request_count")) for item in supports)
+    runtime_execution_count = sum(
+        safe_int((item.get("npu_runtime_tool_broker") or {}).get("tool_execution_count"))
+        for item in supports
+        if isinstance(item.get("npu_runtime_tool_broker"), dict)
+    )
+    fallback_count = sum(safe_int(item.get("npu_deterministic_tool_fallback_count")) for item in supports)
+    tool_success_count = sum(
+        1
+        for item in supports
+        if safe_int(item.get("npu_tool_request_count")) > 0
+        or safe_int(item.get("npu_deterministic_tool_fallback_count")) > 0
+        or (
+            isinstance(item.get("npu_runtime_tool_broker"), dict)
+            and safe_int(item.get("npu_runtime_tool_broker", {}).get("tool_execution_count")) > 0
+        )
+    )
+    lane = orchestrator.get("npu_micro_lane") if isinstance(orchestrator.get("npu_micro_lane"), dict) else {}
+    return {
+        "real": provider_success_count > 0 or tool_success_count > 0,
+        "support_count": len(supports),
+        "requested_count": requested_count,
+        "success_count": provider_success_count + tool_success_count,
+        "provider_success_count": provider_success_count,
+        "tool_success_count": tool_success_count,
+        "overlap_count": overlap_count,
+        "tool_request_count": tool_request_count,
+        "deterministic_tool_fallback_count": fallback_count,
+        "runtime_tool_execution_count": runtime_execution_count,
+        "tool_lane_performed": tool_success_count > 0 or runtime_execution_count > 0 or fallback_count > 0,
+        "lane": lane,
+        "non_blocking": bool(lane.get("non_blocking") or any(item.get("non_blocking") is True for item in supports)),
+    }
+
+
 def probe_evidence(probe: dict[str, Any]) -> dict[str, Any]:
     lane_reports = [item for item in safe_list(probe.get("lane_reports")) if isinstance(item, dict)]
     out: dict[str, Any] = {
@@ -178,6 +224,36 @@ def openvino_gpu0_secondary_evidence(report: dict[str, Any]) -> dict[str, Any]:
         "warnings": safe_list(report.get("warnings")),
     }
 
+
+def gpu0_peer_support_evidence(orchestrator: dict[str, Any]) -> dict[str, Any]:
+    supports = [item for item in safe_list(orchestrator.get("gpu0_peer_supports")) if isinstance(item, dict)]
+    success_items = [
+        item
+        for item in supports
+        if item.get("provider_execution_performed") is True
+        and item.get("openvino_gpu0_visible") is True
+        and item.get("openvino_gpu0_workload_performed") is True
+        and item.get("openvino_gpu0_workload_passed") is True
+        and not item.get("openvino_gpu1_workload_performed")
+    ]
+    overlap_count = sum(1 for item in supports if item.get("launched_while_gpu1_active") is True)
+    selected_devices = [
+        str(item.get("selected_device"))
+        for item in success_items
+        if item.get("selected_device") not in (None, "")
+    ]
+    return {
+        "real": bool(success_items),
+        "support_count": len(supports),
+        "success_count": len(success_items),
+        "overlap_count": overlap_count,
+        "provider_execution_performed": bool(success_items),
+        "selected_devices": selected_devices,
+        "lane": orchestrator.get("gpu0_peer_support_lane") if isinstance(orchestrator.get("gpu0_peer_support_lane"), dict) else {},
+        "non_blocking": any(item.get("non_blocking") is True for item in supports),
+    }
+
+
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     errors: list[str] = []
@@ -199,8 +275,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 
     gpu = gpu_provider_evidence(gpu_report)
     npu = npu_provider_evidence(orchestrator)
+    npu_micro = npu_micro_support_evidence(orchestrator)
     probe = probe_evidence(local_probe)
     openvino_gpu0_secondary = openvino_gpu0_secondary_evidence(openvino_gpu0_workload)
+    gpu0_peer_support = gpu0_peer_support_evidence(orchestrator)
+    openvino_gpu0_secondary_real = bool(openvino_gpu0_secondary["real"] or gpu0_peer_support["real"])
     hardware_policy = hardware_manifest.get("hardware_lane_policy") if isinstance(hardware_manifest.get("hardware_lane_policy"), dict) else {}
     cuda_primary = hardware_policy.get("cuda_gpu_primary", {}) if isinstance(hardware_policy.get("cuda_gpu_primary"), dict) else {}
     openvino_gpu0 = hardware_policy.get("openvino_gpu0", {}) if isinstance(hardware_policy.get("openvino_gpu0"), dict) else {}
@@ -220,7 +299,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             f"audit_count={npu['audit_count']} load_attempt_count={npu['load_attempt_count']} "
             f"success_count={npu['success_count']} lane_mode={npu['lane_mode']}"
         )
-    if args.require_openvino_gpu0_secondary and not openvino_gpu0_secondary["real"]:
+    if args.require_openvino_gpu0_secondary and not openvino_gpu0_secondary_real:
         errors.append(
             "OpenVINO GPU.0 secondary workload evidence missing or degraded: "
             f"visible={openvino_gpu0_secondary['openvino_gpu0_visible']} "
@@ -229,7 +308,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             f"passed={openvino_gpu0_secondary['openvino_gpu0_workload_passed']} "
             f"provider={openvino_gpu0_secondary['openvino_gpu0_provider_execution_performed']} "
             f"selected={openvino_gpu0_secondary['selected_device']} "
-            f"errors={openvino_gpu0_secondary['errors']}"
+            f"errors={openvino_gpu0_secondary['errors']} "
+            f"orchestrator_peer_success={gpu0_peer_support['success_count']} "
+            f"orchestrator_peer_overlap={gpu0_peer_support['overlap_count']}"
         )
     if args.forbid_openvino_gpu1_workload and openvino_gpu0_secondary["openvino_gpu1_workload_performed"]:
         errors.append("hardware policy violation: OpenVINO GPU.1 workload was performed, but GPU.1 is reserved for CUDA/Ollama")
@@ -253,7 +334,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         if openvino_gpu1_reserved.get("openvino_workload_allowed") is not False:
             errors.append("hardware policy violation: OpenVINO GPU.1/RTX must be reserved for CUDA/Ollama")
 
-    provider_execution_observed = bool(gpu["real"] or npu["real"])
+    provider_execution_observed = bool(gpu["real"] or npu["real"] or npu_micro["real"] or openvino_gpu0_secondary_real)
     return {
         "schema_version": 1,
         "kind": "provider_evidence_contract",
@@ -277,18 +358,25 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "openvino_gpu0_workload": gpu0_path,
         },
         "cuda_gpu_primary_real": gpu["real"],
-        "openvino_gpu0_secondary_real": openvino_gpu0_secondary["real"],
+        "openvino_gpu0_secondary_real": openvino_gpu0_secondary_real,
+        "openvino_gpu0_secondary_file_real": openvino_gpu0_secondary["real"],
+        "gpu0_peer_support_real": gpu0_peer_support["real"],
         "npu_auditor_real": npu["real"],
+        "npu_micro_support_real": npu_micro["real"],
         "openvino_gpu1_reserved_visible": bool(openvino_gpu1_reserved.get("visible") or openvino_gpu0_secondary.get("openvino_gpu1_reserved_visible")),
         "gpu": gpu,
         "openvino_gpu0_secondary": openvino_gpu0_secondary,
+        "gpu0_peer_support": gpu0_peer_support,
         "npu": npu,
+        "npu_micro_support": npu_micro,
         "local_probe": probe,
         "hardware_policy": hardware_policy,
         "gpu_npu_sync_metrics": gpu_npu_sync.get("metrics") if isinstance(gpu_npu_sync.get("metrics"), dict) else {},
         "decision": {
             "gpu_provider_ready": gpu["real"],
-            "openvino_gpu0_secondary_ready": openvino_gpu0_secondary["real"],
+            "openvino_gpu0_secondary_ready": openvino_gpu0_secondary_real,
+            "gpu0_peer_support_ready": gpu0_peer_support["real"],
+            "npu_micro_support_ready": npu_micro["real"],
             "gpu0_does_not_satisfy_cuda_primary": True,
             "npu_probe_only_is_not_auditor_evidence": True,
             "openvino_gpu1_workload_forbidden": True,
@@ -312,7 +400,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 def render_markdown(report: dict[str, Any]) -> str:
     gpu = report.get("gpu", {}) if isinstance(report.get("gpu"), dict) else {}
     npu = report.get("npu", {}) if isinstance(report.get("npu"), dict) else {}
+    npu_micro = report.get("npu_micro_support", {}) if isinstance(report.get("npu_micro_support"), dict) else {}
     gpu0 = report.get("openvino_gpu0_secondary", {}) if isinstance(report.get("openvino_gpu0_secondary"), dict) else {}
+    gpu0_peer = report.get("gpu0_peer_support", {}) if isinstance(report.get("gpu0_peer_support"), dict) else {}
     lines = ["# Provider Evidence Contract", ""]
     lines.append(f"- Passed: `{report.get('passed')}`")
     lines.append(f"- Stamp: `{report.get('stamp')}`")
@@ -324,11 +414,22 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- OpenVINO GPU.0 visible: `{gpu0.get('openvino_gpu0_visible')}`")
     lines.append(f"- OpenVINO GPU.0 workload performed: `{gpu0.get('openvino_gpu0_workload_performed')}`")
     lines.append(f"- OpenVINO GPU.0 workload passed: `{gpu0.get('openvino_gpu0_workload_passed')}`")
+    lines.append(f"- GPU0 orchestrator peer support real evidence: `{gpu0_peer.get('real')}`")
+    lines.append(f"- GPU0 orchestrator peer support count: `{gpu0_peer.get('support_count')}`")
+    lines.append(f"- GPU0 orchestrator peer success count: `{gpu0_peer.get('success_count')}`")
+    lines.append(f"- GPU0 orchestrator peer overlap count: `{gpu0_peer.get('overlap_count')}`")
     lines.append(f"- OpenVINO GPU.1 reserved visible: `{gpu0.get('openvino_gpu1_reserved_visible')}`")
     lines.append(f"- OpenVINO GPU.1 workload performed: `{gpu0.get('openvino_gpu1_workload_performed')}`")
     lines.append(f"- NPU real auditor evidence: `{npu.get('real')}`")
     lines.append(f"- NPU audit count: `{npu.get('audit_count')}`")
     lines.append(f"- NPU success count: `{npu.get('success_count')}`")
+    lines.append(f"- NPU micro support real evidence: `{npu_micro.get('real')}`")
+    lines.append(f"- NPU micro support count: `{npu_micro.get('support_count')}`")
+    lines.append(f"- NPU micro provider success count: `{npu_micro.get('provider_success_count')}`")
+    lines.append(f"- NPU micro tool success count: `{npu_micro.get('tool_success_count')}`")
+    lines.append(f"- NPU micro overlap count: `{npu_micro.get('overlap_count')}`")
+    lines.append(f"- NPU micro tool requests: `{npu_micro.get('tool_request_count')}`")
+    lines.append(f"- NPU micro runtime tool executions: `{npu_micro.get('runtime_tool_execution_count')}`")
     if report.get("errors"):
         lines.append("")
         lines.append("## Errors")

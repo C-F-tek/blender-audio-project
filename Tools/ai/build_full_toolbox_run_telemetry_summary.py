@@ -68,7 +68,32 @@ def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str
     )
     npu_audit_count = safe_int(orchestrator.get("npu_audit_count"))
     npu_success_count = safe_int(orchestrator.get("npu_audit_success_count"))
-    npu_provider_performed = npu_success_count > 0
+    gpu0_peer_support_count = safe_int(orchestrator.get("gpu0_peer_support_count"))
+    gpu0_peer_support_success_count = safe_int(orchestrator.get("gpu0_peer_support_success_count"))
+    gpu0_peer_support_overlap_count = safe_int(orchestrator.get("gpu0_peer_support_overlap_count"))
+    npu_micro_support_count = safe_int(orchestrator.get("npu_micro_support_count"))
+    npu_micro_support_success_count = safe_int(orchestrator.get("npu_micro_support_success_count"))
+    npu_micro_support_provider_success_count = safe_int(orchestrator.get("npu_micro_support_provider_success_count"))
+    npu_micro_support_tool_success_count = safe_int(orchestrator.get("npu_micro_support_tool_success_count"))
+    npu_micro_support_overlap_count = safe_int(orchestrator.get("npu_micro_support_overlap_count"))
+    npu_micro_support_tool_request_count = safe_int(orchestrator.get("npu_micro_support_tool_request_count"))
+    npu_micro_runtime_tool_execution_count = safe_int(orchestrator.get("npu_micro_runtime_tool_execution_count"))
+    npu_lane = safe_dict(orchestrator.get("npu_lane"))
+    legacy_npu_requested = bool(
+        orchestrator.get("legacy_npu_auditor_provider_requested")
+        or orchestrator.get("npu_auditor_provider_requested")
+        or npu_lane.get("provider_requested")
+    )
+    gpu0_peer_support_performed = gpu0_peer_support_success_count > 0 or bool(orchestrator.get("gpu0_peer_support_provider_execution_performed"))
+    npu_micro_provider_performed = npu_micro_support_provider_success_count > 0 or bool(orchestrator.get("npu_micro_support_provider_execution_performed"))
+    npu_micro_tool_lane_performed = bool(
+        orchestrator.get("npu_micro_support_tool_lane_performed")
+        or npu_micro_support_tool_success_count > 0
+        or npu_micro_runtime_tool_execution_count > 0
+        or npu_micro_support_tool_request_count > 0
+    )
+    legacy_npu_provider_performed = npu_success_count > 0
+    npu_provider_performed = bool(legacy_npu_provider_performed or npu_micro_provider_performed)
     degraded_reasons = []
     if isinstance(orchestrator.get("provider_degraded_reasons"), list):
         degraded_reasons.extend(str(item) for item in orchestrator.get("provider_degraded_reasons"))
@@ -80,7 +105,7 @@ def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str
             f"classification={gpu_report.get('classification')};"
             f"passed={gpu_report.get('passed')}"
         )
-    if orchestrator.get("npu_lane_mode") in {"skipped", "metadata_only", "degraded"} and npu_success_count == 0:
+    if legacy_npu_requested and orchestrator.get("npu_lane_mode") in {"skipped", "metadata_only", "degraded"} and npu_success_count == 0:
         degraded_reasons.append(
             "npu_auditor_not_confirmed:"
             f"audit_count={npu_audit_count};success_count={npu_success_count};"
@@ -88,13 +113,28 @@ def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str
         )
     return {
         "provider_execution_requested": bool(orchestrator.get("provider_execution_performed") or gpu_report.get("provider_execution_requested")),
-        "provider_execution_performed": bool(gpu_provider_performed or npu_provider_performed),
+        "provider_execution_performed": bool(gpu_provider_performed or gpu0_peer_support_performed or npu_provider_performed),
         "gpu_provider_execution_performed": gpu_provider_performed,
+        "gpu0_peer_support_provider_execution_performed": gpu0_peer_support_performed,
+        "gpu0_peer_support_count": gpu0_peer_support_count,
+        "gpu0_peer_support_success_count": gpu0_peer_support_success_count,
+        "gpu0_peer_support_overlap_count": gpu0_peer_support_overlap_count,
         "gpu_round_count": gpu_round_count,
         "gpu_returncode": orchestrator.get("gpu_returncode"),
         "gpu_classification": gpu_report.get("classification"),
         "gpu_provider_empty_response": bool(gpu_report.get("provider_empty_response")),
+        "legacy_npu_auditor_provider_requested": legacy_npu_requested,
         "npu_provider_execution_performed": npu_provider_performed,
+        "legacy_npu_provider_execution_performed": legacy_npu_provider_performed,
+        "npu_micro_provider_execution_performed": npu_micro_provider_performed,
+        "npu_micro_tool_lane_performed": npu_micro_tool_lane_performed,
+        "npu_micro_support_count": npu_micro_support_count,
+        "npu_micro_support_success_count": npu_micro_support_success_count,
+        "npu_micro_support_provider_success_count": npu_micro_support_provider_success_count,
+        "npu_micro_support_tool_success_count": npu_micro_support_tool_success_count,
+        "npu_micro_support_overlap_count": npu_micro_support_overlap_count,
+        "npu_micro_support_tool_request_count": npu_micro_support_tool_request_count,
+        "npu_micro_runtime_tool_execution_count": npu_micro_runtime_tool_execution_count,
         "npu_audit_count": npu_audit_count,
         "npu_audit_success_count": npu_success_count,
         "npu_lane_mode": orchestrator.get("npu_lane_mode"),
@@ -115,6 +155,7 @@ def peer_exchange_summary(peer_exchange: dict[str, Any], peer_contract: dict[str
         "gpu0_peer_tool_request_count": safe_int(response.get("tool_request_count")),
         "gpu0_peer_tool_execution_count": safe_int(broker.get("tool_execution_count")),
         "npu_micro_non_blocking": bool(npu.get("non_blocking")),
+        "npu_micro_provider_execution_performed": bool(npu.get("provider_execution_performed")),
         "npu_micro_tool_request_count": safe_int(npu.get("tool_request_count")),
         "npu_micro_tool_execution_count": safe_int(npu_broker.get("tool_execution_count")),
         "classifications": peer_exchange.get("classifications") or peer_contract.get("classifications") or [],
@@ -367,8 +408,12 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "raw_output_commit_allowed": False,
             "provider_execution_performed": provider_execution,
             "gpu_provider_execution_performed": provider_evidence.get("gpu_provider_execution_performed"),
+            "gpu0_peer_support_provider_execution_performed": provider_evidence.get("gpu0_peer_support_provider_execution_performed"),
             "npu_provider_execution_performed": provider_evidence.get("npu_provider_execution_performed"),
+            "npu_micro_orchestrator_provider_execution_performed": provider_evidence.get("npu_micro_provider_execution_performed"),
+            "npu_micro_orchestrator_tool_lane_performed": provider_evidence.get("npu_micro_tool_lane_performed"),
             "gpu0_peer_provider_execution_performed": peer_evidence.get("gpu0_peer_provider_execution_performed"),
+            "npu_micro_provider_execution_performed": peer_evidence.get("npu_micro_provider_execution_performed"),
             "npu_micro_non_blocking": peer_evidence.get("npu_micro_non_blocking"),
             "provider_runtime_heap_direct_execution_violation_count": heap_evidence.get("direct_execution_violation_count"),
             "patch_application_performed": False,
@@ -392,8 +437,15 @@ def render_markdown(report: dict[str, Any]) -> str:
     provider_evidence = safe_dict(report.get("provider_evidence"))
     lines.append(f"- GPU provider execution performed: `{provider_evidence.get('gpu_provider_execution_performed')}`")
     lines.append(f"- GPU round count: `{provider_evidence.get('gpu_round_count')}`")
-    lines.append(f"- NPU provider execution performed: `{provider_evidence.get('npu_provider_execution_performed')}`")
+    lines.append(f"- GPU0 startup peer support execution performed: `{provider_evidence.get('gpu0_peer_support_provider_execution_performed')}`")
+    lines.append(f"- GPU0 startup peer support overlap count: `{provider_evidence.get('gpu0_peer_support_overlap_count')}`")
+    lines.append(f"- Legacy NPU auditor requested: `{provider_evidence.get('legacy_npu_auditor_provider_requested')}`")
+    lines.append(f"- Legacy NPU auditor execution performed: `{provider_evidence.get('legacy_npu_provider_execution_performed')}`")
     lines.append(f"- NPU audit success count: `{provider_evidence.get('npu_audit_success_count')}`")
+    lines.append(f"- NPU orchestrator micro execution performed: `{provider_evidence.get('npu_micro_provider_execution_performed')}`")
+    lines.append(f"- NPU orchestrator micro tool lane performed: `{provider_evidence.get('npu_micro_tool_lane_performed')}`")
+    lines.append(f"- NPU orchestrator micro overlap count: `{provider_evidence.get('npu_micro_support_overlap_count')}`")
+    lines.append(f"- NPU orchestrator micro runtime tool executions: `{provider_evidence.get('npu_micro_runtime_tool_execution_count')}`")
     if provider_evidence.get("provider_degraded_reasons"):
         lines.append(f"- Provider degraded reasons: `{provider_evidence.get('provider_degraded_reasons')}`")
     peer_evidence = safe_dict(safe_dict(report.get("gpu_npu")).get("peer_exchange"))
@@ -401,6 +453,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- GPU0 peer provider execution performed: `{peer_evidence.get('gpu0_peer_provider_execution_performed')}`")
     lines.append(f"- GPU0 peer broker tool executions: `{peer_evidence.get('gpu0_peer_tool_execution_count')}`")
     lines.append(f"- NPU micro non-blocking: `{peer_evidence.get('npu_micro_non_blocking')}`")
+    lines.append(f"- NPU micro provider execution performed: `{peer_evidence.get('npu_micro_provider_execution_performed')}`")
     lines.append(f"- NPU micro broker tool executions: `{peer_evidence.get('npu_micro_tool_execution_count')}`")
     heap_evidence = safe_dict(report.get("provider_runtime_heap"))
     lines.append(f"- Runtime heap events: `{heap_evidence.get('event_count')}`")

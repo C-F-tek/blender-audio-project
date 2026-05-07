@@ -270,6 +270,11 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append("## Warnings")
     lines.extend([f"- {item}" for item in report.get("warnings") or []] or ["- none"])
     lines.append("")
+    lines.append("## Provider mesh")
+    lines.append(f"- GPU0 support provider execution: `{report.get('gpu0_support_provider_execution_performed')}`")
+    lines.append(f"- NPU micro provider execution: `{report.get('npu_micro_provider_execution_performed')}`")
+    lines.append(f"- NPU micro non-blocking: `{report.get('npu_micro_non_blocking')}`")
+    lines.append("")
     lines.append("## Evidence")
     for item in report.get("evidence", []):
         lines.append(f"- `{item['name']}` exists=`{item.get('exists')}` passed=`{item.get('passed')}` path=`{item.get('path')}`")
@@ -343,8 +348,10 @@ def main() -> int:
         evidence_item(repo_root, "workload_quality", workload_quality_path),
     ]
 
+    npu_micro = ai_peer_exchange.get("npu_micro_response") if isinstance(ai_peer_exchange, dict) and isinstance(ai_peer_exchange.get("npu_micro_response"), dict) else {}
+
     report = {
-        "schema_version": 5,
+        "schema_version": 6,
         "kind": "full0to10_provider_acceptance_gate",
         "generated_at": now_iso(),
         "stamp": args.stamp,
@@ -355,7 +362,14 @@ def main() -> int:
         "warnings": warnings,
         "evidence": evidence,
         "primary_advisory_markdown": rel(repo_root, suggestions_md_path),
-        "provider_execution_performed": bool(gpu0_provider and gpu0_provider.get("provider_execution_performed") is True),
+        "provider_execution_performed": bool(
+            (gpu0_provider and gpu0_provider.get("provider_execution_performed") is True)
+            or npu_micro.get("provider_execution_performed") is True
+            or (ai_peer_exchange and ai_peer_exchange.get("provider_execution_performed") is True)
+        ),
+        "gpu0_support_provider_execution_performed": bool(gpu0_provider and gpu0_provider.get("provider_execution_performed") is True),
+        "npu_micro_provider_execution_performed": bool(npu_micro.get("provider_execution_performed")),
+        "npu_micro_non_blocking": bool(npu_micro.get("non_blocking")),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "guardrails": {

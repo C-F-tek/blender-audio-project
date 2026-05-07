@@ -32,6 +32,8 @@ CSV/count surfaces from inventory lanes
 discovery/index drift visibility when relevant
 ```
 
+`-Full0To10` does not enable the legacy NPU auditor provider. The production provider mesh starts GPU1, GPU0 peer support, NPU micro support and deterministic/broker bootstrap together inside the full-toolbox orchestrator; pass `-RunLegacyNpuAuditorProvider` only for diagnostics or old-vs-new comparison runs.
+
 Explicit disablers:
 
 ```text
@@ -74,6 +76,7 @@ Legacy/full-toolbox inherited parameters currently exposed by the launcher:
 -NpuMaxPromptChars
 -NpuMaxNewTokens
 -NpuFinalWaitSeconds
+-RunLegacyNpuAuditorProvider
 -MinRecommendations
 -MinPatchPlans
 -MaxRecommendations
@@ -88,7 +91,8 @@ Legacy/full-toolbox inherited parameters currently exposed by the launcher:
 Current wiring status:
 
 ```text
-Budget/round/file/context/token/NPU auditor knobs are wired into the legacy full-toolbox integrated lane.
+Budget/round/file/context/token knobs are wired into the legacy full-toolbox integrated lane. NPU auditor knobs affect legacy provider execution only when -RunLegacyNpuAuditorProvider is supplied.
+The production Full0To10 mesh passes GPU0/NPU startup-support settings to run_agent_gpu_npu_parallel_orchestrator.py and records round_000/overlap evidence before telemetry and bundle finalization.
 RunIntensity presets update ProviderMaxContextChars, ContextPackMaxTotalChars, ContextPackMaxFileChars and AgentStateMaxMemoryChars in the manifest.
 The subordinate context_pack, agent_state, official adapter and Ollama packet calls still need one more patch to pass every external/intensity knob through instead of using their current hardcoded/default values.
 ```

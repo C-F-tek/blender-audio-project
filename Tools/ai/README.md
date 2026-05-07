@@ -90,10 +90,12 @@ File existence alone is not proof of successful execution.
 CPU: parsing, JSON generation, validation, orchestration.
 GPU1/Ollama/RTX 5080: mandatory primary advisory planner/worker when Full0To10 provider execution is selected.
 GPU0/OpenVINO: companion peer worker and controlled tool-request producer for GPU1 follow-up.
-NPU/OpenVINO: micro-fast task assistant, guardrail and lightweight tool-support lane.
+NPU/OpenVINO: orchestrator-called micro-fast task assistant, guardrail and lightweight tool-support lane.
 Deterministic scripts: heavy audit and validation authority.
 External GPU commands: explicit heavy generator path only, never implicit.
 ```
+
+Full0To10 provider mesh runs use startup and close barriers: GPU1, GPU0, NPU and deterministic/broker bootstrap are armed at the beginning, then the orchestrator harvests or terminates active peer-support lanes before telemetry/bundle finalization. The NPU micro lane reports provider text evidence separately from brokered tool-support evidence, so a slow/empty NPU response can still be useful when it emits valid brokered tool requests. Runtime heap telemetry must close broker request/result correlation ids before the compact bundle is considered clean. The legacy NPU auditor provider is diagnostics-only behind `-RunLegacyNpuAuditorProvider`.
 
 ## Safety policy
 

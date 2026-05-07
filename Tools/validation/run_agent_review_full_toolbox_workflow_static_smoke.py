@@ -19,6 +19,11 @@ DEFAULT_MARKDOWN = "output/validation/agent_review_full_toolbox_workflow_static_
 
 REQUIRED_TOKENS = {
     "explicit_provider_flag": "[switch]$RunGpuNpuProvider",
+    "explicit_legacy_npu_auditor_flag": "[switch]$RunLegacyNpuAuditorProvider",
+    "gpu0_peer_support_provider": "--run-gpu0-peer-support-provider",
+    "npu_micro_support_provider": "--run-npu-micro-support-provider",
+    "runtime_heap_to_orchestrator": "--runtime-heap-stamp",
+    "gpu0_support_strict_contract": "--require-openvino-gpu0-secondary",
     "memory_reload_reuse": "run_full_memory_tool_regeneration.ps1",
     "line_count_reuse": "build_python_line_count_csv.py",
     "code_interpreter_reuse": "build_code_interpreter_report",
@@ -104,8 +109,8 @@ def run_smoke(repo_root: Path, workflow_value: str) -> dict[str, Any]:
             forbidden_hits.append(name)
             errors.append(f"forbidden token present {name}: {token}")
 
-    if "--run-npu-auditor-provider" in text and "if ($RunGpuNpuProvider)" not in text:
-        errors.append("NPU provider auditor flag must stay gated by -RunGpuNpuProvider")
+    if "--run-npu-auditor-provider" in text and "if ($RunLegacyNpuAuditorProvider)" not in text:
+        errors.append("legacy NPU provider auditor flag must stay gated by -RunLegacyNpuAuditorProvider")
 
     if "provider_execution_performed = [bool]$RunGpuNpuProvider" not in text:
         errors.append("workflow report must expose provider_execution_performed from explicit flag state")

@@ -241,8 +241,8 @@ def summarize_npu_timing(report: dict[str, Any], npu_audits: list[dict[str, Any]
 
     return {
         "audit_count": len(npu_audits),
-        "audit_requested_count": safe_int(report.get("npu_audit_requested_count")),
-        "audit_success_count": safe_int(report.get("npu_audit_success_count")),
+        "audit_requested_count": safe_int(report.get("npu_audit_requested_count")) + safe_int(report.get("npu_micro_support_count")),
+        "audit_success_count": safe_int(report.get("npu_audit_success_count")) + safe_int(report.get("npu_micro_support_success_count")),
         "duration_sample_count": len(durations),
         "avg_audit_seconds": round(sum(durations) / len(durations), 3) if durations else 0.0,
         "p50_audit_seconds": round(percentile(durations, 50), 3),
@@ -427,10 +427,12 @@ def analyze(repo_root: Path, orchestrator_path: Path) -> dict[str, Any]:
 
     gpu_summary = nested_dict(report, "gpu_summary")
     rounds = list_of_dicts(report.get("rounds"))
-    npu_audits = list_of_dicts(report.get("npu_audits"))
+    legacy_npu_audits = list_of_dicts(report.get("npu_audits"))
+    npu_micro_supports = list_of_dicts(report.get("npu_micro_supports"))
+    npu_audits = legacy_npu_audits + npu_micro_supports
     round_count = first_int(len(rounds), report.get("round_count"), gpu_summary.get("round_count"))
-    audit_count = first_int(len(npu_audits), report.get("npu_audit_count"))
-    success_count = first_int(0, report.get("npu_audit_success_count"))
+    audit_count = len(npu_audits) if npu_audits else safe_int(report.get("npu_audit_count")) + safe_int(report.get("npu_micro_support_count"))
+    success_count = safe_int(report.get("npu_audit_success_count")) + safe_int(report.get("npu_micro_support_success_count"))
     gpu_elapsed = safe_float(report.get("gpu_elapsed_seconds")) or safe_float(gpu_summary.get("elapsed_seconds")) or safe_float(report.get("elapsed_seconds"))
     gpu_round_durations, gpu_metrics_source = extract_gpu_round_durations(report, rounds, round_count, gpu_elapsed)
     npu_durations = [audit_duration_seconds(item) for item in npu_audits]
@@ -441,6 +443,11 @@ def analyze(repo_root: Path, orchestrator_path: Path) -> dict[str, Any]:
     metrics = {
         "gpu_round_count": round_count,
         "npu_audit_count": audit_count,
+        "legacy_npu_audit_count": len(legacy_npu_audits),
+        "npu_micro_support_count": len(npu_micro_supports),
+        "npu_micro_support_overlap_count": safe_int(report.get("npu_micro_support_overlap_count")),
+        "gpu0_peer_support_count": safe_int(report.get("gpu0_peer_support_count")),
+        "gpu0_peer_support_overlap_count": safe_int(report.get("gpu0_peer_support_overlap_count")),
         "npu_audit_success_count": success_count,
         "npu_audit_round_coverage": round(audit_count / round_count, 3) if round_count else 0.0,
         "avg_gpu_round_seconds": round(avg_gpu, 3),

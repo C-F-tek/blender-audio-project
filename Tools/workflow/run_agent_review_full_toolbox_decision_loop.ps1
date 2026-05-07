@@ -5,6 +5,7 @@ param(
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
     [switch]$RunGpuNpuProvider,
     [switch]$RequireProviderArtifacts,
+    [switch]$RunLegacyNpuAuditorProvider,
     [switch]$SkipMemoryReload,
     [switch]$SkipPostValidationPacket,
     [switch]$SkipSharedToolboxBundle,
@@ -396,6 +397,10 @@ $Gpu0CompanionMd = ".\output\validation\gpu0_companion_task_lane_$Stamp.md"
 $Gpu0CompanionToolRequestsJson = ".\output\validation\gpu0_companion_tool_requests_$Stamp.json"
 $Gpu0CompanionContractJson = ".\output\validation\gpu0_companion_contract_$Stamp.json"
 $Gpu0CompanionContractMd = ".\output\validation\gpu0_companion_contract_$Stamp.md"
+$Gpu0PeerSupportDir = ".\output\ai_pipeline\gpu0_peer_support_parallel_$Stamp"
+$Gpu0PeerSupportBootstrapJson = Join-Path $Gpu0PeerSupportDir "round_000_gpu0_peer_support.json"
+$NpuMicroSupportDir = ".\output\ai_pipeline\npu_micro_support_parallel_$Stamp"
+$NpuMicroSupportBootstrapJson = Join-Path $NpuMicroSupportDir "round_000_npu_micro_support.json"
 $Gpu1PrimaryAdvisoryJson = ".\output\validation\gpu1_primary_advisory_$Stamp.json"
 $Gpu1PrimaryAdvisoryMd = ".\output\validation\gpu1_primary_advisory_$Stamp.md"
 $Gpu0PeerTaskPacketJson = ".\output\validation\gpu0_peer_task_packet_$Stamp.json"
@@ -470,6 +475,7 @@ Write-Host "Repo: $RepoRootPath"
 Write-Host "Stamp: $Stamp"
 Write-Host "RunGpuNpuProvider: $RunGpuNpuProvider"
 Write-Host "RequireProviderArtifacts: $RequireProviderArtifacts"
+Write-Host "RunLegacyNpuAuditorProvider: $RunLegacyNpuAuditorProvider"
 Write-Host "Python: $script:RepoPythonExe"
 Write-Host "RepositoryConsistencyMapWorkers: $RepositoryConsistencyMapWorkers"
 Write-Host "MaxRecommendations: $MaxRecommendations"
@@ -653,7 +659,10 @@ Invoke-RepoPython -Label "GPU0 companion worker contract" -ArgsList @(
 )
 
 if ($RunGpuNpuProvider) {
-    Invoke-RepoPython -Label "GPU primary advisory + NPU auditor orchestrator" -ArgsList @(
+    if (-not $RunLegacyNpuAuditorProvider) {
+        [void]$Warnings.Add("legacy NPU auditor provider disabled; production NPU execution uses the micro peer support lane.")
+    }
+    $ProviderArgs = @(
         ".\Tools\ai\run_agent_gpu_npu_parallel_orchestrator.py",
         "--repo-root", ".",
         "--budget-minutes", "$BudgetMinutes",
@@ -683,6 +692,23 @@ if ($RunGpuNpuProvider) {
         "--report-file", $Gpu0CompanionContractJson,
         "--report-file", $MemoryWorkflow,
         "--enable-runtime-tool-broker",
+        "--run-gpu0-peer-support-provider",
+        "--gpu0-peer-support-dir", $Gpu0PeerSupportDir,
+        "--gpu0-peer-support-every-rounds", "1",
+        "--gpu0-peer-support-iterations", "24",
+        "--gpu0-peer-support-min-seconds", "1",
+        "--run-npu-micro-support-provider",
+        "--npu-micro-support-dir", $NpuMicroSupportDir,
+        "--npu-micro-support-every-rounds", "1",
+        "--npu-micro-support-timeout-seconds", "$NpuMicroTimeoutSeconds",
+        "--npu-micro-support-final-wait-seconds", "$NpuFinalWaitSeconds",
+        "--npu-micro-support-max-context-chars", "$NpuMaxContextChars",
+        "--npu-micro-support-max-prompt-chars", "$NpuMaxPromptChars",
+        "--npu-micro-support-max-new-tokens", "$NpuMaxNewTokens",
+        "--runtime-heap-stamp", $Stamp,
+        "--runtime-heap-events", $ProviderRuntimeHeapEventsJsonl,
+        "--runtime-heap-snapshot", $ProviderRuntimeHeapSnapshotJson,
+        "--runtime-heap-markdown", $ProviderRuntimeHeapSnapshotMd,
         "--runtime-tool-output-dir", $RuntimeToolOutputDir,
         "--runtime-tool-timeout-seconds", "300",
         "--context-root", "docs",
@@ -693,20 +719,25 @@ if ($RunGpuNpuProvider) {
         "--context-root", "Scripting\v61b",
         "--context-root", "Scripting\shared",
         "--context-root", $LineCountAllMd,
-        "--run-npu-auditor-provider",
-        "--npu-auditor-every-rounds", "$NpuAuditorEveryRounds",
-        "--max-concurrent-npu-audits", "1",
-        "--npu-auditor-timeout-seconds", "$NpuAuditorTimeoutSeconds",
-        "--npu-max-context-chars", "$NpuMaxContextChars",
-        "--npu-max-prompt-chars", "$NpuMaxPromptChars",
-        "--npu-max-new-tokens", "$NpuMaxNewTokens",
-        "--npu-final-wait-seconds", "$NpuFinalWaitSeconds",
         "--checkpoint-dir", $CheckpointDir,
         "--gpu-output", $GpuOut,
         "--gpu-markdown-output", $GpuMd,
         "--output", $OrchOut,
         "--markdown-output", $OrchMd
     )
+    if ($RunLegacyNpuAuditorProvider) {
+        $ProviderArgs += @(
+            "--run-npu-auditor-provider",
+            "--npu-auditor-every-rounds", "$NpuAuditorEveryRounds",
+            "--max-concurrent-npu-audits", "1",
+            "--npu-auditor-timeout-seconds", "$NpuAuditorTimeoutSeconds",
+            "--npu-max-context-chars", "$NpuMaxContextChars",
+            "--npu-max-prompt-chars", "$NpuMaxPromptChars",
+            "--npu-max-new-tokens", "$NpuMaxNewTokens",
+            "--npu-final-wait-seconds", "$NpuFinalWaitSeconds"
+        )
+    }
+    Invoke-RepoPython -Label "GPU1 primary advisory orchestrator" -ArgsList $ProviderArgs
 } else {
     [void]$Warnings.Add("GPU/NPU provider orchestrator skipped; rerun with -RunGpuNpuProvider for full provider execution.")
     if ((Test-Path ".\output\ai_pipeline\post_pr167_retry_pass_20260503-143243_orchestrator.json") -and (Test-Path ".\output\ai_pipeline\post_pr167_retry_pass_20260503-143243_parallel_gpu.json")) {
@@ -782,6 +813,10 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         "--output", $Gpu0PeerResponseJson,
         "--markdown-output", $Gpu0PeerResponseMd,
         "--tool-requests-output", $Gpu0PeerToolRequestsJson,
+        "--runtime-heap-stamp", $Stamp,
+        "--runtime-heap-events", $ProviderRuntimeHeapEventsJsonl,
+        "--runtime-heap-snapshot", $ProviderRuntimeHeapSnapshotJson,
+        "--runtime-heap-markdown", $ProviderRuntimeHeapSnapshotMd,
         "--iterations", "32",
         "--min-seconds", "1",
         "--allow-degraded"
@@ -810,6 +845,8 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         "--run-npu",
         "--runtime-tool-context-report", $Gpu0PeerBrokerJson,
         "--runtime-tool-context-report", $Gpu0PeerResponseJson,
+        "--runtime-tool-context-report", $ProviderRuntimeHeapSnapshotJson,
+        "--runtime-tool-context-report", $ProviderRuntimeHeapLiveBrokerResultsJson,
         "--context-output", $NpuMicroContextMd,
         "--npu-output", $NpuMicroOutputMd,
         "--npu-notes-output", $NpuMicroNotesMd,
@@ -886,7 +923,9 @@ if ($RunGpuNpuProvider -and (Test-Path $GpuOut)) {
         $ProviderRuntimeHeapLiveNpuSupportJson, $ProviderRuntimeHeapLiveNpuSupportMd,
         $ProviderRuntimeHeapSnapshotJson, $ProviderRuntimeHeapSnapshotMd, $ProviderRuntimeHeapEventsJsonl
     )) {
-        Add-ExistingPath -List $Reports -Path $Path
+        if ($Path -and ([System.IO.Path]::GetExtension($Path) -eq ".json")) {
+            Add-ExistingPath -List $Reports -Path $Path
+        }
         Add-ExistingPath -List $Artifacts -Path $Path
     }
 } elseif ($RunGpuNpuProvider) {
@@ -902,11 +941,15 @@ if ($RunGpuNpuProvider) {
         "--gpu-report", $GpuOut,
         "--gpu-npu-sync", $GpuNpuSyncJson,
         "--local-provider-probe", ".\output\validation\local_provider_probe.json",
+        "--openvino-gpu0-workload", $Gpu0PeerSupportBootstrapJson,
         "--output", $ProviderEvidenceContractJson,
         "--markdown-output", $ProviderEvidenceContractMd
     )
     if ($RequireProviderArtifacts) {
-        $ProviderEvidenceArgs += @("--require-gpu-provider", "--require-npu-auditor")
+        $ProviderEvidenceArgs += @("--require-gpu-provider", "--require-openvino-gpu0-secondary")
+        if ($RunLegacyNpuAuditorProvider) {
+            $ProviderEvidenceArgs += @("--require-npu-auditor")
+        }
     }
     
 Invoke-RepoPython -Label "Provider runtime heap from peer reports" -ArgsList @(
@@ -956,6 +999,8 @@ $ToolReports = @(
     $ProviderEvidenceContractJson,
     $Gpu0CompanionJson,
     $Gpu0CompanionContractJson,
+    $Gpu0PeerSupportBootstrapJson,
+    $NpuMicroSupportBootstrapJson,
     $Gpu1PrimaryAdvisoryJson,
     $Gpu0PeerTaskPacketJson,
     $Gpu0PeerResponseJson,
@@ -1370,6 +1415,7 @@ foreach ($Path in @(
     $MemoryWorkflow, $Evidence, $ProviderEvidenceContractJson, $RepositoryConsistencyJson, $RepositoryConsistencySmokeJson, $LineCountJson, $PythonSyntaxJson, $CodeInterpreterJson, $GpuContractSmokeJson,
     $DeterministicSmokeJson, $DecisionLoopSmokeJson, $NpuEnvJson, $OrchOut, $GpuOut, $GpuReplayJson,
     $GpuNpuSyncJson, $ProviderEvidenceContractJson, $RecommendationsJson, $BridgeJson, $DecisionLoopJson, $PatchPlanJson,
+    $Gpu0PeerSupportBootstrapJson, $NpuMicroSupportBootstrapJson,
     $Gpu1PrimaryAdvisoryJson, $Gpu0PeerTaskPacketJson, $Gpu0PeerResponseJson, $Gpu0PeerToolRequestsJson, $Gpu0PeerBrokerJson,
     $NpuMicroJson, $NpuMicroBrokerJson,
     $AiPeerExchangeJson, $AiPeerExchangeContractJson,
@@ -1385,7 +1431,8 @@ foreach ($Path in @(
     $CodeInterpreterMd, $GpuContractSmokeMd, $DeterministicSmokeMd, $DecisionLoopSmokeMd,
     $NpuEnvMd, $OrchMd, $GpuMd, $GpuReplayMd, $GpuNpuSyncMd, $ProviderEvidenceContractMd, $RecommendationsMd,
     $DecisionLoopMd, $PatchPlanMd, $TelemetrySummaryJson, $TelemetrySummaryMd, $RuntimeToolTelemetryJson, $RuntimeToolTelemetryMd,
-    $RuntimeToolCapabilityJson, $RuntimeToolCapabilityMd, $Gpu1PrimaryAdvisoryMd, $Gpu0PeerResponseMd, $Gpu0PeerBrokerMd,
+    $RuntimeToolCapabilityJson, $RuntimeToolCapabilityMd, $Gpu0PeerSupportBootstrapJson, $NpuMicroSupportBootstrapJson,
+    $Gpu1PrimaryAdvisoryMd, $Gpu0PeerResponseMd, $Gpu0PeerBrokerMd,
     $NpuMicroMd, $NpuMicroBrokerMd, $NpuMicroContextMd, $NpuMicroOutputMd, $NpuMicroNotesMd,
     $AiPeerExchangeMd, $AiPeerExchangeContractMd, $ProviderRuntimeHeapFromPeerReportsMd, $ProviderRuntimeHeapTelemetryMd,
     $ProviderRuntimeHeapLiveInitMd, $ProviderRuntimeHeapLiveGpu1RequestMd, $ProviderRuntimeHeapLiveBrokerResultsMd,
@@ -1402,13 +1449,22 @@ $ProviderAdvisoryReports = @($OrchOut, $GpuOut)
 foreach ($ReportPath in $Reports) {
     $Data = Read-JsonFile $ReportPath
     if ($Data -and ($null -ne $Data.passed) -and ($Data.passed -eq $false)) {
+        $EvidenceInputMissingNonFatal = (
+            ($ReportPath -eq $Evidence) -and
+            (
+                ($Data.classification -eq "missing_refined_review_input") -or
+                (($Data.errors -join ";") -like "*blocked_missing_refined_review_input*")
+            )
+        )
         $DecisionLaneReady = (
             $DecisionSummary -and
             ($DecisionSummary.passed -eq $true) -and
             ([int]$DecisionSummary.recommendation_count -ge $MinRecommendations) -and
             ([int]$DecisionSummary.patch_plan_count -ge $MinPatchPlans)
         )
-        if (($ProviderAdvisoryReports -contains $ReportPath) -and $DecisionLaneReady -and (-not [bool]$RequireProviderArtifacts)) {
+        if ($EvidenceInputMissingNonFatal) {
+            [void]$Warnings.Add("${ReportPath}: passed=false treated as nonfatal because refined review input was absent and classified by the evidence sufficiency tool")
+        } elseif (($ProviderAdvisoryReports -contains $ReportPath) -and $DecisionLaneReady -and (-not [bool]$RequireProviderArtifacts)) {
             [void]$ProviderAdvisoryFailures.Add($ReportPath)
             [void]$Warnings.Add("${ReportPath}: passed=false degraded to provider advisory warning because decision loop passed with sufficient recommendations/patch plans")
         } else {
@@ -1457,6 +1513,7 @@ $WorkflowReport = [ordered]@{
     errors = @($Errors)
     warnings = @($Warnings)
     provider_execution_performed = [bool]$RunGpuNpuProvider
+    legacy_npu_auditor_provider_requested = [bool]$RunLegacyNpuAuditorProvider
     patch_application_performed = $false
     source_writes_performed = $false
     sqlite_write_performed = $false
@@ -1480,6 +1537,8 @@ $WorkflowReport = [ordered]@{
         provider_execution_requires_explicit_flag = $true
         run_gpu_npu_provider = [bool]$RunGpuNpuProvider
         require_provider_artifacts = [bool]$RequireProviderArtifacts
+        legacy_npu_auditor_provider_requested = [bool]$RunLegacyNpuAuditorProvider
+        production_npu_micro_support_default = -not [bool]$RunLegacyNpuAuditorProvider
         strict_provider_failures_block_workflow = [bool]$RequireProviderArtifacts
         patch_application_performed = $false
         source_writes_performed = $false
@@ -1499,6 +1558,7 @@ $WorkflowMarkdown = @(
     "- Passed: ``$WorkflowPassed``",
     "- Stamp: ``$Stamp``",
     "- Provider execution performed: ``$([bool]$RunGpuNpuProvider)``",
+    "- Legacy NPU auditor provider requested: ``$([bool]$RunLegacyNpuAuditorProvider)``",
     "- Patch application performed: ``False``",
     "- SQLite write performed: ``False``",
     "- Persistent memory write performed: ``False``",

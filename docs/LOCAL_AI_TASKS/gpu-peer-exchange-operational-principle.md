@@ -60,6 +60,8 @@ Heavy audit, report validation and acceptance decisions should remain with deter
 
 When provider lanes are selected, the NPU support lane should see the GPU1/GPU0 roundtrip and broker evidence as read-only context, may emit lightweight tool requests, and must remain non-blocking.
 
+The production NPU provider path is now called by `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` itself. The orchestrator creates a `round_000` mesh bootstrap seed and starts a bounded NPU micro-support transaction alongside GPU1 and GPU0. Additional NPU micro transactions may be launched from GPU1 checkpoints and runtime-heap/toolbox context. The legacy parallel NPU auditor remains diagnostics-only and must be enabled explicitly with `-RunLegacyNpuAuditorProvider`.
+
 ## Mesh visibility and slow NPU support rule
 
 The final product must make the GPU1/GPU0/NPU collaboration visible as a mesh, not as disconnected artifacts.
@@ -70,7 +72,7 @@ Required visibility:
 GPU1 sees GPU0 response and GPU0 broker results
 GPU1 sees NPU support signal and NPU broker results when present
 GPU0 sees GPU1 primary advisory and deterministic source reports
-NPU sees GPU1/GPU0/broker context as read-only input
+NPU starts from orchestrator round_000 and then sees GPU1/GPU0/broker context as read-only input
 runtime broker remains visible as the only tool execution channel
 ```
 
@@ -126,14 +128,21 @@ Markdown task input
   -> unified local AI launcher
   -> full-toolbox decision loop
   -> provider-capable Python selection from IA_CARMINE_PYTHON / .venv
-  -> GPU1/Ollama primary advisory report
   -> provider runtime heap live init
+  -> orchestrator startup barrier:
+       GPU1/Ollama primary advisory process
+       GPU0/OpenVINO peer support round_000
+       NPU/OpenVINO micro support round_000
+       deterministic/broker bootstrap tools
+  -> GPU1 checkpoints drive additional GPU0/NPU micro-support where enabled
+  -> GPU1/Ollama primary advisory report
   -> GPU0 peer task packet
   -> provider runtime heap GPU1->GPU0 evidence request
   -> GPU0 OpenVINO peer response
+  -> GPU0 writes response/tool-request events into provider runtime heap
   -> GPU0 runtime broker tool requests
   -> provider runtime heap broker results
-  -> NPU micro peer assistant over GPU1/GPU0/broker context
+  -> NPU micro peer assistant over GPU1/GPU0/broker/runtime-heap context
   -> provider runtime heap NPU support signal
   -> NPU runtime broker tool requests
   -> AI peer-exchange report
@@ -161,6 +170,15 @@ Tools/ai/agent_runtime_tool_broker.py
 ```
 
 The runtime broker is the only production path for GPU1/GPU0/NPU tool execution. GPU0 peer output may be numeric/tool evidence when `IA_CARMINE_GPU0_COMPANION_MODEL_DIR` is not configured, but that state must remain visible as `gpu0_peer_semantic_model_unconfigured`. NPU output remains non-blocking support evidence and must not replace deterministic validators as heavy audit authority.
+
+The production mesh has two synchronization barriers:
+
+```text
+startup barrier: GPU1 process, GPU0 support, NPU micro support and deterministic/broker bootstrap are all armed at the beginning
+close barrier: GPU0/NPU/legacy-auditor subprocesses are harvested or terminated within the final wait budget before telemetry/bundle finalization
+```
+
+`-Full0To10` does not enable the legacy NPU auditor provider by default. Use `-RunLegacyNpuAuditorProvider` only when comparing the old auditor path against the production micro-support lane.
 
 ## Peer mesh operational lanes rule
 
