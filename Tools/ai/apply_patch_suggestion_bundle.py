@@ -71,11 +71,6 @@ class PatchOperation:
     description: str | None = None
 
 
-def repo_relative(path: Path, repo_root: Path) -> str:
-    """Return a normalized repository-relative path."""
-    return path.resolve().relative_to(repo_root.resolve()).as_posix()
-
-
 def run_git(repo_root: Path, *args: str) -> str:
     """Run a read-only git command."""
     result = subprocess.run(
@@ -279,7 +274,7 @@ def apply_operation(repo_root: Path, operation: PatchOperation, apply: bool) -> 
                 result["ok"] = True
                 result["line_count_after"] = line_count(old_text)
                 return result
-            separator = "" if old_text.endswith(("\n", "")) else "\n"
+            separator = "" if not old_text or old_text.endswith("\n") else "\n"
             new_text = old_text + separator + operation.content
             if not new_text.endswith("\n"):
                 new_text += "\n"
