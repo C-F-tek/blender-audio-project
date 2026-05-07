@@ -414,6 +414,7 @@ def synthesize_from_evidence(
 
 SUBSTANTIVE_CONSISTENCY_FINDING_PRIORITIES = {
     "python_import_missing": 10,
+    "python_import_symbol_missing": 11,
     "md_python_command_script_missing": 20,
     "md_mentions_missing_powershell_path": 30,
     "md_cli_arg_not_in_argparse": 40,
@@ -471,7 +472,7 @@ def consistency_target_file(finding: dict[str, Any], repo_root: Path) -> tuple[s
 
 
 def consistency_area(kind: str) -> str:
-    if kind == "python_import_missing":
+    if kind in {"python_import_missing", "python_import_symbol_missing"}:
         return "python_python"
     if kind in {
         "md_python_command_script_missing",
@@ -747,27 +748,28 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
 
     deterministic_used = False
     consistency_recommendation_count = 0
-    desired_consistency_count = min(args.max_recommendations, max(20, len(recommendations)))
-    if repository_consistency_maps and len(recommendations) < desired_consistency_count:
-        deterministic_used = True
-        fill_limit = max(0, args.max_recommendations - len(recommendations))
+    if repository_consistency_maps:
         consistency_synthesized, consistency_skipped = synthesize_from_repository_consistency_maps(
             repository_maps=repository_consistency_maps,
             repo_root=repo_root,
             npu_refs=npu_refs,
             tool_refs=tool_refs,
-            max_recommendations=fill_limit,
+            max_recommendations=args.max_recommendations,
         )
         skipped.extend(consistency_skipped)
-        before_consistency_fill = len(recommendations)
-        for rec in consistency_synthesized:
-            key = recommendation_key(rec)
-            if key not in seen:
-                seen.add(key)
-                recommendations.append(rec)
-            if len(recommendations) >= args.max_recommendations:
-                break
-        consistency_recommendation_count = len(recommendations) - before_consistency_fill
+        consistency_recommendation_count = len(consistency_synthesized)
+        if consistency_synthesized:
+            deterministic_used = True
+            combined: list[dict[str, Any]] = []
+            combined_seen: set[str] = set()
+            for rec in [*recommendations, *consistency_synthesized]:
+                key = recommendation_key(rec)
+                if key in combined_seen:
+                    continue
+                combined_seen.add(key)
+                combined.append(rec)
+            recommendations = area_diverse_items(combined, limit=args.max_recommendations)
+            seen = {recommendation_key(rec) for rec in recommendations}
 
     if not recommendations and evidence:
         deterministic_used = True

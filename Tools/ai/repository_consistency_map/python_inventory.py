@@ -72,6 +72,48 @@ def local_module_exists(module: str, repo_root: Path) -> bool:
     return False
 
 
+def extract_exported_symbols(tree: ast.AST) -> set[str]:
+    symbols: set[str] = set(extract_python_symbols(tree)["functions"])
+    symbols.update(extract_python_symbols(tree)["classes"])
+    for node in tree.body if isinstance(tree, ast.Module) else []:
+        if isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            for target in targets:
+                if isinstance(target, ast.Name):
+                    symbols.add(target.id)
+                elif isinstance(target, (ast.Tuple, ast.List)):
+                    for item in target.elts:
+                        if isinstance(item, ast.Name):
+                            symbols.add(item.id)
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                symbols.add(alias.asname or alias.name.split(".", 1)[0])
+        elif isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if alias.name != "*":
+                    symbols.add(alias.asname or alias.name)
+    return symbols
+
+
+def local_module_symbol_exists(module: str, symbol: str, repo_root: Path) -> bool:
+    if symbol == "*":
+        return True
+    for candidate in module_to_paths(module, repo_root):
+        path = Path(candidate)
+        if not path.exists() or not path.is_file():
+            continue
+        text, error = read_text(path)
+        if error:
+            continue
+        try:
+            tree = ast.parse(text, filename=repo_rel(path, repo_root))
+        except SyntaxError:
+            continue
+        if symbol in extract_exported_symbols(tree):
+            return True
+    return False
+
+
 def extract_local_import_findings(tree: ast.AST, source: str, repo_root: Path) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
     local_prefixes = ("Tools", "Scripting", "indexAI")
@@ -86,8 +128,25 @@ def extract_local_import_findings(tree: ast.AST, source: str, repo_root: Path) -
                 continue
             module = node.module or ""
             root = module.split(".", 1)[0]
-            if root in local_prefixes and not local_module_exists(module, repo_root):
+            if root not in local_prefixes:
+                continue
+            if not local_module_exists(module, repo_root):
                 findings.append({"source": source, "line": getattr(node, "lineno", 0), "module": module, "kind": "python_import_missing"})
+                continue
+            for alias in node.names:
+                symbol = alias.name
+                if symbol == "*":
+                    continue
+                if not local_module_symbol_exists(module, symbol, repo_root):
+                    findings.append(
+                        {
+                            "source": source,
+                            "line": getattr(node, "lineno", 0),
+                            "module": module,
+                            "symbol": symbol,
+                            "kind": "python_import_symbol_missing",
+                        }
+                    )
     return findings
 
 

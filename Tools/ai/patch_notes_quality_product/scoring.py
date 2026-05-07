@@ -85,6 +85,13 @@ def _area_diverse_plans(plans: list[dict[str, Any]], limit: int) -> list[dict[st
         else:
             other.append(plan)
     selected: list[dict[str, Any]] = []
+    # Coverage-first: include one item per available preferred area before filling
+    # the remaining window. This prevents a valid ALL_ALL area from disappearing
+    # when the final patch-note limit is lower than the upstream patch-plan count.
+    for area in preferred_areas:
+        bucket = by_area[area]
+        if bucket and len(selected) < limit:
+            selected.append(bucket.pop(0))
     while len(selected) < limit and any(by_area.values()):
         for area in preferred_areas:
             bucket = by_area[area]
@@ -246,6 +253,7 @@ REPOSITORY_KIND_TO_PRODUCT_AREA = {
     "md_cli_arg_not_in_argparse": "doc_python",
     "documented_python_script_without_obvious_smoke": "python_doc",
     "python_import_missing": "python_python",
+    "python_import_symbol_missing": "python_python",
 }
 
 def canonical_product_area(area: Any) -> str:

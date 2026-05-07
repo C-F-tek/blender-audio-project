@@ -176,6 +176,30 @@ def area_diversity_smoke() -> dict[str, Any]:
     }
 
 
+def python_python_symbol_smoke() -> dict[str, Any]:
+    import ast
+    from pathlib import Path
+    import tempfile
+
+    from Tools.ai.repository_consistency_map.python_inventory import extract_local_import_findings
+
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        package = root / "Tools" / "ai"
+        package.mkdir(parents=True)
+        (root / "Tools" / "__init__.py").write_text("", encoding="utf-8")
+        (package / "__init__.py").write_text("", encoding="utf-8")
+        (package / "real_module.py").write_text("def existing_symbol():\\n    return True\\n", encoding="utf-8")
+        tree = ast.parse("from Tools.ai.real_module import missing_symbol\\n")
+        findings = extract_local_import_findings(tree, "Tools/ai/consumer.py", root)
+    kinds = [item.get("kind") for item in findings]
+    return {
+        "passed": "python_import_symbol_missing" in kinds,
+        "kinds": kinds,
+        "finding_count": len(findings),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
@@ -213,6 +237,9 @@ def main() -> int:
     area_diversity = area_diversity_smoke()
     if not area_diversity.get("passed"):
         errors.append("area diversity smoke failed to include doc_doc/python_doc alongside doc_python")
+    python_python_symbol = python_python_symbol_smoke()
+    if not python_python_symbol.get("passed"):
+        errors.append("python_python symbol import smoke failed")
     report = {
         "schema_version": 1,
         "kind": "patch_notes_quality_product_smoke",
@@ -231,6 +258,7 @@ def main() -> int:
         "negative": {"passed": negative.get("passed"), "quality_gate_passed": negative.get("quality_gate_passed"), "classification": negative.get("classification"), "fallback_path_note_count": len(negative.get("fallback_path_notes", [])), "fallback_case_count": len(negative.get("fallback_cases", []))},
         "all_all_insufficient": {"passed": all_all_insufficient.get("passed"), "quality_gate_passed": all_all_insufficient.get("quality_gate_passed"), "classification": all_all_insufficient.get("classification"), "product_sufficiency": all_all_insufficient.get("product_sufficiency")},
         "area_diversity": area_diversity,
+        "python_python_symbol": python_python_symbol,
         "guardrails": {"report_only": True, "patch_application_performed": False, "source_writes_performed": False},
     }
     output = resolve_output_path(repo_root, args.output or f"output/validation/patch_notes_quality_product_smoke_{stamp}.json")
