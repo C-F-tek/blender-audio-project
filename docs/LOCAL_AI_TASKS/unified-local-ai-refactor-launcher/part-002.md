@@ -66,7 +66,7 @@ Task Markdown
 -> draft GitHub PR
 ```
 
-The relevant launcher flags are:
+Relevant launcher product flags:
 
 ```text
 -BuildTaskPatchSuggestionReport
@@ -82,7 +82,9 @@ The relevant launcher flags are:
 
 `$Stamp` is a single launcher variable. The launcher receives or creates it once, then propagates it to internal tools and report paths. Do not create a second unrelated stamp for patch apply, evidence, PR prep or provider reports.
 
-`ReviewPrIncludePath` remains an emergency/additive override only. The product path should derive staged source/doc paths from the `patch_suggestion_bundle_apply` report generated in the same launcher run.
+`$BudgetMinutes` is a launcher capacity knob. It changes the available time budget for the run; it must not reduce semantic scope. Use it with `-RunIntensity` to control duration while keeping provider/tool/broker/validator lanes selected.
+
+`ReviewPrIncludePath` is an emergency/additive override only. The product path should derive staged source/doc paths from the `patch_suggestion_bundle_apply` report generated in the same launcher run.
 
 PRs created by the review phase should be draft unless explicitly promoted later after human review.
 
@@ -93,6 +95,10 @@ Use this shape from the repository root. Replace only the task file and PR title
 ```powershell
 $Stamp = "full_product_$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 $Task = ".\docs\LOCAL_AI_TASKS\<TASK_MD_REALE>.md"
+$BudgetMinutes = 45
+
+$env:IA_CARMINE_PYTHON = (Resolve-Path ".\.venv\Scripts\python.exe").Path
+$env:PYTHONPATH = (Resolve-Path ".").Path
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
@@ -103,6 +109,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -Model qwen2.5-coder:14b `
   -Full0To10 `
   -RunIntensity balanced `
+  -BudgetMinutes $BudgetMinutes `
   -BuildTaskPatchSuggestionReport `
   -ReviewPrApplyDeterministicSuggestions `
   -PrepareReviewPr `
@@ -117,6 +124,168 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 `-ContinueOnValidationError` is acceptable for this product lane only when provider degradation is captured in reports and the deterministic patch/apply/PR phase can still produce a reviewable product. It must not hide missing product reports, unsafe staging, failed deterministic patch application, failed commit/push or failed PR creation.
 
+## Complete launcher parameter inventory
+
+Source: `Tools/workflow/run_unified_local_ai_refactor.ps1` `param(...)` block.
+
+### Repository, task and output identity
+
+```text
+-RepoRoot
+-Mode
+-TaskFile
+-TaskBranch
+-Stamp
+-OutputDir
+-EvidenceDir
+-AiPacketsRoot
+-AiPacketsDir
+```
+
+### Profile, model, intensity and budget
+
+```text
+-Profile                     # core | npu | docs
+-Model
+-RunIntensity                # quick | balanced | deep | custom
+-BudgetMinutes
+-MaxRounds
+-FilesPerRound
+-MaxContextFiles
+-MaxCharsPerFile
+-MaxNewTokens
+-KeepAlive
+```
+
+### NPU / provider capacity knobs
+
+```text
+-NpuAuditorEveryRounds
+-NpuAuditorTimeoutSeconds
+-NpuMaxContextChars
+-NpuMaxPromptChars
+-NpuMaxNewTokens
+-NpuFinalWaitSeconds
+-NpuMicroStartMode           # startup | deferred | live-seed-only | peer | post-gpu-provider | disabled
+-ProviderMaxContextChars
+-MaxContextChars
+```
+
+### Recommendation, patch-plan and repository consistency limits
+
+```text
+-MinRecommendations
+-MinPatchPlans
+-MaxRecommendations
+-MaxPatchPlans
+-RepositoryConsistencyMapWorkers
+```
+
+### Context pack and memory sizing
+
+```text
+-ContextPackMaxTotalChars
+-ContextPackMaxFileChars
+-AgentStateMaxMemoryChars
+-MemoryDb
+-SaveInputsToMemoryDb
+-NoMemoryWrite
+```
+
+### Python and operator/session controls
+
+```text
+-PythonExe
+-Interactive
+-SkipGitSync
+-NoBranch
+-AllowDirty
+-DryRun
+-ContinueOnValidationError
+-NoStrictRealRunActivation
+-Prod
+-NoExecutionTail
+```
+
+### Full0To10 and provider lanes
+
+```text
+-Full0To10
+-BuildWorkloadQualityReport
+-UseOllamaAdvisory
+-UsePrimaryAdvisoryProvider
+-RunMultistepProviderWorkflow
+-RunLegacyFullToolboxIntegrated
+-RunLegacyNpuAuditorProvider
+-RunOllamaProbe
+-RunNpuProbe
+-RunNpuDecodeSmoke
+-RunOpenVinoGpu0Workload
+```
+
+### Explicit lane disablers
+
+```text
+-NoOllamaProbe
+-NoNpuProbe
+-NoNpuDecodeSmoke
+-NoMultistepProvider
+-NoWorkloadQuality
+-NoEvidence
+-NoPatchSpecs
+```
+
+### Evidence, patch specs and context breadth
+
+```text
+-BuildEvidence
+-GeneratePatchSpecs
+-FullContextGoldenPath
+-OfficialAdapterTimeoutSeconds
+-SkipOfficialAdapter
+```
+
+### Reset and generated artifact cleanup
+
+```text
+-ResetBeforeDate
+-ApplyReset
+-ConfirmResetText
+-IncludeMemoryReset
+-IncludeGeneratedIndexReset
+```
+
+### Matrix/smoke controls
+
+```text
+-MatrixWorkers
+-RepeatCases
+```
+
+### LightFull0To10 profile
+
+```text
+-LightFull0To10
+-LightFull0To10OutputDir
+-LightFull0To10NoExternalProbes
+```
+
+### Review PR product controls
+
+```text
+-BuildTaskPatchSuggestionReport
+-ReviewPrApplyDeterministicSuggestions
+-PrepareReviewPr
+-ReviewPrBranch
+-ReviewPrBaseBranch
+-ReviewPrRemote
+-ReviewPrTitle
+-ReviewPrCommitMessage
+-ReviewPrIncludePath
+-ReviewPrPush
+-ReviewPrCreate
+```
+
 ## Run intensity parameters
 
 All intensity presets preserve run-unica coverage. Intensity changes capacity, not scope.
@@ -128,38 +297,11 @@ All intensity presets preserve run-unica coverage. Intensity changes capacity, n
 | `deep` | Heavier complete review. | Larger legacy-lane context, more rounds and larger memory/context profile values with every Full0To10 lane enabled unless explicitly disabled. |
 | `custom` | Operator-defined capacity. | Use explicit numeric parameters without reducing the Full0To10 lane set. |
 
-Legacy/full-toolbox inherited parameters currently exposed by the launcher:
-
-```text
--BudgetMinutes
--MaxRounds
--FilesPerRound
--MaxContextFiles
--MaxCharsPerFile
--MaxNewTokens
--KeepAlive
--NpuAuditorEveryRounds
--NpuAuditorTimeoutSeconds
--NpuMaxContextChars
--NpuMaxPromptChars
--NpuMaxNewTokens
--NpuFinalWaitSeconds
--RunLegacyNpuAuditorProvider
--MinRecommendations
--MinPatchPlans
--MaxRecommendations
--MaxPatchPlans
--RepositoryConsistencyMapWorkers
--ProviderMaxContextChars
--ContextPackMaxTotalChars
--ContextPackMaxFileChars
--AgentStateMaxMemoryChars
-```
-
 Current wiring status:
 
 ```text
-Budget/round/file/context/token knobs are wired into the legacy full-toolbox integrated lane. NPU auditor knobs affect legacy provider execution only when -RunLegacyNpuAuditorProvider is supplied.
+Budget/round/file/context/token knobs are wired into the legacy full-toolbox integrated lane.
+NPU auditor knobs affect legacy provider execution only when -RunLegacyNpuAuditorProvider is supplied.
 The production Full0To10 mesh passes GPU0/NPU startup-support settings to run_agent_gpu_npu_parallel_orchestrator.py and records round_000/overlap evidence before telemetry and bundle finalization.
 RunIntensity presets update ProviderMaxContextChars, ContextPackMaxTotalChars, ContextPackMaxFileChars and AgentStateMaxMemoryChars in the manifest.
 The subordinate context_pack, agent_state, official adapter and Ollama packet calls still need one more patch to pass every external/intensity knob through instead of using their current hardcoded/default values.
