@@ -57,13 +57,19 @@ Current compact operational bridge:
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ```
 
+Current code-derived behavior map:
+
+```text
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+```
+
 Recent telemetry baseline:
 
 ```text
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 ```
 
-The earlier broker telemetry issue is historical/resolved unless a new regression is found.
+Historical telemetry notes are useful context only when current code and current run manifests confirm relevance.
 
 ## TUTTO SU TUTTO doctrine
 
@@ -78,11 +84,11 @@ The set of lanes is allowed to grow. New production-ready tools, broker capabili
 Canonical production roles:
 
 ```text
-GPU1 / Ollama / RTX 5080 = mandatory primary advisory planner
+GPU1 / Ollama / RTX 5080 = primary advisory planner
 GPU0 / OpenVINO = companion peer worker
-NPU = micro-fast task assistant and lightweight tool-support lane
-deterministic scripts = heavy audit and validation authority
-runtime tool broker = controlled tool execution for GPU1 and GPU0 requests
+NPU = non-blocking micro/task assistant unless explicitly promoted by code/config
+Deterministic scripts = heavy audit and validation authority
+Runtime tool broker = controlled tool execution for provider requests
 ```
 
 Canonical document:
@@ -91,6 +97,8 @@ Canonical document:
 docs/LOCAL_AI_TASKS/gpu-peer-exchange-operational-principle.md
 ```
 
+Current implementation details and caveats are tracked in the code-derived map.
+
 ## Current stable reading order
 
 Use this order for current IA-Carmine local-AI work:
@@ -98,16 +106,18 @@ Use this order for current IA-Carmine local-AI work:
 ```text
 1. CHATGPT/README.md
 2. docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
-3. docs/LOCAL_AI_TASKS/gpu-peer-exchange-operational-principle.md
-4. docs/LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md
-5. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
-6. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-7. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
-8. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
-9. docs/LOCAL_AI_TASKS/project-tool-registry.md
-10. docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
-11. docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
-12. docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
+3. docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+4. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+5. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+6. docs/LOCAL_AI_TASKS/patch-suggestion-bundle-final-phase.md
+7. docs/LOCAL_AI_TASKS/gpu-peer-exchange-operational-principle.md
+8. docs/LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md
+9. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+10. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+11. docs/LOCAL_AI_TASKS/project-tool-registry.md
+12. docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
+13. docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
+14. docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
 ```
 
 Do not start from historical PR handoffs, legacy master-branch runbooks, or long semi-automatic procedure snapshots.
@@ -219,8 +229,10 @@ Existing files already over the limits are technical debt. Do not split them bli
 
 | File | Status | Purpose |
 |---|---|---|
+| `code-derived-ai-toolchain-map-2026-05-07.md` | active map | Source-code-derived behavior map for launcher, full-toolbox, provider mesh and review PR phases. |
 | `current-operational-state-2026-05-05.md` | active bridge | Compact current state and guardrails. |
 | `gpu-peer-exchange-operational-principle.md` | active principle | GPU1/Ollama, GPU0/OpenVINO, NPU and deterministic validator roles. |
+| `patch-suggestion-bundle-final-phase.md` | active final phase | Current deterministic patch suggestion and review PR final-phase behavior. |
 | `md-coherence-only-github-pass-2026-05-06.md` | active policy | GitHub-only Markdown cleanup, split and pruning policy. |
 | `file-line-limit-validator-2026-05-06.md` | active validator note | File line-limit validator contract. |
 | `refactor-reuse-methods-classes-tools-planning.md` | active P1 task | Method/class/helper/tool reuse planning. |
