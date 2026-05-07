@@ -21,7 +21,14 @@ The essential product is the only class that should drive a human-reviewed patch
 Tools/validation/check_patch_suggestion_product_separation.py
 ```
 
-The validator reads one `patch_suggestion_bundle_apply` JSON report and verifies that:
+The validator accepts either:
+
+```text
+patch_suggestion_bundle_apply
+patch_suggestion_bundle_apply_smoke
+```
+
+For a direct `patch_suggestion_bundle_apply` report it verifies that:
 
 ```text
 essential_patch_suggestion_items exists and matches manual_review_product.product_facing_manual_review_count
@@ -32,7 +39,22 @@ essential items have safe source/doc targets, rationale/title, patch sketch or o
 provider, Blender, FFmpeg and SQLite execution flags remain false
 ```
 
-## Example command
+For the smoke wrapper it verifies that the smoke passed, nested commands passed, stamped deterministic suggestions were discovered, current product-facing proposal reports were included, and current supplemental update reports were included.
+
+## Example commands
+
+Validate the smoke wrapper produced by `run_patch_suggestion_bundle_apply_smoke.py`:
+
+```powershell
+python .\Tools\validation\check_patch_suggestion_product_separation.py `
+  --repo-root . `
+  --report .\output\validation\patch_suggestion_bundle_apply_smoke.json `
+  --require-product `
+  --require-supplemental `
+  --output .\output\validation\patch_suggestion_product_separation.json
+```
+
+Validate a direct apply report:
 
 ```powershell
 python .\Tools\validation\check_patch_suggestion_product_separation.py `
