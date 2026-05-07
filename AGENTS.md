@@ -371,10 +371,11 @@ For long, multi-file or delicate changes, especially on workflow, broker, memory
 
 ```text
 README.md
-run_patch_bundle.py
-patches/00_check_repo_ready.py
-patches/01_*.py
+bundle runner script
+ordered patch scripts under a patches/ folder
 ```
+
+These names are ZIP-internal bundle members, not repository-tracked source paths. Do not treat them as files that must already exist in the repository root.
 
 Patch bundles must be idempotent where possible, block on unexpected dirty working trees, print resulting line counts for modified scripts and never commit automatically.
 

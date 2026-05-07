@@ -36,6 +36,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--extra-context", action="append", default=[])
     parser.add_argument("--sqlite-fts-db", required=True)
     parser.add_argument("--min-quality-score", type=float, default=72.0)
+    parser.add_argument("--max-patch-notes", type=int, default=20)
+    parser.add_argument("--min-patch-notes", type=int, default=0)
     parser.add_argument("--strict-patch-notes-quality-gate", action="store_true")
     parser.add_argument("--output", required=True)
     parser.add_argument("--markdown-output", required=True)

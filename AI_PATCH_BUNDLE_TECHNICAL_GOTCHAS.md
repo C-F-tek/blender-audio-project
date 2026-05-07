@@ -234,7 +234,7 @@ Every patch ZIP should contain:
 ```text
 README.md
 manifest.json
-run_patch_bundle.py
+bundle runner script
 patches/
 ```
 
@@ -299,7 +299,7 @@ if ($ParseErrors.Count) { exit 1 }
 For Python files:
 
 ```text
-- run `python -m py_compile <changed.py>`
+- run `python -m py_compile <declared Python target>`
 - avoid nested triple quote generation
 - prefer list[str] line assembly for generated patch files
 - keep large templates as external files when possible
@@ -320,8 +320,8 @@ Use explicit add lists:
 
 ```powershell
 git add `
-  .\Tools\ai\some_tool.py `
-  .\Tools\validation\some_smoke.py `
+  .\Tools\ai\<declared Python target> `
+  .\Tools\validation\<declared validation target> `
   .\Tools\workflow\<declared PowerShell runner>
 ```
 

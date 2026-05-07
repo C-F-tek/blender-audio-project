@@ -90,7 +90,9 @@ def build_report(args: Any) -> dict[str, Any]:
     request_summary = build_request_summary(task, args.branch, args.commit, args.issue)
     normalized_objective = str(task.get("objective_hint") or args.request or "").strip()
     patch_summary = patch_plan_summary(loaded.get("patch_plan", {}), loaded.get("patch_quality", {}))
-    patch_notes = build_patch_notes(loaded.get("patch_plan", {}), loaded.get("patch_quality", {}))
+    patch_note_limit = max(1, int(getattr(args, "max_patch_notes", 20) or 20))
+    requested_min_patch_notes = max(0, int(getattr(args, "min_patch_notes", 0) or 0))
+    patch_notes = build_patch_notes(loaded.get("patch_plan", {}), loaded.get("patch_quality", {}), limit=patch_note_limit)
     validation_commands = patch_summary.get("validation_commands") or [
         "python -m py_compile Tools/ai/build_patch_notes_quality_product.py",
         "python Tools/validation/run_patch_notes_quality_product_smoke.py --repo-root .",
@@ -114,6 +116,8 @@ def build_report(args: Any) -> dict[str, Any]:
             "branch": args.branch,
             "commit": args.commit,
             "issue": args.issue,
+            "patch_note_limit": patch_note_limit,
+            "requested_min_patch_notes": requested_min_patch_notes,
         },
         "request_summary": request_summary,
         "normalized_objective": normalized_objective,
@@ -145,7 +149,13 @@ def build_report(args: Any) -> dict[str, Any]:
         },
     }
     report["missing_evidence"] = report["evidence_coverage"]["missing_evidence"]
-    report["product_sufficiency"] = build_product_sufficiency(report, loaded, task)
+    report["product_sufficiency"] = build_product_sufficiency(
+        report,
+        loaded,
+        task,
+        patch_note_limit=patch_note_limit,
+        requested_min_patch_notes=requested_min_patch_notes,
+    )
     report["fts_evidence_search"] = build_search_quality(repo_root, resolve(repo_root, args.sqlite_fts_db), input_paths, loaded, normalized_objective, [args.task_markdown, *args.extra_context])
     score, findings, fallback = score_product(report)
     report["quality_score"] = score

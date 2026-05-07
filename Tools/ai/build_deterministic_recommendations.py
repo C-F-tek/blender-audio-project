@@ -414,6 +414,7 @@ def synthesize_from_evidence(
 
 SUBSTANTIVE_CONSISTENCY_FINDING_PRIORITIES = {
     "python_import_missing": 10,
+    "python_import_symbol_missing": 11,
     "md_python_command_script_missing": 20,
     "md_mentions_missing_powershell_path": 30,
     "md_cli_arg_not_in_argparse": 40,
@@ -453,25 +454,42 @@ def is_cosmetic_consistency_finding(finding: dict[str, Any]) -> bool:
     ).lower()
     return any(keyword in text for keyword in COSMETIC_FINDING_KEYWORDS)
 
+def finding_source_path(finding: dict[str, Any]) -> str:
+    return normalize_repo_path(finding.get("source") or finding.get("source_path"))
+
+
+def finding_target_path(finding: dict[str, Any]) -> str:
+    return normalize_repo_path(finding.get("target") or finding.get("target_path"))
+
+
+def finding_patch_target_file(finding: dict[str, Any]) -> str:
+    area = consistency_area(str(finding.get("kind") or ""))
+    source = finding_source_path(finding)
+    target = finding_target_path(finding)
+    # For documentation reference findings, the patch target is the document
+    # containing the stale reference, not the missing referenced artifact.
+    if area in {"doc_doc", "doc_python"}:
+        return source
+    return source or target
+
+
+def is_patchable_consistency_finding(finding: dict[str, Any], repo_root: Path) -> bool:
+    path = finding_patch_target_file(finding)
+    return bool(path) and target_path_error(path, repo_root) is None
+
 
 def consistency_target_file(finding: dict[str, Any], repo_root: Path) -> tuple[str, str | None]:
-    source = normalize_repo_path(finding.get("source"))
-    if source:
-        source_error = target_path_error(source, repo_root)
-        if source_error is None:
-            return source, None
-        return "", f"source {source!r}: {source_error}"
-    target = normalize_repo_path(finding.get("target"))
-    if target:
-        target_error = target_path_error(target, repo_root)
-        if target_error is None:
-            return target, None
-        return "", f"target {target!r}: {target_error}"
-    return "", "finding has neither source nor target"
+    patch_target = finding_patch_target_file(finding)
+    if patch_target:
+        patch_error = target_path_error(patch_target, repo_root)
+        if patch_error is None:
+            return patch_target, None
+        return "", f"patch target {patch_target!r}: {patch_error}"
+    return "", "finding has neither source/source_path nor target/target_path"
 
 
 def consistency_area(kind: str) -> str:
-    if kind == "python_import_missing":
+    if kind in {"python_import_missing", "python_import_symbol_missing"}:
         return "python_python"
     if kind in {
         "md_python_command_script_missing",
@@ -517,8 +535,8 @@ def repository_consistency_recommendation(
     if target_error:
         return None, {"id": f"consistency_{index:03d}", "reason": target_error}
 
-    source = normalize_repo_path(finding.get("source"))
-    target = normalize_repo_path(finding.get("target"))
+    source = finding_source_path(finding)
+    target = finding_target_path(finding)
     flag = str(finding.get("flag") or "")
     line = int(finding.get("line") or 0)
     severity = str(finding.get("severity") or "medium")
@@ -573,6 +591,69 @@ def repository_consistency_recommendation(
     )
 
 
+def area_diverse_findings(findings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return findings in round-robin area order for ALL_ALL product diversity."""
+    preferred_areas = [
+        "python_python",
+        "doc_python",
+        "doc_doc",
+        "python_doc",
+        "policy_violation",
+        "refactor_candidate",
+        "telemetry_gap",
+        "evidence_gap",
+    ]
+    by_area: dict[str, list[dict[str, Any]]] = {area: [] for area in preferred_areas}
+    other: list[dict[str, Any]] = []
+    for finding in sorted(findings, key=finding_priority):
+        area = consistency_area(str(finding.get("kind") or ""))
+        if area in by_area:
+            by_area[area].append(finding)
+        else:
+            other.append(finding)
+    ordered: list[dict[str, Any]] = []
+    while any(by_area.values()):
+        for area in preferred_areas:
+            bucket = by_area[area]
+            if bucket:
+                ordered.append(bucket.pop(0))
+    ordered.extend(other)
+    return ordered
+
+
+def area_diverse_items(items: list[dict[str, Any]], *, limit: int) -> list[dict[str, Any]]:
+    """Round-robin items by product area while preserving relative order within each area."""
+    preferred_areas = [
+        "python_python",
+        "doc_python",
+        "doc_doc",
+        "python_doc",
+        "policy_violation",
+        "refactor_candidate",
+        "telemetry_gap",
+        "evidence_gap",
+    ]
+    by_area: dict[str, list[dict[str, Any]]] = {area: [] for area in preferred_areas}
+    other: list[dict[str, Any]] = []
+    for item in items:
+        area = str(item.get("area") or "")
+        if area in by_area:
+            by_area[area].append(item)
+        else:
+            other.append(item)
+    selected: list[dict[str, Any]] = []
+    while len(selected) < limit and any(by_area.values()):
+        for area in preferred_areas:
+            bucket = by_area[area]
+            if bucket and len(selected) < limit:
+                selected.append(bucket.pop(0))
+    for item in other:
+        if len(selected) >= limit:
+            break
+        selected.append(item)
+    return selected
+
+
 def synthesize_from_repository_consistency_maps(
     *,
     repository_maps: list[dict[str, Any]],
@@ -589,10 +670,20 @@ def synthesize_from_repository_consistency_maps(
         for item in raw_findings:
             if isinstance(item, dict):
                 findings.append(item)
-    findings = sorted(findings, key=finding_priority)
+    skipped: list[dict[str, str]] = []
+    raw_finding_count = len(findings)
+    patchable_findings = [finding for finding in findings if is_patchable_consistency_finding(finding, repo_root)]
+    skipped_unpatchable_count = raw_finding_count - len(patchable_findings)
+    if skipped_unpatchable_count:
+        skipped.append(
+            {
+                "id": "repository_consistency_unpatchable_filtered",
+                "reason": f"filtered {skipped_unpatchable_count} generated/runtime/non-patchable consistency findings before area selection",
+            }
+        )
+    findings = area_diverse_findings(patchable_findings)
 
     recommendations: list[dict[str, Any]] = []
-    skipped: list[dict[str, str]] = []
     seen_targets: set[tuple[str, str, str]] = set()
     for index, finding in enumerate(findings, start=1):
         if len(recommendations) >= max_recommendations:
@@ -684,27 +775,28 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
 
     deterministic_used = False
     consistency_recommendation_count = 0
-    desired_consistency_count = min(args.max_recommendations, max(20, len(recommendations)))
-    if repository_consistency_maps and len(recommendations) < desired_consistency_count:
-        deterministic_used = True
-        fill_limit = max(0, args.max_recommendations - len(recommendations))
+    if repository_consistency_maps:
         consistency_synthesized, consistency_skipped = synthesize_from_repository_consistency_maps(
             repository_maps=repository_consistency_maps,
             repo_root=repo_root,
             npu_refs=npu_refs,
             tool_refs=tool_refs,
-            max_recommendations=fill_limit,
+            max_recommendations=args.max_recommendations,
         )
         skipped.extend(consistency_skipped)
-        before_consistency_fill = len(recommendations)
-        for rec in consistency_synthesized:
-            key = recommendation_key(rec)
-            if key not in seen:
-                seen.add(key)
-                recommendations.append(rec)
-            if len(recommendations) >= args.max_recommendations:
-                break
-        consistency_recommendation_count = len(recommendations) - before_consistency_fill
+        consistency_recommendation_count = len(consistency_synthesized)
+        if consistency_synthesized:
+            deterministic_used = True
+            combined: list[dict[str, Any]] = []
+            combined_seen: set[str] = set()
+            for rec in [*recommendations, *consistency_synthesized]:
+                key = recommendation_key(rec)
+                if key in combined_seen:
+                    continue
+                combined_seen.add(key)
+                combined.append(rec)
+            recommendations = area_diverse_items(combined, limit=args.max_recommendations)
+            seen = {recommendation_key(rec) for rec in recommendations}
 
     if not recommendations and evidence:
         deterministic_used = True

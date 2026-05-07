@@ -5,7 +5,7 @@
 PowerShell può passare:
 
 ```powershell
--InputPath ".\README.md",".\Tools\a.ps1",".\Tools\b.py"
+-InputPath ".\README.md",".\Tools\workflow\run_unified_local_ai_refactor.ps1",".\Tools\ai\build_full_toolbox_run_telemetry_summary.py"
 ```
 
 come una singola stringa comma-separated.

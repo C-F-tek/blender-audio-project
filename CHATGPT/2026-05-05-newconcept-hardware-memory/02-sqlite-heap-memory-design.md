@@ -16,21 +16,28 @@ shared AI-to-AI bundle evidence
 
 ## Proposed module layout
 
+Tracked backend already available:
+
 ```text
-Tools/ai/
-  agent_runtime_sqlite_memory.py          # existing SQLite backend to extend
-  agent_memory_schema.py                  # DB schema + migrations
-  agent_memory_chunker.py                 # Markdown/text chunking
-  agent_memory_embeddings.py              # embedding cache
-  agent_memory_search.py                  # FTS5 + vector/hybrid search
-  agent_memory_tools.py                   # memory_add_text / memory_add_file / memory_search CLI
-  agent_runtime_tool_broker.py            # exposes memory tools via allowlist broker
+Tools/ai/agent_runtime_sqlite_memory.py   # existing SQLite backend to extend
+Tools/ai/agent_runtime_tool_broker.py     # broker surface to extend when memory tools become real
+```
 
-output/ai_runtime_memory/
-  operational_context.sqlite              # scratch, local, never commit
+Future design responsibilities, not current repository paths:
 
-indexAI/agent_memory/
-  agent_memory.sqlite                     # persistent, read-only default, never commit
+```text
+DB schema and migrations
+Markdown/text chunking
+embedding cache
+FTS5 plus vector/hybrid search
+memory_add_text / memory_add_file / memory_search CLI
+```
+
+Local runtime storage remains generated/private and must never be committed:
+
+```text
+output/ai_runtime_memory/operational_context.sqlite
+indexAI/agent_memory/agent_memory.sqlite
 ```
 
 ## Physical and logical model

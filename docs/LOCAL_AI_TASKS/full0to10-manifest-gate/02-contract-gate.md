@@ -1,18 +1,26 @@
 # Contract gate
 
-Il gate post-bundle esegue due step:
+Questo documento descrive il contract gate desiderato per il post-bundle.
 
-1. `build_full0to10_run_manifest.py`
-2. `check_full0to10_bundle_contracts.py`
+Stato corrente: non esiste un wrapper PowerShell tracciato con nome canonico per questo gate. Non documentare quindi un comando `-File` eseguibile finché il wrapper non viene aggiunto alla repository e validato.
 
-Il primo produce la mappa della run. Il secondo verifica che bundle, memory lane e
-hardware delegation siano visibili.
+Il gate deve essere implementato come composizione report-only di due responsabilità:
+
+1. generazione della mappa/manifest della run;
+2. validazione che bundle, memory lane e hardware delegation siano visibili nei report finali.
+
+## Componenti logici
+
+```text
+full0to10 run manifest builder
+full0to10 bundle contract validator
+```
+
+Questi nomi sono responsabilità funzionali, non path repository garantiti.
 
 ## Uso
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflowun_full0to10_manifest_contract_gate.ps1 `
-  -RepoRoot . `
-  -Bundle .\docs\LOCAL_VALIDATION_EVIDENCE\<bundle>.json `
-  -EvidenceDir .\docs\LOCAL_VALIDATION_EVIDENCE
+```text
+Design-only. Creare prima un wrapper tracciato in Tools/workflow, con Param block, smoke e parser PowerShell.
+Dopo l'introduzione del wrapper, aggiornare questa sezione con il comando reale.
 ```
