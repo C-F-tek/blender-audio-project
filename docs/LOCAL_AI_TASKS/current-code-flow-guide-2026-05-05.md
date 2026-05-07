@@ -1,17 +1,25 @@
-<!-- IA-CARMINE-MD-SPLIT: index -->
 # current-code-flow-guide-2026-05-05
 
-Questo documento è stato diviso automaticamente per rispettare il budget di righe Markdown.
+Status: historical / superseded code-flow guide.
 
-- File originale: `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md`
-- Limite massimo configurato: `400` righe
-- Indice completo: [`current-code-flow-guide-2026-05-05/README.md`](current-code-flow-guide-2026-05-05/README.md)
+This file is retained for older code-flow context. It is not the current source-derived behavior map.
 
-## Parti
+Current code-driven maps:
 
-- [`current-code-flow-guide-2026-05-05/part-001.md`](current-code-flow-guide-2026-05-05/part-001.md)
-- [`current-code-flow-guide-2026-05-05/part-002.md`](current-code-flow-guide-2026-05-05/part-002.md)
+```text
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+```
 
-## Nota operativa
+Current rule:
 
-Mantenere questo file come entrypoint stabile per non rompere i riferimenti esistenti.
+```text
+When this guide disagrees with source code or 2026-05-07 code-derived maps, the current source and 2026-05-07 maps win.
+```
+
+The old split folder for this document is legacy. New Markdown splits must use the `name.md/part-001.md` layout.
+
+Use the legacy parts only for comparison with earlier code-flow documentation.
