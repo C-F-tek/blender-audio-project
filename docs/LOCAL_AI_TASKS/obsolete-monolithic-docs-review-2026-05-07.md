@@ -29,14 +29,18 @@ UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 | `monolithic` | Too broad/large for first-read usage; should point to compact maps. |
 | `superseded` | Current code-driven maps or launcher contract should be used instead. |
 | `generated-like` | Looks like generated/captured inventory or evidence; do not hand-maintain as source authority. |
+| `legacy-split-layout` | Uses pre-rule split folder naming that does not preserve the `.md` suffix. |
 
 ## Current flagged documents
 
 | Document | Flags | Current action |
 |---|---|---|
+| `FULL_RUN_UNICA_TUTTO_SU_TUTTO.md` | historical, superseded, monolithic, legacy-split-layout | Root legacy runbook. Do not use as current operator entrypoint. |
+| `FULL_RUN_UNICA_TUTTO_SU_TUTTO/part-*.md` | historical, legacy-split-layout | Legacy split parts. Do not copy this split layout. |
+| `docs/LOCAL_AI_TASKS/full-run-unica-tutto-su-tutto-patch-plan-task.md` | historical, superseded | Already reduced to historical pointer. Do not use as current command source. |
 | `docs/LOCAL_AI_TASKS/full-access-md-telemetry-refactor-cycle-2026-05-06.md` | historical, superseded | Already reduced to historical pointer. Do not use as current command source. |
 | `docs/LOCAL_AI_TASKS/code-aware-command-contract.md` | reference-catalog, monolithic | Keep as CLI arg reference only. Do not use as primary workflow map. Prefer script census and owner maps. |
-| `docs/LOCAL_AI_TASKS/code-aware-tool-index.md` | reference-catalog, monolithic | Keep as tool lookup only. Prefer single-owner and script census maps. |
+| `docs/LOCAL_AI_TASKS/code-aware-tool-index.md` | reference-catalog, monolithic, generated-like | Keep as generated tool lookup only. Prefer single-owner and script census maps. |
 | `Tools/validation/README.md` | reference-catalog, monolithic | Keep as validator catalog. Prefer validator-smoke-cycle-map for choosing checks. |
 | `docs/DATA_FLOW.md` | broad-reference | Already compacted to point at code-driven data-flow map. |
 | `docs/MODULE_MAP.md` | broad-reference | Already compacted to point at owner maps. |
