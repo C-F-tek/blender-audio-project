@@ -241,6 +241,9 @@ def build_paths(stamp: str, evidence_dir: str) -> dict[str, str]:
         "bridge_json": f"output/ai_pipeline/full_toolbox_{s}_bridge_orchestrator.json",
         "patch_plan_json": f"output/patch_specs/full_toolbox_{s}_agent_review_patch_plan.json",
         "patch_plan_md": f"output/patch_specs/full_toolbox_{s}_agent_review_patch_plan.md",
+        "patch_quality_json": f"{evidence_dir}/patch_plan_quality_product_{s}.json",
+        "patch_quality_md": f"{evidence_dir}/patch_plan_quality_product_{s}.md",
+        "patch_quality_fts_db": f"output/ai_runtime_memory/patch_plan_quality_product_{s}.sqlite",
         "decision_json": f"output/ai_pipeline/full_toolbox_{s}_agent_review_decision_loop.json",
         "decision_md": f"output/ai_pipeline/full_toolbox_{s}_agent_review_decision_loop.md",
     }
