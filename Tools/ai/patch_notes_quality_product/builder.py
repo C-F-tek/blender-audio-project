@@ -7,6 +7,7 @@ from typing import Any
 from Tools.ai.patch_notes_quality_product.scoring import (
     build_patch_notes,
     classify,
+    patch_notes_applicability,
     patch_plan_summary,
     score_product,
 )
@@ -88,6 +89,7 @@ def build_report(args: Any) -> dict[str, Any]:
     request_summary = build_request_summary(task, args.branch, args.commit, args.issue)
     normalized_objective = str(task.get("objective_hint") or args.request or "").strip()
     patch_summary = patch_plan_summary(loaded.get("patch_plan", {}), loaded.get("patch_quality", {}))
+    patch_notes = build_patch_notes(loaded.get("patch_plan", {}), loaded.get("patch_quality", {}))
     validation_commands = patch_summary.get("validation_commands") or [
         "python -m py_compile Tools/ai/build_patch_notes_quality_product.py",
         "python Tools/validation/run_patch_notes_quality_product_smoke.py --repo-root .",
@@ -114,7 +116,8 @@ def build_report(args: Any) -> dict[str, Any]:
         },
         "request_summary": request_summary,
         "normalized_objective": normalized_objective,
-        "patch_notes": build_patch_notes(loaded.get("patch_plan", {}), loaded.get("patch_quality", {})),
+        "patch_notes": patch_notes,
+        "patch_notes_applicability": patch_notes_applicability(patch_notes),
         "patch_plan_summary": patch_summary,
         "telemetry_quality": build_telemetry_quality(loaded),
         "evidence_coverage": build_evidence_coverage(loaded, status),
@@ -147,10 +150,18 @@ def build_report(args: Any) -> dict[str, Any]:
     report["quality_findings"] = findings
     report["fallback_path_notes"] = fallback
     if score < args.min_quality_score:
-        report["fallback_path_notes"].append({"reason": "patch_notes_quality_score_below_threshold", "quality_score": score, "min_quality_score": args.min_quality_score, "recommended_followup": "strengthen request summary, evidence coverage, telemetry signals, validation commands and concrete patch notes"})
+        report["fallback_path_notes"].append({"reason": "patch_notes_quality_score_below_threshold", "quality_score": score, "min_quality_score": args.min_quality_score, "recommended_followup": "strengthen request summary, evidence coverage, telemetry signals, validation commands and concrete/applicable patch notes"})
+    if not report["patch_notes_applicability"].get("all_applicable"):
+        report["fallback_path_notes"].append({"reason": "patch_notes_not_fully_applicable", "invalid_note_count": report["patch_notes_applicability"].get("invalid_note_count"), "recommended_followup": "fix patch notes so every item has targets, summary, edit strategy, validations, stop conditions and manual review flag"})
     if report["fts_evidence_search"]["fts_total_hit_count"] <= 0:
         report["fallback_path_notes"].append({"reason": "patch_notes_evidence_search_found_no_hits", "recommended_followup": "verify task MD and evidence artifacts contain shared concrete terms"})
-    report["quality_gate_passed"] = not errors and bool(report["patch_notes"]) and score >= args.min_quality_score and report["fts_evidence_search"]["fts_total_hit_count"] > 0
+    report["quality_gate_passed"] = (
+        not errors
+        and bool(report["patch_notes"])
+        and report["patch_notes_applicability"].get("all_applicable") is True
+        and score >= args.min_quality_score
+        and report["fts_evidence_search"]["fts_total_hit_count"] > 0
+    )
     if args.strict_patch_notes_quality_gate and not report["quality_gate_passed"]:
         errors.append("strict patch notes quality gate failed")
     report["passed"] = not errors
