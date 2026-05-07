@@ -34,6 +34,16 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines += ["", "### Invalid notes", ""]
         for item in _items(applicability.get("invalid_notes"), 20):
             lines.append(f"- `{item.get('id')}` missing=`{item.get('missing')}` targets=`{item.get('target_files')}`")
+    lines += ["", "## Product Sufficiency", ""]
+    sufficiency = report.get("product_sufficiency") if isinstance(report.get("product_sufficiency"), dict) else {}
+    for key in ("mode", "requested_min_patch_notes", "actual_patch_note_count", "sufficient"):
+        lines.append(f"- {key}: `{sufficiency.get(key)}`")
+    lines.append(f"- requested_areas: `{sufficiency.get('requested_areas')}`")
+    lines.append(f"- available_requested_areas: `{sufficiency.get('available_requested_areas')}`")
+    lines.append(f"- unavailable_requested_areas: `{sufficiency.get('unavailable_requested_areas')}`")
+    lines.append(f"- actual_areas: `{sufficiency.get('actual_areas')}`")
+    lines.append(f"- missing_available_areas: `{sufficiency.get('missing_available_areas')}`")
+    lines.append(f"- insufficiency_reasons: `{sufficiency.get('insufficiency_reasons')}`")
     lines += ["", "## Generated Patch Notes", ""]
     for note in _items(report.get("patch_notes"), 20):
         lines.append(f"- `{note.get('id')}` `{note.get('area')}` score=`{note.get('quality_score')}` targets=`{note.get('target_files')}`")

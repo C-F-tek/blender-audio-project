@@ -6,6 +6,7 @@ from typing import Any
 
 from Tools.ai.patch_notes_quality_product.scoring import (
     build_patch_notes,
+    build_product_sufficiency,
     classify,
     patch_notes_applicability,
     patch_plan_summary,
@@ -144,6 +145,7 @@ def build_report(args: Any) -> dict[str, Any]:
         },
     }
     report["missing_evidence"] = report["evidence_coverage"]["missing_evidence"]
+    report["product_sufficiency"] = build_product_sufficiency(report, loaded, task)
     report["fts_evidence_search"] = build_search_quality(repo_root, resolve(repo_root, args.sqlite_fts_db), input_paths, loaded, normalized_objective, [args.task_markdown, *args.extra_context])
     score, findings, fallback = score_product(report)
     report["quality_score"] = score
@@ -153,12 +155,15 @@ def build_report(args: Any) -> dict[str, Any]:
         report["fallback_path_notes"].append({"reason": "patch_notes_quality_score_below_threshold", "quality_score": score, "min_quality_score": args.min_quality_score, "recommended_followup": "strengthen request summary, evidence coverage, telemetry signals, validation commands and concrete/applicable patch notes"})
     if not report["patch_notes_applicability"].get("all_applicable"):
         report["fallback_path_notes"].append({"reason": "patch_notes_not_fully_applicable", "invalid_note_count": report["patch_notes_applicability"].get("invalid_note_count"), "recommended_followup": "fix patch notes so every item has targets, summary, edit strategy, validations, stop conditions and manual review flag"})
+    if report["product_sufficiency"].get("sufficient") is False:
+        report["fallback_path_notes"].append({"reason": "patch_notes_product_insufficient", "insufficiency_reasons": report["product_sufficiency"].get("insufficiency_reasons"), "missing_available_areas": report["product_sufficiency"].get("missing_available_areas"), "recommended_followup": "generate a broader availability-aware backlog from repository consistency findings or lower the requested task scope"})
     if report["fts_evidence_search"]["fts_total_hit_count"] <= 0:
         report["fallback_path_notes"].append({"reason": "patch_notes_evidence_search_found_no_hits", "recommended_followup": "verify task MD and evidence artifacts contain shared concrete terms"})
     report["quality_gate_passed"] = (
         not errors
         and bool(report["patch_notes"])
         and report["patch_notes_applicability"].get("all_applicable") is True
+        and report["product_sufficiency"].get("sufficient", True) is True
         and score >= args.min_quality_score
         and report["fts_evidence_search"]["fts_total_hit_count"] > 0
     )
@@ -166,6 +171,8 @@ def build_report(args: Any) -> dict[str, Any]:
         errors.append("strict patch notes quality gate failed")
     report["passed"] = not errors
     report["classification"] = classify(errors, report["quality_gate_passed"], score)
+    if report["product_sufficiency"].get("sufficient") is False and not errors:
+        report["classification"] = "completed_with_insufficient_all_all_patch_notes"
     report["success_cases"] = build_success_cases(report, loaded)
     report["fallback_cases"] = build_fallback_cases(report, loaded, args.min_quality_score)
     return report
