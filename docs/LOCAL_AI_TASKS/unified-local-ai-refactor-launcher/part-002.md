@@ -49,6 +49,74 @@ Explicit disablers:
 
 A disabled phase must appear as intentionally disabled, not missing by accident.
 
+## Unified full product phase
+
+The full product phase is still owned by this launcher. Do not run the internal Python tools as the normal product interface.
+
+The launcher product flow is:
+
+```text
+Task Markdown
+-> launcher-owned Stamp
+-> Full0To10 provider/tool/broker/validator/evidence loop
+-> BuildTaskPatchSuggestionReport
+-> ReviewPrApplyDeterministicSuggestions
+-> product-vs-supplemental validation
+-> PrepareReviewPr
+-> draft GitHub PR
+```
+
+The relevant launcher flags are:
+
+```text
+-BuildTaskPatchSuggestionReport
+-ReviewPrApplyDeterministicSuggestions
+-PrepareReviewPr
+-ReviewPrBranch <CARMINEai/...>
+-ReviewPrBaseBranch master
+-ReviewPrTitle <title>
+-ReviewPrCommitMessage <message>
+-ReviewPrPush
+-ReviewPrCreate
+```
+
+`$Stamp` is a single launcher variable. The launcher receives or creates it once, then propagates it to internal tools and report paths. Do not create a second unrelated stamp for patch apply, evidence, PR prep or provider reports.
+
+`ReviewPrIncludePath` remains an emergency/additive override only. The product path should derive staged source/doc paths from the `patch_suggestion_bundle_apply` report generated in the same launcher run.
+
+PRs created by the review phase should be draft unless explicitly promoted later after human review.
+
+## Current product command shape
+
+Use this shape from the repository root. Replace only the task file and PR title/message.
+
+```powershell
+$Stamp = "full_product_$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+$Task = ".\docs\LOCAL_AI_TASKS\<TASK_MD_REALE>.md"
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -RepoRoot . `
+  -TaskFile $Task `
+  -Stamp $Stamp `
+  -Profile core `
+  -Model qwen2.5-coder:14b `
+  -Full0To10 `
+  -RunIntensity balanced `
+  -BuildTaskPatchSuggestionReport `
+  -ReviewPrApplyDeterministicSuggestions `
+  -PrepareReviewPr `
+  -ReviewPrBranch "CARMINEai/full-product-$Stamp" `
+  -ReviewPrBaseBranch "master" `
+  -ReviewPrTitle "feat(ai): full product review $Stamp" `
+  -ReviewPrCommitMessage "feat(ai): apply full product review" `
+  -ReviewPrPush `
+  -ReviewPrCreate `
+  -ContinueOnValidationError
+```
+
+`-ContinueOnValidationError` is acceptable for this product lane only when provider degradation is captured in reports and the deterministic patch/apply/PR phase can still produce a reviewable product. It must not hide missing product reports, unsafe staging, failed deterministic patch application, failed commit/push or failed PR creation.
+
 ## Run intensity parameters
 
 All intensity presets preserve run-unica coverage. Intensity changes capacity, not scope.
@@ -176,8 +244,8 @@ Expected provider role:
 
 ```text
 advisory/recommendation/proposal generation only
-no automatic source patch application
-no automatic commit/push
+no direct source patch application
+no direct commit/push/merge
 ```
 
 Ollama advisory is local advisory. Primary provider routing requires workload quality routing.
@@ -220,61 +288,13 @@ Every run writes:
 output/local_ai_runs/<stamp>_<mode>_unified/pipeline/unified_local_ai_refactor_manifest.json
 ```
 
-The current manifest includes these verified fields:
-
-```text
-schema_version
-kind
-generated_at
-repo_root
-mode
-mode_name
-full_0_to_10_requested
-available_modes
-profile
-model
-run_intensity
-legacy/intensity parameters
-python_exe
-python_exe_requested
-pythonpath
-ia_carmine_python_env
-stamp
-task_file
-task_branch
-run_dir
-provider_execution_requested
-primary_provider_requested
-workload_quality_report
-workload_quality_routing_ok
-multistep_provider_workflow_requested
-ollama_probe_requested
-npu_probe_requested
-npu_decode_smoke_requested
-memory_in_enabled
-memory_out_enabled
-quality_gate_passed
-reset_apply_requested
-patch_application_performed=false
-patch_specs_requested
-build_evidence_requested
-memory_db
-save_inputs_to_memory_db
-context_files
-report_files
-phase_status
-phase_reports
-warnings
-errors
-```
+The manifest must remain the first machine-readable entrypoint for the run. Long evidence bundles are not the first interface.
 
 For the compact contract, see:
 
 ```text
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
-
-After the external-controls patch, the manifest must also include selected external paths, basenames and external context/report/artifact inputs.
 
 ## Stop conditions
 
@@ -287,6 +307,7 @@ context_pack requested but build_ai_context_pack.py is missing
 provider requested but run_post_validation_ai_packet.ps1 is missing
 official requested but run_local_ai_task_via_pipeline.ps1 is missing
 primary provider requested but workload quality routing cannot be generated
+review PR product requested but patch apply report, safe changed paths, commit, push or PR creation fails
 reset apply requested without exact confirmation text
 working tree dirty and -AllowDirty was not supplied
 ```
@@ -298,9 +319,6 @@ The launcher is report/proposal-only by default.
 It must not:
 
 ```text
-apply patches automatically
-commit
-push
 merge
 force-push
 rewrite history
@@ -312,6 +330,8 @@ commit output/** files
 commit indexAI/code_chunks/**
 create long primary runbooks or monolithic evidence without a compact manifest
 ```
+
+Patch application, commit, push and draft PR creation are allowed only when the explicit review-PR product flags are supplied and branch/path policies pass.
 
 ## Agent instruction
 
@@ -334,6 +354,10 @@ Tools/ai/build_agent_state_packet.py
 Tools/ai/agent_state.py
 Tools/npu/build_semantic_code_chunks.py
 Tools/ai/build_ai_context_pack.py
+Tools/ai/build_task_patch_suggestion_report.py
+Tools/ai/apply_patch_suggestion_bundle.py
+Tools/ai/prepare_review_pr.py
+Tools/validation/check_patch_suggestion_product_separation.py
 ```
 
 If a tool is referenced in documentation but not available in the repository, either remove that reference or mark it clearly as future/optional. Do not describe non-existent capabilities as active.
