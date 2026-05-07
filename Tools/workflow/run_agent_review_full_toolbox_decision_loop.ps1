@@ -35,7 +35,11 @@ param(
     [int]$NpuMicroMaxLiveProviderRounds = 0,
     [int]$MinRecommendations = 1,
     [int]$MinPatchPlans = 1,
-    [int]$RepositoryConsistencyMapWorkers = 0
+    [int]$RepositoryConsistencyMapWorkers = 8,
+    [ValidateSet("process", "thread", "auto")]
+    [string]$RepositoryConsistencyMapWorkerBackend = "process",
+    [double]$RepositoryConsistencyMapWorkerCpuTarget = 0.40,
+    [int]$RepositoryConsistencyMapMaxAutoWorkers = 8
 )
 
 $ErrorActionPreference = "Stop"

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import time
 from collections import Counter
 from pathlib import Path
@@ -28,6 +29,9 @@ def build_report(
     max_detail_items: int,
     max_snippet_chars: int,
     workers: int,
+    worker_backend: str = "process",
+    worker_cpu_target: float = 0.40,
+    max_auto_workers: int | None = 8,
 ) -> dict[str, Any]:
     total_started = time.perf_counter()
     timings: dict[str, float] = {}
@@ -53,11 +57,21 @@ def build_report(
         max_snippet_chars=max_snippet_chars,
         workers=workers,
         markdown_files=markdown_files,
+        worker_backend=worker_backend,
+        worker_cpu_target=worker_cpu_target,
+        max_auto_workers=max_auto_workers,
     )
     timings["markdown_scan_seconds"] = elapsed_seconds(phase_started)
 
     phase_started = time.perf_counter()
-    py_inventory, import_findings, py_warnings = extract_python_inventory(repo_root, workers=workers, python_files=python_files)
+    py_inventory, import_findings, py_warnings = extract_python_inventory(
+        repo_root,
+        workers=workers,
+        python_files=python_files,
+        worker_backend=worker_backend,
+        worker_cpu_target=worker_cpu_target,
+        max_auto_workers=max_auto_workers,
+    )
     timings["python_inventory_seconds"] = elapsed_seconds(phase_started)
 
     phase_started = time.perf_counter()
@@ -87,12 +101,17 @@ def build_report(
     }
     performance = {
         "workers_requested": workers,
+        "worker_backend_requested": worker_backend,
+        "worker_cpu_target": worker_cpu_target,
+        "max_auto_workers": max_auto_workers,
         "adaptive_worker_mode": workers <= 0,
+        "cpu_count": os.cpu_count() or 1,
+        "cpu_process_worker_backend_enabled": worker_backend in {"process", "auto", "cpu", "multiprocessing"},
         "repo_file_count": len(all_files),
         "single_file_discovery_manifest_enabled": True,
         "file_metadata_enabled": True,
-        "markdown_scan_workers": bounded_worker_count(workers, markdown_file_count),
-        "python_scan_workers": bounded_worker_count(workers, python_file_count),
+        "markdown_scan_workers": bounded_worker_count(workers, markdown_file_count, cpu_target=worker_cpu_target, max_auto_workers=max_auto_workers),
+        "python_scan_workers": bounded_worker_count(workers, python_file_count, cpu_target=worker_cpu_target, max_auto_workers=max_auto_workers),
         **timings,
     }
     performance["report_assembly_seconds"] = elapsed_seconds(phase_started)

@@ -3,11 +3,24 @@
 from __future__ import annotations
 
 import ast
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Iterable
 
 from Tools.ai.repository_consistency_map.paths import bounded_worker_count, iter_files, read_text, repo_rel
+
+
+def resolve_scan_worker_backend(worker_backend: str, worker_count: int) -> str:
+    normalized = (worker_backend or "process").strip().lower()
+    if worker_count <= 1:
+        return "serial"
+    if normalized in {"process", "cpu", "multiprocessing"}:
+        return "process"
+    if normalized in {"thread", "threads"}:
+        return "thread"
+    if normalized == "auto":
+        return "process"
+    raise ValueError(f"Unsupported repository consistency worker backend: {worker_backend}")
 
 
 def literal_string(node: ast.AST) -> str | None:
@@ -78,43 +91,63 @@ def extract_local_import_findings(tree: ast.AST, source: str, repo_root: Path) -
     return findings
 
 
-def extract_python_inventory(repo_root: Path, *, workers: int, python_files: list[Path] | None = None) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]], list[str]]:
+def scan_python_file_task(task: tuple[str, str]) -> tuple[str, dict[str, Any], list[dict[str, Any]], list[str]]:
+    repo_root_raw, path_raw = task
+    repo_root = Path(repo_root_raw)
+    path = Path(path_raw)
+    rel = repo_rel(path, repo_root)
+    text, error = read_text(path)
+    file_warnings: list[str] = []
+    if error:
+        file_warnings.append(f"{rel}: {error}")
+        return rel, {"argparse_flags": [], "functions": [], "classes": [], "syntax_error": error}, [], file_warnings
+    try:
+        tree = ast.parse(text, filename=rel)
+    except SyntaxError as exc:
+        file_warnings.append(f"{rel}: SyntaxError line {exc.lineno}: {exc.msg}")
+        return rel, {"argparse_flags": [], "functions": [], "classes": [], "syntax_error": str(exc)}, [], file_warnings
+    symbols = extract_python_symbols(tree)
+    item = {
+        "argparse_flags": extract_argparse_flags(tree),
+        "functions": symbols["functions"],
+        "classes": symbols["classes"],
+        "syntax_error": "",
+    }
+    return rel, item, extract_local_import_findings(tree, rel, repo_root), file_warnings
+
+
+def extract_python_inventory(
+    repo_root: Path,
+    *,
+    workers: int,
+    python_files: list[Path] | None = None,
+    worker_backend: str = "process",
+    worker_cpu_target: float = 0.40,
+    max_auto_workers: int | None = 8,
+) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]], list[str]]:
     inventory: dict[str, dict[str, Any]] = {}
     import_findings: list[dict[str, Any]] = []
     warnings: list[str] = []
     python_files = python_files if python_files is not None else iter_files(repo_root, {".py"})
+    worker_count = bounded_worker_count(
+        workers,
+        len(python_files),
+        cpu_target=worker_cpu_target,
+        max_auto_workers=max_auto_workers,
+    )
+    actual_backend = resolve_scan_worker_backend(worker_backend, worker_count)
+    tasks = [(str(repo_root), str(path)) for path in python_files]
 
-    def scan_python_file(path: Path) -> tuple[str, dict[str, Any], list[dict[str, Any]], list[str]]:
-        rel = repo_rel(path, repo_root)
-        text, error = read_text(path)
-        file_warnings: list[str] = []
-        if error:
-            file_warnings.append(f"{rel}: {error}")
-            return rel, {"argparse_flags": [], "functions": [], "classes": [], "syntax_error": error}, [], file_warnings
-        try:
-            tree = ast.parse(text, filename=rel)
-        except SyntaxError as exc:
-            file_warnings.append(f"{rel}: SyntaxError line {exc.lineno}: {exc.msg}")
-            return rel, {"argparse_flags": [], "functions": [], "classes": [], "syntax_error": str(exc)}, [], file_warnings
-        symbols = extract_python_symbols(tree)
-        item = {
-            "argparse_flags": extract_argparse_flags(tree),
-            "functions": symbols["functions"],
-            "classes": symbols["classes"],
-            "syntax_error": "",
-        }
-        return rel, item, extract_local_import_findings(tree, rel, repo_root), file_warnings
-
-    worker_count = bounded_worker_count(workers, len(python_files))
-    if worker_count > 1:
-        with ThreadPoolExecutor(max_workers=worker_count) as executor:
-            for rel, item, file_import_findings, file_warnings in executor.map(scan_python_file, python_files):
+    if actual_backend in {"process", "thread"}:
+        executor_class = ProcessPoolExecutor if actual_backend == "process" else ThreadPoolExecutor
+        with executor_class(max_workers=worker_count) as executor:
+            for rel, item, file_import_findings, file_warnings in executor.map(scan_python_file_task, tasks):
                 inventory[rel] = item
                 import_findings.extend(file_import_findings)
                 warnings.extend(file_warnings)
     else:
-        for path in python_files:
-            rel, item, file_import_findings, file_warnings = scan_python_file(path)
+        for task in tasks:
+            rel, item, file_import_findings, file_warnings = scan_python_file_task(task)
             inventory[rel] = item
             import_findings.extend(file_import_findings)
             warnings.extend(file_warnings)

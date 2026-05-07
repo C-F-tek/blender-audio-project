@@ -41,7 +41,7 @@ INT_DEFAULTS = {
     "NpuMicroMaxLiveProviderRounds": 0,
     "MinRecommendations": 1,
     "MinPatchPlans": 1,
-    "RepositoryConsistencyMapWorkers": 0,
+    "RepositoryConsistencyMapWorkers": 8,
 }
 
 STRING_DEFAULTS = {
@@ -51,6 +51,9 @@ STRING_DEFAULTS = {
     "EvidenceDir": "docs/LOCAL_VALIDATION_EVIDENCE",
     "KeepAlive": "35m",
     "NpuMicroStartMode": "deferred",
+    "RepositoryConsistencyMapWorkerBackend": "process",
+    "RepositoryConsistencyMapWorkerCpuTarget": 0.40,
+    "RepositoryConsistencyMapMaxAutoWorkers": 8,
 }
 
 SWITCHES = (

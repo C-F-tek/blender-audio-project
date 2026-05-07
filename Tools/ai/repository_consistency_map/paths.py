@@ -189,10 +189,20 @@ def resolve_repo_reference(repo_root: Path, source: str, raw_ref: str, path_inde
     return ref, False, "missing"
 
 
-def bounded_worker_count(requested: int, workload_count: int) -> int:
+def bounded_worker_count(
+    requested: int,
+    workload_count: int,
+    *,
+    cpu_target: float = 0.40,
+    max_auto_workers: int | None = 8,
+) -> int:
+    """Return a dynamic worker count without hardcoding host hardware."""
     if workload_count <= 1:
         return 1
     if requested <= 0:
-        cpu_count = os.cpu_count() or 4
-        requested = max(8, min(32, cpu_count * 2))
+        cpu_count = os.cpu_count() or 1
+        safe_target = max(0.05, min(float(cpu_target), 1.0))
+        requested = max(1, int(cpu_count * safe_target))
+        if max_auto_workers and max_auto_workers > 0:
+            requested = min(requested, max_auto_workers)
     return max(1, min(requested, workload_count))
