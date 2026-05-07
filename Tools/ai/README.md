@@ -23,6 +23,7 @@ CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
 limitations are backlog to overcome, not reasons to skip available tools
 patch application is explicit and separate
 tool output should become verifiable product/evidence/readiness material, not chat-only summary
+patch notes are proposal ledgers until reviewed into a concrete patch bundle or branch diff
 ```
 
 ## Package map
@@ -46,12 +47,34 @@ tool output should become verifiable product/evidence/readiness material, not ch
 | Workload routing | `build_workload_quality_lane_routing.py` | Keeps unusable provider output out of advisory context. |
 | Deterministic recommendations | `build_deterministic_recommendations.py` | Supports degraded-provider recovery without hallucinated provider success. |
 | Patch planning/spec support | `build_agent_review_patch_plan.py`, `build_patch_specs_from_proposals.py`, `promote_patch_spec_draft.py` | Review-only unless explicit apply is authorized separately. |
-| Patch notes product | `build_patch_notes_quality_product.py`, `patch_notes_quality_product/*` | Converts a local Markdown task plus patch-plan/telemetry/evidence inputs into manual-review patch notes quality JSON/MD with structured success/fallback cases. |
+| Patch notes product | `build_patch_notes_quality_product.py`, `patch_notes_quality_product/*` | Converts task/plan/telemetry/evidence into a manual-review suggestion ledger; not an apply bundle. |
 | Runtime broker/telemetry | `agent_runtime_tool_broker.py`, `build_runtime_tool_usage_telemetry.py` | Records executed/failed/blocked tool calls with broker-measured elapsed time and normalized status. |
 | Capability and telemetry summary | capability manifest packages/builders, `build_full_toolbox_run_telemetry_summary.py` | Handoff context for available tools/hardware lanes and run state. |
 | Final tool product | `build_full0to10_final_tool_product.py`, `full0to10_final_product/*` | Aggregates contract/governor/invocation/bridge/effective-use/quality evidence into product/evidence/readiness outputs and can index current-run reports/artifacts. |
 | Production bundle | `build_shared_toolbox_ai_to_ai_bundle.py` | AI-to-AI evidence/telemetry/patch-plan handoff. |
-| Evidence bundles | `build_github_evidence_bundle.py`, full-run bundle ZIP tools | Compact GitHub evidence only; raw `output/**` stays ignored. |
+| Evidence bundles | `build_github_evidence_bundle.py`, full-run bundle ZIP tools | Compact GitHub evidence only; raw `output/**` stays ignored; patch-notes reports expose `summary.proposal_core`. |
+
+## Proposal-core bundle rule
+
+When `build_github_evidence_bundle.py` receives a `patch_notes_quality_product` report, the compact bundle must preserve the operational core under:
+
+```text
+summary.proposal_core
+summary.proposal_core.notes[]
+```
+
+This core is the durable handoff ledger for later patch waves. It carries compact fields such as `id`, `area`, `target_files`, `summary`, `edit_strategy`, `validation_commands`, `stop_conditions` and `manual_review_required`.
+
+Patch notes are not patches. Follow-up implementation must review proposals in lane order:
+
+```text
+1. python_python
+2. python_doc
+3. doc_doc
+4. doc_python
+```
+
+Drop stale suggestions when the reported missing module/path already exists on the current branch. Drop generated-evidence and fenced-code placeholder noise before editing docs. Convert only validated suggestions into a real patch bundle or branch diff.
 
 ## Final product behavior
 
@@ -81,6 +104,7 @@ runtime/hardware capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when relevant
+proposal_core when patch notes quality product is part of the run
 ```
 
 File existence alone is not proof of successful execution.
@@ -113,6 +137,7 @@ commit output/**
 commit SQLite DB files
 execute providers outside selected provider/full-run lanes
 run Blender, FFmpeg, audio playback or media generation
+convert patch notes directly into source writes without review
 ```
 
 ## 400-line policy
@@ -137,6 +162,7 @@ Tools/validation/check_file_line_limits.py
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+docs/LOCAL_AI_TASKS/patch-notes-quality-product-2026-05-07.md
 docs/AI_PIPELINE_ARCHITECTURE.md
 docs/AI_PIPELINE_REFACTOR_STATUS.md
 docs/DATA_FLOW.md
