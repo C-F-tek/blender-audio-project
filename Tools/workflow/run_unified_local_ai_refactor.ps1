@@ -111,7 +111,18 @@ param(
     [switch]$LightFull0To10NoExternalProbes,
     [int]$OfficialAdapterTimeoutSeconds = 1800,
     [switch]$SkipOfficialAdapter,
-    [switch]$RunOpenVinoGpu0Workload
+    [switch]$RunOpenVinoGpu0Workload,
+    [switch]$PrepareReviewPr,
+    [string]$ReviewPrBranch = "",
+    [string]$ReviewPrBaseBranch = "master",
+    [string]$ReviewPrRemote = "origin",
+    [string]$ReviewPrTitle = "",
+    [string]$ReviewPrCommitMessage = "",
+    [string[]]$ReviewPrIncludePath = @(),
+    [switch]$ReviewPrPush,
+    [switch]$ReviewPrCreate,
+    [switch]$ReviewPrApplyDeterministicSuggestions,
+    [switch]$BuildTaskPatchSuggestionReport
 )
 
 Set-StrictMode -Version Latest
@@ -307,6 +318,20 @@ function Add-OptionalModeWarning {
     if ((Test-ModeEnabled $ModeName) -and -not (Test-Path -LiteralPath $ToolPath -PathType Leaf)) {
         $Warnings.Value += "Mode '$ModeName' requested but tool is missing: $ToolPath"
     }
+}
+
+function Split-ReviewPrIncludePaths {
+    param([string[]]$Values)
+    $items = @()
+    foreach ($value in @($Values)) {
+        foreach ($part in ([string]$value -split ",")) {
+            $normalized = $part.Trim().Trim("'").Trim('"')
+            if (-not [string]::IsNullOrWhiteSpace($normalized) -and $items -notcontains $normalized) {
+                $items += $normalized
+            }
+        }
+    }
+    return $items
 }
 
 function Convert-ToRepoRelativePath {
@@ -770,6 +795,7 @@ $RepoRoot = Resolve-RepoRoot
 Set-Location $RepoRoot
 $env:PYTHONPATH = $RepoRoot
 $ResolvedPythonExe = Resolve-PythonExe -Requested $PythonExe -Root $RepoRoot
+$env:IA_CARMINE_PYTHON = $ResolvedPythonExe
 Write-Host "[INFO] PYTHONPATH: $env:PYTHONPATH"
 Write-Host "[INFO] Python: $ResolvedPythonExe"
 
@@ -800,6 +826,17 @@ if ($Full0To10) {
 
 if ([string]::IsNullOrWhiteSpace($Stamp)) { $Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
 $DataStamp = $Stamp
+if ($PrepareReviewPr) {
+    if ([string]::IsNullOrWhiteSpace($ReviewPrBranch)) {
+        $ReviewPrBranch = "CARMINEai/full-run-$Stamp"
+    }
+    if ([string]::IsNullOrWhiteSpace($ReviewPrTitle)) {
+        $ReviewPrTitle = "feat(ai): full-run patch suggestion review $Stamp"
+    }
+    if ([string]::IsNullOrWhiteSpace($ReviewPrCommitMessage)) {
+        $ReviewPrCommitMessage = "feat(ai): prepare full-run patch suggestion review"
+    }
+}
 # IA_CARMINE_OUTPUT_DIR_EVIDENCE_DIR_FALLBACK_BEGIN
 if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = "output" }
 if ([string]::IsNullOrWhiteSpace($EvidenceDir)) { $EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE" }
@@ -1004,6 +1041,11 @@ Write-Host "[INFO] Multistep provider workflow: $RunMultistepProviderWorkflow"
 Write-Host "[INFO] Legacy NPU auditor provider: $RunLegacyNpuAuditorProvider"
 Write-Host "[INFO] Patch specs: $GeneratePatchSpecs"
 Write-Host "[INFO] Reset apply: $ApplyReset"
+Write-Host "[INFO] Prepare review PR: $PrepareReviewPr"
+if ($PrepareReviewPr) {
+    Write-Host "[INFO] Review PR branch: $ReviewPrBranch"
+    Write-Host "[INFO] Review PR title: $ReviewPrTitle"
+}
 foreach ($warning in $Warnings) { Write-Warning $warning }
 
 $PhaseStatus.baseline_compile = Invoke-Checked "Baseline compile validation/inventory tools" {
@@ -1198,9 +1240,13 @@ if ($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoWo
     }
 }
 if ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality -and -not (Test-Path -LiteralPath $WorkloadQualityReport -PathType Leaf)) {
-    if ($DryRun) {
+    if ($DryRun -or $ContinueOnValidationError) {
         Write-Host "[DRY-RUN] Primary provider requires workload quality routing report; generation planned: output/validation/ai_workload_report_quality.json"
-        $WorkloadQualityRoutingOk = $true
+        if (-not $DryRun) {
+            Write-Warning "Primary advisory provider workload quality report is missing; continuing because -ContinueOnValidationError is set."
+            $Warnings += "primary_provider_workload_quality_missing_continued"
+        }
+        $WorkloadQualityRoutingOk = [bool]$DryRun
     } else {
         throw "Primary advisory provider requested but workload quality routing report is missing: output/validation/ai_workload_report_quality.json"
     }
@@ -1465,9 +1511,98 @@ if ($UseOllamaAdvisory -or (Test-ModeEnabled "provider")) {
     $PhaseReports.ollama_proposals = "output/ai_pipeline/$OllamaProposalBase.json"
 }
 
+if ($BuildTaskPatchSuggestionReport -or $ReviewPrApplyDeterministicSuggestions) {
+    $TaskSuggestionJson = "$ValidationDir/task_patch_suggestions_${ModeName}_$Stamp.json"
+    $TaskSuggestionMd = "$ValidationDir/task_patch_suggestions_${ModeName}_$Stamp.md"
+    $PhaseStatus.task_patch_suggestion_report = Invoke-Checked "Build task Markdown patch suggestion report" {
+        Invoke-Python @(
+            ".\Tools\ai\build_task_patch_suggestion_report.py",
+            "--repo-root", ".",
+            "--task-file", $TaskFile,
+            "--Stamp", $Stamp,
+            "--output", $TaskSuggestionJson,
+            "--markdown-output", $TaskSuggestionMd
+        )
+    } -SoftFail:$ContinueOnValidationError
+    if (Test-Path -LiteralPath $TaskSuggestionJson -PathType Leaf) {
+        $ReportFiles += $TaskSuggestionJson
+        $ContextFiles = Add-ExistingContextFile $ContextFiles $TaskSuggestionMd
+        $PhaseReports.task_patch_suggestions = $TaskSuggestionJson
+        $PhaseReports.task_patch_suggestions_markdown = $TaskSuggestionMd
+    }
+}
+
+if ($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) {
+    $PatchSuggestionJson = "$ValidationDir/patch_suggestion_bundle_apply_${ModeName}_$Stamp.json"
+    $PatchSuggestionArgs = @(
+        ".\Tools\ai\apply_patch_suggestion_bundle.py",
+        "--repo-root", ".",
+        "--Stamp", $Stamp,
+        "--output", $PatchSuggestionJson
+    )
+    if ($ReviewPrApplyDeterministicSuggestions) {
+        if ($PrepareReviewPr -and -not [string]::IsNullOrWhiteSpace($ReviewPrBranch)) {
+            $PatchSuggestionArgs += @("--create-review-branch", $ReviewPrBranch, "--allow-dirty-branch")
+        }
+        $PatchSuggestionArgs += "--apply"
+        if ($AllowDirty) { $PatchSuggestionArgs += "--allow-dirty" }
+    }
+    $PhaseStatus.patch_suggestion_final_phase = Invoke-Checked "Patch suggestion final phase product" {
+        Invoke-Python $PatchSuggestionArgs
+    } -SoftFail:$ContinueOnValidationError
+    if (Test-Path -LiteralPath $PatchSuggestionJson -PathType Leaf) {
+        $ReportFiles += $PatchSuggestionJson
+        $PhaseReports.patch_suggestion_final_phase = $PatchSuggestionJson
+    }
+}
+
 if (Test-ModeEnabled "full_validation") {
     $PhaseStatus.git_diff_check_final = Invoke-Checked "Final git diff --check" { git diff --check } -SoftFail:$ContinueOnValidationError
     $PhaseStatus.git_status_final = Invoke-Checked "Final git status --short" { git status --short } -SoftFail:$ContinueOnValidationError
+}
+
+if ($PrepareReviewPr) {
+    $ReviewPrJson = "$ValidationDir/review_pr_prepare_${ModeName}_$Stamp.json"
+    $ReviewPrMd = "$ValidationDir/review_pr_prepare_${ModeName}_$Stamp.md"
+    $ReviewEvidenceJson = Join-Path $EvidenceDir ("review_pr_prepare_{0}.json" -f $Stamp)
+    $ReviewEvidenceMd = Join-Path $EvidenceDir ("review_pr_prepare_{0}.md" -f $Stamp)
+    $ReviewArgs = @(
+        ".\Tools\ai\prepare_review_pr.py",
+        "--repo-root", ".",
+        "--Stamp", $Stamp,
+        "--task-file", $TaskFile,
+        "--branch", $ReviewPrBranch,
+        "--base", $ReviewPrBaseBranch,
+        "--remote", $ReviewPrRemote,
+        "--title", $ReviewPrTitle,
+        "--commit-message", $ReviewPrCommitMessage,
+        "--output", $ReviewPrJson,
+        "--markdown-output", $ReviewPrMd,
+        "--evidence-output", $ReviewEvidenceJson,
+        "--evidence-markdown-output", $ReviewEvidenceMd,
+        "--allow-dirty-branch"
+    )
+    foreach ($PathValue in @(Split-ReviewPrIncludePaths -Values $ReviewPrIncludePath)) {
+        if (-not [string]::IsNullOrWhiteSpace($PathValue)) {
+            $ReviewArgs += @("--include-path", $PathValue)
+        }
+    }
+    if ($ReviewPrPush) { $ReviewArgs += "--push" }
+    if ($ReviewPrCreate) { $ReviewArgs += "--create-pr" }
+    if ($DryRun) { $ReviewArgs += "--dry-run" }
+    $PhaseStatus.review_pr_prepare = Invoke-Checked "Prepare review branch and PR" {
+        Invoke-Python $ReviewArgs
+    } -SoftFail:$ContinueOnValidationError
+    if (Test-Path -LiteralPath $ReviewPrJson -PathType Leaf) {
+        $ReportFiles += $ReviewPrJson
+        $ContextFiles = Add-ExistingContextFile $ContextFiles $ReviewPrMd
+        $PhaseReports.review_pr_prepare = $ReviewPrJson
+        $PhaseReports.review_pr_prepare_markdown = $ReviewPrMd
+    }
+    if (Test-Path -LiteralPath $ReviewEvidenceJson -PathType Leaf) {
+        $PhaseReports.review_pr_evidence = $ReviewEvidenceJson
+        $PhaseReports.review_pr_evidence_markdown = $ReviewEvidenceMd
+    }
 }
 
 $ManifestPath = "$PipelineDir/unified_local_ai_refactor_manifest.json"
@@ -1533,6 +1668,14 @@ $Manifest = [ordered]@{
     memory_out_enabled = [bool]$SaveInputsToMemoryDb
     quality_gate_passed = [bool](((-not $UsePrimaryAdvisoryProvider) -or $NoWorkloadQuality) -or $WorkloadQualityRoutingOk)
     reset_apply_requested = [bool]$ApplyReset
+    review_pr_prepare_requested = [bool]$PrepareReviewPr
+    review_pr_branch = $ReviewPrBranch
+    review_pr_base_branch = $ReviewPrBaseBranch
+    review_pr_push_requested = [bool]$ReviewPrPush
+    review_pr_create_requested = [bool]$ReviewPrCreate
+    review_pr_apply_deterministic_suggestions = [bool]$ReviewPrApplyDeterministicSuggestions
+    task_patch_suggestion_report_requested = [bool]($BuildTaskPatchSuggestionReport -or $ReviewPrApplyDeterministicSuggestions)
+    patch_application_requested = [bool]$ReviewPrApplyDeterministicSuggestions
     patch_application_performed = $false
     patch_specs_requested = [bool]($GeneratePatchSpecs -or (Test-ModeEnabled "patch_specs"))
     build_evidence_requested = [bool]($BuildEvidence -or (Test-ModeEnabled "evidence"))
@@ -1554,6 +1697,8 @@ Write-Host "[OK] Mode: $($ResolvedModes -join ',')"
 Write-Host "[OK] Provider execution requested: $($Manifest.provider_execution_requested)"
 Write-Host "[OK] Reset apply requested: $($Manifest.reset_apply_requested)"
 Write-Host "[OK] Patch specs requested: $($Manifest.patch_specs_requested)"
+Write-Host "[OK] Review PR requested: $($Manifest.review_pr_prepare_requested)"
+if ($PrepareReviewPr) { Write-Host "[OK] Review PR branch: $ReviewPrBranch" }
 Write-Host "[OK] Patch application performed: False"
 Write-Host "[OK] Reports: $($ReportFiles -join ', ')"
 Write-Host "[OK] Context files: $($ContextFiles -join ', ')"

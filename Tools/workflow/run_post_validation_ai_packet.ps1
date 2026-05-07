@@ -15,11 +15,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$PythonEnvScript = Join-Path $PSScriptRoot "python_env.ps1"
+. $PythonEnvScript
 $RepoRootPath = Resolve-Path $RepoRoot
 Set-Location $RepoRootPath
+$PacketPythonExe = Use-WorkflowPython -RepoRoot $RepoRootPath
 
 Write-Host "=== Build post-validation AI work packet ==="
 Write-Host "Repo: $RepoRootPath"
+Write-Host "Python: $PacketPythonExe"
 Write-Host "Profile: $Profile"
 Write-Host "OutputDir: $OutputDir"
 Write-Host "Basename: $Basename"

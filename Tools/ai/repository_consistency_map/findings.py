@@ -8,6 +8,121 @@ from typing import Any
 from Tools.ai.repository_consistency_map.python_inventory import smoke_candidates_for_script
 
 
+PLANNED_SHARED_UTILITY_DOC = "docs/SHARED_SCRIPTING_UTILITIES.md"
+PLANNED_SHARED_PREFIX = "Scripting/shared/"
+PLANNED_SHARED_BASENAMES = {
+    "config_model.py",
+    "hotpatch_base.py",
+    "panel_base.py",
+    "scene_registry.py",
+}
+GENERATED_CONTEXT_PREFIXES = (
+    "Tools/npu/npu_code_chunks/",
+    "npu_code_chunks/",
+    "indexAI/project_code_chunks/",
+    "indexAI/code_chunks/",
+)
+GENERATED_CONTEXT_GLOB_PREFIXES = (
+    "Tools/npu/npu_code_chunks/chunk_",
+    "npu_code_chunks/chunk_",
+)
+
+
+def normalized_path(value: Any) -> str:
+    """Return a normalized repository path string."""
+    return str(value or "").replace("\\", "/").strip().strip("`")
+
+
+def is_planned_shared_utility_reference(ref: dict[str, Any]) -> bool:
+    """Return true for documented future shared utility modules.
+
+    `docs/SHARED_SCRIPTING_UTILITIES.md` contains roadmap sections such as
+    "Target shared modules" and "Extraction candidates". Several entries
+    intentionally name modules that may not exist yet, for example
+    `Scripting/shared/config_model.py` or the bare target `panel_base.py`.
+    Those should remain visible as planned work, but they should not be
+    escalated as high-severity stale documentation defects.
+    """
+    source = normalized_path(ref.get("source"))
+    target = normalized_path(ref.get("raw_ref"))
+    evidence = str(ref.get("snippet") or "")
+    if source != PLANNED_SHARED_UTILITY_DOC or not target.endswith(".py"):
+        return False
+    if target.startswith(PLANNED_SHARED_PREFIX):
+        return "Target shared modules" in evidence or "Scripting/shared/" in evidence
+    if "/" not in target and target in PLANNED_SHARED_BASENAMES:
+        return any(
+            marker in evidence
+            for marker in (
+                "Target shared modules",
+                "Extraction candidates",
+                "Scripting/shared/",
+                "panel_base.py",
+                "hotpatch_base.py",
+            )
+        )
+    return False
+
+
+def is_generated_context_reference(ref: dict[str, Any]) -> bool:
+    """Return true for generated/index context paths referenced from docs."""
+    target = normalized_path(ref.get("raw_ref"))
+    source = normalized_path(ref.get("source"))
+    if not source.startswith("Tools/npu/"):
+        return False
+    if any(target.startswith(prefix) for prefix in GENERATED_CONTEXT_PREFIXES):
+        return True
+    if "*" in target and any(target.startswith(prefix) for prefix in GENERATED_CONTEXT_GLOB_PREFIXES):
+        return True
+    return False
+
+
+def missing_reference_finding(ref: dict[str, Any]) -> dict[str, Any]:
+    """Build a semantically classified missing-reference finding."""
+    if is_planned_shared_utility_reference(ref):
+        return {
+            "kind": "md_mentions_planned_python_path",
+            "severity": "low",
+            "source": ref["source"],
+            "line": ref["line"],
+            "target": ref["raw_ref"],
+            "evidence": ref["snippet"],
+            "recommendation": (
+                "Keep as planned shared-utility roadmap item until the module is "
+                "implemented or intentionally removed from the roadmap."
+            ),
+            "classification": "planned_missing_reference",
+            "patch_recommendation": "manual_review_only",
+        }
+
+    if is_generated_context_reference(ref):
+        return {
+            "kind": "md_mentions_generated_context_markdown_path",
+            "severity": "low",
+            "source": ref["source"],
+            "line": ref["line"],
+            "target": ref["raw_ref"],
+            "evidence": ref["snippet"],
+            "recommendation": (
+                "Regenerate the context/chunk artifact when needed; do not create "
+                "or edit generated chunk files by hand."
+            ),
+            "classification": "generated_context_reference",
+            "patch_recommendation": "regenerate_source_artifact",
+        }
+
+    severity = "high" if ref["kind"] in {"python", "powershell"} else "medium"
+    return {
+        "kind": f"md_mentions_missing_{ref['kind']}_path",
+        "severity": severity,
+        "source": ref["source"],
+        "line": ref["line"],
+        "target": ref["raw_ref"],
+        "evidence": ref["snippet"],
+        "recommendation": "Correct the documentation reference or restore the missing target if it is still required.",
+    }
+
+
 def build_findings(
     *,
     md_refs: list[dict[str, Any]],
@@ -18,18 +133,7 @@ def build_findings(
     findings: list[dict[str, Any]] = []
     for ref in md_refs:
         if ref["kind"] in {"python", "powershell", "markdown"} and not ref["exists"]:
-            severity = "high" if ref["kind"] in {"python", "powershell"} else "medium"
-            findings.append(
-                {
-                    "kind": f"md_mentions_missing_{ref['kind']}_path",
-                    "severity": severity,
-                    "source": ref["source"],
-                    "line": ref["line"],
-                    "target": ref["raw_ref"],
-                    "evidence": ref["snippet"],
-                    "recommendation": "Correct the documentation reference or restore the missing target if it is still required.",
-                }
-            )
+            findings.append(missing_reference_finding(ref))
     for command in md_commands:
         if not command["script_exists"]:
             findings.append(

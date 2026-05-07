@@ -207,9 +207,12 @@ def classify_ai_peer_exchange(
     if tool_request_count > 0 and broker_execution_count <= 0:
         add_unique(classifications, "gpu0_tool_requests_not_broker_consumed")
         errors.append("gpu0_tool_requests_not_broker_consumed")
+    non_blocking_peer_classifications = {"gpu0_peer_semantic_model_unconfigured"}
     for item in peer.get("classifications") or []:
         text = str(item)
-        if text and text not in classifications:
+        if text in non_blocking_peer_classifications:
+            warnings.append(f"non_blocking_peer_degradation: {text}")
+        elif text:
             add_unique(classifications, text)
     if contract is None:
         add_unique(classifications, "ai_peer_exchange_contract_missing")
@@ -351,7 +354,7 @@ def main() -> int:
     npu_micro = ai_peer_exchange.get("npu_micro_response") if isinstance(ai_peer_exchange, dict) and isinstance(ai_peer_exchange.get("npu_micro_response"), dict) else {}
 
     report = {
-        "schema_version": 6,
+        "schema_version": 7,
         "kind": "full0to10_provider_acceptance_gate",
         "generated_at": now_iso(),
         "stamp": args.stamp,

@@ -23,6 +23,8 @@ COMPILE_TARGETS = [
     "Tools/ai/build_runtime_tool_capability_manifest.py",
     "Tools/ai/build_semantic_evidence_chunks.py",
     "Tools/ai/build_agent_review_evidence_sufficiency.py",
+    "Tools/ai/run_megalithic_repo_review.py",
+    "Tools/ai/refine_megalithic_review_signals.py",
     "Tools/ai/build_openvino_hardware_governance_report.py",
     "Tools/ai/build_ai_peer_exchange_packet.py",
     "Tools/ai/provider_runtime_heap.py",
@@ -57,6 +59,41 @@ def existing(ctx: WorkflowContext, *keys: str) -> list[str]:
     return [ctx.p(key) for key in keys if Path(ctx.p(key)).exists()]
 
 
+def run_project_review_refinement(ctx: WorkflowContext) -> None:
+    context_reports = existing(ctx, "repo_consistency_json", "repo_consistency_smoke_json", "code_interpreter_json", "line_count_json", "python_syntax_json", "openvino_governance_json")
+    review_args = [
+        "Tools/ai/run_megalithic_repo_review.py",
+        "--repo-root",
+        ".",
+        "--include-all-docs",
+        "--include-all-code",
+        "--output",
+        ctx.p("megalithic_review_json"),
+        "--markdown-output",
+        ctx.p("megalithic_review_md"),
+        "--proposal-output",
+        ctx.p("megalithic_proposals_json"),
+    ]
+    review_args += sum((["--report-file", path] for path in context_reports), [])
+    ctx.run_python("Project review for patch suggestion product", review_args)
+    ctx.run_python(
+        "Refine project review signals",
+        [
+            "Tools/ai/refine_megalithic_review_signals.py",
+            "--review",
+            ctx.p("megalithic_review_json"),
+            "--proposals",
+            ctx.p("megalithic_proposals_json"),
+            "--output",
+            ctx.p("refined_review"),
+            "--proposal-output",
+            ctx.p("refined_proposals"),
+            "--markdown-output",
+            ctx.p("refined_review_md"),
+        ],
+    )
+
+
 def run_static_foundation(ctx: WorkflowContext) -> None:
     live_signal(ctx, "init", "Provider runtime heap live init", "heap_init_json", "heap_init_md")
     if not ctx.args.SkipMemoryReload:
@@ -89,7 +126,8 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python("OpenVINO hardware governance report", ["Tools/ai/build_openvino_hardware_governance_report.py", "--repo-root", ".", "--npu-micro-start-mode", ctx.args.NpuMicroStartMode, "--output", ctx.p("openvino_governance_json"), "--markdown-output", ctx.p("openvino_governance_md")])
     ctx.run_python("Repository consistency map", ["Tools/ai/build_repository_consistency_map.py", "--repo-root", ".", "--output", ctx.p("repo_consistency_json"), "--markdown-output", ctx.p("repo_consistency_md"), "--workers", str(ctx.args.RepositoryConsistencyMapWorkers), "--worker-backend", ctx.args.RepositoryConsistencyMapWorkerBackend, "--worker-cpu-target", str(ctx.args.RepositoryConsistencyMapWorkerCpuTarget), "--max-auto-workers", str(ctx.args.RepositoryConsistencyMapMaxAutoWorkers)])
     ctx.run_python("Repository consistency map smoke", ["Tools/validation/run_repository_consistency_map_smoke.py", "--repo-root", ".", "--map-report", ctx.p("repo_consistency_json"), "--output", ctx.p("repo_consistency_smoke_json"), "--markdown-output", ctx.p("repo_consistency_smoke_md"), "--workers", str(ctx.args.RepositoryConsistencyMapWorkers)])
-    ctx.run_python("Agent review evidence sufficiency", ["Tools/ai/build_agent_review_evidence_sufficiency.py", "--repo-root", ".", "--refined-review", ctx.p("refined_review"), *sum((["--report-file", p] for p in existing(ctx, "repo_consistency_json", "repo_consistency_smoke_json", "code_interpreter_json", "line_count_json", "python_syntax_json", "openvino_governance_json")), []), "--output", ctx.p("evidence"), "--markdown-output", ctx.p("evidence_md")])
+    run_project_review_refinement(ctx)
+    ctx.run_python("Agent review evidence sufficiency", ["Tools/ai/build_agent_review_evidence_sufficiency.py", "--repo-root", ".", "--refined-review", ctx.p("refined_review"), "--refined-proposals", ctx.p("refined_proposals"), *sum((["--report-file", p] for p in existing(ctx, "repo_consistency_json", "repo_consistency_smoke_json", "code_interpreter_json", "line_count_json", "python_syntax_json", "openvino_governance_json")), []), "--output", ctx.p("evidence"), "--markdown-output", ctx.p("evidence_md")])
     ctx.run_python("GPU0 companion worker task lane", ["Tools/ai/build_gpu0_companion_task_lane.py", "--repo-root", ".", "--stamp", ctx.args.Stamp, "--output", ctx.p("gpu0_companion_json"), "--markdown-output", ctx.p("gpu0_companion_md"), "--tool-requests-output", ctx.p("gpu0_companion_tools_json"), *sum((["--source-report", p] for p in existing(ctx, "evidence", "repo_consistency_json", "repo_consistency_smoke_json", "code_interpreter_json", "line_count_json", "python_syntax_json", "npu_env_json", "openvino_governance_json")), [])])
     ctx.run_python("GPU0 companion worker contract", ["Tools/validation/check_gpu0_companion_contract.py", "--report", ctx.p("gpu0_companion_json"), "--output", ctx.p("gpu0_companion_contract_json"), "--markdown-output", ctx.p("gpu0_companion_contract_md")])
 

@@ -27,11 +27,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$PythonEnvScript = Join-Path $PSScriptRoot "python_env.ps1"
+. $PythonEnvScript
 $RepoRootPath = Resolve-Path $RepoRoot
 Set-Location $RepoRootPath
+$ProviderPythonExe = Use-WorkflowPython -RepoRoot $RepoRootPath
 
 Write-Host "=== Parallel GPU/NPU multistep AI workflow ==="
 Write-Host "Repo: $RepoRootPath"
+Write-Host "Python: $ProviderPythonExe"
 Write-Host "Profile: $Profile"
 Write-Host "Basename: $Basename"
 Write-Host "GPU/Ollama probe: $RunOllamaProbe"
@@ -71,10 +75,15 @@ if ($RunOllamaProbe -or $RunNpuProbe) {
         $ProbeArgs += @("--model", $Model)
     }
     $Jobs += Start-Job -Name "provider_probe" -ScriptBlock {
-        param([string[]]$ArgsList)
+        param([string[]]$ArgsList, [string]$PythonExe, [string]$PythonPath)
         Set-Location $using:RepoRootPath
-        python @ArgsList
-    } -ArgumentList (,$ProbeArgs)
+        $env:IA_CARMINE_PYTHON = $PythonExe
+        $env:PYTHONPATH = $PythonPath
+        if (Test-Path -LiteralPath $PythonExe -PathType Leaf) {
+            $env:PATH = (Split-Path -Parent $PythonExe) + [System.IO.Path]::PathSeparator + $env:PATH
+        }
+        & $PythonExe @ArgsList
+    } -ArgumentList (,$ProbeArgs), $ProviderPythonExe, ([string]$RepoRootPath)
 }
 
 if ($RunNpuDecodeSmoke) {
@@ -86,10 +95,15 @@ if ($RunNpuDecodeSmoke) {
         "--text-output", "output/ai_packets/npu_decode_smoke_output.md"
     )
     $Jobs += Start-Job -Name "npu_decode_smoke" -ScriptBlock {
-        param([string[]]$ArgsList)
+        param([string[]]$ArgsList, [string]$PythonExe, [string]$PythonPath)
         Set-Location $using:RepoRootPath
-        python @ArgsList
-    } -ArgumentList (,$SmokeArgs)
+        $env:IA_CARMINE_PYTHON = $PythonExe
+        $env:PYTHONPATH = $PythonPath
+        if (Test-Path -LiteralPath $PythonExe -PathType Leaf) {
+            $env:PATH = (Split-Path -Parent $PythonExe) + [System.IO.Path]::PathSeparator + $env:PATH
+        }
+        & $PythonExe @ArgsList
+    } -ArgumentList (,$SmokeArgs), $ProviderPythonExe, ([string]$RepoRootPath)
 } else {
     python .\Tools\ai\run_npu_decode_smoke_diagnostic.py `
         --repo-root . `
