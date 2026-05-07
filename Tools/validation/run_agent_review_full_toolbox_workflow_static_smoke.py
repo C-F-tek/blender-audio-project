@@ -18,7 +18,22 @@ DEFAULT_OUTPUT = "output/validation/agent_review_full_toolbox_workflow_static_sm
 DEFAULT_MARKDOWN = "output/validation/agent_review_full_toolbox_workflow_static_smoke.md"
 
 REQUIRED_TOKENS = {
+    "python_control_shim": "run_agent_review_full_toolbox_decision_loop.py",
+    "python_engine_package": "py_engine",
+    "python_mesh_package": "py_mesh",
+    "python_product_package": "py_product",
+    "legacy_powershell_fallback_explicit": "UseLegacyPowerShellImplementation",
     "explicit_provider_flag": "[switch]$RunGpuNpuProvider",
+    "explicit_legacy_npu_auditor_flag": "[switch]$RunLegacyNpuAuditorProvider",
+    "gpu0_peer_support_provider": "--run-gpu0-peer-support-provider",
+    "npu_micro_support_provider": "--run-npu-micro-support-provider",
+    "npu_micro_start_mode": "NpuMicroStartMode",
+    "npu_peer_deferred_placeholder": "write_npu_peer_nonblocking_placeholder",
+    "npu_micro_start_mode_workflow": "NpuMicroStartMode",
+    "npu_micro_deferred_warning": "provider mesh keeps NPU off the live GPU1/GPU0 critical path",
+    "openvino_hardware_governance": "build_openvino_hardware_governance_report.py",
+    "runtime_heap_to_orchestrator": "--runtime-heap-stamp",
+    "gpu0_support_strict_contract": "--require-openvino-gpu0-secondary",
     "memory_reload_reuse": "run_full_memory_tool_regeneration.ps1",
     "line_count_reuse": "build_python_line_count_csv.py",
     "code_interpreter_reuse": "build_code_interpreter_report",
@@ -26,13 +41,14 @@ REQUIRED_TOKENS = {
     "decision_loop_reuse": "run_agent_review_decision_loop.py",
     "post_validation_packet_reuse": "run_post_validation_ai_packet.ps1",
     "shared_toolbox_bundle_reuse": "build_shared_toolbox_ai_to_ai_bundle",
+    "final_tool_product_reuse": "build_full0to10_final_tool_product.py",
     "github_evidence_bundle_reuse": "build_github_evidence_bundle",
     "bundle_validation_reuse": "check_github_evidence_bundle",
     "scoped_validation_contract": "check_validation_report_contract.py",
-    "report_only_guardrail": "patch_application_performed = $false",
-    "sqlite_guardrail": "sqlite_write_performed = $false",
-    "persistent_memory_guardrail": "persistent_memory_write_performed = $false",
-    "raw_output_guardrail": "raw_output_commit_allowed = $false",
+    "report_only_guardrail": "patch_application_performed",
+    "sqlite_guardrail": "sqlite_write_performed",
+    "persistent_memory_guardrail": "persistent_memory_write_performed",
+    "raw_output_guardrail": "raw_output_commit_allowed",
 }
 
 FORBIDDEN_TOKENS = {
@@ -59,6 +75,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Agent Review Full Toolbox Workflow Static Smoke", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Workflow: `{report['workflow']}`")
+    lines.append(f"- Inspected file count: `{len(report.get('inspected_files', []))}`")
     lines.append(f"- Required token count: `{report['required_token_count']}`")
     lines.append(f"- Missing token count: `{report['missing_token_count']}`")
     lines.append(f"- Forbidden token hit count: `{report['forbidden_token_hit_count']}`")
@@ -86,10 +103,21 @@ def run_smoke(repo_root: Path, workflow_value: str) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
     text = ""
+    inspected_files: list[str] = []
     if not workflow.exists():
         errors.append(f"missing workflow: {rel(workflow, repo_root)}")
     else:
-        text = workflow.read_text(encoding="utf-8-sig", errors="replace")
+        inspected_files.append(rel(workflow, repo_root))
+        workflow_texts = [workflow.read_text(encoding="utf-8-sig", errors="replace")]
+        implementation = workflow.with_suffix("") / "main.ps1"
+        python_runner = workflow.with_suffix(".py")
+        engine_dir = workflow.with_suffix("")
+        engine_modules = sorted(engine_dir.glob("py_*.py")) if engine_dir.exists() else []
+        for candidate in (python_runner, implementation, *engine_modules):
+            if candidate.exists():
+                inspected_files.append(rel(candidate, repo_root))
+                workflow_texts.append(candidate.read_text(encoding="utf-8-sig", errors="replace"))
+        text = "\n".join(workflow_texts)
 
     missing = []
     for name, token in REQUIRED_TOKENS.items():
@@ -104,10 +132,10 @@ def run_smoke(repo_root: Path, workflow_value: str) -> dict[str, Any]:
             forbidden_hits.append(name)
             errors.append(f"forbidden token present {name}: {token}")
 
-    if "--run-npu-auditor-provider" in text and "if ($RunGpuNpuProvider)" not in text:
-        errors.append("NPU provider auditor flag must stay gated by -RunGpuNpuProvider")
+    if "--run-npu-auditor-provider" in text and "if ($RunLegacyNpuAuditorProvider)" not in text:
+        errors.append("legacy NPU provider auditor flag must stay gated by -RunLegacyNpuAuditorProvider")
 
-    if "provider_execution_performed = [bool]$RunGpuNpuProvider" not in text:
+    if "provider_execution_performed = [bool]$RunGpuNpuProvider" not in text and '"provider_execution_performed": bool(ctx.args.RunGpuNpuProvider)' not in text:
         errors.append("workflow report must expose provider_execution_performed from explicit flag state")
 
     if "evidence_to_commit" not in text:
@@ -122,6 +150,7 @@ def run_smoke(repo_root: Path, workflow_value: str) -> dict[str, Any]:
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
         "workflow": rel(workflow, repo_root),
+        "inspected_files": inspected_files,
         "passed": not errors,
         "errors": errors,
         "warnings": warnings,

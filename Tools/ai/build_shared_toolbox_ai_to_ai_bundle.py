@@ -85,9 +85,25 @@ FULL_TOOLBOX_REPORT_TEMPLATES: tuple[str, ...] = (
     "output/validation/deterministic_recommendation_synthesizer_smoke_full_toolbox_{stamp}.json",
     "output/validation/agent_review_decision_loop_smoke_full_toolbox_{stamp}.json",
     "output/validation/npu_provider_environment_full_toolbox_{stamp}.json",
+    "output/validation/gpu1_primary_advisory_{stamp}.json",
+    "output/validation/gpu0_peer_task_packet_{stamp}.json",
+    "output/validation/gpu0_peer_response_{stamp}.json",
+    "output/validation/gpu0_tool_requests_{stamp}.json",
+    "output/validation/gpu0_peer_runtime_tool_broker_{stamp}.json",
+    "output/validation/npu_micro_peer_assistant_{stamp}.json",
+    "output/validation/npu_micro_runtime_tool_broker_{stamp}.json",
+    "output/validation/ai_peer_exchange_{stamp}.json",
+    "output/validation/ai_peer_exchange_contract_{stamp}.json",
+    "output/validation/provider_runtime_heap_live_signals_init_{stamp}.json",
+    "output/validation/provider_runtime_heap_live_signals_gpu1_request_{stamp}.json",
+    "output/validation/provider_runtime_heap_live_signals_broker_results_{stamp}.json",
+    "output/validation/provider_runtime_heap_live_signals_npu_support_{stamp}.json",
+    "output/validation/provider_runtime_heap_from_peer_reports_{stamp}.json",
+    "output/ai_runtime_heap/{stamp}/snapshot.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_{stamp}.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_{stamp}.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_{stamp}.json",
+    "docs/LOCAL_VALIDATION_EVIDENCE/provider_runtime_heap_telemetry_{stamp}.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_{stamp}_cloud_semantic_deterministic_chunk_manifest.json",
 )
 
@@ -106,11 +122,25 @@ FULL_TOOLBOX_ARTIFACT_TEMPLATES: tuple[str, ...] = (
     "output/validation/deterministic_recommendation_synthesizer_smoke_full_toolbox_{stamp}.md",
     "output/validation/agent_review_decision_loop_smoke_full_toolbox_{stamp}.md",
     "output/validation/npu_provider_environment_full_toolbox_{stamp}.md",
+    "output/validation/gpu1_primary_advisory_{stamp}.md",
+    "output/validation/gpu0_peer_response_{stamp}.md",
+    "output/validation/gpu0_peer_runtime_tool_broker_{stamp}.md",
+    "output/validation/npu_micro_peer_assistant_{stamp}.md",
+    "output/validation/npu_micro_runtime_tool_broker_{stamp}.md",
+    "output/validation/ai_peer_exchange_{stamp}.md",
+    "output/validation/ai_peer_exchange_contract_{stamp}.md",
+    "output/validation/provider_runtime_heap_live_signals_init_{stamp}.md",
+    "output/validation/provider_runtime_heap_live_signals_gpu1_request_{stamp}.md",
+    "output/validation/provider_runtime_heap_live_signals_broker_results_{stamp}.md",
+    "output/validation/provider_runtime_heap_live_signals_npu_support_{stamp}.md",
+    "output/validation/provider_runtime_heap_from_peer_reports_{stamp}.md",
+    "output/ai_runtime_heap/{stamp}/snapshot.md",
     "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_integrated.md",
     "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_workflow.md",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_{stamp}.md",
     "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_{stamp}.md",
     "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_{stamp}.md",
+    "docs/LOCAL_VALIDATION_EVIDENCE/provider_runtime_heap_telemetry_{stamp}.md",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_{stamp}_cloud_semantic_deterministic_chunk_manifest.md",
 )
 
@@ -308,6 +338,28 @@ def collect_report_facts(repo_root: Path, report_paths: list[str]) -> dict[str, 
     }
 
 
+def artifact_hints_from_reports(repo_root: Path, report_paths: list[str]) -> list[str]:
+    """Promote report-declared side artifacts, especially CSV evidence, into bundles."""
+    artifacts: list[str] = []
+    seen: set[str] = set()
+    for rel in report_paths:
+        path = resolve_repo_path(repo_root, rel)
+        data, parse_error = read_json_object(path)
+        if parse_error or not data:
+            continue
+        for key in ("csv_written", "csv_output", "markdown_output", "markdown_report"):
+            value = data.get(key)
+            if not isinstance(value, str) or not value:
+                continue
+            artifact_path = resolve_repo_path(repo_root, value)
+            artifact_rel = repo_relative(artifact_path, repo_root)
+            if artifact_rel in seen or not artifact_path.exists():
+                continue
+            seen.add(artifact_rel)
+            artifacts.append(artifact_rel)
+    return artifacts
+
+
 def default_tool_requests() -> list[dict[str, Any]]:
     return [
         {
@@ -403,6 +455,15 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
             "agent_gpu_parallel_report",
             "local_provider_probe",
             "ai_workload_report_quality",
+            "gpu1_primary_advisory",
+            "gpu0_peer_response",
+            "npu_gpu_deep_review_audit",
+            "agent_runtime_tool_broker",
+            "ai_peer_exchange",
+            "ai_peer_exchange_contract",
+            "provider_runtime_heap_live_signals",
+            "provider_runtime_heap_from_peer_reports",
+            "provider_runtime_heap_telemetry",
         }:
             errors = data.get("errors") if isinstance(data.get("errors"), list) else []
             warnings = data.get("warnings") if isinstance(data.get("warnings"), list) else []
@@ -414,6 +475,22 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
                     "provider_execution_requested": data.get("provider_execution_requested"),
                     "provider_execution_performed": data.get("provider_execution_performed"),
                     "classification": data.get("classification"),
+                    "classifications": data.get("classifications") if isinstance(data.get("classifications"), list) else [],
+                    "role": data.get("role"),
+                    "source": data.get("source"),
+                    "source_classification": data.get("source_classification"),
+                    "request_kind": data.get("request_kind"),
+                    "non_blocking": data.get("non_blocking"),
+                    "peer_mesh_visibility": data.get("peer_mesh_visibility"),
+                    "npu_support_lane": data.get("npu_support_lane"),
+                    "provider_broker_loop": data.get("provider_broker_loop"),
+                    "collaboration_visibility": (data.get("collaboration_round") or {}).get("synchronized_visibility") if isinstance(data.get("collaboration_round"), dict) else None,
+                    "tool_request_count": data.get("tool_request_count"),
+                    "tool_execution_count": data.get("tool_execution_count"),
+                    "event_count": data.get("event_count"),
+                    "broker_result_count": data.get("broker_result_count"),
+                    "pending_broker_request_count": data.get("pending_broker_request_count"),
+                    "direct_execution_violation_count": data.get("direct_execution_violation_count"),
                     "provider_error": data.get("provider_error"),
                     "recommendation_count": data.get("recommendation_count"),
                     "errors": errors[:20],
@@ -421,6 +498,8 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
                 }
             )
             if kind == "agent_gpu_parallel_report" and passed is True and int(data.get("recommendation_count") or 0) > 0:
+                gpu_primary_advisory_succeeded = True
+            if kind == "gpu1_primary_advisory" and passed is True:
                 gpu_primary_advisory_succeeded = True
 
         if kind in {
@@ -494,6 +573,140 @@ def classify_provider_advisory_state(provider_diagnostics: dict[str, Any]) -> di
         "degraded_provider_components": degraded_components[:20],
     }
 
+
+def extract_peer_mesh_product_state(provider_diagnostics: dict[str, Any]) -> dict[str, Any]:
+    """Derive product-facing peer-mesh state from existing provider diagnostics."""
+
+    operational_lanes: list[str] = []
+    support_lanes: list[str] = []
+    degraded_lanes: list[str] = []
+    product_blockers: list[str] = []
+
+    def add_unique(items: list[str], value: str) -> None:
+        if value and value not in items:
+            items.append(value)
+
+    for item in provider_diagnostics.get("diagnostics", []):
+        if not isinstance(item, dict):
+            continue
+        kind = str(item.get("kind") or "")
+        classifications = item.get("classifications") if isinstance(item.get("classifications"), list) else []
+        mesh = item.get("peer_mesh_visibility") if isinstance(item.get("peer_mesh_visibility"), dict) else {}
+        support = item.get("npu_support_lane") if isinstance(item.get("npu_support_lane"), dict) else {}
+        if kind == "gpu1_primary_advisory" and item.get("passed") is True:
+            add_unique(operational_lanes, "gpu1_ollama_primary_advisory")
+        if kind == "gpu0_peer_response":
+            if item.get("provider_execution_performed") is True:
+                add_unique(operational_lanes, "gpu0_openvino_peer_companion")
+                add_unique(support_lanes, "gpu0_openvino_numeric_tool_peer")
+            if "gpu0_peer_semantic_model_unconfigured" in classifications:
+                add_unique(degraded_lanes, "gpu0_semantic_companion_model_unconfigured")
+        if kind == "agent_runtime_tool_broker" and int(item.get("tool_execution_count") or 0) > 0:
+            add_unique(operational_lanes, "runtime_tool_broker")
+            source_classification = str(item.get("source_classification") or item.get("source") or "")
+            if "gpu0" in source_classification:
+                add_unique(support_lanes, "gpu0_brokered_tool_supply")
+            if "npu" in source_classification:
+                add_unique(support_lanes, "npu_brokered_tool_supply")
+        if kind == "ai_peer_exchange":
+            for lane in item.get("peer_mesh_operational_lanes", []) if isinstance(item.get("peer_mesh_operational_lanes"), list) else []:
+                add_unique(operational_lanes, str(lane))
+            if mesh.get("gpu0_tool_requests_broker_consumed") is True:
+                add_unique(support_lanes, "gpu0_brokered_tool_supply")
+            if mesh.get("npu_tool_requests_broker_consumed") is True:
+                add_unique(support_lanes, "npu_brokered_tool_supply")
+            if support.get("provider_slow_or_degraded") is True:
+                add_unique(degraded_lanes, "npu_semantic_provider_slow_or_degraded")
+            if support.get("product_pass_blocker") is True:
+                add_unique(product_blockers, "npu_support_lane_marked_product_blocker")
+        if kind == "provider_runtime_heap_telemetry" and int(item.get("event_count") or 0) > 0:
+            add_unique(operational_lanes, "provider_runtime_heap_blackboard")
+            if int(item.get("broker_result_count") or 0) > 0:
+                add_unique(support_lanes, "provider_runtime_heap_broker_results")
+            if int(item.get("direct_execution_violation_count") or 0) > 0:
+                add_unique(product_blockers, "provider_runtime_heap_direct_execution_violation")
+    if operational_lanes and "deterministic_scripts" not in operational_lanes:
+        add_unique(operational_lanes, "deterministic_scripts")
+    return {
+        "operational_lanes": operational_lanes,
+        "support_lanes": support_lanes,
+        "degraded_lanes": degraded_lanes,
+        "product_blockers": product_blockers,
+        "legacy_usable_lanes_are_workload_quality_only": True,
+        "npu_degraded_is_product_blocker": False,
+        "npu_heavy_audit_authority": False,
+    }
+
+
+def extract_provider_broker_loop_product_state(provider_diagnostics: dict[str, Any]) -> dict[str, Any]:
+    """Derive provider-broker loop product state from existing provider diagnostics."""
+
+    for item in provider_diagnostics.get("diagnostics", []):
+        if not isinstance(item, dict):
+            continue
+        loop = item.get("provider_broker_loop")
+        if isinstance(loop, dict) and loop:
+            return {
+                "seen": True,
+                "active": loop.get("active"),
+                "controlled_executor": loop.get("controlled_executor"),
+                "direct_tool_execution_allowed": loop.get("direct_tool_execution_allowed"),
+                "broker_tool_execution_count": loop.get("broker_tool_execution_count"),
+                "gpu0_broker_tool_execution_count": loop.get("gpu0_broker_tool_execution_count"),
+                "npu_broker_tool_execution_count": loop.get("npu_broker_tool_execution_count"),
+                "npu_non_blocking": loop.get("npu_non_blocking"),
+                "npu_product_pass_blocker": loop.get("npu_product_pass_blocker"),
+                "deterministic_scripts_heavy_audit_authority": loop.get("deterministic_scripts_heavy_audit_authority"),
+                "product_pass_blockers": loop.get("product_pass_blockers", []),
+                "topology": loop.get("topology", []),
+            }
+
+    heap_items = [
+        item
+        for item in provider_diagnostics.get("diagnostics", [])
+        if isinstance(item, dict) and item.get("kind") == "provider_runtime_heap_telemetry"
+    ]
+    if heap_items:
+        broker_result_count = sum(int(item.get("broker_result_count") or 0) for item in heap_items)
+        return {
+            "seen": True,
+            "active": any(int(item.get("event_count") or 0) > 0 for item in heap_items),
+            "controlled_executor": "provider_runtime_heap + agent_runtime_tool_broker",
+            "direct_tool_execution_allowed": False,
+            "broker_tool_execution_count": broker_result_count,
+            "gpu0_broker_tool_execution_count": broker_result_count,
+            "npu_broker_tool_execution_count": 0,
+            "npu_non_blocking": True,
+            "npu_product_pass_blocker": False,
+            "deterministic_scripts_heavy_audit_authority": True,
+            "product_pass_blockers": [
+                "provider_runtime_heap_direct_execution_violation"
+                for item in heap_items
+                if int(item.get("direct_execution_violation_count") or 0) > 0
+            ],
+            "topology": [
+                "gpu1 -> gpu0 evidence_request",
+                "broker -> gpu0 broker_result",
+                "npu -> gpu1 evidence_response",
+            ],
+        }
+
+    return {
+        "seen": False,
+        "active": False,
+        "controlled_executor": "",
+        "direct_tool_execution_allowed": None,
+        "broker_tool_execution_count": 0,
+        "gpu0_broker_tool_execution_count": 0,
+        "npu_broker_tool_execution_count": 0,
+        "npu_non_blocking": None,
+        "npu_product_pass_blocker": None,
+        "deterministic_scripts_heavy_audit_authority": None,
+        "product_pass_blockers": ["provider_broker_loop_not_found_in_bundle_inputs"],
+        "topology": [],
+    }
+
+
 def build_final_summary(
     *,
     repo_root: Path,
@@ -510,6 +723,8 @@ def build_final_summary(
     facts = collect_report_facts(repo_root, report_paths)
     patch_plan_summary = extract_full_run_patch_plan_summary(repo_root, report_paths)
     provider_diagnostics = extract_provider_diagnostics_summary(repo_root, report_paths)
+    peer_mesh_product_state = extract_peer_mesh_product_state(provider_diagnostics)
+    provider_broker_loop_product_state = extract_provider_broker_loop_product_state(provider_diagnostics)
     tool_capabilities = runtime_tool_capabilities()
     tool_requests = facts.get("tool_requests_executed_or_proposed") or default_tool_requests()
     remaining_gaps = build_remaining_gaps(missing_reports, missing_artifacts, facts)
@@ -533,6 +748,18 @@ def build_final_summary(
         "compact_bundle_paths": bundle_paths,
         "provider_execution_performed": bool(facts.get("provider_execution_performed")),
         "provider_diagnostics": provider_diagnostics,
+        "peer_mesh_product_state": peer_mesh_product_state,
+        "provider_broker_loop_product_state": provider_broker_loop_product_state,
+        "provider_broker_loop_active": provider_broker_loop_product_state.get("active"),
+        "provider_broker_loop_controlled_executor": provider_broker_loop_product_state.get("controlled_executor"),
+        "provider_broker_loop_broker_execution_count": provider_broker_loop_product_state.get("broker_tool_execution_count"),
+        "provider_broker_loop_gpu0_broker_execution_count": provider_broker_loop_product_state.get("gpu0_broker_tool_execution_count"),
+        "provider_broker_loop_npu_broker_execution_count": provider_broker_loop_product_state.get("npu_broker_tool_execution_count"),
+        "provider_broker_loop_product_blockers": provider_broker_loop_product_state.get("product_pass_blockers", []),
+        "peer_mesh_operational_lanes": peer_mesh_product_state.get("operational_lanes", []),
+        "peer_mesh_support_lanes": peer_mesh_product_state.get("support_lanes", []),
+        "peer_mesh_degraded_lanes": peer_mesh_product_state.get("degraded_lanes", []),
+        "peer_mesh_product_blockers": peer_mesh_product_state.get("product_blockers", []),
         "gpu_primary_advisory_succeeded": bool(provider_diagnostics.get("gpu_primary_advisory_succeeded")),
         "provider_failure_detected": bool(provider_diagnostics.get("provider_failure_detected")),
         "provider_advisory_state": provider_diagnostics.get("provider_advisory_state"),
@@ -583,10 +810,27 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
         lines.append("- Provider failure reasons:")
         for reason in reasons[:12]:
             lines.append(f"  - {reason}")
+    peer_mesh_state = summary.get("peer_mesh_product_state") if isinstance(summary.get("peer_mesh_product_state"), dict) else {}
+    if peer_mesh_state:
+        lines.append("")
+        lines.append("## Peer mesh product state")
+        lines.append("")
+        lines.append(f"- Peer mesh operational lanes: `{peer_mesh_state.get('operational_lanes')}`")
+        lines.append(f"- Peer mesh support lanes: `{peer_mesh_state.get('support_lanes')}`")
+        lines.append(f"- Peer mesh degraded lanes: `{peer_mesh_state.get('degraded_lanes')}`")
+        lines.append(f"- Peer mesh product blockers: `{peer_mesh_state.get('product_blockers')}`")
+        lines.append(f"- Legacy usable lanes are workload quality only: `{peer_mesh_state.get('legacy_usable_lanes_are_workload_quality_only')}`")
+        lines.append(f"- NPU degraded is product blocker: `{peer_mesh_state.get('npu_degraded_is_product_blocker')}`")
+        lines.append(f"- NPU heavy audit authority: `{peer_mesh_state.get('npu_heavy_audit_authority')}`")
+        lines.append("")
     for item in provider.get("diagnostics", [])[:12]:
         lines.append(
             f"- `{item.get('path')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}` "
-            f"provider_execution_performed=`{item.get('provider_execution_performed')}` errors=`{item.get('errors')}`"
+            f"source=`{item.get('source')}` source_classification=`{item.get('source_classification')}` "
+            f"provider_execution_performed=`{item.get('provider_execution_performed')}` "
+            f"collaboration_visibility=`{item.get('collaboration_visibility')}` "
+            f"peer_mesh=`{bool(item.get('peer_mesh_visibility'))}` "
+            f"npu_support=`{bool(item.get('npu_support_lane'))}` errors=`{item.get('errors')}`"
         )
     lines.append("")
     lines.append("## Patch plan summary")
@@ -740,7 +984,13 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
         repo_relative(output_dir / f"{basename}.json", repo_root),
         repo_relative(output_dir / f"{basename}.md", repo_root),
     ]
-    artifact_candidates = coalesce_list([args.task_md, args.architecture_md], list(args.artifact or []), artifact_templates_for_stamp(stamp))
+    report_declared_artifacts = artifact_hints_from_reports(repo_root, reports)
+    artifact_candidates = coalesce_list(
+        [args.task_md, args.architecture_md],
+        list(args.artifact or []),
+        report_declared_artifacts,
+        artifact_templates_for_stamp(stamp),
+    )
     artifacts, missing_artifacts = existing_paths(repo_root, artifact_candidates, label="artifact", include_missing_optional=bool(args.include_missing_optional))
 
     recursive_report_roots = [] if args.no_recursive_defaults else list(DEFAULT_RECURSIVE_REPORT_ROOTS)

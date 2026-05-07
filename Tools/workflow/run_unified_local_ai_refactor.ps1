@@ -53,6 +53,8 @@ param(
     [int]$NpuMaxPromptChars = 1200,
     [int]$NpuMaxNewTokens = 384,
     [int]$NpuFinalWaitSeconds = 180,
+    [ValidateSet('startup', 'deferred', 'live-seed-only', 'peer', 'post-gpu-provider', 'disabled')]
+    [string]$NpuMicroStartMode = 'deferred',
     [int]$MinRecommendations = 1,
     [int]$MinPatchPlans = 1,
     [int]$MaxRecommendations = 20,
@@ -86,6 +88,7 @@ param(
     [switch]$UsePrimaryAdvisoryProvider,
     [switch]$RunMultistepProviderWorkflow,
     [switch]$RunLegacyFullToolboxIntegrated,
+    [switch]$RunLegacyNpuAuditorProvider,
     [switch]$RunOllamaProbe,
     [switch]$RunNpuProbe,
     [switch]$RunNpuDecodeSmoke,
@@ -105,11 +108,23 @@ param(
 ,
     [switch]$LightFull0To10,
     [string]$LightFull0To10OutputDir = "output/validation/unified_light_full0to10_profile",
-    [switch]$LightFull0To10NoExternalProbes
+    [switch]$LightFull0To10NoExternalProbes,
+    [int]$OfficialAdapterTimeoutSeconds = 1800,
+    [switch]$SkipOfficialAdapter,
+    [switch]$RunOpenVinoGpu0Workload
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+# IA-CARMINE-UNIFIED-PHASE-VISIBILITY-IMPORT-BEGIN
+$UnifiedPhaseVisibilityScript = Join-Path $PSScriptRoot "unified_phase_visibility.ps1"
+if (Test-Path -LiteralPath $UnifiedPhaseVisibilityScript -PathType Leaf) {
+    . $UnifiedPhaseVisibilityScript
+} else {
+    Write-Warning "Unified phase visibility helper not found: $UnifiedPhaseVisibilityScript"
+}
+# IA-CARMINE-UNIFIED-PHASE-VISIBILITY-IMPORT-END
 
 # IA-CARMINE-LIGHTFULL0TO10-DISPATCH-BEGIN
 if ($LightFull0To10) {
@@ -986,6 +1001,7 @@ Write-Host "[INFO] RunDir: $RunDir"
 Write-Host "[INFO] Ollama advisory: $UseOllamaAdvisory"
 Write-Host "[INFO] Primary advisory provider: $UsePrimaryAdvisoryProvider"
 Write-Host "[INFO] Multistep provider workflow: $RunMultistepProviderWorkflow"
+Write-Host "[INFO] Legacy NPU auditor provider: $RunLegacyNpuAuditorProvider"
 Write-Host "[INFO] Patch specs: $GeneratePatchSpecs"
 Write-Host "[INFO] Reset apply: $ApplyReset"
 foreach ($warning in $Warnings) { Write-Warning $warning }
@@ -1212,56 +1228,219 @@ if ($RunLegacyFullToolboxIntegrated) {
         NpuMaxPromptChars = $NpuMaxPromptChars
         NpuMaxNewTokens = $NpuMaxNewTokens
         NpuFinalWaitSeconds = $NpuFinalWaitSeconds
+        NpuMicroStartMode = $NpuMicroStartMode
         MinRecommendations = $MinRecommendations
         MinPatchPlans = $MinPatchPlans
         RepositoryConsistencyMapWorkers = $RepositoryConsistencyMapWorkers
     }
     if ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality) { $LegacyArgs.RunGpuNpuProvider = $true }
     if ($StrictRealRunActivationEnabled) { $LegacyArgs.RequireProviderArtifacts = $true }
+    if ($RunLegacyNpuAuditorProvider) { $LegacyArgs.RunLegacyNpuAuditorProvider = $true }
     if ($NoMemoryWrite) { $LegacyArgs.SkipMemoryReload = $true }
     if ($NoEvidence) { $LegacyArgs.SkipSharedToolboxBundle = $true }
+# IA-CARMINE-GPU0-PROVIDER-SUPPORT-BEGIN
+if ($Full0To10 -or $RunOpenVinoGpu0Workload) {
+    $Gpu0ProviderSupportJson = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
+    $Gpu0ProviderSupportMd = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.md" -f $DataStamp)
+    $Gpu0SupportOk = Invoke-Checked "Run OpenVINO GPU.0 provider support lane" {
+        & $ResolvedPythonExe .\Tools\ai\build_openvino_gpu0_workload_report.py `
+            --repo-root . `
+            --output $Gpu0ProviderSupportJson `
+            --markdown-output $Gpu0ProviderSupportMd `
+            --iterations 96 `
+            --min-seconds 3 `
+            --role provider_support_diagnostic `
+            --production-support
+    } -SoftFail
+    if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
+        $ReportFiles += @($Gpu0ProviderSupportJson, $Gpu0ProviderSupportMd)
+    }
+    if (-not $Gpu0SupportOk) {
+        if (Get-Variable -Name Warnings -ErrorAction SilentlyContinue) {
+            $Warnings += "GPU0 provider support lane failed or degraded; see $Gpu0ProviderSupportJson"
+        }
+    }
+}
+# IA-CARMINE-GPU0-PROVIDER-SUPPORT-END
+
     $PhaseStatus.legacy_full_toolbox_integrated = Invoke-Checked "Run legacy full-toolbox integrated 0-to-10 lane" {
         & .\Tools\workflow\run_agent_review_full_toolbox_decision_loop_integrated.ps1 @LegacyArgs
     } -SoftFail:$ContinueOnValidationError
     if (Test-Path -LiteralPath $LegacyFullToolboxReport -PathType Leaf) {
         $ReportFiles += $LegacyFullToolboxReport
         $PhaseReports.legacy_full_toolbox_integrated = $LegacyFullToolboxReport
+        foreach ($PeerReport in @(
+            (Join-Path $OutputDir ("validation/gpu1_primary_advisory_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/gpu0_peer_task_packet_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/gpu0_peer_response_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/gpu0_tool_requests_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/gpu0_peer_runtime_tool_broker_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/ai_peer_exchange_{0}.json" -f $DataStamp)),
+            (Join-Path $OutputDir ("validation/ai_peer_exchange_contract_{0}.json" -f $DataStamp))
+        )) {
+            if (Test-Path -LiteralPath $PeerReport -PathType Leaf) {
+                $ReportFiles += $PeerReport
+            }
+        }
+        $PhaseReports.ai_peer_exchange = Join-Path $OutputDir ("validation/ai_peer_exchange_{0}.json" -f $DataStamp)
+        $PhaseReports.ai_peer_exchange_contract = Join-Path $OutputDir ("validation/ai_peer_exchange_contract_{0}.json" -f $DataStamp)
+
+# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-BEGIN
+if ($Full0To10) {
+    $ProviderAcceptanceJson = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.json" -f $DataStamp)
+    $ProviderAcceptanceMd = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.md" -f $DataStamp)
+    $Gpu0ProviderSupportJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
+    $Gpu0FinalWorkloadJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $DataStamp)
+    $Gpu0CompanionJsonForGate = Join-Path $OutputDir ("validation/gpu0_companion_task_lane_{0}.json" -f $DataStamp)
+    $AiPeerExchangeJsonForGate = Join-Path $OutputDir ("validation/ai_peer_exchange_{0}.json" -f $DataStamp)
+    $AiPeerContractJsonForGate = Join-Path $OutputDir ("validation/ai_peer_exchange_contract_{0}.json" -f $DataStamp)
+    $ProviderGateOk = Invoke-Checked "Full0To10 provider acceptance gate" {
+        & $ResolvedPythonExe .\Tools\validation\check_full0to10_provider_acceptance.py `
+            --repo-root . `
+            --stamp $DataStamp `
+            --gpu0-provider-support $Gpu0ProviderSupportJsonForGate `
+            --gpu0-final-workload $Gpu0FinalWorkloadJsonForGate `
+            --gpu0-companion-lane $Gpu0CompanionJsonForGate `
+            --ai-peer-exchange $AiPeerExchangeJsonForGate `
+            --ai-peer-contract $AiPeerContractJsonForGate `
+            --output $ProviderAcceptanceJson `
+            --markdown-output $ProviderAcceptanceMd
+    } -SoftFail
+    if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
+        $ReportFiles += @($ProviderAcceptanceJson, $ProviderAcceptanceMd)
+    }
+    if (Get-Variable -Name PhaseReports -ErrorAction SilentlyContinue) {
+        $PhaseReports.full0to10_provider_acceptance = $ProviderAcceptanceJson
+    }
+    if (-not $ProviderGateOk) {
+        if (Get-Variable -Name Warnings -ErrorAction SilentlyContinue) {
+            $Warnings += "Full0To10 provider acceptance gate failed/degraded; see $ProviderAcceptanceJson"
+        }
+    }
+}
+# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-END
     }
 }
 
-if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-ModeEnabled "patch_specs") -or (Test-ModeEnabled "evidence") -or $UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $GeneratePatchSpecs -or $BuildEvidence) {
-    $BaseName = "unified_${ModeName}_$Stamp"
-    $ProposalBaseName = "unified_${ModeName}_proposals_$Stamp"
-    $ContextFiles = @($ContextFiles | Where-Object {
-        $ContextPath = [string]$_
-        -not (Test-Path -LiteralPath $ContextPath -PathType Container)
-    })
 
-    $RunnerArgs = @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass",
-        "-File", ".\Tools\workflow\run_local_ai_task_via_pipeline.ps1",
+# IA-CARMINE-GPU0-WORKLOAD-BEFORE-OFFICIAL-BEGIN
+if ($RunOpenVinoGpu0Workload -or $Full0To10) {
+    Write-Host ""
+    Write-Host "=== Run OpenVINO GPU.0 secondary workload evidence ==="
+    $Gpu0Stamp = $Stamp
+    if ([string]::IsNullOrWhiteSpace($Gpu0Stamp)) { $Gpu0Stamp = Get-Date -Format "yyyyMMdd-HHmmss" }
+
+    $Gpu0Json = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $Gpu0Stamp)
+    $Gpu0Md = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.md" -f $Gpu0Stamp)
+    Invoke-Python @(
+        "Tools/ai/build_openvino_gpu0_workload_report.py",
+        "--repo-root", ".",
+        "--output", $Gpu0Json,
+        "--markdown-output", $Gpu0Md
+    )
+    if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
+        $ReportFiles += $Gpu0Json
+        $ReportFiles += $Gpu0Md
+    }
+    if (Get-Variable -Name PhaseReports -ErrorAction SilentlyContinue) {
+        $PhaseReports.openvino_gpu0_workload = $Gpu0Json.Replace("\", "/")
+        $PhaseReports.openvino_gpu0_workload_markdown = $Gpu0Md.Replace("\", "/")
+    }
+
+# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-LATE-BEGIN
+if ($Full0To10) {
+    $ProviderAcceptanceJson = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.json" -f $DataStamp)
+    $ProviderAcceptanceMd = Join-Path $OutputDir ("validation/full0to10_provider_acceptance_{0}.md" -f $DataStamp)
+    $Gpu0ProviderSupportJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
+    $Gpu0FinalWorkloadJsonForGate = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $DataStamp)
+    $Gpu0CompanionJsonForGate = Join-Path $OutputDir ("validation/gpu0_companion_task_lane_{0}.json" -f $DataStamp)
+    $AiPeerExchangeJsonForGate = Join-Path $OutputDir ("validation/ai_peer_exchange_{0}.json" -f $DataStamp)
+    $AiPeerContractJsonForGate = Join-Path $OutputDir ("validation/ai_peer_exchange_contract_{0}.json" -f $DataStamp)
+    $ProviderLateGateOk = Invoke-Checked "Full0To10 provider acceptance gate after final GPU0 workload" {
+        & $ResolvedPythonExe .\Tools\validation\check_full0to10_provider_acceptance.py `
+            --repo-root . `
+            --stamp $DataStamp `
+            --gpu0-provider-support $Gpu0ProviderSupportJsonForGate `
+            --gpu0-final-workload $Gpu0FinalWorkloadJsonForGate `
+            --gpu0-companion-lane $Gpu0CompanionJsonForGate `
+            --ai-peer-exchange $AiPeerExchangeJsonForGate `
+            --ai-peer-contract $AiPeerContractJsonForGate `
+            --require-final-workload `
+            --output $ProviderAcceptanceJson `
+            --markdown-output $ProviderAcceptanceMd
+    } -SoftFail
+    if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
+        $ReportFiles += @($ProviderAcceptanceJson, $ProviderAcceptanceMd)
+    }
+    if (Get-Variable -Name PhaseReports -ErrorAction SilentlyContinue) {
+        $PhaseReports.full0to10_provider_acceptance_after_gpu0_workload = $ProviderAcceptanceJson
+    }
+    if (-not $ProviderLateGateOk) {
+        if (Get-Variable -Name Warnings -ErrorAction SilentlyContinue) {
+            $Warnings += "Full0To10 provider acceptance late gate failed/degraded; see $ProviderAcceptanceJson"
+        }
+    }
+}
+# IA-CARMINE-FULL0TO10-PROVIDER-ACCEPTANCE-LATE-END
+}
+# IA-CARMINE-GPU0-WORKLOAD-BEFORE-OFFICIAL-END
+if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-ModeEnabled "patch_specs") -or (Test-ModeEnabled "evidence") -or $UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $GeneratePatchSpecs -or $BuildEvidence) {
+    # IA-CARMINE-OFFICIAL-PHASE-VISIBILITY-BEGIN
+    Write-Host ""
+    Write-Host "=== Run official local AI pipeline adapter ==="
+    $OfficialStamp = $Stamp
+    if ([string]::IsNullOrWhiteSpace($OfficialStamp)) { $OfficialStamp = Get-Date -Format "yyyyMMdd-HHmmss" }
+    $OfficialRepoRoot = $RepoRoot
+    if (Get-Variable -Name ResolvedRepoRoot -ErrorAction SilentlyContinue) { $OfficialRepoRoot = $ResolvedRepoRoot }
+    if ([string]::IsNullOrWhiteSpace($OfficialRepoRoot)) { $OfficialRepoRoot = (Resolve-Path ".").Path }
+    $OfficialAdapterScript = Join-Path $OfficialRepoRoot "Tools/workflow/run_local_ai_task_via_pipeline.ps1"
+    $OfficialRunDir = Join-Path $OutputDir ("local_ai_runs/{0}_official_adapter" -f $OfficialStamp)
+    $OfficialBasename = "{0}_official_adapter" -f $OfficialStamp
+    $OfficialArgs = @(
         "-PromptFile", $TaskFile,
         "-TaskFile", $TaskFile,
-        "-RunDir", $RunDir,
+        "-RunDir", $OfficialRunDir,
+        "-RepoRoot", $OfficialRepoRoot,
         "-Profile", $Profile,
-        "-Basename", $BaseName,
-        "-ProposalBasename", $ProposalBaseName,
-        "-MaxContextChars", "$MaxContextChars",
-        "-ExtraContextFile", ($ContextFiles -join ",")
+        "-Basename", $OfficialBasename,
+        "-ProposalBasename", ("{0}_proposals" -f $OfficialBasename),
+        "-Model", $Model,
+        "-MaxContextChars", ([string]$MaxContextChars)
     )
-    if ($Model -ne "") { $RunnerArgs += @("-Model", $Model) }
-    if ($FullContextGoldenPath) { $RunnerArgs += "-FullContextGoldenPath" }
-    if ($UsePrimaryAdvisoryProvider -or $UseOllamaAdvisory -or (Test-ModeEnabled "provider")) { $RunnerArgs += "-UsePrimaryAdvisoryProvider" }
-    if ($RunMultistepProviderWorkflow) { $RunnerArgs += "-RunMultistepProviderWorkflow" }
-    if ($RunOllamaProbe) { $RunnerArgs += "-RunOllamaProbe" }
-    if ($RunNpuProbe) { $RunnerArgs += "-RunNpuProbe" }
-    if ($RunNpuDecodeSmoke) { $RunnerArgs += "-RunNpuDecodeSmoke" }
-    if ($BuildEvidence -or (Test-ModeEnabled "evidence")) { $RunnerArgs += "-BuildEvidence" }
-    if ($GeneratePatchSpecs -or (Test-ModeEnabled "patch_specs")) { $RunnerArgs += "-GeneratePatchSpecs" }
-    if ($DryRun) { $RunnerArgs += "-DryRun" }
-    $PhaseStatus.official_pipeline = Invoke-Checked "Run official local AI pipeline adapter" { powershell.exe @RunnerArgs } -SoftFail:$ContinueOnValidationError
-    $PhaseReports.official_packet = "$PipelineDir/$BaseName.json"
-    $PhaseReports.official_proposals = "$PipelineDir/$ProposalBaseName.json"
+    if ($FullContextGoldenPath) { $OfficialArgs += "-FullContextGoldenPath" }
+    if ($UsePrimaryAdvisoryProvider) { $OfficialArgs += "-UsePrimaryAdvisoryProvider" }
+    if ($RunMultistepProviderWorkflow) { $OfficialArgs += "-RunMultistepProviderWorkflow" }
+    if ($RunOllamaProbe) { $OfficialArgs += "-RunOllamaProbe" }
+    if ($RunNpuProbe) { $OfficialArgs += "-RunNpuProbe" }
+    if ($RunNpuDecodeSmoke) { $OfficialArgs += "-RunNpuDecodeSmoke" }
+    if ($BuildEvidence) { $OfficialArgs += "-BuildEvidence" }
+    if ($GeneratePatchSpecs) { $OfficialArgs += "-GeneratePatchSpecs" }
+    if ($DryRun) { $OfficialArgs += "-DryRun" }
+    if (Get-Command Invoke-UnifiedExternalPhaseCommand -ErrorAction SilentlyContinue) {
+        $OfficialPhase = Invoke-UnifiedExternalPhaseCommand -RepoRoot $OfficialRepoRoot -PhaseName "official" -StampValue $OfficialStamp -OutputDir $OutputDir -FilePath $OfficialAdapterScript -Arguments $OfficialArgs -TimeoutSeconds $OfficialAdapterTimeoutSeconds -Skip:$SkipOfficialAdapter
+        if (Get-Variable -Name ReportFiles -ErrorAction SilentlyContinue) {
+            $ReportFiles += $OfficialPhase.json
+            $ReportFiles += $OfficialPhase.markdown
+        }
+        if (Get-Variable -Name PhaseReports -ErrorAction SilentlyContinue) {
+            $PhaseReports.official_phase_status = $OfficialPhase.json.Replace("\", "/")
+            $PhaseReports.official_phase_status_markdown = $OfficialPhase.markdown.Replace("\", "/")
+        }
+        if (Get-Variable -Name PhaseStatus -ErrorAction SilentlyContinue) {
+            $PhaseStatus["official"] = $OfficialPhase.status
+        }
+        if ($OfficialPhase.status -eq "timeout" -or $OfficialPhase.status -eq "skipped") {
+            if (Get-Variable -Name Warnings -ErrorAction SilentlyContinue) {
+                $Warnings += ("official phase {0}; report={1}" -f $OfficialPhase.status, $OfficialPhase.json)
+            }
+        }
+        if ($OfficialPhase.status -eq "failed" -and -not $ContinueOnValidationError) {
+            throw ("official phase failed; report={0}" -f $OfficialPhase.json)
+        }
+    } else {
+        throw "unified_phase_visibility.ps1 helper was not loaded"
+    }
+    # IA-CARMINE-OFFICIAL-PHASE-VISIBILITY-END
 }
 
 if ($UseOllamaAdvisory -or (Test-ModeEnabled "provider")) {
@@ -1327,6 +1506,7 @@ $Manifest = [ordered]@{
     context_pack_max_file_chars = $ContextPackMaxFileChars
     agent_state_max_memory_chars = $AgentStateMaxMemoryChars
     legacy_full_toolbox_integrated_requested = [bool]$RunLegacyFullToolboxIntegrated
+    legacy_npu_auditor_provider_requested = [bool]$RunLegacyNpuAuditorProvider
     python_exe = $ResolvedPythonExe
     python_exe_requested = $PythonExe
     pythonpath = $env:PYTHONPATH
@@ -1337,6 +1517,12 @@ $Manifest = [ordered]@{
     run_dir = $RunDir.Replace("\", "/")
     provider_execution_requested = [bool]($UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke -or (Test-ModeEnabled "provider"))
     primary_provider_requested = [bool]$UsePrimaryAdvisoryProvider
+    ai_peer_exchange_required = [bool]$Full0To10
+    gpu1_primary_advisory_role = "mandatory_primary_advisory_planner"
+    gpu0_companion_peer_role = "openvino_companion_peer_worker"
+    npu_micro_lane_role = "micro_fast_task_assistant"
+    deterministic_script_role = "heavy_audit_authority"
+    runtime_tool_broker_role = "controlled_gpu1_gpu0_tool_execution"
     workload_quality_report = $WorkloadQualityReport
     workload_quality_routing_ok = [bool]$WorkloadQualityRoutingOk
     multistep_provider_workflow_requested = [bool]$RunMultistepProviderWorkflow
@@ -1384,3 +1570,4 @@ Write-UnifiedLauncherExecutionTailEvidence `
     -PatchSpecsRequested ([bool]$GeneratePatchSpecs) `
     -ProdMode ([bool]$Prod) `
     -FailureMessage ""
+

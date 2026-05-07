@@ -36,6 +36,7 @@ unified launcher command
   -> runtime/hardware capability manifest
   -> final tool-product evidence/readiness package when selected
   -> full toolbox run telemetry summary
+  -> generated artifact path policy for push-safe bundle names
   -> compact evidence bundle under docs/LOCAL_VALIDATION_EVIDENCE/
   -> shared production AI-to-AI bundle
   -> manual review / PR / merge
@@ -273,6 +274,8 @@ Tools/ai/full0to10_final_product/*
 
 It composes track input contract, accelerator control, provider governor, provider invocation plan, provider execution bridge, effective-use optimization summary and quality gate.
 
+The full toolbox production lane also passes current-run reports and artifacts into this builder so the product package can point at the live GPU1/GPU0/NPU/broker mesh evidence, telemetry and patch-plan outputs for the active stamp.
+
 It writes:
 
 ```text
@@ -339,7 +342,7 @@ npu_decode_smoke_passed: true
 | Provider diagnostics | provider/probe tools and sync analyzers | telemetry summary, bundle, AI agents | Must expose advisory state, failure reasons, degraded components and GPU/NPU timing source. |
 | Provider bridge/readiness report | `Tools/ai/full0to10_provider_execution_bridge/*` | maintainers, telemetry, bundle, future provider runners | Builds invocation/gate/command/workload/telemetry/readiness surfaces; not real provider execution proof by itself. |
 | Hardware/tool capability manifest | `Tools/ai/full0to10_hardware_capability/*` or current runtime hardware capability builder | AI agents, bundle, cloud handoff | Captures tool inventory and CPU/GPU/Ollama/OpenVINO/NPU visibility; not source writes or patch application. |
-| Final tool-product package | `Tools/ai/build_full0to10_final_tool_product.py` | maintainers, AI agents, readiness review | Product/evidence/readiness package that composes Full0To10 contract/governor/bridge/effective-use/quality surfaces. |
+| Final tool-product package | `Tools/ai/build_full0to10_final_tool_product.py` | maintainers, AI agents, readiness review | Product/evidence/readiness package that composes Full0To10 contract/governor/bridge/effective-use/quality surfaces and indexes current-run mesh/telemetry/patch-plan evidence when supplied. |
 | NPU remediation report | `Tools/validation/check_npu_decode_quality_remediation.py` | maintainer, proposals, evidence | Explains why NPU is excluded and what must happen before promotion. |
 | NPU decode smoke report | `Tools/ai/run_npu_decode_smoke_diagnostic.py` | evidence bundle and future promotion gates | Full0To10 diagnostic unless disabled/unavailable; does not imply NPU general advisory quality. |
 | Local provider probe report | `Tools/ai/run_local_provider_probe.py` | evidence bundle | Full0To10/provider probe evidence unless disabled/unavailable. |
@@ -348,6 +351,7 @@ npu_decode_smoke_passed: true
 | Runtime/hardware capability manifest | current capability manifest builder for active lane | AI agents, bundle, cloud handoff | Describes available tools/hardware lanes, allowed args and execution guardrails. |
 | Full toolbox run telemetry summary | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | AI agents, bundle, PR review | Cross-run summary of provider, GPU/NPU, broker, patch-plan and guardrail state. |
 | Shared AI-to-AI bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | next local/cloud AI, PR review | Production handoff surface; must carry diagnostics, telemetry, capability, discovery/count and patch-plan summary. |
+| Generated artifact path policy | `Tools/validation/check_generated_artifact_path_policy.py` | PR review, push readiness | Catches disallowed generated destinations and overlong evidence/bundle filenames before staging/push. |
 | Post-validation AI packet | `Tools/ai/suggest_repository_updates.py` | maintainer / proposal builder | Uses quality-approved advisory context only. |
 | Repository change proposals | `Tools/ai/build_repository_change_proposals.py` | maintainer, future trusted patch builders | Advisory only; no auto-apply. Includes `suggestion_outputs` descriptors for code/MD/JSON/PowerShell targets. |
 | Full-context golden proposals | `Tools/ai/build_full_context_golden_proposals.py` | maintainer, validators, future patch-spec promotion | Deterministic P1-P6 proposal families; manual-review-only and no source mutation. |

@@ -14,12 +14,26 @@ REPORT_ENTRY_FIELDS = (
     ("selected_count", "Selected count"),
     ("total_selected_chars", "Total selected chars"),
     ("max_total_chars", "Max total chars"),
-    ("usable_lanes", "Usable lanes"),
-    ("unusable_lanes", "Unusable lanes"),
+    ("usable_lanes", "Usable workload lanes"),
+    ("unusable_lanes", "Unusable workload lanes"),
+    ("peer_mesh_operational_lanes", "Peer mesh operational lanes"),
+    ("peer_mesh_support_lanes", "Peer mesh support lanes"),
+    ("peer_mesh_degraded_lanes", "Peer mesh degraded lanes"),
+    ("peer_mesh_product_blockers", "Peer mesh product blockers"),
     ("primary_advisory_provider", "Primary advisory provider"),
     ("python_exe", "Python executable"),
 )
-REPORT_DETAIL_FIELDS = (("errors", "Errors"), ("warnings", "Warnings"), ("routing", "Routing"), ("decision", "Decision"), ("ollama", "Ollama"))
+REPORT_DETAIL_FIELDS = (
+    ("errors", "Errors"),
+    ("warnings", "Warnings"),
+    ("routing", "Routing"),
+    ("decision", "Decision"),
+    ("ollama", "Ollama"),
+    ("peer_mesh_visibility", "Peer mesh visibility"),
+    ("npu_support_lane", "NPU support lane"),
+    ("collaboration_visibility", "Collaboration visibility"),
+    ("peer_mesh_lane_state", "Peer mesh lane state"),
+)
 PATCH_PLAN_SUMMARY_FIELDS = (
     ("patch_plan_count", "Patch plan count"),
     ("fallback_used", "Fallback used"),
@@ -187,9 +201,14 @@ def render_git_push_helper(lines: list[str]) -> None:
     lines.append("## Git push helper")
     lines.append("")
     lines.append("```powershell")
-    lines.append("git add docs/LOCAL_VALIDATION_EVIDENCE/")
+    lines.append("git status --short")
+    lines.append("# Replace <bundle_basename> with the generated evidence bundle basename.")
+    lines.append("git add -- `")
+    lines.append("  .\\docs\\LOCAL_VALIDATION_EVIDENCE\\<bundle_basename>.json `")
+    lines.append("  .\\docs\\LOCAL_VALIDATION_EVIDENCE\\<bundle_basename>.md")
     lines.append('git commit -m "test: add local ai workflow evidence bundle"')
     lines.append("git push")
+    lines.append("# Never use: git add docs/LOCAL_VALIDATION_EVIDENCE/")
     lines.append("```")
 
 

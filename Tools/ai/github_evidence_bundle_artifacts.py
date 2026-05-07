@@ -22,6 +22,8 @@ DEFAULT_CHUNK_LINES = 200
 DEFAULT_RECURSIVE_MAX_FILES = 120
 DEFAULT_RECURSIVE_EXCLUDE_GLOBS: tuple[str, ...] = (
     "output/ai_pipeline/*checkpoints*",
+    "output/validation/parked*/*",
+    "output/validation/*parked*/*",
     "output/ai_context_packs/*",
     "indexAI/code_chunks/*",
     "indexAI/project_code_chunks/*",

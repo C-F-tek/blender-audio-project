@@ -9,6 +9,7 @@ without committing output/**.
 from __future__ import annotations
 
 import argparse
+import csv
 import sys
 from pathlib import Path
 from typing import Any
@@ -44,6 +45,185 @@ def safe_list(value: Any) -> list[Any]:
 
 def safe_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
+
+
+def safe_int(value: Any, default: int = 0) -> int:
+    if isinstance(value, bool):
+        return default
+    try:
+        if value in (None, ""):
+            return default
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str, Any]) -> dict[str, Any]:
+    gpu_round_count = safe_int(gpu_report.get("round_count"))
+    gpu_provider_performed = bool(
+        gpu_report.get("provider_execution_performed")
+        and gpu_round_count > 0
+        and str(gpu_report.get("classification") or "") != "required_provider_artifact_missing"
+        and not bool(gpu_report.get("provider_empty_response"))
+    )
+    npu_audit_count = safe_int(orchestrator.get("npu_audit_count"))
+    npu_success_count = safe_int(orchestrator.get("npu_audit_success_count"))
+    gpu0_peer_support_count = safe_int(orchestrator.get("gpu0_peer_support_count"))
+    gpu0_peer_support_success_count = safe_int(orchestrator.get("gpu0_peer_support_success_count"))
+    gpu0_peer_support_overlap_count = safe_int(orchestrator.get("gpu0_peer_support_overlap_count"))
+    npu_micro_support_count = safe_int(orchestrator.get("npu_micro_support_count"))
+    npu_micro_support_success_count = safe_int(orchestrator.get("npu_micro_support_success_count"))
+    npu_micro_support_provider_success_count = safe_int(orchestrator.get("npu_micro_support_provider_success_count"))
+    npu_micro_support_tool_success_count = safe_int(orchestrator.get("npu_micro_support_tool_success_count"))
+    npu_micro_support_overlap_count = safe_int(orchestrator.get("npu_micro_support_overlap_count"))
+    npu_micro_support_tool_request_count = safe_int(orchestrator.get("npu_micro_support_tool_request_count"))
+    npu_micro_runtime_tool_execution_count = safe_int(orchestrator.get("npu_micro_runtime_tool_execution_count"))
+    npu_lane = safe_dict(orchestrator.get("npu_lane"))
+    legacy_npu_requested = bool(
+        orchestrator.get("legacy_npu_auditor_provider_requested")
+        or orchestrator.get("npu_auditor_provider_requested")
+        or npu_lane.get("provider_requested")
+    )
+    gpu0_peer_support_performed = gpu0_peer_support_success_count > 0 or bool(orchestrator.get("gpu0_peer_support_provider_execution_performed"))
+    npu_micro_provider_performed = npu_micro_support_provider_success_count > 0 or bool(orchestrator.get("npu_micro_support_provider_execution_performed"))
+    npu_micro_tool_lane_performed = bool(
+        orchestrator.get("npu_micro_support_tool_lane_performed")
+        or npu_micro_support_tool_success_count > 0
+        or npu_micro_runtime_tool_execution_count > 0
+        or npu_micro_support_tool_request_count > 0
+    )
+    legacy_npu_provider_performed = npu_success_count > 0
+    npu_provider_performed = bool(legacy_npu_provider_performed or npu_micro_provider_performed)
+    degraded_reasons = []
+    if isinstance(orchestrator.get("provider_degraded_reasons"), list):
+        degraded_reasons.extend(str(item) for item in orchestrator.get("provider_degraded_reasons"))
+    if not gpu_provider_performed and (orchestrator or gpu_report):
+        degraded_reasons.append(
+            "gpu_not_confirmed:"
+            f"performed={gpu_report.get('provider_execution_performed')};"
+            f"round_count={gpu_round_count};"
+            f"classification={gpu_report.get('classification')};"
+            f"passed={gpu_report.get('passed')}"
+        )
+    if legacy_npu_requested and orchestrator.get("npu_lane_mode") in {"skipped", "metadata_only", "degraded"} and npu_success_count == 0:
+        degraded_reasons.append(
+            "npu_auditor_not_confirmed:"
+            f"audit_count={npu_audit_count};success_count={npu_success_count};"
+            f"lane_mode={orchestrator.get('npu_lane_mode')}"
+        )
+    return {
+        "provider_execution_requested": bool(orchestrator.get("provider_execution_performed") or gpu_report.get("provider_execution_requested")),
+        "provider_execution_performed": bool(gpu_provider_performed or gpu0_peer_support_performed or npu_provider_performed),
+        "gpu_provider_execution_performed": gpu_provider_performed,
+        "gpu0_peer_support_provider_execution_performed": gpu0_peer_support_performed,
+        "gpu0_peer_support_count": gpu0_peer_support_count,
+        "gpu0_peer_support_success_count": gpu0_peer_support_success_count,
+        "gpu0_peer_support_overlap_count": gpu0_peer_support_overlap_count,
+        "gpu_round_count": gpu_round_count,
+        "gpu_returncode": orchestrator.get("gpu_returncode"),
+        "gpu_classification": gpu_report.get("classification"),
+        "gpu_provider_empty_response": bool(gpu_report.get("provider_empty_response")),
+        "legacy_npu_auditor_provider_requested": legacy_npu_requested,
+        "npu_provider_execution_performed": npu_provider_performed,
+        "legacy_npu_provider_execution_performed": legacy_npu_provider_performed,
+        "npu_micro_provider_execution_performed": npu_micro_provider_performed,
+        "npu_micro_tool_lane_performed": npu_micro_tool_lane_performed,
+        "npu_micro_support_count": npu_micro_support_count,
+        "npu_micro_support_success_count": npu_micro_support_success_count,
+        "npu_micro_support_provider_success_count": npu_micro_support_provider_success_count,
+        "npu_micro_support_tool_success_count": npu_micro_support_tool_success_count,
+        "npu_micro_support_overlap_count": npu_micro_support_overlap_count,
+        "npu_micro_support_tool_request_count": npu_micro_support_tool_request_count,
+        "npu_micro_runtime_tool_execution_count": npu_micro_runtime_tool_execution_count,
+        "npu_audit_count": npu_audit_count,
+        "npu_audit_success_count": npu_success_count,
+        "npu_lane_mode": orchestrator.get("npu_lane_mode"),
+        "provider_degraded_reasons": degraded_reasons,
+    }
+
+
+def peer_exchange_summary(peer_exchange: dict[str, Any], peer_contract: dict[str, Any]) -> dict[str, Any]:
+    response = peer_exchange.get("gpu0_response") if isinstance(peer_exchange.get("gpu0_response"), dict) else {}
+    broker = peer_exchange.get("runtime_tool_broker") if isinstance(peer_exchange.get("runtime_tool_broker"), dict) else {}
+    npu = peer_exchange.get("npu_micro_response") if isinstance(peer_exchange.get("npu_micro_response"), dict) else {}
+    npu_broker = peer_exchange.get("npu_runtime_tool_broker") if isinstance(peer_exchange.get("npu_runtime_tool_broker"), dict) else {}
+    return {
+        "peer_exchange_seen": bool(peer_exchange),
+        "peer_exchange_passed": peer_exchange.get("passed"),
+        "peer_contract_passed": peer_contract.get("passed"),
+        "gpu0_peer_provider_execution_performed": bool(response.get("provider_execution_performed")),
+        "gpu0_peer_tool_request_count": safe_int(response.get("tool_request_count")),
+        "gpu0_peer_tool_execution_count": safe_int(broker.get("tool_execution_count")),
+        "npu_micro_non_blocking": bool(npu.get("non_blocking")),
+        "npu_micro_provider_execution_performed": bool(npu.get("provider_execution_performed")),
+        "npu_micro_tool_request_count": safe_int(npu.get("tool_request_count")),
+        "npu_micro_tool_execution_count": safe_int(npu_broker.get("tool_execution_count")),
+        "classifications": peer_exchange.get("classifications") or peer_contract.get("classifications") or [],
+    }
+
+
+def runtime_heap_summary(
+    telemetry: dict[str, Any],
+    snapshot: dict[str, Any],
+    live_signals: list[dict[str, Any]],
+) -> dict[str, Any]:
+    live_signal_rows: list[dict[str, Any]] = []
+    for report in live_signals:
+        heap = safe_dict(report.get("heap_snapshot"))
+        live_signal_rows.append(
+            {
+                "mode": report.get("mode"),
+                "passed": report.get("passed"),
+                "event_count": safe_int(report.get("event_count")),
+                "heap_event_count": safe_int(heap.get("event_count")),
+                "pending_broker_request_count": safe_int(heap.get("pending_broker_request_count")),
+            }
+        )
+    return {
+        "telemetry_seen": bool(telemetry),
+        "snapshot_seen": bool(snapshot),
+        "live_signal_count": len(live_signal_rows),
+        "event_count": safe_int(telemetry.get("event_count") or snapshot.get("event_count")),
+        "parse_error_count": safe_int(telemetry.get("parse_error_count") or snapshot.get("parse_error_count")),
+        "direct_execution_violation_count": safe_int(telemetry.get("direct_execution_violation_count")),
+        "pending_broker_request_count": safe_int(telemetry.get("pending_broker_request_count") or snapshot.get("pending_broker_request_count")),
+        "events_by_lane": telemetry.get("events_by_lane") if isinstance(telemetry.get("events_by_lane"), dict) else {},
+        "events_by_type": telemetry.get("events_by_type") if isinstance(telemetry.get("events_by_type"), dict) else {},
+        "interaction_edges": telemetry.get("interaction_edges") if isinstance(telemetry.get("interaction_edges"), dict) else {},
+        "gpu1_to_gpu0_event_count": safe_int(telemetry.get("gpu1_to_gpu0_event_count")),
+        "gpu0_to_gpu1_event_count": safe_int(telemetry.get("gpu0_to_gpu1_event_count")),
+        "gpu1_gpu0_bidirectional": bool(telemetry.get("gpu1_gpu0_bidirectional")),
+        "broker_result_count": safe_int(telemetry.get("broker_result_count")),
+        "live_signals": live_signal_rows,
+    }
+
+
+def line_count_csv_summary(repo_root: Path, value: str) -> tuple[dict[str, Any], list[str]]:
+    if not value:
+        return {"seen": False, "path": "", "row_count": 0, "total_lines": 0, "top_files": []}, []
+    path = resolve_output_path(repo_root, value)
+    path_rel = repo_rel(repo_root, path)
+    if not path.exists():
+        return {"seen": False, "path": path_rel, "row_count": 0, "total_lines": 0, "top_files": []}, [f"line-count CSV missing: {path_rel}"]
+    try:
+        with path.open("r", encoding="utf-8-sig", newline="") as handle:
+            rows = [dict(row) for row in csv.DictReader(handle)]
+    except OSError as exc:
+        return {"seen": False, "path": path_rel, "row_count": 0, "total_lines": 0, "top_files": []}, [f"unable to read line-count CSV {path_rel}: {exc}"]
+    normalized: list[dict[str, Any]] = []
+    for row in rows:
+        file_value = str(row.get("File") or row.get("Path") or "")
+        lines = safe_int(row.get("Lines") or row.get("lines"))
+        if file_value:
+            normalized.append({"file": file_value, "lines": lines})
+    normalized.sort(key=lambda item: (-safe_int(item.get("lines")), str(item.get("file")).lower()))
+    return {
+        "seen": True,
+        "path": path_rel,
+        "row_count": len(normalized),
+        "total_lines": sum(safe_int(item.get("lines")) for item in normalized),
+        "top_files": normalized[:20],
+    }, []
 
 
 def compact_paths(values: Any, limit: int = 12) -> list[str]:
@@ -103,6 +283,20 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     gpu_npu_sync, gpu_npu_errors, gpu_npu_path = read_optional_json(repo_root, args.gpu_npu_sync)
     orchestrator, orchestrator_errors, orchestrator_path = read_optional_json(repo_root, args.orchestrator)
     gpu_report, gpu_errors, gpu_path = read_optional_json(repo_root, args.gpu_report)
+    peer_exchange, peer_errors, peer_path = read_optional_json(repo_root, args.peer_exchange)
+    peer_contract, peer_contract_errors, peer_contract_path = read_optional_json(repo_root, args.peer_contract)
+    heap_telemetry, heap_telemetry_errors, heap_telemetry_path = read_optional_json(repo_root, args.provider_runtime_heap_telemetry)
+    heap_snapshot, heap_snapshot_errors, heap_snapshot_path = read_optional_json(repo_root, args.provider_runtime_heap_snapshot)
+    heap_live_reports: list[dict[str, Any]] = []
+    heap_live_paths: list[str] = []
+    for raw_path in safe_list(args.provider_runtime_heap_live_signal):
+        live_report, live_errors, live_path = read_optional_json(repo_root, str(raw_path))
+        warnings.extend(live_errors)
+        if live_path:
+            heap_live_paths.append(live_path)
+        if live_report:
+            heap_live_reports.append(live_report)
+    line_count_csv, line_count_csv_warnings = line_count_csv_summary(repo_root, args.line_count_csv)
 
     hard_inputs = {
         "decision_loop": decision_loop,
@@ -117,6 +311,11 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     warnings.extend(gpu_npu_errors)
     warnings.extend(orchestrator_errors)
     warnings.extend(gpu_errors)
+    warnings.extend(peer_errors)
+    warnings.extend(peer_contract_errors)
+    warnings.extend(heap_telemetry_errors)
+    warnings.extend(heap_snapshot_errors)
+    warnings.extend(line_count_csv_warnings)
 
     for name, data in hard_inputs.items():
         if not data:
@@ -134,7 +333,10 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
         "evidence_to_commit": compact_paths(args.evidence_to_commit, limit=32),
     }
 
-    provider_execution = bool(orchestrator.get("provider_execution_performed") or gpu_report.get("provider_execution_performed"))
+    provider_evidence = provider_evidence_summary(orchestrator, gpu_report)
+    peer_evidence = peer_exchange_summary(peer_exchange, peer_contract)
+    heap_evidence = runtime_heap_summary(heap_telemetry, heap_snapshot, heap_live_reports)
+    provider_execution = bool(provider_evidence["provider_execution_performed"])
     return {
         "schema_version": 1,
         "kind": "full_toolbox_run_telemetry_summary",
@@ -145,6 +347,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
         "errors": errors,
         "warnings": warnings,
         "provider_execution_performed": provider_execution,
+        "provider_evidence": provider_evidence,
         "patch_application_performed": False,
         "source_writes_performed": False,
         "sqlite_write_performed": False,
@@ -159,6 +362,12 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "gpu_npu_sync": gpu_npu_path,
             "orchestrator": orchestrator_path,
             "gpu_report": gpu_path,
+            "peer_exchange": peer_path,
+            "peer_contract": peer_contract_path,
+            "provider_runtime_heap_telemetry": heap_telemetry_path,
+            "provider_runtime_heap_snapshot": heap_snapshot_path,
+            "provider_runtime_heap_live_signals": heap_live_paths,
+            "line_count_csv": line_count_csv.get("path"),
         },
         "run_parameters": {
             "budget_minutes": args.budget_minutes,
@@ -183,16 +392,30 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "smoke_elapsed_seconds": repository_smoke.get("elapsed_seconds"),
         },
         "gpu_npu": {
+            "provider_evidence": provider_evidence,
+            "peer_exchange": peer_evidence,
+            "provider_runtime_heap": heap_evidence,
             "sync_metrics": gpu_npu_sync.get("metrics"),
             "performance": compact_performance(gpu_npu_sync),
             "operational_opinions": gpu_npu_sync.get("operational_opinions"),
             "refactoring_suggestions": gpu_npu_sync.get("refactoring_suggestions"),
         },
+        "provider_runtime_heap": heap_evidence,
+        "line_count_csv": line_count_csv,
         "guardrails": {
             "report_only": True,
             "committable_location": "docs/LOCAL_VALIDATION_EVIDENCE",
             "raw_output_commit_allowed": False,
             "provider_execution_performed": provider_execution,
+            "gpu_provider_execution_performed": provider_evidence.get("gpu_provider_execution_performed"),
+            "gpu0_peer_support_provider_execution_performed": provider_evidence.get("gpu0_peer_support_provider_execution_performed"),
+            "npu_provider_execution_performed": provider_evidence.get("npu_provider_execution_performed"),
+            "npu_micro_orchestrator_provider_execution_performed": provider_evidence.get("npu_micro_provider_execution_performed"),
+            "npu_micro_orchestrator_tool_lane_performed": provider_evidence.get("npu_micro_tool_lane_performed"),
+            "gpu0_peer_provider_execution_performed": peer_evidence.get("gpu0_peer_provider_execution_performed"),
+            "npu_micro_provider_execution_performed": peer_evidence.get("npu_micro_provider_execution_performed"),
+            "npu_micro_non_blocking": peer_evidence.get("npu_micro_non_blocking"),
+            "provider_runtime_heap_direct_execution_violation_count": heap_evidence.get("direct_execution_violation_count"),
             "patch_application_performed": False,
             "source_writes_performed": False,
             "sqlite_write_performed": False,
@@ -211,6 +434,50 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Deterministic synthesizer used: `{workflow.get('deterministic_synthesizer_used')}`")
     lines.append(f"- Patch plan fallback used: `{workflow.get('patch_plan_fallback_used')}`")
     lines.append(f"- Provider execution performed: `{report.get('provider_execution_performed')}`")
+    provider_evidence = safe_dict(report.get("provider_evidence"))
+    lines.append(f"- GPU provider execution performed: `{provider_evidence.get('gpu_provider_execution_performed')}`")
+    lines.append(f"- GPU round count: `{provider_evidence.get('gpu_round_count')}`")
+    lines.append(f"- GPU0 startup peer support execution performed: `{provider_evidence.get('gpu0_peer_support_provider_execution_performed')}`")
+    lines.append(f"- GPU0 startup peer support overlap count: `{provider_evidence.get('gpu0_peer_support_overlap_count')}`")
+    lines.append(f"- Legacy NPU auditor requested: `{provider_evidence.get('legacy_npu_auditor_provider_requested')}`")
+    lines.append(f"- Legacy NPU auditor execution performed: `{provider_evidence.get('legacy_npu_provider_execution_performed')}`")
+    lines.append(f"- NPU audit success count: `{provider_evidence.get('npu_audit_success_count')}`")
+    lines.append(f"- NPU orchestrator micro execution performed: `{provider_evidence.get('npu_micro_provider_execution_performed')}`")
+    lines.append(f"- NPU orchestrator micro tool lane performed: `{provider_evidence.get('npu_micro_tool_lane_performed')}`")
+    lines.append(f"- NPU orchestrator micro overlap count: `{provider_evidence.get('npu_micro_support_overlap_count')}`")
+    lines.append(f"- NPU orchestrator micro runtime tool executions: `{provider_evidence.get('npu_micro_runtime_tool_execution_count')}`")
+    if provider_evidence.get("provider_degraded_reasons"):
+        lines.append(f"- Provider degraded reasons: `{provider_evidence.get('provider_degraded_reasons')}`")
+    peer_evidence = safe_dict(safe_dict(report.get("gpu_npu")).get("peer_exchange"))
+    lines.append(f"- AI peer exchange passed: `{peer_evidence.get('peer_exchange_passed')}`")
+    lines.append(f"- GPU0 peer provider execution performed: `{peer_evidence.get('gpu0_peer_provider_execution_performed')}`")
+    lines.append(f"- GPU0 peer broker tool executions: `{peer_evidence.get('gpu0_peer_tool_execution_count')}`")
+    lines.append(f"- NPU micro non-blocking: `{peer_evidence.get('npu_micro_non_blocking')}`")
+    lines.append(f"- NPU micro provider execution performed: `{peer_evidence.get('npu_micro_provider_execution_performed')}`")
+    lines.append(f"- NPU micro broker tool executions: `{peer_evidence.get('npu_micro_tool_execution_count')}`")
+    heap_evidence = safe_dict(report.get("provider_runtime_heap"))
+    lines.append(f"- Runtime heap events: `{heap_evidence.get('event_count')}`")
+    lines.append(f"- Runtime heap live signals: `{heap_evidence.get('live_signal_count')}`")
+    lines.append(f"- Runtime heap direct execution violations: `{heap_evidence.get('direct_execution_violation_count')}`")
+    line_csv = safe_dict(report.get("line_count_csv"))
+    lines.append(f"- Line-count CSV rows: `{line_csv.get('row_count')}`")
+    lines.append("")
+    lines.append("## Provider runtime heap")
+    lines.append("")
+    lines.append(f"- Telemetry seen: `{heap_evidence.get('telemetry_seen')}`")
+    lines.append(f"- Snapshot seen: `{heap_evidence.get('snapshot_seen')}`")
+    lines.append(f"- Pending broker requests: `{heap_evidence.get('pending_broker_request_count')}`")
+    lines.append(f"- Broker results: `{heap_evidence.get('broker_result_count')}`")
+    for item in safe_list(heap_evidence.get("live_signals")):
+        lines.append(f"- `{item.get('mode')}` passed=`{item.get('passed')}` event_count=`{item.get('event_count')}` heap_event_count=`{item.get('heap_event_count')}`")
+    lines.append("")
+    lines.append("## Line-count CSV")
+    lines.append("")
+    lines.append(f"- Seen: `{line_csv.get('seen')}`")
+    lines.append(f"- Path: `{line_csv.get('path')}`")
+    lines.append(f"- Total lines: `{line_csv.get('total_lines')}`")
+    for item in safe_list(line_csv.get("top_files"))[:10]:
+        lines.append(f"- `{item.get('file')}`: `{item.get('lines')}`")
     lines.append("")
     lines.append("## Repository consistency performance")
     lines.append("")
@@ -267,6 +534,12 @@ def main() -> int:
     parser.add_argument("--gpu-npu-sync", default="")
     parser.add_argument("--orchestrator", default="")
     parser.add_argument("--gpu-report", default="")
+    parser.add_argument("--peer-exchange", default="")
+    parser.add_argument("--peer-contract", default="")
+    parser.add_argument("--provider-runtime-heap-telemetry", default="")
+    parser.add_argument("--provider-runtime-heap-snapshot", default="")
+    parser.add_argument("--provider-runtime-heap-live-signal", action="append", default=[])
+    parser.add_argument("--line-count-csv", default="")
     parser.add_argument("--evidence-to-commit", action="append", default=[])
     parser.add_argument("--bundle-validation-passed", action="store_true")
     parser.add_argument("--budget-minutes", type=int, default=0)

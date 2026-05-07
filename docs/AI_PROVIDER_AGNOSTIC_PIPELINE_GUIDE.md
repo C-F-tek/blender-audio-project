@@ -203,7 +203,7 @@ Fallback providers are allowed only when the report clearly states that fallback
 - Keep generated Python policy checks separate from generation.
 - Keep Blender runtime execution separate from artifact planning.
 - Keep provider bridge/gate/readiness evidence separate from real provider execution proof.
-- Keep NPU helper package provider-free until a validated migration phase wires it into runtime execution.
+- Keep reusable `Tools/npu/pipeline/` helper contracts provider-free; real NPU runtime execution is owned by explicit orchestrator/provider lanes and must be surfaced as evidence, not hidden inside reusable helpers.
 - Keep telemetry and capability context separate from provider implementation but attached to run-unica handoff.
 - Keep discovery/index/CSV-count/file-line context separate from provider implementation but attached when repository visibility or maintainability affects recommendations or patch plans.
 - Keep maintained source files under 400 lines through compact entrypoints and responsibility-based modules.

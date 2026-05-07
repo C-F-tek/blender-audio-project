@@ -17,6 +17,7 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 Full0To10 = TUTTO SU TUTTO
 quick/balanced/deep/custom = intensity, not scope
 provider/probe/workload-quality lanes are opt-out in Full0To10
+GPU1/GPU0 peer exchange is production evidence, not smoke-only proof
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
 400-line policy applies to maintained docs and source files
 limitations are backlog to overcome, not reasons to skip available tools
@@ -41,12 +42,13 @@ tool output should become verifiable product/evidence/readiness material, not ch
 | Context and chunks | `build_ai_context_pack.py`, `select_semantic_code_chunks.py` | Provider-free context evidence. |
 | Agent state and memory | `build_agent_state_packet.py`, `review_agent_memory.py`, `agent_runtime_sqlite_memory.py` | SQLite outputs are local/private and must not be committed. |
 | Provider diagnostics | `run_local_provider_probe.py`, `check_local_resource_lanes.py`, `analyze_gpu_npu_run_sync.py` | Provider state must flow to telemetry/bundle when used in Full0To10 handoff. |
+| AI peer exchange | `build_ai_peer_exchange_packet.py`, `run_gpu0_peer_companion_worker.py`, `run_npu_gpu_deep_review_auditor.py` | Wires GPU1 master advisory/worker output to GPU0 companion response, GPU0/NPU broker requests and peer contract evidence. |
 | Workload routing | `build_workload_quality_lane_routing.py` | Keeps unusable provider output out of advisory context. |
 | Deterministic recommendations | `build_deterministic_recommendations.py` | Supports degraded-provider recovery without hallucinated provider success. |
 | Patch planning/spec support | `build_agent_review_patch_plan.py`, `build_patch_specs_from_proposals.py`, `promote_patch_spec_draft.py` | Review-only unless explicit apply is authorized separately. |
 | Runtime broker/telemetry | `agent_runtime_tool_broker.py`, `build_runtime_tool_usage_telemetry.py` | Records executed/failed/blocked tool calls. |
 | Capability and telemetry summary | capability manifest packages/builders, `build_full_toolbox_run_telemetry_summary.py` | Handoff context for available tools/hardware lanes and run state. |
-| Final tool product | `build_full0to10_final_tool_product.py`, `full0to10_final_product/*` | Aggregates contract/governor/invocation/bridge/effective-use/quality evidence into product/evidence/readiness outputs. |
+| Final tool product | `build_full0to10_final_tool_product.py`, `full0to10_final_product/*` | Aggregates contract/governor/invocation/bridge/effective-use/quality evidence into product/evidence/readiness outputs and can index current-run reports/artifacts. |
 | Production bundle | `build_shared_toolbox_ai_to_ai_bundle.py` | AI-to-AI evidence/telemetry/patch-plan handoff. |
 | Evidence bundles | `build_github_evidence_bundle.py`, full-run bundle ZIP tools | Compact GitHub evidence only; raw `output/**` stays ignored. |
 
@@ -64,7 +66,7 @@ effective-use optimization summary
 quality gate
 ```
 
-It writes a product Markdown, evidence index, readiness JSON, manifest and README. This supports the project idea that the toolbox should produce inspectable tool products with readiness/evidence, not only advisory prose.
+It writes a product Markdown, evidence index, readiness JSON, manifest and README. The builder accepts `--run-report` and `--run-artifact` inputs so production workflows can attach the current stamp's mesh, telemetry, broker and patch-plan evidence to the final product. This supports the project idea that the toolbox should produce inspectable tool products with readiness/evidence, not only advisory prose.
 
 ## Full-run handoff rule
 
@@ -86,10 +88,14 @@ File existence alone is not proof of successful execution.
 
 ```text
 CPU: parsing, JSON generation, validation, orchestration.
-GPU/Ollama: primary advisory lane when available and quality-gated.
-NPU/OpenVINO: probe, guardrail and decode diagnostic unless future quality promotion changes the contract.
+GPU1/Ollama/RTX 5080: mandatory primary advisory planner/worker when Full0To10 provider execution is selected.
+GPU0/OpenVINO: companion peer worker and controlled tool-request producer for GPU1 follow-up.
+NPU/OpenVINO: orchestrator-called micro-fast task assistant, guardrail and lightweight tool-support lane.
+Deterministic scripts: heavy audit and validation authority.
 External GPU commands: explicit heavy generator path only, never implicit.
 ```
+
+Full0To10 provider mesh runs use startup and close barriers: GPU1, GPU0, NPU and deterministic/broker bootstrap are armed at the beginning, then the orchestrator harvests or terminates active peer-support lanes before telemetry/bundle finalization. The NPU micro lane reports provider text evidence separately from brokered tool-support evidence, so a slow/empty NPU response can still be useful when it emits valid brokered tool requests. Runtime heap telemetry must close broker request/result correlation ids before the compact bundle is considered clean. The legacy NPU auditor provider is diagnostics-only behind `-RunLegacyNpuAuditorProvider`.
 
 ## Safety policy
 

@@ -22,6 +22,8 @@ LightFull0To10 = evidence-only profile, not provider/runtime proof
 quick/balanced/deep/custom = intensity, not scope
 supporting wrappers are implementation lanes, not first entrypoints
 provider/probe/workload-quality lanes are opt-out in Full0To10
+GPU1/GPU0/NPU peer exchange must enter telemetry, bundle and acceptance evidence
+provider-capable workflow runners prefer `IA_CARMINE_PYTHON`, then `.venv`, before system `python`
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
 400-line policy applies to maintained docs and source files
 limitations are backlog to overcome, not reasons to skip available tools
@@ -38,6 +40,12 @@ limitations are backlog to overcome, not reasons to skip available tools
 | `run_local_ai_task_via_pipeline.ps1` | launcher-internal/supporting-tool | Official adapter lane. |
 | `run_post_validation_ai_packet.ps1` | launcher-internal/supporting-tool | Advisory packet lane. |
 | `run_parallel_ai_provider_multistep.ps1` | launcher-internal/supporting-tool | Provider/probe lane. |
+| `run_agent_review_full_toolbox_decision_loop.ps1` | thin shell wrapper | Resolves Python and forwards the public CLI without owning orchestration behavior. Legacy PowerShell is explicit fallback only. |
+| `run_agent_review_full_toolbox_decision_loop.py` | Python control entrypoint | Preserves the public CLI and runs the packaged Python engine under `run_agent_review_full_toolbox_decision_loop/`. |
+| `run_agent_review_full_toolbox_decision_loop/py_engine.py` | Python engine package | Static foundation and top-level phase sequencing. |
+| `run_agent_review_full_toolbox_decision_loop/py_mesh.py` | Python engine package | GPU1/GPU0/NPU provider mesh, runtime heap live signals and broker-controlled peer tool execution. |
+| `run_agent_review_full_toolbox_decision_loop/py_product.py` | Python engine package | Decision loop, final local AI product, evidence bundle, telemetry, semantic chunks and artifact path policy. |
+| `run_agent_review_full_toolbox_decision_loop/py_support.py` | Python engine package | Shared paths, execution helpers and compact artifact stamp generation. |
 | `run_agent_review_full_toolbox_decision_loop_integrated.ps1` | supporting selected phase | Not primary operator path. |
 | `run_local_ai_markdown_task.ps1` | supporting-tool | Markdown helper; prefer unified launcher. |
 | `run_docs_md_refactor_10min.ps1` | legacy-superseded/supporting-tool | Prefer unified launcher `md`/validation phases. |
@@ -97,9 +105,13 @@ launcher manifest
 phase_status / phase_reports
 runtime tool usage telemetry when tools execute
 runtime/hardware capability manifest when capabilities matter
+AI peer-exchange report and contract when provider execution is selected, including non-blocking NPU micro/tool-support evidence when available
+live runtime-heap NPU broker results before final telemetry, including live tool-seed evidence when the NPU provider is slower than the GPU1 round
+Full0To10 final local AI product package with run-specific reports and artifacts
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when relevant
+generated artifact path policy evidence so long bundle names are caught before push
 ```
 
 ## 400-line policy

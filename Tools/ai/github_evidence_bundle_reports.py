@@ -18,6 +18,16 @@ from Tools.ai.github_evidence_bundle_io import (
 CORE_SUMMARY_KEYS = (
     "usable_lanes",
     "unusable_lanes",
+    "peer_mesh_operational_lanes",
+    "peer_mesh_support_lanes",
+    "peer_mesh_degraded_lanes",
+    "peer_mesh_product_blockers",
+    "provider_broker_loop_active",
+    "provider_broker_loop_controlled_executor",
+    "provider_broker_loop_broker_execution_count",
+    "provider_broker_loop_gpu0_broker_execution_count",
+    "provider_broker_loop_npu_broker_execution_count",
+    "provider_broker_loop_product_blockers",
     "primary_advisory_provider",
     "policy",
     "mode",
@@ -45,6 +55,11 @@ CHECK_SUMMARY_KEYS = (
     "provider_envelope",
     "promotion_gate",
     "required_promotion_gate",
+    "peer_mesh_visibility",
+    "npu_support_lane",
+    "collaboration_visibility",
+    "peer_mesh_lane_state",
+    "provider_broker_loop",
 )
 
 
@@ -125,6 +140,36 @@ def add_nested_summary_fields(summary: dict[str, Any], data: dict[str, Any]) -> 
             max_string=500,
         )
 
+    for key in (
+        "peer_mesh_visibility",
+        "npu_support_lane",
+        "collaboration_visibility",
+        "peer_mesh_lane_state",
+    ):
+        value = data.get(key)
+        if isinstance(value, dict):
+            summary[key] = compact_value(value, max_string=900)
+
+
+def promote_peer_mesh_lane_fields(summary: dict[str, Any], data: dict[str, Any]) -> None:
+    """Promote peer-mesh lane fields from nested product reports into compact summaries."""
+
+    lane_state = data.get("peer_mesh_lane_state") if isinstance(data.get("peer_mesh_lane_state"), dict) else {}
+    if not lane_state:
+        collaboration = data.get("collaboration_round") if isinstance(data.get("collaboration_round"), dict) else {}
+        lane_state = collaboration.get("peer_mesh_lane_state") if isinstance(collaboration.get("peer_mesh_lane_state"), dict) else {}
+    if lane_state:
+        mapping = {
+            "peer_mesh_operational_lanes": "operational_lanes",
+            "peer_mesh_support_lanes": "support_lanes",
+            "peer_mesh_degraded_lanes": "degraded_lanes",
+            "peer_mesh_product_blockers": "product_blockers",
+        }
+        for summary_key, state_key in mapping.items():
+            if summary.get(summary_key) is None and lane_state.get(state_key) is not None:
+                summary[summary_key] = compact_value(lane_state.get(state_key))
+        summary["peer_mesh_lane_state"] = compact_value(lane_state, max_string=900)
+
 
 def base_report_summary(data: dict[str, Any]) -> dict[str, Any]:
     """Return common report summary fields."""
@@ -150,6 +195,7 @@ def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
     summary = base_report_summary(data)
     add_core_summary_fields(summary, data)
     add_nested_summary_fields(summary, data)
+    promote_peer_mesh_lane_fields(summary, data)
 
     patch_plan_summary = summarize_patch_plan_report(data)
     if patch_plan_summary:
@@ -184,10 +230,10 @@ def summarize_selected_chunks_evidence(path: Path, repo_root: Path) -> dict[str,
     return {"path": rel, "exists": True, "json_ok": True, "kind": data.get("kind"), "passed": data.get("passed"), "summary": summary}
 
 
-def discover_selected_chunks_evidence(repo_root: Path, explicit_paths: list[str]) -> list[Path]:
+def discover_selected_chunks_evidence(repo_root: Path, explicit_paths: list[str], *, auto_discover: bool = True) -> list[Path]:
     """Discover compact selected-chunks evidence files under docs evidence."""
     candidates = split_path_values(explicit_paths)
-    if not candidates:
+    if auto_discover and not candidates:
         candidates = list(DEFAULT_SELECTED_CHUNKS_EVIDENCE)
         evidence_dir = repo_root / "docs" / "LOCAL_VALIDATION_EVIDENCE"
         if evidence_dir.exists():

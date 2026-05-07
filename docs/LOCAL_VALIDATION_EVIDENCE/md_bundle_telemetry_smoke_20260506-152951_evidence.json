@@ -1,0 +1,570 @@
+{
+  "schema_version": 1,
+  "kind": "github_validation_evidence_bundle",
+  "generated_at": "2026-05-06T15:32:40",
+  "repo_root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "source_reports": [
+    "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_adapter_manifest.json",
+    "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_telemetry.json",
+    "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json",
+    "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_manifest.json",
+    "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_proposals.json",
+    "output/validation/md_bundle_telemetry_smoke_20260506-152951_repository_change_proposals_contract.json"
+  ],
+  "source_selected_chunks_evidence": [],
+  "source_included_artifacts": [
+    "CHATGPT.md",
+    "docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md",
+    "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_telemetry.md",
+    "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.md",
+    "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_proposals.md"
+  ],
+  "reports": [
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_adapter_manifest.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "local_ai_task_pipeline_adapter_manifest",
+      "passed": null,
+      "summary": {
+        "schema_version": 1,
+        "kind": "local_ai_task_pipeline_adapter_manifest",
+        "passed": null,
+        "provider_execution_performed": null,
+        "patch_application_performed": false,
+        "source_writes_performed": null,
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_telemetry.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "local_ai_task_pipeline_telemetry",
+      "passed": null,
+      "summary": {
+        "schema_version": 1,
+        "kind": "local_ai_task_pipeline_telemetry",
+        "passed": null,
+        "provider_execution_performed": null,
+        "patch_application_performed": null,
+        "source_writes_performed": null,
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "post_validation_ai_work_packet",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "post_validation_ai_work_packet",
+        "passed": true,
+        "provider_execution_performed": null,
+        "patch_application_performed": null,
+        "source_writes_performed": null,
+        "errors": [],
+        "warnings": [],
+        "context": {
+          "context_files": [
+            "AGENTS.md",
+            "WORKFLOW.md",
+            "docs/README.md",
+            "docs/AI_DOCS_ENTRYPOINT.md",
+            "docs/PROJECT_STATUS_POINT.md",
+            "docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md",
+            "docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md",
+            "docs/TECH_DEBT_TRACKER.md",
+            "CHATGPT.md",
+            "docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md"
+          ],
+          "excluded_context_files": [],
+          "advisory_context_routing": {
+            "quality_report_present": true,
+            "advisory_lanes": [
+              "npu"
+            ],
+            "excluded_advisory_lanes": [],
+            "trusted_context_files": [
+              {
+                "path": "AGENTS.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "WORKFLOW.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/README.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/AI_DOCS_ENTRYPOINT.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/PROJECT_STATUS_POINT.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/TECH_DEBT_TRACKER.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "CHATGPT.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              }
+            ],
+            "excluded_context_files": [],
+            "decisions": [
+              {
+                "path": "AGENTS.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "WORKFLOW.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/README.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/AI_DOCS_ENTRYPOINT.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/PROJECT_STATUS_POINT.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/TECH_DEBT_TRACKER.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "CHATGPT.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              },
+              {
+                "path": "docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md",
+                "lane": "",
+                "trusted": true,
+                "reason": "not_a_tracked_workload_report",
+                "classification": ""
+              }
+            ],
+            "enforced": true,
+            "policy": "quality-approved-workload-context-only",
+            "provider_execution_performed": false
+          }
+        },
+        "ollama": {
+          "used": false,
+          "model": null,
+          "error": "",
+          "text_preview": ""
+        }
+      }
+    },
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_manifest.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "post_validation_ai_work_packet_manifest",
+      "passed": null,
+      "summary": {
+        "schema_version": 1,
+        "kind": "post_validation_ai_work_packet_manifest",
+        "passed": null,
+        "provider_execution_performed": null,
+        "patch_application_performed": null,
+        "source_writes_performed": null,
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_proposals.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "repository_change_proposals",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "repository_change_proposals",
+        "passed": true,
+        "provider_execution_performed": null,
+        "patch_application_performed": null,
+        "source_writes_performed": null,
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "path": "output/validation/md_bundle_telemetry_smoke_20260506-152951_repository_change_proposals_contract.json",
+      "exists": true,
+      "json_ok": true,
+      "kind": "repository_change_proposal_contract",
+      "passed": true,
+      "summary": {
+        "schema_version": 1,
+        "kind": "repository_change_proposal_contract",
+        "passed": true,
+        "provider_execution_performed": null,
+        "patch_application_performed": null,
+        "source_writes_performed": null,
+        "errors": [],
+        "warnings": []
+      }
+    }
+  ],
+  "selected_chunks_evidence": [],
+  "artifact_manifest": [
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_adapter_manifest.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 7117,
+      "sha256": "ae6c0aa4291218c69fa12ebcf415c4a940174419b3427c1f6ff3b67702b6deef",
+      "role": "local_artifact_reference",
+      "content_included": true,
+      "preview": "{\n    \"schema_version\":  1,\n    \"kind\":  \"local_ai_task_pipeline_adapter_manifest\",\n    \"generated_at\":  \"2026-05-06T15:32:40.1323040+02:00\",\n    \"repo_root\":  \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n    \"prompt_file\":  \"CHATGPT.md\",\n    \"task_file\":  \"docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md\",\n    \"pipeline_output_dir\":  \"output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline\",\n    \"profile\":  \"docs\",\n    \"basename\":  \"md_bundle_telemetry_smoke_20260506-152951\",\n    \"proposal_basename\":  \"md_bundle_telemetry_smoke_20260506-152951_proposals\",\n    \"context_files\":  [\n                          \"CHATGPT.md\",\n                          \"docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md\"\n                      ],\n    \"context_file_count\":  2,\n    \"full_context_golden_path_preset\":  false,\n    \"enrichment_requested\":  {\n                                 \"build_enrichment_plan\":  false,\n                                 \"enrichment_plan_basename\":  \"md_bundle_telemetry_smoke_20260506-152951_enrichment_plan\",\n                                 \"build_semantic_chunks\":  false,\n                                 \"select_semantic_chunks\":  false,\n                                 \"build_selected_chunks_evidence\":  false,\n                                 \"selected_chunks_evidence_basename\":  \"md_bundle_telemetry_smoke_20260506-152951_selected_chunks_evidence\",\n                                 \"chunk_query\":  \"Run local AI",
+      "preview_chars": 1500,
+      "line_count": 97
+    },
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_telemetry.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 7495,
+      "sha256": "e9f2201794041af8e6868d0b7086e3513ad8951a40abcf795be58a03efb08634",
+      "role": "local_artifact_reference",
+      "content_included": true,
+      "preview": "{\n    \"schema_version\":  1,\n    \"kind\":  \"local_ai_task_pipeline_telemetry\",\n    \"generated_at\":  \"2026-05-06T15:32:40.1873059+02:00\",\n    \"repo_root\":  \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n    \"run\":  {\n                \"basename\":  \"md_bundle_telemetry_smoke_20260506-152951\",\n                \"proposal_basename\":  \"md_bundle_telemetry_smoke_20260506-152951_proposals\",\n                \"profile\":  \"docs\",\n                \"prompt_file\":  \"CHATGPT.md\",\n                \"task_file\":  \"docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md\",\n                \"pipeline_output_dir\":  \"output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline\",\n                \"full_context_golden_path_preset\":  false,\n                \"dry_run\":  false\n            },\n    \"scenario_flags\":  {\n                           \"build_enrichment_plan\":  false,\n                           \"build_semantic_chunks\":  false,\n                           \"select_semantic_chunks\":  false,\n                           \"build_selected_chunks_evidence\":  false,\n                           \"build_context_pack\":  false,\n                           \"build_agent_state_packet\":  false,\n                           \"build_evidence\":  true,\n                           \"generate_patch_specs\":  false,\n                           \"run_multistep_provider_workflow\":  false,\n                           \"run_ollama_probe\":  false,\n                           \"run_npu_probe\":  false,\n                        ",
+      "preview_chars": 1500,
+      "line_count": 133
+    },
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 105317,
+      "sha256": "c779b3abc2d58df42c01ead7a9a21fb86583b78395120ee1e9ea0149429c703b",
+      "role": "local_artifact_reference",
+      "content_included": true,
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"post_validation_ai_work_packet\",\n  \"generated_at\": \"2026-05-06T15:32:39\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"profile\": \"docs\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"packet_manifest\": {\n    \"schema_version\": 1,\n    \"kind\": \"post_validation_ai_work_packet_manifest\",\n    \"path\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\local_ai_runs\\\\md_bundle_telemetry_smoke_20260506-152951\\\\pipeline\\\\md_bundle_telemetry_smoke_20260506-152951_manifest.json\",\n    \"outputs\": {\n      \"json\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\local_ai_runs\\\\md_bundle_telemetry_smoke_20260506-152951\\\\pipeline\\\\md_bundle_telemetry_smoke_20260506-152951.json\",\n      \"markdown\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\local_ai_runs\\\\md_bundle_telemetry_smoke_20260506-152951\\\\pipeline\\\\md_bundle_telemetry_smoke_20260506-152951.md\"\n    },\n    \"profile\": \"docs\",\n    \"input_count\": 17,\n    \"requested_context_files\": [\n      \"AGENTS.md\",\n      \"WORKFLOW.md\",\n      \"docs/README.md\",\n      \"docs/AI_DOCS_ENTRYPOINT.md\",\n      \"docs/PROJECT_STATUS_POINT.md\",\n      \"docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md\",\n      \"docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md\",\n      \"docs/TECH_DEBT_TRACKER.md\",\n      \"CHATGPT.md\",\n      \"docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md\"\n    ],\n    \"context_files\": [\n      \"AGENTS.md\",\n      \"WORKFLOW.md\",\n      \"docs/README.md\",\n ",
+      "preview_chars": 1500,
+      "line_count": 601
+    },
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_manifest.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 6247,
+      "sha256": "dfc9d4bdd233495f51a53db164ebfc36074ddf05b8b0b9da3f7ded612d9c13cd",
+      "role": "local_artifact_reference",
+      "content_included": true,
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"post_validation_ai_work_packet_manifest\",\n  \"path\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\local_ai_runs\\\\md_bundle_telemetry_smoke_20260506-152951\\\\pipeline\\\\md_bundle_telemetry_smoke_20260506-152951_manifest.json\",\n  \"outputs\": {\n    \"json\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\local_ai_runs\\\\md_bundle_telemetry_smoke_20260506-152951\\\\pipeline\\\\md_bundle_telemetry_smoke_20260506-152951.json\",\n    \"markdown\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\local_ai_runs\\\\md_bundle_telemetry_smoke_20260506-152951\\\\pipeline\\\\md_bundle_telemetry_smoke_20260506-152951.md\"\n  },\n  \"profile\": \"docs\",\n  \"input_count\": 17,\n  \"requested_context_files\": [\n    \"AGENTS.md\",\n    \"WORKFLOW.md\",\n    \"docs/README.md\",\n    \"docs/AI_DOCS_ENTRYPOINT.md\",\n    \"docs/PROJECT_STATUS_POINT.md\",\n    \"docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md\",\n    \"docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md\",\n    \"docs/TECH_DEBT_TRACKER.md\",\n    \"CHATGPT.md\",\n    \"docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md\"\n  ],\n  \"context_files\": [\n    \"AGENTS.md\",\n    \"WORKFLOW.md\",\n    \"docs/README.md\",\n    \"docs/AI_DOCS_ENTRYPOINT.md\",\n    \"docs/PROJECT_STATUS_POINT.md\",\n    \"docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md\",\n    \"docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md\",\n    \"docs/TECH_DEBT_TRACKER.md\",\n    \"CHATGPT.md\",\n    \"docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md\"\n  ],\n  \"excluded_context_file",
+      "preview_chars": 1500,
+      "line_count": 200
+    },
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_proposals.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 5912,
+      "sha256": "bbb3280393765a08a51290dd0817459a82c6d787296a7d1100bacde7f7bb1936",
+      "role": "local_artifact_reference",
+      "content_included": true,
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"repository_change_proposals\",\n  \"generated_at\": \"2026-05-06T15:32:40\",\n  \"repo_root\": \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\",\n  \"profile\": \"docs\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"apply_mode\": \"manual_review_only\",\n  \"suggestion_contract\": {\n    \"schema_version\": 1,\n    \"supported_output_kinds\": [\n      \"python_code\",\n      \"markdown\",\n      \"json\",\n      \"powershell\",\n      \"workflow_yaml\",\n      \"path_group\",\n      \"text_or_config\"\n    ],\n    \"default_operation\": \"manual_patch_suggestion\",\n    \"default_write_policy\": \"manual_review_only\",\n    \"provider_execution_performed\": false\n  },\n  \"reports_read\": [\n    \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\validation\\\\python_syntax.json\",\n    \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\validation\\\\npu_pipeline_modules.json\",\n    \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\validation\\\\npu_pipeline_helper_tests.json\",\n    \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\validation\\\\npu_pipeline_docs.json\",\n    \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\validation\\\\provider_result_parsing.json\",\n    \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\validation\\\\provider_result_report.json\",\n    \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\validation\\\\ai_workload_report_quality.json\",\n    \"C:\\\\Users\\\\carmi\\\\blender\\\\blender-audio-project\\\\output\\\\validation\\\\npu_runtime_ou",
+      "preview_chars": 1500,
+      "line_count": 120
+    },
+    {
+      "path": "output/validation/md_bundle_telemetry_smoke_20260506-152951_repository_change_proposals_contract.json",
+      "exists": true,
+      "suffix": ".json",
+      "size_bytes": 2297,
+      "sha256": "cffde06cc9e471f8b91cf535d644ad1953ecfef9d806ad699177f8603a77463f",
+      "role": "local_artifact_reference",
+      "content_included": true,
+      "preview": "{\n  \"schema_version\": 1,\n  \"kind\": \"repository_change_proposal_contract\",\n  \"repo_root\": \"C:/Users/carmi/blender/blender-audio-project\",\n  \"passed\": true,\n  \"errors\": [],\n  \"warnings\": [],\n  \"report_count\": 1,\n  \"results\": [\n    {\n      \"path\": \"output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_proposals.json\",\n      \"exists\": true,\n      \"json_ok\": true,\n      \"ok\": true,\n      \"proposal_count\": 1,\n      \"errors\": [],\n      \"warnings\": [],\n      \"proposal_checks\": [\n        {\n          \"id\": \"P-NEXT-NPU-OBSERVABILITY\",\n          \"ok\": true,\n          \"errors\": [],\n          \"warnings\": [],\n          \"suggestion_output_count\": 5,\n          \"suggestion_output_checks\": [\n            {\n              \"label\": \"P-NEXT-NPU-OBSERVABILITY.suggestion_outputs[0]\",\n              \"path\": \"Tools/npu/build_runtime_output_manifest.py\",\n              \"artifact_kind\": \"python_code\",\n              \"ok\": true,\n              \"errors\": [],\n              \"warnings\": []\n            },\n            {\n              \"label\": \"P-NEXT-NPU-OBSERVABILITY.suggestion_outputs[1]\",\n              \"path\": \"Tools/ai/check_local_resource_lanes.py\",\n              \"artifact_kind\": \"python_code\",\n              \"ok\": true,\n              \"errors\": [],\n              \"warnings\": []\n            },\n            {\n              \"label\": \"P-NEXT-NPU-OBSERVABILITY.suggestion_outputs[2]\",\n              \"path\": \"Tools/ai/suggest_repository_updates.py\",\n             ",
+      "preview_chars": 1500,
+      "line_count": 71
+    }
+  ],
+  "included_artifacts": [
+    {
+      "path": "CHATGPT.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 1356,
+      "sha256": "7c70e0c995a1cbde0e07f36dc38edbbc78bd2cf4d5ca16369b864fe8972bcfa1",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "chunked_content": false,
+      "line_count": 56,
+      "raw_chars": 1356,
+      "included_chars": 1356,
+      "content": "# CHATGPT operational memory\n\nThis is the root pointer for ChatGPT-assisted repository memory.\n\nRead this directory early when entering the repository as a human, cloud AI, local AI, Codex-style agent or automated review assistant:\n\n```text\nCHATGPT/\n```\n\nPrimary file:\n\n```text\nCHATGPT/README.md\n```\n\nCurrent handoff file:\n\n```text\nCHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md\n```\n\nCurrent active task:\n\n```text\ndocs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md\n```\n\nCurrent runtime bundle to inspect:\n\n```text\nia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip\n```\n\nThe bundle is a runtime artifact published as a GitHub draft release asset from PR #187 and is intentionally not committed to the repository.\n\nRobust chat/tooling recovery notes:\n\n```text\nCHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md\n```\n\nContract:\n\n```text\n- CHATGPT/*.md is durable operational memory.\n- It is advisory but should be read before planning new local AI/full-toolbox work.\n- Source-of-truth remains code, validation reports, canonical docs, runtime bundle evidence and current git state.\n- Do not use CHATGPT notes to override AGENTS.md guardrails.\n```\n\nLocal AI discovery rule:\n\n```text\nAny repository scanner/context-pack builder should include CHATGPT/*.md as lightweight high-priority context.\n```\n"
+    },
+    {
+      "path": "docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 5864,
+      "sha256": "3e614453fe51732d28dfc3f147cc8fece30a80752226447949c81764dc60f5c7",
+      "role": "explicit_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "chunked_content": false,
+      "line_count": 196,
+      "raw_chars": 5861,
+      "included_chars": 5861,
+      "content": "# Refactor/reuse methods, classes and tools planning task\n\n## Status\n\nStable local-AI planning task for IA-Carmine refactor/reuse work.\n\nThis task is intended for a full-run planning pass, not for automatic patch application.\n\n## Objective\n\nAnalyze the repository code and produce a manual-review refactor/reuse plan for:\n\n```text\nduplicate methods/classes\nreusable helper functions\nbase-class/superclass opportunities\nproject-tool promotion candidates\nsupport-library extraction candidates\nworkflow/provider/telemetry utility centralization\ncode that should remain app-specific and not be promoted\nThe goal is a controlled mega patch plan, not a blind rewrite.\n\nCurrent doctrine\nFull0To10 = TUTTO SU TUTTO\nquick/balanced/deep/custom = intensity, not scope\ntelemetry accompanies evidence and patch plans for completeness\n\nFor this task, tutto includes code, docs, workflow scripts, validation tools, provider diagnostics, telemetry builders, memory/context lanes and Blender/audio application boundaries.\n\nHard requirements\n\nThe run must be review-only:\n\npatch_application_performed=false\nsource_writes_performed=false\n\nDo not:\n\napply patches automatically\nperform source writes\nrun Blender\nrun FFmpeg\ncommit output/**\ncommit *.db or *.sqlite\ncommit indexAI/code_chunks/**\ntouch secrets, permissions, billing, visibility or deploy settings\nmerge to master\nforce-push or rewrite history\nRequired focus areas\nWorkflow and orchestration\n\nInspect for reusable workflow helpers across:\n\nTools/workflow/**\nTools/ai/**\nTools/validation/**\nTools/npu/**\n\nCandidate themes:\n\nreport writing\nmanifest writing\npath normalization\nPowerShell command wrappers\nprovider diagnostic result normalization\ntelemetry summary assembly\nbundle/final-summary assembly\npatch-plan target hygiene\nerror/failure/blocked/degraded state propagation\nValidation and report contracts\n\nInspect validator/report code for shared abstractions:\n\ncommon report fields\nschema_version/kind/repo_root/passed/errors/warnings\nprovider_execution_performed\npatch_application_performed\nsource_writes_performed\nblender_runtime_execution_performed\nffmpeg_execution_performed\nJSON/Markdown paired output helpers\nscoped report validation\nwarning policy ledgers\nProvider and runtime diagnostics\n\nInspect provider-related code for extraction candidates, but do not promote provider execution by default.\n\nCandidate reusable objects:\n\nprovider advisory state\nprovider failure reasons\ndegraded provider components\nGPU/NPU timing summaries\nreal per-round elapsed_seconds extraction\nworkload quality lane routing\nprovider preflight normalization\nBroker/tool promotion\n\nUse docs/LOCAL_AI_TASKS/project-tool-registry.md and promotion docs to classify tools.\n\nDo not promote these as broker-default tools:\n\nBlender runtime tools\nFFmpeg/audio encoding tools\nGit write tools\npatch apply tools\narbitrary shell execution tools\nprovider execution tools without explicit diagnostic-only contract\nSQLite persistent write tools unless explicitly allowed\nBlender/audio application boundary\n\nInspect Blender/audio files for reusable helper candidates, but keep app-specific runtime behavior separate.\n\nCandidate extraction must preserve:\n\nno Blender runtime during planning\nno FFmpeg runtime during planning\nno automatic behavior changes\nmanual-review patch plan only\nPython string patch hygiene\n\nTreat command-example cleanup and embedded Markdown/code fences as high-risk for multiline rewrites.\n\nDo not introduce broad triple-quoted/raw multiline rewrites to fix command examples.\n\nPrefer:\n\nminimal one-line literal edits\nPOSIX-style relative examples such as ./Tools/...\nexplicit doubled backslashes when Windows path syntax must be preserved\n\nValidate string/command-example changes with:\n\npython -m py_compile\ngit diff --check\nline counts\nfocused diff review\nRequired output\n\nThe full run should produce or update review artifacts containing:\n\nrecommendations\npatch plan\nreview-only patch specs when supported\ntelemetry/capability/final-summary context\nprovider degradation notes if provider probes fail\nsource-write and patch-application flags\nsafe target list\nunsafe/deferred target list\npromotion/backlog notes\nAcceptance criteria\n\nA valid result must show:\n\npatch_application_performed=false\nsource_writes_performed=false\nprovider state visible in telemetry/bundle/final summary\npatch plan targets source/docs only when safe\nno ordinary patch targets under docs/LOCAL_VALIDATION_EVIDENCE/**\nno ordinary patch targets under output/**\nno ordinary patch targets under indexAI/code_chunks/**\nno generated/runtime artifacts committed as source\n\nThe patch plan must explicitly distinguish:\n\nsafe mechanical refactor\nmanual-review refactor\nrequires local runtime validation\nrequires Blender runtime validation\nrequires provider execution validation\ndefer/do not promote\nSuggested command\n\nUse the unified launcher from the repository root:\n\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File \".\\Tools\\workflow\\run_unified_local_ai_refactor.ps1\" `\n  -TaskFile \".\\docs\\LOCAL_AI_TASKS\\refactor-reuse-methods-classes-tools-planning.md\" `\n  -Full0To10 `\n  -RunIntensity quick `\n  -SkipGitSync `\n  -NoBranch `\n  -NoExecutionTail\n\nIncrease intensity only after the quick planning pass is inspectable from manifest, telemetry, bundle/final summary and patch plan.\n\nPost-run handling\n\nAfter the run:\n\nRead the latest unified_local_ai_refactor_manifest.json.\nInspect provider diagnostics and workload quality reports.\nInspect decision loop recommendation and patch-plan counts.\nGroup evidence, patch plan, telemetry, capability manifest, full toolbox telemetry summary and AI-to-AI bundle/final summary.\nPush runtime artifact bundle as a draft GitHub release asset or attach to PR; do not commit output/**.\nSelect a controlled patch subset manually.\nApply source/docs changes in a normal reviewed commit only after focused validation.\n"
+    },
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_telemetry.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 2219,
+      "sha256": "4c2f8d722172077834c7d4a2ce23794d197892c0b2006bd6fbf9cc5f1701db6f",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "chunked_content": false,
+      "line_count": 31,
+      "raw_chars": 2185,
+      "included_chars": 2185,
+      "content": "# Local AI task pipeline telemetry\n\n- Kind: `local_ai_task_pipeline_telemetry`\n- Basename: `md_bundle_telemetry_smoke_20260506-152951`\n- Profile: `docs`\n- Pipeline output: `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline`\n- Provider execution requested: `False`\n- Provider execution performed: `False`\n- Patch application performed: `False`\n- Source writes performed: `False`\n- Build evidence requested: `True`\n- Output checks passed: `True`\n\n## Output Checks\n\n| Name | Kind | Required | Exists | Bytes | Path |\n|---|---|---:|---:|---:|---|\n| `adapter_manifest` | `manifest` | `True` | `True` | `7117` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_adapter_manifest.json` |\n| `packet_json` | `packet` | `True` | `True` | `105317` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json` |\n| `packet_markdown` | `packet` | `True` | `True` | `3307` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.md` |\n| `packet_manifest` | `manifest` | `True` | `True` | `6247` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_manifest.json` |\n| `proposals_json` | `proposal` | `True` | `True` | `5912` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_proposals.json` |\n| `proposals_markdown` | `proposal` | `True` | `True` | `2344` | `output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_proposals.md` |\n| `proposal_validation` | `validation` | `True` | `True` | `2297` | `output/validation/md_bundle_telemetry_smoke_20260506-152951_repository_change_proposals_contract.json` |\n\n## Validation Summaries\n\n| Name | Exists | JSON OK | Passed | Errors | Warnings | Path |\n|---|---:|---:|---:|---:|---:|---|\n| `proposal_validation` | `True` | `True` | `True` | `0` | `0` | `output/validation/md_bundle_telemetry_smoke_20260506-152951_repository_change_proposals_contract.json` |\n\n"
+    },
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 3307,
+      "sha256": "114c78922a3e63b910321ec6c476cf3db00140b5dabc1df533d51d52e1d596a6",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "chunked_content": false,
+      "line_count": 61,
+      "raw_chars": 3240,
+      "included_chars": 3240,
+      "content": "# Post-Validation AI Work Packet\n\n- Generated at: `2026-05-06T15:32:39`\n- Repo: `C:\\Users\\carmi\\blender\\blender-audio-project`\n- Profile: `docs`\n- Ollama used: `False`\n- Packet manifest: `C:\\Users\\carmi\\blender\\blender-audio-project\\output\\local_ai_runs\\md_bundle_telemetry_smoke_20260506-152951\\pipeline\\md_bundle_telemetry_smoke_20260506-152951_manifest.json`\n\n## Advisory context routing\n\n- Enforced: `True`\n- Provider execution performed: `False`\n- Advisory lanes: `npu`\n- Excluded advisory lanes: `none`\n\n## Deterministic suggestions\n\n### P2 — Run or review missing validation reports before strict follow-up work\n\n- Area: `validation`\n- Details: C:\\Users\\carmi\\blender\\blender-audio-project\\output\\validation\\docs_links.json; C:\\Users\\carmi\\blender\\blender-audio-project\\output\\validation\\execution_plan_status.json; C:\\Users\\carmi\\blender\\blender-audio-project\\output\\validation\\json_artifacts.json; C:\\Users\\carmi\\blender\\blender-audio-project\\output\\validation\\validation_report_contract.json; C:\\Users\\carmi\\blender\\blender-audio-project\\output\\validation\\python_syntax.json\n\n### P2 — Review active execution plans before opening the next milestone\n\n- Area: `execution_plans`\n- Details: docs/EXECUTION_PLANS/active/2026-04-29_agent_state_memory_integration.md; docs/EXECUTION_PLANS/active/2026-04-29_agentic_memory_guardrail_pipeline.md; docs/EXECUTION_PLANS/active/2026-04-29_formal_json_schema_validation.md; docs/EXECUTION_PLANS/active/2026-04-29_superseded_pr_followups.md; docs/EXECUTION_PLANS/active/2026-04-30_ai_pipeline_report_contracts.md; docs/EXECUTION_PLANS/active/2026-04-30_dry_run_matrix_contract_followups.md; docs/EXECUTION_PLANS/active/2026-04-30_npu_output_policy_provider_preflight.md; docs/EXECUTION_PLANS/active/2026-04-30_npu_pipeline_decomposition_plan.md; docs/EXECUTION_PLANS/active/2026-04-30_runtime_safe_provider_report_adoption.md; docs/EXECUTION_PLANS/active/2026-04-30_validator_report_consistency_review.md\n\n### P2 — Prefer additive observability before provider or Blender runtime changes\n\n- Area: `agnostic_core`\n- Details: Safe next steps: report contract consistency, runtime-output manifest emission, provider-result parsing/reporting without changing provider execution.\n\n## Inputs\n\n### Trusted context files\n- `AGENTS.md`\n- `WORKFLOW.md`\n- `docs/README.md`\n- `docs/AI_DOCS_ENTRYPOINT.md`\n- `docs/PROJECT_STATUS_POINT.md`\n- `docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`\n- `docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md`\n- `docs/TECH_DEBT_TRACKER.md`\n- `CHATGPT.md`\n- `docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md`\n\n### Report files\n- `output/validation/docs_links.json`\n- `output/validation/execution_plan_status.json`\n- `output/validation/json_artifacts.json`\n- `output/validation/validation_report_contract.json`\n- `output/validation/python_syntax.json`\n- `output/validation/ai_workload_quality_lane_routing.json`\n- `output/validation/npu_decode_quality_remediation.json`\n\n## Guardrails\n\n- Advisory only: do not auto-apply edits from this packet.\n- Output/input paths are configurable; defaults are not part of the architecture boundary.\n- Validate locally before committing generated indexes.\n- Keep provider execution changes in a separate explicitly scoped milestone.\n"
+    },
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951_proposals.md",
+      "exists": true,
+      "suffix": ".md",
+      "size_bytes": 2344,
+      "sha256": "bd07ce4a2a36d36f0d2a6c75a4e197b482eb5475917252ae4d4e21604ee474ae",
+      "role": "auto_related_artifact",
+      "content_included": true,
+      "content_truncated": false,
+      "chunked_content": false,
+      "line_count": 45,
+      "raw_chars": 2297,
+      "included_chars": 2297,
+      "content": "# Repository Change Proposals\n\n- Generated at: `2026-05-06T15:32:40`\n- Profile: `docs`\n- Apply mode: `manual_review_only`\n- Proposal count: `1`\n\n## P-NEXT-NPU-OBSERVABILITY — Add additive NPU observability before provider execution changes\n\n- Priority: `P2`\n- Area: `npu_backend`\n- Change type: `observability_extension`\n- Apply mode: `manual_review_only`\n- Rationale: Current reports do not indicate blocking failures. The next safe app-agnostic step is deeper observability, not provider behavior changes.\n\n### Target files\n- `Tools/npu/build_runtime_output_manifest.py`\n- `Tools/ai/check_local_resource_lanes.py`\n- `Tools/ai/suggest_repository_updates.py`\n- `docs/JSON_SCHEMAS.md`\n- `Tools/validation/README.md`\n\n### Patch sketch\n- Include runtime-output manifest and resource-lane reports in the default NPU packet profile.\n- Add proposal generation output next to packet JSON/Markdown.\n- Keep every output advisory and generated under output/.\n\n### Suggestion outputs\n- `python_code` `Tools/npu/build_runtime_output_manifest.py` (manual_patch_suggestion, manual_review_only)\n- `python_code` `Tools/ai/check_local_resource_lanes.py` (manual_patch_suggestion, manual_review_only)\n- `python_code` `Tools/ai/suggest_repository_updates.py` (manual_patch_suggestion, manual_review_only)\n- `markdown` `docs/JSON_SCHEMAS.md` (manual_patch_suggestion, manual_review_only)\n- `markdown` `Tools/validation/README.md` (manual_patch_suggestion, manual_review_only)\n\n### Validation\n- `powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_npu_pipeline_helper_validation.ps1`\n- `python .\\Tools\\ai\\check_local_resource_lanes.py --repo-root . --parallel --output .\\output\\validation\\local_ai_resource_lanes.json --markdown-output .\\output\\validation\\local_ai_resource_lanes.md`\n- `powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_post_validation_ai_packet.ps1 -Profile npu -OutputDir output/ai_packets -Basename npu_after_tests -ReportFile output/validation/local_ai_resource_lanes.json -ReportFile output/validation/npu_runtime_output_manifest.json`\n\n### Stop conditions\n- Any change requires modifying provider execution, prompt prose, Blender runtime or generated indexes manually.\n\n## Guardrail\n\nThese are proposals only. They must not be auto-applied without explicit review.\n"
+    }
+  ],
+  "artifact_chunk_index": [
+    {
+      "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json",
+      "suffix": ".json",
+      "line_count": 601,
+      "chunk_size_lines": 200,
+      "chunk_count": 4,
+      "first_chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L1-L200",
+      "last_chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L601-L601",
+      "chunks": [
+        {
+          "chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L1-L200",
+          "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json",
+          "line_start": 1,
+          "line_end": 200,
+          "previous_chunk_id": null,
+          "next_chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L201-L400",
+          "has_previous": false,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L201-L400",
+          "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json",
+          "line_start": 201,
+          "line_end": 400,
+          "previous_chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L1-L200",
+          "next_chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L401-L600",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L401-L600",
+          "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json",
+          "line_start": 401,
+          "line_end": 600,
+          "previous_chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L201-L400",
+          "next_chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L601-L601",
+          "has_previous": true,
+          "has_next": true
+        },
+        {
+          "chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L601-L601",
+          "path": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json",
+          "line_start": 601,
+          "line_end": 601,
+          "previous_chunk_id": "output/local_ai_runs/md_bundle_telemetry_smoke_20260506-152951/pipeline/md_bundle_telemetry_smoke_20260506-152951.json#L401-L600",
+          "next_chunk_id": null,
+          "has_previous": true,
+          "has_next": false
+        }
+      ]
+    }
+  ],
+  "recursive_default_discovery": {
+    "enabled": false,
+    "stamp": null,
+    "include_unstamped": false,
+    "max_files": 120,
+    "report_roots": [],
+    "artifact_roots": [],
+    "discovered_reports": [],
+    "discovered_artifacts": [],
+    "skipped_reports": [],
+    "skipped_artifacts": []
+  },
+  "included_artifact_policy": {
+    "auto_include_related_artifacts": true,
+    "max_included_artifact_chars": 6000,
+    "max_included_artifacts": 40,
+    "chunk_large_files_lines": 200,
+    "content_extension_allowlist": [
+      ".cfg",
+      ".csv",
+      ".ini",
+      ".json",
+      ".md",
+      ".ps1",
+      ".py",
+      ".toml",
+      ".txt",
+      ".yaml",
+      ".yml"
+    ],
+    "raw_artifact_deny_prefixes": [
+      "output/ai_context_packs/",
+      "output/ai_pipeline/gpu_deep_planning_parallel_checkpoints/",
+      "output/ai_pipeline/gpu_planner_nonempty_diagnostics_checkpoints",
+      "output/ai_pipeline/gpu_planner_fallback_verify_checkpoints",
+      "output/ai_pipeline/gpu_planner_full_after_fallback_fix_checkpoints",
+      "indexAI/code_chunks/",
+      "indexAI/project_code_chunks/",
+      "renders/"
+    ],
+    "raw_artifact_deny_fragments": [
+      "full_analysis",
+      "analysis_full",
+      ".sqlite",
+      ".db",
+      "_npu_async_audit_context",
+      "_npu_async_audit_npu",
+      "_npu_async_audit_npu_notes"
+    ]
+  },
+  "decision": {
+    "ollama_gpu_primary_advisory": false,
+    "npu_excluded_when_unusable": false,
+    "provider_execution_seen": false,
+    "npu_decode_smoke_passed": false,
+    "selected_chunks_evidence_seen": false,
+    "selected_chunks_built": false,
+    "budget_respected": false,
+    "artifact_manifest_built": true,
+    "included_artifacts_built": true,
+    "included_artifact_count": 5,
+    "patch_plan_summary_seen": false
+  }
+}

@@ -112,6 +112,8 @@ Telemetry is a completeness accessory for evidence and patch plans. It does not 
 | `Tools/ai/full0to10_hardware_capability/` | Full0To10 hardware/capability package. | Capability visibility for CPU/GPU/NPU/NVIDIA-style lanes and report-only contracts. |
 | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Full toolbox telemetry summary builder. | Cross-run summary of broker/provider/GPU/NPU/patch-plan state. |
 | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production AI-to-AI bundle builder. | Groups evidence, patch-plan, telemetry, capability and final summary for next AI. |
+| `Tools/ai/code_interpreter_report/` | Implementation package for static code-interpreter reports. | Keeps `build_code_interpreter_report.py` as a compact entrypoint. |
+| `Tools/ai/repository_consistency_map/` | Implementation package for repository consistency mapping. | Keeps `build_repository_consistency_map.py` as a compact entrypoint. |
 | `Tools/ai/build_deterministic_recommendations.py` | Deterministic recommendations and recovery. | Supports degraded-provider recovery and safe recommendations. |
 | `Tools/ai/build_agent_review_patch_plan.py` | Manual-review documentation patch plan. | Patch-plan evidence must be accompanied by telemetry/capability when from run-unica outputs. |
 | `Tools/ai/build_agent_state_packet.py` | CLI for task-local agent state packets. | Context/memory surface; no Blender, GPU, NPU or FFmpeg execution. |
@@ -122,6 +124,8 @@ Telemetry is a completeness accessory for evidence and patch plans. It does not 
 | `Tools/ai/run_local_provider_probe.py` | Local provider probe. | Full0To10/provider probe report unless disabled or unavailable; no implicit provider promotion. |
 | `Tools/ai/check_local_resource_lanes.py` | Local resource lane checks. | Provider/resource diagnostics. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | Quality-based advisory routing. | Prevents unusable provider output from contaminating advisory context. |
+| `Tools/ai/build_ai_peer_exchange_packet.py` | GPU1/GPU0 peer exchange packet and summary builder. | Production Full0To10 evidence lane; no patch apply. |
+| `Tools/ai/run_gpu0_peer_companion_worker.py` | OpenVINO GPU.0 companion worker and tool-request packet builder. | GPU0 peer support lane; preserves GPU1 as primary planner. |
 
 ### NPU and AI tooling
 
@@ -144,6 +148,7 @@ Telemetry is a completeness accessory for evidence and patch plans. It does not 
 | `Tools/ai/github_evidence_bundle_reports.py` | Helper module for evidence bundle report summaries. | Internal helper; document as library, not user command. |
 | `Tools/ai/agent_runtime_sqlite_memory.py` | Runtime SQLite memory support. | Internal/local state helper; do not commit DB outputs. |
 | `Tools/ai/agent_memory_routing_policy.py` | Memory routing policy logic. | Internal policy helper. |
+| `Tools/validation/check_ai_peer_exchange_contract.py` | Validate GPU1/GPU0 peer exchange, broker consumption and acceptance evidence. | Report-only validator. |
 
 ### Workflow helper scripts
 
@@ -160,6 +165,7 @@ docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md
 | `Tools/workflow/run_unified_local_ai_refactor.ps1` | canonical-entrypoint | Active run-unica local-AI entrypoint. |
 | `Tools/workflow/run_local_validation_after_refactor.ps1` | supporting-tool | Full local validation wrapper. |
 | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | launcher-internal/supporting-tool | Official local AI task adapter. |
+| `Tools/workflow/run_local_ai_task_via_pipeline/*.ps1` | launcher-internal/supporting-library | Split adapter responsibilities: paths, context, enrichment, validation, manifest, evidence and telemetry. |
 | `Tools/workflow/run_post_validation_ai_packet.ps1` | launcher-internal/supporting-tool | Advisory packet builder. |
 | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | launcher-internal/supporting-tool | Explicit multistep provider workflow. |
 | `Tools/workflow/run_docs_md_refactor_10min.ps1` | legacy-superseded/supporting-tool | Prefer unified launcher `md` mode. |

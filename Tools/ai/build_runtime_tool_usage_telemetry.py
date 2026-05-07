@@ -230,13 +230,13 @@ def collect_from_broker_report(
                 caller=caller,
                 phase=phase,
                 round_id=round_id,
-                broker_source=str(broker_report.get('source') or broker_report.get('kind') or phase),
+                broker_source=str(broker_report.get('source') or broker_report.get('source_classification') or broker_report.get('kind') or phase),
                 broker_path=broker_path,
                 request=request,
                 result=raw_result,
             )
         )
-    if not entries and broker_report.get('tool_request_count') or broker_report.get('requested_tool_count'):
+    if (not entries) and (broker_report.get('tool_request_count') or broker_report.get('requested_tool_count')):
         entries.append(
             {
                 'caller_ai': caller,
@@ -334,6 +334,27 @@ def append_default_broker_report_if_present(repo_root: Path, stamp: str, values:
     return paths
 
 
+def classify_broker_caller_phase(
+    broker_report: dict[str, Any],
+    broker_path: str,
+    default_caller: str,
+    default_phase: str,
+) -> tuple[str, str]:
+    source = str(broker_report.get("source") or broker_report.get("source_classification") or "").lower()
+    path_text = broker_path.lower()
+    marker = f"{source} {path_text}"
+
+    if "gpu0" in marker:
+        return "gpu0", "gpu0_peer_runtime_tool_broker"
+    if "npu" in marker:
+        return "npu", "npu_micro_runtime_tool_broker"
+    if "gpu1" in marker:
+        return "gpu", "gpu1_runtime_tool_broker"
+    if "gpu" in marker:
+        return "gpu", "gpu_runtime_tool_broker"
+    return default_caller, default_phase
+
+
 def collect_explicit_broker_reports(repo_root: Path, values: Any) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     entries: list[dict[str, Any]] = []
     warnings: list[str] = []
@@ -352,13 +373,19 @@ def collect_explicit_broker_reports(repo_root: Path, values: Any) -> tuple[list[
         if not isinstance(data, dict):
             warnings.append(f"{rel}: broker report is not a JSON object")
             continue
+        caller, phase = classify_broker_caller_phase(
+            data,
+            rel,
+            "orchestrator",
+            "explicit_runtime_tool_broker_bootstrap",
+        )
         entries.extend(
             collect_from_broker_report(
                 repo_root=repo_root,
                 broker_report=data,
                 broker_path=rel,
-                caller="orchestrator",
-                phase="explicit_runtime_tool_broker_bootstrap",
+                caller=caller,
+                phase=phase,
                 round_id=index,
             )
         )
@@ -425,6 +452,98 @@ def collect_npu_declared_requests(orchestrator: dict[str, Any]) -> list[dict[str
                 }
             )
     return entries
+
+
+def collect_npu_micro_support_broker_entries(repo_root: Path, orchestrator: dict[str, Any]) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    for micro in safe_list(orchestrator.get("npu_micro_supports")):
+        if not isinstance(micro, dict):
+            continue
+        round_id = safe_int(micro.get("round"), -1)
+        brokers = [
+            ("provider_micro", safe_dict(micro.get("npu_runtime_tool_broker"))),
+            ("live_tool_seed", safe_dict(micro.get("npu_live_seed_runtime_tool_broker"))),
+        ]
+        for broker_source, broker in brokers:
+            if not broker:
+                continue
+            phase = (
+                "npu_micro_runtime_tool_broker_live"
+                if broker.get("executed_while_gpu1_active") is True
+                else "npu_micro_runtime_tool_broker"
+            )
+            broker_entries = collect_from_broker_report(
+                repo_root=repo_root,
+                broker_report=broker,
+                broker_path=str(broker.get("broker_output") or ""),
+                caller="npu",
+                phase=phase,
+                round_id=round_id if round_id >= 0 else None,
+            )
+            for entry in broker_entries:
+                entry["npu_micro_support_live"] = broker.get("executed_while_gpu1_active") is True
+                entry["npu_micro_support_status"] = micro.get("status")
+                entry["npu_micro_broker_source"] = broker_source
+            entries.extend(broker_entries)
+    return entries
+
+
+def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str, Any]) -> dict[str, Any]:
+    gpu_round_count = safe_int(gpu_report.get('round_count'))
+    gpu_provider_performed = bool(
+        gpu_report.get('provider_execution_performed')
+        and gpu_round_count > 0
+        and str(gpu_report.get('classification') or '') != 'required_provider_artifact_missing'
+        and not bool(gpu_report.get('provider_empty_response'))
+    )
+    npu_success_count = safe_int(orchestrator.get('npu_audit_success_count'))
+    npu_audit_count = safe_int(orchestrator.get('npu_audit_count'))
+    npu_provider_performed = npu_success_count > 0
+    npu_micro_support_count = safe_int(orchestrator.get("npu_micro_support_count"))
+    npu_micro_support_success_count = safe_int(orchestrator.get("npu_micro_support_success_count"))
+    npu_micro_runtime_tool_execution_count = safe_int(orchestrator.get("npu_micro_runtime_tool_execution_count"))
+    npu_micro_runtime_tool_live_execution_count = safe_int(orchestrator.get("npu_micro_runtime_tool_live_execution_count"))
+    npu_micro_support_performed = bool(npu_micro_support_success_count > 0 or npu_micro_runtime_tool_execution_count > 0)
+    degraded_reasons = []
+    raw_reasons = orchestrator.get('provider_degraded_reasons')
+    if isinstance(raw_reasons, list):
+        degraded_reasons.extend(str(item) for item in raw_reasons)
+    if not gpu_provider_performed and (orchestrator or gpu_report):
+        degraded_reasons.append(
+            'gpu_not_confirmed:'
+            f"performed={gpu_report.get('provider_execution_performed')};"
+            f"round_count={gpu_round_count};"
+            f"classification={gpu_report.get('classification')};"
+            f"passed={gpu_report.get('passed')}"
+        )
+    if (
+        orchestrator.get('npu_lane_mode') in {'skipped', 'metadata_only', 'degraded'}
+        and npu_success_count == 0
+        and not npu_micro_support_performed
+    ):
+        degraded_reasons.append(
+            'npu_auditor_not_confirmed:'
+            f"audit_count={npu_audit_count};success_count={npu_success_count};"
+            f"lane_mode={orchestrator.get('npu_lane_mode')}"
+        )
+    return {
+        'provider_execution_performed': bool(gpu_provider_performed or npu_provider_performed),
+        'gpu_provider_execution_performed': gpu_provider_performed,
+        'gpu_round_count': gpu_round_count,
+        'gpu_classification': gpu_report.get('classification'),
+        'gpu_provider_empty_response': bool(gpu_report.get('provider_empty_response')),
+        'npu_provider_execution_performed': npu_provider_performed,
+        'npu_audit_count': npu_audit_count,
+        'npu_audit_success_count': npu_success_count,
+        'npu_micro_support_performed': npu_micro_support_performed,
+        'npu_micro_support_count': npu_micro_support_count,
+        'npu_micro_support_success_count': npu_micro_support_success_count,
+        'npu_micro_runtime_tool_execution_count': npu_micro_runtime_tool_execution_count,
+        'npu_micro_runtime_tool_live_execution_count': npu_micro_runtime_tool_live_execution_count,
+        'npu_lane_mode': orchestrator.get('npu_lane_mode'),
+        'provider_degraded_reasons': degraded_reasons,
+    }
+
 
 def extract_declared_runtime_tool_counters(gpu_report: dict[str, Any], gpu_npu_sync: dict[str, Any]) -> dict[str, int]:
     # Extract planner-declared runtime tool counters even when no broker entry exists.
@@ -501,6 +620,8 @@ def summarize_entries(entries: list[dict[str, Any]]) -> dict[str, Any]:
     executed_count = 0
     failed_count = 0
     blocked_count = 0
+    broker_entry_count = 0
+    broker_executed_count = 0
     for entry in entries:
         caller = str(entry.get('caller_ai') or 'unknown')
         phase = str(entry.get('phase') or 'unknown')
@@ -511,6 +632,9 @@ def summarize_entries(entries: list[dict[str, Any]]) -> dict[str, Any]:
         executed = entry.get('executed') is True or result.get('returncode') == 0 or result.get('passed') is True
         failed = entry.get('failed') is True or result.get('failed') is True or result.get('returncode') not in (None, 0)
         blocked = entry.get('blocked') is True
+        broker_phase = "broker" in phase
+        broker_entry_count += 1 if broker_phase else 0
+        broker_executed_count += 1 if broker_phase and executed else 0
         executed_count += 1 if executed else 0
         failed_count += 1 if failed else 0
         blocked_count += 1 if blocked else 0
@@ -526,6 +650,8 @@ def summarize_entries(entries: list[dict[str, Any]]) -> dict[str, Any]:
         'executed_count': executed_count,
         'failed_count': failed_count,
         'blocked_count': blocked_count,
+        'broker_entry_count': broker_entry_count,
+        'broker_executed_count': broker_executed_count,
         'total_reported_tool_elapsed_seconds': round(total_elapsed, 3),
         'by_caller_ai': by_caller,
         'by_tool': by_tool,
@@ -552,6 +678,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     warnings.extend(explicit_broker_warnings)
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('gpu_runtime_tool_results'), 'gpu', 'gpu_runtime_tool_broker'))
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('npu_runtime_tool_results'), 'npu', 'npu_runtime_tool_broker'))
+    entries.extend(collect_npu_micro_support_broker_entries(repo_root, orchestrator))
     entries.extend(collect_gpu_declared_requests(gpu_report))
     entries.extend(collect_npu_declared_requests(orchestrator))
     declared_counters = extract_declared_runtime_tool_counters(gpu_report, gpu_npu_sync)
@@ -561,6 +688,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     max_entries = max(1, int(args.max_entries))
     summary = summarize_entries(entries)
     summary.update(declared_counters)
+    provider_evidence = provider_evidence_summary(orchestrator, gpu_report)
+    provider_broker_loop = orchestrator.get("provider_broker_loop") if isinstance(orchestrator.get("provider_broker_loop"), dict) else {}
     return {
         'schema_version': 1,
         'kind': 'runtime_tool_usage_telemetry',
@@ -570,7 +699,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         'passed': not errors,
         'errors': errors,
         'warnings': warnings,
-        'provider_execution_performed': False,
+        'provider_execution_performed': provider_evidence['provider_execution_performed'],
+        'provider_evidence': provider_evidence,
+        'provider_broker_loop': provider_broker_loop,
         'patch_application_performed': False,
         'source_writes_performed': False,
         'sqlite_write_performed': False,
@@ -597,7 +728,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             'report_only': True,
             'committable_location': 'docs/LOCAL_VALIDATION_EVIDENCE',
             'raw_output_commit_allowed': False,
-            'provider_execution_performed': False,
+            'provider_execution_performed': provider_evidence['provider_execution_performed'],
+            'gpu_provider_execution_performed': provider_evidence['gpu_provider_execution_performed'],
+            'npu_provider_execution_performed': provider_evidence['npu_provider_execution_performed'],
             'patch_application_performed': False,
             'source_writes_performed': False,
             'sqlite_write_performed': False,
@@ -610,6 +743,12 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ['# Runtime Tool Usage Telemetry', '']
     lines.append(f"- Passed: `{report.get('passed')}`")
     lines.append(f"- Stamp: `{report.get('stamp')}`")
+    provider_evidence = safe_dict(report.get('provider_evidence'))
+    lines.append(f"- Provider execution performed: `{report.get('provider_execution_performed')}`")
+    lines.append(f"- GPU provider execution performed: `{provider_evidence.get('gpu_provider_execution_performed')}`")
+    lines.append(f"- NPU provider execution performed: `{provider_evidence.get('npu_provider_execution_performed')}`")
+    if provider_evidence.get('provider_degraded_reasons'):
+        lines.append(f"- Provider degraded reasons: `{provider_evidence.get('provider_degraded_reasons')}`")
     summary = safe_dict(report.get('summary'))
     lines.append(f"- Tool call entries: `{summary.get('tool_call_entry_count')}`")
     lines.append(f"- Executed count: `{summary.get('executed_count')}`")
@@ -617,8 +756,17 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Blocked count: `{summary.get('blocked_count')}`")
     lines.append(f"- Total reported tool elapsed seconds: `{summary.get('total_reported_tool_elapsed_seconds')}`")
     lines.append(f"- Declared runtime tool requests: `{summary.get('runtime_tool_request_count')}`")
-    lines.append(f"- Broker runtime tool executions: `{summary.get('runtime_tool_execution_count')}`")
+    lines.append(f"- Declared runtime tool executions: `{summary.get('runtime_tool_execution_count')}`")
+    lines.append(f"- Broker runtime tool executions: `{summary.get('broker_executed_count')}`")
     lines.append(f"- Declared not executed count: `{summary.get('declared_not_executed_count')}`")
+    provider_broker_loop = safe_dict(report.get('provider_broker_loop'))
+    if provider_broker_loop:
+        lines.append(f"- Provider-broker loop active: `{provider_broker_loop.get('active')}`")
+        lines.append(f"- Provider-broker loop executor: `{provider_broker_loop.get('controlled_executor')}`")
+        lines.append(f"- Provider-broker loop broker executions: `{provider_broker_loop.get('broker_tool_execution_count')}`")
+        lines.append(f"- Provider-broker loop GPU0 executions: `{provider_broker_loop.get('gpu0_broker_tool_execution_count')}`")
+        lines.append(f"- Provider-broker loop NPU executions: `{provider_broker_loop.get('npu_broker_tool_execution_count')}`")
+        lines.append(f"- Provider-broker loop NPU non-blocking: `{provider_broker_loop.get('npu_non_blocking')}`")
     lines.append('')
     lines.append('## By caller AI')
     lines.append('')

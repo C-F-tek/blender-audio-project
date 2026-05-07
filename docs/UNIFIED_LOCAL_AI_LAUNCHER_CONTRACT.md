@@ -1,4 +1,4 @@
-# Unified Local AI Launcher Contract
+﻿# Unified Local AI Launcher Contract
 
 ## Purpose
 
@@ -97,6 +97,8 @@ multistep_provider_workflow_requested
 ollama_probe_requested
 npu_probe_requested
 npu_decode_smoke_requested
+ai_peer_exchange_required
+ai_peer_exchange_contract_passed
 memory_in_enabled
 memory_out_enabled
 quality_gate_passed
@@ -171,6 +173,8 @@ ollama_packet
 ollama_proposals
 workload_quality
 legacy_full_toolbox_integrated
+ai_peer_exchange
+ai_peer_exchange_contract
 patch_specs_manifest
 patch_specs_validation
 ```
@@ -232,6 +236,10 @@ runtime tool broker telemetry requested
 runtime/hardware capability manifest requested
 Ollama advisory requested
 primary provider routing requested
+GPU1/Ollama primary advisory planner requested
+GPU0/OpenVINO companion peer worker and tool-request producer requested
+NPU/OpenVINO non-blocking micro/tool-support lane requested
+AI peer-exchange contract requested
 provider diagnostics requested
 workload quality routing requested
 multistep provider workflow requested
@@ -371,7 +379,35 @@ includes .md, .py, .ps1, .psm1, .psd1, .sh, .bat, .cmd, .js, .ts, .tsx, .jsx
 excludes .git, venv/.venv, __pycache__, node_modules, output, renders, indexAI/code_chunks, indexAI/project_code_chunks
 ```
 
-## Quality gate contract
+
+## Provider-capable Python preflight
+
+Provider/OpenVINO/NPU/GPU0 validation requires a Python interpreter that can import the provider runtime packages.
+
+The normal repository `.venv` is valid for generic repository validation only if it contains the provider packages required by the selected lane.
+
+Required for OpenVINO GPU.0/NPU provider validation:
+
+```text
+numpy
+openvino
+openvino-genai Required operator preflight before interpreting GPU.0/NPU provider failures:
+
+$env:IA_CARMINE_PYTHON = "<repo>\.venv\Scripts\python.exe"
+$env:PYTHONPATH = "<repo>"
+
+& $env:IA_CARMINE_PYTHON -c "import sys; print(sys.executable); import numpy, openvino; from openvino import Core; c=Core(); print(c.available_devices)"
+
+Expected IA-Carmine workstation visibility when provider runtime is correctly selected:
+
+['CPU', 'GPU.0', 'GPU.1', 'NPU']
+
+If numpy, openvino or openvino-genai is missing, classify the failure as provider_python_environment_missing_dependency, not as GPU.0/NPU provider failure.
+
+If GPU.0 is not visible after imports succeed, classify the failure as OpenVINO device visibility/runtime configuration, not as Python selection failure.
+
+GPU.1 may be visible through OpenVINO, but it remains reserved for CUDA/Ollama and must not receive OpenVINO workload.
+rn## Quality gate contract
 
 When primary provider routing is requested:
 

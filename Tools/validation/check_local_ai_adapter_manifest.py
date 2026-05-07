@@ -263,6 +263,12 @@ def validate_manifest(path: Path, repo_root: Path) -> dict[str, Any]:
             for error in path_policy_errors(value):
                 errors.append(f"outputs.{output_key}: {error}")
 
+    for output_key in ("telemetry_json", "telemetry_markdown"):
+        value = normalize_path(outputs.get(output_key))
+        if value:
+            for error in path_policy_errors(value):
+                errors.append(f"outputs.{output_key}: {error}")
+
     return {
         "path": rel_path,
         "exists": True,
@@ -273,7 +279,10 @@ def validate_manifest(path: Path, repo_root: Path) -> dict[str, Any]:
         "warnings": warnings,
         "context_file_count": len(context_files),
         "provider_execution_requested": data.get("provider_execution_requested"),
+        "provider_execution_performed_by_adapter": data.get("provider_execution_performed_by_adapter"),
         "patch_application_performed": data.get("patch_application_performed"),
+        "build_evidence_requested": data.get("build_evidence_requested"),
+        "telemetry_outputs_declared": bool(outputs.get("telemetry_json") or outputs.get("telemetry_markdown")),
         "enrichment_requested_keys": sorted(enrichment_requested.keys()),
         "enrichment_output_keys": sorted(enrichment_outputs.keys()),
     }
@@ -288,6 +297,11 @@ def validate_manifests(repo_root: Path, manifests: list[Path]) -> dict[str, Any]
         "kind": REPORT_KIND,
         "repo_root": repo_root.as_posix(),
         "passed": not errors,
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+        "blender_runtime_execution_performed": False,
+        "ffmpeg_runtime_execution_performed": False,
         "errors": errors,
         "warnings": warnings,
         "manifest_count": len(results),

@@ -1,4 +1,4 @@
-# Workflow
+﻿# Workflow
 
 ## Purpose
 
@@ -181,7 +181,30 @@ ignored output/cache/state files not staged
 
 The unified launcher resolves Python through `-PythonExe`, `IA_CARMINE_PYTHON`, `.venv`, `venv` and fallback `python`. It also sets `PYTHONPATH` to the repository root.
 
-## Inventory policy
+
+Provider-capable Python preflight
+
+Before provider/OpenVINO/NPU/GPU0 validation, verify that the selected Python is provider-capable, not only repository-validation-capable.
+
+The launcher resolves Python through:
+
+-PythonExe -> IA_CARMINE_PYTHON -> .venv -> venv -> python fallback
+
+For OpenVINO GPU.0/NPU lanes, the selected interpreter must provide:
+
+numpy
+openvino
+openvino-genai
+
+Required local check:
+
+$env:IA_CARMINE_PYTHON = "<repo>\.venv\Scripts\python.exe"
+$env:PYTHONPATH = "<repo>"
+
+& $env:IA_CARMINE_PYTHON -c "import sys; print(sys.executable); import numpy, openvino; from openvino import Core; c=Core(); print(c.available_devices)"
+
+A missing Python package is an environment-preflight failure, not GPU.0/NPU provider evidence. Do not interpret provider lane results until this preflight is green.
+rn## Inventory policy
 
 Use inventories before broad documentation or code refactors.
 
@@ -309,3 +332,4 @@ patch application remains explicit
 long evidence is indexed by compact manifests
 obsolete monolithic runbooks are not active entrypoints
 ```
+

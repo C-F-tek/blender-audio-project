@@ -609,6 +609,9 @@ def build_report(
         "runtime_tool_provider_request_count": runtime_tool_provider_request_count,
         "runtime_tool_provider_request_execution_count": runtime_tool_provider_request_execution_count,
         "runtime_tool_feedback_context_report_count": runtime_tool_feedback_context_report_count,
+        "live_context_refresh_enabled": bool(args.refresh_live_context_each_round),
+        "live_context_report_paths": list(args.live_context_report or []),
+        "live_context_refresh_count": sum(int(round_item.get("live_context_report_count") or 0) for round_item in rounds),
         "deterministic_runtime_tool_fallback_request_count": deterministic_runtime_tool_fallback_request_count,
         "deterministic_runtime_tool_fallback_execution_count": deterministic_runtime_tool_fallback_execution_count,
         "deterministic_runtime_tool_fallback_failed_count": deterministic_runtime_tool_fallback_failed_count,
@@ -724,6 +727,43 @@ def run_npu_audit_for_checkpoint(repo_root: Path, checkpoint_json: Path, audit_j
     return audit
 
 
+def compact_context_report(repo_root: Path, path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {"path": repo_rel(path, repo_root), "error": "missing"}
+    try:
+        data = read_json(path)
+    except Exception as exc:  # noqa: BLE001 - live context reports are advisory.
+        return {"path": repo_rel(path, repo_root), "error": f"{type(exc).__name__}: {exc}"}
+    return {
+        "path": repo_rel(path, repo_root),
+        "kind": data.get("kind"),
+        "passed": data.get("passed"),
+        "summary": data.get("summary", {}),
+        "decision": data.get("decision", {}),
+        "event_count": data.get("event_count") or data.get("heap_snapshot", {}).get("event_count"),
+        "pending_broker_request_count": data.get("pending_broker_request_count")
+        or data.get("heap_snapshot", {}).get("pending_broker_request_count"),
+    }
+
+
+def refresh_live_context_reports(context_reports: list[dict[str, Any]], repo_root: Path, paths: list[str]) -> int:
+    refreshed = 0
+    for value in paths:
+        report = compact_context_report(repo_root, resolve_path(repo_root, value))
+        report["kind"] = report.get("kind") or "live_runtime_context_report"
+        report["live_context_report"] = True
+        key = report.get("path")
+        for index, item in enumerate(context_reports):
+            if isinstance(item, dict) and item.get("path") == key:
+                context_reports[index] = report
+                break
+        else:
+            context_reports.append(report)
+        if not report.get("error"):
+            refreshed += 1
+    return refreshed
+
+
 def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     started_at = time.perf_counter()
@@ -834,6 +874,13 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 break
             if time.perf_counter() >= deadline and rounds:
                 break
+            live_context_report_count = 0
+            if args.refresh_live_context_each_round or (index == 1 and args.live_context_report):
+                live_context_report_count = refresh_live_context_reports(
+                    context_reports,
+                    repo_root,
+                    args.live_context_report or [],
+                )
             context_reports = build_schema_repair_context_stack(
                 base_context_reports=context_reports,
                 rounds=rounds,
@@ -973,6 +1020,8 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 "elapsed_seconds": round(time.perf_counter() - round_start, 3),
                 "file_count": len(batch),
                 "files": [item.path for item in batch],
+                "live_context_report_count": live_context_report_count,
+                "live_context_refresh_performed": bool(live_context_report_count),
                 "response_chars": len(response),
                 "raw_response_preview": response[:3000],
                 "parsed_response": parsed,
@@ -1047,6 +1096,8 @@ def main() -> int:
     parser.add_argument("--evidence", default=DEFAULT_EVIDENCE)
     parser.add_argument("--refined-review", default=DEFAULT_REFINED)
     parser.add_argument("--report-file", action="append", default=[])
+    parser.add_argument("--live-context-report", action="append", default=[])
+    parser.add_argument("--refresh-live-context-each-round", action="store_true")
     parser.add_argument("--context-root", action="append", default=[])
     parser.add_argument("--max-context-files", type=int, default=160)
     parser.add_argument("--max-chars-per-file", type=int, default=8000)

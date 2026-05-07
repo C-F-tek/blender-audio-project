@@ -15,6 +15,7 @@ NPU -> tool_requests -> orchestrator -> broker -> report
 provider -> never direct executor
 orchestrator -> control-plane / routing / scheduling
 broker -> only controlled executor
+runtime heap -> append-only blackboard / visibility mesh
 report -> reinjected read-only evidence
 ```
 
@@ -48,13 +49,14 @@ The orchestrator is the control-plane.
 It is responsible for:
 
 - launching GPU planning;
-- launching NPU audits;
+- launching GPU0 peer-support work at startup and from GPU checkpoints;
+- launching NPU micro-support work at startup and from GPU checkpoints, with legacy NPU audits only when explicitly requested;
 - collecting checkpoint reports;
 - collecting GPU and NPU `tool_requests`;
 - scheduling report-only tool execution;
 - passing requests to the broker;
 - reinjecting broker reports into later context;
-- preserving non-blocking behavior for NPU audits;
+- preserving non-blocking behavior for NPU support;
 - surfacing guardrail counters in final reports.
 
 The orchestrator decides when a request is executed, but it does not implement the tools themselves.
@@ -74,6 +76,19 @@ It is responsible for:
 
 The broker should remain deterministic, narrow, and low-policy. High-level scheduling belongs to the orchestrator.
 
+### Runtime heap / blackboard
+
+The runtime heap is the shared visibility layer for provider collaboration.
+
+It is append-only evidence, not an executor:
+
+- GPU1 can publish a bounded evidence/tool-context request for GPU0.
+- GPU0 and the broker can publish broker result visibility.
+- NPU can publish a non-blocking support signal back to GPU1.
+- Telemetry can summarize events, lane edges and direct-execution violations.
+
+The heap must never execute tools, apply patches or write source. Brokered tool reports remain the execution authority; the heap only records what each lane can see.
+
 ## Supported shared toolbox capabilities
 
 The shared toolbox currently includes report-only capabilities such as:
@@ -86,7 +101,8 @@ The shared toolbox currently includes report-only capabilities such as:
 - Python syntax validation;
 - validation report contract checks;
 - GPU planner JSON contract smoke;
-- code-interpreter report inventory.
+- code-interpreter report inventory;
+- provider runtime heap live signals and telemetry.
 
 Tool execution is always mediated by `Tools/ai/agent_runtime_tool_broker.py`.
 
@@ -113,10 +129,11 @@ The architectural preference is to keep this path symmetrical with the NPU path.
 
 ## NPU path
 
-The NPU auditor is non-blocking and non-primary.
+The production NPU lane is a bounded micro-support lane. The legacy NPU auditor remains available for diagnostics, but it is not enabled by default in Full0To10.
 
 It may:
 
+- start from the orchestrator `round_000` bootstrap seed so NPU readiness is visible at the beginning of the run;
 - read GPU checkpoints;
 - read runtime toolbox context;
 - classify provider states;
@@ -124,6 +141,17 @@ It may:
 - propose structured `tool_requests`.
 
 The NPU must not execute tools directly. NPU tool requests are routed through the orchestrator and broker.
+
+NPU provider text evidence and NPU micro tool-support evidence are separate success surfaces. A timed-out or empty NPU provider response is recorded as provider degradation, but the micro lane can still be operationally successful when it emits valid brokered tool requests and the runtime heap closes the matching broker results with zero pending requests.
+
+In full-toolbox peer exchange, NPU micro support sees GPU1/GPU0/broker/runtime-heap context, may emit brokered tool requests, and remains non-blocking. Heavy NPU audit waits require an explicit legacy-auditor flag and must not be confused with product NPU support.
+
+The orchestrator owns both synchronization points:
+
+```text
+startup barrier: GPU1 primary process + GPU0 peer support + NPU micro support + deterministic/broker bootstrap
+close barrier: harvest or terminate active GPU0/NPU/legacy support subprocesses before final telemetry and bundle reports
+```
 
 ## Memory model
 
@@ -147,6 +175,7 @@ Permanent guardrails:
 - no implicit persistent SQLite writes;
 - no SQLite/database artifacts committed;
 - no `output/**` artifacts committed except selected compact evidence when explicitly intended;
+- line-count CSV evidence under `docs/LOCAL_VALIDATION_EVIDENCE` is a first-class compact evidence artifact when listed by workflow `evidence_to_commit`;
 - NPU remains non-blocking and non-primary;
 - broker remains the only executor.
 

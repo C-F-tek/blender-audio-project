@@ -4,15 +4,16 @@
 
 Current policy for IA-Carmine Markdown that is too large to be reliably opened, reviewed or carried into a new AI/chat context.
 
-This policy is now numeric:
+Numeric policy:
 
 ```text
-Active maintained Markdown hard limit: 400 lines
+Active maintained Markdown hard threshold: 500 lines
+Preferred active runbook size: 400 lines
 ```
 
 ## Rule
 
-A maintained Markdown file above 400 lines must not be a primary operational entrypoint.
+A maintained Markdown file above 500 lines must not remain a primary operational entrypoint in monolithic form.
 
 Large Markdown may exist only as one of:
 
@@ -28,14 +29,14 @@ It must have a compact bridge, index entry or summary if it is still relevant.
 
 ## Required split layout
 
-When an active maintained Markdown file would exceed 400 lines:
+When an active maintained Markdown file would exceed 500 lines:
 
 ```text
 Keep the original file as a compact index.
 Create a sibling folder named exactly like the file, including .md: <file>.md/.
 Move detailed content into <file>.md/part-001.md, part-002.md, ...
-Keep each part under 400 lines.
-The index must list all parts and state that the document was split for the 400-line policy.
+Keep each part <= 500 lines.
+The index must list all parts and state that the document was split for the line-budget policy.
 ```
 
 Example:
@@ -59,17 +60,17 @@ README.md
 WORKFLOW.md
 docs/README.md
 docs/LOCAL_AI_TASKS/README.md
-docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
-docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/gpu-peer-exchange-operational-principle.md
+docs/LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
-If any primary-path file exceeds 400 lines, split it or replace the operational content with a compact bridge.
+If any primary-path file exceeds 500 lines, split it or replace the operational content with a compact bridge.
 
 ## Large-file handling
 
-When a maintained `.md` is above 400 lines:
+When a maintained `.md` is above 500 lines:
 
 ```text
 1. Do not keep adding operational state to it.
@@ -77,7 +78,7 @@ When a maintained `.md` is above 400 lines:
 3. Mark the large file as historical/supporting/catalog/evidence where appropriate.
 4. Move current state, next steps and command ownership to the compact bridge.
 5. Keep executable commands in their canonical runbook/tool README only.
-6. Do not delete the large file without explicit approval.
+6. Do not delete compact evidence automatically.
 ```
 
 ## Current examples
@@ -102,10 +103,12 @@ Tools/validation/README.md
 ```text
 run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
-quick/balanced/deep/custom = presets or operator parameters
+quick/balanced/deep/custom = budget/intensity, not scope reduction
 -No* flags = explicit opt-out from selected lanes
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
-limitations are backlog to overcome, not reasons to skip available tools
+GPU1/Ollama/RTX5080 = mandatory primary advisory planner
+GPU0/OpenVINO = companion peer worker
+NPU = micro-fast task/tool-support lane
 ```
 
 Large historical files must not override this current compact doctrine.

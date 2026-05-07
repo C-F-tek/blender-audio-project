@@ -142,11 +142,18 @@ def sample_results(repo_root: Path, policy: PathPolicy) -> list[dict[str, Any]]:
     return rendered
 
 
-def build_policy(allowed_prefixes: list[str], allowed_exact_paths: list[str]) -> PathPolicy:
+def build_policy(
+    allowed_prefixes: list[str],
+    allowed_exact_paths: list[str],
+    max_repo_relative_path_chars: int | None,
+    max_filename_chars: int | None,
+) -> PathPolicy:
     """Build an active policy from defaults plus optional CLI additions."""
     return PathPolicy(
         allowed_prefixes=tuple(dict.fromkeys([*DEFAULT_ALLOWED_PREFIXES, *allowed_prefixes])),
         allowed_exact_paths=tuple(dict.fromkeys([*DEFAULT_ALLOWED_EXACT_PATHS, *allowed_exact_paths])),
+        max_repo_relative_path_chars=max_repo_relative_path_chars,
+        max_filename_chars=max_filename_chars,
     )
 
 
@@ -156,9 +163,11 @@ def check_policy(
     artifact_reports: list[str],
     allowed_prefixes: list[str],
     allowed_exact_paths: list[str],
+    max_repo_relative_path_chars: int | None,
+    max_filename_chars: int | None,
 ) -> dict[str, Any]:
     """Evaluate sample and explicit generated artifact destinations."""
-    policy = build_policy(allowed_prefixes, allowed_exact_paths)
+    policy = build_policy(allowed_prefixes, allowed_exact_paths, max_repo_relative_path_chars, max_filename_chars)
     samples = sample_results(repo_root, policy)
     report_paths, report_inputs, report_errors = collect_artifact_paths_from_reports(repo_root, artifact_reports)
     explicit_paths = [Path(item) for item in [*paths, *report_paths]]
@@ -181,6 +190,8 @@ def check_policy(
         "warnings": [],
         "allowed_prefixes": list(policy.allowed_prefixes),
         "allowed_exact_paths": list(policy.allowed_exact_paths),
+        "max_repo_relative_path_chars": policy.max_repo_relative_path_chars,
+        "max_filename_chars": policy.max_filename_chars,
         "artifact_reports": report_inputs,
         "artifact_report_path_count": len(report_paths),
         "sample_results": samples,
@@ -188,10 +199,31 @@ def check_policy(
         "path_results": [item.to_dict() for item in path_results],
         "notes": [
             "This validator checks generated artifact destinations, not input domains or output applications.",
-            "Use --path for proposed generated files before writing or committing them.",
-            "Use --allowed-prefix or --allowed-exact-path for deliberate workflow-specific extensions.",
-        ],
+        "Use --path for proposed generated files before writing or committing them.",
+        "Use --allowed-prefix or --allowed-exact-path for deliberate workflow-specific extensions.",
+        "Use --max-repo-relative-path-chars and --max-filename-chars to catch bundle names that may fail Windows/Git push workflows.",
+    ],
     }
+
+
+def render_markdown(report: dict[str, Any]) -> str:
+    lines = ["# Generated Artifact Path Policy", ""]
+    lines.append(f"- Passed: `{report.get('passed')}`")
+    lines.append(f"- Path count: `{report.get('path_count')}`")
+    lines.append(f"- Artifact report path count: `{report.get('artifact_report_path_count')}`")
+    lines.append(f"- Max repo-relative path chars: `{report.get('max_repo_relative_path_chars')}`")
+    lines.append(f"- Max filename chars: `{report.get('max_filename_chars')}`")
+    failing = [item for item in report.get("path_results", []) if not item.get("passed")]
+    lines.append(f"- Failing path count: `{len(failing)}`")
+    if failing:
+        lines.append("")
+        lines.append("## Failing Paths")
+        lines.append("")
+        for item in failing[:80]:
+            lines.append(f"- `{item.get('repo_relative_path') or item.get('path')}`")
+            for finding in item.get("findings", []):
+                lines.append(f"  - {finding.get('rule_id')}: {finding.get('message')}")
+    return "\n".join(lines) + "\n"
 
 
 def main() -> int:
@@ -201,11 +233,22 @@ def main() -> int:
     parser.add_argument("--artifact-report", action="append", default=[], help="JSON report to scan for generated artifact destination fields. Can be repeated.")
     parser.add_argument("--allowed-prefix", action="append", default=[], help="Additional allowed repo-relative prefix.")
     parser.add_argument("--allowed-exact-path", action="append", default=[], help="Additional allowed repo-relative exact path.")
+    parser.add_argument("--max-repo-relative-path-chars", type=int, default=None)
+    parser.add_argument("--max-filename-chars", type=int, default=None)
     parser.add_argument("--output", help="Optional JSON report path.")
+    parser.add_argument("--markdown-output", help="Optional Markdown report path.")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    report = check_policy(repo_root, args.path, args.artifact_report, args.allowed_prefix, args.allowed_exact_path)
+    report = check_policy(
+        repo_root,
+        args.path,
+        args.artifact_report,
+        args.allowed_prefix,
+        args.allowed_exact_path,
+        args.max_repo_relative_path_chars,
+        args.max_filename_chars,
+    )
     text = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
     if args.output:
         output = Path(args.output)
@@ -214,6 +257,13 @@ def main() -> int:
         output = output.resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(text, encoding="utf-8")
+    if args.markdown_output:
+        markdown_output = Path(args.markdown_output)
+        if not markdown_output.is_absolute():
+            markdown_output = repo_root / markdown_output
+        markdown_output = markdown_output.resolve()
+        markdown_output.parent.mkdir(parents=True, exist_ok=True)
+        markdown_output.write_text(render_markdown(report), encoding="utf-8")
     print(text, end="")
     return 0 if report["passed"] else 2
 

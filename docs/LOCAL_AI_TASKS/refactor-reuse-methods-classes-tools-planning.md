@@ -183,6 +183,25 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Tools\workflow\run_un
 
 Increase intensity only after the quick planning pass is inspectable from manifest, telemetry, bundle/final summary and patch plan.
 
+Current full-access task input
+
+For the current Markdown-to-telemetry/evidence hardening pass, feed this task file to the unified launcher:
+
+```text
+docs/LOCAL_AI_TASKS/full-access-md-telemetry-refactor-cycle-2026-05-06.md
+```
+
+That task requires:
+
+```text
+repository proposals JSON/Markdown
+review-only patch-spec manifest JSON/Markdown
+patch-spec validation report
+adapter/unified telemetry JSON/Markdown
+compact evidence bundle JSON/Markdown
+evidence validation report
+```
+
 Post-run handling
 
 After the run:

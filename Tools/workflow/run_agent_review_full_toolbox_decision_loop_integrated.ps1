@@ -5,6 +5,7 @@ param(
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
     [switch]$RunGpuNpuProvider,
     [switch]$RequireProviderArtifacts,
+    [switch]$RunLegacyNpuAuditorProvider,
     [switch]$SkipMemoryReload,
     [switch]$SkipPostValidationPacket,
     [switch]$SkipSharedToolboxBundle,
@@ -21,6 +22,8 @@ param(
     [int]$NpuMaxPromptChars = 1200,
     [int]$NpuMaxNewTokens = 384,
     [int]$NpuFinalWaitSeconds = 180,
+    [ValidateSet('startup', 'deferred', 'live-seed-only', 'peer', 'post-gpu-provider', 'disabled')]
+    [string]$NpuMicroStartMode = 'deferred',
     [int]$MinRecommendations = 1,
     [int]$MinPatchPlans = 1,
     [int]$RepositoryConsistencyMapWorkers = 8
@@ -35,6 +38,18 @@ if ($Stamp -eq "") {
 }
 
 $env:PYTHONPATH = (Get-Location).Path
+$script:RepoPythonExe = "python"
+if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) {
+    if (Test-Path -LiteralPath $env:IA_CARMINE_PYTHON -PathType Leaf) {
+        $script:RepoPythonExe = $env:IA_CARMINE_PYTHON
+    } else {
+        Write-Warning "IA_CARMINE_PYTHON is set but not found: $env:IA_CARMINE_PYTHON"
+    }
+} elseif (Test-Path -LiteralPath ".\.venv\Scripts\python.exe" -PathType Leaf) {
+    $script:RepoPythonExe = (Resolve-Path ".\.venv\Scripts\python.exe").Path
+} elseif (Test-Path -LiteralPath ".\venv\Scripts\python.exe" -PathType Leaf) {
+    $script:RepoPythonExe = (Resolve-Path ".\venv\Scripts\python.exe").Path
+}
 
 function Read-JsonFile {
     param([string]$Path)
@@ -62,7 +77,7 @@ function Invoke-RepoPython {
     )
     Write-Host ""
     Write-Host "=== $Label ==="
-    python @ArgsList
+    & $script:RepoPythonExe @ArgsList
 }
 
 $WorkflowJson = ".\output\validation\agent_review_full_toolbox_decision_loop_${Stamp}_workflow.json"
@@ -92,12 +107,14 @@ $RunnerParams = @{
     NpuMaxPromptChars = $NpuMaxPromptChars
     NpuMaxNewTokens = $NpuMaxNewTokens
     NpuFinalWaitSeconds = $NpuFinalWaitSeconds
+    NpuMicroStartMode = $NpuMicroStartMode
     MinRecommendations = $MinRecommendations
     MinPatchPlans = $MinPatchPlans
     RepositoryConsistencyMapWorkers = $RepositoryConsistencyMapWorkers
 }
 if ($RunGpuNpuProvider) { $RunnerParams.RunGpuNpuProvider = $true }
 if ($RequireProviderArtifacts) { $RunnerParams.RequireProviderArtifacts = $true }
+if ($RunLegacyNpuAuditorProvider) { $RunnerParams.RunLegacyNpuAuditorProvider = $true }
 if ($SkipMemoryReload) { $RunnerParams.SkipMemoryReload = $true }
 if ($SkipPostValidationPacket) { $RunnerParams.SkipPostValidationPacket = $true }
 if ($SkipSharedToolboxBundle) { $RunnerParams.SkipSharedToolboxBundle = $true }
@@ -107,6 +124,8 @@ Write-Host "Repo: $RepoRootPath"
 Write-Host "Stamp: $Stamp"
 Write-Host "RunGpuNpuProvider: $RunGpuNpuProvider"
 Write-Host "RequireProviderArtifacts: $RequireProviderArtifacts"
+Write-Host "RunLegacyNpuAuditorProvider: $RunLegacyNpuAuditorProvider"
+Write-Host "Python: $script:RepoPythonExe"
 Write-Host "Integration: base workflow + agent_review_warning_policy ledger"
 
 & .\Tools\workflow\run_agent_review_full_toolbox_decision_loop.ps1 @RunnerParams

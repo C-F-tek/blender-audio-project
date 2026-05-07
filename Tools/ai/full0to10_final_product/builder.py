@@ -32,6 +32,8 @@ def build_final_tool_product(
     request: str,
     no_external_probes: bool,
     timeout_seconds: int,
+    run_reports: list[str] | None = None,
+    run_artifacts: list[str] | None = None,
 ) -> dict[str, Any]:
     repo_root = repo_root.resolve()
     output_dir = ensure_dir(output_dir)
@@ -56,6 +58,7 @@ def build_final_tool_product(
     records = product_artifacts(effective_dir, quality_dir, accelerator_dir, governor_dir, invocation_dir, bridge_dir, track_dir, repo_root)
     evidence = build_evidence_index(repo_root, records)
     readiness = build_readiness(records, evidence)
+    run_product_evidence = build_run_product_evidence(repo_root, run_reports or [], run_artifacts or [])
 
     product_path = output_dir / PRODUCT_MARKDOWN
     evidence_path = output_dir / EVIDENCE_INDEX
@@ -63,7 +66,7 @@ def build_final_tool_product(
     manifest_path = output_dir / PRODUCT_MANIFEST
     readme_path = output_dir / README_NAME
 
-    product_path.write_text(render_product_markdown(request, evidence, readiness), encoding="utf-8")
+    product_path.write_text(render_product_markdown(request, evidence, readiness, run_product_evidence), encoding="utf-8")
     write_json(evidence_path, evidence)
     write_json(readiness_path, readiness)
 
@@ -84,6 +87,7 @@ def build_final_tool_product(
         "outputs": outputs,
         "evidence": evidence,
         "readiness": readiness,
+        "run_product_evidence": run_product_evidence,
         "track_input_contract": track_contract,
         "accelerator_control": accelerator_control,
         "provider_governor": provider_governor,
@@ -103,3 +107,30 @@ def build_final_tool_product(
     write_json(manifest_path, manifest)
     readme_path.write_text(render_readme(manifest), encoding="utf-8")
     return manifest
+
+
+def build_run_product_evidence(repo_root: Path, reports: list[str], artifacts: list[str]) -> dict[str, Any]:
+    def record(path_value: str) -> dict[str, Any]:
+        path = Path(path_value)
+        if not path.is_absolute():
+            path = repo_root / path
+        return {
+            "path": repo_relative(path, repo_root),
+            "exists": path.exists(),
+            "size_bytes": path.stat().st_size if path.exists() else 0,
+            "type": "markdown" if path.suffix.lower() == ".md" else "json" if path.suffix.lower() == ".json" else path.suffix.lower().lstrip("."),
+        }
+
+    report_records = [record(item) for item in reports]
+    artifact_records = [record(item) for item in artifacts]
+    missing = [item["path"] for item in report_records + artifact_records if not item["exists"]]
+    return {
+        "kind": "full0to10_final_tool_product_run_evidence",
+        "passed": not missing,
+        "report_count": len(report_records),
+        "artifact_count": len(artifact_records),
+        "missing_count": len(missing),
+        "missing": missing,
+        "reports": report_records,
+        "artifacts": artifact_records,
+    }
