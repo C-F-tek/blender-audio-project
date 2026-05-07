@@ -55,6 +55,24 @@ SUPPORTED_OPERATIONS = {
     "write_file",
 }
 
+DEFAULT_DISCOVER_SUGGESTION_ROOTS = (
+    "docs/LOCAL_VALIDATION_EVIDENCE",
+    "output/patch_specs",
+    "output/validation",
+    "output/ai_pipeline",
+    "output/ai_packets",
+)
+
+DEFAULT_DISCOVER_SUGGESTION_TOKENS = (
+    "patch_notes_quality_product",
+    "patch_suggestion",
+    "suggestion",
+    "proposal",
+    "recommendation",
+    "patch_plan",
+    "agent_review",
+)
+
 
 @dataclass
 class PatchOperation:
@@ -93,6 +111,22 @@ def current_branch(repo_root: Path) -> str:
 def git_status_short(repo_root: Path) -> str:
     """Return git status --short output."""
     return run_git(repo_root, "status", "--short")
+
+
+def split_values(values: list[str] | tuple[str, ...]) -> list[str]:
+    """Split repeatable/comma-separated CLI values while preserving order."""
+    out: list[str] = []
+    for value in values:
+        for part in str(value).split(","):
+            cleaned = part.strip()
+            if cleaned:
+                out.append(cleaned)
+    return out
+
+
+def repo_relative(path: Path, repo_root: Path) -> str:
+    """Return a normalized repository-relative path."""
+    return path.resolve().relative_to(repo_root.resolve()).as_posix()
 
 
 def is_safe_target(path: str) -> tuple[bool, str | None]:
@@ -206,6 +240,67 @@ def discover_operations(data: Any) -> tuple[list[PatchOperation], list[dict[str,
             )
 
     return operations, manual
+
+
+def discover_suggestion_reports(
+    repo_root: Path,
+    stamp: str | None,
+    roots: list[str],
+    tokens: list[str],
+    max_files: int,
+) -> tuple[list[str], list[dict[str, Any]]]:
+    """Discover local suggestion/proposal JSON reports by run stamp.
+
+    Discovery is read-only and accepts both Git-tracked evidence under docs and
+    local runtime reports under output. Returned paths are repository-relative.
+    """
+    if not stamp:
+        return [], []
+    normalized_tokens = [token.lower() for token in tokens if token]
+    discovered: list[tuple[float, str]] = []
+    scanned: list[dict[str, Any]] = []
+
+    for raw_root in roots:
+        root = (repo_root / raw_root).resolve()
+        scan_item = {
+            "root": raw_root.replace("\\", "/"),
+            "exists": root.exists(),
+            "json_candidates": 0,
+            "matched": 0,
+            "error": None,
+        }
+        if not root.exists():
+            scanned.append(scan_item)
+            continue
+        try:
+            root.relative_to(repo_root.resolve())
+        except ValueError:
+            scan_item["error"] = "root is outside repository"
+            scanned.append(scan_item)
+            continue
+
+        for path in root.rglob("*.json"):
+            scan_item["json_candidates"] += 1
+            rel = repo_relative(path, repo_root)
+            lower_rel = rel.lower()
+            if stamp.lower() not in lower_rel:
+                continue
+            if normalized_tokens and not any(token in lower_rel for token in normalized_tokens):
+                continue
+            discovered.append((path.stat().st_mtime, rel))
+            scan_item["matched"] += 1
+        scanned.append(scan_item)
+
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for _, rel in sorted(discovered, reverse=True):
+        if rel in seen:
+            continue
+        seen.add(rel)
+        deduped.append(rel)
+        if len(deduped) >= max_files:
+            break
+    return deduped, scanned
 
 
 def read_text(path: Path) -> str:
@@ -334,6 +429,24 @@ def parse_args() -> argparse.Namespace:
         default=[],
         help="Suggestion/proposal JSON path. Repeatable.",
     )
+    parser.add_argument(
+        "--suggestion-stamp",
+        default=None,
+        help="Run stamp used to discover local suggestion/proposal JSON reports.",
+    )
+    parser.add_argument(
+        "--discover-suggestion-root",
+        action="append",
+        default=[],
+        help="Root used with --suggestion-stamp. Repeatable or comma-separated.",
+    )
+    parser.add_argument(
+        "--discover-suggestion-token",
+        action="append",
+        default=[],
+        help="Filename/path token used with --suggestion-stamp. Repeatable or comma-separated.",
+    )
+    parser.add_argument("--discover-max-files", type=int, default=50)
     parser.add_argument("--output", default="output/validation/patch_suggestion_bundle_apply.json")
     parser.add_argument("--apply", action="store_true", help="Actually write source/doc files.")
     parser.add_argument("--allow-dirty", action="store_true", help="Allow applying with dirty git status.")
@@ -360,11 +473,29 @@ def main() -> int:
     if args.apply and status_before and not args.allow_dirty:
         errors.append("refusing --apply with dirty working tree; use --allow-dirty only for reviewed incremental fixes")
 
+    discover_roots = split_values(args.discover_suggestion_root) or list(DEFAULT_DISCOVER_SUGGESTION_ROOTS)
+    discover_tokens = split_values(args.discover_suggestion_token) or list(DEFAULT_DISCOVER_SUGGESTION_TOKENS)
+    discovered_reports, discovery_scan = discover_suggestion_reports(
+        repo_root,
+        args.suggestion_stamp,
+        discover_roots,
+        discover_tokens,
+        int(args.discover_max_files),
+    )
+
+    report_paths = split_values(args.suggestion_report)
+    for rel in discovered_reports:
+        if rel not in report_paths:
+            report_paths.append(rel)
+
+    if args.suggestion_stamp and not report_paths:
+        errors.append(f"no suggestion/proposal JSON reports found for stamp {args.suggestion_stamp!r}")
+
     loaded_reports: list[dict[str, Any]] = []
     operations: list[PatchOperation] = []
     manual_review: list[dict[str, Any]] = []
 
-    for raw_path in args.suggestion_report:
+    for raw_path in report_paths:
         path = (repo_root / raw_path).resolve()
         data, error = load_json(path)
         report_item = {
@@ -381,8 +512,8 @@ def main() -> int:
         operations.extend(discovered)
         manual_review.extend(manual)
 
-    if not args.suggestion_report:
-        warnings.append("no suggestion reports supplied")
+    if not report_paths:
+        warnings.append("no suggestion reports supplied or discovered")
 
     results = []
     if not errors:
@@ -400,6 +531,10 @@ def main() -> int:
         "repo_root": repo_root.as_posix(),
         "branch": branch,
         "apply_requested": bool(args.apply),
+        "suggestion_stamp": args.suggestion_stamp,
+        "discovered_report_count": len(discovered_reports),
+        "discovered_reports": discovered_reports,
+        "discovery_scan": discovery_scan,
         "provider_execution_performed": False,
         "blender_execution_performed": False,
         "ffmpeg_execution_performed": False,
