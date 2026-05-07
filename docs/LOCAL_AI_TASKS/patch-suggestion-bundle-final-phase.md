@@ -7,6 +7,11 @@ Scope: IA-Carmine full toolbox flow, patch suggestion application, local PR veri
 
 After the full toolbox run produces patch notes, telemetry and suggestion/proposal JSON, the final phase is allowed to apply only deterministic, reviewable patch operations on a dedicated PR branch.
 
+The primary product is the applied code/Markdown patch in the GitHub PR. Patch
+notes, telemetry, heap data and evidence are control surfaces: they prove why
+the patch is acceptable or why it fell back, but they are not the product by
+themselves.
+
 This phase is implemented by:
 
 ```text
@@ -92,6 +97,16 @@ No delete.
 No output/** target edits.
 No renders/** target edits.
 No indexAI/code_chunks/** or indexAI/project_code_chunks/** target edits.
+```
+
+Apply policy:
+
+```text
+apply is allowed only on a dedicated PR branch
+branch name must be CARMINEai/... and include the run $Stamp for uniqueness
+if the branch exists locally/remotely, the tool may reuse it
+otherwise the tool creates it
+master/main apply is always refused
 ```
 
 Natural-language suggestions and proposal-only `manual_patch_suggestion` items are not rewritten into code automatically. They are reported as `manual_review_required`.

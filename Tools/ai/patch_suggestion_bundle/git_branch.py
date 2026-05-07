@@ -47,6 +47,12 @@ def git_result(repo_root: Path, args: list[str]) -> dict[str, Any]:
     }
 
 
+def remote_branch_exists(repo_root: Path, remote: str, branch: str) -> bool:
+    """Return true when a remote branch already exists."""
+    result = git_result(repo_root, ["ls-remote", "--exit-code", "--heads", remote, branch])
+    return bool(result["ok"])
+
+
 def local_branch_exists(repo_root: Path, branch: str) -> bool:
     """Return true when a local branch already exists."""
     result = git_result(repo_root, ["show-ref", "--verify", "--quiet", f"refs/heads/{branch}"])
@@ -87,7 +93,24 @@ def create_review_branch(
         out["switched"] = True
         return out
     if local_branch_exists(repo_root, branch):
-        out["errors"].append(f"local branch already exists: {branch}")
+        result = git_result(repo_root, ["switch", branch])
+        out["commands"].append(result)
+        if result["ok"]:
+            out["switched"] = True
+            out["warnings"].append(f"reused existing local branch: {branch}")
+        else:
+            out["errors"].append(result["stderr"] or f"git switch failed for existing branch: {branch}")
+        out["status_after"] = git_status_short(repo_root)
+        return out
+    if remote_branch_exists(repo_root, "origin", branch):
+        result = git_result(repo_root, ["switch", "--track", f"origin/{branch}"])
+        out["commands"].append(result)
+        if result["ok"]:
+            out["switched"] = True
+            out["warnings"].append(f"reused existing remote branch: origin/{branch}")
+        else:
+            out["errors"].append(result["stderr"] or f"git switch --track failed for remote branch: {branch}")
+        out["status_after"] = git_status_short(repo_root)
         return out
     result = git_result(repo_root, ["switch", "-c", branch])
     out["commands"].append(result)

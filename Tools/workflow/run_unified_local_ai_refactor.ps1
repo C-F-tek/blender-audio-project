@@ -121,7 +121,8 @@ param(
     [string[]]$ReviewPrIncludePath = @(),
     [switch]$ReviewPrPush,
     [switch]$ReviewPrCreate,
-    [switch]$ReviewPrApplyDeterministicSuggestions
+    [switch]$ReviewPrApplyDeterministicSuggestions,
+    [switch]$BuildTaskPatchSuggestionReport
 )
 
 Set-StrictMode -Version Latest
@@ -1510,6 +1511,27 @@ if ($UseOllamaAdvisory -or (Test-ModeEnabled "provider")) {
     $PhaseReports.ollama_proposals = "output/ai_pipeline/$OllamaProposalBase.json"
 }
 
+if ($BuildTaskPatchSuggestionReport -or $ReviewPrApplyDeterministicSuggestions) {
+    $TaskSuggestionJson = "$ValidationDir/task_patch_suggestions_${ModeName}_$Stamp.json"
+    $TaskSuggestionMd = "$ValidationDir/task_patch_suggestions_${ModeName}_$Stamp.md"
+    $PhaseStatus.task_patch_suggestion_report = Invoke-Checked "Build task Markdown patch suggestion report" {
+        Invoke-Python @(
+            ".\Tools\ai\build_task_patch_suggestion_report.py",
+            "--repo-root", ".",
+            "--task-file", $TaskFile,
+            "--Stamp", $Stamp,
+            "--output", $TaskSuggestionJson,
+            "--markdown-output", $TaskSuggestionMd
+        )
+    } -SoftFail:$ContinueOnValidationError
+    if (Test-Path -LiteralPath $TaskSuggestionJson -PathType Leaf) {
+        $ReportFiles += $TaskSuggestionJson
+        $ContextFiles = Add-ExistingContextFile $ContextFiles $TaskSuggestionMd
+        $PhaseReports.task_patch_suggestions = $TaskSuggestionJson
+        $PhaseReports.task_patch_suggestions_markdown = $TaskSuggestionMd
+    }
+}
+
 if ($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) {
     $PatchSuggestionJson = "$ValidationDir/patch_suggestion_bundle_apply_${ModeName}_$Stamp.json"
     $PatchSuggestionArgs = @(
@@ -1649,6 +1671,7 @@ $Manifest = [ordered]@{
     review_pr_push_requested = [bool]$ReviewPrPush
     review_pr_create_requested = [bool]$ReviewPrCreate
     review_pr_apply_deterministic_suggestions = [bool]$ReviewPrApplyDeterministicSuggestions
+    task_patch_suggestion_report_requested = [bool]($BuildTaskPatchSuggestionReport -or $ReviewPrApplyDeterministicSuggestions)
     patch_application_requested = [bool]$ReviewPrApplyDeterministicSuggestions
     patch_application_performed = $false
     patch_specs_requested = [bool]($GeneratePatchSpecs -or (Test-ModeEnabled "patch_specs"))

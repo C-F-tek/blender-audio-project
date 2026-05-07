@@ -40,6 +40,18 @@ applied_count = 0
 source_writes_performed = false for the full-run evidence path
 ```
 
+The real final product is not telemetry. The primary product is:
+
+```text
+concrete patch suggestion from the task Markdown
+-> deterministic patch applied on a dedicated PR branch
+-> online GitHub PR with the applied code/MD change
+```
+
+Telemetry, heap, runtime usage, provider probes and evidence reports are
+secondary proof surfaces. They can support or reject a patch suggestion, but
+they do not close the product loop by themselves.
+
 The expected product-facing item is the NPU observability proposal only if it
 has all of:
 
@@ -71,9 +83,9 @@ No commit of renders/**.
 ```
 
 Provider execution is allowed only through the explicit Full0To10 command for
-this validation run. Patch application stays disabled unless
-`-ReviewPrApplyDeterministicSuggestions` is supplied and the product contains
-deterministic operations.
+this validation run. Patch application is allowed only on the dedicated PR
+branch for the current `$Stamp`, with `-ReviewPrApplyDeterministicSuggestions`,
+after the task Markdown supplies deterministic operations.
 
 ## Environment Note
 
@@ -112,6 +124,10 @@ never merge to master
 never force-push
 never stage output/**, generated code chunks, DBs, SQLite files or renders
 ```
+
+If the `CARMINEai/...$Stamp` branch already exists locally or remotely, the
+tool may reuse it. Otherwise it must create a new branch from the current
+review base. It must never apply on `master` or `main`.
 
 ## Review Questions
 
