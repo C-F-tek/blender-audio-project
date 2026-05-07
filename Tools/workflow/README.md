@@ -48,7 +48,6 @@ limitations are backlog to overcome, not reasons to skip available tools
 | Full-toolbox internals | `run_agent_review_full_toolbox_decision_loop.py` and packaged engine. |
 | Script family census | `docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md`. |
 | Source-code behavior map | `docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md`. |
-```
 
 Do not start a normal workflow from an internal helper unless the launcher/runbook explicitly delegates to that helper or the task is a focused tool validation.
 
