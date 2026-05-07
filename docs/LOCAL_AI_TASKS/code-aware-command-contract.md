@@ -34,7 +34,7 @@ Root docs should link here or to canonical runbooks instead of duplicating long 
 | `Tools/ai/build_full0to10_auto_refactor_plan.py` | `--markdown-output, --output, --patch-specs-output, --repo-root, --scan-root` |
 | `Tools/ai/build_full0to10_effective_use_optimization.py` | `--db, --no-external-probes, --output, --output-dir, --repo-root, --request, --timeout-seconds` |
 | `Tools/ai/build_full0to10_final_product_quality_package.py` | `--output, --output-dir, --run-root` |
-| `Tools/ai/build_full0to10_final_tool_product.py` | `--no-external-probes, --output, --output-dir, --repo-root, --request, --timeout-seconds` |
+| `Tools/ai/build_full0to10_final_tool_product.py` | `--no-external-probes, --output, --output-dir, --repo-root, --request, --run-artifact, --run-report, --timeout-seconds` |
 | `Tools/ai/build_full0to10_hardware_tool_capability.py` | `--markdown-output, --no-external-probes, --output, --repo-root, --timeout-seconds` |
 | `Tools/ai/build_full0to10_light_profile_promotion.py` | `--output, --output-dir, --run-report` |
 | `Tools/ai/build_full0to10_memory_visibility_assertion.py` | `--output, --output-dir, --repo-root` |
@@ -137,7 +137,7 @@ Root docs should link here or to canonical runbooks instead of duplicating long 
 | `Tools/validation/check_full0to10_generated_artifact_quarantine.py` | `--output, --repo-root` |
 | `Tools/validation/check_full_context_golden_docs_contract.py` | `--output, --repo-root` |
 | `Tools/validation/check_full_context_golden_proposals.py` | `--min-proposals, --output, --proposal, --repo-root` |
-| `Tools/validation/check_generated_artifact_path_policy.py` | `--allowed-exact-path, --allowed-prefix, --artifact-report, --output, --path, --repo-root` |
+| `Tools/validation/check_generated_artifact_path_policy.py` | `--allowed-exact-path, --allowed-prefix, --artifact-report, --markdown-output, --max-filename-chars, --max-repo-relative-path-chars, --output, --path, --repo-root` |
 | `Tools/validation/check_generated_blender_script_policy.py` | `--output, --path, --repo-root` |
 | `Tools/validation/check_generated_python_policy.py` | `--output, --path, --repo-root` |
 | `Tools/validation/check_github_evidence_bundle.py` | `--bundle, --output, --repo-root` |
@@ -236,6 +236,7 @@ Root docs should link here or to canonical runbooks instead of duplicating long 
 | `Tools/validation/run_substantive_planning_smoke.py` | `--markdown-output, --min-patch-plans, --min-recommendations, --min-substantive, --output, --patch-plan, --recommendations, --repo-root` |
 | `Tools/validation/run_unified_full0to10_supervisor_gate_smoke.py` | `--repo-root, --work-dir` |
 | `Tools/validation/run_unified_launcher_lightfull0to10_smoke.py` | `--repo-root` |
+| `Tools/workflow/run_agent_review_full_toolbox_decision_loop.py` | `--BudgetMinutes, --EvidenceDir, --FilesPerRound, --KeepAlive, --MaxCharsPerFile, --MaxContextFiles, --MaxNewTokens, --MaxPatchPlans, --MaxRecommendations, --MaxRounds, --MinPatchPlans, --MinRecommendations, --NpuAuditorEveryRounds, --NpuAuditorTimeoutSeconds, --NpuFinalWaitSeconds, --NpuMaxContextChars, --NpuMaxNewTokens, --NpuMaxPromptChars, --NpuMicroBrokerTimeoutSeconds, --NpuMicroTimeoutSeconds, --OutputRoot, --PowerShellExe, --RepoRoot, --RepositoryConsistencyMapWorkers, --RequireProviderArtifacts, --RunGpuNpuProvider, --RunLegacyNpuAuditorProvider, --SkipMemoryReload, --SkipPostValidationPacket, --SkipSharedToolboxBundle, --Stamp, --UseLegacyPowerShellImplementation` |
 | `Tools/workflow/ai_runtime_diagnostics.py` | `--json-out, --md-out, --track-stem` |
 | `Tools/workflow/smart_ai_context.py` | `--include-file, --max-capsule-chars, --max-packet-chars, --output-dir, --repo-root, --task, --track-stem` |
 | `Tools/workflow/startup_check.py` | `--json, --output, --project, --repo-root, --root, --text-output` |

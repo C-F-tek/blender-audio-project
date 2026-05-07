@@ -453,6 +453,41 @@ def collect_npu_declared_requests(orchestrator: dict[str, Any]) -> list[dict[str
             )
     return entries
 
+
+def collect_npu_micro_support_broker_entries(repo_root: Path, orchestrator: dict[str, Any]) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    for micro in safe_list(orchestrator.get("npu_micro_supports")):
+        if not isinstance(micro, dict):
+            continue
+        round_id = safe_int(micro.get("round"), -1)
+        brokers = [
+            ("provider_micro", safe_dict(micro.get("npu_runtime_tool_broker"))),
+            ("live_tool_seed", safe_dict(micro.get("npu_live_seed_runtime_tool_broker"))),
+        ]
+        for broker_source, broker in brokers:
+            if not broker:
+                continue
+            phase = (
+                "npu_micro_runtime_tool_broker_live"
+                if broker.get("executed_while_gpu1_active") is True
+                else "npu_micro_runtime_tool_broker"
+            )
+            broker_entries = collect_from_broker_report(
+                repo_root=repo_root,
+                broker_report=broker,
+                broker_path=str(broker.get("broker_output") or ""),
+                caller="npu",
+                phase=phase,
+                round_id=round_id if round_id >= 0 else None,
+            )
+            for entry in broker_entries:
+                entry["npu_micro_support_live"] = broker.get("executed_while_gpu1_active") is True
+                entry["npu_micro_support_status"] = micro.get("status")
+                entry["npu_micro_broker_source"] = broker_source
+            entries.extend(broker_entries)
+    return entries
+
+
 def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str, Any]) -> dict[str, Any]:
     gpu_round_count = safe_int(gpu_report.get('round_count'))
     gpu_provider_performed = bool(
@@ -464,6 +499,11 @@ def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str
     npu_success_count = safe_int(orchestrator.get('npu_audit_success_count'))
     npu_audit_count = safe_int(orchestrator.get('npu_audit_count'))
     npu_provider_performed = npu_success_count > 0
+    npu_micro_support_count = safe_int(orchestrator.get("npu_micro_support_count"))
+    npu_micro_support_success_count = safe_int(orchestrator.get("npu_micro_support_success_count"))
+    npu_micro_runtime_tool_execution_count = safe_int(orchestrator.get("npu_micro_runtime_tool_execution_count"))
+    npu_micro_runtime_tool_live_execution_count = safe_int(orchestrator.get("npu_micro_runtime_tool_live_execution_count"))
+    npu_micro_support_performed = bool(npu_micro_support_success_count > 0 or npu_micro_runtime_tool_execution_count > 0)
     degraded_reasons = []
     raw_reasons = orchestrator.get('provider_degraded_reasons')
     if isinstance(raw_reasons, list):
@@ -476,7 +516,11 @@ def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str
             f"classification={gpu_report.get('classification')};"
             f"passed={gpu_report.get('passed')}"
         )
-    if orchestrator.get('npu_lane_mode') in {'skipped', 'metadata_only', 'degraded'} and npu_success_count == 0:
+    if (
+        orchestrator.get('npu_lane_mode') in {'skipped', 'metadata_only', 'degraded'}
+        and npu_success_count == 0
+        and not npu_micro_support_performed
+    ):
         degraded_reasons.append(
             'npu_auditor_not_confirmed:'
             f"audit_count={npu_audit_count};success_count={npu_success_count};"
@@ -491,6 +535,11 @@ def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str
         'npu_provider_execution_performed': npu_provider_performed,
         'npu_audit_count': npu_audit_count,
         'npu_audit_success_count': npu_success_count,
+        'npu_micro_support_performed': npu_micro_support_performed,
+        'npu_micro_support_count': npu_micro_support_count,
+        'npu_micro_support_success_count': npu_micro_support_success_count,
+        'npu_micro_runtime_tool_execution_count': npu_micro_runtime_tool_execution_count,
+        'npu_micro_runtime_tool_live_execution_count': npu_micro_runtime_tool_live_execution_count,
         'npu_lane_mode': orchestrator.get('npu_lane_mode'),
         'provider_degraded_reasons': degraded_reasons,
     }
@@ -629,6 +678,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     warnings.extend(explicit_broker_warnings)
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('gpu_runtime_tool_results'), 'gpu', 'gpu_runtime_tool_broker'))
     entries.extend(collect_broker_pointer_entries(repo_root, orchestrator.get('npu_runtime_tool_results'), 'npu', 'npu_runtime_tool_broker'))
+    entries.extend(collect_npu_micro_support_broker_entries(repo_root, orchestrator))
     entries.extend(collect_gpu_declared_requests(gpu_report))
     entries.extend(collect_npu_declared_requests(orchestrator))
     declared_counters = extract_declared_runtime_tool_counters(gpu_report, gpu_npu_sync)

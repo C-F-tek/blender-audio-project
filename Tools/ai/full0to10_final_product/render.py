@@ -4,7 +4,12 @@ from __future__ import annotations
 from typing import Any
 
 
-def render_product_markdown(request: str, evidence: dict[str, Any], readiness: dict[str, Any]) -> str:
+def render_product_markdown(
+    request: str,
+    evidence: dict[str, Any],
+    readiness: dict[str, Any],
+    run_product_evidence: dict[str, Any] | None = None,
+) -> str:
     lines = [
         "# Full0To10 final tool product",
         "",
@@ -21,6 +26,21 @@ def render_product_markdown(request: str, evidence: dict[str, Any], readiness: d
     ]
     for role, record in evidence["artifacts"].items():
         lines.append(f"- `{role}` exists=`{record['exists']}` path=`{record['path']}`")
+    if run_product_evidence:
+        lines.extend(
+            [
+                "",
+                "## Current run product evidence",
+                "",
+                f"- Passed: `{run_product_evidence.get('passed')}`",
+                f"- Report count: `{run_product_evidence.get('report_count')}`",
+                f"- Artifact count: `{run_product_evidence.get('artifact_count')}`",
+                f"- Missing count: `{run_product_evidence.get('missing_count')}`",
+                "",
+            ]
+        )
+        for record in run_product_evidence.get("reports", [])[:20]:
+            lines.append(f"- report `{record['path']}` exists=`{record['exists']}`")
     lines.extend(
         [
             "",

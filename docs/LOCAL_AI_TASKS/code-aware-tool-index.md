@@ -132,8 +132,9 @@ Do not edit by hand when code changes; regenerate from the report.
 
 | Path | Lines | Parameters |
 |---|---:|---|
+| `Tools/workflow/run_agent_review_full_toolbox_decision_loop/main.ps1` | 1650 | `-BudgetMinutes, -EvidenceDir, -FilesPerRound, -KeepAlive, -MaxCharsPerFile, -MaxContextFiles, -MaxNewTokens, -MaxPatchPlans, -MaxRecommendations, -MaxRounds, -MinPatchPlans, -MinRecommendations, -N...` |
 | `Tools/workflow/run_unified_local_ai_refactor.ps1` | 1386 | `-AgentStateMaxMemoryChars, -AiPacketsDir, -AiPacketsRoot, -AllowDirty, -ApplyReset, -BudgetMinutes, -BuildEvidence, -BuildWorkloadQualityReport, -ConfirmResetText, -ContextPackMaxFileChars, -Contex...` |
-| `Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1` | 1033 | `-BudgetMinutes, -EvidenceDir, -FilesPerRound, -KeepAlive, -MaxCharsPerFile, -MaxContextFiles, -MaxNewTokens, -MaxPatchPlans, -MaxRecommendations, -MaxRounds, -MinPatchPlans, -MinRecommendations, -N...` |
+| `Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1` | 65 | `-BudgetMinutes, -EvidenceDir, -FilesPerRound, -KeepAlive, -MaxCharsPerFile, -MaxContextFiles, -MaxNewTokens, -MaxPatchPlans, -MaxRecommendations, -MaxRounds, -MinPatchPlans, -MinRecommendations, -N...` |
 | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | 609 | `-AgentStateBasename, -AgentStateMaxMemoryChars, -AgentStateObjective, -Basename, -BuildAgentStatePacket, -BuildContextPack, -BuildEnrichmentPlan, -BuildEvidence, -BuildSelectedChunksEvidence, -Buil...` |
 | `Tools/workflow/run_ai_cycle_startup_preflight.ps1` | 401 | `-EnableNpuProviderEnvironmentCheck, -EvidenceDir, -ExtraArtifact, -ExtraReport, -InputAuditReport, -MaxIncludedArtifactChars, -MaxIncludedArtifacts, -Objective, -OutputRoot, -RepoRoot, -SkipCodeInt...` |
 | `Tools/workflow/run_full_memory_tool_regeneration.ps1` | 375 | `-ClearOperational, -EvidenceDir, -MaxIncludedArtifactChars, -MaxIncludedArtifacts, -Objective, -OutputRoot, -Profile, -RepoRoot, -SkipBroker, -SkipBundle, -SkipCodeInterpreter, -Stamp, -TimeoutSeconds` |
@@ -149,6 +150,16 @@ Do not edit by hand when code changes; regenerate from the report.
 | `Tools/workflow/run_post_validation_ai_packet.ps1` | 168 | `-Basename, -ContextFile, -MaxContextChars, -Model, -OutputDir, -Profile, -ProposalBasename, -RepoRoot, -ReportFile, -UseOllama, -UsePrimaryAdvisoryProvider` |
 | `Tools/workflow/run_parallel_ai_provider_multistep.ps1` | 162 | `-Basename, -ContextFile, -EvidenceBasename, -MaxContextChars, -Model, -OutputDir, -Profile, -ProposalBasename, -RepoRoot, -ReportFile, -RunNpuDecodeSmoke, -RunNpuProbe, -RunOllamaProbe, -UsePrimary...` |
 | `Tools/git/auto_push_generated_artifacts.ps1` | 135 | `-DryRun, -IncludeFullAnalysisJson, -Message, -NoPush, -Paths, -RepoPath` |
+
+## Python workflow package
+
+| Path | Lines | Role |
+|---|---:|---|
+| `Tools/workflow/run_agent_review_full_toolbox_decision_loop.py` | 120 | Public CLI-preserving Python entrypoint; legacy PowerShell requires explicit fallback flag. |
+| `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_engine.py` | 105 | Static foundation and phase sequencing. |
+| `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_mesh.py` | 203 | GPU1/GPU0/NPU live provider mesh and runtime heap/broker coordination. |
+| `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_product.py` | 299 | Decision loop, final local AI product, bundle, telemetry, semantic chunks and path-length policy. |
+| `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_support.py` | 274 | Shared execution helpers, path map and compact artifact stamp generation. |
 | `Tools/workflow/run_unified_full0to10_quality_supervisor.ps1` | 113 | `-AllowGitSyncBranching, -ForwardedArgs, -Model, -NoBranch, -NoExternalProbes, -OutputDir, -PatchSpecs, -RepoRoot, -RunIntensity, -RunLauncher, -SkipGitSync, -SkipLauncher` |
 | `Tools/workflow/repair_full_toolbox_datastamp_doc.ps1` | 110 | `-DocPath` |
 | `Tools/workflow/run_full0to10_repo_quality_packet.ps1` | 101 | `-AllowOutputOutsideOutput, -DiagnosticsOnly, -InputPath, -MaxFiles, -OutputDir, -OutputFile, -RepoRoot, -Request, -Tool, -WriteOutput` |

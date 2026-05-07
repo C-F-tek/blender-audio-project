@@ -48,7 +48,7 @@ tool output should become verifiable product/evidence/readiness material, not ch
 | Patch planning/spec support | `build_agent_review_patch_plan.py`, `build_patch_specs_from_proposals.py`, `promote_patch_spec_draft.py` | Review-only unless explicit apply is authorized separately. |
 | Runtime broker/telemetry | `agent_runtime_tool_broker.py`, `build_runtime_tool_usage_telemetry.py` | Records executed/failed/blocked tool calls. |
 | Capability and telemetry summary | capability manifest packages/builders, `build_full_toolbox_run_telemetry_summary.py` | Handoff context for available tools/hardware lanes and run state. |
-| Final tool product | `build_full0to10_final_tool_product.py`, `full0to10_final_product/*` | Aggregates contract/governor/invocation/bridge/effective-use/quality evidence into product/evidence/readiness outputs. |
+| Final tool product | `build_full0to10_final_tool_product.py`, `full0to10_final_product/*` | Aggregates contract/governor/invocation/bridge/effective-use/quality evidence into product/evidence/readiness outputs and can index current-run reports/artifacts. |
 | Production bundle | `build_shared_toolbox_ai_to_ai_bundle.py` | AI-to-AI evidence/telemetry/patch-plan handoff. |
 | Evidence bundles | `build_github_evidence_bundle.py`, full-run bundle ZIP tools | Compact GitHub evidence only; raw `output/**` stays ignored. |
 
@@ -66,7 +66,7 @@ effective-use optimization summary
 quality gate
 ```
 
-It writes a product Markdown, evidence index, readiness JSON, manifest and README. This supports the project idea that the toolbox should produce inspectable tool products with readiness/evidence, not only advisory prose.
+It writes a product Markdown, evidence index, readiness JSON, manifest and README. The builder accepts `--run-report` and `--run-artifact` inputs so production workflows can attach the current stamp's mesh, telemetry, broker and patch-plan evidence to the final product. This supports the project idea that the toolbox should produce inspectable tool products with readiness/evidence, not only advisory prose.
 
 ## Full-run handoff rule
 

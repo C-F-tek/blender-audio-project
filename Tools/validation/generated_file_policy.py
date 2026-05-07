@@ -72,6 +72,8 @@ class PathPolicy:
 
     allowed_prefixes: tuple[str, ...]
     allowed_exact_paths: tuple[str, ...] = ()
+    max_repo_relative_path_chars: int | None = None
+    max_filename_chars: int | None = None
 
 
 @dataclass
@@ -196,6 +198,22 @@ def evaluate_generated_artifact_path(repo_root: Path, artifact_path: Path, polic
                 rule_id="path_not_allowed",
                 severity="error",
                 message=f"Generated artifact path is not in an allowed destination: {relative}",
+            )
+        )
+    if relative and policy.max_repo_relative_path_chars and len(relative) > policy.max_repo_relative_path_chars:
+        findings.append(
+            PolicyFinding(
+                rule_id="repo_relative_path_too_long",
+                severity="error",
+                message=f"Generated artifact path is {len(relative)} chars; max allowed is {policy.max_repo_relative_path_chars}: {relative}",
+            )
+        )
+    if relative and policy.max_filename_chars and len(Path(relative).name) > policy.max_filename_chars:
+        findings.append(
+            PolicyFinding(
+                rule_id="filename_too_long",
+                severity="error",
+                message=f"Generated artifact filename is {len(Path(relative).name)} chars; max allowed is {policy.max_filename_chars}: {Path(relative).name}",
             )
         )
 

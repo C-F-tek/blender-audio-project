@@ -23,6 +23,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--request", default=DEFAULT_REQUEST)
     parser.add_argument("--no-external-probes", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=8)
+    parser.add_argument("--run-report", action="append", default=[])
+    parser.add_argument("--run-artifact", action="append", default=[])
     parser.add_argument("--output")
     return parser.parse_args()
 
@@ -35,6 +37,8 @@ def main() -> int:
         args.request,
         no_external_probes=bool(args.no_external_probes),
         timeout_seconds=args.timeout_seconds,
+        run_reports=args.run_report,
+        run_artifacts=args.run_artifact,
     )
     text = json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
     if args.output:

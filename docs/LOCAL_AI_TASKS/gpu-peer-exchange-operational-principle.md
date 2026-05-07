@@ -74,6 +74,8 @@ GPU1 sees NPU support signal and NPU broker results when present
 GPU0 sees GPU1 primary advisory and deterministic source reports
 NPU starts from orchestrator round_000 and then sees GPU1/GPU0/broker context as read-only input
 runtime broker remains visible as the only tool execution channel
+NPU micro broker requests are executed during live harvest when the micro-support process finishes while GPU1 is still active
+NPU launch also creates one broker-controlled live tool seed so short GPU1 runs receive NPU-lane tool evidence before the slower NPU provider returns
 ```
 
 The NPU lane is allowed to be slow, empty, timed out or dependency-degraded. That state must be classified and surfaced, but it must remain non-blocking when the NPU still supplies deterministic fallback/tool-support requests or when deterministic scripts already provide heavy audit authority.
@@ -133,6 +135,7 @@ Markdown task input
        GPU1/Ollama primary advisory process
        GPU0/OpenVINO peer support round_000
        NPU/OpenVINO micro support round_000
+       NPU live tool-seed broker evidence
        deterministic/broker bootstrap tools
   -> GPU1 checkpoints drive additional GPU0/NPU micro-support where enabled
   -> GPU1/Ollama primary advisory report
@@ -144,7 +147,9 @@ Markdown task input
   -> provider runtime heap broker results
   -> NPU micro peer assistant over GPU1/GPU0/broker/runtime-heap context
   -> provider runtime heap NPU support signal
-  -> NPU runtime broker tool requests
+  -> NPU runtime broker tool requests during live harvest when available
+  -> provider runtime heap NPU broker results before final telemetry/bundle
+  -> generated artifact path policy for push-safe bundle names
   -> AI peer-exchange report
   -> peer-exchange contract
   -> Full0To10 provider acceptance gate
@@ -163,6 +168,8 @@ Tools/ai/build_provider_runtime_heap_telemetry.py
 Tools/validation/check_ai_peer_exchange_contract.py
 Tools/validation/check_full0to10_provider_acceptance.py
 Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1
+Tools/workflow/run_agent_review_full_toolbox_decision_loop.py
+Tools/workflow/run_agent_review_full_toolbox_decision_loop/main.ps1
 Tools/workflow/run_unified_local_ai_refactor.ps1
 Tools/ai/build_full_toolbox_run_telemetry_summary.py
 Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
@@ -207,7 +214,7 @@ deterministic_baseline -> GPU1/Ollama primary advisory
 GPU1 -> GPU0/OpenVINO peer task packet
 GPU0 -> runtime broker -> GPU1/GPU0 read-only context
 GPU1/GPU0/broker context -> NPU/OpenVINO micro support
-NPU -> runtime broker -> final context
+NPU -> runtime broker -> live heap context -> final context
 provider_broker_loop -> peer_exchange_contract -> telemetry -> shared AI-to-AI bundle -> review-only patch bundle
 ```
 

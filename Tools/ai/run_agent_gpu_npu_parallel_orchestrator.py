@@ -39,11 +39,13 @@ ROUND_RE = re.compile(r"round_(\d{3})\.json$")
 
 try:
     from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap
+    from Tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap  # type: ignore
+    from Tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
 
 ORCHESTRATOR_RUNTIME_TOOL_BOOTSTRAP_REQUESTS: list[dict[str, object]] = [
     {"id": "orchestrator_bootstrap_tool_inventory", "tool": "build_agent_agnostic_tool_inventory", "reason": "Bootstrap shared runtime tool inventory before GPU/NPU orchestration.", "args": {}},
@@ -377,6 +379,9 @@ def build_gpu_command(args: argparse.Namespace, repo_root: Path, checkpoint_dir:
     bootstrap_report = getattr(args, "orchestrator_runtime_tool_bootstrap_result", {})
     if args.enable_runtime_tool_broker and isinstance(bootstrap_report, dict) and bootstrap_report.get("broker_output"):
         command.extend(["--report-file", str(bootstrap_report["broker_output"])])
+    if args.enable_runtime_tool_broker and getattr(args, "runtime_heap_snapshot", ""):
+        command.extend(["--live-context-report", str(args.runtime_heap_snapshot)])
+        command.append("--refresh-live-context-each-round")
     for report_file in args.report_file:
         command.extend(["--report-file", report_file])
     for context_root in args.context_root:
@@ -712,22 +717,21 @@ def launch_npu_micro_support(
     command = build_npu_micro_support_command(args, repo_root, source_report, output_json, round_id)
     process = run_command_async(command, repo_root)
     active_supports[round_id] = process
-    support_records.append(
-        {
-            "round": round_id,
-            "source_report": repo_rel(source_report, repo_root),
-            "audit_output": repo_rel(output_json, repo_root),
-            "audit_markdown": repo_rel(output_json.with_suffix(".md"), repo_root),
-            "started_at": now_iso(),
-            "status": "running",
-            "command": command,
-            "launched_while_gpu1_active": bool(gpu1_active),
-            "provider_execution_requested": True,
-            "provider_execution_performed": False,
-            "non_blocking": True,
-            "micro_transaction": True,
-        }
-    )
+    record = {
+        "round": round_id,
+        "source_report": repo_rel(source_report, repo_root),
+        "audit_output": repo_rel(output_json, repo_root),
+        "audit_markdown": repo_rel(output_json.with_suffix(".md"), repo_root),
+        "started_at": now_iso(),
+        "status": "running",
+        "command": command,
+        "launched_while_gpu1_active": bool(gpu1_active),
+        "provider_execution_requested": True,
+        "provider_execution_performed": False,
+        "non_blocking": True,
+        "micro_transaction": True,
+    }
+    support_records.append(record)
     append_runtime_heap_event(
         args=args,
         repo_root=repo_root,
@@ -747,6 +751,14 @@ def launch_npu_micro_support(
             "direct_tool_execution": False,
             "provider_lane": "OpenVINO NPU",
         },
+    )
+    execute_npu_micro_live_tool_seed(
+        args=args,
+        repo_root=repo_root,
+        round_id=round_id,
+        record=record,
+        warnings=warnings,
+        gpu1_active=gpu1_active,
     )
     return True
 
@@ -794,6 +806,7 @@ def harvest_finished_npu_micro_supports(
     active_supports: dict[int, subprocess.Popen[str]],
     support_records: list[dict[str, Any]],
     warnings: list[str],
+    gpu1_active: bool = False,
 ) -> None:
     for round_id, process in list(active_supports.items()):
         if process.poll() is None:
@@ -892,6 +905,13 @@ def harvest_finished_npu_micro_supports(
                     "broker_required": True,
                 },
             )
+        execute_npu_micro_runtime_tool_broker(
+            args=args,
+            repo_root=repo_root,
+            micro=record,
+            warnings=warnings,
+            gpu1_active=gpu1_active,
+        )
         active_supports.pop(round_id, None)
 
 
@@ -1009,6 +1029,144 @@ def run_npu_runtime_tool_broker_for_audit(
         "tool_results": broker_report.get("tool_results", [])[:8],
         "guardrails": broker_report.get("guardrails", {}),
     }
+
+
+def append_npu_micro_broker_result_events(
+    *,
+    args: argparse.Namespace,
+    repo_root: Path,
+    micro: dict[str, Any],
+    broker: dict[str, Any],
+    warnings: list[str],
+) -> None:
+    round_id = record_round_id(micro)
+    append_runtime_heap_event(
+        args=args,
+        repo_root=repo_root,
+        warnings=warnings,
+        source="broker",
+        target="npu",
+        event_type="broker_result",
+        round_id=round_id,
+        correlation_id=f"{getattr(args, 'runtime_heap_stamp', '')}:npu-micro-broker-{round_id:03d}",
+        payload={
+            "summary": "Broker executed deterministic tools for NPU micro support.",
+            "round": micro.get("round"),
+            "tool_execution_count": broker.get("tool_execution_count"),
+            "failed_tool_count": broker.get("failed_tool_count"),
+            "blocked_tool_count": broker.get("blocked_tool_count"),
+            "broker_output": broker.get("broker_output"),
+            "executed_while_gpu1_active": broker.get("executed_while_gpu1_active"),
+            "direct_execution": False,
+        },
+    )
+    requests = micro.get("npu_tool_requests", [])
+    for request in requests if isinstance(requests, list) else []:
+        if not isinstance(request, dict):
+            continue
+        request_id = str(request.get("id") or request.get("request_id") or "")
+        if not request_id:
+            continue
+        append_runtime_heap_event(
+            args=args,
+            repo_root=repo_root,
+            warnings=warnings,
+            source="broker",
+            target="npu",
+            event_type="broker_result",
+            round_id=round_id,
+            correlation_id=request_id,
+            payload={
+                "summary": "Broker completed one NPU micro-support tool request.",
+                "request_id": request_id,
+                "tool": request.get("tool"),
+                "round": micro.get("round"),
+                "broker_output": broker.get("broker_output"),
+                "tool_execution_count": broker.get("tool_execution_count"),
+                "failed_tool_count": broker.get("failed_tool_count"),
+                "blocked_tool_count": broker.get("blocked_tool_count"),
+                "executed_while_gpu1_active": broker.get("executed_while_gpu1_active"),
+                "direct_execution": False,
+            },
+        )
+
+
+def execute_npu_micro_runtime_tool_broker(
+    *,
+    args: argparse.Namespace,
+    repo_root: Path,
+    micro: dict[str, Any],
+    warnings: list[str],
+    gpu1_active: bool,
+) -> None:
+    if not micro.get("npu_tool_requests") or micro.get("npu_runtime_tool_broker"):
+        return
+    micro["npu_runtime_tool_broker"] = run_npu_runtime_tool_broker_for_audit(
+        args=args,
+        repo_root=repo_root,
+        audit_record=micro,
+    )
+    broker = micro["npu_runtime_tool_broker"]
+    broker["executed_while_gpu1_active"] = bool(gpu1_active)
+    micro["npu_runtime_tool_broker_executed_while_gpu1_active"] = bool(gpu1_active)
+    micro["npu_runtime_tool_broker_completed_at"] = now_iso()
+    if broker.get("error"):
+        warnings.append(f"NPU micro runtime tool broker round {micro.get('round')}: {broker.get('error')}")
+    if broker.get("returncode") not in (None, 0):
+        warnings.append(f"NPU micro runtime tool broker round {micro.get('round')}: returncode={broker.get('returncode')}")
+    if broker.get("executed"):
+        append_npu_micro_broker_result_events(
+            args=args,
+            repo_root=repo_root,
+            micro=micro,
+            broker=broker,
+            warnings=warnings,
+        )
+        write_runtime_heap_snapshot(args=args, repo_root=repo_root, warnings=warnings)
+
+
+def execute_npu_micro_live_tool_seed(
+    *,
+    args: argparse.Namespace,
+    repo_root: Path,
+    round_id: int,
+    record: dict[str, Any],
+    warnings: list[str],
+    gpu1_active: bool,
+) -> None:
+    if not getattr(args, "enable_runtime_tool_broker", False):
+        return
+    if getattr(args, "npu_micro_live_tool_seeded", False):
+        return
+    requests = deterministic_fallback_tool_requests(
+        "NPU micro provider is non-blocking and may finish after GPU1; seed broker-controlled micro evidence while GPU1 is active.",
+        max_requests=min(3, max(1, int(getattr(args, "npu_micro_support_max_tool_requests", 3) or 3))),
+    )
+    for index, request in enumerate(requests, start=1):
+        request["id"] = f"npu_live_seed_{round_id:03d}_{index:03d}_{request.get('id')}"
+        request["source"] = "npu_micro_live_tool_seed"
+        request["reason"] = f"NPU live micro-tool seed: {request.get('reason')}"
+    micro = {
+        "round": -1,
+        "source_round": round_id,
+        "npu_micro_live_tool_seed": True,
+        "launched_while_gpu1_active": bool(gpu1_active),
+        "npu_tool_requests": requests,
+        "npu_tool_request_count": len(requests),
+        "npu_deterministic_tool_fallback_used": True,
+        "npu_deterministic_tool_fallback_count": len(requests),
+    }
+    execute_npu_micro_runtime_tool_broker(
+        args=args,
+        repo_root=repo_root,
+        micro=micro,
+        warnings=warnings,
+        gpu1_active=gpu1_active,
+    )
+    record["npu_live_seed_runtime_tool_broker"] = micro.get("npu_runtime_tool_broker", {})
+    record["npu_live_seed_runtime_tool_broker_executed_while_gpu1_active"] = bool(gpu1_active)
+    record["npu_live_seed_tool_request_count"] = len(requests)
+    setattr(args, "npu_micro_live_tool_seeded", True)
 
 
 def build_npu_command(args: argparse.Namespace, repo_root: Path, checkpoint: Path, audit_json: Path) -> list[str]:
@@ -1470,7 +1628,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
                 audit_records=audit_records,
             )
             harvest_finished_gpu0_peer_supports(args=args, repo_root=repo_root, active_supports=active_gpu0_supports, support_records=gpu0_support_records, warnings=warnings)
-            harvest_finished_npu_micro_supports(args=args, repo_root=repo_root, active_supports=active_npu_micro_supports, support_records=npu_micro_support_records, warnings=warnings)
+            harvest_finished_npu_micro_supports(args=args, repo_root=repo_root, active_supports=active_npu_micro_supports, support_records=npu_micro_support_records, warnings=warnings, gpu1_active=True)
             harvest_finished_audits(repo_root=repo_root, active_audits=active_audits, audit_records=audit_records)
             time.sleep(args.poll_seconds)
     except KeyboardInterrupt:
@@ -1521,7 +1679,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
     )
     while (active_gpu0_supports or active_npu_micro_supports or active_audits) and time.perf_counter() < close_deadline:
         harvest_finished_gpu0_peer_supports(args=args, repo_root=repo_root, active_supports=active_gpu0_supports, support_records=gpu0_support_records, warnings=warnings)
-        harvest_finished_npu_micro_supports(args=args, repo_root=repo_root, active_supports=active_npu_micro_supports, support_records=npu_micro_support_records, warnings=warnings)
+        harvest_finished_npu_micro_supports(args=args, repo_root=repo_root, active_supports=active_npu_micro_supports, support_records=npu_micro_support_records, warnings=warnings, gpu1_active=False)
         harvest_finished_audits(repo_root=repo_root, active_audits=active_audits, audit_records=audit_records)
         time.sleep(args.poll_seconds)
     terminated_gpu0_rounds: set[int] = set()
@@ -1540,7 +1698,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         terminated_npu_audit_rounds.add(round_id)
         warnings.append(f"NPU audit round {round_id} terminated after final wait budget")
     harvest_finished_gpu0_peer_supports(args=args, repo_root=repo_root, active_supports=active_gpu0_supports, support_records=gpu0_support_records, warnings=warnings)
-    harvest_finished_npu_micro_supports(args=args, repo_root=repo_root, active_supports=active_npu_micro_supports, support_records=npu_micro_support_records, warnings=warnings)
+    harvest_finished_npu_micro_supports(args=args, repo_root=repo_root, active_supports=active_npu_micro_supports, support_records=npu_micro_support_records, warnings=warnings, gpu1_active=False)
     harvest_finished_audits(repo_root=repo_root, active_audits=active_audits, audit_records=audit_records)
     for record in gpu0_support_records:
         round_id = record_round_id(record)
@@ -1620,65 +1778,13 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
                 warnings.append(f"NPU runtime tool broker round {audit.get('round')}: returncode={broker.get('returncode')}")
 
     for micro in npu_micro_support_records:
-        if micro.get("npu_tool_requests") and not micro.get("npu_runtime_tool_broker"):
-            micro["npu_runtime_tool_broker"] = run_npu_runtime_tool_broker_for_audit(
-                args=args,
-                repo_root=repo_root,
-                audit_record=micro,
-            )
-            broker = micro["npu_runtime_tool_broker"]
-            if broker.get("error"):
-                warnings.append(f"NPU micro runtime tool broker round {micro.get('round')}: {broker.get('error')}")
-            if broker.get("returncode") not in (None, 0):
-                warnings.append(f"NPU micro runtime tool broker round {micro.get('round')}: returncode={broker.get('returncode')}")
-            if broker.get("executed"):
-                round_id = record_round_id(micro)
-                append_runtime_heap_event(
-                    args=args,
-                    repo_root=repo_root,
-                    warnings=warnings,
-                    source="broker",
-                    target="npu",
-                    event_type="broker_result",
-                    round_id=round_id,
-                    correlation_id=f"{getattr(args, 'runtime_heap_stamp', '')}:npu-micro-broker-{round_id:03d}",
-                    payload={
-                        "summary": "Broker executed deterministic tools for NPU micro support.",
-                        "round": micro.get("round"),
-                        "tool_execution_count": broker.get("tool_execution_count"),
-                        "failed_tool_count": broker.get("failed_tool_count"),
-                        "blocked_tool_count": broker.get("blocked_tool_count"),
-                        "broker_output": broker.get("broker_output"),
-                        "direct_execution": False,
-                    },
-                )
-                for request in micro.get("npu_tool_requests", []) if isinstance(micro.get("npu_tool_requests"), list) else []:
-                    if not isinstance(request, dict):
-                        continue
-                    request_id = str(request.get("id") or request.get("request_id") or "")
-                    if not request_id:
-                        continue
-                    append_runtime_heap_event(
-                        args=args,
-                        repo_root=repo_root,
-                        warnings=warnings,
-                        source="broker",
-                        target="npu",
-                        event_type="broker_result",
-                        round_id=round_id,
-                        correlation_id=request_id,
-                        payload={
-                            "summary": "Broker completed one NPU micro-support tool request.",
-                            "request_id": request_id,
-                            "tool": request.get("tool"),
-                            "round": micro.get("round"),
-                            "broker_output": broker.get("broker_output"),
-                            "tool_execution_count": broker.get("tool_execution_count"),
-                            "failed_tool_count": broker.get("failed_tool_count"),
-                            "blocked_tool_count": broker.get("blocked_tool_count"),
-                            "direct_execution": False,
-                        },
-                    )
+        execute_npu_micro_runtime_tool_broker(
+            args=args,
+            repo_root=repo_root,
+            micro=micro,
+            warnings=warnings,
+            gpu1_active=False,
+        )
 
     gpu_runtime_tool_brokers = execute_gpu_runtime_tool_requests_from_report(
         args=args,
@@ -1722,12 +1828,37 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
     npu_micro_support_overlap_count = sum(1 for item in npu_micro_support_records if item.get("launched_while_gpu1_active") is True)
     npu_micro_support_tool_request_count = sum(int(item.get("npu_tool_request_count") or 0) for item in npu_micro_support_records)
     npu_micro_support_deterministic_tool_fallback_count = sum(int(item.get("npu_deterministic_tool_fallback_count") or 0) for item in npu_micro_support_records)
-    npu_micro_runtime_brokers = [item.get("npu_runtime_tool_broker", {}) for item in npu_micro_support_records if item.get("npu_runtime_tool_broker")]
+    npu_micro_live_seed_brokers = [
+        item.get("npu_live_seed_runtime_tool_broker", {})
+        for item in npu_micro_support_records
+        if item.get("npu_live_seed_runtime_tool_broker")
+    ]
+    npu_micro_live_tool_seed_count = len(npu_micro_live_seed_brokers)
+    npu_micro_runtime_brokers = [
+        item.get("npu_runtime_tool_broker", {})
+        for item in npu_micro_support_records
+        if item.get("npu_runtime_tool_broker")
+    ] + npu_micro_live_seed_brokers
     npu_micro_runtime_tool_request_count = sum(int(item.get("requested_tool_count") or 0) for item in npu_micro_runtime_brokers)
     npu_micro_runtime_tool_execution_count = sum(int(item.get("tool_execution_count") or 0) for item in npu_micro_runtime_brokers)
     npu_micro_runtime_tool_failed_count = sum(int(item.get("failed_tool_count") or 0) for item in npu_micro_runtime_brokers)
     npu_micro_runtime_tool_blocked_count = sum(int(item.get("blocked_tool_count") or 0) for item in npu_micro_runtime_brokers)
     npu_micro_runtime_tool_result_count = sum(len(item.get("tool_results", [])) for item in npu_micro_runtime_brokers)
+    npu_micro_runtime_tool_live_request_count = sum(
+        int(item.get("requested_tool_count") or 0)
+        for item in npu_micro_runtime_brokers
+        if item.get("executed_while_gpu1_active") is True
+    )
+    npu_micro_runtime_tool_live_execution_count = sum(
+        int(item.get("tool_execution_count") or 0)
+        for item in npu_micro_runtime_brokers
+        if item.get("executed_while_gpu1_active") is True
+    )
+    npu_micro_runtime_tool_live_result_count = sum(
+        len(item.get("tool_results", []))
+        for item in npu_micro_runtime_brokers
+        if item.get("executed_while_gpu1_active") is True
+    )
     npu_micro_support_tool_success_count = sum(
         1
         for item in npu_micro_support_records
@@ -1948,6 +2079,7 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "gpu_empty_recommendations_reason": gpu_empty_recommendations_reason,
         "gpu_evidence_ready_for_manual_patch_count": gpu_evidence_ready_count,
         "gpu_recommended_next_layer": gpu_recommended_next_layer,
+        "gpu_live_context_refresh_count": gpu_report.get("live_context_refresh_count"),
         "runtime_tool_broker_enabled": runtime_tool_broker_enabled,
         "runtime_tool_bootstrap_executed": runtime_tool_bootstrap_executed,
         "runtime_tool_bootstrap_passed": runtime_tool_bootstrap_passed,
@@ -1993,6 +2125,9 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "gpu_summary": {
             "passed": gpu_report.get("passed"),
             "round_count": gpu_report.get("round_count"),
+            "live_context_refresh_enabled": gpu_report.get("live_context_refresh_enabled"),
+            "live_context_refresh_count": gpu_report.get("live_context_refresh_count"),
+            "live_context_report_paths": gpu_report.get("live_context_report_paths"),
             "recommendation_count": gpu_recommendation_count,
             "raw_recommendation_candidate_count": gpu_report.get("raw_recommendation_candidate_count"),
             "filtered_recommendation_count": gpu_report.get("filtered_recommendation_count"),
@@ -2045,8 +2180,12 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "npu_micro_support_tool_lane_performed": npu_micro_support_tool_lane_performed,
         "npu_micro_support_tool_request_count": npu_micro_support_tool_request_count,
         "npu_micro_support_deterministic_tool_fallback_count": npu_micro_support_deterministic_tool_fallback_count,
+        "npu_micro_live_tool_seed_count": npu_micro_live_tool_seed_count,
         "npu_micro_runtime_tool_request_count": npu_micro_runtime_tool_request_count,
         "npu_micro_runtime_tool_execution_count": npu_micro_runtime_tool_execution_count,
+        "npu_micro_runtime_tool_live_request_count": npu_micro_runtime_tool_live_request_count,
+        "npu_micro_runtime_tool_live_execution_count": npu_micro_runtime_tool_live_execution_count,
+        "npu_micro_runtime_tool_live_result_count": npu_micro_runtime_tool_live_result_count,
         "npu_micro_runtime_tool_failed_count": npu_micro_runtime_tool_failed_count,
         "npu_micro_runtime_tool_blocked_count": npu_micro_runtime_tool_blocked_count,
         "npu_micro_runtime_tool_result_count": npu_micro_runtime_tool_result_count,
@@ -2063,7 +2202,9 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
             "npu_micro_support_provider_success_count": npu_micro_support_provider_success_count,
             "npu_micro_support_tool_success_count": npu_micro_support_tool_success_count,
             "npu_micro_support_tool_request_count": npu_micro_support_tool_request_count,
+            "npu_micro_live_tool_seed_count": npu_micro_live_tool_seed_count,
             "npu_micro_runtime_tool_execution_count": npu_micro_runtime_tool_execution_count,
+            "npu_micro_runtime_tool_live_execution_count": npu_micro_runtime_tool_live_execution_count,
             "npu_micro_support_tool_lane_performed": npu_micro_support_tool_lane_performed,
             "npu_tool_context_seen_count": npu_tool_context_seen_count,
             "npu_tool_request_count": npu_tool_request_count,
@@ -2137,7 +2278,9 @@ def run_orchestrator(args: argparse.Namespace) -> dict[str, Any]:
         "tool_success_count": npu_micro_support_tool_success_count,
         "overlap_count": npu_micro_support_overlap_count,
         "tool_request_count": npu_micro_support_tool_request_count,
+        "live_tool_seed_count": npu_micro_live_tool_seed_count,
         "runtime_tool_execution_count": npu_micro_runtime_tool_execution_count,
+        "runtime_tool_live_execution_count": npu_micro_runtime_tool_live_execution_count,
         "non_blocking": True,
     }
     report["gpu0_peer_support_lane"] = {
@@ -2248,6 +2391,7 @@ def main() -> int:
         "npu_micro_support_overlap_count": report.get("npu_micro_support_overlap_count"),
         "npu_micro_support_tool_request_count": report.get("npu_micro_support_tool_request_count"),
         "npu_micro_runtime_tool_execution_count": report.get("npu_micro_runtime_tool_execution_count"),
+        "npu_micro_runtime_tool_live_execution_count": report.get("npu_micro_runtime_tool_live_execution_count"),
         "gpu_empty_recommendations_reason": report.get("gpu_empty_recommendations_reason"),
         "gpu_evidence_ready_for_manual_patch_count": report.get("gpu_evidence_ready_for_manual_patch_count"),
         "gpu_recommended_next_layer": report.get("gpu_recommended_next_layer"),

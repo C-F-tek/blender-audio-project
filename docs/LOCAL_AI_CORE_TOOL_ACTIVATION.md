@@ -46,6 +46,7 @@ runtime/hardware capability manifest
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 file-line-limit report when maintainability is in scope
+generated artifact path policy when compact evidence/bundle names are staged or pushed
 ```
 
 Telemetry is the completeness accessory that explains the state behind activation artifacts:
@@ -97,6 +98,7 @@ GitHub evidence bundle
 runtime telemetry and capability manifest when tools execute
 file-line-limit report when maintainability is in scope
 final tool-product product/evidence/readiness package when selected
+generated artifact path policy for push-safe bundle names
 optional macro patch draft specs
 ```
 
@@ -122,8 +124,9 @@ These artifacts give the repo concrete material for review and tests instead of 
 | Runtime/hardware capability manifest | active capability manifest builder/package | Required capability handoff when tool or hardware capabilities matter. |
 | File line-limit report | `Tools/validation/check_file_line_limits.py` | Report-only 400-line policy validator; no rewrite/delete/split. |
 | Full toolbox telemetry summary | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Production summary for AI handoff. |
-| Full0To10 final product | `Tools/ai/full0to10_final_product/*` | Builds product Markdown, evidence index, readiness JSON, manifest and README. |
+| Full0To10 final product | `Tools/ai/build_full0to10_final_tool_product.py`, `Tools/ai/full0to10_final_product/*` | Builds product Markdown, evidence index, readiness JSON, manifest and README, including current-run reports/artifacts when supplied by the workflow. |
 | Shared AI-to-AI bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production handoff bundle. |
+| Generated artifact path policy | `Tools/validation/check_generated_artifact_path_policy.py` | Validates generated artifact destinations and path/filename lengths before evidence is staged or pushed. |
 | Tool inventory | `Tools/ai/build_agent_agnostic_tool_inventory.py` | Supporting toolbox visibility tool. |
 | Code interpreter report | `Tools/ai/build_code_interpreter_report.py` | Supporting capability report. |
 | Refactor duplication audit | `Tools/ai/build_refactor_duplication_audit.py` | Supporting audit tool. |
