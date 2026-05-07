@@ -12,6 +12,8 @@ notes, telemetry, heap data and evidence are control surfaces: they prove why
 the patch is acceptable or why it fell back, but they are not the product by
 themselves.
 
+A final product test is complete only when a task Markdown produces at least one concrete patch suggestion and that suggestion is applied to code or maintained Markdown on the dedicated review PR branch.
+
 This phase is implemented by:
 
 ```text
