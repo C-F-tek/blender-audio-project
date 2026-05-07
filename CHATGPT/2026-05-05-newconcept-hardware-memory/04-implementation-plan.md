@@ -71,7 +71,7 @@ no Blender/FFmpeg/media runtime
 Add:
 
 ```text
-Tools/validation/check_runtime_hardware_capability_manifest.py
+future runtime hardware capability manifest validator
 ```
 
 Validate:
@@ -95,8 +95,8 @@ errors/warnings shape
 Add or extend:
 
 ```text
-Tools/ai/agent_memory_schema.py
-Tools/ai/agent_memory_tools.py
+future memory schema module after smoke-backed implementation
+future memory tool CLI module after smoke-backed implementation
 ```
 
 First scope:

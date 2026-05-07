@@ -121,6 +121,61 @@ def run_case(repo_root: Path, stamp: str, fixtures: dict[str, str], min_score: f
     return build_report(args)
 
 
+def area_diversity_smoke() -> dict[str, Any]:
+    from Tools.ai.patch_notes_quality_product.scoring import build_patch_notes
+
+    patch_plan = {
+        "patch_plans": [
+            {
+                "id": f"doc_python_{index}",
+                "area": "doc_python",
+                "status": "ready_for_patch_plan",
+                "target_files": ["docs/doc-python.md"],
+                "rationale": "doc python mismatch requiring update",
+                "edit_strategy": "update documented command to tracked path or mark as design-only",
+                "validation_commands": ["git diff --check"],
+                "stop_conditions": ["manual review"],
+                "manual_review_required": True,
+                "source_evidence": {},
+            }
+            for index in range(1, 8)
+        ]
+        + [
+            {
+                "id": "doc_doc_1",
+                "area": "doc_doc",
+                "status": "ready_for_patch_plan",
+                "target_files": ["docs/doc-doc.md"],
+                "rationale": "doc doc mismatch requiring update",
+                "edit_strategy": "align stale doc reference with canonical doc",
+                "validation_commands": ["git diff --check"],
+                "stop_conditions": ["manual review"],
+                "manual_review_required": True,
+                "source_evidence": {},
+            },
+            {
+                "id": "python_doc_1",
+                "area": "python_doc",
+                "status": "ready_for_patch_plan",
+                "target_files": ["docs/python-doc.md"],
+                "rationale": "document tracked python behavior",
+                "edit_strategy": "add missing operator documentation for existing python tool",
+                "validation_commands": ["git diff --check"],
+                "stop_conditions": ["manual review"],
+                "manual_review_required": True,
+                "source_evidence": {},
+            },
+        ]
+    }
+    notes = build_patch_notes(patch_plan, {}, limit=5)
+    areas = [note.get("area") for note in notes]
+    return {
+        "passed": "doc_doc" in areas and "python_doc" in areas and areas.count("doc_python") < 5,
+        "areas": areas,
+        "note_count": len(notes),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
@@ -155,6 +210,9 @@ def main() -> int:
         errors.append("ALL_ALL insufficient case incorrectly passed quality gate")
     if all_all_insufficient.get("classification") != "completed_with_insufficient_all_all_patch_notes":
         errors.append("ALL_ALL insufficient case did not receive insufficient classification")
+    area_diversity = area_diversity_smoke()
+    if not area_diversity.get("passed"):
+        errors.append("area diversity smoke failed to include doc_doc/python_doc alongside doc_python")
     report = {
         "schema_version": 1,
         "kind": "patch_notes_quality_product_smoke",
@@ -172,6 +230,7 @@ def main() -> int:
         "positive": {"passed": positive.get("passed"), "quality_gate_passed": positive.get("quality_gate_passed"), "classification": positive.get("classification"), "patch_note_count": len(positive.get("patch_notes", [])), "success_case_count": len(positive.get("success_cases", []))},
         "negative": {"passed": negative.get("passed"), "quality_gate_passed": negative.get("quality_gate_passed"), "classification": negative.get("classification"), "fallback_path_note_count": len(negative.get("fallback_path_notes", [])), "fallback_case_count": len(negative.get("fallback_cases", []))},
         "all_all_insufficient": {"passed": all_all_insufficient.get("passed"), "quality_gate_passed": all_all_insufficient.get("quality_gate_passed"), "classification": all_all_insufficient.get("classification"), "product_sufficiency": all_all_insufficient.get("product_sufficiency")},
+        "area_diversity": area_diversity,
         "guardrails": {"report_only": True, "patch_application_performed": False, "source_writes_performed": False},
     }
     output = resolve_output_path(repo_root, args.output or f"output/validation/patch_notes_quality_product_smoke_{stamp}.json")

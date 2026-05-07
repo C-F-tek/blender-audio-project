@@ -51,19 +51,66 @@ def patch_plan_summary(patch_plan: dict[str, Any], patch_quality: dict[str, Any]
     }
 
 
+def _canonical_note_area(area: Any) -> str:
+    aliases = {
+        "md_md": "doc_doc",
+        "markdown_markdown": "doc_doc",
+        "doc_code": "doc_python",
+        "md_python": "doc_python",
+        "md_powershell": "doc_python",
+        "python_validation": "python_doc",
+        "repository_consistency": "refactor_candidate",
+    }
+    value = str(area or "").strip()
+    return aliases.get(value, value)
+
+
+def _area_diverse_plans(plans: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    preferred_areas = [
+        "python_python",
+        "doc_python",
+        "doc_doc",
+        "python_doc",
+        "policy_violation",
+        "refactor_candidate",
+        "telemetry_gap",
+        "evidence_gap",
+    ]
+    by_area: dict[str, list[dict[str, Any]]] = {area: [] for area in preferred_areas}
+    other: list[dict[str, Any]] = []
+    for plan in plans:
+        area = _canonical_note_area(plan.get("area"))
+        if area in by_area:
+            by_area[area].append(plan)
+        else:
+            other.append(plan)
+    selected: list[dict[str, Any]] = []
+    while len(selected) < limit and any(by_area.values()):
+        for area in preferred_areas:
+            bucket = by_area[area]
+            if bucket and len(selected) < limit:
+                selected.append(bucket.pop(0))
+    for plan in other:
+        if len(selected) >= limit:
+            break
+        selected.append(plan)
+    return selected
+
+
 def build_patch_notes(patch_plan: dict[str, Any], patch_quality: dict[str, Any], limit: int = 20) -> list[dict[str, Any]]:
     quality_scores = {}
     for item in safe_list(safe_dict(patch_quality.get("quality")).get("plan_scores")):
         if isinstance(item, dict):
             quality_scores[str(item.get("id") or "")] = item
     notes: list[dict[str, Any]] = []
-    for index, plan in enumerate(list_plans(patch_plan)[:limit], 1):
+    selected_plans = _area_diverse_plans([plan for plan in list_plans(patch_plan) if isinstance(plan, dict)], limit)
+    for index, plan in enumerate(selected_plans, 1):
         plan_id = str(plan.get("id") or plan.get("title") or f"plan_{index:03d}")
         score = quality_scores.get(plan_id, {})
         notes.append(
             {
                 "id": plan_id,
-                "area": plan.get("area"),
+                "area": _canonical_note_area(plan.get("area")),
                 "status": plan.get("status"),
                 "target_files": _unique_strings(safe_list(plan.get("target_files")), limit=12),
                 "summary": _text(plan.get("rationale") or plan.get("edit_strategy"), 700),

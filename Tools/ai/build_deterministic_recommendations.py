@@ -573,6 +573,69 @@ def repository_consistency_recommendation(
     )
 
 
+def area_diverse_findings(findings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return findings in round-robin area order for ALL_ALL product diversity."""
+    preferred_areas = [
+        "python_python",
+        "doc_python",
+        "doc_doc",
+        "python_doc",
+        "policy_violation",
+        "refactor_candidate",
+        "telemetry_gap",
+        "evidence_gap",
+    ]
+    by_area: dict[str, list[dict[str, Any]]] = {area: [] for area in preferred_areas}
+    other: list[dict[str, Any]] = []
+    for finding in sorted(findings, key=finding_priority):
+        area = consistency_area(str(finding.get("kind") or ""))
+        if area in by_area:
+            by_area[area].append(finding)
+        else:
+            other.append(finding)
+    ordered: list[dict[str, Any]] = []
+    while any(by_area.values()):
+        for area in preferred_areas:
+            bucket = by_area[area]
+            if bucket:
+                ordered.append(bucket.pop(0))
+    ordered.extend(other)
+    return ordered
+
+
+def area_diverse_items(items: list[dict[str, Any]], *, limit: int) -> list[dict[str, Any]]:
+    """Round-robin items by product area while preserving relative order within each area."""
+    preferred_areas = [
+        "python_python",
+        "doc_python",
+        "doc_doc",
+        "python_doc",
+        "policy_violation",
+        "refactor_candidate",
+        "telemetry_gap",
+        "evidence_gap",
+    ]
+    by_area: dict[str, list[dict[str, Any]]] = {area: [] for area in preferred_areas}
+    other: list[dict[str, Any]] = []
+    for item in items:
+        area = str(item.get("area") or "")
+        if area in by_area:
+            by_area[area].append(item)
+        else:
+            other.append(item)
+    selected: list[dict[str, Any]] = []
+    while len(selected) < limit and any(by_area.values()):
+        for area in preferred_areas:
+            bucket = by_area[area]
+            if bucket and len(selected) < limit:
+                selected.append(bucket.pop(0))
+    for item in other:
+        if len(selected) >= limit:
+            break
+        selected.append(item)
+    return selected
+
+
 def synthesize_from_repository_consistency_maps(
     *,
     repository_maps: list[dict[str, Any]],
@@ -589,7 +652,7 @@ def synthesize_from_repository_consistency_maps(
         for item in raw_findings:
             if isinstance(item, dict):
                 findings.append(item)
-    findings = sorted(findings, key=finding_priority)
+    findings = area_diverse_findings(findings)
 
     recommendations: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
