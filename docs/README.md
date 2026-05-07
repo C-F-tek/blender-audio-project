@@ -8,6 +8,52 @@ The repository slug is still `C-F-tek/blender-audio-project`, but the active arc
 
 Full local-AI work must preserve **TUTTO SU TUTTO**:
 
+All documentation that describes full local-AI work must preserve the same doctrine: **TUTTO SU TUTTO**.
+
+A full run means whole-repository coverage across active lanes, not a partial scan. Intensity profiles may reduce cost or expand depth, but they must not reduce semantic scope.
+
+Full0To10 is opt-out by lane: provider/probe/workload-quality, runtime telemetry, capability manifests, discovery, index repair visibility and CSV/count surfaces are included by default unless explicitly disabled, diagnosed unavailable, represented as dry-run planned state or excluded by a documented operator decision.
+
+When the project gains a stable new lane, registry, validator, broker capability, provider diagnostic, evidence surface, memory/context tool, discovery/index surface or CSV/count surface, that capability becomes a candidate expansion of `tutto` and must be either wired into the full-run contract or explicitly excluded with rationale.
+
+## Main runtime architecture
+
+The primary runtime target is now documented in:
+
+```text
+MAIN_RUNTIME_ARCHITECTURE.md
+```
+
+This contract defines the target coordination model:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Interpretation:
+
+```text
+providers advise, classify, plan or respond through explicit lanes
+broker unico executor is the execution gateway for registered tools
+deterministic CPU validators remain local pass/fail authority
+telemetry/event stream makes execution, skipped phases and degradation visible
+```
+
+## Limitation policy
+
+Architectural and operational limitations remain important because they are the backlog to overcome.
+
+They must not be used as static reasons to skip available tools. Use all relevant tool lanes by default; mark a lane unavailable or degraded only when current code, manifests, telemetry, provider diagnostics or validator reports prove it.
+
+Canonical limitation/backlog file:
+
 ```text
 Full0To10 = whole-repository active-lane perimeter
 quick/balanced/deep/custom = budget/intensity, not reduced semantic scope
@@ -70,6 +116,8 @@ Use this flow unless a task file says otherwise:
 ../CHATGPT.md
 ../CHATGPT/README.md
 LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+MAIN_RUNTIME_ARCHITECTURE.md
+LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
 ../README.md
 ../WORKFLOW.md
 README.md
@@ -82,6 +130,7 @@ LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+AI_PIPELINE_ARCHITECTURE.md
 WORKFLOW_HELPER_SCRIPTS_POLICY.md
 PROJECT_STATUS_POINT.md
 DATA_FLOW.md
@@ -91,7 +140,7 @@ nearest package/tool README
 target file
 ```
 
-`JSON_SCHEMAS.md` is intentionally not part of the primary reading flow. It is a broad schema notebook/catalog. Prefer `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` and compact current-state docs for active run-unica semantics.
+`JSON_SCHEMAS.md` is intentionally not part of the primary reading flow. It is a broad schema notebook/catalog. Prefer `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md`, `MAIN_RUNTIME_ARCHITECTURE.md` and compact current-state docs for active run-unica semantics.
 
 This documentation index is descriptive only. It must not carry executable PowerShell command blocks because task commands and launcher flags change faster than stable documentation indexes.
 
@@ -102,6 +151,8 @@ This documentation index is descriptive only. It must not carry executable Power
 | Current operational bridge | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
 | GPU peer-exchange doctrine | `LOCAL_AI_TASKS/gpu-peer-exchange-operational-principle.md` |
 | MD-only cleanup policy | `LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md` |
+
+| Main runtime architecture | `MAIN_RUNTIME_ARCHITECTURE.md` |
 | Large Markdown policy | `LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md` |
 | Active refactor/reuse planning | `LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` |
 | Refactor/reuse run coherence note | `LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md` |
@@ -163,6 +214,12 @@ Index repair is plan/report-first unless explicitly requested.
 | Peer-exchange doctrine | `LOCAL_AI_TASKS/gpu-peer-exchange-operational-principle.md` | Canonical GPU1/GPU0/NPU role contract. |
 | MD coherence | `LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md` | GitHub-only Markdown cleanup and split policy. |
 | Refactor/reuse planning | `LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` | Active review-only task. |
+
+| Current operational state | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` | Compact current state bridge for post-#187 master and active candidate PRs. |
+| Main runtime architecture | `MAIN_RUNTIME_ARCHITECTURE.md` | Shared blackboard, GPU1/GPU0/NPU lanes, broker executor, semantic registry, CPU validators and telemetry/event stream. |
+| Large Markdown policy | `LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md` | Keeps oversized Markdown out of primary operational paths. |
+| Refactor/reuse planning | `LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md` | Active review-only task for helper/class/tool reuse planning. |
+| Recent telemetry state | `LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` | Recent baseline and resolved broker context. |
 | Unified local AI launcher | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Active 0-to-10 local AI execution guide. |
 | Tool governance | `LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md`, `LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` | Tool discovery, placement and promotion rules. |
 | Evidence | `LOCAL_VALIDATION_EVIDENCE/` | Review snapshots, not source docs. |
@@ -174,6 +231,7 @@ Index repair is plan/report-first unless explicitly requested.
 | File | Purpose |
 |---|---|
 | `DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | Markdown lifecycle, pruning policy, missing-index review and add-before-prune rules. |
+| `MAIN_RUNTIME_ARCHITECTURE.md` | Primary shared runtime topology: blackboard, GPU1/GPU0/NPU lanes, broker, semantic registry, CPU validators and telemetry. |
 | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Compact launcher manifest, phase-status, visibility, Full0To10 and external-controls contract. |
 | `WORKFLOW_HELPER_SCRIPTS_POLICY.md` | Shell/GUI/debug/push-capable helper classification and guardrails. |
 | `PROJECT_STATUS_POINT.md` | Current status checkpoint and recommended tasks. |
@@ -189,6 +247,20 @@ Index repair is plan/report-first unless explicitly requested.
 | `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | GitHub-only continuation and local-validation handoff. |
 | `MODULE_MAP.md` | Repository area map. |
 | `TECH_DEBT_TRACKER.md` | Known debt and remediation queue. |
+
+## AI artifact contracts
+
+| File | Purpose |
+|---|---|
+| `AI_PIPELINE_ARCHITECTURE.md` | Modular AI artifact pipeline map, subordinate to the main runtime architecture and unified launcher. |
+| `AI_PIPELINE_REFACTOR_STATUS.md` | Stable refactor status marker. |
+| `AI_ARTIFACT_SCHEMAS.md` | AI artifact schema notes. |
+| `GENERATED_PYTHON_ADAPTER_TEMPLATE.md` | Future generated Python adapter template. |
+| `PATCH_SPEC_WORKFLOW.md` | Safe JSON patch-spec workflow. |
+| `AI_REFERENCE_ONBOARDING.md` | AI-to-AI reference onboarding. |
+| `AI_REFERENCE_SOURCE_MAP.md` | Source map for AI references and evidence. |
+| `AI_EXTERNAL_KNOWLEDGE.md` | External AI-coding knowledge adapted to this repo. |
+| `OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md` | External agent engineering patterns mapped to project actions. |
 
 ## Blender/audio docs
 
@@ -212,3 +284,7 @@ SHARED_SCRIPTING_UTILITIES.md
 Use the unified launcher `md,contract,full_validation` flow or the validator README for exact commands.
 
 Do not commit `output/**`, generated DB files, renders or raw local reports.
+
+## Main runtime architecture
+
+- `docs/MAIN_RUNTIME_ARCHITECTURE.md` — shared runtime heap / blackboard, provider lanes, broker, semantic registry, deterministic validators and telemetry/event stream contract.

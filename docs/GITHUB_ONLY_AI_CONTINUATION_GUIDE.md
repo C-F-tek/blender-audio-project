@@ -46,13 +46,40 @@ telemetry accompanies evidence and patch plans for completeness
 
 GitHub-only agents can update docs, contracts, PR bodies and small low-risk code when requested. They cannot prove runtime behavior without committed/pasted evidence.
 
+## Main runtime architecture
+
+Current architecture target:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Canonical contract:
+
+```text
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+```
+
+GitHub-only interpretation:
+
+```text
+Do not claim a runtime component executed unless committed/pasted telemetry proves it.
+Do not introduce a second tool-execution path outside the future broker/registry/validator/telemetry model.
+Prefer report-only architecture docs, schema validators and manifest fields before source-changing runtime behavior.
+```
+
 ## Current branch phase
 
 ```text
 Baseline branch: master after PR #187 merge
-Current documentation PR: #193 docs(ai): align operational docs with post-PR187 code state
-Next clean report-only foundation candidate: PR #192
-Useful but diverged evidence branch: PR #191
+Current documentation PR: #196 docs(ai): add main runtime architecture contract
 Mode: GitHub-only/API until maintainer requests local validation
 ```
 
@@ -61,8 +88,7 @@ Operational interpretation:
 ```text
 Do not treat codex/unified-local-ai-refactor-launcher or PR #187 as the active branch anymore.
 Treat #187 as the merged baseline.
-Treat #192 as the next clean report-only foundation candidate.
-Treat #191 as evidence to mine/regenerate/summarize before any merge decision.
+Treat historical PR #191/#192 references as context only unless current GitHub state confirms they are active.
 ```
 
 ## North star
@@ -82,6 +108,7 @@ full toolbox telemetry summary
 shared AI-to-AI bundle completeness
 discovery/index/CSV-count visibility
 file-line-limit visibility
+blackboard / broker / semantic registry / CPU-validator / event-stream surfaces
 documentation and execution plans
 local workstation proof when available
 index regeneration only when explicitly scoped
@@ -103,6 +130,7 @@ Current compact state documents:
 
 ```text
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
 docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
@@ -198,6 +226,7 @@ shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
 CSV/count summaries when inventory lanes ran
 discovery/index repair reports when relevant
 file-line-limit reports when maintainability is in scope
+blackboard/broker/registry/validator/event-stream reports when implemented
 ```
 
 A GitHub-only agent must not infer success from:
@@ -240,6 +269,7 @@ When working GitHub-only, prioritize:
 6. Document local validation as pending unless committed/pasted evidence proves it.
 7. Avoid requesting local sync or runs until the maintainer asks for them.
 8. Treat limitations as measurable backlog and use all available tools by default.
+9. Keep blackboard/broker/semantic-registry/CPU-validator/event-stream architecture changes report-only first.
 
 Good follow-up targets:
 
@@ -327,6 +357,7 @@ When a macro step changes direction, update compact/current-state files first:
 
 ```text
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/MAIN_RUNTIME_ARCHITECTURE.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
 docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
@@ -341,5 +372,5 @@ Only update status documents when there is evidence in committed code, validatio
 ## Short prompt for future GitHub-only agents
 
 ```text
-You are working GitHub-only on C-F-tek/blender-audio-project / IA-Carmine. Read AGENTS.md, CHATGPT.md, CHATGPT/README.md, docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md, docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md, docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md, WORKFLOW.md, docs/README.md, docs/LOCAL_AI_RUN_BOOTSTRAP.md, docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md and docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md first. Continue core/backend/AI/NPU/guardrail/memory/telemetry/discovery/index/CSV/file-line-limit work before Ready To Jazz or blender_compat adoption. PR #187 is merged baseline on master, not the active branch. Do not ask for local sync or runs while the maintainer is away unless requested. Do not hand-edit generated indexes, indexAI/code_chunks/** or full analysis JSON. Make small PR updates, state local validation limits honestly, use every available Full0To10 tool lane by default, treat limitations as backlog to overcome, and treat telemetry/capability/final-summary plus discovery/index/CSV/file-line-limit artifacts as required companions for run-unica evidence and patch plans.
+You are working GitHub-only on C-F-tek/blender-audio-project / IA-Carmine. Read AGENTS.md, CHATGPT.md, CHATGPT/README.md, docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md, docs/MAIN_RUNTIME_ARCHITECTURE.md, docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md, docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md, docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md, WORKFLOW.md, docs/README.md, docs/LOCAL_AI_RUN_BOOTSTRAP.md, docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md and docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md first. Continue core/backend/AI/NPU/guardrail/memory/telemetry/discovery/index/CSV/file-line-limit and blackboard/broker/semantic-registry/CPU-validator/event-stream work before Ready To Jazz or blender_compat adoption. PR #187 is merged baseline on master, not the active branch. Do not ask for local sync or runs while the maintainer is away unless requested. Do not hand-edit generated indexes, indexAI/code_chunks/** or full analysis JSON. Make small PR updates, state local validation limits honestly, use every available Full0To10 tool lane by default, treat limitations as backlog to overcome, and treat telemetry/capability/final-summary plus discovery/index/CSV/file-line-limit artifacts as required companions for run-unica evidence and patch plans.
 ```

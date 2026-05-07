@@ -29,13 +29,42 @@ limitations = backlog to overcome, not reasons to skip available tools
 
 Telemetry is not a replacement for evidence or patch plans. It is the required accessory that tells future agents whether lanes executed, failed, were blocked, degraded, disabled, unavailable or planned-only.
 
+## Main runtime architecture
+
+Current target architecture:
+
+```text
+shared runtime heap / blackboard
+├─ GPU1 primary advisory / planner
+├─ GPU0 coworker/helper OpenVINO
+├─ NPU microtask responder
+├─ broker unico executor
+├─ semantic tools registry
+├─ deterministic validators / CPU authority
+└─ telemetry/event stream
+```
+
+Read the canonical contract before runtime, provider, broker, registry, validator or telemetry work:
+
+```text
+docs/MAIN_RUNTIME_ARCHITECTURE.md
+```
+
+Interpretation:
+
+```text
+providers advise, classify or respond through explicit lanes;
+broker unico executor is the execution gateway for registered tools;
+semantic tools registry is the capability source of truth;
+deterministic CPU validators remain local pass/fail authority;
+telemetry/event stream records executed, skipped, degraded and blocked phases.
+```
+
 ## Current branch phase
 
 ```text
 Baseline: master after PR #187 merge
-Current documentation PR: #193 docs(ai): align operational docs with post-PR187 code state
-Next clean report-only foundation candidate: PR #192
-Useful but diverged evidence branch: PR #191
+Current documentation PR: #196 docs(ai): add main runtime architecture contract
 Mode: GitHub-only/API when maintainer is away
 ```
 
@@ -48,19 +77,18 @@ Use this priority when documents disagree:
 1. `AGENTS.md` for repository rules, safety limits and required validation.
 2. `CHATGPT.md` and `CHATGPT/README.md` for current chat/session handoff routing.
 3. `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for current code/state bridge.
-4. `docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md` for oversized Markdown handling.
-5. `docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md` for the 400-line validator contract.
-6. `README.md` and `WORKFLOW.md` for human/project identity and lifecycle.
-7. `docs/README.md` for documentation navigation.
-8. `docs/LOCAL_AI_RUN_BOOTSTRAP.md` for local checkout bootstrap.
-9. `docs/LOCAL_AI_TASKS/README.md` for task routing.
+4. `docs/MAIN_RUNTIME_ARCHITECTURE.md` for blackboard, GPU1/GPU0/NPU, broker, registry, validators and telemetry model.
+5. `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` for launcher manifest/phase contract.
+6. `docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md` for oversized Markdown handling.
+7. `docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md` for the 400-line validator contract.
+8. `README.md`, `WORKFLOW.md` and `docs/README.md` for project identity and navigation.
+9. `docs/LOCAL_AI_RUN_BOOTSTRAP.md` for local checkout bootstrap.
 10. `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` for the run-unica entrypoint.
-11. `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` for launcher manifest/phase contract.
-12. `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` for current broker/provider/telemetry/bundle/discovery/CSV/evidence flow.
-13. `docs/MODULE_MAP.md`, `docs/DATA_FLOW.md`, `docs/LOCAL_AI_WORKFLOW.md` and target package/tool READMEs for architecture and migration direction.
-14. The target source file itself.
-15. Generated indexes under `indexAI/` and `Tools/npu/*_index.md` as derived context only.
-16. `docs/PROJECT_AI_CONSCIOUSNESS.md` only as historical/orientation material; it must not override current contracts.
+11. `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` for current broker/provider/telemetry/bundle/discovery/CSV/evidence flow.
+12. `docs/MODULE_MAP.md`, `docs/DATA_FLOW.md`, `docs/LOCAL_AI_WORKFLOW.md` and target package/tool READMEs.
+13. The target source file itself.
+14. Generated indexes under `indexAI/` and `Tools/npu/*_index.md` as derived context only.
+15. `docs/PROJECT_AI_CONSCIOUSNESS.md` only as historical/orientation material.
 
 If a status document says a file is missing but the file exists, treat the file tree as current evidence and update the stale document in a small documentation patch.
 
@@ -71,10 +99,11 @@ If a status document says a file is missing but the file exists, treat the file 
 | `Tools/workflow/run_unified_local_ai_refactor.ps1` | Canonical run-unica local-AI entrypoint. |
 | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Canonical runbook for run-unica commands and parameters. |
 | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Compact launcher manifest and phase contract. |
+| `docs/MAIN_RUNTIME_ARCHITECTURE.md` | Canonical blackboard/broker/registry/validator/telemetry architecture target. |
 | `Tools/ai/` | AI orchestration, provider diagnostics, deterministic recommendations, broker reports, runtime telemetry, capability manifests, telemetry summaries and AI-to-AI bundle tooling. |
 | `Tools/validation/` | Non-invasive validators and report-contract checks. Its README is a catalog/reference, not a primary entrypoint if too large/truncated. |
 | `Tools/validation/check_file_line_limits.py` | Report-only 400-line policy validator for maintained docs and source files. |
-| `Tools/npu/` | AI/NPU/Ollama context and review tooling. NPU remains probe/guardrail/decode diagnostic unless future quality-gated promotion exists. |
+| `Tools/npu/` | AI/NPU/Ollama context and review tooling. NPU remains probe/guardrail/decode diagnostic or microtask responder unless future quality-gated promotion exists. |
 | `Tools/npu/pipeline/` | Additive app-agnostic helper package. It is not runtime-provider wiring by default. |
 | `Scripting/v61b/` | Stable reference Blender package. Do not destructively refactor. |
 | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/` | Usable standalone Blender/audio package, still monolithic. |
@@ -86,13 +115,11 @@ If a status document says a file is missing but the file exists, treat the file 
 Not yet complete / still debt to overcome:
 
 ```text
-Scripting/shared/blender_compat.py
-Scripting/shared/config_model.py
-Scripting/shared/diagnostics.py
-runtime adoption of Tools/npu/pipeline/ helpers inside Tools/npu/run_dual_ai_pipeline.py
-full production JSON schemas
-automated Blender runtime validation
-strict validation of every telemetry/bundle completeness path
+strict production schemas for every new runtime-architecture report
+blackboard state reports wired into launcher manifest
+semantic tools registry snapshot emitted by full runs
+runtime event stream as a first-class report
+full automatic Blender runtime validation
 existing oversized docs/source files above 400 lines
 ```
 
@@ -117,6 +144,7 @@ shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
 CSV/count summaries when inventory lanes ran
 discovery/index repair reports when relevant
 file-line-limit reports when maintainability is in scope
+blackboard/broker/registry/validator/event-stream reports when implemented
 ```
 
 Never infer success only from:
@@ -164,8 +192,7 @@ Historical notes about missing tools are obsolete unless current evidence confir
 - Do not push patch specs that trigger GitHub Actions without explicit human approval.
 - Do not add dependencies, CI changes, long Blender renders or GPU-heavy jobs without explicit approval.
 - Do not assume Blender version compatibility unless it is documented or tested; mark it `not specified`.
-- Do not wire `Tools/npu/pipeline/` helpers into `Tools/npu/run_dual_ai_pipeline.py` until local validation, index regeneration, quality gates, telemetry/bundle visibility and migration readiness gates are green.
-- Do not treat planned files listed in `Not yet complete` as stale broken links; verify whether they are explicitly future-facing before changing code or docs.
+- Do not create a second execution path outside broker/registry/validator/telemetry once the main runtime architecture is implemented.
 - Do not claim `Full0To10` success from focused validation, dry-run reports, provider reports, NPU smoke, large Markdown content or file existence alone.
 
 ## Task routing
@@ -173,12 +200,11 @@ Historical notes about missing tools are obsolete unless current evidence confir
 | Task type | Preferred first move |
 |---|---|
 | Documentation clarity | Patch docs directly, keep edits small, update indexes if adding a stable doc. |
-| Documentation patch-plan evidence | Use current run-unica/task docs; apply only allowed doc targets; include telemetry/capability context when patch plan comes from full-run evidence. |
+| Main runtime architecture | Read `docs/MAIN_RUNTIME_ARCHITECTURE.md`; add report-only validators/manifests before execution changes. |
 | Shared utility extraction | Add package-agnostic module first, validate without Blender, then consider adapters. |
 | v61b runtime issue | Read `Scripting/v61b/README.md` and target source; patch one concern only. |
 | New generated package | Start from `Scripting/_template_audio_reactive_package/` and `docs/QUALITY_GATE.md`. |
 | NPU/AI pipeline refactor | Split provider, prompt, validation and artifact-writing concerns without changing CLI behavior. |
-| NPU helper package work | Keep helpers app-agnostic, run focused helper validation when local execution is available, and defer runtime wiring to a later proven phase. |
 | GitHub-only work | Read `docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`; do not ask for local sync/runs while maintainer is away unless requested. |
 | Run-unica evidence or patch-plan review | Inspect manifest, evidence, telemetry, capability manifest, full toolbox summary, CSV/index/discovery/file-line-limit surfaces and shared AI-to-AI bundle together. |
 
