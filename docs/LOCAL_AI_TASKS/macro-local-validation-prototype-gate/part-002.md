@@ -23,9 +23,7 @@ python .\Tools\validation\check_docs_contract_drift.py `
   --output .\output\validation\docs_contract_drift.json `
   --markdown-output .\output\validation\docs_contract_drift.md
 
-python .\Tools\validation\check_markdown_command_hygiene.py `
-  --repo-root . `
-  --output .\output\validation\markdown_command_hygiene.json
+# Removed obsolete check_markdown_command_hygiene.py command; the script is not tracked in current master. Use check_docs_links.py plus check_validation_report_contract.py for this gate.
 ```
 
 Expected semantics:
@@ -99,9 +97,7 @@ python .\Tools\validation\check_docs_links.py `
   --repo-root . `
   --output .\output\validation\docs_links_macro.json
 
-python .\Tools\validation\check_markdown_command_hygiene.py `
-  --repo-root . `
-  --output .\output\validation\markdown_command_hygiene_macro.json
+# Removed obsolete check_markdown_command_hygiene.py command; the script is not tracked in current master. Use check_docs_links.py plus check_validation_report_contract.py for this gate.
 
 python .\Tools\validation\run_agent_review_code_patch_plan_smoke.py `
   --repo-root . `

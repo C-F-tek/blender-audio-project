@@ -133,6 +133,15 @@ def main() -> int:
     fixtures = build_fixtures(repo_root, stamp)
     positive = run_case(repo_root, stamp, fixtures, 72.0)
     negative = run_case(repo_root, stamp + "_forced_false", fixtures, 101.0)
+    all_all_task_path = repo_root / fixtures["task"]
+    all_all_task_path.write_text(
+        "# ALL_ALL smoke task\n\n"
+        "Objective: ALL_ALL repository progression. Required areas: "
+        "doc_doc, doc_python, python_doc, python_python, policy_violation, "
+        "refactor_candidate, telemetry_gap, evidence_gap.\n",
+        encoding="utf-8",
+    )
+    all_all_insufficient = run_case(repo_root, stamp + "_all_all_insufficient", fixtures, 72.0)
     errors: list[str] = []
     if not positive.get("passed") or not positive.get("quality_gate_passed") or not positive.get("patch_notes"):
         errors.append("positive case did not produce passing patch notes")
@@ -142,6 +151,10 @@ def main() -> int:
         errors.append("negative non-blocking fallback case did not behave as expected")
     if not negative.get("fallback_cases"):
         errors.append("negative non-blocking fallback case did not produce structured fallback cases")
+    if all_all_insufficient.get("quality_gate_passed"):
+        errors.append("ALL_ALL insufficient case incorrectly passed quality gate")
+    if all_all_insufficient.get("classification") != "completed_with_insufficient_all_all_patch_notes":
+        errors.append("ALL_ALL insufficient case did not receive insufficient classification")
     report = {
         "schema_version": 1,
         "kind": "patch_notes_quality_product_smoke",
@@ -158,6 +171,7 @@ def main() -> int:
         "manual_review_required": True,
         "positive": {"passed": positive.get("passed"), "quality_gate_passed": positive.get("quality_gate_passed"), "classification": positive.get("classification"), "patch_note_count": len(positive.get("patch_notes", [])), "success_case_count": len(positive.get("success_cases", []))},
         "negative": {"passed": negative.get("passed"), "quality_gate_passed": negative.get("quality_gate_passed"), "classification": negative.get("classification"), "fallback_path_note_count": len(negative.get("fallback_path_notes", [])), "fallback_case_count": len(negative.get("fallback_cases", []))},
+        "all_all_insufficient": {"passed": all_all_insufficient.get("passed"), "quality_gate_passed": all_all_insufficient.get("quality_gate_passed"), "classification": all_all_insufficient.get("classification"), "product_sufficiency": all_all_insufficient.get("product_sufficiency")},
         "guardrails": {"report_only": True, "patch_application_performed": False, "source_writes_performed": False},
     }
     output = resolve_output_path(repo_root, args.output or f"output/validation/patch_notes_quality_product_smoke_{stamp}.json")

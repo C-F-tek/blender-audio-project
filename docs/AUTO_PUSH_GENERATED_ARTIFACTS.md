@@ -103,7 +103,7 @@ Example from PowerShell:
 
 ```powershell
 # App regeneration step here
-# .\your_app_regenerate_indexes.ps1
+# App-owned regeneration command goes here; no tracked repository script is implied.
 
 .\Tools\git\auto_push_generated_artifacts.ps1 `
   -RepoPath "C:\Users\carmi\blender\blender-audio-project" `

@@ -321,27 +321,26 @@ delete/reset memory -> double confirmation only
 
 ## CLI sketch
 
-```powershell
-python .\Tools\ai\agent_memory_tools.py init `
-  --db .\output\ai_runtime_memory\operational_context.sqlite
+No runnable memory CLI is tracked in current `master` for this design yet. The following is the accepted command contract for a future implementation, not a copy/paste executable command.
 
-python .\Tools\ai\agent_memory_tools.py memory_add_text `
-  --db .\output\ai_runtime_memory\operational_context.sqlite `
-  --namespace chatgpt_handoff `
-  --title "Decisione hybrid search" `
-  --text "SQLite FTS5 + embedding cache + namespace..."
+```text
+memory init --db output/ai_runtime_memory/operational_context.sqlite
+memory add-text --db output/ai_runtime_memory/operational_context.sqlite --namespace chatgpt_handoff --title "Decisione hybrid search" --text "SQLite FTS5 + embedding cache + namespace..."
+memory add-file --db output/ai_runtime_memory/operational_context.sqlite --namespace repo_docs --path docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+memory search --db output/ai_runtime_memory/operational_context.sqlite --namespace repo_docs --query "Full0To10 SQLite memory evidence" --mode hybrid --limit 10
+```
 
-python .\Tools\ai\agent_memory_tools.py memory_add_file `
-  --db .\output\ai_runtime_memory\operational_context.sqlite `
-  --namespace repo_docs `
-  --path .\docs\LOCAL_AI_TASKS\unified-local-ai-refactor-launcher.md
+Implementation rule:
 
-python .\Tools\ai\agent_memory_tools.py memory_search `
-  --db .\output\ai_runtime_memory\operational_context.sqlite `
-  --namespace repo_docs `
-  --query "Full0To10 SQLite memory evidence" `
-  --mode hybrid `
-  --limit 10
+```text
+Do not document a real `python <path>.py` command for memory tools until the concrete entrypoint exists in the repository, has argparse validation, and has a smoke/contract report.
+```
+
+Current tracked design/backend references remain:
+
+```text
+Tools/ai/agent_runtime_sqlite_memory.py
+Tools/ai/agent_runtime_tool_broker.py
 ```
 
 ## Policy summary

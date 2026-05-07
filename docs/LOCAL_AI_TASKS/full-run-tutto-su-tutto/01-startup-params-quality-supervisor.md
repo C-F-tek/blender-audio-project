@@ -5,7 +5,7 @@ Il quality supervisor è safe-by-default.
 ## Default
 
 ```text
-run_unified_full0to10_quality_supervisor.ps1
+Tools/workflow/run_unified_full0to10_quality_supervisor.ps1
 ```
 
 senza flag espliciti esegue solo:

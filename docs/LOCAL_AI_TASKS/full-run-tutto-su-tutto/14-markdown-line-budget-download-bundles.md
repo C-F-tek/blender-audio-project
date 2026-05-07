@@ -9,12 +9,15 @@ se supera 400 righe -> directory con README.md e child docs numerati
 
 ## Uso nel loop
 
-Il prossimo bundle può concatenare i bundle reali da `Downloads` tramite:
+I bundle locali in `Downloads` o `output/validation/patch_bundles/**` sono transienti e non sono documentati come comandi tracciati.
 
-```powershell
-python .\output\validation\patch_bundles\full0to10_chained_md_budget_repo_quality_patch_bundle\run_patch_bundle.py `
-  --chain-download-md-budget `
-  --apply-doc-split
+Procedura corretta:
+
+```text
+1. ricreare il bundle da strumenti tracciati aggiornati;
+2. applicarlo solo dopo review manuale;
+3. non committare output/validation/patch_bundles/**;
+4. validare i file sorgente/docs modificati con git diff --check e validator pertinenti.
 ```
 
 ## Policy

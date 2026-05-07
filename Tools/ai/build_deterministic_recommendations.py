@@ -473,15 +473,24 @@ def consistency_target_file(finding: dict[str, Any], repo_root: Path) -> tuple[s
 def consistency_area(kind: str) -> str:
     if kind == "python_import_missing":
         return "python_python"
-    if kind in {"md_python_command_script_missing", "md_cli_arg_not_in_argparse", "md_mentions_missing_python_path"}:
-        return "md_python"
-    if kind == "md_mentions_missing_powershell_path":
-        return "md_powershell"
+    if kind in {
+        "md_python_command_script_missing",
+        "md_cli_arg_not_in_argparse",
+        "md_mentions_missing_python_path",
+        "md_mentions_missing_powershell_path",
+    }:
+        return "doc_python"
     if kind == "md_mentions_missing_markdown_path":
-        return "md_md"
+        return "doc_doc"
     if kind == "documented_python_script_without_obvious_smoke":
-        return "python_validation"
-    return "repository_consistency"
+        return "python_doc"
+    if kind.startswith("policy_"):
+        return "policy_violation"
+    if "telemetry" in kind:
+        return "telemetry_gap"
+    if "evidence" in kind:
+        return "evidence_gap"
+    return "refactor_candidate"
 
 
 def consistency_validation_commands(target_file: str) -> list[str]:
@@ -675,22 +684,27 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
 
     deterministic_used = False
     consistency_recommendation_count = 0
-    if not recommendations and repository_consistency_maps:
+    desired_consistency_count = min(args.max_recommendations, max(20, len(recommendations)))
+    if repository_consistency_maps and len(recommendations) < desired_consistency_count:
         deterministic_used = True
+        fill_limit = max(0, args.max_recommendations - len(recommendations))
         consistency_synthesized, consistency_skipped = synthesize_from_repository_consistency_maps(
             repository_maps=repository_consistency_maps,
             repo_root=repo_root,
             npu_refs=npu_refs,
             tool_refs=tool_refs,
-            max_recommendations=args.max_recommendations,
+            max_recommendations=fill_limit,
         )
         skipped.extend(consistency_skipped)
+        before_consistency_fill = len(recommendations)
         for rec in consistency_synthesized:
             key = recommendation_key(rec)
             if key not in seen:
                 seen.add(key)
                 recommendations.append(rec)
-        consistency_recommendation_count = len(recommendations)
+            if len(recommendations) >= args.max_recommendations:
+                break
+        consistency_recommendation_count = len(recommendations) - before_consistency_fill
 
     if not recommendations and evidence:
         deterministic_used = True

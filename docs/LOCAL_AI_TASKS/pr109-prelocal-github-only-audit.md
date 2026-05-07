@@ -152,9 +152,7 @@ python .\Tools\validation\check_github_evidence_bundle.py `
 Recommended local command:
 
 ```powershell
-python .\Tools\validation\check_markdown_command_hygiene.py `
-  --repo-root . `
-  --output .\output\validation\markdown_command_hygiene_pr109.json
+# Removed obsolete check_markdown_command_hygiene.py command; the script is not tracked in current master. Use check_docs_links.py plus check_validation_report_contract.py for this gate.
 ```
 
 ### 2. Helper promotion should pause until syntax validation

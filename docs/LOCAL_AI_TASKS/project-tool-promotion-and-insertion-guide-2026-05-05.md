@@ -304,36 +304,50 @@ Required broker acceptance:
 
 Target path:
 
-    Tools/validation/check_example_contract.py
+```text
+Tools/validation/<new_contract_validator>
+```
 
-CLI:
+The exact filename must be created in the same PR before executable examples use it. Until then, keep this as a placeholder contract, not a runnable command.
 
-    python .\Tools\validation\check_example_contract.py --repo-root . --output .\output\validation\example_contract.json --markdown-output .\output\validation\example_contract.md
+CLI pattern after the file exists:
+
+```text
+python <tracked validation tool> --repo-root . --output output/validation/example_contract.json --markdown-output output/validation/example_contract.md
+```
 
 Broker ID:
 
-    check_example_contract
+```text
+check_example_contract
+```
 
-Broker builder:
+Broker builder pattern:
 
-    def check_example_contract(repo_root, out_dir, request_id, args):
-        report = out_dir / f"{request_id}_example_contract.json"
-        markdown = out_dir / f"{request_id}_example_contract.md"
-        command = [sys.executable, "Tools/validation/check_example_contract.py", "--repo-root", ".", "--output", str(report), "--markdown-output", str(markdown)]
-        return command, {"json_report": repo_rel(report, repo_root), "markdown_report": repo_rel(markdown, repo_root)}
+```python
+def check_example_contract(repo_root, out_dir, request_id, args):
+    report = out_dir / f"{request_id}_example_contract.json"
+    markdown = out_dir / f"{request_id}_example_contract.md"
+    command = [sys.executable, "<tracked validation tool>", "--repo-root", ".", "--output", str(report), "--markdown-output", str(markdown)]
+    return command, {"json_report": repo_rel(report, repo_root), "markdown_report": repo_rel(markdown, repo_root)}
+```
 
-ToolSpec:
+ToolSpec pattern:
 
-    "check_example_contract": ToolSpec(
-        name="check_example_contract",
-        description="Validate example contract as report-only runtime tool.",
-        allowed_args=(),
-        builder=check_example_contract,
-    )
+```python
+"check_example_contract": ToolSpec(
+    name="check_example_contract",
+    description="Validate example contract as report-only runtime tool.",
+    allowed_args=(),
+    builder=check_example_contract,
+)
+```
 
-Validation:
+Validation after the concrete file exists:
 
-    python -m py_compile .\Tools\validation\check_example_contract.py .\Tools\ai\agent_runtime_tool_broker.py
+```text
+python -m py_compile <tracked validation tool> Tools/ai/agent_runtime_tool_broker.py
+```
 
 ## Example: promoting root audio analyzer
 

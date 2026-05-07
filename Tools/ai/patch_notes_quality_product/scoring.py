@@ -169,3 +169,156 @@ def classify(errors: list[str], quality_gate_passed: bool, score: float) -> str:
     if score < 50:
         return "completed_with_low_confidence_patch_notes"
     return "completed_with_patch_notes_fallback"
+
+PRODUCT_AREA_ALIASES = {
+    "md_md": "doc_doc",
+    "markdown_markdown": "doc_doc",
+    "doc_code": "doc_python",
+    "md_python": "doc_python",
+    "md_powershell": "doc_python",
+    "python_validation": "python_doc",
+    "repository_consistency": "refactor_candidate",
+}
+
+ALL_ALL_REQUIRED_AREAS = [
+    "doc_doc",
+    "doc_python",
+    "python_doc",
+    "python_python",
+    "policy_violation",
+    "refactor_candidate",
+    "telemetry_gap",
+    "evidence_gap",
+]
+
+REPOSITORY_KIND_TO_PRODUCT_AREA = {
+    "md_mentions_missing_markdown_path": "doc_doc",
+    "md_mentions_missing_python_path": "doc_python",
+    "md_mentions_missing_powershell_path": "doc_python",
+    "md_python_command_script_missing": "doc_python",
+    "md_cli_arg_not_in_argparse": "doc_python",
+    "documented_python_script_without_obvious_smoke": "python_doc",
+    "python_import_missing": "python_python",
+}
+
+def canonical_product_area(area: Any) -> str:
+    value = str(area or "").strip()
+    return PRODUCT_AREA_ALIASES.get(value, value)
+
+def _task_text(task: dict[str, Any]) -> str:
+    parts: list[str] = []
+    for key in ("title", "objective_hint"):
+        value = task.get(key)
+        if value:
+            parts.append(str(value))
+    for key in ("headings", "excerpt"):
+        values = task.get(key)
+        if isinstance(values, list):
+            parts.extend(str(item) for item in values)
+    return "\n".join(parts)
+
+def detect_product_mode(task: dict[str, Any]) -> dict[str, Any]:
+    text = _task_text(task)
+    lowered = text.lower()
+    all_all = "all_all" in lowered or "all-all" in lowered or "whole repository" in lowered
+    requested = [area for area in ALL_ALL_REQUIRED_AREAS if area.lower() in lowered]
+    if all_all and not requested:
+        requested = list(ALL_ALL_REQUIRED_AREAS)
+    return {"mode": "ALL_ALL" if all_all or requested else "standard", "requested_areas": requested}
+
+def _workflow_summary(loaded: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    telemetry = safe_dict(loaded.get("full_toolbox_telemetry"))
+    summary = safe_dict(telemetry.get("workflow_summary"))
+    if summary:
+        return summary
+    decision = safe_dict(loaded.get("decision_loop"))
+    return {
+        "passed": decision.get("passed"),
+        "recommendation_count": decision.get("recommendation_count"),
+        "patch_plan_count": decision.get("patch_plan_count"),
+    }
+
+def _bump_area(counts: dict[str, int], area: Any, amount: int = 1) -> None:
+    canonical = canonical_product_area(area)
+    if canonical:
+        counts[canonical] = counts.get(canonical, 0) + amount
+
+def _repository_area_counts(repository_consistency: dict[str, Any]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for kind, count in safe_dict(repository_consistency.get("finding_kind_counts")).items():
+        area = REPOSITORY_KIND_TO_PRODUCT_AREA.get(str(kind))
+        if area:
+            counts[area] = counts.get(area, 0) + int(count or 0)
+    return counts
+
+def _proposal_area_counts(loaded: dict[str, dict[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    telemetry = safe_dict(loaded.get("full_toolbox_telemetry"))
+    for key in ("recommendations_first20", "patch_plans_first20"):
+        for item in safe_list(telemetry.get(key)):
+            if isinstance(item, dict):
+                _bump_area(counts, item.get("area"))
+    patch_plan = safe_dict(loaded.get("patch_plan"))
+    for key in ("patch_plans", "plans"):
+        for item in safe_list(patch_plan.get(key)):
+            if isinstance(item, dict):
+                _bump_area(counts, item.get("area"))
+    return counts
+
+def _merge_counts(*items: dict[str, int]) -> dict[str, int]:
+    merged: dict[str, int] = {}
+    for item in items:
+        for key, value in item.items():
+            merged[key] = merged.get(key, 0) + int(value or 0)
+    return merged
+
+def build_product_sufficiency(report: dict[str, Any], loaded: dict[str, dict[str, Any]], task: dict[str, Any]) -> dict[str, Any]:
+    mode = detect_product_mode(task)
+    notes = [item for item in safe_list(report.get("patch_notes")) if isinstance(item, dict)]
+    actual_area_counts: dict[str, int] = {}
+    for note in notes:
+        _bump_area(actual_area_counts, note.get("area"))
+    actual_areas = sorted(actual_area_counts)
+    repository_area_counts = _repository_area_counts(safe_dict(loaded.get("repository_consistency")))
+    proposal_area_counts = _proposal_area_counts(loaded)
+    available_area_counts = _merge_counts(repository_area_counts, proposal_area_counts, actual_area_counts)
+    requested_areas = list(mode["requested_areas"])
+    available_requested_areas = [area for area in requested_areas if available_area_counts.get(area, 0) > 0]
+    unavailable_requested_areas = [area for area in requested_areas if area not in available_requested_areas]
+    missing_available_areas = [area for area in available_requested_areas if area not in actual_areas]
+    requested_min_patch_notes = 1
+    if mode["mode"] == "ALL_ALL":
+        requested_min_patch_notes = max(5, min(40, max(1, len(available_requested_areas)) * 5))
+    workflow = _workflow_summary(loaded)
+    recommendation_count = int(workflow.get("recommendation_count") or 0)
+    patch_plan_count = int(workflow.get("patch_plan_count") or safe_dict(report.get("patch_plan_summary")).get("patch_plan_count") or 0)
+    reasons: list[str] = []
+    if len(notes) < requested_min_patch_notes:
+        reasons.append("patch_note_count_below_availability_aware_minimum")
+    if missing_available_areas:
+        reasons.append("available_requested_area_coverage_missing")
+    if workflow.get("passed") is False:
+        reasons.append("workflow_summary_not_passed")
+    if mode["mode"] == "ALL_ALL" and patch_plan_count < requested_min_patch_notes:
+        reasons.append("patch_plan_count_below_availability_aware_minimum")
+    if mode["mode"] == "ALL_ALL" and recommendation_count and recommendation_count < requested_min_patch_notes:
+        reasons.append("recommendation_count_below_availability_aware_minimum")
+    return {
+        "mode": mode["mode"],
+        "requested_areas": requested_areas,
+        "available_requested_areas": available_requested_areas,
+        "unavailable_requested_areas": unavailable_requested_areas,
+        "missing_available_areas": missing_available_areas,
+        "requested_min_patch_notes": requested_min_patch_notes,
+        "actual_patch_note_count": len(notes),
+        "actual_areas": actual_areas,
+        "actual_area_counts": actual_area_counts,
+        "repository_area_counts": repository_area_counts,
+        "proposal_area_counts": proposal_area_counts,
+        "available_area_counts": available_area_counts,
+        "workflow_summary_passed": workflow.get("passed"),
+        "recommendation_count": recommendation_count,
+        "patch_plan_count": patch_plan_count,
+        "sufficient": not reasons,
+        "insufficiency_reasons": reasons,
+    }

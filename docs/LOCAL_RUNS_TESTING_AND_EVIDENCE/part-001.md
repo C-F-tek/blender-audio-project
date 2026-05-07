@@ -254,9 +254,7 @@ python .\Tools\validation\check_docs_links.py `
   --repo-root . `
   --output .\output\validation\docs_links_macro.json
 
-python .\Tools\validation\check_markdown_command_hygiene.py `
-  --repo-root . `
-  --output .\output\validation\markdown_command_hygiene_macro.json
+# Removed obsolete check_markdown_command_hygiene.py command; the script is not tracked in current master. Use check_docs_links.py plus check_validation_report_contract.py for this gate.
 ```
 
 ### Contract drift
