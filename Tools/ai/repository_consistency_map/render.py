@@ -9,6 +9,10 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Repository Consistency Map", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Finding count: `{report['finding_count']}`")
+    lines.append(f"- Repository files: `{report['scope'].get('repository_file_count')}`")
+    lines.append(f"- File metadata records: `{report['scope'].get('repository_file_metadata_count')}`")
+    lines.append(f"- Counted text-like files: `{report['scope'].get('repository_line_count_available_count')}`")
+    lines.append(f"- Total counted text lines: `{report['scope'].get('repository_text_line_count_total')}`")
     lines.append(f"- Markdown files: `{report['scope']['markdown_file_count']}`")
     lines.append(f"- Python files: `{report['scope']['python_file_count']}`")
     lines.append(f"- Markdown references: `{report['scope']['markdown_reference_count']}`")
@@ -17,6 +21,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     if report.get("performance"):
         performance = report["performance"]
         lines.append(f"- Workers requested: `{performance.get('workers_requested')}`")
+        lines.append(f"- Adaptive worker mode: `{performance.get('adaptive_worker_mode')}`")
+        lines.append(f"- Single file manifest: `{performance.get('single_file_discovery_manifest_enabled')}`")
+        lines.append(f"- File metadata enabled: `{performance.get('file_metadata_enabled')}`")
         lines.append(f"- Total build seconds: `{performance.get('total_build_report_seconds')}`")
         lines.append(f"- Markdown scan seconds: `{performance.get('markdown_scan_seconds')}`")
         lines.append(f"- Python inventory seconds: `{performance.get('python_inventory_seconds')}`")

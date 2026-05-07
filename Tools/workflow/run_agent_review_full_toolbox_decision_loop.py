@@ -41,7 +41,7 @@ INT_DEFAULTS = {
     "NpuMicroMaxLiveProviderRounds": 0,
     "MinRecommendations": 1,
     "MinPatchPlans": 1,
-    "RepositoryConsistencyMapWorkers": 8,
+    "RepositoryConsistencyMapWorkers": 0,
 }
 
 STRING_DEFAULTS = {

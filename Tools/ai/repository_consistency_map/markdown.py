@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from Tools.ai.repository_consistency_map.constants import (
     BACKTICK_RE,
@@ -33,11 +33,12 @@ def extract_markdown_references(
     *,
     max_snippet_chars: int,
     workers: int,
+    markdown_files: list[Path] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
     references: list[dict[str, Any]] = []
     commands: list[dict[str, Any]] = []
     warnings: list[str] = []
-    markdown_files = iter_files(repo_root, DOC_EXTENSIONS)
+    markdown_files = markdown_files if markdown_files is not None else iter_files(repo_root, DOC_EXTENSIONS)
 
     def scan_markdown_file(path: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
         file_references: list[dict[str, Any]] = []

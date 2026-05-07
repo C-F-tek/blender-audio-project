@@ -78,11 +78,11 @@ def extract_local_import_findings(tree: ast.AST, source: str, repo_root: Path) -
     return findings
 
 
-def extract_python_inventory(repo_root: Path, *, workers: int) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]], list[str]]:
+def extract_python_inventory(repo_root: Path, *, workers: int, python_files: list[Path] | None = None) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]], list[str]]:
     inventory: dict[str, dict[str, Any]] = {}
     import_findings: list[dict[str, Any]] = []
     warnings: list[str] = []
-    python_files = iter_files(repo_root, {".py"})
+    python_files = python_files if python_files is not None else iter_files(repo_root, {".py"})
 
     def scan_python_file(path: Path) -> tuple[str, dict[str, Any], list[dict[str, Any]], list[str]]:
         rel = repo_rel(path, repo_root)

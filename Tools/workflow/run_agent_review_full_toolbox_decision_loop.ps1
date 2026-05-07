@@ -35,7 +35,7 @@ param(
     [int]$NpuMicroMaxLiveProviderRounds = 0,
     [int]$MinRecommendations = 1,
     [int]$MinPatchPlans = 1,
-    [int]$RepositoryConsistencyMapWorkers = 8
+    [int]$RepositoryConsistencyMapWorkers = 0
 )
 
 $ErrorActionPreference = "Stop"

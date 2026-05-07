@@ -37,7 +37,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
     parser.add_argument("--max-detail-items", type=int, default=2000)
     parser.add_argument("--max-snippet-chars", type=int, default=DEFAULT_MAX_SNIPPET_CHARS)
-    parser.add_argument("--workers", type=int, default=8, help="Bounded worker count for Markdown/Python repository scans.")
+    parser.add_argument("--workers", type=int, default=0, help="Worker count for Markdown/Python repository scans; 0 enables adaptive local parallelism.")
     return parser.parse_args()
 
 
