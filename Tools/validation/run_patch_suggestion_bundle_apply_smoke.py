@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -23,16 +24,28 @@ except ImportError:  # Allows package-style imports during external checks.
 
 
 SMOKE_STAMP = "20990101-010203"
+STREAM_PREVIEW_CHARS = 1200
+
+
+def stream_summary(text: str) -> dict[str, Any]:
+    """Return a compact stream preview for nested smoke commands."""
+    return {
+        "chars": len(text),
+        "preview": text[:STREAM_PREVIEW_CHARS],
+        "truncated": len(text) > STREAM_PREVIEW_CHARS,
+    }
 
 
 def run_command(command: list[str], cwd: Path) -> dict[str, Any]:
     """Run command and return a compact result."""
-    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)
+    env = dict(os.environ)
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, check=False)
     return {
         "command": command,
         "returncode": result.returncode,
-        "stdout": result.stdout,
-        "stderr": result.stderr,
+        "stdout": stream_summary(result.stdout),
+        "stderr": stream_summary(result.stderr),
     }
 
 
@@ -96,6 +109,8 @@ def build_synthetic_repo(tmp: Path, source_repo: Path) -> tuple[Path, Path]:
                 "area": "docs",
                 "title": "Manual review proposal must not auto-apply",
                 "target_files": ["README.md"],
+                "patch_sketch": ["Add a reviewed documentation note to README.md."],
+                "validation_commands": ["git diff --check"],
                 "suggestion_outputs": [
                     {
                         "path": "README.md",
@@ -111,6 +126,32 @@ def build_synthetic_repo(tmp: Path, source_repo: Path) -> tuple[Path, Path]:
     (repo / "output" / "ai_pipeline" / "repository_change_proposals.json").write_text(
         json.dumps(current_suggestions, indent=2) + "\n",
         encoding="utf-8",
+    )
+    current_update_suggestions = {
+        "schema_version": 1,
+        "kind": "post_validation_ai_work_packet",
+        "suggestions": [
+            {
+                "priority": "P1",
+                "area": "validation",
+                "title": "Auxiliary validation signal must stay supplemental",
+                "details": "output/validation/local_provider_probe.json: ['provider probe failed']",
+            }
+        ],
+    }
+    (repo / "output" / "ai_pipeline" / "repository_update_suggestions.json").write_text(
+        json.dumps(current_update_suggestions, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "config", "user.email", "smoke@example.invalid"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Patch Suggestion Smoke"], cwd=repo, check=True)
+    subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "commit", "-m", "seed synthetic repo"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
     )
     return repo, suggestion_path
 
@@ -130,6 +171,8 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory(prefix="patch-suggestion-smoke-") as tmp_raw:
         repo, suggestion_path = build_synthetic_repo(Path(tmp_raw), source_repo)
+        dry_output = Path(tmp_raw) / "dry.json"
+        apply_output = Path(tmp_raw) / "apply.json"
         dry = run_command(
             [
                 sys.executable,
@@ -139,7 +182,7 @@ def main() -> int:
                 "--Stamp",
                 SMOKE_STAMP,
                 "--output",
-                "dry.json",
+                str(dry_output),
             ],
             repo,
         )
@@ -156,7 +199,7 @@ def main() -> int:
                 "--Stamp",
                 SMOKE_STAMP,
                 "--output",
-                "apply.json",
+                str(apply_output),
                 "--apply",
             ],
             repo,
@@ -166,26 +209,36 @@ def main() -> int:
             errors.append("apply run failed")
 
         sample = (repo / "sample.md").read_text(encoding="utf-8")
-        apply_report = json.loads((repo / "apply.json").read_text(encoding="utf-8"))
+        apply_report = json.loads(apply_output.read_text(encoding="utf-8"))
         discovered_reports = apply_report.get("discovered_reports") or []
         current_reports = apply_report.get("current_suggestion_reports") or []
         manual_items = apply_report.get("manual_review_items") or []
+        manual_product = apply_report.get("manual_review_product") or {}
         if suggestion_path.relative_to(repo).as_posix() not in discovered_reports:
             errors.append("stamped suggestion report was not discovered")
         if "output/ai_pipeline/repository_change_proposals.json" not in current_reports:
             errors.append("current non-stamped proposal report was not discovered")
+        if "output/ai_pipeline/repository_update_suggestions.json" not in current_reports:
+            errors.append("current non-stamped update suggestion report was not discovered")
         if "new text" not in sample or "Final phase marker" not in sample:
             errors.append("expected deterministic edits were not applied")
         if apply_report.get("applied_count") != 2:
             errors.append("expected exactly two applied operations")
         if not apply_report.get("manual_review_required") or not manual_items:
             errors.append("manual review was not preserved for proposal-only suggestion")
+        if manual_product.get("product_facing_manual_review_count") != 1:
+            errors.append("expected one product-facing manual review proposal")
+        if not manual_product.get("supplemental_manual_review_count"):
+            errors.append("expected supplemental telemetry/debug suggestions to be separated")
+        if apply_report.get("patch_product_status") != "deterministic_patch_operations_ready":
+            errors.append("expected deterministic patch product readiness")
         if any(item.get("family") == "synthetic_patch_suggestions" for item in manual_items):
             errors.append("report container was incorrectly classified as manual review item")
 
     report = {
         "schema_version": 1,
         "kind": "patch_suggestion_bundle_apply_smoke",
+        "repo_root": source_repo.as_posix(),
         "passed": not errors,
         "provider_execution_performed": False,
         "patch_application_performed": False,

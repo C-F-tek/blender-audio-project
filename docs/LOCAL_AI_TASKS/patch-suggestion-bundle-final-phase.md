@@ -96,6 +96,46 @@ No indexAI/code_chunks/** or indexAI/project_code_chunks/** target edits.
 
 Natural-language suggestions and proposal-only `manual_patch_suggestion` items are not rewritten into code automatically. They are reported as `manual_review_required`.
 
+## Product vs supplemental output
+
+The final phase separates review output into two classes:
+
+```text
+essential_patch_suggestion_items
+supplemental_telemetry_debug_items
+```
+
+Essential/product-facing suggestions must have:
+
+```text
+safe concrete source/doc target files
+title or rationale
+patch sketch or deterministic operation
+validation commands or stop conditions
+```
+
+Telemetry, evidence, debug and validation-status-only items remain supplemental. They are useful for diagnosis, but they are not enough to close the product loop as an applicable patch suggestion.
+
+Readiness fields:
+
+```text
+patch_product_status
+ready_for_patch_suggestion_review
+manual_review_product.product_facing_manual_review_count
+manual_review_product.supplemental_manual_review_count
+manual_review_product.deterministic_operation_count
+manual_review_product.deterministic_apply_ready
+```
+
+The product loop is review-ready only when `patch_product_status` is either:
+
+```text
+deterministic_patch_operations_ready
+manual_review_product_suggestions_ready
+```
+
+`no_applicable_patch_product` means the run produced telemetry/debug context, but no concrete patch product to review.
+
 ## Supported deterministic operations
 
 Suggestion/proposal JSON may contain explicit operations:
@@ -213,6 +253,8 @@ Get-Content .\output\validation\patch_suggestion_bundle_apply_dry_run.json -Raw 
     changed_count, `
     applied_count, `
     failed_count, `
+    patch_product_status, `
+    ready_for_patch_suggestion_review, `
     manual_review_required, `
     errors, `
     warnings
@@ -230,6 +272,23 @@ If `discovered_report_count = 0`, the stamp is wrong or the run artifacts are no
 
 ```powershell
 $dry = Get-Content .\output\validation\patch_suggestion_bundle_apply_dry_run.json -Raw | ConvertFrom-Json
+
+$dry.manual_review_product |
+  Select-Object `
+    patch_product_status, `
+    ready_for_patch_suggestion_review, `
+    deterministic_operation_count, `
+    product_facing_manual_review_count, `
+    supplemental_manual_review_count |
+  Format-List
+
+$dry.essential_patch_suggestion_items |
+  Select-Object -First 40 |
+  Format-List
+
+$dry.supplemental_telemetry_debug_items |
+  Select-Object -First 40 |
+  Format-List
 
 $dry.manual_review_items |
   Select-Object -First 80 |
@@ -251,7 +310,51 @@ git status --short
   --apply
 ```
 
-The tool refuses `--apply` outside branches matching `codex/*` unless explicitly overridden.
+The tool refuses `--apply` outside branches matching `CARMINEai/*` or `codex/*` unless explicitly overridden.
+
+## Full Run Review PR Phase
+
+For production review, the unified launcher can run the final patch suggestion
+product phase and then prepare the online review branch/PR itself. The branch
+family for this lane is `CARMINEai/...`; the human operator still reviews and
+merges on GitHub.
+
+```powershell
+$Stamp = "pr206_patch_suggestion_review_$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+$ReviewPrIncludePaths = @(
+  ".\Tools\ai\apply_patch_suggestion_bundle.py",
+  ".\Tools\ai\patch_suggestion_bundle",
+  ".\Tools\ai\prepare_review_pr.py",
+  ".\Tools\workflow\run_unified_local_ai_refactor.ps1",
+  ".\Tools\validation\run_patch_suggestion_bundle_apply_smoke.py",
+  ".\docs\LOCAL_AI_TASKS\patch-suggestion-bundle-final-phase.md",
+  ".\docs\LOCAL_AI_TASKS\pr206-patch-suggestion-product-full-run-2026-05-07.md"
+)
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -RepoRoot . `
+  -TaskFile .\docs\LOCAL_AI_TASKS\pr206-patch-suggestion-product-full-run-2026-05-07.md `
+  -Stamp $Stamp `
+  -Profile core `
+  -Model qwen2.5-coder:14b `
+  -Full0To10 `
+  -RunIntensity quick `
+  -PrepareReviewPr `
+  -ReviewPrBranch "CARMINEai/pr206-patch-suggestion-product-$Stamp" `
+  -ReviewPrTitle "feat(ai): PR206 patch suggestion product $Stamp" `
+  -ReviewPrCommitMessage "feat(ai): harden patch suggestion product final phase" `
+  -ReviewPrIncludePath ($ReviewPrIncludePaths -join ",") `
+  -ReviewPrPush `
+  -ReviewPrCreate
+```
+
+Add `-ReviewPrApplyDeterministicSuggestions` only when deterministic operations
+are present and the dry-run product has already been inspected.
+
+For this workstation snapshot, `qwen2.5-coder:14b` is the preferred Ollama
+model for the strict JSON provider probe. `gpt-oss:20b` produced an empty
+strict-JSON probe response and should be treated as degraded until rechecked.
 
 ## Optional: explicit reports plus Stamp
 
