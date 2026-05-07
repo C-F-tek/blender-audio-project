@@ -15,9 +15,13 @@ This document is split to keep Markdown reviewable and compatible with AI contex
 
 ## Current canonical additions
 
+- [`code-derived-ai-toolchain-map-2026-05-07.md`](code-derived-ai-toolchain-map-2026-05-07.md)
 - [`gpu-peer-exchange-operational-principle.md`](gpu-peer-exchange-operational-principle.md)
 - [`md-coherence-only-github-pass-2026-05-06.md`](md-coherence-only-github-pass-2026-05-06.md)
+- [`patch-suggestion-bundle-final-phase.md`](patch-suggestion-bundle-final-phase.md)
 
 ## Operational note
 
 Keep this file as the stable entrypoint so existing references do not break.
+
+For current behavior, prefer code-derived docs over historical handoff docs. The current code-derived map is the first stop when launcher/review-PR/provider behavior is unclear.
