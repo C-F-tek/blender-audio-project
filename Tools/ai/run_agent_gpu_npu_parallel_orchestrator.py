@@ -47,6 +47,14 @@ except ImportError:
     from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap  # type: ignore
     from Tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
 
+try:
+    from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[2]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python  # type: ignore
+
 ORCHESTRATOR_RUNTIME_TOOL_BOOTSTRAP_REQUESTS: list[dict[str, object]] = [
     {"id": "orchestrator_bootstrap_tool_inventory", "tool": "build_agent_agnostic_tool_inventory", "reason": "Bootstrap shared runtime tool inventory before GPU/NPU orchestration.", "args": {}},
     {"id": "orchestrator_bootstrap_memory_inventory", "tool": "build_agent_memory_inventory", "reason": "Bootstrap durable project memory inventory before GPU/NPU orchestration.", "args": {}},
@@ -84,57 +92,6 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-
-def is_windowsapps_python(path_value: str) -> bool:
-    normalized = str(path_value).replace("\\", "/").lower()
-    return "/windowsapps/" in normalized and "python" in Path(path_value).name.lower()
-
-
-def normalize_python_candidate(path_value: str) -> str:
-    candidate = Path(path_value)
-    try:
-        if candidate.is_file():
-            return str(candidate.resolve())
-    except OSError:
-        return ""
-    return ""
-
-
-def resolve_child_python(repo_root: Path | None = None) -> str:
-    root = repo_root or Path.cwd()
-    env_python = os.environ.get("IA_CARMINE_PYTHON", "")
-    candidates = [
-        env_python,
-        str(root / ".venv/Scripts/python.exe"),
-        str(root / "venv/Scripts/python.exe"),
-        str(root / ".venv314/Scripts/python.exe"),
-    ]
-
-    current = normalize_python_candidate(getattr(sys, "executable", ""))
-    if current and not is_windowsapps_python(current):
-        candidates.append(current)
-
-    for raw in candidates:
-        if not raw:
-            continue
-        normalized = normalize_python_candidate(raw)
-        if normalized:
-            return normalized
-
-    return "python"
-
-
-def command_env(repo_root: Path) -> dict[str, str]:
-    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
-    existing = env.get("PYTHONPATH", "")
-    repo_path = str(repo_root)
-    child_python = resolve_child_python(repo_root)
-    env["IA_CARMINE_PYTHON"] = child_python
-    env["PYTHONPATH"] = repo_path if not existing else repo_path + os.pathsep + existing
-    python_path = Path(child_python)
-    if python_path.is_file():
-        env["PATH"] = str(python_path.resolve().parent) + os.pathsep + env.get("PATH", "")
-    return env
 
 
 def terminate_process(process: subprocess.Popen[str], timeout_seconds: float = 3.0) -> None:
