@@ -14,6 +14,32 @@ Tools/ai/apply_patch_suggestion_bundle.py
 Tools/validation/run_patch_suggestion_bundle_apply_smoke.py
 ```
 
+## Stamp-driven rule
+
+The final phase must be driven by the same run stamp used by the full toolbox run.
+
+Do not hardcode one specific report filename such as:
+
+```text
+patch_notes_quality_product_post_patchable_doc_python_probe_20260507-180555.json
+```
+
+Instead, pass the stamp:
+
+```powershell
+$Stamp = "20260507-180555"
+```
+
+Then let the tool discover matching local JSON reports under:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/
+output/patch_specs/
+output/validation/
+output/ai_pipeline/
+output/ai_packets/
+```
+
 ## Safety contract
 
 The final phase is conservative by design:
@@ -95,25 +121,70 @@ python .\Tools\validation\run_patch_suggestion_bundle_apply_smoke.py `
 
 Get-Content .\output\validation\patch_suggestion_bundle_apply_smoke.json -Raw |
   ConvertFrom-Json |
-  Select-Object passed, errors, warnings
+  Select-Object passed, smoke_stamp, discovered_reports, errors, warnings
 ```
 
-## Dry-run against local suggestion reports
+## Find the stamp
 
-Example with one or more local JSON reports:
+Use the same `$Stamp` from the run. If you do not remember it, inspect recent candidate reports:
+
+```powershell
+Get-ChildItem `
+  .\docs\LOCAL_VALIDATION_EVIDENCE, `
+  .\output\patch_specs, `
+  .\output\validation, `
+  .\output\ai_pipeline, `
+  .\output\ai_packets `
+  -Recurse `
+  -Filter *.json `
+  -ErrorAction SilentlyContinue |
+Where-Object {
+  $_.Name -match 'patch|suggest|proposal|recommend|plan|agent_review'
+} |
+Sort-Object LastWriteTime -Descending |
+Select-Object -First 30 LastWriteTime, FullName |
+Format-Table -AutoSize
+```
+
+Set the stamp explicitly:
+
+```powershell
+$Stamp = "20260507-180555"
+```
+
+## Dry-run by stamp
+
+Dry-run must be the first real invocation. It reads matching reports and writes only an output validation report.
 
 ```powershell
 python .\Tools\ai\apply_patch_suggestion_bundle.py `
   --repo-root . `
-  --suggestion-report .\docs\LOCAL_VALIDATION_EVIDENCE\patch_notes_quality_product_post_patchable_doc_python_probe_20260507-180555.json `
+  --suggestion-stamp $Stamp `
   --output .\output\validation\patch_suggestion_bundle_apply_dry_run.json
 
 Get-Content .\output\validation\patch_suggestion_bundle_apply_dry_run.json -Raw |
   ConvertFrom-Json |
-  Select-Object passed, operation_count, changed_count, applied_count, failed_count, manual_review_required, errors, warnings
+  Select-Object `
+    passed, `
+    suggestion_stamp, `
+    discovered_report_count, `
+    discovered_reports, `
+    operation_count, `
+    changed_count, `
+    applied_count, `
+    failed_count, `
+    manual_review_required, `
+    errors, `
+    warnings
 ```
 
-Dry-run must show `applied_count = 0`.
+Dry-run must show:
+
+```text
+applied_count = 0
+```
+
+If `discovered_report_count = 0`, the stamp is wrong or the run artifacts are not present locally.
 
 ## Apply on PR branch only
 
@@ -125,12 +196,26 @@ git status --short
 
 python .\Tools\ai\apply_patch_suggestion_bundle.py `
   --repo-root . `
-  --suggestion-report .\docs\LOCAL_VALIDATION_EVIDENCE\patch_notes_quality_product_post_patchable_doc_python_probe_20260507-180555.json `
+  --suggestion-stamp $Stamp `
   --output .\output\validation\patch_suggestion_bundle_apply.json `
   --apply
 ```
 
 The tool refuses `--apply` outside branches matching `codex/*` unless explicitly overridden.
+
+## Optional: explicit reports plus stamp
+
+You can combine explicit reports with stamp discovery:
+
+```powershell
+python .\Tools\ai\apply_patch_suggestion_bundle.py `
+  --repo-root . `
+  --suggestion-stamp $Stamp `
+  --suggestion-report .\output\patch_specs\agent_review_patch_plan.json `
+  --output .\output\validation\patch_suggestion_bundle_apply_dry_run.json
+```
+
+Explicit missing report paths still fail fast. Stamp discovery avoids hardcoded timestamped filenames.
 
 ## Post-apply validation
 
@@ -175,11 +260,11 @@ When local suggestion reports produce source/doc edits, add only the reviewed fi
 After local apply and validation, build compact Git-trackable evidence if needed:
 
 ```powershell
-$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$EvidenceStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
 python .\Tools\ai\build_github_evidence_bundle.py `
   --repo-root . `
-  --basename patch_suggestion_bundle_final_phase_$Stamp `
+  --basename patch_suggestion_bundle_final_phase_$EvidenceStamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
   --report .\output\validation\patch_suggestion_bundle_apply.json `
   --report .\output\validation\patch_suggestion_bundle_apply_smoke.json `
