@@ -5,6 +5,7 @@ param(
     [string]$OutputRoot = "output",
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
     [string]$TaskMarkdown = "docs/LOCAL_AI_TASKS/patch-notes-quality-product-2026-05-07.md",
+    [string]$IssueNumber = "",
     [switch]$RunGpuNpuProvider,
     [switch]$RequireProviderArtifacts,
     [switch]$RunLegacyNpuAuditorProvider,
