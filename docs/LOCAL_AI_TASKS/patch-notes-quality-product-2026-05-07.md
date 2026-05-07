@@ -30,6 +30,56 @@ tool_catalog_response
 
 This proves GPU1 can see the controlled broker capability catalog before final product telemetry without allowing provider lanes to execute tools directly.
 
+## Proposal Core Handoff
+
+The patch-notes product is a suggestion ledger, not a patch bundle. A `ready_for_patch_notes_review` product may be pushed as durable evidence, but its `patch_notes[]` entries must not be applied blindly.
+
+When the product is included in a GitHub evidence bundle, the bundle must expose the compact ledger under:
+
+```text
+summary.proposal_core
+summary.proposal_core.notes[]
+```
+
+The proposal core is the source for follow-up patch waves. Each note must retain enough data for another AI/session or human operator to decide whether the suggestion is still valid:
+
+```text
+id
+area
+severity
+status
+target_files
+summary
+edit_strategy
+validation_commands
+stop_conditions
+manual_review_required
+```
+
+## Patch Suggestion Review Order
+
+Apply suggestion lanes in this order:
+
+```text
+1. python_python
+2. python_doc
+3. doc_doc
+4. doc_python
+```
+
+Before creating any source patch from a suggestion:
+
+```text
+refresh against current master
+verify the reported source/target still exists
+reject stale findings whose missing module/path now exists
+reject generated-evidence noise and placeholder fenced-code paths
+prefer small patch waves with explicit validation commands
+record skipped stale suggestions as evidence when useful
+```
+
+`python_python` can justify code changes only when the import/module/symbol is still missing on the current branch. `python_doc` usually means a documented script lacks an obvious smoke/check/test; prefer report-only smoke wrappers over invasive refactors. `doc_doc` and `doc_python` must be filtered for template/path-placeholder noise before editing Markdown.
+
 ## NPU Final Check Policy
 
 NPU is a micro/support lane, not the final judge of its own output. Final NPU quality checks must be reviewed by GPU1, GPU0 or both, then accepted by deterministic validators.
@@ -61,6 +111,7 @@ no output/** commit
 no SQLite commit
 manual review required
 NPU must not be sole final reviewer of NPU lane quality
+patch notes are proposals until converted into a reviewed patch bundle or branch diff
 ```
 
 ## Validation

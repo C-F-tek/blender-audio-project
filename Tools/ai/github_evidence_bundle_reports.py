@@ -61,6 +61,18 @@ CHECK_SUMMARY_KEYS = (
     "peer_mesh_lane_state",
     "provider_broker_loop",
 )
+PATCH_NOTE_CORE_FIELDS = (
+    "id",
+    "area",
+    "severity",
+    "status",
+    "target_files",
+    "summary",
+    "edit_strategy",
+    "validation_commands",
+    "stop_conditions",
+    "manual_review_required",
+)
 
 
 def compact_patch_plan(plan: dict[str, Any]) -> dict[str, Any]:
@@ -80,6 +92,20 @@ def compact_patch_plan(plan: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def compact_patch_note(note: dict[str, Any]) -> dict[str, Any]:
+    """Return one compact patch-note proposal for AI-to-AI bundle handoff."""
+    return {field: compact_value(note.get(field), max_string=1200) for field in PATCH_NOTE_CORE_FIELDS if field in note}
+
+
+def patch_note_area_counts(patch_notes: list[dict[str, Any]]) -> dict[str, int]:
+    """Return deterministic patch-note counts by area."""
+    counts: dict[str, int] = {}
+    for note in patch_notes:
+        area = str(note.get("area") or "unknown")
+        counts[area] = counts.get(area, 0) + 1
+    return dict(sorted(counts.items()))
+
+
 def summarize_patch_plan_report(data: dict[str, Any]) -> dict[str, Any] | None:
     """Return native patch-plan summary for legacy agent_review_patch_plan reports."""
     if data.get("kind") != "agent_review_patch_plan":
@@ -96,6 +122,42 @@ def summarize_patch_plan_report(data: dict[str, Any]) -> dict[str, Any] | None:
         "patch_application_performed": data.get("patch_application_performed"),
         "source_writes_performed": data.get("source_writes_performed"),
         "plans": [compact_patch_plan(plan) for plan in patch_plans if isinstance(plan, dict)],
+    }
+
+
+def summarize_patch_notes_quality_product_report(data: dict[str, Any]) -> dict[str, Any] | None:
+    """Return the complete compact proposal core for patch-notes quality products.
+
+    This is intentionally not limited to the first 20 items: the patch-notes
+    product is the durable handoff ledger used by the next AI/session to choose
+    concrete patch waves. Each note is compacted field-by-field so the GitHub
+    evidence bundle can carry all proposals without embedding full raw reports.
+    """
+    patch_notes = data.get("patch_notes") if isinstance(data.get("patch_notes"), list) else []
+    if "patch_notes_quality_product" not in str(data.get("kind") or "") and not patch_notes:
+        return None
+
+    compact_notes = [compact_patch_note(note) for note in patch_notes if isinstance(note, dict)]
+    product_sufficiency = data.get("product_sufficiency") if isinstance(data.get("product_sufficiency"), dict) else {}
+    applicability = data.get("patch_notes_applicability") if isinstance(data.get("patch_notes_applicability"), dict) else {}
+
+    return {
+        "purpose": "durable_core_proposal_ledger_for_followup_patch_waves",
+        "patch_note_count": len(compact_notes),
+        "area_counts": patch_note_area_counts([note for note in patch_notes if isinstance(note, dict)]),
+        "quality_gate_passed": data.get("quality_gate_passed"),
+        "classification": data.get("classification"),
+        "quality_score": data.get("quality_score"),
+        "requested_areas": product_sufficiency.get("requested_areas"),
+        "available_requested_areas": product_sufficiency.get("available_requested_areas"),
+        "missing_available_areas": product_sufficiency.get("missing_available_areas"),
+        "requested_min_patch_notes": product_sufficiency.get("requested_min_patch_notes"),
+        "patch_note_limit": product_sufficiency.get("patch_note_limit"),
+        "sufficient": product_sufficiency.get("sufficient"),
+        "insufficiency_reasons": product_sufficiency.get("insufficiency_reasons"),
+        "all_applicable": applicability.get("all_applicable"),
+        "invalid_note_count": applicability.get("invalid_note_count"),
+        "notes": compact_notes,
     }
 
 
@@ -200,6 +262,10 @@ def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
     patch_plan_summary = summarize_patch_plan_report(data)
     if patch_plan_summary:
         summary["patch_plan_summary"] = patch_plan_summary
+
+    patch_notes_core = summarize_patch_notes_quality_product_report(data)
+    if patch_notes_core:
+        summary["proposal_core"] = patch_notes_core
 
     return {"path": rel, "exists": True, "json_ok": True, "kind": data.get("kind"), "passed": data.get("passed"), "summary": summary}
 
