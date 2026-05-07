@@ -14,6 +14,47 @@ Full0To10 is opt-out by lane. Once selected, provider/probe/workload-quality, te
 
 The meaning of `tutto` is expandable. New stable lanes, registries, validators, broker tools, provider diagnostics, evidence surfaces, memory/context builders and repository-consistency checks must be added to the full-run contract when they become production-ready.
 
+## Unified full product loop
+
+The active product interface is the unified launcher:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+```
+
+The full product is one launcher-controlled loop, not a manual chain of independent tools:
+
+```text
+Task Markdown input
+-> Full0To10 context/chunk/agent-state preparation
+-> GPU1 primary advisory / planner
+-> GPU0 OpenVINO peer companion
+-> NPU non-blocking microtask/tool-support lane
+-> runtime broker tool execution
+-> runtime heap / blackboard evidence
+-> repository, syntax, contract and quality validators
+-> raw output reports under output/**
+-> compact AI-to-AI bundle, telemetry and evidence
+-> deterministic patch suggestion extraction
+-> safe patch application on CARMINEai/* review branch
+-> product-vs-supplemental separation validation
+-> automatic source/doc path discovery from apply report
+-> draft GitHub PR for human review
+```
+
+The raw `output/**` reports are part of the official AI-to-AI process. They are not committed directly, but they are valid inputs for bundle building, final summaries, telemetry, evidence, patch-suggestion reports and draft-PR preparation.
+
+The internal tools remain reuse-first implementation details of the launcher path:
+
+```text
+Tools/ai/build_task_patch_suggestion_report.py
+Tools/ai/apply_patch_suggestion_bundle.py
+Tools/ai/prepare_review_pr.py
+Tools/validation/check_patch_suggestion_product_separation.py
+```
+
+`prepare_review_pr.py` may accept explicit include paths, but the product path is automatic source/doc path discovery from `patch_suggestion_bundle_apply` results. Draft PR creation is the safe default; promotion to ready-for-review is explicit.
+
 ## Main runtime architecture
 
 Canonical contract:
@@ -38,12 +79,16 @@ shared runtime heap / blackboard
 Runtime meaning:
 
 ```text
-provider lanes advise, classify, plan or respond through explicit roles;
+GPU1 / Ollama / RTX 5080 is the primary advisory and planner lane;
+GPU0 / OpenVINO is a companion peer worker lane;
+NPU is a non-blocking microtask and tool-support lane;
 broker unico executor is the execution gateway for registered tools;
 semantic tools registry is the capability source of truth;
 deterministic CPU validators remain local pass/fail authority;
 telemetry/event stream records executed, skipped, degraded and blocked phases.
 ```
+
+Provider lanes must collaborate through explicit reports, broker requests, peer-exchange contracts and telemetry. Degraded GPU0/NPU support remains visible as supplemental evidence and must not hide a valid deterministic patch product.
 
 This architecture is implemented incrementally. Do not claim that a lane executed unless manifest, telemetry, provider diagnostics or validator evidence proves it.
 
@@ -88,16 +133,16 @@ Launcher manifest contract:
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
-Use those documents for current commands, `-Full0To10`, intensity profiles, provider flags, reset mode, memory controls, patch-spec generation and validation modes.
+Use those documents for current commands, `-Full0To10`, intensity profiles, provider flags, reset mode, memory controls, patch-spec generation, evidence/bundle production, patch suggestion apply and draft review PR creation.
 
 ## Current code-derived state
 
 ```text
-Baseline: master after PR #187 merge
+Baseline: master after PR #210 merge
 Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
 Current bridge: docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
-Current documentation architecture PR: #196 docs(ai): add main runtime architecture contract
-Mode: review-only until explicit human instruction
+Current product: Full0To10 Markdown-to-bundle-to-draft-PR loop
+Mode: review-first; merge to master only by explicit human instruction
 ```
 
 Do not treat `codex/unified-local-ai-refactor-launcher` or PR #187 as the active branch anymore. PR #187 is the merged baseline.
@@ -164,6 +209,8 @@ CSV/count summaries when inventory lanes ran
 discovery/index repair reports when relevant
 file-line-limit reports when maintainability is in scope
 blackboard/broker/registry/validator/event-stream reports when implemented
+patch_suggestion_bundle_apply reports when deterministic edits ran
+review_pr_prepare reports when a draft PR product was created
 ```
 
 Never infer success only from file existence, focused validator output, dry-run matrix output, provider report existence, NPU smoke, patch plan existence or large Markdown text.
