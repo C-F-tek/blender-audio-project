@@ -7,6 +7,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -60,13 +61,43 @@ def compact_artifact_stamp(stamp: str, max_chars: int = 56) -> str:
     return f"{head}-{digest}"
 
 
+def is_windowsapps_python(path_value: str) -> bool:
+    normalized = str(path_value).replace("\\", "/").lower()
+    return "/windowsapps/" in normalized and "python" in Path(path_value).name.lower()
+
+
+def normalize_python_candidate(path_value: str) -> str:
+    candidate = Path(path_value)
+    try:
+        if candidate.is_file():
+            return str(candidate.resolve())
+    except OSError:
+        return ""
+    return ""
+
+
 def resolve_python(repo_root: Path) -> str:
     env_python = os.environ.get("IA_CARMINE_PYTHON", "")
-    if env_python and Path(env_python).is_file():
-        return str(Path(env_python))
-    for candidate in (repo_root / ".venv/Scripts/python.exe", repo_root / "venv/Scripts/python.exe"):
-        if candidate.is_file():
-            return str(candidate)
+    candidates = [
+        env_python,
+        str(repo_root / ".venv/Scripts/python.exe"),
+        str(repo_root / "venv/Scripts/python.exe"),
+        str(repo_root / ".venv314/Scripts/python.exe"),
+    ]
+
+    current = normalize_python_candidate(sys.executable)
+    if current and not is_windowsapps_python(current):
+        candidates.append(current)
+
+    for raw in candidates:
+        if not raw:
+            continue
+        normalized = normalize_python_candidate(raw)
+        if normalized:
+            return normalized
+
+    if sys.executable and not is_windowsapps_python(sys.executable):
+        return sys.executable
     return "python"
 
 
@@ -90,6 +121,10 @@ class WorkflowContext:
         env = os.environ.copy()
         env["IA_CARMINE_PYTHON"] = self.python_exe
         env["PYTHONPATH"] = str(self.repo_root)
+        python_path = Path(self.python_exe)
+        if python_path.is_file():
+            python_dir = str(python_path.resolve().parent)
+            env["PATH"] = python_dir + os.pathsep + env.get("PATH", "")
         completed = subprocess.run(command, cwd=self.repo_root, timeout=timeout, env=env)
         if completed.returncode != 0:
             self.warnings.append(f"{label} failed with exit code {completed.returncode}")
@@ -99,19 +134,38 @@ class WorkflowContext:
         return self.run(label, [self.python_exe, *args], timeout=timeout)
 
     def run_powershell(self, label: str, script: str, params: dict[str, Any]) -> int:
-        command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script]
+        # IA-CARMINE-PS-SPLAT-ARRAY-SAFE-BEGIN
+        # Use PowerShell splatting syntax for list parameters. Passing a
+        # Python list as repeated positional CLI arguments after ``-File`` can
+        # make PowerShell bind later paths to unrelated positional parameters
+        # such as MaxContextChars. The command string below keeps arrays
+        # attached to their named parameter, e.g. ``-ReportFile @('a','b')``.
+        def quote_ps(value: Any) -> str:
+            return "'" + str(value).replace("'", "''") + "'"
+
+        script_parts: list[str] = ["&", quote_ps(script)]
         for key, value in params.items():
             if isinstance(value, bool):
                 if value:
-                    command.append(f"-{key}")
-            elif isinstance(value, (list, tuple)):
-                if value:
-                    command.append(f"-{key}")
-                    command.extend(str(item) for item in value)
-            elif value is not None:
-                command.extend((f"-{key}", str(value)))
-        return self.run(label, command)
+                    script_parts.append(f"-{key}")
+                continue
 
+            if isinstance(value, (list, tuple)):
+                values = [str(item) for item in value if item is not None and str(item) != ""]
+                if values:
+                    array_literal = "@(" + ", ".join(quote_ps(item) for item in values) + ")"
+                    script_parts.append(f"-{key}")
+                    script_parts.append(array_literal)
+                continue
+
+            if value is not None:
+                script_parts.append(f"-{key}")
+                script_parts.append(quote_ps(value))
+
+        command_text = "$ErrorActionPreference = 'Stop'; " + " ".join(script_parts)
+        command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command_text]
+        return self.run(label, command)
+        # IA-CARMINE-PS-SPLAT-ARRAY-SAFE-END
 
 def build_paths(stamp: str, evidence_dir: str) -> dict[str, str]:
     s = compact_artifact_stamp(stamp)

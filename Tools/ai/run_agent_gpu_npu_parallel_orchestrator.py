@@ -85,11 +85,55 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def is_windowsapps_python(path_value: str) -> bool:
+    normalized = str(path_value).replace("\\", "/").lower()
+    return "/windowsapps/" in normalized and "python" in Path(path_value).name.lower()
+
+
+def normalize_python_candidate(path_value: str) -> str:
+    candidate = Path(path_value)
+    try:
+        if candidate.is_file():
+            return str(candidate.resolve())
+    except OSError:
+        return ""
+    return ""
+
+
+def resolve_child_python(repo_root: Path | None = None) -> str:
+    root = repo_root or Path.cwd()
+    env_python = os.environ.get("IA_CARMINE_PYTHON", "")
+    candidates = [
+        env_python,
+        str(root / ".venv/Scripts/python.exe"),
+        str(root / "venv/Scripts/python.exe"),
+        str(root / ".venv314/Scripts/python.exe"),
+    ]
+
+    current = normalize_python_candidate(getattr(sys, "executable", ""))
+    if current and not is_windowsapps_python(current):
+        candidates.append(current)
+
+    for raw in candidates:
+        if not raw:
+            continue
+        normalized = normalize_python_candidate(raw)
+        if normalized:
+            return normalized
+
+    return "python"
+
+
 def command_env(repo_root: Path) -> dict[str, str]:
     env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     existing = env.get("PYTHONPATH", "")
     repo_path = str(repo_root)
+    child_python = resolve_child_python(repo_root)
+    env["IA_CARMINE_PYTHON"] = child_python
     env["PYTHONPATH"] = repo_path if not existing else repo_path + os.pathsep + existing
+    python_path = Path(child_python)
+    if python_path.is_file():
+        env["PATH"] = str(python_path.resolve().parent) + os.pathsep + env.get("PATH", "")
     return env
 
 
@@ -255,7 +299,7 @@ def run_orchestrator_runtime_tool_broker_packet(
     broker_markdown = out_dir / f"{output_prefix}_runtime_tool_broker.md"
     request_packet = {"schema_version": 1, "kind": request_kind, "repo_root": str(repo_root), "source": source, "tool_requests": tool_requests, "guardrails": {"free_shell_allowed": False, "broker_allowlist_required": True, "patch_application_allowed": False, "provider_execution_allowed": False, "persistent_memory_write_allowed": False, "manual_review_required": True}}
     write_json(request_file, request_packet)
-    command = [sys.executable, "Tools/ai/agent_runtime_tool_broker.py", "--repo-root", ".", "--request-file", str(request_file), "--tool-output-dir", str(out_dir), "--timeout-seconds", str(args.runtime_tool_timeout_seconds), "--output", str(broker_output), "--markdown-output", str(broker_markdown)]
+    command = [resolve_child_python(), "Tools/ai/agent_runtime_tool_broker.py", "--repo-root", ".", "--request-file", str(request_file), "--tool-output-dir", str(out_dir), "--timeout-seconds", str(args.runtime_tool_timeout_seconds), "--output", str(broker_output), "--markdown-output", str(broker_markdown)]
     returncode, stdout, stderr, error = run_command_sync(command, repo_root, args.runtime_tool_timeout_seconds + 30)
     broker_report: dict[str, Any] = {}
     broker_output_exists = broker_output.exists()
@@ -335,7 +379,7 @@ def collect_stdout_stderr(process: subprocess.Popen[str]) -> tuple[str, str]:
 
 def build_gpu_command(args: argparse.Namespace, repo_root: Path, checkpoint_dir: Path, gpu_output: Path, gpu_markdown: Path) -> list[str]:
     command = [
-        sys.executable,
+        resolve_child_python(),
         "Tools/ai/run_agent_gpu_deep_planning_supervised.py",
         "--repo-root",
         ".",
@@ -426,7 +470,7 @@ def gpu0_peer_support_output_path(args: argparse.Namespace, repo_root: Path, rou
 
 def build_gpu0_peer_support_command(args: argparse.Namespace, support_json: Path, round_id: int) -> list[str]:
     return [
-        sys.executable,
+        resolve_child_python(),
         "Tools/ai/build_openvino_gpu0_workload_report.py",
         "--repo-root",
         ".",
@@ -650,7 +694,7 @@ def build_npu_micro_support_command(
     round_id: int,
 ) -> list[str]:
     command = [
-        sys.executable,
+        resolve_child_python(),
         "Tools/ai/run_npu_gpu_deep_review_auditor.py",
         "--repo-root",
         ".",
@@ -977,7 +1021,7 @@ def run_npu_runtime_tool_broker_for_audit(
     }
     write_json(request_file, request_packet)
     command = [
-        sys.executable,
+        resolve_child_python(),
         "Tools/ai/agent_runtime_tool_broker.py",
         "--repo-root",
         ".",
@@ -1171,7 +1215,7 @@ def execute_npu_micro_live_tool_seed(
 
 def build_npu_command(args: argparse.Namespace, repo_root: Path, checkpoint: Path, audit_json: Path) -> list[str]:
     command = [
-        sys.executable,
+        resolve_child_python(),
         "Tools/ai/run_npu_gpu_deep_review_auditor.py",
         "--repo-root",
         ".",
