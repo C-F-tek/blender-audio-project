@@ -174,7 +174,7 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
         f"- PR created: {report.get('github_pr_created')}",
         f"- PR URL: {report.get('github_pr_url') or ''}",
         f"- Product commit: `{report.get('product_commit') or ''}`",
-        f"- Evidence commit: `{report.get('evidence_commit') or ''}`",
+        f"- Evidence report committed: {report.get('git_evidence_commit_performed', False)}",
         "",
         "## Staged Product Paths",
         "",
