@@ -17,6 +17,7 @@ TOOL_REPORT_KEYS = [
     "deterministic_smoke_json",
     "decision_loop_smoke_json",
     "npu_env_json",
+    "openvino_governance_json",
     "gpu_replay_json",
     "gpu_npu_sync_json",
     "provider_contract_json",
@@ -163,7 +164,7 @@ def build_evidence_bundle(ctx: WorkflowContext) -> None:
     else:
         ctx.warnings.append("shared toolbox bundle skipped by request")
     report_paths = existing(ctx, "orch_json", "gpu_json", *TOOL_REPORT_KEYS, "heap_from_peer_json", "final_product_json", "final_product_manifest", "final_product_evidence", "final_product_readiness", "recommendations_json", "bridge_json", "decision_json", "patch_plan_json")
-    artifact_paths = existing(ctx, "repo_consistency_md", "repo_consistency_smoke_md", "line_count_all_md", "decision_md", "gpu1_primary_md", "gpu0_response_md", "npu_micro_md", "npu_broker_md", "peer_md", "peer_contract_md", "heap_from_peer_md", "heap_telemetry_md", "heap_init_md", "heap_gpu1_request_md", "heap_broker_md", "heap_npu_md", "heap_snapshot_md", "final_product_md", "final_product_readme", "patch_plan_md")
+    artifact_paths = existing(ctx, "repo_consistency_md", "repo_consistency_smoke_md", "line_count_all_md", "openvino_governance_md", "decision_md", "gpu1_primary_md", "gpu0_response_md", "npu_micro_md", "npu_broker_md", "peer_md", "peer_contract_md", "heap_from_peer_md", "heap_telemetry_md", "heap_init_md", "heap_gpu1_request_md", "heap_broker_md", "heap_npu_md", "heap_snapshot_md", "final_product_md", "final_product_readme", "patch_plan_md")
     line_csv = ctx.paths.get("line_count_csv")
     if line_csv and Path(line_csv).exists():
         artifact_paths.append(line_csv)
@@ -227,7 +228,7 @@ def evidence_to_commit(ctx: WorkflowContext) -> list[str]:
 
 def write_workflow(ctx: WorkflowContext) -> None:
     report_keys = ["memory_workflow", "evidence", "provider_contract_json", *TOOL_REPORT_KEYS, "orch_json", "gpu_json", "gpu_replay_json", "gpu_npu_sync_json", "recommendations_json", "bridge_json", "decision_json", "patch_plan_json", "heap_from_peer_json", "heap_telemetry_json", "final_product_json", "final_product_manifest", "final_product_evidence", "final_product_readiness", "artifact_path_policy_json", "bundle_validation_json", "final_python_syntax_json", "final_contract_json"]
-    artifact_keys = ["memory_bundle_json", "memory_bundle_md", "memory_line_count_csv", "evidence_md", "provider_contract_md", "repo_consistency_md", "repo_consistency_smoke_md", "line_count_all_md", "code_interpreter_md", "gpu_contract_smoke_md", "deterministic_smoke_md", "decision_loop_smoke_md", "npu_env_md", "orch_md", "gpu_md", "gpu_replay_md", "gpu_npu_sync_md", "recommendations_md", "decision_md", "patch_plan_md", "telemetry_json", "telemetry_md", "runtime_usage_json", "runtime_usage_md", "runtime_capability_json", "runtime_capability_md", "gpu1_primary_md", "gpu0_response_md", "gpu0_broker_md", "npu_micro_md", "npu_broker_md", "peer_md", "peer_contract_md", "heap_from_peer_md", "heap_telemetry_md", "heap_snapshot_md", "heap_events", "final_product_md", "final_product_readme", "artifact_path_policy_md", "chunk_manifest_json", "chunk_manifest_md", "bundle_json", "bundle_md"]
+    artifact_keys = ["memory_bundle_json", "memory_bundle_md", "memory_line_count_csv", "evidence_md", "provider_contract_md", "repo_consistency_md", "repo_consistency_smoke_md", "line_count_all_md", "code_interpreter_md", "gpu_contract_smoke_md", "deterministic_smoke_md", "decision_loop_smoke_md", "npu_env_md", "openvino_governance_md", "orch_md", "gpu_md", "gpu_replay_md", "gpu_npu_sync_md", "recommendations_md", "decision_md", "patch_plan_md", "telemetry_json", "telemetry_md", "runtime_usage_json", "runtime_usage_md", "runtime_capability_json", "runtime_capability_md", "gpu1_primary_md", "gpu0_response_md", "gpu0_broker_md", "npu_micro_md", "npu_broker_md", "peer_md", "peer_contract_md", "heap_from_peer_md", "heap_telemetry_md", "heap_snapshot_md", "heap_events", "final_product_md", "final_product_readme", "artifact_path_policy_md", "chunk_manifest_json", "chunk_manifest_md", "bundle_json", "bundle_md"]
     for key in report_keys:
         add_existing(ctx.reports, ctx.p(key))
     for key in artifact_keys:

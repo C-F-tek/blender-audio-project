@@ -28,6 +28,11 @@ param(
     [int]$NpuMicroTimeoutSeconds = 60,
     [int]$NpuMicroBrokerTimeoutSeconds = 90,
     [int]$NpuFinalWaitSeconds = 180,
+    [ValidateSet("startup", "deferred", "live-seed-only", "disabled")]
+    [string]$NpuMicroStartMode = "deferred",
+    [switch]$SkipNpuMicroProvider,
+    [switch]$SkipNpuLiveToolSeed,
+    [int]$NpuMicroMaxLiveProviderRounds = 0,
     [int]$MinRecommendations = 1,
     [int]$MinPatchPlans = 1,
     [int]$RepositoryConsistencyMapWorkers = 8

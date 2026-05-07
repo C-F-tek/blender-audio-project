@@ -138,6 +138,8 @@ def build_paths(stamp: str, evidence_dir: str) -> dict[str, str]:
         "decision_loop_smoke_md": f"output/validation/agent_review_decision_loop_smoke_full_toolbox_{s}.md",
         "npu_env_json": f"output/validation/npu_provider_environment_full_toolbox_{s}.json",
         "npu_env_md": f"output/validation/npu_provider_environment_full_toolbox_{s}.md",
+        "openvino_governance_json": f"output/validation/openvino_hardware_governance_full_toolbox_{s}.json",
+        "openvino_governance_md": f"output/validation/openvino_hardware_governance_full_toolbox_{s}.md",
         "repo_consistency_json": f"output/analysis/repository_consistency_map_full_toolbox_{s}.json",
         "repo_consistency_md": f"output/analysis/repository_consistency_map_full_toolbox_{s}.md",
         "repo_consistency_smoke_json": f"output/validation/repository_consistency_map_smoke_full_toolbox_{s}.json",

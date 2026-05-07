@@ -38,6 +38,7 @@ INT_DEFAULTS = {
     "NpuMicroTimeoutSeconds": 60,
     "NpuMicroBrokerTimeoutSeconds": 90,
     "NpuFinalWaitSeconds": 180,
+    "NpuMicroMaxLiveProviderRounds": 0,
     "MinRecommendations": 1,
     "MinPatchPlans": 1,
     "RepositoryConsistencyMapWorkers": 8,
@@ -49,6 +50,7 @@ STRING_DEFAULTS = {
     "OutputRoot": "output",
     "EvidenceDir": "docs/LOCAL_VALIDATION_EVIDENCE",
     "KeepAlive": "35m",
+    "NpuMicroStartMode": "deferred",
 }
 
 SWITCHES = (
@@ -59,6 +61,8 @@ SWITCHES = (
     "SkipPostValidationPacket",
     "SkipSharedToolboxBundle",
     "UseLegacyPowerShellImplementation",
+    "SkipNpuMicroProvider",
+    "SkipNpuLiveToolSeed",
 )
 
 
