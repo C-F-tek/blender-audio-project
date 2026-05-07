@@ -19,6 +19,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$PythonEnvScript = Join-Path $PSScriptRoot "python_env.ps1"
+. $PythonEnvScript
 
 function Resolve-RepoRoot {
     param([string]$Path)
@@ -40,6 +42,7 @@ function Invoke-ValidationStep {
 
 $repo = Resolve-RepoRoot $RepoRoot
 Set-Location $repo
+$NpuHelperPythonExe = Use-WorkflowPython -RepoRoot $repo
 
 if (-not (Test-Path -LiteralPath $OutputDir)) {
     New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null

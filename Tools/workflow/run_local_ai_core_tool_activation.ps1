@@ -54,6 +54,9 @@ function Invoke-Checked {
 
 $RepoRootPath = Resolve-ExistingPath $RepoRoot
 Set-Location $RepoRootPath
+$PythonEnvScript = Join-Path $PSScriptRoot "python_env.ps1"
+. $PythonEnvScript
+$CoreToolPythonExe = Use-WorkflowPython -RepoRoot $RepoRootPath
 
 $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $SafeRunName = [regex]::Replace($RunName.ToLowerInvariant(), "[^a-z0-9._-]+", "_").Trim("._-")
@@ -92,6 +95,7 @@ $MegalithicReviewPrDraftMd = "output/ai_pipeline/local_ai_core_tool_activation_m
 
 Write-Host "=== IA-Carmine Local AI Core/Tool Activation ===" -ForegroundColor Green
 Write-Host "Repo: $RepoRootPath"
+Write-Host "Python: $CoreToolPythonExe"
 Write-Host "Task file: $TaskFile"
 Write-Host "Run dir: $RunDir"
 Write-Host "Use explicit providers: $UseExplicitProviders"

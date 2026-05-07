@@ -3,6 +3,22 @@
 Status: active final-phase runbook  
 Scope: IA-Carmine full toolbox flow, patch suggestion application, local PR verification.
 
+## Product North Star
+
+Current product: a task Markdown asks for a concrete repository improvement; the
+tool evaluates the repository state, produces patch suggestions, applies the
+accepted deterministic suggestion on a dedicated `CARMINEai/...$Stamp` branch,
+pushes it, and opens a GitHub PR for human review.
+
+Future product: the same shape becomes an agnostic AI tool. It receives a
+request and project paths, runs the tool chain in the middle, and returns the
+requested output plus reviewable evidence.
+
+Runtime rule: every phase must use the same provider-capable repo Python,
+exported as `IA_CARMINE_PYTHON`, with `PYTHONPATH` set to the repo root. This is
+the `.venv` that can see OpenVINO `GPU.0`/`NPU`; wrapper scripts must not fall
+back to WindowsApps or a random global `python`.
+
 ## Objective
 
 After the full toolbox run produces patch notes, telemetry and suggestion/proposal JSON, the final phase is allowed to apply only deterministic, reviewable patch operations on a dedicated PR branch.

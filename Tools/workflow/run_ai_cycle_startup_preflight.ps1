@@ -20,14 +20,13 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "python_env.ps1")
 $RepoRootPath = Resolve-Path $RepoRoot
 Set-Location $RepoRootPath
-
 if ($Stamp -eq "") {
     $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 }
-
-$env:PYTHONPATH = (Get-Location).Path
+$null = Use-WorkflowPython -RepoRoot $RepoRootPath
 
 $AiPipelineDir = Join-Path $OutputRoot "ai_pipeline"
 $ValidationDir = Join-Path $OutputRoot "validation"
@@ -43,7 +42,7 @@ function Invoke-RepoPython {
     )
     Write-Host ""
     Write-Host "=== $Label ==="
-    python @ArgsList
+    Invoke-WorkflowPython $ArgsList
 }
 
 function Add-ExistingPath {

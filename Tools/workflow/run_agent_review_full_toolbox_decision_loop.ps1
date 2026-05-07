@@ -53,12 +53,10 @@ if (-not (Test-Path -LiteralPath $PythonRunner -PathType Leaf)) {
     throw "Full toolbox decision-loop Python runner not found: $PythonRunner"
 }
 
-$PythonExe = "python"
-if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON) -and (Test-Path -LiteralPath $env:IA_CARMINE_PYTHON -PathType Leaf)) {
-    $PythonExe = $env:IA_CARMINE_PYTHON
-} elseif (Test-Path -LiteralPath (Join-Path $PSScriptRoot "..\..\.venv\Scripts\python.exe") -PathType Leaf) {
-    $PythonExe = (Resolve-Path (Join-Path $PSScriptRoot "..\..\.venv\Scripts\python.exe")).Path
-}
+$PythonEnvScript = Join-Path $PSScriptRoot "python_env.ps1"
+. $PythonEnvScript
+$RepoRootPath = (Resolve-Path -LiteralPath $RepoRoot).Path
+$PythonExe = Use-WorkflowPython -RepoRoot $RepoRootPath
 
 $ForwardArgs = @($PythonRunner)
 foreach ($Key in $PSBoundParameters.Keys) {

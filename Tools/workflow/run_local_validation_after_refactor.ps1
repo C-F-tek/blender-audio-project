@@ -38,6 +38,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$PythonEnvScript = Join-Path $PSScriptRoot "python_env.ps1"
+. $PythonEnvScript
 
 function Resolve-RepoRoot {
     param([string]$Path)
@@ -109,6 +111,7 @@ function Invoke-Step {
 
 $repo = Resolve-RepoRoot $RepoRoot
 Set-Location $repo
+$ValidationPythonExe = Use-WorkflowPython -RepoRoot $repo
 
 $logPath = Join-Path $repo $LogDir
 New-LogDirectory $logPath
@@ -125,6 +128,7 @@ Add-Content -LiteralPath $script:MainLog -Value "MatrixWorkers: $MatrixWorkers"
 Add-Content -LiteralPath $script:MainLog -Value "RepeatCases: $RepeatCases"
 Add-Content -LiteralPath $script:MainLog -Value "BuildAiPacket: $BuildAiPacket"
 Add-Content -LiteralPath $script:MainLog -Value "UseOllama: $UseOllama"
+Add-Content -LiteralPath $script:MainLog -Value "Python: $ValidationPythonExe"
 
 try {
     if (-not $SkipPull) {

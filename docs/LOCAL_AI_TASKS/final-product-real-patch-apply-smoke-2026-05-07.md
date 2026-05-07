@@ -3,6 +3,20 @@
 Status: active local product test  
 Scope: task Markdown to concrete patch suggestion to applied PR patch.
 
+## Product North Star
+
+Current product: read a task Markdown, evaluate this repository, produce concrete
+patch suggestions, apply the accepted deterministic suggestion on a dedicated
+`CARMINEai/...$Stamp` branch, push it, and open a GitHub PR for human review.
+
+Future product: an agnostic AI tool receives a request and project paths, runs
+the tool chain in the middle, and returns the requested output plus reviewable
+evidence.
+
+Runtime rule: all wrappers and subprocesses must use the same provider-capable
+repo `.venv` Python through `IA_CARMINE_PYTHON`, `PYTHONPATH` and `PATH`, because
+GPU0/OpenVINO and NPU visibility depend on that interpreter.
+
 ## Objective
 
 Apply one deterministic documentation patch from this task Markdown and publish
@@ -46,4 +60,36 @@ No merge to master.
 No force-push.
 No automatic patch-spec apply outside this deterministic suggestion.
 No output/**, generated code chunks, DB, SQLite or render commit.
+```
+
+## Follow-up: Provider Acceptance Gate
+
+The patch sub-chain can pass while the Full0To10 provider acceptance gate still
+fails closed. In that state the complete product is not accepted yet.
+
+Current failing gate to resolve before claiming full green:
+
+```text
+Full0To10 provider acceptance gate after final GPU0 workload failed with exit code 2
+```
+
+Classifications observed:
+
+```text
+gpu0_peer_semantic_model_unconfigured
+blocked_missing_refined_review_input
+```
+
+Resolution tasks:
+
+```text
+1. Configure or explicitly classify IA_CARMINE_GPU0_COMPANION_MODEL_DIR so GPU0
+   can be semantic companion when a model is available.
+2. Produce or intentionally supersede
+   output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review_v3.json
+   before the provider acceptance gate.
+3. Update the acceptance gate so product-patch success and provider-mesh
+   degradation are reported as separate statuses.
+4. Keep NPU as non-blocking support; final NPU acceptance checks must be
+   verified by GPU0/GPU1 plus deterministic validators, not by NPU itself.
 ```

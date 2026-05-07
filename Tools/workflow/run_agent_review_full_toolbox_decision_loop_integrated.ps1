@@ -37,19 +37,9 @@ if ($Stamp -eq "") {
     $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 }
 
-$env:PYTHONPATH = (Get-Location).Path
-$script:RepoPythonExe = "python"
-if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) {
-    if (Test-Path -LiteralPath $env:IA_CARMINE_PYTHON -PathType Leaf) {
-        $script:RepoPythonExe = $env:IA_CARMINE_PYTHON
-    } else {
-        Write-Warning "IA_CARMINE_PYTHON is set but not found: $env:IA_CARMINE_PYTHON"
-    }
-} elseif (Test-Path -LiteralPath ".\.venv\Scripts\python.exe" -PathType Leaf) {
-    $script:RepoPythonExe = (Resolve-Path ".\.venv\Scripts\python.exe").Path
-} elseif (Test-Path -LiteralPath ".\venv\Scripts\python.exe" -PathType Leaf) {
-    $script:RepoPythonExe = (Resolve-Path ".\venv\Scripts\python.exe").Path
-}
+$PythonEnvScript = Join-Path $PSScriptRoot "python_env.ps1"
+. $PythonEnvScript
+$script:RepoPythonExe = Use-WorkflowPython -RepoRoot $RepoRootPath
 
 function Read-JsonFile {
     param([string]$Path)

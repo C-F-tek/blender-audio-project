@@ -83,12 +83,14 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $AdapterModuleDir = Join-Path $PSScriptRoot "run_local_ai_task_via_pipeline"
+. (Join-Path $PSScriptRoot "python_env.ps1")
 . (Join-Path $AdapterModuleDir "paths.ps1")
 . (Join-Path $AdapterModuleDir "context.ps1")
 . (Join-Path $AdapterModuleDir "validation.ps1")
 
 $RepoRootPath = Resolve-ExistingPath $RepoRoot
 Set-Location $RepoRootPath
+$PipelinePythonExe = Use-WorkflowPython -RepoRoot $RepoRootPath
 
 if ($FullContextGoldenPath) {
     $Profile = "npu"
@@ -178,6 +180,7 @@ $ReportFiles = @(
 
 Write-Host "=== Local AI task via project pipeline ==="
 Write-Host "Repo: $RepoRootPath"
+Write-Host "Python: $PipelinePythonExe"
 Write-Host "Prompt: $PromptRel"
 Write-Host "Task: $TaskRel"
 Write-Host "Pipeline output: $PipelineRel"
