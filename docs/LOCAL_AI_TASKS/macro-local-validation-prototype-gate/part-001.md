@@ -171,12 +171,7 @@ python .\Tools\validation\check_docs_links.py `
   --repo-root . `
   --output .\output\validation\docs_links_pr108.json
 
-python .\Tools\validation\check_markdown_command_hygiene.py `
-  --repo-root . `
-  --path docs/CONTRACT_DRIFT_VALIDATION.md `
-  --path docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md `
-  --path docs/README.md `
-  --output .\output\validation\markdown_command_hygiene_pr108.json
+# Removed obsolete check_markdown_command_hygiene.py command; the script is not tracked in current master. Use check_docs_links.py plus check_validation_report_contract.py for this gate.
 
 python .\Tools\validation\check_validation_report_contract.py `
   --repo-root . `

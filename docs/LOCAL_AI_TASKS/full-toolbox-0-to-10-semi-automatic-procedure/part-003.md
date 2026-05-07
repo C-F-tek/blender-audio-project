@@ -327,7 +327,8 @@ python ".\output\validation\patch_bundles\full_toolbox_agent_review_patch_bundle
 Validate after apply:
 
 ```powershell
-& ".\output\validation\patch_bundles\full_toolbox_agent_review_patch_bundle_${Stamp}\scripts\validate_after_patch.ps1" -RepoRoot .
+# Run the generated post-apply validation script from the reviewed bundle if present.
+# The generated script path lives under output/** and is not a tracked repository command.
 
 git diff --stat
 git diff --check

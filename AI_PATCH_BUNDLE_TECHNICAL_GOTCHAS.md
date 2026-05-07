@@ -289,7 +289,7 @@ PowerShell parser validation:
 ```powershell
 $ParseErrors = $null
 $Tokens = $null
-[System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path ".\Tools\workflow\some_script.ps1"), [ref]$Tokens, [ref]$ParseErrors) | Out-Null
+[System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path ".\Tools\workflow\<declared PowerShell target>"), [ref]$Tokens, [ref]$ParseErrors) | Out-Null
 $ParseErrors | Format-List
 if ($ParseErrors.Count) { exit 1 }
 ```
@@ -322,7 +322,7 @@ Use explicit add lists:
 git add `
   .\Tools\ai\some_tool.py `
   .\Tools\validation\some_smoke.py `
-  .\Tools\workflow\some_runner.ps1
+  .\Tools\workflow\<declared PowerShell runner>
 ```
 
 Never commit:

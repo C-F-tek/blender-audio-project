@@ -26,7 +26,7 @@ Robust fix:
 Prefer real files or patch bundles over long chat blocks.
 For complex fixes, deliver a ZIP or repository file containing:
 - README.txt or README.md;
-- run_patch_bundle.py or run_patch_bundle.ps1;
+- run_patch_bundle.py or bundle runner script;
 - validation commands;
 - exact target files;
 - no automatic git add/commit/push.

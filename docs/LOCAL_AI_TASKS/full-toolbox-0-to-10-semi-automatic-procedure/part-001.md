@@ -98,7 +98,7 @@ Memory:
 Muscles / patch execution lane:
   Tools/ai/build_agent_review_patch_bundle.py
   generated run_patch_bundle.py
-  generated validate_after_patch.ps1
+  generated post-apply validation script
 
 Bloodstream / compact evidence:
   docs/LOCAL_VALIDATION_EVIDENCE/*.json

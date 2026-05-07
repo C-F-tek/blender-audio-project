@@ -128,66 +128,24 @@ Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1
 docs/LOCAL_AI_TASKS/full-toolbox-0-to-10-semi-automatic-procedure.md
 ```
 
-## How to apply the prepared bundle locally
+## Historical prepared bundle note
 
-Extract ZIP to:
+The previously referenced strict-activation ZIP was a local transient bundle, not a tracked repository command. Do not document an `output/validation/patch_bundles/**/run_patch_bundle.py` path as an executable project command.
+
+Current rule:
 
 ```text
-output/validation/patch_bundles/ia_carmine_real_run_strict_tool_activation_bundle/
+Recreate patch bundles from current tracked tooling when needed.
+Keep transient bundle runners under output/** uncommitted.
+Validate the tracked workflow files directly after any replacement.
 ```
 
-Run from repository root:
-
-```powershell
-python .\output\validation\patch_bundles\ia_carmine_real_run_strict_tool_activation_bundle\run_patch_bundle.py
-```
-
-Validate PowerShell parser:
+Validation for tracked workflow files remains:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$p=(Resolve-Path '.\Tools\workflow\run_unified_local_ai_refactor.ps1').Path; $t=$null; $e=$null; [System.Management.Automation.Language.Parser]::ParseFile($p,[ref]$t,[ref]$e)|Out-Null; $e"
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$p=(Resolve-Path '.\Tools\workflow\run_agent_review_full_toolbox_decision_loop.ps1').Path; $t=$null; $e=$null; [System.Management.Automation.Language.Parser]::ParseFile($p,[ref]$t,[ref]$e)|Out-Null; $e"
-```
-
-Then:
-
-```powershell
-git diff --check
-
-@(
-  ".\Tools\workflow\run_unified_local_ai_refactor.ps1",
-  ".\Tools\workflow\run_agent_review_full_toolbox_decision_loop.ps1",
-  ".\docs\LOCAL_AI_TASKS\full-toolbox-0-to-10-semi-automatic-procedure.md"
-) | ForEach-Object {
-  if (Test-Path $_) {
-    [PSCustomObject]@{
-      File = $_
-      Lines = (Get-Content $_ | Measure-Object -Line).Lines
-    }
-  }
-} | Format-Table -AutoSize
-```
-
-Commit only these files:
-
-```powershell
-git add `
-  .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
-  .\Tools\workflow\run_agent_review_full_toolbox_decision_loop.ps1 `
-  .\docs\LOCAL_AI_TASKS\full-toolbox-0-to-10-semi-automatic-procedure.md
-
-git commit -m "fix(ai): enforce strict tool activation for real runs"
-git push
-```
-
-Do not commit:
-
-```text
-output/validation/patch_bundles/**
-docs/LOCAL_VALIDATION_EVIDENCE/*
-indexAI/code_chunks/*
-output/**
 ```
 
 ## Before running again
