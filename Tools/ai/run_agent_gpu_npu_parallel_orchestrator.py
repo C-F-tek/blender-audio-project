@@ -49,6 +49,9 @@ except ImportError:
 
 try:
     from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python
+    from Tools.ai.provider_mesh_runtime.npu_micro import build_npu_micro_support_command, collect_runtime_tool_context_reports, npu_micro_context_reports, npu_micro_support_output_path
+    from Tools.ai.provider_mesh_runtime.gpu0_peer import build_gpu0_peer_support_command, gpu0_peer_support_output_path, should_launch_gpu0_peer_support
+    from Tools.ai.provider_mesh_runtime.runtime_heap import append_runtime_heap_event, write_runtime_heap_snapshot
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
@@ -135,58 +138,6 @@ def run_command_sync(command: list[str], repo_root: Path, timeout_seconds: int) 
         return 124, exc.stdout or "", exc.stderr or "", f"TimeoutExpired: {timeout_seconds}s"
     except Exception as exc:  # noqa: BLE001 - report-only runtime broker execution must be captured.
         return 1, "", "", f"{type(exc).__name__}: {exc}"
-
-
-def append_runtime_heap_event(
-    *,
-    args: argparse.Namespace,
-    repo_root: Path,
-    warnings: list[str],
-    source: str,
-    event_type: str,
-    payload: dict[str, Any],
-    round_id: int | None = None,
-    target: str | None = None,
-    correlation_id: str | None = None,
-) -> None:
-    if not getattr(args, "runtime_heap_stamp", ""):
-        return
-    try:
-        heap = ProviderRuntimeHeap.from_args(
-            repo_root,
-            args.runtime_heap_stamp,
-            getattr(args, "runtime_heap_events", ""),
-            getattr(args, "runtime_heap_snapshot", ""),
-            getattr(args, "runtime_heap_markdown", ""),
-        )
-        heap.append_event(
-            source=source,
-            target=target,
-            event_type=event_type,
-            round_id=round_id,
-            correlation_id=correlation_id,
-            payload=payload,
-        )
-    except Exception as exc:  # noqa: BLE001 - heap telemetry must not block provider orchestration.
-        warnings.append(f"runtime heap append failed for {source}:{event_type}: {type(exc).__name__}: {exc}")
-
-
-def write_runtime_heap_snapshot(*, args: argparse.Namespace, repo_root: Path, warnings: list[str]) -> dict[str, Any]:
-    if not getattr(args, "runtime_heap_stamp", ""):
-        return {}
-    try:
-        heap = ProviderRuntimeHeap.from_args(
-            repo_root,
-            args.runtime_heap_stamp,
-            getattr(args, "runtime_heap_events", ""),
-            getattr(args, "runtime_heap_snapshot", ""),
-            getattr(args, "runtime_heap_markdown", ""),
-        )
-        return heap.write_snapshot()
-    except Exception as exc:  # noqa: BLE001 - heap telemetry must not block provider orchestration.
-        warnings.append(f"runtime heap snapshot failed: {type(exc).__name__}: {exc}")
-        return {}
-
 
 def write_mesh_bootstrap_seed(
     *,
@@ -389,26 +340,6 @@ def build_gpu_command(args: argparse.Namespace, repo_root: Path, checkpoint_dir:
         command.extend(["--context-root", context_root])
     return command
 
-
-def collect_runtime_tool_context_reports(args: argparse.Namespace, repo_root: Path, round_id: int) -> list[Path]:
-    if not getattr(args, "enable_runtime_tool_broker", False):
-        return []
-    base = resolve_path(repo_root, args.runtime_tool_output_dir)
-    candidates = [
-        base / "round_000" / "round_000_runtime_tool_broker.json",
-        base / f"round_{round_id:03d}" / f"round_{round_id:03d}_runtime_tool_broker.json",
-    ]
-    reports: list[Path] = []
-    seen: set[str] = set()
-    for candidate in candidates:
-        key = str(candidate.resolve(strict=False))
-        if key in seen or not candidate.exists():
-            continue
-        seen.add(key)
-        reports.append(candidate)
-    return reports
-
-
 def record_round_id(record: dict[str, Any]) -> int:
     value = record.get("round")
     if value in (None, ""):
@@ -417,37 +348,6 @@ def record_round_id(record: dict[str, Any]) -> int:
         return int(value)
     except (TypeError, ValueError):
         return -1
-
-
-def gpu0_peer_support_output_path(args: argparse.Namespace, repo_root: Path, round_id: int) -> Path:
-    support_dir = resolve_path(repo_root, args.gpu0_peer_support_dir)
-    support_dir.mkdir(parents=True, exist_ok=True)
-    return support_dir / f"round_{round_id:03d}_gpu0_peer_support.json"
-
-
-def build_gpu0_peer_support_command(args: argparse.Namespace, support_json: Path, round_id: int) -> list[str]:
-    return [
-        resolve_child_python(),
-        "Tools/ai/build_openvino_gpu0_workload_report.py",
-        "--repo-root",
-        ".",
-        "--output",
-        str(support_json),
-        "--markdown-output",
-        str(support_json.with_suffix(".md")),
-        "--iterations",
-        str(args.gpu0_peer_support_iterations),
-        "--min-seconds",
-        str(args.gpu0_peer_support_min_seconds),
-        "--role",
-        f"peer_support_round_{round_id:03d}",
-        "--production-support",
-    ]
-
-
-def should_launch_gpu0_peer_support(round_id: int, every_rounds: int) -> bool:
-    return round_id == 1 or round_id % max(1, every_rounds) == 0
-
 
 def launch_gpu0_peer_support(
     *,
@@ -617,78 +517,6 @@ def harvest_finished_gpu0_peer_supports(
             },
         )
         active_supports.pop(round_id, None)
-
-
-def npu_micro_support_output_path(args: argparse.Namespace, repo_root: Path, round_id: int) -> Path:
-    support_dir = resolve_path(repo_root, args.npu_micro_support_dir)
-    support_dir.mkdir(parents=True, exist_ok=True)
-    return support_dir / f"round_{round_id:03d}_npu_micro_support.json"
-
-
-def npu_micro_context_reports(args: argparse.Namespace, repo_root: Path, round_id: int) -> list[Path]:
-    reports = collect_runtime_tool_context_reports(args, repo_root, round_id)
-    snapshot_value = str(getattr(args, "runtime_heap_snapshot", "") or "")
-    if snapshot_value:
-        snapshot = resolve_path(repo_root, snapshot_value)
-        if snapshot.exists():
-            reports.append(snapshot)
-    seen: set[str] = set()
-    unique: list[Path] = []
-    for report in reports:
-        key = str(report.resolve(strict=False))
-        if key in seen:
-            continue
-        seen.add(key)
-        unique.append(report)
-    return unique
-
-
-def build_npu_micro_support_command(
-    args: argparse.Namespace,
-    repo_root: Path,
-    source_report: Path,
-    output_json: Path,
-    round_id: int,
-) -> list[str]:
-    command = [
-        resolve_child_python(),
-        "Tools/ai/run_npu_gpu_deep_review_auditor.py",
-        "--repo-root",
-        ".",
-        "--gpu-review",
-        str(source_report),
-        "--run-npu",
-        "--context-output",
-        str(output_json.with_name(output_json.stem + "_context.md")),
-        "--npu-output",
-        str(output_json.with_name(output_json.stem + "_npu.md")),
-        "--npu-notes-output",
-        str(output_json.with_name(output_json.stem + "_npu_notes.md")),
-        "--npu-metadata-output",
-        str(output_json.with_name(output_json.stem + "_metadata.json")),
-        "--output",
-        str(output_json),
-        "--markdown-output",
-        str(output_json.with_suffix(".md")),
-        "--timeout-seconds",
-        str(args.npu_micro_support_timeout_seconds),
-        "--max-context-chars",
-        str(args.npu_micro_support_max_context_chars),
-        "--max-prompt-chars",
-        str(args.npu_micro_support_max_prompt_chars),
-        "--max-new-tokens",
-        str(args.npu_micro_support_max_new_tokens),
-        "--max-runtime-tool-context-chars",
-        str(args.npu_micro_support_max_runtime_tool_context_chars),
-        "--max-npu-tool-requests",
-        str(args.npu_micro_support_max_tool_requests),
-    ]
-    for context_report in npu_micro_context_reports(args, repo_root, round_id):
-        command.extend(["--runtime-tool-context-report", str(context_report)])
-    if args.npu_python:
-        command.extend(["--npu-python", args.npu_python])
-    return command
-
 
 def should_launch_npu_micro_support(round_id: int, every_rounds: int) -> bool:
     return round_id == 0 or round_id == 1 or round_id % max(1, every_rounds) == 0
