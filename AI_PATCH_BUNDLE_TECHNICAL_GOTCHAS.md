@@ -10,6 +10,75 @@ The file is intentionally placed at repository root so it is visible early, not 
 
 ## Current incident log
 
+### 2026-05-07 — patch-notes product confused with an apply bundle
+
+A `patch_notes_quality_product_<stamp>.json` file was treated like it might contain directly applicable patches.
+
+Observed product shape:
+
+```text
+kind = patch_notes_quality_product
+classification = ready_for_patch_notes_review
+patch_notes[].status = ready_for_manual_review
+manual_review_required = true
+```
+
+Root cause:
+
+```text
+The product is a suggestion ledger. It carries target files, summaries, edit strategies, validation commands and stop conditions, but it is not a diff and not an APPLY.ps1 patch bundle.
+```
+
+Operational rule:
+
+```text
+Never apply patch notes directly.
+```
+
+Required conversion path:
+
+```text
+patch_notes_quality_product / proposal_core
+  -> lane filtering
+  -> current-branch verification
+  -> stale/noise rejection
+  -> reviewed patch bundle or branch diff
+  -> py_compile/smoke/git diff validation
+```
+
+Lane order:
+
+```text
+1. python_python
+2. python_doc
+3. doc_doc
+4. doc_python
+```
+
+Stale suggestion rule:
+
+```text
+If a python_python suggestion reports a missing module/symbol, re-check master first. If the module or symbol now exists, record it as stale evidence and do not patch.
+```
+
+Generated/noise rule:
+
+```text
+Do not patch docs/LOCAL_VALIDATION_EVIDENCE/**, output/**, fenced-code directory trees or placeholder path examples just because the ledger mentions them. Convert obsolete executable-looking docs to design-only text when appropriate.
+```
+
+Bundle rule:
+
+```text
+A GitHub evidence bundle that includes patch_notes_quality_product must expose the compact proposal ledger as summary.proposal_core so later sessions can review proposals without relying on chat memory.
+```
+
+Canonical guide:
+
+```text
+docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md
+```
+
 ### 2026-05-03 — triple quote / macro-patch generation failure
 
 A Python script generated a ZIP patch bundle using nested triple-quoted strings that themselves contained Python and PowerShell multiline blocks.
@@ -380,6 +449,8 @@ Before giving Carmine a patch bundle:
 [ ] Did I provide PowerShell parse validation for `.ps1` files?
 [ ] Did I provide `py_compile` for changed Python files?
 [ ] Did I include `git diff --check` and explicit `git add` commands?
+[ ] Did I treat patch_notes_quality_product/proposal_core as review input rather than an apply bundle?
+[ ] Did I refresh every suggestion against current master before patching?
 ```
 
 ## Living notes
