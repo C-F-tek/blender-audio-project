@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import Any
 
@@ -306,6 +306,75 @@ def _repository_area_counts(repository_consistency: dict[str, Any]) -> dict[str,
             counts[area] = counts.get(area, 0) + int(count or 0)
     return counts
 
+
+UNPATCHABLE_REPOSITORY_PREFIXES = (
+    "output/",
+    "renders/",
+    ".git/",
+    "indexAI/code_chunks/",
+    "indexAI/project_code_chunks/",
+    "docs/LOCAL_VALIDATION_EVIDENCE/",
+)
+
+
+def _path_value(value: Any) -> str:
+    text = str(value or "").strip().replace("\\\\", "/")
+    while text.startswith("./"):
+        text = text[2:]
+    return text
+
+
+def _is_unpatchable_generated_path(path: str) -> bool:
+    normalized = _path_value(path)
+    if not normalized:
+        return True
+    if "*" in normalized or normalized.endswith("/"):
+        return True
+    lowered = normalized.lower()
+    if lowered.endswith((".db", ".sqlite")):
+        return True
+    return any(normalized.startswith(prefix) for prefix in UNPATCHABLE_REPOSITORY_PREFIXES)
+
+
+def _finding_patch_target(finding: dict[str, Any]) -> str:
+    kind = str(finding.get("kind") or "")
+    area = REPOSITORY_KIND_TO_PRODUCT_AREA.get(kind)
+    source = _path_value(finding.get("source") or finding.get("source_path"))
+    target = _path_value(finding.get("target") or finding.get("target_path"))
+    # For documentation consistency findings, the patch target is the document
+    # that contains the stale reference, not the missing referenced artifact.
+    if area in {"doc_doc", "doc_python"}:
+        return source
+    return source or target
+
+
+def _repository_patchable_area_counts(repository_consistency: dict[str, Any]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    raw_findings = safe_list(repository_consistency.get("findings"))
+    for item in raw_findings:
+        if not isinstance(item, dict):
+            continue
+        area = REPOSITORY_KIND_TO_PRODUCT_AREA.get(str(item.get("kind") or ""))
+        if not area:
+            continue
+        patch_target = _finding_patch_target(item)
+        if _is_unpatchable_generated_path(patch_target):
+            continue
+        counts[area] = counts.get(area, 0) + 1
+    # Older repository maps may expose counts but not full findings. Keep those
+    # counts only as a fallback when no detailed finding list is available.
+    if not raw_findings:
+        return _repository_area_counts(repository_consistency)
+    return counts
+
+
+def _subtract_counts(raw_counts: dict[str, int], patchable_counts: dict[str, int]) -> dict[str, int]:
+    result: dict[str, int] = {}
+    for area, raw_count in raw_counts.items():
+        filtered = int(raw_count or 0) - int(patchable_counts.get(area, 0) or 0)
+        if filtered > 0:
+            result[area] = filtered
+    return result
 def _proposal_area_counts(loaded: dict[str, dict[str, Any]]) -> dict[str, int]:
     counts: dict[str, int] = {}
     telemetry = safe_dict(loaded.get("full_toolbox_telemetry"))
@@ -341,7 +410,9 @@ def build_product_sufficiency(
     for note in notes:
         _bump_area(actual_area_counts, note.get("area"))
     actual_areas = sorted(actual_area_counts)
-    repository_area_counts = _repository_area_counts(safe_dict(loaded.get("repository_consistency")))
+    raw_repository_area_counts = _repository_area_counts(safe_dict(loaded.get("repository_consistency")))
+    repository_area_counts = _repository_patchable_area_counts(safe_dict(loaded.get("repository_consistency")))
+    unpatchable_repository_area_counts = _subtract_counts(raw_repository_area_counts, repository_area_counts)
     proposal_area_counts = _proposal_area_counts(loaded)
     available_area_counts = _merge_counts(repository_area_counts, proposal_area_counts, actual_area_counts)
     requested_areas = list(mode["requested_areas"])
@@ -382,6 +453,8 @@ def build_product_sufficiency(
         "actual_areas": actual_areas,
         "actual_area_counts": actual_area_counts,
         "repository_area_counts": repository_area_counts,
+        "raw_repository_area_counts": raw_repository_area_counts,
+        "unpatchable_repository_area_counts": unpatchable_repository_area_counts,
         "proposal_area_counts": proposal_area_counts,
         "available_area_counts": available_area_counts,
         "workflow_summary_passed": workflow.get("passed"),

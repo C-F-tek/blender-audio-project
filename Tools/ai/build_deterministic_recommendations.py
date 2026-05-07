@@ -454,21 +454,38 @@ def is_cosmetic_consistency_finding(finding: dict[str, Any]) -> bool:
     ).lower()
     return any(keyword in text for keyword in COSMETIC_FINDING_KEYWORDS)
 
+def finding_source_path(finding: dict[str, Any]) -> str:
+    return normalize_repo_path(finding.get("source") or finding.get("source_path"))
+
+
+def finding_target_path(finding: dict[str, Any]) -> str:
+    return normalize_repo_path(finding.get("target") or finding.get("target_path"))
+
+
+def finding_patch_target_file(finding: dict[str, Any]) -> str:
+    area = consistency_area(str(finding.get("kind") or ""))
+    source = finding_source_path(finding)
+    target = finding_target_path(finding)
+    # For documentation reference findings, the patch target is the document
+    # containing the stale reference, not the missing referenced artifact.
+    if area in {"doc_doc", "doc_python"}:
+        return source
+    return source or target
+
+
+def is_patchable_consistency_finding(finding: dict[str, Any], repo_root: Path) -> bool:
+    path = finding_patch_target_file(finding)
+    return bool(path) and target_path_error(path, repo_root) is None
+
 
 def consistency_target_file(finding: dict[str, Any], repo_root: Path) -> tuple[str, str | None]:
-    source = normalize_repo_path(finding.get("source"))
-    if source:
-        source_error = target_path_error(source, repo_root)
-        if source_error is None:
-            return source, None
-        return "", f"source {source!r}: {source_error}"
-    target = normalize_repo_path(finding.get("target"))
-    if target:
-        target_error = target_path_error(target, repo_root)
-        if target_error is None:
-            return target, None
-        return "", f"target {target!r}: {target_error}"
-    return "", "finding has neither source nor target"
+    patch_target = finding_patch_target_file(finding)
+    if patch_target:
+        patch_error = target_path_error(patch_target, repo_root)
+        if patch_error is None:
+            return patch_target, None
+        return "", f"patch target {patch_target!r}: {patch_error}"
+    return "", "finding has neither source/source_path nor target/target_path"
 
 
 def consistency_area(kind: str) -> str:
@@ -518,8 +535,8 @@ def repository_consistency_recommendation(
     if target_error:
         return None, {"id": f"consistency_{index:03d}", "reason": target_error}
 
-    source = normalize_repo_path(finding.get("source"))
-    target = normalize_repo_path(finding.get("target"))
+    source = finding_source_path(finding)
+    target = finding_target_path(finding)
     flag = str(finding.get("flag") or "")
     line = int(finding.get("line") or 0)
     severity = str(finding.get("severity") or "medium")
@@ -653,10 +670,20 @@ def synthesize_from_repository_consistency_maps(
         for item in raw_findings:
             if isinstance(item, dict):
                 findings.append(item)
-    findings = area_diverse_findings(findings)
+    skipped: list[dict[str, str]] = []
+    raw_finding_count = len(findings)
+    patchable_findings = [finding for finding in findings if is_patchable_consistency_finding(finding, repo_root)]
+    skipped_unpatchable_count = raw_finding_count - len(patchable_findings)
+    if skipped_unpatchable_count:
+        skipped.append(
+            {
+                "id": "repository_consistency_unpatchable_filtered",
+                "reason": f"filtered {skipped_unpatchable_count} generated/runtime/non-patchable consistency findings before area selection",
+            }
+        )
+    findings = area_diverse_findings(patchable_findings)
 
     recommendations: list[dict[str, Any]] = []
-    skipped: list[dict[str, str]] = []
     seen_targets: set[tuple[str, str, str]] = set()
     for index, finding in enumerate(findings, start=1):
         if len(recommendations) >= max_recommendations:
