@@ -144,6 +144,44 @@ telemetry/event stream records executed, skipped, degraded and blocked phases
 
 Architecture targets do not authorize source writes, provider execution, patch application, Blender runtime, FFmpeg runtime, commit, push, merge or delete by themselves.
 
+## Launcher/wrapper boundary
+
+PowerShell files are compatibility wrappers and operator launchers. Python is the core implementation language for production workflow logic.
+
+Required rule:
+
+```text
+PS1 = launcher/wrapper/bootstrap/argument bridge only
+Python = core orchestration, provider mesh, broker, telemetry, manifests, validators and evidence semantics
+```
+
+Allowed in PS1:
+
+```text
+repository-root discovery
+Python interpreter selection
+PYTHONPATH/environment setup
+argument normalization
+backward-compatible operator command surface
+calling Python entrypoints
+compact human-readable status output
+```
+
+Not allowed as new PS1 core logic:
+
+```text
+provider mesh decisions
+runtime heap state mutation
+broker execution policy
+artifact/report schema construction
+validation contract interpretation
+patch-plan synthesis
+evidence bundle semantics
+large JSON/Markdown transformation
+```
+
+If a task needs new runtime behavior, implement it in Python first and expose it through a thin PS1 wrapper only if operator compatibility requires it.
+
 ## Code length policy
 
 Hard limit for maintained code/script files:
@@ -386,7 +424,7 @@ keep path/JSON/provider/evidence logic app-agnostic when practical
 keep generated indexes out of source-level refactors
 keep artistic scene behavior separate from infrastructure refactors
 do not migrate Blender packages broadly unless explicitly scoped
-when implementing the main runtime architecture, centralize execution through broker/registry/validator/telemetry surfaces instead of duplicating per-runner logic
+when implementing the main runtime architecture, centralize execution through Python broker/registry/validator/telemetry surfaces instead of duplicating per-runner or PS1 logic
 ```
 
 ## Reporting contract
