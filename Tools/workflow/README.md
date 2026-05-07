@@ -24,6 +24,10 @@ supporting wrappers are implementation lanes, not first entrypoints
 provider/probe/workload-quality lanes are opt-out in Full0To10
 GPU1/GPU0/NPU peer exchange must enter telemetry, bundle and acceptance evidence
 patch notes quality product must consume Markdown task input, patch plan, telemetry, capability and evidence coverage
+patch notes quality product must expose structured success_cases[] and fallback_cases[]
+runtime tool telemetry must use normalized statuses and broker-measured elapsed seconds when tools execute
+provider runtime heap must publish a broker-controlled tool catalog request/response pair before final telemetry
+final NPU provider work must not run on the performance-critical close path unless `NpuMicroStartMode=final-provider`
 provider-capable workflow runners prefer `IA_CARMINE_PYTHON`, then `.venv`, before system `python`
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
 400-line policy applies to maintained docs and source files
@@ -104,11 +108,12 @@ When a workflow helper contributes to Full0To10 evidence, recommendations, patch
 ```text
 launcher manifest
 phase_status / phase_reports
-runtime tool usage telemetry when tools execute
+runtime tool usage telemetry when tools execute, including normalized status and elapsed-time quality
 runtime/hardware capability manifest when capabilities matter
 patch notes quality product from `TaskMarkdown` after the patch-plan quality gate
 AI peer-exchange report and contract when provider execution is selected, including non-blocking NPU micro/tool-support evidence when available
 live runtime-heap NPU broker results before final telemetry, including live tool-seed evidence when the NPU provider is slower than the GPU1 round
+runtime-heap tool catalog exchange before final telemetry
 Full0To10 final local AI product package with run-specific reports and artifacts
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary

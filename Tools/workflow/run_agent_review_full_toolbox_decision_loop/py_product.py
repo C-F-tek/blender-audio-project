@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from py_mesh import add_artifacts, add_reports, existing
-from py_support import WorkflowContext, add_existing, git_output, now_iso, read_json, write_json, write_text
+from py_mesh import add_artifacts, add_reports, existing, live_signal
+from py_patch_notes import run_patch_notes_quality_product
+from py_support import WorkflowContext, add_existing, now_iso, read_json, write_json, write_text
 
 
 TOOL_REPORT_KEYS = [
@@ -38,6 +39,7 @@ TOOL_REPORT_KEYS = [
     "heap_gpu1_request_json",
     "heap_broker_json",
     "heap_npu_json",
+    "heap_catalog_json",
     "heap_snapshot_json",
     "heap_telemetry_json",
     "memory_workflow",
@@ -159,62 +161,6 @@ def run_patch_plan_quality_product_gate(ctx: WorkflowContext) -> None:
     args += sum((["--extra-context", item] for item in extra_context), [])
     ctx.run_python("Patch plan quality product gate", args)
 
-def run_patch_notes_quality_product(ctx: WorkflowContext) -> None:
-    extra_context = existing(
-        ctx,
-        "repo_consistency_md",
-        "decision_md",
-        "patch_plan_md",
-        "patch_quality_md",
-        "telemetry_md",
-        "runtime_usage_md",
-        "runtime_capability_md",
-        "memory_bundle_md",
-        "bundle_md",
-    )
-    args = [
-        "Tools/ai/build_patch_notes_quality_product.py",
-        "--repo-root",
-        ".",
-        "--stamp",
-        ctx.args.Stamp,
-        "--task-markdown",
-        ctx.args.TaskMarkdown,
-        "--patch-plan",
-        ctx.p("patch_plan_json"),
-        "--patch-quality",
-        ctx.p("patch_quality_json"),
-        "--decision-loop",
-        ctx.p("decision_json"),
-        "--runtime-usage",
-        ctx.p("runtime_usage_json"),
-        "--runtime-capability",
-        ctx.p("runtime_capability_json"),
-        "--repository-consistency",
-        ctx.p("repo_consistency_json"),
-        "--memory-bundle",
-        ctx.p("memory_bundle_json"),
-        "--full-toolbox-telemetry", ctx.p("telemetry_json"),
-        "--github-evidence-bundle",
-        ctx.p("bundle_json"),
-        "--sqlite-fts-db",
-        ctx.p("patch_notes_quality_fts_db"),
-        "--branch",
-        git_output(ctx.repo_root, "branch", "--show-current"),
-        "--commit",
-        git_output(ctx.repo_root, "rev-parse", "--short", "HEAD"),
-        "--issue",
-        "199",
-        "--request",
-        f"Build manual-review patch notes quality product for {ctx.args.Stamp}.",
-        "--output",
-        ctx.p("patch_notes_quality_json"),
-        "--markdown-output",
-        ctx.p("patch_notes_quality_md"),
-    ]
-    args += sum((["--extra-context", item] for item in extra_context), [])
-    ctx.run_python("Patch notes quality product", args)
-
 def run_runtime_telemetry(ctx: WorkflowContext, label: str) -> None:
     ctx.run_python(
         label,
@@ -245,11 +191,13 @@ def run_runtime_telemetry(ctx: WorkflowContext, label: str) -> None:
         ],
     )
     ctx.run_python("Runtime tool capability manifest", ["Tools/ai/build_runtime_tool_capability_manifest.py", "--repo-root", ".", "--tool-usage", ctx.p("runtime_usage_json"), "--output", ctx.p("runtime_capability_json"), "--markdown-output", ctx.p("runtime_capability_md")])
+    live_signal(ctx, "tool-catalog-complete", "Provider runtime heap tool catalog exchange complete", "heap_catalog_json", "heap_catalog_md", ["--runtime-usage", ctx.p("runtime_usage_json"), "--runtime-capability", ctx.p("runtime_capability_json"), "--round", "1"])
+    ctx.run_python("Provider runtime heap telemetry refresh", ["Tools/ai/build_provider_runtime_heap_telemetry.py", "--repo-root", ".", "--stamp", ctx.args.Stamp, "--output", ctx.p("heap_telemetry_json"), "--markdown-output", ctx.p("heap_telemetry_md")])
 
 
 def run_final_product(ctx: WorkflowContext) -> None:
-    report_keys = ["orch_json", "gpu_json", "gpu_npu_sync_json", "provider_contract_json", "peer_json", "peer_contract_json", "heap_from_peer_json", "heap_telemetry_json", "heap_snapshot_json", "runtime_usage_json", "runtime_capability_json", "runtime_broker_json", "gpu0_broker_json", "npu_broker_json", "recommendations_json", "decision_json", "patch_plan_json", "patch_quality_json", "patch_notes_quality_json"]
-    artifact_keys = ["orch_md", "gpu_md", "gpu_npu_sync_md", "peer_md", "peer_contract_md", "heap_telemetry_md", "heap_snapshot_md", "runtime_usage_md", "runtime_capability_md", "patch_plan_md", "patch_quality_md", "patch_notes_quality_md"]
+    report_keys = ["orch_json", "gpu_json", "gpu_npu_sync_json", "provider_contract_json", "peer_json", "peer_contract_json", "heap_from_peer_json", "heap_telemetry_json", "heap_catalog_json", "heap_snapshot_json", "runtime_usage_json", "runtime_capability_json", "runtime_broker_json", "gpu0_broker_json", "npu_broker_json", "recommendations_json", "decision_json", "patch_plan_json", "patch_quality_json", "patch_notes_quality_json"]
+    artifact_keys = ["orch_md", "gpu_md", "gpu_npu_sync_md", "peer_md", "peer_contract_md", "heap_telemetry_md", "heap_catalog_md", "heap_snapshot_md", "runtime_usage_md", "runtime_capability_md", "patch_plan_md", "patch_quality_md", "patch_notes_quality_md"]
     args = ["Tools/ai/build_full0to10_final_tool_product.py", "--repo-root", ".", "--output-dir", ctx.p("final_product_dir"), "--request", f"Build the final local AI product for stamp {ctx.args.Stamp} from the live provider mesh, runtime broker evidence, telemetry, patch specs and validation bundle.", "--no-external-probes", "--timeout-seconds", "8", "--output", ctx.p("final_product_json")]
     args += sum((["--run-report", path] for path in existing(ctx, *report_keys)), [])
     args += sum((["--run-artifact", path] for path in existing(ctx, *artifact_keys)), [])
@@ -262,7 +210,7 @@ def build_evidence_bundle(ctx: WorkflowContext) -> None:
     else:
         ctx.warnings.append("shared toolbox bundle skipped by request")
     report_paths = existing(ctx, "orch_json", "gpu_json", *TOOL_REPORT_KEYS, "heap_from_peer_json", "patch_quality_json", "patch_notes_quality_json", "final_product_json", "final_product_manifest", "final_product_evidence", "final_product_readiness", "recommendations_json", "bridge_json", "decision_json", "patch_plan_json")
-    artifact_paths = existing(ctx, "repo_consistency_md", "repo_consistency_smoke_md", "line_count_all_md", "openvino_governance_md", "decision_md", "gpu1_primary_md", "gpu0_response_md", "npu_micro_md", "npu_broker_md", "peer_md", "peer_contract_md", "heap_from_peer_md", "heap_telemetry_md", "heap_init_md", "heap_gpu1_request_md", "heap_broker_md", "heap_npu_md", "heap_snapshot_md", "final_product_md", "final_product_readme", "patch_plan_md", "patch_quality_md", "patch_notes_quality_md")
+    artifact_paths = existing(ctx, "repo_consistency_md", "repo_consistency_smoke_md", "line_count_all_md", "openvino_governance_md", "decision_md", "gpu1_primary_md", "gpu0_response_md", "npu_micro_md", "npu_broker_md", "peer_md", "peer_contract_md", "heap_from_peer_md", "heap_telemetry_md", "heap_init_md", "heap_gpu1_request_md", "heap_broker_md", "heap_npu_md", "heap_catalog_md", "heap_snapshot_md", "final_product_md", "final_product_readme", "patch_plan_md", "patch_quality_md", "patch_notes_quality_md")
     line_csv = ctx.paths.get("line_count_csv")
     if line_csv and Path(line_csv).exists():
         artifact_paths.append(line_csv)
@@ -274,7 +222,7 @@ def build_evidence_bundle(ctx: WorkflowContext) -> None:
 
 def run_run_telemetry(ctx: WorkflowContext) -> None:
     args = ["Tools/ai/build_full_toolbox_run_telemetry_summary.py", "--repo-root", ".", "--stamp", ctx.args.Stamp, "--decision-loop", ctx.p("decision_json"), "--recommendations", ctx.p("recommendations_json"), "--patch-plan", ctx.p("patch_plan_json"), "--repository-consistency", ctx.p("repo_consistency_json"), "--repository-consistency-smoke", ctx.p("repo_consistency_smoke_json"), "--gpu-npu-sync", ctx.p("gpu_npu_sync_json"), "--orchestrator", ctx.p("orch_json"), "--gpu-report", ctx.p("gpu_json"), "--peer-exchange", ctx.p("peer_json"), "--peer-contract", ctx.p("peer_contract_json"), "--provider-runtime-heap-telemetry", ctx.p("heap_telemetry_json"), "--provider-runtime-heap-snapshot", ctx.p("heap_snapshot_json"), "--line-count-csv", ctx.paths.get("line_count_csv", ""), "--budget-minutes", str(ctx.args.BudgetMinutes), "--max-rounds", str(ctx.args.MaxRounds), "--files-per-round", str(ctx.args.FilesPerRound), "--max-context-files", str(ctx.args.MaxContextFiles), "--max-chars-per-file", str(ctx.args.MaxCharsPerFile), "--max-new-tokens", str(ctx.args.MaxNewTokens), "--npu-auditor-every-rounds", str(ctx.args.NpuAuditorEveryRounds), "--repository-consistency-map-workers", str(ctx.args.RepositoryConsistencyMapWorkers), "--output", ctx.p("telemetry_json"), "--markdown-output", ctx.p("telemetry_md")]
-    for key in ("heap_init_json", "heap_gpu1_request_json", "heap_broker_json", "heap_npu_json"):
+    for key in ("heap_init_json", "heap_gpu1_request_json", "heap_broker_json", "heap_npu_json", "heap_catalog_json"):
         if Path(ctx.p(key)).exists():
             args += ["--provider-runtime-heap-live-signal", ctx.p(key)]
     for path in evidence_to_commit(ctx):
@@ -285,7 +233,7 @@ def run_run_telemetry(ctx: WorkflowContext) -> None:
 
 
 def run_semantic_chunks(ctx: WorkflowContext) -> None:
-    sources = existing(ctx, "bundle_json", "bundle_md", "telemetry_json", "telemetry_md", "runtime_usage_json", "runtime_usage_md", "runtime_capability_json", "runtime_capability_md", "heap_telemetry_json", "heap_telemetry_md", "heap_snapshot_json", "heap_snapshot_md", "final_product_json", "final_product_md", "peer_json", "peer_md", "npu_micro_json", "npu_micro_md", "npu_broker_json", "npu_broker_md", "peer_contract_json", "peer_contract_md")
+    sources = existing(ctx, "bundle_json", "bundle_md", "telemetry_json", "telemetry_md", "runtime_usage_json", "runtime_usage_md", "runtime_capability_json", "runtime_capability_md", "heap_telemetry_json", "heap_telemetry_md", "heap_catalog_json", "heap_catalog_md", "heap_snapshot_json", "heap_snapshot_md", "final_product_json", "final_product_md", "peer_json", "peer_md", "npu_micro_json", "npu_micro_md", "npu_broker_json", "npu_broker_md", "peer_contract_json", "peer_contract_md")
     if not sources:
         ctx.warnings.append("semantic evidence chunking skipped; no source reports found")
         return
@@ -326,7 +274,7 @@ def evidence_to_commit(ctx: WorkflowContext) -> list[str]:
 
 def write_workflow(ctx: WorkflowContext) -> None:
     report_keys = ["memory_workflow", "evidence", "provider_contract_json", *TOOL_REPORT_KEYS, "orch_json", "gpu_json", "gpu_replay_json", "gpu_npu_sync_json", "recommendations_json", "bridge_json", "decision_json", "patch_plan_json", "patch_quality_json", "patch_notes_quality_json", "heap_from_peer_json", "heap_telemetry_json", "final_product_json", "final_product_manifest", "final_product_evidence", "final_product_readiness", "artifact_path_policy_json", "bundle_validation_json", "final_python_syntax_json", "final_contract_json"]
-    artifact_keys = ["memory_bundle_json", "memory_bundle_md", "memory_line_count_csv", "evidence_md", "provider_contract_md", "repo_consistency_md", "repo_consistency_smoke_md", "line_count_all_md", "code_interpreter_md", "gpu_contract_smoke_md", "deterministic_smoke_md", "decision_loop_smoke_md", "npu_env_md", "openvino_governance_md", "orch_md", "gpu_md", "gpu_replay_md", "gpu_npu_sync_md", "recommendations_md", "decision_md", "patch_plan_md", "patch_quality_md", "patch_notes_quality_md", "telemetry_json", "telemetry_md", "runtime_usage_json", "runtime_usage_md", "runtime_capability_json", "runtime_capability_md", "gpu1_primary_md", "gpu0_response_md", "gpu0_broker_md", "npu_micro_md", "npu_broker_md", "peer_md", "peer_contract_md", "heap_from_peer_md", "heap_telemetry_md", "heap_snapshot_md", "heap_events", "final_product_md", "final_product_readme", "artifact_path_policy_md", "chunk_manifest_json", "chunk_manifest_md", "bundle_json", "bundle_md"]
+    artifact_keys = ["memory_bundle_json", "memory_bundle_md", "memory_line_count_csv", "evidence_md", "provider_contract_md", "repo_consistency_md", "repo_consistency_smoke_md", "line_count_all_md", "code_interpreter_md", "gpu_contract_smoke_md", "deterministic_smoke_md", "decision_loop_smoke_md", "npu_env_md", "openvino_governance_md", "orch_md", "gpu_md", "gpu_replay_md", "gpu_npu_sync_md", "recommendations_md", "decision_md", "patch_plan_md", "patch_quality_md", "patch_notes_quality_md", "telemetry_json", "telemetry_md", "runtime_usage_json", "runtime_usage_md", "runtime_capability_json", "runtime_capability_md", "gpu1_primary_md", "gpu0_response_md", "gpu0_broker_md", "npu_micro_md", "npu_broker_md", "peer_md", "peer_contract_md", "heap_from_peer_md", "heap_telemetry_md", "heap_catalog_md", "heap_snapshot_md", "heap_events", "final_product_md", "final_product_readme", "artifact_path_policy_md", "chunk_manifest_json", "chunk_manifest_md", "bundle_json", "bundle_md"]
     for key in report_keys:
         add_existing(ctx.reports, ctx.p(key))
     for key in artifact_keys:

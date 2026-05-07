@@ -303,6 +303,8 @@ def add_runtime_paths(p: dict[str, str], stamp: str, evidence_dir: str) -> None:
             "heap_broker_md": f"output/validation/provider_runtime_heap_live_signals_broker_results_{s}.md",
             "heap_npu_json": f"output/validation/provider_runtime_heap_live_signals_npu_support_{s}.json",
             "heap_npu_md": f"output/validation/provider_runtime_heap_live_signals_npu_support_{s}.md",
+            "heap_catalog_json": f"output/validation/provider_runtime_heap_live_signals_tool_catalog_complete_{s}.json",
+            "heap_catalog_md": f"output/validation/provider_runtime_heap_live_signals_tool_catalog_complete_{s}.md",
             "final_product_dir": final_dir,
             "final_product_json": f"output/validation/full0to10_final_tool_product_{s}.json",
             "final_product_manifest": f"{final_dir}/full0to10_final_tool_product_manifest.json",

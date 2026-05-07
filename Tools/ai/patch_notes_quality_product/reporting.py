@@ -41,6 +41,17 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines += ["", "## Fallback Path Notes", ""]
         for note in _items(report.get("fallback_path_notes"), 20):
             lines.append(f"- `{note.get('reason')}` {note.get('recommended_followup', '')}")
+    if report.get("success_cases"):
+        lines += ["", "## Success Cases", ""]
+        for case in _items(report.get("success_cases"), 20):
+            lines.append(f"- `{case.get('case')}` score=`{case.get('score')}` gate=`{case.get('quality_gate_passed')}`")
+    if report.get("fallback_cases"):
+        lines += ["", "## Structured Fallback Cases", ""]
+        for case in _items(report.get("fallback_cases"), 20):
+            lines.append(
+                f"- `{case.get('fallback_type')}` primary=`{case.get('primary_lane')}` "
+                f"fallback=`{case.get('fallback_lane')}` recovered=`{case.get('recovered')}`"
+            )
     if report.get("quality_findings"):
         lines += ["", "## Quality Findings", ""]
         for finding in _items(report.get("quality_findings"), 20):

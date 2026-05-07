@@ -11,7 +11,12 @@ from Tools.ai.patch_notes_quality_product.scoring import (
     score_product,
 )
 from Tools.ai.patch_notes_quality_product.task_md import build_request_summary, load_task_markdown
-from Tools.ai.patch_notes_quality_product.telemetry_quality import build_evidence_coverage, build_telemetry_quality
+from Tools.ai.patch_notes_quality_product.telemetry_quality import (
+    build_evidence_coverage,
+    build_fallback_cases,
+    build_success_cases,
+    build_telemetry_quality,
+)
 from Tools.ai.patch_plan_quality_product.io_utils import flatten_json, now_iso, read_json, repo_rel, resolve
 from Tools.ai.patch_plan_quality_product.token_search import build_search_index, safe_tokens, search_docs
 
@@ -150,4 +155,6 @@ def build_report(args: Any) -> dict[str, Any]:
         errors.append("strict patch notes quality gate failed")
     report["passed"] = not errors
     report["classification"] = classify(errors, report["quality_gate_passed"], score)
+    report["success_cases"] = build_success_cases(report, loaded)
+    report["fallback_cases"] = build_fallback_cases(report, loaded, args.min_quality_score)
     return report

@@ -190,10 +190,10 @@ def run_provider_mesh(ctx: WorkflowContext) -> None:
 
 def npu_peer_provider_enabled(ctx: WorkflowContext) -> bool:
     mode = str(getattr(ctx.args, "NpuMicroStartMode", "deferred") or "deferred").strip().lower()
-    return mode in {"startup", "peer", "post-gpu-provider"}
+    return mode == "final-provider"
 
 
-def write_npu_peer_nonblocking_placeholder(ctx: WorkflowContext, reason: str) -> None:
+def write_npu_peer_nonblocking_placeholder(ctx: WorkflowContext, reason: str, classification: str = "npu_peer_provider_deferred_to_avoid_openvino_contention") -> None:
     mode = str(getattr(ctx.args, "NpuMicroStartMode", "deferred") or "deferred")
     npu_payload = {
         "schema_version": 1,
@@ -201,7 +201,7 @@ def write_npu_peer_nonblocking_placeholder(ctx: WorkflowContext, reason: str) ->
         "generated_at": now_iso(),
         "stamp": ctx.args.Stamp,
         "passed": True,
-        "classification": "npu_peer_provider_deferred_to_avoid_openvino_contention",
+        "classification": classification,
         "provider_execution_requested": False,
         "provider_execution_performed": False,
         "provider_execution_succeeded": False,
@@ -308,7 +308,13 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
         live_signal(ctx, "npu-support", "Provider runtime heap NPU live support", "heap_npu_json", "heap_npu_md", ["--npu-report", ctx.p("npu_micro_json"), "--round", "1"])
         ctx.run_python("NPU micro runtime tool broker", ["Tools/ai/agent_runtime_tool_broker.py", "--repo-root", ".", "--request-file", ctx.p("npu_micro_json"), "--tool-output-dir", f"{ctx.p('runtime_tool_dir')}/npu_micro", "--stamp", ctx.args.Stamp, "--timeout-seconds", str(ctx.args.NpuMicroBrokerTimeoutSeconds), "--output", ctx.p("npu_broker_json"), "--markdown-output", ctx.p("npu_broker_md")])
     else:
-        write_npu_peer_nonblocking_placeholder(ctx, "NPU peer provider deferred to avoid OpenVINO/NPU contention while GPU1/GPU0 produce the product evidence.")
+        if str(getattr(ctx.args, "NpuMicroStartMode", "")).lower() == "startup":
+            reason = "Final NPU provider pass moved off the performance path; startup NPU support and broker seed evidence are reviewed by GPU1/GPU0 plus deterministic validators."
+            classification = "npu_final_provider_moved_to_gpu_peer_review"
+        else:
+            reason = "NPU peer provider deferred to avoid OpenVINO/NPU contention while GPU1/GPU0 produce the product evidence."
+            classification = "npu_peer_provider_deferred_to_avoid_openvino_contention"
+        write_npu_peer_nonblocking_placeholder(ctx, reason, classification)
         live_signal(ctx, "npu-support", "Provider runtime heap NPU deferred support placeholder", "heap_npu_json", "heap_npu_md", ["--npu-report", ctx.p("npu_micro_json"), "--round", "1"])
     ctx.run_python("Finalize AI peer-exchange packet", ["Tools/ai/build_ai_peer_exchange_packet.py", *common, *sum((["--source-report", p] for p in existing(ctx, "evidence", "repo_consistency_json", "code_interpreter_json", "gpu0_response_json", "npu_micro_json")), []), "--response-report", ctx.p("gpu0_response_json"), "--broker-report", ctx.p("gpu0_broker_json"), "--npu-report", ctx.p("npu_micro_json"), "--npu-broker-report", ctx.p("npu_broker_json"), "--primary-output", ctx.p("gpu1_primary_json"), "--primary-markdown-output", ctx.p("gpu1_primary_md"), "--task-output", ctx.p("gpu0_task_json"), "--exchange-output", ctx.p("peer_json"), "--exchange-markdown-output", ctx.p("peer_md")])
     ctx.run_python("AI peer-exchange contract", ["Tools/validation/check_ai_peer_exchange_contract.py", "--repo-root", ".", "--stamp", ctx.args.Stamp, "--broker-report", ctx.p("gpu0_broker_json"), "--npu-response", ctx.p("npu_micro_json"), "--npu-broker-report", ctx.p("npu_broker_json"), "--require-broker-execution", "--allow-degraded", "--output", ctx.p("peer_contract_json"), "--markdown-output", ctx.p("peer_contract_md")])

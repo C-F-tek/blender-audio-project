@@ -59,6 +59,8 @@ def main() -> int:
                 "quality_score": report["quality_score"],
                 "patch_note_count": len(report["patch_notes"]),
                 "fallback_path_note_count": len(report["fallback_path_notes"]),
+                "success_case_count": len(report.get("success_cases", [])),
+                "fallback_case_count": len(report.get("fallback_cases", [])),
                 "output": str(output),
                 "markdown": str(markdown),
             },
