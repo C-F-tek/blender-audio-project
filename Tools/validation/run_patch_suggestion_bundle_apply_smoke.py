@@ -3,8 +3,8 @@
 
 The smoke is report-only by default. It creates a temporary mini-repository
 outside the project tree, runs the applier in dry-run and apply modes against a
-synthetic suggestion report, and verifies that only deterministic operations are
-applied.
+synthetic stamped suggestion report, and verifies that only deterministic
+operations are applied.
 """
 from __future__ import annotations
 
@@ -20,6 +20,9 @@ try:
     from report_utils import resolve_output_path, write_json_report
 except ImportError:  # Allows package-style imports during external checks.
     from Tools.validation.report_utils import resolve_output_path, write_json_report  # type: ignore
+
+
+SMOKE_STAMP = "20990101-010203"
 
 
 def run_command(command: list[str], cwd: Path) -> dict[str, Any]:
@@ -41,6 +44,7 @@ def build_synthetic_repo(tmp: Path, source_repo: Path) -> tuple[Path, Path]:
 
     (repo / "Tools" / "ai").mkdir(parents=True)
     (repo / "Tools" / "validation").mkdir(parents=True)
+    (repo / "docs" / "LOCAL_VALIDATION_EVIDENCE").mkdir(parents=True)
     (repo / "Tools" / "ai" / "apply_patch_suggestion_bundle.py").write_text(
         (source_repo / "Tools" / "ai" / "apply_patch_suggestion_bundle.py").read_text(encoding="utf-8"),
         encoding="utf-8",
@@ -78,7 +82,12 @@ def build_synthetic_repo(tmp: Path, source_repo: Path) -> tuple[Path, Path]:
             },
         ],
     }
-    suggestion_path = repo / "suggestions.json"
+    suggestion_path = (
+        repo
+        / "docs"
+        / "LOCAL_VALIDATION_EVIDENCE"
+        / f"patch_suggestion_smoke_{SMOKE_STAMP}.json"
+    )
     suggestion_path.write_text(json.dumps(suggestion, indent=2) + "\n", encoding="utf-8")
     return repo, suggestion_path
 
@@ -93,6 +102,7 @@ def main() -> int:
     source_repo = Path(args.repo_root).resolve()
     errors: list[str] = []
     commands: list[dict[str, Any]] = []
+    discovered_reports: list[str] = []
 
     with tempfile.TemporaryDirectory(prefix="patch-suggestion-smoke-") as tmp_raw:
         repo, suggestion_path = build_synthetic_repo(Path(tmp_raw), source_repo)
@@ -102,8 +112,8 @@ def main() -> int:
                 "Tools/ai/apply_patch_suggestion_bundle.py",
                 "--repo-root",
                 ".",
-                "--suggestion-report",
-                suggestion_path.name,
+                "--suggestion-stamp",
+                SMOKE_STAMP,
                 "--output",
                 "dry.json",
             ],
@@ -119,8 +129,8 @@ def main() -> int:
                 "Tools/ai/apply_patch_suggestion_bundle.py",
                 "--repo-root",
                 ".",
-                "--suggestion-report",
-                suggestion_path.name,
+                "--suggestion-stamp",
+                SMOKE_STAMP,
                 "--output",
                 "apply.json",
                 "--apply",
@@ -133,6 +143,9 @@ def main() -> int:
 
         sample = (repo / "sample.md").read_text(encoding="utf-8")
         apply_report = json.loads((repo / "apply.json").read_text(encoding="utf-8"))
+        discovered_reports = apply_report.get("discovered_reports") or []
+        if suggestion_path.relative_to(repo).as_posix() not in discovered_reports:
+            errors.append("stamped suggestion report was not discovered")
         if "new text" not in sample or "Final phase marker" not in sample:
             errors.append("expected deterministic edits were not applied")
         if apply_report.get("applied_count") != 2:
@@ -147,6 +160,8 @@ def main() -> int:
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
+        "smoke_stamp": SMOKE_STAMP,
+        "discovered_reports": discovered_reports,
         "commands": commands,
         "errors": errors,
         "warnings": [],
