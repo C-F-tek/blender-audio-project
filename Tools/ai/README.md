@@ -46,6 +46,7 @@ tool output should become verifiable product/evidence/readiness material, not ch
 | Workload routing | `build_workload_quality_lane_routing.py` | Keeps unusable provider output out of advisory context. |
 | Deterministic recommendations | `build_deterministic_recommendations.py` | Supports degraded-provider recovery without hallucinated provider success. |
 | Patch planning/spec support | `build_agent_review_patch_plan.py`, `build_patch_specs_from_proposals.py`, `promote_patch_spec_draft.py` | Review-only unless explicit apply is authorized separately. |
+| Patch notes product | `build_patch_notes_quality_product.py`, `patch_notes_quality_product/*` | Converts a local Markdown task plus patch-plan/telemetry/evidence inputs into manual-review patch notes quality JSON/MD. |
 | Runtime broker/telemetry | `agent_runtime_tool_broker.py`, `build_runtime_tool_usage_telemetry.py` | Records executed/failed/blocked tool calls. |
 | Capability and telemetry summary | capability manifest packages/builders, `build_full_toolbox_run_telemetry_summary.py` | Handoff context for available tools/hardware lanes and run state. |
 | Final tool product | `build_full0to10_final_tool_product.py`, `full0to10_final_product/*` | Aggregates contract/governor/invocation/bridge/effective-use/quality evidence into product/evidence/readiness outputs and can index current-run reports/artifacts. |

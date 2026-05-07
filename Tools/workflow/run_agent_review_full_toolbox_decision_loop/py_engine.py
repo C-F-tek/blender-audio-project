@@ -16,6 +16,7 @@ COMPILE_TARGETS = [
     "Tools/ai/build_deterministic_recommendations.py",
     "Tools/ai/build_agent_review_patch_plan.py",
     "Tools/ai/build_full_toolbox_run_telemetry_summary.py",
+    "Tools/ai/build_patch_notes_quality_product.py",
     "Tools/ai/build_runtime_tool_usage_telemetry.py",
     "Tools/ai/build_runtime_tool_capability_manifest.py",
     "Tools/ai/build_semantic_evidence_chunks.py",
@@ -36,6 +37,7 @@ COMPILE_TARGETS = [
     "Tools/validation/run_gpu_planner_json_contract_smoke.py",
     "Tools/validation/run_deterministic_recommendation_synthesizer_smoke.py",
     "Tools/validation/run_agent_review_decision_loop_smoke.py",
+    "Tools/validation/run_patch_notes_quality_product_smoke.py",
     "Tools/validation/check_provider_evidence_contract.py",
 ]
 

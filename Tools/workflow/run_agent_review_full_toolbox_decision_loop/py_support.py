@@ -52,6 +52,13 @@ def add_existing(items: list[str], path: str | Path | None) -> None:
             items.append(value)
 
 
+def git_output(repo_root: Path, *args: str) -> str:
+    try:
+        return subprocess.check_output(["git", *args], cwd=repo_root, text=True, stderr=subprocess.DEVNULL).strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
 def compact_artifact_stamp(stamp: str, max_chars: int = 56) -> str:
     safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", stamp.strip() or "run").strip("._-")
     if len(safe) <= max_chars:
@@ -244,6 +251,9 @@ def build_paths(stamp: str, evidence_dir: str) -> dict[str, str]:
         "patch_quality_json": f"{evidence_dir}/patch_plan_quality_product_{s}.json",
         "patch_quality_md": f"{evidence_dir}/patch_plan_quality_product_{s}.md",
         "patch_quality_fts_db": f"output/ai_runtime_memory/patch_plan_quality_product_{s}.sqlite",
+        "patch_notes_quality_json": f"{evidence_dir}/patch_notes_quality_product_{s}.json",
+        "patch_notes_quality_md": f"{evidence_dir}/patch_notes_quality_product_{s}.md",
+        "patch_notes_quality_fts_db": f"output/ai_runtime_memory/patch_notes_quality_product_{s}.sqlite",
         "decision_json": f"output/ai_pipeline/full_toolbox_{s}_agent_review_decision_loop.json",
         "decision_md": f"output/ai_pipeline/full_toolbox_{s}_agent_review_decision_loop.md",
     }

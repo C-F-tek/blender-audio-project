@@ -42,7 +42,7 @@ def search_docs(conn: sqlite3.Connection, fts_enabled: bool, query: str, limit: 
     if not tokens:
         return []
     if fts_enabled:
-        fts_query = ' OR '.join(token.replace(chr(34), '') for token in tokens)
+        fts_query = ' OR '.join(f'"{token.replace(chr(34), chr(34) + chr(34))}"' for token in tokens)
         rows = conn.execute("SELECT source, kind, snippet(evidence_fts, 2, '[', ']', '…', 12) FROM evidence_fts WHERE evidence_fts MATCH ? LIMIT ?", (fts_query, limit)).fetchall()
     else:
         rows = conn.execute('SELECT source, kind, substr(content, 1, 320) FROM evidence_fts_fallback WHERE content LIKE ? LIMIT ?', ('%' + '%'.join(tokens[:3]) + '%', limit)).fetchall()

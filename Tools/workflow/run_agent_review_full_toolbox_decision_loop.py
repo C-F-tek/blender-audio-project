@@ -49,6 +49,7 @@ STRING_DEFAULTS = {
     "Stamp": "",
     "OutputRoot": "output",
     "EvidenceDir": "docs/LOCAL_VALIDATION_EVIDENCE",
+    "TaskMarkdown": "docs/LOCAL_AI_TASKS/patch-notes-quality-product-2026-05-07.md",
     "KeepAlive": "35m",
     "NpuMicroStartMode": "deferred",
     "RepositoryConsistencyMapWorkerBackend": "process",
