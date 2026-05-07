@@ -14,9 +14,55 @@ Tools/ai/apply_patch_suggestion_bundle.py
 Tools/validation/run_patch_suggestion_bundle_apply_smoke.py
 ```
 
+## Project Python and environment
+
+Use the same interpreter contract used by the Python full-toolbox engine:
+
+```text
+IA_CARMINE_PYTHON
+```
+
+Recommended local resolver:
+
+```powershell
+if (-not $env:IA_CARMINE_PYTHON) {
+  if (Test-Path .\.venv\Scripts\python.exe) {
+    $env:IA_CARMINE_PYTHON = (Resolve-Path .\.venv\Scripts\python.exe).Path
+  } elseif (Test-Path .\venv\Scripts\python.exe) {
+    $env:IA_CARMINE_PYTHON = (Resolve-Path .\venv\Scripts\python.exe).Path
+  } elseif (Test-Path .\.venv314\Scripts\python.exe) {
+    $env:IA_CARMINE_PYTHON = (Resolve-Path .\.venv314\Scripts\python.exe).Path
+  } else {
+    $env:IA_CARMINE_PYTHON = "python"
+  }
+}
+
+$ProjectPython = $env:IA_CARMINE_PYTHON
+& $ProjectPython --version
+```
+
+Do not use a random shell `python` if `IA_CARMINE_PYTHON` is already set.
+
 ## Stamp-driven rule
 
-The final phase must be driven by the same run stamp used by the full toolbox run.
+Use the same Python workflow parameter used by the full-toolbox engine:
+
+```text
+--Stamp
+```
+
+The final phase internally applies the same compact artifact-stamp normalization used by:
+
+```text
+Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_support.py
+compact_artifact_stamp()
+```
+
+Example:
+
+```powershell
+$Stamp = "post_patchable_doc_python_probe_20260507-180555"
+```
 
 Do not hardcode one specific report filename such as:
 
@@ -24,13 +70,7 @@ Do not hardcode one specific report filename such as:
 patch_notes_quality_product_post_patchable_doc_python_probe_20260507-180555.json
 ```
 
-Instead, pass the stamp:
-
-```powershell
-$Stamp = "20260507-180555"
-```
-
-Then let the tool discover matching local JSON reports under:
+Instead, pass `--Stamp $Stamp` and let the tool discover matching local JSON reports under:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/
@@ -115,7 +155,7 @@ git status --short
 ## Smoke validation
 
 ```powershell
-python .\Tools\validation\run_patch_suggestion_bundle_apply_smoke.py `
+& $ProjectPython .\Tools\validation\run_patch_suggestion_bundle_apply_smoke.py `
   --repo-root . `
   --output .\output\validation\patch_suggestion_bundle_apply_smoke.json
 
@@ -124,9 +164,9 @@ Get-Content .\output\validation\patch_suggestion_bundle_apply_smoke.json -Raw |
   Select-Object passed, smoke_stamp, discovered_reports, errors, warnings
 ```
 
-## Find the stamp
+## Find the canonical Stamp
 
-Use the same `$Stamp` from the run. If you do not remember it, inspect recent candidate reports:
+Prefer the exact `--Stamp` value used for the full-toolbox run. If you need to infer it from local outputs, inspect recent full-toolbox files:
 
 ```powershell
 Get-ChildItem `
@@ -139,34 +179,37 @@ Get-ChildItem `
   -Filter *.json `
   -ErrorAction SilentlyContinue |
 Where-Object {
-  $_.Name -match 'patch|suggest|proposal|recommend|plan|agent_review'
+  $_.Name -match 'full_toolbox|patch|suggest|proposal|recommend|plan|agent_review'
 } |
 Sort-Object LastWriteTime -Descending |
-Select-Object -First 30 LastWriteTime, FullName |
+Select-Object -First 40 LastWriteTime, FullName |
 Format-Table -AutoSize
 ```
 
-Set the stamp explicitly:
+For the post-patchable probe run, use the full artifact stamp prefix:
 
 ```powershell
-$Stamp = "20260507-180555"
+$Stamp = "post_patchable_doc_python_probe_20260507-180555"
 ```
 
-## Dry-run by stamp
+Using only the trailing time fragment can work for simple filenames, but `--Stamp` should match the Python workflow stamp whenever possible.
+
+## Dry-run by Stamp
 
 Dry-run must be the first real invocation. It reads matching reports and writes only an output validation report.
 
 ```powershell
-python .\Tools\ai\apply_patch_suggestion_bundle.py `
+& $ProjectPython .\Tools\ai\apply_patch_suggestion_bundle.py `
   --repo-root . `
-  --suggestion-stamp $Stamp `
+  --Stamp $Stamp `
   --output .\output\validation\patch_suggestion_bundle_apply_dry_run.json
 
 Get-Content .\output\validation\patch_suggestion_bundle_apply_dry_run.json -Raw |
   ConvertFrom-Json |
   Select-Object `
     passed, `
-    suggestion_stamp, `
+    Stamp, `
+    artifact_stamp, `
     discovered_report_count, `
     discovered_reports, `
     operation_count, `
@@ -194,24 +237,24 @@ Apply only after dry-run is clean and the current branch is the PR branch.
 git branch --show-current
 git status --short
 
-python .\Tools\ai\apply_patch_suggestion_bundle.py `
+& $ProjectPython .\Tools\ai\apply_patch_suggestion_bundle.py `
   --repo-root . `
-  --suggestion-stamp $Stamp `
+  --Stamp $Stamp `
   --output .\output\validation\patch_suggestion_bundle_apply.json `
   --apply
 ```
 
 The tool refuses `--apply` outside branches matching `codex/*` unless explicitly overridden.
 
-## Optional: explicit reports plus stamp
+## Optional: explicit reports plus Stamp
 
 You can combine explicit reports with stamp discovery:
 
 ```powershell
-python .\Tools\ai\apply_patch_suggestion_bundle.py `
+& $ProjectPython .\Tools\ai\apply_patch_suggestion_bundle.py `
   --repo-root . `
-  --suggestion-stamp $Stamp `
-  --suggestion-report .\output\patch_specs\agent_review_patch_plan.json `
+  --Stamp $Stamp `
+  --suggestion-report .\output\patch_specs\full_toolbox_${Stamp}_agent_review_patch_plan.json `
   --output .\output\validation\patch_suggestion_bundle_apply_dry_run.json
 ```
 
@@ -220,11 +263,11 @@ Explicit missing report paths still fail fast. Stamp discovery avoids hardcoded 
 ## Post-apply validation
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py `
+& $ProjectPython .\Tools\validation\check_python_syntax.py `
   --repo-root . `
   --output .\output\validation\python_syntax_after_patch_suggestion_bundle.json
 
-python .\Tools\validation\check_validation_report_contract.py `
+& $ProjectPython .\Tools\validation\check_validation_report_contract.py `
   --repo-root . `
   --output .\output\validation\validation_report_contract_after_patch_suggestion_bundle.json
 
@@ -262,7 +305,7 @@ After local apply and validation, build compact Git-trackable evidence if needed
 ```powershell
 $EvidenceStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
-python .\Tools\ai\build_github_evidence_bundle.py `
+& $ProjectPython .\Tools\ai\build_github_evidence_bundle.py `
   --repo-root . `
   --basename patch_suggestion_bundle_final_phase_$EvidenceStamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `

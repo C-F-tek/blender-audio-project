@@ -19,7 +19,9 @@ Git pushes, merges, force pushes, deletes, or output artifact promotion.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import re
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime
@@ -87,6 +89,16 @@ class PatchOperation:
     source_id: str | None = None
     family: str | None = None
     description: str | None = None
+
+
+def compact_artifact_stamp(stamp: str, max_chars: int = 56) -> str:
+    """Match the full-toolbox Python engine artifact-stamp normalization."""
+    safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", stamp.strip() or "run").strip("._-")
+    if len(safe) <= max_chars:
+        return safe
+    digest = hashlib.sha1(safe.encode("utf-8")).hexdigest()[:10]
+    head = safe[: max(12, max_chars - len(digest) - 1)].rstrip("._-")
+    return f"{head}-{digest}"
 
 
 def run_git(repo_root: Path, *args: str) -> str:
@@ -249,7 +261,7 @@ def discover_suggestion_reports(
     tokens: list[str],
     max_files: int,
 ) -> tuple[list[str], list[dict[str, Any]]]:
-    """Discover local suggestion/proposal JSON reports by run stamp.
+    """Discover local suggestion/proposal JSON reports by compact artifact stamp.
 
     Discovery is read-only and accepts both Git-tracked evidence under docs and
     local runtime reports under output. Returned paths are repository-relative.
@@ -430,9 +442,14 @@ def parse_args() -> argparse.Namespace:
         help="Suggestion/proposal JSON path. Repeatable.",
     )
     parser.add_argument(
+        "--Stamp",
+        default="",
+        help="Full-toolbox run stamp. This matches the Python workflow engine parameter.",
+    )
+    parser.add_argument(
         "--suggestion-stamp",
         default=None,
-        help="Run stamp used to discover local suggestion/proposal JSON reports.",
+        help="Backward-compatible alias for --Stamp.",
     )
     parser.add_argument(
         "--discover-suggestion-root",
@@ -473,11 +490,14 @@ def main() -> int:
     if args.apply and status_before and not args.allow_dirty:
         errors.append("refusing --apply with dirty working tree; use --allow-dirty only for reviewed incremental fixes")
 
+    raw_stamp = args.Stamp or args.suggestion_stamp or ""
+    artifact_stamp = compact_artifact_stamp(raw_stamp) if raw_stamp else ""
+
     discover_roots = split_values(args.discover_suggestion_root) or list(DEFAULT_DISCOVER_SUGGESTION_ROOTS)
     discover_tokens = split_values(args.discover_suggestion_token) or list(DEFAULT_DISCOVER_SUGGESTION_TOKENS)
     discovered_reports, discovery_scan = discover_suggestion_reports(
         repo_root,
-        args.suggestion_stamp,
+        artifact_stamp,
         discover_roots,
         discover_tokens,
         int(args.discover_max_files),
@@ -488,8 +508,11 @@ def main() -> int:
         if rel not in report_paths:
             report_paths.append(rel)
 
-    if args.suggestion_stamp and not report_paths:
-        errors.append(f"no suggestion/proposal JSON reports found for stamp {args.suggestion_stamp!r}")
+    if raw_stamp and not report_paths:
+        errors.append(
+            "no suggestion/proposal JSON reports found for "
+            f"Stamp {raw_stamp!r} (artifact stamp {artifact_stamp!r})"
+        )
 
     loaded_reports: list[dict[str, Any]] = []
     operations: list[PatchOperation] = []
@@ -531,7 +554,9 @@ def main() -> int:
         "repo_root": repo_root.as_posix(),
         "branch": branch,
         "apply_requested": bool(args.apply),
-        "suggestion_stamp": args.suggestion_stamp,
+        "Stamp": raw_stamp,
+        "artifact_stamp": artifact_stamp,
+        "suggestion_stamp": artifact_stamp,
         "discovered_report_count": len(discovered_reports),
         "discovered_reports": discovered_reports,
         "discovery_scan": discovery_scan,

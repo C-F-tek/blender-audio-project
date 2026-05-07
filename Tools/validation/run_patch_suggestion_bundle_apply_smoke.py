@@ -112,7 +112,7 @@ def main() -> int:
                 "Tools/ai/apply_patch_suggestion_bundle.py",
                 "--repo-root",
                 ".",
-                "--suggestion-stamp",
+                "--Stamp",
                 SMOKE_STAMP,
                 "--output",
                 "dry.json",
@@ -129,7 +129,7 @@ def main() -> int:
                 "Tools/ai/apply_patch_suggestion_bundle.py",
                 "--repo-root",
                 ".",
-                "--suggestion-stamp",
+                "--Stamp",
                 SMOKE_STAMP,
                 "--output",
                 "apply.json",
@@ -146,6 +146,10 @@ def main() -> int:
         discovered_reports = apply_report.get("discovered_reports") or []
         if suggestion_path.relative_to(repo).as_posix() not in discovered_reports:
             errors.append("stamped suggestion report was not discovered")
+        if apply_report.get("Stamp") != SMOKE_STAMP:
+            errors.append("canonical --Stamp value was not preserved in report")
+        if apply_report.get("artifact_stamp") != SMOKE_STAMP:
+            errors.append("compact artifact stamp did not match expected smoke stamp")
         if "new text" not in sample or "Final phase marker" not in sample:
             errors.append("expected deterministic edits were not applied")
         if apply_report.get("applied_count") != 2:
