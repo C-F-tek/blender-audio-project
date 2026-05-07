@@ -14,6 +14,13 @@ Current command ownership lives in:
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
+Current code-driven navigation and validation ownership lives in:
+
+```text
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
+```
+
 ## Current doctrine
 
 ```text
@@ -23,16 +30,27 @@ quick/balanced/deep/custom = intensity, not scope
 supporting wrappers are implementation lanes, not first entrypoints
 provider/probe/workload-quality lanes are opt-out in Full0To10
 GPU1/GPU0/NPU peer exchange must enter telemetry, bundle and acceptance evidence
-patch notes quality product must consume Markdown task input, patch plan, telemetry, capability and evidence coverage
-patch notes quality product must expose structured success_cases[] and fallback_cases[]
 runtime tool telemetry must use normalized statuses and broker-measured elapsed seconds when tools execute
-provider runtime heap must publish a broker-controlled tool catalog request/response pair before final telemetry
 final NPU provider work must not run on the performance-critical close path unless `NpuMicroStartMode=final-provider`
 provider-capable workflow runners prefer `IA_CARMINE_PYTHON`, then `.venv`, before system `python`
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
 400-line policy applies to maintained docs and source files
 limitations are backlog to overcome, not reasons to skip available tools
 ```
+
+## Operator routing
+
+| Need | Start here |
+|---|---|
+| Real full product run | `run_unified_local_ai_refactor.ps1` with `-Full0To10`. |
+| Single-phase diagnostic | `run_unified_local_ai_refactor.ps1` with `-NoStrictRealRunActivation`. |
+| Lightweight evidence profile | `run_unified_local_ai_refactor.ps1 -LightFull0To10`. |
+| Full-toolbox internals | `run_agent_review_full_toolbox_decision_loop.py` and packaged engine. |
+| Script family census | `docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md`. |
+| Source-code behavior map | `docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md`. |
+```
+
+Do not start a normal workflow from an internal helper unless the launcher/runbook explicitly delegates to that helper or the task is a focused tool validation.
 
 ## Tool classification
 
@@ -58,7 +76,6 @@ limitations are backlog to overcome, not reasons to skip available tools
 | `startup_check.py` | diagnostic-only | Startup check helper. |
 | `workflow_shell.py` | gui-or-shell-helper | Interactive helper; not canonical headless flow. |
 | `workflow_shell_with_push.py` | unsafe-or-write-capable | Push-capable; explicit user intent required. |
-| `workflow_debug.py` | diagnostic-only | Debug helper. |
 | `git_auto_push.py` | unsafe-or-write-capable | Push behavior requires explicit user intent. |
 | `asset_inventory.py` | supporting-tool | Asset inventory helper. |
 | `scene_brief.py` | supporting-tool/application-domain | Scene brief helper. |
@@ -66,6 +83,10 @@ limitations are backlog to overcome, not reasons to skip available tools
 | `project_awareness.py` | supporting-tool | Project-awareness context helper. |
 | `smart_ai_context.py` | supporting-tool | Smart context helper. |
 | `ai_runtime_diagnostics.py` | diagnostic-only | Runtime diagnostics helper. |
+
+## Diagnostic rule
+
+For single-mode diagnostics, use the launcher with `-NoStrictRealRunActivation`. Without that flag, a real non-smoke run may promote to TUTTO SU TUTTO and start provider/GPU/NPU lanes.
 
 ## LightFull0To10 behavior
 
@@ -81,7 +102,7 @@ blender_runtime_execution_performed=false
 ffmpeg_execution_performed=false
 ```
 
-It may run optional evidence steps for startup, track input contract, repo quality, Markdown line limits, accelerator/provider governance, provider invocation/bridge planning, memory visibility, provider feedback loop and final product quality. Optional missing scripts are represented as step records and must not be interpreted as silent full-run success.
+It may run optional evidence steps. Optional missing scripts are represented as step records and must not be interpreted as silent full-run success.
 
 ## Guardrails
 
@@ -108,26 +129,26 @@ When a workflow helper contributes to Full0To10 evidence, recommendations, patch
 ```text
 launcher manifest
 phase_status / phase_reports
-runtime tool usage telemetry when tools execute, including normalized status and elapsed-time quality
-runtime/hardware capability manifest when capabilities matter
-patch notes quality product from `TaskMarkdown` after the patch-plan quality gate
-AI peer-exchange report and contract when provider execution is selected, including non-blocking NPU micro/tool-support evidence when available
-live runtime-heap NPU broker results before final telemetry, including live tool-seed evidence when the NPU provider is slower than the GPU1 round
+runtime tool usage telemetry
+runtime/hardware capability manifest
+patch notes quality product when selected
+AI peer-exchange report and contract when provider execution is selected
 runtime-heap tool catalog exchange before final telemetry
-Full0To10 final local AI product package with run-specific reports and artifacts
+Full0To10 final local AI product package when selected
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when relevant
-generated artifact path policy evidence so long bundle names are caught before push
+generated artifact path policy evidence when long bundle names are possible
 ```
 
 ## 400-line policy
 
-Maintained workflow scripts and docs must stay under 400 lines.
+Maintained workflow scripts and docs must stay under the active line-budget policy.
 
 ```text
 Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
-Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Markdown >500 lines -> compact index + <file>.md/part-001.md layout.
+Preferred active runbook size -> <=400 lines.
 Existing oversized files -> technical debt to refactor progressively, not blind split targets.
 ```
 
@@ -143,6 +164,8 @@ Tools/validation/check_file_line_limits.py
 WORKFLOW.md
 docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 ```
