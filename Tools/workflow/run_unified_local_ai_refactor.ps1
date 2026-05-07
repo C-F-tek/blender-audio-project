@@ -53,6 +53,8 @@ param(
     [int]$NpuMaxPromptChars = 1200,
     [int]$NpuMaxNewTokens = 384,
     [int]$NpuFinalWaitSeconds = 180,
+    [ValidateSet('startup', 'deferred', 'live-seed-only', 'peer', 'post-gpu-provider', 'disabled')]
+    [string]$NpuMicroStartMode = 'deferred',
     [int]$MinRecommendations = 1,
     [int]$MinPatchPlans = 1,
     [int]$MaxRecommendations = 20,
@@ -1226,6 +1228,7 @@ if ($RunLegacyFullToolboxIntegrated) {
         NpuMaxPromptChars = $NpuMaxPromptChars
         NpuMaxNewTokens = $NpuMaxNewTokens
         NpuFinalWaitSeconds = $NpuFinalWaitSeconds
+        NpuMicroStartMode = $NpuMicroStartMode
         MinRecommendations = $MinRecommendations
         MinPatchPlans = $MinPatchPlans
         RepositoryConsistencyMapWorkers = $RepositoryConsistencyMapWorkers
