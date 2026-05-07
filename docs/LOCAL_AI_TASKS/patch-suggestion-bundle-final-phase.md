@@ -1,76 +1,82 @@
 # Patch suggestion bundle final phase
 
-Status: active final-phase runbook  
-Scope: IA-Carmine full toolbox flow, patch suggestion application, local PR verification.
+Status: active final-phase runbook aligned to current code  
+Scope: IA-Carmine full toolbox flow, deterministic patch suggestion application, review PR preparation.
 
-## Product North Star
+## Code-verified current state
 
-Current product: a task Markdown asks for a concrete repository improvement; the
-tool evaluates the repository state, produces patch suggestions, applies the
-accepted deterministic suggestion on a dedicated `CARMINEai/...$Stamp` branch,
-pushes it, and opens a GitHub PR for human review.
+This document describes the current implementation, not the future product target.
 
-Future product: the same shape becomes an agnostic AI tool. It receives a
-request and project paths, runs the tool chain in the middle, and returns the
-requested output plus reviewable evidence.
-
-Runtime rule: every phase must use the same provider-capable repo Python,
-exported as `IA_CARMINE_PYTHON`, with `PYTHONPATH` set to the repo root. This is
-the `.venv` that can see OpenVINO `GPU.0`/`NPU`; wrapper scripts must not fall
-back to WindowsApps or a random global `python`.
-
-## Objective
-
-After the full toolbox run produces patch notes, telemetry and suggestion/proposal JSON, the final phase is allowed to apply only deterministic, reviewable patch operations on a dedicated PR branch.
-
-The primary product is the applied code/Markdown patch in the GitHub PR. Patch
-notes, telemetry, heap data and evidence are control surfaces: they prove why
-the patch is acceptable or why it fell back, but they are not the product by
-themselves.
-
-A final product test is complete only when a task Markdown produces at least one concrete patch suggestion and that suggestion is applied to code or maintained Markdown on the dedicated review PR branch.
-
-This phase is implemented by:
+Current script family:
 
 ```text
 Tools/ai/apply_patch_suggestion_bundle.py
+Tools/ai/patch_suggestion_bundle/cli.py
+Tools/ai/prepare_review_pr.py
 Tools/validation/run_patch_suggestion_bundle_apply_smoke.py
+Tools/validation/check_patch_suggestion_product_separation.py
+```
+
+Current behavior from code:
+
+```text
+apply_patch_suggestion_bundle.py discovers stamped/current suggestion JSON reports.
+apply_patch_suggestion_bundle.py can apply only deterministic operations when --apply is supplied.
+apply_patch_suggestion_bundle.py creates/switches a review branch when requested, but does not commit.
+apply_patch_suggestion_bundle.py may push the review branch when --push-review-branch is supplied, but does not force-push.
+prepare_review_pr.py stages only explicit --include-path allowlist entries.
+prepare_review_pr.py rejects output/**, generated chunks, renders and DB/SQLite paths.
+prepare_review_pr.py can commit, push and call gh pr create when requested.
+prepare_review_pr.py currently does not auto-discover include paths from patch_suggestion_bundle_apply results.
+prepare_review_pr.py currently does not pass --draft to gh pr create.
+check_patch_suggestion_product_separation.py is report-only and validates apply reports or smoke wrapper reports.
+```
+
+Do not document automatic path discovery or automatic draft PR creation as active until the code implements it.
+
+## Product target versus current implementation
+
+Target product loop:
+
+```text
+Task Markdown input
+-> unified launcher Full0To10 run
+-> provider/tool/broker/validator/evidence loop
+-> deterministic patch suggestion extraction
+-> deterministic patch apply on CARMINEai/* review branch
+-> product-vs-supplemental separation validation
+-> review PR preparation
+-> GitHub PR for human review
+```
+
+Current implementation gap:
+
+```text
+Review PR staging still requires explicit ReviewPrIncludePath / --include-path.
+Draft PR creation is not implemented in prepare_review_pr.py.
+Automatic include-path derivation from patch_suggestion_bundle_apply results is a follow-up.
 ```
 
 ## Runtime variables
 
-Use the same Python and stamp conventions as the Python full-toolbox workflow.
+Use the same Python and stamp conventions as the unified launcher and Python full-toolbox workflow.
 
 ```powershell
-if (-not $env:IA_CARMINE_PYTHON) {
-  if (Test-Path .\.venv\Scripts\python.exe) {
-    $env:IA_CARMINE_PYTHON = (Resolve-Path .\.venv\Scripts\python.exe).Path
-  } elseif (Test-Path .\venv\Scripts\python.exe) {
-    $env:IA_CARMINE_PYTHON = (Resolve-Path .\venv\Scripts\python.exe).Path
-  } elseif (Test-Path .\.venv314\Scripts\python.exe) {
-    $env:IA_CARMINE_PYTHON = (Resolve-Path .\.venv314\Scripts\python.exe).Path
-  } else {
-    $env:IA_CARMINE_PYTHON = "python"
-  }
-}
-
+$env:IA_CARMINE_PYTHON = (Resolve-Path .\.venv\Scripts\python.exe).Path
+$env:PYTHONPATH = (Resolve-Path .).Path
 $ProjectPython = $env:IA_CARMINE_PYTHON
-$Stamp = "post_patchable_doc_python_probe_20260507-180555"
+$Stamp = "<launcher-owned-stamp>"
 ```
 
-The final phase takes `--Stamp`, matching the Python workflow engine parameter. The tool computes the same compact artifact stamp used by the full-toolbox engine.
+`$Stamp` belongs to the launcher run. Internal tools consume that value; they should not create a second unrelated stamp for the same product run.
 
-## Stamp-driven rule
+The tool computes the compact artifact stamp used by the full-toolbox engine.
+
+## Stamp-driven discovery
 
 The final phase must be driven by the same run stamp used by the full toolbox run.
 
-Do not hardcode one specific report filename such as:
-
-```text
-patch_notes_quality_product_post_patchable_doc_python_probe_20260507-180555.json
-```
-
-Instead, pass the full workflow stamp through `--Stamp`:
+Do not hardcode one specific timestamped report filename. Pass the workflow stamp through `--Stamp`:
 
 ```powershell
 & $ProjectPython .\Tools\ai\apply_patch_suggestion_bundle.py `
@@ -100,15 +106,14 @@ Use `--no-current-suggestions` only for debugging a stamp-only run.
 
 ## Safety contract
 
-The final phase is conservative by design:
+The final apply phase is conservative by design:
 
 ```text
 No provider execution.
 No Blender execution.
 No FFmpeg execution.
 No SQLite writes.
-No Git commit.
-No Git push.
+No Git commit in apply_patch_suggestion_bundle.py.
 No merge.
 No force-push.
 No delete.
@@ -120,11 +125,10 @@ No indexAI/code_chunks/** or indexAI/project_code_chunks/** target edits.
 Apply policy:
 
 ```text
-apply is allowed only on a dedicated PR branch
-branch name must be CARMINEai/... and include the run $Stamp for uniqueness
-if the branch exists locally/remotely, the tool may reuse it
-otherwise the tool creates it
-master/main apply is always refused
+apply is allowed only on a dedicated review branch
+branch name must match an allowed prefix
+current default allowed prefixes are CARMINEai/ and codex/
+master/main apply is refused by branch policy
 ```
 
 Natural-language suggestions and proposal-only `manual_patch_suggestion` items are not rewritten into code automatically. They are reported as `manual_review_required`.
@@ -209,25 +213,6 @@ proposal_only
 manual_review_only
 ```
 
-## Local PR sync
-
-Use a dedicated review branch. Do not apply this phase directly on `master`.
-
-```powershell
-cd C:\Users\carmi\blender\blender-audio-project
-
-git fetch origin
-
-git switch codex/apply-python-doc-suggestion-wave1 2>$null
-if ($LASTEXITCODE -ne 0) {
-  git switch -c codex/apply-python-doc-suggestion-wave1 origin/codex/apply-python-doc-suggestion-wave1
-}
-
-git pull --ff-only origin codex/apply-python-doc-suggestion-wave1
-
-git status --short
-```
-
 ## Smoke validation
 
 ```powershell
@@ -238,28 +223,6 @@ git status --short
 Get-Content .\output\validation\patch_suggestion_bundle_apply_smoke.json -Raw |
   ConvertFrom-Json |
   Select-Object passed, smoke_stamp, discovered_reports, current_suggestion_reports, errors, warnings
-```
-
-## Find the stamp
-
-Use the same `$Stamp` from the run. If you do not remember it, inspect recent candidate reports:
-
-```powershell
-Get-ChildItem `
-  .\docs\LOCAL_VALIDATION_EVIDENCE, `
-  .\output\patch_specs, `
-  .\output\validation, `
-  .\output\ai_pipeline, `
-  .\output\ai_packets `
-  -Recurse `
-  -Filter *.json `
-  -ErrorAction SilentlyContinue |
-Where-Object {
-  $_.Name -match 'patch|suggest|proposal|recommend|plan|agent_review'
-} |
-Sort-Object LastWriteTime -Descending |
-Select-Object -First 30 LastWriteTime, FullName |
-Format-Table -AutoSize
 ```
 
 ## Dry-run by Stamp
@@ -279,9 +242,7 @@ Get-Content .\output\validation\patch_suggestion_bundle_apply_dry_run.json -Raw 
     Stamp, `
     artifact_stamp, `
     discovered_report_count, `
-    discovered_reports, `
     current_suggestion_report_count, `
-    current_suggestion_reports, `
     operation_count, `
     changed_count, `
     applied_count, `
@@ -322,15 +283,11 @@ $dry.essential_patch_suggestion_items |
 $dry.supplemental_telemetry_debug_items |
   Select-Object -First 40 |
   Format-List
-
-$dry.manual_review_items |
-  Select-Object -First 80 |
-  Format-List
 ```
 
-## Apply on PR branch only
+## Apply on review branch only
 
-Apply only after dry-run is clean and the current branch is the PR branch.
+Apply only after dry-run is clean and the current branch is a review branch.
 
 ```powershell
 git branch --show-current
@@ -343,25 +300,49 @@ git status --short
   --apply
 ```
 
-The tool refuses `--apply` outside branches matching `CARMINEai/*` or `codex/*` unless explicitly overridden.
+The tool refuses `--apply` outside branches matching the allowed prefixes unless explicitly overridden by future code changes.
 
-## Full Run Review PR Phase
+## Product separation validation
 
-For production review, the unified launcher can run the final patch suggestion
-product phase and then prepare the online review branch/PR itself. The branch
-family for this lane is `CARMINEai/...`; the human operator still reviews and
-merges on GitHub.
+Validate either the direct apply report or the smoke wrapper report:
 
 ```powershell
-$Stamp = "pr206_patch_suggestion_review_$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+& $ProjectPython .\Tools\validation\check_patch_suggestion_product_separation.py `
+  --repo-root . `
+  --report .\output\validation\patch_suggestion_bundle_apply.json `
+  --require-product `
+  --require-supplemental `
+  --output .\output\validation\patch_suggestion_product_separation.json
+
+Get-Content .\output\validation\patch_suggestion_product_separation.json -Raw |
+  ConvertFrom-Json |
+  Select-Object passed, kind, metrics, errors, warnings
+```
+
+## Current unified launcher review PR phase
+
+The unified launcher can call `prepare_review_pr.py` through:
+
+```text
+-PrepareReviewPr
+-ReviewPrBranch
+-ReviewPrBaseBranch
+-ReviewPrRemote
+-ReviewPrTitle
+-ReviewPrCommitMessage
+-ReviewPrIncludePath
+-ReviewPrPush
+-ReviewPrCreate
+```
+
+Current requirement: pass explicit `-ReviewPrIncludePath` values for the reviewed files that may be staged and committed.
+
+Example shape:
+
+```powershell
+$Stamp = "review_pr_$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 $ReviewPrIncludePaths = @(
-  ".\Tools\ai\apply_patch_suggestion_bundle.py",
-  ".\Tools\ai\patch_suggestion_bundle",
-  ".\Tools\ai\prepare_review_pr.py",
-  ".\Tools\workflow\run_unified_local_ai_refactor.ps1",
-  ".\Tools\validation\run_patch_suggestion_bundle_apply_smoke.py",
-  ".\docs\LOCAL_AI_TASKS\patch-suggestion-bundle-final-phase.md",
-  ".\docs\LOCAL_AI_TASKS\pr206-patch-suggestion-product-full-run-2026-05-07.md"
+  ".\docs\LOCAL_AI_TASKS\patch-suggestion-bundle-final-phase.md"
 )
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
@@ -374,34 +355,17 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -Full0To10 `
   -RunIntensity quick `
   -PrepareReviewPr `
-  -ReviewPrBranch "CARMINEai/pr206-patch-suggestion-product-$Stamp" `
-  -ReviewPrTitle "feat(ai): PR206 patch suggestion product $Stamp" `
-  -ReviewPrCommitMessage "feat(ai): harden patch suggestion product final phase" `
+  -ReviewPrBranch "CARMINEai/review-$Stamp" `
+  -ReviewPrTitle "feat(ai): review patch suggestion product $Stamp" `
+  -ReviewPrCommitMessage "feat(ai): review patch suggestion product" `
   -ReviewPrIncludePath ($ReviewPrIncludePaths -join ",") `
   -ReviewPrPush `
   -ReviewPrCreate
 ```
 
-Add `-ReviewPrApplyDeterministicSuggestions` only when deterministic operations
-are present and the dry-run product has already been inspected.
+Add `-ReviewPrApplyDeterministicSuggestions` only when deterministic operations are present and the dry-run product has already been inspected.
 
-For this workstation snapshot, `qwen2.5-coder:14b` is the preferred Ollama
-model for the strict JSON provider probe. `gpt-oss:20b` produced an empty
-strict-JSON probe response and should be treated as degraded until rechecked.
-
-## Optional: explicit reports plus Stamp
-
-You can combine explicit reports with stamp discovery:
-
-```powershell
-& $ProjectPython .\Tools\ai\apply_patch_suggestion_bundle.py `
-  --repo-root . `
-  --Stamp $Stamp `
-  --suggestion-report .\output\patch_specs\agent_review_patch_plan.json `
-  --output .\output\validation\patch_suggestion_bundle_apply_dry_run.json
-```
-
-Explicit missing report paths still fail fast. Stamp discovery avoids hardcoded timestamped filenames.
+For this workstation snapshot, `qwen2.5-coder:14b` was the preferred Ollama model for strict JSON provider probing. Re-check model health before treating this as permanent.
 
 ## Post-apply validation
 
@@ -425,22 +389,6 @@ git diff --stat
 git diff -- .
 ```
 
-## Commit and push to PR branch
-
-Do not use `git add .`.
-
-```powershell
-git add `
-  .\Tools\ai\apply_patch_suggestion_bundle.py `
-  .\Tools\validation\run_patch_suggestion_bundle_apply_smoke.py `
-  .\docs\LOCAL_AI_TASKS\patch-suggestion-bundle-final-phase.md
-
-git commit -m "fix(ai): include current suggestion reports in final phase"
-git push -u origin codex/apply-python-doc-suggestion-wave1
-```
-
-When local suggestion reports produce source/doc edits, add only the reviewed files changed by the tool. Never add `output/**`, `*.db`, `*.sqlite`, `renders/**`, or generated patch bundles.
-
 ## Evidence bundle after local apply
 
 After local apply and validation, build compact Git-trackable evidence if needed:
@@ -454,8 +402,19 @@ $EvidenceStamp = Get-Date -Format "yyyyMMdd-HHmmss"
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
   --report .\output\validation\patch_suggestion_bundle_apply.json `
   --report .\output\validation\patch_suggestion_bundle_apply_smoke.json `
+  --report .\output\validation\patch_suggestion_product_separation.json `
   --report .\output\validation\python_syntax_after_patch_suggestion_bundle.json `
   --report .\output\validation\validation_report_contract_after_patch_suggestion_bundle.json
 ```
 
 Commit only the generated compact evidence JSON/MD if it is useful for PR review.
+
+## Follow-up implementation candidates
+
+These are not current behavior:
+
+```text
+prepare_review_pr.py auto-discovery of changed paths from patch_suggestion_bundle_apply results
+prepare_review_pr.py --draft or launcher ReviewPrDraft flag
+full launcher product command that requires no explicit ReviewPrIncludePath
+```
