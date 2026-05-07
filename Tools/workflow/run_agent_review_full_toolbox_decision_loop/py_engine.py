@@ -17,7 +17,9 @@ COMPILE_TARGETS = [
     "Tools/ai/build_agent_review_patch_plan.py",
     "Tools/ai/build_full_toolbox_run_telemetry_summary.py",
     "Tools/ai/build_patch_notes_quality_product.py",
+    "Tools/ai/agent_runtime_tool_broker_execution.py",
     "Tools/ai/build_runtime_tool_usage_telemetry.py",
+    "Tools/ai/runtime_tool_telemetry_normalization.py",
     "Tools/ai/build_runtime_tool_capability_manifest.py",
     "Tools/ai/build_semantic_evidence_chunks.py",
     "Tools/ai/build_agent_review_evidence_sufficiency.py",
@@ -39,6 +41,7 @@ COMPILE_TARGETS = [
     "Tools/validation/run_agent_review_decision_loop_smoke.py",
     "Tools/validation/run_patch_notes_quality_product_smoke.py",
     "Tools/validation/check_provider_evidence_contract.py",
+    "Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_patch_notes.py",
 ]
 
 

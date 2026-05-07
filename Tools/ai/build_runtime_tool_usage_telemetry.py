@@ -15,12 +15,14 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from Tools.ai.runtime_tool_telemetry_normalization import normalize_tool_entry, status_quality
     from Tools.ai.code_patch_plan_common import now_iso, read_json_object, repo_rel
     from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.runtime_tool_telemetry_normalization import normalize_tool_entry, status_quality  # type: ignore
     from Tools.ai.code_patch_plan_common import now_iso, read_json_object, repo_rel  # type: ignore
     from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
 
@@ -176,7 +178,7 @@ def normalize_tool_result(
     started = result.get('started_at') or result.get('start_time')
     finished = result.get('finished_at') or result.get('end_time')
     elapsed = safe_float(result.get('elapsed_seconds')) or safe_float(result.get('duration_seconds')) or elapsed_from_timestamps(started, finished)
-    return {
+    return normalize_tool_entry({
         'caller_ai': caller,
         'phase': phase,
         'round': round_id,
@@ -194,7 +196,7 @@ def normalize_tool_result(
         'started_at': started,
         'finished_at': finished,
         'result': summarize_result_output(result),
-    }
+    })
 
 
 def requests_by_id(report: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -238,7 +240,7 @@ def collect_from_broker_report(
         )
     if (not entries) and (broker_report.get('tool_request_count') or broker_report.get('requested_tool_count')):
         entries.append(
-            {
+            normalize_tool_entry({
                 'caller_ai': caller,
                 'phase': phase,
                 'round': round_id,
@@ -257,7 +259,7 @@ def collect_from_broker_report(
                     'failed_tool_count': broker_report.get('failed_tool_count'),
                     'output_paths': [path for path in (broker_report.get('broker_output'), broker_report.get('broker_markdown')) if path],
                 },
-            }
+            })
         )
     return entries
 
@@ -286,7 +288,7 @@ def collect_broker_pointer_entries(repo_root: Path, raw_items: Any, caller: str,
             )
             continue
         entries.append(
-            {
+            normalize_tool_entry({
                 'caller_ai': caller,
                 'phase': phase,
                 'round': round_value,
@@ -308,7 +310,7 @@ def collect_broker_pointer_entries(repo_root: Path, raw_items: Any, caller: str,
                     'stderr_tail': compact_text(raw.get('stderr_tail'), 600),
                     'error': compact_text(raw.get('error'), 600),
                 },
-            }
+            })
         )
     return entries
 
@@ -402,7 +404,7 @@ def collect_gpu_declared_requests(gpu_report: dict[str, Any]) -> list[dict[str, 
             if not isinstance(request, dict):
                 continue
             entries.append(
-                {
+                normalize_tool_entry({
                     'caller_ai': 'gpu',
                     'phase': 'gpu_planner_declared_tool_requests',
                     'round': round_id if round_id >= 0 else None,
@@ -418,7 +420,7 @@ def collect_gpu_declared_requests(gpu_report: dict[str, Any]) -> list[dict[str, 
                     'failed': None,
                     'elapsed_seconds': 0.0,
                     'result': {'summary': 'Declared by GPU planner; execution is represented by broker records when available.'},
-                }
+                })
             )
     return entries
 
@@ -433,7 +435,7 @@ def collect_npu_declared_requests(orchestrator: dict[str, Any]) -> list[dict[str
             if not isinstance(request, dict):
                 continue
             entries.append(
-                {
+                normalize_tool_entry({
                     'caller_ai': 'npu',
                     'phase': 'npu_auditor_declared_tool_requests',
                     'round': round_id if round_id >= 0 else None,
@@ -449,7 +451,7 @@ def collect_npu_declared_requests(orchestrator: dict[str, Any]) -> list[dict[str
                     'failed': None,
                     'elapsed_seconds': 0.0,
                     'result': {'summary': 'Declared by NPU auditor; execution is represented by broker records when available.'},
-                }
+                })
             )
     return entries
 
@@ -504,6 +506,7 @@ def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str
     npu_micro_runtime_tool_execution_count = safe_int(orchestrator.get("npu_micro_runtime_tool_execution_count"))
     npu_micro_runtime_tool_live_execution_count = safe_int(orchestrator.get("npu_micro_runtime_tool_live_execution_count"))
     npu_micro_support_performed = bool(npu_micro_support_success_count > 0 or npu_micro_runtime_tool_execution_count > 0)
+    gpu0_peer_support_performed = bool(orchestrator.get("gpu0_peer_support_provider_execution_performed"))
     degraded_reasons = []
     raw_reasons = orchestrator.get('provider_degraded_reasons')
     if isinstance(raw_reasons, list):
@@ -529,6 +532,8 @@ def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str
     return {
         'provider_execution_performed': bool(gpu_provider_performed or npu_provider_performed),
         'gpu_provider_execution_performed': gpu_provider_performed,
+        'gpu0_peer_support_provider_execution_performed': gpu0_peer_support_performed,
+        'gpu0_peer_support_count': safe_int(orchestrator.get("gpu0_peer_support_count")),
         'gpu_round_count': gpu_round_count,
         'gpu_classification': gpu_report.get('classification'),
         'gpu_provider_empty_response': bool(gpu_report.get('provider_empty_response')),
@@ -536,6 +541,7 @@ def provider_evidence_summary(orchestrator: dict[str, Any], gpu_report: dict[str
         'npu_audit_count': npu_audit_count,
         'npu_audit_success_count': npu_success_count,
         'npu_micro_support_performed': npu_micro_support_performed,
+        'npu_micro_tool_lane_performed': npu_micro_support_performed,
         'npu_micro_support_count': npu_micro_support_count,
         'npu_micro_support_success_count': npu_micro_support_success_count,
         'npu_micro_runtime_tool_execution_count': npu_micro_runtime_tool_execution_count,
@@ -590,7 +596,7 @@ def extract_declared_runtime_tool_counters(gpu_report: dict[str, Any], gpu_npu_s
 
 def build_declared_runtime_tool_counter_entry(counters: dict[str, int]) -> dict[str, Any]:
     # Create a single summary telemetry entry when only aggregate planner counters exist.
-    return {
+    return normalize_tool_entry({
         "caller_ai": "gpu",
         "phase": "gpu_planner_declared_tool_request_counters",
         "round": None,
@@ -610,7 +616,7 @@ def build_declared_runtime_tool_counter_entry(counters: dict[str, int]) -> dict[
             "summary": "Planner declared runtime tool requests; broker execution count is reported separately.",
             **counters,
         },
-    }
+    })
 
 def summarize_entries(entries: list[dict[str, Any]]) -> dict[str, Any]:
     by_caller: dict[str, dict[str, Any]] = {}
@@ -686,7 +692,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         entries.append(build_declared_runtime_tool_counter_entry(declared_counters))
 
     max_entries = max(1, int(args.max_entries))
+    entries = [normalize_tool_entry(entry) for entry in entries]
     summary = summarize_entries(entries)
+    summary["telemetry_quality"] = status_quality(entries)
     summary.update(declared_counters)
     provider_evidence = provider_evidence_summary(orchestrator, gpu_report)
     provider_broker_loop = orchestrator.get("provider_broker_loop") if isinstance(orchestrator.get("provider_broker_loop"), dict) else {}
@@ -755,6 +763,11 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Failed count: `{summary.get('failed_count')}`")
     lines.append(f"- Blocked count: `{summary.get('blocked_count')}`")
     lines.append(f"- Total reported tool elapsed seconds: `{summary.get('total_reported_tool_elapsed_seconds')}`")
+    telemetry_quality = safe_dict(summary.get('telemetry_quality'))
+    if telemetry_quality:
+        lines.append(f"- Status normalized: `{telemetry_quality.get('status_normalized')}`")
+        lines.append(f"- Status missing count: `{telemetry_quality.get('status_missing_count')}`")
+        lines.append(f"- Executed elapsed missing count: `{telemetry_quality.get('executed_elapsed_missing_count')}`")
     lines.append(f"- Declared runtime tool requests: `{summary.get('runtime_tool_request_count')}`")
     lines.append(f"- Declared runtime tool executions: `{summary.get('runtime_tool_execution_count')}`")
     lines.append(f"- Broker runtime tool executions: `{summary.get('broker_executed_count')}`")

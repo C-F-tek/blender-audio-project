@@ -79,26 +79,81 @@ def build_patch_notes(patch_plan: dict[str, Any], patch_quality: dict[str, Any],
     return notes
 
 
+def patch_notes_applicability(notes: Any) -> dict[str, Any]:
+    items = [item for item in safe_list(notes) if isinstance(item, dict)]
+    invalid_notes: list[dict[str, Any]] = []
+    required_text_min = 24
+
+    for index, note in enumerate(items, 1):
+        missing: list[str] = []
+        if not str(note.get("id") or "").strip():
+            missing.append("id")
+        if not str(note.get("area") or "").strip():
+            missing.append("area")
+        if not safe_list(note.get("target_files")):
+            missing.append("target_files")
+        if len(str(note.get("summary") or "").strip()) < required_text_min:
+            missing.append("summary")
+        if len(str(note.get("edit_strategy") or "").strip()) < required_text_min:
+            missing.append("edit_strategy")
+        if not safe_list(note.get("validation_commands")):
+            missing.append("validation_commands")
+        if not safe_list(note.get("stop_conditions")):
+            missing.append("stop_conditions")
+        if note.get("manual_review_required") is not True:
+            missing.append("manual_review_required")
+        if missing:
+            invalid_notes.append(
+                {
+                    "index": index,
+                    "id": note.get("id"),
+                    "missing": missing,
+                    "target_files": safe_list(note.get("target_files"))[:8],
+                }
+            )
+
+    return {
+        "note_count": len(items),
+        "applicable_count": len(items) - len(invalid_notes),
+        "invalid_note_count": len(invalid_notes),
+        "invalid_notes": invalid_notes[:20],
+        "all_applicable": bool(items) and not invalid_notes,
+        "required_fields": [
+            "id",
+            "area",
+            "target_files",
+            "summary",
+            "edit_strategy",
+            "validation_commands",
+            "stop_conditions",
+            "manual_review_required",
+        ],
+    }
+
+
 def score_product(report: dict[str, Any]) -> tuple[float, list[dict[str, Any]], list[dict[str, Any]]]:
+    applicability = safe_dict(report.get("patch_notes_applicability")) or patch_notes_applicability(report.get("patch_notes"))
     checks = {
         "request_summary": bool(safe_dict(report.get("request_summary")).get("title")),
         "normalized_objective": len(str(report.get("normalized_objective") or "")) >= 24,
         "patch_plan_summary": safe_dict(report.get("patch_plan_summary")).get("patch_plan_count", 0) > 0,
         "patch_notes_concrete": bool(report.get("patch_notes")),
+        "patch_notes_applicable": applicability.get("all_applicable") is True,
         "evidence_coverage": safe_dict(report.get("evidence_coverage")).get("score", 0) >= 60,
         "telemetry_quality": safe_dict(report.get("telemetry_quality")).get("score", 0) >= 50,
         "validation_commands": bool(safe_dict(report.get("patch_plan_summary")).get("validation_commands")),
         "stop_conditions_guardrails": bool(safe_dict(report.get("patch_plan_summary")).get("stop_conditions")) and safe_dict(report.get("guardrails")).get("report_only") is True,
     }
     weights = {
-        "request_summary": 10,
-        "normalized_objective": 10,
-        "patch_plan_summary": 15,
-        "patch_notes_concrete": 20,
-        "evidence_coverage": 15,
-        "telemetry_quality": 15,
+        "request_summary": 8,
+        "normalized_objective": 8,
+        "patch_plan_summary": 12,
+        "patch_notes_concrete": 10,
+        "patch_notes_applicable": 20,
+        "evidence_coverage": 12,
+        "telemetry_quality": 12,
         "validation_commands": 10,
-        "stop_conditions_guardrails": 5,
+        "stop_conditions_guardrails": 8,
     }
     score = float(sum(weights[key] for key, ok in checks.items() if ok))
     findings = [{"severity": "medium", "reason": f"missing_or_weak:{key}"} for key, ok in checks.items() if not ok]

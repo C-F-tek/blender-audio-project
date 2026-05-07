@@ -162,6 +162,43 @@ def peer_exchange_summary(peer_exchange: dict[str, Any], peer_contract: dict[str
     }
 
 
+def npu_final_review_summary(provider: dict[str, Any], peer: dict[str, Any]) -> dict[str, Any]:
+    gpu1_review = bool(provider.get("gpu_provider_execution_performed"))
+    gpu0_review = bool(
+        provider.get("gpu0_peer_support_provider_execution_performed")
+        or peer.get("gpu0_peer_provider_execution_performed")
+        or peer.get("gpu0_peer_tool_execution_count")
+    )
+    npu_support_seen = bool(
+        provider.get("npu_micro_tool_lane_performed")
+        or provider.get("npu_provider_execution_performed")
+        or peer.get("npu_micro_tool_execution_count")
+        or peer.get("npu_micro_non_blocking")
+    )
+    if gpu1_review and gpu0_review:
+        classification = "gpu1_gpu0_npu_final_review"
+        reviewers = ["gpu1", "gpu0", "deterministic_validators"]
+    elif gpu1_review:
+        classification = "gpu1_npu_final_review"
+        reviewers = ["gpu1", "deterministic_validators"]
+    elif gpu0_review:
+        classification = "gpu0_npu_final_review"
+        reviewers = ["gpu0", "deterministic_validators"]
+    else:
+        classification = "npu_final_review_missing_gpu_peer"
+        reviewers = ["deterministic_validators"]
+    return {
+        "classification": classification,
+        "npu_support_seen": npu_support_seen,
+        "npu_self_check_only": False,
+        "npu_final_provider_close_path_required": False,
+        "final_review_on_performant_lane": classification != "npu_final_review_missing_gpu_peer",
+        "reviewers": reviewers,
+        "deterministic_validator_acceptance_required": True,
+        "product_blocker": not npu_support_seen,
+    }
+
+
 def runtime_heap_summary(
     telemetry: dict[str, Any],
     snapshot: dict[str, Any],
@@ -336,6 +373,8 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     provider_evidence = provider_evidence_summary(orchestrator, gpu_report)
     peer_evidence = peer_exchange_summary(peer_exchange, peer_contract)
     heap_evidence = runtime_heap_summary(heap_telemetry, heap_snapshot, heap_live_reports)
+    npu_final_review = npu_final_review_summary(provider_evidence, peer_evidence)
+    provider_evidence["npu_final_review"] = npu_final_review
     provider_execution = bool(provider_evidence["provider_execution_performed"])
     return {
         "schema_version": 1,
@@ -394,6 +433,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
         "gpu_npu": {
             "provider_evidence": provider_evidence,
             "peer_exchange": peer_evidence,
+            "npu_final_review": npu_final_review,
             "provider_runtime_heap": heap_evidence,
             "sync_metrics": gpu_npu_sync.get("metrics"),
             "performance": compact_performance(gpu_npu_sync),
@@ -415,6 +455,8 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "gpu0_peer_provider_execution_performed": peer_evidence.get("gpu0_peer_provider_execution_performed"),
             "npu_micro_provider_execution_performed": peer_evidence.get("npu_micro_provider_execution_performed"),
             "npu_micro_non_blocking": peer_evidence.get("npu_micro_non_blocking"),
+            "npu_final_review_classification": npu_final_review.get("classification"),
+            "npu_final_provider_close_path_required": npu_final_review.get("npu_final_provider_close_path_required"),
             "provider_runtime_heap_direct_execution_violation_count": heap_evidence.get("direct_execution_violation_count"),
             "patch_application_performed": False,
             "source_writes_performed": False,
@@ -455,6 +497,10 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- NPU micro non-blocking: `{peer_evidence.get('npu_micro_non_blocking')}`")
     lines.append(f"- NPU micro provider execution performed: `{peer_evidence.get('npu_micro_provider_execution_performed')}`")
     lines.append(f"- NPU micro broker tool executions: `{peer_evidence.get('npu_micro_tool_execution_count')}`")
+    npu_final_review = safe_dict(safe_dict(report.get("gpu_npu")).get("npu_final_review"))
+    lines.append(f"- NPU final review classification: `{npu_final_review.get('classification')}`")
+    lines.append(f"- NPU final review on performant lane: `{npu_final_review.get('final_review_on_performant_lane')}`")
+    lines.append(f"- NPU final close-path provider required: `{npu_final_review.get('npu_final_provider_close_path_required')}`")
     heap_evidence = safe_dict(report.get("provider_runtime_heap"))
     lines.append(f"- Runtime heap events: `{heap_evidence.get('event_count')}`")
     lines.append(f"- Runtime heap live signals: `{heap_evidence.get('live_signal_count')}`")

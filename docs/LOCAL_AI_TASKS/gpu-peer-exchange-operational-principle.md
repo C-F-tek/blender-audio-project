@@ -82,6 +82,8 @@ The NPU lane is allowed to be slow, empty, timed out or dependency-degraded. Tha
 
 The NPU must not become the heavy audit authority and must not mark product pass/fail directly. Its production role is support intelligence and brokered tool-supply amplification.
 
+NPU final quality checks must not be self-certified by NPU alone. The final NPU state should be reviewed by GPU1, GPU0 or both, and deterministic validators remain the final acceptance authority. Preferred product classification is `gpu1_gpu0_npu_final_review` when both GPU peer reports exist; otherwise use `gpu1_npu_final_review` or `gpu0_npu_final_review` and explain missing peer context.
+
 ## Runtime broker rule
 
 The runtime tool broker may consume tool requests from GPU1, GPU0 and NPU support reports.
@@ -96,10 +98,11 @@ The Python full-toolbox runner exposes `NpuMicroStartMode` so the operator can c
 Supported modes:
 
 ```text
-startup        = start the NPU provider with GPU1/GPU0; use for overlap/stress tests only
+startup        = start only the bounded startup NPU support lane with GPU1/GPU0; avoid final NPU provider work on the close path
 deferred       = keep the real NPU provider out of the live GPU1/GPU0 critical path; preferred workstation default
 live-seed-only = preserve broker-controlled NPU support evidence without starting the NPU provider in the mesh
 disabled       = disable the NPU micro-provider lane
+final-provider = explicitly allow the slower final NPU provider pass for diagnostics/stress tests only
 ```
 
 OpenVINO governance is a policy/probe surface, not a magic OS scheduler. The report `openvino_hardware_governance_*` records visible OpenVINO devices and the intended routing: GPU1 remains reserved for Ollama/CUDA, GPU0 is the explicit OpenVINO companion lane, NPU is bounded support, and deterministic scripts remain the heavy audit authority.
@@ -198,7 +201,7 @@ The production mesh has two synchronization barriers:
 
 ```text
 startup barrier: GPU1 process, GPU0 support, NPU micro support and deterministic/broker bootstrap are all armed at the beginning
-close barrier: GPU0/NPU/legacy-auditor subprocesses are harvested or terminated within the final wait budget before telemetry/bundle finalization
+close barrier: GPU0, startup NPU support and legacy-auditor subprocesses are harvested or terminated within the final wait budget before telemetry/bundle finalization; final NPU provider work stays off this path unless `final-provider` is explicitly selected
 ```
 
 `-Full0To10` does not enable the legacy NPU auditor provider by default. Use `-RunLegacyNpuAuditorProvider` only when comparing the old auditor path against the production micro-support lane.

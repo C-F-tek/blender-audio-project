@@ -54,6 +54,12 @@ if (Test-Path $QualityReport) {
         if ($null -ne $RoutingJson.primary_advisory_provider) {
             $PrimaryAdvisoryProvider = [string]$RoutingJson.primary_advisory_provider.provider
             $PrimaryAdvisoryComputeLane = [string]$RoutingJson.primary_advisory_provider.compute_lane
+            if ([string]::IsNullOrWhiteSpace($PrimaryAdvisoryProvider)) {
+                $PrimaryAdvisoryProvider = "none"
+            }
+            if ([string]::IsNullOrWhiteSpace($PrimaryAdvisoryComputeLane)) {
+                $PrimaryAdvisoryComputeLane = "none"
+            }
         }
         if ($UsePrimaryAdvisoryProvider) {
             if ($PrimaryAdvisoryProvider -eq "ollama" -and $PrimaryAdvisoryComputeLane -eq "gpu_cuda") {

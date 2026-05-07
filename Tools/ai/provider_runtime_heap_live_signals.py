@@ -184,6 +184,48 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                     },
                 )
             )
+    elif args.mode == "tool-catalog-complete":
+        capability = read_json(args.runtime_capability)
+        runtime_usage = read_json(args.runtime_usage)
+        if not capability:
+            errors.append(f"missing or invalid runtime capability report: {args.runtime_capability}")
+        if not runtime_usage:
+            errors.append(f"missing or invalid runtime usage report: {args.runtime_usage}")
+        if not errors:
+            correlation_id = f"{args.stamp}:tool-catalog-exchange"
+            catalog_payload = {
+                "runtime_capability": existing(repo_root, args.runtime_capability),
+                "runtime_usage": existing(repo_root, args.runtime_usage),
+                "tool_count": capability.get("tool_count"),
+                "broker_required": True,
+                "direct_execution": False,
+            }
+            events.append(
+                heap.append_event(
+                    source="gpu1",
+                    target="broker",
+                    event_type="tool_catalog_request",
+                    round_id=args.round,
+                    correlation_id=correlation_id,
+                    payload={
+                        **catalog_payload,
+                        "summary": "GPU1 requests the broker-controlled tool catalog before final product telemetry.",
+                    },
+                )
+            )
+            events.append(
+                heap.append_event(
+                    source="broker",
+                    target="gpu1",
+                    event_type="tool_catalog_response",
+                    round_id=args.round,
+                    correlation_id=correlation_id,
+                    payload={
+                        **catalog_payload,
+                        "summary": "Broker publishes the runtime tool capability catalog into the provider heap.",
+                    },
+                )
+            )
     else:
         errors.append(f"unsupported mode: {args.mode}")
 
@@ -235,7 +277,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--stamp", required=True)
-    parser.add_argument("--mode", required=True, choices=["init", "gpu1-request", "broker-results", "npu-support"])
+    parser.add_argument("--mode", required=True, choices=["init", "gpu1-request", "broker-results", "npu-support", "tool-catalog-complete"])
     parser.add_argument("--events", default="")
     parser.add_argument("--snapshot", default="")
     parser.add_argument("--heap-markdown", default="")
@@ -243,6 +285,8 @@ def main() -> int:
     parser.add_argument("--gpu0-task-packet", default="")
     parser.add_argument("--broker-report", default="")
     parser.add_argument("--npu-report", default="")
+    parser.add_argument("--runtime-usage", default="")
+    parser.add_argument("--runtime-capability", default="")
     parser.add_argument("--round", type=int, default=1)
     parser.add_argument("--output", default="output/validation/provider_runtime_heap_live_signals_{mode}_{stamp}.json")
     parser.add_argument("--markdown-output", default="output/validation/provider_runtime_heap_live_signals_{mode}_{stamp}.md")

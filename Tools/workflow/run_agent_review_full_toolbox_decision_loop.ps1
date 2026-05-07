@@ -5,6 +5,7 @@ param(
     [string]$OutputRoot = "output",
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
     [string]$TaskMarkdown = "docs/LOCAL_AI_TASKS/patch-notes-quality-product-2026-05-07.md",
+    [string]$IssueNumber = "",
     [switch]$RunGpuNpuProvider,
     [switch]$RequireProviderArtifacts,
     [switch]$RunLegacyNpuAuditorProvider,
@@ -32,7 +33,7 @@ param(
     [int]$NpuMicroTimeoutSeconds = 60,
     [int]$NpuMicroBrokerTimeoutSeconds = 90,
     [int]$NpuFinalWaitSeconds = 180,
-    [ValidateSet("startup", "deferred", "live-seed-only", "disabled")]
+    [ValidateSet("startup", "deferred", "live-seed-only", "disabled", "final-provider")]
     [string]$NpuMicroStartMode = "deferred",
     [switch]$SkipNpuMicroProvider,
     [switch]$SkipNpuLiveToolSeed,
