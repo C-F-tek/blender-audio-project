@@ -14,15 +14,9 @@ Tools/ai/apply_patch_suggestion_bundle.py
 Tools/validation/run_patch_suggestion_bundle_apply_smoke.py
 ```
 
-## Project Python and environment
+## Runtime variables
 
-Use the same interpreter contract used by the Python full-toolbox engine:
-
-```text
-IA_CARMINE_PYTHON
-```
-
-Recommended local resolver:
+Use the same Python and stamp conventions as the Python full-toolbox workflow.
 
 ```powershell
 if (-not $env:IA_CARMINE_PYTHON) {
@@ -38,31 +32,14 @@ if (-not $env:IA_CARMINE_PYTHON) {
 }
 
 $ProjectPython = $env:IA_CARMINE_PYTHON
-& $ProjectPython --version
+$Stamp = "post_patchable_doc_python_probe_20260507-180555"
 ```
 
-Do not use a random shell `python` if `IA_CARMINE_PYTHON` is already set.
+The final phase takes `--Stamp`, matching the Python workflow engine parameter. The tool computes the same compact artifact stamp used by the full-toolbox engine.
 
 ## Stamp-driven rule
 
-Use the same Python workflow parameter used by the full-toolbox engine:
-
-```text
---Stamp
-```
-
-The final phase internally applies the same compact artifact-stamp normalization used by:
-
-```text
-Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_support.py
-compact_artifact_stamp()
-```
-
-Example:
-
-```powershell
-$Stamp = "post_patchable_doc_python_probe_20260507-180555"
-```
+The final phase must be driven by the same run stamp used by the full toolbox run.
 
 Do not hardcode one specific report filename such as:
 
@@ -70,7 +47,16 @@ Do not hardcode one specific report filename such as:
 patch_notes_quality_product_post_patchable_doc_python_probe_20260507-180555.json
 ```
 
-Instead, pass `--Stamp $Stamp` and let the tool discover matching local JSON reports under:
+Instead, pass the full workflow stamp through `--Stamp`:
+
+```powershell
+& $ProjectPython .\Tools\ai\apply_patch_suggestion_bundle.py `
+  --repo-root . `
+  --Stamp $Stamp `
+  --output .\output\validation\patch_suggestion_bundle_apply_dry_run.json
+```
+
+The tool discovers matching local JSON reports under:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/
@@ -79,6 +65,15 @@ output/validation/
 output/ai_pipeline/
 output/ai_packets/
 ```
+
+It also includes current non-stamped suggestion/proposal reports when present:
+
+```text
+output/ai_pipeline/repository_update_suggestions.json
+output/ai_pipeline/repository_change_proposals.json
+```
+
+Use `--no-current-suggestions` only for debugging a stamp-only run.
 
 ## Safety contract
 
@@ -99,7 +94,7 @@ No renders/** target edits.
 No indexAI/code_chunks/** or indexAI/project_code_chunks/** target edits.
 ```
 
-Natural-language suggestions are not rewritten into code automatically. They are reported as `manual_review_required`.
+Natural-language suggestions and proposal-only `manual_patch_suggestion` items are not rewritten into code automatically. They are reported as `manual_review_required`.
 
 ## Supported deterministic operations
 
@@ -133,6 +128,14 @@ patch_operation
 edit_operation
 ```
 
+Proposal-only operations are preserved for manual review:
+
+```text
+manual_patch_suggestion
+proposal_only
+manual_review_only
+```
+
 ## Local PR sync
 
 Use a dedicated review branch. Do not apply this phase directly on `master`.
@@ -161,12 +164,12 @@ git status --short
 
 Get-Content .\output\validation\patch_suggestion_bundle_apply_smoke.json -Raw |
   ConvertFrom-Json |
-  Select-Object passed, smoke_stamp, discovered_reports, errors, warnings
+  Select-Object passed, smoke_stamp, discovered_reports, current_suggestion_reports, errors, warnings
 ```
 
-## Find the canonical Stamp
+## Find the stamp
 
-Prefer the exact `--Stamp` value used for the full-toolbox run. If you need to infer it from local outputs, inspect recent full-toolbox files:
+Use the same `$Stamp` from the run. If you do not remember it, inspect recent candidate reports:
 
 ```powershell
 Get-ChildItem `
@@ -179,20 +182,12 @@ Get-ChildItem `
   -Filter *.json `
   -ErrorAction SilentlyContinue |
 Where-Object {
-  $_.Name -match 'full_toolbox|patch|suggest|proposal|recommend|plan|agent_review'
+  $_.Name -match 'patch|suggest|proposal|recommend|plan|agent_review'
 } |
 Sort-Object LastWriteTime -Descending |
-Select-Object -First 40 LastWriteTime, FullName |
+Select-Object -First 30 LastWriteTime, FullName |
 Format-Table -AutoSize
 ```
-
-For the post-patchable probe run, use the full artifact stamp prefix:
-
-```powershell
-$Stamp = "post_patchable_doc_python_probe_20260507-180555"
-```
-
-Using only the trailing time fragment can work for simple filenames, but `--Stamp` should match the Python workflow stamp whenever possible.
 
 ## Dry-run by Stamp
 
@@ -212,6 +207,8 @@ Get-Content .\output\validation\patch_suggestion_bundle_apply_dry_run.json -Raw 
     artifact_stamp, `
     discovered_report_count, `
     discovered_reports, `
+    current_suggestion_report_count, `
+    current_suggestion_reports, `
     operation_count, `
     changed_count, `
     applied_count, `
@@ -227,7 +224,17 @@ Dry-run must show:
 applied_count = 0
 ```
 
-If `discovered_report_count = 0`, the stamp is wrong or the run artifacts are not present locally.
+If `discovered_report_count = 0`, the stamp is wrong or the run artifacts are not present locally. If `current_suggestion_report_count = 0`, the current non-stamped reports are not present locally.
+
+## Inspect manual-review proposals
+
+```powershell
+$dry = Get-Content .\output\validation\patch_suggestion_bundle_apply_dry_run.json -Raw | ConvertFrom-Json
+
+$dry.manual_review_items |
+  Select-Object -First 80 |
+  Format-List
+```
 
 ## Apply on PR branch only
 
@@ -254,7 +261,7 @@ You can combine explicit reports with stamp discovery:
 & $ProjectPython .\Tools\ai\apply_patch_suggestion_bundle.py `
   --repo-root . `
   --Stamp $Stamp `
-  --suggestion-report .\output\patch_specs\full_toolbox_${Stamp}_agent_review_patch_plan.json `
+  --suggestion-report .\output\patch_specs\agent_review_patch_plan.json `
   --output .\output\validation\patch_suggestion_bundle_apply_dry_run.json
 ```
 
@@ -292,7 +299,7 @@ git add `
   .\Tools\validation\run_patch_suggestion_bundle_apply_smoke.py `
   .\docs\LOCAL_AI_TASKS\patch-suggestion-bundle-final-phase.md
 
-git commit -m "feat(ai): apply patch suggestions as final toolbox phase"
+git commit -m "fix(ai): include current suggestion reports in final phase"
 git push -u origin codex/apply-python-doc-suggestion-wave1
 ```
 

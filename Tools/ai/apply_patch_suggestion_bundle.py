@@ -3,8 +3,8 @@
 
 The tool is intentionally conservative. It consumes suggestion/proposal JSON,
 applies only explicit file-edit operations, and writes a JSON report. Natural
-language recommendations are preserved as manual-review items instead of being
-converted into source edits.
+language recommendations and proposal-only items are preserved as
+manual-review items instead of being converted into source edits.
 
 Supported operations:
 - replace_once
@@ -57,6 +57,12 @@ SUPPORTED_OPERATIONS = {
     "write_file",
 }
 
+PROPOSAL_ONLY_OPERATIONS = {
+    "manual_patch_suggestion",
+    "proposal_only",
+    "manual_review_only",
+}
+
 DEFAULT_DISCOVER_SUGGESTION_ROOTS = (
     "docs/LOCAL_VALIDATION_EVIDENCE",
     "output/patch_specs",
@@ -73,6 +79,11 @@ DEFAULT_DISCOVER_SUGGESTION_TOKENS = (
     "recommendation",
     "patch_plan",
     "agent_review",
+)
+
+DEFAULT_CURRENT_SUGGESTION_REPORTS = (
+    "output/ai_pipeline/repository_update_suggestions.json",
+    "output/ai_pipeline/repository_change_proposals.json",
 )
 
 
@@ -130,9 +141,22 @@ def split_values(values: list[str] | tuple[str, ...]) -> list[str]:
     out: list[str] = []
     for value in values:
         for part in str(value).split(","):
-            cleaned = part.strip()
+            cleaned = part.strip().strip("'\"")
             if cleaned:
                 out.append(cleaned)
+    return out
+
+
+def unique_in_order(items: list[str] | tuple[str, ...]) -> list[str]:
+    """Return unique non-empty values in order."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        normalized = str(item).replace("\\", "/").strip()
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        out.append(normalized)
     return out
 
 
@@ -180,6 +204,15 @@ def first_string(data: dict[str, Any], keys: tuple[str, ...]) -> str | None:
     return None
 
 
+def as_string_list(value: Any) -> list[str]:
+    """Normalize string/list values into strings."""
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        return [str(item) for item in value if item is not None and str(item)]
+    return []
+
+
 def normalize_operation(raw: dict[str, Any]) -> PatchOperation | None:
     """Convert a raw suggestion dict into a supported PatchOperation."""
     op = first_string(raw, ("operation", "op", "action", "patch_operation", "edit_operation"))
@@ -200,7 +233,7 @@ def normalize_operation(raw: dict[str, Any]) -> PatchOperation | None:
         find=first_string(raw, ("find", "old", "search", "anchor", "needle")),
         replace=first_string(raw, ("replace", "new", "replacement")),
         marker=first_string(raw, ("marker", "idempotency_marker")),
-        source_id=first_string(raw, ("id", "suggestion_id", "plan_id")),
+        source_id=first_string(raw, ("id", "suggestion_id", "plan_id", "proposal_id")),
         family=first_string(raw, ("family", "suggestion_family", "area", "kind")),
         description=first_string(raw, ("description", "rationale", "title")),
     )
@@ -219,11 +252,85 @@ def iter_dicts(data: Any) -> list[dict[str, Any]]:
     return found
 
 
+def is_report_container(raw: dict[str, Any]) -> bool:
+    """Detect report-root/container dictionaries that should not become manual items."""
+    if not isinstance(raw, dict):
+        return False
+    if "kind" not in raw:
+        return False
+    container_keys = {
+        "schema_version",
+        "repo_root",
+        "generated_at",
+        "passed",
+        "errors",
+        "warnings",
+        "checks",
+        "results",
+        "reports_read",
+        "loaded_reports",
+        "workflow",
+        "bundle",
+    }
+    return bool(container_keys.intersection(raw.keys()))
+
+
+def is_manual_candidate(raw: dict[str, Any]) -> bool:
+    """Return true for real suggestion/proposal nodes, not telemetry containers."""
+    if not isinstance(raw, dict) or is_report_container(raw):
+        return False
+
+    operation = first_string(raw, ("operation", "op", "action", "patch_operation", "edit_operation"))
+    if operation and operation.strip().lower().replace("-", "_") in PROPOSAL_ONLY_OPERATIONS:
+        return True
+
+    if raw.get("write_policy") == "manual_review_only" or raw.get("content_status") == "proposal_only":
+        return True
+
+    proposal_keys = {
+        "proposal_id",
+        "priority",
+        "area",
+        "title",
+        "rationale",
+        "target_files",
+        "target_file",
+        "patch_sketch",
+        "suggestion_outputs",
+        "validation_commands",
+        "stop_conditions",
+        "change_type",
+        "apply_mode",
+        "details",
+    }
+    if proposal_keys.intersection(raw.keys()):
+        if first_string(raw, ("title", "rationale", "description", "details", "proposal_id", "id")):
+            return True
+
+    return False
+
+
+def manual_item(raw: dict[str, Any]) -> dict[str, Any]:
+    """Build a compact manual-review item from a suggestion/proposal node."""
+    operation = first_string(raw, ("operation", "op", "action", "patch_operation", "edit_operation"))
+    return {
+        "id": first_string(raw, ("proposal_id", "id", "suggestion_id", "plan_id")),
+        "family": first_string(raw, ("family", "suggestion_family", "area", "kind")),
+        "title": first_string(raw, ("title", "description", "rationale", "details")),
+        "operation": operation,
+        "apply_mode": first_string(raw, ("apply_mode", "write_policy", "content_status")),
+        "target": first_string(raw, ("path", "target", "target_file", "file", "file_path")),
+        "target_files": as_string_list(raw.get("target_files")),
+        "reason": "proposal-only or no supported deterministic operation found",
+    }
+
+
 def discover_operations(data: Any) -> tuple[list[PatchOperation], list[dict[str, Any]]]:
-    """Discover supported deterministic operations and manual-review candidates."""
+    """Discover supported deterministic operations and useful manual-review candidates."""
     operations: list[PatchOperation] = []
     manual: list[dict[str, Any]] = []
-    seen: set[tuple[str, str, str | None, str | None, str | None]] = set()
+    seen_operations: set[tuple[str, str, str | None, str | None, str | None]] = set()
+    seen_manual: set[str] = set()
 
     for raw in iter_dicts(data):
         operation = normalize_operation(raw)
@@ -235,21 +342,17 @@ def discover_operations(data: Any) -> tuple[list[PatchOperation], list[dict[str,
                 operation.replace,
                 operation.content,
             )
-            if key not in seen:
-                seen.add(key)
+            if key not in seen_operations:
+                seen_operations.add(key)
                 operations.append(operation)
             continue
 
-        family = first_string(raw, ("family", "suggestion_family", "area", "kind"))
-        title = first_string(raw, ("title", "description", "rationale", "id"))
-        if family or title:
-            manual.append(
-                {
-                    "family": family,
-                    "title": title,
-                    "reason": "no supported deterministic operation found",
-                }
-            )
+        if is_manual_candidate(raw):
+            item = manual_item(raw)
+            item_key = json.dumps(item, sort_keys=True, ensure_ascii=False)
+            if item_key not in seen_manual:
+                seen_manual.add(item_key)
+                manual.append(item)
 
     return operations, manual
 
@@ -313,6 +416,17 @@ def discover_suggestion_reports(
         if len(deduped) >= max_files:
             break
     return deduped, scanned
+
+
+def discover_current_suggestion_reports(repo_root: Path, enabled: bool) -> list[str]:
+    """Return current non-stamped suggestion/proposal reports if present."""
+    if not enabled:
+        return []
+    out: list[str] = []
+    for rel in DEFAULT_CURRENT_SUGGESTION_REPORTS:
+        if (repo_root / rel).exists():
+            out.append(rel)
+    return out
 
 
 def read_text(path: Path) -> str:
@@ -455,15 +569,20 @@ def parse_args() -> argparse.Namespace:
         "--discover-suggestion-root",
         action="append",
         default=[],
-        help="Root used with --suggestion-stamp. Repeatable or comma-separated.",
+        help="Root used with --Stamp. Repeatable or comma-separated.",
     )
     parser.add_argument(
         "--discover-suggestion-token",
         action="append",
         default=[],
-        help="Filename/path token used with --suggestion-stamp. Repeatable or comma-separated.",
+        help="Filename/path token used with --Stamp. Repeatable or comma-separated.",
     )
     parser.add_argument("--discover-max-files", type=int, default=50)
+    parser.add_argument(
+        "--no-current-suggestions",
+        action="store_true",
+        help="Do not include current non-stamped repository suggestion/proposal reports.",
+    )
     parser.add_argument("--output", default="output/validation/patch_suggestion_bundle_apply.json")
     parser.add_argument("--apply", action="store_true", help="Actually write source/doc files.")
     parser.add_argument("--allow-dirty", action="store_true", help="Allow applying with dirty git status.")
@@ -502,11 +621,12 @@ def main() -> int:
         discover_tokens,
         int(args.discover_max_files),
     )
+    current_suggestion_reports = discover_current_suggestion_reports(
+        repo_root,
+        enabled=not bool(args.no_current_suggestions),
+    )
 
-    report_paths = split_values(args.suggestion_report)
-    for rel in discovered_reports:
-        if rel not in report_paths:
-            report_paths.append(rel)
+    report_paths = unique_in_order(split_values(args.suggestion_report) + discovered_reports + current_suggestion_reports)
 
     if raw_stamp and not report_paths:
         errors.append(
@@ -526,6 +646,7 @@ def main() -> int:
             "exists": path.exists(),
             "json_ok": error is None,
             "error": error,
+            "current_suggestion_report": raw_path.replace("\\", "/") in current_suggestion_reports,
         }
         loaded_reports.append(report_item)
         if error:
@@ -559,6 +680,8 @@ def main() -> int:
         "suggestion_stamp": artifact_stamp,
         "discovered_report_count": len(discovered_reports),
         "discovered_reports": discovered_reports,
+        "current_suggestion_report_count": len(current_suggestion_reports),
+        "current_suggestion_reports": current_suggestion_reports,
         "discovery_scan": discovery_scan,
         "provider_execution_performed": False,
         "blender_execution_performed": False,

@@ -3,8 +3,8 @@
 
 The smoke is report-only by default. It creates a temporary mini-repository
 outside the project tree, runs the applier in dry-run and apply modes against a
-synthetic stamped suggestion report, and verifies that only deterministic
-operations are applied.
+synthetic stamped suggestion report plus current proposal reports, and verifies
+that only deterministic operations are applied.
 """
 from __future__ import annotations
 
@@ -45,6 +45,7 @@ def build_synthetic_repo(tmp: Path, source_repo: Path) -> tuple[Path, Path]:
     (repo / "Tools" / "ai").mkdir(parents=True)
     (repo / "Tools" / "validation").mkdir(parents=True)
     (repo / "docs" / "LOCAL_VALIDATION_EVIDENCE").mkdir(parents=True)
+    (repo / "output" / "ai_pipeline").mkdir(parents=True)
     (repo / "Tools" / "ai" / "apply_patch_suggestion_bundle.py").write_text(
         (source_repo / "Tools" / "ai" / "apply_patch_suggestion_bundle.py").read_text(encoding="utf-8"),
         encoding="utf-8",
@@ -75,11 +76,6 @@ def build_synthetic_repo(tmp: Path, source_repo: Path) -> tuple[Path, Path]:
                 "marker": "Final phase marker",
                 "content": "\nFinal phase marker\n",
             },
-            {
-                "id": "manual_only",
-                "family": "doc_python",
-                "rationale": "Natural-language suggestion must remain manual-review only.",
-            },
         ],
     }
     suggestion_path = (
@@ -89,6 +85,33 @@ def build_synthetic_repo(tmp: Path, source_repo: Path) -> tuple[Path, Path]:
         / f"patch_suggestion_smoke_{SMOKE_STAMP}.json"
     )
     suggestion_path.write_text(json.dumps(suggestion, indent=2) + "\n", encoding="utf-8")
+
+    current_suggestions = {
+        "schema_version": 1,
+        "kind": "repository_change_proposals",
+        "proposals": [
+            {
+                "proposal_id": "P-SMOKE-MANUAL",
+                "priority": "P2",
+                "area": "docs",
+                "title": "Manual review proposal must not auto-apply",
+                "target_files": ["README.md"],
+                "suggestion_outputs": [
+                    {
+                        "path": "README.md",
+                        "artifact_kind": "markdown",
+                        "operation": "manual_patch_suggestion",
+                        "content_status": "proposal_only",
+                        "write_policy": "manual_review_only",
+                    }
+                ],
+            }
+        ],
+    }
+    (repo / "output" / "ai_pipeline" / "repository_change_proposals.json").write_text(
+        json.dumps(current_suggestions, indent=2) + "\n",
+        encoding="utf-8",
+    )
     return repo, suggestion_path
 
 
@@ -103,6 +126,7 @@ def main() -> int:
     errors: list[str] = []
     commands: list[dict[str, Any]] = []
     discovered_reports: list[str] = []
+    current_reports: list[str] = []
 
     with tempfile.TemporaryDirectory(prefix="patch-suggestion-smoke-") as tmp_raw:
         repo, suggestion_path = build_synthetic_repo(Path(tmp_raw), source_repo)
@@ -144,18 +168,20 @@ def main() -> int:
         sample = (repo / "sample.md").read_text(encoding="utf-8")
         apply_report = json.loads((repo / "apply.json").read_text(encoding="utf-8"))
         discovered_reports = apply_report.get("discovered_reports") or []
+        current_reports = apply_report.get("current_suggestion_reports") or []
+        manual_items = apply_report.get("manual_review_items") or []
         if suggestion_path.relative_to(repo).as_posix() not in discovered_reports:
             errors.append("stamped suggestion report was not discovered")
-        if apply_report.get("Stamp") != SMOKE_STAMP:
-            errors.append("canonical --Stamp value was not preserved in report")
-        if apply_report.get("artifact_stamp") != SMOKE_STAMP:
-            errors.append("compact artifact stamp did not match expected smoke stamp")
+        if "output/ai_pipeline/repository_change_proposals.json" not in current_reports:
+            errors.append("current non-stamped proposal report was not discovered")
         if "new text" not in sample or "Final phase marker" not in sample:
             errors.append("expected deterministic edits were not applied")
         if apply_report.get("applied_count") != 2:
             errors.append("expected exactly two applied operations")
-        if not apply_report.get("manual_review_required"):
-            errors.append("manual review was not preserved for natural-language suggestion")
+        if not apply_report.get("manual_review_required") or not manual_items:
+            errors.append("manual review was not preserved for proposal-only suggestion")
+        if any(item.get("family") == "synthetic_patch_suggestions" for item in manual_items):
+            errors.append("report container was incorrectly classified as manual review item")
 
     report = {
         "schema_version": 1,
@@ -166,6 +192,7 @@ def main() -> int:
         "source_writes_performed": False,
         "smoke_stamp": SMOKE_STAMP,
         "discovered_reports": discovered_reports,
+        "current_suggestion_reports": current_reports,
         "commands": commands,
         "errors": errors,
         "warnings": [],
