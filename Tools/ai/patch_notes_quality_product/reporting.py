@@ -17,13 +17,23 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Manual review required: `{report.get('manual_review_required')}`")
     telemetry = report.get("telemetry_quality") if isinstance(report.get("telemetry_quality"), dict) else {}
     coverage = report.get("evidence_coverage") if isinstance(report.get("evidence_coverage"), dict) else {}
+    applicability = report.get("patch_notes_applicability") if isinstance(report.get("patch_notes_applicability"), dict) else {}
     lines.append(f"- Telemetry quality score: `{telemetry.get('score')}`")
     lines.append(f"- Evidence coverage score: `{coverage.get('score')}`")
+    lines.append(f"- Patch notes applicable: `{applicability.get('all_applicable')}`")
+    lines.append(f"- Patch notes invalid count: `{applicability.get('invalid_note_count')}`")
     lines += ["", "## Request", "", str(report.get("normalized_objective") or "")]
     lines += ["", "## Patch Plan Summary", ""]
     summary = report.get("patch_plan_summary") if isinstance(report.get("patch_plan_summary"), dict) else {}
     for key in ("patch_plan_count", "patch_quality_gate_passed", "patch_quality_classification", "average_plan_score"):
         lines.append(f"- {key}: `{summary.get(key)}`")
+    lines += ["", "## Patch Notes Applicability", ""]
+    for key in ("note_count", "applicable_count", "invalid_note_count", "all_applicable"):
+        lines.append(f"- {key}: `{applicability.get(key)}`")
+    if applicability.get("invalid_notes"):
+        lines += ["", "### Invalid notes", ""]
+        for item in _items(applicability.get("invalid_notes"), 20):
+            lines.append(f"- `{item.get('id')}` missing=`{item.get('missing')}` targets=`{item.get('target_files')}`")
     lines += ["", "## Generated Patch Notes", ""]
     for note in _items(report.get("patch_notes"), 20):
         lines.append(f"- `{note.get('id')}` `{note.get('area')}` score=`{note.get('quality_score')}` targets=`{note.get('target_files')}`")
