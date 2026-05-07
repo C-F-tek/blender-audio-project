@@ -327,7 +327,14 @@ def _merge_counts(*items: dict[str, int]) -> dict[str, int]:
             merged[key] = merged.get(key, 0) + int(value or 0)
     return merged
 
-def build_product_sufficiency(report: dict[str, Any], loaded: dict[str, dict[str, Any]], task: dict[str, Any]) -> dict[str, Any]:
+def build_product_sufficiency(
+    report: dict[str, Any],
+    loaded: dict[str, dict[str, Any]],
+    task: dict[str, Any],
+    *,
+    patch_note_limit: int = 20,
+    requested_min_patch_notes: int = 0,
+) -> dict[str, Any]:
     mode = detect_product_mode(task)
     notes = [item for item in safe_list(report.get("patch_notes")) if isinstance(item, dict)]
     actual_area_counts: dict[str, int] = {}
@@ -341,15 +348,20 @@ def build_product_sufficiency(report: dict[str, Any], loaded: dict[str, dict[str
     available_requested_areas = [area for area in requested_areas if available_area_counts.get(area, 0) > 0]
     unavailable_requested_areas = [area for area in requested_areas if area not in available_requested_areas]
     missing_available_areas = [area for area in available_requested_areas if area not in actual_areas]
-    requested_min_patch_notes = 1
-    if mode["mode"] == "ALL_ALL":
-        requested_min_patch_notes = max(5, min(40, max(1, len(available_requested_areas)) * 5))
+    requested_min_patch_notes = int(requested_min_patch_notes or 0)
+    if requested_min_patch_notes <= 0:
+        requested_min_patch_notes = 1
+        if mode["mode"] == "ALL_ALL":
+            requested_min_patch_notes = max(5, min(40, max(1, len(available_requested_areas)) * 5))
+    patch_note_limit = max(1, int(patch_note_limit or 20))
     workflow = _workflow_summary(loaded)
     recommendation_count = int(workflow.get("recommendation_count") or 0)
     patch_plan_count = int(workflow.get("patch_plan_count") or safe_dict(report.get("patch_plan_summary")).get("patch_plan_count") or 0)
     reasons: list[str] = []
     if len(notes) < requested_min_patch_notes:
-        reasons.append("patch_note_count_below_availability_aware_minimum")
+        reasons.append("patch_note_count_below_requested_minimum")
+    if patch_note_limit < requested_min_patch_notes:
+        reasons.append("patch_note_limit_below_requested_minimum")
     if missing_available_areas:
         reasons.append("available_requested_area_coverage_missing")
     if workflow.get("passed") is False:
@@ -365,6 +377,7 @@ def build_product_sufficiency(report: dict[str, Any], loaded: dict[str, dict[str
         "unavailable_requested_areas": unavailable_requested_areas,
         "missing_available_areas": missing_available_areas,
         "requested_min_patch_notes": requested_min_patch_notes,
+        "patch_note_limit": patch_note_limit,
         "actual_patch_note_count": len(notes),
         "actual_areas": actual_areas,
         "actual_area_counts": actual_area_counts,

@@ -189,8 +189,8 @@ def python_python_symbol_smoke() -> dict[str, Any]:
         package.mkdir(parents=True)
         (root / "Tools" / "__init__.py").write_text("", encoding="utf-8")
         (package / "__init__.py").write_text("", encoding="utf-8")
-        (package / "real_module.py").write_text("def existing_symbol():\\n    return True\\n", encoding="utf-8")
-        tree = ast.parse("from Tools.ai.real_module import missing_symbol\\n")
+        (package / "real_module.py").write_text("def existing_symbol():\n    return True\n", encoding="utf-8")
+        tree = ast.parse("from Tools.ai.real_module import missing_symbol\n")
         findings = extract_local_import_findings(tree, "Tools/ai/consumer.py", root)
     kinds = [item.get("kind") for item in findings]
     return {
