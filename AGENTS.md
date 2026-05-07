@@ -11,9 +11,10 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 3. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for the current code/state bridge when present;
 4. read `docs/MAIN_RUNTIME_ARCHITECTURE.md` when working on runtime, provider, broker, validator, telemetry or workflow architecture;
 5. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
-6. follow hard guardrails unless the human explicitly approves a normally restricted action;
-7. inspect the target source/document before proposing or applying a patch;
-8. report conflicts between the request, code, docs, evidence and guardrails before modifying files.
+6. read `docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md` before converting patch-note suggestions into source edits;
+7. follow hard guardrails unless the human explicitly approves a normally restricted action;
+8. inspect the target source/document before proposing or applying a patch;
+9. report conflicts between the request, code, docs, evidence and guardrails before modifying files.
 
 ## Repository identity
 
@@ -54,6 +55,8 @@ docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/patch-notes-quality-product-2026-05-07.md
+docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 docs/AI_PIPELINE_ARCHITECTURE.md
 docs/PROJECT_STATUS_POINT.md
@@ -143,6 +146,38 @@ telemetry/event stream records executed, skipped, degraded and blocked phases
 ```
 
 Architecture targets do not authorize source writes, provider execution, patch application, Blender runtime, FFmpeg runtime, commit, push, merge or delete by themselves.
+
+## Patch suggestion ledger policy
+
+A patch-notes quality product is a proposal ledger, not executable code.
+
+```text
+patch_notes_quality_product_<stamp>.json = review input
+summary.proposal_core = compact bundle handoff ledger
+patch bundle / branch diff = reviewed implementation artifact
+```
+
+Agents must not convert ledger entries directly into source writes. Review order is:
+
+```text
+1. python_python
+2. python_doc
+3. doc_doc
+4. doc_python
+```
+
+Before patching any suggestion:
+
+```text
+refresh against current master
+verify source/target still exists
+verify missing imports/symbols are still missing
+reject generated-evidence noise and placeholder fenced-code paths
+use a small reviewed patch bundle or branch diff
+run py_compile/smoke/git diff --check
+```
+
+If a suggestion is stale, record it as stale evidence when useful and do not patch it.
 
 ## Code length policy
 
@@ -378,6 +413,8 @@ ordered patch scripts under a patches/ folder
 These names are ZIP-internal bundle members, not repository-tracked source paths. Do not treat them as files that must already exist in the repository root.
 
 Patch bundles must be idempotent where possible, block on unexpected dirty working trees, print resulting line counts for modified scripts and never commit automatically.
+
+Patch-note products and `summary.proposal_core` ledgers are not patch bundles. They must be converted into reviewed bundles or branch diffs before any source write.
 
 ## Refactoring rules
 
