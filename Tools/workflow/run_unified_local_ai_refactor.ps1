@@ -1541,6 +1541,9 @@ if ($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) {
         "--output", $PatchSuggestionJson
     )
     if ($ReviewPrApplyDeterministicSuggestions) {
+        if ($PrepareReviewPr -and -not [string]::IsNullOrWhiteSpace($ReviewPrBranch)) {
+            $PatchSuggestionArgs += @("--create-review-branch", $ReviewPrBranch, "--allow-dirty-branch")
+        }
         $PatchSuggestionArgs += "--apply"
         if ($AllowDirty) { $PatchSuggestionArgs += "--allow-dirty" }
     }
