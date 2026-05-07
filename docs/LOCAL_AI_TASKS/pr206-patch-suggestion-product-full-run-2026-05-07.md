@@ -1,7 +1,17 @@
 # PR206 Patch Suggestion Product Full Run
 
-Status: active local full-run task  
-Scope: PR206 final phase, patch suggestion product quality, report-only review.
+Status: historical task updated as product-flow reference  
+Scope: unified Full0To10 launcher, patch suggestion product quality, draft review PR.
+
+## Current interpretation
+
+This task predates the final unified-product wording. It remains useful as a concrete example, but the active product interface is now:
+
+```text
+Tools/workflow/run_unified_local_ai_refactor.ps1
+```
+
+Do not use this document as a separate manual runbook. Use it as a task Markdown input or as historical evidence for the product requirement.
 
 ## Objective
 
@@ -13,88 +23,55 @@ review-ready patch suggestion product for this repository, while keeping
 telemetry/debug findings separate from essential patch suggestions.
 ```
 
-The desired output is not automatic source editing. The desired output is a
-reviewable product surface:
+The desired output is now the complete launcher-owned product loop:
 
 ```text
 task Markdown input
+-> unified Full0To10 provider/tool/broker/validator run
 -> repository consistency evidence
 -> current suggestion/proposal JSON
--> patch suggestion bundle dry-run
+-> patch suggestion bundle apply report
 -> product-facing patch suggestion classification
 -> supplemental telemetry/debug classification
 -> compact validation evidence
+-> deterministic patch applied on CARMINEai/* review branch when present
+-> draft GitHub PR with applied code/MD diff
 ```
 
-## Product Acceptance
+## Product acceptance
 
-The run is product-useful only if it can show:
+The run is product-useful only if it can show one of these states clearly:
 
 ```text
-patch_product_status != no_applicable_patch_product
-ready_for_patch_suggestion_review = true
-essential_patch_suggestion_items contains concrete target files
-supplemental_telemetry_debug_items is separate from product suggestions
-operation_count = 0 unless deterministic operations are explicit
-applied_count = 0
-source_writes_performed = false for the full-run evidence path
+deterministic_patch_operations_ready and applied on review branch
+manual_review_product_suggestions_ready with concrete source/doc targets
+no_applicable_patch_product with telemetry/debug kept supplemental
 ```
 
-The real final product is not telemetry. The primary product is:
+For a real product PR, the required success surface is:
 
 ```text
-concrete patch suggestion from the task Markdown
--> deterministic patch applied on a dedicated PR branch
--> online GitHub PR with the applied code/MD change
+patch_suggestion_bundle_apply passed
+product-vs-supplemental separation passed
+safe source/doc paths were derived from the apply report
+draft GitHub PR was created from the CARMINEai/* review branch
+output/** was not committed
+DB/SQLite/render/generated chunk artifacts were not committed
 ```
 
-Telemetry, heap, runtime usage, provider probes and evidence reports are
-secondary proof surfaces. They can support or reject a patch suggestion, but
-they do not close the product loop by themselves.
+Telemetry, heap, runtime usage, provider probes and evidence reports are secondary proof surfaces. They support or reject a patch suggestion, but they do not close the product loop by themselves.
 
-The expected product-facing item is the NPU observability proposal only if it
-has all of:
+## Launcher-owned variables
+
+`$Stamp` belongs to the unified launcher run. The launcher receives or creates it once and propagates it to all internal tools.
+
+Do not create a second stamp for patch apply, review PR preparation, telemetry, evidence or provider reports.
+
+Environment is also launcher-owned:
 
 ```text
-safe source/doc target files
-patch sketch
-validation commands
-stop conditions
-manual_review_only apply mode
-```
-
-## Guardrails
-
-```text
-No merge to master.
-No force-push.
-No rewrite history.
-No destructive delete.
-No deploy.
-No secrets, permissions, billing or visibility changes.
-No Blender runtime.
-No FFmpeg runtime.
-No automatic patch-spec apply.
-No commit of output/**.
-No commit of indexAI/code_chunks/**.
-No commit of indexAI/project_code_chunks/**.
-No commit of *.db, *.sqlite or *.sqlite3.
-No commit of renders/**.
-```
-
-Provider execution is allowed only through the explicit Full0To10 command for
-this validation run. Patch application is allowed only on the dedicated PR
-branch for the current `$Stamp`, with `-ReviewPrApplyDeterministicSuggestions`,
-after the task Markdown supplies deterministic operations.
-
-## Environment Note
-
-The unified launcher must export the resolved project interpreter before any
-provider, broker, GPU0 or NPU subprocess runs:
-
-```powershell
-$env:IA_CARMINE_PYTHON = "<repo>\.venv\Scripts\python.exe"
-$env:PYTHONPATH = "<repo>"
+IA_CARMINE_PYTHON = provider-capable repository Python
+PYTHONPATH = repository root
 ```
 
 Local probe result from this session:
@@ -106,50 +83,55 @@ qwen2.5-coder:14b: strict JSON probe passed
 autumnzsd/qwen2.5-coder-tools:latest: strict JSON probe passed
 ```
 
-Use `qwen2.5-coder:14b` for the PR206 full-run validation unless a later
-provider probe proves `gpt-oss:20b` healthy again.
+Use `qwen2.5-coder:14b` for this workstation snapshot unless a later provider probe proves another model healthy again.
 
-## Online Review PR Output
+## Online review PR output
 
-The full run may prepare the review PR directly when invoked with
-`-PrepareReviewPr`. That phase must:
+The full run prepares the review PR through launcher flags, not by turning this document into a separate script chain.
+
+The review PR phase must:
 
 ```text
-use a CARMINEai/... branch
-stage only explicit allowlisted source/doc/evidence paths
-commit compact Git-trackable evidence under docs/LOCAL_VALIDATION_EVIDENCE
-push the branch to origin
-create a GitHub PR for human manual review
+use a CARMINEai/* branch
+prefer automatic path discovery from patch_suggestion_bundle_apply results
+allow explicit include paths only as additive/manual overrides
+commit compact Git-trackable evidence only when requested and safe
+push the branch to origin when -ReviewPrPush is supplied
+create a draft GitHub PR when -ReviewPrCreate is supplied
 never merge to master
 never force-push
 never stage output/**, generated code chunks, DBs, SQLite files or renders
 ```
 
-If the `CARMINEai/...$Stamp` branch already exists locally or remotely, the
-tool may reuse it. Otherwise it must create a new branch from the current
-review base. It must never apply on `master` or `main`.
+If the `CARMINEai/*` branch already exists locally or remotely, the tool may reuse it. It must never apply on `master` or `main`.
 
-## Review Questions
+## Review questions
 
 ```text
-1. Is there at least one concrete patch suggestion product?
-2. Are telemetry/debug/validation signals kept supplemental?
-3. Does the final phase keep proposal-only output in manual review?
-4. Are current suggestions regenerated from the current repository state?
-5. Are validation commands and stop conditions present for the product item?
+1. Did the unified launcher own the stamp and environment for the whole run?
+2. Did Full0To10 run all selected provider/tool/broker/validator lanes or record explicit degradation?
+3. Is there at least one concrete patch suggestion product?
+4. Are telemetry/debug/validation signals kept supplemental?
+5. Were source/doc paths derived from the apply report instead of broad git add?
+6. Was the GitHub PR created as draft for human review?
 ```
 
-## Minimum Local Validation
+## Minimum local validation
 
 ```powershell
-$ProjectPython = $env:IA_CARMINE_PYTHON
-if (-not $ProjectPython) { $ProjectPython = ".\.venv\Scripts\python.exe" }
+python -m py_compile .\Tools\ai\prepare_review_pr.py
+python -m py_compile .\Tools\validation\check_patch_suggestion_product_separation.py
+git diff --check
+```
 
-& $ProjectPython .\Tools\validation\run_patch_suggestion_bundle_apply_smoke.py `
-  --repo-root . `
-  --output .\output\validation\patch_suggestion_bundle_apply_smoke_pr206_product_final.json
+After a real launcher run, inspect:
 
-& $ProjectPython .\Tools\ai\apply_patch_suggestion_bundle.py `
-  --repo-root . `
-  --output .\output\validation\patch_suggestion_bundle_apply_dry_run_current_only_pr206_product_final.json
+```powershell
+Get-Content ".\output\validation\patch_suggestion_bundle_apply*.json" -Raw |
+  ConvertFrom-Json |
+  Select-Object passed, apply_requested, applied_count, changed_count, patch_product_status, ready_for_patch_suggestion_review, errors, warnings
+
+Get-Content ".\output\validation\review_pr_prepare*.json" -Raw |
+  ConvertFrom-Json |
+  Select-Object passed, github_pr_created, github_pr_draft_requested, github_pr_url, product_commit, include_paths, auto_include_paths, errors, warnings
 ```
