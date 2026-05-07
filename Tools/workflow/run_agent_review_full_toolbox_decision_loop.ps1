@@ -4,6 +4,8 @@ param(
     [string]$Stamp = "",
     [string]$OutputRoot = "output",
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
+    [string]$TaskMarkdown = "docs/LOCAL_AI_TASKS/patch-notes-quality-product-2026-05-07.md",
+    [string]$IssueNumber = "",
     [switch]$RunGpuNpuProvider,
     [switch]$RequireProviderArtifacts,
     [switch]$RunLegacyNpuAuditorProvider,
@@ -11,6 +13,9 @@ param(
     [switch]$SkipPostValidationPacket,
     [switch]$SkipSharedToolboxBundle,
     [switch]$UseLegacyPowerShellImplementation,
+    [switch]$BuildEvidence,
+    [switch]$GeneratePatchSpecs,
+    [switch]$ContinueOnValidationError,
     [int]$BudgetMinutes = 30,
     [int]$MaxRounds = 20,
     [int]$FilesPerRound = 8,
@@ -28,14 +33,18 @@ param(
     [int]$NpuMicroTimeoutSeconds = 60,
     [int]$NpuMicroBrokerTimeoutSeconds = 90,
     [int]$NpuFinalWaitSeconds = 180,
-    [ValidateSet("startup", "deferred", "live-seed-only", "disabled")]
+    [ValidateSet("startup", "deferred", "live-seed-only", "disabled", "final-provider")]
     [string]$NpuMicroStartMode = "deferred",
     [switch]$SkipNpuMicroProvider,
     [switch]$SkipNpuLiveToolSeed,
     [int]$NpuMicroMaxLiveProviderRounds = 0,
     [int]$MinRecommendations = 1,
     [int]$MinPatchPlans = 1,
-    [int]$RepositoryConsistencyMapWorkers = 8
+    [int]$RepositoryConsistencyMapWorkers = 8,
+    [ValidateSet("process", "thread", "auto")]
+    [string]$RepositoryConsistencyMapWorkerBackend = "process",
+    [double]$RepositoryConsistencyMapWorkerCpuTarget = 0.40,
+    [int]$RepositoryConsistencyMapMaxAutoWorkers = 8
 )
 
 $ErrorActionPreference = "Stop"

@@ -52,6 +52,13 @@ def add_existing(items: list[str], path: str | Path | None) -> None:
             items.append(value)
 
 
+def git_output(repo_root: Path, *args: str) -> str:
+    try:
+        return subprocess.check_output(["git", *args], cwd=repo_root, text=True, stderr=subprocess.DEVNULL).strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
 def compact_artifact_stamp(stamp: str, max_chars: int = 56) -> str:
     safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", stamp.strip() or "run").strip("._-")
     if len(safe) <= max_chars:
@@ -241,6 +248,12 @@ def build_paths(stamp: str, evidence_dir: str) -> dict[str, str]:
         "bridge_json": f"output/ai_pipeline/full_toolbox_{s}_bridge_orchestrator.json",
         "patch_plan_json": f"output/patch_specs/full_toolbox_{s}_agent_review_patch_plan.json",
         "patch_plan_md": f"output/patch_specs/full_toolbox_{s}_agent_review_patch_plan.md",
+        "patch_quality_json": f"{evidence_dir}/patch_plan_quality_product_{s}.json",
+        "patch_quality_md": f"{evidence_dir}/patch_plan_quality_product_{s}.md",
+        "patch_quality_fts_db": f"output/ai_runtime_memory/patch_plan_quality_product_{s}.sqlite",
+        "patch_notes_quality_json": f"{evidence_dir}/patch_notes_quality_product_{s}.json",
+        "patch_notes_quality_md": f"{evidence_dir}/patch_notes_quality_product_{s}.md",
+        "patch_notes_quality_fts_db": f"output/ai_runtime_memory/patch_notes_quality_product_{s}.sqlite",
         "decision_json": f"output/ai_pipeline/full_toolbox_{s}_agent_review_decision_loop.json",
         "decision_md": f"output/ai_pipeline/full_toolbox_{s}_agent_review_decision_loop.md",
     }
@@ -290,6 +303,8 @@ def add_runtime_paths(p: dict[str, str], stamp: str, evidence_dir: str) -> None:
             "heap_broker_md": f"output/validation/provider_runtime_heap_live_signals_broker_results_{s}.md",
             "heap_npu_json": f"output/validation/provider_runtime_heap_live_signals_npu_support_{s}.json",
             "heap_npu_md": f"output/validation/provider_runtime_heap_live_signals_npu_support_{s}.md",
+            "heap_catalog_json": f"output/validation/provider_runtime_heap_live_signals_tool_catalog_complete_{s}.json",
+            "heap_catalog_md": f"output/validation/provider_runtime_heap_live_signals_tool_catalog_complete_{s}.md",
             "final_product_dir": final_dir,
             "final_product_json": f"output/validation/full0to10_final_tool_product_{s}.json",
             "final_product_manifest": f"{final_dir}/full0to10_final_tool_product_manifest.json",

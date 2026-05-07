@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import time
 from datetime import datetime
 from pathlib import Path
@@ -58,16 +59,87 @@ def should_skip(path: Path, repo_root: Path) -> bool:
     return any(part in EXCLUDE_DIRS for part in rel_parts) or is_generated_evidence_chunk_path(rel_posix)
 
 
-def iter_files(repo_root: Path, extensions: set[str]) -> list[Path]:
+def build_repo_file_manifest(repo_root: Path) -> list[Path]:
+    # Full eligible repository file manifest. This preserves full-scan semantics
+    # while avoiding repeated rglob traversals inside one consistency-map run.
     files: list[Path] = []
     for path in repo_root.rglob("*"):
         if not path.is_file():
             continue
         if should_skip(path, repo_root):
             continue
-        if path.suffix.lower() in extensions:
-            files.append(path)
+        files.append(path)
     return sorted(files, key=lambda item: repo_rel(item, repo_root))
+
+
+def filter_manifest_by_extensions(files: list[Path], extensions: set[str]) -> list[Path]:
+    return [path for path in files if path.suffix.lower() in extensions]
+
+
+def iter_files(repo_root: Path, extensions: set[str], *, files: list[Path] | None = None) -> list[Path]:
+    if files is not None:
+        return filter_manifest_by_extensions(files, extensions)
+    return filter_manifest_by_extensions(build_repo_file_manifest(repo_root), extensions)
+
+
+LINE_COUNT_EXTENSIONS = TEXT_EXTENSIONS | {
+    ".json",
+    ".csv",
+    ".txt",
+    ".yml",
+    ".yaml",
+    ".toml",
+    ".ini",
+    ".cfg",
+    ".bat",
+    ".cmd",
+    ".sh",
+}
+
+
+def count_text_file_lines(path: Path) -> int | None:
+    if path.suffix.lower() not in LINE_COUNT_EXTENSIONS:
+        return None
+    try:
+        data = path.read_bytes()
+    except OSError:
+        return None
+    if not data:
+        return 0
+    return data.count(b"\n") + (0 if data.endswith(b"\n") else 1)
+
+
+def file_modified_at(path: Path) -> str:
+    return datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds")
+
+
+def build_repo_file_records(repo_root: Path, files: list[Path] | None = None) -> list[dict[str, object]]:
+    records: list[dict[str, object]] = []
+    for path in files if files is not None else build_repo_file_manifest(repo_root):
+        try:
+            stat = path.stat()
+        except OSError as exc:
+            records.append({
+                "path": repo_rel(path, repo_root),
+                "suffix": path.suffix.lower(),
+                "size_bytes": None,
+                "modified_at": "",
+                "line_count": None,
+                "line_count_available": False,
+                "metadata_error": f"{type(exc).__name__}: {exc}",
+            })
+            continue
+        line_count = count_text_file_lines(path)
+        records.append({
+            "path": repo_rel(path, repo_root),
+            "suffix": path.suffix.lower(),
+            "size_bytes": stat.st_size,
+            "modified_at": file_modified_at(path),
+            "line_count": line_count,
+            "line_count_available": line_count is not None,
+            "metadata_error": "",
+        })
+    return records
 
 
 def read_text(path: Path) -> tuple[str, str | None]:
@@ -91,9 +163,9 @@ def snippet_for_line(text: str, line_no: int, *, max_chars: int) -> str:
     return snippet
 
 
-def build_existing_path_index(repo_root: Path) -> dict[str, str]:
+def build_existing_path_index(repo_root: Path, *, files: list[Path] | None = None) -> dict[str, str]:
     index: dict[str, str] = {}
-    for path in iter_files(repo_root, TEXT_EXTENSIONS | {".json", ".csv"}):
+    for path in iter_files(repo_root, TEXT_EXTENSIONS | {".json", ".csv"}, files=files):
         rel = repo_rel(path, repo_root)
         index[rel.lower()] = rel
         index[path.name.lower()] = rel
@@ -117,10 +189,20 @@ def resolve_repo_reference(repo_root: Path, source: str, raw_ref: str, path_inde
     return ref, False, "missing"
 
 
-def bounded_worker_count(requested: int, workload_count: int) -> int:
-    """Return a conservative worker count for repository scans."""
+def bounded_worker_count(
+    requested: int,
+    workload_count: int,
+    *,
+    cpu_target: float = 0.40,
+    max_auto_workers: int | None = 8,
+) -> int:
+    """Return a dynamic worker count without hardcoding host hardware."""
     if workload_count <= 1:
         return 1
     if requested <= 0:
-        requested = 8
+        cpu_count = os.cpu_count() or 1
+        safe_target = max(0.05, min(float(cpu_target), 1.0))
+        requested = max(1, int(cpu_count * safe_target))
+        if max_auto_workers and max_auto_workers > 0:
+            requested = min(requested, max_auto_workers)
     return max(1, min(requested, workload_count))

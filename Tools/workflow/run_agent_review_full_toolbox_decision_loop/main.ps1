@@ -3,6 +3,7 @@ param(
     [string]$Stamp = "",
     [string]$OutputRoot = "output",
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
+    [string]$TaskMarkdown = "",
     [switch]$RunGpuNpuProvider,
     [switch]$RequireProviderArtifacts,
     [switch]$RunLegacyNpuAuditorProvider,

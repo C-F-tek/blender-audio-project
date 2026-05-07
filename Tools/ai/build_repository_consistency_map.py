@@ -37,7 +37,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
     parser.add_argument("--max-detail-items", type=int, default=2000)
     parser.add_argument("--max-snippet-chars", type=int, default=DEFAULT_MAX_SNIPPET_CHARS)
-    parser.add_argument("--workers", type=int, default=8, help="Bounded worker count for Markdown/Python repository scans.")
+    parser.add_argument("--workers", type=int, default=8, help="Worker count for Markdown/Python repository scans; 0 enables adaptive local parallelism capped to 8.")
+    parser.add_argument(
+        "--worker-backend",
+        choices=("process", "thread", "auto"),
+        default="process",
+        help="Executor backend for Markdown/Python scans. Use process for real CPU worker processes.",
+    )
+    parser.add_argument("--worker-cpu-target", type=float, default=0.40, help="Automatic worker target as a fraction of logical CPU count.")
+    parser.add_argument("--max-auto-workers", type=int, default=8, help="Optional cap for automatic worker count; 0 disables the cap.")
     return parser.parse_args()
 
 
@@ -51,6 +59,9 @@ def main() -> int:
         max_detail_items=args.max_detail_items,
         max_snippet_chars=args.max_snippet_chars,
         workers=args.workers,
+        worker_backend=args.worker_backend,
+        worker_cpu_target=args.worker_cpu_target,
+        max_auto_workers=args.max_auto_workers or None,
     )
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown_output)
@@ -68,6 +79,10 @@ def main() -> int:
                 "patch_application_performed": report["patch_application_performed"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
                 "workers_requested": report.get("performance", {}).get("workers_requested"),
+                "worker_backend_requested": report.get("performance", {}).get("worker_backend_requested"),
+                "worker_cpu_target": report.get("performance", {}).get("worker_cpu_target"),
+                "max_auto_workers": report.get("performance", {}).get("max_auto_workers"),
+                "cpu_process_worker_backend_enabled": report.get("performance", {}).get("cpu_process_worker_backend_enabled"),
                 "performance": report.get("performance", {}),
             },
             indent=2,

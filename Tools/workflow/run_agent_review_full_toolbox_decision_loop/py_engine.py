@@ -16,7 +16,10 @@ COMPILE_TARGETS = [
     "Tools/ai/build_deterministic_recommendations.py",
     "Tools/ai/build_agent_review_patch_plan.py",
     "Tools/ai/build_full_toolbox_run_telemetry_summary.py",
+    "Tools/ai/build_patch_notes_quality_product.py",
+    "Tools/ai/agent_runtime_tool_broker_execution.py",
     "Tools/ai/build_runtime_tool_usage_telemetry.py",
+    "Tools/ai/runtime_tool_telemetry_normalization.py",
     "Tools/ai/build_runtime_tool_capability_manifest.py",
     "Tools/ai/build_semantic_evidence_chunks.py",
     "Tools/ai/build_agent_review_evidence_sufficiency.py",
@@ -36,7 +39,9 @@ COMPILE_TARGETS = [
     "Tools/validation/run_gpu_planner_json_contract_smoke.py",
     "Tools/validation/run_deterministic_recommendation_synthesizer_smoke.py",
     "Tools/validation/run_agent_review_decision_loop_smoke.py",
+    "Tools/validation/run_patch_notes_quality_product_smoke.py",
     "Tools/validation/check_provider_evidence_contract.py",
+    "Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_patch_notes.py",
 ]
 
 
@@ -82,7 +87,7 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python("Agent review decision-loop smoke", ["Tools/validation/run_agent_review_decision_loop_smoke.py", "--repo-root", ".", "--output", ctx.p("decision_loop_smoke_json"), "--markdown-output", ctx.p("decision_loop_smoke_md")])
     ctx.run_python("NPU provider environment preflight", ["Tools/ai/check_npu_provider_environment.py", "--repo-root", ".", "--output", ctx.p("npu_env_json"), "--markdown-output", ctx.p("npu_env_md")])
     ctx.run_python("OpenVINO hardware governance report", ["Tools/ai/build_openvino_hardware_governance_report.py", "--repo-root", ".", "--npu-micro-start-mode", ctx.args.NpuMicroStartMode, "--output", ctx.p("openvino_governance_json"), "--markdown-output", ctx.p("openvino_governance_md")])
-    ctx.run_python("Repository consistency map", ["Tools/ai/build_repository_consistency_map.py", "--repo-root", ".", "--output", ctx.p("repo_consistency_json"), "--markdown-output", ctx.p("repo_consistency_md"), "--workers", str(ctx.args.RepositoryConsistencyMapWorkers)])
+    ctx.run_python("Repository consistency map", ["Tools/ai/build_repository_consistency_map.py", "--repo-root", ".", "--output", ctx.p("repo_consistency_json"), "--markdown-output", ctx.p("repo_consistency_md"), "--workers", str(ctx.args.RepositoryConsistencyMapWorkers), "--worker-backend", ctx.args.RepositoryConsistencyMapWorkerBackend, "--worker-cpu-target", str(ctx.args.RepositoryConsistencyMapWorkerCpuTarget), "--max-auto-workers", str(ctx.args.RepositoryConsistencyMapMaxAutoWorkers)])
     ctx.run_python("Repository consistency map smoke", ["Tools/validation/run_repository_consistency_map_smoke.py", "--repo-root", ".", "--map-report", ctx.p("repo_consistency_json"), "--output", ctx.p("repo_consistency_smoke_json"), "--markdown-output", ctx.p("repo_consistency_smoke_md"), "--workers", str(ctx.args.RepositoryConsistencyMapWorkers)])
     ctx.run_python("Agent review evidence sufficiency", ["Tools/ai/build_agent_review_evidence_sufficiency.py", "--repo-root", ".", "--refined-review", ctx.p("refined_review"), *sum((["--report-file", p] for p in existing(ctx, "repo_consistency_json", "repo_consistency_smoke_json", "code_interpreter_json", "line_count_json", "python_syntax_json", "openvino_governance_json")), []), "--output", ctx.p("evidence"), "--markdown-output", ctx.p("evidence_md")])
     ctx.run_python("GPU0 companion worker task lane", ["Tools/ai/build_gpu0_companion_task_lane.py", "--repo-root", ".", "--stamp", ctx.args.Stamp, "--output", ctx.p("gpu0_companion_json"), "--markdown-output", ctx.p("gpu0_companion_md"), "--tool-requests-output", ctx.p("gpu0_companion_tools_json"), *sum((["--source-report", p] for p in existing(ctx, "evidence", "repo_consistency_json", "repo_consistency_smoke_json", "code_interpreter_json", "line_count_json", "python_syntax_json", "npu_env_json", "openvino_governance_json")), [])])

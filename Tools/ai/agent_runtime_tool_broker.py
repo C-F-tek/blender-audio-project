@@ -19,7 +19,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime
@@ -27,11 +26,13 @@ from pathlib import Path
 from typing import Any, Callable
 
 try:
+    from Tools.ai.agent_runtime_tool_broker_execution import execute_command_timed
     from Tools.validation.report_utils import read_json_report, split_csv_values, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.agent_runtime_tool_broker_execution import execute_command_timed  # type: ignore
     from Tools.validation.report_utils import read_json_report, split_csv_values, write_json_report
 
 
@@ -454,23 +455,6 @@ def infer_request_source(requests_data: dict[str, Any], request_path: Path) -> s
     return kind or "unknown"
 
 
-def execute_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str]:
-    try:
-        completed = subprocess.run(
-            command,
-            cwd=repo_root,
-            text=True,
-            capture_output=True,
-            timeout=timeout_seconds,
-            check=False,
-        )
-        return completed.returncode, completed.stdout[-12000:], completed.stderr[-12000:], ""
-    except subprocess.TimeoutExpired as exc:
-        return 124, exc.stdout or "", exc.stderr or "", f"TimeoutExpired: {timeout_seconds}s"
-    except Exception as exc:  # noqa: BLE001 - broker report must capture failure.
-        return 1, "", "", f"{type(exc).__name__}: {exc}"
-
-
 def execute_tool_request(
     *,
     repo_root: Path,
@@ -491,6 +475,7 @@ def execute_tool_request(
         "executed": False,
         "blocked": False,
         "dry_run": dry_run,
+        "status": "dry_run_pending" if dry_run else "pending",
         "persistent_memory_write_authorized": False,
         "returncode": None,
         "errors": [],
@@ -523,12 +508,14 @@ def execute_tool_request(
     spec = TOOL_SPECS.get(tool_name)
     if spec is None:
         base_result["blocked"] = True
+        base_result["status"] = "blocked_not_allowlisted"
         base_result["errors"] = [f"tool not allowlisted: {tool_name}"]
         return base_result
 
     arg_errors = validate_request_args(tool_name, request_args, spec.allowed_args)
     if arg_errors:
         base_result["blocked"] = True
+        base_result["status"] = "blocked_invalid_args"
         base_result["errors"] = arg_errors
         return base_result
 
@@ -537,17 +524,22 @@ def execute_tool_request(
     base_result["outputs"] = outputs
 
     if dry_run:
+        base_result["status"] = "dry_run"
         return base_result
 
-    returncode, stdout, stderr, error = execute_command(command, repo_root, timeout_seconds)
+    timed = execute_command_timed(command, repo_root, timeout_seconds)
     base_result["executed"] = True
-    base_result["returncode"] = returncode
-    base_result["stdout_tail"] = stdout
-    base_result["stderr_tail"] = stderr
-    if error:
-        base_result["errors"].append(error)
-    if returncode != 0:
-        base_result["errors"].append(f"tool returned {returncode}")
+    base_result["returncode"] = timed.returncode
+    base_result["started_at"] = timed.started_at
+    base_result["finished_at"] = timed.finished_at
+    base_result["elapsed_seconds"] = timed.elapsed_seconds
+    base_result["status"] = "executed_ok" if timed.returncode == 0 else "executed_failed"
+    base_result["stdout_tail"] = timed.stdout_tail
+    base_result["stderr_tail"] = timed.stderr_tail
+    if timed.error:
+        base_result["errors"].append(timed.error)
+    if timed.returncode != 0:
+        base_result["errors"].append(f"tool returned {timed.returncode}")
 
     json_report = outputs.get("json_report")
     if json_report:
