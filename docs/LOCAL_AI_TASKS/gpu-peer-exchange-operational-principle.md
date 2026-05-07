@@ -88,6 +88,22 @@ The runtime tool broker may consume tool requests from GPU1, GPU0 and NPU suppor
 
 Tool execution must remain controlled, report-only by default, and visible in telemetry.
 
+
+## NPU contention control and OpenVINO governance
+
+The Python full-toolbox runner exposes `NpuMicroStartMode` so the operator can control whether the real OpenVINO NPU provider starts inside the live GPU1/GPU0 mesh.
+
+Supported modes:
+
+```text
+startup        = start the NPU provider with GPU1/GPU0; use for overlap/stress tests only
+deferred       = keep the real NPU provider out of the live GPU1/GPU0 critical path; preferred workstation default
+live-seed-only = preserve broker-controlled NPU support evidence without starting the NPU provider in the mesh
+disabled       = disable the NPU micro-provider lane
+```
+
+OpenVINO governance is a policy/probe surface, not a magic OS scheduler. The report `openvino_hardware_governance_*` records visible OpenVINO devices and the intended routing: GPU1 remains reserved for Ollama/CUDA, GPU0 is the explicit OpenVINO companion lane, NPU is bounded support, and deterministic scripts remain the heavy audit authority.
+
 ## Acceptance evidence
 
 A production peer-exchange lane should produce or validate these surfaces:

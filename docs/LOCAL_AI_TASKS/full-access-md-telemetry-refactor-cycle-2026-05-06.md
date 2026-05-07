@@ -153,6 +153,7 @@ evidence bundle validation report
 AI-to-AI or shared toolbox final summary when available
 runtime/tool/provider telemetry summaries when available
 capability/hardware manifest when available
+OpenVINO hardware governance report when provider lanes are in scope
 startup/preflight report
 ```
 
