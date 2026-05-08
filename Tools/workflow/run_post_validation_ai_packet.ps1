@@ -51,7 +51,7 @@ if (Test-Path $QualityReport) {
     foreach ($Path in $ContextFile) {
         $RoutingArgs += @("--context-file", $Path)
     }
-    python @RoutingArgs
+    & $PacketPythonExe @RoutingArgs
 
     if (Test-Path $LaneRoutingReport) {
         $RoutingJson = Get-Content $LaneRoutingReport -Raw | ConvertFrom-Json
@@ -77,7 +77,7 @@ if (Test-Path $QualityReport) {
 
     Write-Host ""
     Write-Host "=== Build NPU decode remediation report ==="
-    python .\Tools\validation\check_npu_decode_quality_remediation.py `
+    & $PacketPythonExe .\Tools\validation\check_npu_decode_quality_remediation.py `
         --repo-root . `
         --quality-report $QualityReport `
         --output $NpuDecodeRemediationReport
@@ -126,7 +126,7 @@ if ($Model -ne "") {
     $ArgsList += @("--model", $Model)
 }
 
-python @ArgsList
+& $PacketPythonExe @ArgsList
 
 $ProposalArgs = @(
     ".\Tools\ai\build_repository_change_proposals.py",
@@ -152,7 +152,7 @@ if (Test-Path $NpuDecodeSmokeReport) {
     $ProposalArgs += @("--report-file", $NpuDecodeSmokeReport)
 }
 
-python @ProposalArgs
+& $PacketPythonExe @ProposalArgs
 
 Write-Host ""
 Write-Host "Generated:"
