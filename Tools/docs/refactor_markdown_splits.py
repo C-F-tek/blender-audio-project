@@ -113,7 +113,7 @@ def rewrite_links_for_part(text: str, source_name: str) -> str:
 def render_readme(title: str, source_note: str, part_names: list[str], max_lines: int) -> str:
     lines = [
         "<!-- IA-CARMINE-MD-SPLIT: index -->",
-        f"# Indice — {title}",
+        f"# Indice â€” {title}",
         "",
         source_note,
         f"Limite massimo configurato: `{max_lines}` righe per file Markdown.",
@@ -129,7 +129,7 @@ def render_readme(title: str, source_note: str, part_names: list[str], max_lines
 def render_part_header(title: str, index: int, total: int) -> str:
     lines = [
         "<!-- IA-CARMINE-MD-SPLIT: part -->",
-        f"# {title} — parte {index:03d} di {total:03d}",
+        f"# {title} â€” parte {index:03d} di {total:03d}",
         "",
         "Sorgente indice: [`README.md`](README.md)",
         "",
@@ -295,7 +295,7 @@ python .\\Tools\\docs\\refactor_markdown_splits.py `
 python -m py_compile .\\Tools\\docs\\refactor_markdown_splits.py
 python .\\Tools\\validation\\check_docs_links.py --repo-root .
 python .\\Tools\\validation\\check_markdown_line_limits.py --repo-root . --max-lines 500
-python .\Tools\validation\check_file_line_limits.py --repo-root . --output .\output\validation\file_line_limits.json
+python .\\Tools\\validation\\check_file_line_limits.py --repo-root . --output .\\output\\validation\\file_line_limits.json
 git diff --check
 git status --short
 ```
