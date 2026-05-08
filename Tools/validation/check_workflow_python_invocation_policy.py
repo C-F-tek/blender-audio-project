@@ -23,6 +23,11 @@ BARE_PYTHON_PATTERNS = (
     re.compile(r"[;|{]\s*(?:&\s*)?python(?:\.exe)?(?:\s|$)", re.IGNORECASE),
 )
 
+NON_COMMAND_PATTERNS = (
+    re.compile(r"^\s*python(?:\.exe)?\s*=", re.IGNORECASE),
+    re.compile(r"^\s*[\"']python(?:\.exe)?[\"']\s*[=:]", re.IGNORECASE),
+)
+
 ALLOWED_BARE_PATHS = {
     "Tools/workflow/python_env.ps1",
 }
@@ -59,6 +64,10 @@ def strip_line(line: str) -> str:
     return line.rstrip("\r\n")
 
 
+def is_non_command_python_reference(line: str) -> bool:
+    return any(pattern.search(line) for pattern in NON_COMMAND_PATTERNS)
+
+
 def scan_file(repo_root: Path, path: Path) -> list[Violation]:
     rel = repo_relative(repo_root, path)
     if rel in ALLOWED_BARE_PATHS:
@@ -72,7 +81,7 @@ def scan_file(repo_root: Path, path: Path) -> list[Violation]:
 
     for index, raw_line in enumerate(lines, start=1):
         line = strip_line(raw_line)
-        if not line.strip():
+        if not line.strip() or is_non_command_python_reference(line):
             continue
         for pattern in BARE_PYTHON_PATTERNS:
             if pattern.search(line):
