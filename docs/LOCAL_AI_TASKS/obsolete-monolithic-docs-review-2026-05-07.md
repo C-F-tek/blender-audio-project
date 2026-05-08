@@ -73,3 +73,7 @@ Before marking a document obsolete:
 ## Stop conditions
 
 Do not mark a document obsolete if it is the only place that documents active code behavior. First move the active behavior into a compact current map, then mark the old document.
+
+## Mini Full0To10 PR Smoke Note
+
+`mini_full_pr_smoke_obsolete_docs_policy_20260508`: obsolete or superseded Markdown found during a product smoke can be clarified, marked, or routed to an explicit pruning task. This smoke proves review-PR production and does not authorize destructive deletion by itself.
