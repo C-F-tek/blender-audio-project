@@ -32,6 +32,11 @@ $PythonEnvScript = Join-Path $PSScriptRoot "python_env.ps1"
 $RepoRootPath = Resolve-Path $RepoRoot
 Set-Location $RepoRootPath
 $ProviderPythonExe = Use-WorkflowPython -RepoRoot $RepoRootPath
+$env:IA_CARMINE_PYTHON = $ProviderPythonExe
+$env:PYTHONPATH = [string]$RepoRootPath
+if (Test-Path -LiteralPath $ProviderPythonExe -PathType Leaf) {
+    $env:PATH = (Split-Path -Parent $ProviderPythonExe) + [System.IO.Path]::PathSeparator + $env:PATH
+}
 
 Write-Host "=== Parallel GPU/NPU multistep AI workflow ==="
 Write-Host "Repo: $RepoRootPath"
@@ -52,7 +57,7 @@ $LocalProviderProbeReport = "output/validation/local_provider_probe.json"
 
 Write-Host ""
 Write-Host "=== Step 1: workload quality gate ==="
-python .\Tools\validation\check_ai_workload_report_quality.py `
+& $ProviderPythonExe .\Tools\validation\check_ai_workload_report_quality.py `
     --repo-root . `
     --output $QualityReport
 
@@ -105,7 +110,7 @@ if ($RunNpuDecodeSmoke) {
         & $PythonExe @ArgsList
     } -ArgumentList (,$SmokeArgs), $ProviderPythonExe, ([string]$RepoRootPath)
 } else {
-    python .\Tools\ai\run_npu_decode_smoke_diagnostic.py `
+    & $ProviderPythonExe .\Tools\ai\run_npu_decode_smoke_diagnostic.py `
         --repo-root . `
         --output $NpuDecodeSmokeReport
 }
@@ -126,9 +131,9 @@ $RoutingArgs = @(
 foreach ($Path in $ContextFile) {
     $RoutingArgs += @("--context-file", $Path)
 }
-python @RoutingArgs
+& $ProviderPythonExe @RoutingArgs
 
-python .\Tools\validation\check_npu_decode_quality_remediation.py `
+& $ProviderPythonExe .\Tools\validation\check_npu_decode_quality_remediation.py `
     --repo-root . `
     --quality-report $QualityReport `
     --output $NpuDecodeRemediationReport
@@ -161,7 +166,7 @@ powershell.exe @PacketArgs
 
 Write-Host ""
 Write-Host "=== Step 5: GitHub evidence bundle ==="
-python .\Tools\ai\build_github_evidence_bundle.py `
+& $ProviderPythonExe .\Tools\ai\build_github_evidence_bundle.py `
     --repo-root . `
     --basename $EvidenceBasename
 
