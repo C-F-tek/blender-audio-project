@@ -22,6 +22,17 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 
 This policy is not a command catalog. Current memory-aware run commands live in the unified launcher runbook.
 
+## Current code-driven references
+
+```text
+docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+```
+
 ## Full-run memory doctrine
 
 Memory/context is part of **TUTTO SU TUTTO** when enabled by the unified launcher.
@@ -40,7 +51,7 @@ shared AI-to-AI bundle reference when used for handoff
 
 SQLite DB files remain private local runtime state. They are never the handoff artifact and must not be committed.
 
-Telemetry is the completeness accessory that explains whether memory/context was enabled, disabled, skipped or unavailable. It does not replace the memory evidence or agent-state packet; it accompanies them.
+Telemetry explains whether memory/context was enabled, disabled, skipped or unavailable. It does not replace memory evidence or agent-state packets; it accompanies them.
 
 ## Active memory components
 
@@ -96,7 +107,7 @@ memory/context contribution referenced in telemetry/bundle when part of producti
 SQLite DB remains untracked
 ```
 
-`Full0To10` should include memory IN/OUT unless explicitly disabled with the documented `NoMemoryWrite`/memory controls in the unified launcher runbook.
+`Full0To10` should include memory IN/OUT unless explicitly disabled with documented memory controls in the unified launcher runbook.
 
 ## Record Shape
 
@@ -142,7 +153,8 @@ validated constraints
 runtime validation results
 architecture decisions
 guardrail decisions
-Blender/audio smoke outcomes
+provider/broker/validator telemetry decisions
+Blender/audio smoke outcomes with explicit application-domain scope
 known risks with date and scope
 ```
 
@@ -155,17 +167,22 @@ large source dumps
 secrets or credentials
 unverified assumptions
 obsolete local paths unless needed for reproducibility
+old PR/branch state already superseded by merged docs
 ```
 
-Promotion means copying a reviewed summary into a stable target such as:
+Promotion means copying a reviewed summary into a stable current target such as:
 
 ```text
-docs/PROJECT_AI_CONSCIOUSNESS.md
+docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 docs/TECH_DEBT_TRACKER.md
-docs/PROJECT_STATUS_POINT.md
 docs/EXECUTION_PLANS/
 curated JSONL memory selected by the app
 ```
+
+Historical/reference docs such as `docs/PROJECT_STATUS_POINT.md` must not receive new current-state memory unless they are first reclassified as active.
 
 ## Generic examples
 
@@ -226,7 +243,8 @@ A PR established an artifact path policy, report scanning rule or validated runt
 Suggested promotion targets:
 
 ```text
-docs/PROJECT_STATUS_POINT.md
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
 docs/TECH_DEBT_TRACKER.md
 ```
 
@@ -266,6 +284,12 @@ no output/** commit
 no provider execution unless explicit
 manifest/report visibility when routed through launcher
 telemetry/capability visibility when memory contributes to full-run handoff
+```
+
+Focused validation cycle selection lives in:
+
+```text
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 ```
 
 ## Blender/Audio Rule

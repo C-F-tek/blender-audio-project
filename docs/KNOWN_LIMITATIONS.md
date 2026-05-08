@@ -23,7 +23,12 @@ Current sources of truth for tool/capability status:
 ```text
 source code
 AGENTS.md
-docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 runtime tool usage telemetry
 runtime capability manifests
@@ -36,12 +41,15 @@ repository consistency map/smoke
 
 ```text
 Some legacy docs still describe pre-unified workflows or stale tool assumptions.
-Some large docs and source files still exceed the 400-line maintainability policy.
+Some large docs and source files still exceed the current line-budget policy.
 Some evidence branches can become too large or diverge from master before review.
 Repository-consistency findings can still be noisy and need classification.
 Provider-declared runtime tool requests are not yet fully equivalent to broker-executed feedback unless evidence proves execution.
 GPU timing can be degraded when reports infer per-round timing from aggregate elapsed time.
-NPU is intentionally a probe/guardrail/decode diagnostic lane, not primary advisory.
+NPU is intentionally a probe/guardrail/decode/micro-support lane, not primary advisory.
+ReviewPrIncludePath is still explicit in the Markdown-to-review-PR product path.
+prepare_review_pr.py does not auto-discover include paths from apply reports yet.
+prepare_review_pr.py does not create draft PRs yet.
 ```
 
 ## Current application-domain limitations to overcome
@@ -81,4 +89,5 @@ Promote recurring limitations into explicit TECH_DEBT_TRACKER items.
 Add current evidence links when a limitation is observed.
 Prefer report-only checks before destructive changes.
 Keep Full0To10 lanes enabled unless explicitly disabled or diagnosed unavailable.
+Keep Markdown-to-review-PR product limitations explicit until code implements them.
 ```
