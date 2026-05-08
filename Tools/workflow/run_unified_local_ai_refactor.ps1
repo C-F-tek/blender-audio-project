@@ -902,19 +902,23 @@ if ($NoExecutionTail -and -not $Prod) {
 Start-UnifiedLauncherExecutionTranscript -StampValue $Stamp -Root $RepoRoot -ProdMode ([bool]$Prod)
 
 # IA-CARMINE-EARLY-OBSERVER-INIT-BEGIN
-$EarlyObserverRunDir = Join-Path $RepoRoot (Join-Path $OutputDir ("local_ai_runs/{0}" -f $Stamp))
-$EarlyObserverDir = $ObserverOutputDir
-if ([string]::IsNullOrWhiteSpace($EarlyObserverDir)) {
-    $EarlyObserverDir = Join-Path $RepoRoot (Join-Path $OutputDir ("local_ai_runs/{0}_observer" -f $Stamp))
-}
-if (Get-Command Initialize-UnifiedRunObserver -ErrorAction SilentlyContinue) {
-    Initialize-UnifiedRunObserver `
-        -StampValue $Stamp `
-        -ObserverDirValue $EarlyObserverDir `
-        -RepoRootValue $RepoRoot `
-        -RunDirValue $EarlyObserverRunDir `
-        -OpenConsoles ([bool]$OpenObserverConsoles) `
-        -RefreshSeconds $ObserverRefreshSeconds
+try {
+    $EarlyObserverRunDir = Join-Path $RepoRoot (Join-Path $OutputDir ("local_ai_runs/{0}" -f $Stamp))
+    $EarlyObserverDir = $ObserverOutputDir
+    if ([string]::IsNullOrWhiteSpace($EarlyObserverDir)) {
+        $EarlyObserverDir = Join-Path $RepoRoot (Join-Path $OutputDir ("local_ai_runs/{0}_observer" -f $Stamp))
+    }
+    if (Get-Command Initialize-UnifiedRunObserver -ErrorAction SilentlyContinue) {
+        Initialize-UnifiedRunObserver `
+            -StampValue $Stamp `
+            -ObserverDirValue $EarlyObserverDir `
+            -RepoRootValue $RepoRoot `
+            -RunDirValue $EarlyObserverRunDir `
+            -OpenConsoles ([bool]$OpenObserverConsoles) `
+            -RefreshSeconds $ObserverRefreshSeconds
+    }
+} catch {
+    Write-Warning ("Unified run observer early init failed: {0}" -f $_.Exception.Message)
 }
 # IA-CARMINE-EARLY-OBSERVER-INIT-END
 if ($RunIntensity -ne "custom") {
