@@ -55,6 +55,34 @@ def split_csv(values: Iterable[str] | None) -> list[str]:
     return out
 
 
+def split_container_for(path: Path, repo_root: Path) -> str | None:
+    try:
+        parts = path.resolve().relative_to(repo_root.resolve()).parts
+    except ValueError:
+        return None
+    for index, part in enumerate(parts[:-1]):
+        if part.endswith(".md"):
+            return "/".join(parts[: index + 1])
+    return None
+
+
+def file_role(path: Path, repo_root: Path) -> str:
+    container = split_container_for(path, repo_root)
+    if container and path.suffix.lower() == ".md":
+        name = path.name.lower()
+        if name == "readme.md":
+            return "split_markdown_index"
+        if name.startswith("part-"):
+            return "split_markdown_part"
+        return "split_markdown_auxiliary"
+    suffix = path.suffix.lower()
+    if suffix == ".md":
+        return "markdown_file"
+    if suffix in {".py", ".ps1", ".psm1", ".psd1", ".sh", ".bat", ".cmd"}:
+        return "script"
+    return "source"
+
+
 def is_excluded(path: Path, repo_root: Path, excluded_dirs: set[str]) -> bool:
     rel = normalize_rel(path, repo_root)
     parts = rel.split("/")
@@ -70,13 +98,24 @@ def is_excluded(path: Path, repo_root: Path, excluded_dirs: set[str]) -> bool:
 
 
 def iter_candidate_files(repo_root: Path, suffixes: tuple[str, ...], excluded_dirs: set[str]) -> Iterable[Path]:
+    """Yield only readable files; directory-form *.md containers are traversed."""
     for path in repo_root.rglob("*"):
+        if path.is_dir():
+            continue
         if not path.is_file():
             continue
         if is_excluded(path, repo_root, excluded_dirs):
             continue
         if path.suffix.lower() in suffixes:
             yield path
+
+
+def collect_split_containers(repo_root: Path, excluded_dirs: set[str]) -> list[str]:
+    containers: list[str] = []
+    for path in repo_root.rglob("*.md"):
+        if path.is_dir() and not is_excluded(path, repo_root, excluded_dirs):
+            containers.append(normalize_rel(path, repo_root))
+    return sorted(set(containers))
 
 
 def count_lines(path: Path) -> tuple[int | None, str | None]:
@@ -87,7 +126,10 @@ def count_lines(path: Path) -> tuple[int | None, str | None]:
         return None, f"{type(exc).__name__}: {exc}"
 
 
-def classify_file(path: Path) -> str:
+def classify_file(path: Path, repo_root: Path) -> str:
+    role = file_role(path, repo_root)
+    if role.startswith("split_markdown"):
+        return role
     suffix = path.suffix.lower()
     if suffix == ".md":
         return "markdown"
@@ -106,6 +148,7 @@ def build_report(
     checked: list[dict[str, object]] = []
     violations: list[dict[str, object]] = []
     errors: list[str] = []
+    split_containers = collect_split_containers(repo_root, excluded_dirs)
 
     for path in sorted(iter_candidate_files(repo_root, include_suffixes, excluded_dirs)):
         rel = normalize_rel(path, repo_root)
@@ -113,11 +156,14 @@ def build_report(
         if error:
             errors.append(f"{rel}: {error}")
             continue
+        container = split_container_for(path, repo_root)
         item = {
             "path": rel,
             "line_count": line_count,
             "limit": max_lines,
-            "kind": classify_file(path),
+            "kind": classify_file(path, repo_root),
+            "split_container": container or "",
+            "directory_form_md_suffix": bool(container),
             "over_limit": bool(line_count is not None and line_count > max_lines),
         }
         checked.append(item)
@@ -133,6 +179,9 @@ def build_report(
         "include_suffixes": list(include_suffixes),
         "excluded_dirs": sorted(excluded_dirs),
         "checked_file_count": len(checked),
+        "split_container_count": len(split_containers),
+        "split_containers": split_containers,
+        "split_markdown_file_count": sum(1 for item in checked if item["directory_form_md_suffix"]),
         "violation_count": len(violations),
         "violations": violations,
         "errors": errors,
@@ -158,6 +207,8 @@ def write_markdown(path: Path, data: dict[str, object]) -> None:
         f"- Passed: `{data.get('passed')}`",
         f"- Max lines: `{data.get('max_lines')}`",
         f"- Checked files: `{data.get('checked_file_count')}`",
+        f"- Split containers: `{data.get('split_container_count')}`",
+        f"- Split Markdown files: `{data.get('split_markdown_file_count')}`",
         f"- Violations: `{data.get('violation_count')}`",
         "",
         "## Violations",
