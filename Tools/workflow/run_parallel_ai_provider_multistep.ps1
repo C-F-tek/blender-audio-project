@@ -22,6 +22,7 @@ param(
     [switch]$RunNpuDecodeSmoke,
     [switch]$UsePrimaryAdvisoryProvider,
     [string]$Model = "",
+    [string]$PythonExe = "",
     [int]$MaxContextChars = 6000
 )
 
@@ -31,7 +32,11 @@ $PythonEnvScript = Join-Path $PSScriptRoot "python_env.ps1"
 . $PythonEnvScript
 $RepoRootPath = Resolve-Path $RepoRoot
 Set-Location $RepoRootPath
-$ProviderPythonExe = Use-WorkflowPython -RepoRoot $RepoRootPath
+if (-not [string]::IsNullOrWhiteSpace($PythonExe)) {
+    $ProviderPythonExe = (Resolve-Path -LiteralPath $PythonExe).Path
+} else {
+    $ProviderPythonExe = Use-WorkflowPython -RepoRoot $RepoRootPath
+}
 $env:IA_CARMINE_PYTHON = $ProviderPythonExe
 $env:PYTHONPATH = [string]$RepoRootPath
 if (Test-Path -LiteralPath $ProviderPythonExe -PathType Leaf) {
