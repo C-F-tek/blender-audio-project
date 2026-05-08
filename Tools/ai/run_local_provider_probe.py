@@ -43,12 +43,33 @@ def run_ollama_probe(repo_root: Path, model: str | None) -> dict[str, Any]:
             "error": "no Ollama model available",
             "elapsed_sec": round(time.perf_counter() - started, 4),
         }
+    prompts = [
+        "Return exactly this JSON object and no prose: {\"ok\": true, \"lane\": \"ollama\"}",
+        "{\"ok\": true, \"lane\": \"ollama\"}",
+    ]
+
+    text = ""
+    prompt_attempts: list[dict[str, Any]] = []
     with OllamaSession(model=selected_model, shutdown_server=False, unload_model=True) as session:
-        text = session.generate(
-            "Return exactly this JSON object and no prose: {\"ok\": true, \"lane\": \"ollama\"}",
-            max_new_tokens=48,
-            temperature=0.0,
-        )
+        for index, prompt in enumerate(prompts, start=1):
+            candidate = session.generate(
+                prompt,
+                max_new_tokens=64,
+                temperature=0.0,
+            )
+            candidate = candidate or ""
+            prompt_attempts.append(
+                {
+                    "attempt": index,
+                    "prompt_chars": len(prompt),
+                    "text_chars": len(candidate),
+                    "text_preview": candidate[:120],
+                }
+            )
+            if candidate.strip():
+                text = candidate
+                break
+
     parsed = parse_provider_result(
         {"response": text},
         provider="ollama",
@@ -56,13 +77,19 @@ def run_ollama_probe(repo_root: Path, model: str | None) -> dict[str, Any]:
         executed=True,
         allow_json=True,
     )
+    empty_output = not text.strip()
     return {
         "lane": "ollama",
-        "passed": parsed.ok,
+        "passed": (not empty_output) and parsed.ok,
         "provider_execution_performed": True,
         "elapsed_sec": round(time.perf_counter() - started, 4),
         "selected_model": selected_model,
+        "model_count": len(models),
+        "server_ready": is_server_ready(),
+        "empty_output": empty_output,
+        "error": "empty Ollama generation output" if empty_output else None,
         "parsed_result": parsed.to_dict(),
+        "prompt_attempts": prompt_attempts,
         "text_preview": text[:200],
     }
 
