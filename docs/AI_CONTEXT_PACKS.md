@@ -15,11 +15,12 @@ which compact evidence can be reviewed on GitHub
 
 They do not execute providers, apply patches, write `patch_specs/inbox/`, edit generated indexes or touch Blender runtime.
 
-Current command examples live in the unified launcher runbook and validator README, not in this document:
+Current command and validation routes live in:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 ```
 
 ## Full-run context-pack doctrine
@@ -28,7 +29,7 @@ Context packs are a lane of the unified local-AI flow.
 
 `Full0To10` should include context-pack generation unless explicitly disabled or unavailable. `quick`, `balanced`, `deep` and `custom` can change context size and budgets, but not the fact that context-pack visibility belongs to the full-run perimeter.
 
-Context packs are evidence-adjacent but not sufficient by themselves. When a context pack contributes to a production run or patch plan, it must be accompanied by the relevant telemetry/capability surfaces:
+Context packs are evidence-adjacent but not sufficient by themselves. When a context pack contributes to a production run or patch plan, it must be accompanied by the relevant telemetry/capability and repository-visibility surfaces:
 
 ```text
 unified launcher manifest
@@ -38,6 +39,9 @@ runtime tool usage telemetry when tools executed
 runtime tool capability manifest when tool capabilities are relevant
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
+CSV/count summaries when inventory lanes ran
+discovery/index repair reports when relevant
+file-line-limit reports when maintainability is in scope
 ```
 
 Telemetry does not replace the context pack. It explains whether the context-pack lane executed, failed, was skipped, was degraded or was only planned.
@@ -49,6 +53,18 @@ Telemetry does not replace the context pack. It explains whether the context-pac
 | `Tools/ai/build_ai_context_pack.py` | Builds a local context pack under ignored `output/ai_context_packs/` and optional compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/`. | Manifest `context_files` / `phase_reports`; bundle reference when included in handoff. |
 | `Tools/validation/check_ai_context_pack_contract.py` | Validates context-pack and context-pack-evidence contracts without executing providers. | Validation report and phase status. |
 
+Owner map:
+
+```text
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+```
+
+Focused validation cycle:
+
+```text
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+```
+
 ## Profiles
 
 | Profile | Use |
@@ -58,6 +74,8 @@ Telemetry does not replace the context pack. It explains whether the context-pac
 | `npu_provider_diagnostics` | NPU/OpenVINO probe, guardrail and decode diagnostic work. |
 | `artifact_pipeline` | AI artifact pipeline and dry-run matrix work. |
 | `docs_only` | Documentation-only drift fixes and onboarding updates. |
+
+Profiles tune context composition. They do not authorize provider execution, patch application or source writes by themselves.
 
 ## Outputs
 
@@ -154,7 +172,7 @@ They may include compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/` when t
 
 Context packs are not autonomous coding agents. They are context and validation planners.
 
-The intended loop is now part of the unified launcher flow:
+The intended loop is part of the unified launcher flow:
 
 ```text
 select launcher mode/profile
@@ -163,7 +181,7 @@ select launcher mode/profile
   -> run task-specific validators
   -> optionally run explicit GPU/NPU provider/probe workflow
   -> build recommendations and patch-plan artifacts
-  -> attach telemetry/capability surfaces for completeness
+  -> attach telemetry/capability/discovery/file-line surfaces for completeness
   -> commit only compact evidence when required
 ```
 
@@ -173,9 +191,11 @@ This gives future agents a smaller and safer working set before they produce pro
 
 Future phases can build on this without changing the safety boundary:
 
-- dry-run matrix evidence bundles for GitHub-only review;
-- raw validators for provider probe and provider result reports;
-- selective execution planner that chooses validators from changed files;
-- richer context-pack profiles for memory, guardrail and NPU promotion experiments;
-- NPU advisory promotion experiment only after multi-sample quality gates;
-- richer context-pack telemetry fields when context-pack lanes become more complex.
+```text
+dry-run matrix evidence bundles for GitHub-only review
+raw validators for provider probe and provider result reports
+selective execution planner that chooses validators from changed files
+richer context-pack profiles for memory, guardrail and NPU promotion experiments
+NPU advisory promotion experiment only after multi-sample quality gates
+richer context-pack telemetry fields when context-pack lanes become more complex
+```
