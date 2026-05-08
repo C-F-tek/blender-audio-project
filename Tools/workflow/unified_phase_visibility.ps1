@@ -33,8 +33,8 @@ function Write-UnifiedPhaseVisibilityReport {
         return_code = $ReturnCode
         elapsed_seconds = $ElapsedSeconds
         command_line = $CommandLine
-        report_json = $JsonPath.Replace('\', '/')
-        report_markdown = $MdPath.Replace('\', '/')
+        report_json = $JsonPath.Replace('\\', '/')
+        report_markdown = $MdPath.Replace('\\', '/')
         warnings = @($Warnings)
         errors = @($Errors)
         phase_reports = @($ReportFiles)
@@ -70,6 +70,13 @@ function Write-UnifiedPhaseVisibilityReport {
     return [ordered]@{ json = $JsonPath; markdown = $MdPath; status = $Status; passed = $Passed }
 }
 
+function ConvertTo-UnifiedCommandLineArgument {
+    param([string]$Value)
+    if ($null -eq $Value) { return '""' }
+    if ($Value -notmatch '[\s"]') { return $Value }
+    return '"' + ($Value -replace '([\\]*)"', '$1$1\"' -replace '([\\]+)$', '$1$1') + '"'
+}
+
 function Invoke-UnifiedExternalPhaseCommand {
     param(
         [string]$RepoRoot,
@@ -93,19 +100,60 @@ function Invoke-UnifiedExternalPhaseCommand {
     $StdoutPath = Join-Path $PhaseDir "stdout.log"
     $StderrPath = Join-Path $PhaseDir "stderr.log"
     $AllArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $FilePath) + @($Arguments)
-    $CommandLine = "powershell.exe " + ($AllArgs -join " ")
+    $CommandLine = "powershell.exe " + ((@($AllArgs) | ForEach-Object { ConvertTo-UnifiedCommandLineArgument ([string]$_) }) -join " ")
     $Started = Get-Date
-    $Process = Start-Process -FilePath "powershell.exe" -ArgumentList $AllArgs -WorkingDirectory $RepoRoot -RedirectStandardOutput $StdoutPath -RedirectStandardError $StderrPath -NoNewWindow -PassThru
-    $Completed = $Process.WaitForExit($TimeoutSeconds * 1000)
-    $Ended = Get-Date
-    $Elapsed = [Math]::Round(($Ended - $Started).TotalSeconds, 3)
-    if (-not $Completed) {
-        try { Stop-Process -Id $Process.Id -Force -ErrorAction SilentlyContinue } catch {}
-        return Write-UnifiedPhaseVisibilityReport -RepoRoot $RepoRoot -PhaseName $PhaseName -Status "timeout" -StampValue $StampValue -OutputDir $OutputDir -CommandLine $CommandLine -TimeoutSeconds $TimeoutSeconds -ReturnCode -1 -ElapsedSeconds $Elapsed -Errors @("Phase timed out and process was terminated.") -ReportFiles @($StdoutPath, $StderrPath)
+
+    $ProcessInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $ProcessInfo.FileName = "powershell.exe"
+    $ProcessInfo.Arguments = ((@($AllArgs) | ForEach-Object { ConvertTo-UnifiedCommandLineArgument ([string]$_) }) -join " ")
+    $ProcessInfo.WorkingDirectory = $RepoRoot
+    $ProcessInfo.UseShellExecute = $false
+    $ProcessInfo.RedirectStandardOutput = $true
+    $ProcessInfo.RedirectStandardError = $true
+    $ProcessInfo.CreateNoWindow = $true
+
+    $Process = New-Object System.Diagnostics.Process
+    $Process.StartInfo = $ProcessInfo
+
+    try {
+        [void]$Process.Start()
+        $StdoutTask = $Process.StandardOutput.ReadToEndAsync()
+        $StderrTask = $Process.StandardError.ReadToEndAsync()
+        $Completed = $Process.WaitForExit($TimeoutSeconds * 1000)
+        $Ended = Get-Date
+        $Elapsed = [Math]::Round(($Ended - $Started).TotalSeconds, 3)
+
+        if (-not $Completed) {
+            try { $Process.Kill() } catch {}
+            try { $Process.WaitForExit() } catch {}
+            $StdoutText = ""
+            $StderrText = ""
+            try { $StdoutText = $StdoutTask.Result } catch {}
+            try { $StderrText = $StderrTask.Result } catch {}
+            $StdoutText | Set-Content -LiteralPath $StdoutPath -Encoding UTF8
+            $StderrText | Set-Content -LiteralPath $StderrPath -Encoding UTF8
+            return Write-UnifiedPhaseVisibilityReport -RepoRoot $RepoRoot -PhaseName $PhaseName -Status "timeout" -StampValue $StampValue -OutputDir $OutputDir -CommandLine $CommandLine -TimeoutSeconds $TimeoutSeconds -ReturnCode -1 -ElapsedSeconds $Elapsed -Errors @("Phase timed out and process was terminated.") -ReportFiles @($StdoutPath, $StderrPath)
+        }
+
+        $Process.WaitForExit()
+        $StdoutTask.Wait()
+        $StderrTask.Wait()
+        $StdoutTask.Result | Set-Content -LiteralPath $StdoutPath -Encoding UTF8
+        $StderrTask.Result | Set-Content -LiteralPath $StderrPath -Encoding UTF8
+        $ReturnCode = [int]$Process.ExitCode
+    } catch {
+        $Ended = Get-Date
+        $Elapsed = [Math]::Round(($Ended - $Started).TotalSeconds, 3)
+        try {
+            if ($null -ne $Process -and -not $Process.HasExited) { $Process.Kill() }
+        } catch {}
+        return Write-UnifiedPhaseVisibilityReport -RepoRoot $RepoRoot -PhaseName $PhaseName -Status "failed" -StampValue $StampValue -OutputDir $OutputDir -CommandLine $CommandLine -TimeoutSeconds $TimeoutSeconds -ReturnCode -2 -ElapsedSeconds $Elapsed -Errors @(("Phase process execution failed: {0}" -f $_.Exception.Message)) -ReportFiles @($StdoutPath, $StderrPath)
+    } finally {
+        try { $Process.Dispose() } catch {}
     }
-    $Code = $Process.ExitCode
-    if ($Code -eq 0) { $Status = "passed" } else { $Status = "failed" }
+
+    if ($ReturnCode -eq 0) { $Status = "passed" } else { $Status = "failed" }
     $Errors = @()
-    if ($Code -ne 0) { $Errors += ("Phase returned non-zero exit code: {0}" -f $Code) }
-    return Write-UnifiedPhaseVisibilityReport -RepoRoot $RepoRoot -PhaseName $PhaseName -Status $Status -StampValue $StampValue -OutputDir $OutputDir -CommandLine $CommandLine -TimeoutSeconds $TimeoutSeconds -ReturnCode $Code -ElapsedSeconds $Elapsed -Errors $Errors -ReportFiles @($StdoutPath, $StderrPath)
+    if ($ReturnCode -ne 0) { $Errors += ("Phase returned non-zero exit code: {0}" -f $ReturnCode) }
+    return Write-UnifiedPhaseVisibilityReport -RepoRoot $RepoRoot -PhaseName $PhaseName -Status $Status -StampValue $StampValue -OutputDir $OutputDir -CommandLine $CommandLine -TimeoutSeconds $TimeoutSeconds -ReturnCode $ReturnCode -ElapsedSeconds $Elapsed -Errors $Errors -ReportFiles @($StdoutPath, $StderrPath)
 }
