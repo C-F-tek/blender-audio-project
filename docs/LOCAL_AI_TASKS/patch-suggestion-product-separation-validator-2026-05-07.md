@@ -1,12 +1,12 @@
 # Patch Suggestion Product Separation Validator
 
-Status: active validator integrated into the review PR product path
+Status: active validator integrated into the review PR product path  
 Date: 2026-05-07  
 Scope: final product lane, patch suggestion review, product-vs-supplemental classification.
 
 ## Purpose
 
-The patch suggestion final phase now has two different output classes:
+The patch suggestion final phase has two different output classes:
 
 ```text
 essential patch suggestion product
@@ -24,20 +24,29 @@ Tools/validation/check_patch_suggestion_product_separation.py
 The validator accepts either:
 
 ```text
-patch_suggestion_bundle_apply
-patch_suggestion_bundle_apply_smoke
+kind=patch_suggestion_bundle_apply
+kind=patch_suggestion_bundle_apply_smoke
 ```
 
 For a direct `patch_suggestion_bundle_apply` report it verifies that:
 
 ```text
-essential_patch_suggestion_items exists and matches manual_review_product.product_facing_manual_review_count
-supplemental_telemetry_debug_items exists and matches manual_review_product.supplemental_manual_review_count
+essential_patch_suggestion_items exists and matches manual_review_product.product_facing_manual_review_published_count
+supplemental_telemetry_debug_items exists and matches manual_review_product.supplemental_manual_review_published_count
+total product/supplemental counts remain visible through *_total_count / *_count metrics
 --require-product passes when either product-facing manual suggestions exist or deterministic operations are ready with failed_count=0
 essential items have product_facing=true and supplemental!=true
 supplemental items have supplemental=true and product_facing!=true
 essential items have safe source/doc targets, rationale/title, patch sketch or operation, and validation or stop conditions
 provider, Blender, FFmpeg and SQLite execution flags remain false
+```
+
+Why published counts exist:
+
+```text
+product.py caps published review-item lists at 100 entries.
+The validator must compare list length with published_count, not total_count.
+The total count remains available for product accounting and review scale.
 ```
 
 For the smoke wrapper it verifies that the smoke passed, nested commands passed, stamped deterministic suggestions were discovered, current product-facing proposal reports were included, and current supplemental update reports were included.
@@ -82,6 +91,22 @@ validation commands or stop conditions
 Deterministic operations are also a product when the apply report marks them ready and no operation failed.
 
 Telemetry, debug, evidence-only, validation-only and provider diagnostic items stay supplemental.
+
+## Report fields to inspect
+
+```text
+manual_review_product.product_facing_manual_review_count
+manual_review_product.product_facing_manual_review_published_count
+manual_review_product.product_facing_manual_review_total_count
+manual_review_product.supplemental_manual_review_count
+manual_review_product.supplemental_manual_review_published_count
+manual_review_product.supplemental_manual_review_total_count
+manual_review_product.deterministic_operation_count
+manual_review_product.deterministic_apply_ready
+failed_count
+patch_product_status
+ready_for_patch_suggestion_review
+```
 
 ## Guardrails
 
