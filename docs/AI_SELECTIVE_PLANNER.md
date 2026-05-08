@@ -4,11 +4,12 @@ The selective planner is a report-only control layer for the local AI orchestrat
 
 It reads compact, Git-trackable inputs and recommends the next validation and patch-spec steps without applying code changes and without starting provider workloads.
 
-This document is a contract/positioning document, not a command catalog. Current executable commands live in:
+This document is a contract/positioning document, not a command catalog. Current executable routes live in:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 ```
 
 ## Purpose
@@ -16,7 +17,7 @@ Tools/validation/README.md
 The current prototype answers this question:
 
 ```text
-Given the latest context pack, evidence, telemetry, capability manifest and provider diagnostics, what should be validated or specified next?
+Given the latest context pack, evidence, telemetry, capability manifest, provider diagnostics and patch-suggestion product state, what should be validated or specified next?
 ```
 
 It is intentionally conservative. It separates:
@@ -26,6 +27,7 @@ context collection
 dry-run planning evidence
 real provider evidence
 runtime telemetry and capability context
+patch suggestion product/separation evidence
 validator recommendations
 patch-spec recommendations
 local-only commands
@@ -45,6 +47,7 @@ A planner recommendation that cites full-run evidence should include or referenc
 ```text
 evidence artifacts
 patch-plan or patch-spec artifacts
+patch suggestion product/separation reports when review PR flow is selected
 runtime tool usage telemetry
 runtime tool capability manifest
 full toolbox telemetry summary
@@ -64,10 +67,12 @@ Focused direct invocation of the selective planner is allowed only when debuggin
 | Context pack evidence | `docs/LOCAL_VALIDATION_EVIDENCE/project_self_improvement_context_pack_evidence.json` with Markdown fallback | Confirms bounded AI context, no source writes and no provider execution. |
 | Dry-run matrix evidence | `docs/LOCAL_VALIDATION_EVIDENCE/ai_pipeline_dry_run_matrix_evidence.json` | Confirms planned-only matrix coverage. |
 | Real GPU/NPU evidence | `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json` | Confirms provider execution evidence and lane decisions. |
+| Patch suggestion product/separation evidence | `docs/LOCAL_VALIDATION_EVIDENCE/*patch_suggestion*` or launcher phase report references | Confirms product-vs-supplemental classification and deterministic operation readiness when the review PR product path ran. |
+| Review PR preparation evidence | `docs/LOCAL_VALIDATION_EVIDENCE/review_pr_prepare_*.json` | Confirms explicit include paths, staged paths, commit/push/PR state and guardrails. |
 | Runtime tool usage telemetry | `docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json` | Confirms tool execution, failure and blocked counts when broker lane ran. |
 | Runtime capability manifest | `docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json` | Confirms which tools/capabilities were available and under which guardrails. |
 | Full toolbox telemetry summary | `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.json` | Confirms provider, GPU/NPU, broker, patch-plan and guardrail state. |
-| Shared AI-to-AI bundle/final summary | `docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json` and `output/analysis/shared_toolbox_ai_to_ai_final_summary_<STAMP>.json` | Production handoff surface for next AI/operator. |
+| Shared AI-to-AI bundle/final summary | `docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json` and final summary when available | Production handoff surface for next AI/operator. |
 | Validation report contract | `output/validation/validation_report_contract.json` | Optional local ignored validation health input. |
 | Execution plans | `docs/EXECUTION_PLANS/active/` | Detects active linked plans. |
 | Tech debt tracker | `docs/TECH_DEBT_TRACKER.md` | Detects known follow-up markers. |
@@ -91,6 +96,7 @@ provider_evidence_summary
 telemetry_summary
 capability_manifest_summary
 dry_run_summary
+patch_suggestion_product_summary
 validation_health
 recommended_validators
 recommended_patch_specs
@@ -116,7 +122,7 @@ telemetry_required_for_full_run_evidence
 
 The planner must not execute providers.
 
-Provider execution is valid only when Carmine runs the explicit local command set through the unified launcher/provider lanes. Ollama/GPU remains the primary advisory lane only when evidence confirms the quality gate. OpenVINO/NPU remains a probe, guardrail and decode-diagnostic lane until a dedicated promotion milestone exists.
+Provider execution is valid only when Carmine runs the explicit local command set through the unified launcher/provider lanes. Ollama/GPU remains the primary advisory lane only when evidence confirms the quality gate. OpenVINO/NPU remains a probe, guardrail, micro/support and decode-diagnostic lane until a dedicated promotion milestone exists.
 
 For evidence-derived plans, the planner must not infer provider success from file existence alone. It must inspect or require:
 
@@ -129,6 +135,29 @@ deterministic_recovery_used
 workload_quality_routing_ok
 quality_gate_passed
 ```
+
+## Patch suggestion product policy
+
+The planner must not confuse patch suggestion product readiness with patch application authorization.
+
+Current product path:
+
+```text
+build_task_patch_suggestion_report.py
+apply_patch_suggestion_bundle.py
+check_patch_suggestion_product_separation.py
+prepare_review_pr.py
+```
+
+Current limits:
+
+```text
+ReviewPrIncludePath is explicit.
+prepare_review_pr.py does not auto-discover include paths from apply reports yet.
+prepare_review_pr.py does not create draft PRs yet.
+```
+
+A planner recommendation may cite patch suggestion readiness only when product/separation evidence exists or the launcher manifest exposes that phase.
 
 ## Evidence and patch-spec completeness
 
@@ -154,21 +183,27 @@ renders/**
 
 The selective planner must not:
 
-- apply patches;
-- write source replacements;
-- enqueue patch specs for automatic apply;
-- run Blender;
-- run FFmpeg;
-- execute Ollama/OpenVINO/GPU/NPU providers implicitly;
-- edit generated indexes manually;
-- edit full analysis JSON files;
-- change provider prompts, models, temperatures or orchestration behavior;
-- treat a patch-spec recommendation as complete when its full-run evidence lacks telemetry/capability context.
+```text
+apply patches
+write source replacements
+enqueue patch specs for automatic apply
+run Blender
+run FFmpeg
+execute Ollama/OpenVINO/GPU/NPU providers implicitly
+edit generated indexes manually
+edit full analysis JSON files
+change provider prompts, models, temperatures or orchestration behavior
+treat a patch-spec recommendation as complete when its full-run evidence lacks telemetry/capability context
+treat product separation success as draft PR support when prepare_review_pr.py does not implement draft PR creation
+```
 
 ## Next iterations
 
-1. Add validator scoring and ranking.
-2. Add stricter evidence freshness heuristics when stable date policy exists.
-3. Add a generator that converts `recommended_patch_specs` into draft patch specs, still without replacements.
-4. Add formal provider evidence quality gates before any provider promotion work.
-5. Add telemetry completeness scoring for evidence-derived patch-spec recommendations.
+```text
+Add validator scoring and ranking.
+Add stricter evidence freshness heuristics when stable date policy exists.
+Add a generator that converts recommended_patch_specs into draft patch specs, still without replacements.
+Add formal provider evidence quality gates before any provider promotion work.
+Add telemetry completeness scoring for evidence-derived patch-spec recommendations.
+Add patch suggestion product readiness scoring based on published-vs-total counts and deterministic operation readiness.
+```
