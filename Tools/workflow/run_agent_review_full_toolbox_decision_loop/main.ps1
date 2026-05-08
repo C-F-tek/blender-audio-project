@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$RepoRoot = ".",
     [string]$Stamp = "",
     [string]$OutputRoot = "output",
@@ -33,6 +33,17 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+# IA-CARMINE-REPO-PYTHON-POLICY-BEGIN
+$RepoRootForWorkflowPython = (& git rev-parse --show-toplevel 2>$null)
+if ([string]::IsNullOrWhiteSpace($RepoRootForWorkflowPython)) {
+    $RepoRootForWorkflowPython = (Resolve-Path ".").Path
+} else {
+    $RepoRootForWorkflowPython = (Resolve-Path $RepoRootForWorkflowPython.Trim()).Path
+}
+. (Join-Path $RepoRootForWorkflowPython "Tools/workflow/python_env.ps1")
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRootForWorkflowPython
+# IA-CARMINE-REPO-PYTHON-POLICY-END
 $RepoRootPath = Resolve-Path $RepoRoot
 Set-Location $RepoRootPath
 
@@ -41,7 +52,7 @@ if ($Stamp -eq "") {
 }
 
 $env:PYTHONPATH = (Get-Location).Path
-$script:RepoPythonExe = "python"
+$script:RepoPythonExe = $WorkflowPythonExe
 if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) {
     if (Test-Path -LiteralPath $env:IA_CARMINE_PYTHON -PathType Leaf) {
         $script:RepoPythonExe = $env:IA_CARMINE_PYTHON
@@ -1649,3 +1660,4 @@ Write-Host "Recommendation count: $($WorkflowReport.recommendation_count)"
 Write-Host "Patch plan count: $($WorkflowReport.patch_plan_count)"
 Write-Host ""
 Write-Host "Git policy: stage only docs/LOCAL_VALIDATION_EVIDENCE outputs listed in workflow evidence_to_commit. Do not stage output/**, *.db or *.sqlite."
+

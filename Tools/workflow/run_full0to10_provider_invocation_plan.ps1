@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$RepoRoot = ".",
     [string]$OutputDir = "output/validation/full0to10_provider_invocation_plan",
     [string]$Request = "Pianifica dry-run provider GPU/Ollama con NPU audit e workload report contract, senza generazione reale.",
@@ -10,6 +10,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+
+# IA-CARMINE-REPO-PYTHON-POLICY-BEGIN
+$RepoRootForWorkflowPython = (& git rev-parse --show-toplevel 2>$null)
+if ([string]::IsNullOrWhiteSpace($RepoRootForWorkflowPython)) {
+    $RepoRootForWorkflowPython = (Resolve-Path ".").Path
+} else {
+    $RepoRootForWorkflowPython = (Resolve-Path $RepoRootForWorkflowPython.Trim()).Path
+}
+. (Join-Path $RepoRootForWorkflowPython "Tools/workflow/python_env.ps1")
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRootForWorkflowPython
+# IA-CARMINE-REPO-PYTHON-POLICY-END
 function Resolve-RepoPath {
     param([string]$Base, [string]$PathValue)
     if ([System.IO.Path]::IsPathRooted($PathValue)) {
@@ -35,10 +46,11 @@ if ($OperatorIntent) { $Args += "--operator-intent" }
 if ($AllowProviderGeneration) { $Args += "--allow-provider-generation" }
 if ($NoExternalProbes) { $Args += "--no-external-probes" }
 
-& python (Join-Path $RepoRoot "Tools/ai/build_full0to10_provider_invocation_plan.py") @Args
+& $WorkflowPythonExe (Join-Path $RepoRoot "Tools/ai/build_full0to10_provider_invocation_plan.py") @Args
 if ($LASTEXITCODE -ne 0) {
     throw "Full0To10 provider invocation plan failed with exit code $LASTEXITCODE"
 }
 
 Write-Host "[OK] Provider invocation plan JSON: $Summary"
 Write-Host "[OK] Provider invocation plan MD: $(Join-Path $OutputPath 'full0to10_provider_invocation_plan.md')"
+

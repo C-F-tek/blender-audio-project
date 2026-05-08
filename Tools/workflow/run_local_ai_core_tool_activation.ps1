@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Activate the app-agnostic local AI core/tool pipeline and produce concrete review artifacts.
 
@@ -34,6 +34,17 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+
+# IA-CARMINE-REPO-PYTHON-POLICY-BEGIN
+$RepoRootForWorkflowPython = (& git rev-parse --show-toplevel 2>$null)
+if ([string]::IsNullOrWhiteSpace($RepoRootForWorkflowPython)) {
+    $RepoRootForWorkflowPython = (Resolve-Path ".").Path
+} else {
+    $RepoRootForWorkflowPython = (Resolve-Path $RepoRootForWorkflowPython.Trim()).Path
+}
+. (Join-Path $RepoRootForWorkflowPython "Tools/workflow/python_env.ps1")
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRootForWorkflowPython
+# IA-CARMINE-REPO-PYTHON-POLICY-END
 function Resolve-ExistingPath {
     param([string]$PathValue)
     if ([System.IO.Path]::IsPathRooted($PathValue)) {
@@ -136,14 +147,14 @@ Invoke-Checked -Label "Run full-context local AI core/tool activation pipeline" 
 
 if (-not $DryRun) {
     Invoke-Checked -Label "Validate local AI adapter manifest" -Block {
-        python .\Tools\validation\check_local_ai_adapter_manifest.py `
+        & $WorkflowPythonExe .\Tools\validation\check_local_ai_adapter_manifest.py `
             --repo-root . `
             --manifest $AdapterManifest `
             --output $AdapterManifestValidation
     }
 
     Invoke-Checked -Label "Build NPU knowledge-broker context packet" -Block {
-        python .\Tools\npu\build_npu_knowledge_broker_packet.py `
+        & $WorkflowPythonExe .\Tools\npu\build_npu_knowledge_broker_packet.py `
             --repo-root . `
             --objective $Objective `
             --selected-chunks $SelectedChunks `
@@ -155,7 +166,7 @@ if (-not $DryRun) {
     }
 
     Invoke-Checked -Label "Validate NPU knowledge-broker context packet" -Block {
-        python .\Tools\validation\check_npu_knowledge_broker_packet.py `
+        & $WorkflowPythonExe .\Tools\validation\check_npu_knowledge_broker_packet.py `
             --repo-root . `
             --packet $KnowledgePacket `
             --output $KnowledgeValidation `
@@ -164,7 +175,7 @@ if (-not $DryRun) {
     }
 
     Invoke-Checked -Label "Validate generated GitHub evidence bundle" -Block {
-        python .\Tools\validation\check_github_evidence_bundle.py `
+        & $WorkflowPythonExe .\Tools\validation\check_github_evidence_bundle.py `
             --repo-root . `
             --bundle ".\docs\LOCAL_VALIDATION_EVIDENCE\${EvidenceBasename}.json" `
             --output $GithubEvidenceValidation
@@ -172,7 +183,7 @@ if (-not $DryRun) {
 
     if ($RunMegalithicReview) {
         Invoke-Checked -Label "Build agnostic agent memory inventory" -Block {
-            python .\Tools\ai\build_agent_memory_inventory.py `
+            & $WorkflowPythonExe .\Tools\ai\build_agent_memory_inventory.py `
                 --repo-root . `
                 --memory-db .\indexAI\agent_memory\agent_memory.sqlite `
                 --objective $Objective `
@@ -181,14 +192,14 @@ if (-not $DryRun) {
         }
 
         Invoke-Checked -Label "Build agnostic tool inventory" -Block {
-            python .\Tools\ai\build_agent_agnostic_tool_inventory.py `
+            & $WorkflowPythonExe .\Tools\ai\build_agent_agnostic_tool_inventory.py `
                 --repo-root . `
                 --output $AgnosticToolInventoryJson `
                 --markdown-output $AgnosticToolInventoryMd
         }
 
         Invoke-Checked -Label "Build transient request context" -Block {
-            python .\Tools\ai\build_agent_transient_request_context.py `
+            & $WorkflowPythonExe .\Tools\ai\build_agent_transient_request_context.py `
                 --repo-root . `
                 --objective $Objective `
                 --memory-note $Objective `
@@ -221,10 +232,10 @@ if (-not $DryRun) {
         }
 
         Invoke-Checked -Label "Run optional all-resources megalithic repository review" -Block {
-            python @MegalithicArgs
+            & $WorkflowPythonExe @MegalithicArgs
         }
         Invoke-Checked -Label "Refine megalithic review signals" -Block {
-            python .\Tools\ai\refine_megalithic_review_signals.py `
+            & $WorkflowPythonExe .\Tools\ai\refine_megalithic_review_signals.py `
                 --review $MegalithicReviewJson `
                 --proposals $MegalithicReviewProposals `
                 --output $MegalithicRefinedReviewJson `
@@ -232,7 +243,7 @@ if (-not $DryRun) {
                 --markdown-output $MegalithicRefinedReviewMd
         }
         Invoke-Checked -Label "Build megalithic review PR draft artifact" -Block {
-            python .\Tools\ai\build_megalithic_review_pr_draft.py `
+            & $WorkflowPythonExe .\Tools\ai\build_megalithic_review_pr_draft.py `
                 --review $MegalithicRefinedReviewJson `
                 --proposals $MegalithicRefinedProposals `
                 --output $MegalithicReviewPrDraft `
@@ -246,7 +257,7 @@ if (-not $DryRun) {
         $PatchManifest = "output/patch_specs/${Basename}_patch_specs_manifest.json"
         if (Test-Path -LiteralPath $PatchManifest -PathType Leaf) {
             Invoke-Checked -Label "Validate macro patch draft specs" -Block {
-                python .\Tools\validation\check_patch_spec_drafts.py `
+                & $WorkflowPythonExe .\Tools\validation\check_patch_spec_drafts.py `
                     --repo-root . `
                     --manifest $PatchManifest `
                     --output "output/validation/${Basename}_macro_patch_drafts.json"
@@ -341,3 +352,4 @@ Write-Host "[OK] Summary: $SummaryPath"
 Write-Host "[OK] Run dir: $RunDir"
 Write-Host "[OK] Provider execution explicit-only: True"
 Write-Host "[OK] Patch application performed: False"
+

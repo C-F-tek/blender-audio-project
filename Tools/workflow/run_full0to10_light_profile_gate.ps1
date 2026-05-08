@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$RepoRoot = ".",
     [string]$RunReport = "output/validation/light_full0to10_evidence/full0to10_light_evidence_only_run.json",
     [string]$OutputDir = "output/validation/light_full0to10_profile_gate",
@@ -7,6 +7,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+
+# IA-CARMINE-REPO-PYTHON-POLICY-BEGIN
+$RepoRootForWorkflowPython = (& git rev-parse --show-toplevel 2>$null)
+if ([string]::IsNullOrWhiteSpace($RepoRootForWorkflowPython)) {
+    $RepoRootForWorkflowPython = (Resolve-Path ".").Path
+} else {
+    $RepoRootForWorkflowPython = (Resolve-Path $RepoRootForWorkflowPython.Trim()).Path
+}
+. (Join-Path $RepoRootForWorkflowPython "Tools/workflow/python_env.ps1")
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRootForWorkflowPython
+# IA-CARMINE-REPO-PYTHON-POLICY-END
 function Resolve-RepoPath {
     param([string]$Base, [string]$PathValue)
     if ([System.IO.Path]::IsPathRooted($PathValue)) { return $PathValue }
@@ -20,7 +31,7 @@ New-Item -ItemType Directory -Force -Path $OutputPath | Out-Null
 
 $Builder = Join-Path $RepoRoot "Tools/ai/build_full0to10_light_profile_promotion.py"
 $Summary = Join-Path $OutputPath "full0to10_light_profile_promotion.from_gate.json"
-& python $Builder --run-report $RunReportPath --output-dir $OutputPath --output $Summary
+& $WorkflowPythonExe $Builder --run-report $RunReportPath --output-dir $OutputPath --output $Summary
 $ExitCode = $LASTEXITCODE
 
 Write-Host ("[OK] Light profile gate JSON: {0}" -f $Summary)
@@ -28,3 +39,4 @@ Write-Host ("[OK] Light profile gate JSON: {0}" -f $Summary)
 if ($Strict -and $ExitCode -ne 0) {
     throw "Light profile gate failed in strict mode."
 }
+

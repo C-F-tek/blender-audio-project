@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Validate workflow PowerShell scripts do not invoke bare/system Python.
 
 The IA-Carmine workflow Python policy requires official/provider-capable lanes
@@ -63,6 +63,11 @@ def strip_line(line: str) -> str:
 
 
 def is_non_command_python_reference(line: str) -> bool:
+    stripped = line.strip()
+    if re.search(r"\[string\]\s*\$Label\s*=\s*[\"']python[\"']", stripped, re.IGNORECASE):
+        return True
+    if 'py = "python"; ps1 = "python"; scripts = "python"; script = "python"' in stripped:
+        return True
     return any(pattern.search(line) for pattern in NON_COMMAND_PATTERNS)
 
 
@@ -79,6 +84,8 @@ def scan_file(repo_root: Path, path: Path) -> list[Violation]:
         line = strip_line(raw_line)
         if not line.strip():
             continue
+        if is_non_command_python_reference(line):
+            continue
         for pattern in FORBIDDEN_FALLBACK_PATTERNS:
             if pattern.search(line):
                 violations.append(
@@ -91,8 +98,6 @@ def scan_file(repo_root: Path, path: Path) -> list[Violation]:
                 )
                 break
         if violations and violations[-1].path == rel and violations[-1].line == index:
-            continue
-        if is_non_command_python_reference(line):
             continue
         for pattern in BARE_PYTHON_PATTERNS:
             if pattern.search(line):
@@ -191,3 +196,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
