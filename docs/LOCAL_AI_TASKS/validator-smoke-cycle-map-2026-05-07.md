@@ -16,6 +16,7 @@ docs links -> check_docs_links.py
 file line limits -> check_file_line_limits.py
 patch suggestion product separation -> check_patch_suggestion_product_separation.py
 patch suggestion dry/apply smoke -> run_patch_suggestion_bundle_apply_smoke.py
+Full0To10 product PR chain smoke -> run_full0to10_product_pr_chain_smoke.py
 runtime broker smoke -> run_agent_runtime_tool_broker_smoke.py
 peer exchange contract -> check_ai_peer_exchange_contract.py
 provider evidence contract -> check_provider_evidence_contract.py
@@ -99,6 +100,7 @@ Use for patch suggestion, deterministic apply and review PR flow.
 
 ```text
 run_patch_suggestion_bundle_apply_smoke.py
+run_full0to10_product_pr_chain_smoke.py
 check_patch_suggestion_product_separation.py
 apply_patch_suggestion_bundle.py dry-run by Stamp
 prepare_review_pr.py report inspection when used
@@ -110,6 +112,18 @@ Current code requires explicit include paths for review PR staging:
 
 ```text
 ReviewPrIncludePath / prepare_review_pr.py --include-path
+```
+
+`run_full0to10_product_pr_chain_smoke.py` is the focused "all together" smoke
+for the product path. It runs in a temporary git repo and verifies:
+
+```text
+task Markdown patch_suggestion extraction
+deduped deterministic apply by Stamp plus explicit suggestion report
+product separation validation with --require-product
+canonical launcher workflow trace for the same product phases
+review branch preparation and product commit
+no push and no real GitHub PR from the smoke
 ```
 
 ## Cycle F: context/memory/index change

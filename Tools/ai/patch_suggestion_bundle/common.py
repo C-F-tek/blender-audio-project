@@ -7,7 +7,7 @@ import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 
 DENY_PREFIXES = (
@@ -131,6 +131,40 @@ def unique_in_order(items: list[str] | tuple[str, ...]) -> list[str]:
             seen.add(normalized)
             out.append(normalized)
     return out
+
+
+@dataclass(frozen=True)
+class RepoPathNormalizer:
+    """Base normalizer for repository-relative path lists."""
+
+    repo_root: Path
+
+    def normalize(self, raw_path: str) -> str:
+        """Normalize a path to a repository-relative form when possible."""
+        raw = str(raw_path).replace("\\", "/").strip().strip("'\"")
+        if not raw:
+            return ""
+        path = Path(raw)
+        candidate = path if path.is_absolute() else self.repo_root / path
+        try:
+            return candidate.resolve(strict=False).relative_to(self.repo_root.resolve()).as_posix()
+        except ValueError:
+            return raw.lstrip("./")
+
+    def unique(self, raw_paths: Iterable[str]) -> list[str]:
+        """Return unique non-empty normalized paths in first-seen order."""
+        out: list[str] = []
+        seen: set[str] = set()
+        for raw_path in raw_paths:
+            normalized = self.normalize(raw_path)
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                out.append(normalized)
+        return out
+
+
+class ReportPathNormalizer(RepoPathNormalizer):
+    """Specialized normalizer for suggestion/report discovery inputs."""
 
 
 def repo_relative(path: Path, repo_root: Path) -> str:

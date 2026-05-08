@@ -41,6 +41,7 @@ Task Markdown input
 -> telemetry/capability/evidence bundle
 -> patch suggestion product report when selected
 -> deterministic apply report when selected
+-> product separation validator when review PR/apply path is selected
 -> explicit include-path review PR preparation when selected
 ```
 
@@ -155,7 +156,10 @@ SQLite outputs are local runtime state and must not be committed.
 | `Tools/ai/build_task_patch_suggestion_report.py` | Task-scoped patch suggestion report. |
 | `Tools/ai/apply_patch_suggestion_bundle.py` | CLI wrapper for deterministic patch suggestion dry-run/apply. |
 | `Tools/ai/patch_suggestion_bundle/cli.py` | Discovery, product separation and deterministic operation apply implementation. |
+| `Tools/ai/patch_suggestion_bundle/common.py` | Shared operation model and reusable repo/report path normalization. |
+| `Tools/ai/patch_suggestion_bundle/product.py` | Product/supplemental classification with published-vs-total review counts. |
 | `Tools/validation/run_patch_suggestion_bundle_apply_smoke.py` | Smoke for dry/apply behavior in temp repo. |
+| `Tools/validation/run_full0to10_product_pr_chain_smoke.py` | End-to-end product PR chain smoke plus real launcher workflow trace. |
 | `Tools/validation/check_patch_suggestion_product_separation.py` | Report-only validation of product/supplemental separation. |
 | `Tools/ai/prepare_review_pr.py` | Explicit include-path staging, commit, optional push and PR creation. |
 
@@ -224,6 +228,7 @@ runtime heap/broker telemetry inspection
 
 ```text
 patch suggestion apply smoke
+Full0To10 product PR chain smoke with launcher trace
 product separation validator
 dry-run by Stamp
 explicit include-path review PR preparation smoke

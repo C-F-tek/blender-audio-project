@@ -16,6 +16,8 @@ Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_product.py
 Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_support.py
 Tools/ai/apply_patch_suggestion_bundle.py
 Tools/ai/patch_suggestion_bundle/cli.py
+Tools/ai/patch_suggestion_bundle/common.py
+Tools/ai/patch_suggestion_bundle/product.py
 Tools/ai/prepare_review_pr.py
 Tools/validation/check_patch_suggestion_product_separation.py
 ```
@@ -184,11 +186,13 @@ It can:
 ```text
 discover stamped suggestion/proposal JSON reports
 include current repository_update_suggestions/repository_change_proposals
+dedupe explicit --suggestion-report paths against Stamp discovery through ReportPathNormalizer
 perform dry-run report generation
 apply deterministic operations only when --apply is supplied
 create/switch an allowed review branch when requested
 push that review branch when requested
 separate product-facing and supplemental manual-review items
+publish capped review-item lists while retaining total counts
 ```
 
 It does not:
@@ -218,6 +222,7 @@ kind=patch_suggestion_bundle_apply_smoke
 ```
 
 It validates that product-facing patch suggestions are separate from telemetry/debug/supporting items.
+The unified launcher runs this validator with `--require-product` after the patch suggestion final phase whenever review PR preparation or deterministic apply is selected.
 
 ## Review PR preparation
 
@@ -261,6 +266,17 @@ create GitHub PRs as draft through --draft
 merge PRs
 force-push
 ```
+
+Focused validation for the complete product PR chain:
+
+```text
+Tools/validation/run_full0to10_product_pr_chain_smoke.py
+```
+
+This smoke runs task Markdown extraction, deterministic apply, product
+separation validation and review PR preparation together in a temporary git
+repository. It also traces the canonical launcher source to verify the same
+product phases are wired in the real workflow. It does not push or create a real PR.
 
 ## Current product gap
 

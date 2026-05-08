@@ -1556,6 +1556,26 @@ if ($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) {
     }
 }
 
+if (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and (Test-Path -LiteralPath $PatchSuggestionJson -PathType Leaf)) {
+    $PatchSuggestionProductSeparationJson = "$ValidationDir/patch_suggestion_product_separation_${ModeName}_$Stamp.json"
+    $PatchSuggestionProductSeparationArgs = @(
+        ".\Tools\validation\check_patch_suggestion_product_separation.py",
+        "--repo-root", ".",
+        "--report", $PatchSuggestionJson,
+        "--output", $PatchSuggestionProductSeparationJson
+    )
+    if ($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) {
+        $PatchSuggestionProductSeparationArgs += "--require-product"
+    }
+    $PhaseStatus.patch_suggestion_product_separation = Invoke-Checked "Validate patch suggestion product separation" {
+        Invoke-Python $PatchSuggestionProductSeparationArgs
+    } -SoftFail:$ContinueOnValidationError
+    if (Test-Path -LiteralPath $PatchSuggestionProductSeparationJson -PathType Leaf) {
+        $ReportFiles += $PatchSuggestionProductSeparationJson
+        $PhaseReports.patch_suggestion_product_separation = $PatchSuggestionProductSeparationJson
+    }
+}
+
 if (Test-ModeEnabled "full_validation") {
     $PhaseStatus.git_diff_check_final = Invoke-Checked "Final git diff --check" { git diff --check } -SoftFail:$ContinueOnValidationError
     $PhaseStatus.git_status_final = Invoke-Checked "Final git status --short" { git status --short } -SoftFail:$ContinueOnValidationError

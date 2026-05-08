@@ -21,6 +21,7 @@ Current behavior from code:
 
 ```text
 apply_patch_suggestion_bundle.py discovers stamped/current suggestion JSON reports.
+apply_patch_suggestion_bundle.py dedupes explicit --suggestion-report paths against Stamp discovery.
 apply_patch_suggestion_bundle.py can apply only deterministic operations when --apply is supplied.
 apply_patch_suggestion_bundle.py creates/switches a review branch when requested, but does not commit.
 apply_patch_suggestion_bundle.py may push the review branch when --push-review-branch is supplied, but does not force-push.
@@ -220,6 +221,11 @@ manual_review_only
   --repo-root . `
   --output .\output\validation\patch_suggestion_bundle_apply_smoke.json
 
+& $ProjectPython .\Tools\validation\run_full0to10_product_pr_chain_smoke.py `
+  --repo-root . `
+  --output .\output\validation\full0to10_product_pr_chain_smoke.json `
+  --markdown-output .\output\validation\full0to10_product_pr_chain_smoke.md
+
 Get-Content .\output\validation\patch_suggestion_bundle_apply_smoke.json -Raw |
   ConvertFrom-Json |
   Select-Object passed, smoke_stamp, discovered_reports, current_suggestion_reports, errors, warnings
@@ -336,6 +342,7 @@ The unified launcher can call `prepare_review_pr.py` through:
 ```
 
 Current requirement: pass explicit `-ReviewPrIncludePath` values for the reviewed files that may be staged and committed.
+When `-PrepareReviewPr` or `-ReviewPrApplyDeterministicSuggestions` is selected, the unified launcher now runs `check_patch_suggestion_product_separation.py --require-product` between `patch_suggestion_final_phase` and `prepare_review_pr.py`. That keeps the real workflow trace aligned with the focused smoke instead of validating only isolated Python modules.
 
 Example shape:
 
@@ -363,7 +370,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -ReviewPrCreate
 ```
 
-Add `-ReviewPrApplyDeterministicSuggestions` only when deterministic operations are present and the dry-run product has already been inspected.
+Add `-ReviewPrApplyDeterministicSuggestions` only when deterministic operations are present and the dry-run product has already been inspected. In a real Full0To10 run the repository usually already has fresh ignored `output/` artifacts, so pair deterministic apply with reviewed `-AllowDirty`; the final staging step still uses explicit `-ReviewPrIncludePath` and must not stage `output/**`.
 
 For this workstation snapshot, `qwen2.5-coder:14b` was the preferred Ollama model for strict JSON provider probing. Re-check model health before treating this as permanent.
 

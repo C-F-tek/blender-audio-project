@@ -8,6 +8,7 @@ from pathlib import Path
 from Tools.ai.patch_suggestion_bundle.common import (
     DEFAULT_DISCOVER_SUGGESTION_ROOTS,
     DEFAULT_DISCOVER_SUGGESTION_TOKENS,
+    ReportPathNormalizer,
     compact_artifact_stamp,
     current_branch,
     git_status_short,
@@ -143,8 +144,8 @@ def main() -> int:
         repo_root,
         enabled=not bool(args.no_current_suggestions),
     )
-    report_paths = unique_in_order(
-        split_values(args.suggestion_report) + discovered_reports + current_suggestion_reports
+    report_paths = ReportPathNormalizer(repo_root).unique(
+        unique_in_order(split_values(args.suggestion_report) + discovered_reports + current_suggestion_reports)
     )
 
     if raw_stamp and not report_paths:
