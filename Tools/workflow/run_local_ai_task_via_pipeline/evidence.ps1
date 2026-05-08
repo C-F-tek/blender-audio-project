@@ -46,10 +46,10 @@ if ($BuildEvidence) {
     }
 
     Invoke-CommandChecked -Label "Build task-scoped compact GitHub evidence bundle" -Block {
-        python @EvidenceArgs
+        & $PipelinePythonExe @EvidenceArgs
     }
     Invoke-CommandChecked -Label "Validate task-scoped compact GitHub evidence bundle" -Block {
-        python -m Tools.validation.check_github_evidence_bundle `
+        & $PipelinePythonExe -m Tools.validation.check_github_evidence_bundle `
             --repo-root . `
             --bundle $EvidenceJson `
             --output $EvidenceValidationOutput
