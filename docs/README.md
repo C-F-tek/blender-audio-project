@@ -52,6 +52,7 @@ Full local-AI work must preserve **TUTTO SU TUTTO**.
 Full0To10 = whole-repository active-lane perimeter
 quick/balanced/deep/custom = budget/intensity, not reduced semantic scope
 -No* flags = explicit opt-out only
+-NoStrictRealRunActivation = single-phase diagnostics only
 ```
 
 New stable lanes, validators, broker capabilities, provider diagnostics, evidence surfaces, memory/context tools, discovery/index surfaces and CSV/count surfaces become candidate expansions of `tutto`.
@@ -100,10 +101,11 @@ UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 DATA_FLOW.md
 ../Tools/workflow/README.md
 ../Tools/ai/README.md
-../Tools/validation/README.md
 nearest package/tool README
 target source/doc file
 ```
+
+Large catalogs such as `../Tools/validation/README.md` are reference material, not primary reading-order entrypoints.
 
 Historical handoffs and generated evidence are context only. Do not let them override current source code, owner maps or manifest evidence.
 
@@ -160,7 +162,6 @@ DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 | `DATA_FLOW.md` | Broad data/report/provider flow; compact flow map is preferred for operations. |
 | `MODULE_MAP.md` | Repository area map. |
 | `WORKFLOW_HELPER_SCRIPTS_POLICY.md` | Shell/GUI/debug/push-capable helper classification and guardrails. |
-| `LOCAL_AI_WORKFLOW.md` | Local AI provider workflow and evidence handling. |
 | `AI_WORKLOAD_REPORT_QUALITY_GATE.md` | Workload quality-gate contract. |
 | `AI_CONTEXT_PACKS.md` | Task-scoped context packs and compact evidence. |
 | `AI_SELECTIVE_PLANNER.md` | Report-only selective planner. |
@@ -169,13 +170,22 @@ DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 | `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md` | GitHub-only continuation and local-validation handoff. |
 | `TECH_DEBT_TRACKER.md` | Known debt and remediation queue. |
 
+Historical/supporting references stay available but must not override current maps:
+
+```text
+LOCAL_AI_WORKFLOW.md
+PROJECT_STATUS_POINT.md
+docs/JSON_SCHEMAS.md
+large generated evidence docs
+```
+
 ## Tooling README entrypoints
 
 | Folder | README |
 |---|---|
 | Workflow tools | `../Tools/workflow/README.md` |
 | AI tools | `../Tools/ai/README.md` |
-| Validators/smokes | `../Tools/validation/README.md` |
+| Validators/smokes catalog | `../Tools/validation/README.md` |
 | NPU/OpenVINO package | `../Tools/npu/pipeline/README.md` |
 
 ## Blender/audio docs
