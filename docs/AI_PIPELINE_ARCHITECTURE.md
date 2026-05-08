@@ -2,9 +2,9 @@
 
 ## Purpose
 
-This document describes the modular AI artifact pipeline architecture in `IA-Carmine Local AI Orchestration Workbench`.
+Architecture contract for the modular AI artifact pipeline in `IA-Carmine Local AI Orchestration Workbench`.
 
-It is intended for human maintainers and AI agents. Read it before changing files under:
+Read before changing:
 
 ```text
 Tools/ai/run_parallel_artifact_pipeline.py
@@ -13,48 +13,35 @@ Tools/validation/check_ai_pipeline_modules.py
 Tools/ai/run_pipeline_dry_run_matrix.py
 ```
 
-This file is an architecture contract, not a command catalog. Current executable examples live in:
+This is not a command catalog. Current command and owner sources:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 ```
 
-Large validator catalogs such as `Tools/validation/README.md` are references only and must not become primary operational entrypoints if too large or truncated.
+## Relationship to main runtime architecture
 
-## Relationship to the main runtime architecture
-
-The canonical runtime topology is defined in:
+Canonical runtime topology:
 
 ```text
 docs/MAIN_RUNTIME_ARCHITECTURE.md
 ```
 
-The AI artifact pipeline is one implementation lane inside that wider runtime. It should publish compact state, report references and planned artifacts into the shared runtime heap / blackboard model rather than becoming an isolated orchestration island.
+The AI artifact pipeline is one implementation lane inside the wider runtime. It should publish compact state, report references and planned artifacts into the shared runtime heap / blackboard model rather than becoming an isolated orchestration island.
 
-Current target topology:
-
-```text
-shared runtime heap / blackboard
-├─ GPU1 primary advisory / planner
-├─ GPU0 coworker/helper OpenVINO
-├─ NPU microtask responder
-├─ broker unico executor
-├─ semantic tools registry
-├─ deterministic validators / CPU authority
-└─ telemetry/event stream
-```
-
-Pipeline reports are not final authority by themselves. They become useful when joined with broker execution state, semantic tool registry metadata, deterministic validator results and telemetry/event stream summaries.
+Pipeline reports become useful when joined with broker execution state, semantic tool registry metadata, deterministic validator results and telemetry/event stream summaries.
 
 ## Current status
 
-Status: `modular schedule complete, subordinate to unified launcher and full-run evidence contract`
+Status: active architecture reference, subordinate to unified launcher and full-run evidence contract.
 
-The original monolithic orchestration logic has been split into focused modules. The public CLI and schema-v6 report shape are intended to remain compatible.
+The original monolithic orchestration logic has been split into focused modules. The public CLI and schema-v6 report shape should remain compatible.
 
-The local AI artifact pipeline is now an implementation lane inside the wider unified local-AI flow. It must not be treated as a replacement for the full `TUTTO SU TUTTO` launcher path.
-
-The current direct entrypoint remains intentionally thin:
+Direct entrypoint:
 
 ```text
 Tools/ai/run_parallel_artifact_pipeline.py
@@ -80,7 +67,7 @@ return exit code
 
 Dry-run matrix evidence proves planned-only behavior. It does not prove provider execution, broker tool execution, runtime capability availability, patch application state or source-write state.
 
-When pipeline reports influence evidence, recommendations, patch plans or patch specs, the handoff must include companion telemetry/capability surfaces:
+When pipeline reports influence evidence, recommendations, patch plans or patch specs, handoff must include companion surfaces:
 
 ```text
 runtime tool usage telemetry
@@ -90,10 +77,6 @@ shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when repository visibility or maintainability is in scope
 main runtime blackboard / broker / registry / validator / telemetry state when available
 ```
-
-Telemetry does not replace pipeline reports. It explains whether the lanes that produced or consumed those reports executed, failed, were blocked, degraded, disabled or planned-only.
-
-Limitations are backlog to overcome, not reasons to skip available tools.
 
 ## Module map
 
@@ -113,9 +96,7 @@ Limitations are backlog to overcome, not reasons to skip available tools.
 | `guardrail_models.py` | Typed normalization of remediation queue requests and pass results. |
 | `remediation.py` | Guardrail action queue loading and auto-safe remediation pass execution. |
 
-## Core Extension Policy
-
-The AI pipeline core is app-agnostic infrastructure, not a closed list of files. Add new reusable functions, dataclasses or focused modules when they make validation, reporting, scheduling, provider integration, guardrails, telemetry or memory policy clearer.
+## Core extension policy
 
 Good core additions are:
 
@@ -127,15 +108,13 @@ free of Ready To Jazz or Blender-scene assumptions
 compatible with existing schema-v6 report meanings
 visible through launcher manifest/report surfaces when selected
 compatible with telemetry/capability handoff when part of full-run evidence
-compatible with the shared runtime heap / blackboard contract when runtime state is introduced
-under 400 lines per maintained source file or split by responsibility
+compatible with shared runtime heap / blackboard contract when runtime state is introduced
+within file-size policy or split by responsibility
 ```
 
-Avoid broad utility modules. Prefer a focused owner such as report helpers, provider preflight helpers, memory policy helpers, artifact manifest helpers, telemetry summary helpers, file-line evidence helpers or dry-run fixture builders.
+Prefer focused owners such as report helpers, provider preflight helpers, memory policy helpers, artifact manifest helpers, telemetry summary helpers, file-line evidence helpers or dry-run fixture builders.
 
-## Data flow
-
-Direct pipeline flow:
+## Direct pipeline flow
 
 ```text
 CLI args
@@ -149,26 +128,17 @@ CLI args
   -> write_report_if_requested
 ```
 
-Unified full-run flow around it:
+Unified full-run context is documented in:
 
 ```text
-unified launcher manifest
-  -> selected pipeline/dry-run lanes
-  -> pipeline reports
-  -> validation reports
-  -> compact evidence when selected
-  -> recommendations / patch plans when selected
-  -> runtime telemetry and capability context
-  -> discovery/index/CSV/file-line context when relevant
-  -> shared AI-to-AI bundle/final summary
-  -> main runtime blackboard / broker / registry / CPU-validator state when available
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
 ```
 
 ## Report compatibility
 
 The report schema remains version `6`.
 
-Important compatibility fields preserved:
+Important compatibility fields:
 
 ```text
 schema_version
@@ -187,14 +157,12 @@ steps
 post_run_expected_outputs
 ```
 
-Additional report fields added during modularization:
+Additive fields include:
 
 ```text
 summary
 schedule
 ```
-
-These fields are additive and should not break existing consumers.
 
 When a schema-v6 pipeline report is used as full-run evidence input, surrounding bundle/telemetry must still expose:
 
@@ -208,14 +176,21 @@ file-line-limit state when maintainability is relevant
 blackboard/broker/registry/validator/telemetry state when relevant
 ```
 
-## 400-line policy
+## File-size policy
 
-Maintained pipeline source and docs follow the hard 400-line policy.
+Maintained pipeline source and docs follow the active file-size policy:
 
 ```text
-Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
-Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
-Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+preferred active runbook <= 400 lines
+active Markdown hard threshold <= 500 lines
+maintained source/script target <= 400 lines
+```
+
+Markdown split layout:
+
+```text
+name.md
+name.md/part-001.md
 ```
 
 Validator:
@@ -226,9 +201,13 @@ Tools/validation/check_file_line_limits.py
 
 ## Validation ownership
 
-Use the unified launcher runbook for current broad commands.
-
 Focused direct validation is appropriate only when changing or debugging the pipeline itself. Broad local-AI validation should route through the unified launcher.
+
+Validation selector:
+
+```text
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+```
 
 ## Expected dry-run outputs
 
@@ -285,16 +264,16 @@ changing Blender runtime packages
 modifying full frame-level JSON data
 changing existing schema-v6 field meanings
 claiming full-run success from dry-run matrix evidence alone
-creating or expanding maintained pipeline files beyond 400 lines without split/refactor plan
 silently bypassing the broker unico executor once runtime execution is centralized
 ```
 
 ## Current next actions
 
-1. Validate launcher-owned usage of the pipeline through the unified runbook when local execution is available.
-2. Keep dry-run matrix evidence clearly marked as planned-only.
-3. Keep pipeline outputs attached to telemetry/capability/final-summary context when they influence recommendations or patch plans.
-4. Keep file-line evidence visible when pipeline/docs maintainability is in scope.
-5. Regenerate AI/NPU indexes only when a scoped task requires it.
-6. Only after successful dry-runs, continue with richer lane execution policy or Markdown report output.
-7. When implementing the main runtime architecture, add blackboard, broker, registry, validator-authority and telemetry surfaces incrementally with deterministic reports first.
+```text
+validate launcher-owned usage through unified runbook when local execution is available
+keep dry-run matrix evidence clearly marked planned-only
+attach pipeline outputs to telemetry/capability/final-summary context when used for recommendations or patch plans
+keep file-line evidence visible when maintainability is in scope
+regenerate indexes only under scoped task
+add blackboard, broker, registry, validator-authority and telemetry surfaces incrementally with deterministic reports first
+```
