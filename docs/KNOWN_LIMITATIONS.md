@@ -48,7 +48,7 @@ Provider-declared runtime tool requests are not yet fully equivalent to broker-e
 GPU timing can be degraded when reports infer per-round timing from aggregate elapsed time.
 NPU is intentionally a probe/guardrail/decode/micro-support lane, not primary advisory.
 ReviewPrIncludePath is still explicit in the Markdown-to-review-PR product path.
-prepare_review_pr.py does not auto-discover include paths from apply reports yet.
+prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
 prepare_review_pr.py does not create draft PRs yet.
 ```
 

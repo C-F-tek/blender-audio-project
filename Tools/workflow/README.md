@@ -78,8 +78,8 @@ Tools/validation/run_full0to10_product_pr_chain_smoke.py
 Current limitations:
 
 ```text
-ReviewPrIncludePath remains explicit.
-prepare_review_pr.py does not auto-discover include paths from apply reports yet.
+ReviewPrIncludePath remains supported for explicit/manual allowlists.
+prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
 prepare_review_pr.py does not create draft PRs yet.
 ```
 
