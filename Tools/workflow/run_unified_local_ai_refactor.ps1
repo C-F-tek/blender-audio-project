@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
@@ -124,6 +124,7 @@ param(
     [switch]$ReviewPrApplyDeterministicSuggestions,
     [switch]$BuildTaskPatchSuggestionReport,
     [switch]$OpenObserverConsoles,
+    [switch]$OpenExtendedObserverConsoles,
     [string]$ObserverOutputDir = "",
     [int]$ObserverRefreshSeconds = 2
 )
@@ -915,6 +916,7 @@ try {
             -RepoRootValue $RepoRoot `
             -RunDirValue $EarlyObserverRunDir `
             -OpenConsoles ([bool]$OpenObserverConsoles) `
+            -OpenExtendedConsoles ([bool]$OpenExtendedObserverConsoles) `
             -RefreshSeconds $ObserverRefreshSeconds
     }
 } catch {
@@ -1785,4 +1787,3 @@ Write-UnifiedLauncherExecutionTailEvidence `
     -PatchSpecsRequested ([bool]$GeneratePatchSpecs) `
     -ProdMode ([bool]$Prod) `
     -FailureMessage ""
-

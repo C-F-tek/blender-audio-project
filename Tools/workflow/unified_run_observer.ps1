@@ -1,4 +1,4 @@
-﻿$Script:UnifiedObserverDir = ""
+$Script:UnifiedObserverDir = ""
 $Script:UnifiedObserverStamp = ""
 $Script:UnifiedObserverStartedAt = Get-Date
 $Script:UnifiedObserverInitialized = $false
@@ -10,8 +10,10 @@ function Initialize-UnifiedRunObserver {
         [string]$RepoRootValue,
         [string]$RunDirValue,
         [bool]$OpenConsoles = $false,
+        [bool]$OpenExtendedConsoles = $false,
         [int]$RefreshSeconds = 2
     )
+
     if ($Script:UnifiedObserverInitialized) {
         return
     }
@@ -20,7 +22,6 @@ function Initialize-UnifiedRunObserver {
     $Script:UnifiedObserverDir = $ObserverDirValue
     $Script:UnifiedObserverStamp = $StampValue
     $Script:UnifiedObserverStartedAt = Get-Date
-$Script:UnifiedObserverInitialized = $false
     New-Item -ItemType Directory -Force -Path $Script:UnifiedObserverDir | Out-Null
 
     $state = [ordered]@{
@@ -33,6 +34,7 @@ $Script:UnifiedObserverInitialized = $false
         started_at = $Script:UnifiedObserverStartedAt.ToString("o")
         raw_thinking_exposed = $false
         ai_public_exchange_only = $true
+        extended_observer_consoles = $OpenExtendedConsoles
     }
     $state | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $Script:UnifiedObserverDir "current_state.json") -Encoding UTF8
 
@@ -43,6 +45,13 @@ $Script:UnifiedObserverInitialized = $false
         $exchange = Join-Path $PSScriptRoot "watch_unified_ai_public_exchange.ps1"
         Start-Process powershell.exe -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $telemetry, "-ObserverDir", $Script:UnifiedObserverDir, "-RefreshSeconds", "$RefreshSeconds")
         Start-Process powershell.exe -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $exchange, "-ObserverDir", $Script:UnifiedObserverDir, "-RefreshSeconds", "$RefreshSeconds")
+    }
+
+    if ($OpenExtendedConsoles) {
+        $conversation = Join-Path $PSScriptRoot "watch_unified_ai_conversation.ps1"
+        $rawDebug = Join-Path $PSScriptRoot "watch_unified_raw_debug_good_info.ps1"
+        Start-Process powershell.exe -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $conversation, "-ObserverDir", $Script:UnifiedObserverDir, "-RefreshSeconds", "$RefreshSeconds")
+        Start-Process powershell.exe -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $rawDebug, "-ObserverDir", $Script:UnifiedObserverDir, "-RefreshSeconds", "$RefreshSeconds")
     }
 }
 
@@ -81,4 +90,3 @@ function Write-UnifiedRunAiPublicEvent {
         raw_thinking_exposed = $false
     }
 }
-
