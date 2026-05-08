@@ -1,17 +1,25 @@
-<!-- IA-CARMINE-MD-SPLIT: index -->
 # macro-local-validation-prototype-gate
 
-Questo documento è stato diviso automaticamente per rispettare il budget di righe Markdown.
+Status: historical / prototype validation reference.
 
-- File originale: `docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate.md`
-- Limite massimo configurato: `400` righe
-- Indice completo: [`macro-local-validation-prototype-gate/README.md`](macro-local-validation-prototype-gate/README.md)
+This file is retained for older macro validation gate design context. It is not the current validation-cycle entrypoint.
 
-## Parti
+Current validation references:
 
-- [`macro-local-validation-prototype-gate/part-001.md`](macro-local-validation-prototype-gate/part-001.md)
-- [`macro-local-validation-prototype-gate/part-002.md`](macro-local-validation-prototype-gate/part-002.md)
+```text
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+Tools/validation/README.md
+```
 
-## Nota operativa
+Current owner rule:
 
-Mantenere questo file come entrypoint stabile per non rompere i riferimenti esistenti.
+```text
+Use focused validators and smokes from Tools/validation.
+Do not create a parallel macro gate when an owner validator already exists.
+```
+
+The old split folder for this document is legacy. New Markdown splits must use the `name.md/part-001.md` layout.
+
+Use the legacy parts only for comparison with older prototype-gate planning.

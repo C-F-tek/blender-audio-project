@@ -49,6 +49,110 @@ Explicit disablers:
 
 A disabled phase must appear as intentionally disabled, not missing by accident.
 
+## Strict real-run activation and diagnostics
+
+The launcher currently has strict real-run activation. Any non-smoke/non-reset real run may be promoted to the TUTTO SU TUTTO lane unless the operator explicitly passes:
+
+```text
+-NoStrictRealRunActivation
+```
+
+This is intentional for real product runs, but it is wrong for phase-by-phase diagnostics.
+
+Observed diagnostic case on 2026-05-07:
+
+```text
+-Mode md without -NoStrictRealRunActivation started run_agent_review_full_toolbox_decision_loop.py
+-Mode md without -NoStrictRealRunActivation started run_agent_gpu_npu_parallel_orchestrator.py
+-Mode md without -NoStrictRealRunActivation started run_agent_gpu_deep_planning_supervised.py
+-Mode md without -NoStrictRealRunActivation started an Ollama runner
+```
+
+Therefore, every smoke matrix or single-phase investigation must include:
+
+```text
+-SkipGitSync
+-NoBranch
+-AllowDirty
+-NoStrictRealRunActivation
+-Prod
+-NoExecutionTail
+```
+
+Use strict activation only for real product/full runs. Do not use it to diagnose isolated `md`, `json`, `python`, `contract`, `chunks`, `context_pack` or `agent_state` phases.
+
+### Correct single-phase diagnostic command
+
+```powershell
+$Stamp = "debug_python_nostrict_$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File .\Tools\workflow\run_unified_local_ai_refactor.ps1 `
+  -RepoRoot . `
+  -Mode python `
+  -TaskFile .\docs\LOCAL_AI_TASKS\pr206-patch-suggestion-product-full-run-2026-05-07.md `
+  -Stamp $Stamp `
+  -SkipGitSync `
+  -NoBranch `
+  -AllowDirty `
+  -NoStrictRealRunActivation `
+  -Prod `
+  -NoExecutionTail
+```
+
+Expected for isolated diagnostics:
+
+```text
+No run_agent_gpu_npu_parallel_orchestrator.py
+No run_agent_gpu_deep_planning_supervised.py
+No Ollama runner
+No provider/GPU/NPU subprocess unless the selected mode is provider or Full0To10
+```
+
+### Correct matrix argument block
+
+```powershell
+$Args = @(
+  "-NoProfile",
+  "-ExecutionPolicy", "Bypass",
+  "-File", ".\Tools\workflow\run_unified_local_ai_refactor.ps1",
+  "-RepoRoot", ".",
+  "-Mode", $Case.Mode,
+  "-TaskFile", $Task,
+  "-Stamp", $Stamp,
+  "-SkipGitSync",
+  "-NoBranch",
+  "-AllowDirty",
+  "-NoStrictRealRunActivation",
+  "-Prod",
+  "-NoExecutionTail"
+)
+```
+
+If the process list contains `run_agent_gpu*`, `run_npu*`, `run_agent_review_full_toolbox*` or `ollama.exe runner` during an isolated `md/json/python/contract` diagnostic, the diagnostic command is wrong or strict activation was not disabled.
+
+### Cleanup command for contaminated diagnostics
+
+Use this only to stop local diagnostic/provider processes. It does not delete files and does not change Git state.
+
+```powershell
+Get-CimInstance Win32_Process |
+  Where-Object {
+    $_.CommandLine -match "diag_|run_unified_local_ai_refactor|run_agent_gpu|run_npu|run_agent_review_full_toolbox|ollama.exe runner"
+  } |
+  ForEach-Object {
+    Write-Host "Killing PID $($_.ProcessId) $($_.Name)"
+    Stop-Process -Id $_.ProcessId -Force
+  }
+```
+
+Then verify:
+
+```powershell
+ollama ps
+nvidia-smi
+```
+
 ## Run intensity parameters
 
 All intensity presets preserve run-unica coverage. Intensity changes capacity, not scope.

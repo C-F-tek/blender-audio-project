@@ -1,17 +1,20 @@
-<!-- IA-CARMINE-MD-SPLIT: index -->
 # LOCAL_AI_WORKFLOW
 
-Questo documento è stato diviso automaticamente per rispettare il budget di righe Markdown.
+Status: historical / broad reference.
 
-- File originale: `docs/LOCAL_AI_WORKFLOW.md`
-- Limite massimo configurato: `400` righe
-- Indice completo: [`LOCAL_AI_WORKFLOW/README.md`](LOCAL_AI_WORKFLOW/README.md)
+This file is retained for old local-AI workflow context. It is not the current operator entrypoint.
 
-## Parti
+Current entrypoints:
 
-- [`LOCAL_AI_WORKFLOW/part-001.md`](LOCAL_AI_WORKFLOW/part-001.md)
-- [`LOCAL_AI_WORKFLOW/part-002.md`](LOCAL_AI_WORKFLOW/part-002.md)
+```text
+docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+```
 
-## Nota operativa
+The old split folder for this document is legacy. New Markdown splits must use the `name.md/part-001.md` layout.
 
-Mantenere questo file come entrypoint stabile per non rompere i riferimenti esistenti.
+Use the legacy parts only for forensic comparison with older workflow descriptions.

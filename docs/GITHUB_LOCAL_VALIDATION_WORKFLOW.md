@@ -2,15 +2,16 @@
 
 ## Purpose
 
-This document defines the local Git/GitHub review lifecycle after AI-assisted refactoring, documentation updates or pipeline changes.
+Local Git/GitHub review lifecycle after AI-assisted refactoring, documentation updates or pipeline changes.
 
-It is policy and review guidance, not a command catalog. Current executable commands live in:
+This is policy and review guidance, not a command catalog. Current commands and flow ownership live in:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 ```
-
-Large tool catalogs such as `Tools/validation/README.md` and `Tools/npu/pipeline/README.md` are references only and must not become primary operational entrypoints if too large or truncated.
 
 ## Primary rule
 
@@ -18,59 +19,44 @@ Use the unified launcher as the primary local validation and local-AI orchestrat
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
-docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
-The primary model is one parameterized run:
-
-```text
-run_unified_local_ai_refactor.ps1 = run unica
-Full0To10 = TUTTO SU TUTTO perimeter
-quick/balanced/deep/custom = presets or operator parameters, not scope
--No* flags = explicit opt-out from selected lanes
-CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
-400-line policy applies to maintained docs and source files
-limitations are backlog to overcome, not reasons to skip available tools
-```
-
-Supporting wrappers may exist, but they are not first entrypoints.
+Supporting wrappers are implementation lanes or focused debugging targets, not first entrypoints.
 
 ## Run-unica validation doctrine
 
-`Full0To10` means **TUTTO SU TUTTO**.
+```text
+Full0To10 = TUTTO SU TUTTO perimeter
+quick/balanced/deep/custom = intensity or budget, not scope
+-No* flags = explicit opt-out from selected lanes
+-NoStrictRealRunActivation = phase diagnostic only
+```
 
-`quick`, `balanced`, `deep` and `custom` are parameter presets or operator values only. They must not silently narrow scope.
-
-A broad validation proof is incomplete if it only says that files exist or that a focused dry-run passed. When a PR is derived from a run-unica execution, provider lane, broker/tool lane, evidence bundle, recommendation or patch plan, the review must include companion telemetry/capability surfaces and, when relevant, discovery/index/CSV-count/file-line-limit surfaces.
-
-Telemetry is a completeness accessory for evidence and patch plans. It does not replace validation reports; it explains whether lanes executed, failed, were blocked, degraded, disabled, unavailable or planned-only.
-
-A lane/tool is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
+A broad validation proof is incomplete if it only says files exist or that a focused dry-run passed. Review manifest, phase reports, telemetry, capability, evidence and bundle surfaces together.
 
 ## Recommended lifecycle
 
 ```text
 pull latest
-choose unified launcher mode/parameters/presets
-run focused validation or run-unica Full0To10 flow through launcher
+confirm branch and dirty state
+choose unified launcher mode or focused validator cycle
+run focused validation or Full0To10 through the owning entrypoint
 inspect manifest-first outputs
-inspect telemetry/capability/final-summary surfaces when relevant
+inspect telemetry/capability/final-summary when relevant
 inspect CSV/count, file-line-limit and discovery/index summaries when relevant
 promote only compact evidence when needed
-commit intended docs/source/index changes
+commit intended docs/source changes
 push results
 share manifest/reports/telemetry for review
 ```
 
 ## Manifest-first inspection
 
-The primary run artifact is:
+Primary run artifact:
 
 ```text
 output/local_ai_runs/<stamp>_<mode>_unified/pipeline/unified_local_ai_refactor_manifest.json
 ```
-
-Read this before opening long reports.
 
 Review order:
 
@@ -80,26 +66,27 @@ unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
 runtime tool usage telemetry when tools/broker lanes ran
 runtime/hardware capability manifest when capabilities matter
-full toolbox telemetry summary for run-unica/production handoff
+full toolbox telemetry summary for run-unica handoff
 shared AI-to-AI bundle/final summary for production handoff
 compact Markdown, CSV/count or file-line-limit summaries
 discovery/index repair reports when relevant
 detailed evidence only when needed
 ```
 
-Do not begin review from a long evidence bundle or oversized Markdown catalog.
+Do not begin review from a long evidence bundle, oversized Markdown catalog or historical handoff.
 
 ## Validation routing
 
 | Need | Preferred route |
 |---|---|
-| Quick docs/source validation | unified launcher quick parameter preset with relevant validation phases |
-| Run-unica Full0To10 review | unified launcher Full0To10 with selected presets/parameters |
-| Deep provider/repo review | unified launcher Full0To10 with deep/custom parameters; provider/probe lanes included unless disabled/unavailable |
-| NPU helper-only work | focused NPU helper validation, then unified launcher full validation if broader scope changed |
-| Validator debugging | direct focused validator command from validator catalog/reference |
-| GitHub evidence handoff | compact evidence builder through launcher/tool README, never bulk-add raw output |
-| Discovery/index/CSV/file-line review | inventory/chunks/repository-consistency phases through launcher; file-line-limit report when maintainability is in scope; index repair remains plan/report-first |
+| Docs-only change | `validator-smoke-cycle-map` Cycle A. |
+| Python/script change | `validator-smoke-cycle-map` Cycle B. |
+| Launcher/workflow change | `validator-smoke-cycle-map` Cycle C plus manifest inspection. |
+| Provider mesh change | `validator-smoke-cycle-map` Cycle D. |
+| Patch suggestion/review PR change | `validator-smoke-cycle-map` Cycle E. |
+| Context/memory/index change | `validator-smoke-cycle-map` Cycle F. |
+| Real full product run | unified launcher `-Full0To10`. |
+| Single phase diagnostic | unified launcher with `-NoStrictRealRunActivation`. |
 
 Focused validation is not proof that `Full0To10` passed.
 
@@ -121,24 +108,7 @@ Policy:
 Do not document them as primary local validation commands.
 Do not use them as run-unica substitutes.
 If launcher delegates to them, their outputs must be visible in the launcher manifest.
-If their output feeds evidence/patch plans, companion telemetry/capability state must be visible in the handoff.
-If they produce inventory/discovery/count/file-line artifacts, compact CSV/JSON/Markdown references must be visible in the handoff.
 ```
-
-## Repository sync preflight
-
-Before local validation, confirm:
-
-```text
-current branch
-remote sync state
-working tree status
-whether dirty changes are intentional
-Python/venv selected by launcher
-ignored output/cache/state files are not staged
-```
-
-For PR work, validate on the PR branch unless the task explicitly says to start a new branch from `master`.
 
 ## Report review
 
@@ -185,23 +155,6 @@ source_writes_performed
 patch_application_performed
 ```
 
-Discovery/index/CSV/file-line surfaces to check when relevant:
-
-```text
-Markdown inventory JSON/MD
-script inventory JSON/CSV/MD
-Python line-count CSV/MD
-file-line-limit JSON/MD
-function/class/method inventory CSV
-semantic chunk manifest JSON/MD
-selected chunk evidence JSON/MD
-repository consistency map/smoke JSON/MD
-auto-discovery report
-index repair plan/report
-```
-
-A broad validation run is not acceptable if these surfaces are missing or if selected phases vanish silently.
-
 ## Evidence policy
 
 Because `output/` is ignored, promote only compact evidence files under:
@@ -212,18 +165,6 @@ docs/LOCAL_VALIDATION_EVIDENCE/
 
 Do not bulk-add the whole evidence directory. Add only reviewed evidence files that directly support the PR.
 
-When adding run-unica evidence or patch-plan evidence, also include or reference:
-
-```text
-runtime telemetry
-runtime/hardware capability manifest
-full toolbox telemetry summary
-shared AI-to-AI final summary
-CSV/count summaries when inventory lanes ran
-file-line-limit report when maintainability is in scope
-discovery/index repair reports when relevant
-```
-
 Do not commit:
 
 ```text
@@ -231,35 +172,42 @@ output/**
 renders/**
 *.db
 *.sqlite
+*.sqlite3
 raw provider outputs
 unreviewed generated indexes
 indexAI/code_chunks/**
 ```
 
-## Index regeneration
-
-Regenerate generated indexes only when structural source/doc/workflow changes require it and the task explicitly scopes regeneration.
+## Index and generated-output policy
 
 Generated indexes are not source-of-truth docs. Do not hand-edit generated chunks or manifests.
 
-`indexAI/code_chunks/**` must not be committed as ordinary source.
+`indexAI/code_chunks/**` and `indexAI/project_code_chunks/**` must not be committed as ordinary source.
 
 Index repair is plan/report-first unless explicitly requested.
 
-## 400-line validation
+## File-size policy
 
-Maintained documentation and source files follow a hard 400-line policy.
+Maintained files must remain compact:
 
 ```text
-Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
-Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
-Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+preferred active runbook <= 400 lines
+active Markdown hard threshold <= 500 lines
+maintained source/script target <= 400 lines
 ```
 
-Validator:
+Markdown split layout is exact:
 
 ```text
-Tools/validation/check_file_line_limits.py
+path/name.md
+path/name.md/part-001.md
+```
+
+Policies:
+
+```text
+docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
+docs/LOCAL_AI_TASKS/md-split-folder-naming-rule-2026-05-07.md
 docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 ```
 
@@ -303,18 +251,12 @@ For docs/workflow-state cleanup PRs, explicitly state:
 No runtime files, provider behavior, generated indexes, full analysis JSON, Blender scripts or audio/media outputs touched.
 ```
 
-## Optional Blender compatibility smoke
-
-Blender-facing validation is application-domain work and must not be silently included in core local-AI validation.
-
-Outside Blender, import/syntax smokes may be run as focused validators. Real Blender runtime validation requires explicit Blender scope.
-
 ## Troubleshooting policy
 
 When a focused validator, NPU helper or provider lane fails:
 
 ```text
-first inspect the launcher manifest if the run used the launcher
+first inspect launcher manifest if the run used the launcher
 then inspect telemetry/capability/final-summary surfaces if involved
 then inspect discovery/index/CSV/file-line surfaces if relevant
 then inspect the focused JSON report
@@ -332,9 +274,7 @@ Do not commit output validation reports unless explicitly needed as compact evid
 
 Do not modify Blender runtime packages while validating AI pipeline or NPU helper refactors.
 
-Do not wire `Tools/npu/pipeline/` helpers into runtime orchestration until focused NPU helper validation, broad launcher validation, quality gates, telemetry/bundle visibility and index review pass.
-
-Do not treat push-capable workflow helpers as default validation commands. Any push-capable helper must require explicit user intent and visible git status review.
+Do not treat push-capable workflow helpers as default validation commands. Push-capable helpers require explicit user intent and visible git status review.
 
 Do not claim a run-unica Full0To10 run passed from dry-run, focused validator, oversized Markdown or file existence alone.
 

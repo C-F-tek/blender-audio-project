@@ -2,23 +2,21 @@
 
 ## Purpose
 
-This guide defines how guardrails, schema validation and evaluation-style workflows should be applied to AI-generated artifacts in this repository.
+Policy guide for guardrails, schema validation and evaluation-style workflows applied to AI-generated artifacts in this repository.
 
-It adapts guardrails/evals concepts into local repository rules without adding mandatory external runtime dependencies.
-
-This document is guidance, not a command catalog. Current executable examples live in:
+This is guidance, not a command catalog. Current validation routing lives in:
 
 ```text
-docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+Tools/validation/README.md
 ```
-
-`Tools/validation/README.md` is a validator catalog/reference. Do not treat it as the primary operational entrypoint if it is oversized or truncated.
 
 ## Core rule
 
-AI-generated output is not accepted because it looks plausible. It is accepted only after it passes the relevant local contracts and its execution context is visible.
+AI-generated output is not accepted because it looks plausible. It is accepted only after it passes relevant local contracts and its execution context is visible.
 
-For this project, that means:
+For this project:
 
 ```text
 model/tool output
@@ -27,8 +25,7 @@ model/tool output
   -> schema validation
   -> path validation
   -> file-line-limit visibility when maintainability is in scope
-  -> Blender compatibility validation when relevant
-  -> generated Python policy validation when relevant
+  -> generated Python / Blender compatibility validation when relevant
   -> report
   -> manifest/phase visibility when part of launcher flow
   -> telemetry/capability companion when tools/providers/patch plans are involved
@@ -39,11 +36,7 @@ model/tool output
 
 `Full0To10` is **TUTTO SU TUTTO**.
 
-A full-run artifact, recommendation, evidence bundle, patch plan or patch spec is not complete unless the handoff also carries the telemetry/capability context needed to interpret it.
-
-Telemetry is a guardrail accessory. It does not replace schema validation, evidence or patch plans; it explains whether the relevant lanes executed, failed, were blocked, degraded, disabled or planned-only.
-
-Limitations are backlog to overcome, not reasons to skip available tools. A lane/tool is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
+A full-run artifact, recommendation, evidence bundle, patch plan or patch spec is incomplete unless the handoff carries telemetry/capability context needed to interpret it.
 
 Guardrails must prevent these false positives:
 
@@ -57,37 +50,33 @@ reviewed patch spec exists -> therefore queued/apply is authorized
 historical limitation note exists -> therefore skip current tool lane
 ```
 
-## Local validation assets
+## Validation owner map
 
-| Local asset | Role |
-|---|---|
-| `Tools/validation/` | Non-invasive validation scripts. |
-| `Tools/validation/check_file_line_limits.py` | Report-only 400-line policy validator for maintained docs and source files. |
-| `docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md` | Compact contract note for the line-limit validator. |
-| `docs/JSON_SCHEMAS.md` | Existing JSON schema notes and report contract map; broad catalog only. |
-| `docs/AI_ARTIFACT_SCHEMAS.md` | AI artifact, telemetry and bundle schema notes. |
-| `docs/QUALITY_GATE.md` | Acceptance rules for generated packages. |
-| `Tools/ai/run_pipeline_dry_run_matrix.py` | Repeatable AI pipeline dry-run matrix. Planned-only proof, not full-run proof. |
-| `Tools/ai/build_runtime_tool_usage_telemetry.py` | Runtime tool usage telemetry. |
-| Runtime/hardware capability manifest builders | Runtime or hardware lane capability and guardrail manifests from current code/evidence. |
-| `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Full-run telemetry summary. |
-| `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production AI-to-AI bundle. |
-| `output/validation/` | Recommended local validation report output folder. Ignored unless compact evidence is promoted. |
-| `docs/EXECUTION_PLANS/` | Durable task records for complex validation/refactor work. |
+Do not create duplicate validators when an owner exists.
+
+```text
+Python syntax -> Tools/validation/check_python_syntax.py
+report contracts -> Tools/validation/check_validation_report_contract.py
+docs links -> Tools/validation/check_docs_links.py
+file line limits -> Tools/validation/check_file_line_limits.py
+patch suggestion product separation -> Tools/validation/check_patch_suggestion_product_separation.py
+patch suggestion smoke -> Tools/validation/run_patch_suggestion_bundle_apply_smoke.py
+runtime broker smoke -> Tools/validation/run_agent_runtime_tool_broker_smoke.py
+peer exchange contract -> Tools/validation/check_ai_peer_exchange_contract.py
+provider evidence contract -> Tools/validation/check_provider_evidence_contract.py
+```
+
+Current focused cycles live in:
+
+```text
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+```
 
 ## Required validation dimensions
 
 ### 1. Syntax validity
 
-Generated JSON must parse as JSON.
-
-Generated Python must pass syntax checks before it is considered usable.
-
-Command ownership:
-
-```text
-docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-```
+Generated JSON must parse as JSON. Generated Python must pass syntax checks before it is considered usable.
 
 ### 2. Schema conformance
 
@@ -117,7 +106,7 @@ patch_application_performed
 source_writes_performed
 ```
 
-Full-run-derived artifacts should also reference the companion handoff surfaces:
+Full-run-derived artifacts should reference companion handoff surfaces:
 
 ```text
 runtime_tool_usage_telemetry
@@ -133,41 +122,27 @@ Generated artifact paths must be checked before file writes.
 
 Rules:
 
-- do not write outside the repository root;
-- do not overwrite raw frame-by-frame analysis JSON files;
-- prefer `output/`, `indexAI/patch_library/`, `Scripting/v61b/hotpatch/` or explicit safe folders;
-- use patch specs for mechanical edits when reviewability matters;
-- never treat `output/**` or SQLite DB files as Git-tracked handoff artifacts.
+```text
+do not write outside the repository root
+do not overwrite raw frame-by-frame analysis JSON files
+prefer output/, indexAI/patch_library/, Scripting/v61b/hotpatch/ or explicit safe folders
+use patch specs for mechanical edits when reviewability matters
+never treat output/** or SQLite DB files as Git-tracked handoff artifacts
+```
 
 ### 4. Blender compatibility
 
-Generated Blender Python must avoid known incompatible APIs and deprecated node types.
+Blender/audio/media runtime is application-domain work and must not be triggered by normal AI/tooling validation.
 
-Current hard rule:
+Hard known Blender rule:
 
 ```text
 Do not use ShaderNodeTexMusgrave for Blender 5.x.
 ```
 
-Generated scene scripts should preserve:
+### 5. Telemetry and capability validation
 
-- audio loading;
-- frame range setup;
-- FPS setup;
-- camera;
-- lighting;
-- render configuration;
-- output path configuration.
-
-Blender/audio/media runtime remains application-domain work and must not be triggered by normal AI/tooling full-run validation.
-
-### 5. Policy validation
-
-Use existing policy validators for generated files. Commands are owned by the unified launcher runbook and compact task docs.
-
-### 6. Telemetry and capability validation
-
-When tools, broker calls, provider lanes or patch plans participate in a production handoff, validate or inspect the companion surfaces:
+When tools, broker calls, provider lanes or patch plans participate in a production handoff, inspect companion surfaces:
 
 ```text
 runtime_tool_usage_telemetry_<STAMP>.json/md
@@ -189,30 +164,12 @@ which provider lanes degraded
 whether deterministic recovery was used
 whether source writes happened
 whether patch application happened
-which docs/source files exceed 400 lines when maintainability is in scope
+which docs/source files exceed policy when maintainability is in scope
 ```
 
 ## Guardrail failure behavior
 
 A failed validation must produce a structured failure, not a silent fallback.
-
-Recommended report shape:
-
-```json
-{
-  "status": "failed",
-  "stage": "schema_validation",
-  "errors": [
-    {
-      "code": "missing_required_field",
-      "field": "target_files",
-      "message": "Patch artifact does not declare target files."
-    }
-  ],
-  "warnings": [],
-  "artifact_written": false
-}
-```
 
 Provider fallback or deterministic recovery must also be visible in telemetry/bundle summaries when relevant.
 
@@ -226,7 +183,7 @@ input fixture
   -> validation command owner
   -> report path
   -> pass/fail result
-  -> telemetry/capability companion when the artifact joins full-run handoff
+  -> telemetry/capability companion when artifact joins full-run handoff
 ```
 
 Good future locations:
@@ -238,33 +195,21 @@ output/validation/
 docs/EXECUTION_PLANS/
 ```
 
-## Prompt and artifact regression policy
-
-When a prompt or provider changes, the agent should check:
-
-- whether artifact structure changed;
-- whether schema fields are still present;
-- whether validation reports still pass;
-- whether generated code policy still passes;
-- whether paths remain safe;
-- whether output quality degraded in obvious ways;
-- whether telemetry reports provider degradation or deterministic recovery;
-- whether the shared AI-to-AI bundle still carries evidence, patch-plan and telemetry references together;
-- whether file-line-limit evidence changed when maintainability is in scope.
-
-## Practical acceptance checklist
+## Acceptance checklist
 
 An AI artifact is acceptable when:
 
-- it parses successfully;
-- it matches the expected contract;
-- it has explicit errors/warnings fields;
-- it does not target unsafe paths;
-- it does not require unapproved dependencies;
-- it has a validation report;
-- it states unresolved uncertainty;
-- it does not bypass existing workflow docs;
-- it has telemetry/capability companion context when it comes from or feeds a full-run evidence/patch-plan lane.
+```text
+it parses successfully
+it matches the expected contract
+it has explicit errors/warnings fields
+it does not target unsafe paths
+it does not require unapproved dependencies
+it has a validation report
+it states unresolved uncertainty
+it does not bypass existing owners/workflows
+it has telemetry/capability companion context when it feeds full-run evidence or patch-plan lanes
+```
 
 ## Non-goals
 

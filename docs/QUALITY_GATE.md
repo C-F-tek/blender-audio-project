@@ -1,17 +1,18 @@
-<!-- IA-CARMINE-MD-SPLIT: index -->
 # QUALITY_GATE
 
-Questo documento è stato diviso automaticamente per rispettare il budget di righe Markdown.
+Status: application-domain / historical reference.
 
-- File originale: `docs/QUALITY_GATE.md`
-- Limite massimo configurato: `400` righe
-- Indice completo: [`QUALITY_GATE/README.md`](QUALITY_GATE/README.md)
+This file is retained for older Blender/application quality-gate context. It is not the current local-AI validation entrypoint.
 
-## Parti
+Current validation and quality maps:
 
-- [`QUALITY_GATE/part-001.md`](QUALITY_GATE/part-001.md)
-- [`QUALITY_GATE/part-002.md`](QUALITY_GATE/part-002.md)
+```text
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+```
 
-## Nota operativa
+The old split folder for this document is legacy. New Markdown splits must use the `name.md/part-001.md` layout.
 
-Mantenere questo file come entrypoint stabile per non rompere i riferimenti esistenti.
+Use legacy parts only when working on Blender/application quality gates or for forensic comparison.
