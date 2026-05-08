@@ -42,7 +42,10 @@ function Invoke-LocalAiTaskPipelineValidation {
     )
 
     if ([string]::IsNullOrWhiteSpace($PythonExe)) {
-        $PythonExe = if ([string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) { "python" } else { $env:IA_CARMINE_PYTHON }
+        throw "Pipeline validation requires resolved repository-owned PythonExe. Call Use-WorkflowPython in the parent workflow."
+    }
+    if (-not (Test-Path -LiteralPath $PythonExe -PathType Leaf)) {
+        throw "Resolved repository-owned PythonExe does not exist: $PythonExe"
     }
 
     if ($RunMultistepProviderWorkflow) {
