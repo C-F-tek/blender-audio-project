@@ -49,7 +49,10 @@ Do not use this module map as proof of active behavior when source code or the o
 | Provider mesh | `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_mesh.py` |
 | Runtime broker | `Tools/ai/agent_runtime_tool_broker.py` |
 | AI-to-AI bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` |
+| Task Markdown patch suggestion report | `Tools/ai/build_task_patch_suggestion_report.py` |
 | Patch suggestion dry/apply | `Tools/ai/apply_patch_suggestion_bundle.py` and `Tools/ai/patch_suggestion_bundle/cli.py` |
+| Patch suggestion product separation | `Tools/validation/check_patch_suggestion_product_separation.py` |
+| Product PR chain smoke | `Tools/validation/run_full0to10_product_pr_chain_smoke.py` |
 | Review PR preparation | `Tools/ai/prepare_review_pr.py` |
 | Validator/smoke selection | `docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md` |
 
@@ -57,6 +60,25 @@ Full table:
 
 ```text
 docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+```
+
+## Current Markdown-to-review-PR product path
+
+```text
+docs/LOCAL_AI_TASKS/<task>.md
+  -> build_task_patch_suggestion_report.py
+  -> apply_patch_suggestion_bundle.py
+  -> check_patch_suggestion_product_separation.py
+  -> prepare_review_pr.py
+  -> GitHub PR for manual review
+```
+
+Limits still present in code:
+
+```text
+ReviewPrIncludePath remains explicit.
+prepare_review_pr.py does not auto-discover include paths from apply reports yet.
+prepare_review_pr.py does not create draft PRs yet.
 ```
 
 ## Obsolete / monolithic flag

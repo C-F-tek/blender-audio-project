@@ -19,6 +19,9 @@ Current code-driven navigation and validation ownership lives in:
 ```text
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 ```
 
 ## Current doctrine
@@ -31,10 +34,12 @@ supporting wrappers are implementation lanes, not first entrypoints
 provider/probe/workload-quality lanes are opt-out in Full0To10
 GPU1/GPU0/NPU peer exchange must enter telemetry, bundle and acceptance evidence
 runtime tool telemetry must use normalized statuses and broker-measured elapsed seconds when tools execute
-final NPU provider work must not run on the performance-critical close path unless `NpuMicroStartMode=final-provider`
-provider-capable workflow runners prefer `IA_CARMINE_PYTHON`, then `.venv`, before system `python`
+final NPU provider work must not run on the performance-critical close path unless NpuMicroStartMode=final-provider
+provider-capable workflow runners prefer IA_CARMINE_PYTHON, then .venv, before system python
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
-400-line policy applies to maintained docs and source files
+preferred active runbook/docs size <=400 lines
+active Markdown hard threshold <=500 lines
+maintained source/script target <=400 lines
 limitations are backlog to overcome, not reasons to skip available tools
 ```
 
@@ -45,11 +50,38 @@ limitations are backlog to overcome, not reasons to skip available tools
 | Real full product run | `run_unified_local_ai_refactor.ps1` with `-Full0To10`. |
 | Single-phase diagnostic | `run_unified_local_ai_refactor.ps1` with `-NoStrictRealRunActivation`. |
 | Lightweight evidence profile | `run_unified_local_ai_refactor.ps1 -LightFull0To10`. |
+| Markdown-to-review-PR product path | Unified launcher plus patch suggestion/review PR flags; current owner chain below. |
 | Full-toolbox internals | `run_agent_review_full_toolbox_decision_loop.py` and packaged engine. |
 | Script family census | `docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md`. |
 | Source-code behavior map | `docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md`. |
 
 Do not start a normal workflow from an internal helper unless the launcher/runbook explicitly delegates to that helper or the task is a focused tool validation.
+
+## Markdown-to-review-PR product chain
+
+Current owner chain:
+
+```text
+docs/LOCAL_AI_TASKS/<task>.md
+  -> Tools/ai/build_task_patch_suggestion_report.py
+  -> Tools/ai/apply_patch_suggestion_bundle.py
+  -> Tools/validation/check_patch_suggestion_product_separation.py
+  -> Tools/ai/prepare_review_pr.py
+```
+
+Focused chain smoke:
+
+```text
+Tools/validation/run_full0to10_product_pr_chain_smoke.py
+```
+
+Current limitations:
+
+```text
+ReviewPrIncludePath remains explicit.
+prepare_review_pr.py does not auto-discover include paths from apply reports yet.
+prepare_review_pr.py does not create draft PRs yet.
+```
 
 ## Tool classification
 
@@ -117,6 +149,7 @@ run Blender or FFmpeg
 produce audio/media output
 change provider/model execution semantics
 claim provider execution from light evidence-only profiles
+claim draft PR support before prepare_review_pr.py implements it
 ```
 
 Push-capable helpers are not default validation commands and require explicit user intent.
@@ -131,6 +164,7 @@ phase_status / phase_reports
 runtime tool usage telemetry
 runtime/hardware capability manifest
 patch notes quality product when selected
+patch suggestion product/separation reports when selected
 AI peer-exchange report and contract when provider execution is selected
 runtime-heap tool catalog exchange before final telemetry
 Full0To10 final local AI product package when selected
@@ -140,7 +174,7 @@ CSV/index/discovery/file-line evidence when relevant
 generated artifact path policy evidence when long bundle names are possible
 ```
 
-## 400-line policy
+## Line-budget policy
 
 Maintained workflow scripts and docs must stay under the active line-budget policy.
 
@@ -165,6 +199,8 @@ docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
-docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 ```
