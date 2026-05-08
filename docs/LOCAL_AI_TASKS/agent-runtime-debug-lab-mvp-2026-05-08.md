@@ -1,62 +1,78 @@
-# Agent Runtime Debug Lab — MVP report-only task
+# Agent Runtime Debug Lab — proposta completa
 
 ## Stato
 
 - Data: 2026-05-08
-- Classificazione MVP: `SAFE_MECHANICAL`
-- Validazione: `LOCAL_VALIDATION_REQUIRED`
-- Broker registration: `MANUAL_REVIEW`, fuori da questa PR
-- Full0To10 integration: `DEFER`, fuori da questa PR
+- Classificazione proposta: `SAFE_MECHANICAL` per MVP report-only, `LOCAL_VALIDATION_REQUIRED` per smoke, `MANUAL_REVIEW` per broker registration, `DEFER` per integrazione workflow pesante.
 - Dipendenza soddisfatta: PR #216 mergeata; le lane workflow devono usare Python di progetto/repo, non Python di sistema.
+- Obiettivo: trasformare la capacità di programmazione/debug delle IA da richiesta manuale a tool controllato, tracciato e validabile.
 
-## Obiettivo operativo
+## Problema
 
-Implementare un nuovo tool report-only per dare alle IA capacità controllate di debug/programmazione senza esporre una shell libera.
+Il progetto ha ormai molte lane AI, workflow, validator, patch suggestion e report. Le IA riescono a proporre codice, ma quando serve verificare compile check, smoke mirati o parser PowerShell il ciclo operativo dipende ancora da comandi manuali esterni.
 
-Nome consigliato:
+La soluzione non deve diventare una shell libera. Deve essere una capability runtime limitata, dove l'IA produce un piano JSON e il sistema esegue solo operazioni allowlist, timeout-bound e report-only.
+
+## Decisione architetturale
+
+Implementare una nuova capability:
+
+```text
+agent_runtime_debug_lab
+```
+
+Entry point consigliato:
 
 ```text
 Tools/ai/agent_runtime_debug_lab.py
 ```
 
-Package/moduli:
+Moduli interni:
 
 ```text
 Tools/ai/agent_runtime_debug_lab/policy.py
 Tools/ai/agent_runtime_debug_lab/runner.py
 Tools/ai/agent_runtime_debug_lab/reporting.py
+```
+
+Smoke:
+
+```text
 Tools/validation/run_agent_runtime_debug_lab_smoke.py
 ```
 
-Il tool deve accettare un piano JSON, validarlo tramite policy allowlist, eseguire solo operation type consentite, applicare timeout, produrre report JSON/Markdown e non avere side effect impliciti su Git, sorgenti, provider, Blender o FFmpeg.
+La capability deve essere progettata da subito per tre livelli:
 
-## Non-obiettivi
+1. MVP locale report-only;
+2. registrazione broker;
+3. integrazione workflow/prodotto.
 
-Non implementare in questa PR:
+## Principi non negoziabili
 
-- broker registration;
-- Full0To10 automatic lane;
-- patch apply;
-- Git write;
-- shell libera;
-- provider/Ollama/OpenVINO run diretto;
-- Blender runtime;
-- FFmpeg runtime;
-- installazioni package (`pip install`, `uv add`, `npm install`).
-
-## Design richiesto
-
-Il nuovo tool deve essere:
+Il tool deve essere:
 
 - brokerable;
 - report-only;
 - deterministic-first;
 - timeout-bound;
 - evidence-producing;
+- path-guarded;
+- operation-allowlisted;
 - compatibile con Python di progetto/repo introdotto dalla policy post-PR #216;
-- eseguibile localmente tramite smoke controllato.
+- privo di Git write impliciti;
+- privo di provider/Blender/FFmpeg runtime impliciti.
 
-## Input JSON previsto
+Il tool non deve essere:
+
+- un wrapper bash generico;
+- un terminale libero per provider;
+- un esecutore di patch;
+- un runner Blender;
+- un runner FFmpeg;
+- un tool Git write;
+- un sistema per installare dipendenze.
+
+## Request JSON canonica
 
 Esempio di richiesta:
 
@@ -90,9 +106,9 @@ Esempio di richiesta:
 }
 ```
 
-## Operation type ammessi per MVP
+## Operation type ammessi
 
-Implementare solo questi operation type:
+MVP:
 
 ```text
 python_compile
@@ -104,55 +120,89 @@ validation_report_contract
 json_report_probe
 ```
 
-### Semantica operation
+Deferred, solo dopo review:
 
-`python_compile`:
+```text
+python_test_subset
+markdown_link_check
+markdown_line_limit_check
+workflow_python_policy_check
+```
 
-- input: `paths`
-- usa Python runtime corrente/progetto;
-- esegue compile check equivalente a `python -m py_compile <paths>`;
-- path soggetti a allowlist.
+Vietati sempre:
 
-`python_script`:
+```text
+free_shell
+git_commit
+git_push
+git_merge
+git_reset
+git_clean
+patch_apply
+pip_install
+uv_add
+npm_install
+terraform_apply
+terraform_destroy
+blender_run
+ffmpeg_run
+provider_run
+ollama_run
+openvino_run
+```
 
-- input: `script`, opzionale `args`, opzionale `timeout_seconds`;
-- `script` deve essere un file `.py` ammesso;
-- `args` devono essere lista di stringhe, non una shell string;
-- cattura stdout/stderr tail;
-- registra return code e durata;
-- non consente script sotto path vietati.
+## Semantica operation MVP
 
-`powershell_parse`:
+### python_compile
 
 - input: `paths`;
-- usa PowerShell parser per file `.ps1` ammessi;
+- esegue equivalente sicuro di `python -m py_compile <paths>`;
+- usa Python runtime corrente/progetto;
+- accetta solo `.py` sotto path ammessi;
+- non accetta path sotto `output/**` come sorgente.
+
+### python_script
+
+- input: `script`, opzionale `args`, opzionale `timeout_seconds`;
+- `script` deve essere `.py` ammesso;
+- `args` deve essere lista di stringhe;
+- non deve accettare una shell string;
+- cattura stdout/stderr tail;
+- registra return code, durata e timeout;
+- accetta output report solo sotto `output/validation/**`.
+
+### powershell_parse
+
+- input: `paths`;
+- usa PowerShell parser su `.ps1` ammessi;
 - non esegue gli script;
 - produce errori parser strutturati.
 
-`git_diff_check`:
+### git_diff_check
 
 - esegue solo `git diff --check`;
-- nessun git write.
+- nessun Git write.
 
-`git_status_short`:
+### git_status_short
 
 - esegue solo `git status --short`;
-- nessun git write.
+- nessun Git write.
 
-`validation_report_contract`:
+### validation_report_contract
 
-- invoca il validator di contract report esistente solo con file consentiti;
-- output sotto `output/validation/**` consentito come report generato.
+- invoca validator report-contract esistente;
+- input report file e output devono rispettare policy;
+- output consentito solo sotto `output/validation/**`.
 
-`json_report_probe`:
+### json_report_probe
 
 - legge report JSON esistenti;
-- verifica `kind`, `passed`, `errors`, `warnings` e presenza file;
+- verifica shape minima: `kind`, `passed`, `errors`, `warnings`;
 - non modifica sorgenti.
 
-## Path ammessi nel MVP
+## Path policy
 
-Path sorgenti ammessi per operazioni di lettura/compile/parser/script controllato:
+Path sorgenti ammessi:
 
 ```text
 Tools/ai/**/*.py
@@ -162,15 +212,15 @@ Tools/workflow/**/*.ps1
 docs/**/*.md
 ```
 
-Note:
+Regole:
 
-- `docs/**/*.md` è solo per validazione/read/probe, non per esecuzione.
-- Gli output report possono essere scritti sotto `output/validation/**`.
-- I path devono essere normalizzati rispetto alla repo e non possono uscire dalla repo root.
+- `docs/**/*.md` è solo read/probe/validation, mai esecuzione;
+- output report scrivibili solo sotto `output/validation/**`;
+- ogni path deve essere normalizzato rispetto alla repo root;
+- vietare path assoluti fuori repo;
+- vietare traversal fuori repo.
 
-## Path vietati
-
-Bloccare sempre:
+Path vietati:
 
 ```text
 output/** come target sorgente
@@ -183,27 +233,7 @@ indexAI/project_code_chunks/**
 Scripting/** per esecuzione runtime
 ```
 
-## Comandi vietati
-
-Il tool non deve accettare stringhe shell arbitrarie. Vietare esplicitamente:
-
-```text
-git commit
-git push
-git merge
-git reset
-git clean
-Remove-Item / del / rm su sorgenti
-pip install
-uv add
-npm install
-terraform apply/destroy
-Blender
-FFmpeg
-provider/Ollama/OpenVINO run diretto
-```
-
-## Output report richiesto
+## Report JSON/Markdown
 
 Default output:
 
@@ -212,7 +242,7 @@ output/validation/agent_runtime_debug_lab_<stamp>.json
 output/validation/agent_runtime_debug_lab_<stamp>.md
 ```
 
-Shape minima JSON:
+Shape minima:
 
 ```json
 {
@@ -246,7 +276,36 @@ Shape minima JSON:
 }
 ```
 
-## File target e budget linee
+Markdown report minimo:
+
+- riepilogo passed/failed;
+- tabella operations;
+- elenco errori;
+- guardrail matrix;
+- output prodotti.
+
+## Roadmap PR
+
+### PR 1 — MVP report-only
+
+Scopo:
+
+- implementare entrypoint, policy, runner, reporting e smoke;
+- nessun broker;
+- nessuna integrazione Full0To10 automatica;
+- nessuna modifica a patch apply.
+
+File nuovi:
+
+```text
+Tools/ai/agent_runtime_debug_lab.py
+Tools/ai/agent_runtime_debug_lab/policy.py
+Tools/ai/agent_runtime_debug_lab/runner.py
+Tools/ai/agent_runtime_debug_lab/reporting.py
+Tools/validation/run_agent_runtime_debug_lab_smoke.py
+```
+
+Budget linee:
 
 ```text
 Tools/ai/agent_runtime_debug_lab.py <= 220
@@ -256,20 +315,18 @@ Tools/ai/agent_runtime_debug_lab/reporting.py <= 180
 Tools/validation/run_agent_runtime_debug_lab_smoke.py <= 260
 ```
 
-## Smoke richiesto
-
-`Tools/validation/run_agent_runtime_debug_lab_smoke.py` deve creare una richiesta temporanea o fixture controllata e verificare almeno:
+Smoke PR 1 deve verificare:
 
 - compile di un tool Python ammesso;
 - parse di un `.ps1` ammesso;
 - `git_diff_check` report-only;
 - `git_status_short` report-only;
-- rifiuto di almeno un path vietato (`output/**` come sorgente o `*.sqlite`);
-- rifiuto di operation type non ammesso;
-- report JSON/MD prodotti sotto `output/validation/**`;
+- rifiuto di path vietato;
+- rifiuto di operation type vietato;
+- report JSON/MD sotto `output/validation/**`;
 - guardrail boolean coerenti.
 
-## Validazioni richieste per PR MVP
+Validazioni PR 1:
 
 ```powershell
 python -m py_compile .\Tools\ai\agent_runtime_debug_lab.py
@@ -287,41 +344,47 @@ git diff --check
 git status --short
 ```
 
-Expected smoke:
+Acceptance PR 1:
 
 ```text
 passed: true
 failed_count: 0
 ```
 
-## Acceptance criteria
+### PR 2 — Broker registration
 
-La PR MVP è accettabile solo se:
+Scopo:
 
-- non introduce shell libera;
-- non introduce Git write;
-- non introduce provider/Blender/FFmpeg runtime;
-- non scrive sorgenti;
-- non committa `output/**`;
-- produce report JSON/MD deterministici;
-- rifiuta operation type e path vietati;
-- ogni file nuovo resta sotto il budget linee indicato;
-- smoke locale passa.
+- registrare tool broker con `tool_id = runtime_debug_lab`;
+- accettare `request_file` e `timeout_seconds`;
+- usare helper broker esistente per timeout/stdout/stderr quando possibile;
+- evitare duplicazione subprocess se `agent_runtime_tool_broker.py` ha già helper `execute_command_timed()`.
 
-## Deferred PR 2 — Broker registration
-
-Solo dopo MVP stabile:
+Argomenti broker:
 
 ```text
-tool_id = runtime_debug_lab
-args = request_file, timeout_seconds
+request_file
+timeout_seconds
 ```
 
-Nota: se `agent_runtime_tool_broker.py` supera la policy linee, spostare `TOOL_SPECS` o builder in modulo dedicato prima di aggiungere il nuovo tool.
+Regola linee:
 
-## Deferred PR 3 — Workflow/product integration
+- se `agent_runtime_tool_broker.py` supera 400 righe, non gonfiarlo;
+- prima spostare `TOOL_SPECS` o builder in modulo dedicato;
+- poi registrare `runtime_debug_lab`.
 
-Solo dopo broker stabile:
+Validazioni PR 2:
+
+- smoke broker con request file controllato;
+- verifica report output;
+- verifica che provider execution sia false;
+- verifica che shell libera non sia esposta.
+
+### PR 3 — Workflow/product integration
+
+Scopo:
+
+Integrare il lab nel ciclo prodotto solo dopo broker stabile:
 
 ```text
 patch suggestion apply
@@ -330,4 +393,138 @@ patch suggestion apply
 -> prepare_review_pr
 ```
 
-In Full0To10 registrare come lane `debug/programming capability`, non come always-run pesante.
+Regole:
+
+- non always-run pesante;
+- registrare in Full0To10 come lane `debug/programming capability`;
+- esecuzione attivabile solo quando ci sono file cambiati o richiesta esplicita;
+- report incluso nell'evidence bundle, non committato come output.
+
+### PR 4 — Quality gates e regressioni
+
+Scopo:
+
+- aggiungere smoke negativi per path traversal;
+- aggiungere smoke per timeout;
+- aggiungere smoke per operation type vietato;
+- aggiungere smoke per tentativo `pip install`/`git push`/`ffmpeg` come argomento;
+- validare che stdout/stderr tail non superi budget.
+
+### PR 5 — UX/task templates
+
+Scopo:
+
+- aggiungere esempi di request JSON;
+- aggiungere template task MD per debug lab;
+- documentare come usarlo da AI-to-AI bundle;
+- documentare quando non usarlo.
+
+## Run completa veloce proposta prima dell'implementazione
+
+Dopo merge PR #216, eseguire run veloce usando questo task come `TaskFile`, in modo da vedere se la pipeline produce proposta coerente prima di implementare codice.
+
+Comando consigliato:
+
+```powershell
+$Stamp = "agent_runtime_debug_lab_fast_$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+$Task = ".\docs\LOCAL_AI_TASKS\agent-runtime-debug-lab-mvp-2026-05-08.md"
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File ".\Tools\workflow\run_unified_local_ai_refactor.ps1" `
+  -RepoRoot "." `
+  -Mode smoke,md,python,context_pack,agent_state,official,provider,patch_specs,contract,full_validation `
+  -TaskFile $Task `
+  -Stamp $Stamp `
+  -SkipGitSync `
+  -NoBranch `
+  -AllowDirty `
+  -NoStrictRealRunActivation `
+  -Prod `
+  -NoExecutionTail `
+  -RunIntensity quick `
+  -BudgetMinutes 10 `
+  -MaxRounds 8 `
+  -FilesPerRound 6 `
+  -MaxContextFiles 120 `
+  -MaxCharsPerFile 5000 `
+  -MaxNewTokens 2400 `
+  -KeepAlive 15m `
+  -OfficialAdapterTimeoutSeconds 240
+```
+
+Se la proposta prodotta è debole o non produce codice sufficiente, procedere manualmente con PR 1 MVP usando questo MD come specifica normativa.
+
+## Rischi principali
+
+### Rischio: shell libera mascherata
+
+Mitigazione:
+
+- operation type enum;
+- nessuna command string;
+- subprocess solo costruito da argomenti tipizzati.
+
+### Rischio: esecuzione provider involontaria
+
+Mitigazione:
+
+- denylist su script/provider path;
+- guardrail boolean obbligatori;
+- test negativo per Ollama/OpenVINO direct run.
+
+### Rischio: source write implicito
+
+Mitigazione:
+
+- consentire output solo in `output/validation/**`;
+- vietare operations di patch/apply;
+- vietare path sorgente sotto output/renders/index chunks.
+
+### Rischio: timeout/hang
+
+Mitigazione:
+
+- timeout default per operation;
+- timeout massimo globale;
+- stdout/stderr tail limitato.
+
+### Rischio: broker troppo grande
+
+Mitigazione:
+
+- PR2 deve rifattorizzare specs se necessario;
+- nessun gonfiaggio monolitico oltre policy linee.
+
+## Criteri di maturità
+
+La capability è matura quando:
+
+- MVP smoke passa;
+- broker smoke passa;
+- almeno un ciclo patch suggestion -> debug lab -> prepare_review_pr produce evidence utile;
+- fallimenti sono diagnostici, non solo return code;
+- nessuna lane può eseguire shell libera o provider diretto;
+- la documentazione spiega esempi positivi e negativi.
+
+## Decisione operativa
+
+La proposta migliore non è dare shell alla IA. La proposta corretta è introdurre `agent_runtime_debug_lab` come laboratorio runtime controllato:
+
+```text
+JSON plan
+operation allowlist
+path allowlist
+timeout
+stdout/stderr tail
+report JSON/MD
+broker integration differita
+zero Git/source/provider side effect implicito
+```
+
+Prossimo passo consigliato:
+
+1. merge di questo task MD;
+2. run veloce usando questo task;
+3. se output buono, implementare PR 1 MVP;
+4. se output debole, implementare manualmente PR 1 MVP rispettando questa specifica;
+5. solo dopo smoke stabile procedere con PR2/PR3.
