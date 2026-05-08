@@ -23,6 +23,7 @@ param(
     [switch]$UsePrimaryAdvisoryProvider,
     [string]$Model = "",
     [string]$PythonExe = "",
+    [string]$NpuPythonExe = "",
     [int]$MaxContextChars = 6000
 )
 
@@ -37,6 +38,10 @@ if (-not [string]::IsNullOrWhiteSpace($PythonExe)) {
 } else {
     $ProviderPythonExe = Use-WorkflowPython -RepoRoot $RepoRootPath
 }
+if ([string]::IsNullOrWhiteSpace($NpuPythonExe)) {
+    $NpuPythonExe = $env:SPAZIOTEMPO_NPU_PYTHON
+}
+$ResolvedNpuPythonExe = $NpuPythonExe
 $env:IA_CARMINE_PYTHON = $ProviderPythonExe
 $env:PYTHONPATH = [string]$RepoRootPath
 if (Test-Path -LiteralPath $ProviderPythonExe -PathType Leaf) {
@@ -68,7 +73,7 @@ Write-Host "=== Step 1: workload quality gate ==="
 
 Write-Host ""
 Write-Host "=== Step 2: parallel provider probes / diagnostics ==="
-$Jobs = @()
+# Provider probe background jobs disabled here: provider probe arguments must remain argv-safe.
 if ($RunOllamaProbe -or $RunNpuProbe) {
     $ProbeArgs = @(
         ".\Tools\ai\run_local_provider_probe.py",
@@ -84,16 +89,13 @@ if ($RunOllamaProbe -or $RunNpuProbe) {
     if ($Model -ne "") {
         $ProbeArgs += @("--model", $Model)
     }
-    $Jobs += Start-Job -Name "provider_probe" -ScriptBlock {
-        param([string[]]$ArgsList, [string]$PythonExe, [string]$PythonPath)
-        Set-Location $using:RepoRootPath
-        $env:IA_CARMINE_PYTHON = $PythonExe
-        $env:PYTHONPATH = $PythonPath
-        if (Test-Path -LiteralPath $PythonExe -PathType Leaf) {
-            $env:PATH = (Split-Path -Parent $PythonExe) + [System.IO.Path]::PathSeparator + $env:PATH
-        }
-        & $PythonExe @ArgsList
-    } -ArgumentList (,$ProbeArgs), $ProviderPythonExe, ([string]$RepoRootPath)
+    if (-not [string]::IsNullOrWhiteSpace($ResolvedNpuPythonExe)) {
+        $ProbeArgs += @("--npu-python-exe", $ResolvedNpuPythonExe)
+    }
+    & $ProviderPythonExe @ProbeArgs
+    if ($LASTEXITCODE -ne 0) {
+        throw "provider_probe failed with exit code $LASTEXITCODE"
+    }
 }
 
 if ($RunNpuDecodeSmoke) {
@@ -104,24 +106,17 @@ if ($RunNpuDecodeSmoke) {
         "--output", $NpuDecodeSmokeReport,
         "--text-output", "output/ai_packets/npu_decode_smoke_output.md"
     )
-    $Jobs += Start-Job -Name "npu_decode_smoke" -ScriptBlock {
-        param([string[]]$ArgsList, [string]$PythonExe, [string]$PythonPath)
-        Set-Location $using:RepoRootPath
-        $env:IA_CARMINE_PYTHON = $PythonExe
-        $env:PYTHONPATH = $PythonPath
-        if (Test-Path -LiteralPath $PythonExe -PathType Leaf) {
-            $env:PATH = (Split-Path -Parent $PythonExe) + [System.IO.Path]::PathSeparator + $env:PATH
-        }
-        & $PythonExe @ArgsList
-    } -ArgumentList (,$SmokeArgs), $ProviderPythonExe, ([string]$RepoRootPath)
+    if (-not [string]::IsNullOrWhiteSpace($ResolvedNpuPythonExe)) {
+        $SmokeArgs += @("--python-exe", $ResolvedNpuPythonExe)
+    }
+    & $ProviderPythonExe @SmokeArgs
+    if ($LASTEXITCODE -ne 0) {
+        throw "npu_decode_smoke failed with exit code $LASTEXITCODE"
+    }
 } else {
     & $ProviderPythonExe .\Tools\ai\run_npu_decode_smoke_diagnostic.py `
         --repo-root . `
         --output $NpuDecodeSmokeReport
-}
-
-foreach ($Job in $Jobs) {
-    Receive-Job -Job $Job -Wait -AutoRemoveJob
 }
 
 Write-Host ""
