@@ -1,6 +1,7 @@
 ﻿$Script:UnifiedObserverDir = ""
 $Script:UnifiedObserverStamp = ""
 $Script:UnifiedObserverStartedAt = Get-Date
+$Script:UnifiedObserverInitialized = $false
 
 function Initialize-UnifiedRunObserver {
     param(
@@ -11,9 +12,15 @@ function Initialize-UnifiedRunObserver {
         [bool]$OpenConsoles = $false,
         [int]$RefreshSeconds = 2
     )
+    if ($Script:UnifiedObserverInitialized) {
+        return
+    }
+
+    $Script:UnifiedObserverInitialized = $true
     $Script:UnifiedObserverDir = $ObserverDirValue
     $Script:UnifiedObserverStamp = $StampValue
     $Script:UnifiedObserverStartedAt = Get-Date
+$Script:UnifiedObserverInitialized = $false
     New-Item -ItemType Directory -Force -Path $Script:UnifiedObserverDir | Out-Null
 
     $state = [ordered]@{
