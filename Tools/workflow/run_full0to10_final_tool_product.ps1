@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$RepoRoot = ".",
     [string]$OutputDir = "output/validation/full0to10_final_tool_product",
     [string]$Request = "Costruisci il pacchetto prodotto finale Full0To10 orientato a SQLite FTS5, runtime tools, GPU/Ollama, NPU/OpenVINO e quality gate.",
@@ -8,6 +8,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+
+# IA-CARMINE-REPO-PYTHON-POLICY-BEGIN
+$RepoRootForWorkflowPython = (& git rev-parse --show-toplevel 2>$null)
+if ([string]::IsNullOrWhiteSpace($RepoRootForWorkflowPython)) {
+    $RepoRootForWorkflowPython = (Resolve-Path ".").Path
+} else {
+    $RepoRootForWorkflowPython = (Resolve-Path $RepoRootForWorkflowPython.Trim()).Path
+}
+. (Join-Path $RepoRootForWorkflowPython "Tools/workflow/python_env.ps1")
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRootForWorkflowPython
+# IA-CARMINE-REPO-PYTHON-POLICY-END
 function Resolve-RepoPath {
     param([string]$Base, [string]$PathValue)
     if ([System.IO.Path]::IsPathRooted($PathValue)) {
@@ -33,10 +44,11 @@ if ($NoExternalProbes) {
     $Args += "--no-external-probes"
 }
 
-& python (Join-Path $RepoRoot "Tools/ai/build_full0to10_final_tool_product.py") @Args
+& $WorkflowPythonExe (Join-Path $RepoRoot "Tools/ai/build_full0to10_final_tool_product.py") @Args
 if ($LASTEXITCODE -ne 0) {
     throw "Full0To10 final tool product build failed with exit code $LASTEXITCODE"
 }
 
 Write-Host "[OK] Final tool product manifest: $Manifest"
 Write-Host "[OK] Final tool product markdown: $(Join-Path $OutputPath 'full0to10_final_tool_product.md')"
+

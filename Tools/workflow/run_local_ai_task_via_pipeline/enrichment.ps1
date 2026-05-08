@@ -13,7 +13,7 @@ if ($BuildEnrichmentPlan) {
     $EnrichmentPlanMd = "output/ai_pipeline/${EnrichmentPlanBasename}.md"
     $EnrichmentPlanValidation = "output/validation/${EnrichmentPlanBasename}_contract.json"
     Invoke-CommandChecked -Label "Build local AI enrichment plan" -Block {
-        python .\Tools\ai\build_local_ai_enrichment_plan.py `
+        & $PipelinePythonExe .\Tools\ai\build_local_ai_enrichment_plan.py `
             --repo-root . `
             --objective $AgentStateObjective `
             --task-file $TaskRel `
@@ -23,7 +23,7 @@ if ($BuildEnrichmentPlan) {
             --markdown-output $EnrichmentPlanMd
     }
     Invoke-CommandChecked -Label "Validate local AI enrichment plan" -Block {
-        python .\Tools\validation\check_local_ai_enrichment_plan.py `
+        & $PipelinePythonExe .\Tools\validation\check_local_ai_enrichment_plan.py `
             --repo-root . `
             --plan $EnrichmentPlanJson `
             --output $EnrichmentPlanValidation
@@ -38,7 +38,7 @@ if ($BuildEnrichmentPlan) {
 
 if ($BuildSemanticChunks) {
     Invoke-CommandChecked -Label "Build semantic code chunks" -Block {
-        python .\Tools\npu\build_semantic_code_chunks.py --repo-root .
+        & $PipelinePythonExe .\Tools\npu\build_semantic_code_chunks.py --repo-root .
     }
     $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue "indexAI/code_chunks/semantic_code_chunks_manifest.json" -Root $RepoRootPath
     $ContextFiles = @(Normalize-ContextFiles $ContextFiles)
@@ -63,7 +63,7 @@ if ($SelectSemanticChunks) {
         $SelectArgs += @("--path-boost", $boost)
     }
     Invoke-CommandChecked -Label "Select focused semantic code chunks" -Block {
-        python @SelectArgs
+        & $PipelinePythonExe @SelectArgs
     }
     $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $SelectedChunksMd -Root $RepoRootPath
     $ContextFiles = Add-ContextFileIfPresent -Current $ContextFiles -PathValue $SelectedChunksJson -Root $RepoRootPath
@@ -76,7 +76,7 @@ if ($SelectSemanticChunks) {
         $SelectedChunksEvidenceJson = "docs/LOCAL_VALIDATION_EVIDENCE/${SelectedChunksEvidenceBasename}.json"
         $SelectedChunksEvidenceMd = "docs/LOCAL_VALIDATION_EVIDENCE/${SelectedChunksEvidenceBasename}.md"
         Invoke-CommandChecked -Label "Validate selected semantic chunks and build compact evidence" -Block {
-            python .\Tools\validation\check_selected_semantic_chunks.py `
+            & $PipelinePythonExe .\Tools\validation\check_selected_semantic_chunks.py `
                 --repo-root . `
                 --bundle $SelectedChunksJson `
                 --output $SelectedChunksValidation `
@@ -92,7 +92,7 @@ if ($SelectSemanticChunks) {
 
 if ($BuildContextPack) {
     Invoke-CommandChecked -Label "Build bounded AI context pack" -Block {
-        python .\Tools\ai\build_ai_context_pack.py `
+        & $PipelinePythonExe .\Tools\ai\build_ai_context_pack.py `
             --repo-root . `
             --profile $ContextPackProfile `
             --basename $ContextPackBasename `
@@ -128,7 +128,7 @@ if ($BuildAgentStatePacket) {
         $AgentArgs += @("--include-file", $context)
     }
     Invoke-CommandChecked -Label "Build agent state packet with SQLite memory" -Block {
-        python @AgentArgs
+        & $PipelinePythonExe @AgentArgs
     }
     $AgentStateJson = "$AgentStateRel/$AgentStateBasename.json"
     $AgentStateMd = "$AgentStateRel/$AgentStateBasename.md"

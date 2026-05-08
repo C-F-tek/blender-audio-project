@@ -1,7 +1,23 @@
 function Test-WorkflowWindowsAppsPython {
     param([string]$PathValue)
+    if ([string]::IsNullOrWhiteSpace($PathValue)) { return $false }
     $normalized = $PathValue.Replace("\", "/").ToLowerInvariant()
     return ($normalized -like "*/windowsapps/*" -and [System.IO.Path]::GetFileName($PathValue).ToLowerInvariant().Contains("python"))
+}
+
+function Test-WorkflowRepoPython {
+    param(
+        [string]$PathValue,
+        [string]$RepoRoot
+    )
+    if ([string]::IsNullOrWhiteSpace($PathValue)) { return $false }
+    if (-not (Test-Path -LiteralPath $PathValue -PathType Leaf)) { return $false }
+    if (Test-WorkflowWindowsAppsPython $PathValue) { return $false }
+    $rootPath = (Resolve-Path -LiteralPath $RepoRoot).Path.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+    $resolvedPath = (Resolve-Path -LiteralPath $PathValue).Path
+    $normalizedRoot = $rootPath.Replace("\", "/").ToLowerInvariant()
+    $normalizedPath = $resolvedPath.Replace("\", "/").ToLowerInvariant()
+    return ($normalizedPath -eq $normalizedRoot -or $normalizedPath.StartsWith($normalizedRoot + "/"))
 }
 
 function Resolve-WorkflowPython {
@@ -10,25 +26,29 @@ function Resolve-WorkflowPython {
         [string]$RequestedPython = ""
     )
     $rootPath = (Resolve-Path -LiteralPath $RepoRoot).Path
-    $candidates = @()
-    if (-not [string]::IsNullOrWhiteSpace($RequestedPython)) { $candidates += $RequestedPython }
-    if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) { $candidates += $env:IA_CARMINE_PYTHON }
-    $candidates += @(
+    $explicitCandidates = @()
+    if (-not [string]::IsNullOrWhiteSpace($RequestedPython)) { $explicitCandidates += $RequestedPython }
+    if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) { $explicitCandidates += $env:IA_CARMINE_PYTHON }
+
+    foreach ($candidate in $explicitCandidates) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+        if (-not (Test-WorkflowRepoPython -PathValue $candidate -RepoRoot $rootPath)) {
+            throw "Rejected non-repository IA-CARMINE Python '$candidate'. Use the repository .venv Python, not system PATH Python."
+        }
+        return (Resolve-Path -LiteralPath $candidate).Path
+    }
+
+    $repoCandidates = @(
         (Join-Path $rootPath ".venv\Scripts\python.exe"),
         (Join-Path $rootPath "venv\Scripts\python.exe"),
         (Join-Path $rootPath ".venv314\Scripts\python.exe")
     )
-    foreach ($candidate in $candidates) {
-        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
-        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+    foreach ($candidate in $repoCandidates) {
+        if (Test-WorkflowRepoPython -PathValue $candidate -RepoRoot $rootPath) {
             return (Resolve-Path -LiteralPath $candidate).Path
         }
     }
-    $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
-    if ($pythonCommand -and -not (Test-WorkflowWindowsAppsPython $pythonCommand.Source)) {
-        return $pythonCommand.Source
-    }
-    throw "No provider-capable Python found. Set IA_CARMINE_PYTHON to the repo .venv Python."
+    throw "No repository-owned provider-capable Python found. Create .venv or set IA_CARMINE_PYTHON to a Python executable inside the repository."
 }
 
 function Use-WorkflowPython {

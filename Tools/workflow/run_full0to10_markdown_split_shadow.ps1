@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$RepoRoot = ".",
     [string]$PatchSpecs = "output/validation/full0to10_auto_refactor_plan/full0to10_auto_refactor_patch_specs.json",
     [string]$OutputDir = "output/validation/full0to10_markdown_split_shadow",
@@ -11,6 +11,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+
+# IA-CARMINE-REPO-PYTHON-POLICY-BEGIN
+$RepoRootForWorkflowPython = (& git rev-parse --show-toplevel 2>$null)
+if ([string]::IsNullOrWhiteSpace($RepoRootForWorkflowPython)) {
+    $RepoRootForWorkflowPython = (Resolve-Path ".").Path
+} else {
+    $RepoRootForWorkflowPython = (Resolve-Path $RepoRootForWorkflowPython.Trim()).Path
+}
+. (Join-Path $RepoRootForWorkflowPython "Tools/workflow/python_env.ps1")
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRootForWorkflowPython
+# IA-CARMINE-REPO-PYTHON-POLICY-END
 function Resolve-RepoPath {
     param([string]$Base, [string]$PathValue)
     if ([System.IO.Path]::IsPathRooted($PathValue)) {
@@ -58,7 +69,7 @@ if ($ForwardedArgs.Count -gt 0) {
 }
 
 $ScriptPath = Join-Path $RepoRoot "Tools/ai/apply_full0to10_markdown_split_patch_specs.py"
-& python $ScriptPath @Args
+& $WorkflowPythonExe $ScriptPath @Args
 $ExitCode = $LASTEXITCODE
 
 if ($ExitCode -ne 0) {
@@ -67,3 +78,4 @@ if ($ExitCode -ne 0) {
 
 Write-Host "[OK] Markdown split shadow output: $OutputPath"
 Write-Host "[OK] Markdown split shadow files: $ShadowRootPath"
+

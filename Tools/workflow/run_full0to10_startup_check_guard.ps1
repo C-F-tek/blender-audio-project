@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$RepoRoot = ".",
     [string]$OutputDir = "output/validation/startup_check_guard",
     [string]$TrackName = "current",
@@ -8,6 +8,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+
+# IA-CARMINE-REPO-PYTHON-POLICY-BEGIN
+$RepoRootForWorkflowPython = (& git rev-parse --show-toplevel 2>$null)
+if ([string]::IsNullOrWhiteSpace($RepoRootForWorkflowPython)) {
+    $RepoRootForWorkflowPython = (Resolve-Path ".").Path
+} else {
+    $RepoRootForWorkflowPython = (Resolve-Path $RepoRootForWorkflowPython.Trim()).Path
+}
+. (Join-Path $RepoRootForWorkflowPython "Tools/workflow/python_env.ps1")
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRootForWorkflowPython
+# IA-CARMINE-REPO-PYTHON-POLICY-END
 function Resolve-RepoPath {
     param([string]$Base, [string]$PathValue)
     if ([System.IO.Path]::IsPathRooted($PathValue)) {
@@ -24,7 +35,7 @@ $JsonOutput = Join-Path $OutputPath "startup_check.json"
 $TextOutput = Join-Path $OutputPath "startup_check.txt"
 $ScriptPath = Join-Path $RepoRoot "Tools/workflow/startup_check.py"
 
-& python $ScriptPath --repo-root $RepoRoot --output $JsonOutput --text-output $TextOutput
+& $WorkflowPythonExe $ScriptPath --repo-root $RepoRoot --output $JsonOutput --text-output $TextOutput
 $ExitCode = $LASTEXITCODE
 if ($ExitCode -ne 0) {
     throw "startup_check.py failed with exit code $ExitCode"
@@ -41,7 +52,7 @@ if ($RequireTrackInputs) {
     $TrackArgs += "--require-inputs"
 }
 
-& python (Join-Path $RepoRoot "Tools/ai/build_full0to10_track_input_contract.py") @TrackArgs
+& $WorkflowPythonExe (Join-Path $RepoRoot "Tools/ai/build_full0to10_track_input_contract.py") @TrackArgs
 $TrackExitCode = $LASTEXITCODE
 if ($TrackExitCode -ne 0) {
     throw "Track input contract failed with exit code $TrackExitCode"
@@ -57,3 +68,4 @@ if ($StrictExit) {
 Write-Host "[OK] Startup check JSON: $JsonOutput"
 Write-Host "[OK] Startup check text: $TextOutput"
 Write-Host "[OK] Track input contract: $(Join-Path $TrackOutputDir 'full0to10_track_input_contract.from_startup_guard.json')"
+

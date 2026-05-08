@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$RepoRoot = ".",
     [string]$OutputDir = "output/validation/full0to10_quality_stack_preflight",
     [string]$PatchSpecs,
@@ -8,6 +8,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+
+# IA-CARMINE-REPO-PYTHON-POLICY-BEGIN
+$RepoRootForWorkflowPython = (& git rev-parse --show-toplevel 2>$null)
+if ([string]::IsNullOrWhiteSpace($RepoRootForWorkflowPython)) {
+    $RepoRootForWorkflowPython = (Resolve-Path ".").Path
+} else {
+    $RepoRootForWorkflowPython = (Resolve-Path $RepoRootForWorkflowPython.Trim()).Path
+}
+. (Join-Path $RepoRootForWorkflowPython "Tools/workflow/python_env.ps1")
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRootForWorkflowPython
+# IA-CARMINE-REPO-PYTHON-POLICY-END
 function Resolve-RepoPath {
     param([string]$Base, [string]$PathValue)
     if ([System.IO.Path]::IsPathRooted($PathValue)) {
@@ -34,10 +45,10 @@ $CapabilityArgs = @(
 if ($NoExternalProbes) {
     $CapabilityArgs += "--no-external-probes"
 }
-& python (Join-Path $RepoRoot "Tools/ai/build_full0to10_hardware_tool_capability.py") @CapabilityArgs
+& $WorkflowPythonExe (Join-Path $RepoRoot "Tools/ai/build_full0to10_hardware_tool_capability.py") @CapabilityArgs
 if ($LASTEXITCODE -ne 0) { throw "hardware/tool capability failed" }
 
-& python (Join-Path $RepoRoot "Tools/ai/build_full0to10_runtime_tool_registry.py") `
+& $WorkflowPythonExe (Join-Path $RepoRoot "Tools/ai/build_full0to10_runtime_tool_registry.py") `
     --repo-root $RepoRoot `
     --output (Join-Path $RegistryDir "full0to10_runtime_tool_registry.json") `
     --markdown-output (Join-Path $RegistryDir "full0to10_runtime_tool_registry.md")
@@ -54,12 +65,12 @@ if ($PatchSpecs) {
         $GateArgs += @("--patch-specs", $PatchSpecsPath)
     }
 }
-& python (Join-Path $RepoRoot "Tools/ai/build_full0to10_quality_gate.py") @GateArgs
+& $WorkflowPythonExe (Join-Path $RepoRoot "Tools/ai/build_full0to10_quality_gate.py") @GateArgs
 if ($LASTEXITCODE -ne 0) { throw "quality gate failed" }
 
 $SummaryJson = Join-Path $OutputPath "full0to10_quality_stack_preflight.json"
 $SummaryMd = Join-Path $OutputPath "full0to10_quality_stack_preflight.md"
-& python (Join-Path $RepoRoot "Tools/ai/build_full0to10_quality_stack_summary.py") `
+& $WorkflowPythonExe (Join-Path $RepoRoot "Tools/ai/build_full0to10_quality_stack_summary.py") `
     --repo-root $RepoRoot `
     --search-root $OutputPath `
     --output $SummaryJson `
@@ -68,3 +79,4 @@ if ($LASTEXITCODE -ne 0) { throw "quality stack summary failed" }
 
 Write-Host "[OK] Quality stack JSON: $SummaryJson"
 Write-Host "[OK] Quality stack MD: $SummaryMd"
+

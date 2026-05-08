@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$RepoRoot = ".",
     [string]$Bundle,
     [string]$EvidenceDir = "docs/LOCAL_VALIDATION_EVIDENCE",
@@ -8,6 +8,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+
+# IA-CARMINE-REPO-PYTHON-POLICY-BEGIN
+$RepoRootForWorkflowPython = (& git rev-parse --show-toplevel 2>$null)
+if ([string]::IsNullOrWhiteSpace($RepoRootForWorkflowPython)) {
+    $RepoRootForWorkflowPython = (Resolve-Path ".").Path
+} else {
+    $RepoRootForWorkflowPython = (Resolve-Path $RepoRootForWorkflowPython.Trim()).Path
+}
+. (Join-Path $RepoRootForWorkflowPython "Tools/workflow/python_env.ps1")
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRootForWorkflowPython
+# IA-CARMINE-REPO-PYTHON-POLICY-END
 function Resolve-RepoPath {
     param(
         [Parameter(Mandatory = $true)]
@@ -34,7 +45,7 @@ $ManifestMd = Join-Path $OutputPath "full0to10_run_manifest.md"
 $ContractJson = Join-Path $OutputPath "full0to10_bundle_contract_validation.json"
 $ContractMd = Join-Path $OutputPath "full0to10_bundle_contract_validation.md"
 
-$Python = "python"
+$Python = $WorkflowPythonExe
 
 & $Python (Join-Path $RepoRoot "Tools/ai/build_full0to10_run_manifest.py") `
     --repo-root $RepoRoot `
@@ -70,3 +81,4 @@ $BundlePath = Resolve-RepoPath -Base $RepoRoot -PathValue $Bundle
 
 Write-Host "[OK] Manifest: $ManifestJson"
 Write-Host "[OK] Contract: $ContractJson"
+

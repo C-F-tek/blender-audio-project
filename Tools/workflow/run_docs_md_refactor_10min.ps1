@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Prepare a bounded 10-minute Markdown/refactor local-AI run.
 
@@ -26,6 +26,17 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+
+# IA-CARMINE-REPO-PYTHON-POLICY-BEGIN
+$RepoRootForWorkflowPython = (& git rev-parse --show-toplevel 2>$null)
+if ([string]::IsNullOrWhiteSpace($RepoRootForWorkflowPython)) {
+    $RepoRootForWorkflowPython = (Resolve-Path ".").Path
+} else {
+    $RepoRootForWorkflowPython = (Resolve-Path $RepoRootForWorkflowPython.Trim()).Path
+}
+. (Join-Path $RepoRootForWorkflowPython "Tools/workflow/python_env.ps1")
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRootForWorkflowPython
+# IA-CARMINE-REPO-PYTHON-POLICY-END
 function Invoke-Git {
     param([string[]]$GitArgs)
     Write-Host "[git] git $($GitArgs -join ' ')"
@@ -123,7 +134,7 @@ if (-not $NoBranch) {
 Write-Host "[INFO] Stamp:      $Stamp"
 Write-Host "[INFO] TaskBranch: $TaskBranch"
 
-python -m py_compile `
+& $WorkflowPythonExe -m py_compile `
     .\Tools\validation\build_markdown_inventory.py `
     .\Tools\validation\build_script_inventory.py
 if ($LASTEXITCODE -ne 0) {
@@ -138,7 +149,7 @@ $scriptInventoryMd = ".\output\validation\script_inventory_refactor_$Stamp.md"
 $docsLinksJson = ".\output\validation\docs_links_$Stamp.json"
 $contractJson = ".\output\validation\validation_report_contract_md_refactor_task_$Stamp.json"
 
-python .\Tools\validation\build_markdown_inventory.py `
+& $WorkflowPythonExe .\Tools\validation\build_markdown_inventory.py `
     --repo-root . `
     --output $markdownInventoryJson `
     --markdown-output $markdownInventoryMd
@@ -146,7 +157,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "build_markdown_inventory failed"
 }
 
-python .\Tools\validation\build_script_inventory.py `
+& $WorkflowPythonExe .\Tools\validation\build_script_inventory.py `
     --repo-root . `
     --output $scriptInventoryJson `
     --csv-output $scriptInventoryCsv `
@@ -155,14 +166,14 @@ if ($LASTEXITCODE -ne 0) {
     throw "build_script_inventory failed"
 }
 
-python .\Tools\validation\check_docs_links.py `
+& $WorkflowPythonExe .\Tools\validation\check_docs_links.py `
     --repo-root . `
     --output $docsLinksJson
 if ($LASTEXITCODE -ne 0) {
     throw "check_docs_links failed"
 }
 
-python .\Tools\validation\check_validation_report_contract.py `
+& $WorkflowPythonExe .\Tools\validation\check_validation_report_contract.py `
     --repo-root . `
     --report-file $markdownInventoryJson `
     --report-file $scriptInventoryJson `
@@ -227,3 +238,4 @@ else {
 Write-Host ""
 Write-Host "[INFO] 10-minute provider profile to use if the local runner reaches orchestrator execution:"
 Write-Host "--budget-minutes 10 --max-rounds 8 --files-per-round 6 --max-context-files 120 --max-chars-per-file 5000 --max-new-tokens 2400 --keep-alive 15m"
+

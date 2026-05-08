@@ -1,4 +1,4 @@
-function Resolve-SpaziotempoOllamaBaseUrl {
+﻿function Resolve-SpaziotempoOllamaBaseUrl {
     $baseUrl = $env:OLLAMA_API_BASE
     if ([string]::IsNullOrWhiteSpace($baseUrl)) {
         $baseUrl = $env:OLLAMA_HOST
@@ -177,7 +177,16 @@ function Invoke-SpaziotempoStartupCheck {
         if (-not [string]::IsNullOrWhiteSpace($Python)) {
             $candidatePythons += $Python
         }
-        $candidatePythons += "python"
+        $projectPythonCandidates = @(
+            (Join-Path $Project ".venv\Scripts\python.exe"),
+            (Join-Path $Project "venv\Scripts\python.exe"),
+            (Join-Path $Project ".venv314\Scripts\python.exe")
+        )
+        foreach ($projectPython in $projectPythonCandidates) {
+            if (Test-Path -LiteralPath $projectPython -PathType Leaf) {
+                $candidatePythons += (Resolve-Path -LiteralPath $projectPython).Path
+            }
+        }
         $candidatePythons = $candidatePythons | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
 
         foreach ($candidatePython in $candidatePythons) {
@@ -335,3 +344,4 @@ print(json.dumps(report))
 
     return $checks
 }
+

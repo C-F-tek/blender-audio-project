@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
@@ -494,13 +494,7 @@ function Resolve-PythonExe {
             }
         }
     }
-
-    $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
-    if ($pythonCommand) {
-        return "python"
-    }
-
-    throw "No usable Python interpreter found. Set -PythonExe, IA_CARMINE_PYTHON, or install py launcher with Python 3.12/3.13."
+    throw "No repository-owned Python interpreter found. Set -PythonExe or IA_CARMINE_PYTHON to a Python executable under the repository, or create .venv/Scripts/python.exe."
 }
 
 function Invoke-Python {

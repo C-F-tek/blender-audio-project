@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Run focused validation for app-agnostic NPU pipeline helper modules.
 
@@ -19,6 +19,17 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+# IA-CARMINE-REPO-PYTHON-POLICY-BEGIN
+$RepoRootForWorkflowPython = (& git rev-parse --show-toplevel 2>$null)
+if ([string]::IsNullOrWhiteSpace($RepoRootForWorkflowPython)) {
+    $RepoRootForWorkflowPython = (Resolve-Path ".").Path
+} else {
+    $RepoRootForWorkflowPython = (Resolve-Path $RepoRootForWorkflowPython.Trim()).Path
+}
+. (Join-Path $RepoRootForWorkflowPython "Tools/workflow/python_env.ps1")
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRootForWorkflowPython
+# IA-CARMINE-REPO-PYTHON-POLICY-END
 $PythonEnvScript = Join-Path $PSScriptRoot "python_env.ps1"
 . $PythonEnvScript
 
@@ -34,7 +45,7 @@ function Invoke-ValidationStep {
     )
 
     Write-Host "`n=== $Name ===" -ForegroundColor Cyan
-    & python @Arguments
+    & $WorkflowPythonExe @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "Validation step failed: $Name with exit code $LASTEXITCODE"
     }
@@ -86,3 +97,4 @@ Write-Host "- .\output\validation\npu_pipeline_helper_tests.json"
 Write-Host "- .\output\validation\npu_pipeline_docs.json"
 Write-Host "- .\output\validation\npu_runtime_output_manifest.json"
 Write-Host "- .\output\validation\python_syntax.json"
+

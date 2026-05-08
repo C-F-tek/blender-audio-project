@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Run a local Markdown AI task through the project-owned report-only AI pipeline.
 
@@ -91,6 +91,11 @@ $AdapterModuleDir = Join-Path $PSScriptRoot "run_local_ai_task_via_pipeline"
 $RepoRootPath = Resolve-ExistingPath $RepoRoot
 Set-Location $RepoRootPath
 $PipelinePythonExe = Use-WorkflowPython -RepoRoot $RepoRootPath
+$env:IA_CARMINE_PYTHON = $PipelinePythonExe
+$env:PYTHONPATH = [string]$RepoRootPath
+if (Test-Path -LiteralPath $PipelinePythonExe -PathType Leaf) {
+    $env:PATH = (Split-Path -Parent $PipelinePythonExe) + [System.IO.Path]::PathSeparator + $env:PATH
+}
 
 if ($FullContextGoldenPath) {
     $Profile = "npu"
@@ -221,7 +226,8 @@ $ValidationState = Invoke-LocalAiTaskPipelineValidation `
     -ContextFiles $ContextFiles `
     -ReportFiles $ReportFiles `
     -MaxContextChars "$MaxContextChars" `
-    -RepoRootPath $RepoRootPath
+    -RepoRootPath $RepoRootPath `
+    -PythonExe $PipelinePythonExe
 
 $ProposalPath = $ValidationState.proposal_path
 $ProposalRel = $ValidationState.proposal_rel
