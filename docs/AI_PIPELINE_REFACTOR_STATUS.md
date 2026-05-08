@@ -6,7 +6,7 @@
 modular_schedule_complete_subordinate_to_unified_launcher
 ```
 
-This file is a stable status marker for human maintainers and AI agents.
+This file is a compact status marker for human maintainers and AI agents.
 
 The AI artifact pipeline has been modularized. The public CLI and schema-v6 report are intended to remain compatible, but the pipeline is now a subordinate implementation lane inside the wider unified local-AI workflow.
 
@@ -28,6 +28,18 @@ Blender runtime changes: not part of this refactor
 
 A dry-run matrix is not a full run. It proves planned/dry-run pipeline behavior only. It does not prove provider execution, runtime broker execution, capability availability, patch application state or source-write state.
 
+## Current maps
+
+Use these before treating this status file as operational guidance:
+
+```text
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+```
+
 ## Machine-readable status
 
 The Python status marker is:
@@ -46,15 +58,13 @@ status = get_pipeline_refactor_status()
 
 ## Validation ownership
 
-Current broad command examples live in:
+Broad local-AI validation routes through the unified launcher. Focused direct validation is appropriate only when changing or debugging the AI artifact pipeline itself.
+
+Validation cycle selector:
 
 ```text
-docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 ```
-
-Focused validator references are allowed, but large validator catalogs are not first operational entrypoints.
-
-Broad local-AI validation should route through the unified launcher. Focused direct validation is appropriate only when changing or debugging the AI artifact pipeline itself.
 
 Local validation should report:
 
@@ -83,16 +93,21 @@ shared AI-to-AI bundle/final summary
 file-line-limit report when maintainability is in scope
 ```
 
-Telemetry is the completeness accessory. It does not replace the pipeline report; it explains whether the related lanes executed, failed, were blocked, degraded, disabled or planned-only.
+## File-size policy
 
-## 400-line policy
-
-Maintained pipeline source and documentation follow the hard 400-line policy.
+Maintained pipeline source and documentation follow the active file-size policy:
 
 ```text
-Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
-Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
-Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+preferred active runbook <= 400 lines
+active Markdown hard threshold <= 500 lines
+maintained source/script target <= 400 lines
+```
+
+Markdown split layout:
+
+```text
+name.md
+name.md/part-001.md
 ```
 
 Validator:
@@ -147,14 +162,13 @@ docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 ## Safe next actions
 
 ```text
-1. Validate focused pipeline behavior locally only when the pipeline changes.
-2. Use the unified launcher for broad local-AI validation.
-3. Keep dry-run matrix evidence clearly marked as planned-only.
-4. Include file-line evidence when maintainability is in scope.
-5. Regenerate AI/NPU indexes only when a scoped local task requires it.
-6. Do not commit output/**, SQLite DBs or raw local reports.
-7. Do not push to master or merge from this status document.
-8. Continue richer lane policy only after manifest, report and telemetry surfaces are clear.
+validate focused pipeline behavior locally only when the pipeline changes
+use the unified launcher for broad local-AI validation
+keep dry-run matrix evidence clearly marked as planned-only
+include file-line evidence when maintainability is in scope
+regenerate AI/NPU indexes only when a scoped local task requires it
+do not commit output/**, SQLite DBs or raw local reports
+continue richer lane policy only after manifest, report and telemetry surfaces are clear
 ```
 
 ## Guardrails
