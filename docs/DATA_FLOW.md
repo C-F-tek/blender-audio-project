@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document describes the broad data movement across `IA-Carmine Local AI Orchestration Workbench`.
+This document describes broad data movement across `IA-Carmine Local AI Orchestration Workbench`.
 
 For current operator navigation, flow variants and owner boundaries, start from the compact code-driven maps:
 
@@ -10,6 +10,7 @@ For current operator navigation, flow variants and owner boundaries, start from 
 docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 ```
 
 This file remains the broad/background data-flow reference. The compact maps above are preferred for daily operations and PR review.
@@ -37,8 +38,11 @@ unified launcher command
   -> effective-use local memory/product surfaces when selected
   -> post-validation AI packet and proposals
   -> full-context golden proposal families when requested
-  -> proposal-derived draft patch specs
-  -> explicit replacement plan and reviewed dry-run spec
+  -> proposal-derived draft patch specs when requested
+  -> patch suggestion product report when a task Markdown provides suggestions
+  -> deterministic patch suggestion dry/apply when explicitly selected
+  -> product-vs-supplemental separation validation
+  -> review PR preparation when explicitly selected
   -> runtime broker report
   -> runtime tool usage telemetry
   -> runtime/hardware capability manifest
@@ -67,7 +71,8 @@ Normal flows must not bypass single-owner scripts.
 launcher owns operator entry
 broker owns provider tool execution
 apply_patch_suggestion_bundle owns suggestion dry-run/apply
-prepare_review_pr owns staging/commit/push/PR creation
+check_patch_suggestion_product_separation owns product-vs-supplemental validation
+prepare_review_pr owns staging/commit/push/PR preparation
 bundle builders own handoff/evidence packaging
 validators own smoke and contract claims
 ```
@@ -86,9 +91,12 @@ The primary model is one parameterized run:
 run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 LightFull0To10 = evidence-only profile, not provider/runtime proof
-quick/balanced/deep/custom = presets or operator parameters
+quick/balanced/deep/custom = intensity or budget, not scope
 -No* flags = explicit opt-out from selected lanes
-400-line policy applies to maintained docs and source files
+-NoStrictRealRunActivation = single-phase diagnostics only
+preferred active runbook/docs size <=400 lines
+active Markdown hard threshold <=500 lines
+maintained source/script target <=400 lines
 limitations are backlog to overcome, not reasons to skip available tools
 ```
 
@@ -96,7 +104,36 @@ limitations are backlog to overcome, not reasons to skip available tools
 
 Every intensity preset must preserve the same semantic data surfaces. `quick`, `balanced`, `deep` and `custom` may change volume, context size, token limits and runtime budget, but they must not silently remove core data flows.
 
-The full-run perimeter can expand. When a new production-ready data surface appears, such as a registry, broker tool report, provider diagnostic, repository-consistency map, memory/context builder, discovery/index report, CSV/count surface, file-line-limit report or telemetry summary, it must be added to this document and to the launcher contract, or explicitly excluded with rationale.
+The full-run perimeter can expand. When a new production-ready data surface appears, such as a registry, broker tool report, provider diagnostic, repository-consistency map, memory/context builder, discovery/index report, CSV/count surface, file-line-limit report, product-separation report or telemetry summary, it must be added to this document and to the launcher contract, or explicitly excluded with rationale.
+
+## Markdown-to-review-PR product flow
+
+Current product path:
+
+```text
+docs/LOCAL_AI_TASKS/<task>.md
+  -> Tools/ai/build_task_patch_suggestion_report.py
+  -> Tools/ai/apply_patch_suggestion_bundle.py
+  -> Tools/validation/check_patch_suggestion_product_separation.py
+  -> Tools/ai/prepare_review_pr.py
+  -> GitHub PR for manual review
+```
+
+Focused proof:
+
+```text
+Tools/validation/run_full0to10_product_pr_chain_smoke.py
+```
+
+Current explicit limitations:
+
+```text
+ReviewPrIncludePath remains explicit.
+prepare_review_pr.py does not auto-discover include paths from apply reports yet.
+prepare_review_pr.py does not create draft PRs yet.
+```
+
+This flow is not the same as the patch-spec queue. Patch specs remain explicit/manual-review-only and are documented in `docs/PATCH_SPEC_WORKFLOW.md`.
 
 ## Operational data-flow map
 
@@ -154,6 +191,7 @@ This is now one application domain over the local AI orchestration workbench, no
 - Treat NPU short smoke success as diagnostic evidence, not as general advisory promotion.
 - Keep provider execution report-bound and opt-out inside Full0To10, not implicit outside selected workflows.
 - Do not treat LightFull0To10, provider bridge/readiness or capability manifests as real provider execution proof unless the artifact itself records provider execution.
+- Do not treat product-separation success as draft PR support until `prepare_review_pr.py` implements draft PR creation.
 - Do not treat local output SQLite memory writes as source writes, and do not commit generated DB files.
 - Do not overwrite large analysis JSON files unless explicitly requested.
 - Treat `indexAI/` and generated manifests as generated context.
@@ -164,27 +202,33 @@ This is now one application domain over the local AI orchestration workbench, no
 
 ## Missing formal schemas
 
-`docs/JSON_SCHEMAS.md` exists as a schema-notes file, but the following contracts still need more formal treatment:
+`docs/AI_ARTIFACT_SCHEMAS.md` is the compact schema guide. `docs/JSON_SCHEMAS.md` remains a broader schema/reference notebook and must not override current launcher or validator contracts.
 
-- unified launcher manifest/phase contract beyond the compact contract doc;
-- provider probe report;
-- provider bridge/readiness report;
-- effective-use SQLite memory/product report;
-- runtime tool usage telemetry;
-- runtime/hardware capability manifest;
-- full toolbox run telemetry summary;
-- shared AI-to-AI bundle final summary;
-- discovery/index repair reports;
-- Python line-count and function/class/method CSV surfaces;
-- file-line-limit report;
-- selected semantic chunks report/evidence beyond the focused contract already present;
-- full-context golden proposal report beyond the focused validator already present;
-- legacy audio analysis JSON;
-- music context JSON;
-- generated artifact plan/manifest schema;
-- final tool-product manifest/evidence/readiness package;
-- promotion from reviewed dry-run patch spec to approved local apply or GitHub Action queue;
-- richer context-pack profiles and selective execution plans for changed-file workflows.
+The following contracts still need more formal treatment:
+
+```text
+unified launcher manifest/phase contract beyond the compact contract doc
+provider probe report
+provider bridge/readiness report
+effective-use SQLite memory/product report
+runtime tool usage telemetry
+runtime/hardware capability manifest
+full toolbox run telemetry summary
+shared AI-to-AI bundle final summary
+discovery/index repair reports
+Python line-count and function/class/method CSV surfaces
+file-line-limit report
+selected semantic chunks report/evidence beyond the focused contract already present
+full-context golden proposal report beyond the focused validator already present
+legacy audio analysis JSON
+music context JSON
+generated artifact plan/manifest schema
+final tool-product manifest/evidence/readiness package
+promotion from reviewed dry-run patch spec to approved local apply or GitHub Action queue
+include-path autodiscovery for Markdown-to-review-PR product flow
+draft PR creation support in prepare_review_pr.py
+richer context-pack profiles and selective execution plans for changed-file workflows
+```
 
 ## Recommended next improvement
 
