@@ -28,7 +28,8 @@ quick/balanced/deep/custom = intensity, not scope
 provider/probe/workload-quality lanes are opt-out in Full0To10
 GPU1/GPU0/NPU peer exchange is production evidence, not smoke-only proof
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
-400-line policy applies to maintained docs and source files
+preferred active runbook/docs size <=400 lines; active Markdown hard threshold <=500 lines
+maintained source/script target <=400 lines
 limitations are backlog to overcome, not reasons to skip available tools
 patch application is explicit and separate
 tool output should become verifiable product/evidence/readiness material, not chat-only summary
@@ -189,7 +190,7 @@ bypass agent_runtime_tool_broker.py for provider-requested tools
 bypass prepare_review_pr.py for review PR staging/commit/push/create
 ```
 
-## 400-line policy
+## Line-budget policy
 
 Maintained tools and docs must stay within active line-budget policy.
 
