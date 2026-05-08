@@ -59,7 +59,8 @@ function Invoke-LocalAiTaskPipelineValidation {
             "-ProposalBasename", $MultistepProposalBasename,
             "-EvidenceBasename", $MultistepEvidenceBasename,
             "-ContextFile", ($ContextFiles -join ","),
-            "-MaxContextChars", "$MaxContextChars"
+            "-MaxContextChars", "$MaxContextChars",
+            "-PythonExe", $PythonExe
         )
         if ($RunOllamaProbe) { $MultistepArgs += "-RunOllamaProbe" }
         if ($RunNpuProbe) { $MultistepArgs += "-RunNpuProbe" }
