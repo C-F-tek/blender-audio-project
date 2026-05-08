@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
@@ -1130,7 +1130,7 @@ if (Test-ModeEnabled "chunks") {
 if (Test-ModeEnabled "context_pack") {
     $ContextPackBase = "unified_${ModeName}_context_pack_$Stamp"
     $PhaseStatus.context_pack = Invoke-Checked "Build AI context pack" {
-        Invoke-Python @(".\Tools\ai\build_ai_context_pack.py", "--repo-root", ".", "--profile", "core_ai_backend", "--basename", $ContextPackBase, "--evidence-basename", "${ContextPackBase}_evidence", "--max-total-chars", "64000", "--max-file-chars", "4000")
+        Invoke-Python @(".\Tools\ai\build_ai_context_pack.py", "--repo-root", ".", "--profile", "core_ai_backend", "--basename", $ContextPackBase, "--evidence-basename", "${ContextPackBase}_evidence", "--max-total-chars", "$ContextPackMaxTotalChars", "--max-file-chars", "$ContextPackMaxFileChars")
     } -SoftFail:$ContinueOnValidationError
     $ContextFiles = Add-ExistingContextFile $ContextFiles "output/ai_context_packs/$ContextPackBase.md"
     $ContextFiles = Add-ExistingContextFile $ContextFiles "output/ai_context_packs/$ContextPackBase.json"
@@ -1729,4 +1729,3 @@ Write-UnifiedLauncherExecutionTailEvidence `
     -PatchSpecsRequested ([bool]$GeneratePatchSpecs) `
     -ProdMode ([bool]$Prod) `
     -FailureMessage ""
-
