@@ -9,8 +9,11 @@ Indice operativo dei tool utili per coding assistito da IA, refactor Markdown, v
 | Tool | Uso |
 |---|---|
 | `Tools/docs/refactor_markdown_splits.py` | Migra split legacy `nomefile/part-xxx.md` in `nomefile.md/part-xxx.md`, divide Markdown monolitici e pruna snapshot obsoleti allowlist-only. |
-| `Tools/validation/check_markdown_line_limits.py` | Valida il budget righe Markdown. Usare `--max-lines 400` per policy preferita e `500` come soglia hard. |
+| `Tools/validation/check_markdown_line_limits.py` | Valida il budget righe Markdown. Supporta file `.md` ordinari e directory split `nomefile.md/part-xxx.md`. |
+| `Tools/validation/check_file_line_limits.py` | Valida il budget righe per Markdown/script sorgente e classifica `split_markdown_index` / `split_markdown_part`. |
+| `Tools/validation/build_markdown_inventory.py` | Inventaria Markdown ordinari e split directory-form senza marcare le parti split come prune candidate. |
 | `Tools/validation/check_docs_links.py` | Controlla link Markdown dopo split, rename o pruning. |
+| `Tools/validation/run_md_split_dir_validator_smoke.py` | Smoke regression per verificare che i validator trattino `nomefile.md/` come container e non come file leggibile. |
 
 Comando tipico:
 
@@ -37,9 +40,11 @@ python .\Tools\docs\refactor_markdown_splits.py `
 
 ```powershell
 python -m py_compile .\Tools\docs\refactor_markdown_splits.py
+python -m py_compile .\Tools\validation\run_md_split_dir_validator_smoke.py
 python .\Tools\validation\check_docs_links.py --repo-root .
 python .\Tools\validation\check_markdown_line_limits.py --repo-root . --max-lines 500
 python .\Tools\validation\check_file_line_limits.py --repo-root . --output .\output\validation\file_line_limits.json
+python .\Tools\validation\run_md_split_dir_validator_smoke.py --output .\output\validation\md_split_dir_validator_smoke.json --markdown-output .\output\validation\md_split_dir_validator_smoke.md
 git diff --check
 git status --short
 ```
