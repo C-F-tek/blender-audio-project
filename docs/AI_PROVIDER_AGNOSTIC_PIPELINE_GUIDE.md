@@ -4,15 +4,15 @@
 
 This guide describes how AI pipeline work should remain reusable across providers, runtimes and projects.
 
-It translates runtime-agnostic and agent-engineering references into local rules for `Tools/ai/pipeline/`, `Tools/npu/pipeline/`, validators and future generated artifacts.
-
-This document is architectural guidance, not a command catalog. Current executable examples live in:
+It is architectural guidance, not a command catalog. Current operator commands and flow ownership live in:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
+docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 ```
-
-Large validator/tool catalogs such as `Tools/validation/README.md` are references only and must not become primary operational entrypoints if too large or truncated.
 
 ## Design goal
 
@@ -21,44 +21,35 @@ The project should support multiple execution targets without coupling orchestra
 ```text
 run-unica launcher
   -> pipeline orchestration
-  -> provider interface
-  -> provider implementation or provider execution plan
-  -> normalized provider diagnostics
-  -> validated artifact/evidence
+  -> provider interface or provider execution plan
+  -> provider implementation when selected and permitted
+  -> normalized diagnostics
+  -> validation report
   -> runtime telemetry and capability context
-  -> discovery/index/CSV-count/file-line context when repository visibility or maintainability is involved
+  -> discovery/index/CSV-count/file-line context when relevant
   -> shared AI-to-AI bundle / patch-plan handoff
-  -> downstream application workflow when explicitly scoped
+  -> downstream application workflow only when explicitly scoped
 ```
 
-Core pipeline code should not assume that the model is always:
-
-- OpenVINO;
-- Ollama;
-- OpenAI-compatible API;
-- local Python only;
-- cloud-hosted only;
-- NPU-only;
-- GPU-only.
+Core pipeline code should not assume a single model runtime such as OpenVINO, Ollama, an OpenAI-compatible API, local Python, cloud-only runtime, NPU-only runtime or GPU-only runtime.
 
 ## Run-unica provider doctrine
 
 Provider-agnostic does not mean provider-invisible.
 
-Current doctrine:
-
 ```text
 run_unified_local_ai_refactor.ps1 = run unica
 Full0To10 = TUTTO SU TUTTO perimeter
 LightFull0To10 = evidence-only profile, not provider/runtime proof
-quick/balanced/deep/custom = presets or operator parameters, not scope
+quick/balanced/deep/custom = intensity or budget, not scope
 -No* flags = explicit opt-out from selected lanes
-CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
-400-line policy applies to maintained docs and source files
-limitations are backlog to overcome, not reasons to skip available tools
+-NoStrictRealRunActivation = single-phase diagnostics only
+CSV/index/discovery/file-line-limit surfaces = evidence lanes when relevant
 ```
 
-When provider output influences run-unica evidence, recommendations, patch plans or patch specs, the handoff must preserve provider state through telemetry/capability/bundle surfaces:
+When provider output influences evidence, recommendations, patch plans or patch specs, the handoff must preserve provider state through telemetry/capability/bundle surfaces.
+
+Required state signals include:
 
 ```text
 provider_advisory_state
@@ -77,40 +68,39 @@ file-line-limit report when maintainability is in scope
 discovery/index repair reports when relevant
 ```
 
-Telemetry is the completeness accessory. It does not replace provider artifacts or validation reports; it explains whether provider lanes executed, failed, degraded, were blocked, were disabled, unavailable or planned-only.
-
-`Full0To10` remains **TUTTO SU TUTTO**. A provider-specific wrapper or dry-run cannot narrow run-unica scope or serve as proof that the full run passed.
+Telemetry is the completeness accessory. It does not replace provider artifacts or validation reports.
 
 ## Local application areas
 
 | Area | Expected role |
 |---|---|
-| `Tools/ai/pipeline/` | Main modular AI artifact pipeline. |
+| `Tools/ai/pipeline/` | Modular AI artifact pipeline. |
 | `Tools/npu/pipeline/` | App-agnostic NPU helper contracts and provider-free staging helpers. |
-| `Tools/ai/full0to10_provider_execution_bridge/*` | Provider execution bridge planning/gating/readiness artifacts; current safety flags are non-executing. |
+| `Tools/ai/full0to10_provider_execution_bridge/*` | Provider execution bridge planning/gating/readiness artifacts. |
 | `Tools/ai/full0to10_final_product/*` | Final tool-product package: product Markdown, evidence index, readiness, manifest and README. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | Quality-based advisory routing. |
 | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Provider/broker/GPU/NPU/patch-plan telemetry summary. |
 | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production AI-to-AI handoff bundle. |
-| `Tools/validation/check_file_line_limits.py` | Report-only 400-line policy evidence for maintained docs/source files. |
+| `Tools/validation/check_file_line_limits.py` | Report-only line-budget evidence for maintained docs/source files. |
 | `Tools/validation/` | Non-invasive validation layer for generated outputs and package structure. |
-| `docs/AI_PIPELINE_ARCHITECTURE.md` | Current architecture map. |
-| `docs/AI_PIPELINE_REFACTOR_STATUS.md` | Current status marker. |
-| `docs/AI_PIPELINE_OPTIMIZATION.md` | Optimization notes and future work. |
+
+Use the owner map before adding or bypassing scripts.
 
 ## Required boundaries
 
 ### Orchestration layer
 
-The orchestration layer should decide:
+The orchestration layer decides:
 
-- which stage runs;
-- which input artifact is consumed;
-- which output artifact is expected;
-- which validator must run;
-- how failures are reported;
-- how provider/telemetry state is surfaced into the launcher manifest and bundle;
-- how discovery/index/CSV-count/file-line state is surfaced when repository visibility or maintainability is involved.
+```text
+which stage runs
+which input artifact is consumed
+which output artifact is expected
+which validator must run
+how failures are reported
+how provider/telemetry state is surfaced
+how discovery/index/CSV-count/file-line state is surfaced when relevant
+```
 
 It should not contain provider-specific inference code.
 
@@ -118,44 +108,35 @@ It should not contain provider-specific inference code.
 
 The provider layer may contain:
 
-- OpenVINO/NPU invocation;
-- Ollama invocation;
-- OpenAI-compatible API invocation;
-- local stub/dry-run providers;
-- fixture-based test providers.
+```text
+OpenVINO/NPU invocation
+Ollama invocation
+OpenAI-compatible API invocation
+local stub or fixture providers
+dry-run providers
+```
 
 Provider results must be normalized before entering artifact validation, telemetry summary or bundle handoff.
 
 ### Provider bridge layer
 
-The current `full0to10_provider_execution_bridge` code is a bridge/gate/readiness layer, not proof of model execution by itself.
-
-Verified safety flags from code:
-
-```text
-provider_execution_performed=false
-patch_application_performed=false
-source_writes_performed=false
-persistent_memory_write_performed=false
-```
-
-It builds an invocation plan, real-run gate, command plan, workload output paths, bridge telemetry and readiness report. A future real provider run must set explicit execution state and must not reuse non-executing bridge evidence as runtime proof.
+Provider bridge/gate/readiness evidence is not proof of model execution by itself. A real provider run must set explicit execution state and must not reuse non-executing bridge evidence as runtime proof.
 
 ### Artifact layer
 
-The artifact layer should be provider-independent.
+Artifacts should be provider-independent and include:
 
-Expected artifact properties:
-
-- explicit schema version;
-- source input references;
-- generated output path;
-- validation status;
-- warnings and errors;
-- target files, if patch-related;
-- safe write plan, if file generation is involved;
-- provider/telemetry companion references when derived from a run-unica execution;
-- discovery/index/CSV-count/file-line companion references when derived from repository-wide evidence or maintainability evidence.
+```text
+schema version
+source input references
+generated output path
+validation status
+warnings and errors
+target files if patch-related
+safe write plan if file generation is involved
+provider/telemetry companion references when run-derived
+discovery/index/CSV-count/file-line companion references when repository-wide evidence is involved
+```
 
 ## Recommended pipeline stages
 
@@ -163,17 +144,17 @@ Expected artifact properties:
 1. collect source inputs
 2. build compact context
 3. select provider, provider plan or dry-run mode
-4. generate model output only when explicitly requested or selected by Full0To10/provider lanes and permitted by gates
+4. generate model output only when explicitly selected and permitted
 5. normalize raw output and diagnostics
-6. parse JSON or structured text
+6. parse structured output
 7. validate schema
 8. validate repository paths
 9. validate file-line impact when maintainability is in scope
-10. validate Blender compatibility when explicitly scoped
+10. validate Blender compatibility only when explicitly scoped
 11. write artifact to safe output location
 12. generate report
-13. attach telemetry/capability context when part of run-unica handoff
-14. attach CSV/index/discovery/file-line context when repository visibility or maintainability is part of the evidence
+13. attach telemetry/capability context for run-unica handoff
+14. attach discovery/CSV/index/file-line context when relevant
 15. update status only after validation succeeds
 ```
 
@@ -191,7 +172,7 @@ error: <short diagnostic>
 artifact_written: false
 ```
 
-Fallback providers are allowed only when the report clearly states that fallback happened. Run-unica handoff must also expose fallback/degradation in telemetry and AI-to-AI bundle state.
+Fallback providers are allowed only when the report clearly states that fallback happened. Run-unica handoff must expose fallback/degradation in telemetry and AI-to-AI bundle state.
 
 ## Runtime-agnostic implementation rules
 
@@ -203,10 +184,10 @@ Fallback providers are allowed only when the report clearly states that fallback
 - Keep generated Python policy checks separate from generation.
 - Keep Blender runtime execution separate from artifact planning.
 - Keep provider bridge/gate/readiness evidence separate from real provider execution proof.
-- Keep reusable `Tools/npu/pipeline/` helper contracts provider-free; real NPU runtime execution is owned by explicit orchestrator/provider lanes and must be surfaced as evidence, not hidden inside reusable helpers.
-- Keep telemetry and capability context separate from provider implementation but attached to run-unica handoff.
-- Keep discovery/index/CSV-count/file-line context separate from provider implementation but attached when repository visibility or maintainability affects recommendations or patch plans.
-- Keep maintained source files under 400 lines through compact entrypoints and responsibility-based modules.
+- Keep reusable `Tools/npu/pipeline/` helper contracts provider-free.
+- Keep telemetry/capability context separate from provider implementation but attached to run-unica handoff.
+- Keep discovery/index/CSV-count/file-line context separate from provider implementation but attached when repository visibility or maintainability matters.
+- Keep maintained source files compact through responsibility-based modules.
 
 ## Good local pattern
 
@@ -233,51 +214,54 @@ single script
   -> model output directly written as code
   -> no schema validation
   -> no report
-  -> no telemetry/capability context for downstream patch plan
-  -> no discovery/index/CSV/file-line context for repository-wide recommendations
-  -> treats non-executing provider bridge/readiness output as real provider execution
-  -> maintained source grows beyond 400 lines without split/refactor plan
+  -> no telemetry/capability context
+  -> no discovery/index/CSV/file-line context
+  -> treats bridge/readiness output as real provider execution
+  -> grows beyond line-budget policy without split/refactor plan
 ```
 
 ## Acceptance criteria for new pipeline modules
 
 A new pipeline module is acceptable only if it:
 
-- has a narrow responsibility;
-- can be imported without running inference;
-- can be tested with fixtures or dry-run data;
-- does not mutate source files on import;
-- reports errors structurally;
-- integrates with existing validators where possible;
-- is documented in the relevant README or docs file;
-- remains under 400 lines or is split by responsibility;
-- exposes manifest/report/telemetry/bundle visibility when promoted into the run-unica perimeter;
-- exposes discovery/index/CSV-count/file-line visibility when it affects repository-wide inventory, maintainability or refactor/reuse planning;
-- clearly distinguishes plan/gate/readiness evidence from actual provider execution.
+```text
+has a narrow responsibility
+can be imported without running inference
+can be tested with fixtures or dry-run data
+does not mutate source files on import
+reports errors structurally
+integrates with existing validators where possible
+is documented in the relevant README or docs file
+stays within line-budget policy or is split by responsibility
+exposes manifest/report/telemetry/bundle visibility when promoted into run-unica
+clearly distinguishes plan/gate/readiness evidence from actual provider execution
+```
 
 ## Validation ownership
 
-Use focused validation before broad workflows, but keep command ownership in:
+Focused direct validation is appropriate only when changing provider-agnostic modules or validators themselves. Broad local-AI validation should route through the unified launcher.
+
+Validation cycle selector:
 
 ```text
-docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 ```
-
-Focused direct validation is appropriate only when changing provider-agnostic pipeline modules or validators themselves. Broad local-AI validation should route through the unified launcher.
 
 ## Migration strategy
 
 When converting an existing script into reusable pipeline logic:
 
-1. document the current behavior;
-2. extract pure helpers first;
-3. add fixture-based validation;
-4. keep the old entrypoint stable;
-5. add an adapter layer;
-6. run focused validation;
-7. update docs and status markers;
-8. add telemetry/capability/bundle references if the module enters run-unica evidence;
-9. add discovery/index/CSV/file-line references if the module affects repository-wide visibility or maintainability;
-10. only then consider wiring the new module into runtime flow.
+```text
+1. read source and current owner maps
+2. document current behavior
+3. extract pure helpers first
+4. add fixture-based validation
+5. keep the old entrypoint stable
+6. add an adapter layer
+7. run focused validation
+8. update docs and status markers
+9. add telemetry/capability/bundle references if entering run-unica
+10. only then consider runtime wiring
+```
 
-Do not claim run-unica Full0To10 success from provider-agnostic dry-runs alone.
+Do not claim Full0To10 success from provider-agnostic dry-runs alone.
