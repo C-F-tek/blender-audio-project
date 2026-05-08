@@ -32,6 +32,7 @@ Task Markdown
 -> shared AI-to-AI bundle
 -> optional patch suggestion product
 -> optional deterministic apply
+-> product separation validator for product/apply path
 -> optional review PR preparation
 ```
 
@@ -175,6 +176,7 @@ review branch
 -> deterministic operations only
 -> changed source/doc files
 -> apply report
+-> product separation validation when review PR path is selected
 -> validation cycle
 ```
 
@@ -198,6 +200,7 @@ no generated chunk/DB/render edits
 
 ```text
 review branch
+-> patch suggestion product separation has passed or failed explicitly
 -> explicit include path list
 -> prepare_review_pr.py
 -> path policy validation

@@ -131,8 +131,12 @@ def validate_apply_report(data: dict[str, Any], *, require_product: bool, requir
             f"manual_review_product={expected_supplemental_count} supplemental_list={len(supplemental)}"
         )
 
-    if require_product and not essential:
-        errors.append("required product-facing patch suggestions are absent")
+    deterministic_count = int(product.get("deterministic_operation_count") or data.get("operation_count") or 0)
+    deterministic_apply_ready = product.get("deterministic_apply_ready")
+    failed_count = int(data.get("failed_count") or 0)
+    deterministic_product_ready = deterministic_count > 0 and deterministic_apply_ready is True and failed_count == 0
+    if require_product and not essential and not deterministic_product_ready:
+        errors.append("required product-facing patch suggestions or deterministic operations are absent")
     if require_supplemental and not supplemental:
         errors.append("required supplemental telemetry/debug items are absent")
 
@@ -141,8 +145,6 @@ def validate_apply_report(data: dict[str, Any], *, require_product: bool, requir
     for index, item in enumerate(supplemental):
         errors.extend(validate_supplemental_item(item, index) if isinstance(item, dict) else [f"supplemental[{index}]: item is not an object"])
 
-    deterministic_count = int(product.get("deterministic_operation_count") or data.get("operation_count") or 0)
-    deterministic_apply_ready = product.get("deterministic_apply_ready")
     if deterministic_count > 0 and deterministic_apply_ready is not True:
         errors.append("deterministic operations exist but deterministic_apply_ready is not true")
     if deterministic_count == 0 and deterministic_apply_ready is True:
@@ -163,6 +165,8 @@ def validate_apply_report(data: dict[str, Any], *, require_product: bool, requir
     metrics = {
         "validated_input_kind": "patch_suggestion_bundle_apply",
         "deterministic_operation_count": deterministic_count,
+        "deterministic_product_ready": deterministic_product_ready,
+        "failed_count": failed_count,
         "essential_patch_suggestion_count": len(essential),
         "supplemental_telemetry_debug_count": len(supplemental),
         "patch_product_status": data.get("patch_product_status") or product.get("patch_product_status"),

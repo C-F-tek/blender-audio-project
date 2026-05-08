@@ -1,6 +1,6 @@
 # Patch Suggestion Product Separation Validator
 
-Status: active proposal for next review PR  
+Status: active validator integrated into the review PR product path
 Date: 2026-05-07  
 Scope: final product lane, patch suggestion review, product-vs-supplemental classification.
 
@@ -33,6 +33,7 @@ For a direct `patch_suggestion_bundle_apply` report it verifies that:
 ```text
 essential_patch_suggestion_items exists and matches manual_review_product.product_facing_manual_review_count
 supplemental_telemetry_debug_items exists and matches manual_review_product.supplemental_manual_review_count
+--require-product passes when either product-facing manual suggestions exist or deterministic operations are ready with failed_count=0
 essential items have product_facing=true and supplemental!=true
 supplemental items have supplemental=true and product_facing!=true
 essential items have safe source/doc targets, rationale/title, patch sketch or operation, and validation or stop conditions
@@ -65,7 +66,7 @@ python .\Tools\validation\check_patch_suggestion_product_separation.py `
   --output .\output\validation\patch_suggestion_product_separation.json
 ```
 
-For a deterministic-only run, omit `--require-product` or `--require-supplemental` when that class is not expected.
+For a deterministic-only run, `--require-product` is valid when `deterministic_apply_ready=true`, `deterministic_operation_count>0` and `failed_count=0`. Omit `--require-supplemental` when telemetry/debug items are not expected.
 
 ## Product rule
 
@@ -77,6 +78,8 @@ title, description or rationale
 patch sketch or deterministic operation
 validation commands or stop conditions
 ```
+
+Deterministic operations are also a product when the apply report marks them ready and no operation failed.
 
 Telemetry, debug, evidence-only, validation-only and provider diagnostic items stay supplemental.
 
@@ -93,6 +96,6 @@ no source writes
 no output/** commit
 ```
 
-## Follow-up integration target
+## Launcher integration
 
-Wire this validator into the final product run after `patch_suggestion_bundle_apply` so the run can fail closed when a future change collapses product-facing suggestions and telemetry/debug noise into one undifferentiated list.
+The unified launcher runs this validator after `patch_suggestion_bundle_apply` and before `prepare_review_pr.py` when `-PrepareReviewPr` or `-ReviewPrApplyDeterministicSuggestions` is selected. The focused `run_full0to10_product_pr_chain_smoke.py` also verifies that this phase is present in the canonical workflow trace, so isolated Python smoke success is not confused with real launcher wiring.
