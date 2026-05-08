@@ -1,0 +1,19 @@
+{
+  "kind": "ia_carmine_markdown_split_manifest",
+  "layout": "directory_form_md_suffix",
+  "migrated_from": "docs/PROJECT_AI_CONSCIOUSNESS",
+  "target_dir": "docs/PROJECT_AI_CONSCIOUSNESS.md",
+  "part_count": 2,
+  "max_lines": 400,
+  "generated_at": "2026-05-08T19:51:49",
+  "parts": [
+    {
+      "path": "docs/PROJECT_AI_CONSCIOUSNESS.md/part-001.md",
+      "lines": 17
+    },
+    {
+      "path": "docs/PROJECT_AI_CONSCIOUSNESS.md/part-002.md",
+      "lines": 22
+    }
+  ]
+}

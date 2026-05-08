@@ -44,10 +44,29 @@ def is_excluded(path: Path, repo_root: Path, excludes: set[str]) -> bool:
 
 
 def iter_markdown_files(repo_root: Path, excludes: set[str]) -> list[Path]:
-    return sorted(
-        path for path in repo_root.rglob("*.md")
-        if not is_excluded(path, repo_root, excludes)
-    )
+    """Return Markdown files and expand policy split directories.
+
+    The repository can contain Markdown split containers named like
+    ``name.md/README.md`` and ``name.md/part-001.md``. ``Path.rglob("*.md")``
+    can match both real Markdown files and these ``*.md`` directories. The
+    validator must inspect the path type before reading:
+
+    - if it is a file, read it normally;
+    - if it is a directory, enter it and read the Markdown files inside.
+    """
+    files: dict[str, Path] = {}
+    for path in repo_root.rglob("*.md"):
+        if is_excluded(path, repo_root, excludes):
+            continue
+        if path.is_file():
+            files[path.resolve().as_posix()] = path
+            continue
+        if path.is_dir():
+            for nested in sorted(path.rglob("*.md")):
+                if nested.is_file() and not is_excluded(nested, repo_root, excludes):
+                    files[nested.resolve().as_posix()] = nested
+    return [files[key] for key in sorted(files)]
+
 
 
 def is_external_link(target: str) -> bool:

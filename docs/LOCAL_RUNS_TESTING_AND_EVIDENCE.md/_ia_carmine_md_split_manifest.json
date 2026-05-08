@@ -1,0 +1,19 @@
+{
+  "kind": "ia_carmine_markdown_split_manifest",
+  "layout": "directory_form_md_suffix",
+  "migrated_from": "docs/LOCAL_RUNS_TESTING_AND_EVIDENCE",
+  "target_dir": "docs/LOCAL_RUNS_TESTING_AND_EVIDENCE.md",
+  "part_count": 2,
+  "max_lines": 400,
+  "generated_at": "2026-05-08T19:51:49",
+  "parts": [
+    {
+      "path": "docs/LOCAL_RUNS_TESTING_AND_EVIDENCE.md/part-001.md",
+      "lines": 16
+    },
+    {
+      "path": "docs/LOCAL_RUNS_TESTING_AND_EVIDENCE.md/part-002.md",
+      "lines": 17
+    }
+  ]
+}

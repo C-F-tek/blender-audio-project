@@ -77,3 +77,28 @@ Do not mark a document obsolete if it is the only place that documents active co
 ## Mini Full0To10 PR Smoke Note
 
 `mini_full_pr_smoke_obsolete_docs_policy_20260508`: obsolete or superseded Markdown found during a product smoke can be clarified, marked, or routed to an explicit pruning task. This smoke proves review-PR production and does not authorize destructive deletion by itself.
+
+## Pruning/refactor action — 2026-05-08
+
+The explicit pruning/refactor task now routes through:
+
+```text
+Tools/docs/refactor_markdown_splits.py
+```
+
+Applied policy:
+
+```text
+legacy split folders `nomefile/part-xxx.md` -> `nomefile.md/part-xxx.md`
+index/stub content moves to `nomefile.md/README.md` because a file and directory cannot share the same path
+obsolete task snapshots are removed only from an allowlist and only when marked historical/superseded/obsolete
+reference catalogs and validation READMEs are not deleted only because they are long
+```
+
+Allowlisted obsolete snapshots pruned by the tool:
+
+```text
+docs/LOCAL_AI_TASKS/full-run-unica-tutto-su-tutto-patch-plan-task.md
+docs/LOCAL_AI_TASKS/full-access-md-telemetry-refactor-cycle-2026-05-06.md
+docs/LOCAL_AI_TASKS/docs-md-obsolete-pruning-next-step.md
+```
