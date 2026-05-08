@@ -263,6 +263,42 @@ def safe_read_text(path: Path) -> tuple[str | None, str | None]:
         return None, str(exc)
 
 
+def split_markdown_parts(path: Path) -> list[Path]:
+    """Return ordered files for the canonical split Markdown directory layout.
+
+    Supported layout:
+
+        name.md/
+          README.md
+          part-001.md
+          part-002.md
+    """
+    if not path.is_dir() or not path.name.endswith(".md"):
+        return []
+    parts: list[Path] = []
+    readme = path / "README.md"
+    if readme.is_file():
+        parts.append(readme)
+    parts.extend(sorted(item for item in path.glob("part-*.md") if item.is_file()))
+    return parts
+
+
+def safe_read_split_markdown(path: Path) -> tuple[str | None, str | None, int]:
+    parts = split_markdown_parts(path)
+    if not parts:
+        return None, "path is not a file", 0
+
+    chunks: list[str] = []
+    total_size = 0
+    for part in parts:
+        text, error = safe_read_text(part)
+        if error or text is None:
+            return None, f"split markdown read failed for {part.name}: {error}", total_size
+        total_size += part.stat().st_size
+        chunks.append(f"<!-- split-source: {part.name} -->\n{text.rstrip()}\n")
+    return "\n".join(chunks), None, total_size
+
+
 def build_file_entry(
     *,
     repo_root: Path,
@@ -301,13 +337,19 @@ def build_file_entry(
     if not full_path.exists():
         entry["read_error"] = "file is missing"
         return entry, remaining_chars
-    if not full_path.is_file():
-        entry["read_error"] = "path is not a file"
+
+    if full_path.is_file():
+        text, read_error = safe_read_text(full_path)
+        entry["size_bytes"] = full_path.stat().st_size
+    else:
+        text, read_error, split_size = safe_read_split_markdown(full_path)
+        entry["size_bytes"] = split_size
+
+    if not full_path.is_file() and text is None:
+        entry["read_error"] = read_error or "path is not a file"
         return entry, remaining_chars
 
-    text, read_error = safe_read_text(full_path)
     entry["exists"] = True
-    entry["size_bytes"] = full_path.stat().st_size
     if read_error or text is None:
         entry["read_error"] = read_error or "unknown read error"
         return entry, remaining_chars
