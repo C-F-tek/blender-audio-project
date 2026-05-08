@@ -103,7 +103,7 @@ apply_patch_suggestion_bundle.py can dry-run or apply deterministic operations o
 patch_suggestion_bundle/common.py owns the reusable operation model and report path normalization used by the final phase.
 patch_suggestion_bundle/product.py exposes product/supplemental totals separately from capped published review-item lists.
 prepare_review_pr.py requires explicit --include-path / launcher ReviewPrIncludePath.
-prepare_review_pr.py does not auto-discover include paths from apply reports yet.
+prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
 prepare_review_pr.py does not create PRs as draft yet.
 ```
 

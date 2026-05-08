@@ -1,0 +1,19 @@
+{
+  "kind": "ia_carmine_markdown_split_manifest",
+  "layout": "directory_form_md_suffix",
+  "migrated_from": "docs/TOOL_AGNOSTIC_ARTIFACT_EXPANSION",
+  "target_dir": "docs/TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md",
+  "part_count": 2,
+  "max_lines": 400,
+  "generated_at": "2026-05-08T19:51:49",
+  "parts": [
+    {
+      "path": "docs/TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md/part-001.md",
+      "lines": 11
+    },
+    {
+      "path": "docs/TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md/part-002.md",
+      "lines": 11
+    }
+  ]
+}

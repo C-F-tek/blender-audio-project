@@ -1,0 +1,19 @@
+{
+  "kind": "ia_carmine_markdown_split_manifest",
+  "layout": "directory_form_md_suffix",
+  "migrated_from": "FULL_RUN_UNICA_TUTTO_SU_TUTTO",
+  "target_dir": "FULL_RUN_UNICA_TUTTO_SU_TUTTO.md",
+  "part_count": 2,
+  "max_lines": 400,
+  "generated_at": "2026-05-08T19:51:49",
+  "parts": [
+    {
+      "path": "FULL_RUN_UNICA_TUTTO_SU_TUTTO.md/part-001.md",
+      "lines": 32
+    },
+    {
+      "path": "FULL_RUN_UNICA_TUTTO_SU_TUTTO.md/part-002.md",
+      "lines": 18
+    }
+  ]
+}
