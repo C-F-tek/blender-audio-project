@@ -4,11 +4,12 @@ This document defines the report/schema contract for the AI workload report qual
 
 The gate is app-agnostic and report-only. It classifies already-generated workload reports before they are used as advisory context by packet/proposal builders.
 
-This file is a contract document, not a command catalog. Current executable examples live in:
+This file is a contract document, not a command catalog. Current executable routes and validation cycles live in:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-Tools/validation/README.md
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 ```
 
 ## Purpose
@@ -38,7 +39,7 @@ full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 ```
 
-Telemetry is the completeness accessory that explains whether provider/advisory context was trusted, excluded, degraded, missing or only planned. It does not replace the quality report; it accompanies the quality report and downstream evidence/patch plans.
+Telemetry explains whether provider/advisory context was trusted, excluded, degraded, missing or only planned. It does not replace the quality report; it accompanies the quality report and downstream evidence/patch plans.
 
 A patch plan generated after degraded provider routing is incomplete unless the handoff also records:
 
@@ -106,7 +107,7 @@ Default output:
 output/validation/ai_workload_report_quality.json
 ```
 
-The producer may be called directly only for focused validator debugging or when the validator README explicitly scopes it. Broad local-AI runs must route it through the unified launcher.
+The producer may be called directly only for focused validator debugging or when the validator cycle map scopes it. Broad local-AI runs must route it through the unified launcher.
 
 ## Report contract
 
@@ -347,9 +348,13 @@ hand-edit generated indexes
 
 Broad local-AI validation uses the unified launcher.
 
-Focused quality-gate validation uses `Tools/validation/README.md` when debugging the validator or validating its contract directly.
+Focused quality-gate validation uses:
 
-The acceptance signal for broad runs is not a pasted command block; it is the launcher manifest and telemetry/bundle state:
+```text
+docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
+```
+
+The acceptance signal for broad runs is not a pasted command block; it is launcher manifest and telemetry/bundle state:
 
 ```text
 workload_quality_report
