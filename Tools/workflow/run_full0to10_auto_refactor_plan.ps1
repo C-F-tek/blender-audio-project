@@ -6,6 +6,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "python_env.ps1")
+
 function Resolve-RepoPath {
     param([string]$Base, [string]$PathValue)
     if ([System.IO.Path]::IsPathRooted($PathValue)) {
@@ -15,6 +17,7 @@ function Resolve-RepoPath {
 }
 
 $RepoRoot = (Resolve-Path $RepoRoot).Path
+$WorkflowPythonExe = Use-WorkflowPython -RepoRoot $RepoRoot
 $OutputPath = Resolve-RepoPath -Base $RepoRoot -PathValue $OutputDir
 New-Item -ItemType Directory -Force -Path $OutputPath | Out-Null
 
@@ -32,7 +35,7 @@ if ($WritePatchSpecs) {
     $Args += @("--patch-specs-output", $Specs)
 }
 
-& python (Join-Path $RepoRoot "Tools/ai/build_full0to10_auto_refactor_plan.py") @Args
+& $WorkflowPythonExe (Join-Path $RepoRoot "Tools/ai/build_full0to10_auto_refactor_plan.py") @Args
 
 Write-Host "[OK] Auto-refactor plan JSON: $Json"
 Write-Host "[OK] Auto-refactor plan MD: $Md"
