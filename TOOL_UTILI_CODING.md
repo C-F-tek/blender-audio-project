@@ -15,7 +15,7 @@ Indice operativo dei tool utili per coding assistito da IA, refactor Markdown, v
 Comando tipico:
 
 ```powershell
-python .\Tools\docsefactor_markdown_splits.py `
+python .\Tools\docs\refactor_markdown_splits.py `
   --repo-root . `
   --apply `
   --migrate-legacy-splits `
@@ -36,10 +36,10 @@ python .\Tools\docsefactor_markdown_splits.py `
 ## Validazioni minime
 
 ```powershell
-python -m py_compile .\Tools\docsefactor_markdown_splits.py
-python .\Toolsalidation\check_docs_links.py --repo-root .
-python .\Toolsalidation\check_markdown_line_limits.py --repo-root . --max-lines 500
-python .\Toolsalidation\check_file_line_limits.py --repo-root . --output .\outputalidationile_line_limits.json
+python -m py_compile .\Tools\docs\refactor_markdown_splits.py
+python .\Tools\validation\check_docs_links.py --repo-root .
+python .\Tools\validation\check_markdown_line_limits.py --repo-root . --max-lines 500
+python .\Tools\validation\check_file_line_limits.py --repo-root . --output .\output\validation\file_line_limits.json
 git diff --check
 git status --short
 ```
