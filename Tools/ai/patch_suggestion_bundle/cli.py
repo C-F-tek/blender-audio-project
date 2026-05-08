@@ -8,6 +8,7 @@ from pathlib import Path
 from Tools.ai.patch_suggestion_bundle.common import (
     DEFAULT_DISCOVER_SUGGESTION_ROOTS,
     DEFAULT_DISCOVER_SUGGESTION_TOKENS,
+    ReportPathNormalizer,
     compact_artifact_stamp,
     current_branch,
     git_status_short,
@@ -106,31 +107,6 @@ def load_reports(repo_root: Path, report_paths: list[str], current_reports: list
     return loaded, operations, manual_review, errors
 
 
-def normalize_report_path(repo_root: Path, raw_path: str) -> str:
-    """Normalize a report path so explicit and discovered inputs dedupe."""
-    raw = str(raw_path).replace("\\", "/").strip().strip("'\"")
-    if not raw:
-        return ""
-    path = Path(raw)
-    candidate = path if path.is_absolute() else repo_root / path
-    try:
-        return candidate.resolve(strict=False).relative_to(repo_root.resolve()).as_posix()
-    except ValueError:
-        return raw.lstrip("./")
-
-
-def unique_report_paths(repo_root: Path, raw_paths: list[str]) -> list[str]:
-    """Return unique report paths after repo-relative normalization."""
-    out: list[str] = []
-    seen: set[str] = set()
-    for raw_path in raw_paths:
-        normalized = normalize_report_path(repo_root, raw_path)
-        if normalized and normalized not in seen:
-            seen.add(normalized)
-            out.append(normalized)
-    return out
-
-
 def main() -> int:
     """CLI entrypoint."""
     args = parse_args()
@@ -168,9 +144,8 @@ def main() -> int:
         repo_root,
         enabled=not bool(args.no_current_suggestions),
     )
-    report_paths = unique_report_paths(
-        repo_root,
-        unique_in_order(split_values(args.suggestion_report) + discovered_reports + current_suggestion_reports),
+    report_paths = ReportPathNormalizer(repo_root).unique(
+        unique_in_order(split_values(args.suggestion_report) + discovered_reports + current_suggestion_reports)
     )
 
     if raw_stamp and not report_paths:

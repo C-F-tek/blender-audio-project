@@ -90,6 +90,25 @@ docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 
 Use those documents for current commands, `-Full0To10`, intensity profiles, provider flags, reset mode, memory controls, patch-spec generation and validation modes.
 
+## Current product path: Markdown input to review PR
+
+<!-- README_PRODUCT_PR_WORKFLOW_20260508 -->
+
+The immediate product is a reviewable branch and GitHub PR derived from a concrete task Markdown file. A valid product run starts from `docs/LOCAL_AI_TASKS/*.md`, extracts patch suggestions, applies only deterministic source/doc operations on an allowed review branch, validates product-vs-telemetry separation, and prepares a PR for human review.
+
+Current chain:
+
+```text
+task Markdown patch_suggestion
+  -> Tools/ai/build_task_patch_suggestion_report.py
+  -> Tools/ai/apply_patch_suggestion_bundle.py
+  -> Tools/validation/check_patch_suggestion_product_separation.py
+  -> Tools/ai/prepare_review_pr.py
+  -> GitHub PR for manual review
+```
+
+The focused workflow proof is `Tools/validation/run_full0to10_product_pr_chain_smoke.py`: it runs the product chain in a temporary git repository and also traces `Tools/workflow/run_unified_local_ai_refactor.ps1` to confirm the real launcher keeps the same phase order.
+
 ## Current code-derived state
 
 ```text

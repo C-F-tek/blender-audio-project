@@ -16,6 +16,8 @@ Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_product.py
 Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_support.py
 Tools/ai/apply_patch_suggestion_bundle.py
 Tools/ai/patch_suggestion_bundle/cli.py
+Tools/ai/patch_suggestion_bundle/common.py
+Tools/ai/patch_suggestion_bundle/product.py
 Tools/ai/prepare_review_pr.py
 Tools/validation/check_patch_suggestion_product_separation.py
 ```
@@ -184,12 +186,13 @@ It can:
 ```text
 discover stamped suggestion/proposal JSON reports
 include current repository_update_suggestions/repository_change_proposals
-dedupe explicit --suggestion-report paths against Stamp discovery
+dedupe explicit --suggestion-report paths against Stamp discovery through ReportPathNormalizer
 perform dry-run report generation
 apply deterministic operations only when --apply is supplied
 create/switch an allowed review branch when requested
 push that review branch when requested
 separate product-facing and supplemental manual-review items
+publish capped review-item lists while retaining total counts
 ```
 
 It does not:

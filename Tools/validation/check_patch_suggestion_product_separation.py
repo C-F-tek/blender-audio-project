@@ -118,17 +118,29 @@ def validate_apply_report(data: dict[str, Any], *, require_product: bool, requir
         errors.append("supplemental_telemetry_debug_items is missing or not a list")
         supplemental = []
 
-    expected_product_count = int(product.get("product_facing_manual_review_count") or 0)
-    expected_supplemental_count = int(product.get("supplemental_manual_review_count") or 0)
-    if expected_product_count != len(essential):
+    expected_product_total = int(product.get("product_facing_manual_review_count") or 0)
+    expected_supplemental_total = int(product.get("supplemental_manual_review_count") or 0)
+    expected_product_published = int(
+        product.get("product_facing_manual_review_published_count")
+        if product.get("product_facing_manual_review_published_count") is not None
+        else min(expected_product_total, 100)
+    )
+    expected_supplemental_published = int(
+        product.get("supplemental_manual_review_published_count")
+        if product.get("supplemental_manual_review_published_count") is not None
+        else min(expected_supplemental_total, 100)
+    )
+    if expected_product_published != len(essential):
         errors.append(
             "product-facing count mismatch: "
-            f"manual_review_product={expected_product_count} essential_list={len(essential)}"
+            f"published={expected_product_published} essential_list={len(essential)} "
+            f"total={expected_product_total}"
         )
-    if expected_supplemental_count != len(supplemental):
+    if expected_supplemental_published != len(supplemental):
         errors.append(
             "supplemental count mismatch: "
-            f"manual_review_product={expected_supplemental_count} supplemental_list={len(supplemental)}"
+            f"published={expected_supplemental_published} supplemental_list={len(supplemental)} "
+            f"total={expected_supplemental_total}"
         )
 
     deterministic_count = int(product.get("deterministic_operation_count") or data.get("operation_count") or 0)
@@ -168,7 +180,9 @@ def validate_apply_report(data: dict[str, Any], *, require_product: bool, requir
         "deterministic_product_ready": deterministic_product_ready,
         "failed_count": failed_count,
         "essential_patch_suggestion_count": len(essential),
+        "essential_patch_suggestion_total_count": expected_product_total,
         "supplemental_telemetry_debug_count": len(supplemental),
+        "supplemental_telemetry_debug_total_count": expected_supplemental_total,
         "patch_product_status": data.get("patch_product_status") or product.get("patch_product_status"),
         "ready_for_patch_suggestion_review": data.get("ready_for_patch_suggestion_review"),
     }

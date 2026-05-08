@@ -156,6 +156,8 @@ SQLite outputs are local runtime state and must not be committed.
 | `Tools/ai/build_task_patch_suggestion_report.py` | Task-scoped patch suggestion report. |
 | `Tools/ai/apply_patch_suggestion_bundle.py` | CLI wrapper for deterministic patch suggestion dry-run/apply. |
 | `Tools/ai/patch_suggestion_bundle/cli.py` | Discovery, product separation and deterministic operation apply implementation. |
+| `Tools/ai/patch_suggestion_bundle/common.py` | Shared operation model and reusable repo/report path normalization. |
+| `Tools/ai/patch_suggestion_bundle/product.py` | Product/supplemental classification with published-vs-total review counts. |
 | `Tools/validation/run_patch_suggestion_bundle_apply_smoke.py` | Smoke for dry/apply behavior in temp repo. |
 | `Tools/validation/run_full0to10_product_pr_chain_smoke.py` | End-to-end product PR chain smoke plus real launcher workflow trace. |
 | `Tools/validation/check_patch_suggestion_product_separation.py` | Report-only validation of product/supplemental separation. |

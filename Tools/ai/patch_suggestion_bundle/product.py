@@ -105,6 +105,8 @@ def build_manual_review_product(
     classified = [classify_manual_item(item) for item in manual_items]
     product = [item for item in classified if item["product_facing"]]
     supplemental = [item for item in classified if item["supplemental"]]
+    product_items = product[:100]
+    supplemental_items = supplemental[:100]
     deterministic_ready = operation_count > 0 and failed_count == 0
     product_review_ready = bool(product)
 
@@ -124,10 +126,14 @@ def build_manual_review_product(
         "deterministic_operation_count": operation_count,
         "deterministic_apply_ready": deterministic_ready,
         "product_facing_manual_review_count": len(product),
+        "product_facing_manual_review_published_count": len(product_items),
+        "product_facing_manual_review_total_count": len(product),
         "supplemental_manual_review_count": len(supplemental),
+        "supplemental_manual_review_published_count": len(supplemental_items),
+        "supplemental_manual_review_total_count": len(supplemental),
         "manual_review_count": len(classified),
-        "product_facing_manual_review_items": product[:100],
-        "supplemental_manual_review_items": supplemental[:100],
+        "product_facing_manual_review_items": product_items,
+        "supplemental_manual_review_items": supplemental_items,
         "classification_policy": (
             "Product-facing suggestions need safe concrete source/doc targets, "
             "a title/rationale, patch sketch or operation, and validation commands "
