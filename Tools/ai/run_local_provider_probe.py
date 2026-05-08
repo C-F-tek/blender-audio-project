@@ -67,7 +67,7 @@ def run_ollama_probe(repo_root: Path, model: str | None) -> dict[str, Any]:
     }
 
 
-def run_npu_probe(repo_root: Path, timeout: float) -> dict[str, Any]:
+def run_npu_probe(repo_root: Path, timeout: float, npu_python_exe: str | None = None) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     from Tools.npu.npu_runtime import DEFAULT_NPU_PYTHON, _parse_last_json_line, _run_python  # noqa: PLC0415
 
@@ -83,7 +83,8 @@ devices = core.available_devices
 result = {"ok": "NPU" in devices, "lane": "npu", "devices": devices}
 print(json.dumps(result))
 '''
-    ok, text, exit_code = _run_python(DEFAULT_NPU_PYTHON, code, timeout=timeout)
+    python_exe = Path(npu_python_exe).expanduser() if npu_python_exe else DEFAULT_NPU_PYTHON
+    ok, text, exit_code = _run_python(python_exe, code, timeout=timeout)
     parsed_payload = _parse_last_json_line(text) if ok else {"error": text, "exit_code": exit_code}
     parsed = parse_provider_result(
         {"text": json.dumps(parsed_payload)},
@@ -116,7 +117,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
             lane_reports.append({"lane": "ollama", "passed": False, "provider_execution_performed": False, "error": f"{type(exc).__name__}: {exc}"})
     if args.run_npu:
         try:
-            lane_reports.append(run_npu_probe(repo_root, args.timeout))
+            lane_reports.append(run_npu_probe(repo_root, args.timeout, args.npu_python_exe))
         except Exception as exc:  # noqa: BLE001 - report-only tool.
             lane_reports.append({"lane": "npu", "passed": False, "provider_execution_performed": False, "error": f"{type(exc).__name__}: {exc}"})
 
@@ -160,6 +161,7 @@ def main() -> int:
     parser.add_argument("--output", default="output/validation/local_provider_probe.json")
     parser.add_argument("--model", help="Preferred Ollama model.")
     parser.add_argument("--timeout", type=float, default=30.0)
+    parser.add_argument("--npu-python-exe", default="", help="Explicit NPU/OpenVINO Python executable.")
     parser.add_argument("--run-ollama", action="store_true")
     parser.add_argument("--run-npu", action="store_true")
     args = parser.parse_args()
