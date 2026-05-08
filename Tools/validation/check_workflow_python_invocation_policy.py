@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-"""Validate workflow PowerShell scripts do not invoke bare python.
+"""Validate workflow PowerShell scripts do not invoke bare/system Python.
 
-The IA-Carmine workflow Python policy requires provider-capable lanes to use the
-resolved interpreter from Tools/workflow/python_env.ps1, IA_CARMINE_PYTHON or the
-repository .venv. PowerShell workflow scripts should therefore call a resolved
-variable such as $RepoPythonExe, $ProviderPythonExe, $PipelinePythonExe or an
-explicit function such as Invoke-RepoPython instead of relying on PATH lookup for
-`python` / `python.exe`.
+The IA-Carmine workflow Python policy requires official/provider-capable lanes
+to use the repository-owned interpreter resolved by Tools/workflow/python_env.ps1.
+System PATH Python, WindowsApps Python and permissive fallback to bare `python`
+are forbidden in workflow lanes.
 """
-
 from __future__ import annotations
 
 import argparse
@@ -22,15 +19,16 @@ BARE_PYTHON_PATTERNS = (
     re.compile(r"^\s*(?:&\s*)?python(?:\.exe)?(?:\s|$)", re.IGNORECASE),
     re.compile(r"[;|{]\s*(?:&\s*)?python(?:\.exe)?(?:\s|$)", re.IGNORECASE),
 )
-
+FORBIDDEN_FALLBACK_PATTERNS = (
+    re.compile(r"Get-Command\s+python\b", re.IGNORECASE),
+    re.compile(r"\{\s*[\"']python(?:\.exe)?[\"']\s*\}", re.IGNORECASE),
+    re.compile(r"=\s*[\"']python(?:\.exe)?[\"']\s*$", re.IGNORECASE),
+)
 NON_COMMAND_PATTERNS = (
     re.compile(r"^\s*python(?:\.exe)?\s*=", re.IGNORECASE),
     re.compile(r"^\s*[\"']python(?:\.exe)?[\"']\s*[=:]", re.IGNORECASE),
 )
-
-ALLOWED_BARE_PATHS = {
-    "Tools/workflow/python_env.ps1",
-}
+ALLOWED_BARE_PATHS = set()
 
 
 @dataclass
@@ -72,16 +70,29 @@ def scan_file(repo_root: Path, path: Path) -> list[Violation]:
     rel = repo_relative(repo_root, path)
     if rel in ALLOWED_BARE_PATHS:
         return []
-
     violations: list[Violation] = []
     try:
         lines = path.read_text(encoding="utf-8-sig").splitlines()
     except UnicodeDecodeError:
         lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-
     for index, raw_line in enumerate(lines, start=1):
         line = strip_line(raw_line)
-        if not line.strip() or is_non_command_python_reference(line):
+        if not line.strip():
+            continue
+        for pattern in FORBIDDEN_FALLBACK_PATTERNS:
+            if pattern.search(line):
+                violations.append(
+                    Violation(
+                        path=rel,
+                        line=index,
+                        text=raw_line.strip(),
+                        reason="system/PATH Python fallback is forbidden; use repository-owned IA_CARMINE_PYTHON",
+                    )
+                )
+                break
+        if violations and violations[-1].path == rel and violations[-1].line == index:
+            continue
+        if is_non_command_python_reference(line):
             continue
         for pattern in BARE_PYTHON_PATTERNS:
             if pattern.search(line):
@@ -102,7 +113,6 @@ def build_report(repo_root: Path, roots: list[str]) -> dict:
     violations: list[Violation] = []
     for path in checked_files:
         violations.extend(scan_file(repo_root, path))
-
     return {
         "schema_version": 1,
         "kind": "workflow_python_invocation_policy",
@@ -112,18 +122,26 @@ def build_report(repo_root: Path, roots: list[str]) -> dict:
         "violation_count": len(violations),
         "passed": len(violations) == 0,
         "policy": {
-            "required_interpreter_source": "Tools/workflow/python_env.ps1 / IA_CARMINE_PYTHON / repository .venv",
-            "forbidden": ["bare python invocation", "bare python.exe invocation"],
+            "required_interpreter_source": "repository-owned IA_CARMINE_PYTHON from Tools/workflow/python_env.ps1",
+            "forbidden": [
+                "bare python invocation",
+                "bare python.exe invocation",
+                "Get-Command python fallback",
+                "fallback literal 'python' / 'python.exe'",
+                "WindowsApps Python",
+                "system PATH Python",
+            ],
             "allowed_examples": [
-                "$RepoPythonExe",
                 "$ProviderPythonExe",
                 "$PipelinePythonExe",
-                "Invoke-RepoPython",
+                "$PacketPythonExe",
+                "$WorkflowPythonExe",
                 "Use-WorkflowPython",
+                "Invoke-WorkflowPython",
             ],
         },
         "violations": [asdict(item) for item in violations],
-        "errors": [] if not violations else ["bare workflow Python invocations found"],
+        "errors": [] if not violations else ["workflow Python policy violations found"],
         "warnings": [],
     }
 
@@ -138,7 +156,7 @@ def write_markdown(report: dict, output: Path) -> None:
         "",
         "## Policy",
         "",
-        "Workflow PowerShell scripts must use the resolved IA-Carmine Python interpreter, not bare `python` or `python.exe` PATH lookup.",
+        "Workflow PowerShell scripts must use the repository-owned IA-Carmine Python interpreter, not system PATH Python.",
         "",
     ]
     if report["violations"]:
@@ -155,26 +173,18 @@ def write_markdown(report: dict, output: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--root",
-        action="append",
-        default=None,
-        help="Root path or file to scan. Defaults to Tools/workflow.",
-    )
+    parser.add_argument("--root", action="append", default=None)
     parser.add_argument("--output", default="output/validation/workflow_python_invocation_policy.json")
     parser.add_argument("--markdown-output", default="")
     args = parser.parse_args()
-
     repo_root = Path(args.repo_root).resolve()
     roots = args.root or ["Tools/workflow"]
     report = build_report(repo_root, roots)
-
     output = repo_root / args.output
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2), encoding="utf-8")
     if args.markdown_output:
         write_markdown(report, repo_root / args.markdown_output)
-
     print(json.dumps({"passed": report["passed"], "output": str(output), "violation_count": report["violation_count"]}, indent=2))
     return 0 if report["passed"] else 1
 
