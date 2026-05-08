@@ -122,7 +122,10 @@ param(
     [switch]$ReviewPrPush,
     [switch]$ReviewPrCreate,
     [switch]$ReviewPrApplyDeterministicSuggestions,
-    [switch]$BuildTaskPatchSuggestionReport
+    [switch]$BuildTaskPatchSuggestionReport,
+    [switch]$OpenObserverConsoles,
+    [string]$ObserverOutputDir = "",
+    [int]$ObserverRefreshSeconds = 2
 )
 
 Set-StrictMode -Version Latest
@@ -137,6 +140,14 @@ if (Test-Path -LiteralPath $UnifiedPhaseVisibilityScript -PathType Leaf) {
 }
 # IA-CARMINE-UNIFIED-PHASE-VISIBILITY-IMPORT-END
 
+# IA-CARMINE-UNIFIED-RUN-OBSERVER-IMPORT-BEGIN
+$UnifiedRunObserverScript = Join-Path $PSScriptRoot "unified_run_observer.ps1"
+if (Test-Path -LiteralPath $UnifiedRunObserverScript -PathType Leaf) {
+    . $UnifiedRunObserverScript
+} else {
+    Write-Warning "Unified run observer helper not found: $UnifiedRunObserverScript"
+}
+# IA-CARMINE-UNIFIED-RUN-OBSERVER-IMPORT-END
 # IA-CARMINE-LIGHTFULL0TO10-DISPATCH-BEGIN
 if ($LightFull0To10) {
     $LightProfileScript = Join-Path $PSScriptRoot "run_unified_light_full0to10_profile.ps1"
@@ -279,12 +290,36 @@ function Invoke-Checked {
     param([string]$Label, [scriptblock]$Block, [switch]$SoftFail)
     Write-Host ""
     Write-Host "=== $Label ==="
-    if ($DryRun) { Write-Host "[DRY-RUN] Skipped execution."; return $true }
+
+    if (Get-Command Write-UnifiedRunProgressEvent -ErrorAction SilentlyContinue) {
+        Write-UnifiedRunProgressEvent -Phase $Label -Status "started"
+    }
+
+    if ($DryRun) {
+        Write-Host "[DRY-RUN] Skipped execution."
+        if (Get-Command Write-UnifiedRunProgressEvent -ErrorAction SilentlyContinue) {
+            Write-UnifiedRunProgressEvent -Phase $Label -Status "dry_run_skipped"
+        }
+        return $true
+    }
+
     & $Block
+
     if ($LASTEXITCODE -ne 0) {
-        if ($SoftFail) { Write-Warning "$Label failed with exit code $LASTEXITCODE"; return $false }
+        if (Get-Command Write-UnifiedRunProgressEvent -ErrorAction SilentlyContinue) {
+            Write-UnifiedRunProgressEvent -Phase $Label -Status "failed" -Message ("exit_code={0}" -f $LASTEXITCODE)
+        }
+        if ($SoftFail) {
+            Write-Warning "$Label failed with exit code $LASTEXITCODE"
+            return $false
+        }
         throw "$Label failed with exit code $LASTEXITCODE"
     }
+
+    if (Get-Command Write-UnifiedRunProgressEvent -ErrorAction SilentlyContinue) {
+        Write-UnifiedRunProgressEvent -Phase $Label -Status "passed"
+    }
+
     return $true
 }
 
@@ -814,7 +849,7 @@ if ($Full0To10) {
     if (-not $NoMemoryWrite) { $SaveInputsToMemoryDb = $true }
     if (-not $NoEvidence) { $BuildEvidence = $true }
     if (-not $NoPatchSpecs) { $GeneratePatchSpecs = $true }
-    $RunLegacyFullToolboxIntegrated = $true
+    Write-Warning "Legacy full-toolbox integrated lane is no longer auto-enabled by -Full0To10; use -RunLegacyFullToolboxIntegrated explicitly for diagnostic legacy runs."
 }
 
 
@@ -1018,7 +1053,7 @@ if ($StrictRealRunActivationEnabled) {
 
     $UseOllamaAdvisory = $true
     $UsePrimaryAdvisoryProvider = $true
-    $RunLegacyFullToolboxIntegrated = $true
+    Write-Warning "Legacy full-toolbox integrated lane is no longer auto-enabled by -Full0To10; use -RunLegacyFullToolboxIntegrated explicitly for diagnostic legacy runs."
 }
 # IA_CARMINE_STRICT_REAL_RUN_ACTIVATION_END
 
@@ -1130,7 +1165,7 @@ if (Test-ModeEnabled "chunks") {
 if (Test-ModeEnabled "context_pack") {
     $ContextPackBase = "unified_${ModeName}_context_pack_$Stamp"
     $PhaseStatus.context_pack = Invoke-Checked "Build AI context pack" {
-        Invoke-Python @(".\Tools\ai\build_ai_context_pack.py", "--repo-root", ".", "--profile", "core_ai_backend", "--basename", $ContextPackBase, "--evidence-basename", "${ContextPackBase}_evidence", "--max-total-chars", "$ContextPackMaxTotalChars", "--max-file-chars", "$ContextPackMaxFileChars")
+        Invoke-Python @(".\Tools\ai\build_ai_context_pack.py", "--repo-root", ".", "--profile", "core_ai_backend", "--basename", $ContextPackBase, "--evidence-dir", $ValidationDir, "--evidence-basename", "${ContextPackBase}_evidence", "--max-total-chars", "$ContextPackMaxTotalChars", "--max-file-chars", "$ContextPackMaxFileChars")
     } -SoftFail:$ContinueOnValidationError
     $ContextFiles = Add-ExistingContextFile $ContextFiles "output/ai_context_packs/$ContextPackBase.md"
     $ContextFiles = Add-ExistingContextFile $ContextFiles "output/ai_context_packs/$ContextPackBase.json"
