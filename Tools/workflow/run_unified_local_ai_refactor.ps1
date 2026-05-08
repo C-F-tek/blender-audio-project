@@ -814,7 +814,7 @@ if ($Full0To10) {
     if (-not $NoMemoryWrite) { $SaveInputsToMemoryDb = $true }
     if (-not $NoEvidence) { $BuildEvidence = $true }
     if (-not $NoPatchSpecs) { $GeneratePatchSpecs = $true }
-    $RunLegacyFullToolboxIntegrated = $true
+    Write-Warning "Legacy full-toolbox integrated lane is no longer auto-enabled by -Full0To10; use -RunLegacyFullToolboxIntegrated explicitly for diagnostic legacy runs."
 }
 
 
@@ -1130,7 +1130,7 @@ if (Test-ModeEnabled "chunks") {
 if (Test-ModeEnabled "context_pack") {
     $ContextPackBase = "unified_${ModeName}_context_pack_$Stamp"
     $PhaseStatus.context_pack = Invoke-Checked "Build AI context pack" {
-        Invoke-Python @(".\Tools\ai\build_ai_context_pack.py", "--repo-root", ".", "--profile", "core_ai_backend", "--basename", $ContextPackBase, "--evidence-basename", "${ContextPackBase}_evidence", "--max-total-chars", "$ContextPackMaxTotalChars", "--max-file-chars", "$ContextPackMaxFileChars")
+        Invoke-Python @(".\Tools\ai\build_ai_context_pack.py", "--repo-root", ".", "--profile", "core_ai_backend", "--basename", $ContextPackBase, "--evidence-dir", $ValidationDir, "--evidence-basename", "${ContextPackBase}_evidence", "--max-total-chars", "$ContextPackMaxTotalChars", "--max-file-chars", "$ContextPackMaxFileChars")
     } -SoftFail:$ContinueOnValidationError
     $ContextFiles = Add-ExistingContextFile $ContextFiles "output/ai_context_packs/$ContextPackBase.md"
     $ContextFiles = Add-ExistingContextFile $ContextFiles "output/ai_context_packs/$ContextPackBase.json"

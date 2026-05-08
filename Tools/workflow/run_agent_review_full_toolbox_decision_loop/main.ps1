@@ -53,18 +53,9 @@ if ($Stamp -eq "") {
 
 $env:PYTHONPATH = (Get-Location).Path
 $script:RepoPythonExe = $WorkflowPythonExe
-if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) {
-    if (Test-Path -LiteralPath $env:IA_CARMINE_PYTHON -PathType Leaf) {
-        $script:RepoPythonExe = $env:IA_CARMINE_PYTHON
-    } else {
-        Write-Warning "IA_CARMINE_PYTHON is set but not found: $env:IA_CARMINE_PYTHON"
-    }
-} elseif (Test-Path -LiteralPath ".\.venv\Scripts\python.exe" -PathType Leaf) {
-    $script:RepoPythonExe = (Resolve-Path ".\.venv\Scripts\python.exe").Path
-} elseif (Test-Path -LiteralPath ".\venv\Scripts\python.exe" -PathType Leaf) {
-    $script:RepoPythonExe = (Resolve-Path ".\venv\Scripts\python.exe").Path
+if ([string]::IsNullOrWhiteSpace($script:RepoPythonExe) -or -not (Test-Path -LiteralPath $script:RepoPythonExe -PathType Leaf)) {
+    throw "Resolved workflow Python is missing or invalid: $script:RepoPythonExe"
 }
-
 $AiPipelineDir = Join-Path $OutputRoot "ai_pipeline"
 $AnalysisDir = Join-Path $OutputRoot "analysis"
 $ValidationDir = Join-Path $OutputRoot "validation"

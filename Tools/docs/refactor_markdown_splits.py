@@ -295,7 +295,7 @@ python .\\Tools\\docs\\refactor_markdown_splits.py `
 python -m py_compile .\\Tools\\docs\\refactor_markdown_splits.py
 python .\\Tools\\validation\\check_docs_links.py --repo-root .
 python .\\Tools\\validation\\check_markdown_line_limits.py --repo-root . --max-lines 500
-python .\Tools\validation\check_file_line_limits.py --repo-root . --output .\output\validation\file_line_limits.json
+python .\\Tools\\validation\\check_file_line_limits.py --repo-root . --output .\\output\\validation\\file_line_limits.json
 git diff --check
 git status --short
 ```

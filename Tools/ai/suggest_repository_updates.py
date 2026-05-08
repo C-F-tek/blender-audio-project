@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Build an advisory post-validation AI work packet.
 
 The packet is intentionally app-agnostic and non-destructive:
@@ -147,16 +147,68 @@ def unique_items(items: list[str]) -> list[str]:
     return out
 
 
+def split_markdown_parts(path: Path) -> list[Path]:
+    """Return ordered files for the canonical split Markdown directory layout."""
+    if not path.is_dir() or not path.name.endswith(".md"):
+        return []
+    parts: list[Path] = []
+    readme = path / "README.md"
+    if readme.is_file():
+        parts.append(readme)
+    parts.extend(sorted(item for item in path.glob("part-*.md") if item.is_file()))
+    return parts
+
+
+def read_split_markdown(path: Path) -> tuple[str, int, str]:
+    parts = split_markdown_parts(path)
+    if not parts:
+        return "", 0, "path is not a file"
+    chunks: list[str] = []
+    total_chars = 0
+    for part in parts:
+        text = part.read_text(encoding="utf-8", errors="replace")
+        total_chars += len(text)
+        chunks.append(f"<!-- split-source: {part.name} -->\n{text.rstrip()}\n")
+    return "\n".join(chunks), total_chars, ""
+
+
 def read_text_if_exists(path: Path, *, max_chars: int) -> dict[str, Any]:
     rel = str(path)
     if not path.exists():
         return {"path": rel, "exists": False, "text": "", "chars": 0, "truncated": False}
-    text = path.read_text(encoding="utf-8", errors="replace")
-    original_len = len(text)
+
+    split_markdown = False
+    read_error = ""
+
+    if path.is_file():
+        text = path.read_text(encoding="utf-8", errors="replace")
+        original_len = len(text)
+    else:
+        text, original_len, read_error = read_split_markdown(path)
+        split_markdown = bool(text)
+        if read_error:
+            return {
+                "path": rel,
+                "exists": True,
+                "text": "",
+                "chars": 0,
+                "truncated": False,
+                "split_markdown": False,
+                "read_error": read_error,
+            }
+
     truncated = original_len > max_chars
     if truncated:
         text = text[:max_chars] + "\n...[truncated]"
-    return {"path": rel, "exists": True, "text": text, "chars": original_len, "truncated": truncated}
+    return {
+        "path": rel,
+        "exists": True,
+        "text": text,
+        "chars": original_len,
+        "truncated": truncated,
+        "split_markdown": split_markdown,
+        "read_error": "",
+    }
 
 
 def read_json_if_exists(path: Path) -> dict[str, Any]:
@@ -423,7 +475,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append("## Deterministic suggestions")
     lines.append("")
     for item in report["suggestions"]:
-        lines.append(f"### {item['priority']} — {item['title']}")
+        lines.append(f"### {item['priority']} â€” {item['title']}")
         lines.append("")
         lines.append(f"- Area: `{item['area']}`")
         lines.append(f"- Details: {item['details']}")
@@ -444,7 +496,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("### Excluded advisory context files")
         for item in excluded:
             if isinstance(item, dict):
-                lines.append(f"- `{item.get('path')}` — lane `{item.get('lane')}`, reason `{item.get('reason')}`")
+                lines.append(f"- `{item.get('path')}` â€” lane `{item.get('lane')}`, reason `{item.get('reason')}`")
         lines.append("")
     lines.append("### Report files")
     for path in report["context"]["report_files"]:
@@ -549,3 +601,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
