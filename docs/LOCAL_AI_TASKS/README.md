@@ -26,6 +26,8 @@ This document is split to keep Markdown reviewable and compatible with AI contex
 - [`gpu-peer-exchange-operational-principle.md`](gpu-peer-exchange-operational-principle.md)
 - [`md-coherence-only-github-pass-2026-05-06.md`](md-coherence-only-github-pass-2026-05-06.md)
 - [`patch-suggestion-bundle-final-phase.md`](patch-suggestion-bundle-final-phase.md)
+- [`readme-product-pr-workflow-refresh-2026-05-08.md`](readme-product-pr-workflow-refresh-2026-05-08.md)
+- [`mini-full-pr-product-smoke-2026-05-08.md`](mini-full-pr-product-smoke-2026-05-08.md)
 
 ## Operational note
 
@@ -42,5 +44,7 @@ For ownership boundaries and scripts that must not be duplicated or bypassed, us
 For operational data-flow variants, use `code-driven-data-flow-map-2026-05-07.md`.
 
 For focused validator/smoke cycles, use `validator-smoke-cycle-map-2026-05-07.md`.
+
+For the current Markdown-to-review-PR product path, use `patch-suggestion-bundle-final-phase.md`, `readme-product-pr-workflow-refresh-2026-05-08.md`, and `mini-full-pr-product-smoke-2026-05-08.md`. Current limits remain explicit: `ReviewPrIncludePath` is still required, include-path autodiscovery is not implemented yet, and draft PR creation is not implemented yet.
 
 For split Markdown, the sibling folder must keep the full file name including `.md`; see `md-split-folder-naming-rule-2026-05-07.md`.
