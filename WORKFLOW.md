@@ -32,6 +32,7 @@ A `-Full0To10` run must traverse every active lane that participates in project 
 Full0To10 = whole-repository active-lane perimeter
 quick/balanced/deep/custom = intensity, not reduced scope
 -No* flags = explicit opt-out only
+-NoStrictRealRunActivation = single-phase diagnostics only
 ```
 
 The scope of `tutto` may expand. When a new lane becomes stable, it must be wired into the full-run contract or explicitly excluded with rationale. Silent omission is a workflow defect.
@@ -56,10 +57,11 @@ docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 docs/MAIN_RUNTIME_ARCHITECTURE.md
 Tools/workflow/README.md
 Tools/ai/README.md
-Tools/validation/README.md
 nearest package/tool README
 target source/doc file
 ```
+
+Large catalogs such as `Tools/validation/README.md` are reference material, not primary reading-order entrypoints.
 
 Historical handoffs and generated evidence are context only. They do not override current source code, owner maps, launcher manifests or validation evidence.
 
@@ -95,6 +97,35 @@ Owner and flow maps:
 docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
 ```
+
+## Current product path: Markdown to review PR evidence
+
+The current product workflow starts from a task Markdown and produces reviewable branch/PR evidence through deterministic patch suggestions.
+
+```text
+task Markdown patch_suggestion
+  -> Tools/ai/build_task_patch_suggestion_report.py
+  -> Tools/ai/apply_patch_suggestion_bundle.py
+  -> Tools/validation/check_patch_suggestion_product_separation.py
+  -> Tools/ai/prepare_review_pr.py
+  -> GitHub PR for manual review
+```
+
+Focused proof:
+
+```text
+Tools/validation/run_full0to10_product_pr_chain_smoke.py
+```
+
+Current explicit limitations:
+
+```text
+ReviewPrIncludePath remains explicit.
+prepare_review_pr.py does not auto-discover include paths from apply reports yet.
+prepare_review_pr.py does not create draft PRs yet.
+```
+
+Do not document this path as fully automatic until the code implements include-path autodiscovery and draft PR creation.
 
 ## Obsolete / historical monolithic runbook flag
 
@@ -324,4 +355,5 @@ limitations are backlog to overcome, not tool-skip reasons
 patch application remains explicit
 long evidence is indexed by compact manifests
 obsolete monolithic runbooks are flagged historical, not active
+product PR workflow limitations remain explicit until code implements them
 ```
