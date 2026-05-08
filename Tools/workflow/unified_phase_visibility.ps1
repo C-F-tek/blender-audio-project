@@ -33,8 +33,8 @@ function Write-UnifiedPhaseVisibilityReport {
         return_code = $ReturnCode
         elapsed_seconds = $ElapsedSeconds
         command_line = $CommandLine
-        report_json = $JsonPath.Replace('\', '/')
-        report_markdown = $MdPath.Replace('\', '/')
+        report_json = $JsonPath.Replace('\\', '/')
+        report_markdown = $MdPath.Replace('\\', '/')
         warnings = @($Warnings)
         errors = @($Errors)
         phase_reports = @($ReportFiles)
@@ -103,9 +103,22 @@ function Invoke-UnifiedExternalPhaseCommand {
         try { Stop-Process -Id $Process.Id -Force -ErrorAction SilentlyContinue } catch {}
         return Write-UnifiedPhaseVisibilityReport -RepoRoot $RepoRoot -PhaseName $PhaseName -Status "timeout" -StampValue $StampValue -OutputDir $OutputDir -CommandLine $CommandLine -TimeoutSeconds $TimeoutSeconds -ReturnCode -1 -ElapsedSeconds $Elapsed -Errors @("Phase timed out and process was terminated.") -ReportFiles @($StdoutPath, $StderrPath)
     }
+
+    try {
+        $Process.WaitForExit()
+        $Process.Refresh()
+    } catch {
+        return Write-UnifiedPhaseVisibilityReport -RepoRoot $RepoRoot -PhaseName $PhaseName -Status "failed" -StampValue $StampValue -OutputDir $OutputDir -CommandLine $CommandLine -TimeoutSeconds $TimeoutSeconds -ReturnCode -2 -ElapsedSeconds $Elapsed -Errors @(("Phase completed, but process refresh failed: {0}" -f $_.Exception.Message)) -ReportFiles @($StdoutPath, $StderrPath)
+    }
+
     $Code = $Process.ExitCode
-    if ($Code -eq 0) { $Status = "passed" } else { $Status = "failed" }
+    if ($null -eq $Code) {
+        return Write-UnifiedPhaseVisibilityReport -RepoRoot $RepoRoot -PhaseName $PhaseName -Status "failed" -StampValue $StampValue -OutputDir $OutputDir -CommandLine $CommandLine -TimeoutSeconds $TimeoutSeconds -ReturnCode -3 -ElapsedSeconds $Elapsed -Errors @("Phase completed, but process ExitCode was unavailable after refresh.") -ReportFiles @($StdoutPath, $StderrPath)
+    }
+
+    $ReturnCode = [int]$Code
+    if ($ReturnCode -eq 0) { $Status = "passed" } else { $Status = "failed" }
     $Errors = @()
-    if ($Code -ne 0) { $Errors += ("Phase returned non-zero exit code: {0}" -f $Code) }
-    return Write-UnifiedPhaseVisibilityReport -RepoRoot $RepoRoot -PhaseName $PhaseName -Status $Status -StampValue $StampValue -OutputDir $OutputDir -CommandLine $CommandLine -TimeoutSeconds $TimeoutSeconds -ReturnCode $Code -ElapsedSeconds $Elapsed -Errors $Errors -ReportFiles @($StdoutPath, $StderrPath)
+    if ($ReturnCode -ne 0) { $Errors += ("Phase returned non-zero exit code: {0}" -f $ReturnCode) }
+    return Write-UnifiedPhaseVisibilityReport -RepoRoot $RepoRoot -PhaseName $PhaseName -Status $Status -StampValue $StampValue -OutputDir $OutputDir -CommandLine $CommandLine -TimeoutSeconds $TimeoutSeconds -ReturnCode $ReturnCode -ElapsedSeconds $Elapsed -Errors $Errors -ReportFiles @($StdoutPath, $StderrPath)
 }
