@@ -37,8 +37,13 @@ function Invoke-LocalAiTaskPipelineValidation {
         [string[]]$ContextFiles,
         [string[]]$ReportFiles,
         [string]$MaxContextChars,
-        [string]$RepoRootPath
+        [string]$RepoRootPath,
+        [string]$PythonExe
     )
+
+    if ([string]::IsNullOrWhiteSpace($PythonExe)) {
+        $PythonExe = if ([string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) { "python" } else { $env:IA_CARMINE_PYTHON }
+    }
 
     if ($RunMultistepProviderWorkflow) {
         $MultistepArgs = @(
@@ -87,7 +92,7 @@ function Invoke-LocalAiTaskPipelineValidation {
 
     if (Test-Path -LiteralPath $ProposalPath -PathType Leaf) {
         Invoke-CommandChecked -Label "Validate repository change proposals" -Block {
-            python .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal $ProposalRel --output $ProposalValidationOutput
+            & $PythonExe .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal $ProposalRel --output $ProposalValidationOutput
         }
     }
     else {
@@ -99,10 +104,10 @@ function Invoke-LocalAiTaskPipelineValidation {
         $PatchManifest = "output/patch_specs/${PatchBasename}_manifest.json"
         $PatchManifestMd = "output/patch_specs/${PatchBasename}_manifest.md"
         Invoke-CommandChecked -Label "Build draft patch specs from proposals" -Block {
-            python .\Tools\ai\build_patch_specs_from_proposals.py --repo-root . --proposal $ProposalRel --output-dir output\patch_specs --basename $PatchBasename
+            & $PythonExe .\Tools\ai\build_patch_specs_from_proposals.py --repo-root . --proposal $ProposalRel --output-dir output\patch_specs --basename $PatchBasename
         }
         Invoke-CommandChecked -Label "Validate draft patch specs" -Block {
-            python .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest $PatchManifest --output "output/validation/${Basename}_patch_spec_drafts.json"
+            & $PythonExe .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest $PatchManifest --output "output/validation/${Basename}_patch_spec_drafts.json"
         }
     }
 
