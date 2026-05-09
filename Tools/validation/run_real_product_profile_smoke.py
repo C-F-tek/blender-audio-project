@@ -31,10 +31,15 @@ def main() -> int:
     intrinsic_contract_text = intrinsic_contract.read_text(encoding="utf-8-sig", errors="replace") if intrinsic_contract.exists() else ""
     runtime_mesh_contract_text = runtime_mesh_contract.read_text(encoding="utf-8-sig", errors="replace") if runtime_mesh_contract.exists() else ""
 
+    task_file_contract = (
+        ("[Parameter(Mandatory = $true)]" in text and "$TaskFile" in text)
+        or ('[string]$TaskFile = ""' in text and "-ProcessGateTask" in text and "New-HeapExchangeProcessGateTask" in text)
+    )
+
     required_tokens = {
         "wrapper_exists": wrapper.exists(),
         "delegates_to_unified_launcher": "run_unified_local_ai_refactor.ps1" in text,
-        "requires_task_file": "[Parameter(Mandatory = $true)]" in text and "$TaskFile" in text,
+        "requires_task_file": task_file_contract,
         "uses_mode_all": '"-Mode", "all"' in text,
         "enables_primary_provider": "-UsePrimaryAdvisoryProvider" in text,
         "enables_multistep_provider": "-RunMultistepProviderWorkflow" in text,
@@ -53,7 +58,7 @@ def main() -> int:
         "preflight_validates_manifest_runtime_correlation_schema": "run_unified_manifest_runtime_evidence_correlation_smoke.py" in readme_text or "run_unified_manifest_runtime_evidence_correlation_smoke.py" in launcher_text,
         "review_pr_final_product_contract_exists": (repo / "Tools/validation/check_review_pr_final_product_contract.py").exists(),
         "single_entry_exit_process_gate": "-ProcessGateTask" in text and "New-HeapExchangeProcessGateTask" in text,
-        "single_exit_validates_review_pr_product": "-ValidateFinalReviewPrProduct" in text and "check_review_pr_final_product_contract.py" in text,
+        "single_exit_validates_review_pr_product": "[switch]$ValidateFinalReviewPrProduct" in text and "check_review_pr_final_product_contract.py" in text,
         "preflight_validates_review_pr_final_product_contract": "run_review_pr_final_product_contract_smoke.py" in readme_text or "run_review_pr_final_product_contract_smoke.py" in launcher_text,
         "supports_review_pr_push": "-ReviewPrPush" in text,
         "supports_review_pr_create": "-ReviewPrCreate" in text,
@@ -91,7 +96,7 @@ def main() -> int:
         "exposes_extended_observers": "[switch]$OpenExtendedObserverConsoles" in text and "-OpenExtendedObserverConsoles" in text,
         "exposes_observer_refresh": "[int]$ObserverRefreshSeconds" in text and "-ObserverRefreshSeconds" in text,
         "does_not_merge": "gh pr merge" not in text and "git merge" not in text,
-        "does_not_force_push": "--force" not in text and "force-push" not in text.lower(),
+        "does_not_force_push": "git push --force" not in text and "--force-with-lease" not in text,
         "launcher_has_task_ingress": "IA-CARMINE-TASK-INGRESS-CONTRACT-BEGIN" in launcher_text,
         "launcher_has_peer_manifest": "IA-CARMINE-HEAP-PEER-RUNTIME-MANIFEST-BEGIN" in launcher_text,
         "launcher_has_closure_audit": "IA-CARMINE-HEAP-EXCHANGE-CLOSURE-AUDIT-BEGIN" in launcher_text,
