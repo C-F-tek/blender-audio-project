@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from Tools.ai.patchkit.anchors import append_once, insert_after_marker, insert_before_marker, replace_once
-from Tools.ai.patchkit.filesystem import backup_file, load_text, rel, repo_path, write_text_preserved
+from Tools.ai.patchkit.filesystem import LoadedText, backup_file, load_text, rel, repo_path, write_text_preserved
 from Tools.ai.patchkit.powershell import assert_no_naked_throw, insert_after_invoke_checked, run_parser
 from Tools.ai.patchkit.reports import write_json, write_markdown
 
@@ -83,6 +83,9 @@ def run_python_compile(repo_root: Path, files: list[str]) -> tuple[bool, str]:
 
 
 def run_git_diff_check(repo_root: Path) -> tuple[bool, str]:
+    inside = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], cwd=repo_root, capture_output=True, text=True, check=False)
+    if inside.returncode != 0:
+        return False, "repo-root is not a Git worktree; cannot run git diff --check\n" + inside.stdout + inside.stderr
     result = subprocess.run(["git", "diff", "--check"], cwd=repo_root, capture_output=True, text=True, check=False)
     return result.returncode == 0, result.stdout + result.stderr
 
@@ -100,6 +103,8 @@ def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[s
     changed_count = 0
     backups: list[str] = []
     touched: set[Path] = set()
+    loaded_by_target: dict[Path, LoadedText] = {}
+    text_by_target: dict[Path, str] = {}
 
     for index, op in enumerate(bundle["operations"], start=1):
         target_raw = str(op.get("target") or bundle.get("target") or "")
@@ -107,22 +112,28 @@ def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[s
             errors.append(f"operation {index}: missing target")
             continue
         target = repo_path(repo_root, target_raw)
-        if not target.exists() and op.get("operation") != "write_file":
+        if not target.exists():
             errors.append(f"operation {index}: target missing: {target_raw}")
             continue
         try:
-            loaded = load_text(target)
-            changed, patched, reason = apply_operation(loaded.text_lf, op, bundle_dir)
+            if target not in loaded_by_target:
+                loaded = load_text(target)
+                loaded_by_target[target] = loaded
+                text_by_target[target] = loaded.text_lf
+            changed, patched, reason = apply_operation(text_by_target[target], op, bundle_dir)
             if changed:
                 changed_count += 1
                 touched.add(target)
-                if not dry_run:
-                    backup = backup_file(repo_root, target)
-                    backups.append(rel(repo_root, backup))
-                    write_text_preserved(loaded, patched)
+                text_by_target[target] = patched
             results.append({"index": index, "operation": op.get("operation"), "target": target_raw, "changed": changed, "reason": reason})
         except Exception as exc:  # noqa: BLE001
             errors.append(f"operation {index} failed: {type(exc).__name__}: {exc}")
+
+    if not dry_run and not errors:
+        for target in sorted(touched):
+            backup = backup_file(repo_root, target)
+            backups.append(rel(repo_root, backup))
+            write_text_preserved(loaded_by_target[target], text_by_target[target])
 
     validators = bundle.get("validators") or []
     validator_results: list[dict[str, Any]] = []
