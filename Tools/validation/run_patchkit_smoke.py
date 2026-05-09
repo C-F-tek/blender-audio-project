@@ -54,18 +54,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/patchkit_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/patchkit_smoke.md")
-    args = parser.parse_args()
-
-    source_repo = Path(args.repo_root).resolve()
-    runner = source_repo / "Tools/ai/patchkit/apply_patch_bundle.py"
-    cases: list[dict[str, Any]] = []
-    errors: list[str] = []
-
+def smoke_insert_idempotent(source_repo: Path, runner: Path) -> dict[str, Any]:
     with tempfile.TemporaryDirectory(prefix="patchkit-smoke-") as tmp:
         repo = Path(tmp) / "repo"
         repo.mkdir()
@@ -110,9 +99,97 @@ def main() -> int:
             and second["returncode"] == 0
             and target_text.count("PATCHKIT-SMOKE-FRAGMENT") == 1
         )
-        cases.append({"name": "dry_apply_idempotent_patch_bundle", "passed": ok, "git_setup": git_setup, "dry": dry, "apply": apply, "second": second})
-        if not ok:
-            errors.append("patchkit dry/apply/idempotency smoke failed")
+        return {"name": "dry_apply_idempotent_patch_bundle", "passed": ok, "git_setup": git_setup, "dry": dry, "apply": apply, "second": second}
+
+
+def smoke_guarded_delete(source_repo: Path, runner: Path) -> dict[str, Any]:
+    with tempfile.TemporaryDirectory(prefix="patchkit-delete-smoke-") as tmp:
+        repo = Path(tmp) / "repo"
+        repo.mkdir()
+        target = repo / "obsolete.md"
+        write(target, "# Old doc\n\nStatus: historical / superseded.\n")
+        bundle_dir = repo / "patch_specs/delete_demo"
+        bundle = bundle_dir / "bundle.json"
+        write(
+            bundle,
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "kind": "codemod_patch_bundle",
+                    "operations": [
+                        {
+                            "operation": "delete_file",
+                            "target": "obsolete.md",
+                            "allow_delete": True,
+                            "required_marker": "superseded",
+                        }
+                    ],
+                    "validators": ["git_diff_check"],
+                },
+                indent=2,
+            )
+            + "\n",
+        )
+        git_setup = init_git_repo(repo, source_repo)
+        dry = run([sys.executable, str(runner), "--repo-root", str(repo), "--bundle", str(bundle), "--dry-run"], repo, source_repo)
+        exists_after_dry = target.exists()
+        apply = run([sys.executable, str(runner), "--repo-root", str(repo), "--bundle", str(bundle)], repo, source_repo)
+        exists_after_apply = target.exists()
+        blocked_target = repo / "blocked.md"
+        write(blocked_target, "# Old doc\n\nNo marker here.\n")
+        blocked_bundle = repo / "patch_specs/delete_blocked/bundle.json"
+        write(
+            blocked_bundle,
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "kind": "codemod_patch_bundle",
+                    "operations": [
+                        {
+                            "operation": "delete_file",
+                            "target": "blocked.md",
+                            "allow_delete": True,
+                            "required_marker": "superseded",
+                        }
+                    ],
+                },
+                indent=2,
+            )
+            + "\n",
+        )
+        blocked = run([sys.executable, str(runner), "--repo-root", str(repo), "--bundle", str(blocked_bundle), "--dry-run"], repo, source_repo)
+        ok = (
+            all(item["returncode"] == 0 for item in git_setup)
+            and dry["returncode"] == 0
+            and exists_after_dry
+            and apply["returncode"] == 0
+            and not exists_after_apply
+            and blocked["returncode"] != 0
+            and blocked_target.exists()
+        )
+        return {
+            "name": "guarded_delete_file_patch_bundle",
+            "passed": ok,
+            "git_setup": git_setup,
+            "dry": dry,
+            "exists_after_dry": exists_after_dry,
+            "apply": apply,
+            "exists_after_apply": exists_after_apply,
+            "blocked": blocked,
+        }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repo-root", default=".")
+    parser.add_argument("--output", default="output/validation/patchkit_smoke.json")
+    parser.add_argument("--markdown-output", default="output/validation/patchkit_smoke.md")
+    args = parser.parse_args()
+
+    source_repo = Path(args.repo_root).resolve()
+    runner = source_repo / "Tools/ai/patchkit/apply_patch_bundle.py"
+    cases = [smoke_insert_idempotent(source_repo, runner), smoke_guarded_delete(source_repo, runner)]
+    errors = [f"{case['name']} failed" for case in cases if not case.get("passed")]
 
     report = {
         "schema_version": 1,
