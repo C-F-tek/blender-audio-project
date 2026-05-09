@@ -177,46 +177,32 @@ def create_commit(repo_root: Path, message: str) -> dict[str, Any]:
     head = git(repo_root, ["rev-parse", "HEAD"]) if commit["ok"] else {"stdout": ""}
     return {"requested": True, "committed": bool(commit["ok"]), "head": str(head.get("stdout") or "").strip(), "commands": [commit, head]}
 def default_pr_body(args: argparse.Namespace, report_path: str) -> str:
-    return "\n".join(
-        [
-            "## Full Run Review PR",
-            "",
-            f"- Stamp: `{args.Stamp}`",
-            f"- Task file: `{args.task_file}`",
-            f"- Branch: `{args.branch}`",
-            f"- Base: `{args.base}`",
-            f"- Product: patch suggestion final phase + review evidence",
-            f"- Evidence report: `{report_path}`",
-            "",
-            "Guardrails: no merge to master, no force-push, no output/** commit, no DB/render commit.",
-        ]
-    ) + "\n"
+    return (
+        "## Full Run Review PR\n\n"
+        f"- Stamp: `{args.Stamp}`\n- Task file: `{args.task_file}`\n- Branch: `{args.branch}`\n"
+        f"- Base: `{args.base}`\n- Draft requested: `{bool(args.draft_pr)}`\n"
+        f"- Product: patch suggestion final phase + review evidence\n- Evidence report: `{report_path}`\n\n"
+        "Guardrails: no merge to master, no force-push, no output/** commit, no DB/render commit.\n"
+    )
 def write_markdown(report: dict[str, Any], output: Path) -> str:
     lines = [
-        "# Review PR Preparation",
-        "",
+        "# Review PR Preparation", "",
         f"- Passed: {report.get('passed')}",
         f"- Branch: `{report.get('branch')}`",
         f"- Base: `{report.get('base_branch')}`",
         f"- Commit performed: {report.get('git_commit_performed')}",
         f"- Push performed: {report.get('git_push_performed')}",
         f"- PR created: {report.get('github_pr_created')}",
+        f"- PR draft requested: {report.get('github_pr_draft_requested')}",
         f"- PR URL: {report.get('github_pr_url') or ''}",
         f"- Product commit: `{report.get('product_commit') or ''}`",
-        f"- Auto include from apply report: {report.get('auto_include_from_apply_report')}",
-        f"- Evidence report committed: {report.get('git_evidence_commit_performed', False)}",
-        "",
-        "## Staged Product Paths",
-        "",
+        f"- Auto include from apply report: {report.get('auto_include_from_apply_report')}", "",
+        "## Staged Product Paths", "",
     ]
-    for path in report.get("include_paths") or []:
-        lines.append(f"- `{path}`")
-    if report.get("errors"):
-        lines.extend(["", "## Errors", ""])
-        lines.extend(f"- {item}" for item in report["errors"])
-    if report.get("warnings"):
-        lines.extend(["", "## Warnings", ""])
-        lines.extend(f"- {item}" for item in report["warnings"])
+    lines.extend(f"- `{path}`" for path in (report.get("include_paths") or []))
+    for title, key in (("Errors", "errors"), ("Warnings", "warnings")):
+        if report.get(key):
+            lines.extend(["", f"## {title}", "", *[f"- {item}" for item in report[key]]])
     return write_text_report("\n".join(lines) + "\n", output)
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -240,9 +226,30 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allowed-branch-prefix", action="append", default=["CARMINEai/"])
     parser.add_argument("--push", action="store_true")
     parser.add_argument("--create-pr", action="store_true")
+    parser.add_argument("--draft-pr", action="store_true")
     parser.add_argument("--allow-dirty-branch", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
+def validate_pr_flags(args: argparse.Namespace) -> list[str]:
+    errors: list[str] = []
+    if args.create_pr and not args.push:
+        errors.append("--create-pr requires --push so the requested branch exists on the remote")
+    if args.draft_pr and not args.create_pr:
+        errors.append("--draft-pr requires --create-pr")
+    return errors
+def create_github_pr(repo_root: Path, args: argparse.Namespace, body: str, body_file: Path) -> dict[str, Any]:
+    body_file.parent.mkdir(parents=True, exist_ok=True)
+    body_file.write_text(body, encoding="utf-8")
+    command = [
+        "gh", "pr", "create", "--repo", remote_repo_name(repo_root, args.remote), "--base", args.base,
+        "--head", args.branch, "--title", args.title, "--body-file", str(body_file),
+    ]
+    if args.draft_pr:
+        command.append("--draft")
+    result = run_command(repo_root, command)
+    if result["ok"]:
+        result["url"] = str(result["stdout"]).splitlines()[-1].strip()
+    return result
 def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
@@ -250,13 +257,12 @@ def main() -> int:
     md_output = resolve_output_path(repo_root, args.markdown_output) if args.markdown_output else None
     evidence_output = resolve_output_path(repo_root, args.evidence_output) if args.evidence_output else None
     evidence_md = resolve_output_path(repo_root, args.evidence_markdown_output) if args.evidence_markdown_output else None
-    errors: list[str] = []
+    errors: list[str] = validate_pr_flags(args)
     warnings: list[str] = []
     commands: list[dict[str, Any]] = []
     ok, reason = validate_branch_name(args.branch, list(args.allowed_branch_prefix))
     if not ok:
         errors.append(str(reason))
-    base_branch = args.base
     if args.base not in {"master", "main"}:
         errors.append("review PR base must be master or main")
     auto_include_paths: list[str] = []
@@ -283,7 +289,7 @@ def main() -> int:
     stage_result: dict[str, Any] = {"requested": False, "ok": False, "staged_files": []}
     product_commit: dict[str, Any] = {"committed": False, "head": ""}
     push_result: dict[str, Any] = {"requested": False, "ok": False}
-    pr_result: dict[str, Any] = {"requested": False, "ok": False, "url": ""}
+    pr_result: dict[str, Any] = {"requested": bool(args.create_pr), "ok": False, "url": "", "draft_requested": bool(args.draft_pr)}
     evidence_commit: dict[str, Any] = {"committed": False, "head": ""}
     if not errors and not args.dry_run:
         stage_result = stage_paths(repo_root, include_paths)
@@ -304,56 +310,29 @@ def main() -> int:
             commands.append(push_result)
             if not push_result["ok"]:
                 errors.append("git push failed")
-        if args.create_pr and args.push and not errors:
+        if args.create_pr and not errors:
             body = args.body
             if args.body_file:
                 body = Path(args.body_file).read_text(encoding="utf-8")
             if not body:
                 body = default_pr_body(args, str(evidence_output or output))
-            body_file = output.with_suffix(".body.md")
-            body_file.parent.mkdir(parents=True, exist_ok=True)
-            body_file.write_text(body, encoding="utf-8")
-            command = ["gh", "pr", "create", "--repo", remote_repo_name(repo_root, args.remote), "--base", base_branch, "--head", args.branch, "--title", args.title, "--body-file", str(body_file)]
-            pr_result = run_command(repo_root, command)
+            pr_result = create_github_pr(repo_root, args, body, output.with_suffix(".body.md"))
             commands.append(pr_result)
-            if pr_result["ok"]:
-                pr_result["url"] = str(pr_result["stdout"]).splitlines()[-1].strip()
-            else:
+            if not pr_result["ok"]:
                 errors.append("gh pr create failed")
     report = {
-        "schema_version": 1,
-        "kind": "review_pr_prepare",
-        "generated_at": datetime.now().isoformat(timespec="seconds"),
-        "repo_root": repo_root.as_posix(),
-        "Stamp": args.Stamp,
-        "task_file": args.task_file.replace("\\", "/"),
-        "branch": args.branch,
-        "base_branch": base_branch,
-        "include_paths": include_paths,
-        "manual_include_paths": args.include_path,
-        "auto_include_from_apply_report": bool(args.auto_include_from_apply_report),
-        "auto_include_paths": auto_include_paths,
-        "apply_reports": apply_report_infos,
-        "provider_execution_performed": False,
-        "blender_execution_performed": False,
-        "ffmpeg_execution_performed": False,
-        "patch_application_performed": False,
-        "source_writes_performed": False,
-        "git_branch_created": bool(branch_prepare.get("created")),
-        "git_commit_performed": bool(product_commit.get("committed")),
-        "git_push_performed": bool(push_result.get("ok")),
-        "github_pr_created": bool(pr_result.get("ok")),
-        "github_pr_url": pr_result.get("url") or "",
-        "product_commit": product_commit.get("head") or "",
-        "evidence_commit": "",
-        "branch_prepare": branch_prepare,
-        "stage_result": stage_result,
-        "push_result": push_result,
-        "pr_result": pr_result,
-        "commands": commands,
-        "passed": not errors,
-        "errors": errors,
-        "warnings": warnings,
+        "schema_version": 1, "kind": "review_pr_prepare", "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "repo_root": repo_root.as_posix(), "Stamp": args.Stamp, "task_file": args.task_file.replace("\\", "/"),
+        "branch": args.branch, "base_branch": args.base, "include_paths": include_paths, "manual_include_paths": args.include_path,
+        "auto_include_from_apply_report": bool(args.auto_include_from_apply_report), "auto_include_paths": auto_include_paths,
+        "apply_reports": apply_report_infos, "provider_execution_performed": False, "blender_execution_performed": False,
+        "ffmpeg_execution_performed": False, "patch_application_performed": False, "source_writes_performed": False,
+        "git_branch_created": bool(branch_prepare.get("created")), "git_commit_performed": bool(product_commit.get("committed")),
+        "git_push_performed": bool(push_result.get("ok")), "github_pr_created": bool(pr_result.get("ok")),
+        "github_pr_draft_requested": bool(args.draft_pr), "github_pr_url": pr_result.get("url") or "",
+        "product_commit": product_commit.get("head") or "", "evidence_commit": "", "branch_prepare": branch_prepare,
+        "stage_result": stage_result, "push_result": push_result, "pr_result": pr_result, "commands": commands,
+        "passed": not errors, "errors": errors, "warnings": warnings,
     }
     if evidence_output and not args.dry_run and not errors:
         write_json_report(report, evidence_output)
