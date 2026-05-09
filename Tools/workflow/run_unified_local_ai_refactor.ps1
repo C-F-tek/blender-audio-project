@@ -107,7 +107,7 @@ param(
     [int]$RepeatCases = 2
 ,
     [switch]$LightFull0To10,
-    [string]$LightFull0To10OutputDir = "output/validation/unified_light_full0to10_profile",
+    [string]$LightFull0To10OutputDir = "output/validation/unified_run_light_legacy_alias",
     [switch]$LightFull0To10NoExternalProbes,
     [int]$OfficialAdapterTimeoutSeconds = 1800,
     [switch]$SkipOfficialAdapter,
@@ -171,9 +171,9 @@ if (Test-Path -LiteralPath $UnifiedHeapExchangeReviewBridgeScript -PathType Leaf
 # IA-CARMINE-HEAP-EXCHANGE-REVIEW-BRIDGE-IMPORT-END
 # IA-CARMINE-LIGHTFULL0TO10-DISPATCH-BEGIN
 if ($LightFull0To10) {
-    $LightProfileScript = Join-Path $PSScriptRoot "run_unified_light_full0to10_profile.ps1"
+    $LightProfileScript = Join-Path $PSScriptRoot "run_unified_light_full0to10_profile.ps1" # legacy filename; compatibility wrapper only
     if (-not (Test-Path $LightProfileScript)) {
-        throw "LightFull0To10 profile script not found: $LightProfileScript"
+        throw "LightFull0To10 legacy compatibility wrapper not found: $LightProfileScript"
     }
 
     if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
