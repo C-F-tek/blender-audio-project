@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""End-to-end smoke for the Full0To10 patch product PR chain.
+"""End-to-end smoke for the unified run patch product PR chain.
 
-This smoke runs in a temporary git repository. It does not modify the source
-checkout, push, create a real PR, run providers, Blender or FFmpeg.
+Full0To10 is treated here as an activation/profile inside the unified launcher,
+not as a separate pipeline. This smoke runs in a temporary git repository. It
+does not modify the source checkout, push, create a real PR, run providers,
+Blender or FFmpeg.
 """
 from __future__ import annotations
 
@@ -30,12 +32,20 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
     """Verify the canonical launcher contains the real product PR chain."""
     workflow = source_repo / "Tools/workflow/run_unified_local_ai_refactor.ps1"
     required_tokens = {
+        "heap_exchange_entry": "build_heap_exchange_runtime_entry.py",
+        "heap_exchange_exit": "build_heap_exchange_runtime_exit.py",
+        "heap_exchange_lifecycle": "check_heap_exchange_runtime_lifecycle.py",
         "task_patch_suggestion_report": "build_task_patch_suggestion_report.py",
         "patch_suggestion_final_phase": "apply_patch_suggestion_bundle.py",
         "patch_suggestion_product_separation": "check_patch_suggestion_product_separation.py",
         "patch_suggestion_product_gate": "--require-product",
         "review_pr_prepare": "prepare_review_pr.py",
-        "phase_report_product_separation": "$PhaseReports.patch_suggestion_product_separation",
+        "review_pr_auto_include": "--auto-include-from-apply-report",
+        "review_pr_apply_report": "--apply-report",
+        "final_chain_contract_gate": "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN",
+        "final_chain_contract": "check_unified_chain_contract.py",
+        "final_chain_review_pr_report": "--review-pr-report",
+        "final_chain_review_pr_product": "--require-review-pr-product",
     }
     if not workflow.exists():
         return {
@@ -49,10 +59,12 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
     text = workflow.read_text(encoding="utf-8-sig")
     missing = [name for name, token in required_tokens.items() if token not in text]
     ordered_tokens = [
-        ("task_patch_suggestion_report", "build_task_patch_suggestion_report.py"),
+        ("heap_exchange_entry", "build_heap_exchange_runtime_entry.py"),
         ("patch_suggestion_final_phase", "apply_patch_suggestion_bundle.py"),
+        ("heap_exchange_exit", "build_heap_exchange_runtime_exit.py"),
         ("patch_suggestion_product_separation", "check_patch_suggestion_product_separation.py"),
         ("review_pr_prepare", "prepare_review_pr.py"),
+        ("final_chain_contract", "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN"),
     ]
     positions = [
         {"phase": name, "position": text.find(token)}
@@ -173,7 +185,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Command count: `{len(report.get('commands', []))}`",
         f"- Deterministic operation count: `{report.get('deterministic_operation_count')}`",
         f"- PR preparation committed: `{report.get('review_pr_commit_performed')}`",
+        f"- Chain contract passed: `{report.get('chain_contract_passed')}`",
         f"- Real workflow trace passed: `{report.get('workflow_trace', {}).get('passed')}`",
+        "- Full0To10 role: `activation profile inside unified run`",
     ]
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
@@ -216,7 +230,14 @@ def main() -> int:
         review_md = repo / "output/validation/review_pr_prepare.md"
         evidence_json = repo / "docs/LOCAL_VALIDATION_EVIDENCE/review_pr_prepare.json"
         evidence_md = repo / "docs/LOCAL_VALIDATION_EVIDENCE/review_pr_prepare.md"
+        chain_json = repo / "output/validation/unified_chain_contract.json"
+        manifest_json = repo / f"output/local_ai_runs/{STAMP}_unified/pipeline/unified_local_ai_refactor_manifest.json"
+        official_json = repo / f"output/validation/{STAMP}_phase_official.json"
+        gpu0_json = repo / f"output/validation/openvino_gpu0_workload_{STAMP}.json"
         branch = f"CARMINEai/product-pr-chain-smoke-{STAMP}"
+        write_json(manifest_json, {"schema_version": 1, "kind": "unified_local_ai_refactor_manifest", "stamp": STAMP})
+        write_json(official_json, {"schema_version": 1, "kind": "unified_launcher_phase_status", "phase": "official", "passed": True, "status": "passed", "return_code": 0})
+        write_json(gpu0_json, {"schema_version": 1, "kind": "openvino_gpu0_workload", "passed": True, "openvino_gpu0_visible": True, "openvino_gpu0_workload_performed": True, "openvino_gpu0_workload_passed": True})
         steps = [
             [
                 sys.executable,
@@ -278,10 +299,9 @@ def main() -> int:
                 f"docs(ai): product PR chain smoke {STAMP}",
                 "--commit-message",
                 "docs(ai): product PR chain smoke",
-                "--include-path",
-                "docs/LOCAL_AI_TASKS/smoke-task.md",
-                "--include-path",
-                "docs/LOCAL_AI_TASKS/obsolete-monolithic-docs-review-2026-05-07.md",
+                "--apply-report",
+                str(apply_json),
+                "--auto-include-from-apply-report",
                 "--output",
                 str(review_json),
                 "--markdown-output",
@@ -291,6 +311,30 @@ def main() -> int:
                 "--evidence-markdown-output",
                 str(evidence_md),
                 "--allow-dirty-branch",
+            ],
+            [
+                sys.executable,
+                str(source_repo / "Tools/validation/check_unified_chain_contract.py"),
+                "--repo-root",
+                str(repo),
+                "--stamp",
+                STAMP,
+                "--manifest",
+                str(manifest_json),
+                "--official-report",
+                str(official_json),
+                "--gpu0-report",
+                str(gpu0_json),
+                "--apply-report",
+                str(apply_json),
+                "--product-separation-report",
+                str(separation_json),
+                "--review-pr-report",
+                str(review_json),
+                "--require-concrete-patch-specs",
+                "--require-review-pr-product",
+                "--output",
+                str(chain_json),
             ],
         ]
         for step in steps:
@@ -302,6 +346,7 @@ def main() -> int:
         apply_report = load_json(apply_json) if apply_json.exists() else {}
         separation = load_json(separation_json) if separation_json.exists() else {}
         review = load_json(review_json) if review_json.exists() else {}
+        chain = load_json(chain_json) if chain_json.exists() else {}
         target_text = (repo / "docs/LOCAL_AI_TASKS/obsolete-monolithic-docs-review-2026-05-07.md").read_text(encoding="utf-8")
         if MARKER not in target_text:
             errors.append("deterministic marker was not applied")
@@ -313,22 +358,35 @@ def main() -> int:
             errors.append("product separation validation did not pass")
         if review.get("git_commit_performed") is not True:
             errors.append("review PR preparation did not create product commit")
+        if review.get("auto_include_from_apply_report") is not True:
+            errors.append("review PR preparation did not use apply-report auto include")
+        if not review.get("auto_include_paths"):
+            errors.append("review PR preparation did not discover auto include paths")
+        if chain.get("passed") is not True:
+            errors.append("unified chain contract did not pass after review PR preparation")
+        if not any(edge.get("edge") == "product_separation_to_review_pr_product" and edge.get("passed") is True for edge in chain.get("edges") or []):
+            errors.append("unified chain contract did not validate the review PR product edge")
         if review.get("github_pr_created") is True or review.get("git_push_performed") is True:
             errors.append("smoke unexpectedly pushed or created a GitHub PR")
 
     report = {
         "schema_version": 1,
-        "kind": "full0to10_product_pr_chain_smoke",
+        "kind": "unified_run_product_pr_chain_smoke",
+        "legacy_smoke_name": "full0to10_product_pr_chain_smoke",
+        "full0to10_is_profile_not_pipeline": True,
         "repo_root": source_repo.as_posix(),
         "passed": not errors,
         "timeout_seconds": args.timeout_seconds,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
+        "unified_run_profile": "Full0To10",
         "git_push_performed": False,
         "github_pr_created": False,
         "deterministic_operation_count": apply_report.get("operation_count"),
         "review_pr_commit_performed": review.get("git_commit_performed"),
+        "review_pr_auto_include_from_apply_report": review.get("auto_include_from_apply_report"),
+        "chain_contract_passed": chain.get("passed"),
         "workflow_trace": workflow_trace,
         "commands": commands,
         "errors": errors,
