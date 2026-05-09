@@ -135,7 +135,6 @@ def run_powershell_parse(repo_root: Path, operation: dict[str, Any]) -> dict[str
         result = base_operation_result(operation, "powershell.exe/pwsh not found for parser operation")
         result["paths"] = paths
         return result
-
     parse_results: list[dict[str, Any]] = []
     for path in paths:
         literal = "'" + str((repo_root / path).resolve()).replace("'", "''") + "'"
