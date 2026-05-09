@@ -1457,6 +1457,28 @@ if ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality -and -not (Test-Pat
 }
 
 
+# IA-CARMINE-TASK-INGRESS-CONTRACT-BEGIN
+$TaskIngressContractJson = Join-Path $AiPacketsDir "task_ingress_contract.json"
+$TaskIngressContractMd = Join-Path $AiPacketsDir "task_ingress_contract.md"
+$TaskIngressArgs = @(
+    "Tools/ai/build_task_ingress_contract.py",
+    "--repo-root", ".",
+    "--stamp", $DataStamp,
+    "--task-file", $TaskFile,
+    "--runtime-state", $HeapExchangeRuntimeState,
+    "--observer-dir", $HeapExchangeObserverDir,
+    "--output", $TaskIngressContractJson,
+    "--markdown-output", $TaskIngressContractMd
+)
+$PhaseStatus.task_ingress_contract = Invoke-Checked "Build task ingress contract" {
+    & $ResolvedPythonExe @TaskIngressArgs
+}
+$ReportFiles += $TaskIngressContractJson
+$ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $TaskIngressContractMd
+$PhaseReports.task_ingress_contract = $TaskIngressContractJson
+$PhaseReports.task_ingress_contract_markdown = $TaskIngressContractMd
+# IA-CARMINE-TASK-INGRESS-CONTRACT-END
+
 # IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-BEGIN
 if (-not (Get-Variable -Name HeapExchangeObserverDir -ErrorAction SilentlyContinue)) {
     $HeapExchangeObserverDir = $ObserverOutputDir
