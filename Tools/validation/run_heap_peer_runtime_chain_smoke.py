@@ -61,7 +61,7 @@ def main() -> int:
             [
                 {"kind": "proposal", "peer": "gpu1", "role": "primary advisory planner"},
                 {"kind": "tool_result", "peer": "gpu0", "role": "companion openvino tool worker"},
-                {"kind": "decision", "peer": "npu", "role": "audit efficiency observer"},
+                {"kind": "decision", "peer": "npu", "role": "microoperation efficiency peer"},
                 {"kind": "summary", "shared_memory": "heap exchange context bundle"},
             ],
         )
@@ -76,7 +76,7 @@ def main() -> int:
                 "peers": [
                     {"id": "gpu1", "role": "primary advisory planner"},
                     {"id": "gpu0", "role": "companion openvino tool worker"},
-                    {"id": "npu", "role": "audit efficiency observer"},
+                    {"id": "npu", "role": "microoperation efficiency peer"},
                 ],
             },
         )

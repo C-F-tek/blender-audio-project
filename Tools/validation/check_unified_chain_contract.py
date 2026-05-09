@@ -49,7 +49,7 @@ TOOL_EVIDENCE_HINTS = (
 REQUIRED_HEAP_PEERS = {
     "gpu1": ("gpu1", "primary", "advisory", "planner"),
     "gpu0": ("gpu0", "companion", "tool", "openvino", "worker"),
-    "npu": ("npu", "audit", "efficiency", "observer"),
+    "npu": ("npu", "microoperation", "micro-operation", "micro_ops", "micro-ops", "efficiency", "peer"),
 }
 
 SHARED_MEMORY_HINTS = (
@@ -467,10 +467,10 @@ def main() -> int:
         name="heap_exchange_to_peer_runtime",
         producer="dynamic heap/exchange center",
         consumer="GPU1/GPU0/NPU peer runtime",
-        expected="GPU1 primary advisory, GPU0 companion/tool worker and NPU audit/efficiency peers" if args.require_heap_peer_runtime else "not required for this invocation",
+        expected="GPU1 primary advisory, GPU0 companion/tool worker and NPU microoperation/efficiency peer" if args.require_heap_peer_runtime else "not required for this invocation",
         actual=f"peers={peers} heap_peer_error={heap_peer_error}",
         passed=peer_runtime_passed,
-        action="Emit heap peer runtime evidence showing GPU1, GPU0 and NPU participating as linked heap/exchange peers.",
+        action="Emit heap peer runtime evidence showing GPU1, GPU0 and NPU participating as linked heap/exchange peers. Audit remains a deterministic/script lane that can be reused for a complete heap/exchange audit before closure; it is not the dynamic NPU peer role.",
         artifacts=[rel(repo_root, heap_peer_path), rel(repo_root, ai_events_path)],
     )
 
