@@ -16,19 +16,22 @@ This file is report-only. It does not authorize deletion by itself.
 | 2 | `CHATGPT.md` | ChatGPT memory pointer | Current handoff and session-memory index. |
 | 3 | `CHATGPT/README.md` | ChatGPT memory index | Compact reading order for resumed sessions. |
 | 4 | `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` | Current branch state bridge | Start here for phase context. |
-| 5 | `README.md` | Human project identity | Keep short; link to workflows. |
-| 6 | `WORKFLOW.md` | Operational lifecycle | Keep short; no scenario-specific long runs. |
-| 7 | `docs/README.md` | Documentation index | Single reading flow and doc family map. |
-| 8 | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | Markdown lifecycle and pruning policy | Cleanup control point. |
-| 9 | `docs/LOCAL_AI_TASKS/gpu-peer-exchange-operational-principle.md` | GPU1/GPU0/NPU role contract | Canonical peer-exchange doctrine. |
-| 10 | `docs/LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md` | MD-only cleanup policy | GitHub-only doc coherence rules. |
-| 11 | `docs/LOCAL_AI_RUN_BOOTSTRAP.md` | Local checkout bootstrap | Local-run prerequisites. |
-| 12 | `docs/LOCAL_AI_TASKS/README.md` | Task routing | Current vs historical task entrypoints. |
-| 13 | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Unified local AI run-unica entrypoint | Canonical launcher runbook. |
-| 14 | `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` | Current code/tool/evidence flow | Launcher, provider, broker, telemetry, discovery, CSV, bundle and evidence flow. |
-| 15 | `docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md` | Tool placement audit | Tool/candidate classification. |
-| 16 | `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` | Tool promotion guide | Project-tool, broker-tool and full-run-lane promotion. |
-| 17 | `Tools/validation/README.md` | Validator catalog | Tool commands and contracts only. |
+| 5 | `docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` | Current capability depth map | Distinguish active/report-only/provider-gated/manual-review/target capability. |
+| 6 | `docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` | Launcher parameter decision map | Choose lane before flags. |
+| 7 | `docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` | Hidden/old script review queue | Notice wrappers/legacy scripts; not a deletion list. |
+| 8 | `README.md` | Human project identity | Keep short; link to workflows. |
+| 9 | `WORKFLOW.md` | Operational lifecycle | Keep short; no scenario-specific long runs. |
+| 10 | `docs/README.md` | Documentation index | Single reading flow and doc family map. |
+| 11 | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` | Markdown lifecycle and pruning policy | Cleanup control point. |
+| 12 | `docs/LOCAL_AI_TASKS/gpu-peer-exchange-operational-principle.md` | GPU1/GPU0/NPU role contract | Canonical peer-exchange doctrine. |
+| 13 | `docs/LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md` | MD-only cleanup policy | GitHub-only doc coherence rules. |
+| 14 | `docs/LOCAL_AI_RUN_BOOTSTRAP.md` | Local checkout bootstrap | Local-run prerequisites. |
+| 15 | `docs/LOCAL_AI_TASKS/README.md` | Task routing | Current vs historical task entrypoints. |
+| 16 | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | Unified local AI run-unica entrypoint | Canonical launcher runbook. |
+| 17 | `docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md` | Current code/tool/evidence flow | Launcher, provider, broker, telemetry, discovery, CSV, bundle and evidence flow. |
+| 18 | `docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md` | Tool placement audit | Tool/candidate classification. |
+| 19 | `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` | Tool promotion guide | Project-tool, broker-tool and full-run-lane promotion. |
+| 20 | `Tools/validation/README.md` | Validator catalog | Tool commands and contracts only. |
 
 Legacy monolithic 0-to-10 runbooks have been removed or demoted from the active documentation set. The unified launcher is now the only active run-unica entrypoint.
 
@@ -46,6 +49,27 @@ quick/balanced/deep/custom = budget/intensity, not scope reduction
 Prune or rewrite docs that imply a quick Full0To10 run is a partial run, that legacy wrappers are first entrypoints, or that a run-unica flow may silently skip core lanes.
 
 The perimeter of `tutto` is expandable. New stable lanes and data surfaces must update canonical docs or be explicitly excluded with rationale.
+
+## Capability and parameter map rule
+
+Docs are stale if a new AI must infer capability or launcher parameters from scattered historical runbooks.
+
+Canonical decision surfaces:
+
+```text
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
+```
+
+Rules:
+
+```text
+capability map answers what exists and what evidence proves it
+parameter map answers which launcher lane/flags to use
+script aging audit answers what may be hidden/legacy and needs review
+older docs must link to these maps rather than restating partial state
+```
 
 ## GPU peer-exchange pruning rule
 
@@ -167,6 +191,9 @@ Do not create new monolithic AI-to-AI bundles without companion manifests.
 | Topic | Canonical target | Pruning rule |
 |---|---|---|
 | Provider lane policy | `AGENTS.md`, `LOCAL_AI_TASKS/gpu-peer-exchange-operational-principle.md` | Other docs link or summarize one line. |
+| Current capability status | `LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` | Other docs do not duplicate status matrices. |
+| Launcher parameter selection | `LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` | Other docs avoid flat parameter lists unless generated from code. |
+| Script aging / hidden wrappers | `LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` | Do not delete from age alone. |
 | Run unica procedure | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` | No copied command blocks in entrypoints. |
 | TUTTO SU TUTTO doctrine | `AGENTS.md`, `README.md`, `WORKFLOW.md`, `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` | Other docs may summarize but must not narrow scope. |
 | MD-only cleanup | `LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md` | Other docs link to it. |
@@ -237,20 +264,24 @@ guardrail breach report
 ## Current cleanup sequence
 
 1. Keep root entrypoints focused on the single reading flow.
-2. Keep the canonical unified launcher as the only active run-unica command surface.
-3. Keep TUTTO SU TUTTO and expandable perimeter doctrine visible.
-4. Keep GPU peer-exchange doctrine visible.
-5. Keep broker telemetry, capability manifest, provider quality and full toolbox telemetry visible.
-6. Keep discovery/index/CSV-count surfaces visible in refactor/reuse and run-unica docs.
-7. Keep no-audio/media output policy visible in task routing.
-8. Use inventory output to identify missing-index, long-file and prune candidates.
-9. Split maintained Markdown over 500 lines using `<file>.md/part-xxx.md`.
-10. Validate links and report contracts after deletion when local execution is available.
+2. Keep current capability, parameter and script visibility maps indexed before historical task runbooks.
+3. Keep the canonical unified launcher as the only active run-unica command surface.
+4. Keep TUTTO SU TUTTO and expandable perimeter doctrine visible.
+5. Keep GPU peer-exchange doctrine visible.
+6. Keep broker telemetry, capability manifest, provider quality and full toolbox telemetry visible.
+7. Keep discovery/index/CSV-count surfaces visible in refactor/reuse and run-unica docs.
+8. Keep no-audio/media output policy visible in task routing.
+9. Use inventory output to identify missing-index, long-file and prune candidates.
+10. Split maintained Markdown over 500 lines using `<file>.md/part-xxx.md`.
+11. Validate links and report contracts after deletion when local execution is available.
 
 ## Acceptance criteria
 
 ```text
 single reading flow is explicit
+capability depth map is indexed before historical runbooks
+launcher parameter decision map is indexed before copied command blocks
+script aging visibility audit is indexed before cleanup/deprecation work
 unified launcher is the active run-unica entrypoint
 TUTTO SU TUTTO remains full-scope across quick/balanced/deep/custom parameters
 GPU1/GPU0/NPU peer-exchange roles are documented
