@@ -49,6 +49,7 @@ Do not use this module map as proof of active behavior when source code or the o
 | Provider mesh | `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_mesh.py` |
 | Runtime broker | `Tools/ai/agent_runtime_tool_broker.py` |
 | AI-to-AI bundle | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` |
+| Task Markdown patch suggestion authoring | `Tools/ai/create_task_patch_suggestion_markdown.py` |
 | Task Markdown patch suggestion report | `Tools/ai/build_task_patch_suggestion_report.py` |
 | Patch suggestion dry/apply | `Tools/ai/apply_patch_suggestion_bundle.py` and `Tools/ai/patch_suggestion_bundle/cli.py` |
 | Patch suggestion product separation | `Tools/validation/check_patch_suggestion_product_separation.py` |
@@ -66,6 +67,7 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 
 ```text
 docs/LOCAL_AI_TASKS/<task>.md
+  -> create_task_patch_suggestion_markdown.py (optional helper)
   -> build_task_patch_suggestion_report.py
   -> apply_patch_suggestion_bundle.py
   -> check_patch_suggestion_product_separation.py
@@ -78,7 +80,7 @@ Limits still present in code:
 ```text
 ReviewPrIncludePath remains supported for explicit/manual allowlists.
 prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
-prepare_review_pr.py does not create draft PRs yet.
+prepare_review_pr.py can create draft PRs only when `--draft-pr` is explicitly paired with `--create-pr`.
 ```
 
 ## Obsolete / monolithic flag
