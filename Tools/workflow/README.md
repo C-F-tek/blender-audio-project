@@ -423,3 +423,17 @@ Required final order:
 
 The hardening remains report-only: no provider execution, no patch application, no git push and no PR creation.
 <!-- IA-CARMINE-RUNTIME-EVIDENCE-CORRELATION-LAUNCHER-HARDENING-END -->
+
+<!-- IA-CARMINE-REAL-PRODUCT-PROFILE-CORRELATION-HARDENING-BEGIN -->
+## Real product profile correlation hardening
+
+The real product profile smoke requires the wrapper to pass `-BuildRuntimeEvidenceCorrelation` to the launcher.
+
+This protects the final product path from regressing to a run that prepares a PR without emitting the correlated runtime evidence report. The profile-level smoke now checks all three levels:
+
+1. wrapper requests runtime evidence correlation;
+2. launcher exposes and emits the final correlation artifact;
+3. preflight/README document the wiring smoke that guards the contract.
+
+This remains static and report-only. It does not execute providers, does not apply patches and does not create remote PRs.
+<!-- IA-CARMINE-REAL-PRODUCT-PROFILE-CORRELATION-HARDENING-END -->
