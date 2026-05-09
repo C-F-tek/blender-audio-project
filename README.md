@@ -38,26 +38,29 @@ Canonical rule:
 docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 ```
 
-## Current operating doctrine: TUTTO SU TUTTO
+## Current operating doctrine: run unica real product
 
-The project treats full local AI runs as whole-repository operations: **TUTTO SU TUTTO**.
+The current product doctrine is one controlled entry, one dynamic heap/exchange center and one validated product exit.
 
 ```text
-Full0To10 = whole-repository active-lane perimeter
+operator product entrypoint = Tools/workflow/run_unified_real_product_pr.ps1
+internal dynamic launcher = Tools/workflow/run_unified_local_ai_refactor.ps1
+Full0To10 / 0Full10 = compatibility wording for whole-repository active-lane perimeter
+single_dynamic_heap_exchange_run = current report/manifest model
 quick/balanced/deep/custom = intensity or budget, not reduced semantic scope
 -No* flags = explicit opt-out from selected lanes
 -NoStrictRealRunActivation = single-phase diagnostics only
 ```
 
-Once `-Full0To10` is selected, provider/probe/workload-quality, telemetry, discovery, index and CSV/count lanes are included by default unless explicitly disabled, unavailable or recorded as degraded.
-
-The meaning of `tutto` is expandable. New stable lanes, registries, validators, broker tools, provider diagnostics, evidence surfaces, memory/context builders and repository-consistency checks must be added to the full-run contract when they become production-ready.
+Full local-AI work remains **TUTTO SU TUTTO**, but not by blindly executing every script. It means every relevant mapped, guarded, observable and evidence-producing capability can be selected, coordinated, validated and reported inside the run-unica model.
 
 ## Current runtime boundary
 
 Canonical operating model:
 
 ```text
+docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/MAIN_RUNTIME_ARCHITECTURE.md
@@ -67,22 +70,28 @@ Current boundary:
 
 ```text
 IN
-  controlled task Markdown
+  Task MD or generated process-gate task
+  mandatory real product preflight
   RepoPy/PYTHONPATH gate
   inventories/context/agent-state
   workload/capability evidence
 
 LOOP / HEAP / EXCHANGE
   dynamic heap knowledge surface
-  GPU1/GPU0/NPU/provider/context/broker lanes
+  GPU1/Ollama advisory lane
+  GPU0/OpenVINO observable support workload
+  NPU micro peer diagnostic/report lane
+  provider/context/broker lanes
   runtime state and public exchange events
 
 OUT
   heap exchange exit product
-  concrete deterministic operation candidates
-  lifecycle validation
-  patchkit/apply bridge
-  review PR product
+  runtime evidence correlation
+  repository change proposals
+  generated patch specs with concrete deterministic operations
+  lifecycle/final product validation
+  prepare_review_pr.py
+  draft review PR product when requested
 ```
 
 The center is dynamic. Entry and exit are controlled.
@@ -95,12 +104,13 @@ Current target topology:
 
 ```text
 shared runtime heap / blackboard
-├─ GPU1 primary advisory / planner
-├─ GPU0 coworker/helper OpenVINO
-├─ NPU microtask responder
+├─ GPU1 primary advisory / Ollama planner
+├─ GPU0 OpenVINO observable support workload
+├─ NPU peer micro diagnostic/report lane
 ├─ broker unico executor
 ├─ semantic tools registry
 ├─ deterministic validators / CPU authority
+├─ generated patch-spec product lane
 └─ telemetry/event stream
 ```
 
@@ -111,7 +121,8 @@ provider lanes advise, classify, plan or respond through explicit roles;
 broker unico executor is the execution gateway for registered tools;
 semantic tools registry is the capability source of truth;
 deterministic CPU validators remain local pass/fail authority;
-telemetry/event stream records executed, skipped, degraded and blocked phases.
+telemetry/event stream records executed, skipped, degraded and blocked phases;
+generated patch specs are product only when they carry concrete deterministic operations.
 ```
 
 This architecture is implemented incrementally. Architecture targets do not authorize source writes, provider execution, patch application, Blender runtime, FFmpeg runtime, commit, push, merge or delete by themselves.
@@ -123,12 +134,16 @@ AGENTS.md
   -> CHATGPT.md
   -> CHATGPT/README.md
   -> docs/README.md
+  -> docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+  -> docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+  -> docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
+  -> docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md
+  -> docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
   -> docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
   -> docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
   -> docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
   -> docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
   -> docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
-  -> docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
   -> docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
   -> docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
   -> docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
@@ -142,75 +157,73 @@ AGENTS.md
 
 Historical handoffs, old `current-*` docs, generated evidence and monolithic runbooks are context only. They do not override current source code, owner maps, launcher manifests or validation evidence.
 
-The root README is descriptive only. It must not carry executable PowerShell command blocks because launcher options change faster than project identity docs.
+The root README is descriptive only. It must not carry long executable PowerShell command blocks because launcher options change faster than project identity docs.
 
-## Current local AI entrypoint
+## Current local AI entrypoints
 
-The active local AI operator entrypoint is:
+Operator-facing real product entrypoint:
+
+```text
+Tools/workflow/run_unified_real_product_pr.ps1
+```
+
+Internal dynamic launcher and diagnostic entrypoint:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
-Canonical runbook:
+Canonical runbooks/contracts:
 
 ```text
+docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-```
-
-Launcher manifest contract:
-
-```text
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
-Use those documents for current commands, `-Full0To10`, intensity profiles, provider flags, reset mode, memory controls, patch-spec generation, review-PR options and validation modes.
+Use those documents for current commands, intensity profiles, provider flags, reset mode, memory controls, patch-spec generation, review-PR options and validation modes.
 
 ## Current product path: Markdown input to review PR
 
-A valid product run starts from a controlled task Markdown file, enters the dynamic heap/exchange with context and lane evidence, and exits only through deterministic product validation.
+A valid product run starts from a controlled task Markdown file or generated process-gate task, enters the dynamic heap/exchange with context and lane evidence, and exits only through deterministic product validation.
 
 Current chain:
 
 ```text
-task Markdown
-  -> inventories/context/agent-state
-  -> workload quality routing
-  -> heap/exchange runtime entry
-  -> official adapter/provider lanes
-  -> patch specs or patch suggestion product
-  -> heap/exchange runtime exit product
-  -> lifecycle validator
-  -> patchkit bundle or deterministic patch bridge
-  -> review PR for manual review
+run_unified_real_product_pr.ps1
+  -> Task MD or generated process-gate task
+  -> mandatory real product preflight
+  -> run_unified_local_ai_refactor.ps1
+  -> inventories/context/agent-state/workload-quality
+  -> heap/exchange runtime entry and peer manifest
+  -> GPU1/GPU0/NPU/provider lanes
+  -> runtime evidence correlation
+  -> repository change proposals
+  -> generated patch specs
+  -> generated patch-spec apply report
+  -> prepare_review_pr.py
+  -> final review PR product contract
+  -> draft review PR for manual review when selected
 ```
 
-Current deterministic source-write boundary:
+Current deterministic source-write boundary for patchkit bundles:
 
 ```text
 Tools/ai/patchkit/apply_patch_bundle.py
 ```
 
-Future patch bundles should centralize the modification core:
+Current generated review product boundary:
 
 ```text
-patch_specs/<bundle>/bundle.json
-patch_specs/<bundle>/fragments/*.ps1
-patch_specs/<bundle>/fragments/*.py
-```
-
-Apply with the reusable patchkit runner, not a new one-off patcher, when the supported operations can express the change.
-
-The older patch suggestion bridge remains available:
-
-```text
-Tools/ai/build_task_patch_suggestion_report.py
-Tools/ai/apply_patch_suggestion_bundle.py
-Tools/validation/check_patch_suggestion_product_separation.py
+Tools/ai/build_repository_change_proposals.py
+Tools/ai/build_patch_specs_from_proposals.py
+Tools/ai/apply_generated_patch_specs_for_review_pr.py
 Tools/ai/prepare_review_pr.py
+Tools/validation/check_review_pr_final_product_contract.py
 ```
 
-Metadata-only patch drafts are not enough for a successful review-PR product.
+Metadata-only patch drafts are not enough for a successful review-PR product. `operation_count=0` under generated patch-spec apply is a hard failure.
 
 ## Current stable docs
 
@@ -219,13 +232,17 @@ Metadata-only patch drafts are not enough for a successful review-PR product.
 | Agent contract and guardrails | `AGENTS.md` |
 | ChatGPT/session memory and handoff notes | `CHATGPT.md`, then `CHATGPT/README.md` |
 | Documentation index | `docs/README.md` |
+| Real product run documentation router | `docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md` |
+| Real product run-unica runbook | `docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md` |
+| Documentation/code alignment audit | `docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md` |
+| Problems and hygiene candidates | `docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md` |
+| Markdown line-budget triage | `docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md` |
 | Heap/exchange and patchkit model | `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` |
 | AI first-orientation map | `docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` |
 | Current code/state bridge | `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
 | Current capability depth | `docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
 | Launcher parameter decision map | `docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
 | Script aging / hidden wrapper review | `docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` |
-| Read-first/reuse-first/small-files rule | `docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md` |
 | Code-derived current behavior | `docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md` |
 | Script census and run variants | `docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md` |
 | Single-owner scripts / do-not-bypass rules | `docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md` |
@@ -233,8 +250,7 @@ Metadata-only patch drafts are not enough for a successful review-PR product.
 | Validator and smoke cycles | `docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md` |
 | Main runtime architecture | `docs/MAIN_RUNTIME_ARCHITECTURE.md` |
 | Unified launcher manifest contract | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
-| Unified full 0-to-10 local AI run | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
-| Patch suggestion final phase | `docs/LOCAL_AI_TASKS/patch-suggestion-bundle-final-phase.md` |
+| Unified launcher internal workflow | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
 | Validators and inventories | `Tools/validation/README.md` and validator-smoke map |
 | NPU/helper package | `Tools/npu/pipeline/README.md` |
 | Repository area map | `docs/MODULE_MAP.md` |
@@ -248,14 +264,20 @@ A production run-unica handoff is not complete from evidence or patch plan alone
 Review this group together:
 
 ```text
+wrapper report when product path was used
 launcher manifest
 phase_status / phase_reports
-evidence artifacts
+mandatory preflight report
 heap/exchange runtime entry
-heap/exchange runtime state
+heap peer runtime manifest
 heap/exchange runtime exit product
 heap/exchange lifecycle report
-patch-plan artifacts when produced
+runtime evidence correlation
+repository change proposals
+generated patch-spec manifest and apply report
+review PR prepare report
+final review PR product contract
+evidence artifacts
 runtime_tool_usage_telemetry_<STAMP>.json/md
 runtime_tool_capability_manifest_<STAMP>.json/md
 full_toolbox_run_telemetry_summary_<STAMP>.json/md
@@ -300,8 +322,10 @@ run FFmpeg encode/mux or Blender render
 modify full analysis JSON files
 commit output/**, renders/**, generated media, *.db or *.sqlite
 hand-edit generated indexes
-change Full0To10 from opt-out-by-lane to silent opt-in per capability
-promote NPU/OpenVINO to primary advisory without quality-gated architecture change
+change Full0To10 compatibility spelling into magic behavior
+promote NPU/OpenVINO to compute-provider lane without quality-gated architecture change
+claim GPU0 success from device visibility only
+claim metadata-only generated patch specs as reviewable product
 create tool execution paths outside broker/registry/validator/telemetry architecture
 merge to master without explicit user command
 ```
@@ -343,12 +367,15 @@ auto-discovery and index repair reports/plans
 tool placement audit
 validation report contracts
 runtime broker telemetry
+runtime evidence correlation
+repository change proposals
+generated patch-spec apply reports
 compact GitHub evidence bundles
 heap/exchange lifecycle evidence
 patchkit reports
 ```
 
-Commands for these tools live in the unified launcher runbook and tool-specific README files, not in this root README.
+Commands for these tools live in the real product runbook, unified launcher runbook and tool-specific README files, not in this root README.
 
 ## GitHub / PR description policy
 
@@ -358,7 +385,7 @@ Required wording principle:
 
 ```text
 Root/project descriptions describe purpose and canonical docs.
-Operational commands live in docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md.
+Operational commands live in docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md and docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md.
 Runtime architecture lives in docs/MAIN_RUNTIME_ARCHITECTURE.md and the heap/exchange operating model.
 The GitHub About description must not describe this as only a Blender/audio project.
 ```
