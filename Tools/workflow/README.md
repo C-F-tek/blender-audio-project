@@ -408,3 +408,18 @@ Use it after a real product run to prove that one stamp contains the complete pr
 
 The smoke `Tools/validation/run_runtime_evidence_correlation_smoke.py` is also part of the mandatory preflight to prevent drift in the validator itself. It is report-only and does not execute providers or apply patches.
 <!-- IA-CARMINE-RUNTIME-EVIDENCE-CORRELATION-END -->
+
+<!-- IA-CARMINE-RUNTIME-EVIDENCE-CORRELATION-LAUNCHER-HARDENING-BEGIN -->
+## Runtime evidence correlation launcher hardening
+
+The mandatory real product preflight validates `run_runtime_evidence_correlation_launcher_wiring_smoke.py`.
+
+The full product PR chain smoke also checks that runtime evidence correlation is present after the final unified chain contract. This prevents drift where the launcher emits a final chain contract but forgets to emit the correlated runtime evidence report for the same stamp.
+
+Required final order:
+
+1. final unified chain contract
+2. runtime evidence correlation JSON/Markdown report
+
+The hardening remains report-only: no provider execution, no patch application, no git push and no PR creation.
+<!-- IA-CARMINE-RUNTIME-EVIDENCE-CORRELATION-LAUNCHER-HARDENING-END -->
