@@ -82,13 +82,108 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+class RealProductLauncherError {
+    [string]$Code
+    [string]$Message
+    [int]$ExitCode
+
+    RealProductLauncherError([string]$Code, [string]$Message, [int]$ExitCode) {
+        $this.Code = $Code
+        $this.Message = $Message
+        $this.ExitCode = $ExitCode
+    }
+}
+
+function Stop-RealProductLauncher {
+    param(
+        [string]$Code,
+        [string]$Message,
+        [int]$ExitCode = 2,
+        [string]$Root = "",
+        [string]$StampValue = "",
+        [string]$DetailPath = ""
+    )
+
+    $ErrorObject = [RealProductLauncherError]::new($Code, $Message, $ExitCode)
+
+    $EffectiveRoot = $Root
+    if ([string]::IsNullOrWhiteSpace($EffectiveRoot)) {
+        try {
+            $MaybeRoot = (& git rev-parse --show-toplevel 2>$null)
+            if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($MaybeRoot)) {
+                $EffectiveRoot = $MaybeRoot.Trim()
+            }
+        }
+        catch {
+            $EffectiveRoot = ""
+        }
+    }
+    if ([string]::IsNullOrWhiteSpace($EffectiveRoot)) {
+        $EffectiveRoot = (Get-Location).Path
+    }
+
+    $EffectiveStamp = $StampValue
+    if ([string]::IsNullOrWhiteSpace($EffectiveStamp)) {
+        $EffectiveStamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    }
+
+    $OutputDir = Join-Path $EffectiveRoot "output/validation"
+    $JsonPath = Join-Path $OutputDir ("real_product_wrapper_error_{0}.json" -f $EffectiveStamp)
+    $MarkdownPath = Join-Path $OutputDir ("real_product_wrapper_error_{0}.md" -f $EffectiveStamp)
+
+    $Report = [ordered]@{
+        schema_version = 1
+        kind = "real_product_wrapper_error"
+        generated_at = (Get-Date).ToString("s")
+        repo_root = $EffectiveRoot.Replace("\", "/")
+        stamp = $EffectiveStamp
+        passed = $false
+        error_code = $ErrorObject.Code
+        message = $ErrorObject.Message
+        detail_path = $DetailPath
+        provider_execution_performed = $false
+        patch_application_performed = $false
+        source_writes_performed = $false
+        exit_code = $ErrorObject.ExitCode
+        errors = @($ErrorObject.Message)
+        warnings = @()
+    }
+
+    try {
+        New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+        ($Report | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $JsonPath -Encoding UTF8
+
+        $Markdown = @(
+            "# Real Product Wrapper Error",
+            "",
+            "- Passed: ``False``",
+            "- Error code: ``$($ErrorObject.Code)``",
+            "- Message: $($ErrorObject.Message)",
+            "- Detail path: ``$DetailPath``",
+            "- JSON report: ``$JsonPath``",
+            "- Exit code: ``$($ErrorObject.ExitCode)``",
+            ""
+        ) -join "`n"
+        Set-Content -LiteralPath $MarkdownPath -Value ($Markdown + "`n") -Encoding UTF8
+
+        Write-Host "[ERROR] $($ErrorObject.Code): $($ErrorObject.Message)" -ForegroundColor Red
+        Write-Host "[ERROR] Structured wrapper report: $JsonPath" -ForegroundColor Red
+    }
+    catch {
+        Write-Host "[ERROR] $($ErrorObject.Code): $($ErrorObject.Message)" -ForegroundColor Red
+        Write-Host "[ERROR] Failed to write structured wrapper report: $($_.Exception.Message)" -ForegroundColor Red
+    }
+
+    exit $ErrorObject.ExitCode
+}
+
 function Resolve-RepoRoot {
     param([string]$Root)
     Push-Location $Root
     try {
         $resolved = (& git rev-parse --show-toplevel 2>$null)
         if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($resolved)) {
-            throw "This command must be run inside a Git repository checkout."
+            Stop-RealProductLauncher -Code "not_git_repository" -Message "This command must be run inside a Git repository checkout." -Root $Root -StampValue $Stamp
         }
         return (Resolve-Path $resolved.Trim()).Path
     }
@@ -310,10 +405,10 @@ function Add-LauncherSwitch {
 }
 
 if ($CreatePr -and -not $Push) {
-    throw "-CreatePr requires -Push because prepare_review_pr.py needs the branch on the remote"
+    Stop-RealProductLauncher -Code "create_pr_requires_push" -Message "-CreatePr requires -Push because prepare_review_pr.py needs the branch on the remote" -Root $RepoRoot -StampValue $Stamp
 }
 if ($DraftPr -and -not $CreatePr) {
-    throw "-DraftPr requires -CreatePr"
+    Stop-RealProductLauncher -Code "draft_pr_requires_create_pr" -Message "-DraftPr requires -CreatePr" -Root $RepoRoot -StampValue $Stamp
 }
 
 if ($CreatePr) { $ValidateFinalReviewPrProduct = $true }
@@ -328,7 +423,7 @@ if ([string]::IsNullOrWhiteSpace($Stamp)) {
 $GeneratedProcessGateTask = $false
 if ([string]::IsNullOrWhiteSpace($TaskFile)) {
     if (-not $ProcessGateTask) {
-        throw "-TaskFile is required unless -ProcessGateTask is used."
+        Stop-RealProductLauncher -Code "task_file_required" -Message "-TaskFile is required unless -ProcessGateTask is used." -Root $ResolvedRepoRoot -StampValue $Stamp
     }
 
     $TaskFile = New-HeapExchangeProcessGateTask -Root $ResolvedRepoRoot -StampValue $Stamp
@@ -351,7 +446,7 @@ if ($GeneratedProcessGateTask -and -not $AllowDirty) {
     if (-not [string]::IsNullOrWhiteSpace($DirtyAfterGeneratedTask)) {
         Write-Host "[ERROR] Generated process gate task dirtied the repository:" -ForegroundColor Red
         Write-Host $DirtyAfterGeneratedTask
-        throw "Generated process gate task must live under ignored output/**."
+        Stop-RealProductLauncher -Code "generated_task_dirty_tree" -Message "Generated process gate task must live under ignored output/**." -Root $ResolvedRepoRoot -StampValue $Stamp
     }
 }
 
@@ -362,12 +457,12 @@ if ([string]::IsNullOrWhiteSpace($TaskBranch)) {
 
 $Launcher = Join-Path $ResolvedRepoRoot "Tools/workflow/run_unified_local_ai_refactor.ps1"
 if (-not (Test-Path -LiteralPath $Launcher -PathType Leaf)) {
-    throw "Unified launcher missing: $Launcher"
+    Stop-RealProductLauncher -Code "unified_launcher_missing" -Message "Unified launcher missing: $Launcher" -Root $ResolvedRepoRoot -StampValue $Stamp -DetailPath $Launcher
 }
 
 $PreflightGate = Join-Path $ResolvedRepoRoot "Tools/validation/run_real_product_preflight_gate.py"
 if (-not (Test-Path -LiteralPath $PreflightGate -PathType Leaf)) {
-    throw "Mandatory real product preflight gate missing: $PreflightGate"
+    Stop-RealProductLauncher -Code "mandatory_preflight_missing" -Message "Mandatory real product preflight gate missing: $PreflightGate" -Root $ResolvedRepoRoot -StampValue $Stamp -DetailPath $PreflightGate
 }
 
 $ResolvedPythonExe = $PythonExe
@@ -397,7 +492,7 @@ Write-Host "Python: $ResolvedPythonExe"
     --timeout-seconds $PreflightTimeoutSeconds
 
 if ($LASTEXITCODE -ne 0) {
-    throw "Mandatory real product preflight failed. See $PreflightOutput"
+    Stop-RealProductLauncher -Code "mandatory_preflight_failed" -Message "Mandatory real product preflight failed. See $PreflightOutput" -Root $ResolvedRepoRoot -StampValue $Stamp -DetailPath $PreflightOutput
 }
 
 Write-Host "[OK] Mandatory real product preflight passed: $PreflightOutput"
@@ -510,7 +605,7 @@ if ($LauncherExitCode -ne 0) {
 if ($ValidateFinalReviewPrProduct -and -not $DryRun) {
     $FinalProductContract = Join-Path $ResolvedRepoRoot "Tools/validation/check_review_pr_final_product_contract.py"
     if (-not (Test-Path -LiteralPath $FinalProductContract -PathType Leaf)) {
-        throw "Review PR final product contract missing: $FinalProductContract"
+        Stop-RealProductLauncher -Code "final_product_contract_missing" -Message "Review PR final product contract missing: $FinalProductContract" -Root $ResolvedRepoRoot -StampValue $Stamp -DetailPath $FinalProductContract
     }
 
     $ReviewReportCandidates = @()
@@ -521,7 +616,7 @@ if ($ValidateFinalReviewPrProduct -and -not $DryRun) {
         Select-Object -First 1
 
     if ($null -eq $ReviewReport) {
-        throw "review_pr_prepare report not found for stamp $Stamp"
+        Stop-RealProductLauncher -Code "review_pr_prepare_report_missing" -Message "review_pr_prepare report not found for stamp $Stamp" -Root $ResolvedRepoRoot -StampValue $Stamp
     }
 
     $FinalProductJson = Join-Path $ResolvedRepoRoot ("output/validation/review_pr_final_product_contract_remote_{0}.json" -f $Stamp)
@@ -542,7 +637,7 @@ if ($ValidateFinalReviewPrProduct -and -not $DryRun) {
     & $ResolvedPythonExe @FinalProductArgs
     $FinalProductExitCode = $LASTEXITCODE
     if ($FinalProductExitCode -ne 0) {
-        throw "Review PR final product contract failed. See $FinalProductJson"
+        Stop-RealProductLauncher -Code "review_pr_final_product_contract_failed" -Message "Review PR final product contract failed. See $FinalProductJson" -Root $ResolvedRepoRoot -StampValue $Stamp -DetailPath $FinalProductJson
     }
 
     $ReviewPrReport = Get-Content -LiteralPath $ReviewReport.FullName -Raw | ConvertFrom-Json
