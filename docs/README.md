@@ -24,9 +24,14 @@ LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 
 ## Current code-driven entrypoints
 
-Use these first when an AI needs to understand what the project is, what exists, what can run, and which scripts may be hidden or legacy:
+Use these first when an AI needs to understand the current product path, run-unica model, documentation state and code owners:
 
 ```text
+LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
+LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md
+LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
 LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
@@ -45,6 +50,11 @@ Meaning:
 
 | Map | Purpose |
 |---|---|
+| `real-product-run-doc-index-2026-05-10.md` | Current document router for run-unica, product path, code alignment, problems and MD line-budget hygiene. |
+| `real-product-run-unica-runbook-2026-05-10.md` | Current operator-facing real product runbook: wrapper entry, mandatory preflight, heap/exchange center and draft review PR exit. |
+| `documentation-code-alignment-audit-2026-05-10.md` | Code-driven owner map showing which documents match which source files and where drift remains. |
+| `problems-and-hygiene-candidates-2026-05-10.md` | Prioritized hygiene/problem backlog after the first real product run attempts. |
+| `md-line-budget-triage-2026-05-10.md` | Current Markdown line-budget and split/refactor triage. |
 | `heap-exchange-and-patchkit-operating-model-2026-05-09.md` | Current IN -> dynamic heap/exchange loop -> deterministic OUT model and reusable patchkit bundle procedure. |
 | `ai-orientation-map-2026-05-09.md` | Compact first-orientation map for AI agents: read path, owner map, heap/exchange boundary, patchkit commands and validation map. |
 | `documentation-panorama-and-staleness-map-2026-05-09.md` | Repository-wide doc precedence, canonical/stale zones and future cleanup queue. |
@@ -60,16 +70,19 @@ Meaning:
 
 ## Main doctrine
 
-Full local-AI work must preserve **TUTTO SU TUTTO**.
+Full local-AI work must preserve the run-unica principle.
 
 ```text
-Full0To10 = whole-repository active-lane perimeter
+real product entrypoint = Tools/workflow/run_unified_real_product_pr.ps1
+internal dynamic launcher = Tools/workflow/run_unified_local_ai_refactor.ps1
+Full0To10 / 0Full10 = compatibility wording for whole-repository active-lane perimeter
+single_dynamic_heap_exchange_run = current manifest/report model
 quick/balanced/deep/custom = budget/intensity, not reduced semantic scope
 -No* flags = explicit opt-out only
 -NoStrictRealRunActivation = single-phase diagnostics only
 ```
 
-New stable lanes, validators, broker capabilities, provider diagnostics, evidence surfaces, memory/context tools, discovery/index surfaces and CSV/count surfaces become candidate expansions of `tutto`.
+New stable lanes, validators, broker capabilities, provider diagnostics, evidence surfaces, memory/context tools, discovery/index surfaces and CSV/count surfaces become candidate expansions of `tutto` only after they are mapped, wired, guarded, observable and evidence-producing.
 
 ## Primary runtime architecture
 
@@ -78,18 +91,20 @@ Canonical architecture:
 ```text
 MAIN_RUNTIME_ARCHITECTURE.md
 LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
 ```
 
-Target topology:
+Current topology:
 
 ```text
 shared runtime heap / blackboard
-├─ GPU1 primary advisory / planner
-├─ GPU0 coworker/helper OpenVINO
-├─ NPU microtask responder
+├─ GPU1 primary advisory / Ollama planner
+├─ GPU0 OpenVINO observable support workload
+├─ NPU peer micro diagnostic/report lane
 ├─ broker unico executor
 ├─ semantic tools registry
 ├─ deterministic validators / CPU authority
+├─ generated patch-spec product lane
 └─ telemetry/event stream
 ```
 
@@ -98,7 +113,7 @@ Runtime boundary:
 ```text
 IN = controlled task/context/capability entry
 LOOP = dynamic heap/exchange where GPU1/GPU0/NPU/provider lanes cooperate
-OUT = deterministic exit product, lifecycle validation, patchkit bundle or review PR
+OUT = deterministic exit product, lifecycle validation, concrete patch specs, patchkit bundle or review PR
 ```
 
 Architecture targets do not authorize source writes, provider execution, patch application, Blender runtime, FFmpeg runtime, commit, push, merge or delete by themselves.
@@ -111,6 +126,11 @@ Use this order unless a task file says otherwise:
 ../AGENTS.md
 ../CHATGPT.md
 ../CHATGPT/README.md
+LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
+LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md
+LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
 LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
@@ -217,6 +237,7 @@ Canonical policies:
 LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 LOCAL_AI_TASKS/md-split-folder-naming-rule-2026-05-07.md
 LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md
+LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
 DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 ```
 
@@ -224,6 +245,11 @@ DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 
 | Need | File |
 |---|---|
+| Real product run documentation router | `LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md` |
+| Real product run-unica operator runbook | `LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md` |
+| Documentation/code alignment audit | `LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md` |
+| Problems and hygiene candidates | `LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md` |
+| Markdown line-budget triage | `LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md` |
 | Current operational bridge | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
 | Heap/exchange and patchkit operating model | `LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` |
 | AI first-orientation map | `LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` |
@@ -232,7 +258,7 @@ DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 | Current capability depth | `LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
 | Launcher parameter decision map | `LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
 | Script aging / hidden wrapper review | `LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` |
-| Unified full 0-to-10 local AI workflow | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
+| Unified launcher internal workflow | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
 | Launcher manifest/phase contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
 | Code-derived behavior map | `LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md` |
 | Script census and validation flows | `LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md` |
