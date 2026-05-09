@@ -2052,44 +2052,67 @@ $Manifest = [ordered]@{
 # IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN
 $UnifiedChainContractJson = Join-Path $OutputDir ("validation/unified_chain_contract_{0}.json" -f $DataStamp)
 $UnifiedChainContractMd = Join-Path $OutputDir ("validation/unified_chain_contract_{0}.md" -f $DataStamp)
+$UnifiedChainArgsContextJson = Join-Path $OutputDir ("validation/unified_chain_contract_args_context_{0}.json" -f $DataStamp)
+$UnifiedChainArgsJson = Join-Path $OutputDir ("validation/unified_chain_contract_args_{0}.json" -f $DataStamp)
 
-$RequireAiExchangeForChain = [bool]($UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $UseOllamaAdvisory -or $RunOllamaProbe -or $OpenExtendedObserverConsoles)
-$RequireConcretePatchSpecsForChain = [bool]$ReviewPrFromGeneratedPatchSpecs
-$RequireReviewPrProductForChain = [bool]($PrepareReviewPr -and ($ReviewPrFromGeneratedPatchSpecs -or $ReviewPrApplyDeterministicSuggestions))
-
-$UnifiedChainArgs = @(
-    "Tools/validation/check_unified_chain_contract.py",
-    "--repo-root", ".",
-    "--stamp", $DataStamp,
-    "--mode-name", $ModeName,
-    "--manifest", $ManifestPath,
-    "--output", $UnifiedChainContractJson,
-    "--markdown-output", $UnifiedChainContractMd
-)
-
+$UnifiedChainApplyReport = ""
 if ((Get-Variable -Name PatchSuggestionJson -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $PatchSuggestionJson -PathType Leaf)) {
-    $UnifiedChainArgs += @("--apply-report", $PatchSuggestionJson)
+    $UnifiedChainApplyReport = $PatchSuggestionJson
 }
 
+$UnifiedChainProductSeparationReport = ""
 if ((Get-Variable -Name PatchSuggestionProductSeparationJson -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $PatchSuggestionProductSeparationJson -PathType Leaf)) {
-    $UnifiedChainArgs += @("--product-separation-report", $PatchSuggestionProductSeparationJson)
+    $UnifiedChainProductSeparationReport = $PatchSuggestionProductSeparationJson
 }
 
+$UnifiedChainReviewPrReport = ""
 if ((Get-Variable -Name ReviewPrJson -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $ReviewPrJson -PathType Leaf)) {
-    $UnifiedChainArgs += @("--review-pr-report", $ReviewPrJson)
+    $UnifiedChainReviewPrReport = $ReviewPrJson
 }
 
-if ($RequireAiExchangeForChain) { $UnifiedChainArgs += "--require-ai-exchange" }
-if ($RequireConcretePatchSpecsForChain) { $UnifiedChainArgs += "--require-concrete-patch-specs" }
-if ($RequireReviewPrProductForChain) { $UnifiedChainArgs += "--require-review-pr-product" }
+$UnifiedChainArgsContext = [ordered]@{
+    repo_root = "."
+    stamp = $DataStamp
+    mode_name = $ModeName
+    manifest = $ManifestPath
+    apply_report = $UnifiedChainApplyReport
+    product_separation_report = $UnifiedChainProductSeparationReport
+    review_pr_report = $UnifiedChainReviewPrReport
+    output_report = $UnifiedChainContractJson
+    markdown_report = $UnifiedChainContractMd
+    use_primary_advisory_provider = [bool]$UsePrimaryAdvisoryProvider
+    run_multistep_provider_workflow = [bool]$RunMultistepProviderWorkflow
+    use_ollama_advisory = [bool]$UseOllamaAdvisory
+    run_ollama_probe = [bool]$RunOllamaProbe
+    open_extended_observer_consoles = [bool]$OpenExtendedObserverConsoles
+    review_pr_from_generated_patch_specs = [bool]$ReviewPrFromGeneratedPatchSpecs
+    prepare_review_pr = [bool]$PrepareReviewPr
+    review_pr_apply_deterministic_suggestions = [bool]$ReviewPrApplyDeterministicSuggestions
+}
+($UnifiedChainArgsContext | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $UnifiedChainArgsContextJson -Encoding UTF8
+
+$UnifiedChainArgsBuilderOk = Invoke-Checked "Build final unified chain contract args" {
+    & $ResolvedPythonExe "Tools/ai/build_unified_chain_contract_args.py" `
+        "--context", $UnifiedChainArgsContextJson `
+        "--output", $UnifiedChainArgsJson
+}
+
+$UnifiedChainArgsReport = Get-Content -LiteralPath $UnifiedChainArgsJson -Raw | ConvertFrom-Json
+if (-not [bool]$UnifiedChainArgsReport.passed) {
+    throw "Final unified chain contract args builder failed: $($UnifiedChainArgsReport.errors -join '; ')"
+}
+$UnifiedChainArgs = @($UnifiedChainArgsReport.argv | ForEach-Object { [string]$_ })
 
 $UnifiedChainContractOk = Invoke-Checked "Validate final unified heap/exchange chain contract" {
     & $ResolvedPythonExe @UnifiedChainArgs
 }
 
+$ReportFiles += $UnifiedChainArgsJson
 $ReportFiles += $UnifiedChainContractJson
 $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $UnifiedChainContractMd
+$PhaseStatus.unified_chain_contract_args = $UnifiedChainArgsBuilderOk
 $PhaseStatus.unified_chain_contract_final = $UnifiedChainContractOk
+$PhaseReports.unified_chain_contract_args = $UnifiedChainArgsJson
 $PhaseReports.unified_chain_contract = $UnifiedChainContractJson
 $PhaseReports.unified_chain_contract_markdown = $UnifiedChainContractMd
 
