@@ -123,6 +123,15 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
                 f"output/**/heap_exchange*{stamp}*.json",
             ],
         )
+    closure_audit_report = existing_or_blank(repo_root, context.get("closure_audit_report"))
+    if not closure_audit_report:
+        closure_audit_report = discover_first(
+            repo_root,
+            [
+                f"output/**/heap_exchange_closure_audit*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/heap_exchange_closure_audit*{stamp}*.json",
+            ],
+        )
 
     requested_apply_report = str(context.get("apply_report") or "").strip()
     requested_product_report = str(context.get("product_separation_report") or "").strip()
@@ -148,6 +157,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
     require_provider_tool_evidence = as_bool(context.get("require_provider_tool_evidence")) or require_ai_exchange
     require_heap_peer_runtime = as_bool(context.get("require_heap_peer_runtime")) or require_ai_exchange
     require_shared_memory_evidence = as_bool(context.get("require_shared_memory_evidence")) or require_ai_exchange
+    require_heap_closure_audit = as_bool(context.get("require_heap_closure_audit")) or require_ai_exchange
     require_concrete_patch_specs = as_bool(context.get("review_pr_from_generated_patch_specs"))
     require_review_pr_product = as_bool(context.get("prepare_review_pr")) and (
         as_bool(context.get("review_pr_from_generated_patch_specs"))
@@ -177,6 +187,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
     add_pair(argv, "--tool-usage-telemetry", tool_usage_telemetry)
     add_pair(argv, "--heap-peer-runtime", heap_peer_runtime)
     add_pair(argv, "--shared-memory-evidence", shared_memory_evidence)
+    add_pair(argv, "--closure-audit-report", closure_audit_report)
 
     if require_ai_exchange:
         argv.append("--require-ai-exchange")
@@ -186,6 +197,8 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
         argv.append("--require-heap-peer-runtime")
     if require_shared_memory_evidence:
         argv.append("--require-shared-memory-evidence")
+    if require_heap_closure_audit:
+        argv.append("--require-heap-closure-audit")
     if require_concrete_patch_specs:
         argv.append("--require-concrete-patch-specs")
     if require_review_pr_product:
@@ -203,6 +216,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
             "require_provider_tool_evidence": require_provider_tool_evidence,
             "require_heap_peer_runtime": require_heap_peer_runtime,
             "require_shared_memory_evidence": require_shared_memory_evidence,
+            "require_heap_closure_audit": require_heap_closure_audit,
             "require_concrete_patch_specs": require_concrete_patch_specs,
             "require_review_pr_product": require_review_pr_product,
         },
@@ -217,6 +231,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
             "tool_usage_telemetry": tool_usage_telemetry,
             "heap_peer_runtime": heap_peer_runtime,
             "shared_memory_evidence": shared_memory_evidence,
+            "closure_audit_report": closure_audit_report,
             "output_report": output_report,
             "markdown_report": markdown_report,
         },
