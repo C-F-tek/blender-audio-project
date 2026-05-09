@@ -19,6 +19,16 @@ docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 
 Regola pratica: scegliere prima la lane/prodotto (`smoke`, fase singola, `Full0To10`, `LightFull0To10`, provider, review PR), poi modificare solo il gruppo di parametri pertinente.
 
+## Mappa profondità capability
+
+Per capire cosa esiste davvero, quanto è profondo, cosa produce e quali potenzialità sono attive o solo target, usare:
+
+```text
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+```
+
+Regola pratica: non confondere un target architetturale con una capability eseguita. Una capability è provata solo da manifest, phase report, validator report, telemetry, observer pointer, bundle o report prodotto dalla lane.
+
 ## Regola
 
 Split directory-form conforme alla policy: `nomefile.md/part-xxx.md`.
