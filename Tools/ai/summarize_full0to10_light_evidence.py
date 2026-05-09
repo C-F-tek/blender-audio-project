@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarize Full0To10 light evidence-only run for launcher promotion."""
+"""Summarize legacy LightFull0To10 evidence as unified-run compatibility evidence."""
 from __future__ import annotations
 
 import argparse
@@ -37,7 +37,10 @@ def build_summary(run: dict[str, Any], source: Path) -> dict[str, Any]:
     passed = bool(run.get("passed")) and not failed and safety_ok
 
     report = {
-        "kind": "full0to10_light_evidence_promotion",
+        "kind": "unified_run_light_evidence_compatibility",
+        "legacy_kind": "full0to10_light_evidence_promotion",
+        "full0to10_legacy_alias_absorbed_by_unified_run": True,
+        "standalone_pipeline": False,
         "source_report": str(source),
         "passed": passed,
         "promotable_to_unified_launcher": passed,
@@ -51,16 +54,17 @@ def build_summary(run: dict[str, Any], source: Path) -> dict[str, Any]:
         "patch_application_performed": bool_field(run, "patch_application_performed"),
         "blender_runtime_execution_performed": bool_field(run, "blender_runtime_execution_performed"),
         "ffmpeg_execution_performed": bool_field(run, "ffmpeg_execution_performed"),
-        "recommended_launcher_flag": "-LightFull0To10",
+        "legacy_launcher_flag": "-LightFull0To10",
+        "recommended_unified_entrypoint": "Tools/workflow/run_unified_local_ai_refactor.ps1",
         "recommended_default_flags": ["-NoExternalProbes", "-SkipProviderGeneration"],
-        "next_action": "Promote wrapper profile into unified launcher only after this report is passed.",
+        "next_action": "Keep this as compatibility evidence only; the operational model is the single unified heap/exchange run.",
     }
     return report
 
 
 def render_markdown(report: dict[str, Any]) -> str:
     lines = [
-        "# Full0To10 light evidence promotion",
+        "# Unified run light evidence compatibility",
         "",
         f"- Passed: `{report['passed']}`",
         f"- Promotable: `{report['promotable_to_unified_launcher']}`",
@@ -74,7 +78,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     ]
     for step in report["failed_steps"] or ["None"]:
         lines.append(f"- `{step}`" if isinstance(step, str) else f"- `{step.get('name')}` status=`{step.get('status')}`")
-    lines.extend(["", "## Next action", "", report["next_action"], ""])
+    lines.extend(["", "## Compatibility", "", f"- Legacy flag: `{report.get('legacy_launcher_flag')}`", f"- Unified entrypoint: `{report.get('recommended_unified_entrypoint')}`", f"- Standalone pipeline: `{report.get('standalone_pipeline')}`", "", "## Next action", "", report["next_action"], ""])
     return "\n".join(lines)
 
 

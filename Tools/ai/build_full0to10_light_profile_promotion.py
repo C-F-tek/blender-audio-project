@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Full0To10 light profile promotion artifacts."""
+"""Build legacy LightFull0To10 compatibility artifacts for the unified run."""
 from __future__ import annotations
 
 import argparse

@@ -1,6 +1,6 @@
-﻿param(
+param(
     [string]$RepoRoot = ".",
-    [string]$OutputDir = "output/validation/unified_light_full0to10_profile",
+    [string]$OutputDir = "output/validation/unified_run_light_legacy_alias",
     [string]$TrackName = "current",
     [int]$MaxRepoQualityFiles = 180,
     [int]$TimeoutSeconds = 8,
@@ -46,7 +46,7 @@ if ($Strict) { $RunArgs += "-Strict" }
 if ($SkipFinalProduct) { $RunArgs += "-SkipFinalProduct" }
 
 $LightRunScript = Join-Path $RepoRoot "Tools/workflow/run_full0to10_light_evidence_only.ps1"
-Write-Host "[RUN] LightFull0To10 evidence profile"
+Write-Host "[RUN] Unified run light evidence compatibility wrapper; LightFull0To10 is a legacy alias, not an operational profile."
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $LightRunScript @RunArgs
 $LightExit = $LASTEXITCODE
 
@@ -61,6 +61,6 @@ Write-Host ("[OK] Promotion JSON: {0}" -f $PromotionOut)
 Write-Host ("[OK] Promotion dir: {0}" -f $PromotionDir)
 
 if ($Strict -and ($LightExit -ne 0 -or $PromotionExit -ne 0)) {
-    throw "Unified LightFull0To10 profile failed in strict mode."
+    throw "Unified run light evidence compatibility wrapper failed in strict mode."
 }
 

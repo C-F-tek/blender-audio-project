@@ -1,4 +1,4 @@
-"""Constants for Full0To10 light profile promotion."""
+"""Constants for legacy LightFull0To10 compatibility evidence."""
 from __future__ import annotations
 
 PROMOTION_JSON = "full0to10_light_profile_promotion.json"
@@ -28,10 +28,10 @@ SAFETY_FALSE_FIELDS = (
 )
 
 NEXT_LOOP_ACTIONS = (
-    "wire LightFull0To10 flag into unified launcher",
-    "keep NoExternalProbes default for light profile",
+    "keep LightFull0To10 only as a compatibility alias for unified run evidence",
+    "keep NoExternalProbes default for compatibility evidence",
     "add provider telemetry semantic validator",
     "add GPU.0/NPU normalized device visibility check",
     "add provider tool feedback loop report-only",
-    "finalize LightFull0To10 product quality package",
+    "route quality package evidence through the unified run product model",
 )
