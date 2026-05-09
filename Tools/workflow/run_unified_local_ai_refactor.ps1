@@ -2057,6 +2057,21 @@ if ($PrepareReviewPr) {
         if (-not [bool]$ReviewPrArgsReport.passed) {
             throw "Review PR prepare args builder failed: $($ReviewPrArgsReport.errors -join '; ')"
         }
+
+        $ReviewPrReadinessJson = "$ValidationDir/review_pr_product_readiness_${ModeName}_$Stamp.json"
+        $ReviewPrReadinessMd = "$ValidationDir/review_pr_product_readiness_${ModeName}_$Stamp.md"
+        $PhaseStatus.review_pr_product_readiness = Invoke-Checked "Validate review PR product readiness" {
+            & $ResolvedPythonExe "Tools/validation/check_review_pr_product_readiness.py" `
+                "--repo-root", "." `
+                "--args-report", $ReviewPrArgsJson `
+                "--output", $ReviewPrReadinessJson `
+                "--markdown-output", $ReviewPrReadinessMd
+        } -SoftFail:$ContinueOnValidationError
+        if (Test-Path -LiteralPath $ReviewPrReadinessJson -PathType Leaf) {
+            $ReportFiles += $ReviewPrReadinessJson
+            $PhaseReports.review_pr_product_readiness = $ReviewPrReadinessJson
+        }
+        $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $ReviewPrReadinessMd
         $ReviewArgs = @($ReviewPrArgsReport.argv | ForEach-Object { [string]$_ })
     $PhaseStatus.review_pr_prepare = Invoke-Checked "Prepare review branch and PR" {
         Invoke-Python $ReviewArgs
