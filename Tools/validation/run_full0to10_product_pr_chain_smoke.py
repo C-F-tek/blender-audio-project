@@ -39,6 +39,8 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
         "manifest_schema_validator": source_repo / "Tools/validation/check_unified_run_manifest_schema.py",
         "legacy_alias_registry": source_repo / "Tools/ai/unified_run_legacy_alias_registry.json",
         "closure_audit": source_repo / "Tools/ai/build_heap_exchange_closure_audit.py",
+        "runtime_mesh_contract": source_repo / "Tools/validation/check_real_product_runtime_mesh_contract.py",
+        "runtime_mesh_smoke": source_repo / "Tools/validation/run_real_product_runtime_mesh_contract_smoke.py",
     }
 
     texts = {
@@ -84,6 +86,18 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
         "manifest_schema_validator:file": ("manifest_schema_validator", "unified_run_manifest_schema_validation"),
         "legacy_alias_registry:file": ("legacy_alias_registry", "unified_run_legacy_alias_registry"),
         "closure_audit:file": ("closure_audit", "heap_exchange_closure_audit"),
+
+        "runtime_mesh:file": ("runtime_mesh_contract", "real_product_runtime_mesh_contract"),
+        "runtime_mesh:task_md": ("runtime_mesh_contract", "task_md_in"),
+        "runtime_mesh:heap_exchange": ("runtime_mesh_contract", "heap_exchange_activation"),
+        "runtime_mesh:gpu1": ("runtime_mesh_contract", "gpu1_primary_advisory"),
+        "runtime_mesh:gpu0": ("runtime_mesh_contract", "gpu0_openvino_tool_workload"),
+        "runtime_mesh:npu": ("runtime_mesh_contract", "npu_peer_micro_lane"),
+        "runtime_mesh:sqlite_fts": ("runtime_mesh_contract", "sqlite_fts_memory"),
+        "runtime_mesh:broker": ("runtime_mesh_contract", "tool_agnostic_broker"),
+        "runtime_mesh:direct_reasoning": ("runtime_mesh_contract", "direct_reasoning_assistance"),
+        "runtime_mesh:product_readiness": ("runtime_mesh_contract", "product_readiness"),
+        "runtime_mesh:smoke": ("runtime_mesh_smoke", "real_product_runtime_mesh_contract_smoke"),
     }
 
     missing = [
@@ -232,6 +246,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- PR preparation committed: `{report.get('review_pr_commit_performed')}`",
         f"- Chain contract passed: `{report.get('chain_contract_passed')}`",
         f"- Real workflow trace passed: `{report.get('workflow_trace', {}).get('passed')}`",
+        f"- Runtime mesh contract passed: `{report.get('runtime_mesh_contract_passed')}`",
         "- Legacy name: `full0to10_product_pr_chain_smoke`",
         "- Runtime model: `single unified run`",
     ]
@@ -265,6 +280,33 @@ def main() -> int:
         errors.extend(f"workflow trace: {error}" for error in workflow_trace.get("errors", []))
         for token in workflow_trace.get("missing_tokens", []):
             errors.append(f"workflow trace missing token: {token}")
+
+    runtime_mesh_contract_json = source_repo / "output/validation/full0to10_product_pr_chain_runtime_mesh_contract.json"
+    runtime_mesh_contract_md = source_repo / "output/validation/full0to10_product_pr_chain_runtime_mesh_contract.md"
+    runtime_mesh_result = run(
+        [
+            sys.executable,
+            str(source_repo / "Tools/validation/check_real_product_runtime_mesh_contract.py"),
+            "--repo-root",
+            str(source_repo),
+            "--output",
+            str(runtime_mesh_contract_json),
+            "--markdown-output",
+            str(runtime_mesh_contract_md),
+        ],
+        source_repo,
+        env,
+        args.timeout_seconds,
+    )
+    commands.append(runtime_mesh_result)
+    runtime_mesh_contract = load_json(runtime_mesh_contract_json) if runtime_mesh_contract_json.exists() else {}
+    if runtime_mesh_result["returncode"] != 0:
+        errors.append(f"runtime mesh contract failed rc={runtime_mesh_result['returncode']} {runtime_mesh_result['error']}")
+    if runtime_mesh_contract.get("passed") is not True:
+        errors.append("runtime mesh contract did not pass before product PR chain smoke")
+    if not runtime_mesh_contract_md.exists():
+        errors.append("runtime mesh contract markdown report was not produced")
+
     with tempfile.TemporaryDirectory(prefix="full0to10-product-pr-smoke-") as tmp_raw:
         repo = seed_repo(Path(tmp_raw))
         task = repo / "docs/LOCAL_AI_TASKS/smoke-task.md"
@@ -434,6 +476,8 @@ def main() -> int:
         "review_pr_auto_include_from_apply_report": review.get("auto_include_from_apply_report"),
         "chain_contract_passed": chain.get("passed"),
         "workflow_trace": workflow_trace,
+        "runtime_mesh_contract_passed": runtime_mesh_contract.get("passed"),
+        "runtime_mesh_contract": runtime_mesh_contract,
         "commands": commands,
         "errors": errors,
         "warnings": [],
