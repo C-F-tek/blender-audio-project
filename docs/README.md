@@ -29,6 +29,7 @@ Use these first when an AI needs to understand what the project is, what exists,
 ```text
 LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
@@ -45,6 +46,7 @@ Meaning:
 |---|---|
 | `heap-exchange-and-patchkit-operating-model-2026-05-09.md` | Current IN -> dynamic heap/exchange loop -> deterministic OUT model and reusable patchkit bundle procedure. |
 | `ai-orientation-map-2026-05-09.md` | Compact first-orientation map for AI agents: read path, owner map, heap/exchange boundary, patchkit commands and validation map. |
+| `documentation-panorama-and-staleness-map-2026-05-09.md` | Repository-wide doc precedence, canonical/stale zones and future cleanup queue. |
 | `current-capability-depth-map-2026-05-09.md` | Current active/report-only/provider/manual-review/target capabilities and evidence surfaces. |
 | `unified-launcher-parameter-decision-map-2026-05-09.md` | How to choose launcher parameters by lane instead of reading a flat flag list. |
 | `script-aging-visibility-audit-2026-05-09.md` | Oldest/hidden wrapper notice queue; not a deletion list. |
@@ -110,6 +112,7 @@ Use this order unless a task file says otherwise:
 LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
@@ -194,6 +197,7 @@ DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 | Current operational bridge | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
 | Heap/exchange and patchkit operating model | `LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` |
 | AI first-orientation map | `LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` |
+| Documentation panorama and stale-zone map | `LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md` |
 | Current capability depth | `LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
 | Launcher parameter decision map | `LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
 | Script aging / hidden wrapper review | `LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` |
