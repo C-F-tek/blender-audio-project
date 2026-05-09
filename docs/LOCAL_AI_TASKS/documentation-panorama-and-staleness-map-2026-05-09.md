@@ -32,6 +32,7 @@ CHATGPT.md
 CHATGPT/README.md
 docs/README.md
 docs/AI_ONBOARDING.md
+docs/AI_DOCS_ENTRYPOINT.md
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
@@ -46,6 +47,7 @@ CHATGPT.md: updated in PR #251 to point at heap/exchange and patchkit.
 CHATGPT/README.md: updated in PR #251 to include the current read order.
 docs/README.md: updated in PR #251 as current doc index.
 docs/AI_ONBOARDING.md: updated in PR #251 as compact onboarding bridge.
+docs/AI_DOCS_ENTRYPOINT.md: updated in PR #251 follow-up as docs-folder entrypoint.
 heap-exchange operating model: new canonical post-#249/#250 model.
 ai-orientation map: new compact first-orientation map for AI agents.
 documentation panorama: this stale-zone map.
@@ -70,7 +72,7 @@ MAIN_RUNTIME_ARCHITECTURE.md: architecture target; do not claim implemented exec
 UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md: split contract index updated in PR #251 to mention heap/exchange lifecycle and patchkit surfaces.
 unified-local-ai-refactor-launcher.md: operator runbook; verify current flags against Tools/workflow/run_unified_local_ai_refactor.ps1.
 unified-launcher-parameter-decision-map: current parameter decision map.
-WORKFLOW.md: root workflow policy, updated in PR #251 with heap/exchange product path and patchkit boundary.
+WORKFLOW.md: root workflow policy, updated in PR #251 with heap/exchange product path and patchkit boundary; still has one blocked full-file update follow-up tracked in problems.md.
 Tools/workflow/README.md: updated in PR #251 for lifecycle and patchkit.
 Tools/ai/README.md: updated in PR #251 for lifecycle and patchkit.
 AI_PIPELINE_ARCHITECTURE.md: updated in PR #251 so dry-run pipeline evidence cannot be mistaken for full product proof.
@@ -101,6 +103,7 @@ If they disagree with heap-exchange-and-patchkit-operating-model-2026-05-09.md, 
 ## Patch/product layer
 
 ```text
+docs/PATCH_SPEC_WORKFLOW.md
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/patch-suggestion-bundle-final-phase.md
 docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md
@@ -113,10 +116,20 @@ Current rule:
 
 ```text
 patch notes = ledger
-patch suggestion = product candidate
+patch suggestion = bridge/product candidate
 heap exit product = deterministic product gate
 patchkit bundle = preferred source-write boundary
+prepare_review_pr.py = branch/commit/push/PR preparation owner
 review PR = human-review product
+```
+
+Status:
+
+```text
+docs/PATCH_SPEC_WORKFLOW.md: updated in PR #251 follow-up; patchkit/heap lifecycle is now primary product boundary context.
+patch-suggestion-bundle-final-phase.md: updated in PR #251 follow-up as bridge lane, not whole product path.
+patch-suggestion-review-workflow-2026-05-07.md: updated in PR #251 follow-up as historical proposal-ledger review reference.
+patch-notes-quality-product-2026-05-07.md: updated in PR #251 follow-up as historical/reference task, not current product path.
 ```
 
 Do not apply patch-note ledger entries directly.
@@ -137,6 +150,24 @@ Status:
 Tools/validation/README.md is a large catalog, not a primary first-read entrypoint.
 Use targeted validator/smoke maps first.
 Future cleanup should split or index the validation README only if line-limit validators require it.
+```
+
+## Reference/external layer
+
+```text
+docs/AI_REFERENCE_ONBOARDING.md
+docs/AI_REFERENCE_SOURCE_MAP.md
+docs/AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md
+docs/AI_GUARDRAILS_VALIDATION_GUIDE.md
+docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md
+```
+
+Status:
+
+```text
+AI_REFERENCE_ONBOARDING.md: updated in PR #251 follow-up with heap/exchange and patchkit mapping.
+AI_REFERENCE_SOURCE_MAP.md: still has stale transient PR/branch state and old priority order; tracked in problems.md P-001/P-002.
+Other files are reference material; inspect current code before treating them as active implementation state.
 ```
 
 ## Historical/reference split indexes classified in PR #251
@@ -192,9 +223,9 @@ Do not refactor or execute Blender/FFmpeg/audio paths unless the task explicitly
 Old handoff files under CHATGPT/next-chat-handoff-*.md are forensic context only.
 Old current-* documents may contain historical PR/branch references.
 Large generated evidence Markdown must not become first-read documentation.
-Older patch-suggestion docs may refer to pre-patchkit behavior.
-Older product-chain docs may not include heap/exchange runtime entry/exit.
-Any doc that claims success without manifest/telemetry evidence is suspect.
+Older patch-suggestion docs may still exist; check this map before treating them as current.
+Older product-chain docs may not include heap/exchange runtime entry/exit unless explicitly updated above.
+Any doc that claims success without manifest/telemetry/evidence report fields is suspect.
 ```
 
 ## Future cleanup queue
@@ -202,11 +233,12 @@ Any doc that claims success without manifest/telemetry evidence is suspect.
 Suggested next documentation-only PRs:
 
 ```text
-1. Verify MAIN_RUNTIME_ARCHITECTURE.md against the exact post-#249/#250 code and add only missing implemented-surface links.
-2. Verify code-driven-data-flow-map-2026-05-07.md against heap/exchange entry/exit and patchkit.
-3. Verify single-owner-scripts-and-flow-boundaries-2026-05-07.md includes patchkit and heap lifecycle owners.
+1. Verify code-driven-data-flow-map-2026-05-07.md against heap/exchange entry/exit and patchkit.
+2. Verify single-owner-scripts-and-flow-boundaries-2026-05-07.md includes patchkit and heap lifecycle owners.
+3. Apply a focused safe patch to AI_REFERENCE_SOURCE_MAP.md to remove stale transient PR/branch state and update first-read priority.
 4. Add a compact validation README index if Tools/validation/README.md becomes too hard to scan.
 5. Add formal JSON schema validators for heap_exchange_runtime_entry, heap_exchange_runtime_exit_product and patchkit_apply_report.
+6. Verify MODULE_MAP.md, PROJECT_AUDIT.md, KNOWN_LIMITATIONS.md and TECH_DEBT_TRACKER.md for stale current-state claims.
 ```
 
 ## Agent behavior when documentation conflicts
@@ -217,5 +249,6 @@ Suggested next documentation-only PRs:
 3. Inspect current validator/smoke.
 4. Inspect current PR/branch/GitHub state.
 5. Update the smallest canonical map.
-6. Do not create a parallel doctrine document unless the index points to it and marks older docs as historical.
+6. Record unresolved coherence issues in problems.md.
+7. Do not create a parallel doctrine document unless the index points to it and marks older docs as historical.
 ```
