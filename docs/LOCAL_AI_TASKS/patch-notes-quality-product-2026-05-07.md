@@ -1,8 +1,37 @@
 # Patch Notes Quality Product Task
 
-Status: active local AI task
-Date: 2026-05-07
-Branch: `codex/provider-mesh-runtime-extract-p1`
+Status: historical/reference local AI task.  
+Date: 2026-05-07  
+Original branch: `codex/provider-mesh-runtime-extract-p1`
+
+## Current position
+
+This file describes a historical patch-notes quality product task and proposal-ledger workflow.
+
+It is not the current Markdown-to-review-PR product path.
+
+Current product path:
+
+```text
+task Markdown
+  -> unified launcher
+  -> heap/exchange runtime entry
+  -> dynamic provider/tool/broker/validator exchange
+  -> heap/exchange runtime exit product
+  -> heap/exchange lifecycle validation
+  -> patchkit or deterministic patch suggestion bridge
+  -> prepare_review_pr.py
+  -> manual-review PR
+```
+
+Current operating docs:
+
+```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/PATCH_SPEC_WORKFLOW.md
+docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md
+```
 
 ## Objective
 
@@ -10,7 +39,7 @@ Produce a manual-review patch notes quality product from a local Markdown task, 
 
 ## Required Product
 
-The run must produce:
+The run produced or expected:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/patch_notes_quality_product_<stamp>.json
@@ -58,7 +87,7 @@ manual_review_required
 
 ## Patch Suggestion Review Order
 
-Apply suggestion lanes in this order:
+For historical ledgers, review suggestion lanes in this order:
 
 ```text
 1. python_python
@@ -76,6 +105,8 @@ reject stale findings whose missing module/path now exists
 reject generated-evidence noise and placeholder fenced-code paths
 prefer small patch waves with explicit validation commands
 record skipped stale suggestions as evidence when useful
+route current product work through heap/exchange exit and lifecycle validation
+prefer patchkit for reviewed reusable bundle application
 ```
 
 `python_python` can justify code changes only when the import/module/symbol is still missing on the current branch. `python_doc` usually means a documented script lacks an obvious smoke/check/test; prefer report-only smoke wrappers over invasive refactors. `doc_doc` and `doc_python` must be filtered for template/path-placeholder noise before editing Markdown.
@@ -98,12 +129,12 @@ If NPU is slow, empty, timed out or degraded, the product must keep the fallback
 
 ## Runtime Posture
 
-For focused builder tests, do not execute providers. For the final Full0To10 validation, providers are expected because the operator explicitly requested TUTTO SU TUTTO.
+For focused builder tests, do not execute providers. For Full0To10 validation, providers may be expected when the operator explicitly requested TUTTO SU TUTTO and did not disable those lanes.
 
 ## Guardrails
 
 ```text
-no patch apply
+no patch apply unless explicitly requested
 no source writes by generated patch specs
 no Blender runtime
 no FFmpeg runtime
@@ -111,13 +142,22 @@ no output/** commit
 no SQLite commit
 manual review required
 NPU must not be sole final reviewer of NPU lane quality
-patch notes are proposals until converted into a reviewed patch bundle or branch diff
+patch notes are proposals until converted into a reviewed patchkit bundle, deterministic patch suggestion bridge or branch diff
 ```
 
 ## Validation
+
+Historical validation for this task:
 
 ```powershell
 python -m py_compile .\Tools\ai\build_patch_notes_quality_product.py .\Tools\ai\build_runtime_tool_usage_telemetry.py .\Tools\ai\provider_runtime_heap_live_signals.py .\Tools\validation\run_patch_notes_quality_product_smoke.py
 python .\Tools\validation\run_patch_notes_quality_product_smoke.py --repo-root .
 git diff --check
+```
+
+For current product-path work, also consider:
+
+```powershell
+python .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py --repo-root .
+python .\Tools\validation\run_patchkit_smoke.py --repo-root .
 ```

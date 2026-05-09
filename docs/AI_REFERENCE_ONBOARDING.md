@@ -1,10 +1,23 @@
 # AI Reference Onboarding
 
+## Status
+
+Current external-reference onboarding map.
+
+This is reference onboarding only. It is not the primary operator entrypoint and not a command catalog.
+
+Read current local orientation first:
+
+```text
+docs/AI_ONBOARDING.md
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+```
+
 ## Purpose
 
 This document explains how external AI, NPU, validation and agent-engineering references map into this repository.
-
-It is reference onboarding only. It is not the primary operator entrypoint and not a command catalog.
 
 Primary onboarding and current maps:
 
@@ -29,6 +42,8 @@ quick/balanced/deep/custom = intensity or budget, not scope
 -No* flags = explicit opt-out from selected lanes
 -NoStrictRealRunActivation = single-phase diagnostics only
 telemetry accompanies evidence and patch plans for completeness
+heap/exchange center is dynamic; entry and exit are controlled
+patchkit is the preferred deterministic source-write boundary for reviewed bundles
 monolithic/historical runbooks stay out of the primary path
 ```
 
@@ -62,6 +77,8 @@ small local inference/probe concepts -> NPU microtask responder only when valida
 function/tool calling concepts -> broker unico executor plus semantic tools registry
 schema/eval/guardrail concepts -> deterministic validators / CPU authority
 observability concepts -> telemetry/event stream and compact evidence
+controlled dynamic-runtime concepts -> heap/exchange entry, runtime state, public events and exit product
+source-write bundle concepts -> patchkit bundle schema, dry-run, apply report and validators
 ```
 
 External references do not authorize direct repository mutation, provider execution, Blender runtime, FFmpeg runtime, dependency changes or secret/network work.
@@ -87,7 +104,7 @@ a complete mirror of upstream docs
 a replacement for local validation
 a runtime dependency
 a permission to perform destructive changes
-a reason to bypass AGENTS.md, the unified launcher, owner maps, validators or telemetry
+a reason to bypass AGENTS.md, the unified launcher, owner maps, validators, heap/exchange lifecycle, patchkit or telemetry
 a reason to skip available tools because of historical limitation notes
 a place for long generated patch-plan/evidence blocks
 ```
@@ -115,7 +132,9 @@ keep full local reports under ignored output/**
 commit only compact task-scoped evidence under docs/LOCAL_VALIDATION_EVIDENCE/ when useful
 keep documentation-only patch plans provider-free unless explicitly derived from run-unica evidence
 include telemetry/capability/final-summary context when derived from run-unica evidence
+include heap/exchange lifecycle context when product lanes were selected
 keep patch application manual-review-only
+use patchkit for reviewed source-write bundles when expressible
 ```
 
 ## Run-unica evidence and reference rules
@@ -128,6 +147,11 @@ Use the full group:
 launcher manifest
 phase_status / phase_reports
 evidence artifacts
+heap/exchange runtime entry
+heap/exchange runtime state
+heap/exchange runtime exit product
+heap/exchange lifecycle report
+patchkit report when source-write boundary was selected
 patch-plan artifacts when produced
 runtime_tool_usage_telemetry_<STAMP>.json/md
 runtime_tool_capability_manifest_<STAMP>.json/md
@@ -153,5 +177,6 @@ Instead:
 3. map it to local files and validators
 4. add telemetry/capability/handoff implications if it affects run-unica evidence
 5. add broker/registry/validator/telemetry implications if it affects runtime architecture
-6. keep the original source external
+6. add heap/exchange lifecycle or patchkit implications if it affects product/source-write boundaries
+7. keep the original source external
 ```

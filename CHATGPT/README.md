@@ -25,32 +25,37 @@ Recommended read order:
 ```text
 1. AGENTS.md
 2. CHATGPT.md
-3. docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
-4. docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
-5. docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
-6. docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
-7. docs/MAIN_RUNTIME_ARCHITECTURE.md
-8. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
-9. docs/AI_PIPELINE_ARCHITECTURE.md
-10. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-11. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
-12. docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-13. docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
-14. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
-15. docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
-16. docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
-17. docs/LOCAL_AI_TASKS/project-tool-registry.md
-18. docs/TECH_DEBT_TRACKER.md
-19. CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
-20. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
-21. CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md
-22. CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md
-23. AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md
+3. docs/README.md
+4. docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+5. docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+6. docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+7. docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+8. docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+9. docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
+10. docs/MAIN_RUNTIME_ARCHITECTURE.md
+11. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+12. docs/AI_PIPELINE_ARCHITECTURE.md
+13. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+14. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+15. docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+16. docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+17. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+18. docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
+19. docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+20. docs/LOCAL_AI_TASKS/project-tool-registry.md
+21. docs/TECH_DEBT_TRACKER.md
+22. CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
+23. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
+24. CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md
+25. CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md
+26. AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md
 ```
 
 Current active follow-up:
 
 ```text
+Use docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md as the current IN -> dynamic heap/exchange -> deterministic OUT operating model.
+Use docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md as the compact first-orientation map for AI agents.
 Use docs/MAIN_RUNTIME_ARCHITECTURE.md as the architecture target for shared runtime heap / blackboard, GPU1 planner, GPU0 OpenVINO helper, NPU microtask responder, broker executor, semantic tools registry, deterministic CPU validators and telemetry/event stream work.
 Use docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md to distinguish current active capability from target architecture.
 Use docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md before choosing launcher flags.
@@ -73,6 +78,9 @@ ia_carmine_refactor_reuse_full_run_bundle_20260505-143844.zip
 The historical handoff and bundle remain useful forensic/evidence context, but they are not current branch state by themselves. Prefer:
 
 ```text
+docs/README.md
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
@@ -83,6 +91,8 @@ docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 Current compact context notes:
 
 ```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
@@ -119,6 +129,8 @@ Broker unico executor is the target execution gateway for registered tools.
 Semantic tools registry is the target capability source of truth.
 Deterministic validators / CPU authority decide local pass/fail claims.
 Telemetry/event stream must make executed, skipped, degraded and blocked phases visible.
+Heap/exchange entry and exit are deterministic boundaries around the dynamic center.
+Patchkit is the preferred deterministic source-write boundary for future long or delicate patch bundles.
 ```
 
 Bundle handling policy:
@@ -127,7 +139,7 @@ Bundle handling policy:
 Runtime bundles are local/GitHub release artifacts, not source files.
 They are intentionally not committed to the repository.
 Do not infer bundle contents from file existence alone.
-Inspect manifest, decision loop, recommendations, patch plan, telemetry, capability manifest, full toolbox telemetry summary, shared AI-to-AI bundle, provider diagnostics and workload quality before selecting patches.
+Inspect manifest, decision loop, recommendations, patch plan, telemetry, capability manifest, full toolbox telemetry summary, shared AI-to-AI bundle, provider diagnostics, workload quality, heap/exchange lifecycle evidence and patchkit reports before selecting patches.
 ```
 
 Resolved broker telemetry context:
@@ -146,6 +158,8 @@ Non-canonical candidates include root audio entrypoints and Scripting/** Blender
 Promotion to project tool requires placement, CLI/report contract, guardrails and validation.
 Broker promotion requires stricter report-only/no-side-effect guardrails.
 See:
+- docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+- docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 - docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 - docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
 - docs/LOCAL_AI_TASKS/project-tool-registry.md

@@ -8,6 +8,14 @@ This file tracks current architectural, operational and application-domain limit
 
 It must not be used to avoid tool usage. IA-Carmine policy is **TUTTO SU TUTTO**: use every available and relevant tool lane unless a current validator, manifest, telemetry report, provider diagnostic or explicit operator flag blocks it.
 
+Current operating model:
+
+```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+```
+
 ## Tool usage rule
 
 ```text
@@ -23,6 +31,9 @@ Current sources of truth for tool/capability status:
 ```text
 source code
 AGENTS.md
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
@@ -32,6 +43,8 @@ docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 runtime tool usage telemetry
 runtime capability manifests
+heap/exchange runtime entry/state/exit/lifecycle reports
+patchkit reports when selected
 provider diagnostics
 validator reports
 repository consistency map/smoke
@@ -47,9 +60,12 @@ Repository-consistency findings can still be noisy and need classification.
 Provider-declared runtime tool requests are not yet fully equivalent to broker-executed feedback unless evidence proves execution.
 GPU timing can be degraded when reports infer per-round timing from aggregate elapsed time.
 NPU is intentionally a probe/guardrail/decode/micro-support lane, not primary advisory.
-ReviewPrIncludePath is still explicit in the Markdown-to-review-PR product path.
+ReviewPrIncludePath remains supported for explicit/manual allowlists.
 prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
-prepare_review_pr.py does not create draft PRs yet.
+prepare_review_pr.py supports draft PR creation through `--draft-pr` when paired with `--create-pr`.
+Heap/exchange lifecycle exists, but product success still depends on concrete exit candidates, not metadata-only drafts.
+Patchkit exists, but only covered bundle operations should be expressed through it; complex refactors still need normal reviewed code patches.
+Formal JSON schema validators for heap_exchange_runtime_entry, heap_exchange_runtime_exit_product and patchkit_apply_report are still follow-up work.
 ```
 
 ## Current application-domain limitations to overcome
@@ -85,9 +101,10 @@ historical note saying no tool access -> obsolete unless current evidence confir
 
 ```text
 Convert stale limitation notes into measurable validators or manifests.
-Promote recurring limitations into explicit TECH_DEBT_TRACKER items.
+Promote recurring limitations into explicit TECH_DEBT_TRACKER or problems.md items.
 Add current evidence links when a limitation is observed.
 Prefer report-only checks before destructive changes.
 Keep Full0To10 lanes enabled unless explicitly disabled or diagnosed unavailable.
-Keep Markdown-to-review-PR product limitations explicit until code implements them.
+Keep Markdown-to-review-PR product limitations explicit until code/report evidence proves them.
+Keep heap/exchange and patchkit limits expressed as validator/schema backlog, not workflow bypass reasons.
 ```

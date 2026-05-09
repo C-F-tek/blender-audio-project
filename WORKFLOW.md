@@ -1,5 +1,19 @@
 # Workflow
 
+## Status
+
+Current root workflow policy.
+
+This document is command-light by design. It defines durable lifecycle, guardrails and document ownership. Current executable commands live in the owning runbooks and tool READMEs.
+
+Current operating model:
+
+```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+```
+
 ## Purpose
 
 Root operational lifecycle for `IA-Carmine Local AI Orchestration Workbench`.
@@ -64,6 +78,10 @@ Use this order unless a task file says otherwise:
 AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
+docs/README.md
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
@@ -114,6 +132,8 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 Decision maps:
 
 ```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
@@ -130,13 +150,16 @@ docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
 
 ## Current product path: Markdown to review PR evidence
 
-The current product workflow starts from a task Markdown and produces reviewable branch/PR evidence through deterministic patch suggestions.
+The current product workflow starts from a task Markdown, enters the dynamic heap/exchange with context and lane evidence, and exits only through deterministic product validation.
 
 ```text
-task Markdown patch_suggestion
-  -> Tools/ai/build_task_patch_suggestion_report.py
-  -> Tools/ai/apply_patch_suggestion_bundle.py
-  -> Tools/validation/check_patch_suggestion_product_separation.py
+task Markdown
+  -> inventories/context/agent-state/workload-quality
+  -> Tools/ai/build_heap_exchange_runtime_entry.py
+  -> official adapter/provider/patch-spec lanes
+  -> Tools/ai/build_heap_exchange_runtime_exit.py
+  -> Tools/validation/check_heap_exchange_runtime_lifecycle.py
+  -> Tools/ai/patchkit/apply_patch_bundle.py or deterministic patch suggestion bridge
   -> Tools/ai/prepare_review_pr.py
   -> GitHub PR for manual review
 ```
@@ -145,6 +168,8 @@ Focused proof:
 
 ```text
 Tools/validation/run_full0to10_product_pr_chain_smoke.py
+Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+Tools/validation/run_patchkit_smoke.py
 ```
 
 Current explicit limitations:
@@ -153,9 +178,35 @@ Current explicit limitations:
 ReviewPrIncludePath remains supported for explicit/manual allowlists.
 prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
 prepare_review_pr.py does not create draft PRs yet.
+metadata-only patch drafts are not enough for a successful review PR product.
 ```
 
 Do not document this path as fully automatic until draft PR creation is implemented and validated.
+
+## Patchkit source-write boundary
+
+Future long, delicate or repeated patch work should centralize the modification core:
+
+```text
+patch_specs/<bundle>/bundle.json
+patch_specs/<bundle>/fragments/*.ps1
+patch_specs/<bundle>/fragments/*.py
+```
+
+Standard application:
+
+```powershell
+python .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json `
+  --dry-run
+
+python .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json
+```
+
+Patchkit is deterministic application infrastructure, not authorization. Human/operator scope and guardrails still apply.
 
 ## Obsolete / historical monolithic runbook flag
 
@@ -167,6 +218,8 @@ Mark a document as historical/superseded when:
 it duplicates launcher commands instead of linking the runbook
 it starts from an internal helper as normal operator flow
 it predates strict real-run activation or provider mesh ownership
+it predates heap/exchange entry/exit for product paths
+it predates patchkit as preferred deterministic source-write boundary
 it claims automatic review PR behavior not implemented in code
 it treats generated evidence as a canonical source doc
 it exceeds the active Markdown line budget and has no compact index
@@ -177,6 +230,8 @@ Preferred replacement wording:
 ```text
 Status: historical / superseded by the unified launcher and code-driven maps.
 Current entrypoint: docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md.
+Current operating model: docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md.
+Current AI orientation map: docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md.
 Current capability map: docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md.
 Current parameter map: docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md.
 Current source-derived behavior: docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md.
@@ -192,6 +247,7 @@ Root workflow and README files are descriptive. They should link to command owne
 |---|---|
 | 0Full10 / run-unica launcher commands | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
 | Launcher parameter selection | `docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
+| Current operating model | `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` |
 | Current capability status | `docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
 | Hidden/old script review | `docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` |
 | Launcher manifest fields | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
@@ -200,6 +256,7 @@ Root workflow and README files are descriptive. They should link to command owne
 | Data-flow variants | `docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md` |
 | Validator/smoke cycles | `docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md` |
 | Patch suggestion final phase | `docs/LOCAL_AI_TASKS/patch-suggestion-bundle-final-phase.md` |
+| Patchkit bundle application | `Tools/ai/patchkit/apply_patch_bundle.py` and `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` |
 | Tool discovery and promotion | `docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md`, `docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md` |
 | Markdown/script inventories | unified launcher runbook first; `Tools/validation/README.md` as catalog/reference |
 
@@ -388,6 +445,8 @@ unified launcher remains the active local-AI entrypoint
 single-owner scripts are not duplicated or bypassed
 0Full10 remains opt-out by lane, not opt-in per capability
 runtime broker telemetry is surfaced when relevant
+heap/exchange entry, runtime state, public events and exit product are surfaced for product paths
+patchkit is the preferred deterministic boundary for reviewed source-write bundles
 file-line-limit evidence is available when maintainability is in scope
 audio/media output is forbidden in normal AI/tooling runs
 limitations are backlog to overcome, not tool-skip reasons

@@ -53,13 +53,43 @@ Once `-Full0To10` is selected, provider/probe/workload-quality, telemetry, disco
 
 The meaning of `tutto` is expandable. New stable lanes, registries, validators, broker tools, provider diagnostics, evidence surfaces, memory/context builders and repository-consistency checks must be added to the full-run contract when they become production-ready.
 
-## Main runtime architecture
+## Current runtime boundary
 
-Canonical contract:
+Canonical operating model:
 
 ```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/MAIN_RUNTIME_ARCHITECTURE.md
 ```
+
+Current boundary:
+
+```text
+IN
+  controlled task Markdown
+  RepoPy/PYTHONPATH gate
+  inventories/context/agent-state
+  workload/capability evidence
+
+LOOP / HEAP / EXCHANGE
+  dynamic heap knowledge surface
+  GPU1/GPU0/NPU/provider/context/broker lanes
+  runtime state and public exchange events
+
+OUT
+  heap exchange exit product
+  concrete deterministic operation candidates
+  lifecycle validation
+  patchkit/apply bridge
+  review PR product
+```
+
+The center is dynamic. Entry and exit are controlled.
+
+Do not claim that a lane executed unless manifest, telemetry, provider diagnostics or validator evidence proves it.
+
+## Main runtime architecture
 
 Current target topology:
 
@@ -84,7 +114,7 @@ deterministic CPU validators remain local pass/fail authority;
 telemetry/event stream records executed, skipped, degraded and blocked phases.
 ```
 
-This architecture is implemented incrementally. Do not claim that a lane executed unless manifest, telemetry, provider diagnostics or validator evidence proves it.
+This architecture is implemented incrementally. Architecture targets do not authorize source writes, provider execution, patch application, Blender runtime, FFmpeg runtime, commit, push, merge or delete by themselves.
 
 ## Canonical code-driven reading flow
 
@@ -92,7 +122,9 @@ This architecture is implemented incrementally. Do not claim that a lane execute
 AGENTS.md
   -> CHATGPT.md
   -> CHATGPT/README.md
-  -> docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+  -> docs/README.md
+  -> docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+  -> docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
   -> docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
   -> docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
   -> docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
@@ -102,7 +134,6 @@ AGENTS.md
   -> docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
   -> docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
   -> docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
-  -> docs/LOCAL_AI_TASKS/obsolete-monolithic-docs-review-2026-05-07.md
   -> docs/MAIN_RUNTIME_ARCHITECTURE.md
   -> docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
   -> docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
@@ -137,36 +168,49 @@ Use those documents for current commands, `-Full0To10`, intensity profiles, prov
 
 ## Current product path: Markdown input to review PR
 
-<!-- README_PRODUCT_PR_WORKFLOW_20260508 -->
-
-The immediate product is a reviewable branch and GitHub PR derived from a concrete task Markdown file. A valid product run starts from `docs/LOCAL_AI_TASKS/*.md`, extracts patch suggestions, applies only deterministic source/doc operations on an allowed review branch, validates product-vs-telemetry separation, and prepares a PR for human review.
+A valid product run starts from a controlled task Markdown file, enters the dynamic heap/exchange with context and lane evidence, and exits only through deterministic product validation.
 
 Current chain:
 
 ```text
-task Markdown patch_suggestion
-  -> Tools/ai/build_task_patch_suggestion_report.py
-  -> Tools/ai/apply_patch_suggestion_bundle.py
-  -> Tools/validation/check_patch_suggestion_product_separation.py
-  -> Tools/ai/prepare_review_pr.py
-  -> GitHub PR for manual review
+task Markdown
+  -> inventories/context/agent-state
+  -> workload quality routing
+  -> heap/exchange runtime entry
+  -> official adapter/provider lanes
+  -> patch specs or patch suggestion product
+  -> heap/exchange runtime exit product
+  -> lifecycle validator
+  -> patchkit bundle or deterministic patch bridge
+  -> review PR for manual review
 ```
 
-The focused workflow proof is:
+Current deterministic source-write boundary:
 
 ```text
-Tools/validation/run_full0to10_product_pr_chain_smoke.py
+Tools/ai/patchkit/apply_patch_bundle.py
 ```
 
-That smoke runs the product chain in a temporary git repository and traces `Tools/workflow/run_unified_local_ai_refactor.ps1` to confirm the real launcher keeps the same phase order. It does not push or create a real GitHub PR.
-
-Current limitation:
+Future patch bundles should centralize the modification core:
 
 ```text
-ReviewPrIncludePath is still explicit.
-prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
-prepare_review_pr.py does not create draft PRs yet.
+patch_specs/<bundle>/bundle.json
+patch_specs/<bundle>/fragments/*.ps1
+patch_specs/<bundle>/fragments/*.py
 ```
+
+Apply with the reusable patchkit runner, not a new one-off patcher, when the supported operations can express the change.
+
+The older patch suggestion bridge remains available:
+
+```text
+Tools/ai/build_task_patch_suggestion_report.py
+Tools/ai/apply_patch_suggestion_bundle.py
+Tools/validation/check_patch_suggestion_product_separation.py
+Tools/ai/prepare_review_pr.py
+```
+
+Metadata-only patch drafts are not enough for a successful review-PR product.
 
 ## Current stable docs
 
@@ -174,6 +218,9 @@ prepare_review_pr.py does not create draft PRs yet.
 |---|---|
 | Agent contract and guardrails | `AGENTS.md` |
 | ChatGPT/session memory and handoff notes | `CHATGPT.md`, then `CHATGPT/README.md` |
+| Documentation index | `docs/README.md` |
+| Heap/exchange and patchkit model | `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` |
+| AI first-orientation map | `docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` |
 | Current code/state bridge | `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
 | Current capability depth | `docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
 | Launcher parameter decision map | `docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
@@ -184,7 +231,6 @@ prepare_review_pr.py does not create draft PRs yet.
 | Single-owner scripts / do-not-bypass rules | `docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md` |
 | Operational data-flow variants | `docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md` |
 | Validator and smoke cycles | `docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md` |
-| Obsolete/monolithic docs review | `docs/LOCAL_AI_TASKS/obsolete-monolithic-docs-review-2026-05-07.md` |
 | Main runtime architecture | `docs/MAIN_RUNTIME_ARCHITECTURE.md` |
 | Unified launcher manifest contract | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
 | Unified full 0-to-10 local AI run | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
@@ -205,6 +251,10 @@ Review this group together:
 launcher manifest
 phase_status / phase_reports
 evidence artifacts
+heap/exchange runtime entry
+heap/exchange runtime state
+heap/exchange runtime exit product
+heap/exchange lifecycle report
 patch-plan artifacts when produced
 runtime_tool_usage_telemetry_<STAMP>.json/md
 runtime_tool_capability_manifest_<STAMP>.json/md
@@ -294,6 +344,8 @@ tool placement audit
 validation report contracts
 runtime broker telemetry
 compact GitHub evidence bundles
+heap/exchange lifecycle evidence
+patchkit reports
 ```
 
 Commands for these tools live in the unified launcher runbook and tool-specific README files, not in this root README.
@@ -307,7 +359,7 @@ Required wording principle:
 ```text
 Root/project descriptions describe purpose and canonical docs.
 Operational commands live in docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md.
-Runtime architecture lives in docs/MAIN_RUNTIME_ARCHITECTURE.md.
+Runtime architecture lives in docs/MAIN_RUNTIME_ARCHITECTURE.md and the heap/exchange operating model.
 The GitHub About description must not describe this as only a Blender/audio project.
 ```
 

@@ -25,6 +25,9 @@ This policy is not a command catalog. Current memory-aware run commands live in 
 ## Current code-driven references
 
 ```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
@@ -45,6 +48,9 @@ Memory output must be visible through compact, non-private surfaces:
 unified manifest memory fields
 phase_status / phase_reports
 agent-state packet path
+heap/exchange runtime entry context references
+heap/exchange runtime state when memory participates in the dynamic center
+heap/exchange runtime exit product when memory influenced concrete output
 runtime telemetry / full toolbox telemetry summary when relevant
 shared AI-to-AI bundle reference when used for handoff
 ```
@@ -52,6 +58,40 @@ shared AI-to-AI bundle reference when used for handoff
 SQLite DB files remain private local runtime state. They are never the handoff artifact and must not be committed.
 
 Telemetry explains whether memory/context was enabled, disabled, skipped or unavailable. It does not replace memory evidence or agent-state packets; it accompanies them.
+
+## Memory and heap/exchange lifecycle
+
+Memory is one input to the dynamic heap/exchange, not the final authority.
+
+Correct lifecycle:
+
+```text
+IN
+  task Markdown
+  context pack
+  agent-state packet
+  selected memory summaries
+
+LOOP / HEAP / EXCHANGE
+  dynamic cooperation among context, memory, GPU1/GPU0/NPU/provider/broker/validator lanes
+  runtime state records lane events and observations
+
+OUT
+  heap exchange exit product
+  concrete deterministic operation candidates or manual-review findings
+  lifecycle validation
+  patchkit or deterministic patch bridge when selected
+```
+
+Rules:
+
+```text
+Memory can enrich the heap.
+Memory must not silently decide the output.
+Raw memory is not a patch product.
+Exit products must cite concrete operations/findings, not hidden memory assumptions.
+Quarantined/private/local-only records must not enter provider prompts or public handoffs.
+```
 
 ## Active memory components
 
@@ -76,6 +116,7 @@ Do not commit SQLite DBs or local memory output files.
 Do not select quarantined/private/local-only records into provider prompts.
 Expose memory input/output in the unified launcher manifest when used.
 Expose memory/context handoff state in telemetry or bundle surfaces when it contributes to a production run.
+Expose memory/context participation in heap/exchange lifecycle artifacts when that lane is selected.
 ```
 
 ## Storage
@@ -104,6 +145,7 @@ memory_out_enabled recorded in unified manifest
 save_inputs_to_memory_db recorded in unified manifest
 agent-state packet path recorded in phase_reports/context_files when produced
 memory/context contribution referenced in telemetry/bundle when part of production handoff
+heap/exchange entry and runtime state include context/memory lane visibility when lifecycle is selected
 SQLite DB remains untracked
 ```
 
@@ -154,6 +196,8 @@ runtime validation results
 architecture decisions
 guardrail decisions
 provider/broker/validator telemetry decisions
+heap/exchange lifecycle decisions
+patchkit bundle/application decisions
 Blender/audio smoke outcomes with explicit application-domain scope
 known risks with date and scope
 ```
@@ -173,6 +217,9 @@ old PR/branch state already superseded by merged docs
 Promotion means copying a reviewed summary into a stable current target such as:
 
 ```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
@@ -243,6 +290,7 @@ A PR established an artifact path policy, report scanning rule or validated runt
 Suggested promotion targets:
 
 ```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
 docs/TECH_DEBT_TRACKER.md
@@ -284,6 +332,7 @@ no output/** commit
 no provider execution unless explicit
 manifest/report visibility when routed through launcher
 telemetry/capability visibility when memory contributes to full-run handoff
+heap/exchange lifecycle visibility when memory participates in the product path
 ```
 
 Focused validation cycle selection lives in:

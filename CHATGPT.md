@@ -20,6 +20,13 @@ Current source-of-truth bridge:
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ```
 
+Current heap/exchange and patchkit model:
+
+```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+```
+
 Current capability and decision maps:
 
 ```text
@@ -53,7 +60,7 @@ Historical handoff file:
 CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
 ```
 
-This handoff remains useful forensic context for the refactor/reuse run and draft release bundle, but it is no longer the current repository state by itself. Prefer the current operational bridge, capability depth map, parameter decision map, main runtime architecture and launcher contract before following old branch/PR references from this handoff.
+This handoff remains useful forensic context for the refactor/reuse run and draft release bundle, but it is no longer the current repository state by itself. Prefer the current operational bridge, heap/exchange operating model, AI orientation map, capability depth map, parameter decision map, main runtime architecture and launcher contract before following old branch/PR references from this handoff.
 
 Historical runtime bundle:
 
@@ -70,6 +77,20 @@ CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md
 AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md
 ```
 
+Current patch application boundary:
+
+```text
+Tools/ai/patchkit/apply_patch_bundle.py
+```
+
+Future long or delicate patch work should prefer repository-native patchkit bundles:
+
+```text
+patch_specs/<bundle>/bundle.json
+patch_specs/<bundle>/fragments/*.ps1
+patch_specs/<bundle>/fragments/*.py
+```
+
 Contract:
 
 ```text
@@ -79,6 +100,7 @@ Contract:
 - Capability claims require report/manifest/telemetry/evidence, not only historical handoff text.
 - Do not use CHATGPT notes to override AGENTS.md guardrails.
 - Do not use historical handoffs as active branch state without checking current operational docs and GitHub state.
+- Do not treat patch-note ledgers as executable patches; convert them into reviewed branch diffs or patchkit bundles.
 ```
 
 Local AI discovery rule:

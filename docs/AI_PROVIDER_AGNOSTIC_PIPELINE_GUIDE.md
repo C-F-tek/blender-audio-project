@@ -8,6 +8,7 @@ It is architectural guidance, not a command catalog. Current operator commands a
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
@@ -16,19 +17,31 @@ docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 
 ## Design goal
 
-The project should support multiple execution targets without coupling orchestration to one provider:
+The project should support multiple execution targets without coupling orchestration to one provider.
+
+Current provider/product model:
 
 ```text
-run-unica launcher
-  -> pipeline orchestration
-  -> provider interface or provider execution plan
-  -> provider implementation when selected and permitted
-  -> normalized diagnostics
-  -> validation report
-  -> runtime telemetry and capability context
-  -> discovery/index/CSV-count/file-line context when relevant
-  -> shared AI-to-AI bundle / patch-plan handoff
-  -> downstream application workflow only when explicitly scoped
+IN
+  task Markdown
+  context pack
+  agent-state / memory summaries
+  capability and workload evidence
+
+LOOP / HEAP / EXCHANGE
+  provider interface or provider execution plan
+  GPU1 primary advisory lane
+  GPU0 companion workload lane
+  NPU diagnostic/microtask lane
+  broker/tool lane
+  validators and telemetry
+
+OUT
+  normalized diagnostics
+  heap exchange exit product
+  lifecycle validation
+  patchkit or deterministic patch bridge when selected
+  review PR product when selected
 ```
 
 Core pipeline code should not assume a single model runtime such as OpenVINO, Ollama, an OpenAI-compatible API, local Python, cloud-only runtime, NPU-only runtime or GPU-only runtime.
@@ -47,7 +60,7 @@ quick/balanced/deep/custom = intensity or budget, not scope
 CSV/index/discovery/file-line-limit surfaces = evidence lanes when relevant
 ```
 
-When provider output influences evidence, recommendations, patch plans or patch specs, the handoff must preserve provider state through telemetry/capability/bundle surfaces.
+When provider output influences evidence, recommendations, patch plans or patch specs, the handoff must preserve provider state through telemetry/capability/bundle and heap/exchange lifecycle surfaces.
 
 Required state signals include:
 
@@ -59,6 +72,9 @@ degraded_provider_components
 deterministic_recovery_used
 workload_quality_routing_ok
 quality_gate_passed
+heap/exchange runtime entry when lifecycle is selected
+heap/exchange runtime state when provider lanes participate
+heap/exchange runtime exit product when provider output influences product candidates
 runtime tool usage telemetry when tools execute
 runtime/hardware capability manifest when capability matters
 full toolbox telemetry summary
@@ -78,6 +94,9 @@ Telemetry is the completeness accessory. It does not replace provider artifacts 
 | `Tools/npu/pipeline/` | App-agnostic NPU helper contracts and provider-free staging helpers. |
 | `Tools/ai/full0to10_provider_execution_bridge/*` | Provider execution bridge planning/gating/readiness artifacts. |
 | `Tools/ai/full0to10_final_product/*` | Final tool-product package: product Markdown, evidence index, readiness, manifest and README. |
+| `Tools/ai/build_heap_exchange_runtime_entry.py` | Runtime entry/lane availability for heap/exchange lifecycle. |
+| `Tools/ai/build_heap_exchange_runtime_exit.py` | Product exit gate after dynamic exchange. |
+| `Tools/validation/check_heap_exchange_runtime_lifecycle.py` | Lifecycle validation. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | Quality-based advisory routing. |
 | `Tools/ai/build_full_toolbox_run_telemetry_summary.py` | Provider/broker/GPU/NPU/patch-plan telemetry summary. |
 | `Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py` | Production AI-to-AI handoff bundle. |
@@ -99,6 +118,7 @@ which output artifact is expected
 which validator must run
 how failures are reported
 how provider/telemetry state is surfaced
+how heap/exchange lifecycle state is surfaced
 how discovery/index/CSV-count/file-line state is surfaced when relevant
 ```
 
@@ -116,7 +136,7 @@ local stub or fixture providers
 dry-run providers
 ```
 
-Provider results must be normalized before entering artifact validation, telemetry summary or bundle handoff.
+Provider results must be normalized before entering artifact validation, telemetry summary, heap/exchange product output or bundle handoff.
 
 ### Provider bridge layer
 
@@ -135,6 +155,7 @@ warnings and errors
 target files if patch-related
 safe write plan if file generation is involved
 provider/telemetry companion references when run-derived
+heap/exchange lifecycle references when product path is selected
 discovery/index/CSV-count/file-line companion references when repository-wide evidence is involved
 ```
 
@@ -143,19 +164,23 @@ discovery/index/CSV-count/file-line companion references when repository-wide ev
 ```text
 1. collect source inputs
 2. build compact context
-3. select provider, provider plan or dry-run mode
-4. generate model output only when explicitly selected and permitted
-5. normalize raw output and diagnostics
-6. parse structured output
-7. validate schema
-8. validate repository paths
-9. validate file-line impact when maintainability is in scope
-10. validate Blender compatibility only when explicitly scoped
-11. write artifact to safe output location
-12. generate report
-13. attach telemetry/capability context for run-unica handoff
-14. attach discovery/CSV/index/file-line context when relevant
-15. update status only after validation succeeds
+3. enter heap/exchange entry when lifecycle is selected
+4. select provider, provider plan or dry-run mode
+5. generate model output only when explicitly selected and permitted
+6. normalize raw output and diagnostics
+7. publish provider/context/tool observations into bounded exchange artifacts
+8. parse structured output
+9. validate schema
+10. validate repository paths
+11. validate file-line impact when maintainability is in scope
+12. validate Blender compatibility only when explicitly scoped
+13. write artifact to safe output location
+14. generate report
+15. build heap/exchange exit product when product path is selected
+16. validate heap/exchange lifecycle
+17. attach telemetry/capability context for run-unica handoff
+18. attach discovery/CSV/index/file-line context when relevant
+19. update status only after validation succeeds
 ```
 
 ## Provider fallback rule
@@ -172,7 +197,7 @@ error: <short diagnostic>
 artifact_written: false
 ```
 
-Fallback providers are allowed only when the report clearly states that fallback happened. Run-unica handoff must expose fallback/degradation in telemetry and AI-to-AI bundle state.
+Fallback providers are allowed only when the report clearly states that fallback happened. Run-unica handoff must expose fallback/degradation in telemetry, lifecycle artifacts and AI-to-AI bundle state.
 
 ## Runtime-agnostic implementation rules
 
@@ -186,6 +211,7 @@ Fallback providers are allowed only when the report clearly states that fallback
 - Keep provider bridge/gate/readiness evidence separate from real provider execution proof.
 - Keep reusable `Tools/npu/pipeline/` helper contracts provider-free.
 - Keep telemetry/capability context separate from provider implementation but attached to run-unica handoff.
+- Keep heap/exchange lifecycle artifacts separate from provider implementation but present when the product path is selected.
 - Keep discovery/index/CSV-count/file-line context separate from provider implementation but attached when repository visibility or maintainability matters.
 - Keep maintained source files compact through responsibility-based modules.
 
@@ -194,6 +220,7 @@ Fallback providers are allowed only when the report clearly states that fallback
 ```text
 StageConfig
   -> ProviderDescriptor or ProviderExecutionPlan
+  -> HeapExchangeEntry when lifecycle is selected
   -> ProviderResult when real execution is explicitly permitted
   -> ArtifactNormalizer
   -> SchemaValidator
@@ -201,6 +228,7 @@ StageConfig
   -> FileLineImpactReport when relevant
   -> ArtifactWriter
   -> ValidationReport
+  -> HeapExchangeExitProduct when product path is selected
   -> Telemetry/Capability companion when used in run-unica evidence
   -> Discovery/CSV/Index/File-line companion when repository visibility or maintainability is part of the evidence
 ```
@@ -215,6 +243,7 @@ single script
   -> no schema validation
   -> no report
   -> no telemetry/capability context
+  -> no heap/exchange lifecycle boundary
   -> no discovery/index/CSV/file-line context
   -> treats bridge/readiness output as real provider execution
   -> grows beyond line-budget policy without split/refactor plan
@@ -235,6 +264,7 @@ is documented in the relevant README or docs file
 stays within line-budget policy or is split by responsibility
 exposes manifest/report/telemetry/bundle visibility when promoted into run-unica
 clearly distinguishes plan/gate/readiness evidence from actual provider execution
+participates in heap/exchange lifecycle when product path output is selected
 ```
 
 ## Validation ownership
@@ -261,7 +291,8 @@ When converting an existing script into reusable pipeline logic:
 7. run focused validation
 8. update docs and status markers
 9. add telemetry/capability/bundle references if entering run-unica
-10. only then consider runtime wiring
+10. add heap/exchange lifecycle references if entering product path
+11. only then consider runtime wiring
 ```
 
 Do not claim Full0To10 success from provider-agnostic dry-runs alone.

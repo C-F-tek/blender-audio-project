@@ -1,5 +1,17 @@
 # Data Flow
 
+## Status
+
+Current broad/background data-flow reference.
+
+For first-session orientation and stale-document classification, start here instead:
+
+```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+```
+
 ## Purpose
 
 This document describes broad data movement across `IA-Carmine Local AI Orchestration Workbench`.
@@ -36,12 +48,18 @@ unified launcher command
   -> provider probes and primary advisory generation unless disabled or diagnosed unavailable
   -> provider bridge/gate/readiness planning when selected
   -> effective-use local memory/product surfaces when selected
+  -> heap/exchange runtime entry
+  -> dynamic heap/exchange center with GPU1/GPU0/NPU/provider/context/broker lanes
+  -> runtime state and public exchange events
   -> post-validation AI packet and proposals
   -> full-context golden proposal families when requested
   -> proposal-derived draft patch specs when requested
   -> patch suggestion product report when a task Markdown provides suggestions
   -> deterministic patch suggestion dry/apply when explicitly selected
+  -> heap/exchange runtime exit product
+  -> heap/exchange lifecycle validation
   -> product-vs-supplemental separation validation
+  -> patchkit bundle/apply bridge when selected
   -> review PR preparation when explicitly selected
   -> runtime broker report
   -> runtime tool usage telemetry
@@ -70,7 +88,11 @@ Normal flows must not bypass single-owner scripts.
 ```text
 launcher owns operator entry
 broker owns provider tool execution
-apply_patch_suggestion_bundle owns suggestion dry-run/apply
+build_heap_exchange_runtime_entry owns heap/exchange entry
+build_heap_exchange_runtime_exit owns heap/exchange exit product
+check_heap_exchange_runtime_lifecycle owns lifecycle validation
+patchkit/apply_patch_bundle owns new reviewed patchkit bundle application
+apply_patch_suggestion_bundle owns legacy suggestion dry-run/apply
 check_patch_suggestion_product_separation owns product-vs-supplemental validation
 prepare_review_pr owns staging/commit/push/PR preparation
 bundle builders own handoff/evidence packaging
@@ -104,7 +126,7 @@ limitations are backlog to overcome, not reasons to skip available tools
 
 Every intensity preset must preserve the same semantic data surfaces. `quick`, `balanced`, `deep` and `custom` may change volume, context size, token limits and runtime budget, but they must not silently remove core data flows.
 
-The full-run perimeter can expand. When a new production-ready data surface appears, such as a registry, broker tool report, provider diagnostic, repository-consistency map, memory/context builder, discovery/index report, CSV/count surface, file-line-limit report, product-separation report or telemetry summary, it must be added to this document and to the launcher contract, or explicitly excluded with rationale.
+The full-run perimeter can expand. When a new production-ready data surface appears, such as a registry, broker tool report, provider diagnostic, repository-consistency map, memory/context builder, discovery/index report, CSV/count surface, file-line-limit report, product-separation report, heap/exchange lifecycle report, patchkit report or telemetry summary, it must be added to this document and to the launcher contract, or explicitly excluded with rationale.
 
 ## Markdown-to-review-PR product flow
 
@@ -112,9 +134,12 @@ Current product path:
 
 ```text
 docs/LOCAL_AI_TASKS/<task>.md
-  -> Tools/ai/build_task_patch_suggestion_report.py
-  -> Tools/ai/apply_patch_suggestion_bundle.py
-  -> Tools/validation/check_patch_suggestion_product_separation.py
+  -> inventories/context/agent-state/workload-quality
+  -> Tools/ai/build_heap_exchange_runtime_entry.py
+  -> provider/official-adapter/proposal/patch-spec lanes
+  -> Tools/ai/build_heap_exchange_runtime_exit.py
+  -> Tools/validation/check_heap_exchange_runtime_lifecycle.py
+  -> Tools/ai/patchkit/apply_patch_bundle.py or legacy deterministic patch suggestion bridge
   -> Tools/ai/prepare_review_pr.py
   -> GitHub PR for manual review
 ```
@@ -123,6 +148,8 @@ Focused proof:
 
 ```text
 Tools/validation/run_full0to10_product_pr_chain_smoke.py
+Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+Tools/validation/run_patchkit_smoke.py
 ```
 
 Current explicit limitations:
@@ -131,9 +158,26 @@ Current explicit limitations:
 ReviewPrIncludePath remains supported for explicit/manual allowlists.
 prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
 prepare_review_pr.py does not create draft PRs yet.
+metadata-only patch drafts are not enough for a successful review PR product.
 ```
 
 This flow is not the same as the patch-spec queue. Patch specs remain explicit/manual-review-only and are documented in `docs/PATCH_SPEC_WORKFLOW.md`.
+
+## Patchkit source-write flow
+
+Preferred future source-write boundary:
+
+```text
+patch_specs/<bundle>/bundle.json
+  -> fragments/*.ps1 or fragments/*.py
+  -> Tools/ai/patchkit/apply_patch_bundle.py --dry-run
+  -> Tools/ai/patchkit/apply_patch_bundle.py
+  -> validators
+  -> line counts
+  -> review PR
+```
+
+Patchkit is deterministic infrastructure for reviewed source writes. It is not authorization to bypass guardrails.
 
 ## Operational data-flow map
 
@@ -161,6 +205,8 @@ reset planning
 output class map
 do-not-bypass list
 ```
+
+If this compact map conflicts with the heap/exchange operating model or current source code, inspect source first and update the smallest map.
 
 ## Legacy Blender/audio flow
 
@@ -193,6 +239,9 @@ This is now one application domain over the local AI orchestration workbench, no
 - Do not treat LightFull0To10, provider bridge/readiness or capability manifests as real provider execution proof unless the artifact itself records provider execution.
 - Do not treat product-separation success as draft PR support until `prepare_review_pr.py` implements draft PR creation.
 - Do not treat local output SQLite memory writes as source writes, and do not commit generated DB files.
+- Do not treat metadata-only patch drafts as concrete review PR product.
+- Do not bypass heap/exchange entry/exit for product paths.
+- Do not bypass patchkit for new long/delicate patch bundles when patchkit can express the change.
 - Do not overwrite large analysis JSON files unless explicitly requested.
 - Treat `indexAI/` and generated manifests as generated context.
 - Preserve local path configurability.
@@ -208,6 +257,11 @@ The following contracts still need more formal treatment:
 
 ```text
 unified launcher manifest/phase contract beyond the compact contract doc
+heap/exchange runtime entry report
+heap/exchange runtime state jsonl
+heap/exchange runtime exit product report
+heap/exchange lifecycle report
+patchkit bundle schema and apply report
 provider probe report
 provider bridge/readiness report
 effective-use SQLite memory/product report
@@ -232,4 +286,4 @@ richer context-pack profiles and selective execution plans for changed-file work
 
 ## Recommended next improvement
 
-Keep the code-driven maps synchronized with the single-owner scripts. Then inspect current Full0To10 evidence branches and compact runtime bundles, classify recommendations and patch plans, and select review-first refactor/reuse patch families only after telemetry, provider diagnostics, workload quality, discovery/index, CSV/count and file-line-limit evidence have been reviewed.
+Keep the code-driven maps synchronized with the single-owner scripts. Then inspect current Full0To10 evidence branches and compact runtime bundles, classify recommendations and patch plans, and select review-first refactor/reuse patch families only after telemetry, provider diagnostics, workload quality, heap/exchange lifecycle evidence, patchkit reports, discovery/index, CSV/count and file-line-limit evidence have been reviewed.
