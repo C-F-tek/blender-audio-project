@@ -392,6 +392,37 @@ Remote queueing is a high-risk explicit action, not a default run-unica behavior
 5. let GitHub Action dry-run/apply/commit if configured
 ```
 
+## Generated patch specs to review PR bridge
+
+For proposal/provider runs that produce generated patch specs instead of fenced
+task-Markdown `patch_suggestion` blocks, use the bridge lane:
+
+```text
+proposal_patch_spec_manifest
+  -> apply_generated_patch_specs_for_review_pr.py
+  -> patch_suggestion_bundle_apply-compatible report
+  -> prepare_review_pr.py --auto-include-from-apply-report
+```
+
+This lane does not replace the current product owners. The bridge applies only
+concrete deterministic operations supported by `patch_suggestion_bundle`; inert
+metadata-only drafts remain manual-review items. Generated/runtime/evidence
+paths stay denied, including `output/**`, generated `indexAI` chunks,
+`docs/LOCAL_VALIDATION_EVIDENCE/**`, databases and renders.
+
+Launcher flags:
+
+```text
+-ReviewPrFromGeneratedPatchSpecs
+-ReviewPrPatchSpecManifest <manifest>
+-ReviewPrMaxAppliedPatches <n>
+-ReviewPrRequireAllValidators
+-ReviewPrDraft
+```
+
+Use this only when a run already produced reviewed concrete operations or when a
+trusted operator supplied an explicit generated patch-spec manifest.
+
 ## Current recommendation
 
 Use patch specs for mechanical documentation and validation-policy edits.

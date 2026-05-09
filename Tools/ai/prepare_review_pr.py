@@ -13,6 +13,7 @@ FORBIDDEN_PREFIXES = (
     "output/",
     "indexAI/code_chunks/",
     "indexAI/project_code_chunks/",
+    "docs/LOCAL_VALIDATION_EVIDENCE/",
     "renders/",
 )
 FORBIDDEN_SUFFIXES = (".db", ".sqlite", ".sqlite3")
@@ -223,7 +224,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--markdown-output", default="")
     parser.add_argument("--evidence-output", default="")
     parser.add_argument("--evidence-markdown-output", default="")
-    parser.add_argument("--allowed-branch-prefix", action="append", default=["CARMINEai/"])
+    parser.add_argument("--allowed-branch-prefix", action="append", default=["CARMINEai/", "codex/"])
     parser.add_argument("--push", action="store_true")
     parser.add_argument("--create-pr", action="store_true")
     parser.add_argument("--draft-pr", action="store_true")

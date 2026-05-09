@@ -15,6 +15,7 @@ DENY_PREFIXES = (
     "output/",
     "indexAI/code_chunks/",
     "indexAI/project_code_chunks/",
+    "docs/LOCAL_VALIDATION_EVIDENCE/",
     "renders/",
 )
 

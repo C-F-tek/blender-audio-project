@@ -123,6 +123,11 @@ param(
     [switch]$ReviewPrCreate,
     [switch]$ReviewPrApplyDeterministicSuggestions,
     [switch]$BuildTaskPatchSuggestionReport,
+    [switch]$ReviewPrFromGeneratedPatchSpecs,
+    [string]$ReviewPrPatchSpecManifest = "",
+    [int]$ReviewPrMaxAppliedPatches = 5,
+    [switch]$ReviewPrRequireAllValidators,
+    [switch]$ReviewPrDraft,
     [switch]$OpenObserverConsoles,
     [switch]$OpenExtendedObserverConsoles,
     [string]$ObserverOutputDir = "",
@@ -1584,7 +1589,32 @@ if ($BuildTaskPatchSuggestionReport -or $ReviewPrApplyDeterministicSuggestions) 
     }
 }
 
-if ($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) {
+if ($ReviewPrFromGeneratedPatchSpecs) {
+    $PatchSuggestionJson = "$ValidationDir/generated_patch_specs_review_pr_apply_${ModeName}_$Stamp.json"
+    $EffectiveGeneratedPatchSpecsBranch = $ReviewPrBranch
+    if ([string]::IsNullOrWhiteSpace($EffectiveGeneratedPatchSpecsBranch)) {
+        $EffectiveGeneratedPatchSpecsBranch = "codex/generated-patch-specs-review-pr-$Stamp"
+    }
+    $GeneratedPatchSpecsArgs = @(
+        ".\Tools\ai\apply_generated_patch_specs_for_review_pr.py",
+        "--repo-root", ".",
+        "--output", $PatchSuggestionJson,
+        "--markdown-output", "$ValidationDir/generated_patch_specs_review_pr_apply_${ModeName}_$Stamp.md",
+        "--max-applied-patches", ([string]$ReviewPrMaxAppliedPatches),
+        "--create-review-branch", $EffectiveGeneratedPatchSpecsBranch
+    )
+    if (-not [string]::IsNullOrWhiteSpace($ReviewPrPatchSpecManifest)) {
+        $GeneratedPatchSpecsArgs += "--manifest"
+        $GeneratedPatchSpecsArgs += $ReviewPrPatchSpecManifest
+    }
+    if ($ReviewPrRequireAllValidators) { $GeneratedPatchSpecsArgs += "--require-all-validators" }
+    if ($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) { $GeneratedPatchSpecsArgs += "--apply" }
+    if ($AllowDirty) { $GeneratedPatchSpecsArgs += "--allow-dirty"; $GeneratedPatchSpecsArgs += "--allow-dirty-branch" }
+    $ReviewPrBranch = $EffectiveGeneratedPatchSpecsBranch
+    Invoke-Checked "Apply generated patch specs for review PR" { Invoke-Python $GeneratedPatchSpecsArgs }
+}
+
+if (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and -not $ReviewPrFromGeneratedPatchSpecs) {
     $PatchSuggestionJson = "$ValidationDir/patch_suggestion_bundle_apply_${ModeName}_$Stamp.json"
     $PatchSuggestionArgs = @(
         ".\Tools\ai\apply_patch_suggestion_bundle.py",
@@ -1746,8 +1776,13 @@ $Manifest = [ordered]@{
     review_pr_push_requested = [bool]$ReviewPrPush
     review_pr_create_requested = [bool]$ReviewPrCreate
     review_pr_apply_deterministic_suggestions = [bool]$ReviewPrApplyDeterministicSuggestions
+    review_pr_from_generated_patch_specs = [bool]$ReviewPrFromGeneratedPatchSpecs
+    review_pr_patch_spec_manifest = $ReviewPrPatchSpecManifest
+    review_pr_max_applied_patches = $ReviewPrMaxAppliedPatches
+    review_pr_require_all_validators = [bool]$ReviewPrRequireAllValidators
+    review_pr_draft_requested = [bool]$ReviewPrDraft
     task_patch_suggestion_report_requested = [bool]($BuildTaskPatchSuggestionReport -or $ReviewPrApplyDeterministicSuggestions)
-    patch_application_requested = [bool]$ReviewPrApplyDeterministicSuggestions
+    patch_application_requested = [bool]($ReviewPrApplyDeterministicSuggestions -or (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and $ReviewPrFromGeneratedPatchSpecs))
     patch_application_performed = $false
     patch_specs_requested = [bool]($GeneratePatchSpecs -or (Test-ModeEnabled "patch_specs"))
     build_evidence_requested = [bool]($BuildEvidence -or (Test-ModeEnabled "evidence"))
