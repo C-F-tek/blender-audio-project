@@ -22,12 +22,14 @@ def main() -> int:
     launcher = repo / "Tools/workflow/run_unified_local_ai_refactor.ps1"
     readme = repo / "Tools/workflow/README.md"
     intrinsic_contract = repo / "Tools/validation/check_real_product_intrinsic_capability_contract.py"
+    runtime_mesh_contract = repo / "Tools/validation/check_real_product_runtime_mesh_contract.py"
     errors: list[str] = []
 
     text = wrapper.read_text(encoding="utf-8-sig", errors="replace") if wrapper.exists() else ""
     launcher_text = launcher.read_text(encoding="utf-8-sig", errors="replace") if launcher.exists() else ""
     readme_text = readme.read_text(encoding="utf-8-sig", errors="replace") if readme.exists() else ""
     intrinsic_contract_text = intrinsic_contract.read_text(encoding="utf-8-sig", errors="replace") if intrinsic_contract.exists() else ""
+    runtime_mesh_contract_text = runtime_mesh_contract.read_text(encoding="utf-8-sig", errors="replace") if runtime_mesh_contract.exists() else ""
 
     required_tokens = {
         "wrapper_exists": wrapper.exists(),
@@ -52,6 +54,9 @@ def main() -> int:
         "intrinsic_contract_exists": intrinsic_contract.exists(),
         "intrinsic_contract_mentions_heap_exchange": "heap_exchange_activation" in intrinsic_contract_text,
         "intrinsic_contract_mentions_gpu0_gpu1_npu": "gpu1_primary_advisory" in intrinsic_contract_text and "gpu0_openvino_workload" in intrinsic_contract_text and "npu_peer_micro_lane" in intrinsic_contract_text,
+        "runtime_mesh_contract_exists": runtime_mesh_contract.exists(),
+        "runtime_mesh_contract_mentions_sqlite_broker": "sqlite_fts_memory" in runtime_mesh_contract_text and "tool_agnostic_broker" in runtime_mesh_contract_text,
+        "runtime_mesh_contract_mentions_direct_reasoning": "direct_reasoning_assistance" in runtime_mesh_contract_text,
         "supports_generated_patch_specs": "-ReviewPrFromGeneratedPatchSpecs" in text,
         "supports_deterministic_suggestions": "-ReviewPrApplyDeterministicSuggestions" in text,
         "saves_inputs_to_memory": "-SaveInputsToMemoryDb" in text,
