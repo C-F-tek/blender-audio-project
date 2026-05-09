@@ -35,12 +35,21 @@ def main() -> int:
         ("[Parameter(Mandatory = $true)]" in text and "$TaskFile" in text)
         or ('[string]$TaskFile = ""' in text and "-ProcessGateTask" in text and "New-HeapExchangeProcessGateTask" in text)
     )
+    mode_contract = (
+        '"-Mode", "all"' in text
+        or (
+            '"-Mode", $RealProductPostPreflightModes' in text
+            and "$RealProductPostPreflightModes" in text
+            and "official,provider" in text
+            and "patch_specs,evidence,contract,full_validation" in text
+        )
+    )
 
     required_tokens = {
         "wrapper_exists": wrapper.exists(),
         "delegates_to_unified_launcher": "run_unified_local_ai_refactor.ps1" in text,
         "requires_task_file": task_file_contract,
-        "uses_mode_all": '"-Mode", "all"' in text,
+        "uses_real_product_mode_contract": mode_contract,
         "enables_primary_provider": "-UsePrimaryAdvisoryProvider" in text,
         "enables_multistep_provider": "-RunMultistepProviderWorkflow" in text,
         "enables_gpu0_workload": "-RunOpenVinoGpu0Workload" in text,
