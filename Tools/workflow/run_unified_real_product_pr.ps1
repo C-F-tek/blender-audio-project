@@ -498,6 +498,8 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "[OK] Mandatory real product preflight passed: $PreflightOutput"
 Write-Host ""
 
+$RealProductPostPreflightModes = "smoke,reset,md,json,python,chunks,context_pack,agent_state,official,provider,patch_specs,evidence,contract,full_validation"
+
 $script:LauncherArgs = @(
     "-NoProfile", "-ExecutionPolicy", "Bypass",
     "-File", $Launcher,
@@ -505,7 +507,7 @@ $script:LauncherArgs = @(
     "-TaskFile", $TaskRel,
     "-TaskBranch", $TaskBranch,
     "-Stamp", $Stamp,
-    "-Mode", "all",
+    "-Mode", $RealProductPostPreflightModes,
     "-RunIntensity", $RunIntensity,
     "-Model", $Model,
 
@@ -593,6 +595,7 @@ Write-Host "Push: $Push"
 Write-Host "Create PR: $CreatePr"
 Write-Host "Draft PR: $DraftPr"
 Write-Host "Use generated patch specs: $UseGeneratedPatchSpecs"
+Write-Host "Post-preflight modes: $RealProductPostPreflightModes"
 Write-Host ""
 Write-Host "[RUN] powershell.exe $($script:LauncherArgs -join ' ')"
 
