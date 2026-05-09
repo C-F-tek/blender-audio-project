@@ -35,12 +35,19 @@ def main() -> int:
         task_file = repo_root / task_file
     task_file = task_file.resolve()
 
+    task_rel = task_file.relative_to(repo_root).as_posix()
+    process_gate_task = task_rel.startswith("output/local_ai_task_inputs/")
+    allow_empty = bool(args.allow_empty or process_gate_task)
+    empty_reason = args.empty_reason
+    if allow_empty and not empty_reason:
+        empty_reason = "Task Markdown is an entry contract; runtime/generated patch-spec product is expected downstream."
+
     report = build_task_patch_suggestion_report(
         repo_root,
         task_file,
         args.Stamp,
-        allow_empty=args.allow_empty,
-        empty_reason=args.empty_reason,
+        allow_empty=allow_empty,
+        empty_reason=empty_reason,
     )
     output = resolve_output_path(repo_root, args.output)
     print(write_json_report(report, output), end="")
