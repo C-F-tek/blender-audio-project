@@ -1411,6 +1411,32 @@ if ($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoWo
     $PhaseStatus.workload_quality = Invoke-Checked "Build AI workload quality routing report" {
         Invoke-Python @(".\Tools\validation\check_ai_workload_report_quality.py", "--repo-root", ".", "--report-dir", $AiPacketsDir, "--output", $WorkloadQualityReport)
     } -SoftFail:$ContinueOnValidationError
+
+# IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-BEGIN
+$HeapExchangeObserverDir = $ObserverOutputDir
+if ([string]::IsNullOrWhiteSpace($HeapExchangeObserverDir)) {
+    $HeapExchangeObserverDir = Join-Path $OutputDir ("local_ai_runs/{0}_observer" -f $DataStamp)
+}
+$HeapExchangeEntryJson = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.json"
+$HeapExchangeEntryMd = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.md"
+$HeapExchangeRuntimeState = Join-Path $AiPacketsDir "heap_exchange_runtime_state.jsonl"
+$HeapExchangeEntryArgs = @(
+    "Tools/ai/build_heap_exchange_runtime_entry.py",
+    "--repo-root", ".",
+    "--stamp", $DataStamp,
+    "--task-file", $TaskFile,
+    "--observer-dir", $HeapExchangeObserverDir,
+    "--runtime-state", $HeapExchangeRuntimeState,
+    "--output", $HeapExchangeEntryJson,
+    "--markdown-output", $HeapExchangeEntryMd
+)
+$HeapExchangeEntryOk = Invoke-Checked "Build heap/exchange runtime entry" {
+    & $ResolvedPythonExe @HeapExchangeEntryArgs
+}
+$ReportFiles += $HeapExchangeEntryJson
+$ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapExchangeEntryMd
+# IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-END
+
     if (Test-Path -LiteralPath $WorkloadQualityReport -PathType Leaf) {
         $ReportFiles += $WorkloadQualityReport
         $PhaseReports.workload_quality = $WorkloadQualityReport
@@ -1743,6 +1769,28 @@ if ($ReviewPrFromGeneratedPatchSpecs) {
     if ($AllowDirty) { $GeneratedPatchSpecsArgs += "--allow-dirty"; $GeneratedPatchSpecsArgs += "--allow-dirty-branch" }
     $ReviewPrBranch = $EffectiveGeneratedPatchSpecsBranch
     Invoke-Checked "Apply generated patch specs for review PR" { Invoke-Python $GeneratedPatchSpecsArgs }
+
+# IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-BEGIN
+$HeapExchangeExitJson = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.json"
+$HeapExchangeExitMd = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.md"
+$HeapExchangeExitArgs = @(
+    "Tools/ai/build_heap_exchange_runtime_exit.py",
+    "--repo-root", ".",
+    "--stamp", $DataStamp,
+    "--runtime-entry", $HeapExchangeEntryJson,
+    "--runtime-state", $HeapExchangeRuntimeState,
+    "--observer-dir", $HeapExchangeObserverDir,
+    "--output", $HeapExchangeExitJson,
+    "--markdown-output", $HeapExchangeExitMd
+)
+if ($PrepareReviewPr -or $ReviewPrFromGeneratedPatchSpecs) { $HeapExchangeExitArgs += "--require-concrete-product" }
+$HeapExchangeExitOk = Invoke-Checked "Build heap/exchange runtime exit product" {
+    & $ResolvedPythonExe @HeapExchangeExitArgs
+}
+$ReportFiles += $HeapExchangeExitJson
+$ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapExchangeExitMd
+# IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-END
+
 }
 
 if (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and -not $ReviewPrFromGeneratedPatchSpecs) {
@@ -1770,6 +1818,30 @@ if (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and -not $Rev
 }
 
 if (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and (Test-Path -LiteralPath $PatchSuggestionJson -PathType Leaf)) {
+
+
+# IA-CARMINE-HEAP-EXCHANGE-LIFECYCLE-GATE-BEGIN
+$HeapExchangeLifecycleJson = Join-Path $OutputDir ("validation/heap_exchange_runtime_lifecycle_{0}.json" -f $DataStamp)
+$HeapExchangeLifecycleMd = Join-Path $OutputDir ("validation/heap_exchange_runtime_lifecycle_{0}.md" -f $DataStamp)
+$HeapExchangeLifecycleArgs = @(
+    "Tools/validation/check_heap_exchange_runtime_lifecycle.py",
+    "--repo-root", ".",
+    "--stamp", $DataStamp,
+    "--runtime-entry", $HeapExchangeEntryJson,
+    "--runtime-state", $HeapExchangeRuntimeState,
+    "--runtime-exit", $HeapExchangeExitJson,
+    "--observer-dir", $HeapExchangeObserverDir,
+    "--require-public-events",
+    "--output", $HeapExchangeLifecycleJson,
+    "--markdown-output", $HeapExchangeLifecycleMd
+)
+if ($PrepareReviewPr -or $ReviewPrFromGeneratedPatchSpecs) { $HeapExchangeLifecycleArgs += "--require-concrete-exit" }
+$HeapExchangeLifecycleOk = Invoke-Checked "Validate heap/exchange runtime lifecycle" {
+    & $ResolvedPythonExe @HeapExchangeLifecycleArgs
+}
+$ReportFiles += $HeapExchangeLifecycleJson
+$ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapExchangeLifecycleMd
+# IA-CARMINE-HEAP-EXCHANGE-LIFECYCLE-GATE-END
 
 # IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-BEGIN
 $UnifiedChainContractJson = Join-Path $OutputDir ("validation/unified_chain_contract_{0}.json" -f $DataStamp)
