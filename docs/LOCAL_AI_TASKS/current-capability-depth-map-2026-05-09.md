@@ -30,6 +30,24 @@ Code, current reports and manifests override older handoffs.
 | Target | Architecture goal; no execution claim without evidence. |
 | Legacy/diagnostic | Available for focused diagnostics, not normal product path. |
 
+## TUTTO SU TUTTO meaning
+
+TUTTO SU TUTTO means intelligent combined use of all relevant mapped tools/scripts inside the complete 0Full10 run-unica flow.
+
+It does not mean executing every script blindly. It means the run unica can discover, select, coordinate, validate and report every applicable capability from the maps while respecting guardrails, provider availability, evidence quality and explicit `-No*` opt-outs.
+
+```text
+mapped capability
+  -> lane selection
+  -> preflight / availability classification
+  -> execution or explicit skip/degraded state
+  -> deterministic validation when applicable
+  -> telemetry/evidence/bundle publication
+  -> recommendation, patch-plan or review-PR product when requested
+```
+
+Future tools become part of TUTTO SU TUTTO only after they are mapped, wired, guarded, observable and evidence-producing. Architecture targets are expansion space, not current execution claims.
+
 ## Depth model
 
 ```text
@@ -70,7 +88,7 @@ The repository is now an AI orchestration workbench with a historical Blender/au
 | Patch suggestion apply | Active/explicit apply only | deterministic operation executor | `apply_patch_suggestion_bundle.py`, `patch_suggestion_bundle/` | apply report |
 | Review PR preparation | Active/explicit Git controls | review branch/PR bridge | `prepare_review_pr.py` | `review_pr_prepare` reports |
 | Evidence/handoff bundles | Active/report-only | Git-trackable summary | `build_github_evidence_bundle.py`, `build_shared_toolbox_ai_to_ai_bundle.py` | compact evidence/bundle docs |
-| Full0To10 final product | Active | product/readiness packaging | `full0to10_final_product/` builders | product, readiness, manifest |
+| 0Full10 final product | Active | product/readiness packaging | `full0to10_final_product/` builders | product, readiness, manifest |
 | Semantic tools registry | Target/partial | capability metadata model | broker/capability docs and manifests | capability manifests |
 | Blender/audio domain | Legacy/scoped | downstream app domain | `Scripting/`, Blender/audio scripts | scoped app validation only |
 
@@ -78,7 +96,7 @@ The repository is now an AI orchestration workbench with a historical Blender/au
 
 ### Launcher
 
-Selects phases, resolves repository Python, applies strict real-run activation, manages `Stamp`, routes `smoke`, single-phase, `LightFull0To10` and `Full0To10`, and writes phase/manifest evidence. It does not apply patches, commit, push, merge, run Blender or run FFmpeg by default.
+Selects phases, resolves repository Python, applies strict real-run activation, manages `Stamp`, routes `smoke`, single-phase, `LightFull0To10` and 0Full10/run-unica execution, and writes phase/manifest evidence. It does not apply patches, commit, push, merge, run Blender or run FFmpeg by default.
 
 ### Deterministic validators
 
@@ -102,7 +120,7 @@ Recommendation and patch-note products are proposal ledgers. `apply_patch_sugges
 
 ### Evidence, final product and script visibility
 
-Evidence builders summarize raw `output/**` reports into compact Git-trackable handoff surfaces. Full0To10 product builders package readiness/product manifests so a run becomes reviewable product material, not only logs. Script aging audits are documentation-only visibility queues: they notice hidden/legacy wrappers but do not delete or mark obsolete without follow-up proof.
+Evidence builders summarize raw `output/**` reports into compact Git-trackable handoff surfaces. 0Full10 product builders package readiness/product manifests so a run becomes reviewable product material, not only logs. Script aging audits are documentation-only visibility queues: they notice hidden/legacy wrappers but do not delete or mark obsolete without follow-up proof.
 
 ## Provider role boundaries
 
@@ -169,6 +187,8 @@ run local oldest-to-newest script inventory and promote reviewed findings only
 
 ```text
 Do not infer current capability from target architecture alone.
+Do not treat TUTTO SU TUTTO as blind execution of every script.
+Do not treat -Full0To10 as magic instead of lane composition.
 Do not treat LightFull0To10 as provider execution proof.
 Do not treat patch notes as patches.
 Do not trust provider output without workload quality and validators.
