@@ -88,18 +88,42 @@ def patch_launcher(text_lf: str) -> tuple[str, list[str]]:
     if CHAIN_GATE_MARKER in text_lf:
         return text_lf, changes
 
-    anchor = "=== Validate patch suggestion product separation ==="
-    label = '$PatchSuggestionProductSeparationOk = Invoke-Checked "Validate patch suggestion product separation" {'
-    index = text_lf.find(label)
-    if index < 0:
-        raise RuntimeError("could not locate product separation gate anchor")
+    lines = text_lf.splitlines()
+    anchor_terms = [
+        "Validate patch suggestion product separation",
+        "check_patch_suggestion_product_separation.py",
+        "patch_suggestion_product_separation",
+    ]
 
-    before = text_lf[:index]
-    after = text_lf[index:]
-    block = build_gate_block()
-    changes.append("insert_chain_contract_before_product_separation")
-    return before.rstrip("\n") + "\n\n" + block + "\n\n" + after.lstrip("\n"), changes
+    anchor_index: int | None = None
+    matched_term = ""
+    for index, line in enumerate(lines):
+        for term in anchor_terms:
+            if term in line:
+                anchor_index = index
+                matched_term = term
+                break
+        if anchor_index is not None:
+            break
 
+    if anchor_index is None:
+        diagnostics = []
+        for index, line in enumerate(lines):
+            lowered = line.lower()
+            if "product" in lowered or "separation" in lowered or "patch_suggestion" in lowered:
+                diagnostics.append(f"{index + 1}: {line}")
+        preview = "\n".join(diagnostics[:40])
+        raise RuntimeError(
+            "could not locate product separation gate anchor. "
+            "Searched for Validate patch suggestion product separation / "
+            "check_patch_suggestion_product_separation.py / patch_suggestion_product_separation. "
+            f"Nearby diagnostics:\n{preview}"
+        )
+
+    block = build_gate_block().splitlines()
+    new_lines = lines[:anchor_index] + [""] + block + [""] + lines[anchor_index:]
+    changes.append(f"insert_chain_contract_before_product_separation:{matched_term}")
+    return "\n".join(new_lines) + "\n", changes
 
 def validate_policy(text_lf: str) -> list[str]:
     errors: list[str] = []
