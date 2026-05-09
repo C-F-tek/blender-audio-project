@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """End-to-end smoke for the unified run patch product PR chain.
 
-Full0To10 is treated here as an activation/profile inside the unified launcher,
-not as a separate pipeline. This smoke runs in a temporary git repository. It
-does not modify the source checkout, push, create a real PR, run providers,
-Blender or FFmpeg.
+This smoke keeps a legacy filename for compatibility, but it validates the
+single unified run product chain. Full0To10 is not a separate pipeline and not a
+runtime profile here. It has been absorbed by the unified run semantics:
+controlled input, dynamic heap/exchange center, deterministic product exit and
+reviewable PR output.
 """
 from __future__ import annotations
 
@@ -178,7 +179,7 @@ def load_json(path: Path) -> dict[str, Any]:
 def render_markdown(report: dict[str, Any]) -> str:
     """Render a compact Markdown report."""
     lines = [
-        "# Full0To10 Product PR Chain Smoke",
+        "# Unified Run Product PR Chain Smoke",
         "",
         f"- Passed: `{report['passed']}`",
         f"- Timeout seconds: `{report['timeout_seconds']}`",
@@ -187,7 +188,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- PR preparation committed: `{report.get('review_pr_commit_performed')}`",
         f"- Chain contract passed: `{report.get('chain_contract_passed')}`",
         f"- Real workflow trace passed: `{report.get('workflow_trace', {}).get('passed')}`",
-        "- Full0To10 role: `activation profile inside unified run`",
+        "- Legacy name: `full0to10_product_pr_chain_smoke`",
+        "- Runtime model: `single unified run`",
     ]
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
@@ -373,14 +375,14 @@ def main() -> int:
         "schema_version": 1,
         "kind": "unified_run_product_pr_chain_smoke",
         "legacy_smoke_name": "full0to10_product_pr_chain_smoke",
-        "full0to10_is_profile_not_pipeline": True,
+        "full0to10_legacy_alias_absorbed_by_unified_run": True,
         "repo_root": source_repo.as_posix(),
         "passed": not errors,
         "timeout_seconds": args.timeout_seconds,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
-        "unified_run_profile": "Full0To10",
+        "unified_run_model": "single_dynamic_heap_exchange_run",
         "git_push_performed": False,
         "github_pr_created": False,
         "deterministic_operation_count": apply_report.get("operation_count"),
