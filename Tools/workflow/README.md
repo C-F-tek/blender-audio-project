@@ -321,3 +321,29 @@ docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 ```
 
+<!-- IA-CARMINE-REAL-PRODUCT-RUNTIME-MESH-BEGIN -->
+## Real product runtime mesh contract
+
+The real product profile is not a manually guided chain. The operator provides a task Markdown file, then the run enters the heap/exchange runtime. Inside that dynamic center, GPU1, GPU0, NPU, shared memory, SQLite FTS memory, broker/tool-agnostic capabilities and deterministic script lanes cooperate as peers and evidence producers.
+
+Required route:
+
+- Task MD IN
+- heap/exchange activation
+- GPU1 primary advisory
+- GPU0 OpenVINO/tool workload
+- NPU peer micro lane
+- shared memory / SQLite FTS / tool broker / direct reasoning assistance
+- static deterministic script/product lane
+- heap/exchange CLOSE
+- product readiness
+- prepare_review_pr.py
+- PR finale testabile
+
+Static gate:
+
+- `Tools/validation/check_real_product_runtime_mesh_contract.py`
+- `Tools/validation/run_real_product_runtime_mesh_contract_smoke.py`
+
+The gate is deterministic. It does not run providers, does not apply patches, does not run Blender/FFmpeg and does not write source products. Its job is to fail early when the real product profile stops wiring one of the intrinsic project capabilities into the final review-PR path.
+<!-- IA-CARMINE-REAL-PRODUCT-RUNTIME-MESH-END -->
