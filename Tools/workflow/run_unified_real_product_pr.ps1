@@ -20,6 +20,10 @@
     prepare_review_pr product
     optional push and GitHub PR creation
 
+  Architectural lane selection is internal to the profile. Runtime sizing,
+  provider budget, observer and review-PR controls remain operator-facing
+  parameters.
+
   It does not merge, force-push, rewrite history, delete branches locally, deploy,
   touch secrets or run Blender/FFmpeg.
 #>
@@ -28,24 +32,46 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$TaskFile,
 
+    [string]$RepoRoot = ".",
     [string]$TaskBranch = "",
     [string]$Stamp = "",
-    [string]$RepoRoot = ".",
 
     [ValidateSet("quick", "balanced", "deep", "custom")]
     [string]$RunIntensity = "deep",
 
     [string]$Model = "gpt-oss:20b",
+    [string]$PythonExe = "",
+
+    [int]$BudgetMinutes = 30,
+    [int]$MaxRounds = 20,
+    [int]$FilesPerRound = 8,
+    [int]$MaxContextFiles = 220,
+    [int]$MaxCharsPerFile = 6000,
+    [int]$MaxNewTokens = 3600,
+    [string]$KeepAlive = "35m",
+
+    [int]$ProviderMaxContextChars = 0,
+    [int]$ContextPackMaxTotalChars = 64000,
+    [int]$ContextPackMaxFileChars = 4000,
+    [int]$AgentStateMaxMemoryChars = 24000,
+    [int]$MaxRecommendations = 20,
+    [int]$MaxPatchPlans = 20,
+    [int]$OfficialAdapterTimeoutSeconds = 1800,
+
+    [switch]$OpenObserverConsoles,
+    [switch]$OpenExtendedObserverConsoles,
+    [int]$ObserverRefreshSeconds = 2,
+
+    [switch]$UseGeneratedPatchSpecs,
+    [int]$ReviewPrMaxAppliedPatches = 5,
 
     [switch]$Push,
     [switch]$CreatePr,
     [switch]$DraftPr,
-    [switch]$UseGeneratedPatchSpecs,
+
     [switch]$AllowDirty,
     [switch]$SkipGitSync,
-    [switch]$DryRun,
-
-    [int]$ReviewPrMaxAppliedPatches = 5
+    [switch]$DryRun
 )
 
 Set-StrictMode -Version Latest
@@ -89,6 +115,34 @@ function New-SafeSlug {
     return $slug
 }
 
+function Add-LauncherArg {
+    param(
+        [string]$Name,
+        [string]$Value
+    )
+    $script:LauncherArgs += @($Name, $Value)
+}
+
+function Add-OptionalLauncherArg {
+    param(
+        [string]$Name,
+        [string]$Value
+    )
+    if (-not [string]::IsNullOrWhiteSpace($Value)) {
+        Add-LauncherArg -Name $Name -Value $Value
+    }
+}
+
+function Add-LauncherSwitch {
+    param(
+        [string]$Name,
+        [bool]$Enabled
+    )
+    if ($Enabled) {
+        $script:LauncherArgs += $Name
+    }
+}
+
 if ($CreatePr -and -not $Push) {
     throw "-CreatePr requires -Push because prepare_review_pr.py needs the branch on the remote"
 }
@@ -121,7 +175,7 @@ if (-not (Test-Path -LiteralPath $Launcher -PathType Leaf)) {
     throw "Unified launcher missing: $Launcher"
 }
 
-$Args = @(
+$script:LauncherArgs = @(
     "-NoProfile", "-ExecutionPolicy", "Bypass",
     "-File", $Launcher,
     "-RepoRoot", $ResolvedRepoRoot,
@@ -131,6 +185,7 @@ $Args = @(
     "-Mode", "all",
     "-RunIntensity", $RunIntensity,
     "-Model", $Model,
+
     "-UseOllamaAdvisory",
     "-UsePrimaryAdvisoryProvider",
     "-RunMultistepProviderWorkflow",
@@ -150,19 +205,39 @@ $Args = @(
     "-SaveInputsToMemoryDb"
 )
 
+Add-OptionalLauncherArg -Name "-PythonExe" -Value $PythonExe
+Add-LauncherArg -Name "-BudgetMinutes" -Value ([string]$BudgetMinutes)
+Add-LauncherArg -Name "-MaxRounds" -Value ([string]$MaxRounds)
+Add-LauncherArg -Name "-FilesPerRound" -Value ([string]$FilesPerRound)
+Add-LauncherArg -Name "-MaxContextFiles" -Value ([string]$MaxContextFiles)
+Add-LauncherArg -Name "-MaxCharsPerFile" -Value ([string]$MaxCharsPerFile)
+Add-LauncherArg -Name "-MaxNewTokens" -Value ([string]$MaxNewTokens)
+Add-LauncherArg -Name "-KeepAlive" -Value $KeepAlive
+Add-LauncherArg -Name "-ProviderMaxContextChars" -Value ([string]$ProviderMaxContextChars)
+Add-LauncherArg -Name "-ContextPackMaxTotalChars" -Value ([string]$ContextPackMaxTotalChars)
+Add-LauncherArg -Name "-ContextPackMaxFileChars" -Value ([string]$ContextPackMaxFileChars)
+Add-LauncherArg -Name "-AgentStateMaxMemoryChars" -Value ([string]$AgentStateMaxMemoryChars)
+Add-LauncherArg -Name "-MaxRecommendations" -Value ([string]$MaxRecommendations)
+Add-LauncherArg -Name "-MaxPatchPlans" -Value ([string]$MaxPatchPlans)
+Add-LauncherArg -Name "-OfficialAdapterTimeoutSeconds" -Value ([string]$OfficialAdapterTimeoutSeconds)
+Add-LauncherArg -Name "-ObserverRefreshSeconds" -Value ([string]$ObserverRefreshSeconds)
+
+Add-LauncherSwitch -Name "-OpenObserverConsoles" -Enabled ([bool]$OpenObserverConsoles)
+Add-LauncherSwitch -Name "-OpenExtendedObserverConsoles" -Enabled ([bool]$OpenExtendedObserverConsoles)
+
 if ($UseGeneratedPatchSpecs) {
-    $Args += "-ReviewPrFromGeneratedPatchSpecs"
+    $script:LauncherArgs += "-ReviewPrFromGeneratedPatchSpecs"
 }
 else {
-    $Args += "-ReviewPrApplyDeterministicSuggestions"
+    $script:LauncherArgs += "-ReviewPrApplyDeterministicSuggestions"
 }
 
-if ($Push) { $Args += "-ReviewPrPush" }
-if ($CreatePr) { $Args += "-ReviewPrCreate" }
-if ($DraftPr) { $Args += "-ReviewPrDraft" }
-if ($AllowDirty) { $Args += "-AllowDirty" }
-if ($SkipGitSync) { $Args += "-SkipGitSync" }
-if ($DryRun) { $Args += "-DryRun" }
+Add-LauncherSwitch -Name "-ReviewPrPush" -Enabled ([bool]$Push)
+Add-LauncherSwitch -Name "-ReviewPrCreate" -Enabled ([bool]$CreatePr)
+Add-LauncherSwitch -Name "-ReviewPrDraft" -Enabled ([bool]$DraftPr)
+Add-LauncherSwitch -Name "-AllowDirty" -Enabled ([bool]$AllowDirty)
+Add-LauncherSwitch -Name "-SkipGitSync" -Enabled ([bool]$SkipGitSync)
+Add-LauncherSwitch -Name "-DryRun" -Enabled ([bool]$DryRun)
 
 Write-Host "=== IA-Carmine real product profile ==="
 Write-Host "Repo: $ResolvedRepoRoot"
@@ -170,11 +245,29 @@ Write-Host "Task: $TaskRel"
 Write-Host "Branch: $TaskBranch"
 Write-Host "Stamp: $Stamp"
 Write-Host "Run intensity: $RunIntensity"
+Write-Host "Model: $Model"
+Write-Host "Budget minutes: $BudgetMinutes"
+Write-Host "Max rounds: $MaxRounds"
+Write-Host "Files per round: $FilesPerRound"
+Write-Host "Max context files: $MaxContextFiles"
+Write-Host "Max chars per file: $MaxCharsPerFile"
+Write-Host "Max new tokens: $MaxNewTokens"
+Write-Host "Provider max context chars: $ProviderMaxContextChars"
+Write-Host "Context pack max total chars: $ContextPackMaxTotalChars"
+Write-Host "Context pack max file chars: $ContextPackMaxFileChars"
+Write-Host "Agent state max memory chars: $AgentStateMaxMemoryChars"
+Write-Host "Max recommendations: $MaxRecommendations"
+Write-Host "Max patch plans: $MaxPatchPlans"
+Write-Host "Official adapter timeout seconds: $OfficialAdapterTimeoutSeconds"
+Write-Host "Observer consoles: $OpenObserverConsoles"
+Write-Host "Extended observer consoles: $OpenExtendedObserverConsoles"
+Write-Host "Observer refresh seconds: $ObserverRefreshSeconds"
 Write-Host "Push: $Push"
 Write-Host "Create PR: $CreatePr"
+Write-Host "Draft PR: $DraftPr"
 Write-Host "Use generated patch specs: $UseGeneratedPatchSpecs"
 Write-Host ""
-Write-Host "[RUN] powershell.exe $($Args -join ' ')"
+Write-Host "[RUN] powershell.exe $($script:LauncherArgs -join ' ')"
 
-& powershell.exe @Args
+& powershell.exe @script:LauncherArgs
 exit $LASTEXITCODE
