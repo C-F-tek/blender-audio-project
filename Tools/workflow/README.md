@@ -353,3 +353,16 @@ Full product PR chain gate:
 - `Tools/validation/run_full0to10_product_pr_chain_smoke.py` now runs the real product runtime mesh contract before the deterministic product PR chain smoke.
 - A full product chain smoke is not considered valid unless the static mesh contract passes first.
 - This keeps Task MD ingress, heap/exchange activation, GPU1/GPU0/NPU peer lanes, shared memory, SQLite FTS, tool broker, direct reasoning assistance, static deterministic product lane, heap/exchange close and review PR readiness tied to the final PR product.
+
+<!-- IA-CARMINE-REAL-PRODUCT-PREFLIGHT-GATE-BEGIN -->
+## Real product preflight gate
+
+Before launching a real product run, execute the deterministic preflight gate:
+
+- `Tools/validation/run_real_product_preflight_gate.py`
+- `Tools/validation/run_real_product_preflight_gate_smoke.py`
+
+The preflight gate runs profile, intrinsic capability, runtime mesh, review PR args, review PR readiness and full product PR chain smokes. It does not execute providers, does not apply patches, does not run Blender/FFmpeg and does not write source products.
+
+It is the safe static readiness gate before entering the dynamic heap/exchange runtime.
+<!-- IA-CARMINE-REAL-PRODUCT-PREFLIGHT-GATE-END -->
