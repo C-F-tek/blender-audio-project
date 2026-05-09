@@ -17,6 +17,8 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 Current code-driven navigation and validation ownership lives in:
 
 ```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
 docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
@@ -37,6 +39,8 @@ runtime tool telemetry must use normalized statuses and broker-measured elapsed 
 final NPU provider work must not run on the performance-critical close path unless NpuMicroStartMode=final-provider
 provider-capable workflow runners prefer IA_CARMINE_PYTHON, then .venv, before system python
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
+heap/exchange entry and exit are deterministic boundaries around the dynamic center
+patchkit is the preferred deterministic source-write boundary for future long or delicate patch bundles
 preferred active runbook/docs size <=400 lines
 active Markdown hard threshold <=500 lines
 maintained source/script target <=400 lines
@@ -50,12 +54,40 @@ limitations are backlog to overcome, not reasons to skip available tools
 | Real full product run | `run_unified_local_ai_refactor.ps1` with `-Full0To10`. |
 | Single-phase diagnostic | `run_unified_local_ai_refactor.ps1` with `-NoStrictRealRunActivation`. |
 | Lightweight evidence profile | `run_unified_local_ai_refactor.ps1 -LightFull0To10`. |
-| Markdown-to-review-PR product path | Unified launcher plus patch suggestion/review PR flags; current owner chain below. |
+| Heap/exchange lifecycle product path | Unified launcher with provider/evidence/patch/review lanes selected. |
+| Patchkit source-write boundary | `Tools/ai/patchkit/apply_patch_bundle.py` after a reviewed `patch_specs/<bundle>/bundle.json`. |
+| Markdown-to-review-PR product path | Unified launcher plus patch specs/review PR flags; current owner chain below. |
 | Full-toolbox internals | `run_agent_review_full_toolbox_decision_loop.py` and packaged engine. |
 | Script family census | `docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md`. |
 | Source-code behavior map | `docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md`. |
 
 Do not start a normal workflow from an internal helper unless the launcher/runbook explicitly delegates to that helper or the task is a focused tool validation.
+
+## Runtime boundary
+
+Current full product path is:
+
+```text
+IN
+  task Markdown
+  RepoPy/PYTHONPATH gate
+  inventories/context/agent-state
+  workload/capability evidence
+
+LOOP / HEAP / EXCHANGE
+  dynamic provider/context/broker/runtime lane cooperation
+  runtime state
+  public exchange events
+
+OUT
+  heap exchange exit product
+  concrete deterministic operation candidates
+  lifecycle validation
+  patchkit or deterministic patch bridge
+  review PR product
+```
+
+The center is dynamic. Entry and exit are controlled.
 
 ## Markdown-to-review-PR product chain
 
@@ -63,16 +95,29 @@ Current owner chain:
 
 ```text
 docs/LOCAL_AI_TASKS/<task>.md
-  -> Tools/ai/build_task_patch_suggestion_report.py
-  -> Tools/ai/apply_patch_suggestion_bundle.py
-  -> Tools/validation/check_patch_suggestion_product_separation.py
+  -> inventories/context/agent-state/workload-quality
+  -> Tools/ai/build_heap_exchange_runtime_entry.py
+  -> official adapter/provider/patch-spec lanes
+  -> Tools/ai/build_heap_exchange_runtime_exit.py
+  -> Tools/validation/check_heap_exchange_runtime_lifecycle.py
+  -> Tools/ai/patchkit/apply_patch_bundle.py or deterministic patch suggestion bridge
   -> Tools/ai/prepare_review_pr.py
+```
+
+Legacy deterministic suggestion bridge remains available:
+
+```text
+Tools/ai/build_task_patch_suggestion_report.py
+Tools/ai/apply_patch_suggestion_bundle.py
+Tools/validation/check_patch_suggestion_product_separation.py
 ```
 
 Focused chain smoke:
 
 ```text
 Tools/validation/run_full0to10_product_pr_chain_smoke.py
+Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+Tools/validation/run_patchkit_smoke.py
 ```
 
 Current limitations:
@@ -81,7 +126,33 @@ Current limitations:
 ReviewPrIncludePath remains supported for explicit/manual allowlists.
 prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
 prepare_review_pr.py does not create draft PRs yet.
+metadata-only patch drafts are not enough for a successful review PR product.
 ```
+
+## Patchkit bundle procedure
+
+Future patch work should centralize the modification core:
+
+```text
+patch_specs/<bundle>/bundle.json
+patch_specs/<bundle>/fragments/*.ps1
+patch_specs/<bundle>/fragments/*.py
+```
+
+Standard commands:
+
+```powershell
+python .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json `
+  --dry-run
+
+python .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json
+```
+
+Patchkit handles backup, encoding/newlines, dry-run chain state, idempotency, parser checks, compile checks, `git diff --check`, JSON/Markdown reports and line counts.
 
 ## Tool classification
 
@@ -150,6 +221,8 @@ produce audio/media output
 change provider/model execution semantics
 claim provider execution from light evidence-only profiles
 claim draft PR support before prepare_review_pr.py implements it
+bypass heap/exchange lifecycle for review PR product paths
+bypass patchkit for new long/delicate patch bundles when patchkit can express the change
 ```
 
 Push-capable helpers are not default validation commands and require explicit user intent.
@@ -161,6 +234,10 @@ When a workflow helper contributes to Full0To10 evidence, recommendations, patch
 ```text
 launcher manifest
 phase_status / phase_reports
+heap/exchange runtime entry
+heap/exchange runtime state
+heap/exchange runtime exit product
+heap/exchange lifecycle report
 runtime tool usage telemetry
 runtime/hardware capability manifest
 patch notes quality product when selected
@@ -172,6 +249,7 @@ full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when relevant
 generated artifact path policy evidence when long bundle names are possible
+patchkit reports when source writes are applied through patchkit
 ```
 
 ## Line-budget policy
@@ -197,6 +275,8 @@ Tools/validation/check_file_line_limits.py
 WORKFLOW.md
 docs/WORKFLOW_HELPER_SCRIPTS_POLICY.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
 docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
