@@ -104,7 +104,8 @@ def run_gpu0_workload(repo_root: Path, stamp: str, out_dir: Path, iterations: in
     workload_md = out_dir / f"gpu0_companion_worker_workload_{stamp}.md"
     cmd = [
         sys.executable,
-        "Tools/ai/build_openvino_gpu0_workload_report.py",
+        "-m",
+        "Tools.ai.build_openvino_gpu0_workload_report",
         "--repo-root",
         ".",
         "--output",
