@@ -18,7 +18,7 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def render_markdown(report: dict[str, Any]) -> str:
     lines = [
-        "# OpenVINO GPU.0 secondary workload",
+        "# OpenVINO GPU.0 observable support workload",
         "",
         f"- Passed: `{report.get('passed')}`",
         f"- Provider execution performed: `{report.get('provider_execution_performed')}`",
@@ -32,6 +32,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- GPU.0 workload passed: `{report.get('openvino_gpu0_workload_passed')}`",
         f"- GPU.0 role: `{report.get('openvino_gpu0_role')}`",
         f"- GPU.0 support lane: `{report.get('openvino_gpu0_support_lane')}`",
+        f"- GPU.0 observable workload required: `{report.get('openvino_gpu0_observable_workload_required')}`",
+        f"- GPU.0 observable workload passed: `{report.get('openvino_gpu0_observable_workload_passed')}`",
         f"- GPU.0 sustained requested: `{report.get('openvino_gpu0_sustained_workload_requested')}`",
         f"- GPU.0 sustained performed: `{report.get('openvino_gpu0_sustained_workload_performed')}`",
         f"- GPU.0 iterations requested: `{report.get('openvino_gpu0_sustained_iterations_requested')}`",
@@ -65,11 +67,13 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/openvino_gpu0_workload.json")
     parser.add_argument("--markdown-output", default="output/validation/openvino_gpu0_workload.md")
-    parser.add_argument("--iterations", type=int, default=1)
-    parser.add_argument("--min-seconds", type=float, default=0.0)
-    parser.add_argument("--role", default="secondary_accelerator")
-    parser.add_argument("--production-support", action="store_true")
+    parser.add_argument("--iterations", type=int, default=180)
+    parser.add_argument("--min-seconds", type=float, default=6.0)
+    parser.add_argument("--role", default="observable_secondary_accelerator")
+    parser.add_argument("--production-support", action="store_true", default=True)
+    parser.add_argument("--allow-non-observable", action="store_true")
     args = parser.parse_args()
+
     repo_root = Path(args.repo_root).resolve()
     report = run_openvino_gpu0_tensor_test(
         iterations=args.iterations,
@@ -81,10 +85,21 @@ def main() -> int:
     report["iterations"] = int(args.iterations)
     report["min_seconds"] = float(args.min_seconds)
     report["requested_role"] = str(args.role)
+    report["openvino_gpu0_observable_workload_required"] = not bool(args.allow_non_observable)
+    report["openvino_gpu0_observable_workload_passed"] = bool(
+        report.get("openvino_gpu0_workload_performed")
+        and report.get("openvino_gpu0_sustained_workload_performed")
+        and int(report.get("openvino_gpu0_sustained_iterations_performed") or 0) >= int(args.iterations)
+        and float(report.get("inference_seconds") or 0.0) >= min(0.05, float(args.min_seconds))
+    )
     if args.production_support:
         report["openvino_gpu0_role"] = str(args.role)
         report["openvino_gpu0_not_primary_advisory"] = False
+    if report["openvino_gpu0_observable_workload_required"] and not report["openvino_gpu0_observable_workload_passed"]:
+        report.setdefault("errors", []).append("GPU.0 workload was not observable enough for real product peer evidence.")
+        report["passed"] = False
     report["repo_root"] = str(repo_root)
+
     output = resolve_path(repo_root, args.output)
     markdown = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
