@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "kind": "codemod_patch_bundle",
+  "purpose": "reviewable repository hygiene cleanup generated from build_repo_hygiene_plan.py",
+  "operations": [
+    {
+      "operation": "delete_file",
+      "target": "docs/LOCAL_AI_TASKS/README.md/part-001.md",
+      "allow_delete": true,
+      "required_marker": "superseded",
+      "reason": "split snapshot is marked historical/superseded/obsolete"
+    },
+    {
+      "operation": "delete_file",
+      "target": "docs/LOCAL_AI_WORKFLOW.md/README.md",
+      "allow_delete": true,
+      "required_marker": "superseded",
+      "reason": "split snapshot is marked historical/superseded/obsolete"
+    },
+    {
+      "operation": "delete_file",
+      "target": "docs/PROJECT_STATUS_POINT.md/README.md",
+      "allow_delete": true,
+      "required_marker": "superseded",
+      "reason": "split snapshot is marked historical/superseded/obsolete"
+    },
+    {
+      "operation": "delete_file",
+      "target": "docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/part-001.md",
+      "allow_delete": true,
+      "required_marker": "superseded",
+      "reason": "split snapshot is marked historical/superseded/obsolete"
+    }
+  ],
+  "validators": [
+    "git_diff_check"
+  ]
+}
