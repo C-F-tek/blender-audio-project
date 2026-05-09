@@ -37,6 +37,31 @@ EXCHANGE_EVENT_HINTS = (
     "tool_result",
 )
 
+TOOL_EVIDENCE_HINTS = (
+    "tool",
+    "capability",
+    "capabilities",
+    "tool_usage",
+    "runtime_tool",
+    "telemetry",
+)
+
+REQUIRED_HEAP_PEERS = {
+    "gpu1": ("gpu1", "primary", "advisory", "planner"),
+    "gpu0": ("gpu0", "companion", "tool", "openvino", "worker"),
+    "npu": ("npu", "microoperation", "micro-operation", "micro_ops", "micro-ops", "efficiency", "peer"),
+}
+
+SHARED_MEMORY_HINTS = (
+    "shared_memory",
+    "memory",
+    "bundle",
+    "ai_to_ai",
+    "heap",
+    "exchange",
+    "context",
+)
+
 
 def repo_path(repo_root: Path, value: str) -> Path:
     path = Path(value)
@@ -125,6 +150,76 @@ def has_productive_exchange_event(events: list[dict[str, Any]]) -> bool:
     return False
 
 
+def has_tool_capability_evidence(report: dict[str, Any] | None) -> bool:
+    if not report:
+        return False
+    if report.get("passed") is False:
+        return False
+    text = json.dumps(report, ensure_ascii=False).lower()
+    explicit_count = 0
+    for key in ("tool_count", "capability_count", "runtime_tool_count", "available_tool_count"):
+        try:
+            explicit_count = max(explicit_count, int(report.get(key) or 0))
+        except (TypeError, ValueError):
+            pass
+    if explicit_count > 0:
+        return True
+    for key in ("tools", "capabilities", "tool_capabilities", "runtime_tools", "available_tools"):
+        value = report.get(key)
+        if isinstance(value, list) and value:
+            return True
+        if isinstance(value, dict) and value:
+            return True
+    return "tool" in text and any(hint in text for hint in TOOL_EVIDENCE_HINTS)
+
+
+def has_tool_usage_evidence(report: dict[str, Any] | None) -> bool:
+    if not report:
+        return False
+    if report.get("passed") is False:
+        return False
+    text = json.dumps(report, ensure_ascii=False).lower()
+    for key in ("tool_usage_count", "runtime_tool_usage_count", "tool_invocation_count", "used_tool_count"):
+        try:
+            if int(report.get(key) or 0) > 0:
+                return True
+        except (TypeError, ValueError):
+            pass
+    for key in ("tool_usage", "tool_usages", "runtime_tool_usage", "tool_invocations", "used_tools", "tools_used"):
+        value = report.get(key)
+        if isinstance(value, list) and value:
+            return True
+        if isinstance(value, dict) and value:
+            return True
+    return ("tool" in text or "capability" in text) and any(token in text for token in ("used", "usage", "invoked", "telemetry"))
+
+
+def peer_presence(report: dict[str, Any] | None, events: list[dict[str, Any]]) -> dict[str, bool]:
+    text_parts: list[str] = []
+    if report:
+        text_parts.append(json.dumps(report, ensure_ascii=False).lower())
+    if events:
+        text_parts.append(json.dumps(events, ensure_ascii=False).lower())
+    text = "\n".join(text_parts)
+
+    found: dict[str, bool] = {}
+    for peer, hints in REQUIRED_HEAP_PEERS.items():
+        found[peer] = peer in text and any(hint in text for hint in hints)
+    return found
+
+
+def has_shared_memory_evidence(report: dict[str, Any] | None, events: list[dict[str, Any]]) -> bool:
+    text_parts: list[str] = []
+    if report:
+        text_parts.append(json.dumps(report, ensure_ascii=False).lower())
+    if events:
+        text_parts.append(json.dumps(events, ensure_ascii=False).lower())
+    text = "\n".join(text_parts)
+    if not text:
+        return False
+    return any(hint in text for hint in SHARED_MEMORY_HINTS)
+
+
 def concrete_operation_count_from_apply(report: dict[str, Any]) -> int:
     count = int(report.get("operation_count") or 0)
     if count > 0:
@@ -207,7 +302,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--review-pr-report", default="")
     parser.add_argument("--observer-dir", default="")
     parser.add_argument("--ai-public-events", default="")
+    parser.add_argument("--tool-capability-manifest", default="")
+    parser.add_argument("--tool-usage-telemetry", default="")
+    parser.add_argument("--heap-peer-runtime", default="")
+    parser.add_argument("--shared-memory-evidence", default="")
     parser.add_argument("--require-ai-exchange", action="store_true")
+    parser.add_argument("--require-provider-tool-evidence", action="store_true")
+    parser.add_argument("--require-heap-peer-runtime", action="store_true")
+    parser.add_argument("--require-shared-memory-evidence", action="store_true")
     parser.add_argument("--require-concrete-patch-specs", action="store_true")
     parser.add_argument("--require-review-pr-product", action="store_true")
     parser.add_argument("--output", default="output/validation/unified_chain_contract.json")
@@ -232,6 +334,43 @@ def main() -> int:
     review_pr_path = repo_path(repo_root, args.review_pr_report) if args.review_pr_report else repo_root / f"output/validation/review_pr_prepare_{mode_name}_{stamp}.json"
     observer_dir = repo_path(repo_root, args.observer_dir) if args.observer_dir else discover_observer_dir(repo_root, stamp)
     ai_events_path = repo_path(repo_root, args.ai_public_events) if args.ai_public_events else ((observer_dir / "ai_public_events.jsonl") if observer_dir else None)
+    tool_capability_path = repo_path(repo_root, args.tool_capability_manifest) if args.tool_capability_manifest else discover_first(
+        repo_root,
+        [
+            f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
+            f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
+            f"output/**/tool_capability_manifest*{stamp}*.json",
+        ],
+    )
+    tool_usage_path = repo_path(repo_root, args.tool_usage_telemetry) if args.tool_usage_telemetry else discover_first(
+        repo_root,
+        [
+            f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
+            f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
+            f"output/**/tool_usage*{stamp}*.json",
+            f"output/**/runtime_tool_usage*{stamp}*.json",
+        ],
+    )
+    heap_peer_path = repo_path(repo_root, args.heap_peer_runtime) if args.heap_peer_runtime else discover_first(
+        repo_root,
+        [
+            f"output/**/heap_peer_runtime*{stamp}*.json",
+            f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
+            f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
+            f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
+            f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
+        ],
+    )
+    shared_memory_path = repo_path(repo_root, args.shared_memory_evidence) if args.shared_memory_evidence else discover_first(
+        repo_root,
+        [
+            f"output/**/shared_toolbox_ai_to_ai_bundle*{stamp}*.json",
+            f"docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle*{stamp}*.json",
+            f"output/**/full_memory_tool_regeneration_bundle*{stamp}*.json",
+            f"docs/LOCAL_VALIDATION_EVIDENCE/full_memory_tool_regeneration_bundle*{stamp}*.json",
+            f"output/**/heap_exchange*{stamp}*.json",
+        ],
+    )
 
     edges: list[dict[str, Any]] = []
 
@@ -292,6 +431,63 @@ def main() -> int:
         passed=exchange_passed,
         action="Emit public exchange events from provider/official phases or disable --require-ai-exchange only for diagnostic runs.",
         artifacts=[rel(repo_root, ai_events_path)],
+    )
+
+    tool_capability_report, tool_capability_error = load_json(tool_capability_path) if tool_capability_path else (None, "missing")
+    tool_usage_report, tool_usage_error = load_json(tool_usage_path) if tool_usage_path else (None, "missing")
+    heap_peer_report, heap_peer_error = load_json(heap_peer_path) if heap_peer_path else (None, "missing")
+    shared_memory_report, shared_memory_error = load_json(shared_memory_path) if shared_memory_path else (None, "missing")
+
+    tool_capability_ok = has_tool_capability_evidence(tool_capability_report)
+    tool_usage_ok = has_tool_usage_evidence(tool_usage_report)
+    tool_evidence_passed = True
+    if args.require_provider_tool_evidence:
+        tool_evidence_passed = bool(tool_capability_ok and tool_usage_ok)
+    add_edge(
+        edges,
+        name="provider_to_tool_evidence",
+        producer="provider/heap exchange runtime",
+        consumer="runtime tool capability and usage evidence",
+        expected="tool capability manifest and runtime tool usage telemetry" if args.require_provider_tool_evidence else "not required for this invocation",
+        actual=(
+            f"capability_ok={tool_capability_ok} capability_error={tool_capability_error} "
+            f"usage_ok={tool_usage_ok} usage_error={tool_usage_error}"
+        ),
+        passed=tool_evidence_passed,
+        action="When provider/exchange is required, emit runtime_tool_capability_manifest and full_toolbox/tool-usage telemetry before declaring the chain complete.",
+        artifacts=[rel(repo_root, tool_capability_path), rel(repo_root, tool_usage_path)],
+    )
+
+    peers = peer_presence(heap_peer_report, events)
+    peer_runtime_passed = True
+    if args.require_heap_peer_runtime:
+        peer_runtime_passed = all(peers.get(peer, False) for peer in REQUIRED_HEAP_PEERS)
+    add_edge(
+        edges,
+        name="heap_exchange_to_peer_runtime",
+        producer="dynamic heap/exchange center",
+        consumer="GPU1/GPU0/NPU peer runtime",
+        expected="GPU1 primary advisory, GPU0 companion/tool worker and NPU microoperation/efficiency peer" if args.require_heap_peer_runtime else "not required for this invocation",
+        actual=f"peers={peers} heap_peer_error={heap_peer_error}",
+        passed=peer_runtime_passed,
+        action="Emit heap peer runtime evidence showing GPU1, GPU0 and NPU participating as linked heap/exchange peers. Audit remains a deterministic/script lane that can be reused for a complete heap/exchange audit before closure; it is not the dynamic NPU peer role.",
+        artifacts=[rel(repo_root, heap_peer_path), rel(repo_root, ai_events_path)],
+    )
+
+    shared_memory_ok = has_shared_memory_evidence(shared_memory_report, events)
+    shared_memory_passed = True
+    if args.require_shared_memory_evidence:
+        shared_memory_passed = shared_memory_ok
+    add_edge(
+        edges,
+        name="heap_exchange_to_shared_memory",
+        producer="dynamic heap/exchange center",
+        consumer="shared memory / AI-to-AI bundle evidence",
+        expected="shared memory or AI-to-AI bundle evidence" if args.require_shared_memory_evidence else "not required for this invocation",
+        actual=f"shared_memory_ok={shared_memory_ok} shared_memory_error={shared_memory_error}",
+        passed=shared_memory_passed,
+        action="Emit shared memory / AI-to-AI bundle evidence so the heap remains the source of knowledge for provider peers.",
+        artifacts=[rel(repo_root, shared_memory_path), rel(repo_root, ai_events_path)],
     )
 
     apply_report, apply_error = load_json(apply_path) if apply_path else (None, "missing")
@@ -373,6 +569,9 @@ def main() -> int:
         "mode_name": mode_name,
         "passed": not broken_edges,
         "require_ai_exchange": bool(args.require_ai_exchange),
+        "require_provider_tool_evidence": bool(args.require_provider_tool_evidence),
+        "require_heap_peer_runtime": bool(args.require_heap_peer_runtime),
+        "require_shared_memory_evidence": bool(args.require_shared_memory_evidence),
         "require_concrete_patch_specs": bool(args.require_concrete_patch_specs),
         "require_review_pr_product": bool(args.require_review_pr_product),
         "edges": edges,

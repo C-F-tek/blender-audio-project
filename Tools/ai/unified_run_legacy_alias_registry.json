@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "kind": "unified_run_legacy_alias_registry",
+  "operational_model": "single_dynamic_heap_exchange_run",
+  "source_of_knowledge": "heap_exchange",
+  "standalone_pipelines_forbidden": true,
+  "aliases": [
+    {
+      "alias": "Full0To10",
+      "status": "legacy_compatibility_alias",
+      "allowed_reason": "historical CLI/docs/smoke compatibility",
+      "replacement": "unified run",
+      "standalone_pipeline": false
+    },
+    {
+      "alias": "LightFull0To10",
+      "status": "legacy_compatibility_alias",
+      "allowed_reason": "historical evidence-only wrapper compatibility",
+      "replacement": "unified run compatibility evidence",
+      "standalone_pipeline": false
+    }
+  ],
+  "allowed_legacy_paths": [
+    "Tools/workflow/run_unified_light_full0to10_profile.ps1",
+    "Tools/workflow/run_full0to10_light_evidence_only.ps1",
+    "Tools/ai/build_full0to10_light_profile_promotion.py",
+    "Tools/ai/summarize_full0to10_light_evidence.py",
+    "Tools/ai/full0to10_light_profile/constants.py",
+    "Tools/validation/run_full0to10_light_profile_mega_smoke.py",
+    "Tools/validation/run_full0to10_light_profile_promotion_smoke.py",
+    "Tools/validation/run_full0to10_product_pr_chain_smoke.py"
+  ],
+  "forbidden_semantics": [
+    "Full0To10 as standalone pipeline",
+    "Full0To10 as operational profile",
+    "LightFull0To10 as standalone pipeline",
+    "LightFull0To10 as operational profile"
+  ]
+}
