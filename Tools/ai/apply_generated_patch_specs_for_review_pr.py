@@ -128,9 +128,7 @@ def discover_latest_manifest(repo_root: Path, roots: list[str], max_files: int, 
             continue
         candidates.extend(path for path in root.rglob("*_manifest.json") if path.is_file())
     candidates = sorted(candidates, key=lambda item: item.stat().st_mtime, reverse=True)
-    scanned = 0
     for path in candidates[:max_files]:
-        scanned += 1
         relative = repo_relative(path, repo_root)
         if manifest_stamp and manifest_stamp not in relative:
             continue
@@ -463,6 +461,13 @@ def main() -> int:
             manual_review_items.extend(manual)
 
     operations = operations[: max(0, int(args.max_applied_patches))]
+    if args.apply and not errors and not operations:
+        reasons = sorted({str(item.get("reason") or "unknown") for item in manual_review_items})
+        reason_text = "; ".join(reasons) if reasons else "no generated patch specs contained allowlisted concrete deterministic operations"
+        errors.append(
+            "generated patch specs did not produce a concrete review product: "
+            f"{reason_text}"
+        )
     results: list[dict[str, Any]] = []
     if not errors:
         for operation in operations:
