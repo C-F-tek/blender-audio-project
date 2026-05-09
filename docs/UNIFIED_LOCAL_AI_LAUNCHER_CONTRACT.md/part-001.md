@@ -14,7 +14,14 @@ Sorgente indice: [`README.md`](README.md)
 
 Compact contract for `Tools/workflow/run_unified_local_ai_refactor.ps1` and its manifest output.
 
-This file exists so agents do not need to inspect long historical JSON-schema notes before understanding the unified launcher contract.
+The operator-facing real product entrypoint is `Tools/workflow/run_unified_real_product_pr.ps1`; it performs mandatory preflight and delegates the dynamic center to this launcher. This contract describes the launcher/manifest layer, not the outer wrapper policy.
+
+For current real product run guidance, use:
+
+```text
+docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+```
 
 For launcher manifest semantics, this compact contract is canonical. If this file conflicts with broad historical notes in `docs/JSON_SCHEMAS.md`, prefer this file for the unified launcher and update `JSON_SCHEMAS.md` later as a schema catalog task.
 
@@ -24,16 +31,26 @@ For launcher manifest semantics, this compact contract is canonical. If this fil
 Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
-## Primary runbook
+## Product wrapper
+
+```text
+Tools/workflow/run_unified_real_product_pr.ps1
+```
+
+The wrapper owns product entry, mandatory preflight, `-ProcessGateTask`, review PR flags and final product validation. The launcher owns the heap/exchange execution surface and produced manifest.
+
+## Primary runbooks
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
 ```
 
 ## Current operational bridge
 
 ```text
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
 ```
 
 ## Main runtime architecture
@@ -44,25 +61,28 @@ The launcher must remain compatible with the main runtime architecture contract:
 docs/MAIN_RUNTIME_ARCHITECTURE.md
 ```
 
-Target runtime topology:
+Current runtime topology:
 
 ```text
 shared runtime heap / blackboard
-├─ GPU1 primary advisory / planner
-├─ GPU0 coworker/helper OpenVINO
-├─ NPU microtask responder
+├─ GPU1 primary advisory / Ollama planner
+├─ GPU0 OpenVINO observable support workload
+├─ NPU micro peer diagnostic/report lane
 ├─ broker unico executor
 ├─ semantic tools registry
 ├─ deterministic validators / CPU authority
+├─ generated patch-spec product lane
+├─ runtime evidence correlation
 └─ telemetry/event stream
 ```
 
-Current launcher code does not need to implement every runtime component at once. When a component is not yet implemented, the manifest/evidence should either omit it clearly or record it as planned/unavailable, not silently imply execution.
+Current launcher code does not need to implement every future runtime component at once. When a component is not yet implemented, the manifest/evidence should either omit it clearly or record it as planned/unavailable, not silently imply execution.
 
 Current compact validator note:
 
 ```text
 docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
 ```
 
 ## Manifest path pattern
@@ -73,7 +93,7 @@ Current default:
 output/local_ai_runs/<stamp>_<mode>_unified/pipeline/unified_local_ai_refactor_manifest.json
 ```
 
-After the external-controls patch, the root output directory should be operator-selectable through launcher CLI parameters.
+The root output directory should remain operator-selectable through launcher CLI parameters where supported.
 
 ## Required root fields
 
@@ -116,6 +136,8 @@ reset_apply_requested
 patch_application_performed
 patch_specs_requested
 build_evidence_requested
+runtime_evidence_correlation_requested
+runtime_evidence_correlation_report
 memory_db
 save_inputs_to_memory_db
 context_files
@@ -124,6 +146,21 @@ phase_status
 phase_reports
 warnings
 errors
+```
+
+Product-wrapper reports may additionally include review-PR/product fields such as:
+
+```text
+review_pr_prepare_report
+review_pr_final_product_contract_report
+review_pr_branch
+review_pr_base_branch
+review_pr_push_requested
+review_pr_create_requested
+review_pr_draft_requested
+generated_patch_specs_apply_report
+generated_patch_specs_concrete_operation_count
+generated_patch_specs_changed_count
 ```
 
 Future runtime-architecture fields should be additive, for example:
@@ -155,7 +192,7 @@ structured list/object with stdout/stderr/status
 
 If a phase is selected but skipped intentionally, the skip must be visible either in `phase_status`, `warnings`, or a phase-specific report.
 
-Silent phase loss is not allowed for `-Full0To10`.
+Silent phase loss is not allowed for real unified runs.
 
 ## Phase report contract
 
@@ -182,12 +219,23 @@ official_proposals
 ollama_packet
 ollama_proposals
 workload_quality
-legacy_full_toolbox_integrated
 ai_peer_exchange
 ai_peer_exchange_contract
 patch_specs_manifest
 patch_specs_validation
+generated_patch_specs_apply
+heap_exchange_runtime_entry
+heap_peer_runtime_manifest
+heap_exchange_closure_audit
+heap_exchange_runtime_exit_product
+final_chain_contract
+runtime_evidence_correlation
+repository_change_proposals
+review_pr_prepare
+review_pr_final_product_contract
 ```
+
+Legacy full-toolbox integrated evidence is explicit and diagnostic; it is not auto-enabled by `-Full0To10` compatibility spelling.
 
 Expected future keys for the main runtime architecture:
 
