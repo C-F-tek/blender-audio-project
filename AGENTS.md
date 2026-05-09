@@ -306,7 +306,21 @@ Do not stop at an internal module, helper function, isolated smoke script or hid
 
 For 0Full10/run unica, promoted lanes must be included by default unless disabled by explicit operator flags or classified as unavailable/degraded through manifest, telemetry, phase reports or validator evidence.
 
-## 0Full10 run-unica rule
+## TUTTO SU TUTTO / 0Full10 run-unica rule
+
+TUTTO SU TUTTO means intelligent combined use of all relevant mapped tools/scripts inside the complete 0Full10 run-unica flow.
+
+It does not mean executing every script blindly. It means the run unica can discover, select, coordinate, validate and report every applicable capability from the maps while respecting guardrails, provider availability, evidence quality and explicit `-No*` opt-outs.
+
+```text
+mapped capability
+  -> lane selection
+  -> preflight / availability classification
+  -> execution or explicit skip/degraded state
+  -> deterministic validation when applicable
+  -> telemetry/evidence/bundle publication
+  -> recommendation, patch-plan or review-PR product when requested
+```
 
 0Full10 is the run unica: complete 0-to-10 workflow over the whole active project perimeter.
 
@@ -351,6 +365,8 @@ deterministic validators / CPU authority summary
 telemetry/event stream summary
 GPU1/GPU0/NPU lane status reports
 ```
+
+Future tools become part of TUTTO SU TUTTO only after they are mapped, wired, guarded, observable and evidence-producing. Architecture targets are expansion space, not current execution claims.
 
 `-RunIntensity quick|balanced|deep|custom` changes budget, rounds, context limits, token limits and keep-alive only. It must not reduce the 0Full10 semantic perimeter.
 
