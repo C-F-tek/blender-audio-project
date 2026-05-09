@@ -55,13 +55,60 @@ function Initialize-UnifiedRunObserver {
     }
 }
 
+function Write-UnifiedRunJsonlLine {
+    param([string]$Path, [string]$Line)
+
+    $encoding = [System.Text.UTF8Encoding]::new($false)
+    $bytes = $encoding.GetBytes($Line + [Environment]::NewLine)
+    $stream = [System.IO.File]::Open(
+        $Path,
+        [System.IO.FileMode]::Append,
+        [System.IO.FileAccess]::Write,
+        [System.IO.FileShare]::ReadWrite
+    )
+    try {
+        $stream.Write($bytes, 0, $bytes.Length)
+        $stream.Flush()
+    }
+    finally {
+        $stream.Dispose()
+    }
+}
+
+function Write-UnifiedRunObserverWarning {
+    param([string]$Message)
+    if ([string]::IsNullOrWhiteSpace($Script:UnifiedObserverDir)) { return }
+    $warningPath = Join-Path $Script:UnifiedObserverDir "observer_write_warnings.log"
+    try {
+        $line = "{0} {1}" -f (Get-Date).ToString("o"), $Message
+        Write-UnifiedRunJsonlLine -Path $warningPath -Line $line
+    }
+    catch {
+        # Observer telemetry is diagnostic-only. Never fail the product launcher.
+    }
+}
+
 function Write-UnifiedRunJsonl {
     param([string]$FileName, [hashtable]$Event)
     if ([string]::IsNullOrWhiteSpace($Script:UnifiedObserverDir)) { return }
     $path = Join-Path $Script:UnifiedObserverDir $FileName
     $Event["timestamp"] = (Get-Date).ToString("o")
     $Event["stamp"] = $Script:UnifiedObserverStamp
-    ($Event | ConvertTo-Json -Depth 8 -Compress) | Add-Content -LiteralPath $path -Encoding UTF8
+    $line = $Event | ConvertTo-Json -Depth 8 -Compress
+
+    $lastError = $null
+    for ($attempt = 1; $attempt -le 5; $attempt++) {
+        try {
+            Write-UnifiedRunJsonlLine -Path $path -Line $line
+            return
+        }
+        catch {
+            $lastError = $_.Exception.Message
+            Start-Sleep -Milliseconds (50 * $attempt)
+        }
+    }
+
+    Write-UnifiedRunObserverWarning -Message ("failed to append {0}: {1}" -f $FileName, $lastError)
 }
 
 function Write-UnifiedRunProgressEvent {
