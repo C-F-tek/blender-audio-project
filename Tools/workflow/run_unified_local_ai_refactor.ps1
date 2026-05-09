@@ -1457,6 +1457,65 @@ if ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality -and -not (Test-Pat
 }
 
 
+# IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-BEGIN
+if (-not (Get-Variable -Name HeapExchangeObserverDir -ErrorAction SilentlyContinue)) {
+    $HeapExchangeObserverDir = $ObserverOutputDir
+    if ([string]::IsNullOrWhiteSpace($HeapExchangeObserverDir)) {
+        $HeapExchangeObserverDir = Join-Path $OutputDir ("local_ai_runs/{0}_observer" -f $DataStamp)
+    }
+}
+if (-not (Get-Variable -Name HeapExchangeEntryJson -ErrorAction SilentlyContinue)) {
+    $HeapExchangeEntryJson = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.json"
+}
+if (-not (Get-Variable -Name HeapExchangeEntryMd -ErrorAction SilentlyContinue)) {
+    $HeapExchangeEntryMd = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.md"
+}
+if (-not (Get-Variable -Name HeapExchangeRuntimeState -ErrorAction SilentlyContinue)) {
+    $HeapExchangeRuntimeState = Join-Path $AiPacketsDir "heap_exchange_runtime_state.jsonl"
+}
+
+if (-not (Test-Path -LiteralPath $HeapExchangeEntryJson -PathType Leaf)) {
+    $HeapExchangeEntryArgs = @(
+        "Tools/ai/build_heap_exchange_runtime_entry.py",
+        "--repo-root", ".",
+        "--stamp", $DataStamp,
+        "--task-file", $TaskFile,
+        "--observer-dir", $HeapExchangeObserverDir,
+        "--runtime-state", $HeapExchangeRuntimeState,
+        "--output", $HeapExchangeEntryJson,
+        "--markdown-output", $HeapExchangeEntryMd
+    )
+    $PhaseStatus.heap_exchange_runtime_entry_ensured = Invoke-Checked "Ensure heap/exchange runtime entry" {
+        & $ResolvedPythonExe @HeapExchangeEntryArgs
+    }
+    $ReportFiles += $HeapExchangeEntryJson
+    $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapExchangeEntryMd
+    $PhaseReports.heap_exchange_runtime_entry = $HeapExchangeEntryJson
+}
+# IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-END
+
+# IA-CARMINE-HEAP-PEER-RUNTIME-MANIFEST-BEGIN
+$HeapPeerRuntimeJson = Join-Path $AiPacketsDir "heap_peer_runtime_manifest.json"
+$HeapPeerRuntimeMd = Join-Path $AiPacketsDir "heap_peer_runtime_manifest.md"
+$HeapPeerRuntimeArgs = @(
+    "Tools/ai/build_heap_peer_runtime_manifest.py",
+    "--repo-root", ".",
+    "--stamp", $DataStamp,
+    "--runtime-entry", $HeapExchangeEntryJson,
+    "--runtime-state", $HeapExchangeRuntimeState,
+    "--observer-dir", $HeapExchangeObserverDir,
+    "--output", $HeapPeerRuntimeJson,
+    "--markdown-output", $HeapPeerRuntimeMd
+)
+$PhaseStatus.heap_peer_runtime_manifest = Invoke-Checked "Build heap peer runtime manifest" {
+    & $ResolvedPythonExe @HeapPeerRuntimeArgs
+}
+$ReportFiles += $HeapPeerRuntimeJson
+$ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapPeerRuntimeMd
+$PhaseReports.heap_peer_runtime_manifest = $HeapPeerRuntimeJson
+$PhaseReports.heap_peer_runtime_manifest_markdown = $HeapPeerRuntimeMd
+# IA-CARMINE-HEAP-PEER-RUNTIME-MANIFEST-END
+
 $LegacyFullToolboxReport = ""
 if ($RunLegacyFullToolboxIntegrated) {
     $LegacyFullToolboxReport = ".\output\validation\agent_review_full_toolbox_decision_loop_${Stamp}_integrated.json"
@@ -2107,6 +2166,8 @@ $UnifiedChainArgsContext = [ordered]@{
     review_pr_from_generated_patch_specs = [bool]$ReviewPrFromGeneratedPatchSpecs
     prepare_review_pr = [bool]$PrepareReviewPr
     review_pr_apply_deterministic_suggestions = [bool]$ReviewPrApplyDeterministicSuggestions
+    heap_peer_runtime = $HeapPeerRuntimeJson
+    shared_memory_evidence = $HeapPeerRuntimeJson
 }
 ($UnifiedChainArgsContext | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $UnifiedChainArgsContextJson -Encoding UTF8
 

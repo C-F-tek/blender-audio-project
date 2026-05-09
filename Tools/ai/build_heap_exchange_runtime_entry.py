@@ -124,10 +124,17 @@ def build_lanes(gpu0_report: dict[str, Any] | None, official_report: dict[str, A
         ),
         lane(
             "npu",
-            "diagnostic_auditor_lane",
+            "microoperation_efficiency_peer_lane",
             "NPU" in devices or bool((official_report or {}).get("npu_probe_requested")),
             "openvino_device_visibility_or_official_adapter",
-            {"device_visible": "NPU" in devices},
+            {"device_visible": "NPU" in devices, "audit_role": "deterministic_script_lane_not_dynamic_npu_peer"},
+        ),
+        lane(
+            "deterministic_audit",
+            "deterministic_script_audit_lane_reusable_before_heap_exchange_closure",
+            True,
+            "repository_validation_scripts",
+            {"dynamic_npu_peer_role": "microoperation_efficiency", "audit_lane": "deterministic_script"},
         ),
         lane(
             "ollama_provider",
@@ -191,7 +198,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         "## Knowledge surface",
         "",
-        "The heap/exchange is the source of runtime knowledge. GPU1, GPU0, NPU, provider and deterministic lanes publish into and consume from this shared surface; entry does not prescribe a static call chain.",
+        "The heap/exchange is the source of runtime knowledge. GPU1, GPU0, NPU, provider, shared-memory and deterministic lanes publish into and consume from this shared surface; entry does not prescribe a static call chain. NPU is the microoperation/efficiency peer in the dynamic loop; complete audit remains a deterministic/script lane reusable before heap/exchange closure.",
         "",
         "## Lanes",
         "",
