@@ -27,6 +27,7 @@ LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 Use these first when an AI needs to understand what the project is, what exists, what can run, and which scripts may be hidden or legacy:
 
 ```text
+LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
@@ -41,6 +42,7 @@ Meaning:
 
 | Map | Purpose |
 |---|---|
+| `heap-exchange-and-patchkit-operating-model-2026-05-09.md` | Current IN -> dynamic heap/exchange loop -> deterministic OUT model and reusable patchkit bundle procedure. |
 | `current-capability-depth-map-2026-05-09.md` | Current active/report-only/provider/manual-review/target capabilities and evidence surfaces. |
 | `unified-launcher-parameter-decision-map-2026-05-09.md` | How to choose launcher parameters by lane instead of reading a flat flag list. |
 | `script-aging-visibility-audit-2026-05-09.md` | Oldest/hidden wrapper notice queue; not a deletion list. |
@@ -69,6 +71,7 @@ Canonical architecture:
 
 ```text
 MAIN_RUNTIME_ARCHITECTURE.md
+LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 ```
 
 Target topology:
@@ -84,6 +87,14 @@ shared runtime heap / blackboard
 └─ telemetry/event stream
 ```
 
+Runtime boundary:
+
+```text
+IN = controlled task/context/capability entry
+LOOP = dynamic heap/exchange where GPU1/GPU0/NPU/provider lanes cooperate
+OUT = deterministic exit product, lifecycle validation, patchkit bundle or review PR
+```
+
 Architecture targets do not authorize source writes, provider execution, patch application, Blender runtime, FFmpeg runtime, commit, push, merge or delete by themselves.
 
 ## Single reading flow
@@ -95,6 +106,7 @@ Use this order unless a task file says otherwise:
 ../CHATGPT.md
 ../CHATGPT/README.md
 LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
@@ -117,6 +129,33 @@ target source/doc file
 Large catalogs such as `../Tools/validation/README.md` are reference material, not primary reading-order entrypoints.
 
 Historical handoffs and generated evidence are context only. Do not let them override current source code, owner maps or manifest evidence.
+
+## Patch bundle procedure
+
+Future patch work should centralize the modification core and let patchkit apply it.
+
+Preferred layout:
+
+```text
+patch_specs/<bundle>/bundle.json
+patch_specs/<bundle>/fragments/*.ps1
+patch_specs/<bundle>/fragments/*.py
+```
+
+Standard application:
+
+```powershell
+python .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json `
+  --dry-run
+
+python .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json
+```
+
+Patchkit is the deterministic OUT boundary for source modifications. It handles backup, idempotency, encoding/newlines, PowerShell/parser checks, Python compile checks, `git diff --check`, JSON/Markdown reports and line counts.
 
 ## Markdown and file-size policy
 
@@ -150,6 +189,7 @@ DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 | Need | File |
 |---|---|
 | Current operational bridge | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
+| Heap/exchange and patchkit operating model | `LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` |
 | Current capability depth | `LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
 | Launcher parameter decision map | `LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
 | Script aging / hidden wrapper review | `LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` |
