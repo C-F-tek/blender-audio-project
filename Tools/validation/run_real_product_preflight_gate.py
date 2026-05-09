@@ -120,6 +120,7 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     steps_config = [
         ("real_product_profile", "Tools/validation/run_real_product_profile_smoke.py"),
+            ("real_product_single_entry_exit", "Tools/validation/run_real_product_single_entry_exit_smoke.py"),
         ("intrinsic_capability_contract", "Tools/validation/run_real_product_intrinsic_capability_contract_smoke.py"),
         ("runtime_mesh_contract", "Tools/validation/run_real_product_runtime_mesh_contract_smoke.py"),
         ("openvino_peer_topology", "Tools/validation/run_openvino_peer_topology_contract_smoke.py"),

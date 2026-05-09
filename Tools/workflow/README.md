@@ -464,3 +464,17 @@ It distinguishes two modes:
 
 The smoke `Tools/validation/run_review_pr_final_product_contract_smoke.py` covers local-product pass, remote-product pass and missing-remote-PR fail. The check is report-only and does not create branches, commits, pushes or PRs during preflight.
 <!-- IA-CARMINE-REVIEW-PR-FINAL-PRODUCT-CONTRACT-END -->
+
+<!-- IA-CARMINE-REAL-PRODUCT-SINGLE-ENTRY-EXIT-BEGIN -->
+## Real product single entry / single exit
+
+The operator-facing entry point is `Tools/workflow/run_unified_real_product_pr.ps1`.
+
+For the first real process-product PR, use `-ProcessGateTask` instead of an external task-generation script. The wrapper creates the ignored task Markdown under `output/local_ai_task_inputs`, delegates the universe between entry and exit to `run_unified_local_ai_refactor.ps1`, and then validates the final review PR product through `check_review_pr_final_product_contract.py`.
+
+When `-CreatePr` is used, final product validation automatically runs in remote PR mode and requires push, GitHub PR creation and PR URL. This preserves the model:
+
+- one entry: real product launcher;
+- universe in the heap/exchange runtime;
+- one exit: validated review PR final product.
+<!-- IA-CARMINE-REAL-PRODUCT-SINGLE-ENTRY-EXIT-END -->
