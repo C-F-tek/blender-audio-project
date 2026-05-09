@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-"""Apply controlled patch bundles.
-
-Bundle schema v1 intentionally supports a small deterministic operation set.
-Future IA-Carmine patch bundles should carry only the core patch data; this
-runner handles backup, encoding/newline preservation, idempotency, validation,
-dry-run reporting and rollback on parser failure.
-"""
+"""Apply controlled patch bundles."""
 from __future__ import annotations
 
 import argparse
@@ -19,6 +13,14 @@ from Tools.ai.patchkit.anchors import append_once, insert_after_marker, insert_b
 from Tools.ai.patchkit.filesystem import LoadedText, backup_file, load_text, rel, repo_path, write_text_preserved
 from Tools.ai.patchkit.powershell import assert_no_naked_throw, insert_after_invoke_checked, run_parser
 from Tools.ai.patchkit.reports import write_json, write_markdown
+
+DENIED_DELETE_PREFIXES = (
+    "output/",
+    "renders/",
+    "indexAI/code_chunks/",
+    "indexAI/project_code_chunks/",
+)
+DENIED_DELETE_SUFFIXES = (".db", ".sqlite", ".sqlite3")
 
 
 def load_bundle(path: Path) -> dict[str, Any]:
@@ -74,6 +76,28 @@ def apply_operation(text: str, op: dict[str, Any], bundle_dir: Path) -> tuple[bo
     raise ValueError(f"unsupported operation: {operation}")
 
 
+def validate_delete_operation(repo_root: Path, target: Path, target_raw: str, op: dict[str, Any]) -> str:
+    normalized = target_raw.replace("\\", "/").lstrip("./")
+    if not bool(op.get("allow_delete")):
+        raise ValueError("delete_file requires allow_delete=true")
+    if any(normalized.startswith(prefix) for prefix in DENIED_DELETE_PREFIXES):
+        raise ValueError(f"delete_file denied path prefix: {normalized}")
+    if normalized.endswith(DENIED_DELETE_SUFFIXES):
+        raise ValueError(f"delete_file denied file suffix: {normalized}")
+    if not target.exists():
+        if bool(op.get("missing_ok")):
+            return "delete_file skipped: target missing"
+        raise ValueError(f"delete_file target missing: {target_raw}")
+    if not target.is_file():
+        raise ValueError(f"delete_file target is not a file: {target_raw}")
+    required_marker = str(op.get("required_marker") or "")
+    if required_marker:
+        text = target.read_text(encoding="utf-8-sig", errors="replace")
+        if required_marker not in text:
+            raise ValueError(f"delete_file required marker missing in {target_raw}: {required_marker}")
+    return "delete_file accepted"
+
+
 def run_python_compile(repo_root: Path, files: list[str]) -> tuple[bool, str]:
     if not files:
         return True, ""
@@ -102,7 +126,9 @@ def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[s
     warnings: list[str] = []
     changed_count = 0
     backups: list[str] = []
+    deleted_paths: list[str] = []
     touched: set[Path] = set()
+    deleted: set[Path] = set()
     loaded_by_target: dict[Path, LoadedText] = {}
     text_by_target: dict[Path, str] = {}
 
@@ -112,10 +138,19 @@ def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[s
             errors.append(f"operation {index}: missing target")
             continue
         target = repo_path(repo_root, target_raw)
-        if not target.exists():
-            errors.append(f"operation {index}: target missing: {target_raw}")
-            continue
+        operation = str(op.get("operation") or "")
         try:
+            if operation == "delete_file":
+                reason = validate_delete_operation(repo_root, target, target_raw, op)
+                changed = target.exists()
+                if changed:
+                    changed_count += 1
+                    deleted.add(target)
+                results.append({"index": index, "operation": operation, "target": target_raw, "changed": changed, "reason": reason})
+                continue
+            if not target.exists():
+                errors.append(f"operation {index}: target missing: {target_raw}")
+                continue
             if target not in loaded_by_target:
                 loaded = load_text(target)
                 loaded_by_target[target] = loaded
@@ -125,7 +160,7 @@ def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[s
                 changed_count += 1
                 touched.add(target)
                 text_by_target[target] = patched
-            results.append({"index": index, "operation": op.get("operation"), "target": target_raw, "changed": changed, "reason": reason})
+            results.append({"index": index, "operation": operation, "target": target_raw, "changed": changed, "reason": reason})
         except Exception as exc:  # noqa: BLE001
             errors.append(f"operation {index} failed: {type(exc).__name__}: {exc}")
 
@@ -134,6 +169,11 @@ def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[s
             backup = backup_file(repo_root, target)
             backups.append(rel(repo_root, backup))
             write_text_preserved(loaded_by_target[target], text_by_target[target])
+        for target in sorted(deleted):
+            backup = backup_file(repo_root, target)
+            backups.append(rel(repo_root, backup))
+            target.unlink()
+            deleted_paths.append(rel(repo_root, target))
 
     validators = bundle.get("validators") or []
     validator_results: list[dict[str, Any]] = []
@@ -169,6 +209,7 @@ def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[s
         "operation_count": len(bundle["operations"]),
         "changed_count": changed_count,
         "backups": backups,
+        "deleted_paths": deleted_paths,
         "results": results,
         "validators": validator_results,
         "line_counts": line_counts,

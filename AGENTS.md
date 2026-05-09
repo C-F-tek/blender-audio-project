@@ -12,13 +12,14 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 4. read `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` for the current IN -> dynamic heap/exchange -> deterministic OUT operating model;
 5. read `docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` for the compact AI first-orientation map;
 6. read `docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md` when documentation appears conflicting or stale;
-7. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for the current code/state bridge when present;
-8. read `docs/MAIN_RUNTIME_ARCHITECTURE.md` when working on runtime, provider, broker, validator, telemetry or workflow architecture;
-9. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
-10. read `docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md` before converting patch-note suggestions into source edits;
-11. follow hard guardrails unless the human explicitly approves a normally restricted action;
-12. inspect the target source/document before proposing or applying a patch;
-13. report conflicts between the request, code, docs, evidence and guardrails before modifying files.
+7. read `docs/LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md` when classifying, deleting, splitting or refactoring old docs/index/discovery surfaces;
+8. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for the current code/state bridge when present;
+9. read `docs/MAIN_RUNTIME_ARCHITECTURE.md` when working on runtime, provider, broker, validator, telemetry or workflow architecture;
+10. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
+11. read `docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md` before converting patch-note suggestions into source edits;
+12. follow hard guardrails unless the human explicitly approves a normally restricted action;
+13. inspect the target source/document before proposing or applying a patch;
+14. report conflicts between the request, code, docs, evidence and guardrails before modifying files.
 
 ## Repository identity
 
@@ -46,6 +47,7 @@ docs/README.md
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/MAIN_RUNTIME_ARCHITECTURE.md
@@ -126,11 +128,12 @@ never treat generated indexes/evidence as maintained source docs
 Current compact operational state:
 
 ```text
-Baseline: master after PR #250 merge
+Baseline: master after PR #251 merge
 Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
 Current operating model: docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 AI orientation map: docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 Documentation panorama/staleness map: docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+Repository hygiene procedure: docs/LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md
 Capability map: docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 Parameter map: docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 Docs bridge: docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
@@ -233,6 +236,42 @@ python .\Tools\ai\patchkit\apply_patch_bundle.py `
 ```
 
 Patchkit is not an authorization layer. It is a deterministic application boundary. Human/operator scope, branch policy and guardrails still apply.
+
+## Remote-AI PatchKit handoff policy
+
+When an AI does not have local terminal access, PatchKit remains the preferred controlled route for large local changes.
+
+The AI should produce:
+
+```text
+patch_specs/<bundle>/bundle.json
+patch_specs/<bundle>/fragments/*
+local dry-run command
+local apply command
+local validation commands
+expected touched files and line-count reporting requirement
+```
+
+The AI must not claim local application or validation until the user returns terminal output.
+
+The local operator applies:
+
+```powershell
+$RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
+$env:IA_CARMINE_PYTHON = $RepoPy
+$env:PYTHONPATH = (Resolve-Path .).Path
+
+& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json `
+  --dry-run
+
+& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json
+```
+
+Remote handoff bundles must be idempotent where practical, use stable anchors or guarded delete markers and include validators when possible.
 
 ## Code length policy
 
@@ -446,6 +485,7 @@ manifest/report records unavailable-tool or provider failure
 | `docs/MAIN_RUNTIME_ARCHITECTURE.md` | Main runtime topology and blackboard/broker/registry/validator/telemetry contract. |
 | `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` | Current runtime operating model. |
 | `docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` | Compact first-orientation map for AI agents. |
+| `docs/LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md` | Automated hygiene/refactor/delete allowlist procedure. |
 | `indexAI/` | Generated indexes/context/patch material. Do not hand-refactor as source. |
 | `Scripting/` | Blender application-domain packages; frozen for core/backend work unless scoped. |
 
@@ -503,6 +543,15 @@ patch_specs/<bundle>/fragments/*.py
 ```
 
 Patchkit bundles must be idempotent where possible, create backups when writing, block on failed validators, report resulting line counts for modified scripts and never commit automatically.
+
+For remote AI sessions without local terminal access, PatchKit is the official handoff format for large controlled changes:
+
+```text
+AI authors bundle + local commands
+user runs dry-run/apply/validators locally
+user returns output
+AI continues from real terminal evidence
+```
 
 ZIP patch bundles remain acceptable for external/manual transfer when repository-native patchkit cannot express the change. ZIP-internal names such as `README.md`, bundle runner script and `patches/` are bundle members, not repository-tracked source paths.
 

@@ -30,6 +30,7 @@ Use these first when an AI needs to understand what the project is, what exists,
 LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md
 LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
@@ -47,6 +48,7 @@ Meaning:
 | `heap-exchange-and-patchkit-operating-model-2026-05-09.md` | Current IN -> dynamic heap/exchange loop -> deterministic OUT model and reusable patchkit bundle procedure. |
 | `ai-orientation-map-2026-05-09.md` | Compact first-orientation map for AI agents: read path, owner map, heap/exchange boundary, patchkit commands and validation map. |
 | `documentation-panorama-and-staleness-map-2026-05-09.md` | Repository-wide doc precedence, canonical/stale zones and future cleanup queue. |
+| `repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md` | Automated hygiene loop: coherence discovery, stale classification, split/refactor planning, PatchKit delete allowlist and validation. |
 | `current-capability-depth-map-2026-05-09.md` | Current active/report-only/provider/manual-review/target capabilities and evidence surfaces. |
 | `unified-launcher-parameter-decision-map-2026-05-09.md` | How to choose launcher parameters by lane instead of reading a flat flag list. |
 | `script-aging-visibility-audit-2026-05-09.md` | Oldest/hidden wrapper notice queue; not a deletion list. |
@@ -113,6 +115,7 @@ LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md
 LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
@@ -135,6 +138,33 @@ target source/doc file
 Large catalogs such as `../Tools/validation/README.md` are reference material, not primary reading-order entrypoints.
 
 Historical handoffs and generated evidence are context only. Do not let them override current source code, owner maps or manifest evidence.
+
+## Repository hygiene and refactor loop
+
+Use the hygiene procedure when docs, indexes, discovery surfaces or old MDs may be stale:
+
+```text
+LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md
+```
+
+The standard loop is:
+
+```text
+build_code_aware_md_coherence.py
+  -> build_repo_hygiene_plan.py
+  -> refactor_markdown_splits.py when split/migration is needed
+  -> PatchKit bundle for explicit allowlisted deletes/refactors
+  -> check_docs_links.py / line-limit validators / git diff --check
+```
+
+Rules:
+
+```text
+classification before delete
+old but useful material becomes reference/archive/refactor input
+only high-confidence obsolete files with explicit markers enter delete_file bundles
+refactor candidates are mapped before code/source changes
+```
 
 ## Patch bundle procedure
 
@@ -198,6 +228,7 @@ DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 | Heap/exchange and patchkit operating model | `LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` |
 | AI first-orientation map | `LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` |
 | Documentation panorama and stale-zone map | `LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md` |
+| Repository hygiene and cleanup/refactor procedure | `LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md` |
 | Current capability depth | `LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
 | Launcher parameter decision map | `LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
 | Script aging / hidden wrapper review | `LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` |

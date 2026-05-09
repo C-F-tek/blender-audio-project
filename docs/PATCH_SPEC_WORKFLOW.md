@@ -10,12 +10,15 @@ This file is not the primary Markdown-to-review-PR command catalog. Current oper
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
 ## Purpose
 
 Patch specs describe small, reviewable file modifications as deterministic specs.
+
+PatchKit bundles describe controlled file modifications that can be authored by an AI without local access, committed to a PR or pasted/transferred to the user, then applied from the user's terminal with dry-run, backups and validators.
 
 The current source-write direction is:
 
@@ -24,7 +27,7 @@ heap/exchange exit product
   -> concrete deterministic operation candidates
   -> patchkit bundle or deterministic patch suggestion bridge
   -> validation/report
-  -> prepare_review_pr.py
+  -> prepare_review_pr.py or user terminal apply
   -> manual-review PR
 ```
 
@@ -57,6 +60,58 @@ Preferred future bundle lane:
 
 ```text
 patchkit bundle lane
+```
+
+## Remote-AI PatchKit handoff mode
+
+PatchKit must stay usable when an AI has GitHub/API access but no local terminal.
+
+In that mode, the AI must not pretend to have applied local changes. It should produce only:
+
+```text
+patch_specs/<bundle>/bundle.json
+patch_specs/<bundle>/fragments/*
+procedure/update docs when useful
+PowerShell commands for the user
+validation commands for the user
+expected touched files and line-count reporting policy
+```
+
+The user applies locally:
+
+```powershell
+$RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
+$env:IA_CARMINE_PYTHON = $RepoPy
+$env:PYTHONPATH = (Resolve-Path .).Path
+
+& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json `
+  --dry-run `
+  --output output\validation\<bundle>_patchkit_dry_run.json `
+  --markdown-output output\validation\<bundle>_patchkit_dry_run.md
+
+& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json `
+  --output output\validation\<bundle>_patchkit_apply.json `
+  --markdown-output output\validation\<bundle>_patchkit_apply.md
+
+git diff --check
+git status --short
+```
+
+This is the preferred route for large patches when local command execution is required but the AI session cannot access the workstation. The AI focuses on the modification core; PatchKit handles safe local application.
+
+Remote-AI handoff requirements:
+
+```text
+bundle must be idempotent where practical
+bundle must use explicit stable anchors or guarded delete markers
+bundle must keep destructive operations explicit
+bundle must include validators in bundle.json when possible
+AI must list exact local commands
+AI must state that local apply/validation is pending until user output is provided
 ```
 
 ## Current review PR behavior
@@ -127,7 +182,7 @@ File existence alone is not proof that a patch plan/spec is valid.
 | `Tools/ai/build_heap_exchange_runtime_exit.py` | Deterministic exit-product boundary. |
 | `Tools/validation/check_heap_exchange_runtime_lifecycle.py` | Lifecycle gate. |
 | `Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py` | Lifecycle smoke. |
-| `Tools/ai/patchkit/apply_patch_bundle.py` | Preferred reusable controlled patch bundle applicator. |
+| `Tools/ai/patchkit/apply_patch_bundle.py` | Preferred reusable controlled patch bundle applicator and remote-AI handoff apply target. |
 | `Tools/validation/run_patchkit_smoke.py` | Patchkit dry/apply/idempotency smoke. |
 | `Tools/repo_patch_runner/apply_repo_mods.py` | Legacy low-level patch runner; explicit apply only. |
 | `Tools/ai/build_patch_specs_from_proposals.py` | Builds inert proposal-derived draft specs under ignored output. |
@@ -248,6 +303,16 @@ heap/exchange runtime exit product
 heap/exchange lifecycle validation
 patchkit or deterministic patch suggestion bridge
 prepare_review_pr.py
+```
+
+For remote-AI-to-user-terminal workflows, prefer:
+
+```text
+patchkit bundle authored/reviewed in GitHub
+  -> user dry-run locally
+  -> user apply locally
+  -> user returns validation output
+  -> AI continues from actual logs/diff
 ```
 
 For code refactors, prefer normal reviewed commits unless the edit is small, exact, anchorable and easy to validate.
