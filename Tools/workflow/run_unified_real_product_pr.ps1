@@ -239,6 +239,7 @@ $script:LauncherArgs = @(
     "-GeneratePatchSpecs",
     "-BuildTaskPatchSuggestionReport",
     "-PrepareReviewPr",
+    "-BuildRuntimeEvidenceCorrelation",
     "-ReviewPrBranch", $TaskBranch,
     "-ReviewPrBaseBranch", "master",
     "-ReviewPrTitle", "feat(ai): real product review $Slug $Stamp",

@@ -128,6 +128,7 @@ param(
     [int]$ReviewPrMaxAppliedPatches = 5,
     [switch]$ReviewPrRequireAllValidators,
     [switch]$ReviewPrDraft,
+    [switch]$BuildRuntimeEvidenceCorrelation,
     [switch]$OpenObserverConsoles,
     [switch]$OpenExtendedObserverConsoles,
     [string]$ObserverOutputDir = "",
@@ -1220,6 +1221,7 @@ Write-Host "[INFO] Legacy NPU auditor provider: $RunLegacyNpuAuditorProvider"
 Write-Host "[INFO] Patch specs: $GeneratePatchSpecs"
 Write-Host "[INFO] Reset apply: $ApplyReset"
 Write-Host "[INFO] Prepare review PR: $PrepareReviewPr"
+Write-Host "[INFO] Runtime evidence correlation: $BuildRuntimeEvidenceCorrelation"
 if ($PrepareReviewPr) {
     Write-Host "[INFO] Review PR branch: $ReviewPrBranch"
     Write-Host "[INFO] Review PR title: $ReviewPrTitle"
@@ -2171,6 +2173,7 @@ $Manifest = [ordered]@{
     review_pr_max_applied_patches = $ReviewPrMaxAppliedPatches
     review_pr_require_all_validators = [bool]$ReviewPrRequireAllValidators
     review_pr_draft_requested = [bool]$ReviewPrDraft
+    runtime_evidence_correlation_requested = [bool]$BuildRuntimeEvidenceCorrelation
     task_patch_suggestion_report_requested = [bool]($BuildTaskPatchSuggestionReport -or $ReviewPrApplyDeterministicSuggestions)
     patch_application_requested = [bool]($ReviewPrApplyDeterministicSuggestions -or (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and $ReviewPrFromGeneratedPatchSpecs))
     patch_application_performed = $false
@@ -2263,6 +2266,64 @@ $Manifest.phase_status = $PhaseStatus
 $Manifest.phase_reports = $PhaseReports
 ($Manifest | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $ManifestPath -Encoding UTF8
 # IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-END
+
+# IA-CARMINE-RUNTIME-EVIDENCE-CORRELATION-FINAL-BEGIN
+if ($BuildRuntimeEvidenceCorrelation) {
+    $RuntimeEvidenceCorrelationJson = "$ValidationDir/runtime_evidence_correlation_${ModeName}_$Stamp.json"
+    $RuntimeEvidenceCorrelationMd = "$ValidationDir/runtime_evidence_correlation_${ModeName}_$Stamp.md"
+
+    function Add-ExistingRuntimeEvidencePathArg {
+        param(
+            [string[]]$ArgsValue,
+            [string]$Flag,
+            [string[]]$VariableNames
+        )
+
+        foreach ($VariableName in $VariableNames) {
+            $CandidateVariable = Get-Variable -Name $VariableName -ErrorAction SilentlyContinue
+            if ($null -eq $CandidateVariable) { continue }
+            $CandidateValue = [string]$CandidateVariable.Value
+            if ([string]::IsNullOrWhiteSpace($CandidateValue)) { continue }
+            if (Test-Path -LiteralPath $CandidateValue -PathType Leaf) {
+                return @($ArgsValue + $Flag + $CandidateValue)
+            }
+        }
+
+        return $ArgsValue
+    }
+
+    $RuntimeEvidenceCorrelationArgs = @(
+        "Tools/validation/check_runtime_evidence_correlation.py",
+        "--repo-root", ".",
+        "--stamp", $DataStamp,
+        "--output", $RuntimeEvidenceCorrelationJson,
+        "--markdown-output", $RuntimeEvidenceCorrelationMd
+    )
+
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--preflight-report" -VariableNames @("PreflightOutput")
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--heap-entry" -VariableNames @("HeapExchangeEntryJson")
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--heap-peer-runtime" -VariableNames @("HeapPeerRuntimeJson")
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--gpu0-report" -VariableNames @("OpenVinoGpu0WorkloadJson", "OpenVinoGpu0Report", "Gpu0WorkloadJson")
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--npu-report" -VariableNames @("NpuMicroCompanionJson", "NpuMicroReport", "NpuReport")
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--shared-memory-evidence" -VariableNames @("SharedToolboxBundleJson", "HeapPeerRuntimeJson")
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--tool-broker-report" -VariableNames @("RuntimeToolCapabilityManifestJson", "FullToolboxRunTelemetrySummaryJson", "FullToolboxTelemetrySummaryJson")
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--closure-audit-report" -VariableNames @("HeapExchangeClosureAuditJson")
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--product-readiness-report" -VariableNames @("ReviewPrProductReadinessJson")
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--review-pr-report" -VariableNames @("ReviewPrJson")
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--unified-chain-contract" -VariableNames @("UnifiedChainContractJson")
+
+    $PhaseStatus.runtime_evidence_correlation = Invoke-Checked "Build runtime evidence correlation" {
+        Invoke-Python $RuntimeEvidenceCorrelationArgs
+    }
+
+    if (Test-Path -LiteralPath $RuntimeEvidenceCorrelationJson -PathType Leaf) {
+        $ReportFiles += $RuntimeEvidenceCorrelationJson
+        $PhaseReports.runtime_evidence_correlation = $RuntimeEvidenceCorrelationJson
+    }
+    $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $RuntimeEvidenceCorrelationMd
+}
+# IA-CARMINE-RUNTIME-EVIDENCE-CORRELATION-FINAL-END
+
 
 
 Write-Host ""
