@@ -3,7 +3,8 @@
 
 The plan is report-only by default. It classifies old/historical Markdown,
 large split snapshots and refactor candidates, then emits a reviewable bundle
-with guarded delete_file operations only for high-confidence candidates.
+with guarded delete_file operations only for high-confidence candidates that
+carry an explicit marker already present in the target text.
 """
 from __future__ import annotations
 
@@ -52,6 +53,19 @@ RISKY_DELETE_PREFIXES = (
     "Scripting/",
     "Tools/",
 )
+PROTECTED_CURRENT_DELETE_PREFIXES = (
+    "docs/LOCAL_AI_TASKS/README.md/",
+    "docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/",
+)
+EXPLICIT_DELETE_MARKERS = (
+    "IA-CARMINE-DELETE-CANDIDATE",
+    "Status: superseded",
+    "Status: obsolete",
+    "Status: delete-candidate",
+    "status: superseded",
+    "status: obsolete",
+    "status: delete-candidate",
+)
 MD_SPLIT_MANIFEST = "_ia_carmine_md_split_manifest.json"
 COMMAND_RE = re.compile(r"(?:python|py|python3|powershell(?:\.exe)?|gh|git)\b", re.IGNORECASE)
 
@@ -65,6 +79,7 @@ class HygieneItem:
     recommended_action: str
     reason: str
     line_count: int
+    delete_marker: str = ""
 
 
 def repo_root_from(start: Path) -> Path:
@@ -108,6 +123,19 @@ def has_any(text: str, hints: tuple[str, ...]) -> bool:
     return any(hint in lower for hint in hints)
 
 
+def explicit_delete_marker(text: str) -> str:
+    lower = text.lower()
+    for marker in EXPLICIT_DELETE_MARKERS:
+        index = lower.find(marker.lower())
+        if index >= 0:
+            return text[index : index + len(marker)]
+    return ""
+
+
+def protected_current_delete_path(path: str) -> bool:
+    return any(path.startswith(prefix) for prefix in PROTECTED_CURRENT_DELETE_PREFIXES)
+
+
 def classify_markdown(root: Path, path: Path, max_lines: int) -> HygieneItem:
     r = rel(root, path)
     text = read_text(path)
@@ -116,22 +144,34 @@ def classify_markdown(root: Path, path: Path, max_lines: int) -> HygieneItem:
     split_manifest = (path.parent / MD_SPLIT_MANIFEST).exists()
     current = has_any(text, CURRENT_DOC_HINTS) or any(hint in lower_r for hint in CURRENT_DOC_HINTS)
     obsolete = has_any(text, OBSOLETE_HINTS) or "next-chat-handoff" in lower_r or "handoff" in lower_r
+    delete_marker = explicit_delete_marker(text)
     commands = bool(COMMAND_RE.search(text))
 
     if r.startswith("CHATGPT/") and ("handoff" in lower_r or "next-chat" in lower_r):
         return HygieneItem(r, "markdown", "historical_chat_handoff", "high", "archive_or_delete_after_index", "handoff file under CHATGPT is forensic context", lines)
+    if current or protected_current_delete_path(r):
+        if lines > max_lines:
+            return HygieneItem(r, "markdown", "oversized_current", "medium", "split_refactor_keep", f"current doc exceeds {max_lines} lines", lines)
+        return HygieneItem(r, "markdown", "current_oriented", "high", "keep", "contains current orientation anchors or protected current path", lines)
     if split_manifest and obsolete and has_any(text, DELETE_HINTS):
-        return HygieneItem(r, "markdown", "obsolete_split_snapshot", "high", "delete_with_patchkit_allowlist", "split snapshot is marked historical/superseded/obsolete", lines)
+        if delete_marker:
+            return HygieneItem(
+                r,
+                "markdown",
+                "obsolete_split_snapshot",
+                "high",
+                "delete_with_patchkit_allowlist",
+                "split snapshot has explicit delete marker",
+                lines,
+                delete_marker,
+            )
+        return HygieneItem(r, "markdown", "obsolete_split_snapshot_needs_marker", "medium", "review_before_delete_marker", "split snapshot has obsolete signals but no explicit delete marker", lines)
     if obsolete and not current and not commands:
         return HygieneItem(r, "markdown", "obsolete_reference", "medium", "delete_or_archive_after_link_check", "marked old without current-map anchors or executable commands", lines)
     if obsolete and commands:
         return HygieneItem(r, "markdown", "historical_with_commands", "medium", "classify_then_refactor_or_delete", "old document still carries command-like text", lines)
     if lines > max_lines and not current:
         return HygieneItem(r, "markdown", "oversized_noncanonical", "medium", "split_or_demote", f"line_count={lines} exceeds {max_lines}", lines)
-    if lines > max_lines and current:
-        return HygieneItem(r, "markdown", "oversized_current", "medium", "split_refactor_keep", f"current doc exceeds {max_lines} lines", lines)
-    if current:
-        return HygieneItem(r, "markdown", "current_oriented", "high", "keep", "contains current orientation anchors", lines)
     return HygieneItem(r, "markdown", "unclassified", "low", "review_later", "no strong current or obsolete signal", lines)
 
 
@@ -171,6 +211,10 @@ def can_delete(item: HygieneItem) -> bool:
         return False
     if any(item.path.startswith(prefix) for prefix in RISKY_DELETE_PREFIXES):
         return False
+    if protected_current_delete_path(item.path):
+        return False
+    if not item.delete_marker:
+        return False
     return item.confidence == "high"
 
 
@@ -179,12 +223,13 @@ def build_bundle(report: dict[str, Any], root: Path, bundle_path: Path) -> dict[
     for item in report["items"]:
         if not can_delete(HygieneItem(**item)):
             continue
+        marker = str(item.get("delete_marker") or "")
         operations.append(
             {
                 "operation": "delete_file",
                 "target": item["path"],
                 "allow_delete": True,
-                "required_marker": "superseded",
+                "required_marker": marker,
                 "reason": item["reason"],
             }
         )
@@ -215,13 +260,13 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         "## High/medium priority items",
         "",
-        "| Confidence | Classification | Action | Path | Reason | Lines |",
-        "|---|---|---|---|---|---:|",
+        "| Confidence | Classification | Action | Path | Delete marker | Reason | Lines |",
+        "|---|---|---|---|---|---|---:|",
     ]
     rows = [item for item in report["items"] if item["confidence"] in {"high", "medium"}]
     for item in rows[:160]:
         lines.append(
-            f"| {item['confidence']} | {item['classification']} | {item['recommended_action']} | `{item['path']}` | {item['reason']} | {item['line_count']} |"
+            f"| {item['confidence']} | {item['classification']} | {item['recommended_action']} | `{item['path']}` | `{item.get('delete_marker', '')}` | {item['reason']} | {item['line_count']} |"
         )
     if len(rows) > 160:
         lines.append(f"\n_Truncated {len(rows) - 160} more items; see JSON._")
