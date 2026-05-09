@@ -5,9 +5,9 @@ The patcher is deliberately idempotent and non-destructive. It creates a backup,
 modifies only the launcher, and validates the resulting PowerShell syntax.
 
 The wiring does not guide the dynamic center of the run. It adds:
-- entry envelope after workload routing;
-- exit product after generated patch specs review bridge;
-- lifecycle validation before product separation.
+- entry envelope before the official/provider dynamic center;
+- exit product after generated patch specs review bridge when present;
+- lifecycle validation before the unified chain contract.
 """
 from __future__ import annotations
 
@@ -54,6 +54,10 @@ def run_parser(path: Path) -> tuple[bool, str]:
 def entry_block() -> str:
     return r'''
 # IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-BEGIN
+$HeapExchangeObserverDir = $ObserverOutputDir
+if ([string]::IsNullOrWhiteSpace($HeapExchangeObserverDir)) {
+    $HeapExchangeObserverDir = Join-Path $OutputDir ("local_ai_runs/{0}_observer" -f $DataStamp)
+}
 $HeapExchangeEntryJson = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.json"
 $HeapExchangeEntryMd = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.md"
 $HeapExchangeRuntimeState = Join-Path $AiPacketsDir "heap_exchange_runtime_state.jsonl"
@@ -62,14 +66,11 @@ $HeapExchangeEntryArgs = @(
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--task-file", $TaskFile,
-    "--observer-dir", $ObserverDir,
+    "--observer-dir", $HeapExchangeObserverDir,
     "--runtime-state", $HeapExchangeRuntimeState,
     "--output", $HeapExchangeEntryJson,
     "--markdown-output", $HeapExchangeEntryMd
 )
-if (Test-Path -LiteralPath $Gpu0WorkloadJson -PathType Leaf) { $HeapExchangeEntryArgs += @("--gpu0-report", $Gpu0WorkloadJson) }
-if (Test-Path -LiteralPath $OfficialPhaseJson -PathType Leaf) { $HeapExchangeEntryArgs += @("--official-report", $OfficialPhaseJson) }
-if (Test-Path -LiteralPath "output/validation/ai_workload_report_quality.json" -PathType Leaf) { $HeapExchangeEntryArgs += @("--workload-quality-report", "output/validation/ai_workload_report_quality.json") }
 $HeapExchangeEntryOk = Invoke-Checked "Build heap/exchange runtime entry" {
     & $ResolvedPythonExe @HeapExchangeEntryArgs
 }
@@ -90,11 +91,10 @@ $HeapExchangeExitArgs = @(
     "--stamp", $DataStamp,
     "--runtime-entry", $HeapExchangeEntryJson,
     "--runtime-state", $HeapExchangeRuntimeState,
-    "--observer-dir", $ObserverDir,
+    "--observer-dir", $HeapExchangeObserverDir,
     "--output", $HeapExchangeExitJson,
     "--markdown-output", $HeapExchangeExitMd
 )
-if (Test-Path -LiteralPath $GeneratedPatchSpecsApplyJson -PathType Leaf) { $HeapExchangeExitArgs += @("--apply-report", $GeneratedPatchSpecsApplyJson) }
 if ($PrepareReviewPr -or $ReviewPrFromGeneratedPatchSpecs) { $HeapExchangeExitArgs += "--require-concrete-product" }
 $HeapExchangeExitOk = Invoke-Checked "Build heap/exchange runtime exit product" {
     & $ResolvedPythonExe @HeapExchangeExitArgs
@@ -117,7 +117,7 @@ $HeapExchangeLifecycleArgs = @(
     "--runtime-entry", $HeapExchangeEntryJson,
     "--runtime-state", $HeapExchangeRuntimeState,
     "--runtime-exit", $HeapExchangeExitJson,
-    "--observer-dir", $ObserverDir,
+    "--observer-dir", $HeapExchangeObserverDir,
     "--require-public-events",
     "--output", $HeapExchangeLifecycleJson,
     "--markdown-output", $HeapExchangeLifecycleMd
@@ -132,16 +132,45 @@ $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapE
 '''.strip("\n")
 
 
-def insert_after_phase(text: str, phase_label: str, block: str, marker: str) -> tuple[str, bool]:
+def line_has_label(line: str, label: str) -> bool:
+    return label in line
+
+
+def brace_delta(line: str) -> int:
+    # Good enough for this launcher: labels live on Invoke-Checked scriptblock lines,
+    # and inner braces are PowerShell control blocks that should be balanced.
+    return line.count("{") - line.count("}")
+
+
+def find_invoke_checked_block_end(lines: list[str], label: str) -> int | None:
+    start: int | None = None
+    for index, line in enumerate(lines):
+        if line_has_label(line, label):
+            start = index
+            break
+    if start is None:
+        return None
+
+    depth = 0
+    seen_open = False
+    for index in range(start, len(lines)):
+        depth += brace_delta(lines[index])
+        if "{" in lines[index]:
+            seen_open = True
+        if seen_open and depth <= 0:
+            return index
+    return None
+
+
+def insert_after_invoke_checked_label(text: str, label: str, block: str, marker: str) -> tuple[str, bool]:
     if marker in text:
         return text, False
-    idx = text.find(phase_label)
-    if idx < 0:
-        raise RuntimeError(f"anchor not found: {phase_label}")
-    next_phase = text.find("\n=== ", idx + len(phase_label))
-    if next_phase < 0:
-        raise RuntimeError(f"next phase anchor not found after: {phase_label}")
-    return text[:next_phase].rstrip("\n") + "\n\n" + block + "\n" + text[next_phase:], True
+    lines = text.splitlines()
+    end = find_invoke_checked_block_end(lines, label)
+    if end is None:
+        raise RuntimeError(f"Invoke-Checked anchor not found or unterminated: {label}")
+    new_lines = lines[: end + 1] + ["", *block.splitlines(), ""] + lines[end + 1 :]
+    return "\n".join(new_lines) + "\n", True
 
 
 def insert_before_anchor(text: str, anchor_terms: list[str], block: str, marker: str) -> tuple[str, bool]:
@@ -154,18 +183,46 @@ def insert_before_anchor(text: str, anchor_terms: list[str], block: str, marker:
             anchor_index = index
             break
     if anchor_index is None:
-        diagnostics = [f"{idx + 1}: {line}" for idx, line in enumerate(lines) if any(word in line.lower() for word in ("product", "separation", "patch_suggestion", "chain"))]
-        raise RuntimeError("could not locate lifecycle insertion anchor. Diagnostics:\n" + "\n".join(diagnostics[:60]))
+        diagnostics = [f"{idx + 1}: {line}" for idx, line in enumerate(lines) if any(word in line.lower() for word in ("product", "separation", "patch_suggestion", "chain", "review pr"))]
+        raise RuntimeError("could not locate insertion anchor. Diagnostics:\n" + "\n".join(diagnostics[:80]))
     new_lines = lines[:anchor_index] + ["", *block.splitlines(), ""] + lines[anchor_index:]
     return "\n".join(new_lines) + "\n", True
 
 
+def insert_entry(text_lf: str) -> tuple[str, bool]:
+    if ENTRY_MARKER in text_lf:
+        return text_lf, False
+    try:
+        return insert_after_invoke_checked_label(text_lf, "Build AI workload quality routing report", entry_block(), ENTRY_MARKER)
+    except RuntimeError:
+        return insert_before_anchor(
+            text_lf,
+            ["Run official local AI pipeline adapter", "Run Ollama advisory packet", "IA-CARMINE-STRICT-REAL-RUN-ACTIVATION-END"],
+            entry_block(),
+            ENTRY_MARKER,
+        )
+
+
+def insert_exit(text_lf: str) -> tuple[str, bool]:
+    if EXIT_MARKER in text_lf:
+        return text_lf, False
+    try:
+        return insert_after_invoke_checked_label(text_lf, "Apply generated patch specs for review PR", exit_block(), EXIT_MARKER)
+    except RuntimeError:
+        return insert_before_anchor(
+            text_lf,
+            ["Validate unified heap/exchange chain contract", "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-BEGIN"],
+            exit_block(),
+            EXIT_MARKER,
+        )
+
+
 def patch_launcher(text_lf: str) -> tuple[str, list[str]]:
     changes: list[str] = []
-    text_lf, changed = insert_after_phase(text_lf, "=== Build AI workload quality routing report ===", entry_block(), ENTRY_MARKER)
+    text_lf, changed = insert_entry(text_lf)
     if changed:
         changes.append("insert_heap_exchange_runtime_entry")
-    text_lf, changed = insert_after_phase(text_lf, "=== Apply generated patch specs for review PR ===", exit_block(), EXIT_MARKER)
+    text_lf, changed = insert_exit(text_lf)
     if changed:
         changes.append("insert_heap_exchange_runtime_exit")
     text_lf, changed = insert_before_anchor(
@@ -194,10 +251,21 @@ def validate_policy(text_lf: str) -> list[str]:
     ):
         if token not in text_lf:
             errors.append(f"missing required lifecycle token: {token}")
-    if text_lf.find("Build heap/exchange runtime entry") > text_lf.find("Run official local AI pipeline adapter"):
+
+    entry_pos = text_lf.find("Build heap/exchange runtime entry")
+    official_pos = text_lf.find("Run official local AI pipeline adapter")
+    exit_pos = text_lf.find("Build heap/exchange runtime exit product")
+    chain_pos = text_lf.find("Validate unified heap/exchange chain contract")
+    lifecycle_pos = text_lf.find("Validate heap/exchange runtime lifecycle")
+
+    if entry_pos < 0 or exit_pos < 0 or lifecycle_pos < 0:
+        errors.append("one or more lifecycle phase labels are missing after patch")
+    if official_pos >= 0 and entry_pos > official_pos:
         errors.append("heap/exchange entry must be before official/provider dynamic center")
-    if text_lf.find("Build heap/exchange runtime exit product") > text_lf.find("Validate unified heap/exchange chain contract"):
+    if chain_pos >= 0 and exit_pos > chain_pos:
         errors.append("heap/exchange exit must be before unified chain contract")
+    if chain_pos >= 0 and lifecycle_pos > chain_pos:
+        errors.append("heap/exchange lifecycle gate must be before unified chain contract")
     if re.search(r"^\s*throw\s*$", text_lf, flags=re.MULTILINE):
         errors.append("naked throw remains in launcher")
     return errors
