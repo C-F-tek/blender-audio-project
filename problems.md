@@ -64,31 +64,6 @@ Move these documents into the first-read block:
 - docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 ```
 
-### P-004 — older product-chain docs may still describe pre-heap patch suggestion flow as current
-
-Status: open.
-
-Known risk files:
-
-```text
-docs/PATCH_SPEC_WORKFLOW.md
-docs/LOCAL_AI_TASKS/patch-suggestion-bundle-final-phase.md
-docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md
-docs/LOCAL_AI_TASKS/patch-notes-quality-product-2026-05-07.md
-```
-
-Why it matters:
-
-```text
-Agents may bypass heap/exchange entry/exit and lifecycle validation if older patch suggestion docs are treated as current product flow.
-```
-
-Expected fix:
-
-```text
-Add current-status banners to old patch/product docs and route current product paths through heap/exchange lifecycle and patchkit where applicable.
-```
-
 ## Closed problems
 
 ### P-003 — `prepare_review_pr.py` draft PR support was documented as not implemented
@@ -107,4 +82,24 @@ Outcome:
 
 ```text
 Docs that claimed draft PR creation was not implemented should be updated to describe the implemented --draft-pr path.
+```
+
+### P-004 — older product-chain docs described pre-heap patch suggestion flow as current
+
+Status: closed in PR #251 documentation follow-up.
+
+Patched files:
+
+```text
+docs/PATCH_SPEC_WORKFLOW.md
+docs/LOCAL_AI_TASKS/patch-suggestion-bundle-final-phase.md
+docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md
+docs/LOCAL_AI_TASKS/patch-notes-quality-product-2026-05-07.md
+```
+
+Outcome:
+
+```text
+Patch/product docs now route current product work through heap/exchange entry/exit, lifecycle validation, patchkit or deterministic patch suggestion bridge, and prepare_review_pr.py.
+Historical ledger docs are classified as reference/ledger workflows, not primary product paths.
 ```
