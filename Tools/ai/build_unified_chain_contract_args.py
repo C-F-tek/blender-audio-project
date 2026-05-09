@@ -99,6 +99,30 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
                 f"output/**/runtime_tool_usage*{stamp}*.json",
             ],
         )
+    heap_peer_runtime = existing_or_blank(repo_root, context.get("heap_peer_runtime"))
+    if not heap_peer_runtime:
+        heap_peer_runtime = discover_first(
+            repo_root,
+            [
+                f"output/**/heap_peer_runtime*{stamp}*.json",
+                f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
+                f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
+            ],
+        )
+    shared_memory_evidence = existing_or_blank(repo_root, context.get("shared_memory_evidence"))
+    if not shared_memory_evidence:
+        shared_memory_evidence = discover_first(
+            repo_root,
+            [
+                f"output/**/shared_toolbox_ai_to_ai_bundle*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle*{stamp}*.json",
+                f"output/**/full_memory_tool_regeneration_bundle*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/full_memory_tool_regeneration_bundle*{stamp}*.json",
+                f"output/**/heap_exchange*{stamp}*.json",
+            ],
+        )
 
     requested_apply_report = str(context.get("apply_report") or "").strip()
     requested_product_report = str(context.get("product_separation_report") or "").strip()
@@ -122,6 +146,8 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
         )
     )
     require_provider_tool_evidence = as_bool(context.get("require_provider_tool_evidence")) or require_ai_exchange
+    require_heap_peer_runtime = as_bool(context.get("require_heap_peer_runtime")) or require_ai_exchange
+    require_shared_memory_evidence = as_bool(context.get("require_shared_memory_evidence")) or require_ai_exchange
     require_concrete_patch_specs = as_bool(context.get("review_pr_from_generated_patch_specs"))
     require_review_pr_product = as_bool(context.get("prepare_review_pr")) and (
         as_bool(context.get("review_pr_from_generated_patch_specs"))
@@ -149,11 +175,17 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
     add_pair(argv, "--review-pr-report", review_pr_report)
     add_pair(argv, "--tool-capability-manifest", tool_capability_manifest)
     add_pair(argv, "--tool-usage-telemetry", tool_usage_telemetry)
+    add_pair(argv, "--heap-peer-runtime", heap_peer_runtime)
+    add_pair(argv, "--shared-memory-evidence", shared_memory_evidence)
 
     if require_ai_exchange:
         argv.append("--require-ai-exchange")
     if require_provider_tool_evidence:
         argv.append("--require-provider-tool-evidence")
+    if require_heap_peer_runtime:
+        argv.append("--require-heap-peer-runtime")
+    if require_shared_memory_evidence:
+        argv.append("--require-shared-memory-evidence")
     if require_concrete_patch_specs:
         argv.append("--require-concrete-patch-specs")
     if require_review_pr_product:
@@ -169,6 +201,8 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
         "derived": {
             "require_ai_exchange": require_ai_exchange,
             "require_provider_tool_evidence": require_provider_tool_evidence,
+            "require_heap_peer_runtime": require_heap_peer_runtime,
+            "require_shared_memory_evidence": require_shared_memory_evidence,
             "require_concrete_patch_specs": require_concrete_patch_specs,
             "require_review_pr_product": require_review_pr_product,
         },
@@ -181,6 +215,8 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
             "review_pr_report": review_pr_report,
             "tool_capability_manifest": tool_capability_manifest,
             "tool_usage_telemetry": tool_usage_telemetry,
+            "heap_peer_runtime": heap_peer_runtime,
+            "shared_memory_evidence": shared_memory_evidence,
             "output_report": output_report,
             "markdown_report": markdown_report,
         },
