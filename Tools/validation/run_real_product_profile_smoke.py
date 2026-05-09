@@ -52,6 +52,8 @@ def main() -> int:
         "manifest_schema_requires_runtime_evidence_correlation_report": "runtime_evidence_correlation_requested" in launcher_text and "runtime_evidence_correlation" in launcher_text,
         "preflight_validates_manifest_runtime_correlation_schema": "run_unified_manifest_runtime_evidence_correlation_smoke.py" in readme_text or "run_unified_manifest_runtime_evidence_correlation_smoke.py" in launcher_text,
         "review_pr_final_product_contract_exists": (repo / "Tools/validation/check_review_pr_final_product_contract.py").exists(),
+        "single_entry_exit_process_gate": "-ProcessGateTask" in text and "New-HeapExchangeProcessGateTask" in text,
+        "single_exit_validates_review_pr_product": "-ValidateFinalReviewPrProduct" in text and "check_review_pr_final_product_contract.py" in text,
         "preflight_validates_review_pr_final_product_contract": "run_review_pr_final_product_contract_smoke.py" in readme_text or "run_review_pr_final_product_contract_smoke.py" in launcher_text,
         "supports_review_pr_push": "-ReviewPrPush" in text,
         "supports_review_pr_create": "-ReviewPrCreate" in text,
