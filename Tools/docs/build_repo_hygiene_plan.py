@@ -1,0 +1,281 @@
+#!/usr/bin/env python3
+"""Build a repository hygiene plan and optional PatchKit cleanup bundle.
+
+The plan is report-only by default. It classifies old/historical Markdown,
+large split snapshots and refactor candidates, then emits a reviewable bundle
+with guarded delete_file operations only for high-confidence candidates.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+from collections import Counter
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Iterable
+
+SKIP_DIRS = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", "output", "renders", "node_modules"}
+SKIP_PREFIXES = (
+    "docs/LOCAL_VALIDATION_EVIDENCE/",
+    "indexAI/code_chunks/",
+    "indexAI/project_code_chunks/",
+)
+CURRENT_DOC_HINTS = (
+    "heap-exchange-and-patchkit-operating-model",
+    "ai-orientation-map",
+    "documentation-panorama-and-staleness-map",
+    "unified-local-ai-refactor-launcher",
+    "current-capability-depth-map",
+    "single-owner-scripts-and-flow-boundaries",
+)
+OBSOLETE_HINTS = (
+    "historical",
+    "superseded",
+    "obsolete",
+    "legacy",
+    "forensic context",
+    "not the current",
+    "not current",
+)
+DELETE_HINTS = (
+    "historical",
+    "superseded",
+    "obsolete",
+)
+RISKY_DELETE_PREFIXES = (
+    "docs/LOCAL_VALIDATION_EVIDENCE/",
+    "output/",
+    "renders/",
+    "indexAI/",
+    "Scripting/",
+    "Tools/",
+)
+MD_SPLIT_MANIFEST = "_ia_carmine_md_split_manifest.json"
+COMMAND_RE = re.compile(r"(?:python|py|python3|powershell(?:\.exe)?|gh|git)\b", re.IGNORECASE)
+
+
+@dataclass
+class HygieneItem:
+    path: str
+    kind: str
+    classification: str
+    confidence: str
+    recommended_action: str
+    reason: str
+    line_count: int
+
+
+def repo_root_from(start: Path) -> Path:
+    cur = start.resolve()
+    for candidate in (cur, *cur.parents):
+        if (candidate / ".git").exists():
+            return candidate
+    raise SystemExit(f"repository root not found from {start}")
+
+
+def rel(root: Path, path: Path) -> str:
+    return path.resolve().relative_to(root.resolve()).as_posix()
+
+
+def skipped(root: Path, path: Path) -> bool:
+    parts = path.parts
+    if any(part in SKIP_DIRS for part in parts):
+        return True
+    r = rel(root, path) if path.exists() else path.as_posix()
+    return any(r.startswith(prefix) for prefix in SKIP_PREFIXES)
+
+
+def iter_files(root: Path, suffixes: tuple[str, ...]) -> Iterable[Path]:
+    for path in root.rglob("*"):
+        if not path.is_file() or skipped(root, path):
+            continue
+        if path.suffix.lower() in suffixes:
+            yield path
+
+
+def read_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8-sig", errors="replace")
+
+
+def line_count(text: str) -> int:
+    return len(text.splitlines()) if text else 0
+
+
+def has_any(text: str, hints: tuple[str, ...]) -> bool:
+    lower = text.lower()
+    return any(hint in lower for hint in hints)
+
+
+def classify_markdown(root: Path, path: Path, max_lines: int) -> HygieneItem:
+    r = rel(root, path)
+    text = read_text(path)
+    lines = line_count(text)
+    lower_r = r.lower()
+    split_manifest = (path.parent / MD_SPLIT_MANIFEST).exists()
+    current = has_any(text, CURRENT_DOC_HINTS) or any(hint in lower_r for hint in CURRENT_DOC_HINTS)
+    obsolete = has_any(text, OBSOLETE_HINTS) or "next-chat-handoff" in lower_r or "handoff" in lower_r
+    commands = bool(COMMAND_RE.search(text))
+
+    if r.startswith("CHATGPT/") and ("handoff" in lower_r or "next-chat" in lower_r):
+        return HygieneItem(r, "markdown", "historical_chat_handoff", "high", "archive_or_delete_after_index", "handoff file under CHATGPT is forensic context", lines)
+    if split_manifest and obsolete and has_any(text, DELETE_HINTS):
+        return HygieneItem(r, "markdown", "obsolete_split_snapshot", "high", "delete_with_patchkit_allowlist", "split snapshot is marked historical/superseded/obsolete", lines)
+    if obsolete and not current and not commands:
+        return HygieneItem(r, "markdown", "obsolete_reference", "medium", "delete_or_archive_after_link_check", "marked old without current-map anchors or executable commands", lines)
+    if obsolete and commands:
+        return HygieneItem(r, "markdown", "historical_with_commands", "medium", "classify_then_refactor_or_delete", "old document still carries command-like text", lines)
+    if lines > max_lines and not current:
+        return HygieneItem(r, "markdown", "oversized_noncanonical", "medium", "split_or_demote", f"line_count={lines} exceeds {max_lines}", lines)
+    if lines > max_lines and current:
+        return HygieneItem(r, "markdown", "oversized_current", "medium", "split_refactor_keep", f"current doc exceeds {max_lines} lines", lines)
+    if current:
+        return HygieneItem(r, "markdown", "current_oriented", "high", "keep", "contains current orientation anchors", lines)
+    return HygieneItem(r, "markdown", "unclassified", "low", "review_later", "no strong current or obsolete signal", lines)
+
+
+def classify_split_dirs(root: Path) -> list[HygieneItem]:
+    items: list[HygieneItem] = []
+    for directory in root.rglob("*"):
+        if not directory.is_dir() or skipped(root, directory):
+            continue
+        parts = sorted(directory.glob("part-*.md"))
+        manifest = directory / MD_SPLIT_MANIFEST
+        if not parts and not manifest.exists():
+            continue
+        lines = 0
+        text_join = ""
+        for part in parts[:4]:
+            text = read_text(part)
+            text_join += text + "\n"
+            lines += line_count(text)
+        r = rel(root, directory)
+        if directory.name.endswith(".md"):
+            layout = "directory_form_split"
+            action = "keep_or_classify_parts"
+        else:
+            layout = "legacy_split_layout"
+            action = "migrate_with_refactor_markdown_splits"
+        obsolete = has_any(text_join, OBSOLETE_HINTS)
+        classification = f"{layout}_obsolete" if obsolete else layout
+        confidence = "high" if obsolete or layout == "legacy_split_layout" else "medium"
+        items.append(HygieneItem(r, "markdown_split_dir", classification, confidence, action, f"part_count={len(parts)}", lines))
+    return items
+
+
+def can_delete(item: HygieneItem) -> bool:
+    if item.recommended_action != "delete_with_patchkit_allowlist":
+        return False
+    if item.kind != "markdown":
+        return False
+    if any(item.path.startswith(prefix) for prefix in RISKY_DELETE_PREFIXES):
+        return False
+    return item.confidence == "high"
+
+
+def build_bundle(report: dict[str, Any], root: Path, bundle_path: Path) -> dict[str, Any]:
+    operations = []
+    for item in report["items"]:
+        if not can_delete(HygieneItem(**item)):
+            continue
+        operations.append(
+            {
+                "operation": "delete_file",
+                "target": item["path"],
+                "allow_delete": True,
+                "required_marker": "superseded",
+                "reason": item["reason"],
+            }
+        )
+    bundle = {
+        "schema_version": 1,
+        "kind": "codemod_patch_bundle",
+        "purpose": "reviewable repository hygiene cleanup generated from build_repo_hygiene_plan.py",
+        "operations": operations,
+        "validators": ["git_diff_check"],
+    }
+    bundle_path.parent.mkdir(parents=True, exist_ok=True)
+    bundle_path.write_text(json.dumps(bundle, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {"path": rel(root, bundle_path), "operation_count": len(operations)}
+
+
+def render_markdown(report: dict[str, Any]) -> str:
+    lines = [
+        "# Repository Hygiene Plan",
+        "",
+        f"- Generated at: `{report['generated_at']}`",
+        f"- Markdown items: `{report['summary']['item_count']}`",
+        f"- PatchKit bundle: `{report.get('patchkit_bundle', {}).get('path', '')}`",
+        "",
+        "## Summary",
+        "",
+        f"- By classification: `{json.dumps(report['summary']['by_classification'], ensure_ascii=False)}`",
+        f"- By action: `{json.dumps(report['summary']['by_action'], ensure_ascii=False)}`",
+        "",
+        "## High/medium priority items",
+        "",
+        "| Confidence | Classification | Action | Path | Reason | Lines |",
+        "|---|---|---|---|---|---:|",
+    ]
+    rows = [item for item in report["items"] if item["confidence"] in {"high", "medium"}]
+    for item in rows[:160]:
+        lines.append(
+            f"| {item['confidence']} | {item['classification']} | {item['recommended_action']} | `{item['path']}` | {item['reason']} | {item['line_count']} |"
+        )
+    if len(rows) > 160:
+        lines.append(f"\n_Truncated {len(rows) - 160} more items; see JSON._")
+    lines.extend(
+        [
+            "",
+            "## Policy",
+            "",
+            "This report is advisory. Delete operations require a PatchKit bundle, explicit review branch and validators.",
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Build repo hygiene cleanup/refactor plan.")
+    parser.add_argument("--repo-root", default=".")
+    parser.add_argument("--max-lines", type=int, default=400)
+    parser.add_argument("--output", default="output/validation/repo_hygiene_plan.json")
+    parser.add_argument("--markdown-output", default="output/validation/repo_hygiene_plan.md")
+    parser.add_argument("--emit-patchkit-bundle", default="")
+    args = parser.parse_args()
+
+    root = repo_root_from(Path(args.repo_root))
+    items = [classify_markdown(root, path, args.max_lines) for path in iter_files(root, (".md",))]
+    items.extend(classify_split_dirs(root))
+    items_dicts = [asdict(item) for item in sorted(items, key=lambda i: (i.classification, i.path))]
+    summary = {
+        "item_count": len(items_dicts),
+        "by_classification": dict(Counter(item["classification"] for item in items_dicts).most_common()),
+        "by_action": dict(Counter(item["recommended_action"] for item in items_dicts).most_common()),
+    }
+    report: dict[str, Any] = {
+        "schema_version": 1,
+        "kind": "repo_hygiene_plan",
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "repo_root": root.as_posix(),
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+        "summary": summary,
+        "items": items_dicts,
+    }
+    if args.emit_patchkit_bundle:
+        report["patchkit_bundle"] = build_bundle(report, root, root / args.emit_patchkit_bundle)
+    out = root / args.output
+    md = root / args.markdown_output
+    out.parent.mkdir(parents=True, exist_ok=True)
+    md.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    md.write_text(render_markdown(report), encoding="utf-8")
+    print(json.dumps({"passed": True, "summary": summary, "patchkit_bundle": report.get("patchkit_bundle")}, indent=2, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
