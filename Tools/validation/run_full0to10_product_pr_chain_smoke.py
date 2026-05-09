@@ -303,7 +303,11 @@ def main() -> int:
     if runtime_mesh_result["returncode"] != 0:
         errors.append(f"runtime mesh contract failed rc={runtime_mesh_result['returncode']} {runtime_mesh_result['error']}")
     if runtime_mesh_contract.get("passed") is not True:
-        errors.append("runtime mesh contract did not pass before product PR chain smoke")
+        failed = runtime_mesh_contract.get("failed_capabilities") or []
+        if failed:
+            errors.append("runtime mesh contract did not pass before product PR chain smoke: " + ", ".join(str(item) for item in failed))
+        else:
+            errors.append("runtime mesh contract did not pass before product PR chain smoke")
     if not runtime_mesh_contract_md.exists():
         errors.append("runtime mesh contract markdown report was not produced")
 

@@ -63,6 +63,22 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 
     memory_sqlite_text = read_text(repo_root / "Tools/ai/agent_runtime_sqlite_memory.py")
     full_memory_text = read_text(repo_root / "Tools/ai/full0to10_memory_tool.py")
+    sqlite_schema_text = read_text(repo_root / "Tools/ai/full0to10_sqlite_memory/schema.py")
+    sqlite_search_text = read_text(repo_root / "Tools/ai/full0to10_sqlite_memory/search.py")
+    sqlite_ingest_text = read_text(repo_root / "Tools/ai/full0to10_sqlite_memory/ingest.py")
+    sqlite_memory_smoke_text = read_text(repo_root / "Tools/validation/run_full0to10_sqlite_memory_smoke.py")
+    sqlite_hybrid_smoke_text = read_text(repo_root / "Tools/validation/run_full0to10_sqlite_embedding_hybrid_smoke.py")
+    sqlite_fts_surface = "\n".join(
+        [
+            memory_sqlite_text,
+            full_memory_text,
+            sqlite_schema_text,
+            sqlite_search_text,
+            sqlite_ingest_text,
+            sqlite_memory_smoke_text,
+            sqlite_hybrid_smoke_text,
+        ]
+    ).lower()
     broker_text = read_text(repo_root / "Tools/ai/agent_runtime_tool_broker.py")
     broker_exec_text = read_text(repo_root / "Tools/ai/agent_runtime_tool_broker_execution.py")
 
@@ -97,7 +113,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 
         "sqlite_fts_memory": exists(repo_root, "Tools/ai/agent_runtime_sqlite_memory.py")
         and exists(repo_root, "Tools/ai/full0to10_memory_tool.py")
-        and ("fts5" in memory_sqlite_text.lower() or "fts5" in full_memory_text.lower())
+        and exists(repo_root, "Tools/ai/full0to10_sqlite_memory/schema.py")
+        and exists(repo_root, "Tools/ai/full0to10_sqlite_memory/search.py")
+        and exists(repo_root, "Tools/ai/full0to10_sqlite_memory/ingest.py")
+        and ("fts5" in sqlite_fts_surface or "full0to10_sqlite_memory" in sqlite_fts_surface)
         and exists(repo_root, "Tools/validation/run_full0to10_sqlite_memory_smoke.py")
         and exists(repo_root, "Tools/validation/run_full0to10_sqlite_embedding_hybrid_smoke.py"),
 
@@ -179,6 +198,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     ]
 
     errors = [f"missing runtime mesh capability: {name}" for name in capability_order if not checks.get(name)]
+    failed_capabilities = [name for name in capability_order if not checks.get(name)]
 
     return {
         "schema_version": 1,
@@ -186,7 +206,15 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": repo_root.as_posix(),
         "capability_order": capability_order,
+        "failed_capabilities": failed_capabilities,
         "runtime_route": runtime_route,
+        "diagnostics": {
+            "sqlite_fts_surface_has_fts5": "fts5" in sqlite_fts_surface,
+            "sqlite_fts_surface_has_package": "full0to10_sqlite_memory" in sqlite_fts_surface,
+            "sqlite_schema_present": exists(repo_root, "Tools/ai/full0to10_sqlite_memory/schema.py"),
+            "sqlite_search_present": exists(repo_root, "Tools/ai/full0to10_sqlite_memory/search.py"),
+            "sqlite_ingest_present": exists(repo_root, "Tools/ai/full0to10_sqlite_memory/ingest.py"),
+        },
         **checks,
         "provider_execution_performed": False,
         "patch_application_performed": False,
