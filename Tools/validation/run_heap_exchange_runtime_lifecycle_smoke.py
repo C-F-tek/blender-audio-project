@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -21,8 +22,24 @@ except ImportError:  # pragma: no cover
     from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
 
 
-def run(command: list[str], cwd: Path) -> dict[str, Any]:
-    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False, timeout=120)
+def build_env(source_repo: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    existing_pythonpath = env.get("PYTHONPATH", "")
+    source_pythonpath = str(source_repo)
+    env["PYTHONPATH"] = source_pythonpath if not existing_pythonpath else source_pythonpath + os.pathsep + existing_pythonpath
+    return env
+
+
+def run(command: list[str], cwd: Path, source_repo: Path) -> dict[str, Any]:
+    result = subprocess.run(
+        command,
+        cwd=cwd,
+        env=build_env(source_repo),
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=120,
+    )
     return {
         "command": command,
         "returncode": result.returncode,
@@ -115,18 +132,18 @@ def main() -> int:
             sys.executable, str(entry_tool), "--repo-root", str(repo), "--stamp", missing_stamp,
             "--task-file", f"output/local_ai_task_inputs/task-{missing_stamp}.md",
             "--observer-dir", f"output/local_ai_runs/{missing_stamp}_observer",
-        ], repo)
+        ], repo, source_repo)
         exit_result = run([
             sys.executable, str(exit_tool), "--repo-root", str(repo), "--stamp", missing_stamp,
             "--apply-report", str(missing_apply), "--observer-dir", f"output/local_ai_runs/{missing_stamp}_observer",
             "--require-concrete-product",
-        ], repo)
+        ], repo, source_repo)
         lifecycle_result = run([
             sys.executable, str(lifecycle_tool), "--repo-root", str(repo), "--stamp", missing_stamp,
             "--observer-dir", f"output/local_ai_runs/{missing_stamp}_observer",
             "--require-public-events", "--require-concrete-exit",
             "--output", "output/validation/missing_lifecycle.json",
-        ], repo)
+        ], repo, source_repo)
         missing_ok = entry_result["returncode"] == 0 and exit_result["returncode"] == 2 and lifecycle_result["returncode"] == 2
         cases.append({"name": "entry_passes_exit_blocks_without_concrete_product", "passed": missing_ok, "entry": entry_result, "exit": exit_result, "lifecycle": lifecycle_result})
         if not missing_ok:
@@ -139,18 +156,18 @@ def main() -> int:
             sys.executable, str(entry_tool), "--repo-root", str(repo), "--stamp", concrete_stamp,
             "--task-file", f"output/local_ai_task_inputs/task-{concrete_stamp}.md",
             "--observer-dir", f"output/local_ai_runs/{concrete_stamp}_observer",
-        ], repo)
+        ], repo, source_repo)
         exit_result = run([
             sys.executable, str(exit_tool), "--repo-root", str(repo), "--stamp", concrete_stamp,
             "--apply-report", str(concrete_apply), "--observer-dir", f"output/local_ai_runs/{concrete_stamp}_observer",
             "--require-concrete-product",
-        ], repo)
+        ], repo, source_repo)
         lifecycle_result = run([
             sys.executable, str(lifecycle_tool), "--repo-root", str(repo), "--stamp", concrete_stamp,
             "--observer-dir", f"output/local_ai_runs/{concrete_stamp}_observer",
             "--require-public-events", "--require-concrete-exit",
             "--output", "output/validation/concrete_lifecycle.json",
-        ], repo)
+        ], repo, source_repo)
         concrete_ok = entry_result["returncode"] == 0 and exit_result["returncode"] == 0 and lifecycle_result["returncode"] == 0
         cases.append({"name": "entry_exit_lifecycle_pass_with_concrete_product", "passed": concrete_ok, "entry": entry_result, "exit": exit_result, "lifecycle": lifecycle_result})
         if not concrete_ok:
