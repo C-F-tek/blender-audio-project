@@ -1911,37 +1911,56 @@ if ($PrepareReviewPr) {
     $ReviewPrMd = "$ValidationDir/review_pr_prepare_${ModeName}_$Stamp.md"
     $ReviewEvidenceJson = Join-Path $EvidenceDir ("review_pr_prepare_{0}.json" -f $Stamp)
     $ReviewEvidenceMd = Join-Path $EvidenceDir ("review_pr_prepare_{0}.md" -f $Stamp)
-    $ReviewArgs = @(
-        ".\Tools\ai\prepare_review_pr.py",
-        "--repo-root", ".",
-        "--Stamp", $Stamp,
-        "--task-file", $TaskFile,
-        "--branch", $ReviewPrBranch,
-        "--base", $ReviewPrBaseBranch,
-        "--remote", $ReviewPrRemote,
-        "--title", $ReviewPrTitle,
-        "--commit-message", $ReviewPrCommitMessage,
-        "--output", $ReviewPrJson,
-        "--markdown-output", $ReviewPrMd,
-        "--evidence-output", $ReviewEvidenceJson,
-        "--evidence-markdown-output", $ReviewEvidenceMd,
-        "--allow-dirty-branch"
-    )
-    foreach ($PathValue in @(Split-ReviewPrIncludePaths -Values $ReviewPrIncludePath)) {
-        if (-not [string]::IsNullOrWhiteSpace($PathValue)) {
-            $ReviewArgs += @("--include-path", $PathValue)
+        $ReviewPrArgsContextJson = "$ValidationDir/review_pr_prepare_args_context_${ModeName}_$Stamp.json"
+        $ReviewPrArgsJson = "$ValidationDir/review_pr_prepare_args_${ModeName}_$Stamp.json"
+    
+        $ReviewPrApplyReport = ""
+        if ((Get-Variable -Name PatchSuggestionJson -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $PatchSuggestionJson -PathType Leaf)) {
+            $ReviewPrApplyReport = $PatchSuggestionJson
         }
-    }
-    if ($ReviewPrPush) { $ReviewArgs += "--push" }
-    if ($ReviewPrCreate) { $ReviewArgs += "--create-pr" }
-    if ($ReviewPrDraft) { $ReviewArgs += "--draft-pr" }
-    if ((Get-Variable -Name PatchSuggestionJson -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $PatchSuggestionJson -PathType Leaf)) {
-        $ReviewArgs += @("--apply-report", $PatchSuggestionJson, "--auto-include-from-apply-report")
-    }
-    if ($DryRun) { $ReviewArgs += "--dry-run" }
+    
+        $ReviewPrArgsContext = [ordered]@{
+            repo_root = "."
+            stamp = $Stamp
+            task_file = $TaskFile
+            branch = $ReviewPrBranch
+            base = $ReviewPrBaseBranch
+            remote = $ReviewPrRemote
+            title = $ReviewPrTitle
+            commit_message = $ReviewPrCommitMessage
+            output = $ReviewPrJson
+            markdown_output = $ReviewPrMd
+            evidence_output = $ReviewEvidenceJson
+            evidence_markdown_output = $ReviewEvidenceMd
+            include_paths = @($ReviewPrIncludePath)
+            apply_report = $ReviewPrApplyReport
+            auto_include_from_apply_report = [bool](-not [string]::IsNullOrWhiteSpace($ReviewPrApplyReport))
+            allow_dirty_branch = $true
+            push = [bool]$ReviewPrPush
+            create_pr = [bool]$ReviewPrCreate
+            draft_pr = [bool]$ReviewPrDraft
+            dry_run = [bool]$DryRun
+        }
+        ($ReviewPrArgsContext | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $ReviewPrArgsContextJson -Encoding UTF8
+    
+        $PhaseStatus.review_pr_prepare_args = Invoke-Checked "Build review PR prepare args" {
+            & $ResolvedPythonExe "Tools/ai/build_review_pr_prepare_args.py" `
+                "--context", $ReviewPrArgsContextJson `
+                "--output", $ReviewPrArgsJson
+        } -SoftFail:$ContinueOnValidationError
+    
+        $ReviewPrArgsReport = Get-Content -LiteralPath $ReviewPrArgsJson -Raw | ConvertFrom-Json
+        if (-not [bool]$ReviewPrArgsReport.passed) {
+            throw "Review PR prepare args builder failed: $($ReviewPrArgsReport.errors -join '; ')"
+        }
+        $ReviewArgs = @($ReviewPrArgsReport.argv | ForEach-Object { [string]$_ })
     $PhaseStatus.review_pr_prepare = Invoke-Checked "Prepare review branch and PR" {
         Invoke-Python $ReviewArgs
     } -SoftFail:$ContinueOnValidationError
+    if (Test-Path -LiteralPath $ReviewPrArgsJson -PathType Leaf) {
+        $ReportFiles += $ReviewPrArgsJson
+        $PhaseReports.review_pr_prepare_args = $ReviewPrArgsJson
+    }
     if (Test-Path -LiteralPath $ReviewPrJson -PathType Leaf) {
         $ReportFiles += $ReviewPrJson
         $ContextFiles = Add-ExistingContextFile $ContextFiles $ReviewPrMd

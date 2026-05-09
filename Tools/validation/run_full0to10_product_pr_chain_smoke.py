@@ -40,6 +40,7 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
         "patch_suggestion_final_phase": "Patch suggestion final phase product",
         "patch_suggestion_product_separation": "Validate patch suggestion product separation",
         "patch_suggestion_product_gate": "--require-product",
+        "review_pr_prepare_args_builder": "build_review_pr_prepare_args.py",
         "review_pr_prepare": "Prepare review branch and PR",
         "review_pr_auto_include": "--auto-include-from-apply-report",
         "review_pr_apply_report": "--apply-report",
