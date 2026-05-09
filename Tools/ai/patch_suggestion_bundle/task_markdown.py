@@ -81,7 +81,14 @@ def suggestion_items_from_blocks(blocks: list[dict[str, Any]]) -> list[dict[str,
     return suggestions
 
 
-def build_task_patch_suggestion_report(repo_root: Path, task_file: Path, stamp: str) -> dict[str, Any]:
+def build_task_patch_suggestion_report(
+    repo_root: Path,
+    task_file: Path,
+    stamp: str,
+    *,
+    allow_empty: bool = False,
+    empty_reason: str = "",
+) -> dict[str, Any]:
     """Read a task Markdown file and return a patch suggestion report."""
     errors: list[str] = []
     warnings: list[str] = []
@@ -103,6 +110,10 @@ def build_task_patch_suggestion_report(repo_root: Path, task_file: Path, stamp: 
         operation_count=len(operations),
         failed_count=0,
     )
+    no_task_product = not bool(suggestions)
+    deferred_to_runtime_product = bool(allow_empty and no_task_product and not errors)
+    if deferred_to_runtime_product:
+        warnings.append(empty_reason or "task Markdown has no direct patch suggestions; runtime/generated patch-spec product is expected downstream")
     return {
         "schema_version": 1,
         "kind": "task_markdown_patch_suggestions",
@@ -119,7 +130,10 @@ def build_task_patch_suggestion_report(repo_root: Path, task_file: Path, stamp: 
         "manual_review_required": bool(manual_review),
         "manual_review_product": product,
         "suggestions": suggestions,
-        "passed": not errors and bool(suggestions),
+        "allow_empty": bool(allow_empty),
+        "deferred_to_runtime_product": deferred_to_runtime_product,
+        "empty_reason": empty_reason,
+        "passed": not errors and (bool(suggestions) or deferred_to_runtime_product),
         "errors": errors,
         "warnings": warnings,
     }
@@ -136,6 +150,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Fence blocks: {report.get('fence_block_count')}",
         f"- Suggestions: {report.get('suggestion_count')}",
         f"- Deterministic operations: {report.get('operation_count')}",
+        f"- Deferred to runtime product: {report.get('deferred_to_runtime_product')}",
         f"- Patch application performed: {report.get('patch_application_performed')}",
         "",
         "## Suggestions",
