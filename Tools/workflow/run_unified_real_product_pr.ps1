@@ -24,7 +24,7 @@
   provider budget, observer and review-PR controls remain operator-facing
   parameters.
 
-  It does not merge, force-push, rewrite history, delete branches locally, deploy,
+  It does not merge, forced ref updates, rewrite history, delete branches locally, deploy,
   touch secrets or run Blender/FFmpeg.
 #>
 [CmdletBinding()]
