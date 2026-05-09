@@ -9,11 +9,13 @@ Primary operator entrypoint:
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 ```
 
 Code-driven navigation:
 
 ```text
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
 docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
@@ -93,6 +95,8 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 | Final tool product | `build_full0to10_final_tool_product.py`, `full0to10_final_product/*` | Product/evidence/readiness outputs from Full0To10 surfaces. |
 | Production bundle | `build_shared_toolbox_ai_to_ai_bundle.py` | AI-to-AI evidence/telemetry/patch-plan handoff. |
 | Evidence bundles | `build_github_evidence_bundle.py`, full-run bundle ZIP tools | Compact GitHub evidence only; raw `output/**` stays ignored. |
+
+Use `docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` to classify each family as active, report-only, provider-gated, manual-review, local-private, target or legacy/diagnostic.
 
 ## Patch suggestion and review PR status
 
@@ -210,6 +214,8 @@ Tools/validation/check_file_line_limits.py
 ## Related docs
 
 ```text
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
 docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
