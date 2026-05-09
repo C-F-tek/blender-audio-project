@@ -50,6 +50,9 @@ param(
     [int]$MaxNewTokens = 3600,
     [string]$KeepAlive = "35m",
 
+    [ValidateSet('startup', 'deferred', 'live-seed-only', 'peer', 'post-gpu-provider', 'disabled')]
+    [string]$NpuMicroStartMode = "peer",
+
     [int]$ProviderMaxContextChars = 0,
     [int]$ContextPackMaxTotalChars = 64000,
     [int]$ContextPackMaxFileChars = 4000,
@@ -213,6 +216,7 @@ Add-LauncherArg -Name "-MaxContextFiles" -Value ([string]$MaxContextFiles)
 Add-LauncherArg -Name "-MaxCharsPerFile" -Value ([string]$MaxCharsPerFile)
 Add-LauncherArg -Name "-MaxNewTokens" -Value ([string]$MaxNewTokens)
 Add-LauncherArg -Name "-KeepAlive" -Value $KeepAlive
+Add-LauncherArg -Name "-NpuMicroStartMode" -Value $NpuMicroStartMode
 Add-LauncherArg -Name "-ProviderMaxContextChars" -Value ([string]$ProviderMaxContextChars)
 Add-LauncherArg -Name "-ContextPackMaxTotalChars" -Value ([string]$ContextPackMaxTotalChars)
 Add-LauncherArg -Name "-ContextPackMaxFileChars" -Value ([string]$ContextPackMaxFileChars)
@@ -252,6 +256,7 @@ Write-Host "Files per round: $FilesPerRound"
 Write-Host "Max context files: $MaxContextFiles"
 Write-Host "Max chars per file: $MaxCharsPerFile"
 Write-Host "Max new tokens: $MaxNewTokens"
+Write-Host "NPU micro start mode: $NpuMicroStartMode"
 Write-Host "Provider max context chars: $ProviderMaxContextChars"
 Write-Host "Context pack max total chars: $ContextPackMaxTotalChars"
 Write-Host "Context pack max file chars: $ContextPackMaxFileChars"
