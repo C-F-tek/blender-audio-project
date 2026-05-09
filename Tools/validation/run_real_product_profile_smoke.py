@@ -86,6 +86,9 @@ def main() -> int:
         "launcher_has_peer_manifest": "IA-CARMINE-HEAP-PEER-RUNTIME-MANIFEST-BEGIN" in launcher_text,
         "launcher_has_closure_audit": "IA-CARMINE-HEAP-EXCHANGE-CLOSURE-AUDIT-BEGIN" in launcher_text,
         "launcher_has_final_chain_contract": "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN" in launcher_text,
+        "mandatory_preflight_gate": "run_real_product_preflight_gate.py" in text and "Mandatory real product preflight failed" in text,
+        "does_not_expose_skip_preflight": "SkipPreflight" not in text,
+        "exposes_preflight_timeout": "[int]$PreflightTimeoutSeconds" in text,
     }
 
     for name, passed in required_tokens.items():

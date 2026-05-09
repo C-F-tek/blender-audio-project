@@ -81,6 +81,14 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     ).lower()
     broker_text = read_text(repo_root / "Tools/ai/agent_runtime_tool_broker.py")
     broker_exec_text = read_text(repo_root / "Tools/ai/agent_runtime_tool_broker_execution.py")
+    ollama_probe_text = read_text(repo_root / "Tools/ai/run_ollama_provider_probe.py")
+    primary_advisory_text = read_text(repo_root / "Tools/ai/build_workload_quality_lane_routing.py")
+    openvino_gpu0_text = read_text(repo_root / "Tools/ai/build_openvino_gpu0_workload_report.py")
+    gpu0_companion_text = read_text(repo_root / "Tools/ai/build_gpu0_companion_task_lane.py")
+    npu_companion_text = read_text(repo_root / "Tools/ai/build_npu_micro_task_companion_report.py")
+    local_provider_probe_text = read_text(repo_root / "Tools/ai/run_local_provider_probe.py")
+    hardware_ollama_text = read_text(repo_root / "Tools/ai/full0to10_hardware_capability/ollama.py")
+    gpu1_provider_surface = "\n".join([ollama_probe_text, local_provider_probe_text, hardware_ollama_text]).lower()
 
     checks: dict[str, bool] = {
         "task_md_in": has(wrapper_text, "[string]$TaskFile")
@@ -93,17 +101,34 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 
         "gpu1_primary_advisory": has(wrapper_text, "-UsePrimaryAdvisoryProvider")
         and has(wrapper_text, "-UseOllamaAdvisory")
-        and exists(repo_root, "Tools/ai/build_workload_quality_lane_routing.py"),
+        and has(wrapper_text, "-RunOllamaProbe")
+        and (
+            exists(repo_root, "Tools/ai/run_ollama_provider_probe.py")
+            or exists(repo_root, "Tools/ai/run_local_provider_probe.py")
+            or exists(repo_root, "Tools/ai/full0to10_hardware_capability/ollama.py")
+        )
+        and exists(repo_root, "Tools/ai/build_workload_quality_lane_routing.py")
+        and (
+            "ollama" in gpu1_provider_surface
+            or "provider" in gpu1_provider_surface
+            or "probe" in gpu1_provider_surface
+        )
+        and ("primary" in primary_advisory_text.lower() or "advisory" in primary_advisory_text.lower()),
 
         "gpu0_openvino_tool_workload": has(wrapper_text, "-RunOpenVinoGpu0Workload")
         and exists(repo_root, "Tools/ai/build_openvino_gpu0_workload_report.py")
-        and exists(repo_root, "Tools/ai/build_gpu0_companion_task_lane.py"),
+        and exists(repo_root, "Tools/ai/build_gpu0_companion_task_lane.py")
+        and ("openvino" in openvino_gpu0_text.lower())
+        and ("gpu0" in openvino_gpu0_text.lower() or "gpu.0" in openvino_gpu0_text.lower())
+        and ("companion" in gpu0_companion_text.lower()),
 
         "npu_peer_micro_lane": has(wrapper_text, '[string]$NpuMicroStartMode = "peer"')
         and has(wrapper_text, "-NpuMicroStartMode")
         and has(wrapper_text, "-RunNpuProbe")
         and has(wrapper_text, "-RunNpuDecodeSmoke")
-        and exists(repo_root, "Tools/ai/build_npu_micro_task_companion_report.py"),
+        and exists(repo_root, "Tools/ai/build_npu_micro_task_companion_report.py")
+        and ("npu" in npu_companion_text.lower())
+        and ("peer" in wrapper_text.lower()),
 
         "shared_memory_evidence": has(wrapper_text, "-SaveInputsToMemoryDb")
         and has(wrapper_text, "-BuildEvidence")
@@ -214,6 +239,17 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             "sqlite_schema_present": exists(repo_root, "Tools/ai/full0to10_sqlite_memory/schema.py"),
             "sqlite_search_present": exists(repo_root, "Tools/ai/full0to10_sqlite_memory/search.py"),
             "sqlite_ingest_present": exists(repo_root, "Tools/ai/full0to10_sqlite_memory/ingest.py"),
+            "ollama_probe_file_present": exists(repo_root, "Tools/ai/run_ollama_provider_probe.py"),
+            "local_provider_probe_file_present": exists(repo_root, "Tools/ai/run_local_provider_probe.py"),
+            "hardware_ollama_file_present": exists(repo_root, "Tools/ai/full0to10_hardware_capability/ollama.py"),
+            "gpu1_provider_surface_mentions_ollama": "ollama" in gpu1_provider_surface,
+            "gpu1_provider_surface_mentions_provider_or_probe": "provider" in gpu1_provider_surface or "probe" in gpu1_provider_surface,
+            "ollama_probe_path_declares_ollama": "ollama" in "Tools/ai/run_ollama_provider_probe.py".lower(),
+            "ollama_probe_mentions_ollama": "ollama" in ollama_probe_text.lower(),
+            "ollama_probe_mentions_provider_or_probe": "provider" in ollama_probe_text.lower() or "probe" in ollama_probe_text.lower(),
+            "openvino_gpu0_mentions_openvino": "openvino" in openvino_gpu0_text.lower(),
+            "openvino_gpu0_mentions_gpu0": "gpu0" in openvino_gpu0_text.lower() or "gpu.0" in openvino_gpu0_text.lower(),
+            "npu_companion_mentions_npu": "npu" in npu_companion_text.lower(),
         },
         **checks,
         "provider_execution_performed": False,

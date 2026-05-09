@@ -74,6 +74,7 @@ param(
 
     [switch]$AllowDirty,
     [switch]$SkipGitSync,
+    [int]$PreflightTimeoutSeconds = 120,
     [switch]$DryRun
 )
 
@@ -178,6 +179,44 @@ if (-not (Test-Path -LiteralPath $Launcher -PathType Leaf)) {
     throw "Unified launcher missing: $Launcher"
 }
 
+$PreflightGate = Join-Path $ResolvedRepoRoot "Tools/validation/run_real_product_preflight_gate.py"
+if (-not (Test-Path -LiteralPath $PreflightGate -PathType Leaf)) {
+    throw "Mandatory real product preflight gate missing: $PreflightGate"
+}
+
+$ResolvedPythonExe = $PythonExe
+if ([string]::IsNullOrWhiteSpace($ResolvedPythonExe)) {
+    if (-not [string]::IsNullOrWhiteSpace($env:IA_CARMINE_PYTHON)) {
+        $ResolvedPythonExe = $env:IA_CARMINE_PYTHON
+    }
+    elseif (Test-Path -LiteralPath (Join-Path $ResolvedRepoRoot ".venv/Scripts/python.exe") -PathType Leaf) {
+        $ResolvedPythonExe = Join-Path $ResolvedRepoRoot ".venv/Scripts/python.exe"
+    }
+    else {
+        $ResolvedPythonExe = "python"
+    }
+}
+
+$PreflightOutput = Join-Path $ResolvedRepoRoot "output/validation/real_product_profile_preflight_$Stamp.json"
+$PreflightMarkdown = Join-Path $ResolvedRepoRoot "output/validation/real_product_profile_preflight_$Stamp.md"
+
+Write-Host "=== IA-Carmine mandatory real product preflight ==="
+Write-Host "Preflight gate: $PreflightGate"
+Write-Host "Preflight timeout seconds: $PreflightTimeoutSeconds"
+Write-Host "Python: $ResolvedPythonExe"
+& $ResolvedPythonExe $PreflightGate `
+    --repo-root $ResolvedRepoRoot `
+    --output $PreflightOutput `
+    --markdown-output $PreflightMarkdown `
+    --timeout-seconds $PreflightTimeoutSeconds
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Mandatory real product preflight failed. See $PreflightOutput"
+}
+
+Write-Host "[OK] Mandatory real product preflight passed: $PreflightOutput"
+Write-Host ""
+
 $script:LauncherArgs = @(
     "-NoProfile", "-ExecutionPolicy", "Bypass",
     "-File", $Launcher,
@@ -264,6 +303,7 @@ Write-Host "Agent state max memory chars: $AgentStateMaxMemoryChars"
 Write-Host "Max recommendations: $MaxRecommendations"
 Write-Host "Max patch plans: $MaxPatchPlans"
 Write-Host "Official adapter timeout seconds: $OfficialAdapterTimeoutSeconds"
+Write-Host "Preflight timeout seconds: $PreflightTimeoutSeconds"
 Write-Host "Observer consoles: $OpenObserverConsoles"
 Write-Host "Extended observer consoles: $OpenExtendedObserverConsoles"
 Write-Host "Observer refresh seconds: $ObserverRefreshSeconds"
