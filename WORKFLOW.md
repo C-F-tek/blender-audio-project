@@ -46,6 +46,9 @@ AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
 docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
@@ -87,6 +90,14 @@ The active local AI workflow entrypoint is:
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+```
+
+Decision maps:
+
+```text
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
 ```
 
 Normal workflows must not bypass the single-owner scripts.
@@ -147,6 +158,8 @@ Preferred replacement wording:
 ```text
 Status: historical / superseded by the unified launcher and code-driven maps.
 Current entrypoint: docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md.
+Current capability map: docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md.
+Current parameter map: docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md.
 Current source-derived behavior: docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md.
 ```
 
@@ -159,6 +172,9 @@ Root workflow and README files are descriptive. They should link to command owne
 | Command family | Canonical owner |
 |---|---|
 | Full local AI / 0-to-10 launcher commands | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
+| Launcher parameter selection | `docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
+| Current capability status | `docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
+| Hidden/old script review | `docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` |
 | Launcher manifest fields | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
 | Code-derived behavior | `docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md` |
 | Script ownership | `docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md` |
@@ -211,6 +227,7 @@ Use inventories before broad documentation or code refactors.
 ```text
 Markdown inventory -> canonical docs, obsolete docs, generated/evidence docs, missing index review
 Script inventory -> scripts/tools, functions/classes/methods, descriptions, refactor discovery
+Script aging audit -> oldest/hidden wrappers to review before deprecation/removal
 Python line-count and file-line-limit reports -> maintainability and split/refactor evidence
 Tool placement audit -> canonical and non-canonical tool classification
 ```
@@ -345,6 +362,9 @@ follow-up
 ```text
 root docs are command-light and owner-linked
 commands live in owning runbooks/tool READMEs
+capability depth map is linked before historical runbooks
+parameter decision map is linked before copied command blocks
+script aging audit is linked before cleanup/deprecation work
 unified launcher remains the active local-AI entrypoint
 single-owner scripts are not duplicated or bypassed
 Full0To10 remains opt-out by lane, not opt-in per capability
