@@ -47,6 +47,8 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
     }
 
     required_tokens = {
+        "workflow:task_ingress_contract": ("workflow", "build_task_ingress_contract.py"),
+        "workflow:task_ingress_contract_marker": ("workflow", "IA-CARMINE-TASK-INGRESS-CONTRACT-BEGIN"),
         "workflow:heap_exchange_entry": ("workflow", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-BEGIN"),
         "workflow:heap_exchange_entry_ensure": ("workflow", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-BEGIN"),
         "workflow:heap_peer_runtime_manifest": ("workflow", "build_heap_peer_runtime_manifest.py"),
@@ -92,6 +94,7 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
 
     workflow_text = texts["workflow"]
     ordered_tokens = [
+        ("task_ingress_contract", "IA-CARMINE-TASK-INGRESS-CONTRACT-BEGIN"),
         ("heap_exchange_entry", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-BEGIN"),
         ("heap_peer_runtime_manifest", "IA-CARMINE-HEAP-PEER-RUNTIME-MANIFEST-BEGIN"),
         ("heap_exchange_closure_audit", "IA-CARMINE-HEAP-EXCHANGE-CLOSURE-AUDIT-BEGIN"),
