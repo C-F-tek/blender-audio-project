@@ -386,3 +386,25 @@ The runtime mesh contract also requires the OpenVINO peer topology contract as a
 
 This wiring keeps OpenVINO GPU0/NPU topology inside the same Task MD IN -> heap/exchange -> peer lanes -> close -> product readiness -> review PR path.
 <!-- IA-CARMINE-OPENVINO-PEER-TOPOLOGY-WIRING-END -->
+
+<!-- IA-CARMINE-RUNTIME-EVIDENCE-CORRELATION-BEGIN -->
+## Runtime evidence correlation
+
+The real product validation surface includes `Tools/validation/check_runtime_evidence_correlation.py`.
+
+Use it after a real product run to prove that one stamp contains the complete product evidence mesh:
+
+- mandatory preflight result;
+- heap/exchange entry;
+- heap peer runtime manifest;
+- GPU0 OpenVINO peer/support evidence;
+- NPU micro peer evidence;
+- shared memory / AI-to-AI evidence;
+- tool broker capability or usage telemetry;
+- heap/exchange closure audit;
+- review PR product readiness;
+- `prepare_review_pr.py` result;
+- final unified chain contract.
+
+The smoke `Tools/validation/run_runtime_evidence_correlation_smoke.py` is also part of the mandatory preflight to prevent drift in the validator itself. It is report-only and does not execute providers or apply patches.
+<!-- IA-CARMINE-RUNTIME-EVIDENCE-CORRELATION-END -->
