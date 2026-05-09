@@ -366,3 +366,13 @@ The preflight gate runs profile, intrinsic capability, runtime mesh, review PR a
 
 It is the safe static readiness gate before entering the dynamic heap/exchange runtime.
 <!-- IA-CARMINE-REAL-PRODUCT-PREFLIGHT-GATE-END -->
+
+<!-- IA-CARMINE-MANDATORY-PREFLIGHT-BEGIN -->
+## Mandatory real product preflight
+
+The real product wrapper always runs `Tools/validation/run_real_product_preflight_gate.py` before delegating to the heap/exchange launcher.
+
+There is no skip switch for this gate. A failed preflight stops the run before provider activity, patch application, Blender/FFmpeg execution or review-PR preparation.
+
+The provider surface checked by the runtime mesh contract includes Ollama/GPU1 advisory wiring, OpenVINO/GPU0 workload wiring, NPU peer micro lane, SQLite FTS memory, broker/tool-agnostic execution, direct reasoning assistance, static deterministic product lane, heap/exchange close and final review PR readiness.
+<!-- IA-CARMINE-MANDATORY-PREFLIGHT-END -->
