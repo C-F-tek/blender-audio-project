@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Build draft repo patch specs from validated proposal reports.
+"""Build repo patch specs from validated proposal reports.
 
-The generated specs are intentionally inert drafts: they contain target files and
-review metadata, but no replacements. They are written under output/ by default
-and must not be used as the GitHub Action queue without a separate review step.
+By default, proposals remain inert metadata-only drafts. A proposal may also
+carry reviewed concrete_operations; those are copied into the generated patch
+spec only when they are allowlisted deterministic operations against safe,
+existing repository files.
 """
 from __future__ import annotations
 
@@ -34,8 +35,21 @@ SKIPPED_OUTPUT_KINDS = {
     "path_group",
 }
 
+CONCRETE_OPERATION_NAMES = {
+    "replace_once",
+    "append_once",
+    "insert_after_once",
+    "insert_before_once",
+    "write_file",
+}
+
 FORBIDDEN_TARGET_PREFIXES = (
     "indexAI/",
+    "indexAI/code_chunks/",
+    "indexAI/project_code_chunks/",
+    "output/",
+    "docs/LOCAL_VALIDATION_EVIDENCE/",
+    "renders/",
     "Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/",
     "patch_specs/inbox/",
 )
@@ -50,9 +64,9 @@ FORBIDDEN_TARGET_FRAGMENTS = (
 )
 
 DEFAULT_GUARDRAILS = [
-    "Draft specs are metadata-only and contain no replacements.",
+    "Draft specs are metadata-only unless concrete_operations were explicitly supplied by a proposal.",
     "Do not copy drafts into patch_specs/inbox/ without explicit human approval.",
-    "Run Tools/repo_patch_runner/apply_repo_mods.py --dry-run before any --write use.",
+    "Run generated patch-spec apply in a review branch and inspect the result before PR creation.",
     "Keep provider execution explicit and report-bound.",
 ]
 
@@ -158,11 +172,7 @@ def proposal_outputs(proposal: dict[str, Any]) -> list[dict[str, Any]]:
     return [output_descriptor_from_target(str(path)) for path in target_files if str(path).strip()]
 
 
-def build_operation(
-    *,
-    proposal_id: str,
-    output: dict[str, Any],
-) -> dict[str, Any]:
+def build_metadata_operation(*, proposal_id: str, output: dict[str, Any]) -> dict[str, Any]:
     return {
         "path": normalize_repo_path(output.get("path")),
         "replacements": [],
@@ -181,6 +191,66 @@ def build_operation(
     }
 
 
+def build_concrete_operation(*, proposal_id: str, raw: dict[str, Any], repo_root: Path) -> tuple[dict[str, Any] | None, str]:
+    operation = str(raw.get("operation") or "").strip().lower().replace("-", "_")
+    path = normalize_repo_path(raw.get("path"))
+    if operation not in CONCRETE_OPERATION_NAMES:
+        return None, f"unsupported concrete operation: {operation or '(missing)'}"
+    error = target_path_error(path, repo_root)
+    if error:
+        return None, error
+
+    item: dict[str, Any] = {
+        "proposal_id": raw.get("proposal_id") or proposal_id,
+        "id": raw.get("id") or raw.get("source_id") or proposal_id,
+        "path": path,
+        "operation": operation,
+        "content_status": "concrete_review_ready",
+        "draft_status": "concrete_review_ready",
+        "source_id": raw.get("source_id") or proposal_id,
+        "family": raw.get("family") or "repository_change_proposals",
+        "description": raw.get("description") or "concrete operation from repository proposal",
+        "require_contains_after": raw.get("require_contains_after") or [],
+        "forbid_contains_after": raw.get("forbid_contains_after") or [],
+    }
+
+    for key in ("find", "replace", "content"):
+        value = raw.get(key)
+        if isinstance(value, str):
+            item[key] = value
+    if operation == "replace_once" and not ("find" in item and "replace" in item):
+        return None, "replace_once requires find and replace"
+    if operation in {"append_once", "write_file"} and "content" not in item:
+        return None, f"{operation} requires content"
+    if operation in {"insert_after_once", "insert_before_once"} and not ("find" in item and "content" in item):
+        return None, f"{operation} requires find and content"
+    return item, ""
+
+
+def concrete_operations_from_proposal(
+    proposal: dict[str, Any],
+    *,
+    proposal_id: str,
+    repo_root: Path,
+) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+    operations: list[dict[str, Any]] = []
+    skipped: list[dict[str, str]] = []
+    raw_operations = proposal.get("concrete_operations")
+    if not isinstance(raw_operations, list):
+        return operations, skipped
+    for raw in raw_operations:
+        if not isinstance(raw, dict):
+            skipped.append({"path": "", "reason": "concrete operation is not an object"})
+            continue
+        operation, error = build_concrete_operation(proposal_id=proposal_id, raw=raw, repo_root=repo_root)
+        if error:
+            skipped.append({"path": normalize_repo_path(raw.get("path")), "reason": error})
+            continue
+        if operation:
+            operations.append(operation)
+    return operations, skipped
+
+
 def build_spec_for_proposal(
     *,
     proposal: dict[str, Any],
@@ -196,8 +266,19 @@ def build_spec_for_proposal(
         skipped.append({"path": "", "reason": "proposal apply_mode is not manual_review_only"})
         return None, skipped
 
+    concrete_ops, concrete_skipped = concrete_operations_from_proposal(
+        proposal,
+        proposal_id=proposal_id,
+        repo_root=repo_root,
+    )
+    operations.extend(concrete_ops)
+    skipped.extend(concrete_skipped)
+
+    concrete_paths = {str(item.get("path") or "") for item in concrete_ops}
     for output in proposal_outputs(proposal):
         path = normalize_repo_path(output.get("path"))
+        if path in concrete_paths:
+            continue
         artifact_kind = str(output.get("artifact_kind") or "")
         write_policy = output.get("write_policy")
         if write_policy != EXPECTED_APPLY_MODE:
@@ -217,11 +298,12 @@ def build_spec_for_proposal(
             skipped.append({"path": path, "reason": "duplicate target path in proposal"})
             continue
         seen_paths.add(path)
-        operations.append(build_operation(proposal_id=proposal_id, output=output))
+        operations.append(build_metadata_operation(proposal_id=proposal_id, output=output))
 
     if not operations:
         return None, skipped
 
+    draft_status = "concrete_review_ready" if concrete_ops else "needs_concrete_replacements"
     spec = {
         "version": 1,
         "schema_version": 1,
@@ -234,9 +316,9 @@ def build_spec_for_proposal(
         "proposal_area": proposal.get("area") or "",
         "proposal_priority": proposal.get("priority") or "",
         "apply_mode": EXPECTED_APPLY_MODE,
-        "draft_status": "needs_concrete_replacements",
+        "draft_status": draft_status,
         "provider_execution_performed": False,
-        "description": f"Draft patch spec for {proposal_id}: {proposal.get('title') or 'repository proposal'}",
+        "description": f"Patch spec for {proposal_id}: {proposal.get('title') or 'repository proposal'}",
         "operations": operations,
         "validation_commands": proposal.get("validation_commands") or [],
         "stop_conditions": proposal.get("stop_conditions") or [],
@@ -251,17 +333,18 @@ def render_manifest_markdown(manifest: dict[str, Any]) -> str:
     lines = ["# Proposal Patch Spec Drafts", ""]
     lines.append(f"- Generated at: `{manifest['generated_at']}`")
     lines.append(f"- Source proposal report: `{manifest['source_proposal_report']}`")
-    lines.append(f"- Draft spec count: `{manifest['patch_spec_count']}`")
+    lines.append(f"- Patch spec count: `{manifest['patch_spec_count']}`")
+    lines.append(f"- Concrete spec count: `{manifest['concrete_spec_count']}`")
     lines.append(f"- Skipped target count: `{manifest['skipped_target_count']}`")
     lines.append(f"- Provider execution performed: `{manifest['provider_execution_performed']}`")
     lines.append("")
-    lines.append("## Draft specs")
+    lines.append("## Specs")
     lines.append("")
     if manifest["specs"]:
         for item in manifest["specs"]:
             lines.append(
                 f"- `{item['proposal_id']}` -> `{item['path']}` "
-                f"({item['operation_count']} target operations)"
+                f"({item['operation_count']} target operations, status `{item['draft_status']}`)"
             )
     else:
         lines.append("- none")
@@ -277,7 +360,7 @@ def render_manifest_markdown(manifest: dict[str, Any]) -> str:
     lines.append("")
     lines.append("## Guardrail")
     lines.append("")
-    lines.append("These drafts are not queued patches. Keep them under `output/` until a human or trusted agent adds concrete replacements and dry-runs the spec.")
+    lines.append("Specs remain review-only. Concrete operations are deterministic candidates, not an automatic merge.")
     return "\n".join(lines) + "\n"
 
 
@@ -307,17 +390,18 @@ def build_patch_specs(
     specs: list[dict[str, Any]] = []
     skipped_targets: list[dict[str, str]] = []
 
-    for proposal in proposals[:max_proposals] if max_proposals is not None else proposals:
-        if not isinstance(proposal, dict):
+    proposal_items = proposals[:max_proposals] if max_proposals is not None else proposals
+    for item in proposal_items:
+        if not isinstance(item, dict):
             skipped_targets.append({"proposal_id": "unknown", "path": "", "reason": "proposal item is not an object"})
             continue
-        proposal_id = str(proposal.get("id") or "proposal")
+        proposal_id = str(item.get("id") or "proposal")
         spec, skipped = build_spec_for_proposal(
-            proposal=proposal,
+            proposal=item,
             proposal_report_path=proposal_path,
             repo_root=repo_root,
         )
-        skipped_targets.extend({"proposal_id": proposal_id, **item} for item in skipped)
+        skipped_targets.extend({"proposal_id": proposal_id, **target} for target in skipped)
         if spec is None:
             continue
         spec_path = spec_dir / f"{sanitize_filename(proposal_id)}.json"
@@ -329,10 +413,14 @@ def build_patch_specs(
                 "kind": SPEC_KIND,
                 "draft_status": spec["draft_status"],
                 "operation_count": len(spec["operations"]),
+                "concrete_operation_count": sum(
+                    1 for op in spec["operations"] if op.get("draft_status") == "concrete_review_ready"
+                ),
                 "operations": [
                     {
                         "path": op["path"],
                         "artifact_kind": op.get("artifact_kind"),
+                        "operation": op.get("operation"),
                         "draft_status": op.get("draft_status"),
                     }
                     for op in spec["operations"]
@@ -340,6 +428,7 @@ def build_patch_specs(
             }
         )
 
+    concrete_spec_count = sum(1 for item in specs if item.get("concrete_operation_count", 0) > 0)
     manifest = {
         "schema_version": 1,
         "kind": MANIFEST_KIND,
@@ -352,8 +441,9 @@ def build_patch_specs(
         "warnings": warnings,
         "provider_execution_performed": False,
         "apply_mode": EXPECTED_APPLY_MODE,
-        "draft_status": "needs_concrete_replacements",
+        "draft_status": "concrete_review_ready" if concrete_spec_count else "needs_concrete_replacements",
         "patch_spec_count": len(specs),
+        "concrete_spec_count": concrete_spec_count,
         "skipped_target_count": len(skipped_targets),
         "specs": specs,
         "skipped_targets": skipped_targets,
@@ -402,6 +492,7 @@ def main() -> int:
                 "manifest_json": manifest["manifest_json"],
                 "manifest_markdown": manifest["manifest_markdown"],
                 "patch_spec_count": manifest["patch_spec_count"],
+                "concrete_spec_count": manifest["concrete_spec_count"],
                 "skipped_target_count": manifest["skipped_target_count"],
             },
             indent=2,
