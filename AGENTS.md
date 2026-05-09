@@ -9,17 +9,22 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 1. read `AGENTS.md`;
 2. read `CHATGPT.md` and `CHATGPT/README.md` when resuming ChatGPT-assisted, local-AI, full-toolbox or handoff-driven work;
 3. read `docs/README.md` for the current documentation index;
-4. read `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` for the current IN -> dynamic heap/exchange -> deterministic OUT operating model;
-5. read `docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` for the compact AI first-orientation map;
-6. read `docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md` when documentation appears conflicting or stale;
-7. read `docs/LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md` when classifying, deleting, splitting or refactoring old docs/index/discovery surfaces;
-8. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for the current code/state bridge when present;
-9. read `docs/MAIN_RUNTIME_ARCHITECTURE.md` when working on runtime, provider, broker, validator, telemetry or workflow architecture;
-10. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
-11. read `docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md` before converting patch-note suggestions into source edits;
-12. follow hard guardrails unless the human explicitly approves a normally restricted action;
-13. inspect the target source/document before proposing or applying a patch;
-14. report conflicts between the request, code, docs, evidence and guardrails before modifying files.
+4. read `docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md` for the current run/document router;
+5. read `docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md` before launching or modifying the real product run path;
+6. read `docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md` when checking whether docs still match code;
+7. read `docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md` before hygiene work on run/product artifacts;
+8. read `docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md` before adding or expanding operational Markdown;
+9. read `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` for the IN -> dynamic heap/exchange -> deterministic OUT operating model;
+10. read `docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` for the compact AI first-orientation map;
+11. read `docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md` when documentation appears conflicting or stale;
+12. read `docs/LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md` when classifying, deleting, splitting or refactoring old docs/index/discovery surfaces;
+13. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for older code/state bridge context when present;
+14. read `docs/MAIN_RUNTIME_ARCHITECTURE.md` when working on runtime, provider, broker, validator, telemetry or workflow architecture;
+15. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
+16. read `docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md` before converting patch-note suggestions into source edits;
+17. follow hard guardrails unless the human explicitly approves a normally restricted action;
+18. inspect the target source/document before proposing or applying a patch;
+19. report conflicts between the request, code, docs, evidence and guardrails before modifying files.
 
 ## Repository identity
 
@@ -29,10 +34,13 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 | Repository | `C-F-tek/blender-audio-project` |
 | Main language | Python |
 | Active architecture | Shared runtime heap / blackboard, provider-lane orchestration, broker execution, semantic tools registry, deterministic CPU validators, telemetry/evidence workflows |
+| Operator product entrypoint | `Tools/workflow/run_unified_real_product_pr.ps1` |
+| Dynamic heap/exchange launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` |
 | Primary provider lane | `GPU1 / Ollama / RTX 5080 -> primary advisory planner/worker` |
-| Secondary provider lane | `GPU0 / OpenVINO -> coworker/helper peer worker and tool-request producer` |
-| Microtask provider lane | `NPU / OpenVINO -> microtask responder, support lane, probe and diagnostics` |
+| Secondary provider lane | `GPU0 / OpenVINO -> observable support workload and peer evidence lane` |
+| Micro peer lane | `NPU / OpenVINO -> peer micro diagnostic/report lane until compute-provider behavior is validated` |
 | Current source-write boundary | `Tools/ai/patchkit/apply_patch_bundle.py` for reviewed patchkit bundles when operations can express the change |
+| Current generated-product boundary | generated patch specs plus `Tools/ai/apply_generated_patch_specs_for_review_pr.py` for concrete review PR operations |
 | Legacy domain | Blender audio-reactive scene automation |
 
 The repository name is historical. Do not infer that Blender/audio is the current architectural boundary.
@@ -44,6 +52,11 @@ AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
 docs/README.md
+docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
+docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md
+docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
@@ -82,15 +95,18 @@ nearest package/tool README
 target file
 ```
 
-For full toolbox, refactor, provider or 0-to-10 local AI runs, the active entrypoint is:
+For real product, full toolbox, refactor, provider or run-unica local AI runs, the current entrypoint model is:
 
 ```text
-docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
-docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
-docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
-docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
-Tools/workflow/run_unified_local_ai_refactor.ps1
+Operator product path:
+  Tools/workflow/run_unified_real_product_pr.ps1
+  docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+  docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+
+Dynamic launcher / diagnostic path:
+  Tools/workflow/run_unified_local_ai_refactor.ps1
+  docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+  docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 ```
 
 ## Markdown coherence policy
@@ -115,7 +131,6 @@ link all parts from the compact index
 ```
 
 Generated evidence may exceed 500 lines only when it has compact JSON/Markdown manifest, summary or index and is not used as a primary entrypoint.
-
 
 ## Markdown edit and encoding safety rule
 
@@ -151,19 +166,26 @@ never treat generated indexes/evidence as maintained source docs
 Current compact operational state:
 
 ```text
-Baseline: master after PR #251 merge
-Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Baseline: master after PR #296 merge and subsequent docs alignment commits
+Product wrapper: Tools/workflow/run_unified_real_product_pr.ps1
+Dynamic launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Current run index: docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+Current runbook: docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
 Current operating model: docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 AI orientation map: docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 Documentation panorama/staleness map: docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 Repository hygiene procedure: docs/LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md
 Capability map: docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 Parameter map: docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+Docs/code alignment audit: docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
+Problems/hygiene backlog: docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md
+Markdown line-budget triage: docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
 Docs bridge: docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 Main runtime architecture: docs/MAIN_RUNTIME_ARCHITECTURE.md
 Patchkit boundary: Tools/ai/patchkit/apply_patch_bundle.py
+Generated product boundary: Tools/ai/apply_generated_patch_specs_for_review_pr.py
 Current mode: code-driven, docs-first updates unless source changes are explicitly scoped
-Review posture: no merge to master unless explicitly requested
+Review posture: no destructive actions, force-push, deploy, permission/secret changes or protected-branch merge unless explicitly requested
 ```
 
 The earlier broker telemetry gap is resolved/historical unless a new regression is found. Use `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` and newer telemetry evidence for the recent baseline.
@@ -175,11 +197,12 @@ The primary runtime target is:
 ```text
 shared runtime heap / blackboard
 ├─ GPU1 primary advisory / planner
-├─ GPU0 coworker/helper OpenVINO
-├─ NPU microtask responder
+├─ GPU0 OpenVINO observable support workload
+├─ NPU peer micro diagnostic/report lane
 ├─ broker unico executor
 ├─ semantic tools registry
 ├─ deterministic validators / CPU authority
+├─ generated patch-spec product lane
 └─ telemetry/event stream
 ```
 
@@ -191,6 +214,7 @@ broker unico executor is the execution gateway for registered tools
 semantic tools registry is the capability source of truth
 deterministic validators on CPU remain local pass/fail authority
 telemetry/event stream records executed, skipped, degraded and blocked phases
+generated patch specs must become concrete deterministic operations before review PR product success
 ```
 
 Current runtime boundary:
@@ -327,9 +351,9 @@ promote stable principles into canonical docs/LOCAL_AI_TASKS or contract docs
 Canonical production roles:
 
 ```text
-GPU1 / Ollama / RTX 5080 = mandatory primary advisory planner/worker
-GPU0 / OpenVINO = companion peer worker and tool-request producer
-NPU = micro-fast task assistant and lightweight tool-support lane
+GPU1 / Ollama / RTX 5080 = primary advisory planner/worker
+GPU0 / OpenVINO = observable companion peer support workload and tool-request producer
+NPU = peer micro diagnostic/report lane until compute-provider behavior is validated
 deterministic scripts = heavy audit and validation authority
 runtime tool broker = controlled tool execution for GPU1, GPU0 and NPU requests
 broker unico executor = target central execution gateway for registered tools
@@ -337,13 +361,13 @@ semantic tools registry = target capability source of truth
 telemetry/event stream = target visibility surface for executed, skipped, degraded and blocked phases
 ```
 
-GPU1/Ollama must execute the primary advisory lane for real 0Full10/run-unica execution unless explicitly disabled by an operator flag or classified as unavailable/degraded by evidence.
+GPU1/Ollama must execute the primary advisory lane for real run-unica execution unless explicitly disabled by an operator flag or classified as unavailable/degraded by evidence.
 
-GPU0 is not complete when it only performs preflight, smoke, final workload evidence or passive support. GPU0 must move toward peer-worker behavior:
+GPU0 is not complete when it only performs device visibility preflight. GPU0 must provide observable workload/support evidence and move toward peer-worker behavior:
 
 ```text
 GPU1 planner/worker task packet
-  -> GPU0 companion execution
+  -> GPU0 companion execution or observable support workload
   -> GPU0 response/evidence packet
   -> optional GPU0 tool requests
   -> runtime broker execution for GPU0 requests
@@ -355,11 +379,12 @@ GPU1 planner/worker task packet
 
 When `IA_CARMINE_GPU0_COMPANION_MODEL_DIR` is configured, GPU0 may run OpenVINO GenAI tasks on GPU.0. When no companion model is configured, GPU0 may still produce numeric, static, tool-request or report-only evidence, but the run must classify missing semantic companion mode explicitly.
 
-NPU should not be the heavy audit authority when deterministic validators already cover the product. Preferred NPU role:
+NPU should not be documented as a heavy audit or compute authority until a validated compute-provider lane exists. Preferred current NPU role:
 
 ```text
+peer micro diagnostic/report lane
 micro-fast task support
-small checkpoint review
+small checkpoint review when cheap and available
 provider/device diagnostics
 structured helper output
 tool-intelligence support when cheap and available
@@ -370,7 +395,7 @@ NPU tool-support output must stay non-blocking, broker-controlled and visible in
 
 ## Provider-capable `.venv` rule
 
-Before running provider, GPU0, NPU, OpenVINO or 0Full10/run-unica validation, agents must verify:
+Before running provider, GPU0, NPU, OpenVINO or run-unica validation, agents must verify:
 
 ```powershell
 $env:IA_CARMINE_PYTHON = "<repo>\.venv\Scripts\python.exe"
@@ -402,7 +427,7 @@ Every added or changed tool/lane must move through the production path before it
 
 ```text
 implemented code
-  -> wired into the canonical operator entrypoint
+  -> wired into the canonical operator entrypoint or internal launcher according to scope
   -> visible in CLI/help/runbook/operator docs
   -> environment preflight documented when dependencies/providers matter
   -> activated by intended profile or explicit flag
@@ -415,25 +440,26 @@ implemented code
 
 Do not stop at an internal module, helper function, isolated smoke script or hidden command.
 
-For 0Full10/run unica, promoted lanes must be included by default unless disabled by explicit operator flags or classified as unavailable/degraded through manifest, telemetry, phase reports or validator evidence.
+For real run-unica, promoted lanes must be included by default unless disabled by explicit operator flags or classified as unavailable/degraded through manifest, telemetry, phase reports or validator evidence.
 
-## TUTTO SU TUTTO / 0Full10 run-unica rule
+## TUTTO SU TUTTO / run-unica rule
 
-TUTTO SU TUTTO means intelligent combined use of all relevant mapped tools/scripts inside the complete 0Full10 run-unica flow.
+TUTTO SU TUTTO means intelligent combined use of all relevant mapped tools/scripts inside the complete run-unica flow.
 
 It does not mean executing every script blindly. It means the run unica can discover, select, coordinate, validate and report every applicable capability from the maps while respecting guardrails, provider availability, evidence quality and explicit `-No*` opt-outs.
 
 ```text
 mapped capability
   -> lane selection
-  -> preflight / availability classification
+  -> mandatory/static preflight when product path is selected
+  -> availability classification
   -> execution or explicit skip/degraded state
   -> deterministic validation when applicable
   -> telemetry/evidence/bundle publication
   -> recommendation, patch-plan or review-PR product when requested
 ```
 
-0Full10 is the run unica: complete 0-to-10 workflow over the whole active project perimeter.
+0Full10/Full0To10 is legacy compatibility wording for the whole active project perimeter. Current reports should be interpreted through the unified heap/exchange model.
 
 `-Full0To10` is a compatibility/shortcut CLI flag when present in the launcher. It must not be treated as a magic source of semantics. Its behavior should remain expressible as explicit lane composition:
 
@@ -448,29 +474,33 @@ patch/review lanes
 explicit -No* opt-outs
 ```
 
-A valid 0Full10/run-unica execution includes every major phase unless the operator disables a phase explicitly with a `-No*` flag.
+A valid run-unica execution includes every major selected phase unless the operator disables a phase explicitly with a `-No*` flag or the phase is classified unavailable/degraded.
 
-Expected by default:
+Expected by default when the product path selects the corresponding lanes:
 
 ```text
+mandatory real product preflight passed before dynamic runtime
 pipeline adapter ufficiale eseguito
 packet/proposals generati
 GPU1/Ollama primary advisory executed or explicitly classified degraded
-GPU0 companion/peer evidence present when configured or explicitly classified degraded
-NPU micro-fast/tool-support diagnostics present when available
+GPU0 observable support workload evidence present when configured or explicitly classified degraded
+NPU peer micro diagnostic/report evidence present when available
 patch specs creati e validati
 workload quality routing presente
 context pack presente
 SQLite memory IN/OUT presente quando non disabilitata
 heap/exchange runtime entry presente
-heap/exchange runtime state presente
+heap/exchange runtime state/peer manifest presente
 heap/exchange runtime exit product presente quando product lanes are selected
 heap/exchange lifecycle validator presente quando product lanes are selected
+runtime evidence correlation presente quando richiesta
 runtime broker report absorbed into telemetry
+repository change proposals consume current-stamp runtime evidence when available
+generated patch-spec apply report has concrete operations before review PR success
 patch_application_performed=false unless an explicit reviewed patch boundary is selected
 ```
 
-As the main runtime architecture lands, 0Full10 should progressively expose:
+As the main runtime architecture lands, run-unica should progressively expose:
 
 ```text
 blackboard state report
@@ -483,7 +513,7 @@ GPU1/GPU0/NPU lane status reports
 
 Future tools become part of TUTTO SU TUTTO only after they are mapped, wired, guarded, observable and evidence-producing. Architecture targets are expansion space, not current execution claims.
 
-`-RunIntensity quick|balanced|deep|custom` changes budget, rounds, context limits, token limits and keep-alive only. It must not reduce the 0Full10 semantic perimeter.
+`-RunIntensity quick|balanced|deep|custom` changes budget, rounds, context limits, token limits and keep-alive only. It must not reduce the run-unica semantic perimeter.
 
 A missing full-run lane is valid only when one of these is true:
 
@@ -501,11 +531,13 @@ manifest/report records unavailable-tool or provider failure
 | `docs/AI_SESSION_NOTES/` | Compact session notes and decisions. |
 | `Tools/ai/` | AI orchestration, provider probes, evidence bundles, heap/exchange lifecycle helpers and patch-plan tooling. |
 | `Tools/ai/patchkit/` | Reusable controlled patch-bundle application helpers. |
-| `Tools/workflow/` | Local workflow runners and post-validation packet generation. |
+| `Tools/workflow/` | Real product wrapper, unified launcher, local workflow runners and post-validation packet generation. |
 | `Tools/npu/` | NPU/OpenVINO support and diagnostics. |
 | `Tools/validation/` | Non-invasive validators and inventory builders. |
 | `docs/` | Stable documentation contracts and project state. |
 | `docs/MAIN_RUNTIME_ARCHITECTURE.md` | Main runtime topology and blackboard/broker/registry/validator/telemetry contract. |
+| `docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md` | Current run documentation router. |
+| `docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md` | Current operator real product runbook. |
 | `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` | Current runtime operating model. |
 | `docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` | Compact first-orientation map for AI agents. |
 | `docs/LOCAL_AI_TASKS/repository-hygiene-cleanup-and-refactor-procedure-2026-05-09.md` | Automated hygiene/refactor/delete allowlist procedure. |
@@ -534,7 +566,7 @@ merge to master/protected branch
 change secrets, permissions, billing or visibility
 deploy production
 rename repository
-run long Blender renders or heavy GPU workloads
+run long Blender renders or heavy GPU workloads outside an explicitly selected full/provider workflow
 change provider/model execution semantics
 add dependencies
 move package entrypoints
