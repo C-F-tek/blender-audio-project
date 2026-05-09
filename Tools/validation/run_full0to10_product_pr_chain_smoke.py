@@ -95,7 +95,7 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
     workflow_text = texts["workflow"]
     ordered_tokens = [
         ("task_ingress_contract", "IA-CARMINE-TASK-INGRESS-CONTRACT-BEGIN"),
-        ("heap_exchange_entry", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-BEGIN"),
+        ("heap_exchange_entry_ensure", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-BEGIN"),
         ("heap_peer_runtime_manifest", "IA-CARMINE-HEAP-PEER-RUNTIME-MANIFEST-BEGIN"),
         ("heap_exchange_closure_audit", "IA-CARMINE-HEAP-EXCHANGE-CLOSURE-AUDIT-BEGIN"),
         ("patch_suggestion_final_phase", "Patch suggestion final phase product"),
