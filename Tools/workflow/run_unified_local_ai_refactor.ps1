@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
@@ -136,6 +136,11 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+if ($ContinueOnValidationError) {
+    [Console]::Error.WriteLine("-ContinueOnValidationError is forbidden for unified launcher runs. Fix the failing phase instead of allowing a soft-failed run to complete.")
+    exit 2
+}
 
 # IA-CARMINE-UNIFIED-PHASE-VISIBILITY-IMPORT-BEGIN
 $UnifiedPhaseVisibilityScript = Join-Path $PSScriptRoot "unified_phase_visibility.ps1"
