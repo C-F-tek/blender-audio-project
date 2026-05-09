@@ -89,6 +89,23 @@ unclassified
 
 Only high-confidence obsolete files with explicit markers become PatchKit `delete_file` operations.
 
+## Delete marker safety rule
+
+PatchKit cleanup bundle generation must copy `required_marker` from text already present in the target file. The planner must not hardcode a marker such as `superseded` unless that exact marker exists in the target.
+
+Current/protected split paths such as `docs/LOCAL_AI_TASKS/README.md/**` and `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/**` must stay out of automatic delete bundles even when they contain historical wording.
+
+A generated delete candidate is acceptable only when all are true:
+
+~~~text
+target is not protected/current
+target is not generated/runtime/DB evidence
+target contains an explicit delete marker
+bundle required_marker equals the exact marker found in target text
+PatchKit dry-run passes before apply
+~~~
+
+
 ## Phase 3 — split/refactor candidates
 
 Use `refactor_markdown_splits.py` for structural hygiene:
