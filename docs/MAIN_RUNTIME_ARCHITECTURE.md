@@ -8,6 +8,14 @@ It is a stable architecture contract for human maintainers, Codex, ChatGPT-assis
 
 This file is not a command catalog. Current executable runbooks and launcher flags remain in task-specific documentation and workflow scripts.
 
+Current implemented capability depth is tracked separately in:
+
+```text
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+```
+
+Use that map to distinguish active, report-only, provider-gated, manual-review, local-private, target and legacy/diagnostic capabilities before claiming that an architecture component executed.
+
 ## Runtime topology
 
 ```text
@@ -283,6 +291,8 @@ Read with:
 ```text
 AGENTS.md
 docs/README.md
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 docs/AI_PIPELINE_ARCHITECTURE.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md

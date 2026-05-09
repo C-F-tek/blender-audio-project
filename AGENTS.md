@@ -38,6 +38,7 @@ AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/MAIN_RUNTIME_ARCHITECTURE.md
 CHATGPT/next-chat-handoff-*.md                 # when present and relevant
 CHATGPT/chatgpt-session-problems-and-robust-fixes-*.md
@@ -47,6 +48,7 @@ WORKFLOW.md
 docs/README.md
 docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_TASKS/README.md
+docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/gpu-peer-exchange-operational-principle.md
 docs/LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
@@ -71,7 +73,9 @@ target file
 For full toolbox, refactor, provider or 0-to-10 local AI runs, the active entrypoint is:
 
 ```text
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 
@@ -110,12 +114,14 @@ never treat generated indexes/evidence as maintained source docs
 Current compact operational state:
 
 ```text
-Baseline: master after PR #187 merge
+Baseline: master after PR #233 merge
 Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Capability map: docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+Parameter map: docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 Docs bridge: docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 Main runtime architecture: docs/MAIN_RUNTIME_ARCHITECTURE.md
-Current integration candidate: PR #194 codex/md-bundle-telemetry-refactor
-Mode: review-only until explicit human instruction
+Current mode: code-driven, docs-first updates unless source changes are explicitly scoped
+Review posture: no merge to master unless explicitly requested
 ```
 
 The earlier broker telemetry gap is resolved/historical unless a new regression is found. Use `docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md` and newer telemetry evidence for the recent baseline.
@@ -220,7 +226,7 @@ semantic tools registry = target capability source of truth
 telemetry/event stream = target visibility surface for executed, skipped, degraded and blocked phases
 ```
 
-GPU1/Ollama must execute the primary advisory lane for real Full0To10 runs unless explicitly disabled by an operator flag or classified as unavailable/degraded by evidence.
+GPU1/Ollama must execute the primary advisory lane for real 0Full10/run-unica execution unless explicitly disabled by an operator flag or classified as unavailable/degraded by evidence.
 
 GPU0 is not complete when it only performs preflight, smoke, final workload evidence or passive support. GPU0 must move toward peer-worker behavior:
 
@@ -253,7 +259,7 @@ NPU tool-support output must stay non-blocking, broker-controlled and visible in
 
 ## Provider-capable `.venv` rule
 
-Before running provider, GPU0, NPU, OpenVINO or Full0To10 validation, agents must verify:
+Before running provider, GPU0, NPU, OpenVINO or 0Full10/run-unica validation, agents must verify:
 
 ```powershell
 $env:IA_CARMINE_PYTHON = "<repo>\.venv\Scripts\python.exe"
@@ -298,11 +304,40 @@ implemented code
 
 Do not stop at an internal module, helper function, isolated smoke script or hidden command.
 
-For Full0To10, promoted lanes must be included by default unless disabled by explicit operator flags or classified as unavailable/degraded through manifest, telemetry, phase reports or validator evidence.
+For 0Full10/run unica, promoted lanes must be included by default unless disabled by explicit operator flags or classified as unavailable/degraded through manifest, telemetry, phase reports or validator evidence.
 
-## Unified 0-to-10 rule
+## TUTTO SU TUTTO / 0Full10 run-unica rule
 
-A valid `-Full0To10` run includes every major phase unless the operator disables a phase explicitly with a `-No*` flag.
+TUTTO SU TUTTO means intelligent combined use of all relevant mapped tools/scripts inside the complete 0Full10 run-unica flow.
+
+It does not mean executing every script blindly. It means the run unica can discover, select, coordinate, validate and report every applicable capability from the maps while respecting guardrails, provider availability, evidence quality and explicit `-No*` opt-outs.
+
+```text
+mapped capability
+  -> lane selection
+  -> preflight / availability classification
+  -> execution or explicit skip/degraded state
+  -> deterministic validation when applicable
+  -> telemetry/evidence/bundle publication
+  -> recommendation, patch-plan or review-PR product when requested
+```
+
+0Full10 is the run unica: complete 0-to-10 workflow over the whole active project perimeter.
+
+`-Full0To10` is a compatibility/shortcut CLI flag when present in the launcher. It must not be treated as a magic source of semantics. Its behavior should remain expressible as explicit lane composition:
+
+```text
+task input
+run identity
+real-run activation
+intensity/budget
+provider lanes
+evidence lanes
+patch/review lanes
+explicit -No* opt-outs
+```
+
+A valid 0Full10/run-unica execution includes every major phase unless the operator disables a phase explicitly with a `-No*` flag.
 
 Expected by default:
 
@@ -320,7 +355,7 @@ runtime broker report absorbed into telemetry
 patch_application_performed=false
 ```
 
-As the main runtime architecture lands, Full0To10 should progressively expose:
+As the main runtime architecture lands, 0Full10 should progressively expose:
 
 ```text
 blackboard state report
@@ -331,7 +366,9 @@ telemetry/event stream summary
 GPU1/GPU0/NPU lane status reports
 ```
 
-`-RunIntensity quick|balanced|deep|custom` changes budget, rounds, context limits, token limits and keep-alive only. It must not reduce the Full0To10 semantic perimeter.
+Future tools become part of TUTTO SU TUTTO only after they are mapped, wired, guarded, observable and evidence-producing. Architecture targets are expansion space, not current execution claims.
+
+`-RunIntensity quick|balanced|deep|custom` changes budget, rounds, context limits, token limits and keep-alive only. It must not reduce the 0Full10 semantic perimeter.
 
 A missing full-run lane is valid only when one of these is true:
 

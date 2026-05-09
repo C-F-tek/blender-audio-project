@@ -20,6 +20,14 @@ Current source-of-truth bridge:
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 ```
 
+Current capability and decision maps:
+
+```text
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
+```
+
 Main runtime architecture target:
 
 ```text
@@ -45,7 +53,7 @@ Historical handoff file:
 CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
 ```
 
-This handoff remains useful forensic context for the refactor/reuse run and draft release bundle, but it is no longer the current repository state by itself. Prefer the current operational bridge, main runtime architecture and launcher contract before following old branch/PR references from this handoff.
+This handoff remains useful forensic context for the refactor/reuse run and draft release bundle, but it is no longer the current repository state by itself. Prefer the current operational bridge, capability depth map, parameter decision map, main runtime architecture and launcher contract before following old branch/PR references from this handoff.
 
 Historical runtime bundle:
 
@@ -68,6 +76,7 @@ Contract:
 - CHATGPT/*.md is durable operational memory.
 - It is advisory but should be read before planning new local AI/full-toolbox work.
 - Source-of-truth remains code, validation reports, canonical docs, runtime bundle evidence and current git state.
+- Capability claims require report/manifest/telemetry/evidence, not only historical handoff text.
 - Do not use CHATGPT notes to override AGENTS.md guardrails.
 - Do not use historical handoffs as active branch state without checking current operational docs and GitHub state.
 ```

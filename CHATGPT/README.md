@@ -26,29 +26,35 @@ Recommended read order:
 1. AGENTS.md
 2. CHATGPT.md
 3. docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
-4. docs/MAIN_RUNTIME_ARCHITECTURE.md
-5. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
-6. docs/AI_PIPELINE_ARCHITECTURE.md
-7. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-8. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
-9. docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-10. docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
-11. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
-12. docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
-13. docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
-14. docs/LOCAL_AI_TASKS/project-tool-registry.md
-15. docs/TECH_DEBT_TRACKER.md
-16. CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
-17. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
-18. CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md
-19. CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md
-20. AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md
+4. docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+5. docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+6. docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
+7. docs/MAIN_RUNTIME_ARCHITECTURE.md
+8. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+9. docs/AI_PIPELINE_ARCHITECTURE.md
+10. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+11. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+12. docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+13. docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+14. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+15. docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
+16. docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+17. docs/LOCAL_AI_TASKS/project-tool-registry.md
+18. docs/TECH_DEBT_TRACKER.md
+19. CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
+20. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
+21. CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md
+22. CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md
+23. AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md
 ```
 
 Current active follow-up:
 
 ```text
 Use docs/MAIN_RUNTIME_ARCHITECTURE.md as the architecture target for shared runtime heap / blackboard, GPU1 planner, GPU0 OpenVINO helper, NPU microtask responder, broker executor, semantic tools registry, deterministic CPU validators and telemetry/event stream work.
+Use docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md to distinguish current active capability from target architecture.
+Use docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md before choosing launcher flags.
+Use docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md before declaring old wrappers obsolete.
 Keep implementation incremental, report-only first and congruent with the unified launcher and Full0To10 doctrine.
 ```
 
@@ -68,6 +74,8 @@ The historical handoff and bundle remain useful forensic/evidence context, but t
 
 ```text
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 docs/MAIN_RUNTIME_ARCHITECTURE.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
@@ -76,6 +84,9 @@ Current compact context notes:
 
 ```text
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
 docs/MAIN_RUNTIME_ARCHITECTURE.md
 docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
@@ -135,6 +146,8 @@ Non-canonical candidates include root audio entrypoints and Scripting/** Blender
 Promotion to project tool requires placement, CLI/report contract, guardrails and validation.
 Broker promotion requires stricter report-only/no-side-effect guardrails.
 See:
+- docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+- docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
 - docs/LOCAL_AI_TASKS/project-tool-registry.md
 - docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
 - docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md

@@ -22,11 +22,14 @@ Canonical rule:
 LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 ```
 
-## Code-driven navigation
+## Current code-driven entrypoints
 
-Use these maps before historical handoffs or generated evidence snapshots:
+Use these first when an AI needs to understand what the project is, what exists, what can run, and which scripts may be hidden or legacy:
 
 ```text
+LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
 LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
 LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
@@ -38,6 +41,9 @@ Meaning:
 
 | Map | Purpose |
 |---|---|
+| `current-capability-depth-map-2026-05-09.md` | Current active/report-only/provider/manual-review/target capabilities and evidence surfaces. |
+| `unified-launcher-parameter-decision-map-2026-05-09.md` | How to choose launcher parameters by lane instead of reading a flat flag list. |
+| `script-aging-visibility-audit-2026-05-09.md` | Oldest/hidden wrapper notice queue; not a deletion list. |
 | `code-derived-ai-toolchain-map-2026-05-07.md` | Current behavior from source code. |
 | `script-census-and-validation-flow-2026-05-07.md` | Script families, run variants and validation cycles. |
 | `single-owner-scripts-and-flow-boundaries-2026-05-07.md` | Scripts that must not be duplicated or bypassed. |
@@ -89,6 +95,9 @@ Use this order unless a task file says otherwise:
 ../CHATGPT.md
 ../CHATGPT/README.md
 LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
 LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
@@ -141,6 +150,9 @@ DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 | Need | File |
 |---|---|
 | Current operational bridge | `LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
+| Current capability depth | `LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
+| Launcher parameter decision map | `LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
+| Script aging / hidden wrapper review | `LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` |
 | Unified full 0-to-10 local AI workflow | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
 | Launcher manifest/phase contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
 | Code-derived behavior map | `LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md` |

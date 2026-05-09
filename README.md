@@ -4,6 +4,22 @@
 
 The repository name is historical. Blender/audio remains the first application domain, but the active architecture is app-agnostic AI/backend orchestration.
 
+## GitHub About description
+
+Recommended repository description:
+
+```text
+IA-Carmine local AI orchestration workbench for code-driven validation, provider lanes, runtime telemetry, evidence bundles and reviewable PR automation.
+```
+
+Recommended topics:
+
+```text
+local-ai, ai-orchestration, validation, telemetry, evidence, openvino, ollama, npu, gpu, powershell, python, automation
+```
+
+This field is GitHub repository metadata, not a tracked source file. Keep the GitHub About/Description aligned with this README and `AGENTS.md` whenever the project identity changes.
+
 ## First rule: read, inspect, reuse, then change
 
 Before proposing or editing:
@@ -77,6 +93,9 @@ AGENTS.md
   -> CHATGPT.md
   -> CHATGPT/README.md
   -> docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+  -> docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+  -> docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+  -> docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
   -> docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
   -> docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
   -> docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
@@ -156,6 +175,9 @@ prepare_review_pr.py does not create draft PRs yet.
 | Agent contract and guardrails | `AGENTS.md` |
 | ChatGPT/session memory and handoff notes | `CHATGPT.md`, then `CHATGPT/README.md` |
 | Current code/state bridge | `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` |
+| Current capability depth | `docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
+| Launcher parameter decision map | `docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
+| Script aging / hidden wrapper review | `docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` |
 | Read-first/reuse-first/small-files rule | `docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md` |
 | Code-derived current behavior | `docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md` |
 | Script census and run variants | `docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md` |
@@ -265,6 +287,7 @@ Current documentation cleanup and refactoring use:
 ```text
 Markdown inventory
 script/function/class/method inventory
+script aging / hidden wrapper audit
 CSV/count evidence surfaces
 auto-discovery and index repair reports/plans
 tool placement audit
@@ -285,6 +308,7 @@ Required wording principle:
 Root/project descriptions describe purpose and canonical docs.
 Operational commands live in docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md.
 Runtime architecture lives in docs/MAIN_RUNTIME_ARCHITECTURE.md.
+The GitHub About description must not describe this as only a Blender/audio project.
 ```
 
 ## Legacy Blender/audio role
