@@ -22,12 +22,27 @@ Historical handoffs and old PR bodies are secondary. Current code and current co
 ## Canonical naming
 
 ```text
-0Full10 = run unica
-Full0To10 = CLI/flag spelling where the current launcher exposes `-Full0To10`
+0Full10 = run unica concettuale
+Full0To10 / -Full0To10 = CLI/flag compatibility spelling where the current launcher still exposes it
 run unica = full 0-to-10 workflow over the whole active project perimeter
 ```
 
 Use `0Full10` in prose when naming the operational concept. Use `-Full0To10` only when documenting the actual launcher switch.
+
+`-Full0To10` should not be treated as a magic flag. Its semantics must remain expressible as explicit lane composition:
+
+```text
+task input
+run identity
+real-run activation
+intensity/budget
+provider lanes
+evidence lanes
+patch/review lanes
+explicit -No* opt-outs
+```
+
+Future refactors may absorb `-Full0To10` into named profile/config composition while preserving backward compatibility.
 
 ## First decision
 
@@ -35,7 +50,7 @@ Use `0Full10` in prose when naming the operational concept. Use `-Full0To10` onl
 |---|---|---|
 | Fast syntax/config sanity | `-Mode smoke -DryRun` | `-Full0To10` |
 | Debug one phase | `-Mode <phase> -NoStrictRealRunActivation` | implicit real-run activation |
-| Full Markdown-to-review workflow | 0Full10 run unica via `-Full0To10` with task Markdown | hidden helper-only entrypoints |
+| Full Markdown-to-review workflow | 0Full10 run unica profile/lane composition, currently selectable with `-Full0To10` | hidden helper-only entrypoints |
 | Evidence-only lightweight check | `-LightFull0To10` | provider success claims |
 | Markdown/doc inventory | `-Mode md -NoStrictRealRunActivation` | provider switches |
 | Python/script inventory | `-Mode python -NoStrictRealRunActivation` | patch apply |
@@ -143,7 +158,7 @@ Without that flag, non-smoke/non-reset real runs can be promoted into TUTTO SU T
 
 0Full10 means run unica: full semantic perimeter over all major phases unless an explicit `-No*` flag disables a lane or evidence classifies it unavailable/degraded.
 
-`-Full0To10` is the current launcher switch for this run-unica behavior.
+`-Full0To10` is currently the launcher compatibility switch for this run-unica behavior, but the target model is explicit composition of the same semantics through normal parameters and lane controls.
 
 `-RunIntensity` changes capacity, not scope:
 
@@ -344,7 +359,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -NoStrictRealRunActivation -Prod -NoExecutionTail
 ```
 
-0Full10 run unica product shape:
+0Full10 run unica product shape, current compatibility spelling:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
@@ -355,10 +370,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -BuildEvidence -GeneratePatchSpecs
 ```
 
+The same run must remain expressible as explicit parameter composition without relying on `-Full0To10` as hidden behavior.
+
 ## Anti-patterns
 
 ```text
 Running -Mode md without -NoStrictRealRunActivation during diagnostics.
+Treating -Full0To10 as a magic flag instead of lane composition.
 Treating LightFull0To10 as proof of provider execution.
 Using system Python for provider lanes.
 Increasing budgets before fixing missing inputs.
@@ -376,7 +394,7 @@ Provide:
 current branch and PR
 exact launcher command
 Stamp and TaskFile
-selected Mode or 0Full10 / -Full0To10
+selected Mode or 0Full10 / -Full0To10 compatibility flag
 whether NoStrictRealRunActivation was used
 selected PythonExe / IA_CARMINE_PYTHON
 manifest path
