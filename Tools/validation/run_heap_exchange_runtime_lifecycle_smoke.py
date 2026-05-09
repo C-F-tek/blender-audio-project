@@ -141,7 +141,7 @@ def main() -> int:
         lifecycle_result = run([
             sys.executable, str(lifecycle_tool), "--repo-root", str(repo), "--stamp", missing_stamp,
             "--observer-dir", f"output/local_ai_runs/{missing_stamp}_observer",
-            "--require-public-events", "--require-concrete-exit",
+            "--require-public-events", "--require-concrete-exit", "--require-knowledge-surface",
             "--output", "output/validation/missing_lifecycle.json",
         ], repo, source_repo)
         missing_ok = entry_result["returncode"] == 0 and exit_result["returncode"] == 2 and lifecycle_result["returncode"] == 2
@@ -165,7 +165,7 @@ def main() -> int:
         lifecycle_result = run([
             sys.executable, str(lifecycle_tool), "--repo-root", str(repo), "--stamp", concrete_stamp,
             "--observer-dir", f"output/local_ai_runs/{concrete_stamp}_observer",
-            "--require-public-events", "--require-concrete-exit",
+            "--require-public-events", "--require-concrete-exit", "--require-knowledge-surface",
             "--output", "output/validation/concrete_lifecycle.json",
         ], repo, source_repo)
         concrete_ok = entry_result["returncode"] == 0 and exit_result["returncode"] == 0 and lifecycle_result["returncode"] == 0

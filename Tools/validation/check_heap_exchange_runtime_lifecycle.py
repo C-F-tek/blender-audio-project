@@ -116,6 +116,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--observer-dir", default="")
     parser.add_argument("--require-public-events", action="store_true")
     parser.add_argument("--require-concrete-exit", action="store_true")
+    parser.add_argument("--require-knowledge-surface", action="store_true")
     parser.add_argument("--min-available-lanes", type=int, default=2)
     parser.add_argument("--output", default="output/validation/heap_exchange_runtime_lifecycle.json")
     parser.add_argument("--markdown-output", default="")
@@ -151,6 +152,29 @@ def main() -> int:
         action="Run build_heap_exchange_runtime_entry.py after agent-state/workload routing.",
         artifacts=[rel(repo_root, entry_path)],
     )
+
+    knowledge = entry.get("knowledge_surface") if entry else None
+    knowledge_events = [event for event in runtime_events if event_kind(event) == "knowledge_surface_registered"]
+    knowledge_ok = True
+    if args.require_knowledge_surface:
+        knowledge_ok = bool(
+            isinstance(knowledge, dict)
+            and entry.get("source_of_knowledge") == "heap_exchange"
+            and knowledge.get("source_of_knowledge") == "heap_exchange"
+            and knowledge.get("routing_model") == "dynamic_exchange_not_static_chain"
+            and knowledge.get("static_chain_invocation_performed") is False
+            and knowledge_events
+        )
+    add_check(
+        checks,
+        name="knowledge_surface_dynamic_not_static_chain",
+        passed=knowledge_ok,
+        expected="entry records heap_exchange knowledge surface and runtime state records knowledge_surface_registered" if args.require_knowledge_surface else "not required",
+        actual=f"source_of_knowledge={(entry or {}).get('source_of_knowledge')} routing_model={(knowledge or {}).get('routing_model') if isinstance(knowledge, dict) else None} static_chain={(knowledge or {}).get('static_chain_invocation_performed') if isinstance(knowledge, dict) else None} knowledge_events={len(knowledge_events)}",
+        action="Build entry with heap_exchange knowledge_surface and append knowledge_surface_registered event.",
+        artifacts=[rel(repo_root, entry_path), rel(repo_root, state_path)],
+    )
+
     add_check(
         checks,
         name="runtime_lanes_available",

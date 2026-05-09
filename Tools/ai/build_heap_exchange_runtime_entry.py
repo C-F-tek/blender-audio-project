@@ -153,17 +153,45 @@ def build_lanes(gpu0_report: dict[str, Any] | None, official_report: dict[str, A
     ]
 
 
+def build_knowledge_surface(lanes: list[dict[str, Any]], artifacts: dict[str, str]) -> dict[str, Any]:
+    available_lanes = [item["name"] for item in lanes if item.get("available")]
+    return {
+        "source_of_knowledge": "heap_exchange",
+        "knowledge_surface": "shared_runtime_heap_blackboard",
+        "routing_model": "dynamic_exchange_not_static_chain",
+        "dynamic_exchange_pipeline": True,
+        "static_chain_invocation_performed": False,
+        "guided_chain_call_sequence_required": False,
+        "lane_interaction_is_runtime_routed": True,
+        "lane_autonomy_model": "gpu1_gpu0_npu_provider_lanes_publish_and_consume_exchange_evidence",
+        "deterministic_boundaries": {
+            "in_controlled": True,
+            "loop_dynamic": True,
+            "out_deterministic": True,
+        },
+        "available_lanes": available_lanes,
+        "input_artifacts": artifacts,
+    }
+
+
 def render_markdown(report: dict[str, Any]) -> str:
+    knowledge = report.get("knowledge_surface") or {}
     lines = [
         "# Heap Exchange Runtime Entry",
         "",
         f"- Passed: `{report.get('passed')}`",
         f"- Stamp: `{report.get('stamp')}`",
         f"- Task file: `{report.get('task_file')}`",
+        f"- Knowledge source: `{knowledge.get('source_of_knowledge', report.get('source_of_knowledge', ''))}`",
+        f"- Routing model: `{knowledge.get('routing_model', '')}`",
         "",
         "## Runtime rule",
         "",
         "The task and inputs are controlled at entry. The center of the run is dynamic and may use the registered lanes according to current routing logic. Exit must produce concrete reviewable product or fail honestly.",
+        "",
+        "## Knowledge surface",
+        "",
+        "The heap/exchange is the source of runtime knowledge. GPU1, GPU0, NPU, provider and deterministic lanes publish into and consume from this shared surface; entry does not prescribe a static call chain.",
         "",
         "## Lanes",
         "",
@@ -230,6 +258,14 @@ def main() -> int:
 
     lanes = build_lanes(gpu0_report, official_report, workload_report)
     available_count = sum(1 for item in lanes if item["available"])
+    artifact_map = {
+        "task_file": rel(repo_root, task_file),
+        "context_pack": rel(repo_root, context_pack),
+        "agent_state": rel(repo_root, agent_state),
+        "runtime_state": rel(repo_root, runtime_state),
+        "observer_dir": rel(repo_root, observer_dir),
+    }
+    knowledge_surface = build_knowledge_surface(lanes, artifact_map)
     errors = []
     if task_file is not None and not task_file.exists():
         errors.append(f"task file missing: {rel(repo_root, task_file)}")
@@ -242,14 +278,18 @@ def main() -> int:
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "stamp": stamp,
         "repo_root": repo_root.as_posix(),
-        "task_file": rel(repo_root, task_file),
-        "context_pack": rel(repo_root, context_pack),
-        "agent_state": rel(repo_root, agent_state),
-        "runtime_state": rel(repo_root, runtime_state),
-        "observer_dir": rel(repo_root, observer_dir),
+        "task_file": artifact_map["task_file"],
+        "context_pack": artifact_map["context_pack"],
+        "agent_state": artifact_map["agent_state"],
+        "runtime_state": artifact_map["runtime_state"],
+        "observer_dir": artifact_map["observer_dir"],
+        "source_of_knowledge": "heap_exchange",
         "center_is_dynamic": True,
+        "dynamic_exchange_pipeline": True,
+        "static_chain_invocation_performed": False,
         "entry_controls_inputs_only": True,
         "exit_must_produce_concrete_product": True,
+        "knowledge_surface": knowledge_surface,
         "lanes": lanes,
         "available_lane_count": available_count,
         "provider_execution_performed": False,
@@ -264,6 +304,7 @@ def main() -> int:
     write_text_report(render_markdown(report), resolve_output_path(repo_root, markdown_output.as_posix()))
 
     append_jsonl(runtime_state, {"kind": "heap_entry", "schema_version": 1, "stamp": stamp, "summary": "heap/exchange runtime entry registered", "entry": rel(repo_root, output)})
+    append_jsonl(runtime_state, {"kind": "knowledge_surface_registered", "schema_version": 1, "stamp": stamp, "source_of_knowledge": "heap_exchange", "routing_model": knowledge_surface["routing_model"]})
     for item in lanes:
         append_jsonl(runtime_state, {"kind": "lane_registered", "schema_version": 1, "stamp": stamp, "lane": item["name"], "role": item["role"], "available": item["available"]})
     write_public_event(observer_dir, {"kind": "heap_entry", "stamp": stamp, "summary": f"heap/exchange entry registered with {available_count} available lanes", "source_file": rel(repo_root, output)})
