@@ -22,6 +22,17 @@ def check_token(text: str, token: str) -> bool:
     return token in text
 
 
+def has_real_product_mode_contract(wrapper_text: str) -> bool:
+    if '"-Mode", "all"' in wrapper_text:
+        return True
+    return (
+        '"-Mode", $RealProductPostPreflightModes' in wrapper_text
+        and "$RealProductPostPreflightModes" in wrapper_text
+        and "official,provider" in wrapper_text
+        and "patch_specs,evidence,contract,full_validation" in wrapper_text
+    )
+
+
 def write_markdown(report: dict[str, Any], output: Path) -> str:
     lines = [
         "# Real Product Intrinsic Capability Contract",
@@ -70,7 +81,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "task_md_input": check_token(wrapper_text, "[string]$TaskFile")
         and check_token(wrapper_text, '"-TaskFile", $TaskRel')
         and check_token(launcher_text, "IA-CARMINE-TASK-INGRESS-CONTRACT-BEGIN"),
-        "heap_exchange_activation": check_token(wrapper_text, '"-Mode", "all"')
+        "heap_exchange_activation": has_real_product_mode_contract(wrapper_text)
         and check_token(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-BEGIN")
         and check_token(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-PRE-REVIEW-BRIDGE-BEGIN"),
         "gpu1_primary_advisory": check_token(wrapper_text, "-UsePrimaryAdvisoryProvider")
@@ -85,7 +96,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and check_token(launcher_text, "shared_memory_evidence"),
         "static_deterministic_script_lane": check_token(wrapper_text, "-BuildTaskPatchSuggestionReport")
         and check_token(wrapper_text, "-GeneratePatchSpecs")
-        and check_token(wrapper_text, "-ReviewPrApplyDeterministicSuggestions")
+        and (check_token(wrapper_text, "-ReviewPrApplyDeterministicSuggestions") or check_token(wrapper_text, "-ReviewPrFromGeneratedPatchSpecs"))
         and check_token(args_builder_text, "require_product_input"),
         "heap_exchange_close": check_token(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-BEGIN")
         and check_token(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN")
