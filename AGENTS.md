@@ -38,6 +38,7 @@ AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/MAIN_RUNTIME_ARCHITECTURE.md
 CHATGPT/next-chat-handoff-*.md                 # when present and relevant
 CHATGPT/chatgpt-session-problems-and-robust-fixes-*.md
@@ -72,6 +73,7 @@ target file
 For full toolbox, refactor, provider or 0-to-10 local AI runs, the active entrypoint is:
 
 ```text
+docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 Tools/workflow/run_unified_local_ai_refactor.ps1
@@ -114,6 +116,7 @@ Current compact operational state:
 ```text
 Baseline: master after PR #233 merge
 Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Capability map: docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 Parameter map: docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 Docs bridge: docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 Main runtime architecture: docs/MAIN_RUNTIME_ARCHITECTURE.md
