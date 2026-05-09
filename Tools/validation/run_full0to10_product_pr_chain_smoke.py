@@ -44,6 +44,7 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
         "review_pr_auto_include": "--auto-include-from-apply-report",
         "review_pr_apply_report": "--apply-report",
         "final_chain_contract_gate": "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN",
+        "final_chain_args_builder": "build_unified_chain_contract_args.py",
         "final_chain_contract": "check_unified_chain_contract.py",
         "final_chain_review_pr_report": "--review-pr-report",
         "final_chain_review_pr_product": "--require-review-pr-product",
