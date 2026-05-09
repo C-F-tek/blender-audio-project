@@ -9,6 +9,16 @@ Limite massimo configurato: `400` righe per file Markdown.
 1. [`part-001.md`](part-001.md)
 2. [`part-002.md`](part-002.md)
 
+## Nomenclatura canonica
+
+```text
+0Full10 = run unica concettuale
+Full0To10 / -Full0To10 = spelling CLI/flag di compatibilità quando presente nel launcher
+run unica = workflow completo 0-to-10 sul perimetro attivo del progetto
+```
+
+Regola pratica: `0Full10` non deve diventare un flag magico. La run unica deve essere descrivibile dalla combinazione esplicita degli altri parametri: task input, run identity, real-run activation, intensity/budget, provider lanes, evidence lanes, patch/review lanes e opt-out `-No*`. Il flag `-Full0To10`, quando usato, è una scorciatoia compatibile che seleziona quel profilo completo; nel tempo può essere assorbito dalla configurazione esplicita delle lane.
+
 ## Guida operativa parametri
 
 Per scegliere correttamente i parametri del launcher senza leggere l'intera superficie CLI, usare:
@@ -17,7 +27,7 @@ Per scegliere correttamente i parametri del launcher senza leggere l'intera supe
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 ```
 
-Regola pratica: scegliere prima la lane/prodotto (`smoke`, fase singola, `Full0To10`, `LightFull0To10`, provider, review PR), poi modificare solo il gruppo di parametri pertinente.
+Regola pratica: scegliere prima la lane/prodotto (`smoke`, fase singola, `0Full10`/run unica, `LightFull0To10`, provider, review PR), poi modificare solo il gruppo di parametri pertinente.
 
 ## Mappa profondità capability
 
