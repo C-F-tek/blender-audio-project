@@ -34,8 +34,8 @@ def load_text(path: Path) -> LoadedText:
 def write_text_preserved(loaded: LoadedText, text_lf: str) -> None:
     normalized = text_lf.rstrip("\n") + "\n"
     text = normalized.replace("\n", loaded.newline)
-    encoding = "utf-8-sig" if loaded.had_bom else "utf-8"
-    loaded.path.write_text(text, encoding=encoding)
+    payload = text.encode("utf-8-sig" if loaded.had_bom else "utf-8")
+    loaded.path.write_bytes(payload)
 
 
 def backup_file(repo_root: Path, target: Path, *, namespace: str = "patchkit_backups") -> Path:
