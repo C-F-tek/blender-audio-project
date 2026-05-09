@@ -132,6 +132,41 @@ def validate_manifest(manifest: dict[str, Any]) -> tuple[list[str], list[str]]:
                 warnings.append(f"duplicate context_files entry: {item}")
             seen.add(item)
 
+
+    runtime_correlation_requested = manifest.get("runtime_evidence_correlation_requested")
+    if runtime_correlation_requested not in {True, False, None}:
+        errors.append("runtime_evidence_correlation_requested must be boolean/null")
+
+    if runtime_correlation_requested is True:
+        if not isinstance(phase_reports, dict):
+            errors.append("runtime evidence correlation requires phase_reports object")
+        elif not phase_reports.get("runtime_evidence_correlation"):
+            errors.append("runtime evidence correlation requested but phase_reports.runtime_evidence_correlation is missing")
+
+        if not isinstance(report_files, list):
+            errors.append("runtime evidence correlation requires report_files list")
+        else:
+            has_runtime_correlation_report = any(
+                isinstance(item, str)
+                and "runtime_evidence_correlation" in item.replace("\\", "/")
+                and item.replace("\\", "/").endswith(".json")
+                for item in report_files
+            )
+            if not has_runtime_correlation_report:
+                errors.append("runtime evidence correlation requested but report_files does not include runtime_evidence_correlation JSON")
+
+        if not isinstance(context_files, list):
+            errors.append("runtime evidence correlation requires context_files list")
+        else:
+            has_runtime_correlation_context = any(
+                isinstance(item, str)
+                and "runtime_evidence_correlation" in item.replace("\\", "/")
+                and item.replace("\\", "/").endswith(".md")
+                for item in context_files
+            )
+            if not has_runtime_correlation_context:
+                warnings.append("runtime evidence correlation requested but context_files does not include runtime_evidence_correlation Markdown")
+
     if manifest.get("full0to10_standalone_pipeline") is not False:
         errors.append("full0to10_standalone_pipeline must be false")
     if manifest.get("full0to10_legacy_alias_requested") not in {True, False, None}:
