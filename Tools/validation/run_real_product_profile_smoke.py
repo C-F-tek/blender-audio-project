@@ -51,6 +51,8 @@ def main() -> int:
         "launcher_invokes_runtime_evidence_correlation_validator": "check_runtime_evidence_correlation.py" in launcher_text,
         "manifest_schema_requires_runtime_evidence_correlation_report": "runtime_evidence_correlation_requested" in launcher_text and "runtime_evidence_correlation" in launcher_text,
         "preflight_validates_manifest_runtime_correlation_schema": "run_unified_manifest_runtime_evidence_correlation_smoke.py" in readme_text or "run_unified_manifest_runtime_evidence_correlation_smoke.py" in launcher_text,
+        "review_pr_final_product_contract_exists": (repo / "Tools/validation/check_review_pr_final_product_contract.py").exists(),
+        "preflight_validates_review_pr_final_product_contract": "run_review_pr_final_product_contract_smoke.py" in readme_text or "run_review_pr_final_product_contract_smoke.py" in launcher_text,
         "supports_review_pr_push": "-ReviewPrPush" in text,
         "supports_review_pr_create": "-ReviewPrCreate" in text,
         "supports_review_pr_draft": "-ReviewPrDraft" in text,
