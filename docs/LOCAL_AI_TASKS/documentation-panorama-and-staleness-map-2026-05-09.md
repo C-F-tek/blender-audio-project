@@ -31,20 +31,24 @@ README.md
 CHATGPT.md
 CHATGPT/README.md
 docs/README.md
+docs/AI_ONBOARDING.md
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 ```
 
 Status:
 
 ```text
-AGENTS.md: primary contract, still needs a focused follow-up patch to link heap/exchange and patchkit directly.
+AGENTS.md: primary contract, updated in PR #251 to link heap/exchange, orientation, staleness and patchkit.
 README.md: updated in PR #251 to describe heap/exchange and patchkit.
 CHATGPT.md: updated in PR #251 to point at heap/exchange and patchkit.
 CHATGPT/README.md: updated in PR #251 to include the current read order.
 docs/README.md: updated in PR #251 as current doc index.
+docs/AI_ONBOARDING.md: updated in PR #251 as compact onboarding bridge.
 heap-exchange operating model: new canonical post-#249/#250 model.
 ai-orientation map: new compact first-orientation map for AI agents.
+documentation panorama: this stale-zone map.
 ```
 
 ## Canonical architecture and run layer
@@ -54,6 +58,7 @@ docs/MAIN_RUNTIME_ARCHITECTURE.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+WORKFLOW.md
 Tools/workflow/README.md
 Tools/ai/README.md
 ```
@@ -62,11 +67,15 @@ Status:
 
 ```text
 MAIN_RUNTIME_ARCHITECTURE.md: architecture target; do not claim implemented execution without evidence.
-UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md: launcher manifest/phase contract; verify against current launcher source.
+UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md: split contract index updated in PR #251 to mention heap/exchange lifecycle and patchkit surfaces.
 unified-local-ai-refactor-launcher.md: operator runbook; verify current flags against Tools/workflow/run_unified_local_ai_refactor.ps1.
 unified-launcher-parameter-decision-map: current parameter decision map.
+WORKFLOW.md: root workflow policy, updated in PR #251 with heap/exchange product path and patchkit boundary.
 Tools/workflow/README.md: updated in PR #251 for lifecycle and patchkit.
 Tools/ai/README.md: updated in PR #251 for lifecycle and patchkit.
+AI_PIPELINE_ARCHITECTURE.md: updated in PR #251 so dry-run pipeline evidence cannot be mistaken for full product proof.
+DATA_FLOW.md: updated in PR #251 to include heap/exchange lifecycle and patchkit.
+AI_ARTIFACT_SCHEMAS.md: updated in PR #251 to include heap/exchange and patchkit artifact families.
 ```
 
 ## Code-driven map layer
@@ -130,6 +139,18 @@ Use targeted validator/smoke maps first.
 Future cleanup should split or index the validation README only if line-limit validators require it.
 ```
 
+## Historical/reference split indexes classified in PR #251
+
+These split docs remain available, but their README indexes now warn agents not to treat them as current first-read state:
+
+```text
+docs/LOCAL_AI_WORKFLOW.md/README.md = historical/reference workflow split; use current heap/exchange and launcher docs first.
+docs/PROJECT_STATUS_POINT.md/README.md = historical/reference project-status snapshot; verify against current source and maps.
+docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/README.md = current contract index; now points to heap/exchange lifecycle and patchkit surfaces.
+```
+
+Do not edit all split parts unless a dedicated cleanup task requires it. Prefer index banners first.
+
 ## Evidence layer
 
 ```text
@@ -181,11 +202,11 @@ Any doc that claims success without manifest/telemetry evidence is suspect.
 Suggested next documentation-only PRs:
 
 ```text
-1. Focused AGENTS.md update to link heap/exchange, ai-orientation and patchkit directly.
-2. Verify and update UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md against the current launcher lifecycle phases.
-3. Verify code-driven-data-flow-map-2026-05-07.md against heap/exchange entry/exit and patchkit.
-4. Verify single-owner-scripts-and-flow-boundaries-2026-05-07.md includes patchkit and heap lifecycle owners.
-5. Add a compact validation README index if Tools/validation/README.md becomes too hard to scan.
+1. Verify MAIN_RUNTIME_ARCHITECTURE.md against the exact post-#249/#250 code and add only missing implemented-surface links.
+2. Verify code-driven-data-flow-map-2026-05-07.md against heap/exchange entry/exit and patchkit.
+3. Verify single-owner-scripts-and-flow-boundaries-2026-05-07.md includes patchkit and heap lifecycle owners.
+4. Add a compact validation README index if Tools/validation/README.md becomes too hard to scan.
+5. Add formal JSON schema validators for heap_exchange_runtime_entry, heap_exchange_runtime_exit_product and patchkit_apply_report.
 ```
 
 ## Agent behavior when documentation conflicts
