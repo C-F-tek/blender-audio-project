@@ -10,6 +10,7 @@ This compact map tells an AI what exists, how deep each capability goes, what it
 ```text
 AGENTS.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/
 docs/MAIN_RUNTIME_ARCHITECTURE.md
 Tools/ai/README.md
@@ -51,6 +52,7 @@ The repository is now an AI orchestration workbench with a historical Blender/au
 |---|---|---|---|---|
 | Operator launcher | Active | End-to-end wrapper | `Tools/workflow/run_unified_local_ai_refactor.ps1` | manifest, phase reports |
 | Parameter decision map | Active | CLI/lane guidance | `unified-launcher-parameter-decision-map-2026-05-09.md` | doc contract |
+| Script aging visibility | Active/docs-only | hidden/legacy script review map | `script-aging-visibility-audit-2026-05-09.md` | review queue, local inventory command |
 | Repo-owned Python policy | Active | workflow/provider guardrail | `Tools/workflow/python_env.ps1`, launcher resolver | policy reports, stderr/classification |
 | Deterministic validation | Active/report-only | CPU authority | `Tools/validation/` | JSON/MD validation reports |
 | Markdown split/inventory | Active/report-only | doc scalability | `check_markdown_line_limits.py`, `check_file_line_limits.py`, `build_markdown_inventory.py` | inventory/line-limit reports |
@@ -98,9 +100,9 @@ The heap/live-signal layer records compact shared runtime state. The broker exec
 
 Recommendation and patch-note products are proposal ledgers. `apply_patch_suggestion_bundle.py` can apply only deterministic operations with explicit apply controls. `prepare_review_pr.py` stages only explicit or safely discovered paths and performs commit/push/PR only with explicit flags.
 
-### Evidence and final product
+### Evidence, final product and script visibility
 
-Evidence builders summarize raw `output/**` reports into compact Git-trackable handoff surfaces. Full0To10 product builders package readiness/product manifests so a run becomes reviewable product material, not only logs.
+Evidence builders summarize raw `output/**` reports into compact Git-trackable handoff surfaces. Full0To10 product builders package readiness/product manifests so a run becomes reviewable product material, not only logs. Script aging audits are documentation-only visibility queues: they notice hidden/legacy wrappers but do not delete or mark obsolete without follow-up proof.
 
 ## Provider role boundaries
 
@@ -126,6 +128,7 @@ Do not promote GPU0, NPU or provider output over deterministic validators unless
 | Patch notes/recommendations | No | Proposal ledgers only. |
 | Patch suggestion apply | Only with explicit apply | Deterministic operations, unsafe targets blocked. |
 | Review PR prep | Only with explicit Git/PR flags | Allowlisted staging/commit/push/PR. |
+| Script aging audit | No | Notice/review queue only; no deletion. |
 | Blender/audio scripts | No unless scoped | Legacy application domain. |
 
 ## Evidence needed to claim execution
@@ -143,6 +146,7 @@ runtime tool usage telemetry
 shared AI-to-AI bundle
 review_pr_prepare report
 patch_suggestion_bundle_apply report
+script aging inventory or audit entry for visibility claims
 ```
 
 No report, no claim.
@@ -158,6 +162,7 @@ expand runtime heap/blackboard summaries without raw dumps
 add focused smoke tests for provider/gateway contracts
 document review PR draft/include-path autodiscovery from current code
 continue splitting monolithic workflow/provider code by responsibility
+run local oldest-to-newest script inventory and promote reviewed findings only
 ```
 
 ## Anti-confusion rules for future AI agents
@@ -169,5 +174,6 @@ Do not treat patch notes as patches.
 Do not trust provider output without workload quality and validators.
 Do not use system Python for workflow/provider lanes.
 Do not stage output/**, DB, renders or generated chunks.
+Do not delete or deprecate old scripts from age alone.
 Do not change Blender/audio domain during infrastructure docs/refactors unless scoped.
 ```
