@@ -107,7 +107,7 @@ param(
     [int]$RepeatCases = 2
 ,
     [switch]$LightFull0To10,
-    [string]$LightFull0To10OutputDir = "output/validation/unified_light_full0to10_profile",
+    [string]$LightFull0To10OutputDir = "output/validation/unified_run_light_legacy_alias",
     [switch]$LightFull0To10NoExternalProbes,
     [int]$OfficialAdapterTimeoutSeconds = 1800,
     [switch]$SkipOfficialAdapter,
@@ -171,9 +171,9 @@ if (Test-Path -LiteralPath $UnifiedHeapExchangeReviewBridgeScript -PathType Leaf
 # IA-CARMINE-HEAP-EXCHANGE-REVIEW-BRIDGE-IMPORT-END
 # IA-CARMINE-LIGHTFULL0TO10-DISPATCH-BEGIN
 if ($LightFull0To10) {
-    $LightProfileScript = Join-Path $PSScriptRoot "run_unified_light_full0to10_profile.ps1"
+    $LightProfileScript = Join-Path $PSScriptRoot "run_unified_light_full0to10_profile.ps1" # legacy filename; compatibility wrapper only
     if (-not (Test-Path $LightProfileScript)) {
-        throw "LightFull0To10 profile script not found: $LightProfileScript"
+        throw "LightFull0To10 legacy compatibility wrapper not found: $LightProfileScript"
     }
 
     if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
@@ -191,7 +191,7 @@ if ($LightFull0To10) {
         $LightArgs += "-NoExternalProbes"
     }
 
-    Write-Host "[LightFull0To10] Dispatching evidence-only profile..."
+    Write-Host "[UnifiedRun][LegacyAlias:LightFull0To10] Dispatching evidence-only compatibility wrapper..."
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $LightProfileScript @LightArgs
     exit $LASTEXITCODE
 }
@@ -251,11 +251,11 @@ function Show-LauncherIntro {
     Write-Host "Guardrails: no patch apply, no commit, no push, no merge, no Blender, no FFmpeg."
     Write-Host "Reset guardrail: no delete unless -ApplyReset and exact -ConfirmResetText are supplied."
     Write-Host "Python policy: set PYTHONPATH to repo root; use -PythonExe, IA_CARMINE_PYTHON, .venv, venv; auto-bootstrap .venv with py -3.12/3.13 before fallback."
-    Write-Host "Full 0-to-10 selectable profile: use -Full0To10; disable individual steps only with explicit -No* flags."
+    Write-Host "Unified run: -Full0To10 is a legacy compatibility alias for the full unified lane set; use explicit lanes/-No* flags for precise control."
     Write-Host "Debug tail: enabled by default; use -Prod to disable transcript and execution-tail evidence."
     Write-Host "Startup check output: Tools/workflow/startup_check.py supports --output, --text-output and --repo-root."
     Write-Host "AI packets output: use -AiPacketsRoot/-AiPacketsDir; default is output/ai_packets/<DataStamp>."
-    Write-Host "Strict real-run activation: TUTTO SU TUTTO for every non-smoke/non-reset real run unless an explicit -No* flag disables one."
+    Write-Host "Strict real-run activation: every non-smoke/non-reset real run enters the unified heap/exchange model unless explicit -No* flags disable lanes."
     Write-Host "Full run lanes include provider probes, advisory, workload quality, evidence, patch specs and memory input persistence when allowed."
     Write-Host ""
 }
@@ -958,10 +958,10 @@ if ($Full0To10) { $ResolvedModes = @() } elseif ($Interactive -or @($Mode).Count
 if (@($ResolvedModes).Count -eq 0 -and -not $Full0To10) { throw "No modes selected. Use -Interactive or -Mode all." }
 
 if ($Full0To10) {
-    $Full0To10Modes = @("md", "json", "python", "chunks", "context_pack", "agent_state", "official", "provider", "patch_specs", "evidence", "contract", "full_validation")
-    if ($NoPatchSpecs) { $Full0To10Modes = @($Full0To10Modes | Where-Object { $_ -ne "patch_specs" }) }
-    if ($NoEvidence) { $Full0To10Modes = @($Full0To10Modes | Where-Object { $_ -ne "evidence" }) }
-    $ResolvedModes = @($Full0To10Modes)
+    $UnifiedRunLegacyAliasModes = @("md", "json", "python", "chunks", "context_pack", "agent_state", "official", "provider", "patch_specs", "evidence", "contract", "full_validation")
+    if ($NoPatchSpecs) { $UnifiedRunLegacyAliasModes = @($UnifiedRunLegacyAliasModes | Where-Object { $_ -ne "patch_specs" }) }
+    if ($NoEvidence) { $UnifiedRunLegacyAliasModes = @($UnifiedRunLegacyAliasModes | Where-Object { $_ -ne "evidence" }) }
+    $ResolvedModes = @($UnifiedRunLegacyAliasModes)
 
     $UseOllamaAdvisory = $true
     $UsePrimaryAdvisoryProvider = $true
@@ -1963,6 +1963,11 @@ $Manifest = [ordered]@{
     mode = $ResolvedModes
     mode_name = $ModeName
     full_0_to_10_requested = [bool]$Full0To10
+    full0to10_legacy_alias_requested = [bool]$Full0To10
+    full0to10_standalone_pipeline = $false
+    unified_run_operational_model = "single_dynamic_heap_exchange_run"
+    unified_run_source_of_knowledge = "heap_exchange"
+    unified_run_final_product = "reviewable_pr_with_concrete_changes"
     available_modes = @($ModeDescriptions.Keys)
     profile = $Profile
     model = $Model
@@ -2001,7 +2006,7 @@ $Manifest = [ordered]@{
     run_dir = $RunDir.Replace("\", "/")
     provider_execution_requested = [bool]($UseOllamaAdvisory -or $UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke -or (Test-ModeEnabled "provider"))
     primary_provider_requested = [bool]$UsePrimaryAdvisoryProvider
-    ai_peer_exchange_required = [bool]$Full0To10
+    ai_peer_exchange_required = [bool]($Full0To10 -or $StrictRealRunActivationEnabled)
     gpu1_primary_advisory_role = "mandatory_primary_advisory_planner"
     gpu0_companion_peer_role = "openvino_companion_peer_worker"
     npu_micro_lane_role = "micro_fast_task_assistant"

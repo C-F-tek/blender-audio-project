@@ -33,14 +33,14 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
     """Verify the canonical launcher contains the real product PR chain."""
     workflow = source_repo / "Tools/workflow/run_unified_local_ai_refactor.ps1"
     required_tokens = {
-        "heap_exchange_entry": "build_heap_exchange_runtime_entry.py",
-        "heap_exchange_exit": "build_heap_exchange_runtime_exit.py",
+        "heap_exchange_entry": "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-BEGIN",
+        "heap_exchange_exit_after_patch_suggestion": "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN",
         "heap_exchange_lifecycle": "check_heap_exchange_runtime_lifecycle.py",
         "task_patch_suggestion_report": "build_task_patch_suggestion_report.py",
-        "patch_suggestion_final_phase": "apply_patch_suggestion_bundle.py",
-        "patch_suggestion_product_separation": "check_patch_suggestion_product_separation.py",
+        "patch_suggestion_final_phase": "Patch suggestion final phase product",
+        "patch_suggestion_product_separation": "Validate patch suggestion product separation",
         "patch_suggestion_product_gate": "--require-product",
-        "review_pr_prepare": "prepare_review_pr.py",
+        "review_pr_prepare": "Prepare review branch and PR",
         "review_pr_auto_include": "--auto-include-from-apply-report",
         "review_pr_apply_report": "--apply-report",
         "final_chain_contract_gate": "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN",
@@ -60,11 +60,11 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
     text = workflow.read_text(encoding="utf-8-sig")
     missing = [name for name, token in required_tokens.items() if token not in text]
     ordered_tokens = [
-        ("heap_exchange_entry", "build_heap_exchange_runtime_entry.py"),
-        ("patch_suggestion_final_phase", "apply_patch_suggestion_bundle.py"),
-        ("heap_exchange_exit", "build_heap_exchange_runtime_exit.py"),
-        ("patch_suggestion_product_separation", "check_patch_suggestion_product_separation.py"),
-        ("review_pr_prepare", "prepare_review_pr.py"),
+        ("heap_exchange_entry", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-BEGIN"),
+        ("patch_suggestion_final_phase", "Patch suggestion final phase product"),
+        ("heap_exchange_exit_after_patch_suggestion", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN"),
+        ("patch_suggestion_product_separation", "Validate patch suggestion product separation"),
+        ("review_pr_prepare", "Prepare review branch and PR"),
         ("final_chain_contract", "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN"),
     ]
     positions = [

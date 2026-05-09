@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static smoke test for Full0To10 unified light profile mega-loop."""
+"""Static smoke test for legacy LightFull0To10 compatibility evidence."""
 from __future__ import annotations
 
 import argparse
@@ -34,10 +34,17 @@ def main() -> int:
         "gate_calls_builder": "build_full0to10_light_profile_promotion.py" in texts["gate"],
         "requires_provider_false": "provider_execution_performed" in texts["constants"],
         "requires_patch_false": "patch_application_performed" in texts["constants"],
-        "recommends_launcher_flag": "-LightFull0To10" in texts["constants"],
+        "declares_legacy_alias": "compatibility alias" in texts["constants"],
+        "routes_to_unified_run": "unified run product model" in texts["constants"],
         "no_git_restore_docs": "git restore docs" not in "\n".join(texts.values()),
     }
-    report = {"passed": all(checks.values()), "checks": checks}
+    report = {
+        "kind": "unified_run_light_compatibility_mega_smoke",
+        "legacy_smoke_name": "full0to10_light_profile_mega_smoke",
+        "full0to10_standalone_pipeline": False,
+        "passed": all(checks.values()),
+        "checks": checks,
+    }
     print(json.dumps(report, indent=2))
     return 0 if report["passed"] else 1
 
