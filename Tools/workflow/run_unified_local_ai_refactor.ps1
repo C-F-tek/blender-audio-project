@@ -2038,6 +2038,7 @@ if ($PrepareReviewPr) {
             include_paths = @($ReviewPrIncludePath)
             apply_report = $ReviewPrApplyReport
             auto_include_from_apply_report = [bool](-not [string]::IsNullOrWhiteSpace($ReviewPrApplyReport))
+            require_product_input = $true
             allow_dirty_branch = $true
             push = [bool]$ReviewPrPush
             create_pr = [bool]$ReviewPrCreate
