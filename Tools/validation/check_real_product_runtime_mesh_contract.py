@@ -25,6 +25,17 @@ def has(text: str, token: str) -> bool:
     return token in text
 
 
+def has_real_product_mode_contract(wrapper_text: str) -> bool:
+    if '"-Mode", "all"' in wrapper_text:
+        return True
+    return (
+        '"-Mode", $RealProductPostPreflightModes' in wrapper_text
+        and "$RealProductPostPreflightModes" in wrapper_text
+        and "official,provider" in wrapper_text
+        and "patch_specs,evidence,contract,full_validation" in wrapper_text
+    )
+
+
 def write_markdown(report: dict[str, Any], output: Path) -> str:
     lines = [
         "# Real Product Runtime Mesh Contract",
@@ -96,7 +107,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(wrapper_text, '"-TaskFile", $TaskRel')
         and has(launcher_text, "IA-CARMINE-TASK-INGRESS-CONTRACT-BEGIN"),
 
-        "heap_exchange_activation": has(wrapper_text, '"-Mode", "all"')
+        "heap_exchange_activation": has_real_product_mode_contract(wrapper_text)
         and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-BEGIN")
         and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-PRE-REVIEW-BRIDGE-BEGIN"),
 
@@ -161,7 +172,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 
         "static_deterministic_script_lane": has(wrapper_text, "-GeneratePatchSpecs")
         and has(wrapper_text, "-BuildTaskPatchSuggestionReport")
-        and has(wrapper_text, "-ReviewPrApplyDeterministicSuggestions")
+        and (has(wrapper_text, "-ReviewPrApplyDeterministicSuggestions") or has(wrapper_text, "-ReviewPrFromGeneratedPatchSpecs"))
         and exists(repo_root, "Tools/ai/build_deterministic_recommendations.py")
         and exists(repo_root, "Tools/ai/build_patch_specs_from_proposals.py"),
 
