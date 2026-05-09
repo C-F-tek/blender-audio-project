@@ -64,6 +64,7 @@ def main() -> int:
         repo.mkdir()
         run(["git", "init"], repo)
         task = "docs/LOCAL_AI_TASKS/task-patch-md-authoring-smoke.md"
+        target = "docs/LOCAL_AI_TASKS/task-patch-md-authoring-target.md"
         report_json = "output/validation/task_patch_suggestion_report.json"
         dry_json = "output/validation/patch_suggestion_dry.json"
         create_json = "output/validation/create_task_patch_suggestion_markdown.json"
@@ -83,7 +84,7 @@ def main() -> int:
             "--suggestion-title",
             "Append operator gate",
             "--target-path",
-            task,
+            target,
             "--marker",
             "<!-- TASK_PATCH_MD_AUTHORING_SMOKE -->",
             "--content",
@@ -132,6 +133,9 @@ def main() -> int:
             errors.append("generated task Markdown did not produce one deterministic operation")
         if dry_data.get("passed") is not True or dry_data.get("changed_count") != 1:
             errors.append("dry-run did not detect one changed target")
+        result_paths = [item.get("path") for item in dry_data.get("results") or [] if isinstance(item, dict)]
+        if target not in result_paths:
+            errors.append("dry-run did not target the separate generated target file")
         for item in commands:
             if item["result"].get("ok") is not True:
                 errors.append(f"{item['name']} failed")
