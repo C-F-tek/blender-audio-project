@@ -16,17 +16,18 @@ A local-AI run is valid only if a GitHub-only or next local agent can inspect it
 launcher command
 unified_local_ai_refactor_manifest.json
 phase_status / phase_reports
+runtime evidence correlation when requested
 compact Markdown, CSV/count or file-line-limit summaries
 detailed evidence only when needed
 ```
 
-The manifest is the first machine-readable entrypoint. Long evidence bundles are never the first operational interface.
+The manifest is the first machine-readable entrypoint for the launcher. Long evidence bundles are never the first operational interface. For real product runs, the wrapper report and final review-PR product contract are the operator-facing product exit evidence.
 
-## Full0To10 contract
+## Full0To10 / unified run contract
 
 When `full_0_to_10_requested=true`, the manifest should show all default capabilities as either enabled/completed or explicitly disabled by user flags.
 
-Full0To10 always means full coverage: TUTTO SU TUTTO. Intensity profiles may tune budgets and capacity, but they must not silently remove core lanes.
+`Full0To10` is compatibility wording. The current model is a single dynamic heap/exchange unified run. Intensity profiles may tune budgets and capacity, but they must not silently remove core lanes.
 
 Limitations are backlog to overcome, not reasons to skip available tools. A lane/tool is unavailable only when current code, telemetry, capability manifest, provider diagnostic or validator evidence says so.
 
@@ -51,8 +52,8 @@ runtime/hardware capability manifest requested
 Ollama advisory requested
 primary provider routing requested
 GPU1/Ollama primary advisory planner requested
-GPU0/OpenVINO companion peer worker and tool-request producer requested
-NPU/OpenVINO non-blocking micro/tool-support lane requested
+GPU0/OpenVINO observable companion peer support workload requested
+NPU/OpenVINO peer micro diagnostic/report lane requested
 AI peer-exchange contract requested
 provider diagnostics requested
 workload quality routing requested
@@ -60,12 +61,16 @@ multistep provider workflow requested
 Ollama probe requested
 NPU probe requested
 NPU decode smoke requested
-legacy full-toolbox integrated lane requested
 patch specs requested
 evidence requested
 shared AI-to-AI bundle summary requested
-patch_application_performed=false
+runtime evidence correlation requested when product path selects it
+repository change proposals requested when review product lane selects it
+generated patch-spec apply report requested when review PR product lane selects it
+patch_application_performed=false by default
 ```
+
+Legacy full-toolbox integrated lane is no longer auto-enabled by `-Full0To10`; select it explicitly only for diagnostic legacy runs.
 
 Main runtime architecture coverage should be added progressively:
 
@@ -95,7 +100,7 @@ Allowed explicit disablers:
 -NoPatchSpecs
 ```
 
-If a core lane is unavailable, the manifest must record the unavailable-tool/provider failure in `phase_status`, `warnings`, `errors` or a phase report. Missing evidence without an explicit disabler or failure record is a failed full run.
+If a core lane is unavailable, the manifest must record the unavailable-tool/provider failure in `phase_status`, `warnings`, `errors` or a phase report. Missing evidence without an explicit disabler or failure record is a failed unified run.
 
 ## LightFull0To10 contract
 
@@ -107,7 +112,7 @@ Tools/workflow/run_unified_light_full0to10_profile.ps1
 Tools/workflow/run_full0to10_light_evidence_only.ps1
 ```
 
-This is not a replacement for full provider-capable `Full0To10`. It is a lightweight evidence/profile lane that produces `full0to10_light_evidence_only_run.json/md` plus a promotion JSON.
+This is not a replacement for full provider-capable unified runs. It is a lightweight evidence/profile lane that produces `full0to10_light_evidence_only_run.json/md` plus a promotion JSON.
 
 Observed behavior from code:
 
@@ -133,7 +138,7 @@ deep     = full coverage with expanded budget
 custom   = full coverage with operator-supplied budget
 ```
 
-A quick Full0To10 run is not a smoke test. Smoke remains a separate mode and must not be used as evidence that the full-run contract passed.
+A quick unified run is not a smoke test. Smoke remains a separate mode and must not be used as evidence that the full-run contract passed.
 
 ## Discovery, index repair, CSV/count and file-line contract
 
@@ -165,14 +170,15 @@ CSV/count/file-line-limit surfaces are sizing and discovery evidence; they do no
 File-line-limit reports do not rewrite, split, delete or apply patches.
 ```
 
-## 400-line policy
+## Markdown/code line-budget policy
 
-Maintained docs and source files follow a hard 400-line policy:
+Maintained docs and source files follow the active line-budget policy:
 
 ```text
-Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
-Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
-Existing oversized files -> technical debt to refactor progressively, not blind split targets.
+preferred active runbook <= 400 lines
+active Markdown hard threshold <= 500 lines
+maintained source/script target <= 400 lines
+existing oversized files -> technical debt to refactor progressively, not blind split targets
 ```
 
 Validator:
@@ -193,6 +199,13 @@ includes .md, .py, .ps1, .psm1, .psd1, .sh, .bat, .cmd, .js, .ts, .tsx, .jsx
 excludes .git, venv/.venv, __pycache__, node_modules, output, renders, indexAI/code_chunks, indexAI/project_code_chunks
 ```
 
+Policy notes:
+
+```text
+Do not expand oversized root docs when a compact index can link to dedicated runbooks.
+Do not split files that contain validator anchors unless the validator/smoke is updated in the same patch.
+Use directory-form split only after mapping anchors and readers.
+```
 
 ## Provider-capable Python preflight
 
@@ -205,23 +218,31 @@ Required for OpenVINO GPU.0/NPU provider validation:
 ```text
 numpy
 openvino
-openvino-genai Required operator preflight before interpreting GPU.0/NPU provider failures:
+openvino-genai
+```
 
+Required operator preflight before interpreting GPU.0/NPU provider failures:
+
+```powershell
 $env:IA_CARMINE_PYTHON = "<repo>\.venv\Scripts\python.exe"
 $env:PYTHONPATH = "<repo>"
 
 & $env:IA_CARMINE_PYTHON -c "import sys; print(sys.executable); import numpy, openvino; from openvino import Core; c=Core(); print(c.available_devices)"
+```
 
 Expected IA-Carmine workstation visibility when provider runtime is correctly selected:
 
+```text
 ['CPU', 'GPU.0', 'GPU.1', 'NPU']
+```
 
 If numpy, openvino or openvino-genai is missing, classify the failure as provider_python_environment_missing_dependency, not as GPU.0/NPU provider failure.
 
 If GPU.0 is not visible after imports succeed, classify the failure as OpenVINO device visibility/runtime configuration, not as Python selection failure.
 
 GPU.1 may be visible through OpenVINO, but it remains reserved for CUDA/Ollama and must not receive OpenVINO workload.
-rn## Quality gate contract
+
+## Quality gate contract
 
 When primary provider routing is requested:
 
@@ -232,6 +253,25 @@ quality_gate_passed must not hide missing workload quality routing
 ```
 
 In `-DryRun`, missing quality routing may be marked as planned, not executed.
+
+## Runtime evidence / generated product contract
+
+When `runtime_evidence_correlation_requested=true`, the final manifest must include the runtime evidence correlation JSON in `phase_reports.runtime_evidence_correlation` and in `report_files`.
+
+When generated patch-spec application is selected for review PR product, the apply report must distinguish:
+
+```text
+operation_count
+changed_count
+applied_count
+failed_count
+manual_review_required
+manual_review_items
+patch_application_performed
+source_writes_performed
+```
+
+A generated patch-spec run with `operation_count=0` under apply mode is not a successful review product. Metadata-only drafts must remain manual-review backlog unless a proposal supplies concrete deterministic operations.
 
 ## Memory contract
 
@@ -256,7 +296,7 @@ Commit only compact evidence/summary when explicitly needed.
 
 ## External-controls extension contract
 
-The next launcher patch should add manifest fields for selected external controls:
+The next launcher patch should add or keep manifest fields for selected external controls:
 
 ```text
 output_root
@@ -279,7 +319,7 @@ context_pack_basename
 context_pack_evidence_basename
 ```
 
-Until that patch lands, these fields are planned, not guaranteed.
+Until that patch lands for a field, classify it as planned, not guaranteed.
 
 ## Length policy
 
@@ -325,10 +365,13 @@ Recommended local checks after launcher edits are owned by the unified launcher 
 
 ```text
 PowerShell syntax check for Tools/workflow/run_unified_local_ai_refactor.ps1
-launcher Full0To10 dry-run when local execution is available
+launcher unified dry-run when local execution is available
 LightFull0To10 evidence-only run when validating lightweight evidence behavior
 docs link validation
 validation report contract check
+runtime evidence correlation launcher wiring smoke when touching final manifest phases
+repository change proposals runtime evidence smoke when touching proposal/product lanes
+empty generated patch product smoke when touching generated patch-spec apply behavior
 file-line-limit report when maintainability is in scope
 git diff --check
 ```
