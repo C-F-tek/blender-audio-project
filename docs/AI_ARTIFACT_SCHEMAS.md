@@ -1,6 +1,16 @@
 # AI Artifact Schemas
 
-Lightweight schema notes for additive AI pipeline and run-unica artifacts.
+## Status
+
+Current lightweight schema notes for additive AI pipeline and run-unica artifacts.
+
+Read together with:
+
+```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+```
 
 This document records known minimum keys and current contract gaps. It is intentionally not a strict JSON Schema implementation yet.
 
@@ -9,6 +19,8 @@ This file is a compact schema guide. `docs/JSON_SCHEMAS.md` is a historical/refe
 ## Current code-driven references
 
 ```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
@@ -29,6 +41,8 @@ quick/balanced/deep/custom = intensity or budget, not scope
 -No* flags = explicit opt-out from selected lanes
 -NoStrictRealRunActivation = single-phase diagnostics only
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
+heap/exchange entry and exit are deterministic boundaries around the dynamic center
+patchkit is the preferred deterministic source-write boundary for reviewed bundles
 preferred active runbook/docs size <=400 lines
 active Markdown hard threshold <=500 lines
 maintained source/script target <=400 lines
@@ -40,6 +54,11 @@ When a run-unica execution produces evidence, recommendations, patch suggestions
 ```text
 launcher manifest
 phase_status / phase_reports
+heap/exchange runtime entry
+heap/exchange runtime state
+heap/exchange runtime exit product
+heap/exchange lifecycle report
+patchkit report when source-write boundary is selected
 runtime tool usage telemetry
 runtime/hardware capability manifest
 full toolbox run telemetry summary
@@ -79,9 +98,14 @@ AI artifacts are separate from validation reports. Do not mix input-domain artif
 
 | Report | Typical producer | Current validator / checker | Required or common fields | Notes |
 |---|---|---|---|---|
+| `heap_exchange_runtime_entry.json` | `Tools/ai/build_heap_exchange_runtime_entry.py` | `Tools/validation/check_heap_exchange_runtime_lifecycle.py` | `schema_version`, `kind=heap_exchange_runtime_entry`, `stamp`, `repo_root`, `runtime_state`, `observer_dir`, `center_is_dynamic`, `lanes`, `available_lane_count`, safety flags | Dynamic heap/exchange entry boundary. Records available lanes; does not apply patches or run Blender/FFmpeg. |
+| `heap_exchange_runtime_state.jsonl` | heap/exchange entry/exit builders | `Tools/validation/check_heap_exchange_runtime_lifecycle.py` | JSONL events such as `heap_entry`, `lane_registered`, `heap_exit` | Runtime event ledger for the dynamic center. Must be paired with public exchange events when required. |
+| `heap_exchange_runtime_exit_product.json` | `Tools/ai/build_heap_exchange_runtime_exit.py` | `Tools/validation/check_heap_exchange_runtime_lifecycle.py` | `schema_version`, `kind=heap_exchange_runtime_exit_product`, `center_was_dynamic`, `runtime_event_count`, `operation_count`, `changed_count`, `concrete_operation_count`, `manual_review_required`, `passed`, safety flags | Deterministic OUT boundary. Product paths requiring review PR must not pass with metadata-only drafts. |
+| `heap_exchange_runtime_lifecycle_*.json` | `Tools/validation/check_heap_exchange_runtime_lifecycle.py` | self-report plus report-contract validation | `schema_version`, `kind=heap_exchange_runtime_lifecycle`, `passed`, `checks`, `broken_checks`, `errors`, `warnings` | Validates entry, lane availability, runtime events, public events and concrete exit product when required. |
+| `patchkit_apply_report` | `Tools/ai/patchkit/apply_patch_bundle.py` | patchkit validators and local review | `schema_version`, `kind=patchkit_apply_report`, `bundle`, `dry_run`, `operation_count`, `changed_count`, `results`, `validators`, `line_counts`, `passed`, safety flags | Preferred deterministic source-write report for reviewed patchkit bundles. |
 | `dry_run_matrix_report.json` | `Tools/ai/run_pipeline_dry_run_matrix.py` | `Tools/validation/check_ai_dry_run_matrix_contract.py` | `schema_version`, `repo_root`, `output_dir`, `case_count`, `passed`, `results` | Report contract, not Blender/audio adapter. |
 | `ai_pipeline_dry_run_report.json` | `Tools/ai/run_parallel_artifact_pipeline.py` | `Tools/validation/check_ai_pipeline_report_contract.py` | schema-v6 fields: `schema_version`, `generated_at`, `repo_root`, `output_dir`, `dry_run`, `passed`, `preflight`, `step_count`, `summary`, `schedule`, `lanes`, `steps` | Per-case report contract; use `--require-dry-run` for matrix case reports. |
-| `patch_suggestion_bundle_apply*.json` | `Tools/ai/apply_patch_suggestion_bundle.py` | `Tools/validation/check_patch_suggestion_product_separation.py` | `schema_version`, `kind`, `discovered_reports`, `current_suggestion_reports`, `deterministic_operations`, `manual_review_product`, `failed_count`, `patch_product_status`, `ready_for_patch_suggestion_review` | Product report for deterministic/manual-review patch suggestions. Published review-item counts may be capped; total counts remain available separately. |
+| `patch_suggestion_bundle_apply*.json` | `Tools/ai/apply_patch_suggestion_bundle.py` | `Tools/validation/check_patch_suggestion_product_separation.py` | `schema_version`, `kind`, `discovered_reports`, `current_suggestion_reports`, `deterministic_operations`, `manual_review_product`, `failed_count`, `patch_product_status`, `ready_for_patch_suggestion_review` | Legacy/bridge product report for deterministic/manual-review patch suggestions. Published review-item counts may be capped; total counts remain available separately. |
 | `patch_suggestion_product_separation*.json` | `Tools/validation/check_patch_suggestion_product_separation.py` | self-report plus report-contract validation | `schema_version`, `kind`, `passed`, `metrics`, `errors`, `warnings` | Validates essential product vs supplemental telemetry/debug separation. Deterministic-only product can pass when operations are ready and `failed_count=0`. |
 | `full0to10_product_pr_chain_smoke*.json` | `Tools/validation/run_full0to10_product_pr_chain_smoke.py` | self-report plus report-contract validation | `schema_version`, `kind`, `passed`, `commands`, `workflow_trace`, `errors`, `warnings` | Focused temporary-repo smoke that verifies task report -> patch suggestion final phase -> product separation -> review PR prepare chain and launcher trace. |
 | `review_pr_prepare*.json` | `Tools/ai/prepare_review_pr.py` | report-contract validation / manual review | `schema_version`, `kind`, `passed`, `repo_root`, `branch`, `include_paths`, `staged_paths`, `commit`, `push`, `pr`, `errors`, `warnings` | Review PR preparation evidence. Current include paths are explicit; draft PR creation and include-path autodiscovery are not implemented yet. |
@@ -145,11 +169,12 @@ index repair is plan/report-first unless explicitly requested
 - Do not use NPU helper validation reports as proof of provider/runtime execution.
 - Do not hand-edit generated index manifests to satisfy schema notes.
 - Add strict checks only after representative local artifacts are available.
-- Do not treat run-unica evidence as complete without telemetry/capability/final summary and relevant discovery/index/CSV/file-line surfaces.
+- Do not treat run-unica evidence as complete without telemetry/capability/final summary and relevant heap/exchange/discovery/index/CSV/file-line surfaces.
 - Do not treat patch-plan or patch-spec artifacts as complete if their producing run state is unknown.
 - Do not treat quality/product/readiness artifacts as provider runtime proof when their safety flags say otherwise.
 - Do not treat local output SQLite DB writes as source writes, and do not commit generated DB files.
 - Do not treat large Markdown, file existence, dry-run matrix success, provider report existence or NPU smoke success as proof of run-unica completion.
+- Do not treat metadata-only patch specs as concrete product.
 - Treat limitations as backlog to overcome, not as static reasons to skip current tools.
 
 ## GitHub-only limit
