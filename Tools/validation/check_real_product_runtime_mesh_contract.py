@@ -88,6 +88,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     npu_companion_text = read_text(repo_root / "Tools/ai/build_npu_micro_task_companion_report.py")
     local_provider_probe_text = read_text(repo_root / "Tools/ai/run_local_provider_probe.py")
     hardware_ollama_text = read_text(repo_root / "Tools/ai/full0to10_hardware_capability/ollama.py")
+    openvino_peer_topology_contract_text = read_text(repo_root / "Tools/validation/check_openvino_peer_topology_contract.py")
     gpu1_provider_surface = "\n".join([ollama_probe_text, local_provider_probe_text, hardware_ollama_text]).lower()
 
     checks: dict[str, bool] = {
@@ -188,6 +189,13 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 
         "intrinsic_contract_present": exists(repo_root, "Tools/validation/check_real_product_intrinsic_capability_contract.py")
         and has(intrinsic_text, "real_product_intrinsic_capability_contract"),
+
+        "openvino_peer_topology_contract": exists(repo_root, "Tools/validation/check_openvino_peer_topology_contract.py")
+        and exists(repo_root, "Tools/validation/run_openvino_peer_topology_contract_smoke.py")
+        and has(openvino_peer_topology_contract_text, "openvino_peer_topology_contract")
+        and has(openvino_peer_topology_contract_text, "gpu1_reserved_from_openvino_workload")
+        and has(openvino_peer_topology_contract_text, "gpu0_compile_targets_gpu0_only")
+        and has(openvino_peer_topology_contract_text, "npu_micro_uses_runtime_context_and_tool_broker"),
     }
 
     capability_order = [
@@ -206,6 +214,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "prepare_review_pr_product",
         "final_testable_pr",
         "intrinsic_contract_present",
+        "openvino_peer_topology_contract",
     ]
 
     runtime_route = [
@@ -250,6 +259,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             "openvino_gpu0_mentions_openvino": "openvino" in openvino_gpu0_text.lower(),
             "openvino_gpu0_mentions_gpu0": "gpu0" in openvino_gpu0_text.lower() or "gpu.0" in openvino_gpu0_text.lower(),
             "npu_companion_mentions_npu": "npu" in npu_companion_text.lower(),
+            "openvino_peer_topology_contract_present": exists(repo_root, "Tools/validation/check_openvino_peer_topology_contract.py"),
+            "openvino_peer_topology_smoke_present": exists(repo_root, "Tools/validation/run_openvino_peer_topology_contract_smoke.py"),
+            "openvino_peer_topology_contract_mentions_gpu0": "gpu0_compile_targets_gpu0_only" in openvino_peer_topology_contract_text,
+            "openvino_peer_topology_contract_mentions_npu": "npu_micro_uses_runtime_context_and_tool_broker" in openvino_peer_topology_contract_text,
         },
         **checks,
         "provider_execution_performed": False,

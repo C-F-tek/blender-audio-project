@@ -122,6 +122,7 @@ def main() -> int:
         ("real_product_profile", "Tools/validation/run_real_product_profile_smoke.py"),
         ("intrinsic_capability_contract", "Tools/validation/run_real_product_intrinsic_capability_contract_smoke.py"),
         ("runtime_mesh_contract", "Tools/validation/run_real_product_runtime_mesh_contract_smoke.py"),
+        ("openvino_peer_topology", "Tools/validation/run_openvino_peer_topology_contract_smoke.py"),
         ("review_pr_prepare_args", "Tools/validation/run_review_pr_prepare_args_smoke.py"),
         ("review_pr_product_readiness", "Tools/validation/run_review_pr_product_readiness_smoke.py"),
         ("full_product_pr_chain", "Tools/validation/run_full0to10_product_pr_chain_smoke.py"),
