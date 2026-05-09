@@ -156,13 +156,23 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
             "source_writes_performed=true, patch_application_performed=true, or changed/applied results"
         )
 
-    if as_bool(context.get("push")):
+    push_requested = as_bool(context.get("push"))
+    create_pr_requested = as_bool(context.get("create_pr"))
+    draft_pr_requested = as_bool(context.get("draft_pr"))
+    dry_run_requested = as_bool(context.get("dry_run"))
+
+    if create_pr_requested and not push_requested:
+        errors.append("create_pr requires push so the review branch exists on the remote")
+    if draft_pr_requested and not create_pr_requested:
+        errors.append("draft_pr requires create_pr")
+
+    if push_requested:
         argv.append("--push")
-    if as_bool(context.get("create_pr")):
+    if create_pr_requested:
         argv.append("--create-pr")
-    if as_bool(context.get("draft_pr")):
+    if draft_pr_requested:
         argv.append("--draft-pr")
-    if as_bool(context.get("dry_run")):
+    if dry_run_requested:
         argv.append("--dry-run")
 
     return {
@@ -178,10 +188,10 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
             "apply_report_product": apply_report_product,
             "require_product_input": require_product_input,
             "auto_include_from_apply_report": bool(apply_report and auto_include),
-            "push": as_bool(context.get("push")),
-            "create_pr": as_bool(context.get("create_pr")),
-            "draft_pr": as_bool(context.get("draft_pr")),
-            "dry_run": as_bool(context.get("dry_run")),
+            "push": push_requested,
+            "create_pr": create_pr_requested,
+            "draft_pr": draft_pr_requested,
+            "dry_run": dry_run_requested,
         },
         "provider_execution_performed": False,
         "patch_application_performed": False,

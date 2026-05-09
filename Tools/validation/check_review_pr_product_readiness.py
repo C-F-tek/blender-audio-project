@@ -26,10 +26,6 @@ def load_json(path: Path) -> tuple[dict[str, Any] | None, str]:
     return data, ""
 
 
-def argv_contains(argv: Any, token: str) -> bool:
-    return isinstance(argv, list) and token in [str(item) for item in argv]
-
-
 def write_markdown(report: dict[str, Any], output: Path) -> str:
     lines = [
         "# Review PR Product Readiness",
@@ -41,6 +37,8 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
         f"- Apply report product: `{report.get('apply_report_product')}`",
         f"- Require product input: `{report.get('require_product_input')}`",
         f"- Prepare script referenced: `{report.get('prepare_script_referenced')}`",
+        f"- Prepare script reference count: `{report.get('prepare_script_reference_count')}`",
+        f"- Required prepare flags present: `{report.get('required_prepare_flags_present')}`",
         f"- Review PR args ready: `{report.get('review_pr_args_ready')}`",
         f"- Prepare review PR ready: `{report.get('prepare_review_pr_ready')}`",
         "",
@@ -82,9 +80,16 @@ def build_report(repo_root: Path, args_report_path: Path) -> dict[str, Any]:
     has_apply_report = bool(apply_report)
     has_product_input = has_product_paths or has_apply_report
     has_concrete_product = has_product_paths or (has_apply_report and apply_report_product)
-    prepare_script_referenced = isinstance(argv, list) and any(
-        str(item).replace("\\", "/").endswith("Tools/ai/prepare_review_pr.py") for item in argv
+
+    argv_items = [str(item) for item in argv] if isinstance(argv, list) else []
+    normalized_argv = [item.replace("\\", "/") for item in argv_items]
+    prepare_script_reference_count = sum(
+        1 for item in normalized_argv if item.endswith("Tools/ai/prepare_review_pr.py")
     )
+    prepare_script_referenced = prepare_script_reference_count == 1
+    required_prepare_flags = ["--repo-root", "--branch", "--output"]
+    missing_prepare_flags = [flag for flag in required_prepare_flags if flag not in argv_items]
+    required_prepare_flags_present = not missing_prepare_flags
 
     if not args_report_passed:
         errors.append("review PR args report did not pass")
@@ -92,8 +97,12 @@ def build_report(repo_root: Path, args_report_path: Path) -> dict[str, Any]:
         errors.append("review PR product input missing: no include paths and no apply report")
     if require_product_input and has_apply_report and not has_product_paths and not apply_report_product:
         errors.append("review PR apply report is present but not concrete")
-    if not prepare_script_referenced:
+    if prepare_script_reference_count == 0:
         errors.append("prepare_review_pr.py is not referenced by argv")
+    elif prepare_script_reference_count > 1:
+        errors.append("prepare_review_pr.py is referenced more than once by argv")
+    if missing_prepare_flags:
+        errors.append("prepare_review_pr.py argv missing required flags: " + ", ".join(missing_prepare_flags))
 
     review_pr_args_ready = args_report_passed and prepare_script_referenced
     prepare_review_pr_ready = review_pr_args_ready and (not require_product_input or has_concrete_product)
@@ -110,6 +119,9 @@ def build_report(repo_root: Path, args_report_path: Path) -> dict[str, Any]:
         "apply_report_product": apply_report_product,
         "require_product_input": require_product_input,
         "prepare_script_referenced": prepare_script_referenced,
+        "prepare_script_reference_count": prepare_script_reference_count,
+        "required_prepare_flags_present": required_prepare_flags_present,
+        "missing_prepare_flags": missing_prepare_flags,
         "review_pr_args_ready": review_pr_args_ready,
         "prepare_review_pr_ready": prepare_review_pr_ready,
         "derived": {
@@ -118,6 +130,7 @@ def build_report(repo_root: Path, args_report_path: Path) -> dict[str, Any]:
             "has_product_input": has_product_input,
             "has_concrete_product": has_concrete_product,
             "argv_count": len(argv) if isinstance(argv, list) else 0,
+            "required_prepare_flags": required_prepare_flags,
         },
         "provider_execution_performed": False,
         "patch_application_performed": False,

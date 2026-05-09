@@ -60,12 +60,29 @@ def run_checker(source_repo: Path, repo: Path, payload: dict[str, Any], name: st
     }
 
 
-def args_payload(*, include_count: int, apply_report: str, apply_product: bool, passed: bool = True) -> dict[str, Any]:
+def args_payload(
+    *,
+    include_count: int,
+    apply_report: str,
+    apply_product: bool,
+    passed: bool = True,
+    argv: list[str] | None = None,
+) -> dict[str, Any]:
+    if argv is None:
+        argv = [
+            "Tools/ai/prepare_review_pr.py",
+            "--repo-root",
+            ".",
+            "--branch",
+            "CARMINEai/smoke",
+            "--output",
+            "output/validation/review_pr_prepare.json",
+        ]
     return {
         "schema_version": 1,
         "kind": "review_pr_prepare_args",
         "passed": passed,
-        "argv": ["Tools/ai/prepare_review_pr.py", "--repo-root", ".", "--branch", "CARMINEai/smoke"],
+        "argv": argv,
         "derived": {
             "include_path_count": include_count,
             "apply_report": apply_report,
@@ -100,6 +117,37 @@ def main() -> int:
             run_checker(source_repo, repo, args_payload(include_count=0, apply_report="output/apply.json", apply_product=True), "apply_product"),
             run_checker(source_repo, repo, args_payload(include_count=0, apply_report="", apply_product=False), "missing_product"),
             run_checker(source_repo, repo, args_payload(include_count=0, apply_report="output/apply.json", apply_product=False), "non_concrete_apply"),
+            run_checker(
+                source_repo,
+                repo,
+                args_payload(
+                    include_count=1,
+                    apply_report="",
+                    apply_product=False,
+                    argv=[
+                        "Tools/ai/prepare_review_pr.py",
+                        "Tools/ai/prepare_review_pr.py",
+                        "--repo-root",
+                        ".",
+                        "--branch",
+                        "CARMINEai/smoke",
+                        "--output",
+                        "output/validation/review_pr_prepare.json",
+                    ],
+                ),
+                "duplicate_prepare_script",
+            ),
+            run_checker(
+                source_repo,
+                repo,
+                args_payload(
+                    include_count=1,
+                    apply_report="",
+                    apply_product=False,
+                    argv=["Tools/ai/prepare_review_pr.py", "--repo-root", ".", "--branch", "CARMINEai/smoke"],
+                ),
+                "missing_prepare_output",
+            ),
             run_checker(source_repo, repo, args_payload(include_count=1, apply_report="", apply_product=False, passed=False), "args_failed"),
         ]
 
@@ -111,6 +159,18 @@ def main() -> int:
     require(by_name["missing_product"]["returncode"] == 2, errors, "missing product case should fail")
     require(by_name["missing_product"]["report"].get("prepare_review_pr_ready") is False, errors, "missing product should not be ready")
     require(by_name["non_concrete_apply"]["returncode"] == 2, errors, "non concrete apply case should fail")
+    require(by_name["duplicate_prepare_script"]["returncode"] == 2, errors, "duplicate prepare script case should fail")
+    require(
+        by_name["duplicate_prepare_script"]["report"].get("prepare_script_reference_count") == 2,
+        errors,
+        "duplicate prepare script case should report reference count 2",
+    )
+    require(by_name["missing_prepare_output"]["returncode"] == 2, errors, "missing prepare output case should fail")
+    require(
+        "--output" in (by_name["missing_prepare_output"]["report"].get("missing_prepare_flags") or []),
+        errors,
+        "missing prepare output case should report missing --output",
+    )
     require(by_name["args_failed"]["returncode"] == 2, errors, "args failed case should fail")
     require(all(case.get("markdown_exists") for case in cases), errors, "all cases should write markdown")
 
