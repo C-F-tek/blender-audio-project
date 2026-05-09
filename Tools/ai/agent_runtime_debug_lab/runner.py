@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -129,24 +130,29 @@ def run_powershell_parse(repo_root: Path, operation: dict[str, Any]) -> dict[str
         result = base_operation_result(operation, "; ".join(errors) or "no PowerShell paths supplied")
         result["paths"] = paths
         return result
+    powershell = shutil.which("powershell.exe") or shutil.which("pwsh")
+    if not powershell:
+        result = base_operation_result(operation, "powershell.exe/pwsh not found for parser operation")
+        result["paths"] = paths
+        return result
 
     parse_results: list[dict[str, Any]] = []
     for path in paths:
-        import subprocess as _unused_subprocess  # keeps operation side-effect-free while satisfying parser availability
-        try:
-            text = (repo_root / path).read_text(encoding="utf-8-sig")
-        except OSError as exc:
-            parse_results.append({"path": path, "ok": False, "errors": [f"{type(exc).__name__}: {exc}"]})
-            continue
-        brace_balance = text.count("{") - text.count("}")
-        paren_balance = text.count("(") - text.count(")")
-        ok = brace_balance == 0 and paren_balance == 0
+        literal = "'" + str((repo_root / path).resolve()).replace("'", "''") + "'"
+        command = (
+            "$tokens=$null;$parseErrors=$null;"
+            f"$null=[System.Management.Automation.Language.Parser]::ParseFile({literal},[ref]$tokens,[ref]$parseErrors);"
+            "if($parseErrors.Count -gt 0){$parseErrors|ForEach-Object{$_.Message};exit 1}"
+        )
+        result = run_command([powershell, "-NoProfile", "-Command", command], repo_root, 60, 2000)
         parse_results.append({
             "path": path,
-            "ok": ok,
-            "errors": [] if ok else [f"rough parser balance failed braces={brace_balance} parens={paren_balance}"],
+            "ok": result.get("ok") is True,
+            "returncode": result.get("returncode"),
+            "stdout_tail": result.get("stdout_tail", ""),
+            "stderr_tail": result.get("stderr_tail", ""),
+            "errors": [] if result.get("ok") is True else [result.get("stdout_tail") or result.get("stderr_tail") or "PowerShell parser failed"],
         })
-
     errors = [f"{item['path']}: {error}" for item in parse_results for error in item["errors"]]
     return {
         **base_operation_result(operation),
