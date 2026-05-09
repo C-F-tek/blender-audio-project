@@ -96,7 +96,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_uni
 
 This profile is the operator-facing path from task Markdown to reviewable PR product. It enables task ingress, heap/exchange, GPU1/GPU0/NPU peer runtime evidence, shared memory, closure audit, patch suggestion/apply report, prepare_review_pr and optional remote PR creation.
 
-The profile owns the architectural lane flags internally and keeps runtime sizing, model, Python, observer and review-PR controls external. Operators should pass task-specific budgets and context limits from the CLI instead of editing the wrapper.
+The profile owns the architectural lane flags internally and keeps runtime sizing, model, Python, observer and review-PR controls external. Operators should pass task-specific budgets and context limits from the CLI instead of editing the wrapper. Its default NPU micro-start mode is `peer`, so the heap/exchange product lane starts with GPU1/GPU0/NPU as coordinated peers instead of deferring NPU participation.
 
 ## Runtime boundary
 

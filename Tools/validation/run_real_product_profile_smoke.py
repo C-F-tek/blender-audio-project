@@ -58,6 +58,8 @@ def main() -> int:
         "exposes_max_chars_per_file": "[int]$MaxCharsPerFile" in text and "-MaxCharsPerFile" in text,
         "exposes_max_new_tokens": "[int]$MaxNewTokens" in text and "-MaxNewTokens" in text,
         "exposes_keep_alive": "[string]$KeepAlive" in text and "-KeepAlive" in text,
+        "exposes_npu_micro_peer_mode": "[string]$NpuMicroStartMode = \"peer\"" in text,
+        "forwards_npu_micro_start_mode": "-NpuMicroStartMode" in text,
         "exposes_provider_max_context": "[int]$ProviderMaxContextChars" in text and "-ProviderMaxContextChars" in text,
         "exposes_context_pack_total": "[int]$ContextPackMaxTotalChars" in text and "-ContextPackMaxTotalChars" in text,
         "exposes_context_pack_file": "[int]$ContextPackMaxFileChars" in text and "-ContextPackMaxFileChars" in text,
