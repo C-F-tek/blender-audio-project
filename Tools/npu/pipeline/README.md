@@ -47,6 +47,7 @@ configuration objects
 path and generated-artifact validation
 legacy runtime-output policy helpers
 UTF-8 text and JSON IO helpers
+legacy-compatible IO aliases
 legacy/new helper equivalence checks
 deterministic fixtures
 prompt payload builders
@@ -57,7 +58,7 @@ planned runner stage reports
 contract validators
 artifact write planning helpers
 migration readiness reports
-common validation envelopes
+common validation report envelopes
 runtime-output manifest helpers
 ```
 
@@ -66,6 +67,7 @@ Forbidden in this package unless explicitly scoped and validated:
 ```text
 hidden provider calls
 hidden GPU/NPU jobs
+hidden NPU/Ollama provider calls
 Blender runtime execution
 FFmpeg jobs
 Ready To Jazz migration
