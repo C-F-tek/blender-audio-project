@@ -116,6 +116,29 @@ link all parts from the compact index
 
 Generated evidence may exceed 500 lines only when it has compact JSON/Markdown manifest, summary or index and is not used as a primary entrypoint.
 
+
+## Markdown edit and encoding safety rule
+
+AI agents must preserve Markdown encoding and structure. Do not use Windows PowerShell `Set-Content` or fragile multiline `if/elseif` chat-pasted snippets for Unicode Markdown files.
+
+Required safe edit methods:
+
+~~~text
+prefer repository PatchKit bundles for repeatable edits
+prefer Python UTF-8 read/write scripts for direct local Markdown edits
+preserve UTF-8 without mojibake
+verify no corrupted mojibake/BOM byte markers before staging
+run git diff before staging
+~~~
+
+For structural Markdown hygiene, use the repository tool instead of manual splitting:
+
+~~~powershell
+python .\Tools\docs\refactor_markdown_splits.py --repo-root . --migrate-legacy-splits --split-monolithic
+~~~
+
+Do not manually split, rewrite or delete Markdown trees when `Tools/docs/refactor_markdown_splits.py`, `Tools/docs/build_repo_hygiene_plan.py`, PatchKit, or validators can express the change safely.
+
 Markdown cleanup rules:
 
 ```text
