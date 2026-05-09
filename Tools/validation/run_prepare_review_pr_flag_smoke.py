@@ -54,6 +54,34 @@ def seed_repo(root: Path) -> Path:
     return repo
 
 
+def write_apply_report(repo: Path, *, source_writes_performed: bool, patch_application_performed: bool) -> Path:
+    report_path = repo / "output/validation/dry_run_apply_report.json"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report = {
+        "schema_version": 1,
+        "kind": "patch_suggestion_bundle_apply",
+        "passed": True,
+        "apply_requested": False,
+        "patch_application_performed": patch_application_performed,
+        "source_writes_performed": source_writes_performed,
+        "operation_count": 1,
+        "changed_count": 1 if source_writes_performed else 0,
+        "results": [
+            {
+                "operation": "append_once",
+                "path": TARGET,
+                "ok": True,
+                "changed": True,
+                "applied": patch_application_performed,
+            }
+        ],
+        "errors": [],
+        "warnings": [],
+    }
+    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    return report_path
+
+
 def prepare_command(source_repo: Path, repo: Path, output: str, extra_flags: list[str]) -> list[str]:
     return [
         sys.executable,
@@ -81,6 +109,33 @@ def prepare_command(source_repo: Path, repo: Path, output: str, extra_flags: lis
     ]
 
 
+def auto_include_command(source_repo: Path, repo: Path, output: str, apply_report: Path) -> list[str]:
+    return [
+        sys.executable,
+        str(source_repo / "Tools/ai/prepare_review_pr.py"),
+        "--repo-root",
+        str(repo),
+        "--Stamp",
+        "prepare_review_pr_flag_smoke_20990101-010203",
+        "--task-file",
+        "docs/LOCAL_AI_TASKS/smoke-task.md",
+        "--branch",
+        "CARMINEai/prepare-review-pr-auto-include-smoke",
+        "--base",
+        "master",
+        "--title",
+        "docs(ai): prepare review PR auto include smoke",
+        "--commit-message",
+        "docs(ai): prepare review PR auto include smoke",
+        "--apply-report",
+        str(apply_report),
+        "--auto-include-from-apply-report",
+        "--output",
+        output,
+        "--dry-run",
+    ]
+
+
 def run_case(source_repo: Path, repo: Path, env: dict[str, str], timeout: int, name: str, flags: list[str]) -> dict[str, Any]:
     output = f"output/validation/{name}.json"
     command = prepare_command(source_repo, repo, output, flags)
@@ -88,6 +143,16 @@ def run_case(source_repo: Path, repo: Path, env: dict[str, str], timeout: int, n
     report_path = repo / output
     report = json.loads(report_path.read_text(encoding="utf-8-sig")) if report_path.exists() else {}
     return {"name": name, "flags": flags, "command": command_result, "report": report}
+
+
+def run_auto_include_case(source_repo: Path, repo: Path, env: dict[str, str], timeout: int) -> dict[str, Any]:
+    output = "output/validation/auto_include_dry_run_apply_report.json"
+    apply_report = write_apply_report(repo, source_writes_performed=False, patch_application_performed=False)
+    command = auto_include_command(source_repo, repo, output, apply_report)
+    command_result = run(command, repo, env, timeout)
+    report_path = repo / output
+    report = json.loads(report_path.read_text(encoding="utf-8-sig")) if report_path.exists() else {}
+    return {"name": "auto_include_dry_run_apply_report", "flags": ["--auto-include-from-apply-report"], "command": command_result, "report": report}
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -126,9 +191,11 @@ def main() -> int:
         repo = seed_repo(Path(tmp_raw))
         cases.append(run_case(source_repo, repo, env, args.timeout_seconds, "create_pr_without_push", ["--create-pr"]))
         cases.append(run_case(source_repo, repo, env, args.timeout_seconds, "draft_without_create_pr", ["--draft-pr"]))
+        cases.append(run_auto_include_case(source_repo, repo, env, args.timeout_seconds))
     expected_errors = {
         "create_pr_without_push": "--create-pr requires --push",
         "draft_without_create_pr": "--draft-pr requires --create-pr",
+        "auto_include_dry_run_apply_report": "auto include from apply report requires at least one report with source_writes_performed=true or patch_application_performed=true",
     }
     for case in cases:
         case_errors = case.get("report", {}).get("errors") or []

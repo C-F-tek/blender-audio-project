@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
@@ -1779,6 +1779,7 @@ $HeapExchangeExitArgs = @(
     "--stamp", $DataStamp,
     "--runtime-entry", $HeapExchangeEntryJson,
     "--runtime-state", $HeapExchangeRuntimeState,
+    "--apply-report", $PatchSuggestionJson,
     "--observer-dir", $HeapExchangeObserverDir,
     "--output", $HeapExchangeExitJson,
     "--markdown-output", $HeapExchangeExitMd
@@ -1952,6 +1953,9 @@ if ($PrepareReviewPr) {
     if ($ReviewPrPush) { $ReviewArgs += "--push" }
     if ($ReviewPrCreate) { $ReviewArgs += "--create-pr" }
     if ($ReviewPrDraft) { $ReviewArgs += "--draft-pr" }
+    if ((Get-Variable -Name PatchSuggestionJson -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $PatchSuggestionJson -PathType Leaf)) {
+        $ReviewArgs += @("--apply-report", $PatchSuggestionJson, "--auto-include-from-apply-report")
+    }
     if ($DryRun) { $ReviewArgs += "--dry-run" }
     $PhaseStatus.review_pr_prepare = Invoke-Checked "Prepare review branch and PR" {
         Invoke-Python $ReviewArgs

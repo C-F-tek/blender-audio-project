@@ -275,6 +275,16 @@ def main() -> int:
             auto_include_paths, apply_report_infos, auto_errors, auto_warnings = discover_auto_include_paths(repo_root, args.apply_report)
             errors.extend(auto_errors)
             warnings.extend(auto_warnings)
+            source_write_reports = [
+                info for info in apply_report_infos
+                if info.get("source_writes_performed") is True or info.get("patch_application_performed") is True
+            ]
+            if not source_write_reports and not args.include_path:
+                errors.append(
+                    "auto include from apply report requires at least one report with "
+                    "source_writes_performed=true or patch_application_performed=true; "
+                    "run deterministic suggestions with apply enabled before prepare_review_pr.py"
+                )
             if not auto_include_paths and not args.include_path:
                 errors.append("no safe product include paths discovered from apply reports")
             elif not auto_include_paths:
