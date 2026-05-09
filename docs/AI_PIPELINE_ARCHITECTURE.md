@@ -1,5 +1,19 @@
 # AI Pipeline Architecture
 
+## Status
+
+Current architecture reference for the modular AI artifact pipeline.
+
+This document is subordinate to the unified launcher, heap/exchange operating model and full-run evidence contract.
+
+Current operating model:
+
+```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+```
+
 ## Purpose
 
 Architecture contract for the modular AI artifact pipeline in `IA-Carmine Local AI Orchestration Workbench`.
@@ -33,7 +47,7 @@ docs/MAIN_RUNTIME_ARCHITECTURE.md
 
 The AI artifact pipeline is one implementation lane inside the wider runtime. It should publish compact state, report references and planned artifacts into the shared runtime heap / blackboard model rather than becoming an isolated orchestration island.
 
-Pipeline reports become useful when joined with broker execution state, semantic tool registry metadata, deterministic validator results and telemetry/event stream summaries.
+Pipeline reports become useful when joined with heap/exchange lifecycle state, broker execution state, semantic tool registry metadata, deterministic validator results, patchkit or patch bridge reports and telemetry/event stream summaries.
 
 ## Current status
 
@@ -65,11 +79,16 @@ return exit code
 
 `-Full0To10` is **TUTTO SU TUTTO**. The AI artifact pipeline can contribute dry-run reports, planned artifacts and validation evidence, but it is not sufficient to prove a full run by itself.
 
-Dry-run matrix evidence proves planned-only behavior. It does not prove provider execution, broker tool execution, runtime capability availability, patch application state or source-write state.
+Dry-run matrix evidence proves planned-only behavior. It does not prove provider execution, broker tool execution, runtime capability availability, patch application state, heap/exchange lifecycle state, patchkit application state or source-write state.
 
 When pipeline reports influence evidence, recommendations, patch plans or patch specs, handoff must include companion surfaces:
 
 ```text
+heap/exchange runtime entry
+heap/exchange runtime state
+heap/exchange runtime exit product
+heap/exchange lifecycle report
+patchkit apply report when source writes were selected
 runtime tool usage telemetry
 runtime/hardware capability manifest
 full toolbox telemetry summary
@@ -109,6 +128,8 @@ compatible with existing schema-v6 report meanings
 visible through launcher manifest/report surfaces when selected
 compatible with telemetry/capability handoff when part of full-run evidence
 compatible with shared runtime heap / blackboard contract when runtime state is introduced
+compatible with heap/exchange lifecycle reporting when product lanes depend on it
+compatible with patchkit as reviewed source-write boundary when source edits are produced
 within file-size policy or split by responsibility
 ```
 
@@ -170,6 +191,9 @@ When a schema-v6 pipeline report is used as full-run evidence input, surrounding
 provider_execution_performed
 patch_application_performed
 source_writes_performed
+heap_exchange_runtime_entry when product lanes are selected
+heap_exchange_runtime_exit_product when product lanes are selected
+heap_exchange_runtime_lifecycle when product lanes are selected
 runtime tool execution state when relevant
 provider degradation state when relevant
 file-line-limit state when maintainability is relevant
@@ -243,6 +267,8 @@ new validation checks
 internal dataclasses that preserve report compatibility
 telemetry/capability references when pipeline outputs join full-run handoff
 file-line evidence references when maintainability is in scope
+heap/exchange lifecycle references when product lanes join full-run handoff
+patchkit references when reviewed source-write products are produced
 blackboard/broker/registry contract references when integrating the main runtime architecture
 ```
 
@@ -265,6 +291,8 @@ modifying full frame-level JSON data
 changing existing schema-v6 field meanings
 claiming full-run success from dry-run matrix evidence alone
 silently bypassing the broker unico executor once runtime execution is centralized
+bypassing heap/exchange lifecycle for product-path claims
+bypassing patchkit when a reviewed patchkit bundle can express the source-write change
 ```
 
 ## Current next actions
@@ -273,6 +301,8 @@ silently bypassing the broker unico executor once runtime execution is centraliz
 validate launcher-owned usage through unified runbook when local execution is available
 keep dry-run matrix evidence clearly marked planned-only
 attach pipeline outputs to telemetry/capability/final-summary context when used for recommendations or patch plans
+include heap/exchange lifecycle context when product lanes are selected
+keep patchkit reports visible when source-write boundary is selected
 keep file-line evidence visible when maintainability is in scope
 regenerate indexes only under scoped task
 add blackboard, broker, registry, validator-authority and telemetry surfaces incrementally with deterministic reports first
