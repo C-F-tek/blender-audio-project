@@ -12,12 +12,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from Tools.ai.patch_suggestion_bundle.common import (
     PatchOperation,
@@ -58,6 +63,8 @@ DENIED_TARGET_SUFFIXES = (
     ".sqlite-wal",
     ".sqlite-shm",
 )
+
+STAMP_RE = re.compile(r"\d{8}-\d{6}")
 
 
 def run(command: list[str], cwd: Path, timeout: int = 120) -> dict[str, Any]:
@@ -113,7 +120,7 @@ def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     return data, None
 
 
-def discover_latest_manifest(repo_root: Path, roots: list[str], max_files: int) -> str:
+def discover_latest_manifest(repo_root: Path, roots: list[str], max_files: int, manifest_stamp: str = "") -> str:
     candidates: list[Path] = []
     for raw_root in roots:
         root = (repo_root / raw_root).resolve()
@@ -124,11 +131,22 @@ def discover_latest_manifest(repo_root: Path, roots: list[str], max_files: int) 
     scanned = 0
     for path in candidates[:max_files]:
         scanned += 1
+        relative = repo_relative(path, repo_root)
+        if manifest_stamp and manifest_stamp not in relative:
+            continue
         data, error = read_json_object(path)
         if error or not data:
             continue
         if data.get("kind") in {"proposal_patch_spec_manifest", "reviewed_patch_spec_manifest"}:
-            return repo_relative(path, repo_root)
+            return relative
+    return ""
+
+
+def infer_manifest_stamp(*values: str) -> str:
+    for value in values:
+        matches = STAMP_RE.findall(str(value or ""))
+        if matches:
+            return matches[-1]
     return ""
 
 
@@ -342,6 +360,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--patch-spec", action="append", default=[])
     parser.add_argument("--discover-root", action="append", default=["output/patch_specs"])
     parser.add_argument("--discover-max-files", type=int, default=50)
+    parser.add_argument("--manifest-stamp", default="")
     parser.add_argument("--output", default="output/validation/generated_patch_specs_review_pr_apply.json")
     parser.add_argument("--markdown-output", default="")
     parser.add_argument("--max-applied-patches", type=int, default=5)
@@ -388,12 +407,23 @@ def main() -> int:
 
     manifest_path = args.manifest.strip()
     discovered_manifest = ""
+    manifest_stamp = infer_manifest_stamp(args.manifest_stamp, args.output, args.create_review_branch)
     if not manifest_path and not args.patch_spec:
-        discovered_manifest = discover_latest_manifest(repo_root, split_values(args.discover_root), args.discover_max_files)
+        discovered_manifest = discover_latest_manifest(
+            repo_root,
+            split_values(args.discover_root),
+            args.discover_max_files,
+            manifest_stamp,
+        )
         manifest_path = discovered_manifest
 
     spec_paths = split_values(args.patch_spec)
-    manifest_info: dict[str, Any] = {"requested": bool(args.manifest), "path": manifest_path, "discovered": discovered_manifest}
+    manifest_info: dict[str, Any] = {
+        "requested": bool(args.manifest),
+        "path": manifest_path,
+        "discovered": discovered_manifest,
+        "discovery_filter_stamp": manifest_stamp,
+    }
     if manifest_path:
         manifest_full = (repo_root / manifest_path).resolve()
         manifest_data, manifest_error = read_json_object(manifest_full)
