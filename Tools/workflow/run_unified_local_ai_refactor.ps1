@@ -1783,7 +1783,7 @@ $HeapExchangeExitArgs = @(
     "--output", $HeapExchangeExitJson,
     "--markdown-output", $HeapExchangeExitMd
 )
-if ($PrepareReviewPr -or $ReviewPrFromGeneratedPatchSpecs) { $HeapExchangeExitArgs += "--require-concrete-product" }
+if ($ReviewPrFromGeneratedPatchSpecs) { $HeapExchangeExitArgs += "--require-concrete-product" }
 $HeapExchangeExitOk = Invoke-Checked "Build heap/exchange runtime exit product" {
     & $ResolvedPythonExe @HeapExchangeExitArgs
 }
@@ -1820,6 +1820,34 @@ if (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and -not $Rev
 if (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and (Test-Path -LiteralPath $PatchSuggestionJson -PathType Leaf)) {
 
 
+# IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN
+if (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and -not $ReviewPrFromGeneratedPatchSpecs) {
+    $HeapExchangeExitJson = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.json"
+    $HeapExchangeExitMd = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.md"
+
+    $HeapExchangeExitArgs = @(
+        "Tools/ai/build_heap_exchange_runtime_exit.py",
+        "--repo-root", ".",
+        "--stamp", $DataStamp,
+        "--runtime-entry", $HeapExchangeEntryJson,
+        "--runtime-state", $HeapExchangeRuntimeState,
+        "--apply-report", $PatchSuggestionJson,
+        "--observer-dir", $HeapExchangeObserverDir,
+        "--output", $HeapExchangeExitJson,
+        "--markdown-output", $HeapExchangeExitMd,
+        "--require-concrete-product"
+    )
+
+    $PhaseStatus.heap_exchange_runtime_exit_after_patch_suggestion = Invoke-Checked "Build heap/exchange runtime exit product after patch suggestion product" {
+        & $ResolvedPythonExe @HeapExchangeExitArgs
+    }
+
+    $ReportFiles += $HeapExchangeExitJson
+    $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapExchangeExitJson
+    $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapExchangeExitMd
+}
+# IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-END
+
 # IA-CARMINE-HEAP-EXCHANGE-LIFECYCLE-GATE-BEGIN
 $HeapExchangeLifecycleJson = Join-Path $OutputDir ("validation/heap_exchange_runtime_lifecycle_{0}.json" -f $DataStamp)
 $HeapExchangeLifecycleMd = Join-Path $OutputDir ("validation/heap_exchange_runtime_lifecycle_{0}.md" -f $DataStamp)
@@ -1832,10 +1860,11 @@ $HeapExchangeLifecycleArgs = @(
     "--runtime-exit", $HeapExchangeExitJson,
     "--observer-dir", $HeapExchangeObserverDir,
     "--require-public-events",
+    "--require-knowledge-surface",
     "--output", $HeapExchangeLifecycleJson,
     "--markdown-output", $HeapExchangeLifecycleMd
 )
-if ($PrepareReviewPr -or $ReviewPrFromGeneratedPatchSpecs) { $HeapExchangeLifecycleArgs += "--require-concrete-exit" }
+if ($PrepareReviewPr -or $ReviewPrFromGeneratedPatchSpecs -or $ReviewPrApplyDeterministicSuggestions) { $HeapExchangeLifecycleArgs += "--require-concrete-exit" }
 $HeapExchangeLifecycleOk = Invoke-Checked "Validate heap/exchange runtime lifecycle" {
     & $ResolvedPythonExe @HeapExchangeLifecycleArgs
 }
