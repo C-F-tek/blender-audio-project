@@ -21,11 +21,13 @@ def main() -> int:
     wrapper = repo / "Tools/workflow/run_unified_real_product_pr.ps1"
     launcher = repo / "Tools/workflow/run_unified_local_ai_refactor.ps1"
     readme = repo / "Tools/workflow/README.md"
+    intrinsic_contract = repo / "Tools/validation/check_real_product_intrinsic_capability_contract.py"
     errors: list[str] = []
 
     text = wrapper.read_text(encoding="utf-8-sig", errors="replace") if wrapper.exists() else ""
     launcher_text = launcher.read_text(encoding="utf-8-sig", errors="replace") if launcher.exists() else ""
     readme_text = readme.read_text(encoding="utf-8-sig", errors="replace") if readme.exists() else ""
+    intrinsic_contract_text = intrinsic_contract.read_text(encoding="utf-8-sig", errors="replace") if intrinsic_contract.exists() else ""
 
     required_tokens = {
         "wrapper_exists": wrapper.exists(),
@@ -47,6 +49,9 @@ def main() -> int:
         "guards_create_pr_requires_push": "-CreatePr requires -Push" in text,
         "readme_no_stale_draft_limitation": "does not create draft PRs yet" not in readme_text,
         "readme_documents_draft_support": "supports draft PR creation" in readme_text,
+        "intrinsic_contract_exists": intrinsic_contract.exists(),
+        "intrinsic_contract_mentions_heap_exchange": "heap_exchange_activation" in intrinsic_contract_text,
+        "intrinsic_contract_mentions_gpu0_gpu1_npu": "gpu1_primary_advisory" in intrinsic_contract_text and "gpu0_openvino_workload" in intrinsic_contract_text and "npu_peer_micro_lane" in intrinsic_contract_text,
         "supports_generated_patch_specs": "-ReviewPrFromGeneratedPatchSpecs" in text,
         "supports_deterministic_suggestions": "-ReviewPrApplyDeterministicSuggestions" in text,
         "saves_inputs_to_memory": "-SaveInputsToMemoryDb" in text,
