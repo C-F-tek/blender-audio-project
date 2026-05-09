@@ -19,17 +19,27 @@ Tools/workflow/unified_run_observer.ps1
 
 Historical handoffs and old PR bodies are secondary. Current code and current contract docs win.
 
+## Canonical naming
+
+```text
+0Full10 = run unica
+Full0To10 = CLI/flag spelling where the current launcher exposes `-Full0To10`
+run unica = full 0-to-10 workflow over the whole active project perimeter
+```
+
+Use `0Full10` in prose when naming the operational concept. Use `-Full0To10` only when documenting the actual launcher switch.
+
 ## First decision
 
 | Intent | Use | Avoid |
 |---|---|---|
 | Fast syntax/config sanity | `-Mode smoke -DryRun` | `-Full0To10` |
 | Debug one phase | `-Mode <phase> -NoStrictRealRunActivation` | implicit real-run activation |
-| Full Markdown-to-review workflow | `-Full0To10` with task Markdown | hidden helper-only entrypoints |
+| Full Markdown-to-review workflow | 0Full10 run unica via `-Full0To10` with task Markdown | hidden helper-only entrypoints |
 | Evidence-only lightweight check | `-LightFull0To10` | provider success claims |
 | Markdown/doc inventory | `-Mode md -NoStrictRealRunActivation` | provider switches |
 | Python/script inventory | `-Mode python -NoStrictRealRunActivation` | patch apply |
-| Provider advisory run | Full0To10 or explicit provider lane after Python preflight | system Python |
+| Provider advisory run | 0Full10/run unica or explicit provider lane after Python preflight | system Python |
 | Deterministic suggestion apply | review branch and review-PR controls | patch specs as auto-apply |
 | Long-run observation | observer/watch scripts | silent waiting |
 
@@ -129,9 +139,11 @@ For diagnostics, always pair a single phase with:
 
 Without that flag, non-smoke/non-reset real runs can be promoted into TUTTO SU TUTTO.
 
-## Full0To10 versus RunIntensity
+## 0Full10 versus RunIntensity
 
-`-Full0To10` means full semantic perimeter: all major phases unless an explicit `-No*` flag disables a lane or evidence classifies it unavailable/degraded.
+0Full10 means run unica: full semantic perimeter over all major phases unless an explicit `-No*` flag disables a lane or evidence classifies it unavailable/degraded.
+
+`-Full0To10` is the current launcher switch for this run-unica behavior.
 
 `-RunIntensity` changes capacity, not scope:
 
@@ -332,7 +344,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -NoStrictRealRunActivation -Prod -NoExecutionTail
 ```
 
-Full product shape:
+0Full10 run unica product shape:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
@@ -364,7 +376,7 @@ Provide:
 current branch and PR
 exact launcher command
 Stamp and TaskFile
-selected Mode or Full0To10
+selected Mode or 0Full10 / -Full0To10
 whether NoStrictRealRunActivation was used
 selected PythonExe / IA_CARMINE_PYTHON
 manifest path
