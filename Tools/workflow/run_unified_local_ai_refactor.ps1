@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
@@ -1691,6 +1691,7 @@ if ($PrepareReviewPr) {
     }
     if ($ReviewPrPush) { $ReviewArgs += "--push" }
     if ($ReviewPrCreate) { $ReviewArgs += "--create-pr" }
+    if ($ReviewPrDraft) { $ReviewArgs += "--draft-pr" }
     if ($DryRun) { $ReviewArgs += "--dry-run" }
     $PhaseStatus.review_pr_prepare = Invoke-Checked "Prepare review branch and PR" {
         Invoke-Python $ReviewArgs
