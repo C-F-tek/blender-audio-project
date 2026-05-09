@@ -33,6 +33,17 @@ def write(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def init_git_repo(repo: Path, source_repo: Path) -> list[dict[str, Any]]:
+    commands = [
+        ["git", "init"],
+        ["git", "config", "user.email", "patchkit-smoke@example.invalid"],
+        ["git", "config", "user.name", "Patchkit Smoke"],
+        ["git", "add", "."],
+        ["git", "commit", "-m", "initial smoke fixture"],
+    ]
+    return [run(command, repo, source_repo) for command in commands]
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Patchkit Smoke", "", f"- Passed: `{report.get('passed')}`", ""]
     for case in report.get("cases") or []:
@@ -87,12 +98,19 @@ def main() -> int:
             )
             + "\n",
         )
+        git_setup = init_git_repo(repo, source_repo)
         dry = run([sys.executable, str(runner), "--repo-root", str(repo), "--bundle", str(bundle), "--dry-run"], repo, source_repo)
         apply = run([sys.executable, str(runner), "--repo-root", str(repo), "--bundle", str(bundle)], repo, source_repo)
         second = run([sys.executable, str(runner), "--repo-root", str(repo), "--bundle", str(bundle)], repo, source_repo)
         target_text = target.read_text(encoding="utf-8")
-        ok = dry["returncode"] == 0 and apply["returncode"] == 0 and second["returncode"] == 0 and target_text.count("PATCHKIT-SMOKE-FRAGMENT") == 1
-        cases.append({"name": "dry_apply_idempotent_patch_bundle", "passed": ok, "dry": dry, "apply": apply, "second": second})
+        ok = (
+            all(item["returncode"] == 0 for item in git_setup)
+            and dry["returncode"] == 0
+            and apply["returncode"] == 0
+            and second["returncode"] == 0
+            and target_text.count("PATCHKIT-SMOKE-FRAGMENT") == 1
+        )
+        cases.append({"name": "dry_apply_idempotent_patch_bundle", "passed": ok, "git_setup": git_setup, "dry": dry, "apply": apply, "second": second})
         if not ok:
             errors.append("patchkit dry/apply/idempotency smoke failed")
 
