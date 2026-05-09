@@ -1,6 +1,6 @@
 # AI Tools
 
-`Tools/ai/` contains report-oriented tools for IA-Carmine local AI orchestration, context building, provider diagnostics, deterministic recommendations, telemetry, evidence, final tool-product packaging, patch suggestion handling and AI-to-AI handoff.
+`Tools/ai/` contains report-oriented tools for IA-Carmine local AI orchestration, context building, provider diagnostics, deterministic recommendations, telemetry, evidence, final tool-product packaging, patch suggestion handling, reusable patchkit bundles and AI-to-AI handoff.
 
 This README is a technical catalog. It is not the primary command source.
 
@@ -10,11 +10,13 @@ Primary operator entrypoint:
 Tools/workflow/run_unified_local_ai_refactor.ps1
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 ```
 
 Code-driven navigation:
 
 ```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md
@@ -35,7 +37,39 @@ maintained source/script target <=400 lines
 limitations are backlog to overcome, not reasons to skip available tools
 patch application is explicit and separate
 tool output should become verifiable product/evidence/readiness material, not chat-only summary
-patch notes are proposal ledgers until reviewed into a concrete patch bundle or branch diff
+patch notes are proposal ledgers until reviewed into a concrete patchkit bundle or branch diff
+```
+
+## Heap/exchange and patchkit boundary
+
+The active model is:
+
+```text
+IN -> dynamic heap/exchange LOOP -> deterministic OUT
+```
+
+The heap/exchange center is the dynamic knowledge surface. GPU1, GPU0, NPU, provider lanes, official adapter, context/memory and broker evidence may cooperate through runtime routing and evidence quality. Do not model this center as a rigid static chain.
+
+The boundary is deterministic:
+
+```text
+controlled task/context/capability entry
+heap exchange runtime state and public events
+exit product with concrete operation candidates
+lifecycle validation
+patchkit bundle/application or review PR product
+```
+
+Canonical docs and tools:
+
+```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+Tools/ai/build_heap_exchange_runtime_entry.py
+Tools/ai/build_heap_exchange_runtime_exit.py
+Tools/validation/check_heap_exchange_runtime_lifecycle.py
+Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+Tools/ai/patchkit/apply_patch_bundle.py
+Tools/validation/run_patchkit_smoke.py
 ```
 
 ## Owner boundaries
@@ -48,12 +82,15 @@ Do not create a new script when one of these already owns the responsibility.
 | GPU1/Ollama planner worker | `run_agent_gpu_deep_planning_supervised.py` |
 | GPU0 peer worker | `run_gpu0_peer_companion_worker.py` |
 | AI peer exchange packet | `build_ai_peer_exchange_packet.py` |
+| Heap/exchange runtime entry | `build_heap_exchange_runtime_entry.py` |
+| Heap/exchange runtime exit | `build_heap_exchange_runtime_exit.py` |
 | Runtime tool execution | `agent_runtime_tool_broker.py` |
 | Runtime tool telemetry | `build_runtime_tool_usage_telemetry.py` |
 | Full toolbox telemetry summary | `build_full_toolbox_run_telemetry_summary.py` |
 | Shared AI-to-AI bundle | `build_shared_toolbox_ai_to_ai_bundle.py` |
 | GitHub compact evidence bundle | `build_github_evidence_bundle.py` |
 | Task patch suggestion report | `build_task_patch_suggestion_report.py` |
+| Deterministic patchkit application | `patchkit/apply_patch_bundle.py` |
 | Patch suggestion dry-run/apply | `apply_patch_suggestion_bundle.py` and `patch_suggestion_bundle/cli.py` |
 | Review PR preparation | `prepare_review_pr.py` |
 | Context pack | `build_ai_context_pack.py` |
@@ -71,6 +108,7 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 | Area | Role |
 |---|---|
 | `pipeline/` | Modular AI artifact pipeline implementation behind `run_parallel_artifact_pipeline.py`. |
+| `patchkit/` | Reusable controlled patch-bundle runner, filesystem/anchor/PowerShell/report helpers and deterministic validators. |
 | `patch_suggestion_bundle/` | Deterministic patch suggestion discovery, classification and apply implementation. |
 | `patch_notes_quality_product/` | Manual-review patch-note product/ledger support. |
 | `full0to10_final_product/` | Final tool-product package builder: product Markdown, evidence index, readiness, manifest and README. |
@@ -86,9 +124,11 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 | Agent state and memory | `build_agent_state_packet.py`, `review_agent_memory.py`, `agent_runtime_sqlite_memory.py` | SQLite outputs are local/private and must not be committed. |
 | Provider diagnostics | `run_local_provider_probe.py`, `check_local_resource_lanes.py`, `analyze_gpu_npu_run_sync.py` | Provider state must flow to telemetry/bundle when used in Full0To10 handoff. |
 | AI peer exchange | `build_ai_peer_exchange_packet.py`, `run_gpu0_peer_companion_worker.py`, `run_npu_gpu_deep_review_auditor.py` | GPU1 output to GPU0/NPU peer response and broker evidence. |
+| Heap/exchange lifecycle | `build_heap_exchange_runtime_entry.py`, `build_heap_exchange_runtime_exit.py` | Dynamic center boundary: entry state, lane availability, public exchange events and deterministic exit product. |
 | Workload routing | `build_workload_quality_lane_routing.py` | Keeps unusable provider output out of advisory context. |
 | Deterministic recommendations | `build_deterministic_recommendations.py` | Supports degraded-provider recovery without hallucinated provider success. |
 | Patch planning/spec support | `build_agent_review_patch_plan.py`, `build_patch_specs_from_proposals.py`, `promote_patch_spec_draft.py` | Review-only unless explicit apply is authorized separately. |
+| Patchkit bundles | `patchkit/apply_patch_bundle.py`, `patchkit/*` | Preferred OOB application path for future core patch bundles. |
 | Patch suggestion product | `build_task_patch_suggestion_report.py`, `apply_patch_suggestion_bundle.py`, `prepare_review_pr.py` | Markdown/task suggestion product, deterministic apply, review PR preparation. |
 | Runtime broker/telemetry | `agent_runtime_tool_broker.py`, `build_runtime_tool_usage_telemetry.py` | Broker-measured tool calls and normalized status. |
 | Capability and telemetry summary | capability manifest packages/builders, `build_full_toolbox_run_telemetry_summary.py` | Handoff context for available tools/hardware lanes and run state. |
@@ -98,12 +138,66 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 
 Use `docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` to classify each family as active, report-only, provider-gated, manual-review, local-private, target or legacy/diagnostic.
 
+## Patchkit bundle procedure
+
+Future patch work should centralize only the modification core:
+
+```text
+patch_specs/<bundle>/bundle.json
+patch_specs/<bundle>/fragments/*.ps1
+patch_specs/<bundle>/fragments/*.py
+```
+
+Apply it with:
+
+```powershell
+python .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json `
+  --dry-run
+
+python .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json
+```
+
+Patchkit handles:
+
+```text
+backup
+encoding/BOM preservation
+newline preservation without Windows CRCRLF corruption
+in-memory dry-run chain simulation
+idempotency markers
+PowerShell Invoke-Checked anchors
+marker insertions
+exact replacements
+PowerShell parser validation
+Python compile validation
+git diff --check
+JSON/Markdown reports
+line count reporting
+```
+
+Supported initial operations:
+
+```text
+insert_after_invoke_checked
+insert_before_marker
+insert_after_marker
+replace_once
+append_once
+assert_marker
+assert_no_naked_throw
+```
+
 ## Patch suggestion and review PR status
 
 Current code is conservative:
 
 ```text
 apply_patch_suggestion_bundle.py can dry-run or apply deterministic operations only when explicit --apply is supplied.
+patchkit/apply_patch_bundle.py is preferred for new reviewed core patch bundles.
 patch_suggestion_bundle/common.py owns the reusable operation model and report path normalization used by the final phase.
 patch_suggestion_bundle/product.py exposes product/supplemental totals separately from capped published review-item lists.
 prepare_review_pr.py requires explicit --include-path / launcher ReviewPrIncludePath.
@@ -126,7 +220,7 @@ summary.proposal_core
 summary.proposal_core.notes[]
 ```
 
-Patch notes are not patches. Convert only validated suggestions into a real patch bundle or branch diff.
+Patch notes are not patches. Convert only validated suggestions into a real patchkit bundle or branch diff.
 
 ## Final product behavior
 
@@ -157,6 +251,7 @@ full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when relevant
 proposal_core when patch notes quality product is part of the run
+heap/exchange entry, runtime state, public events and exit product when review PR product is requested
 ```
 
 File existence alone is not proof of successful execution.
@@ -192,6 +287,7 @@ run Blender, FFmpeg, audio playback or media generation
 convert patch notes directly into source writes without review
 bypass agent_runtime_tool_broker.py for provider-requested tools
 bypass prepare_review_pr.py for review PR staging/commit/push/create
+bypass patchkit for long/delicate future patch bundles when patchkit operations can express the change
 ```
 
 ## Line-budget policy
@@ -214,6 +310,7 @@ Tools/validation/check_file_line_limits.py
 ## Related docs
 
 ```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
