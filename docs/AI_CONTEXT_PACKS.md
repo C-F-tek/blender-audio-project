@@ -11,6 +11,7 @@ which files to read
 which validation ownership applies
 which stop conditions protect the repo
 which compact evidence can be reviewed on GitHub
+which context enters the heap/exchange lifecycle
 ```
 
 They do not execute providers, apply patches, write `patch_specs/inbox/`, edit generated indexes or touch Blender runtime.
@@ -19,6 +20,7 @@ Current command and validation routes live in:
 
 ```text
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 ```
@@ -35,6 +37,9 @@ Context packs are evidence-adjacent but not sufficient by themselves. When a con
 unified launcher manifest
 phase_status / phase_reports
 context-pack evidence
+heap/exchange runtime entry when lifecycle is selected
+heap/exchange runtime state when context participates in dynamic exchange
+heap/exchange runtime exit product when context influenced product output
 runtime tool usage telemetry when tools executed
 runtime tool capability manifest when tool capabilities are relevant
 full toolbox telemetry summary
@@ -46,12 +51,44 @@ file-line-limit reports when maintainability is in scope
 
 Telemetry does not replace the context pack. It explains whether the context-pack lane executed, failed, was skipped, was degraded or was only planned.
 
+## Context pack in heap/exchange lifecycle
+
+Context pack and agent state form the controlled input layer of the dynamic center.
+
+```text
+IN
+  task Markdown
+  context pack
+  agent-state packet
+  selected memory summaries
+
+LOOP / HEAP / EXCHANGE
+  provider lanes, GPU0/GPU1/NPU/context/broker/validator lanes read and write bounded observations
+  runtime state records lane registration and public exchange events
+
+OUT
+  heap exchange exit product
+  concrete deterministic operation candidates or manual-review findings
+  lifecycle validation
+  patchkit or deterministic patch bridge when selected
+```
+
+Rules:
+
+```text
+Context can guide the heap.
+Context must not become hidden authority.
+Raw context is not a patch product.
+Exit products must expose concrete operations/findings.
+```
+
 ## Current toolchain
 
 | Tool | Role | Full-run visibility |
 |---|---|---|
 | `Tools/ai/build_ai_context_pack.py` | Builds a local context pack under ignored `output/ai_context_packs/` and optional compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/`. | Manifest `context_files` / `phase_reports`; bundle reference when included in handoff. |
 | `Tools/validation/check_ai_context_pack_contract.py` | Validates context-pack and context-pack-evidence contracts without executing providers. | Validation report and phase status. |
+| `Tools/ai/build_heap_exchange_runtime_entry.py` | Records context/agent-state availability at heap entry when lifecycle is selected. | Runtime entry artifact and report list. |
 
 Owner map:
 
@@ -178,9 +215,10 @@ The intended loop is part of the unified launcher flow:
 select launcher mode/profile
   -> build context pack when selected
   -> validate context pack
-  -> run task-specific validators
-  -> optionally run explicit GPU/NPU provider/probe workflow
+  -> enter heap/exchange lifecycle when product lanes are selected
+  -> run task-specific validators and provider/probe workflow when selected
   -> build recommendations and patch-plan artifacts
+  -> exit through heap exchange product and lifecycle validation
   -> attach telemetry/capability/discovery/file-line surfaces for completeness
   -> commit only compact evidence when required
 ```
@@ -198,4 +236,5 @@ selective execution planner that chooses validators from changed files
 richer context-pack profiles for memory, guardrail and NPU promotion experiments
 NPU advisory promotion experiment only after multi-sample quality gates
 richer context-pack telemetry fields when context-pack lanes become more complex
+formal context-to-heap participation validator fields
 ```
