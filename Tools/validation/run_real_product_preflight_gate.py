@@ -129,6 +129,7 @@ def main() -> int:
         ("runtime_evidence_correlation", "Tools/validation/run_runtime_evidence_correlation_smoke.py"),
             ("runtime_evidence_correlation_launcher_wiring", "Tools/validation/run_runtime_evidence_correlation_launcher_wiring_smoke.py"),
             ("manifest_runtime_evidence_correlation_schema", "Tools/validation/run_unified_manifest_runtime_evidence_correlation_smoke.py"),
+            ("review_pr_final_product_contract", "Tools/validation/run_review_pr_final_product_contract_smoke.py"),
     ]
 
     steps: list[dict[str, Any]] = []

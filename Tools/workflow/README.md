@@ -451,3 +451,16 @@ The smoke `Tools/validation/run_unified_manifest_runtime_evidence_correlation_sm
 
 This prevents downstream tooling from relying on implicit path guesses for the final runtime evidence correlation report.
 <!-- IA-CARMINE-MANIFEST-RUNTIME-EVIDENCE-CORRELATION-END -->
+
+<!-- IA-CARMINE-REVIEW-PR-FINAL-PRODUCT-CONTRACT-BEGIN -->
+## Review PR final product contract
+
+`Tools/validation/check_review_pr_final_product_contract.py` validates the output of `prepare_review_pr.py`.
+
+It distinguishes two modes:
+
+1. local review branch product: product commit and safe include paths are required;
+2. remote PR product: push, GitHub PR creation and PR URL are also required.
+
+The smoke `Tools/validation/run_review_pr_final_product_contract_smoke.py` covers local-product pass, remote-product pass and missing-remote-PR fail. The check is report-only and does not create branches, commits, pushes or PRs during preflight.
+<!-- IA-CARMINE-REVIEW-PR-FINAL-PRODUCT-CONTRACT-END -->
