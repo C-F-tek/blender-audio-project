@@ -8,13 +8,17 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 
 1. read `AGENTS.md`;
 2. read `CHATGPT.md` and `CHATGPT/README.md` when resuming ChatGPT-assisted, local-AI, full-toolbox or handoff-driven work;
-3. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for the current code/state bridge when present;
-4. read `docs/MAIN_RUNTIME_ARCHITECTURE.md` when working on runtime, provider, broker, validator, telemetry or workflow architecture;
-5. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
-6. read `docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md` before converting patch-note suggestions into source edits;
-7. follow hard guardrails unless the human explicitly approves a normally restricted action;
-8. inspect the target source/document before proposing or applying a patch;
-9. report conflicts between the request, code, docs, evidence and guardrails before modifying files.
+3. read `docs/README.md` for the current documentation index;
+4. read `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` for the current IN -> dynamic heap/exchange -> deterministic OUT operating model;
+5. read `docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` for the compact AI first-orientation map;
+6. read `docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md` when documentation appears conflicting or stale;
+7. read `docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md` for the current code/state bridge when present;
+8. read `docs/MAIN_RUNTIME_ARCHITECTURE.md` when working on runtime, provider, broker, validator, telemetry or workflow architecture;
+9. read `docs/LOCAL_AI_RUN_BOOTSTRAP.md` when working from or delegating to a local checkout;
+10. read `docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md` before converting patch-note suggestions into source edits;
+11. follow hard guardrails unless the human explicitly approves a normally restricted action;
+12. inspect the target source/document before proposing or applying a patch;
+13. report conflicts between the request, code, docs, evidence and guardrails before modifying files.
 
 ## Repository identity
 
@@ -27,6 +31,7 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 | Primary provider lane | `GPU1 / Ollama / RTX 5080 -> primary advisory planner/worker` |
 | Secondary provider lane | `GPU0 / OpenVINO -> coworker/helper peer worker and tool-request producer` |
 | Microtask provider lane | `NPU / OpenVINO -> microtask responder, support lane, probe and diagnostics` |
+| Current source-write boundary | `Tools/ai/patchkit/apply_patch_bundle.py` for reviewed patchkit bundles when operations can express the change |
 | Legacy domain | Blender audio-reactive scene automation |
 
 The repository name is historical. Do not infer that Blender/audio is the current architectural boundary.
@@ -37,6 +42,10 @@ The repository name is historical. Do not infer that Blender/audio is the curren
 AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
+docs/README.md
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/MAIN_RUNTIME_ARCHITECTURE.md
@@ -45,7 +54,6 @@ CHATGPT/chatgpt-session-problems-and-robust-fixes-*.md
 docs/LOCAL_AI_RUN_BOOTSTRAP.md                 # local checkout only
 README.md
 WORKFLOW.md
-docs/README.md
 docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md
 docs/LOCAL_AI_TASKS/README.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
@@ -65,6 +73,8 @@ docs/PROJECT_STATUS_POINT.md
 docs/DATA_FLOW.md
 docs/LOCAL_AI_WORKFLOW.md
 docs/JSON_SCHEMAS.md
+Tools/ai/README.md
+Tools/workflow/README.md
 Tools/validation/README.md
 nearest package/tool README
 target file
@@ -73,6 +83,8 @@ target file
 For full toolbox, refactor, provider or 0-to-10 local AI runs, the active entrypoint is:
 
 ```text
+docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
@@ -114,12 +126,16 @@ never treat generated indexes/evidence as maintained source docs
 Current compact operational state:
 
 ```text
-Baseline: master after PR #233 merge
+Baseline: master after PR #250 merge
 Primary launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Current operating model: docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+AI orientation map: docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+Documentation panorama/staleness map: docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 Capability map: docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 Parameter map: docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 Docs bridge: docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 Main runtime architecture: docs/MAIN_RUNTIME_ARCHITECTURE.md
+Patchkit boundary: Tools/ai/patchkit/apply_patch_bundle.py
 Current mode: code-driven, docs-first updates unless source changes are explicitly scoped
 Review posture: no merge to master unless explicitly requested
 ```
@@ -151,6 +167,14 @@ deterministic validators on CPU remain local pass/fail authority
 telemetry/event stream records executed, skipped, degraded and blocked phases
 ```
 
+Current runtime boundary:
+
+```text
+IN = controlled task/context/capability entry
+LOOP = dynamic heap/exchange where GPU1/GPU0/NPU/provider lanes cooperate
+OUT = deterministic exit product, lifecycle validation, patchkit bundle or review PR
+```
+
 Architecture targets do not authorize source writes, provider execution, patch application, Blender runtime, FFmpeg runtime, commit, push, merge or delete by themselves.
 
 ## Patch suggestion ledger policy
@@ -160,7 +184,7 @@ A patch-notes quality product is a proposal ledger, not executable code.
 ```text
 patch_notes_quality_product_<stamp>.json = review input
 summary.proposal_core = compact bundle handoff ledger
-patch bundle / branch diff = reviewed implementation artifact
+patchkit bundle / branch diff = reviewed implementation artifact
 ```
 
 Agents must not convert ledger entries directly into source writes. Review order is:
@@ -179,11 +203,36 @@ refresh against current master
 verify source/target still exists
 verify missing imports/symbols are still missing
 reject generated-evidence noise and placeholder fenced-code paths
-use a small reviewed patch bundle or branch diff
+use a small reviewed patchkit bundle or branch diff
 run py_compile/smoke/git diff --check
 ```
 
 If a suggestion is stale, record it as stale evidence when useful and do not patch it.
+
+## Patchkit source-write policy
+
+Future long, delicate or repeated patch work should centralize the modification core in a repository-native patchkit bundle when patchkit operations can express the change:
+
+```text
+patch_specs/<bundle>/bundle.json
+patch_specs/<bundle>/fragments/*.ps1
+patch_specs/<bundle>/fragments/*.py
+```
+
+Standard apply path:
+
+```powershell
+python .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json `
+  --dry-run
+
+python .\Tools\ai\patchkit\apply_patch_bundle.py `
+  --repo-root . `
+  --bundle .\patch_specs\<bundle>\bundle.json
+```
+
+Patchkit is not an authorization layer. It is a deterministic application boundary. Human/operator scope, branch policy and guardrails still apply.
 
 ## Code length policy
 
@@ -351,8 +400,12 @@ patch specs creati e validati
 workload quality routing presente
 context pack presente
 SQLite memory IN/OUT presente quando non disabilitata
+heap/exchange runtime entry presente
+heap/exchange runtime state presente
+heap/exchange runtime exit product presente quando product lanes are selected
+heap/exchange lifecycle validator presente quando product lanes are selected
 runtime broker report absorbed into telemetry
-patch_application_performed=false
+patch_application_performed=false unless an explicit reviewed patch boundary is selected
 ```
 
 As the main runtime architecture lands, 0Full10 should progressively expose:
@@ -384,13 +437,15 @@ manifest/report records unavailable-tool or provider failure
 |---|---|
 | `CHATGPT/` | Lightweight handoff notes. |
 | `docs/AI_SESSION_NOTES/` | Compact session notes and decisions. |
-| `Tools/ai/` | AI orchestration, provider probes, evidence bundles and patch-plan tooling. |
+| `Tools/ai/` | AI orchestration, provider probes, evidence bundles, heap/exchange lifecycle helpers and patch-plan tooling. |
+| `Tools/ai/patchkit/` | Reusable controlled patch-bundle application helpers. |
 | `Tools/workflow/` | Local workflow runners and post-validation packet generation. |
 | `Tools/npu/` | NPU/OpenVINO support and diagnostics. |
 | `Tools/validation/` | Non-invasive validators and inventory builders. |
 | `docs/` | Stable documentation contracts and project state. |
 | `docs/MAIN_RUNTIME_ARCHITECTURE.md` | Main runtime topology and blackboard/broker/registry/validator/telemetry contract. |
-| `docs/LOCAL_VALIDATION_EVIDENCE/` | Compact Git-trackable summaries of ignored local reports. |
+| `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` | Current runtime operating model. |
+| `docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md` | Compact first-orientation map for AI agents. |
 | `indexAI/` | Generated indexes/context/patch material. Do not hand-refactor as source. |
 | `Scripting/` | Blender application-domain packages; frozen for core/backend work unless scoped. |
 
@@ -439,19 +494,19 @@ indexAI/code_chunks/** unless explicitly requested as generated index evidence
 
 ## Patch delivery policy
 
-For long, multi-file or delicate changes, especially on workflow, broker, memory, GPU/NPU provider or runner code, produce a ZIP patch bundle with:
+For long, multi-file or delicate changes, especially on workflow, broker, memory, GPU/NPU provider or runner code, prefer repository-native patchkit bundles when supported:
 
 ```text
-README.md
-bundle runner script
-ordered patch scripts under a patches/ folder
+patch_specs/<bundle>/bundle.json
+patch_specs/<bundle>/fragments/*.ps1
+patch_specs/<bundle>/fragments/*.py
 ```
 
-These names are ZIP-internal bundle members, not repository-tracked source paths. Do not treat them as files that must already exist in the repository root.
+Patchkit bundles must be idempotent where possible, create backups when writing, block on failed validators, report resulting line counts for modified scripts and never commit automatically.
 
-Patch bundles must be idempotent where possible, block on unexpected dirty working trees, print resulting line counts for modified scripts and never commit automatically.
+ZIP patch bundles remain acceptable for external/manual transfer when repository-native patchkit cannot express the change. ZIP-internal names such as `README.md`, bundle runner script and `patches/` are bundle members, not repository-tracked source paths.
 
-Patch-note products and `summary.proposal_core` ledgers are not patch bundles. They must be converted into reviewed bundles or branch diffs before any source write.
+Patch-note products and `summary.proposal_core` ledgers are not patch bundles. They must be converted into reviewed patchkit bundles or branch diffs before any source write.
 
 ## Refactoring rules
 
