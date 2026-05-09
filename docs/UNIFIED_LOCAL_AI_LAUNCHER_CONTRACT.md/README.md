@@ -1,6 +1,20 @@
 <!-- IA-CARMINE-MD-SPLIT: index -->
 # Indice — UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 
+## Status
+
+Current launcher contract index.
+
+Use this contract with the current heap/exchange and patchkit operating model:
+
+```text
+../LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+../LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+../LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+```
+
+When reviewing product-path runs, verify that the launcher manifest/phase reports expose heap/exchange entry, runtime state, exit product, lifecycle validation and patchkit or deterministic patch bridge reports when those lanes are selected.
+
 Documento monolitico trasformato da file `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` a directory-form.
 Limite massimo configurato: `400` righe per file Markdown.
 
@@ -38,6 +52,22 @@ docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
 ```
 
 Regola pratica: non confondere un target architetturale con una capability eseguita. Una capability è provata solo da manifest, phase report, validator report, telemetry, observer pointer, bundle o report prodotto dalla lane.
+
+## Superfici prodotto post-heap/exchange
+
+Per run che preparano prodotti review PR o patch, il contratto va letto insieme a queste superfici:
+
+```text
+heap_exchange_runtime_entry.json/md
+heap_exchange_runtime_state.jsonl
+heap_exchange_runtime_exit_product.json/md
+heap_exchange_runtime_lifecycle_<stamp>.json/md
+patchkit_apply_report quando una patchkit bundle viene applicata
+patch_suggestion_bundle_apply report per il bridge legacy di patch suggestion
+prepare_review_pr report/PR product
+```
+
+Il successo del run non va inferito da file existence o metadata-only patch drafts.
 
 ## Regola
 
