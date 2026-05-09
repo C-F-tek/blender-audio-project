@@ -226,7 +226,7 @@ semantic tools registry = target capability source of truth
 telemetry/event stream = target visibility surface for executed, skipped, degraded and blocked phases
 ```
 
-GPU1/Ollama must execute the primary advisory lane for real Full0To10 runs unless explicitly disabled by an operator flag or classified as unavailable/degraded by evidence.
+GPU1/Ollama must execute the primary advisory lane for real 0Full10/run-unica execution unless explicitly disabled by an operator flag or classified as unavailable/degraded by evidence.
 
 GPU0 is not complete when it only performs preflight, smoke, final workload evidence or passive support. GPU0 must move toward peer-worker behavior:
 
@@ -259,7 +259,7 @@ NPU tool-support output must stay non-blocking, broker-controlled and visible in
 
 ## Provider-capable `.venv` rule
 
-Before running provider, GPU0, NPU, OpenVINO or Full0To10 validation, agents must verify:
+Before running provider, GPU0, NPU, OpenVINO or 0Full10/run-unica validation, agents must verify:
 
 ```powershell
 $env:IA_CARMINE_PYTHON = "<repo>\.venv\Scripts\python.exe"
@@ -304,11 +304,26 @@ implemented code
 
 Do not stop at an internal module, helper function, isolated smoke script or hidden command.
 
-For Full0To10, promoted lanes must be included by default unless disabled by explicit operator flags or classified as unavailable/degraded through manifest, telemetry, phase reports or validator evidence.
+For 0Full10/run unica, promoted lanes must be included by default unless disabled by explicit operator flags or classified as unavailable/degraded through manifest, telemetry, phase reports or validator evidence.
 
-## Unified 0-to-10 rule
+## 0Full10 run-unica rule
 
-A valid `-Full0To10` run includes every major phase unless the operator disables a phase explicitly with a `-No*` flag.
+0Full10 is the run unica: complete 0-to-10 workflow over the whole active project perimeter.
+
+`-Full0To10` is a compatibility/shortcut CLI flag when present in the launcher. It must not be treated as a magic source of semantics. Its behavior should remain expressible as explicit lane composition:
+
+```text
+task input
+run identity
+real-run activation
+intensity/budget
+provider lanes
+evidence lanes
+patch/review lanes
+explicit -No* opt-outs
+```
+
+A valid 0Full10/run-unica execution includes every major phase unless the operator disables a phase explicitly with a `-No*` flag.
 
 Expected by default:
 
@@ -326,7 +341,7 @@ runtime broker report absorbed into telemetry
 patch_application_performed=false
 ```
 
-As the main runtime architecture lands, Full0To10 should progressively expose:
+As the main runtime architecture lands, 0Full10 should progressively expose:
 
 ```text
 blackboard state report
@@ -337,7 +352,7 @@ telemetry/event stream summary
 GPU1/GPU0/NPU lane status reports
 ```
 
-`-RunIntensity quick|balanced|deep|custom` changes budget, rounds, context limits, token limits and keep-alive only. It must not reduce the Full0To10 semantic perimeter.
+`-RunIntensity quick|balanced|deep|custom` changes budget, rounds, context limits, token limits and keep-alive only. It must not reduce the 0Full10 semantic perimeter.
 
 A missing full-run lane is valid only when one of these is true:
 
