@@ -161,6 +161,14 @@ if (Test-Path -LiteralPath $UnifiedRunObserverScript -PathType Leaf) {
     Write-Warning "Unified run observer helper not found: $UnifiedRunObserverScript"
 }
 # IA-CARMINE-UNIFIED-RUN-OBSERVER-IMPORT-END
+# IA-CARMINE-HEAP-EXCHANGE-REVIEW-BRIDGE-IMPORT-BEGIN
+$UnifiedHeapExchangeReviewBridgeScript = Join-Path $PSScriptRoot "heap_exchange_review_bridge.ps1"
+if (Test-Path -LiteralPath $UnifiedHeapExchangeReviewBridgeScript -PathType Leaf) {
+    . $UnifiedHeapExchangeReviewBridgeScript
+} else {
+    Write-Warning "Heap exchange review bridge helper not found: $UnifiedHeapExchangeReviewBridgeScript"
+}
+# IA-CARMINE-HEAP-EXCHANGE-REVIEW-BRIDGE-IMPORT-END
 # IA-CARMINE-LIGHTFULL0TO10-DISPATCH-BEGIN
 if ($LightFull0To10) {
     $LightProfileScript = Join-Path $PSScriptRoot "run_unified_light_full0to10_profile.ps1"
@@ -1702,6 +1710,16 @@ if ($BuildTaskPatchSuggestionReport -or $ReviewPrApplyDeterministicSuggestions) 
     }
 }
 
+# IA-CARMINE-HEAP-EXCHANGE-PRE-REVIEW-BRIDGE-BEGIN
+if ($ReviewPrFromGeneratedPatchSpecs -or $PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) {
+    Invoke-UnifiedHeapExchangePreReviewBridge `
+        -StampValue $DataStamp `
+        -OutputDirValue $OutputDir `
+        -Root $RepoRoot `
+        -RunDirValue $RunDir `
+        -EvidenceDirValue $EvidenceDir
+}
+# IA-CARMINE-HEAP-EXCHANGE-PRE-REVIEW-BRIDGE-END
 if ($ReviewPrFromGeneratedPatchSpecs) {
     $PatchSuggestionJson = "$ValidationDir/generated_patch_specs_review_pr_apply_${ModeName}_$Stamp.json"
     $EffectiveGeneratedPatchSpecsBranch = $ReviewPrBranch
