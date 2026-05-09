@@ -132,7 +132,7 @@ function New-HeapExchangeProcessGateTask {
     $TaskPath = Join-Path $TaskDir ("heap-exchange-process-gate-{0}.md" -f $StampValue)
 
     $TaskContent = @"
-# Heap Exchange Process Gate ??? $StampValue
+# Heap Exchange Process Gate - $StampValue
 
 ## Objective
 
