@@ -26,41 +26,59 @@ Recommended read order:
 1. AGENTS.md
 2. CHATGPT.md
 3. docs/README.md
-4. docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
-5. docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
-6. docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
-7. docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
-8. docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
-9. docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
-10. docs/MAIN_RUNTIME_ARCHITECTURE.md
-11. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
-12. docs/AI_PIPELINE_ARCHITECTURE.md
-13. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
-14. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
-15. docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
-16. docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
-17. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
-18. docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
-19. docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
-20. docs/LOCAL_AI_TASKS/project-tool-registry.md
-21. docs/TECH_DEBT_TRACKER.md
-22. CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
-23. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
-24. CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md
-25. CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md
-26. AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md
+4. docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+5. docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+6. docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
+7. docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md
+8. docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
+9. docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+10. docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+11. docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
+12. docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
+13. docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
+14. docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
+15. docs/MAIN_RUNTIME_ARCHITECTURE.md
+16. docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
+17. docs/AI_PIPELINE_ARCHITECTURE.md
+18. docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
+19. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
+20. docs/LOCAL_AI_TASKS/refactor-reuse-methods-classes-tools-planning.md
+21. docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
+22. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+23. docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+24. docs/LOCAL_AI_TASKS/project-tool-registry.md
+25. docs/TECH_DEBT_TRACKER.md
+26. CHATGPT/next-chat-handoff-refactor-reuse-full-run-20260505-143844.md
+27. CHATGPT/next-chat-handoff-2026-05-05-post-broker-runtime-telemetry.md
+28. CHATGPT/next-chat-handoff-2026-05-04-strict-real-run-tool-activation.md
+29. CHATGPT/chatgpt-session-problems-and-robust-fixes-2026-05-04.md
+30. AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md
 ```
 
 Current active follow-up:
 
 ```text
+Use docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md as the current run/documentation router.
+Use docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md as the operator-facing real product runbook.
+Use docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md to check docs against current code owners.
+Use docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md before hygiene work after a real product run.
+Use docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md before adding or expanding operational Markdown.
 Use docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md as the current IN -> dynamic heap/exchange -> deterministic OUT operating model.
 Use docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md as the compact first-orientation map for AI agents.
-Use docs/MAIN_RUNTIME_ARCHITECTURE.md as the architecture target for shared runtime heap / blackboard, GPU1 planner, GPU0 OpenVINO helper, NPU microtask responder, broker executor, semantic tools registry, deterministic CPU validators and telemetry/event stream work.
+Use docs/MAIN_RUNTIME_ARCHITECTURE.md as the architecture target for shared runtime heap / blackboard, GPU1 planner, GPU0 OpenVINO observable support workload, NPU peer micro diagnostic/report lane, broker executor, semantic tools registry, deterministic CPU validators and telemetry/event stream work.
 Use docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md to distinguish current active capability from target architecture.
 Use docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md before choosing launcher flags.
 Use docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md before declaring old wrappers obsolete.
-Keep implementation incremental, report-only first and congruent with the unified launcher and Full0To10 doctrine.
+Keep implementation incremental, report-only first and congruent with the real product wrapper, unified launcher and current run-unica doctrine.
+```
+
+Current entrypoint model:
+
+```text
+operator product entrypoint = Tools/workflow/run_unified_real_product_pr.ps1
+internal dynamic launcher = Tools/workflow/run_unified_local_ai_refactor.ps1
+Full0To10 / 0Full10 = legacy compatibility wording, not current source of semantics
+single_dynamic_heap_exchange_run = current report/manifest model
 ```
 
 Historical refactor/reuse full-run handoff:
@@ -79,6 +97,9 @@ The historical handoff and bundle remain useful forensic/evidence context, but t
 
 ```text
 docs/README.md
+docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
@@ -91,6 +112,11 @@ docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 Current compact context notes:
 
 ```text
+docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
+docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md
+docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
@@ -100,7 +126,6 @@ docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md
 docs/MAIN_RUNTIME_ARCHITECTURE.md
 docs/LOCAL_AI_TASKS/refactor-reuse-full-run-documentation-coherence-2026-05-05.md
 docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
-docs/LOCAL_AI_TASKS/large-markdown-operational-policy-2026-05-05.md
 docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 ```
 
@@ -117,19 +142,24 @@ Full-toolbox limitation policy:
 
 ```text
 Limitations are backlog to overcome, not reasons to skip available tools.
-Use every relevant Full0To10 lane by default.
+Use every relevant run-unica lane by default when selected through the product wrapper or launcher profile.
 Mark a lane unavailable/degraded only from current code, telemetry, capability manifest, provider diagnostic or validator evidence.
+Metadata-only generated patch specs are backlog, not successful product.
 ```
 
 Main runtime architecture policy:
 
 ```text
 Provider lanes do not directly mutate repository state.
+GPU1/Ollama is the primary advisory/planner lane when selected.
+GPU0/OpenVINO is the observable support workload lane and must not be reduced to device visibility only.
+NPU/OpenVINO is a peer micro diagnostic/report lane until compute-provider behavior is validated.
 Broker unico executor is the target execution gateway for registered tools.
 Semantic tools registry is the target capability source of truth.
 Deterministic validators / CPU authority decide local pass/fail claims.
 Telemetry/event stream must make executed, skipped, degraded and blocked phases visible.
 Heap/exchange entry and exit are deterministic boundaries around the dynamic center.
+Runtime evidence correlation ties same-stamp preflight, heap, peer, broker, readiness and review product evidence together when requested.
 Patchkit is the preferred deterministic source-write boundary for future long or delicate patch bundles.
 ```
 
@@ -139,7 +169,7 @@ Bundle handling policy:
 Runtime bundles are local/GitHub release artifacts, not source files.
 They are intentionally not committed to the repository.
 Do not infer bundle contents from file existence alone.
-Inspect manifest, decision loop, recommendations, patch plan, telemetry, capability manifest, full toolbox telemetry summary, shared AI-to-AI bundle, provider diagnostics, workload quality, heap/exchange lifecycle evidence and patchkit reports before selecting patches.
+Inspect manifest, decision loop, recommendations, patch plan, telemetry, capability manifest, full toolbox telemetry summary, shared AI-to-AI bundle, provider diagnostics, workload quality, heap/exchange lifecycle evidence, runtime evidence correlation, generated patch-spec apply reports and patchkit reports before selecting patches.
 ```
 
 Resolved broker telemetry context:
@@ -158,6 +188,9 @@ Non-canonical candidates include root audio entrypoints and Scripting/** Blender
 Promotion to project tool requires placement, CLI/report contract, guardrails and validation.
 Broker promotion requires stricter report-only/no-side-effect guardrails.
 See:
+- docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+- docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+- docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
 - docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 - docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 - docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
