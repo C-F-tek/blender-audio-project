@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Console-style unified launcher for IA-Carmine local AI refactor workflows.
 
@@ -136,6 +136,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$Script:UnifiedLauncherCurrentPhase = "startup"
+$Script:UnifiedLauncherFailureMessage = ""
 
 if ($ContinueOnValidationError) {
     [Console]::Error.WriteLine("-ContinueOnValidationError is forbidden for unified launcher runs. Fix the failing phase instead of allowing a soft-failed run to complete.")
@@ -301,6 +303,7 @@ function Invoke-Checked {
     param([string]$Label, [scriptblock]$Block, [switch]$SoftFail)
     Write-Host ""
     Write-Host "=== $Label ==="
+    $Script:UnifiedLauncherCurrentPhase = $Label
 
     if (Get-Command Write-UnifiedRunProgressEvent -ErrorAction SilentlyContinue) {
         Write-UnifiedRunProgressEvent -Phase $Label -Status "started"
@@ -320,6 +323,7 @@ function Invoke-Checked {
         if (Get-Command Write-UnifiedRunProgressEvent -ErrorAction SilentlyContinue) {
             Write-UnifiedRunProgressEvent -Phase $Label -Status "failed" -Message ("exit_code={0}" -f $LASTEXITCODE)
         }
+        $Script:UnifiedLauncherFailureMessage = "$Label failed with exit code $LASTEXITCODE"
         if ($SoftFail) {
             Write-Warning "$Label failed with exit code $LASTEXITCODE"
             return $false
@@ -332,6 +336,79 @@ function Invoke-Checked {
     }
 
     return $true
+}
+
+function Get-UnifiedLauncherErrorAction {
+    param([string]$Message)
+
+    if ([string]::IsNullOrWhiteSpace($Message)) {
+        return "Inspect the preceding launcher phase output and rerun with a clean working tree."
+    }
+
+    if ($Message -match "working tree is not clean") {
+        return "Commit, stash, restore generated files, or rerun with -AllowDirty only when the dirty tree is intentional."
+    }
+
+    if ($Message -match "Rejected non-repository Python|RepoPy|IA_CARMINE_PYTHON") {
+        return "Use repository .venv only: `$RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path; pass -PythonExe `$RepoPy."
+    }
+
+    if ($Message -match "Ollama|ollama|provider|advisory") {
+        return "Check Ollama service/model availability and provider logs before rerunning the full orchestration."
+    }
+
+    if ($Message -match "patch spec|patch_specs|generated patch") {
+        return "Inspect current-stamp output/patch_specs manifest and generated patch-spec apply report."
+    }
+
+    if ($Message -match "Prepare review branch|review PR|no staged product changes") {
+        return "Inspect review_pr_prepare report and verify generated patch specs produced concrete source/doc changes."
+    }
+
+    return "Inspect the reported file, line, phase report, and stderr/stdout logs for this phase."
+}
+
+function Write-UnifiedLauncherStructuredError {
+    param([object]$ErrorRecord)
+
+    $message = ""
+    $location = ""
+    $stack = ""
+
+    if ($null -ne $ErrorRecord) {
+        if ($null -ne $ErrorRecord.Exception) {
+            $message = [string]$ErrorRecord.Exception.Message
+        }
+
+        if ($null -ne $ErrorRecord.InvocationInfo) {
+            $location = "{0}:{1}" -f $ErrorRecord.InvocationInfo.ScriptName, $ErrorRecord.InvocationInfo.ScriptLineNumber
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($ErrorRecord.ScriptStackTrace)) {
+            $stack = [string]$ErrorRecord.ScriptStackTrace
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($message)) {
+        $message = $Script:UnifiedLauncherFailureMessage
+    }
+
+    $action = Get-UnifiedLauncherErrorAction -Message $message
+
+    [Console]::Error.WriteLine("[UNIFIED-LAUNCHER-ERROR] Phase: $Script:UnifiedLauncherCurrentPhase")
+    [Console]::Error.WriteLine("[UNIFIED-LAUNCHER-ERROR] Message: $message")
+
+    if (-not [string]::IsNullOrWhiteSpace($location)) {
+        [Console]::Error.WriteLine("[UNIFIED-LAUNCHER-ERROR] Location: $location")
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($action)) {
+        [Console]::Error.WriteLine("[UNIFIED-LAUNCHER-ERROR] Action: $action")
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($stack)) {
+        [Console]::Error.WriteLine("[UNIFIED-LAUNCHER-ERROR] Stack: $stack")
+    }
 }
 
 function Resolve-RepoRoot {
@@ -835,7 +912,37 @@ $RepoRoot = Resolve-RepoRoot
 Set-Location $RepoRoot
 $env:PYTHONPATH = $RepoRoot
 $ResolvedPythonExe = Resolve-PythonExe -Requested $PythonExe -Root $RepoRoot
-$env:IA_CARMINE_PYTHON = $ResolvedPythonExe
+
+$RepoRootCanonical = (Resolve-Path -LiteralPath $RepoRoot).Path.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+$ResolvedPythonCanonical = (Resolve-Path -LiteralPath $ResolvedPythonExe).Path
+$RequiredRepoPy = Join-Path $RepoRootCanonical ".venv\Scripts\python.exe"
+$NormalizedRepoRoot = $RepoRootCanonical.Replace("\", "/").ToLowerInvariant()
+$NormalizedResolvedPython = $ResolvedPythonCanonical.Replace("\", "/").ToLowerInvariant()
+
+Write-Host "[PYTHON-GATE] Repository root: $RepoRootCanonical"
+Write-Host "[PYTHON-GATE] Resolved Python: $ResolvedPythonCanonical"
+Write-Host "[PYTHON-GATE] Required RepoPy: $RequiredRepoPy"
+
+if (-not $NormalizedResolvedPython.StartsWith($NormalizedRepoRoot + "/")) {
+    [Console]::Error.WriteLine("[PYTHON-GATE] Rejected non-repository Python: $ResolvedPythonCanonical")
+    [Console]::Error.WriteLine("[PYTHON-GATE] Use RepoPy only: $RequiredRepoPy")
+    [Console]::Error.WriteLine("[PYTHON-GATE] Set `$RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path and pass -PythonExe `$RepoPy.")
+    exit 2
+}
+
+if (Test-Path -LiteralPath $RequiredRepoPy -PathType Leaf) {
+    $RequiredRepoPyCanonical = (Resolve-Path -LiteralPath $RequiredRepoPy).Path
+    $NormalizedRequiredRepoPy = $RequiredRepoPyCanonical.Replace("\", "/").ToLowerInvariant()
+    if ($NormalizedResolvedPython -ne $NormalizedRequiredRepoPy) {
+        [Console]::Error.WriteLine("[PYTHON-GATE] Rejected repository Python that is not canonical RepoPy: $ResolvedPythonCanonical")
+        [Console]::Error.WriteLine("[PYTHON-GATE] Canonical RepoPy required: $RequiredRepoPyCanonical")
+        exit 2
+    }
+}
+
+$env:IA_CARMINE_PYTHON = $ResolvedPythonCanonical
+$env:PYTHONPATH = $RepoRootCanonical
+Write-Host "[PYTHON-GATE] RepoPy accepted and exported to IA_CARMINE_PYTHON."
 Write-Host "[INFO] PYTHONPATH: $env:PYTHONPATH"
 Write-Host "[INFO] Python: $ResolvedPythonExe"
 
@@ -1059,7 +1166,8 @@ trap {
             Write-Warning ("Could not write unified launcher failure tail evidence: {0}" -f $_.Exception.Message)
         }
     }
-    throw
+    Write-UnifiedLauncherStructuredError -ErrorRecord $_
+    exit 2
 }
 
 
