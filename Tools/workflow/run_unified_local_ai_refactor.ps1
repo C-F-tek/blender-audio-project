@@ -1874,30 +1874,12 @@ $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapE
 # IA-CARMINE-HEAP-EXCHANGE-LIFECYCLE-GATE-END
 
 # IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-BEGIN
-$UnifiedChainContractJson = Join-Path $OutputDir ("validation/unified_chain_contract_{0}.json" -f $DataStamp)
-$UnifiedChainContractMd = Join-Path $OutputDir ("validation/unified_chain_contract_{0}.md" -f $DataStamp)
-$RequireAiExchangeForChain = [bool]($UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $UseOllamaAdvisory -or $RunOllamaProbe -or $OpenExtendedObserverConsoles)
-$RequireConcretePatchSpecsForChain = [bool]$ReviewPrFromGeneratedPatchSpecs
-$RequireReviewPrProductForChain = [bool]($PrepareReviewPr -and ($ReviewPrFromGeneratedPatchSpecs -or $ReviewPrApplyDeterministicSuggestions))
-
-$UnifiedChainArgs = @(
-    "Tools/validation/check_unified_chain_contract.py",
-    "--repo-root", ".",
-    "--stamp", $DataStamp,
-    "--mode-name", $ModeName,
-    "--output", $UnifiedChainContractJson,
-    "--markdown-output", $UnifiedChainContractMd
-)
-
-if ($RequireAiExchangeForChain) { $UnifiedChainArgs += "--require-ai-exchange" }
-if ($RequireConcretePatchSpecsForChain) { $UnifiedChainArgs += "--require-concrete-patch-specs" }
-if ($RequireReviewPrProductForChain) { $UnifiedChainArgs += "--require-review-pr-product" }
-
-$UnifiedChainContractOk = Invoke-Checked "Validate unified heap/exchange chain contract" {
-    & $ResolvedPythonExe @UnifiedChainArgs
-}
-$ReportFiles += $UnifiedChainContractJson
-$ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $UnifiedChainContractMd
+# Deferred intentionally.
+# The unified chain contract is a final product gate and must run after:
+# - patch suggestion product separation
+# - prepare_review_pr.py
+# - manifest write
+# Running it here validates before the review PR product exists.
 # IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-END
 
     $PatchSuggestionProductSeparationJson = "$ValidationDir/patch_suggestion_product_separation_${ModeName}_$Stamp.json"
@@ -2061,6 +2043,58 @@ $Manifest = [ordered]@{
     errors = @()
 }
 ($Manifest | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $ManifestPath -Encoding UTF8
+
+# IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN
+$UnifiedChainContractJson = Join-Path $OutputDir ("validation/unified_chain_contract_{0}.json" -f $DataStamp)
+$UnifiedChainContractMd = Join-Path $OutputDir ("validation/unified_chain_contract_{0}.md" -f $DataStamp)
+
+$RequireAiExchangeForChain = [bool]($UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow -or $UseOllamaAdvisory -or $RunOllamaProbe -or $OpenExtendedObserverConsoles)
+$RequireConcretePatchSpecsForChain = [bool]$ReviewPrFromGeneratedPatchSpecs
+$RequireReviewPrProductForChain = [bool]($PrepareReviewPr -and ($ReviewPrFromGeneratedPatchSpecs -or $ReviewPrApplyDeterministicSuggestions))
+
+$UnifiedChainArgs = @(
+    "Tools/validation/check_unified_chain_contract.py",
+    "--repo-root", ".",
+    "--stamp", $DataStamp,
+    "--mode-name", $ModeName,
+    "--manifest", $ManifestPath,
+    "--output", $UnifiedChainContractJson,
+    "--markdown-output", $UnifiedChainContractMd
+)
+
+if ((Get-Variable -Name PatchSuggestionJson -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $PatchSuggestionJson -PathType Leaf)) {
+    $UnifiedChainArgs += @("--apply-report", $PatchSuggestionJson)
+}
+
+if ((Get-Variable -Name PatchSuggestionProductSeparationJson -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $PatchSuggestionProductSeparationJson -PathType Leaf)) {
+    $UnifiedChainArgs += @("--product-separation-report", $PatchSuggestionProductSeparationJson)
+}
+
+if ((Get-Variable -Name ReviewPrJson -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $ReviewPrJson -PathType Leaf)) {
+    $UnifiedChainArgs += @("--review-pr-report", $ReviewPrJson)
+}
+
+if ($RequireAiExchangeForChain) { $UnifiedChainArgs += "--require-ai-exchange" }
+if ($RequireConcretePatchSpecsForChain) { $UnifiedChainArgs += "--require-concrete-patch-specs" }
+if ($RequireReviewPrProductForChain) { $UnifiedChainArgs += "--require-review-pr-product" }
+
+$UnifiedChainContractOk = Invoke-Checked "Validate final unified heap/exchange chain contract" {
+    & $ResolvedPythonExe @UnifiedChainArgs
+}
+
+$ReportFiles += $UnifiedChainContractJson
+$ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $UnifiedChainContractMd
+$PhaseStatus.unified_chain_contract_final = $UnifiedChainContractOk
+$PhaseReports.unified_chain_contract = $UnifiedChainContractJson
+$PhaseReports.unified_chain_contract_markdown = $UnifiedChainContractMd
+
+$Manifest.report_files = $ReportFiles
+$Manifest.context_files = $ContextFiles
+$Manifest.phase_status = $PhaseStatus
+$Manifest.phase_reports = $PhaseReports
+($Manifest | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $ManifestPath -Encoding UTF8
+# IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-END
+
 
 Write-Host ""
 Write-Host "[OK] Unified local-AI launcher complete" -ForegroundColor Green
