@@ -129,6 +129,18 @@ def main() -> int:
         no_product_context["draft_pr"] = False
         cases.append(run_helper(source_repo, repo, no_product_context, "no_product_input"))
 
+        create_without_push_context = dict(full_context)
+        create_without_push_context["push"] = False
+        create_without_push_context["create_pr"] = True
+        create_without_push_context["draft_pr"] = False
+        cases.append(run_helper(source_repo, repo, create_without_push_context, "create_without_push"))
+
+        draft_without_create_context = dict(full_context)
+        draft_without_create_context["push"] = False
+        draft_without_create_context["create_pr"] = False
+        draft_without_create_context["draft_pr"] = True
+        cases.append(run_helper(source_repo, repo, draft_without_create_context, "draft_without_create"))
+
     full = cases[0]["report"]
     full_argv = full.get("argv") or []
     require(cases[0]["returncode"] == 0, errors, "full case helper failed")
@@ -154,6 +166,31 @@ def main() -> int:
         any("review PR product input missing" in str(item) for item in no_product.get("errors") or []),
         errors,
         "no product input case should explain missing product input",
+    )
+
+    by_name = {case["name"]: case for case in cases}
+    create_without_push = by_name["create_without_push"]["report"]
+    require(
+        by_name["create_without_push"]["returncode"] == 2,
+        errors,
+        "create without push case should fail",
+    )
+    require(
+        any("create_pr requires push" in str(item) for item in create_without_push.get("errors") or []),
+        errors,
+        "create without push case should explain create_pr requires push",
+    )
+
+    draft_without_create = by_name["draft_without_create"]["report"]
+    require(
+        by_name["draft_without_create"]["returncode"] == 2,
+        errors,
+        "draft without create case should fail",
+    )
+    require(
+        any("draft_pr requires create_pr" in str(item) for item in draft_without_create.get("errors") or []),
+        errors,
+        "draft without create case should explain draft_pr requires create_pr",
     )
 
     report = {
