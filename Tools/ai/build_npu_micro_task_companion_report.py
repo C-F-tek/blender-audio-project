@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import argparse
@@ -25,13 +25,19 @@ def main() -> int:
 
     report = {
         "kind": "npu_micro_task_companion_report",
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "passed": True,
         "mode": "report_only",
         "timeout_seconds": args.timeout_seconds,
         "task_file": args.task_file,
         "task_preview_chars": len(task_preview),
+        "npu_peer_activity_requested": True,
+        "npu_peer_activity_performed": False,
+        "npu_device_execution_performed": False,
+        "npu_provider_execution_performed": False,
+        "npu_activity_classification": "diagnostic_report_only",
+        "npu_activity_limit": "No NPU model load or device workload is performed by this companion report.",
         "recommendations": [
             {
                 "id": "npu_companion_policy",
@@ -61,6 +67,12 @@ def main() -> int:
         "",
         f"- Passed: `{report['passed']}`",
         f"- Mode: `{report['mode']}`",
+        f"- NPU peer activity requested: `{report['npu_peer_activity_requested']}`",
+        f"- NPU peer activity performed: `{report['npu_peer_activity_performed']}`",
+        f"- NPU device execution performed: `{report['npu_device_execution_performed']}`",
+        f"- NPU provider execution performed: `{report['npu_provider_execution_performed']}`",
+        f"- NPU activity classification: `{report['npu_activity_classification']}`",
+        f"- NPU activity limit: {report['npu_activity_limit']}",
         f"- Legacy NPU auditor used: `{report['guardrails']['legacy_npu_auditor_used']}`",
         f"- Provider execution performed: `{report['guardrails']['provider_execution_performed']}`",
         "",
@@ -75,4 +87,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
