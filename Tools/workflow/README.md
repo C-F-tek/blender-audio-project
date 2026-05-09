@@ -51,7 +51,7 @@ limitations are backlog to overcome, not reasons to skip available tools
 
 | Need | Start here |
 |---|---|
-| Real full product run | `run_unified_local_ai_refactor.ps1` with `-Full0To10`. |
+| Real full product run | `run_unified_real_product_pr.ps1 -TaskFile <md>`; it delegates to `run_unified_local_ai_refactor.ps1` with the complete heap/exchange product lane. |
 | Single-phase diagnostic | `run_unified_local_ai_refactor.ps1` with `-NoStrictRealRunActivation`. |
 | Lightweight evidence profile | `run_unified_local_ai_refactor.ps1 -LightFull0To10`. |
 | Heap/exchange lifecycle product path | Unified launcher with provider/evidence/patch/review lanes selected. |
@@ -62,6 +62,17 @@ limitations are backlog to overcome, not reasons to skip available tools
 | Source-code behavior map | `docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md`. |
 
 Do not start a normal workflow from an internal helper unless the launcher/runbook explicitly delegates to that helper or the task is a focused tool validation.
+
+## Real product PR profile
+
+~~~powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_unified_real_product_pr.ps1 `
+  -TaskFile .\docs\LOCAL_AI_TASKS\my-task.md `
+  -Push `
+  -CreatePr
+~~~
+
+This profile is the operator-facing path from task Markdown to reviewable PR product. It enables task ingress, heap/exchange, GPU1/GPU0/NPU peer runtime evidence, shared memory, closure audit, patch suggestion/apply report, prepare_review_pr and optional remote PR creation.
 
 ## Runtime boundary
 
@@ -284,3 +295,4 @@ docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
 ```
+

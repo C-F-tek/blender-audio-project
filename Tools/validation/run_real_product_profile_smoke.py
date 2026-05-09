@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""Static smoke for the real product PR profile wrapper."""
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+try:
+    from report_utils import resolve_output_path, write_json_report
+except ImportError:
+    from Tools.validation.report_utils import resolve_output_path, write_json_report  # type: ignore
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repo-root", default=".")
+    parser.add_argument("--output", default="output/validation/real_product_profile_smoke.json")
+    args = parser.parse_args()
+
+    repo = Path(args.repo_root).resolve()
+    wrapper = repo / "Tools/workflow/run_unified_real_product_pr.ps1"
+    launcher = repo / "Tools/workflow/run_unified_local_ai_refactor.ps1"
+    errors: list[str] = []
+
+    text = wrapper.read_text(encoding="utf-8-sig", errors="replace") if wrapper.exists() else ""
+    launcher_text = launcher.read_text(encoding="utf-8-sig", errors="replace") if launcher.exists() else ""
+
+    required_tokens = {
+        "wrapper_exists": wrapper.exists(),
+        "delegates_to_unified_launcher": "run_unified_local_ai_refactor.ps1" in text,
+        "requires_task_file": "[Parameter(Mandatory = $true)]" in text and "$TaskFile" in text,
+        "uses_mode_all": '"-Mode", "all"' in text,
+        "enables_primary_provider": "-UsePrimaryAdvisoryProvider" in text,
+        "enables_multistep_provider": "-RunMultistepProviderWorkflow" in text,
+        "enables_gpu0_workload": "-RunOpenVinoGpu0Workload" in text,
+        "enables_npu_probe": "-RunNpuProbe" in text,
+        "enables_npu_decode": "-RunNpuDecodeSmoke" in text,
+        "enables_evidence": "-BuildEvidence" in text,
+        "enables_patch_specs": "-GeneratePatchSpecs" in text,
+        "enables_task_patch_suggestion": "-BuildTaskPatchSuggestionReport" in text,
+        "enables_prepare_review_pr": "-PrepareReviewPr" in text,
+        "supports_review_pr_push": "-ReviewPrPush" in text,
+        "supports_review_pr_create": "-ReviewPrCreate" in text,
+        "guards_create_pr_requires_push": "-CreatePr requires -Push" in text,
+        "supports_generated_patch_specs": "-ReviewPrFromGeneratedPatchSpecs" in text,
+        "supports_deterministic_suggestions": "-ReviewPrApplyDeterministicSuggestions" in text,
+        "saves_inputs_to_memory": "-SaveInputsToMemoryDb" in text,
+        "does_not_merge": "gh pr merge" not in text and "git merge" not in text,
+        "does_not_force_push": "--force" not in text and "force-push" not in text.lower(),
+        "launcher_has_task_ingress": "IA-CARMINE-TASK-INGRESS-CONTRACT-BEGIN" in launcher_text,
+        "launcher_has_peer_manifest": "IA-CARMINE-HEAP-PEER-RUNTIME-MANIFEST-BEGIN" in launcher_text,
+        "launcher_has_closure_audit": "IA-CARMINE-HEAP-EXCHANGE-CLOSURE-AUDIT-BEGIN" in launcher_text,
+        "launcher_has_final_chain_contract": "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN" in launcher_text,
+    }
+
+    for name, passed in required_tokens.items():
+        if not passed:
+            errors.append(f"missing real product profile token: {name}")
+
+    report = {
+        "schema_version": 1,
+        "kind": "real_product_profile_smoke",
+        "repo_root": repo.as_posix(),
+        "passed": not errors,
+        "wrapper": wrapper.as_posix(),
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+        "checks": required_tokens,
+        "errors": errors,
+        "warnings": [],
+    }
+
+    output = resolve_output_path(repo, args.output)
+    print(write_json_report(report, output), end="")
+    return 0 if report["passed"] else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
