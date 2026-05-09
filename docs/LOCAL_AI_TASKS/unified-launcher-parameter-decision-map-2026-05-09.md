@@ -3,7 +3,7 @@
 Status: active code-derived operator guide  
 Scope: `Tools/workflow/run_unified_local_ai_refactor.ps1`.
 
-This guide prevents agents from getting lost in the launcher parameter surface. Do not reason from the full parameter list. Choose the product lane first, then tune only the related parameter group.
+Purpose: prevent agents from reasoning over a flat 90+ flag list. Choose the lane/product first, then tune only the related parameter group.
 
 ## Source of truth
 
@@ -23,26 +23,20 @@ Historical handoffs and old PR bodies are secondary. Current code and current co
 
 ```text
 0Full10 = run unica concettuale
-Full0To10 / -Full0To10 = CLI/flag compatibility spelling where the current launcher still exposes it
+Full0To10 / -Full0To10 = compatibility CLI spelling while the launcher exposes it
 run unica = full 0-to-10 workflow over the whole active project perimeter
 ```
 
-Use `0Full10` in prose when naming the operational concept. Use `-Full0To10` only when documenting the actual launcher switch.
+Use `0Full10` in prose. Use `-Full0To10` only for the actual launcher switch.
 
-`-Full0To10` should not be treated as a magic flag. Its semantics must remain expressible as explicit lane composition:
+`-Full0To10` is not a magic flag. Its semantics must remain expressible as explicit lane composition:
 
 ```text
-task input
-run identity
-real-run activation
-intensity/budget
-provider lanes
-evidence lanes
-patch/review lanes
-explicit -No* opt-outs
+task input + run identity + real-run activation + intensity/budget
+provider lanes + evidence lanes + patch/review lanes + explicit -No* opt-outs
 ```
 
-Future refactors may absorb `-Full0To10` into named profile/config composition while preserving backward compatibility.
+Future refactors may absorb `-Full0To10` into named profile/config composition while preserving compatibility.
 
 ## First decision
 
@@ -50,29 +44,19 @@ Future refactors may absorb `-Full0To10` into named profile/config composition w
 |---|---|---|
 | Fast syntax/config sanity | `-Mode smoke -DryRun` | `-Full0To10` |
 | Debug one phase | `-Mode <phase> -NoStrictRealRunActivation` | implicit real-run activation |
-| Full Markdown-to-review workflow | 0Full10 run unica profile/lane composition, currently selectable with `-Full0To10` | hidden helper-only entrypoints |
+| Full Markdown-to-review workflow | 0Full10 run-unica lane composition, currently selectable with `-Full0To10` | hidden helper-only entrypoints |
 | Evidence-only lightweight check | `-LightFull0To10` | provider success claims |
 | Markdown/doc inventory | `-Mode md -NoStrictRealRunActivation` | provider switches |
 | Python/script inventory | `-Mode python -NoStrictRealRunActivation` | patch apply |
-| Provider advisory run | 0Full10/run unica or explicit provider lane after Python preflight | system Python |
+| Provider advisory run | 0Full10 or explicit provider lane after Python preflight | system Python |
 | Deterministic suggestion apply | review branch and review-PR controls | patch specs as auto-apply |
 | Long-run observation | observer/watch scripts | silent waiting |
 
 ## Parameter control hierarchy
 
-Use this order:
-
 ```text
-repository and Python controls
-run identity controls
-mode/profile/intensity controls
-strict activation controls
-phase budget controls
-provider controls
-NPU micro controls
-observer/evidence controls
-product/review PR controls
-reset controls
+repository/Python -> run identity -> mode/profile/intensity -> strict activation
+-> phase budget -> provider -> NPU micro -> observer/evidence -> product/review PR -> reset
 ```
 
 ## Repository and Python controls
@@ -86,7 +70,7 @@ $env:IA_CARMINE_PYTHON = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:PYTHONPATH = (Resolve-Path .).Path
 ```
 
-Current policy: workflow/provider lanes must use a repository-owned Python executable. Bare `python`, WindowsApps Python and non-repository interpreters are invalid for provider/workflow lanes.
+Workflow/provider lanes must use repository-owned Python. Bare `python`, WindowsApps Python and non-repository interpreters are invalid for provider/workflow lanes.
 
 Provider preflight:
 
@@ -100,7 +84,7 @@ Expected workstation visibility:
 CPU, GPU.0, GPU.1, NPU
 ```
 
-If `numpy`, `openvino` or `openvino-genai` is missing, classify the failure as `provider_python_environment_missing_dependency`, not GPU0/NPU failure.
+Missing `numpy`, `openvino` or `openvino-genai` is `provider_python_environment_missing_dependency`, not GPU0/NPU failure.
 
 ## Run identity controls
 
@@ -117,36 +101,23 @@ If `numpy`, `openvino` or `openvino-genai` is missing, classify the failure as `
 Rules:
 
 ```text
-Use a unique Stamp for real runs.
-TaskFile is the product input.
+Stamp unique per real run.
+TaskFile is product input.
 OutputDir stays local/ignored.
-EvidenceDir is only for compact Git-trackable summaries.
+EvidenceDir is compact Git-trackable summary only.
 AiPacketsRoot/AiPacketsDir route handoff packets, not source.
 ```
 
-## Mode controls
+## Mode and strict activation controls
 
 Common modes:
 
 ```text
-smoke
-validation
-md
-json
-python
-chunks
-context_pack
-agent_state
-official
-provider
-patch_specs
-evidence
-contract
-full_validation
-all
+smoke validation md json python chunks context_pack agent_state
+official provider patch_specs evidence contract full_validation all
 ```
 
-For diagnostics, always pair a single phase with:
+For diagnostics, pair one phase with:
 
 ```text
 -NoStrictRealRunActivation
@@ -156,24 +127,22 @@ Without that flag, non-smoke/non-reset real runs can be promoted into TUTTO SU T
 
 ## 0Full10 versus RunIntensity
 
-0Full10 means run unica: full semantic perimeter over all major phases unless an explicit `-No*` flag disables a lane or evidence classifies it unavailable/degraded.
+0Full10 means run unica: full semantic perimeter over all major phases unless an explicit `-No*` disables a lane or evidence classifies it unavailable/degraded.
 
-`-Full0To10` is currently the launcher compatibility switch for this run-unica behavior, but the target model is explicit composition of the same semantics through normal parameters and lane controls.
+`-Full0To10` is the current compatibility switch for that behavior. Target model: explicit composition through normal parameters and lane controls.
 
 `-RunIntensity` changes capacity, not scope:
 
 ```text
-quick    = smaller budget/context/token envelope
+quick = smaller budget/context/token envelope
 balanced = default envelope
-deep     = larger envelope
-custom   = operator-supplied envelope
+deep = larger envelope
+custom = operator-supplied envelope
 ```
 
 `quick` is not smoke. Use `-Mode smoke` for smoke.
 
 ## Budget controls
-
-Tune these only after selecting the lane:
 
 ```text
 -BudgetMinutes
@@ -185,14 +154,7 @@ Tune these only after selecting the lane:
 -KeepAlive
 ```
 
-Guidance:
-
-```text
-Use small budgets for reproducing a fault.
-Use balanced defaults for normal review.
-Use deep/custom only when evidence says context was insufficient.
-Do not increase budgets to hide missing inputs or provider failures.
-```
+Use small budgets for fault reproduction, balanced defaults for normal review, and deep/custom only when evidence says context was insufficient. Do not increase budgets to hide missing inputs or provider failures.
 
 ## Context and memory controls
 
@@ -206,18 +168,9 @@ Do not increase budgets to hide missing inputs or provider failures.
 -MemoryDb
 ```
 
-Policy:
-
-```text
-SQLite memory is local/private runtime state.
-Never commit DB files.
-Context pack output is evidence/input, not source authority.
-Memory write is appropriate only when continuity evidence is part of the task.
-```
+SQLite memory is local/private runtime state. Never commit DB files. Context pack output is evidence/input, not source authority.
 
 ## Provider controls
-
-Main provider switches:
 
 ```text
 -UseOllamaAdvisory
@@ -236,16 +189,16 @@ Main provider switches:
 -ProviderMaxContextChars
 ```
 
-Current role model:
+Role model:
 
 ```text
-GPU1/Ollama = primary advisory planner/worker.
-GPU0/OpenVINO = peer companion/helper and tool-request producer.
-NPU/OpenVINO = non-blocking microtask/tool-support lane.
-CPU validators = pass/fail authority.
+GPU1/Ollama = primary advisory planner/worker
+GPU0/OpenVINO = peer companion/helper and tool-request producer
+NPU/OpenVINO = non-blocking microtask/tool-support lane
+CPU validators = pass/fail authority
 ```
 
-Use `RunLegacyNpuAuditorProvider` only for explicit legacy diagnostics. The preferred NPU role is micro support, not heavy audit authority.
+`RunLegacyNpuAuditorProvider` is for explicit legacy diagnostics only. Preferred NPU role is micro support, not heavy audit authority.
 
 ## NPU micro controls
 
@@ -266,8 +219,6 @@ NPU degraded/skipped/blocked state must be visible in telemetry or reports.
 
 ## Observer controls
 
-Current observer surfaces:
-
 ```text
 Tools/workflow/unified_run_observer.ps1
 Tools/workflow/watch_unified_run_telemetry.ps1
@@ -275,9 +226,7 @@ Tools/workflow/watch_unified_ai_conversation.ps1
 Tools/workflow/watch_unified_raw_debug_good_info.ps1
 ```
 
-Observer output improves visibility. It does not prove provider execution, patch application or product success.
-
-Use `-Prod` or `-NoExecutionTail` only when less transcript/tail evidence is intentional.
+Observer output improves visibility; it does not prove provider execution, patch application or product success.
 
 ## Patch and product controls
 
@@ -306,17 +255,7 @@ Review/product controls:
 -ReviewPrCreate
 ```
 
-Policy:
-
-```text
-No patch apply by default.
-No commit, push or PR by default.
-Review PR staging must be allowlisted or derived from a safe apply report.
-No merge to master from launcher.
-Never stage output/**, DB, render, generated chunk or raw runtime artifacts.
-```
-
-Draft PR creation is canonical only if the active branch's `prepare_review_pr.py` exposes and validates an explicit draft flag.
+No patch apply, commit, push or PR by default. Review PR staging must be allowlisted or derived from a safe apply report. Never stage `output/**`, DB, renders, generated chunks or raw runtime artifacts.
 
 ## Reset controls
 
@@ -359,7 +298,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -NoStrictRealRunActivation -Prod -NoExecutionTail
 ```
 
-0Full10 run unica product shape, current compatibility spelling:
+0Full10 run-unica current compatibility spelling:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
@@ -403,5 +342,3 @@ phase_status and phase_reports summary
 first failing report path
 git status --short
 ```
-
-This is enough to prevent the next AI from getting lost in the parameter surface.
