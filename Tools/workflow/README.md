@@ -376,3 +376,13 @@ There is no skip switch for this gate. A failed preflight stops the run before p
 
 The provider surface checked by the runtime mesh contract includes Ollama/GPU1 advisory wiring, OpenVINO/GPU0 workload wiring, NPU peer micro lane, SQLite FTS memory, broker/tool-agnostic execution, direct reasoning assistance, static deterministic product lane, heap/exchange close and final review PR readiness.
 <!-- IA-CARMINE-MANDATORY-PREFLIGHT-END -->
+
+<!-- IA-CARMINE-OPENVINO-PEER-TOPOLOGY-WIRING-BEGIN -->
+## OpenVINO peer topology preflight wiring
+
+The mandatory real product preflight includes `run_openvino_peer_topology_contract_smoke.py`.
+
+The runtime mesh contract also requires the OpenVINO peer topology contract as an intrinsic capability. This means a real product run cannot enter heap/exchange unless GPU.1 remains reserved for Ollama/CUDA advisory, GPU.0 remains the OpenVINO peer/support lane, and NPU remains a micro peer using heap/tool context.
+
+This wiring keeps OpenVINO GPU0/NPU topology inside the same Task MD IN -> heap/exchange -> peer lanes -> close -> product readiness -> review PR path.
+<!-- IA-CARMINE-OPENVINO-PEER-TOPOLOGY-WIRING-END -->
