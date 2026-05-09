@@ -24,18 +24,37 @@ Canonical rule:
 docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 ```
 
-## Operational doctrine: TUTTO SU TUTTO
+## Operational doctrine: TUTTO SU TUTTO / 0Full10
 
-A `-Full0To10` run must traverse every active lane that participates in project understanding, validation, provider diagnostics, broker telemetry, recommendations, patch planning, evidence and AI-to-AI handoff.
+TUTTO SU TUTTO means intelligent combined use of all relevant mapped tools/scripts inside the complete 0Full10 run-unica flow.
+
+It does not mean executing every script blindly. It means the run unica can discover, select, coordinate, validate and report every applicable capability from the maps while respecting guardrails, provider availability, evidence quality and explicit `-No*` opt-outs.
 
 ```text
-Full0To10 = whole-repository active-lane perimeter
+mapped capability
+  -> lane selection
+  -> preflight / availability classification
+  -> execution or explicit skip/degraded state
+  -> deterministic validation when applicable
+  -> telemetry/evidence/bundle publication
+  -> recommendation, patch-plan or review-PR product when requested
+```
+
+`-Full0To10` is compatibility CLI spelling while the launcher exposes it. It must not become a magic flag; its behavior must be explainable as explicit lane composition:
+
+```text
+task input + run identity + real-run activation + intensity/budget
+provider lanes + evidence lanes + patch/review lanes + explicit -No* opt-outs
+```
+
+```text
+0Full10 = whole-repository active-lane perimeter
 quick/balanced/deep/custom = intensity, not reduced scope
 -No* flags = explicit opt-out only
 -NoStrictRealRunActivation = single-phase diagnostics only
 ```
 
-The scope of `tutto` may expand. When a new lane becomes stable, it must be wired into the full-run contract or explicitly excluded with rationale. Silent omission is a workflow defect.
+Future tools become part of TUTTO SU TUTTO only after they are mapped, wired, guarded, observable and evidence-producing. The scope of `tutto` may expand. Silent omission of a stable mapped lane is a workflow defect.
 
 ## Code-driven reading order
 
@@ -171,7 +190,7 @@ Root workflow and README files are descriptive. They should link to command owne
 
 | Command family | Canonical owner |
 |---|---|
-| Full local AI / 0-to-10 launcher commands | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
+| 0Full10 / run-unica launcher commands | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
 | Launcher parameter selection | `docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
 | Current capability status | `docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
 | Hidden/old script review | `docs/LOCAL_AI_TASKS/script-aging-visibility-audit-2026-05-09.md` |
@@ -189,14 +208,14 @@ If a command becomes outdated, update the owning runbook/tool README only. Do no
 ## Provider policy
 
 ```text
-Full0To10 -> provider/probe/workload-quality lanes included by default unless explicitly disabled or diagnosed unavailable
+0Full10/run unica -> provider/probe/workload-quality lanes included by default unless explicitly disabled or diagnosed unavailable
 GPU1/Ollama/RTX 5080 -> primary advisory lane when selected and quality-gated
 GPU0/OpenVINO -> companion peer worker and tool-request producer
 NPU/OpenVINO -> non-blocking micro/tool-support and diagnostics lane
 Blender/audio/media runtime -> application target, frozen unless explicitly scoped
 ```
 
-Provider execution is explicit when the operator selects `-Full0To10` or a provider mode/flag. It is not an additional per-lane opt-in after Full0To10 is selected.
+Provider execution is explicit when the operator selects 0Full10/run unica through `-Full0To10` compatibility spelling or a provider mode/flag. It is not an additional per-lane opt-in after run-unica selection.
 
 For single-phase diagnostics, use `-NoStrictRealRunActivation` to prevent accidental full-lane promotion.
 
@@ -236,7 +255,7 @@ Do not commit inventory outputs from `output/**`. Commit compact evidence under 
 
 ## Validation policy
 
-For full workflow, provider, full-toolbox or code-refactor runs, prefer the unified launcher.
+For run-unica, provider, full-toolbox or code-refactor runs, prefer the unified launcher.
 
 For focused validator work, use:
 
@@ -323,7 +342,7 @@ change secrets, permissions, billing or visibility
 deploy production
 run heavy Blender/GPU workloads outside an explicitly selected full/provider workflow
 run audio playback/export, FFmpeg encode/mux, Blender render or media generation
-change provider/model execution from Full0To10 opt-out semantics to silent opt-in
+change provider/model execution from 0Full10 opt-out semantics to silent opt-in
 ```
 
 Never commit:
@@ -367,7 +386,7 @@ parameter decision map is linked before copied command blocks
 script aging audit is linked before cleanup/deprecation work
 unified launcher remains the active local-AI entrypoint
 single-owner scripts are not duplicated or bypassed
-Full0To10 remains opt-out by lane, not opt-in per capability
+0Full10 remains opt-out by lane, not opt-in per capability
 runtime broker telemetry is surfaced when relevant
 file-line-limit evidence is available when maintainability is in scope
 audio/media output is forbidden in normal AI/tooling runs
