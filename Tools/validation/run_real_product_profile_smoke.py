@@ -20,10 +20,12 @@ def main() -> int:
     repo = Path(args.repo_root).resolve()
     wrapper = repo / "Tools/workflow/run_unified_real_product_pr.ps1"
     launcher = repo / "Tools/workflow/run_unified_local_ai_refactor.ps1"
+    readme = repo / "Tools/workflow/README.md"
     errors: list[str] = []
 
     text = wrapper.read_text(encoding="utf-8-sig", errors="replace") if wrapper.exists() else ""
     launcher_text = launcher.read_text(encoding="utf-8-sig", errors="replace") if launcher.exists() else ""
+    readme_text = readme.read_text(encoding="utf-8-sig", errors="replace") if readme.exists() else ""
 
     required_tokens = {
         "wrapper_exists": wrapper.exists(),
@@ -41,7 +43,10 @@ def main() -> int:
         "enables_prepare_review_pr": "-PrepareReviewPr" in text,
         "supports_review_pr_push": "-ReviewPrPush" in text,
         "supports_review_pr_create": "-ReviewPrCreate" in text,
+        "supports_review_pr_draft": "-ReviewPrDraft" in text,
         "guards_create_pr_requires_push": "-CreatePr requires -Push" in text,
+        "readme_no_stale_draft_limitation": "does not create draft PRs yet" not in readme_text,
+        "readme_documents_draft_support": "supports draft PR creation" in readme_text,
         "supports_generated_patch_specs": "-ReviewPrFromGeneratedPatchSpecs" in text,
         "supports_deterministic_suggestions": "-ReviewPrApplyDeterministicSuggestions" in text,
         "saves_inputs_to_memory": "-SaveInputsToMemoryDb" in text,

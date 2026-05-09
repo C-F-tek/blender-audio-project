@@ -160,7 +160,7 @@ Current limitations:
 ```text
 ReviewPrIncludePath remains supported for explicit/manual allowlists.
 prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
-prepare_review_pr.py does not create draft PRs yet.
+prepare_review_pr.py supports draft PR creation through `--draft-pr` when `--create-pr` and `--push` are selected.
 metadata-only patch drafts are not enough for a successful review PR product.
 ```
 
