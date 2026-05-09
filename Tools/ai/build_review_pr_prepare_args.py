@@ -55,6 +55,33 @@ def existing_or_blank(repo_root: Path, raw: Any) -> str:
     return value if path.exists() else ""
 
 
+def load_apply_report(repo_root: Path, raw: Any) -> tuple[dict[str, Any] | None, str]:
+    value = str(raw or "").strip()
+    if not value:
+        return None, ""
+    path = repo_path(repo_root, value)
+    if not path.exists() or not path.is_file():
+        return None, ""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:  # noqa: BLE001 - report validation is handled by prepare_review_pr.py
+        return None, value
+    if not isinstance(data, dict):
+        return None, value
+    return data, value
+
+
+def apply_report_has_product(report: dict[str, Any] | None) -> bool:
+    if not isinstance(report, dict):
+        return False
+    if as_bool(report.get("source_writes_performed")) or as_bool(report.get("patch_application_performed")):
+        return True
+    for item in report.get("results") or []:
+        if isinstance(item, dict) and item.get("ok") is not False and (item.get("changed") or item.get("applied")):
+            return True
+    return False
+
+
 def add_pair(argv: list[str], flag: str, value: Any) -> None:
     text = str(value or "").strip()
     if text:
@@ -109,12 +136,25 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
         argv.extend(["--include-path", path])
 
     apply_report_requested = str(context.get("apply_report") or "").strip()
-    apply_report = existing_or_blank(repo_root, apply_report_requested)
+    apply_report_data, apply_report = load_apply_report(repo_root, apply_report_requested)
     auto_include = as_bool(context.get("auto_include_from_apply_report"))
+    apply_report_product = apply_report_has_product(apply_report_data)
+    require_product_input = as_bool(context.get("require_product_input"))
     if apply_report and auto_include:
         argv.extend(["--apply-report", apply_report, "--auto-include-from-apply-report"])
     elif apply_report_requested and auto_include:
         warnings.append(f"apply_report not found, auto include omitted: {apply_report_requested}")
+
+    if require_product_input and not include_paths and not apply_report:
+        errors.append(
+            "review PR product input missing: provide explicit include_paths or a generated apply_report "
+            "before invoking prepare_review_pr.py"
+        )
+    elif require_product_input and not include_paths and apply_report and not apply_report_product:
+        errors.append(
+            "review PR product input is not concrete: apply_report exists but does not declare "
+            "source_writes_performed=true, patch_application_performed=true, or changed/applied results"
+        )
 
     if as_bool(context.get("push")):
         argv.append("--push")
@@ -135,6 +175,8 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
         "derived": {
             "include_path_count": len(include_paths),
             "apply_report": apply_report,
+            "apply_report_product": apply_report_product,
+            "require_product_input": require_product_input,
             "auto_include_from_apply_report": bool(apply_report and auto_include),
             "push": as_bool(context.get("push")),
             "create_pr": as_bool(context.get("create_pr")),

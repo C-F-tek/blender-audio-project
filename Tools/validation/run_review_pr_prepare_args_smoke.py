@@ -83,6 +83,7 @@ def base_context(repo: Path) -> dict[str, Any]:
         "include_paths": ["docs/A.md, docs/B.md", "Tools/example.py"],
         "apply_report": str(apply_report),
         "auto_include_from_apply_report": True,
+        "require_product_input": True,
         "allow_dirty_branch": True,
         "push": True,
         "create_pr": True,
@@ -120,6 +121,14 @@ def main() -> int:
         missing_apply_context["draft_pr"] = False
         cases.append(run_helper(source_repo, repo, missing_apply_context, "missing_apply"))
 
+        no_product_context = dict(full_context)
+        no_product_context["include_paths"] = []
+        no_product_context["apply_report"] = str(repo / "missing/apply.json")
+        no_product_context["push"] = False
+        no_product_context["create_pr"] = False
+        no_product_context["draft_pr"] = False
+        cases.append(run_helper(source_repo, repo, no_product_context, "no_product_input"))
+
     full = cases[0]["report"]
     full_argv = full.get("argv") or []
     require(cases[0]["returncode"] == 0, errors, "full case helper failed")
@@ -137,6 +146,15 @@ def main() -> int:
     require("--apply-report" not in missing_argv, errors, "missing apply case should omit --apply-report")
     require("--auto-include-from-apply-report" not in missing_argv, errors, "missing apply case should omit auto include")
     require(bool(missing.get("warnings")), errors, "missing apply case should warn")
+
+    no_product = cases[2]["report"]
+    require(cases[2]["returncode"] == 2, errors, "no product input case should fail")
+    require(not bool(no_product.get("passed")), errors, "no product input case should not pass")
+    require(
+        any("review PR product input missing" in str(item) for item in no_product.get("errors") or []),
+        errors,
+        "no product input case should explain missing product input",
+    )
 
     report = {
         "schema_version": 1,
