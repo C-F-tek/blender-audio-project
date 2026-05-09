@@ -204,6 +204,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--gpu0-report", default="")
     parser.add_argument("--apply-report", default="")
     parser.add_argument("--product-separation-report", default="")
+    parser.add_argument("--review-pr-report", default="")
     parser.add_argument("--observer-dir", default="")
     parser.add_argument("--ai-public-events", default="")
     parser.add_argument("--require-ai-exchange", action="store_true")
@@ -228,6 +229,7 @@ def main() -> int:
     gpu0_path = repo_path(repo_root, args.gpu0_report) if args.gpu0_report else repo_root / f"output/validation/openvino_gpu0_workload_{stamp}.json"
     apply_path = repo_path(repo_root, args.apply_report) if args.apply_report else discover_apply_report(repo_root, stamp, mode_name)
     product_path = repo_path(repo_root, args.product_separation_report) if args.product_separation_report else repo_root / f"output/validation/patch_suggestion_product_separation_{mode_name}_{stamp}.json"
+    review_pr_path = repo_path(repo_root, args.review_pr_report) if args.review_pr_report else repo_root / f"output/validation/review_pr_prepare_{mode_name}_{stamp}.json"
     observer_dir = repo_path(repo_root, args.observer_dir) if args.observer_dir else discover_observer_dir(repo_root, stamp)
     ai_events_path = repo_path(repo_root, args.ai_public_events) if args.ai_public_events else ((observer_dir / "ai_public_events.jsonl") if observer_dir else None)
 
@@ -333,6 +335,32 @@ def main() -> int:
         passed=product_ready if args.require_review_pr_product else bool(product_report and not product_error),
         action="Block prepare_review_pr until product separation has deterministic operations or product-facing suggestions with concrete targets.",
         artifacts=[rel(repo_root, product_path)],
+    )
+
+    review_pr_report, review_pr_error = load_json(review_pr_path)
+    staged_paths = []
+    if review_pr_report and isinstance(review_pr_report.get("stage_result"), dict):
+        staged_paths = review_pr_report["stage_result"].get("staged_files") or []
+
+    review_pr_ready = bool(
+        review_pr_report
+        and not review_pr_error
+        and review_pr_report.get("passed") is True
+        and review_pr_report.get("git_commit_performed") is True
+        and review_pr_report.get("product_commit")
+        and staged_paths
+    )
+
+    add_edge(
+        edges,
+        name="product_separation_to_review_pr_product",
+        producer="patch suggestion product separation / apply report",
+        consumer="prepare_review_pr.py",
+        expected="review_pr_prepare report passed with product commit and staged files" if args.require_review_pr_product else "not required for this invocation",
+        actual=(f"passed={review_pr_report.get('passed')} commit={review_pr_report.get('git_commit_performed')} product_commit={review_pr_report.get('product_commit')} staged_files={len(staged_paths)} pr_created={review_pr_report.get('github_pr_created')}" if review_pr_report else f"missing/invalid: {review_pr_error}"),
+        passed=review_pr_ready if args.require_review_pr_product else True,
+        action="Run prepare_review_pr.py after deterministic apply and require a concrete product commit before declaring the chain complete.",
+        artifacts=[rel(repo_root, review_pr_path)],
     )
 
     broken_edges = [edge for edge in edges if not edge["passed"]]
