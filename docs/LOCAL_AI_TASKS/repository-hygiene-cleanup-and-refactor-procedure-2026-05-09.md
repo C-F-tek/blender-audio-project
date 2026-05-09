@@ -202,6 +202,61 @@ problems.md / TECH_DEBT_TRACKER entry when unresolved
 split/refactor report when the issue is documentation structure
 ```
 
+## How to extend this procedure
+
+Extend the procedure only by adding measured signals and validators, not by adding manual judgment hidden in chat.
+
+Recommended extensions:
+
+```text
+add classification signals to build_repo_hygiene_plan.py
+add formal JSON schema validation for repo_hygiene_plan and patchkit_apply_report
+add obsolete-score fields with reasons and confidence evidence
+add import/reference graph summaries for Markdown-to-code links
+add owner-map checks against single-owner-scripts-and-flow-boundaries
+add AI_REFERENCE_SOURCE_MAP stale-state checks
+add PatchKit operations only when they can be guarded and idempotent
+add dedicated validators before promoting new operations into cleanup bundles
+```
+
+PatchKit operation expansion rules:
+
+```text
+new operation must be idempotent or have explicit preconditions
+new operation must emit changed/reason/result fields
+new destructive operation must require allow_* boolean plus required_marker or exact expected state
+new operation must have smoke coverage in run_patchkit_smoke.py
+new operation must preserve source_writes_performed and patch_application_performed truth fields
+```
+
+Repo hygiene classifier expansion rules:
+
+```text
+never delete from output/**, renders/**, indexAI generated chunks or DB paths
+prefer classify/archive/refactor over delete when commands or unique knowledge are present
+separate current, reference, historical, obsolete, generated and evidence docs
+route current-map conflicts to problems.md or TECH_DEBT_TRACKER
+record old-but-useful material as refactor input rather than discard it
+```
+
+Promotion rules:
+
+```text
+report-only discovery can run often
+PatchKit dry-run can run on dedicated cleanup branches
+PatchKit apply is review-branch only
+merge of cleanup PR remains explicit human action
+```
+
+When this procedure matures, wire its compact report into:
+
+```text
+documentation-panorama-and-staleness-map-2026-05-09.md
+current-capability-depth-map-2026-05-09.md
+unified launcher evidence lanes if repository hygiene becomes part of Full0To10
+heap/exchange lifecycle only when hygiene output participates in a product decision
+```
+
 ## Acceptance criteria
 
 A cleanup/refactor PR is acceptable when:
