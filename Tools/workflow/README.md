@@ -437,3 +437,17 @@ This protects the final product path from regressing to a run that prepares a PR
 
 This remains static and report-only. It does not execute providers, does not apply patches and does not create remote PRs.
 <!-- IA-CARMINE-REAL-PRODUCT-PROFILE-CORRELATION-HARDENING-END -->
+
+<!-- IA-CARMINE-MANIFEST-RUNTIME-EVIDENCE-CORRELATION-BEGIN -->
+## Manifest runtime evidence correlation schema
+
+When `runtime_evidence_correlation_requested` is true, the final unified manifest must expose the produced correlation artifact in `phase_reports.runtime_evidence_correlation` and must include the JSON report in `report_files`.
+
+The smoke `Tools/validation/run_unified_manifest_runtime_evidence_correlation_smoke.py` validates three cases:
+
+1. requested and report declared: pass;
+2. requested and report missing: fail;
+3. not requested: pass.
+
+This prevents downstream tooling from relying on implicit path guesses for the final runtime evidence correlation report.
+<!-- IA-CARMINE-MANIFEST-RUNTIME-EVIDENCE-CORRELATION-END -->
