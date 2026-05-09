@@ -9,8 +9,9 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 | Documento | Ruolo | Quando usarlo |
 |---|---|---|
 | `docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md` | runbook operativo | Prima di lanciare o rilanciare la run unica real product. |
-| `docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md` | coda problemi/igiene | Per scegliere patch safe domani dopo una run reale. |
+| `docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md` | coda problemi/igiene | Per scegliere patch safe dopo una run reale. |
 | `docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md` | audit doc/codice | Per verificare se i documenti descrivono il codice effettivo. |
+| `docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md` | policy MD lunghi / split triage | Prima di espandere README o creare runbook lunghi. |
 | `Tools/workflow/README.md` | router e contratti storici/correnti | Per trovare entrypoint, policy, anchor e tool classification. |
 
 ## Owner code principali
@@ -27,6 +28,7 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 | Concrete ops into patch specs | `Tools/ai/build_patch_specs_from_proposals.py` |
 | Runtime evidence proposal smoke | `Tools/validation/run_repository_change_proposals_runtime_evidence_smoke.py` |
 | Empty product smoke | `Tools/validation/run_generated_patch_specs_empty_product_smoke.py` |
+| Markdown line-budget policy | `Tools/validation/check_file_line_limits.py` |
 
 ## Dottrina sintetica corrente
 
@@ -38,6 +40,7 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 - Metadata-only patch specs non sono prodotto PR.
 - `operation_count=0` con `--apply` è fallimento.
 - Draft PR finale è valido solo se `prepare_review_pr.py` produce prodotto reale e il final product contract passa.
+- Ogni nuovo MD operativo deve restare sotto la soglia policy o diventare indice + parti.
 
 ## Drift da evitare
 
@@ -46,6 +49,7 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 - Non documentare NPU come compute provider se il codice la classifica diagnostic/report-only.
 - Non indicare `P-NEXT-NPU-OBSERVABILITY` come successo finale quando esiste evidenza runtime current-stamp e il prodotto è metadata-only.
 - Non suggerire commit di `output/**`, `indexAI/code_chunks/**`, `docs/LOCAL_VALIDATION_EVIDENCE/**`, database o renders.
+- Non creare nuovi runbook monolitici: usare il validator line-limit come gate di igiene.
 
 ## Prossimo ciclo consigliato
 
@@ -54,4 +58,5 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 3. rilanciare run unica real product;
 4. se fallisce, classificare con `problems-and-hygiene-candidates-2026-05-10.md`;
 5. se passa e crea PR, ispezionare touched files, line counts, validators e product contract;
-6. solo dopo valutare refactor README/line-budget.
+6. prima di espandere docs, consultare `md-line-budget-triage-2026-05-10.md`;
+7. solo dopo valutare refactor README/line-budget.
