@@ -64,31 +64,6 @@ Move these documents into the first-read block:
 - docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 ```
 
-### P-003 — `prepare_review_pr.py` draft PR support is documented as not implemented in multiple docs
-
-Status: verify with code before changing docs.
-
-Evidence from documentation review:
-
-```text
-Several docs state that prepare_review_pr.py does not create draft PRs yet.
-```
-
-Why it matters:
-
-```text
-Recent local runs and PR flow may already rely on draft PR creation through the unified launcher/GitHub CLI path. The exact implementation boundary needs code verification before docs keep or remove this limitation.
-```
-
-Expected fix:
-
-```text
-Inspect Tools/ai/prepare_review_pr.py and unified launcher review-PR path.
-Then either:
-- update docs to describe the implemented draft path, or
-- keep limitation but explain the external GitHub CLI/manual path separately.
-```
-
 ### P-004 — older product-chain docs may still describe pre-heap patch suggestion flow as current
 
 Status: open.
@@ -116,4 +91,20 @@ Add current-status banners to old patch/product docs and route current product p
 
 ## Closed problems
 
-None yet.
+### P-003 — `prepare_review_pr.py` draft PR support was documented as not implemented
+
+Status: closed in PR #251 documentation follow-up.
+
+Code-driven finding:
+
+```text
+Tools/ai/prepare_review_pr.py supports --draft-pr.
+validate_pr_flags() enforces --draft-pr requires --create-pr.
+create_github_pr() appends --draft to gh pr create when args.draft_pr is true.
+```
+
+Outcome:
+
+```text
+Docs that claimed draft PR creation was not implemented should be updated to describe the implemented --draft-pr path.
+```
