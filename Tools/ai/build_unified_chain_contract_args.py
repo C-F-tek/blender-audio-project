@@ -39,6 +39,17 @@ def existing_or_blank(repo_root: Path, raw: Any) -> str:
     return value if path.exists() else ""
 
 
+def discover_first(repo_root: Path, patterns: list[str]) -> str:
+    for pattern in patterns:
+        matches = sorted(repo_root.glob(pattern), key=lambda item: item.stat().st_mtime if item.exists() else 0, reverse=True)
+        if matches:
+            try:
+                return matches[0].resolve().relative_to(repo_root.resolve()).as_posix()
+            except ValueError:
+                return matches[0].as_posix()
+    return ""
+
+
 def add_pair(argv: list[str], flag: str, value: str) -> None:
     if value:
         argv.extend([flag, value])
@@ -67,6 +78,27 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
     apply_report = existing_or_blank(repo_root, context.get("apply_report"))
     product_separation_report = existing_or_blank(repo_root, context.get("product_separation_report"))
     review_pr_report = existing_or_blank(repo_root, context.get("review_pr_report"))
+    tool_capability_manifest = existing_or_blank(repo_root, context.get("tool_capability_manifest"))
+    tool_usage_telemetry = existing_or_blank(repo_root, context.get("tool_usage_telemetry"))
+    if not tool_capability_manifest:
+        tool_capability_manifest = discover_first(
+            repo_root,
+            [
+                f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
+                f"output/**/tool_capability_manifest*{stamp}*.json",
+            ],
+        )
+    if not tool_usage_telemetry:
+        tool_usage_telemetry = discover_first(
+            repo_root,
+            [
+                f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
+                f"output/**/tool_usage*{stamp}*.json",
+                f"output/**/runtime_tool_usage*{stamp}*.json",
+            ],
+        )
 
     requested_apply_report = str(context.get("apply_report") or "").strip()
     requested_product_report = str(context.get("product_separation_report") or "").strip()
@@ -89,6 +121,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
             "open_extended_observer_consoles",
         )
     )
+    require_provider_tool_evidence = as_bool(context.get("require_provider_tool_evidence")) or require_ai_exchange
     require_concrete_patch_specs = as_bool(context.get("review_pr_from_generated_patch_specs"))
     require_review_pr_product = as_bool(context.get("prepare_review_pr")) and (
         as_bool(context.get("review_pr_from_generated_patch_specs"))
@@ -114,9 +147,13 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
     add_pair(argv, "--apply-report", apply_report)
     add_pair(argv, "--product-separation-report", product_separation_report)
     add_pair(argv, "--review-pr-report", review_pr_report)
+    add_pair(argv, "--tool-capability-manifest", tool_capability_manifest)
+    add_pair(argv, "--tool-usage-telemetry", tool_usage_telemetry)
 
     if require_ai_exchange:
         argv.append("--require-ai-exchange")
+    if require_provider_tool_evidence:
+        argv.append("--require-provider-tool-evidence")
     if require_concrete_patch_specs:
         argv.append("--require-concrete-patch-specs")
     if require_review_pr_product:
@@ -131,6 +168,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
         "argv": argv,
         "derived": {
             "require_ai_exchange": require_ai_exchange,
+            "require_provider_tool_evidence": require_provider_tool_evidence,
             "require_concrete_patch_specs": require_concrete_patch_specs,
             "require_review_pr_product": require_review_pr_product,
         },
@@ -141,6 +179,8 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
             "apply_report": apply_report,
             "product_separation_report": product_separation_report,
             "review_pr_report": review_pr_report,
+            "tool_capability_manifest": tool_capability_manifest,
+            "tool_usage_telemetry": tool_usage_telemetry,
             "output_report": output_report,
             "markdown_report": markdown_report,
         },

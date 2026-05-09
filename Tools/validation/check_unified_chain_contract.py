@@ -37,6 +37,15 @@ EXCHANGE_EVENT_HINTS = (
     "tool_result",
 )
 
+TOOL_EVIDENCE_HINTS = (
+    "tool",
+    "capability",
+    "capabilities",
+    "tool_usage",
+    "runtime_tool",
+    "telemetry",
+)
+
 
 def repo_path(repo_root: Path, value: str) -> Path:
     path = Path(value)
@@ -125,6 +134,50 @@ def has_productive_exchange_event(events: list[dict[str, Any]]) -> bool:
     return False
 
 
+def has_tool_capability_evidence(report: dict[str, Any] | None) -> bool:
+    if not report:
+        return False
+    if report.get("passed") is False:
+        return False
+    text = json.dumps(report, ensure_ascii=False).lower()
+    explicit_count = 0
+    for key in ("tool_count", "capability_count", "runtime_tool_count", "available_tool_count"):
+        try:
+            explicit_count = max(explicit_count, int(report.get(key) or 0))
+        except (TypeError, ValueError):
+            pass
+    if explicit_count > 0:
+        return True
+    for key in ("tools", "capabilities", "tool_capabilities", "runtime_tools", "available_tools"):
+        value = report.get(key)
+        if isinstance(value, list) and value:
+            return True
+        if isinstance(value, dict) and value:
+            return True
+    return "tool" in text and any(hint in text for hint in TOOL_EVIDENCE_HINTS)
+
+
+def has_tool_usage_evidence(report: dict[str, Any] | None) -> bool:
+    if not report:
+        return False
+    if report.get("passed") is False:
+        return False
+    text = json.dumps(report, ensure_ascii=False).lower()
+    for key in ("tool_usage_count", "runtime_tool_usage_count", "tool_invocation_count", "used_tool_count"):
+        try:
+            if int(report.get(key) or 0) > 0:
+                return True
+        except (TypeError, ValueError):
+            pass
+    for key in ("tool_usage", "tool_usages", "runtime_tool_usage", "tool_invocations", "used_tools", "tools_used"):
+        value = report.get(key)
+        if isinstance(value, list) and value:
+            return True
+        if isinstance(value, dict) and value:
+            return True
+    return ("tool" in text or "capability" in text) and any(token in text for token in ("used", "usage", "invoked", "telemetry"))
+
+
 def concrete_operation_count_from_apply(report: dict[str, Any]) -> int:
     count = int(report.get("operation_count") or 0)
     if count > 0:
@@ -207,7 +260,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--review-pr-report", default="")
     parser.add_argument("--observer-dir", default="")
     parser.add_argument("--ai-public-events", default="")
+    parser.add_argument("--tool-capability-manifest", default="")
+    parser.add_argument("--tool-usage-telemetry", default="")
     parser.add_argument("--require-ai-exchange", action="store_true")
+    parser.add_argument("--require-provider-tool-evidence", action="store_true")
     parser.add_argument("--require-concrete-patch-specs", action="store_true")
     parser.add_argument("--require-review-pr-product", action="store_true")
     parser.add_argument("--output", default="output/validation/unified_chain_contract.json")
@@ -232,6 +288,23 @@ def main() -> int:
     review_pr_path = repo_path(repo_root, args.review_pr_report) if args.review_pr_report else repo_root / f"output/validation/review_pr_prepare_{mode_name}_{stamp}.json"
     observer_dir = repo_path(repo_root, args.observer_dir) if args.observer_dir else discover_observer_dir(repo_root, stamp)
     ai_events_path = repo_path(repo_root, args.ai_public_events) if args.ai_public_events else ((observer_dir / "ai_public_events.jsonl") if observer_dir else None)
+    tool_capability_path = repo_path(repo_root, args.tool_capability_manifest) if args.tool_capability_manifest else discover_first(
+        repo_root,
+        [
+            f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
+            f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
+            f"output/**/tool_capability_manifest*{stamp}*.json",
+        ],
+    )
+    tool_usage_path = repo_path(repo_root, args.tool_usage_telemetry) if args.tool_usage_telemetry else discover_first(
+        repo_root,
+        [
+            f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
+            f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
+            f"output/**/tool_usage*{stamp}*.json",
+            f"output/**/runtime_tool_usage*{stamp}*.json",
+        ],
+    )
 
     edges: list[dict[str, Any]] = []
 
@@ -292,6 +365,28 @@ def main() -> int:
         passed=exchange_passed,
         action="Emit public exchange events from provider/official phases or disable --require-ai-exchange only for diagnostic runs.",
         artifacts=[rel(repo_root, ai_events_path)],
+    )
+
+    tool_capability_report, tool_capability_error = load_json(tool_capability_path) if tool_capability_path else (None, "missing")
+    tool_usage_report, tool_usage_error = load_json(tool_usage_path) if tool_usage_path else (None, "missing")
+    tool_capability_ok = has_tool_capability_evidence(tool_capability_report)
+    tool_usage_ok = has_tool_usage_evidence(tool_usage_report)
+    tool_evidence_passed = True
+    if args.require_provider_tool_evidence:
+        tool_evidence_passed = bool(tool_capability_ok and tool_usage_ok)
+    add_edge(
+        edges,
+        name="provider_to_tool_evidence",
+        producer="provider/heap exchange runtime",
+        consumer="runtime tool capability and usage evidence",
+        expected="tool capability manifest and runtime tool usage telemetry" if args.require_provider_tool_evidence else "not required for this invocation",
+        actual=(
+            f"capability_ok={tool_capability_ok} capability_error={tool_capability_error} "
+            f"usage_ok={tool_usage_ok} usage_error={tool_usage_error}"
+        ),
+        passed=tool_evidence_passed,
+        action="When provider/exchange is required, emit runtime_tool_capability_manifest and full_toolbox/tool-usage telemetry before declaring the chain complete.",
+        artifacts=[rel(repo_root, tool_capability_path), rel(repo_root, tool_usage_path)],
     )
 
     apply_report, apply_error = load_json(apply_path) if apply_path else (None, "missing")
@@ -373,6 +468,7 @@ def main() -> int:
         "mode_name": mode_name,
         "passed": not broken_edges,
         "require_ai_exchange": bool(args.require_ai_exchange),
+        "require_provider_tool_evidence": bool(args.require_provider_tool_evidence),
         "require_concrete_patch_specs": bool(args.require_concrete_patch_specs),
         "require_review_pr_product": bool(args.require_review_pr_product),
         "edges": edges,
