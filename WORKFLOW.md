@@ -9,6 +9,9 @@ This document is command-light by design. It defines durable lifecycle, guardrai
 Current operating model:
 
 ```text
+docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
@@ -38,16 +41,30 @@ Canonical rule:
 docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 ```
 
-## Operational doctrine: TUTTO SU TUTTO / 0Full10
+## Operational doctrine: run unica / heap-exchange product flow
 
-TUTTO SU TUTTO means intelligent combined use of all relevant mapped tools/scripts inside the complete 0Full10 run-unica flow.
+The current real product doctrine is one operator entry, one dynamic heap/exchange center and one validated product exit.
+
+```text
+Task MD or generated process-gate task
+  -> mandatory preflight
+  -> run_unified_real_product_pr.ps1
+  -> run_unified_local_ai_refactor.ps1
+  -> heap/exchange runtime
+  -> generated patch specs
+  -> prepare_review_pr.py
+  -> draft review PR product
+```
+
+TUTTO SU TUTTO means intelligent combined use of all relevant mapped tools/scripts inside the complete run-unica flow.
 
 It does not mean executing every script blindly. It means the run unica can discover, select, coordinate, validate and report every applicable capability from the maps while respecting guardrails, provider availability, evidence quality and explicit `-No*` opt-outs.
 
 ```text
 mapped capability
   -> lane selection
-  -> preflight / availability classification
+  -> mandatory/static preflight when product path is selected
+  -> availability classification
   -> execution or explicit skip/degraded state
   -> deterministic validation when applicable
   -> telemetry/evidence/bundle publication
@@ -62,7 +79,8 @@ provider lanes + evidence lanes + patch/review lanes + explicit -No* opt-outs
 ```
 
 ```text
-0Full10 = whole-repository active-lane perimeter
+0Full10 = legacy alias for whole-repository active-lane perimeter
+single_dynamic_heap_exchange_run = current model name in reports/manifests
 quick/balanced/deep/custom = intensity, not reduced scope
 -No* flags = explicit opt-out only
 -NoStrictRealRunActivation = single-phase diagnostics only
@@ -79,6 +97,11 @@ AGENTS.md
 CHATGPT.md
 CHATGPT/README.md
 docs/README.md
+docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
+docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md
+docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
@@ -122,10 +145,22 @@ read contract and source
 
 ## Active local AI workflow
 
-The active local AI workflow entrypoint is:
+The active local AI workflow has two current owner entrypoints:
 
 ```text
+Tools/workflow/run_unified_real_product_pr.ps1
 Tools/workflow/run_unified_local_ai_refactor.ps1
+```
+
+Use `run_unified_real_product_pr.ps1` for product runs that must start from a Task MD or process-gate task and end in a validated draft review PR product.
+
+Use `run_unified_local_ai_refactor.ps1` as the internal unified heap/exchange launcher and for focused diagnostic runs.
+
+Current runbook and index:
+
+```text
+docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 
@@ -148,20 +183,26 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
 ```
 
-## Current product path: Markdown to review PR evidence
+## Current product path: Markdown/process-gate to review PR product
 
-The current product workflow starts from a task Markdown, enters the dynamic heap/exchange with context and lane evidence, and exits only through deterministic product validation.
+The current product workflow starts from a task Markdown or generated process-gate task, enters the dynamic heap/exchange with context and lane evidence, and exits only through deterministic product validation.
 
 ```text
-task Markdown
+run_unified_real_product_pr.ps1
+  -> Task MD or output/local_ai_task_inputs/<generated-task>.md
+  -> mandatory real product preflight
+  -> run_unified_local_ai_refactor.ps1
   -> inventories/context/agent-state/workload-quality
   -> Tools/ai/build_heap_exchange_runtime_entry.py
   -> official adapter/provider/patch-spec lanes
   -> Tools/ai/build_heap_exchange_runtime_exit.py
   -> Tools/validation/check_heap_exchange_runtime_lifecycle.py
-  -> Tools/ai/patchkit/apply_patch_bundle.py or deterministic patch suggestion bridge
+  -> Tools/ai/build_repository_change_proposals.py
+  -> Tools/ai/build_patch_specs_from_proposals.py
+  -> Tools/ai/apply_generated_patch_specs_for_review_pr.py
   -> Tools/ai/prepare_review_pr.py
-  -> GitHub PR for manual review
+  -> Tools/validation/check_review_pr_final_product_contract.py
+  -> GitHub draft PR for manual review when push/create/draft flags are selected
 ```
 
 Focused proof:
@@ -170,18 +211,23 @@ Focused proof:
 Tools/validation/run_full0to10_product_pr_chain_smoke.py
 Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
 Tools/validation/run_patchkit_smoke.py
+Tools/validation/run_repository_change_proposals_runtime_evidence_smoke.py
+Tools/validation/run_generated_patch_specs_empty_product_smoke.py
 ```
 
-Current explicit limitations:
+Current explicit gates:
 
 ```text
 ReviewPrIncludePath remains supported for explicit/manual allowlists.
 prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
-prepare_review_pr.py does not create draft PRs yet.
+prepare_review_pr.py supports draft PR creation through `--draft-pr` when `--create-pr` and `--push` are selected.
 metadata-only patch drafts are not enough for a successful review PR product.
+operation_count=0 under generated patch-spec --apply is a hard failure.
+P-NEXT-NPU-OBSERVABILITY is backlog/fallback, not final success when runtime peer evidence exists.
+P-RUNTIME-PEER-EVIDENCE-FEED is expected when runtime peer evidence exists and previous generated product was metadata-only.
 ```
 
-Do not document this path as fully automatic until draft PR creation is implemented and validated.
+Do not document this path as successful when it produces telemetry only, metadata-only patch specs or no changed reviewable source/doc file.
 
 ## Patchkit source-write boundary
 
@@ -210,15 +256,18 @@ Patchkit is deterministic application infrastructure, not authorization. Human/o
 
 ## Obsolete / historical monolithic runbook flag
 
-Legacy monolithic 0-to-10 scripts or runbooks are not active operator entrypoints when they duplicate the unified launcher or owner maps.
+Legacy monolithic 0-to-10 scripts or runbooks are not active operator entrypoints when they duplicate the real product wrapper, unified launcher or owner maps.
 
 Mark a document as historical/superseded when:
 
 ```text
 it duplicates launcher commands instead of linking the runbook
 it starts from an internal helper as normal operator flow
+it predates mandatory real product preflight
 it predates strict real-run activation or provider mesh ownership
 it predates heap/exchange entry/exit for product paths
+it predates generated patch-spec concrete-product enforcement
+it predates runtime peer evidence feed into proposals
 it predates patchkit as preferred deterministic source-write boundary
 it claims automatic review PR behavior not implemented in code
 it treats generated evidence as a canonical source doc
@@ -228,8 +277,11 @@ it exceeds the active Markdown line budget and has no compact index
 Preferred replacement wording:
 
 ```text
-Status: historical / superseded by the unified launcher and code-driven maps.
-Current entrypoint: docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md.
+Status: historical / superseded by the real product wrapper, unified launcher and code-driven maps.
+Current product entrypoint: Tools/workflow/run_unified_real_product_pr.ps1.
+Current internal launcher: Tools/workflow/run_unified_local_ai_refactor.ps1.
+Current run index: docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md.
+Current runbook: docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md.
 Current operating model: docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md.
 Current AI orientation map: docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md.
 Current capability map: docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md.
@@ -245,7 +297,8 @@ Root workflow and README files are descriptive. They should link to command owne
 
 | Command family | Canonical owner |
 |---|---|
-| 0Full10 / run-unica launcher commands | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
+| Real product run / process-gate to draft PR | `docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md` and `Tools/workflow/run_unified_real_product_pr.ps1` |
+| 0Full10 / run-unica launcher commands | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` and `Tools/workflow/run_unified_local_ai_refactor.ps1` |
 | Launcher parameter selection | `docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md` |
 | Current operating model | `docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md` |
 | Current capability status | `docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` |
@@ -265,14 +318,14 @@ If a command becomes outdated, update the owning runbook/tool README only. Do no
 ## Provider policy
 
 ```text
-0Full10/run unica -> provider/probe/workload-quality lanes included by default unless explicitly disabled or diagnosed unavailable
+real product run -> mandatory preflight, then provider/probe/workload-quality lanes included unless explicitly disabled or diagnosed unavailable
 GPU1/Ollama/RTX 5080 -> primary advisory lane when selected and quality-gated
-GPU0/OpenVINO -> companion peer worker and tool-request producer
-NPU/OpenVINO -> non-blocking micro/tool-support and diagnostics lane
+GPU0/OpenVINO -> observable companion peer support workload and tool-request producer
+NPU/OpenVINO -> peer micro diagnostic/report lane until compute-provider behavior is separately validated
 Blender/audio/media runtime -> application target, frozen unless explicitly scoped
 ```
 
-Provider execution is explicit when the operator selects 0Full10/run unica through `-Full0To10` compatibility spelling or a provider mode/flag. It is not an additional per-lane opt-in after run-unica selection.
+Provider execution is explicit when the operator selects run-unica through the real product wrapper, `-Full0To10` compatibility spelling or a provider mode/flag. It is not an additional per-lane opt-in after run-unica selection.
 
 For single-phase diagnostics, use `-NoStrictRealRunActivation` to prevent accidental full-lane promotion.
 
@@ -312,7 +365,7 @@ Do not commit inventory outputs from `output/**`. Commit compact evidence under 
 
 ## Validation policy
 
-For run-unica, provider, full-toolbox or code-refactor runs, prefer the unified launcher.
+For real product, run-unica, provider, full-toolbox or code-refactor runs, prefer the real product wrapper or unified launcher according to scope.
 
 For focused validator work, use:
 
@@ -324,8 +377,11 @@ Minimum PR evidence should state:
 
 ```text
 which launcher/tool command was run
+whether mandatory preflight passed when product path was selected
 whether provider/runtime execution occurred
 whether runtime broker telemetry was produced/absorbed
+whether runtime evidence correlation was produced when requested
+whether generated patch specs produced concrete operations
 whether file-line-limit evidence was relevant or produced
 whether audio/media output occurred
 where the manifest/report/evidence is located
@@ -369,6 +425,7 @@ Policies:
 docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 docs/LOCAL_AI_TASKS/md-split-folder-naming-rule-2026-05-07.md
 docs/LOCAL_AI_TASKS/file-line-limit-validator-2026-05-06.md
+docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
 ```
 
 ## Audio/media output policy
@@ -399,7 +456,7 @@ change secrets, permissions, billing or visibility
 deploy production
 run heavy Blender/GPU workloads outside an explicitly selected full/provider workflow
 run audio playback/export, FFmpeg encode/mux, Blender render or media generation
-change provider/model execution from 0Full10 opt-out semantics to silent opt-in
+change provider/model execution from run-unica opt-out semantics to silent opt-in
 ```
 
 Never commit:
@@ -427,7 +484,10 @@ script line counts for created/modified scripts
 file-size policy impact
 validation run or missing
 provider/runtime execution status
+mandatory preflight status when applicable
 runtime broker telemetry status
+runtime evidence correlation status when applicable
+generated patch-spec concrete operation status when applicable
 audio/media output status
 risk
 follow-up
@@ -438,14 +498,17 @@ follow-up
 ```text
 root docs are command-light and owner-linked
 commands live in owning runbooks/tool READMEs
+real product wrapper is documented as product entrypoint
+unified launcher is documented as dynamic heap/exchange executor and diagnostic entrypoint
 capability depth map is linked before historical runbooks
 parameter decision map is linked before copied command blocks
 script aging audit is linked before cleanup/deprecation work
-unified launcher remains the active local-AI entrypoint
 single-owner scripts are not duplicated or bypassed
-0Full10 remains opt-out by lane, not opt-in per capability
+0Full10 remains legacy/compatibility wording, not magic behavior
 runtime broker telemetry is surfaced when relevant
 heap/exchange entry, runtime state, public events and exit product are surfaced for product paths
+runtime evidence correlation is surfaced when requested
+metadata-only generated patch specs are not documented as product success
 patchkit is the preferred deterministic boundary for reviewed source-write bundles
 file-line-limit evidence is available when maintainability is in scope
 audio/media output is forbidden in normal AI/tooling runs
@@ -453,5 +516,5 @@ limitations are backlog to overcome, not tool-skip reasons
 patch application remains explicit
 long evidence is indexed by compact manifests
 obsolete monolithic runbooks are flagged historical, not active
-product PR workflow limitations remain explicit until code implements them
+product PR workflow limitations match current code
 ```
