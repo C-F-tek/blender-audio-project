@@ -1516,6 +1516,28 @@ $PhaseReports.heap_peer_runtime_manifest = $HeapPeerRuntimeJson
 $PhaseReports.heap_peer_runtime_manifest_markdown = $HeapPeerRuntimeMd
 # IA-CARMINE-HEAP-PEER-RUNTIME-MANIFEST-END
 
+# IA-CARMINE-HEAP-EXCHANGE-CLOSURE-AUDIT-BEGIN
+$HeapExchangeClosureAuditJson = Join-Path $AiPacketsDir "heap_exchange_closure_audit.json"
+$HeapExchangeClosureAuditMd = Join-Path $AiPacketsDir "heap_exchange_closure_audit.md"
+$HeapExchangeClosureAuditArgs = @(
+    "Tools/ai/build_heap_exchange_closure_audit.py",
+    "--repo-root", ".",
+    "--stamp", $DataStamp,
+    "--heap-peer-runtime", $HeapPeerRuntimeJson,
+    "--runtime-state", $HeapExchangeRuntimeState,
+    "--observer-dir", $HeapExchangeObserverDir,
+    "--output", $HeapExchangeClosureAuditJson,
+    "--markdown-output", $HeapExchangeClosureAuditMd
+)
+$PhaseStatus.heap_exchange_closure_audit = Invoke-Checked "Build heap/exchange closure audit" {
+    & $ResolvedPythonExe @HeapExchangeClosureAuditArgs
+}
+$ReportFiles += $HeapExchangeClosureAuditJson
+$ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapExchangeClosureAuditMd
+$PhaseReports.heap_exchange_closure_audit = $HeapExchangeClosureAuditJson
+$PhaseReports.heap_exchange_closure_audit_markdown = $HeapExchangeClosureAuditMd
+# IA-CARMINE-HEAP-EXCHANGE-CLOSURE-AUDIT-END
+
 $LegacyFullToolboxReport = ""
 if ($RunLegacyFullToolboxIntegrated) {
     $LegacyFullToolboxReport = ".\output\validation\agent_review_full_toolbox_decision_loop_${Stamp}_integrated.json"
@@ -2168,6 +2190,7 @@ $UnifiedChainArgsContext = [ordered]@{
     review_pr_apply_deterministic_suggestions = [bool]$ReviewPrApplyDeterministicSuggestions
     heap_peer_runtime = $HeapPeerRuntimeJson
     shared_memory_evidence = $HeapPeerRuntimeJson
+    closure_audit_report = $HeapExchangeClosureAuditJson
 }
 ($UnifiedChainArgsContext | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $UnifiedChainArgsContextJson -Encoding UTF8
 

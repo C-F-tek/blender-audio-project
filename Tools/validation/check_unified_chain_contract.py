@@ -220,6 +220,20 @@ def has_shared_memory_evidence(report: dict[str, Any] | None, events: list[dict[
     return any(hint in text for hint in SHARED_MEMORY_HINTS)
 
 
+def has_closure_audit_evidence(report: dict[str, Any] | None) -> bool:
+    if not report:
+        return False
+    if report.get("passed") is not True:
+        return False
+    text = json.dumps(report, ensure_ascii=False).lower()
+    return (
+        report.get("closure_state") == "ready_for_final_chain_contract"
+        and "deterministic" in text
+        and "audit" in text
+        and "microoperation" in text
+    )
+
+
 def concrete_operation_count_from_apply(report: dict[str, Any]) -> int:
     count = int(report.get("operation_count") or 0)
     if count > 0:
@@ -306,10 +320,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tool-usage-telemetry", default="")
     parser.add_argument("--heap-peer-runtime", default="")
     parser.add_argument("--shared-memory-evidence", default="")
+    parser.add_argument("--closure-audit-report", default="")
     parser.add_argument("--require-ai-exchange", action="store_true")
     parser.add_argument("--require-provider-tool-evidence", action="store_true")
     parser.add_argument("--require-heap-peer-runtime", action="store_true")
     parser.add_argument("--require-shared-memory-evidence", action="store_true")
+    parser.add_argument("--require-heap-closure-audit", action="store_true")
     parser.add_argument("--require-concrete-patch-specs", action="store_true")
     parser.add_argument("--require-review-pr-product", action="store_true")
     parser.add_argument("--output", default="output/validation/unified_chain_contract.json")
@@ -369,6 +385,13 @@ def main() -> int:
             f"output/**/full_memory_tool_regeneration_bundle*{stamp}*.json",
             f"docs/LOCAL_VALIDATION_EVIDENCE/full_memory_tool_regeneration_bundle*{stamp}*.json",
             f"output/**/heap_exchange*{stamp}*.json",
+        ],
+    )
+    closure_audit_path = repo_path(repo_root, args.closure_audit_report) if args.closure_audit_report else discover_first(
+        repo_root,
+        [
+            f"output/**/heap_exchange_closure_audit*{stamp}*.json",
+            f"docs/LOCAL_VALIDATION_EVIDENCE/heap_exchange_closure_audit*{stamp}*.json",
         ],
     )
 
@@ -437,6 +460,7 @@ def main() -> int:
     tool_usage_report, tool_usage_error = load_json(tool_usage_path) if tool_usage_path else (None, "missing")
     heap_peer_report, heap_peer_error = load_json(heap_peer_path) if heap_peer_path else (None, "missing")
     shared_memory_report, shared_memory_error = load_json(shared_memory_path) if shared_memory_path else (None, "missing")
+    closure_audit_report, closure_audit_error = load_json(closure_audit_path) if closure_audit_path else (None, "missing")
 
     tool_capability_ok = has_tool_capability_evidence(tool_capability_report)
     tool_usage_ok = has_tool_usage_evidence(tool_usage_report)
@@ -488,6 +512,22 @@ def main() -> int:
         passed=shared_memory_passed,
         action="Emit shared memory / AI-to-AI bundle evidence so the heap remains the source of knowledge for provider peers.",
         artifacts=[rel(repo_root, shared_memory_path), rel(repo_root, ai_events_path)],
+    )
+
+    closure_audit_ok = has_closure_audit_evidence(closure_audit_report)
+    closure_audit_passed = True
+    if args.require_heap_closure_audit:
+        closure_audit_passed = closure_audit_ok
+    add_edge(
+        edges,
+        name="heap_exchange_to_closure_audit",
+        producer="dynamic heap/exchange center",
+        consumer="deterministic/script closure audit lane",
+        expected="heap_exchange_closure_audit passed and ready_for_final_chain_contract" if args.require_heap_closure_audit else "not required for this invocation",
+        actual=f"closure_audit_ok={closure_audit_ok} closure_audit_error={closure_audit_error}",
+        passed=closure_audit_passed,
+        action="Run deterministic/script closure audit before final chain contract. This lane can audit the complete heap/exchange without changing the NPU dynamic microoperation/efficiency role.",
+        artifacts=[rel(repo_root, closure_audit_path)],
     )
 
     apply_report, apply_error = load_json(apply_path) if apply_path else (None, "missing")
@@ -572,6 +612,7 @@ def main() -> int:
         "require_provider_tool_evidence": bool(args.require_provider_tool_evidence),
         "require_heap_peer_runtime": bool(args.require_heap_peer_runtime),
         "require_shared_memory_evidence": bool(args.require_shared_memory_evidence),
+        "require_heap_closure_audit": bool(args.require_heap_closure_audit),
         "require_concrete_patch_specs": bool(args.require_concrete_patch_specs),
         "require_review_pr_product": bool(args.require_review_pr_product),
         "edges": edges,

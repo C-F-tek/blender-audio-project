@@ -30,42 +30,71 @@ PREVIEW_CHARS = 6000
 
 
 def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
-    """Verify the canonical launcher contains the real product PR chain."""
-    workflow = source_repo / "Tools/workflow/run_unified_local_ai_refactor.ps1"
-    required_tokens = {
-        "heap_exchange_entry": "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-BEGIN",
-        "heap_exchange_exit_after_patch_suggestion": "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN",
-        "heap_exchange_lifecycle": "check_heap_exchange_runtime_lifecycle.py",
-        "task_patch_suggestion_report": "build_task_patch_suggestion_report.py",
-        "patch_suggestion_final_phase": "Patch suggestion final phase product",
-        "patch_suggestion_product_separation": "Validate patch suggestion product separation",
-        "patch_suggestion_product_gate": "--require-product",
-        "review_pr_prepare_args_builder": "build_review_pr_prepare_args.py",
-        "review_pr_prepare": "Prepare review branch and PR",
-        "review_pr_auto_include": "--auto-include-from-apply-report",
-        "review_pr_apply_report": "--apply-report",
-        "final_chain_contract_gate": "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN",
-        "final_chain_args_builder": "build_unified_chain_contract_args.py",
-        "review_pr_args_builder": "build_review_pr_prepare_args.py",
-        "manifest_schema_validator": "check_unified_run_manifest_schema.py",
-        "legacy_alias_registry": "unified_run_legacy_alias_registry.json",
-        "final_chain_contract": "check_unified_chain_contract.py",
-        "final_chain_review_pr_report": "--review-pr-report",
-        "final_chain_review_pr_product": "--require-review-pr-product",
+    """Verify the canonical product PR chain across workflow + extracted helpers."""
+    files = {
+        "workflow": source_repo / "Tools/workflow/run_unified_local_ai_refactor.ps1",
+        "review_pr_args_builder": source_repo / "Tools/ai/build_review_pr_prepare_args.py",
+        "chain_args_builder": source_repo / "Tools/ai/build_unified_chain_contract_args.py",
+        "chain_contract": source_repo / "Tools/validation/check_unified_chain_contract.py",
+        "manifest_schema_validator": source_repo / "Tools/validation/check_unified_run_manifest_schema.py",
+        "legacy_alias_registry": source_repo / "Tools/ai/unified_run_legacy_alias_registry.json",
+        "closure_audit": source_repo / "Tools/ai/build_heap_exchange_closure_audit.py",
     }
-    if not workflow.exists():
-        return {
-            "path": workflow.as_posix(),
-            "passed": False,
-            "missing_tokens": list(required_tokens),
-            "ordered_chain": [],
-            "errors": ["canonical workflow launcher is missing"],
-        }
 
-    text = workflow.read_text(encoding="utf-8-sig")
-    missing = [name for name, token in required_tokens.items() if token not in text]
+    texts = {
+        name: path.read_text(encoding="utf-8-sig", errors="replace") if path.exists() else ""
+        for name, path in files.items()
+    }
+
+    required_tokens = {
+        "workflow:heap_exchange_entry": ("workflow", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-BEGIN"),
+        "workflow:heap_exchange_entry_ensure": ("workflow", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-BEGIN"),
+        "workflow:heap_peer_runtime_manifest": ("workflow", "build_heap_peer_runtime_manifest.py"),
+        "workflow:heap_peer_runtime_marker": ("workflow", "IA-CARMINE-HEAP-PEER-RUNTIME-MANIFEST-BEGIN"),
+        "workflow:heap_exchange_closure_audit": ("workflow", "build_heap_exchange_closure_audit.py"),
+        "workflow:heap_exchange_closure_audit_marker": ("workflow", "IA-CARMINE-HEAP-EXCHANGE-CLOSURE-AUDIT-BEGIN"),
+        "workflow:heap_exchange_exit_after_patch_suggestion": ("workflow", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN"),
+        "workflow:heap_exchange_lifecycle": ("workflow", "check_heap_exchange_runtime_lifecycle.py"),
+        "workflow:task_patch_suggestion_report": ("workflow", "build_task_patch_suggestion_report.py"),
+        "workflow:patch_suggestion_final_phase": ("workflow", "Patch suggestion final phase product"),
+        "workflow:patch_suggestion_product_separation": ("workflow", "Validate patch suggestion product separation"),
+        "workflow:patch_suggestion_product_gate": ("workflow", "--require-product"),
+        "workflow:review_pr_prepare_args_builder": ("workflow", "build_review_pr_prepare_args.py"),
+        "workflow:review_pr_prepare": ("workflow", "Prepare review branch and PR"),
+        "workflow:final_chain_contract_gate": ("workflow", "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN"),
+        "workflow:final_chain_args_builder": ("workflow", "build_unified_chain_contract_args.py"),
+
+        "review_args:auto_include": ("review_pr_args_builder", "--auto-include-from-apply-report"),
+        "review_args:apply_report": ("review_pr_args_builder", "--apply-report"),
+
+        "chain_args:review_pr_report": ("chain_args_builder", "--review-pr-report"),
+        "chain_args:review_pr_product": ("chain_args_builder", "--require-review-pr-product"),
+        "chain_args:provider_tool_evidence": ("chain_args_builder", "--require-provider-tool-evidence"),
+        "chain_args:closure_audit_report": ("chain_args_builder", "--closure-audit-report"),
+        "chain_args:require_heap_closure_audit": ("chain_args_builder", "--require-heap-closure-audit"),
+
+        "chain_contract:provider_tool_edge": ("chain_contract", "provider_to_tool_evidence"),
+        "chain_contract:peer_runtime_edge": ("chain_contract", "heap_exchange_to_peer_runtime"),
+        "chain_contract:shared_memory_edge": ("chain_contract", "heap_exchange_to_shared_memory"),
+        "chain_contract:closure_audit_edge": ("chain_contract", "heap_exchange_to_closure_audit"),
+        "chain_contract:review_pr_product_edge": ("chain_contract", "product_separation_to_review_pr_product"),
+
+        "manifest_schema_validator:file": ("manifest_schema_validator", "unified_run_manifest_schema_validation"),
+        "legacy_alias_registry:file": ("legacy_alias_registry", "unified_run_legacy_alias_registry"),
+        "closure_audit:file": ("closure_audit", "heap_exchange_closure_audit"),
+    }
+
+    missing = [
+        name
+        for name, (file_key, token) in required_tokens.items()
+        if token not in texts.get(file_key, "")
+    ]
+
+    workflow_text = texts["workflow"]
     ordered_tokens = [
         ("heap_exchange_entry", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-BEGIN"),
+        ("heap_peer_runtime_manifest", "IA-CARMINE-HEAP-PEER-RUNTIME-MANIFEST-BEGIN"),
+        ("heap_exchange_closure_audit", "IA-CARMINE-HEAP-EXCHANGE-CLOSURE-AUDIT-BEGIN"),
         ("patch_suggestion_final_phase", "Patch suggestion final phase product"),
         ("heap_exchange_exit_after_patch_suggestion", "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN"),
         ("patch_suggestion_product_separation", "Validate patch suggestion product separation"),
@@ -73,18 +102,25 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
         ("final_chain_contract", "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN"),
     ]
     positions = [
-        {"phase": name, "position": text.find(token)}
+        {"phase": name, "position": workflow_text.find(token)}
         for name, token in ordered_tokens
     ]
-    ordered = all(item["position"] >= 0 for item in positions)
-    if ordered:
-        ordered = positions == sorted(positions, key=lambda item: item["position"])
+
+    errors = []
+    if missing:
+        errors.extend(f"workflow distributed trace missing token: {name}" for name in missing)
+    if any(item["position"] < 0 for item in positions):
+        errors.append("canonical workflow product PR chain positions unavailable")
+    elif positions != sorted(positions, key=lambda item: item["position"]):
+        errors.append("canonical workflow product PR chain is not in execution order")
+
     return {
-        "path": workflow.as_posix(),
-        "passed": not missing and ordered,
+        "path": files["workflow"].as_posix(),
+        "inspected_files": {name: path.as_posix() for name, path in files.items()},
+        "passed": not errors,
         "missing_tokens": missing,
         "ordered_chain": positions,
-        "errors": [] if ordered else ["canonical workflow product PR chain is not in execution order"],
+        "errors": errors,
     }
 
 
