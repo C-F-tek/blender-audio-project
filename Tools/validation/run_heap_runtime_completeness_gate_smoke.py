@@ -28,14 +28,23 @@ def read_json(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+
+def provider_child_python_and_env(repo_root: Path) -> tuple[str, dict[str, str]]:
+    repo_path = str(repo_root)
+    if repo_path not in sys.path:
+        sys.path.insert(0, repo_path)
+    from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python
+
+    return resolve_child_python(repo_root), command_env(repo_root)
+
+
 def run_gate(repo_root: Path, label: str, stamp: str, timeout_seconds: int, max_iterations: int, provider_model: str) -> tuple[subprocess.CompletedProcess[str], dict[str, Any], Path]:
     run_dir = repo_root / "output" / "validation" / f"heap_runtime_completeness_gate_{label}_{stamp}"
     run_dir.mkdir(parents=True, exist_ok=True)
     output = run_dir / "heap_runtime_completeness_gate_report.json"
-    env = os.environ.copy()
-    env["PYTHONPATH"] = str(repo_root) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    child_python, env = provider_child_python_and_env(repo_root)
     command = [
-        sys.executable,
+        child_python,
         "Tools/ai/run_heap_runtime_completeness_gate.py",
         "--repo-root", ".",
         "--stamp", f"{label}_{stamp}",
