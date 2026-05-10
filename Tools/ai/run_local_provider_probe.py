@@ -26,7 +26,7 @@ def ensure_repo_imports(repo_root: Path) -> None:
             sys.path.insert(0, text)
 
 
-def run_ollama_probe(repo_root: Path, model: str | None, prompt: str | None = None) -> dict[str, Any]:
+def run_ollama_probe(repo_root: Path, model: str | None, prompt: str | None = None, max_new_tokens: int = 64) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     from Tools.npu.ollama_runtime import OllamaSession, choose_model, is_server_ready, list_models, list_models_from_disk  # noqa: PLC0415
 
@@ -57,7 +57,7 @@ def run_ollama_probe(repo_root: Path, model: str | None, prompt: str | None = No
         for index, prompt in enumerate(prompts, start=1):
             candidate = session.generate(
                 prompt,
-                max_new_tokens=64,
+                max_new_tokens=max_new_tokens,
                 temperature=0.0,
             )
             candidate = candidate or ""
@@ -67,6 +67,7 @@ def run_ollama_probe(repo_root: Path, model: str | None, prompt: str | None = No
                     "prompt_chars": len(prompt),
                     "text_chars": len(candidate),
                     "text_preview": candidate[:120],
+                    "max_new_tokens": max_new_tokens,
                 }
             )
             if candidate.strip():
@@ -144,7 +145,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     errors: list[str] = []
     if args.run_ollama:
         try:
-            lane_reports.append(run_ollama_probe(repo_root, args.model, args.prompt))
+            lane_reports.append(run_ollama_probe(repo_root, args.model, args.prompt, max_new_tokens=max(1, min(args.max_new_tokens, 4096))))
         except Exception as exc:  # noqa: BLE001 - report-only tool.
             lane_reports.append({"lane": "ollama", "passed": False, "provider_execution_performed": False, "error": f"{type(exc).__name__}: {exc}"})
     if args.run_npu:
@@ -194,6 +195,7 @@ def main() -> int:
     parser.add_argument("--model", help="Preferred Ollama model.")
     parser.add_argument("--prompt", default="", help="Optional user prompt for observable provider response.")
     parser.add_argument("--timeout", type=float, default=30.0)
+    parser.add_argument("--max-new-tokens", type=int, default=64, help="Maximum Ollama tokens for an observable response.")
     parser.add_argument("--npu-python-exe", default="", help="Explicit NPU/OpenVINO Python executable.")
     parser.add_argument("--run-ollama", action="store_true")
     parser.add_argument("--run-npu", action="store_true")

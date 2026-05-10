@@ -40,7 +40,7 @@ param(
     [ValidateSet("quick", "balanced", "deep", "custom")]
     [string]$RunIntensity = "deep",
 
-    [string]$Model = "gpt-oss:20b",
+    [string]$Model = "qwen2.5-coder:14b",
     [string]$PythonExe = "",
 
     [int]$BudgetMinutes = 30,

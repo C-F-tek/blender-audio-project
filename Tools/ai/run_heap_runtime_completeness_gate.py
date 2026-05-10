@@ -374,6 +374,35 @@ class HeapRuntimeCompletenessGate:
     def broker_results(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return event_payloads_by_type(events, "broker_result")
 
+    def broker_request_count_from_events(self, events: list[dict[str, Any]]) -> int:
+        return sum(1 for event in events if event.get("event_type") == "broker_request")
+
+    def broker_execution_count_from_events(self, events: list[dict[str, Any]]) -> int:
+        count = 0
+        for payload in self.broker_results(events):
+            if payload.get("blocked"):
+                continue
+            if safe_int(payload.get("returncode"), default=1) == 0 or payload.get("executed") is True:
+                count += 1
+        return count
+
+    def bridge_report_refs(self, events: list[dict[str, Any]]) -> list[str]:
+        refs: list[str] = []
+        for ref in self.bridge_reports:
+            if ref and ref not in refs:
+                refs.append(ref)
+        for payload in self.broker_results(events):
+            ref = str(payload.get("broker_report") or "").strip()
+            if ref and ref not in refs:
+                refs.append(ref)
+        return refs
+
+    def effective_tool_request_count(self, events: list[dict[str, Any]]) -> int:
+        return max(self.tool_request_count, self.broker_request_count_from_events(events))
+
+    def effective_tool_execution_count(self, events: list[dict[str, Any]]) -> int:
+        return max(self.tool_execution_count, self.broker_execution_count_from_events(events))
+
     def requirement_for_tool(self, tool_name: str) -> str:
         for item in self.tool_plan():
             if item["tool"] == tool_name:
@@ -613,8 +642,16 @@ class HeapRuntimeCompletenessGate:
         missing = self.missing_requirements(events)
         unattempted = self.next_unattempted_plan_item(events)
         ready = not missing
-        if ready and self.request_text() and not self.response_text():
-            missing = [*missing, "gpu1_request_response"]
+        bridge_refs = self.bridge_report_refs(events)
+        effective_tool_execution_count = self.effective_tool_execution_count(events)
+        if ready and effective_tool_execution_count <= 0:
+            missing = [*missing, "broker_tool_execution"]
+            ready = False
+        if ready and not bridge_refs:
+            missing = [*missing, "broker_bridge_reports"]
+            ready = False
+        if ready and self.request_text() and not self.response_text_complete():
+            missing = [*missing, "gpu1_request_response_complete"]
             ready = False
         budget_exhausted = round_id >= self.max_iterations
         no_more_progress = unattempted is None and bool(missing)
@@ -625,7 +662,7 @@ class HeapRuntimeCompletenessGate:
             "id": "heap_completeness_gate_decision",
             "from": "arbiter",
             "decision": "product_ready_heap_complete" if ready else "blocked_with_reason",
-            "evidence_refs": ["heap:task_state", "heap:broker_result", "heap:shared_evidence", "heap:validation_signal", *self.bridge_reports[-4:]],
+            "evidence_refs": ["heap:task_state", "heap:broker_result", "heap:shared_evidence", "heap:validation_signal", *bridge_refs[-4:]],
             "completed_requirements": sorted(self.completed_requirements(events)),
             "missing_requirements": missing,
             "budget_exhausted": budget_exhausted,
@@ -657,8 +694,9 @@ class HeapRuntimeCompletenessGate:
             "provider_refs": self.provider_refs(),
             "provider_response_texts": self.provider_response_texts(),
             "context_artifact_refs": self.broker_output_refs(events),
+            "bridge_reports": bridge_refs,
             "provider_role_decisions": self.provider_role_decisions(),
-            "toolused": self.tool_execution_count > 0,
+            "toolused": effective_tool_execution_count > 0,
             "shared_memory_written_and_used": "shared_memory" in self.completed_requirements(events),
             "gpu0_audit": self.provider_response_text("gpu0_peer"),
             "npu_audit": self.provider_response_text("npu_micro_task_auditor"),
@@ -764,6 +802,22 @@ class HeapRuntimeCompletenessGate:
                 return text
         return ""
 
+    def response_text_complete(self) -> bool:
+        text = self.response_text().strip()
+        if not text:
+            return False
+        lowered = text.lower().rstrip()
+        dangling_suffixes = (
+            " in", " con", " e", " ed", " o", " od", " di", " del", " della", " dello", " dei", " degli",
+            " su", " per", " da", " a", " al", " alla", " allo", " ai", " agli", " tra", " fra", " che",
+            " come", " quando", " perché", " se", " ma", " però", " quindi", " output_preview=", "[", "(", "{",
+        )
+        if lowered.endswith(dangling_suffixes):
+            return False
+        if text[-1] in {",", ":", ";"}:
+            return False
+        return True
+
     def response_source(self) -> str:
         return "gpu1_planner" if self.response_text() else ""
 
@@ -829,6 +883,7 @@ class HeapRuntimeCompletenessGate:
                     "--model", self.args.provider_model,
                     "--prompt", "__GPU1_CUMULATIVE_PROMPT__",
                     "--timeout", str(self.args.timeout_seconds),
+                    "--max-new-tokens", str(max(128, min(int(self.args.max_new_tokens), 4096))),
                     "--output", repo_rel(self.repo_root, gpu1_json),
                 ],
             },
@@ -950,11 +1005,14 @@ class HeapRuntimeCompletenessGate:
         final_events = self.read_events()
         completed = sorted(self.completed_requirements(final_events))
         missing = self.missing_requirements(final_events)
+        final_bridge_reports = self.bridge_report_refs(final_events)
+        final_tool_request_count = self.effective_tool_request_count(final_events)
+        final_tool_execution_count = self.effective_tool_execution_count(final_events)
         metrics = {
             "heap_read_count": self.heap_read_count,
             "heap_write_count": self.heap_write_count,
-            "tool_request_count": self.tool_request_count,
-            "tool_execution_count": self.tool_execution_count,
+            "tool_request_count": final_tool_request_count,
+            "tool_execution_count": final_tool_execution_count,
             "decision_count": self.decision_count,
             "candidate_operation_count": self.candidate_operation_count,
             "product_status": self.state["product"].get("status"),
@@ -1004,11 +1062,11 @@ class HeapRuntimeCompletenessGate:
             metric_errors.append("ready product_status requires all three provider lanes")
         if metrics["product_status"] == "ready" and not self.provider_execution_performed:
             metric_errors.append("ready product_status requires observable provider execution")
-        if metrics["product_status"] == "ready" and not self.bridge_reports:
+        if metrics["product_status"] == "ready" and not final_bridge_reports:
             metric_errors.append("ready product_status requires broker bridge reports")
         if metrics["product_status"] == "ready" and not metrics.get("context_artifact_refs"):
             metric_errors.append("ready product_status requires memory/chunk/context artifacts")
-        if metrics["product_status"] == "ready" and self.response_text().rstrip().endswith((" in", " con", " e", " di", " su", " per", " da", ":", ",")):
+        if metrics["product_status"] == "ready" and not self.response_text_complete():
             metric_errors.append("ready product_status requires a complete final response_text")
         self.errors.extend(metric_errors)
         return {
@@ -1022,7 +1080,7 @@ class HeapRuntimeCompletenessGate:
             "state": self.state,
             "budget_governor": self.budget_governor,
             "heap_snapshot": {"event_count": snapshot.get("event_count"), "event_log": snapshot.get("event_log"), "pending_broker_request_count": snapshot.get("pending_broker_request_count")},
-            "bridge_reports": self.bridge_reports,
+            "bridge_reports": final_bridge_reports,
             "provider_reports": self.provider_reports,
             "real_run_input_contract": {
                 "kind": "heap_runtime_completeness_gate_input_contract",
@@ -1038,7 +1096,7 @@ class HeapRuntimeCompletenessGate:
                 "kind": "heap_runtime_completeness_gate_output_contract",
                 "heap_event_log": snapshot.get("event_log"),
                 "heap_snapshot": snapshot.get("snapshot"),
-                "bridge_reports": self.bridge_reports,
+                "bridge_reports": final_bridge_reports,
                 "provider_report_outputs": [item.get("output") for item in self.provider_reports],
                 "request_input": self.request_text(),
                 "response_text": self.response_text(),

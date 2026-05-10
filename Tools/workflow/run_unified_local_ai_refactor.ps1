@@ -37,7 +37,7 @@ param(
     [string]$AiPacketsDir = "",
     [ValidateSet("core", "npu", "docs")]
     [string]$Profile = "docs",
-    [string]$Model = "gpt-oss:20b",
+    [string]$Model = "qwen2.5-coder:14b",
     [ValidateSet("quick", "balanced", "deep", "custom")]
     [string]$RunIntensity = "balanced",
     [int]$BudgetMinutes = 30,

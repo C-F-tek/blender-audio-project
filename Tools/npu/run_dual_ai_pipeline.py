@@ -1526,7 +1526,7 @@ def main() -> None:
     parser.add_argument("--skip-npu", action="store_true")
     parser.add_argument("--skip-ollama", action="store_true")
     parser.add_argument("--include-manual", action="store_true")
-    parser.add_argument("--creative-model", default="gpt-oss:20b")
+    parser.add_argument("--creative-model", default="qwen2.5-coder:14b")
     parser.add_argument("--technical-model", default="qwen2.5-coder:14b")
     parser.add_argument("--ollama-base-url", default=None)
     parser.add_argument("--npu-python", default=str(DEFAULT_NPU_PYTHON))

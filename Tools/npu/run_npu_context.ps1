@@ -13,7 +13,7 @@ param(
     [ValidateSet("code", "music")]
     [string]$ReviewDomain = "code",
     [string]$OllamaModel = "qwen2.5-coder:14b",
-    [string]$CreativeModel = "gpt-oss:20b",
+    [string]$CreativeModel = "qwen2.5-coder:14b",
     [string]$TechnicalModel = "qwen2.5-coder:14b"
 )
 

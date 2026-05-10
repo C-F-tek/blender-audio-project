@@ -28,7 +28,7 @@ def normalize_base_url(value: str | None) -> str:
 
 
 DEFAULT_BASE_URL = normalize_base_url(os.environ.get("OLLAMA_API_BASE") or os.environ.get("OLLAMA_HOST"))
-DEFAULT_MODELS = ("qwen2.5-coder:14b", "gpt-oss:20b", "autumnzsd/qwen2.5-coder-tools:latest")
+DEFAULT_MODELS = ("qwen2.5-coder:14b", "autumnzsd/qwen2.5-coder-tools:latest")
 DEFAULT_OLLAMA_THREAD_FRACTION = 0.85
 
 
