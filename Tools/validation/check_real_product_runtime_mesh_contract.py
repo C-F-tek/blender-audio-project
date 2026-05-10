@@ -175,8 +175,8 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and exists(repo_root, "Tools/ai/build_heap_exchange_runtime_exit.py")
         and exists(repo_root, "Tools/validation/check_heap_exchange_runtime_lifecycle.py"),
 
-        "heap_team_runtime_lab": exists(repo_root, "Tools/ai/run_heap_team_runtime_lab.py")
-        and exists(repo_root, "Tools/validation/run_heap_team_runtime_lab_smoke.py")
+        "heap_runtime_completeness_gate": exists(repo_root, "Tools/ai/run_heap_runtime_completeness_gate.py")
+        and exists(repo_root, "Tools/validation/run_heap_runtime_completeness_gate_smoke.py")
         and "product_signal" in heap_contract_surface
         and "broker_request" in heap_contract_surface,
 
@@ -226,7 +226,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "runtime_flow_map_evidence",
         "static_deterministic_script_lane",
         "heap_exchange_close",
-        "heap_team_runtime_lab",
+        "heap_runtime_completeness_gate",
         "heap_runtime_product_package",
         "product_readiness",
         "prepare_review_pr_product",
@@ -246,7 +246,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "shared memory / sqlite_fts_memory / tool_agnostic_broker / direct reasoning assistance",
         "runtime flow map evidence",
         "static deterministic script/product lane",
-        "heap/team runtime lab",
+        "heap runtime completeness gate",
         "heap runtime product package",
         "heap/exchange CLOSE",
         "product readiness",

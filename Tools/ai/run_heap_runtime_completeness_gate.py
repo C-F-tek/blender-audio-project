@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Budget-driven heap/team runtime completeness gate for IA-Carmine.
+"""Budget-driven heap runtime completeness gate for IA-Carmine.
 
-This file keeps the historical filename for compatibility with existing
-preflight wiring, but its runtime semantics are a completeness gate, not a
-standalone playground. It proves the control inversion expected by the project:
+This is the canonical runtime completeness gate used by the real product
+preflight. It validates the single execution universe, not isolated helper
+scripts. It proves the control inversion expected by the project:
 
 request -> shared heap -> role needs -> brokered tools -> shared memory/context
 -> validation evidence -> critic claim -> arbiter decision -> product signal.
@@ -87,7 +87,7 @@ def make_state(objective: str) -> dict[str, Any]:
         "claims": [],
         "decisions": [],
         "candidate_operations": [],
-        "product": {"required": True, "status": "not_ready", "reason": "heap completeness gate has not converged"},
+        "product": {"required": True, "status": "not_ready", "reason": "heap runtime completeness gate has not converged"},
     }
 
 
@@ -110,7 +110,7 @@ def event_payloads_by_type(events: list[dict[str, Any]], event_type: str) -> lis
     return payloads
 
 
-class HeapCompletenessGate:
+class HeapRuntimeCompletenessGate:
     def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
         self.repo_root = Path(args.repo_root).resolve()
@@ -208,7 +208,7 @@ class HeapCompletenessGate:
                 "args": {
                     "objective": self.args.objective,
                     "memory_note": [
-                        "heap completeness gate must prove tool, memory, context and validation evidence before product signal",
+                        "heap runtime completeness gate must prove tool, memory, context and validation evidence before product signal",
                         "budget/iterations define convergence and prevent endless repository loops",
                     ],
                     "raw_file": ["AGENTS.md", "README.md"],
@@ -594,7 +594,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    gate = HeapCompletenessGate(args)
+    gate = HeapRuntimeCompletenessGate(args)
     report = gate.run()
     output = resolve_output_path(gate.repo_root, gate.path_arg(args.output, DEFAULT_OUTPUT).format(stamp=gate.stamp))
     markdown = resolve_output_path(gate.repo_root, gate.path_arg(args.markdown_output, DEFAULT_MARKDOWN).format(stamp=gate.stamp))

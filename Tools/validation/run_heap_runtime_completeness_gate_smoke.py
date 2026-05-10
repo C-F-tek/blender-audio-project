@@ -36,7 +36,7 @@ def run_gate(repo_root: Path, label: str, stamp: str, timeout_seconds: int, max_
     env["PYTHONPATH"] = str(repo_root) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
     command = [
         sys.executable,
-        "Tools/ai/run_heap_team_runtime_lab.py",
+        "Tools/ai/run_heap_runtime_completeness_gate.py",
         "--repo-root", ".",
         "--stamp", f"{label}_{stamp}",
         "--output-dir", run_dir.as_posix(),
@@ -126,8 +126,8 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/heap_team_runtime_lab_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/heap_team_runtime_lab_smoke.md")
+    parser.add_argument("--output", default="output/validation/heap_runtime_completeness_gate_smoke.json")
+    parser.add_argument("--markdown-output", default="output/validation/heap_runtime_completeness_gate_smoke.md")
     parser.add_argument("--timeout-seconds", type=int, default=240)
     args = parser.parse_args()
 
