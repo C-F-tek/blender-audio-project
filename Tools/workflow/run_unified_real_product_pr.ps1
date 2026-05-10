@@ -51,8 +51,8 @@ param(
     [int]$MaxNewTokens = 3600,
     [string]$KeepAlive = "35m",
 
-    [ValidateSet('startup', 'deferred', 'live-seed-only', 'peer', 'post-gpu-provider', 'disabled')]
-    [string]$NpuMicroStartMode = "peer",
+    [ValidateSet('startup', 'deferred', 'live-seed-only', 'peer', 'post-gpu-provider', 'disabled', 'final-provider')]
+    [string]$NpuMicroStartMode = "startup",
 
     [int]$ProviderMaxContextChars = 0,
     [int]$ContextPackMaxTotalChars = 64000,

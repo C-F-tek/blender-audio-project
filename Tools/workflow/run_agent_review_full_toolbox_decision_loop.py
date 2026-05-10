@@ -52,7 +52,7 @@ STRING_DEFAULTS = {
     "TaskMarkdown": "docs/LOCAL_AI_TASKS/patch-notes-quality-product-2026-05-07.md",
     "IssueNumber": "",
     "KeepAlive": "35m",
-    "NpuMicroStartMode": "deferred",
+    "NpuMicroStartMode": "startup",
     "RepositoryConsistencyMapWorkerBackend": "process",
     "RepositoryConsistencyMapWorkerCpuTarget": 0.40,
     "RepositoryConsistencyMapMaxAutoWorkers": 8,

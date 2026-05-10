@@ -166,15 +166,20 @@ def run_provider_mesh(ctx: WorkflowContext) -> None:
         "--markdown-output",
         ctx.p("orch_md"),
     ]
-    if not ctx.args.SkipNpuMicroProvider and ctx.args.NpuMicroStartMode == "startup":
+    npu_mesh_mode = normalized_npu_micro_start_mode(ctx)
+    if not ctx.args.SkipNpuMicroProvider and npu_mesh_mode == "startup":
         provider_args.append("--run-npu-micro-support-provider")
-    elif ctx.args.NpuMicroStartMode in {"deferred", "live-seed-only"}:
+    elif npu_mesh_mode == "final-provider":
         ctx.warnings.append(
-            f"NPU micro provider is {ctx.args.NpuMicroStartMode}; provider mesh keeps NPU off the live GPU1/GPU0 critical path. "
+            "NPU micro provider will run as a final peer pass; live provider mesh still requires GPU1/GPU0 heap events."
+        )
+    elif npu_mesh_mode in {"deferred", "live-seed-only"}:
+        ctx.warnings.append(
+            f"NPU micro provider is {npu_mesh_mode}; provider mesh keeps NPU off the live GPU1/GPU0 critical path. "
             "The post-GPU peer-exchange NPU assistant and brokered telemetry remain available."
         )
     else:
-        ctx.warnings.append("NPU micro provider disabled by workflow option; lane will be classified as disabled/degraded.")
+        ctx.warnings.append(f"NPU micro provider disabled/degraded by workflow option: {npu_mesh_mode}")
 
     if ctx.args.RunLegacyNpuAuditorProvider:
         provider_args += ["--run-npu-auditor-provider", "--npu-auditor-every-rounds", str(ctx.args.NpuAuditorEveryRounds), "--max-concurrent-npu-audits", "1", "--npu-auditor-timeout-seconds", str(ctx.args.NpuAuditorTimeoutSeconds), "--npu-max-context-chars", str(ctx.args.NpuMaxContextChars), "--npu-max-prompt-chars", str(ctx.args.NpuMaxPromptChars), "--npu-max-new-tokens", str(ctx.args.NpuMaxNewTokens), "--npu-final-wait-seconds", str(ctx.args.NpuFinalWaitSeconds)]
@@ -188,9 +193,17 @@ def run_provider_mesh(ctx: WorkflowContext) -> None:
 
 
 
+def normalized_npu_micro_start_mode(ctx: WorkflowContext) -> str:
+    raw = str(getattr(ctx.args, "NpuMicroStartMode", "startup") or "startup").strip().lower()
+    if raw == "peer":
+        return "startup"
+    if raw == "post-gpu-provider":
+        return "final-provider"
+    return raw
+
+
 def npu_peer_provider_enabled(ctx: WorkflowContext) -> bool:
-    mode = str(getattr(ctx.args, "NpuMicroStartMode", "deferred") or "deferred").strip().lower()
-    return mode == "final-provider"
+    return normalized_npu_micro_start_mode(ctx) == "final-provider"
 
 
 def write_npu_peer_nonblocking_placeholder(ctx: WorkflowContext, reason: str, classification: str = "npu_peer_provider_deferred_to_avoid_openvino_contention") -> None:
@@ -308,12 +321,13 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
         live_signal(ctx, "npu-support", "Provider runtime heap NPU live support", "heap_npu_json", "heap_npu_md", ["--npu-report", ctx.p("npu_micro_json"), "--round", "1"])
         ctx.run_python("NPU micro runtime tool broker", ["Tools/ai/agent_runtime_tool_broker.py", "--repo-root", ".", "--request-file", ctx.p("npu_micro_json"), "--tool-output-dir", f"{ctx.p('runtime_tool_dir')}/npu_micro", "--stamp", ctx.args.Stamp, "--timeout-seconds", str(ctx.args.NpuMicroBrokerTimeoutSeconds), "--output", ctx.p("npu_broker_json"), "--markdown-output", ctx.p("npu_broker_md")])
     else:
-        if str(getattr(ctx.args, "NpuMicroStartMode", "")).lower() == "startup":
+        npu_mesh_mode = normalized_npu_micro_start_mode(ctx)
+        if npu_mesh_mode == "startup":
             reason = "Final NPU provider pass moved off the performance path; startup NPU support and broker seed evidence are reviewed by GPU1/GPU0 plus deterministic validators."
             classification = "npu_final_provider_moved_to_gpu_peer_review"
         else:
-            reason = "NPU peer provider deferred to avoid OpenVINO/NPU contention while GPU1/GPU0 produce the product evidence."
-            classification = "npu_peer_provider_deferred_to_avoid_openvino_contention"
+            reason = f"NPU peer provider mode {npu_mesh_mode} did not run as final-provider; startup provider mesh remains the default real-product lane."
+            classification = "npu_peer_provider_not_final_provider"
         write_npu_peer_nonblocking_placeholder(ctx, reason, classification)
         live_signal(ctx, "npu-support", "Provider runtime heap NPU deferred support placeholder", "heap_npu_json", "heap_npu_md", ["--npu-report", ctx.p("npu_micro_json"), "--round", "1"])
     ctx.run_python("Finalize AI peer-exchange packet", ["Tools/ai/build_ai_peer_exchange_packet.py", *common, *sum((["--source-report", p] for p in existing(ctx, "evidence", "repo_consistency_json", "code_interpreter_json", "gpu0_response_json", "npu_micro_json")), []), "--response-report", ctx.p("gpu0_response_json"), "--broker-report", ctx.p("gpu0_broker_json"), "--npu-report", ctx.p("npu_micro_json"), "--npu-broker-report", ctx.p("npu_broker_json"), "--primary-output", ctx.p("gpu1_primary_json"), "--primary-markdown-output", ctx.p("gpu1_primary_md"), "--task-output", ctx.p("gpu0_task_json"), "--exchange-output", ctx.p("peer_json"), "--exchange-markdown-output", ctx.p("peer_md")])

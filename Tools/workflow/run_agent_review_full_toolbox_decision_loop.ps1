@@ -33,8 +33,8 @@ param(
     [int]$NpuMicroTimeoutSeconds = 60,
     [int]$NpuMicroBrokerTimeoutSeconds = 90,
     [int]$NpuFinalWaitSeconds = 180,
-    [ValidateSet("startup", "deferred", "live-seed-only", "disabled", "final-provider")]
-    [string]$NpuMicroStartMode = "deferred",
+    [ValidateSet("startup", "deferred", "live-seed-only", "peer", "post-gpu-provider", "disabled", "final-provider")]
+    [string]$NpuMicroStartMode = "startup",
     [switch]$SkipNpuMicroProvider,
     [switch]$SkipNpuLiveToolSeed,
     [int]$NpuMicroMaxLiveProviderRounds = 0,

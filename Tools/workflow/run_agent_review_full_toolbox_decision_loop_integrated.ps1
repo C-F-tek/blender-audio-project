@@ -22,8 +22,8 @@ param(
     [int]$NpuMaxPromptChars = 1200,
     [int]$NpuMaxNewTokens = 384,
     [int]$NpuFinalWaitSeconds = 180,
-    [ValidateSet('startup', 'deferred', 'live-seed-only', 'peer', 'post-gpu-provider', 'disabled')]
-    [string]$NpuMicroStartMode = 'deferred',
+    [ValidateSet('startup', 'deferred', 'live-seed-only', 'peer', 'post-gpu-provider', 'disabled', 'final-provider')]
+    [string]$NpuMicroStartMode = 'startup',
     [int]$MinRecommendations = 1,
     [int]$MinPatchPlans = 1,
     [int]$RepositoryConsistencyMapWorkers = 8
