@@ -34,14 +34,21 @@ except ImportError:
 LANES = ("gpu1", "gpu0", "npu", "broker", "deterministic", "telemetry", "orchestrator")
 EVENT_TYPES = (
     "provider_state",
+    "task_state",
+    "fact",
+    "need",
     "tool_catalog_request",
     "tool_catalog_response",
     "evidence_request",
     "evidence_response",
     "broker_request",
     "broker_result",
+    "claim",
     "validation_signal",
+    "decision",
+    "candidate_operation",
     "patch_plan_signal",
+    "product_signal",
     "telemetry_signal",
 )
 DEFAULT_EVENTS = "output/ai_runtime_heap/{stamp}/events.jsonl"

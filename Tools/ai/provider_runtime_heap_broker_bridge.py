@@ -157,21 +157,37 @@ def request_sources_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
     return mapping
 
 
+def request_correlations_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for request in broker_report.get("tool_requests", []):
+        if not isinstance(request, dict):
+            continue
+        request_id = str(request.get("id") or request.get("request_id") or "")
+        heap_event = safe_dict(request.get("heap_event"))
+        correlation_id = str(heap_event.get("correlation_id") or "")
+        if request_id and correlation_id:
+            mapping[request_id] = correlation_id
+    return mapping
+
+
 def append_broker_results(heap: ProviderRuntimeHeap, broker_report: dict[str, Any]) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     source_by_request_id = request_sources_by_id(broker_report)
+    correlation_by_request_id = request_correlations_by_id(broker_report)
     for result in broker_report.get("tool_results", []):
         if not isinstance(result, dict):
             continue
         result_id = str(result.get("id") or result.get("request_id") or "")
+        result_correlation_id = correlation_by_request_id.get(result_id, result_id)
         target_lane = source_by_request_id.get(result_id, "orchestrator")
         event = heap.append_event(
             source="broker",
             target=target_lane,
             event_type="broker_result",
-            correlation_id=result_id,
+            correlation_id=result_correlation_id,
             payload={
-                "request_id": result_id,
+                "request_id": result_correlation_id,
+                "normalized_request_id": result_id,
                 "target_lane": target_lane,
                 "tool": result.get("tool"),
                 "executed": result.get("executed"),
