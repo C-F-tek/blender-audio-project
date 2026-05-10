@@ -59,6 +59,14 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
 
 
 def build_report(repo_root: Path) -> dict[str, Any]:
+    # Runtime mesh naming contract after legacy cut:
+    # - sqlite_fts_memory is the profile-visible capability token for
+    #   shared memory/search/chunk evidence backed by SQLite surfaces.
+    # - tool_agnostic_broker is the profile-visible capability token for
+    #   the allowlisted broker that executes tools inside the heap universe.
+    # These tokens are intentionally kept in the runtime-mesh contract so
+    # run_real_product_profile_smoke.py validates the single universe route,
+    # not a collection of isolated scripts.
     wrapper_text = read_text(repo_root / "Tools/workflow/run_unified_real_product_pr.ps1")
     launcher_text = read_text(repo_root / "Tools/workflow/run_unified_local_ai_refactor.ps1")
     intrinsic_text = read_text(repo_root / "Tools/validation/check_real_product_intrinsic_capability_contract.py")
@@ -235,7 +243,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "GPU1 primary advisory",
         "GPU0 OpenVINO/tool workload",
         "NPU peer micro lane",
-        "shared memory / SQLite FTS / tool broker / direct reasoning assistance",
+        "shared memory / sqlite_fts_memory / tool_agnostic_broker / direct reasoning assistance",
         "runtime flow map evidence",
         "static deterministic script/product lane",
         "heap/team runtime lab",
