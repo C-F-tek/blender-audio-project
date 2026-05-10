@@ -30,6 +30,7 @@ try:
     from Tools.ai.heap_provider_budget_governor import ProviderBudgetConfig, build_heap_provider_budget_governor, clamp_loop_iterations
     from Tools.ai.heap_provider_invocation_contract import build_heap_provider_invocation_contract
     from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict, safe_int
+    from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python
     from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[2]
@@ -38,6 +39,7 @@ except ImportError:  # pragma: no cover
     from Tools.ai.heap_provider_budget_governor import ProviderBudgetConfig, build_heap_provider_budget_governor, clamp_loop_iterations  # type: ignore
     from Tools.ai.heap_provider_invocation_contract import build_heap_provider_invocation_contract  # type: ignore
     from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict, safe_int  # type: ignore
+    from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python  # type: ignore
     from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
 
 DEFAULT_OUTPUT = "output/validation/heap_runtime_completeness_gate_{stamp}.json"
@@ -93,13 +95,6 @@ def read_json(path: Path) -> dict[str, Any]:
         return {}
     return data if isinstance(data, dict) else {}
 
-
-def provider_python_exe(repo_root: Path) -> str:
-    configured = os.environ.get("IA_CARMINE_PYTHON", "").strip()
-    candidate = Path(configured) if configured else repo_root / ".venv" / "Scripts" / "python.exe"
-    if not candidate.exists():
-        raise RuntimeError(f"provider_python_environment_missing_dependency: Python not found: {candidate}")
-    return str(candidate)
 
 
 def make_state(objective: str) -> dict[str, Any]:
@@ -418,7 +413,7 @@ class HeapRuntimeCompletenessGate:
         bridge_json = resolve_output_path(self.repo_root, self.path_arg(self.args.bridge_output, DEFAULT_BRIDGE_JSON).format(stamp=self.stamp))
         bridge_md = resolve_output_path(self.repo_root, self.path_arg(self.args.bridge_markdown_output, DEFAULT_BRIDGE_MD).format(stamp=self.stamp))
         command = [
-            provider_python_exe(self.repo_root),
+            resolve_child_python(self.repo_root),
             "Tools/ai/provider_runtime_heap_broker_bridge.py",
             "--repo-root", ".",
             "--stamp", self.stamp,
@@ -431,7 +426,7 @@ class HeapRuntimeCompletenessGate:
             "--output", repo_rel(self.repo_root, bridge_json),
             "--markdown-output", repo_rel(self.repo_root, bridge_md),
         ]
-        completed = subprocess.run(command, cwd=self.repo_root, capture_output=True, text=True, check=False, timeout=self.args.timeout_seconds + 30)
+        completed = subprocess.run(command, cwd=self.repo_root, env=command_env(self.repo_root), capture_output=True, text=True, check=False, timeout=self.args.timeout_seconds + 30)
         report = read_json(bridge_json)
         self.bridge_reports.append(repo_rel(self.repo_root, bridge_json))
         if completed.returncode != 0:
@@ -533,7 +528,7 @@ class HeapRuntimeCompletenessGate:
                 "role": "primary_planner",
                 "output": gpu1_json,
                 "command": [
-                    provider_python_exe(self.repo_root),
+                    resolve_child_python(self.repo_root),
                     "Tools/ai/run_local_provider_probe.py",
                     "--repo-root", ".",
                     "--run-ollama",
@@ -548,7 +543,7 @@ class HeapRuntimeCompletenessGate:
                 "role": "diagnostic_peer_workload",
                 "output": gpu0_json,
                 "command": [
-                    provider_python_exe(self.repo_root),
+                    resolve_child_python(self.repo_root),
                     "Tools/ai/build_openvino_gpu0_workload_report.py",
                     "--repo-root", ".",
                     "--iterations", str(self.args.gpu0_iterations),
@@ -564,7 +559,7 @@ class HeapRuntimeCompletenessGate:
                 "role": "static_micro_task_auditor",
                 "output": npu_json,
                 "command": [
-                    provider_python_exe(self.repo_root),
+                    resolve_child_python(self.repo_root),
                     "Tools/ai/build_npu_micro_task_companion_report.py",
                     "--repo-root", ".",
                     "--task-file", self.args.task_file,
@@ -628,6 +623,7 @@ class HeapRuntimeCompletenessGate:
                 completed = subprocess.run(
                     spec["command"],
                     cwd=self.repo_root,
+                    env=command_env(self.repo_root),
                     capture_output=True,
                     text=True,
                     check=False,
