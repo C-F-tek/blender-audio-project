@@ -9,9 +9,22 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_NPU_PYTHON = Path(os.environ.get("SPAZIOTEMPO_NPU_PYTHON", Path.home() / "blender" / "venvs" / "blender-npu-ai" / "Scripts" / "python.exe"))
+DEFAULT_NPU_PYTHON = ROOT / ".venv" / "Scripts" / "python.exe" if os.name == "nt" else ROOT / ".venv" / "bin" / "python"
 DEFAULT_MODEL_DIR = Path(os.environ.get("SPAZIOTEMPO_NPU_MODEL_DIR", Path.home() / "blender" / "npu-models" / "Phi-3.5-mini-instruct-int4-cw-ov"))
 DEFAULT_TIMEOUT_SEC = float(os.environ.get("SPAZIOTEMPO_NPU_PREFLIGHT_TIMEOUT", "30"))
+
+def resolve_project_python(repo_root: Path | None = None) -> Path:
+    # Resolve the project Python required by IA-Carmine runtime policy.
+    # The NPU lane must not silently fall back to a system Python or a user-level
+    # virtualenv. Runtime callers may pass an explicit Python executable;
+    # otherwise the repository `.venv` is authoritative.
+    root = Path(repo_root or ROOT).resolve()
+    if os.name == "nt":
+        candidate = root / ".venv" / "Scripts" / "python.exe"
+    else:
+        candidate = root / ".venv" / "bin" / "python"
+    return candidate
+
 
 
 def utc_now() -> str:
@@ -49,7 +62,7 @@ def _parse_last_json_line(text: str) -> Any:
 
 
 def npu_preflight(
-    python_exe: Path | str = DEFAULT_NPU_PYTHON,
+    python_exe: Path | str | None = None,
     model_dir: Path | str = DEFAULT_MODEL_DIR,
     timeout: float = DEFAULT_TIMEOUT_SEC,
 ) -> dict[str, Any]:
@@ -58,7 +71,7 @@ def npu_preflight(
     The function never raises for normal workstation/runtime problems. If the
     NPU stack is not ready, callers can continue with deterministic guardrails.
     """
-    python_exe = Path(python_exe)
+    python_exe = Path(python_exe) if python_exe else resolve_project_python(ROOT)
     model_dir = Path(model_dir)
 
     checks: dict[str, Any] = {
@@ -113,7 +126,7 @@ def npu_preflight(
 
     ok, text, _ = _run_python(
         python_exe,
-        "import json, openvino as ov; print(json.dumps(ov.Core().available_devices))",
+        "import json; from openvino import Core; print(json.dumps(Core().available_devices))",
         timeout=timeout,
     )
     if ok:

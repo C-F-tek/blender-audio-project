@@ -24,6 +24,7 @@ import re
 import subprocess
 import sys
 from datetime import datetime
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
@@ -145,6 +146,18 @@ MEMORY_CONTEXT_RELOAD_REQUIREMENTS = {
 }
 PROPOSAL_ITERATION_MAX_CHARS = 12000
 PROPOSAL_ITERATION_SUMMARY_CHARS = 1200
+PLACEHOLDER_CODE_PATTERNS = (
+    r"(?m)^\s*pass\s*(?:#.*)?$",
+    r"(?is)def\s+[A-Za-z_][A-Za-z0-9_]*\([^)]*\):\s*(?:#[^\n]*\n\s*)*pass\b",
+    r"(?i)\bTODO\b|\bFIXME\b|\bplaceholder\b|implement here|da implementare",
+    r"(?i)#\s*(aggiornamento della politica|generazione (?:del|di) report|esecuzione delle (?:operazioni|attività)|implementazione della politica)",
+)
+PLACEHOLDER_CODE_LABELS = (
+    "bare_pass",
+    "comment_only_function_stub",
+    "todo_or_placeholder_marker",
+    "italian_comment_only_stub",
+)
 
 
 
@@ -309,6 +322,17 @@ class HeapRuntimeCompletenessGate:
             return default
         return str(self.output_dir / filename)
 
+    def child_python(self) -> str:
+        """Return the project Python executable used for child tools.
+
+        Policy: explicit --python-exe > repo .venv resolver. No system env/PATH
+        fallback is introduced here.
+        """
+        explicit = str(getattr(self.args, "python_exe", "") or "").strip()
+        if explicit:
+            return str(Path(explicit).resolve())
+        return resolve_child_python(self.repo_root)
+
     def runtime_context_dir(self) -> Path:
         if self.output_dir:
             path = self.output_dir / "team_context"
@@ -373,6 +397,10 @@ class HeapRuntimeCompletenessGate:
                 refs.append(value)
         return refs
 
+    def proposal_declares_target_files(self, text: str) -> bool:
+        lowered = (text or "").lower()
+        return "target_files" in lowered or "target files" in lowered or "target_file" in lowered or "target file" in lowered
+
     def response_file_reference_quality(self, text: str) -> dict[str, Any]:
         refs = self.extracted_response_file_refs(text)
         output_refs = [ref for ref in refs if self.is_output_artifact_ref(ref)]
@@ -401,10 +429,19 @@ class HeapRuntimeCompletenessGate:
             unverified_source.append(normalized)
 
         requires_existing = self.request_requires_existing_files()
-        no_source_refs = requires_existing and not existing_source
-        passed = not requires_existing or (not unverified_source and not no_source_refs)
+        declares_target_files = self.proposal_declares_target_files(text)
+        requires_verified_sources = requires_existing or declares_target_files or self.implementation_output_required()
+        no_source_refs = requires_verified_sources and not existing_source
+        ambiguous_source_present = bool(ambiguous_source)
+        passed = (not requires_verified_sources) or (
+            not unverified_source
+            and not ambiguous_source_present
+            and not no_source_refs
+        )
         return {
             "request_requires_existing_files": requires_existing,
+            "declares_target_files": declares_target_files,
+            "requires_verified_sources": requires_verified_sources,
             "file_refs": refs,
             "output_artifact_refs": output_refs,
             "source_file_refs": source_refs,
@@ -512,6 +549,31 @@ class HeapRuntimeCompletenessGate:
         lines.extend(f"- {item}" for item in candidates[:20])
         return "\n".join(lines)
 
+
+    def publish_startup_memory_context_reload_events(self) -> None:
+        # Expose startup reload lifecycle for memory/context/tool surfaces.
+        # This mirrors the unified run behavior: before the heap starts consuming
+        # provider output, it records that tool catalog, shared memory, operational
+        # memory, request context, semantic chunks and context pack surfaces must
+        # be refreshed for the current run.
+        startup_requirements = (
+            "tool_catalog",
+            "shared_memory",
+            "operational_memory_search",
+            "shared_context_chunks",
+            "semantic_code_chunks",
+            "ai_context_pack",
+            "semantic_evidence_chunks",
+        )
+        for requirement in startup_requirements:
+            self.append_reload_lifecycle_event(
+                requirement=requirement,
+                round_id=0,
+                phase="startup_requested",
+                tool="heap_startup_reload",
+                refs=[],
+            )
+
     def append_reload_lifecycle_event(
         self,
         requirement: str,
@@ -556,6 +618,15 @@ class HeapRuntimeCompletenessGate:
         md_path = out_dir / f"{basename}.md"
         previous = self.latest_proposal_iteration_block(max_chars=PROPOSAL_ITERATION_SUMMARY_CHARS)
         anchored_sources = self.real_source_file_candidates(events, limit=20)
+        deterministic_reviews = self.deterministic_lane_reviews(response_text, quality, events)
+        implementation_quality = deterministic_reviews.get("implementation_quality") if isinstance(deterministic_reviews.get("implementation_quality"), dict) else {}
+        proposal_progress = self.proposal_revision_progress_report(response_text, quality)
+        npu_audit = self.npu_workload_audit_report()
+        quality_passed = bool(
+            quality.get("passed")
+            and implementation_quality.get("passed")
+            and proposal_progress.get("passed")
+        )
         clipped = (response_text or "")[:PROPOSAL_ITERATION_MAX_CHARS]
         data = {
             "schema_version": 1,
@@ -563,8 +634,13 @@ class HeapRuntimeCompletenessGate:
             "stamp": self.stamp,
             "revision": revision,
             "source": source,
-            "quality_passed": bool(quality.get("passed")),
+            "quality_passed": quality_passed,
             "response_file_reference_quality": quality,
+            "implementation_quality": implementation_quality,
+            "proposal_progress": proposal_progress,
+            "gpu0_review": deterministic_reviews.get("gpu0_review"),
+            "npu_micro_task_piece": deterministic_reviews.get("npu_micro_task_piece"),
+            "npu_workload_audit": npu_audit,
             "anchored_source_candidates": anchored_sources,
             "previous_iteration_available": bool(previous),
             "response_text": clipped,
@@ -575,7 +651,37 @@ class HeapRuntimeCompletenessGate:
             "",
             f"- Revision: `{revision}`",
             f"- Source: `{source}`",
-            f"- Quality passed: `{quality.get('passed')}`",
+            f"- Quality passed: `{quality_passed}`",
+            "",
+            "## Deterministic lane reviews",
+            "",
+            "### GPU0 review",
+            "",
+            *[f"- {item}" for item in deterministic_reviews.get("gpu0_review", [])],
+            "",
+            "### NPU micro-task piece",
+            "",
+            *[f"- {item}" for item in deterministic_reviews.get("npu_micro_task_piece", [])],
+            "",
+            "### Implementation quality",
+            "",
+            f"- Passed: `{implementation_quality.get('passed')}`",
+            f"- Errors: `{implementation_quality.get('errors')}`",
+            "",
+            "### Proposal progress",
+            "",
+            f"- Passed: `{proposal_progress.get('passed')}`",
+            f"- Similarity: `{proposal_progress.get('similarity')}`",
+            f"- Errors: `{proposal_progress.get('errors')}`",
+            "",
+            "### NPU workload audit",
+            "",
+            f"- Requested: `{npu_audit.get('requested')}`",
+            f"- Performed: `{npu_audit.get('performed')}`",
+            f"- Passed: `{npu_audit.get('passed')}`",
+            f"- Iterations: `{npu_audit.get('iterations')}`",
+            f"- Seconds: `{npu_audit.get('seconds')}`",
+            f"- Python: `{npu_audit.get('python_exe')}`",
             "",
             "## Anchored source candidates",
             "",
@@ -594,7 +700,9 @@ class HeapRuntimeCompletenessGate:
             "round": revision,
             "path": refs["json"],
             "markdown": refs["markdown"],
-            "quality_passed": bool(quality.get("passed")),
+            "quality_passed": quality_passed,
+            "proposal_progress_passed": bool(proposal_progress.get("passed")),
+            "npu_workload_performed": bool(npu_audit.get("performed")),
             "summary": f"provider proposal revision {revision} persisted as reusable heap chunk",
         })
         return refs
@@ -619,14 +727,261 @@ class HeapRuntimeCompletenessGate:
             return text
         return text[-max_chars:]
 
+    def latest_proposal_iteration_report(self) -> dict[str, Any]:
+        out_dir = self.proposal_iteration_dir()
+        candidates = sorted(out_dir.glob("heap_proposal_revision_*.json"))
+        if not candidates:
+            return {}
+        return read_json(candidates[-1])
+
+    def latest_proposal_quality_passed(self) -> bool:
+        report = self.latest_proposal_iteration_report()
+        if not report:
+            return False
+        return report.get("quality_passed") is True
+
+    def latest_quality_proposal_iteration_block(self, max_chars: int = 4000) -> str:
+        out_dir = self.proposal_iteration_dir()
+        for json_path in reversed(sorted(out_dir.glob("heap_proposal_revision_*.json"))):
+            report = read_json(json_path)
+            if report.get("quality_passed") is not True:
+                continue
+            md_path = json_path.with_suffix(".md")
+            if not md_path.exists():
+                continue
+            text = md_path.read_text(encoding="utf-8", errors="replace")
+            if len(text) <= max_chars:
+                return text
+            return text[-max_chars:]
+        return ""
+
+    def normalized_proposal_text(self, value: str) -> str:
+        normalized = re.sub(r"\s+", " ", str(value or "").strip().lower())
+        normalized = re.sub(r"revision\s*[:` ]+\d+", "revision", normalized)
+        return normalized
+
+    def proposal_revision_progress_report(self, response_text: str, quality: dict[str, Any]) -> dict[str, Any]:
+        previous = self.latest_proposal_iteration_report()
+        if not previous:
+            return {
+                "required": False,
+                "passed": True,
+                "reason": "first proposal iteration",
+                "similarity": 0.0,
+                "repeated_unverified_source_refs": [],
+            }
+        previous_text = str(previous.get("response_text") or "")
+        current_norm = self.normalized_proposal_text(response_text)
+        previous_norm = self.normalized_proposal_text(previous_text)
+        similarity = SequenceMatcher(None, previous_norm[:8000], current_norm[:8000]).ratio() if previous_norm and current_norm else 0.0
+        previous_quality = previous.get("response_file_reference_quality") if isinstance(previous.get("response_file_reference_quality"), dict) else {}
+        previous_unverified = set(str(item) for item in previous_quality.get("unverified_source_file_refs") or previous_quality.get("unverified_file_refs") or [])
+        current_unverified = set(str(item) for item in quality.get("unverified_source_file_refs") or quality.get("unverified_file_refs") or [])
+        repeated_unverified = sorted(previous_unverified.intersection(current_unverified))
+        errors: list[str] = []
+        if similarity >= 0.94:
+            errors.append(f"proposal revision too similar to previous iteration: similarity={similarity:.3f}")
+        if repeated_unverified:
+            errors.append(f"proposal repeated unresolved source refs: {repeated_unverified}")
+        return {
+            "required": True,
+            "passed": not errors,
+            "reason": "proposal must improve previous heap chunk",
+            "similarity": round(similarity, 4),
+            "repeated_unverified_source_refs": repeated_unverified,
+            "errors": errors,
+        }
+
+    def npu_workload_audit_report(self) -> dict[str, Any]:
+        for report in reversed(self.provider_reports):
+            if report.get("lane") != "npu_micro_task_auditor":
+                continue
+            output = str(report.get("output") or "")
+            data = read_json(self.repo_root / output)
+            workload = data.get("npu_device_workload") if isinstance(data.get("npu_device_workload"), dict) else {}
+            if workload:
+                return {
+                    "source_file": output,
+                    "requested": bool(workload.get("requested")),
+                    "performed": bool(workload.get("performed")),
+                    "passed": bool(workload.get("passed")),
+                    "mode": workload.get("mode"),
+                    "iterations": safe_int(workload.get("iterations")),
+                    "seconds": workload.get("seconds"),
+                    "python_exe": workload.get("python_exe"),
+                    "errors": workload.get("errors") if isinstance(workload.get("errors"), list) else [],
+                    "warnings": workload.get("warnings") if isinstance(workload.get("warnings"), list) else [],
+                }
+            return {
+                "source_file": output,
+                "requested": bool(data.get("npu_device_workload_requested")),
+                "performed": bool(data.get("npu_device_workload_performed")),
+                "passed": False,
+                "mode": "npu_workload_report_missing",
+                "iterations": 0,
+                "seconds": 0.0,
+                "errors": [],
+                "warnings": [],
+            }
+        return {
+            "requested": False,
+            "performed": False,
+            "passed": False,
+            "mode": "npu_report_unavailable",
+            "iterations": 0,
+            "seconds": 0.0,
+            "errors": [],
+            "warnings": ["NPU provider report unavailable"],
+        }
+
+    def proposal_iteration_digest(self, max_blocks: int = 4, max_chars: int = 12000) -> str:
+        out_dir = self.proposal_iteration_dir()
+        candidates = sorted(out_dir.glob("heap_proposal_revision_*.md"))[-max_blocks:]
+        if not candidates:
+            return ""
+        blocks: list[str] = []
+        remaining = max_chars
+        for path in candidates:
+            text = path.read_text(encoding="utf-8", errors="replace").strip()
+            if not text:
+                continue
+            block = f"## {path.name}\n\n{text}"
+            if len(block) > remaining:
+                block = block[-remaining:]
+            blocks.append(block)
+            remaining -= len(block)
+            if remaining <= 0:
+                break
+        return "\n\n---\n\n".join(blocks)
+
+    def implementation_output_required(self) -> bool:
+        text = f"{self.request_text()} {self.args.objective}".lower()
+        terms = (
+            "mvp",
+            "implement",
+            "implementa",
+            "implementazione",
+            "codice effettivo",
+            "codice completo",
+            "patch",
+            "modifica",
+            "modifiche",
+            "refactor",
+            "debug lab",
+            "lab python",
+            "proposta operativa",
+            "fino al codice",
+        )
+        return any(term in text for term in terms)
+
+    def implementation_quality_report(self, text: str, events: list[dict[str, Any]]) -> dict[str, Any]:
+        file_quality = self.response_file_reference_quality(text)
+        lowered = (text or "").lower()
+        existing_sources = file_quality.get("existing_source_file_refs") if isinstance(file_quality, dict) else []
+        source_count = len(existing_sources or [])
+        code_block_count = len(re.findall(r"```", text or "")) // 2
+        operation_markers = [
+            "target_file",
+            "target_files",
+            "unified_diff",
+            "diff --git",
+            "replace_once",
+            "insert_after_once",
+            "insert_before_once",
+            "write_file",
+            "def ",
+            "class ",
+            "python -m py_compile",
+            "pytest",
+            "git diff --check",
+            "validazione",
+            "validation",
+        ]
+        concrete_operation_markers = [marker for marker in operation_markers if marker in lowered]
+        generic_markers = [
+            "potresti",
+            "si potrebbe",
+            "considerare",
+            "dovrebbe",
+            "migliorare la manutenibil",
+            "ottimizzare la gestione",
+            "assicurarsi che",
+            "aggiungere ulteriori test",
+            "migliorare la sincronizzazione",
+        ]
+        generic_marker_hits = [marker for marker in generic_markers if marker in lowered]
+        placeholder_hits = [
+            label
+            for label, pattern in zip(PLACEHOLDER_CODE_LABELS, PLACEHOLDER_CODE_PATTERNS)
+            if re.search(pattern, text or "")
+        ]
+        has_actionable_structure = bool(code_block_count or concrete_operation_markers)
+        required = self.implementation_output_required()
+        errors: list[str] = []
+        if required and source_count <= 0:
+            errors.append("no verified source file references")
+        if required and file_quality.get("unverified_source_file_refs"):
+            errors.append(f"unverified source file refs: {file_quality.get('unverified_source_file_refs')}")
+        if required and file_quality.get("ambiguous_source_file_refs"):
+            errors.append(f"ambiguous source file refs: {sorted(file_quality.get('ambiguous_source_file_refs', {}).keys())}")
+        if required and not file_quality.get("passed"):
+            errors.append("source file reference quality failed")
+        if required and not has_actionable_structure:
+            errors.append("no code/diff/operation/validation markers")
+        if required and placeholder_hits:
+            errors.append(f"placeholder/stub code detected: {placeholder_hits}")
+        if required and generic_marker_hits and (not code_block_count or placeholder_hits) and len(concrete_operation_markers) < 3:
+            errors.append("generic advisory wording without enough implementation detail")
+        passed = (not required) or (source_count > 0 and has_actionable_structure and not errors)
+        return {
+            "required": required,
+            "passed": passed,
+            "source_count": source_count,
+            "code_block_count": code_block_count,
+            "concrete_operation_markers": concrete_operation_markers,
+            "generic_marker_hits": generic_marker_hits,
+            "placeholder_hits": placeholder_hits,
+            "errors": errors,
+        }
+
+    def deterministic_lane_reviews(self, response_text: str, quality: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any]:
+        implementation_quality = self.implementation_quality_report(response_text, events)
+        file_quality = self.response_file_reference_quality(response_text)
+        gpu0_notes: list[str] = []
+        if not implementation_quality.get("passed") and implementation_quality.get("required"):
+            gpu0_notes.append("GPU0 deterministic review: proposta non soddisfacente; manca implementazione concreta/codice/operazioni validabili.")
+        if file_quality.get("unverified_source_file_refs"):
+            gpu0_notes.append(f"GPU0 deterministic review: source refs non verificati={file_quality.get('unverified_source_file_refs')}.")
+        if file_quality.get("ambiguous_source_file_refs"):
+            gpu0_notes.append(f"GPU0 deterministic review: source refs ambigui={sorted(file_quality.get('ambiguous_source_file_refs', {}).keys())}.")
+        if implementation_quality.get("placeholder_hits"):
+            gpu0_notes.append(f"GPU0 deterministic review: placeholder/stub code rilevati={implementation_quality.get('placeholder_hits')}.")
+        if not gpu0_notes:
+            gpu0_notes.append("GPU0 deterministic review: proposta usabile come blocco, soggetta a validazione finale.")
+        npu_audit = self.npu_workload_audit_report()
+        npu_notes = [
+            "NPU micro-task piece: audit guardrail; verificare che il blocco non dichiari patch applicate, source write o provider execution NPU se non presenti.",
+            f"NPU micro-task piece: implementation_quality_passed={implementation_quality.get('passed')}, file_quality_passed={file_quality.get('passed')}.",
+            f"NPU micro-task piece: workload_requested={npu_audit.get('requested')}, workload_performed={npu_audit.get('performed')}, workload_passed={npu_audit.get('passed')}, iterations={npu_audit.get('iterations')}, seconds={npu_audit.get('seconds')}.",
+        ]
+        if implementation_quality.get("placeholder_hits") or file_quality.get("unverified_source_file_refs") or file_quality.get("ambiguous_source_file_refs"):
+            npu_notes.append("NPU micro-task piece: decision=reject_until_concrete_code_and_full_repo_relative_paths.")
+        return {
+            "gpu0_review": gpu0_notes,
+            "npu_micro_task_piece": npu_notes,
+            "implementation_quality": implementation_quality,
+        }
+
     def proposal_iteration_feedback(self, events: list[dict[str, Any]], quality: dict[str, Any] | None = None) -> str:
         latest = self.latest_proposal_iteration_block(max_chars=3500)
         anchor = self.source_anchor_feedback(events, quality)
         parts = [
             "HEAP PROPOSAL ITERATION MODE:",
             "NPU PIECE LANE REQUIRED: when provider generation/peer revision is permitted, NPU must contribute audit pieces, guardrail deltas, source anchors, or negative findings into the heap exchange instead of remaining only a device-visibility note.",
+            "GPU0 REVIEW REQUIRED: if the previous proposal is generic, lacks code, lacks target paths, or only says what should be done, mark it as non soddisfacente and rewrite it as an operational block.",
             "The next revision must refine the previous proposal chunk and make it more operational.",
-            "Do not restart from scratch. Preserve useful decisions, add verified repo-relative paths, signatures, commands, and concrete implementation steps.",
+            "Do not restart from scratch. Preserve useful decisions, add verified repo-relative paths, signatures, commands, concrete implementation steps, validation commands and patch-level code.",
+            "Use this exact structure in the next proposal: TARGET_FILES, PROBLEM, IMPLEMENTATION_CHANGES, CODE_OR_PATCH_SKETCH, VALIDATION_COMMANDS, RISKS, EXIT_DECISION.",
             "The final answer is assembled from proposal_iteration artifacts at heap exit, not only from raw GPU1 context.",
         ]
         if latest:
@@ -804,7 +1159,7 @@ class HeapRuntimeCompletenessGate:
         """Reuse the existing deterministic heap/exchange exit boundary tool."""
         paths = self.heap_exchange_paths()
         command = [
-            resolve_child_python(self.repo_root),
+            self.child_python(),
             "Tools/ai/build_heap_exchange_runtime_exit.py",
             "--repo-root", ".",
             "--stamp", self.stamp,
@@ -852,6 +1207,8 @@ class HeapRuntimeCompletenessGate:
             "Tools/ai/agent_runtime_debug_lab/policy.py",
             "Tools/ai/agent_runtime_debug_lab/reporting.py",
             "Tools/ai/agent_runtime_debug_lab/runner.py",
+            "Tools/ai/run_heap_runtime_completeness_gate.py",
+            "Tools/ai/agent_runtime_tool_broker.py",
         ]
         return [path for path in candidates if (self.repo_root / path).exists()]
 
@@ -1255,6 +1612,7 @@ class HeapRuntimeCompletenessGate:
             self.publish("deterministic", "fact", fact, target="gpu1", correlation_id=f"{self.stamp}:fact:{fact['id']}", round_id=0)
         self.heap.write_snapshot()
         self.write_heap_exchange_entry()
+        self.publish_startup_memory_context_reload_events()
 
     def planner_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
         if self.heap.pending_broker_requests():
@@ -1301,7 +1659,7 @@ class HeapRuntimeCompletenessGate:
         bridge_json = resolve_output_path(self.repo_root, self.path_arg(self.args.bridge_output, DEFAULT_BRIDGE_JSON).format(stamp=self.stamp))
         bridge_md = resolve_output_path(self.repo_root, self.path_arg(self.args.bridge_markdown_output, DEFAULT_BRIDGE_MD).format(stamp=self.stamp))
         command = [
-            resolve_child_python(self.repo_root),
+            self.child_python(),
             "Tools/ai/provider_runtime_heap_broker_bridge.py",
             "--repo-root", ".",
             "--stamp", self.stamp,
@@ -1368,8 +1726,11 @@ class HeapRuntimeCompletenessGate:
             missing = [*missing, "gpu1_request_response_complete"]
             ready = False
         file_quality = self.response_file_reference_quality(self.response_text())
-        if ready and file_quality.get("request_requires_existing_files") and file_quality.get("unverified_file_refs"):
-            missing = [*missing, "verified_existing_file_refs"]
+        if ready and not file_quality.get("passed"):
+            missing = [*missing, "verified_unambiguous_source_refs"]
+            ready = False
+        if ready and self.detailed_output_expected() and not self.quality_output_passed(self.response_text(), events):
+            missing = [*missing, "provider_quality_output"]
             ready = False
         budget_exhausted = round_id >= self.max_iterations
         no_more_progress = unattempted is None and bool(missing)
@@ -1534,6 +1895,8 @@ class HeapRuntimeCompletenessGate:
             "mentions_next_verifiable_action": "prossima azione" in lowered or "validazione" in lowered or "verificabile" in lowered,
             "tool_names_available": tool_names,
             "response_file_reference_quality": self.response_file_reference_quality(text),
+            "implementation_quality": self.implementation_quality_report(text, events),
+            "proposal_iteration_artifacts": self.proposal_iteration_artifacts(),
         }
 
     def quality_output_passed(self, text: str, events: list[dict[str, Any]]) -> bool:
@@ -1543,7 +1906,12 @@ class HeapRuntimeCompletenessGate:
         if not signals.get("detailed_output_expected"):
             return True
         file_quality = signals.get("response_file_reference_quality") if isinstance(signals.get("response_file_reference_quality"), dict) else {}
-        if file_quality.get("request_requires_existing_files") and file_quality.get("unverified_file_refs"):
+        if not file_quality.get("passed"):
+            return False
+        implementation_quality = signals.get("implementation_quality") if isinstance(signals.get("implementation_quality"), dict) else {}
+        if implementation_quality.get("required") and not implementation_quality.get("passed"):
+            return False
+        if self.provider_revision_count > 0 and self.proposal_iteration_artifacts() and not self.latest_proposal_quality_passed():
             return False
         return bool(
             signals.get("mentions_tool_evidence")
@@ -1579,8 +1947,15 @@ class HeapRuntimeCompletenessGate:
         else:
             lines.append("- nessun risultato broker disponibile")
         file_quality = self.response_file_reference_quality(gpu1_text)
+        proposal_artifacts = self.proposal_iteration_artifacts()
+        latest_proposal = self.latest_quality_proposal_iteration_block(max_chars=9000) or self.latest_proposal_iteration_block(max_chars=2200)
         lines.extend(
             [
+                "",
+                "### Proposal iterations / blocchi riusabili",
+                f"- Artifact proposta iterativa: {proposal_artifacts}",
+                "- Ultimo blocco proposta riusabile:",
+                latest_proposal or "nessun blocco proposal_iteration disponibile",
                 "",
                 "### Verifica riferimenti file",
                 f"- Richiesta richiede file esistenti: {file_quality.get('request_requires_existing_files')}",
@@ -1632,6 +2007,7 @@ class HeapRuntimeCompletenessGate:
             f"File sorgente reali candidati verificati nel repository/context:\n{source_candidates}\n"
             f"Feedback qualitativo heap da eventuale giro precedente:\n{revision_feedback}\n"
             "Regola: rispondi come sintesi GPU1 del team heap; se servono file esistenti usa solo i file sorgente candidati verificati, non gli artifact output/validation. Cita i tool storici/runtime consumati quando la richiesta richiede analisi, stato, igiene, tool, repo o output dettagliato.\n"
+            "Per richieste implementative devi produrre un blocco operativo, non consigli generici. Usa sezioni TARGET_FILES, PROBLEM, IMPLEMENTATION_CHANGES, CODE_OR_PATCH_SKETCH, VALIDATION_COMMANDS, RISKS, EXIT_DECISION. Includi almeno un path repo-relative verificato e comandi/patch-level code quando possibile.\n"
             "Risposta finale completa e chiusa:"
         )
 
@@ -1685,7 +2061,7 @@ class HeapRuntimeCompletenessGate:
                 "role": "diagnostic_peer_workload",
                 "output": gpu0_json,
                 "command": [
-                    resolve_child_python(self.repo_root),
+                    self.child_python(),
                     "Tools/ai/build_openvino_gpu0_workload_report.py",
                     "--repo-root", ".",
                     "--iterations", str(self.args.gpu0_iterations),
@@ -1702,13 +2078,23 @@ class HeapRuntimeCompletenessGate:
                 "role": "npu_micro_task_auditor",
                 "output": npu_json,
                 "command": [
-                    resolve_child_python(self.repo_root),
+                    self.child_python(),
                     "Tools/ai/build_npu_micro_task_companion_report.py",
                     "--repo-root", ".",
                     "--task-file", self.args.task_file,
                     "--request", self.request_text(),
+                    "--python-exe", self.child_python(),
                     "--timeout-seconds", str(self.args.npu_micro_timeout_seconds),
                     "--max-context-chars", str(self.args.npu_max_context_chars),
+                    *(
+                        [
+                            "--run-device-workload",
+                            "--device-workload-seconds", str(self.args.npu_device_workload_seconds),
+                            "--device-workload-iterations", str(self.args.npu_device_workload_iterations),
+                        ]
+                        if self.args.allow_npu_device_workload
+                        else []
+                    ),
                     "--output", repo_rel(self.repo_root, npu_json),
                     "--markdown-output", repo_rel(self.repo_root, npu_md),
                 ],
@@ -1719,7 +2105,7 @@ class HeapRuntimeCompletenessGate:
                 "role": "primary_planner_cumulative_responder",
                 "output": gpu1_json,
                 "command": [
-                    resolve_child_python(self.repo_root),
+                    self.child_python(),
                     "Tools/ai/run_local_provider_probe.py",
                     "--repo-root", ".",
                     "--run-ollama",
@@ -1738,6 +2124,8 @@ class HeapRuntimeCompletenessGate:
             report_data.get("provider_execution_performed")
             or report_data.get("openvino_gpu0_workload_performed")
             or report_data.get("openvino_gpu0_probe_performed")
+            or report_data.get("npu_provider_execution_performed")
+            or report_data.get("npu_device_workload_performed")
         )
         if provider_execution:
             self.provider_execution_performed = True
@@ -1762,6 +2150,10 @@ class HeapRuntimeCompletenessGate:
             "report_kind": report_data.get("kind"),
             "response_text": response_text,
             "role_decision": report_data.get("role_decision"),
+            "npu_device_workload": report_data.get("npu_device_workload"),
+            "npu_device_workload_requested": report_data.get("npu_device_workload_requested"),
+            "npu_device_workload_performed": report_data.get("npu_device_workload_performed"),
+            "npu_provider_execution_performed": report_data.get("npu_provider_execution_performed"),
             "errors": errors,
             "warnings": warnings,
             "stdout_tail": (completed.stdout or "")[-1000:],
@@ -1770,15 +2162,20 @@ class HeapRuntimeCompletenessGate:
 
     def build_quality_failure_feedback(self, text: str, events: list[dict[str, Any]]) -> str:
         file_quality = self.response_file_reference_quality(text)
+        implementation_quality = self.implementation_quality_report(text, events)
         candidates = self.real_source_file_candidates(events, limit=32)
-        return (
+        base_feedback = (
             "quality gate failure: la risposta precedente non è uscibile come prodotto heap. "
             f"output_artifact_refs={file_quality.get('output_artifact_refs')}; "
             f"unverified_source_file_refs={file_quality.get('unverified_source_file_refs')}; "
-            f"no_source_file_refs={file_quality.get('no_source_file_refs')}. "
+            f"no_source_file_refs={file_quality.get('no_source_file_refs')}; "
+            f"implementation_quality_errors={implementation_quality.get('errors')}. "
             "Devi rigenerare usando solo file sorgente reali candidati, con proposte concrete agganciate a path repo esistenti. "
+            "Se manca codice/patch/comandi, GPU0 deve considerare il blocco non soddisfacente. "
             f"source_candidates={candidates}"
         )
+        iteration_feedback = self.proposal_iteration_feedback(events, file_quality)
+        return "\n".join(part for part in (base_feedback, iteration_feedback) if part)
 
     def maybe_run_provider_quality_revisions(self, round_id: int, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
         while (
@@ -1810,6 +2207,16 @@ class HeapRuntimeCompletenessGate:
             })
             self.run_provider_teamwork(round_id, revision=self.provider_revision_count)
             events = self.read_events()
+            revised_text = self.response_text()
+            revised_quality = self.response_file_reference_quality(revised_text)
+            if revised_text:
+                self.write_proposal_iteration_artifact(
+                    self.provider_revision_count,
+                    revised_text,
+                    revised_quality,
+                    events,
+                    source="gpu1_revision",
+                )
             self.publish_shared_evidence_facts(round_id, events)
         return events
 
@@ -1905,6 +2312,18 @@ class HeapRuntimeCompletenessGate:
             self.arbiter_step(last_round or self.max_iterations, events)
         snapshot = self.heap.write_snapshot()
         final_events = self.read_events()
+        if self.detailed_output_expected():
+            final_revision = max(0, int(self.provider_revision_count))
+            final_provider_text = self.response_text()
+            if final_provider_text:
+                self.write_proposal_iteration_artifact(
+                    final_revision,
+                    final_provider_text,
+                    self.response_file_reference_quality(final_provider_text),
+                    final_events,
+                    source="gpu1_final",
+                )
+                final_events = self.read_events()
         completed = sorted(self.completed_requirements(final_events))
         missing = self.missing_requirements(final_events)
         final_bridge_reports = self.bridge_report_refs(final_events)
@@ -1937,6 +2356,7 @@ class HeapRuntimeCompletenessGate:
             "runtime_debug_lab_required": self.runtime_debug_lab_required(),
             "runtime_debug_lab_passed": self.runtime_debug_lab_passed(final_events),
             "runtime_debug_lab_reports": self.runtime_debug_lab_reports(final_events),
+            "proposal_iteration_artifacts": self.proposal_iteration_artifacts(),
             "historical_tool_context_refs": self.historical_tool_context_files(),
             "response_file_reference_quality": self.response_file_reference_quality(self.response_text()),
             "provider_refs": self.provider_refs(),
@@ -2100,6 +2520,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stamp", default="")
     parser.add_argument("--objective", default="prove complete heap-driven teamwork loop over repository context, shared memory, brokered tools and all provider lanes")
     parser.add_argument("--request", default="", help="Optional real user request for heap heartbeat, e.g. ciao.")
+    parser.add_argument("--python-exe", default="", help="Explicit project Python executable for child tools. Defaults to repo .venv resolver; no system env fallback.")
     parser.add_argument("--task-file", default="")
     parser.add_argument("--tool", default="run_gpu_planner_json_contract_smoke", help="Compatibility flag; complete gate uses its internal readiness tool plan.")
     parser.add_argument("--max-iterations", type=int, default=4)
@@ -2117,6 +2538,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--npu-max-context-chars", type=int, default=8000)
     parser.add_argument("--npu-max-prompt-chars", type=int, default=1200)
     parser.add_argument("--npu-max-new-tokens", type=int, default=384)
+    parser.add_argument("--allow-npu-device-workload", action="store_true", help="Opt in to a bounded real OpenVINO NPU micro workload for the NPU audit lane.")
+    parser.add_argument("--npu-device-workload-seconds", type=float, default=0.25)
+    parser.add_argument("--npu-device-workload-iterations", type=int, default=8)
     parser.add_argument("--allow-provider-generation", action="store_true")
     parser.add_argument("--operator-intent", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=240)
