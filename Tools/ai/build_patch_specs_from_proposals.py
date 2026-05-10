@@ -378,6 +378,8 @@ def build_patch_specs(
     output_dir: Path,
     basename: str,
     max_proposals: int | None,
+    require_concrete: bool = False,
+    require_provider_execution: bool = False,
 ) -> dict[str, Any]:
     proposal_report = read_json_object(proposal_path)
     errors: list[str] = []
@@ -387,10 +389,23 @@ def build_patch_specs(
     if proposal_report.get("apply_mode") != EXPECTED_APPLY_MODE:
         errors.append("proposal report apply_mode must be manual_review_only")
 
+    proposal_report_provider_execution_seen = bool(proposal_report.get("provider_execution_performed"))
+
     proposals = proposal_report.get("proposals")
     if not isinstance(proposals, list):
         errors.append("proposal report proposals must be a list")
         proposals = []
+
+    provider_execution_seen = proposal_report_provider_execution_seen or any(
+        bool(item.get("provider_execution_performed"))
+        for item in proposals
+        if isinstance(item, dict)
+    )
+    if require_provider_execution and not provider_execution_seen:
+        errors.append(
+            "provider execution is required for real-product generated patch specs; "
+            "proposal report did not prove provider_execution_performed=true"
+        )
 
     spec_dir = output_dir / basename
     spec_dir.mkdir(parents=True, exist_ok=True)
@@ -436,6 +451,11 @@ def build_patch_specs(
         )
 
     concrete_spec_count = sum(1 for item in specs if item.get("concrete_operation_count", 0) > 0)
+    if require_concrete and concrete_spec_count <= 0:
+        errors.append(
+            "concrete patch specs are required for this real-product run; "
+            "metadata-only fallback is disabled"
+        )
     manifest = {
         "schema_version": 1,
         "kind": MANIFEST_KIND,
@@ -446,7 +466,10 @@ def build_patch_specs(
         "passed": not errors,
         "errors": errors,
         "warnings": warnings,
-        "provider_execution_performed": False,
+        "provider_execution_performed": provider_execution_seen,
+        "provider_execution_required": bool(require_provider_execution),
+        "concrete_patch_specs_required": bool(require_concrete),
+        "metadata_fallback_enabled": not bool(require_concrete),
         "apply_mode": EXPECTED_APPLY_MODE,
         "draft_status": "concrete_review_ready" if concrete_spec_count else "needs_concrete_replacements",
         "patch_spec_count": len(specs),
@@ -480,6 +503,16 @@ def main() -> int:
     parser.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--basename", default=DEFAULT_BASENAME)
     parser.add_argument("--max-proposals", type=int)
+    parser.add_argument(
+        "--require-concrete",
+        action="store_true",
+        help="Fail when generated specs contain no concrete deterministic operations. Disables metadata-only fallback.",
+    )
+    parser.add_argument(
+        "--require-provider-execution",
+        action="store_true",
+        help="Fail unless the proposal report proves provider_execution_performed=true.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -491,6 +524,8 @@ def main() -> int:
         output_dir=output_dir,
         basename=args.basename,
         max_proposals=args.max_proposals,
+        require_concrete=bool(args.require_concrete),
+        require_provider_execution=bool(args.require_provider_execution),
     )
     print(
         json.dumps(

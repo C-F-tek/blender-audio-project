@@ -20,6 +20,7 @@ def main() -> int:
     repo = Path(args.repo_root).resolve()
     wrapper = repo / "Tools/workflow/run_unified_real_product_pr.ps1"
     adapter = repo / "Tools/workflow/run_local_ai_task_via_pipeline.ps1"
+    adapter_validation = repo / "Tools/workflow/run_local_ai_task_via_pipeline/validation.ps1"
     launcher = repo / "Tools/workflow/run_unified_local_ai_refactor.ps1"
     readme = repo / "Tools/workflow/README.md"
     intrinsic_contract = repo / "Tools/validation/check_real_product_intrinsic_capability_contract.py"
@@ -28,6 +29,7 @@ def main() -> int:
 
     text = wrapper.read_text(encoding="utf-8-sig", errors="replace") if wrapper.exists() else ""
     adapter_text = adapter.read_text(encoding="utf-8-sig", errors="replace") if adapter.exists() else ""
+    adapter_validation_text = adapter_validation.read_text(encoding="utf-8-sig", errors="replace") if adapter_validation.exists() else ""
     launcher_text = launcher.read_text(encoding="utf-8-sig", errors="replace") if launcher.exists() else ""
     readme_text = readme.read_text(encoding="utf-8-sig", errors="replace") if readme.exists() else ""
     intrinsic_contract_text = intrinsic_contract.read_text(encoding="utf-8-sig", errors="replace") if intrinsic_contract.exists() else ""
@@ -112,7 +114,12 @@ def main() -> int:
         "launcher_has_peer_manifest": "IA-CARMINE-HEAP-PEER-RUNTIME-MANIFEST-BEGIN" in launcher_text,
         "launcher_has_closure_audit": "IA-CARMINE-HEAP-EXCHANGE-CLOSURE-AUDIT-BEGIN" in launcher_text,
         "launcher_has_final_chain_contract": "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN" in launcher_text,
-        "preflight_validates_runtime_evidence_correlation_wiring": "run_runtime_evidence_correlation_launcher_wiring_smoke.py" in launcher_text or "run_runtime_evidence_correlation_launcher_wiring_smoke.py" in readme_text,
+                "provider_probe_no_fallback_gate": "IA-CARMINE-PROVIDER-PROBE-NO-FALLBACK-BEGIN" in launcher_text and "ProviderProbeSoftFail" in launcher_text,
+        "ollama_workload_no_fallback_gate": "IA-CARMINE-OLLAMA-WORKLOAD-NO-FALLBACK-BEGIN" in launcher_text,
+        "adapter_requires_concrete_patch_specs": "IA-CARMINE-STRICT-REAL-PRODUCT-PATCH-SPECS-BEGIN" in adapter_validation_text and "--require-concrete" in adapter_validation_text,
+        "adapter_requires_provider_backed_specs": "--require-provider-execution" in adapter_validation_text,
+        "patch_spec_builder_has_strict_cli": "--require-concrete" in (repo / "Tools/ai/build_patch_specs_from_proposals.py").read_text(encoding="utf-8-sig", errors="replace") and "--require-provider-execution" in (repo / "Tools/ai/build_patch_specs_from_proposals.py").read_text(encoding="utf-8-sig", errors="replace"),
+"preflight_validates_runtime_evidence_correlation_wiring": "run_runtime_evidence_correlation_launcher_wiring_smoke.py" in launcher_text or "run_runtime_evidence_correlation_launcher_wiring_smoke.py" in readme_text,
         "readme_documents_runtime_evidence_correlation_launcher": "RUNTIME-EVIDENCE-CORRELATION-LAUNCHER-HARDENING" in readme_text or "Runtime evidence correlation launcher hardening" in readme_text,
                 "wrapper_forwards_real_product_profile": '"-Profile", "core"' in text,
         "wrapper_forwards_official_max_context": "IA-CARMINE-REAL-PRODUCT-OFFICIAL-MAX-CONTEXT-BEGIN" in text and "-MaxContextChars" in text,

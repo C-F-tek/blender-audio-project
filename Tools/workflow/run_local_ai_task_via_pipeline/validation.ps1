@@ -107,8 +107,29 @@ function Invoke-LocalAiTaskPipelineValidation {
         $PatchBasename = "${Basename}_patch_specs"
         $PatchManifest = "output/patch_specs/${PatchBasename}_manifest.json"
         $PatchManifestMd = "output/patch_specs/${PatchBasename}_manifest.md"
+        # IA-CARMINE-STRICT-REAL-PRODUCT-PATCH-SPECS-BEGIN
+        $StrictRealProductPatchSpecs = (
+            $Basename -match "official_adapter|real-product|heap-exchange" -or
+            $ProposalBasename -match "official_adapter|real-product|heap-exchange" -or
+            $TaskRel -match "heap-exchange-process-gate|real-product|single_dynamic_heap_exchange_run"
+        )
+        $PatchSpecArgs = @(
+            ".\Tools\ai\build_patch_specs_from_proposals.py",
+            "--repo-root", ".",
+            "--proposal", $ProposalRel,
+            "--output-dir", "output\patch_specs",
+            "--basename", $PatchBasename
+        )
+        if ($StrictRealProductPatchSpecs) {
+            $PatchSpecArgs += "--require-concrete"
+            if ($UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow) {
+                $PatchSpecArgs += "--require-provider-execution"
+            }
+            Write-Host "[INFO] Strict real-product patch specs enabled: no metadata-only fallback."
+        }
+        # IA-CARMINE-STRICT-REAL-PRODUCT-PATCH-SPECS-END
         Invoke-CommandChecked -Label "Build draft patch specs from proposals" -Block {
-            & $PythonExe .\Tools\ai\build_patch_specs_from_proposals.py --repo-root . --proposal $ProposalRel --output-dir output\patch_specs --basename $PatchBasename
+            & $PythonExe @PatchSpecArgs
         }
         Invoke-CommandChecked -Label "Validate draft patch specs" -Block {
             & $PythonExe .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest $PatchManifest --output "output/validation/${Basename}_patch_spec_drafts.json"

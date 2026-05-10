@@ -1406,9 +1406,15 @@ if (($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoW
         if ($RunNpuProbe) { $ProbeArgs += "--run-npu" }
         if (-not [string]::IsNullOrWhiteSpace($Model)) { $ProbeArgs += @("--model", $Model) }
 
+        # IA-CARMINE-PROVIDER-PROBE-NO-FALLBACK-BEGIN
+        $ProviderProbeSoftFail = -not ($UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow)
+        if (-not $ProviderProbeSoftFail) {
+            Write-Host "[INFO] Provider probe hard gate enabled: no provider fallback for real-product advisory run."
+        }
         $PhaseStatus.provider_workload_probe = Invoke-Checked "Generate provider workload probe inputs" {
             Invoke-Python $ProbeArgs
-        } -SoftFail:$true
+        } -SoftFail:$ProviderProbeSoftFail
+        # IA-CARMINE-PROVIDER-PROBE-NO-FALLBACK-END
 
         if (Test-Path -LiteralPath $LocalProviderProbeReport -PathType Leaf) {
             Write-ProviderWorkloadReportsFromProbe `
@@ -1432,6 +1438,11 @@ if (($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoW
     }
 }
 
+# IA-CARMINE-OLLAMA-WORKLOAD-NO-FALLBACK-BEGIN
+if (($UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow) -and $RunOllamaProbe -and -not (Test-Path -LiteralPath $CanonicalOllamaWorkloadReport -PathType Leaf)) {
+    throw "Provider/Ollama advisory path requested but no canonical Ollama workload report was produced. No fallback to metadata-only proposals is allowed."
+}
+# IA-CARMINE-OLLAMA-WORKLOAD-NO-FALLBACK-END
 
 if ($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality)) {
     Assert-FileExists ".\Tools\validation\check_ai_workload_report_quality.py"
