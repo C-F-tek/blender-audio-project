@@ -27,9 +27,7 @@ docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
 ## Current doctrine
 
 ```text
-Full0To10 = TUTTO SU TUTTO
 quick/balanced/deep/custom = intensity, not scope
-provider/probe/workload-quality lanes are opt-out in Full0To10
 GPU1/GPU0/NPU peer exchange is production evidence, not smoke-only proof
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
 preferred active runbook/docs size <=400 lines; active Markdown hard threshold <=500 lines
@@ -111,8 +109,6 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 | `patchkit/` | Reusable controlled patch-bundle runner, filesystem/anchor/PowerShell/report helpers and deterministic validators. |
 | `patch_suggestion_bundle/` | Deterministic patch suggestion discovery, classification and apply implementation. |
 | `patch_notes_quality_product/` | Manual-review patch-note product/ledger support. |
-| `full0to10_final_product/` | Final tool-product package builder: product Markdown, evidence index, readiness, manifest and README. |
-| `full0to10_hardware_capability/` | Full0To10 hardware/capability visibility package. |
 | `full_run_bundle_zip/` | Full-run evidence ZIP support in candidate foundation work. |
 | `runtime_hardware_capability/` | Runtime hardware capability support in candidate foundation work. |
 
@@ -122,7 +118,6 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 |---|---|---|
 | Context and chunks | `build_ai_context_pack.py`, `select_semantic_code_chunks.py` | Provider-free context evidence. |
 | Agent state and memory | `build_agent_state_packet.py`, `review_agent_memory.py`, `agent_runtime_sqlite_memory.py` | SQLite outputs are local/private and must not be committed. |
-| Provider diagnostics | `run_local_provider_probe.py`, `check_local_resource_lanes.py`, `analyze_gpu_npu_run_sync.py` | Provider state must flow to telemetry/bundle when used in Full0To10 handoff. |
 | AI peer exchange | `build_ai_peer_exchange_packet.py`, `run_gpu0_peer_companion_worker.py`, `run_npu_gpu_deep_review_auditor.py` | GPU1 output to GPU0/NPU peer response and broker evidence. |
 | Heap/exchange lifecycle | `build_heap_exchange_runtime_entry.py`, `build_heap_exchange_runtime_exit.py` | Dynamic center boundary: entry state, lane availability, public exchange events and deterministic exit product. |
 | Workload routing | `build_workload_quality_lane_routing.py` | Keeps unusable provider output out of advisory context. |
@@ -132,7 +127,6 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 | Patch suggestion product | `build_task_patch_suggestion_report.py`, `apply_patch_suggestion_bundle.py`, `prepare_review_pr.py` | Markdown/task suggestion product, deterministic apply, review PR preparation. |
 | Runtime broker/telemetry | `agent_runtime_tool_broker.py`, `build_runtime_tool_usage_telemetry.py` | Broker-measured tool calls and normalized status. |
 | Capability and telemetry summary | capability manifest packages/builders, `build_full_toolbox_run_telemetry_summary.py` | Handoff context for available tools/hardware lanes and run state. |
-| Final tool product | `build_full0to10_final_tool_product.py`, `full0to10_final_product/*` | Product/evidence/readiness outputs from Full0To10 surfaces. |
 | Production bundle | `build_shared_toolbox_ai_to_ai_bundle.py` | AI-to-AI evidence/telemetry/patch-plan handoff. |
 | Evidence bundles | `build_github_evidence_bundle.py`, full-run bundle ZIP tools | Compact GitHub evidence only; raw `output/**` stays ignored. |
 
@@ -224,7 +218,6 @@ Patch notes are not patches. Convert only validated suggestions into a real patc
 
 ## Final product behavior
 
-The Full0To10 final-product builder composes these internal evidence families:
 
 ```text
 track input contract
@@ -260,14 +253,12 @@ File existence alone is not proof of successful execution.
 
 ```text
 CPU: parsing, JSON generation, validation, orchestration.
-GPU1/Ollama/RTX 5080: mandatory primary advisory planner/worker when Full0To10 provider execution is selected.
 GPU0/OpenVINO: companion peer worker and controlled tool-request producer for GPU1 follow-up.
 NPU/OpenVINO: orchestrator-called micro-fast task assistant, guardrail and lightweight tool-support lane.
 Deterministic scripts: heavy audit and validation authority.
 External GPU commands: explicit heavy generator path only, never implicit.
 ```
 
-Full0To10 provider mesh runs use startup and close barriers. The legacy NPU auditor provider is diagnostics-only behind `-RunLegacyNpuAuditorProvider`.
 
 ## Safety policy
 

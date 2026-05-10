@@ -248,10 +248,10 @@ def run_runtime_flow_map(ctx: WorkflowContext) -> None:
 def run_final_product(ctx: WorkflowContext) -> None:
     report_keys = ["orch_json", "gpu_json", "gpu_npu_sync_json", "provider_contract_json", "peer_json", "peer_contract_json", "heap_from_peer_json", "heap_telemetry_json", "heap_catalog_json", "heap_snapshot_json", "runtime_usage_json", "runtime_capability_json", "runtime_broker_json", "gpu0_broker_json", "npu_broker_json", "recommendations_json", "decision_json", "patch_plan_json", "patch_quality_json", "patch_notes_quality_json"]
     artifact_keys = ["orch_md", "gpu_md", "gpu_npu_sync_md", "peer_md", "peer_contract_md", "heap_telemetry_md", "heap_catalog_md", "heap_snapshot_md", "runtime_usage_md", "runtime_capability_md", "patch_plan_md", "patch_quality_md", "patch_notes_quality_md"]
-    args = ["Tools/ai/build_full0to10_final_tool_product.py", "--repo-root", ".", "--output-dir", ctx.p("final_product_dir"), "--request", f"Build the final local AI product for stamp {ctx.args.Stamp} from the live provider mesh, runtime broker evidence, telemetry, patch specs and validation bundle.", "--no-external-probes", "--timeout-seconds", "8", "--output", ctx.p("final_product_json")]
+    args = ["Tools/ai/build_heap_runtime_product_package.py", "--repo-root", ".", "--output-dir", ctx.p("final_product_dir"), "--request", f"Build the final local AI product for stamp {ctx.args.Stamp} from the live provider mesh, runtime broker evidence, telemetry, patch specs and validation bundle.", "--no-external-probes", "--timeout-seconds", "8", "--output", ctx.p("final_product_json")]
     args += sum((["--run-report", path] for path in existing(ctx, *report_keys)), [])
     args += sum((["--run-artifact", path] for path in existing(ctx, *artifact_keys)), [])
-    ctx.run_python("Full0To10 final local AI product", args)
+    ctx.run_python("Heap runtime final product", args)
 
 
 def build_evidence_bundle(ctx: WorkflowContext) -> None:

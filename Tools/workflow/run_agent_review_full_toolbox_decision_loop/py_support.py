@@ -269,7 +269,7 @@ def build_paths(stamp: str, evidence_dir: str) -> dict[str, str]:
 def add_runtime_paths(p: dict[str, str], stamp: str, evidence_dir: str) -> None:
     s = stamp
     bundle_base = f"full_toolbox_agent_review_decision_loop_{s}"
-    final_dir = f"output/validation/full0to10_final_tool_product_{s}"
+    final_dir = f"output/validation/heap_runtime_product_{s}"
     chunk_base = f"full_toolbox_{s}_cloud_semantic_deterministic"
     p.update(
         {
@@ -315,11 +315,11 @@ def add_runtime_paths(p: dict[str, str], stamp: str, evidence_dir: str) -> None:
             "heap_catalog_json": f"output/validation/provider_runtime_heap_live_signals_tool_catalog_complete_{s}.json",
             "heap_catalog_md": f"output/validation/provider_runtime_heap_live_signals_tool_catalog_complete_{s}.md",
             "final_product_dir": final_dir,
-            "final_product_json": f"output/validation/full0to10_final_tool_product_{s}.json",
-            "final_product_manifest": f"{final_dir}/full0to10_final_tool_product_manifest.json",
-            "final_product_md": f"{final_dir}/full0to10_final_tool_product.md",
-            "final_product_evidence": f"{final_dir}/full0to10_final_tool_product_evidence_index.json",
-            "final_product_readiness": f"{final_dir}/full0to10_final_tool_product_readiness.json",
+            "final_product_json": f"output/validation/heap_runtime_product_{s}.json",
+            "final_product_manifest": f"{final_dir}/heap_runtime_product_manifest.json",
+            "final_product_md": f"{final_dir}/heap_runtime_product.md",
+            "final_product_evidence": f"{final_dir}/heap_runtime_product_evidence_index.json",
+            "final_product_readiness": f"{final_dir}/heap_runtime_product_readiness.json",
             "final_product_readme": f"{final_dir}/README.md",
             "chunk_base": chunk_base,
             "chunk_dir": f"{evidence_dir}/{chunk_base}_chunks",

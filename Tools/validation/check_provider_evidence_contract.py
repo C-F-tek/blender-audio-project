@@ -383,7 +383,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "npu_auditor_ready": npu["real"],
             "probe_only_is_not_provider_evidence": True,
             "strict_provider_contract_satisfied": not errors,
-            "recommended_next_action": "run_full0to10_provider_lane" if errors else "continue_bundle_review",
+            "recommended_next_action": "run_heap_provider_lane" if errors else "continue_bundle_review",
         },
         "guardrails": {
             "report_only": True,

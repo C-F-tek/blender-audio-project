@@ -33,7 +33,7 @@ def main() -> int:
     workflow = read_text(repo_root / "Tools/workflow/run_unified_local_ai_refactor.ps1")
     wrapper = read_text(repo_root / "Tools/workflow/run_unified_real_product_pr.ps1")
     preflight = read_text(repo_root / "Tools/validation/run_real_product_preflight_gate.py")
-    product_chain_smoke = read_text(repo_root / "Tools/validation/run_full0to10_product_pr_chain_smoke.py")
+    heap_team_smoke = read_text(repo_root / "Tools/validation/run_heap_team_runtime_lab_smoke.py")
 
     errors: list[str] = []
 
@@ -46,7 +46,8 @@ def main() -> int:
         "launcher_adds_context_file": "runtime_evidence_correlation" in workflow and "Add-ExistingContextFile" in workflow,
         "wrapper_requests_correlation": "-BuildRuntimeEvidenceCorrelation" in wrapper,
         "preflight_validates_wiring_smoke": "run_runtime_evidence_correlation_launcher_wiring_smoke.py" in preflight,
-        "product_chain_smoke_checks_final_marker": "workflow:runtime_evidence_correlation_final" in product_chain_smoke,
+        "preflight_routes_to_heap_team_runtime_lab": "run_heap_team_runtime_lab_smoke.py" in preflight,
+        "heap_team_smoke_checks_product_status": "product_status" in heap_team_smoke and "heap_write_count" in heap_team_smoke,
     }
 
     for name, passed in checks.items():

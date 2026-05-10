@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -60,47 +59,30 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
 
 
 def build_report(repo_root: Path) -> dict[str, Any]:
-    wrapper = repo_root / "Tools/workflow/run_unified_real_product_pr.ps1"
-    launcher = repo_root / "Tools/workflow/run_unified_local_ai_refactor.ps1"
-    intrinsic = repo_root / "Tools/validation/check_real_product_intrinsic_capability_contract.py"
-    readiness = repo_root / "Tools/validation/check_review_pr_product_readiness.py"
-    prepare = repo_root / "Tools/ai/prepare_review_pr.py"
-
-    wrapper_text = read_text(wrapper)
-    launcher_text = read_text(launcher)
-    intrinsic_text = read_text(intrinsic)
-    readiness_text = read_text(readiness)
-    prepare_text = read_text(prepare)
+    wrapper_text = read_text(repo_root / "Tools/workflow/run_unified_real_product_pr.ps1")
+    launcher_text = read_text(repo_root / "Tools/workflow/run_unified_local_ai_refactor.ps1")
+    intrinsic_text = read_text(repo_root / "Tools/validation/check_real_product_intrinsic_capability_contract.py")
+    readiness_text = read_text(repo_root / "Tools/validation/check_review_pr_product_readiness.py")
+    prepare_text = read_text(repo_root / "Tools/ai/prepare_review_pr.py")
 
     memory_sqlite_text = read_text(repo_root / "Tools/ai/agent_runtime_sqlite_memory.py")
-    full_memory_text = read_text(repo_root / "Tools/ai/full0to10_memory_tool.py")
-    sqlite_schema_text = read_text(repo_root / "Tools/ai/full0to10_sqlite_memory/schema.py")
-    sqlite_search_text = read_text(repo_root / "Tools/ai/full0to10_sqlite_memory/search.py")
-    sqlite_ingest_text = read_text(repo_root / "Tools/ai/full0to10_sqlite_memory/ingest.py")
-    sqlite_memory_smoke_text = read_text(repo_root / "Tools/validation/run_full0to10_sqlite_memory_smoke.py")
-    sqlite_hybrid_smoke_text = read_text(repo_root / "Tools/validation/run_full0to10_sqlite_embedding_hybrid_smoke.py")
-    sqlite_fts_surface = "\n".join(
-        [
-            memory_sqlite_text,
-            full_memory_text,
-            sqlite_schema_text,
-            sqlite_search_text,
-            sqlite_ingest_text,
-            sqlite_memory_smoke_text,
-            sqlite_hybrid_smoke_text,
-        ]
-    ).lower()
     broker_text = read_text(repo_root / "Tools/ai/agent_runtime_tool_broker.py")
     broker_exec_text = read_text(repo_root / "Tools/ai/agent_runtime_tool_broker_execution.py")
     ollama_probe_text = read_text(repo_root / "Tools/ai/run_ollama_provider_probe.py")
+    local_provider_probe_text = read_text(repo_root / "Tools/ai/run_local_provider_probe.py")
     primary_advisory_text = read_text(repo_root / "Tools/ai/build_workload_quality_lane_routing.py")
     openvino_gpu0_text = read_text(repo_root / "Tools/ai/build_openvino_gpu0_workload_report.py")
     gpu0_companion_text = read_text(repo_root / "Tools/ai/build_gpu0_companion_task_lane.py")
     npu_companion_text = read_text(repo_root / "Tools/ai/build_npu_micro_task_companion_report.py")
-    local_provider_probe_text = read_text(repo_root / "Tools/ai/run_local_provider_probe.py")
-    hardware_ollama_text = read_text(repo_root / "Tools/ai/full0to10_hardware_capability/ollama.py")
     openvino_peer_topology_contract_text = read_text(repo_root / "Tools/validation/check_openvino_peer_topology_contract.py")
-    gpu1_provider_surface = "\n".join([ollama_probe_text, local_provider_probe_text, hardware_ollama_text]).lower()
+    heap_text = read_text(repo_root / "Tools/ai/provider_runtime_heap.py")
+    budget_text = read_text(repo_root / "Tools/ai/heap_provider_budget_governor.py")
+    invocation_text = read_text(repo_root / "Tools/ai/heap_provider_invocation_contract.py")
+    product_text = read_text(repo_root / "Tools/ai/build_heap_runtime_product_package.py")
+
+    gpu1_provider_surface = "\n".join([ollama_probe_text, local_provider_probe_text]).lower()
+    memory_surface = memory_sqlite_text.lower()
+    heap_contract_surface = "\n".join([heap_text, budget_text, invocation_text]).lower()
 
     checks: dict[str, bool] = {
         "task_md_in": has(wrapper_text, "[string]$TaskFile")
@@ -111,20 +93,22 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-BEGIN")
         and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-PRE-REVIEW-BRIDGE-BEGIN"),
 
+        "heap_provider_budget_governor": exists(repo_root, "Tools/ai/heap_provider_budget_governor.py")
+        and has(budget_text, "ProviderBudgetConfig")
+        and has(budget_text, "provider_lanes")
+        and has(budget_text, "permit_allowed"),
+
+        "heap_provider_invocation_contract": exists(repo_root, "Tools/ai/heap_provider_invocation_contract.py")
+        and has(invocation_text, "expected_telemetry_contract")
+        and has(invocation_text, "real_run_gate")
+        and has(invocation_text, "broker_request"),
+
         "gpu1_primary_advisory": has(wrapper_text, "-UsePrimaryAdvisoryProvider")
         and has(wrapper_text, "-UseOllamaAdvisory")
         and has(wrapper_text, "-RunOllamaProbe")
-        and (
-            exists(repo_root, "Tools/ai/run_ollama_provider_probe.py")
-            or exists(repo_root, "Tools/ai/run_local_provider_probe.py")
-            or exists(repo_root, "Tools/ai/full0to10_hardware_capability/ollama.py")
-        )
+        and (exists(repo_root, "Tools/ai/run_ollama_provider_probe.py") or exists(repo_root, "Tools/ai/run_local_provider_probe.py"))
         and exists(repo_root, "Tools/ai/build_workload_quality_lane_routing.py")
-        and (
-            "ollama" in gpu1_provider_surface
-            or "provider" in gpu1_provider_surface
-            or "probe" in gpu1_provider_surface
-        )
+        and ("ollama" in gpu1_provider_surface or "provider" in gpu1_provider_surface or "probe" in gpu1_provider_surface)
         and ("primary" in primary_advisory_text.lower() or "advisory" in primary_advisory_text.lower()),
 
         "gpu0_openvino_tool_workload": has(wrapper_text, "-RunOpenVinoGpu0Workload")
@@ -134,11 +118,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and ("gpu0" in openvino_gpu0_text.lower() or "gpu.0" in openvino_gpu0_text.lower())
         and ("companion" in gpu0_companion_text.lower()),
 
-        "npu_peer_micro_lane": (
-            has(wrapper_text, '[string]$NpuMicroStartMode = "startup"')
-            or has(wrapper_text, '[string]$NpuMicroStartMode = "peer"')
-        )
-        and has(wrapper_text, "-NpuMicroStartMode")
+        "npu_peer_micro_lane": has(wrapper_text, "-NpuMicroStartMode")
         and has(wrapper_text, "-RunNpuProbe")
         and has(wrapper_text, "-RunNpuDecodeSmoke")
         and exists(repo_root, "Tools/ai/build_npu_micro_task_companion_report.py")
@@ -151,14 +131,11 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and exists(repo_root, "Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py")
         and exists(repo_root, "Tools/ai/build_heap_peer_runtime_manifest.py"),
 
-        "sqlite_fts_memory": exists(repo_root, "Tools/ai/agent_runtime_sqlite_memory.py")
-        and exists(repo_root, "Tools/ai/full0to10_memory_tool.py")
-        and exists(repo_root, "Tools/ai/full0to10_sqlite_memory/schema.py")
-        and exists(repo_root, "Tools/ai/full0to10_sqlite_memory/search.py")
-        and exists(repo_root, "Tools/ai/full0to10_sqlite_memory/ingest.py")
-        and ("fts5" in sqlite_fts_surface or "full0to10_sqlite_memory" in sqlite_fts_surface)
-        and exists(repo_root, "Tools/validation/run_full0to10_sqlite_memory_smoke.py")
-        and exists(repo_root, "Tools/validation/run_full0to10_sqlite_embedding_hybrid_smoke.py"),
+        "sqlite_runtime_memory": exists(repo_root, "Tools/ai/agent_runtime_sqlite_memory.py")
+        and ("sqlite" in memory_surface)
+        and ("persistent" in memory_surface)
+        and ("operational" in memory_surface)
+        and exists(repo_root, "Tools/validation/run_runtime_sqlite_persistent_write_smoke.py"),
 
         "tool_agnostic_broker": exists(repo_root, "Tools/ai/agent_runtime_tool_broker.py")
         and exists(repo_root, "Tools/ai/agent_runtime_tool_broker_execution.py")
@@ -190,6 +167,16 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and exists(repo_root, "Tools/ai/build_heap_exchange_runtime_exit.py")
         and exists(repo_root, "Tools/validation/check_heap_exchange_runtime_lifecycle.py"),
 
+        "heap_team_runtime_lab": exists(repo_root, "Tools/ai/run_heap_team_runtime_lab.py")
+        and exists(repo_root, "Tools/validation/run_heap_team_runtime_lab_smoke.py")
+        and "product_signal" in heap_contract_surface
+        and "broker_request" in heap_contract_surface,
+
+        "heap_runtime_product_package": exists(repo_root, "Tools/ai/build_heap_runtime_product_package.py")
+        and has(product_text, "heap_runtime_product_package")
+        and has(product_text, "heap_runtime_product_manifest")
+        and has(product_text, "heap_runtime_product_readiness"),
+
         "product_readiness": has(launcher_text, "review_pr_product_readiness")
         and has(readiness_text, "prepare_review_pr_ready")
         and has(readiness_text, "has_concrete_product"),
@@ -212,24 +199,27 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "openvino_peer_topology_contract": exists(repo_root, "Tools/validation/check_openvino_peer_topology_contract.py")
         and exists(repo_root, "Tools/validation/run_openvino_peer_topology_contract_smoke.py")
         and has(openvino_peer_topology_contract_text, "openvino_peer_topology_contract")
-        and has(openvino_peer_topology_contract_text, "gpu1_reserved_from_openvino_workload")
-        and has(openvino_peer_topology_contract_text, "gpu0_compile_targets_gpu0_only")
+        and has(openvino_peer_topology_contract_text, "runtime_workload_targets_gpu0_only")
         and has(openvino_peer_topology_contract_text, "npu_micro_uses_runtime_context_and_tool_broker"),
     }
 
     capability_order = [
         "task_md_in",
         "heap_exchange_activation",
+        "heap_provider_budget_governor",
+        "heap_provider_invocation_contract",
         "gpu1_primary_advisory",
         "gpu0_openvino_tool_workload",
         "npu_peer_micro_lane",
         "shared_memory_evidence",
-        "sqlite_fts_memory",
+        "sqlite_runtime_memory",
         "tool_agnostic_broker",
         "direct_reasoning_assistance",
         "runtime_flow_map_evidence",
         "static_deterministic_script_lane",
         "heap_exchange_close",
+        "heap_team_runtime_lab",
+        "heap_runtime_product_package",
         "product_readiness",
         "prepare_review_pr_product",
         "final_testable_pr",
@@ -240,12 +230,16 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     runtime_route = [
         "Task MD IN",
         "heap/exchange activation",
+        "provider budget governor",
+        "provider invocation contract",
         "GPU1 primary advisory",
         "GPU0 OpenVINO/tool workload",
         "NPU peer micro lane",
         "shared memory / SQLite FTS / tool broker / direct reasoning assistance",
         "runtime flow map evidence",
         "static deterministic script/product lane",
+        "heap/team runtime lab",
+        "heap runtime product package",
         "heap/exchange CLOSE",
         "product readiness",
         "prepare_review_pr.py",
@@ -264,26 +258,18 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "failed_capabilities": failed_capabilities,
         "runtime_route": runtime_route,
         "diagnostics": {
-            "sqlite_fts_surface_has_fts5": "fts5" in sqlite_fts_surface,
-            "sqlite_fts_surface_has_package": "full0to10_sqlite_memory" in sqlite_fts_surface,
-            "sqlite_schema_present": exists(repo_root, "Tools/ai/full0to10_sqlite_memory/schema.py"),
-            "sqlite_search_present": exists(repo_root, "Tools/ai/full0to10_sqlite_memory/search.py"),
-            "sqlite_ingest_present": exists(repo_root, "Tools/ai/full0to10_sqlite_memory/ingest.py"),
+            "sqlite_surface_has_sqlite": "sqlite" in memory_surface,
+            "sqlite_runtime_memory_present": exists(repo_root, "Tools/ai/agent_runtime_sqlite_memory.py"),
             "ollama_probe_file_present": exists(repo_root, "Tools/ai/run_ollama_provider_probe.py"),
             "local_provider_probe_file_present": exists(repo_root, "Tools/ai/run_local_provider_probe.py"),
-            "hardware_ollama_file_present": exists(repo_root, "Tools/ai/full0to10_hardware_capability/ollama.py"),
             "gpu1_provider_surface_mentions_ollama": "ollama" in gpu1_provider_surface,
             "gpu1_provider_surface_mentions_provider_or_probe": "provider" in gpu1_provider_surface or "probe" in gpu1_provider_surface,
-            "ollama_probe_path_declares_ollama": "ollama" in "Tools/ai/run_ollama_provider_probe.py".lower(),
-            "ollama_probe_mentions_ollama": "ollama" in ollama_probe_text.lower(),
-            "ollama_probe_mentions_provider_or_probe": "provider" in ollama_probe_text.lower() or "probe" in ollama_probe_text.lower(),
             "openvino_gpu0_mentions_openvino": "openvino" in openvino_gpu0_text.lower(),
             "openvino_gpu0_mentions_gpu0": "gpu0" in openvino_gpu0_text.lower() or "gpu.0" in openvino_gpu0_text.lower(),
             "npu_companion_mentions_npu": "npu" in npu_companion_text.lower(),
-            "openvino_peer_topology_contract_present": exists(repo_root, "Tools/validation/check_openvino_peer_topology_contract.py"),
-            "openvino_peer_topology_smoke_present": exists(repo_root, "Tools/validation/run_openvino_peer_topology_contract_smoke.py"),
-            "openvino_peer_topology_contract_mentions_gpu0": "gpu0_compile_targets_gpu0_only" in openvino_peer_topology_contract_text,
-            "openvino_peer_topology_contract_mentions_npu": "npu_micro_uses_runtime_context_and_tool_broker" in openvino_peer_topology_contract_text,
+            "heap_budget_governor_present": exists(repo_root, "Tools/ai/heap_provider_budget_governor.py"),
+            "heap_invocation_contract_present": exists(repo_root, "Tools/ai/heap_provider_invocation_contract.py"),
+            "heap_runtime_product_package_present": exists(repo_root, "Tools/ai/build_heap_runtime_product_package.py"),
         },
         **checks,
         "provider_execution_performed": False,

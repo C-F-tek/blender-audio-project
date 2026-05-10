@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Provider invocation contract for heap-driven IA-Carmine runtime loops.
 
-This is the non-legacy successor of the useful Full0To10 invocation/bridge
+This is the non-legacy successor of the useful provider invocation/bridge
 semantics: workload report contract, telemetry contract, NPU audit hooks,
 provider command plan, and real-run gate. It does not execute providers.
 """

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI entrypoint for Full0To10 evidence ZIP completeness validation."""
+"""CLI entrypoint for full-run evidence ZIP completeness validation."""
 from __future__ import annotations
 
 import sys

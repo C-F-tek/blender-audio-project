@@ -167,10 +167,6 @@ def validate_manifest(manifest: dict[str, Any]) -> tuple[list[str], list[str]]:
             if not has_runtime_correlation_context:
                 warnings.append("runtime evidence correlation requested but context_files does not include runtime_evidence_correlation Markdown")
 
-    if manifest.get("full0to10_standalone_pipeline") is not False:
-        errors.append("full0to10_standalone_pipeline must be false")
-    if manifest.get("full0to10_legacy_alias_requested") not in {True, False, None}:
-        errors.append("full0to10_legacy_alias_requested must be boolean/null")
 
     return errors, warnings
 

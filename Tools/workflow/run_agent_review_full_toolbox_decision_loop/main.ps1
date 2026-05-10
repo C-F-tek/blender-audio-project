@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$RepoRoot = ".",
     [string]$Stamp = "",
     [string]$OutputRoot = "output",
@@ -480,12 +480,12 @@ $ProviderRuntimeHeapLiveBrokerResultsJson = ".\output\validation\provider_runtim
 $ProviderRuntimeHeapLiveBrokerResultsMd = ".\output\validation\provider_runtime_heap_live_signals_broker_results_$Stamp.md"
 $ProviderRuntimeHeapLiveNpuSupportJson = ".\output\validation\provider_runtime_heap_live_signals_npu_support_$Stamp.json"
 $ProviderRuntimeHeapLiveNpuSupportMd = ".\output\validation\provider_runtime_heap_live_signals_npu_support_$Stamp.md"
-$FinalToolProductDir = ".\output\validation\full0to10_final_tool_product_$Stamp"
-$FinalToolProductJson = ".\output\validation\full0to10_final_tool_product_$Stamp.json"
-$FinalToolProductManifestJson = Join-Path $FinalToolProductDir "full0to10_final_tool_product_manifest.json"
-$FinalToolProductMd = Join-Path $FinalToolProductDir "full0to10_final_tool_product.md"
-$FinalToolProductEvidenceJson = Join-Path $FinalToolProductDir "full0to10_final_tool_product_evidence_index.json"
-$FinalToolProductReadinessJson = Join-Path $FinalToolProductDir "full0to10_final_tool_product_readiness.json"
+$FinalToolProductDir = ".\output\validation\heap_runtime_product_$Stamp"
+$FinalToolProductJson = ".\output\validation\heap_runtime_product_$Stamp.json"
+$FinalToolProductManifestJson = Join-Path $FinalToolProductDir "heap_runtime_product_manifest.json"
+$FinalToolProductMd = Join-Path $FinalToolProductDir "heap_runtime_product.md"
+$FinalToolProductEvidenceJson = Join-Path $FinalToolProductDir "heap_runtime_product_evidence_index.json"
+$FinalToolProductReadinessJson = Join-Path $FinalToolProductDir "heap_runtime_product_readiness.json"
 $FinalToolProductReadme = Join-Path $FinalToolProductDir "README.md"
 
 
@@ -1196,7 +1196,7 @@ Invoke-RepoPython -Label "Runtime tool capability manifest pre-bundle" -ArgsList
 )
 
 $FinalToolProductArgs = @(
-    ".\Tools\ai\build_full0to10_final_tool_product.py",
+    ".\Tools\ai\build_heap_runtime_product_package.py",
     "--repo-root", ".",
     "--output-dir", $FinalToolProductDir,
     "--request", "Build the final local AI product for stamp $Stamp from the live provider mesh, runtime broker evidence, telemetry, patch specs and validation bundle.",
@@ -1224,7 +1224,7 @@ foreach ($Path in @(
         $FinalToolProductArgs += @("--run-artifact", $Path)
     }
 }
-Invoke-RepoPython -Label "Full0To10 final local AI product" -ArgsList $FinalToolProductArgs
+Invoke-RepoPython -Label "Heap runtime final product" -ArgsList $FinalToolProductArgs
 Add-ExistingPath -List $Reports -Path $FinalToolProductJson
 Add-ExistingPath -List $Reports -Path $FinalToolProductManifestJson
 Add-ExistingPath -List $Reports -Path $FinalToolProductEvidenceJson

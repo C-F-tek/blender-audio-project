@@ -20,7 +20,6 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ## Current doctrine
 
 ```text
-Full0To10 = TUTTO SU TUTTO
 quick/balanced/deep/custom = intensity, not scope
 pipeline dry-run != full-run proof
 400-line policy applies to maintained docs and source files
@@ -77,7 +76,6 @@ shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when relevant
 ```
 
-Dry-run matrix evidence is planned-only. It does not prove provider execution, broker execution, capability availability, source-write state or Full0To10 completion.
 
 ## 400-line policy
 
@@ -118,14 +116,12 @@ Blender/runtime side effects
 FFmpeg/media side effects
 source writes from model output
 changing schema-v6 field meanings without local validation
-claiming Full0To10 success from focused pipeline dry-runs
 ```
 
 ## Validation ownership
 
 Focused pipeline validation can target this package directly when pipeline code changes.
 
-Broad local-AI validation and Full0To10 evidence must route through the unified launcher runbook.
 
 ## Related docs
 

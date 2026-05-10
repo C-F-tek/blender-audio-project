@@ -43,8 +43,6 @@ def main() -> int:
                 "kind": "unified_local_ai_refactor_manifest",
                 "stamp": "manifest_schema_smoke_20990101-010203",
                 "mode_name": "smoke",
-                "full0to10_legacy_alias_requested": False,
-                "full0to10_standalone_pipeline": False,
                 "unified_run_operational_model": "single_dynamic_heap_exchange_run",
                 "unified_run_source_of_knowledge": "heap_exchange",
                 "unified_run_final_product": "reviewable_pr_with_concrete_changes",

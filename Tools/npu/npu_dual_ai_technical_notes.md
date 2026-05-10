@@ -28,4 +28,3 @@ Reason: NPU output was not trusted (`npu_skipped_gpu_heavy_mode`).
 - Mid band: material roughness/emission mix, secondary object motion, fog filament drift.
 - High band: small emission accents, glints, particle sparkle, sharp camera micro motion.
 - Onset/beat: short impulses, never a constant global light flash.
-

@@ -147,7 +147,9 @@ docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md
 Validator:
 
 ```powershell
-python .\Toolsalidation\check_ai_workload_report_quality.py --repo-root . --output .\outputalidationi_workload_report_quality.json
+python .\Tools
+alidation\check_ai_workload_report_quality.py --repo-root . --output .\output
+alidationi_workload_report_quality.json
 ```
 
 Core report kind and policy:
@@ -169,7 +171,8 @@ NPU review metadata can be emitted without provider loading:
 ```powershell
 python .\Tools
 pu
-un_npu_review.py --metadata-only --metadata-out .\outputalidation
+un_npu_review.py --metadata-only --metadata-out .\output
+alidation
 pu_review_metadata.json
 ```
 

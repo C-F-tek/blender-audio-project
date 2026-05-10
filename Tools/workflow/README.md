@@ -42,8 +42,6 @@ docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
 Real product run = one wrapper entry, one dynamic heap/exchange center, one validated review-PR product exit
 run_unified_real_product_pr.ps1 = operator-facing product entrypoint
 run_unified_local_ai_refactor.ps1 = unified launcher / dynamic heap-exchange executor
-Full0To10 = legacy compatibility alias absorbed by the unified run model
-LightFull0To10 = evidence-only profile, not provider/runtime proof
 quick/balanced/deep/custom = intensity, not scope
 supporting wrappers are implementation lanes, not first entrypoints
 provider/probe/workload-quality lanes are opt-out in real unified product runs
@@ -71,7 +69,6 @@ limitations are backlog to overcome, not reasons to skip available tools
 |---|---|
 | Real full product run | `run_unified_real_product_pr.ps1 -ProcessGateTask` or `-TaskFile <md>`; it performs mandatory preflight and delegates to `run_unified_local_ai_refactor.ps1` with the complete heap/exchange product lane. |
 | Single-phase diagnostic | `run_unified_local_ai_refactor.ps1` with `-NoStrictRealRunActivation`. |
-| Lightweight evidence profile | `run_unified_local_ai_refactor.ps1 -LightFull0To10`. |
 | Heap/exchange lifecycle product path | Real product wrapper or unified launcher with provider/evidence/patch/review lanes selected. |
 | Patchkit source-write boundary | `Tools/ai/patchkit/apply_patch_bundle.py` after a reviewed `patch_specs/<bundle>/bundle.json`. |
 | Markdown-to-review-PR product path | Real product wrapper plus generated patch specs/review PR flags; current owner chain below. |
@@ -182,7 +179,6 @@ Tools/validation/check_patch_suggestion_product_separation.py
 Focused chain smoke:
 
 ```text
-Tools/validation/run_full0to10_product_pr_chain_smoke.py
 Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
 Tools/validation/run_patchkit_smoke.py
 Tools/validation/run_repository_change_proposals_runtime_evidence_smoke.py
@@ -231,9 +227,6 @@ Patchkit handles backup, encoding/newlines, dry-run chain state, idempotency, pa
 | Script | Classification | Notes |
 |---|---|---|
 | `run_unified_real_product_pr.ps1` | canonical-product-entrypoint | Operator-facing task-MD/process-gate to reviewable-PR wrapper; mandatory preflight first, architecture flags internal, runtime controls external. |
-| `run_unified_local_ai_refactor.ps1` | canonical-unified-launcher | Dynamic run-unica launcher used by the product wrapper and direct diagnostics. Dispatches `-LightFull0To10` profile when selected. |
-| `run_unified_light_full0to10_profile.ps1` | evidence-only profile | Dispatches light evidence run and promotion JSON builder. |
-| `run_full0to10_light_evidence_only.ps1` | evidence-only supporting lane | Produces light evidence report; no provider execution, patch apply, Blender runtime or FFmpeg runtime. |
 | `run_local_validation_after_refactor.ps1` | supporting-tool | Local validation wrapper; not first entrypoint. |
 | `run_local_ai_task_via_pipeline.ps1` | launcher-internal/supporting-tool | Official adapter lane. |
 | `run_post_validation_ai_packet.ps1` | launcher-internal/supporting-tool | Advisory packet lane. |
@@ -263,14 +256,11 @@ Patchkit handles backup, encoding/newlines, dry-run chain state, idempotency, pa
 
 For single-mode diagnostics, use the launcher with `-NoStrictRealRunActivation`. Without that flag, a real non-smoke run may promote to TUTTO SU TUTTO and start provider/GPU/NPU lanes.
 
-## LightFull0To10 behavior
 
 The light profile is a report/evidence profile for fast visibility and promotion planning.
 
-Verified behavior from `run_full0to10_light_evidence_only.ps1`:
 
 ```text
-kind=full0to10_light_evidence_only_run
 provider_execution_performed=false
 patch_application_performed=false
 blender_runtime_execution_performed=false
@@ -319,7 +309,6 @@ patch notes quality product when selected
 patch suggestion product/separation reports when selected
 AI peer-exchange report and contract when provider execution is selected
 runtime-heap tool catalog exchange before final telemetry
-Full0To10 final local AI product package when selected
 full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when relevant
@@ -397,7 +386,6 @@ The gate is deterministic. It does not run providers, does not apply patches, do
 
 Full product PR chain gate:
 
-- `Tools/validation/run_full0to10_product_pr_chain_smoke.py` now runs the real product runtime mesh contract before the deterministic product PR chain smoke.
 - A full product chain smoke is not considered valid unless the static mesh contract passes first.
 - This keeps Task MD ingress, heap/exchange activation, GPU1/GPU0/NPU peer lanes, shared memory, SQLite FTS, tool broker, direct reasoning assistance, static deterministic product lane, heap/exchange close and review PR readiness tied to the final PR product.
 

@@ -74,7 +74,7 @@ def response_items(task_packet: dict[str, Any], primary: dict[str, Any], workloa
         findings: list[str] = []
         if "primary_advisory" in task_id and not primary.get("passed"):
             status = "blocked"
-            findings.append("GPU1 primary advisory is not proven; Full0To10 must classify degradation.")
+            findings.append("GPU1 primary advisory is not proven; heap runtime must classify degradation.")
         if workload.get("passed") is not True:
             status = "blocked"
             findings.append("GPU0 OpenVINO peer workload failed or was unavailable.")

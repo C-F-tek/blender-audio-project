@@ -300,7 +300,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "passed": False,
             "errors": [f"blocked_missing_refined_review_input: {missing}"],
             "warnings": [
-                "Evidence sufficiency input is missing; Full0To10 must classify this instead of raising a traceback.",
+                "Evidence sufficiency input is missing; the heap runtime must classify this instead of raising a traceback.",
             ],
             "provider_execution_performed": False,
             "patch_application_performed": False,

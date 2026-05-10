@@ -8,7 +8,7 @@ from typing import Any
 def render_markdown_report(report: dict[str, Any]) -> str:
     """Render a compact Markdown completeness report."""
     lines = [
-        "# Full0To10 evidence bundle completeness report",
+        "# full-run evidence bundle completeness report",
         "",
         f"- Kind: `{report.get('kind')}`",
         f"- Passed: `{report.get('passed')}`",

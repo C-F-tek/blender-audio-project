@@ -211,7 +211,7 @@ def score_product(report: dict[str, Any]) -> tuple[float, list[dict[str, Any]], 
     }
     score = float(sum(weights[key] for key, ok in checks.items() if ok))
     findings = [{"severity": "medium", "reason": f"missing_or_weak:{key}"} for key, ok in checks.items() if not ok]
-    fallback = [{"reason": f"patch_notes_quality_missing:{key}", "recommended_followup": "rerun Full0To10 with patch specs, telemetry, capability manifest and evidence bundle enabled"} for key, ok in checks.items() if not ok]
+    fallback = [{"reason": f"patch_notes_quality_missing:{key}", "recommended_followup": "rerun the heap-runtime workflow with patch specs, telemetry, capability manifest and evidence bundle enabled"} for key, ok in checks.items() if not ok]
     return score, findings, fallback
 
 

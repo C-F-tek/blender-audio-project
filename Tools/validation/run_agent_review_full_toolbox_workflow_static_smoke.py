@@ -41,7 +41,7 @@ REQUIRED_TOKENS = {
     "decision_loop_reuse": "run_agent_review_decision_loop.py",
     "post_validation_packet_reuse": "run_post_validation_ai_packet.ps1",
     "shared_toolbox_bundle_reuse": "build_shared_toolbox_ai_to_ai_bundle",
-    "final_tool_product_reuse": "build_full0to10_final_tool_product.py",
+    "heap_runtime_product_reuse": "build_heap_runtime_product_package.py",
     "patch_notes_quality_product": "build_patch_notes_quality_product.py",
     "task_markdown_input": "TaskMarkdown",
     "github_evidence_bundle_reuse": "build_github_evidence_bundle",

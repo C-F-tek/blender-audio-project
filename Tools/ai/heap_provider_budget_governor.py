@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Provider budget governor for heap-driven IA-Carmine runtime loops.
 
-This module intentionally does not import any legacy Full0To10 package. It
+This module intentionally does not import any deleted legacy pipeline package. It
 extracts the useful semantics from the old provider governor layer into a small,
 provider-free contract that can be written to the heap before any GPU/NPU/LLM
 execution is allowed.

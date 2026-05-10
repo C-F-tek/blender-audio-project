@@ -17,7 +17,6 @@ docs/AI_NPU_RUNTIME_REFERENCE_GUIDE.md
 ## Current doctrine
 
 ```text
-Full0To10 = TUTTO SU TUTTO
 quick/balanced/deep/custom = intensity, not scope
 NPU helper validation != full-run proof
 NPU smoke success != primary advisory promotion
@@ -157,7 +156,6 @@ Focused helper validation remains allowed only for package debugging and should 
 
 Focused helper validation must not execute Blender, provider calls, GPU jobs or FFmpeg.
 
-Focused helper validation is not proof that `Full0To10` passed.
 
 ## Migration policy
 

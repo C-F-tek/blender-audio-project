@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI entrypoint for recursive Full0To10 evidence ZIP bundle creation."""
+"""CLI entrypoint for recursive full-run evidence ZIP bundle creation."""
 from __future__ import annotations
 
 import sys

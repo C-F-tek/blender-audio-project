@@ -54,8 +54,6 @@ def base_manifest(stamp: str) -> dict[str, Any]:
         "unified_run_operational_model": "single_dynamic_heap_exchange_run",
         "unified_run_source_of_knowledge": "heap_exchange",
         "unified_run_final_product": "reviewable_pr_with_concrete_changes",
-        "full0to10_standalone_pipeline": False,
-        "full0to10_legacy_alias_requested": False,
         "phase_status": {
             "final_unified_chain_contract": True,
             "runtime_evidence_correlation": True,
