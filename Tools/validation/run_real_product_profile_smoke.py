@@ -115,6 +115,10 @@ def main() -> int:
         "mandatory_preflight_gate": "run_real_product_preflight_gate.py" in text and "Mandatory real product preflight failed" in text,
         "does_not_expose_skip_preflight": "SkipPreflight" not in text,
         "exposes_preflight_timeout": "[int]$PreflightTimeoutSeconds" in text,
+        "exposes_prerun_artifact_reset": "[switch]$ResetLocalAiArtifactsBeforeRun" in text and "Invoke-LocalAiArtifactReset" in text,
+        "prerun_reset_reuses_unified_reset_mode": '"-Mode", "reset"' in text and "DELETE LOCAL AI ARTIFACTS" in text,
+        "prerun_reset_supports_memory_and_index": "[switch]$ResetLocalAiMemoryBeforeRun" in text and "[switch]$ResetGeneratedIndexBeforeRun" in text and "-IncludeMemoryReset" in text and "-IncludeGeneratedIndexReset" in text,
+        "prerun_reset_requires_main_switch_for_memory_index": "reset_flags_require_artifact_reset" in text,
     }
 
     for name, passed in required_tokens.items():

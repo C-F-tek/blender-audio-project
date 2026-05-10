@@ -76,6 +76,12 @@ param(
     [switch]$AllowDirty,
     [switch]$SkipGitSync,
     [int]$PreflightTimeoutSeconds = 120,
+
+    [switch]$ResetLocalAiArtifactsBeforeRun,
+    [int]$ResetLocalAiArtifactsRetentionDays = 0,
+    [switch]$ResetLocalAiMemoryBeforeRun,
+    [switch]$ResetGeneratedIndexBeforeRun,
+
     [switch]$DryRun
 )
 
@@ -404,11 +410,77 @@ function Add-LauncherSwitch {
     }
 }
 
+function Invoke-LocalAiArtifactReset {
+    param(
+        [string]$Root,
+        [string]$LauncherPath,
+        [int]$RetentionDays,
+        [bool]$IncludeMemory,
+        [bool]$IncludeGeneratedIndex,
+        [string]$PythonPath
+    )
+
+    if ($RetentionDays -lt 0) {
+        Stop-RealProductLauncher -Code "invalid_reset_retention_days" -Message "-ResetLocalAiArtifactsRetentionDays must be zero or greater." -Root $Root -StampValue $Stamp
+    }
+
+    $ResetBefore = if ($RetentionDays -gt 0) {
+        (Get-Date).AddDays(-$RetentionDays).Date
+    }
+    else {
+        (Get-Date).AddSeconds(1)
+    }
+
+    $ResetArgs = @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass",
+        "-File", $LauncherPath,
+        "-RepoRoot", $Root,
+        "-Mode", "reset",
+        "-ResetBeforeDate", $ResetBefore.ToString("s"),
+        "-ApplyReset",
+        "-ConfirmResetText", "DELETE LOCAL AI ARTIFACTS",
+        "-SkipGitSync",
+        "-NoBranch",
+        "-AllowDirty"
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($PythonPath)) {
+        $ResetArgs += @("-PythonExe", $PythonPath)
+    }
+    if ($IncludeMemory) {
+        $ResetArgs += "-IncludeMemoryReset"
+    }
+    if ($IncludeGeneratedIndex) {
+        $ResetArgs += "-IncludeGeneratedIndexReset"
+    }
+
+    Write-Host "=== IA-Carmine pre-run local AI reset ==="
+    Write-Host "Reset before: $($ResetBefore.ToString("s"))"
+    Write-Host "Retention days: $RetentionDays"
+    Write-Host "Include memory reset: $IncludeMemory"
+    Write-Host "Include generated index reset: $IncludeGeneratedIndex"
+    Write-Host "[RUN] powershell.exe $($ResetArgs -join ' ')"
+
+    & powershell.exe @ResetArgs
+    if ($LASTEXITCODE -ne 0) {
+        Stop-RealProductLauncher -Code "local_ai_prerun_reset_failed" -Message "Pre-run local AI reset failed with exit code $LASTEXITCODE." -Root $Root -StampValue $Stamp
+    }
+
+    Write-Host "[OK] Pre-run local AI reset completed."
+    Write-Host ""
+}
+
 if ($CreatePr -and -not $Push) {
     Stop-RealProductLauncher -Code "create_pr_requires_push" -Message "-CreatePr requires -Push because prepare_review_pr.py needs the branch on the remote" -Root $RepoRoot -StampValue $Stamp
 }
 if ($DraftPr -and -not $CreatePr) {
     Stop-RealProductLauncher -Code "draft_pr_requires_create_pr" -Message "-DraftPr requires -CreatePr" -Root $RepoRoot -StampValue $Stamp
+}
+if (($ResetLocalAiMemoryBeforeRun -or $ResetGeneratedIndexBeforeRun) -and -not $ResetLocalAiArtifactsBeforeRun) {
+    Stop-RealProductLauncher -Code "reset_flags_require_artifact_reset" -Message "-ResetLocalAiMemoryBeforeRun and -ResetGeneratedIndexBeforeRun require -ResetLocalAiArtifactsBeforeRun." -Root $RepoRoot -StampValue $Stamp
+}
+if ($ResetLocalAiArtifactsRetentionDays -lt 0) {
+    Stop-RealProductLauncher -Code "invalid_reset_retention_days" -Message "-ResetLocalAiArtifactsRetentionDays must be zero or greater." -Root $RepoRoot -StampValue $Stamp
 }
 
 if ($CreatePr) { $ValidateFinalReviewPrProduct = $true }
@@ -476,6 +548,16 @@ if ([string]::IsNullOrWhiteSpace($ResolvedPythonExe)) {
     else {
         $ResolvedPythonExe = "python"
     }
+}
+
+if ($ResetLocalAiArtifactsBeforeRun) {
+    Invoke-LocalAiArtifactReset `
+        -Root $ResolvedRepoRoot `
+        -LauncherPath $Launcher `
+        -RetentionDays $ResetLocalAiArtifactsRetentionDays `
+        -IncludeMemory ([bool]$ResetLocalAiMemoryBeforeRun) `
+        -IncludeGeneratedIndex ([bool]$ResetGeneratedIndexBeforeRun) `
+        -PythonPath $ResolvedPythonExe
 }
 
 $PreflightOutput = Join-Path $ResolvedRepoRoot "output/validation/real_product_profile_preflight_$Stamp.json"
@@ -588,6 +670,10 @@ Write-Host "Max recommendations: $MaxRecommendations"
 Write-Host "Max patch plans: $MaxPatchPlans"
 Write-Host "Official adapter timeout seconds: $OfficialAdapterTimeoutSeconds"
 Write-Host "Preflight timeout seconds: $PreflightTimeoutSeconds"
+Write-Host "Pre-run local AI reset: $ResetLocalAiArtifactsBeforeRun"
+Write-Host "Pre-run reset retention days: $ResetLocalAiArtifactsRetentionDays"
+Write-Host "Pre-run memory reset: $ResetLocalAiMemoryBeforeRun"
+Write-Host "Pre-run generated index reset: $ResetGeneratedIndexBeforeRun"
 Write-Host "Observer consoles: $OpenObserverConsoles"
 Write-Host "Extended observer consoles: $OpenExtendedObserverConsoles"
 Write-Host "Observer refresh seconds: $ObserverRefreshSeconds"
