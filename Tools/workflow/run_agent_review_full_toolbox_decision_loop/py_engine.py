@@ -22,6 +22,7 @@ COMPILE_TARGETS = [
     "Tools/ai/runtime_tool_telemetry_normalization.py",
     "Tools/ai/build_runtime_tool_capability_manifest.py",
     "Tools/ai/build_semantic_evidence_chunks.py",
+    "Tools/ai/build_runtime_flow_map.py",
     "Tools/ai/build_agent_review_evidence_sufficiency.py",
     "Tools/ai/run_megalithic_repo_review.py",
     "Tools/ai/refine_megalithic_review_signals.py",
