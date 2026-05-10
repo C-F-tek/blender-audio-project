@@ -477,6 +477,29 @@ function Convert-ToRepoRelativePath {
     return $full.Replace("\", "/")
 }
 
+function Test-ResetCandidateIsActiveRunArtifact {
+    param([string]$RelativePath)
+
+    if ([string]::IsNullOrWhiteSpace($RelativePath)) { return $false }
+    $normalized = $RelativePath.Replace("\", "/")
+
+    $activeStamps = @()
+    foreach ($name in @("DataStamp", "Stamp")) {
+        $variable = Get-Variable -Name $name -Scope Script -ErrorAction SilentlyContinue
+        if ($null -ne $variable -and -not [string]::IsNullOrWhiteSpace([string]$variable.Value)) {
+            $activeStamps += [string]$variable.Value
+        }
+    }
+
+    foreach ($activeStamp in @($activeStamps | Select-Object -Unique)) {
+        if ($normalized -like ("output/local_ai_runs/{0}_*" -f $activeStamp)) { return $true }
+        if ($normalized -like ("output/ai_packets/{0}/*" -f $activeStamp)) { return $true }
+    }
+
+    return $false
+}
+
+
 function Get-ResetCandidates {
     param([string]$Root, [datetime]$BeforeDate, [switch]$IncludeMemory, [switch]$IncludeGeneratedIndex)
     $patterns = @(
@@ -501,8 +524,10 @@ function Get-ResetCandidates {
         $files = Get-ChildItem -LiteralPath $rootPath -Recurse -File -Force -ErrorAction SilentlyContinue
         foreach ($file in $files) {
             if ($BeforeDate -ne [datetime]::MinValue -and $file.LastWriteTime -ge $BeforeDate) { continue }
+            $relativePath = Convert-ToRepoRelativePath $Root $file.FullName
+            if (Test-ResetCandidateIsActiveRunArtifact -RelativePath $relativePath) { continue }
             $items += [ordered]@{
-                path = Convert-ToRepoRelativePath $Root $file.FullName
+                path = $relativePath
                 category = $entry.category
                 last_write_time = $file.LastWriteTime.ToString("o")
                 size_bytes = $file.Length
