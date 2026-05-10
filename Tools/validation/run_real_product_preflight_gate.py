@@ -128,7 +128,7 @@ def main() -> int:
         ("review_pr_product_readiness", "Tools/validation/run_review_pr_product_readiness_smoke.py"),
         ("heap_provider_budget_governor", "Tools/validation/run_heap_provider_budget_governor_smoke.py"),
         ("heap_provider_invocation_contract", "Tools/validation/run_heap_provider_invocation_contract_smoke.py"),
-        ("heap_team_runtime_lab", "Tools/validation/run_heap_team_runtime_lab_smoke.py"),
+        ("heap_runtime_completeness_gate", "Tools/validation/run_heap_team_runtime_lab_smoke.py"),
         ("runtime_evidence_correlation", "Tools/validation/run_runtime_evidence_correlation_smoke.py"),
         ("runtime_evidence_correlation_launcher_wiring", "Tools/validation/run_runtime_evidence_correlation_launcher_wiring_smoke.py"),
         ("manifest_runtime_evidence_correlation_schema", "Tools/validation/run_unified_manifest_runtime_evidence_correlation_smoke.py"),

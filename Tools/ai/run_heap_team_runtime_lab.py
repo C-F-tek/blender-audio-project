@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
-"""Deterministic blackboard/teamwork runtime lab for IA-Carmine.
+"""Budget-driven heap/team runtime completeness gate for IA-Carmine.
 
-This is intentionally small and provider-free. It proves the control inversion:
-roles read a shared heap, publish typed events, request one allowlisted broker
-operation, evaluate the broker evidence, and close with an explicit product
-state. It is a lab, not a patch applier.
+This file keeps the historical filename for compatibility with existing
+preflight wiring, but its runtime semantics are a completeness gate, not a
+standalone playground. It proves the control inversion expected by the project:
+
+request -> shared heap -> role needs -> brokered tools -> shared memory/context
+-> validation evidence -> critic claim -> arbiter decision -> product signal.
+
+The loop is budget bounded. It exits with `ready` only after all required
+readiness requirements are met, otherwise it exits with `blocked_with_reason` and
+explicit missing requirements. It never applies patches, never writes source
+files, never runs Blender/FFmpeg and never executes providers.
 """
 from __future__ import annotations
 
@@ -30,14 +37,21 @@ except ImportError:  # pragma: no cover
     from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict, safe_int  # type: ignore
     from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
 
-DEFAULT_OUTPUT = "output/validation/heap_team_runtime_lab_{stamp}.json"
-DEFAULT_MARKDOWN = "output/validation/heap_team_runtime_lab_{stamp}.md"
-DEFAULT_EVENTS = "output/heap_team_runtime_lab/{stamp}/events.jsonl"
-DEFAULT_SNAPSHOT = "output/heap_team_runtime_lab/{stamp}/state.json"
-DEFAULT_HEAP_MD = "output/heap_team_runtime_lab/{stamp}/state.md"
-DEFAULT_BRIDGE_DIR = "output/heap_team_runtime_lab/{stamp}/broker_bridge"
-DEFAULT_BRIDGE_JSON = "output/validation/heap_team_runtime_lab_broker_bridge_{stamp}.json"
-DEFAULT_BRIDGE_MD = "output/validation/heap_team_runtime_lab_broker_bridge_{stamp}.md"
+DEFAULT_OUTPUT = "output/validation/heap_runtime_completeness_gate_{stamp}.json"
+DEFAULT_MARKDOWN = "output/validation/heap_runtime_completeness_gate_{stamp}.md"
+DEFAULT_EVENTS = "output/heap_runtime_completeness_gate/{stamp}/events.jsonl"
+DEFAULT_SNAPSHOT = "output/heap_runtime_completeness_gate/{stamp}/state.json"
+DEFAULT_HEAP_MD = "output/heap_runtime_completeness_gate/{stamp}/state.md"
+DEFAULT_BRIDGE_DIR = "output/heap_runtime_completeness_gate/{stamp}/broker_bridge"
+DEFAULT_BRIDGE_JSON = "output/validation/heap_runtime_completeness_gate_broker_bridge_{stamp}.json"
+DEFAULT_BRIDGE_MD = "output/validation/heap_runtime_completeness_gate_broker_bridge_{stamp}.md"
+
+REQUIREMENT_ORDER = (
+    "tool_catalog",
+    "shared_memory",
+    "shared_context_chunks",
+    "validation_evidence",
+)
 
 
 def now_iso() -> str:
@@ -69,10 +83,11 @@ def make_state(objective: str) -> dict[str, Any]:
         "facts": [],
         "needs": [],
         "tool_requests": [],
+        "shared_evidence": [],
         "claims": [],
         "decisions": [],
         "candidate_operations": [],
-        "product": {"required": True, "status": "not_ready", "reason": "loop has not evaluated broker evidence yet"},
+        "product": {"required": True, "status": "not_ready", "reason": "heap completeness gate has not converged"},
     }
 
 
@@ -84,17 +99,29 @@ def append_unique(bucket: list[dict[str, Any]], item: dict[str, Any], key: str =
     return True
 
 
-class HeapTeamLab:
+def event_payloads_by_type(events: list[dict[str, Any]], event_type: str) -> list[dict[str, Any]]:
+    payloads: list[dict[str, Any]] = []
+    for event in events:
+        if event.get("event_type") != event_type:
+            continue
+        payload = safe_dict(event.get("payload"))
+        if payload:
+            payloads.append(payload)
+    return payloads
+
+
+class HeapCompletenessGate:
     def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
         self.repo_root = Path(args.repo_root).resolve()
         self.stamp = args.stamp or datetime.now().strftime("%Y%m%d-%H%M%S")
+        self.output_dir = Path(args.output_dir).resolve() if args.output_dir else None
         self.heap = ProviderRuntimeHeap.from_args(
             self.repo_root,
             self.stamp,
-            args.events or DEFAULT_EVENTS,
-            args.snapshot or DEFAULT_SNAPSHOT,
-            args.heap_markdown or DEFAULT_HEAP_MD,
+            self.path_arg(args.events, DEFAULT_EVENTS),
+            self.path_arg(args.snapshot, DEFAULT_SNAPSHOT),
+            self.path_arg(args.heap_markdown, DEFAULT_HEAP_MD),
         )
         self.budget_config = ProviderBudgetConfig(
             objective=args.objective,
@@ -114,10 +141,7 @@ class HeapTeamLab:
             allow_provider_generation=args.allow_provider_generation,
             operator_intent=args.operator_intent,
         )
-        self.budget_governor = build_heap_provider_budget_governor(
-            self.budget_config,
-            requested_max_iterations=args.max_iterations,
-        )
+        self.budget_governor = build_heap_provider_budget_governor(self.budget_config, requested_max_iterations=args.max_iterations)
         self.invocation_contract = build_heap_provider_invocation_contract(
             self.budget_governor,
             allow_provider_generation=args.allow_provider_generation,
@@ -137,24 +161,195 @@ class HeapTeamLab:
         self.errors: list[str] = []
         self.warnings: list[str] = []
 
+    def path_arg(self, explicit: str, default: str) -> str:
+        if explicit:
+            return explicit
+        if not self.output_dir:
+            return default
+        mapping = {
+            DEFAULT_EVENTS: "events.jsonl",
+            DEFAULT_SNAPSHOT: "state.json",
+            DEFAULT_HEAP_MD: "state.md",
+            DEFAULT_BRIDGE_DIR: "broker_bridge",
+            DEFAULT_BRIDGE_JSON: "broker_bridge.json",
+            DEFAULT_BRIDGE_MD: "broker_bridge.md",
+            DEFAULT_OUTPUT: "heap_runtime_completeness_gate_report.json",
+            DEFAULT_MARKDOWN: "heap_runtime_completeness_gate_report.md",
+        }
+        filename = mapping.get(default)
+        if not filename:
+            return default
+        return str(self.output_dir / filename)
+
+    def tool_plan(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "requirement": "tool_catalog",
+                "id": "tool-catalog-inventory",
+                "tool": "build_agent_agnostic_tool_inventory",
+                "args": {"root": ["Tools/ai", "Tools/validation", "Tools/workflow"]},
+                "reason": "discover allowlisted project tools before deciding product readiness",
+            },
+            {
+                "requirement": "shared_memory",
+                "id": "shared-memory-inventory",
+                "tool": "build_agent_memory_inventory",
+                "args": {"objective": self.args.objective},
+                "reason": "load read-only shared memory state into heap-visible evidence",
+            },
+            {
+                "requirement": "shared_context_chunks",
+                "id": "shared-request-context",
+                "tool": "build_agent_transient_request_context",
+                "args": {
+                    "objective": self.args.objective,
+                    "memory_note": [
+                        "heap completeness gate must prove tool, memory, context and validation evidence before product signal",
+                        "budget/iterations define convergence and prevent endless repository loops",
+                    ],
+                    "raw_file": ["AGENTS.md", "README.md"],
+                },
+                "reason": "materialize request-scoped shared context/chunks from repository policy documents",
+            },
+            {
+                "requirement": "validation_evidence",
+                "id": "planner-json-contract-validation",
+                "tool": "run_gpu_planner_json_contract_smoke",
+                "args": {},
+                "reason": "prove validation tool evidence is consumed before arbiter decision",
+            },
+        ]
+
     def read_events(self) -> list[dict[str, Any]]:
         self.heap_read_count += 1
         return self.heap.read_events()
 
     def publish(self, source: str, event_type: str, payload: dict[str, Any], *, target: str = "", correlation_id: str = "", round_id: int | None = None) -> None:
-        self.heap.append_event(
-            source=source,
-            target=target or None,
-            event_type=event_type,
-            correlation_id=correlation_id or None,
-            round_id=round_id,
-            payload=payload,
-        )
+        self.heap.append_event(source=source, target=target or None, event_type=event_type, correlation_id=correlation_id or None, round_id=round_id, payload=payload)
         self.heap_write_count += 1
 
+    def broker_results(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return event_payloads_by_type(events, "broker_result")
+
+    def requirement_for_tool(self, tool_name: str) -> str:
+        for item in self.tool_plan():
+            if item["tool"] == tool_name:
+                return str(item["requirement"])
+        return "unknown"
+
+    def completed_requirements(self, events: list[dict[str, Any]]) -> set[str]:
+        completed: set[str] = set()
+        for payload in self.broker_results(events):
+            tool = str(payload.get("tool") or "")
+            if payload.get("blocked"):
+                continue
+            if safe_int(payload.get("returncode"), default=1) != 0:
+                continue
+            errors = payload.get("errors") if isinstance(payload.get("errors"), list) else []
+            if errors:
+                continue
+            requirement = self.requirement_for_tool(tool)
+            if requirement != "unknown":
+                completed.add(requirement)
+        return completed
+
+    def attempted_requirements(self, events: list[dict[str, Any]]) -> set[str]:
+        attempted: set[str] = set()
+        for payload in self.broker_results(events):
+            requirement = self.requirement_for_tool(str(payload.get("tool") or ""))
+            if requirement != "unknown":
+                attempted.add(requirement)
+        return attempted
+
+    def missing_requirements(self, events: list[dict[str, Any]]) -> list[str]:
+        completed = self.completed_requirements(events)
+        return [item for item in REQUIREMENT_ORDER if item not in completed]
+
+    def next_unattempted_plan_item(self, events: list[dict[str, Any]]) -> dict[str, Any] | None:
+        attempted = self.attempted_requirements(events)
+        for item in self.tool_plan():
+            if item["requirement"] not in attempted:
+                return item
+        return None
+
+    def publish_shared_evidence_facts(self, round_id: int, events: list[dict[str, Any]]) -> None:
+        existing = {item.get("requirement") for item in self.state["shared_evidence"]}
+        completed = self.completed_requirements(events)
+        for requirement in REQUIREMENT_ORDER:
+            if requirement not in completed or requirement in existing:
+                continue
+            evidence = {
+                "id": f"shared_evidence_{requirement}",
+                "requirement": requirement,
+                "kind": "shared_runtime_evidence",
+                "source": "broker_result",
+                "status": "available",
+            }
+            append_unique(self.state["shared_evidence"], evidence)
+            self.publish("deterministic", "fact", evidence, target="gpu1", correlation_id=f"{self.stamp}:shared:{requirement}", round_id=round_id)
+
+    def bootstrap(self) -> None:
+        self.publish("orchestrator", "task_state", self.state["task"], target="gpu1", correlation_id=f"{self.stamp}:task", round_id=0)
+        budget_fact = {
+            "id": "provider_budget_governor_loaded",
+            "source": "heap_provider_budget_governor",
+            "kind": "provider_budget",
+            "value": self.budget_governor.get("decision"),
+            "loop_budget": self.budget_governor.get("loop_budget"),
+            "provider_lanes": sorted((self.budget_governor.get("provider_lanes") or {}).keys()),
+        }
+        contract_fact = {
+            "id": "provider_invocation_contract_loaded",
+            "source": "heap_provider_invocation_contract",
+            "kind": "provider_invocation_contract",
+            "value": safe_dict(self.invocation_contract.get("real_run_gate")).get("decision"),
+            "required_events": safe_dict(self.invocation_contract.get("expected_telemetry_contract")).get("events_required", []),
+        }
+        completeness_fact = {
+            "id": "heap_completeness_requirements_loaded",
+            "source": "heap_runtime_completeness_gate",
+            "kind": "readiness_requirements",
+            "value": list(REQUIREMENT_ORDER),
+            "budget_max_iterations": self.max_iterations,
+        }
+        for fact in (budget_fact, contract_fact, completeness_fact):
+            append_unique(self.state["facts"], fact)
+            self.publish("deterministic", "fact", fact, target="gpu1", correlation_id=f"{self.stamp}:fact:{fact['id']}", round_id=0)
+        self.heap.write_snapshot()
+
+    def planner_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
+        if self.heap.pending_broker_requests():
+            return
+        plan_item = self.next_unattempted_plan_item(events)
+        if not plan_item:
+            return
+        request_id = f"{self.stamp}:{plan_item['id']}"
+        need = {
+            "id": f"need_{plan_item['requirement']}",
+            "owner": "planner",
+            "kind": "brokered_runtime_evidence",
+            "target": plan_item["tool"],
+            "requirement": plan_item["requirement"],
+            "reason": plan_item["reason"],
+            "budget_ref": "provider_budget_governor_loaded",
+            "round": round_id,
+        }
+        append_unique(self.state["needs"], need)
+        self.publish("gpu1", "need", need, target="broker", correlation_id=request_id, round_id=round_id)
+        tool_request = {
+            "id": request_id,
+            "tool": plan_item["tool"],
+            "args": plan_item.get("args") or {},
+            "reason": plan_item["reason"],
+            "requirement": plan_item["requirement"],
+        }
+        append_unique(self.state["tool_requests"], tool_request)
+        self.publish("gpu1", "broker_request", tool_request, target="broker", correlation_id=request_id, round_id=round_id)
+        self.tool_request_count += 1
+
     def run_bridge(self) -> dict[str, Any]:
-        bridge_json = resolve_output_path(self.repo_root, (self.args.bridge_output or DEFAULT_BRIDGE_JSON).format(stamp=self.stamp))
-        bridge_md = resolve_output_path(self.repo_root, (self.args.bridge_markdown_output or DEFAULT_BRIDGE_MD).format(stamp=self.stamp))
+        bridge_json = resolve_output_path(self.repo_root, self.path_arg(self.args.bridge_output, DEFAULT_BRIDGE_JSON).format(stamp=self.stamp))
+        bridge_md = resolve_output_path(self.repo_root, self.path_arg(self.args.bridge_markdown_output, DEFAULT_BRIDGE_MD).format(stamp=self.stamp))
         command = [
             sys.executable,
             "Tools/ai/provider_runtime_heap_broker_bridge.py",
@@ -163,7 +358,7 @@ class HeapTeamLab:
             "--events", repo_rel(self.repo_root, self.heap.paths.events),
             "--snapshot", repo_rel(self.repo_root, self.heap.paths.snapshot),
             "--heap-markdown", repo_rel(self.repo_root, self.heap.paths.markdown),
-            "--bridge-dir", self.args.bridge_dir or DEFAULT_BRIDGE_DIR,
+            "--bridge-dir", self.path_arg(self.args.bridge_dir, DEFAULT_BRIDGE_DIR),
             "--timeout-seconds", str(self.args.timeout_seconds),
             "--max-requests", "1",
             "--output", repo_rel(self.repo_root, bridge_json),
@@ -177,86 +372,45 @@ class HeapTeamLab:
         self.tool_execution_count += safe_int(report.get("tool_execution_count"))
         return report
 
-    def planner_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
-        if not any(item.get("id") == "provider_budget_governor_loaded" for item in self.state["facts"]):
-            budget_fact = {
-                "id": "provider_budget_governor_loaded",
-                "source": "heap_provider_budget_governor",
-                "kind": "provider_budget",
-                "value": self.budget_governor.get("decision"),
-                "loop_budget": self.budget_governor.get("loop_budget"),
-                "provider_lanes": sorted((self.budget_governor.get("provider_lanes") or {}).keys()),
-            }
-            if append_unique(self.state["facts"], budget_fact):
-                self.publish("deterministic", "fact", budget_fact, target="gpu1", correlation_id=f"{self.stamp}:fact:budget", round_id=round_id)
-
-        if not any(item.get("id") == "provider_invocation_contract_loaded" for item in self.state["facts"]):
-            contract_fact = {
-                "id": "provider_invocation_contract_loaded",
-                "source": "heap_provider_invocation_contract",
-                "kind": "provider_invocation_contract",
-                "value": self.invocation_contract.get("real_run_gate", {}).get("decision"),
-                "required_events": self.invocation_contract.get("expected_telemetry_contract", {}).get("events_required", []),
-            }
-            if append_unique(self.state["facts"], contract_fact):
-                self.publish("deterministic", "fact", contract_fact, target="gpu1", correlation_id=f"{self.stamp}:fact:invocation_contract", round_id=round_id)
-
-        if not any(item.get("id") == "repo_snapshot_loaded" for item in self.state["facts"]):
-            fact = {
-                "id": "repo_snapshot_loaded",
-                "source": "repo_snapshot",
-                "kind": "repo_state",
-                "value": "repository snapshot readable; heap lab controls loop state through events",
-            }
-            if append_unique(self.state["facts"], fact):
-                self.publish("gpu1", "fact", fact, target="orchestrator", correlation_id=f"{self.stamp}:fact:repo", round_id=round_id)
-        has_request = any(event.get("event_type") == "broker_request" for event in events)
-        if not has_request:
-            request_id = f"{self.stamp}:syntax-contract-smoke"
-            loop_budget = safe_dict(self.budget_governor.get("loop_budget"))
-            need = {
-                "id": "need_allowlisted_tool_evidence",
-                "owner": "planner",
-                "kind": "brokered_validation",
-                "target": self.args.tool,
-                "budget_ref": "provider_budget_governor_loaded",
-                "max_iterations": loop_budget.get("max_iterations"),
-            }
-            append_unique(self.state["needs"], need)
-            self.publish("gpu1", "need", need, target="broker", correlation_id=request_id, round_id=round_id)
-            tool_request = {"id": request_id, "tool": self.args.tool, "args": {}, "reason": "prove heap-driven brokered tool execution before product decision"}
-            append_unique(self.state["tool_requests"], tool_request)
-            self.publish("gpu1", "broker_request", tool_request, target="broker", correlation_id=request_id, round_id=round_id)
-            self.tool_request_count += 1
-
     def critic_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
-        broker_results = [event for event in events if event.get("event_type") == "broker_result"]
-        if not broker_results or self.state["claims"]:
+        broker_results = self.broker_results(events)
+        if not broker_results:
             return
-        payloads = [safe_dict(event.get("payload")) for event in broker_results]
-        failed = [payload for payload in payloads if payload.get("returncode") not in (0, None) or payload.get("errors")]
+        completed = sorted(self.completed_requirements(events))
+        missing = self.missing_requirements(events)
         claim = {
-            "id": "brokered_tool_evidence_reviewed",
+            "id": f"heap_completeness_progress_round_{round_id}",
             "from": "critic",
-            "claim": "broker produced executable evidence through the shared heap" if not failed else "broker evidence contains failures",
-            "confidence": 0.91 if not failed else 0.72,
+            "claim": "heap evidence complete" if not missing else "heap evidence still incomplete",
+            "confidence": 0.95 if not missing else 0.78,
+            "completed_requirements": completed,
+            "missing_requirements": missing,
             "broker_result_count": len(broker_results),
-            "failed_result_count": len(failed),
+            "tool_execution_count": self.tool_execution_count,
         }
         append_unique(self.state["claims"], claim)
-        self.publish("npu", "claim", claim, target="gpu1", correlation_id=f"{self.stamp}:critic:broker", round_id=round_id)
-        self.publish("deterministic", "validation_signal", claim, target="gpu1", correlation_id=f"{self.stamp}:validation:broker", round_id=round_id)
+        self.publish("npu", "claim", claim, target="gpu1", correlation_id=f"{self.stamp}:critic:{round_id}", round_id=round_id)
+        self.publish("deterministic", "validation_signal", claim, target="gpu1", correlation_id=f"{self.stamp}:validation:{round_id}", round_id=round_id)
 
-    def arbiter_step(self, round_id: int) -> None:
-        if not self.state["claims"] or self.state["decisions"]:
+    def arbiter_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
+        if self.state["decisions"]:
             return
-        claim = self.state["claims"][-1]
-        passed = safe_int(claim.get("failed_result_count")) == 0 and self.tool_execution_count > 0
+        missing = self.missing_requirements(events)
+        unattempted = self.next_unattempted_plan_item(events)
+        ready = not missing
+        budget_exhausted = round_id >= self.max_iterations
+        no_more_progress = unattempted is None and bool(missing)
+        if not ready and not budget_exhausted and not no_more_progress:
+            return
+        status = "ready" if ready else "blocked_with_reason"
         decision = {
-            "id": "heap_team_lab_decision",
+            "id": "heap_completeness_gate_decision",
             "from": "arbiter",
-            "decision": "product_ready_no_source_write" if passed else "blocked_with_reason",
-            "evidence_refs": ["heap:provider_budget_governor", "heap:broker_result", "heap:validation_signal", *self.bridge_reports[-1:]],
+            "decision": "product_ready_heap_complete" if ready else "blocked_with_reason",
+            "evidence_refs": ["heap:task_state", "heap:broker_result", "heap:shared_evidence", "heap:validation_signal", *self.bridge_reports[-4:]],
+            "completed_requirements": sorted(self.completed_requirements(events)),
+            "missing_requirements": missing,
+            "budget_exhausted": budget_exhausted,
             "budget_decision": self.budget_governor.get("decision"),
             "invocation_gate_decision": safe_dict(self.invocation_contract.get("real_run_gate")).get("decision"),
             "provider_generation_permit_allowed": self.budget_governor.get("permit_allowed"),
@@ -265,39 +419,49 @@ class HeapTeamLab:
         self.decision_count += 1
         self.publish("deterministic", "decision", decision, target="orchestrator", correlation_id=f"{self.stamp}:decision", round_id=round_id)
         candidate = {
-            "id": "candidate_heap_loop_driver_refactor",
+            "id": "candidate_heap_runtime_product_flow",
             "kind": "design_operation",
-            "path": "Tools/ai/run_heap_team_runtime_lab.py",
-            "status": "ready_for_manual_review" if passed else "blocked",
-            "rationale": "promote heap-read/write/tool/decision/product loop semantics before adding LLM providers",
-            "budget_governor": self.budget_governor.get("decision"),
+            "path": "Tools/workflow/run_unified_real_product_pr.ps1",
+            "status": "ready_for_manual_review" if ready else "blocked",
+            "rationale": "gate proves heap/tool/memory/context/validation convergence before product readiness" if ready else "gate blocked because heap completeness requirements were not all satisfied within budget",
+            "missing_requirements": missing,
         }
         append_unique(self.state["candidate_operations"], candidate)
         self.candidate_operation_count += 1
         self.publish("deterministic", "candidate_operation", candidate, target="orchestrator", correlation_id=f"{self.stamp}:candidate", round_id=round_id)
         self.state["product"] = {
             "required": True,
-            "status": "ready" if passed else "blocked_with_reason",
-            "reason": "heap loop produced provider budget, broker evidence, validation, decision and candidate operation" if passed else "broker evidence failed or no tool execution occurred",
+            "status": status,
+            "reason": "heap loop consumed tool catalog, memory, context/chunks and validation evidence" if ready else "heap loop stopped by budget/failed requirement before readiness",
+            "completed_requirements": sorted(self.completed_requirements(events)),
+            "missing_requirements": missing,
+            "budget_exhausted": budget_exhausted,
             "budget_governor": self.budget_governor.get("decision"),
         }
         self.publish("orchestrator", "product_signal", self.state["product"], correlation_id=f"{self.stamp}:product", round_id=round_id)
 
     def run(self) -> dict[str, Any]:
-        self.publish("orchestrator", "task_state", self.state["task"], target="gpu1", correlation_id=f"{self.stamp}:task", round_id=0)
-        self.heap.write_snapshot()
-        self.publish("deterministic", "decision", self.budget_governor, target="orchestrator", correlation_id=f"{self.stamp}:budget", round_id=0)
+        self.bootstrap()
+        last_round = 0
         for round_id in range(1, self.max_iterations + 1):
+            last_round = round_id
             events = self.read_events()
             self.planner_step(round_id, events)
             if self.heap.pending_broker_requests():
                 self.run_bridge()
             events = self.read_events()
+            self.publish_shared_evidence_facts(round_id, events)
             self.critic_step(round_id, events)
-            self.arbiter_step(round_id)
+            self.arbiter_step(round_id, events)
             if self.state["product"].get("status") in {"ready", "blocked_with_reason"}:
                 break
+        if self.state["product"].get("status") == "not_ready":
+            events = self.read_events()
+            self.arbiter_step(last_round or self.max_iterations, events)
         snapshot = self.heap.write_snapshot()
+        final_events = self.read_events()
+        completed = sorted(self.completed_requirements(final_events))
+        missing = self.missing_requirements(final_events)
         metrics = {
             "heap_read_count": self.heap_read_count,
             "heap_write_count": self.heap_write_count,
@@ -308,6 +472,16 @@ class HeapTeamLab:
             "product_status": self.state["product"].get("status"),
             "budget_decision": self.budget_governor.get("decision"),
             "budget_max_iterations": self.max_iterations,
+            "completed_requirement_count": len(completed),
+            "required_requirement_count": len(REQUIREMENT_ORDER),
+            "completed_requirements": completed,
+            "missing_requirements": missing,
+            "shared_evidence_count": len(self.state["shared_evidence"]),
+            "shared_memory_evidence_count": 1 if "shared_memory" in completed else 0,
+            "shared_context_chunk_evidence_count": 1 if "shared_context_chunks" in completed else 0,
+            "tool_catalog_evidence_count": 1 if "tool_catalog" in completed else 0,
+            "validation_evidence_count": 1 if "validation_evidence" in completed else 0,
+            "budget_exhausted": bool(missing and (last_round >= self.max_iterations)),
             "invocation_contract_ready": bool(self.invocation_contract.get("passed")),
             "invocation_gate_decision": safe_dict(self.invocation_contract.get("real_run_gate")).get("decision"),
         }
@@ -317,10 +491,12 @@ class HeapTeamLab:
                 metric_errors.append(f"{key} must be >0")
         if metrics["product_status"] not in {"ready", "blocked_with_reason"}:
             metric_errors.append("product_status must be ready or blocked_with_reason")
+        if metrics["product_status"] == "ready" and missing:
+            metric_errors.append("ready product_status is forbidden while requirements are missing")
         self.errors.extend(metric_errors)
         return {
             "schema_version": 1,
-            "kind": "heap_team_runtime_lab",
+            "kind": "heap_runtime_completeness_gate",
             "generated_at": now_iso(),
             "repo_root": self.repo_root.as_posix(),
             "stamp": self.stamp,
@@ -335,19 +511,42 @@ class HeapTeamLab:
             "source_writes_performed": False,
             "errors": self.errors,
             "warnings": self.warnings,
-            "guardrails": {"deterministic_roles_only": True, "provider_execution_performed": False, "patch_application_performed": False, "source_writes_performed": False},
+            "guardrails": {"heap_completeness_gate": True, "provider_execution_performed": False, "patch_application_performed": False, "source_writes_performed": False},
         }
 
 
 def render_markdown(report: dict[str, Any]) -> str:
-    lines = ["# Heap Team Runtime Lab", ""]
+    lines = ["# Heap Runtime Completeness Gate", ""]
     lines.append(f"- Passed: `{report.get('passed')}`")
     lines.append(f"- Stamp: `{report.get('stamp')}`")
     metrics = safe_dict(report.get("metrics"))
-    for key in ("heap_read_count", "heap_write_count", "tool_request_count", "tool_execution_count", "decision_count", "candidate_operation_count", "product_status", "budget_decision", "budget_max_iterations", "invocation_contract_ready", "invocation_gate_decision"):
+    for key in (
+        "heap_read_count",
+        "heap_write_count",
+        "tool_request_count",
+        "tool_execution_count",
+        "decision_count",
+        "candidate_operation_count",
+        "product_status",
+        "completed_requirement_count",
+        "required_requirement_count",
+        "missing_requirements",
+        "budget_exhausted",
+        "budget_decision",
+        "budget_max_iterations",
+        "invocation_contract_ready",
+        "invocation_gate_decision",
+    ):
         lines.append(f"- {key}: `{metrics.get(key)}`")
     product = safe_dict(safe_dict(report.get("state")).get("product"))
     lines.extend(["", "## Product", "", f"- Status: `{product.get('status')}`", f"- Reason: {product.get('reason')}"])
+    lines.extend(["", "## Completed requirements", ""])
+    for item in metrics.get("completed_requirements") or []:
+        lines.append(f"- `{item}`")
+    if metrics.get("missing_requirements"):
+        lines.extend(["", "## Missing requirements", ""])
+        for item in metrics.get("missing_requirements") or []:
+            lines.append(f"- `{item}`")
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {item}" for item in report.get("errors", []))
@@ -358,8 +557,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--stamp", default="")
-    parser.add_argument("--objective", default="prove heap-driven multi-role teamwork loop before provider/LLM integration")
-    parser.add_argument("--tool", default="run_gpu_planner_json_contract_smoke")
+    parser.add_argument("--objective", default="prove complete heap-driven teamwork loop over repository context, shared memory and brokered tools")
+    parser.add_argument("--tool", default="run_gpu_planner_json_contract_smoke", help="Compatibility flag; complete gate uses its internal readiness tool plan.")
     parser.add_argument("--max-iterations", type=int, default=4)
     parser.add_argument("--budget-minutes", type=int, default=5)
     parser.add_argument("--max-rounds", type=int, default=4)
@@ -376,7 +575,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--npu-max-new-tokens", type=int, default=384)
     parser.add_argument("--allow-provider-generation", action="store_true")
     parser.add_argument("--operator-intent", action="store_true")
-    parser.add_argument("--timeout-seconds", type=int, default=180)
+    parser.add_argument("--timeout-seconds", type=int, default=240)
+    parser.add_argument("--output-dir", default="")
     parser.add_argument("--events", default="")
     parser.add_argument("--snapshot", default="")
     parser.add_argument("--heap-markdown", default="")
@@ -390,10 +590,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    lab = HeapTeamLab(args)
-    report = lab.run()
-    output = resolve_output_path(lab.repo_root, args.output.format(stamp=lab.stamp))
-    markdown = resolve_output_path(lab.repo_root, args.markdown_output.format(stamp=lab.stamp))
+    gate = HeapCompletenessGate(args)
+    report = gate.run()
+    output = resolve_output_path(gate.repo_root, gate.path_arg(args.output, DEFAULT_OUTPUT).format(stamp=gate.stamp))
+    markdown = resolve_output_path(gate.repo_root, gate.path_arg(args.markdown_output, DEFAULT_MARKDOWN).format(stamp=gate.stamp))
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown)
     print(json.dumps(report, indent=2, ensure_ascii=False))

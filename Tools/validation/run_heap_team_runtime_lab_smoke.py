@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test the deterministic heap/team runtime lab."""
+"""Smoke-test the budget-driven heap runtime completeness gate."""
 from __future__ import annotations
 
 import argparse
@@ -28,31 +28,33 @@ def read_json(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
-def run_lab(repo_root: Path, stamp: str, timeout_seconds: int) -> tuple[subprocess.CompletedProcess[str], dict[str, Any]]:
-    output = repo_root / "output" / "validation" / f"heap_team_runtime_lab_smoke_inner_{stamp}.json"
-    markdown = repo_root / "output" / "validation" / f"heap_team_runtime_lab_smoke_inner_{stamp}.md"
+def run_gate(repo_root: Path, label: str, stamp: str, timeout_seconds: int, max_iterations: int) -> tuple[subprocess.CompletedProcess[str], dict[str, Any], Path]:
+    run_dir = repo_root / "output" / "validation" / f"heap_runtime_completeness_gate_{label}_{stamp}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    output = run_dir / "heap_runtime_completeness_gate_report.json"
     env = os.environ.copy()
     env["PYTHONPATH"] = str(repo_root) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
     command = [
         sys.executable,
         "Tools/ai/run_heap_team_runtime_lab.py",
         "--repo-root", ".",
-        "--stamp", stamp,
-        "--max-iterations", "4",
+        "--stamp", f"{label}_{stamp}",
+        "--output-dir", run_dir.as_posix(),
+        "--max-iterations", str(max_iterations),
         "--budget-minutes", "5",
-        "--max-rounds", "3",
+        "--max-rounds", str(max_iterations),
         "--timeout-seconds", str(timeout_seconds),
-        "--output", output.relative_to(repo_root).as_posix(),
-        "--markdown-output", markdown.relative_to(repo_root).as_posix(),
     ]
-    completed = subprocess.run(command, cwd=repo_root, env=env, capture_output=True, text=True, check=False, timeout=timeout_seconds + 60)
-    return completed, read_json(output)
+    completed = subprocess.run(command, cwd=repo_root, env=env, capture_output=True, text=True, check=False, timeout=timeout_seconds * max(2, max_iterations))
+    return completed, read_json(output), run_dir
 
 
-def validate_lab(report: dict[str, Any]) -> list[str]:
+def validate_complete(report: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     if report.get("passed") is not True:
-        errors.append("inner heap team lab did not pass")
+        errors.append("complete heap runtime gate did not pass")
+    if report.get("kind") != "heap_runtime_completeness_gate":
+        errors.append("report kind must be heap_runtime_completeness_gate")
     metrics = report.get("metrics") if isinstance(report.get("metrics"), dict) else {}
     required_positive = (
         "heap_read_count",
@@ -61,20 +63,25 @@ def validate_lab(report: dict[str, Any]) -> list[str]:
         "tool_execution_count",
         "decision_count",
         "candidate_operation_count",
+        "shared_evidence_count",
+        "shared_memory_evidence_count",
+        "shared_context_chunk_evidence_count",
+        "tool_catalog_evidence_count",
+        "validation_evidence_count",
     )
     for key in required_positive:
         if int(metrics.get(key) or 0) <= 0:
             errors.append(f"metric {key} must be >0")
-    if metrics.get("product_status") not in {"ready", "blocked_with_reason"}:
-        errors.append("product_status must be ready or blocked_with_reason")
+    if metrics.get("product_status") != "ready":
+        errors.append("complete run product_status must be ready")
+    if metrics.get("missing_requirements"):
+        errors.append("complete run must have no missing requirements")
+    if int(metrics.get("completed_requirement_count") or 0) != int(metrics.get("required_requirement_count") or -1):
+        errors.append("complete run must satisfy all required requirements")
     if metrics.get("budget_decision") != "deny_provider_generation":
         errors.append("budget_decision must deny provider generation by default")
-    if int(metrics.get("budget_max_iterations") or 0) <= 0:
-        errors.append("budget_max_iterations must be >0")
     state = report.get("state") if isinstance(report.get("state"), dict) else {}
-    if not isinstance(state.get("budget_governor"), dict) or not state.get("budget_governor"):
-        errors.append("state.budget_governor must be present")
-    for key in ("facts", "needs", "tool_requests", "claims", "decisions", "candidate_operations"):
+    for key in ("facts", "needs", "tool_requests", "shared_evidence", "claims", "decisions", "candidate_operations"):
         value = state.get(key)
         if not isinstance(value, list) or not value:
             errors.append(f"state.{key} must contain at least one item")
@@ -85,13 +92,31 @@ def validate_lab(report: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_budget_block(report: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    if report.get("passed") is not True:
+        errors.append("budget-block heap runtime gate should pass as controlled blocked_with_reason")
+    metrics = report.get("metrics") if isinstance(report.get("metrics"), dict) else {}
+    if metrics.get("product_status") != "blocked_with_reason":
+        errors.append("budget-block product_status must be blocked_with_reason")
+    if not metrics.get("missing_requirements"):
+        errors.append("budget-block run must expose missing_requirements")
+    if metrics.get("budget_exhausted") is not True:
+        errors.append("budget-block run must mark budget_exhausted=true")
+    if int(metrics.get("tool_execution_count") or 0) <= 0:
+        errors.append("budget-block run must still execute at least one brokered tool")
+    return errors
+
+
 def render_markdown(report: dict[str, Any]) -> str:
-    lines = ["# Heap Team Runtime Lab Smoke", "", f"- Passed: `{report.get('passed')}`"]
-    inner = report.get("inner_report") if isinstance(report.get("inner_report"), dict) else {}
-    metrics = inner.get("metrics") if isinstance(inner.get("metrics"), dict) else {}
-    lines.extend(["", "## Metrics", ""])
-    for key, value in metrics.items():
-        lines.append(f"- {key}: `{value}`")
+    lines = ["# Heap Runtime Completeness Gate Smoke", "", f"- Passed: `{report.get('passed')}`"]
+    for run in report.get("runs") or []:
+        lines.extend(["", f"## {run.get('label')}", ""])
+        lines.append(f"- Passed: `{run.get('passed')}`")
+        lines.append(f"- Run dir: `{run.get('run_dir')}`")
+        metrics = run.get("metrics") if isinstance(run.get("metrics"), dict) else {}
+        for key in ("product_status", "completed_requirement_count", "required_requirement_count", "missing_requirements", "budget_exhausted", "tool_execution_count"):
+            lines.append(f"- {key}: `{metrics.get(key)}`")
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {error}" for error in report["errors"])
@@ -103,25 +128,51 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/heap_team_runtime_lab_smoke.json")
     parser.add_argument("--markdown-output", default="output/validation/heap_team_runtime_lab_smoke.md")
-    parser.add_argument("--timeout-seconds", type=int, default=180)
+    parser.add_argument("--timeout-seconds", type=int, default=240)
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    stamp = f"heap_team_smoke_{now_stamp()}"
-    completed, inner = run_lab(repo_root, stamp, args.timeout_seconds)
-    errors = []
-    if completed.returncode != 0:
-        errors.append(f"heap team lab returned {completed.returncode}: {(completed.stderr or completed.stdout)[-1500:]}")
-    errors.extend(validate_lab(inner))
+    stamp = now_stamp()
+    runs: list[dict[str, Any]] = []
+    errors: list[str] = []
+
+    complete_proc, complete_report, complete_dir = run_gate(repo_root, "complete", stamp, args.timeout_seconds, max_iterations=4)
+    complete_errors = []
+    if complete_proc.returncode != 0:
+        complete_errors.append(f"complete gate returned {complete_proc.returncode}: {(complete_proc.stderr or complete_proc.stdout)[-1500:]}")
+    complete_errors.extend(validate_complete(complete_report))
+    errors.extend(f"complete: {item}" for item in complete_errors)
+    runs.append({
+        "label": "complete",
+        "passed": not complete_errors,
+        "run_dir": complete_dir.relative_to(repo_root).as_posix(),
+        "returncode": complete_proc.returncode,
+        "metrics": complete_report.get("metrics", {}),
+        "errors": complete_errors,
+    })
+
+    blocked_proc, blocked_report, blocked_dir = run_gate(repo_root, "budget_block", stamp, args.timeout_seconds, max_iterations=2)
+    blocked_errors = []
+    if blocked_proc.returncode != 0:
+        blocked_errors.append(f"budget_block gate returned {blocked_proc.returncode}: {(blocked_proc.stderr or blocked_proc.stdout)[-1500:]}")
+    blocked_errors.extend(validate_budget_block(blocked_report))
+    errors.extend(f"budget_block: {item}" for item in blocked_errors)
+    runs.append({
+        "label": "budget_block",
+        "passed": not blocked_errors,
+        "run_dir": blocked_dir.relative_to(repo_root).as_posix(),
+        "returncode": blocked_proc.returncode,
+        "metrics": blocked_report.get("metrics", {}),
+        "errors": blocked_errors,
+    })
 
     report = {
         "schema_version": 1,
-        "kind": "heap_team_runtime_lab_smoke",
+        "kind": "heap_runtime_completeness_gate_smoke",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": repo_root.as_posix(),
         "passed": not errors,
-        "inner_returncode": completed.returncode,
-        "inner_report": inner,
+        "runs": runs,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -130,8 +181,9 @@ def main() -> int:
     }
     output = resolve_output_path(repo_root, args.output)
     markdown = resolve_output_path(repo_root, args.markdown_output)
-    print(write_json_report(report, output), end="")
+    write_json_report(report, output)
     write_text_report(render_markdown(report), markdown)
+    print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2
 
 
