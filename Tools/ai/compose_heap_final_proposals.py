@@ -150,11 +150,14 @@ def flatten_quality_blockers(report: dict[str, Any], proposals: list[dict[str, A
     return list(dict.fromkeys(blockers))
 
 
-def proposal_text_for_review(proposal: dict[str, Any], max_chars: int) -> str:
+def proposal_text_for_review(proposal: dict[str, Any], max_chars: int | None) -> str:
     md_path = proposal.get("markdown_path")
     if isinstance(md_path, Path) and md_path.exists():
         return read_text(md_path, limit=max_chars)
-    return str(proposal.get("response_text") or "")[:max_chars]
+    text = str(proposal.get("response_text") or "")
+    if max_chars is not None and len(text) > max_chars:
+        return text[:max_chars] + "\n...[truncated]\n"
+    return text
 
 
 def render_markdown(
@@ -256,19 +259,24 @@ def write_documents_package(
     markdown: str,
     json_data: dict[str, Any],
     proposals: list[dict[str, Any]],
-) -> list[str]:
+) -> dict[str, Any]:
     doc_dir.mkdir(parents=True, exist_ok=True)
     written: list[str] = []
+    proposal_txt_outputs: list[str] = []
+    proposal_chunk_outputs: list[str] = []
     md_path = doc_dir / f"aicarmine_heap_final_proposals_{stamp}.md"
     txt_path = doc_dir / f"aicarmine_heap_final_proposals_{stamp}.txt"
     json_path = doc_dir / f"aicarmine_heap_final_proposals_{stamp}.json"
+    manifest_path = doc_dir / f"aicarmine_heap_final_proposals_{stamp}_DOWNLOADS.txt"
     md_path.write_text(markdown, encoding="utf-8")
     txt_path.write_text(markdown, encoding="utf-8")
     json_path.write_text(json.dumps(json_data, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
     written.extend([str(md_path), str(txt_path), str(json_path)])
 
     chunk_dir = doc_dir / "proposal_chunks"
+    chunk_txt_dir = doc_dir / "proposal_chunks_txt"
     chunk_dir.mkdir(parents=True, exist_ok=True)
+    chunk_txt_dir.mkdir(parents=True, exist_ok=True)
     for proposal in proposals:
         md = proposal.get("markdown_path")
         js = proposal.get("json_path")
@@ -276,11 +284,43 @@ def write_documents_package(
             target = chunk_dir / md.name
             shutil.copyfile(md, target)
             written.append(str(target))
+            proposal_chunk_outputs.append(str(target))
         if isinstance(js, Path) and js.exists():
             target = chunk_dir / js.name
             shutil.copyfile(js, target)
             written.append(str(target))
-    return written
+            proposal_chunk_outputs.append(str(target))
+        txt_name = f"{Path(str(proposal.get('name') or 'proposal')).stem}.txt"
+        txt_target = chunk_txt_dir / txt_name
+        txt_target.write_text(proposal_text_for_review(proposal, None), encoding="utf-8")
+        written.append(str(txt_target))
+        proposal_txt_outputs.append(str(txt_target))
+
+    manifest_lines = [
+        "IA-Carmine heap final proposal download package",
+        "",
+        f"Primary TXT: {txt_path}",
+        f"Primary Markdown: {md_path}",
+        f"Primary JSON: {json_path}",
+        "",
+        "Proposal TXT chunks:",
+    ]
+    manifest_lines.extend(f"- {path}" for path in proposal_txt_outputs)
+    manifest_lines.extend(["", "All outputs:"])
+    manifest_lines.extend(f"- {path}" for path in written)
+    manifest_path.write_text("\n".join(manifest_lines) + "\n", encoding="utf-8")
+    written.append(str(manifest_path))
+
+    return {
+        "documents_dir": str(doc_dir),
+        "documents_outputs": written,
+        "primary_markdown": str(md_path),
+        "primary_txt": str(txt_path),
+        "primary_json": str(json_path),
+        "download_manifest_txt": str(manifest_path),
+        "proposal_chunk_outputs": proposal_chunk_outputs,
+        "proposal_txt_outputs": proposal_txt_outputs,
+    }
 
 
 def parse_args() -> argparse.Namespace:
@@ -367,8 +407,7 @@ def main() -> int:
 
     if args.write_documents:
         doc_dir = documents_root(args.documents_root, stamp)
-        result["documents_dir"] = str(doc_dir)
-        result["documents_outputs"] = write_documents_package(
+        document_package = write_documents_package(
             repo_root=repo_root,
             stamp=stamp,
             doc_dir=doc_dir,
@@ -376,6 +415,8 @@ def main() -> int:
             json_data=result,
             proposals=proposals,
         )
+        result.update(document_package)
+        result["download_hint"] = f"Apri o copia il file TXT principale: {document_package['primary_txt']}"
 
     output.write_text(json.dumps(result, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
