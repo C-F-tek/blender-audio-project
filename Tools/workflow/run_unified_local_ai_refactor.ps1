@@ -1390,7 +1390,7 @@ $WorkloadQualityRoutingOk = $false
 
 $CanonicalOllamaWorkloadReport = $OllamaWorkloadReport
 $CanonicalNpuWorkloadReport = $NpuWorkloadReport
-$LocalProviderProbeReport = "output/validation/local_provider_probe.json"
+$LocalProviderProbeReport = Join-Path $OutputDir ("validation/local_provider_probe_{0}.json" -f $DataStamp)
 
 if (($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality) -or $RunOllamaProbe -or $RunNpuProbe) -and -not $NoWorkloadQuality) {
     $NeedProviderWorkloadInputs = (-not (Test-Path -LiteralPath $CanonicalOllamaWorkloadReport -PathType Leaf)) -or (-not (Test-Path -LiteralPath $CanonicalNpuWorkloadReport -PathType Leaf))
@@ -1443,6 +1443,31 @@ if (($UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow) -and $RunOll
     throw "Provider/Ollama advisory path requested but no canonical Ollama workload report was produced. No fallback to metadata-only proposals is allowed."
 }
 # IA-CARMINE-OLLAMA-WORKLOAD-NO-FALLBACK-END
+
+# IA-CARMINE-REAL-PRODUCT-LIVE-PROVIDER-GATE-BEGIN
+if (($UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow) -and ($RunOllamaProbe -or $RunNpuProbe)) {
+    $LiveProviderGateJson = Join-Path $OutputDir ("validation/real_product_live_provider_gate_{0}.json" -f $DataStamp)
+    $LiveProviderGateMd = Join-Path $OutputDir ("validation/real_product_live_provider_gate_{0}.md" -f $DataStamp)
+    $LiveProviderGateArgs = @(
+        "Tools/validation/check_real_product_live_provider_gate.py",
+        "--repo-root", ".",
+        "--provider-probe", $LocalProviderProbeReport,
+        "--output", $LiveProviderGateJson,
+        "--markdown-output", $LiveProviderGateMd
+    )
+    if ($RunOllamaProbe) { $LiveProviderGateArgs += "--require-ollama" }
+    if ($RunNpuProbe) { $LiveProviderGateArgs += "--require-npu" }
+    if (-not [string]::IsNullOrWhiteSpace($Model)) { $LiveProviderGateArgs += @("--model", $Model) }
+
+    $PhaseStatus.real_product_live_provider_gate = Invoke-Checked "Validate real-product live provider gate" {
+        & $ResolvedPythonExe @LiveProviderGateArgs
+    }
+    $ReportFiles += $LiveProviderGateJson
+    $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $LiveProviderGateMd
+    $PhaseReports.real_product_live_provider_gate = $LiveProviderGateJson
+    $PhaseReports.real_product_live_provider_gate_markdown = $LiveProviderGateMd
+}
+# IA-CARMINE-REAL-PRODUCT-LIVE-PROVIDER-GATE-END
 
 if ($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality)) {
     Assert-FileExists ".\Tools\validation\check_ai_workload_report_quality.py"

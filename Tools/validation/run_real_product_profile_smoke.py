@@ -25,6 +25,7 @@ def main() -> int:
     readme = repo / "Tools/workflow/README.md"
     intrinsic_contract = repo / "Tools/validation/check_real_product_intrinsic_capability_contract.py"
     runtime_mesh_contract = repo / "Tools/validation/check_real_product_runtime_mesh_contract.py"
+    live_provider_gate = repo / "Tools/validation/check_real_product_live_provider_gate.py"
     errors: list[str] = []
 
     text = wrapper.read_text(encoding="utf-8-sig", errors="replace") if wrapper.exists() else ""
@@ -34,6 +35,7 @@ def main() -> int:
     readme_text = readme.read_text(encoding="utf-8-sig", errors="replace") if readme.exists() else ""
     intrinsic_contract_text = intrinsic_contract.read_text(encoding="utf-8-sig", errors="replace") if intrinsic_contract.exists() else ""
     runtime_mesh_contract_text = runtime_mesh_contract.read_text(encoding="utf-8-sig", errors="replace") if runtime_mesh_contract.exists() else ""
+    live_provider_gate_text = live_provider_gate.read_text(encoding="utf-8-sig", errors="replace") if live_provider_gate.exists() else ""
 
     task_file_contract = (
         ("[Parameter(Mandatory = $true)]" in text and "$TaskFile" in text)
@@ -116,6 +118,11 @@ def main() -> int:
         "launcher_has_final_chain_contract": "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-FINAL-GATE-BEGIN" in launcher_text,
                 "provider_probe_no_fallback_gate": "IA-CARMINE-PROVIDER-PROBE-NO-FALLBACK-BEGIN" in launcher_text and "ProviderProbeSoftFail" in launcher_text,
         "ollama_workload_no_fallback_gate": "IA-CARMINE-OLLAMA-WORKLOAD-NO-FALLBACK-BEGIN" in launcher_text,
+        "live_provider_gate_exists": live_provider_gate.exists(),
+        "live_provider_gate_requires_execution": "provider probe did not perform live provider execution" in live_provider_gate_text,
+        "live_provider_gate_requires_ollama_lane": "--require-ollama" in live_provider_gate_text and "required provider lane did not pass" in live_provider_gate_text,
+        "launcher_uses_stamped_provider_probe": "local_provider_probe_{0}.json" in launcher_text,
+        "launcher_invokes_live_provider_gate": "IA-CARMINE-REAL-PRODUCT-LIVE-PROVIDER-GATE-BEGIN" in launcher_text and "check_real_product_live_provider_gate.py" in launcher_text,
         "adapter_requires_concrete_patch_specs": "IA-CARMINE-STRICT-REAL-PRODUCT-PATCH-SPECS-BEGIN" in adapter_validation_text and "--require-concrete" in adapter_validation_text,
         "adapter_requires_provider_backed_specs": "--require-provider-execution" in adapter_validation_text,
         "patch_spec_builder_has_strict_cli": "--require-concrete" in (repo / "Tools/ai/build_patch_specs_from_proposals.py").read_text(encoding="utf-8-sig", errors="replace") and "--require-provider-execution" in (repo / "Tools/ai/build_patch_specs_from_proposals.py").read_text(encoding="utf-8-sig", errors="replace"),
