@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime
@@ -91,6 +92,14 @@ def read_json(path: Path) -> dict[str, Any]:
     except Exception:  # noqa: BLE001 - report summarizer must not crash on partial artifacts.
         return {}
     return data if isinstance(data, dict) else {}
+
+
+def provider_python_exe(repo_root: Path) -> str:
+    configured = os.environ.get("IA_CARMINE_PYTHON", "").strip()
+    candidate = Path(configured) if configured else repo_root / ".venv" / "Scripts" / "python.exe"
+    if not candidate.exists():
+        raise RuntimeError(f"provider_python_environment_missing_dependency: Python not found: {candidate}")
+    return str(candidate)
 
 
 def make_state(objective: str) -> dict[str, Any]:
@@ -409,7 +418,7 @@ class HeapRuntimeCompletenessGate:
         bridge_json = resolve_output_path(self.repo_root, self.path_arg(self.args.bridge_output, DEFAULT_BRIDGE_JSON).format(stamp=self.stamp))
         bridge_md = resolve_output_path(self.repo_root, self.path_arg(self.args.bridge_markdown_output, DEFAULT_BRIDGE_MD).format(stamp=self.stamp))
         command = [
-            sys.executable,
+            provider_python_exe(self.repo_root),
             "Tools/ai/provider_runtime_heap_broker_bridge.py",
             "--repo-root", ".",
             "--stamp", self.stamp,
@@ -524,7 +533,7 @@ class HeapRuntimeCompletenessGate:
                 "role": "primary_planner",
                 "output": gpu1_json,
                 "command": [
-                    sys.executable,
+                    provider_python_exe(self.repo_root),
                     "Tools/ai/run_local_provider_probe.py",
                     "--repo-root", ".",
                     "--run-ollama",
@@ -539,7 +548,7 @@ class HeapRuntimeCompletenessGate:
                 "role": "diagnostic_peer_workload",
                 "output": gpu0_json,
                 "command": [
-                    sys.executable,
+                    provider_python_exe(self.repo_root),
                     "Tools/ai/build_openvino_gpu0_workload_report.py",
                     "--repo-root", ".",
                     "--iterations", str(self.args.gpu0_iterations),
@@ -555,7 +564,7 @@ class HeapRuntimeCompletenessGate:
                 "role": "static_micro_task_auditor",
                 "output": npu_json,
                 "command": [
-                    sys.executable,
+                    provider_python_exe(self.repo_root),
                     "Tools/ai/build_npu_micro_task_companion_report.py",
                     "--repo-root", ".",
                     "--task-file", self.args.task_file,
