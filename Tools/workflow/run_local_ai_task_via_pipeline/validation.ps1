@@ -48,6 +48,12 @@ function Invoke-LocalAiTaskPipelineValidation {
         throw "Resolved repository-owned PythonExe does not exist: $PythonExe"
     }
 
+    $StrictRealProductPatchSpecs = (
+        $Basename -match "official_adapter|real-product|heap-exchange" -or
+        $ProposalBasename -match "official_adapter|real-product|heap-exchange" -or
+        $TaskRel -match "heap-exchange-process-gate|real-product|single_dynamic_heap_exchange_run"
+    )
+
     if ($RunMultistepProviderWorkflow) {
         $MultistepArgs = @(
             "-NoProfile", "-ExecutionPolicy", "Bypass",
@@ -84,6 +90,7 @@ function Invoke-LocalAiTaskPipelineValidation {
         "-MaxContextChars", "$MaxContextChars"
     )
     if ($UsePrimaryAdvisoryProvider) { $PacketArgs += "-UsePrimaryAdvisoryProvider" }
+    if ($StrictRealProductPatchSpecs) { $PacketArgs += "-RequireConcreteProposals" }
     if ($Model -ne "") { $PacketArgs += @("-Model", $Model) }
 
     Invoke-CommandChecked -Label "Build advisory packet and repository proposals" -Block { powershell.exe @PacketArgs }
@@ -108,11 +115,6 @@ function Invoke-LocalAiTaskPipelineValidation {
         $PatchManifest = "output/patch_specs/${PatchBasename}_manifest.json"
         $PatchManifestMd = "output/patch_specs/${PatchBasename}_manifest.md"
         # IA-CARMINE-STRICT-REAL-PRODUCT-PATCH-SPECS-BEGIN
-        $StrictRealProductPatchSpecs = (
-            $Basename -match "official_adapter|real-product|heap-exchange" -or
-            $ProposalBasename -match "official_adapter|real-product|heap-exchange" -or
-            $TaskRel -match "heap-exchange-process-gate|real-product|single_dynamic_heap_exchange_run"
-        )
         $PatchSpecArgs = @(
             ".\Tools\ai\build_patch_specs_from_proposals.py",
             "--repo-root", ".",

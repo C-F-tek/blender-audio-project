@@ -288,6 +288,17 @@ def ai_workload_quality_has_unusable_output(by_kind: dict[str, dict[str, Any]]) 
     return isinstance(report, dict) and bool(report.get("unusable_lanes"))
 
 
+def proposal_concrete_operation_count(item: dict[str, Any]) -> int:
+    operations = item.get("concrete_operations")
+    if not isinstance(operations, list):
+        return 0
+    return sum(1 for operation in operations if isinstance(operation, dict))
+
+
+def proposals_concrete_operation_count(proposals: list[dict[str, Any]]) -> int:
+    return sum(proposal_concrete_operation_count(item) for item in proposals)
+
+
 def proposal(
     *,
     proposal_id: str,
@@ -629,7 +640,12 @@ def default_npu_observability_proposal() -> dict[str, Any]:
     )
 
 
-def build_proposals(reports: list[dict[str, Any]], *, profile: str) -> list[dict[str, Any]]:
+def build_proposals(
+    reports: list[dict[str, Any]],
+    *,
+    profile: str,
+    require_concrete: bool = False,
+) -> list[dict[str, Any]]:
     by_kind = report_by_kind(reports)
     by_kind_multi = reports_by_kind(reports)
     proposals: list[dict[str, Any]] = []
@@ -738,6 +754,9 @@ def build_proposals(reports: list[dict[str, Any]], *, profile: str) -> list[dict
             )
         )
 
+    if not proposals and require_concrete:
+        return proposals
+
     if not proposals:
         if ai_workload_quality_has_unusable_output(by_kind):
             proposals.append(ai_workload_quality_remediation_proposal(by_kind))
@@ -821,6 +840,11 @@ def main() -> int:
     parser.add_argument("--runtime-report-stamp", default="")
     parser.add_argument("--runtime-report-max-files", type=int, default=40)
     parser.add_argument("--no-discover-runtime-reports", action="store_true")
+    parser.add_argument(
+        "--require-concrete-proposals",
+        action="store_true",
+        help="Fail instead of emitting fallback/backlog-only proposals when no concrete_operations are produced.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -832,7 +856,19 @@ def main() -> int:
 
     report_paths = list(DEFAULT_REPORTS) + explicit_report_paths + runtime_report_paths
     loaded_reports = [read_json_if_exists(repo_root / path) for path in dict.fromkeys(report_paths)]
-    proposals = build_proposals(loaded_reports, profile=args.profile)
+    proposals = build_proposals(
+        loaded_reports,
+        profile=args.profile,
+        require_concrete=bool(args.require_concrete_proposals),
+    )
+    concrete_operation_count = proposals_concrete_operation_count(proposals)
+    errors: list[str] = []
+    warnings: list[str] = []
+    if args.require_concrete_proposals and concrete_operation_count <= 0:
+        errors.append(
+            "concrete repository proposals are required for this real-product run, "
+            "but no concrete_operations were produced"
+        )
 
     output_dir = repo_root / args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -845,12 +881,15 @@ def main() -> int:
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": str(repo_root),
         "profile": args.profile,
-        "passed": True,
-        "errors": [],
-        "warnings": [],
+        "passed": not errors,
+        "errors": errors,
+        "warnings": warnings,
         "apply_mode": "manual_review_only",
         "runtime_report_stamp": stamp,
         "runtime_report_paths": runtime_report_paths,
+        "concrete_proposals_required": bool(args.require_concrete_proposals),
+        "metadata_only_fallback_enabled": not bool(args.require_concrete_proposals),
+        "concrete_operation_count": concrete_operation_count,
         "suggestion_contract": {
             "schema_version": 1,
             "supported_output_kinds": list(SUPPORTED_SUGGESTION_OUTPUT_KINDS),
@@ -865,8 +904,15 @@ def main() -> int:
 
     output_json.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     output_md.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({"passed": True, "json": str(output_json), "markdown": str(output_md), "proposal_count": len(proposals)}, indent=2))
-    return 0
+    print(json.dumps({
+        "passed": not errors,
+        "json": str(output_json),
+        "markdown": str(output_md),
+        "proposal_count": len(proposals),
+        "concrete_operation_count": concrete_operation_count,
+        "errors": errors,
+    }, indent=2))
+    return 0 if not errors else 2
 
 
 if __name__ == "__main__":

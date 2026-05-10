@@ -9,6 +9,7 @@ param(
     [string[]]$ReportFile = @(),
     [switch]$UseOllama,
     [switch]$UsePrimaryAdvisoryProvider,
+    [switch]$RequireConcreteProposals,
     [string]$Model = "",
     [int]$MaxContextChars = 6000
 )
@@ -152,6 +153,10 @@ if (Test-Path $NpuDecodeSmokeReport) {
     $ProposalArgs += @("--report-file", $NpuDecodeSmokeReport)
 }
 
+if ($RequireConcreteProposals) {
+    $ProposalArgs += "--require-concrete-proposals"
+}
+
 & $PacketPythonExe @ProposalArgs
 
 Write-Host ""
@@ -174,5 +179,6 @@ if (Test-Path $NpuDecodeSmokeReport) {
 Write-Host ""
 Write-Host "Primary advisory provider: $PrimaryAdvisoryProvider / $PrimaryAdvisoryComputeLane"
 Write-Host "Primary advisory provider execution requested: $UsePrimaryAdvisoryProvider"
+Write-Host "Concrete repository proposals required: $RequireConcreteProposals"
 Write-Host "Ollama advisory execution used: $UseResolvedOllama"
 Write-Host "These reports are advisory only. Review before applying changes."
