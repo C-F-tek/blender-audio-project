@@ -149,8 +149,6 @@ def main() -> int:
             "--apply",
             "--create-review-branch",
             branch,
-            "--allow-dirty",
-            "--allow-dirty-branch",
             "--require-all-validators",
         ]
         apply_result = run(apply_command, repo, env, args.timeout_seconds)
@@ -162,6 +160,11 @@ def main() -> int:
             errors.append("generated patch spec apply report did not pass")
         if apply_report.get("patch_application_performed") is not True:
             errors.append("generated patch spec bridge did not apply the concrete operation")
+        if apply_report.get("git_unsafe_status_before"):
+            errors.append(f"safe output-only dirtiness should not be treated as unsafe: {apply_report.get('git_unsafe_status_before')}")
+        branch_prepare = apply_report.get("git_review_branch_prepare") if isinstance(apply_report, dict) else {}
+        if isinstance(branch_prepare, dict) and branch_prepare.get("unsafe_status_before"):
+            errors.append(f"branch preparation should ignore output-only dirtiness: {branch_prepare.get('unsafe_status_before')}")
         if MARKER not in (repo / TARGET).read_text(encoding="utf-8"):
             errors.append("target marker was not written")
 

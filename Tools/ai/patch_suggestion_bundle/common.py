@@ -106,9 +106,35 @@ def current_branch(repo_root: Path) -> str:
     return run_git(repo_root, "branch", "--show-current") or "unknown"
 
 
+SAFE_GENERATED_STATUS_PREFIXES = (
+    "?? output/",
+)
+
+
 def git_status_short(repo_root: Path) -> str:
     """Return git status --short output."""
     return run_git(repo_root, "status", "--short")
+
+
+def git_status_lines(repo_root: Path) -> list[str]:
+    """Return non-empty git status --short lines."""
+    return [line for line in git_status_short(repo_root).splitlines() if line.strip()]
+
+
+def is_safe_generated_status_line(line: str) -> bool:
+    """Return true for expected generated runtime artifacts that must not block apply gates."""
+    normalized = str(line or "").replace("\\", "/").strip()
+    return any(normalized.startswith(prefix) for prefix in SAFE_GENERATED_STATUS_PREFIXES)
+
+
+def unsafe_git_status_lines(repo_root: Path) -> list[str]:
+    """Return status lines that represent source/doc/index dirtiness, excluding safe output artifacts."""
+    return [line for line in git_status_lines(repo_root) if not is_safe_generated_status_line(line)]
+
+
+def unsafe_git_status_short(repo_root: Path) -> str:
+    """Return unsafe git status lines as a string for gate checks."""
+    return "\n".join(unsafe_git_status_lines(repo_root))
 
 
 def split_values(values: list[str] | tuple[str, ...]) -> list[str]:

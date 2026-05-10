@@ -28,6 +28,7 @@ from Tools.ai.patch_suggestion_bundle.common import (
     PatchOperation,
     current_branch,
     git_status_short,
+    unsafe_git_status_short,
     load_json,
     repo_relative,
     split_values,
@@ -398,8 +399,9 @@ def main() -> int:
 
     branch = current_branch(repo_root)
     status_before = git_status_short(repo_root)
-    if args.apply and status_before and not args.allow_dirty:
-        errors.append("refusing --apply with dirty working tree; use --allow-dirty only for reviewed incremental fixes")
+    unsafe_status_before = unsafe_git_status_short(repo_root)
+    if args.apply and unsafe_status_before and not args.allow_dirty:
+        errors.append("refusing --apply with source/doc dirty working tree; use --allow-dirty only for reviewed incremental fixes")
     if args.apply and not any(branch.startswith(prefix) for prefix in args.allowed_branch_prefix):
         errors.append(f"refusing --apply on branch {branch!r}; expected allowed branch prefix")
 
@@ -518,6 +520,7 @@ def main() -> int:
         "results": results,
         "validators": validator_results,
         "git_status_before": status_before,
+        "git_unsafe_status_before": unsafe_status_before,
         "git_status_after": git_status_short(repo_root),
         "passed": not errors,
         "errors": errors,

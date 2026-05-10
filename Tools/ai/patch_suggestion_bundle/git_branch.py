@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.patch_suggestion_bundle.common import current_branch, git_status_short
+from Tools.ai.patch_suggestion_bundle.common import current_branch, git_status_short, unsafe_git_status_short
 
 
 PROTECTED_BRANCHES = {"main", "master"}
@@ -68,6 +68,7 @@ def create_review_branch(
 ) -> dict[str, Any]:
     """Create and switch to an explicit review branch without committing."""
     status_before = git_status_short(repo_root)
+    unsafe_status_before = unsafe_git_status_short(repo_root)
     out: dict[str, Any] = {
         "requested": bool(branch),
         "branch": branch,
@@ -77,6 +78,7 @@ def create_review_branch(
         "warnings": [],
         "commands": [],
         "status_before": status_before,
+        "unsafe_status_before": unsafe_status_before,
         "status_after": status_before,
     }
     if not branch:
@@ -85,8 +87,8 @@ def create_review_branch(
     if not ok:
         out["errors"].append(str(reason))
         return out
-    if status_before and not allow_dirty:
-        out["errors"].append("refusing branch creation with dirty tree; use --allow-dirty-branch")
+    if unsafe_status_before and not allow_dirty:
+        out["errors"].append("refusing branch creation with source/doc dirty tree; use --allow-dirty-branch")
         return out
     current = current_branch(repo_root)
     if current == branch:
