@@ -142,7 +142,7 @@ def main() -> int:
     parser.add_argument("--output", default="output/validation/heap_runtime_completeness_gate_smoke.json")
     parser.add_argument("--markdown-output", default="output/validation/heap_runtime_completeness_gate_smoke.md")
     parser.add_argument("--timeout-seconds", type=int, default=240)
-    parser.add_argument("--provider-model", default="gpt-oss:20b")
+    parser.add_argument("--provider-model", default="qwen2.5-coder:14b")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
