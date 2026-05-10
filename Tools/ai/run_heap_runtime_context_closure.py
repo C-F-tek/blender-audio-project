@@ -228,6 +228,13 @@ def main() -> int:
     }
     composer_report = load_json(run_dir / "heap_final_proposal_composer.json")
     composer_packaging_performed = bool((run_dir / "heap_final_proposal_composer.json").exists() and (run_dir / "heap_final_proposal_composer.md").exists())
+    composer_documents_dir = str(composer_report.get("documents_dir", "") or "")
+    composer_documents_outputs = composer_report.get("documents_outputs") if isinstance(composer_report.get("documents_outputs"), list) else []
+    final_proposal_txt = str(composer_report.get("primary_txt", "") or "")
+    final_proposal_markdown = str(composer_report.get("primary_markdown", "") or "")
+    final_proposal_json = str(composer_report.get("primary_json", "") or "")
+    final_download_manifest_txt = str(composer_report.get("download_manifest_txt", "") or "")
+    proposal_txt_outputs = composer_report.get("proposal_txt_outputs") if isinstance(composer_report.get("proposal_txt_outputs"), list) else []
 
     summary = {
         "schema_version": 1,
@@ -249,7 +256,14 @@ def main() -> int:
         "composer_passed": composer_result["passed"],
         "composer_packaging_performed": composer_packaging_performed,
         "composer_blocking_issue_count": composer_report.get("blocking_issue_count"),
-        "composer_documents_dir": composer_report.get("documents_dir", ""),
+        "composer_documents_dir": composer_documents_dir,
+        "composer_documents_outputs": composer_documents_outputs,
+        "final_proposal_txt": final_proposal_txt,
+        "final_proposal_markdown": final_proposal_markdown,
+        "final_proposal_json": final_proposal_json,
+        "final_download_manifest_txt": final_download_manifest_txt,
+        "proposal_txt_outputs": proposal_txt_outputs,
+        "download_hint": composer_report.get("download_hint", ""),
         "launcher_passed": bool(startup_result["passed"] and heap_result["passed"] and composer_packaging_performed),
         "heap_stdout_tail": heap_result["stdout_tail"],
         "heap_stderr_tail": heap_result["stderr_tail"],
