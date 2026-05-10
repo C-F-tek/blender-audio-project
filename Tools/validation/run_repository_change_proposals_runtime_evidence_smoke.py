@@ -47,24 +47,26 @@ def seed_repo(repo: Path) -> None:
 
 def seed_runtime_reports(repo: Path) -> None:
     write_json(
-        repo / f"output/validation/openvino_gpu0_workload_{STAMP}.json",
+        repo / f"output/validation/openvino_gpu0_provider_support_{STAMP}.json",
         {
             "schema_version": 1,
-            "kind": "openvino_gpu0_workload",
+            "kind": "openvino_gpu0_secondary_workload",
             "Stamp": STAMP,
             "passed": True,
             "openvino_gpu0_observable_workload_passed": True,
         },
     )
     write_json(
-        repo / f"output/validation/npu_micro_peer_{STAMP}.json",
+        repo / f"output/validation/npu_micro_task_companion_report_{STAMP}.json",
         {
-            "schema_version": 1,
-            "kind": "npu_micro_peer",
+            "schema_version": 2,
+            "kind": "npu_micro_task_companion_report",
             "Stamp": STAMP,
             "passed": True,
             "npu_peer_activity_requested": True,
             "npu_peer_activity_performed": False,
+            "npu_device_execution_performed": False,
+            "npu_activity_classification": "diagnostic_report_only",
         },
     )
     run_dir = repo / f"output/local_ai_runs/{STAMP}_unified/ai_packets"
@@ -97,12 +99,40 @@ def seed_runtime_reports(repo: Path) -> None:
         },
     )
     write_json(
-        repo / f"output/validation/generated_patch_specs_review_pr_apply_{STAMP}.json",
+        run_dir / "heap_exchange_runtime_exit_product.json",
+        {
+            "schema_version": 1,
+            "kind": "heap_exchange_runtime_exit_product",
+            "stamp": STAMP,
+            "passed": False,
+            "operation_count": 0,
+            "concrete_operation_count": 0,
+        },
+    )
+    write_json(
+        repo / f"output/validation/heap_exchange_runtime_lifecycle_{STAMP}.json",
+        {
+            "schema_version": 1,
+            "kind": "heap_exchange_runtime_lifecycle",
+            "stamp": STAMP,
+            "passed": False,
+            "concrete_exit_required": True,
+        },
+    )
+    write_json(
+        repo / "output/validation/generated_patch_specs_review_pr_apply.json",
         {
             "schema_version": 1,
             "kind": "patch_suggestion_bundle_apply",
-            "Stamp": STAMP,
+            "generated_at": "2099-01-01T01:02:03",
             "passed": False,
+            "manifest": {
+                "path": f"output/patch_specs/{STAMP}_proposal_patch_specs_manifest.json",
+                "discovery_filter_stamp": STAMP,
+            },
+            "loaded_specs": [
+                {"path": f"output/patch_specs/{STAMP}_proposal_patch_specs/P-EMPTY.json"}
+            ],
             "operation_count": 0,
             "changed_count": 0,
             "manual_review_items": [
@@ -202,6 +232,13 @@ def main() -> int:
         errors.append("patch spec manifest did not contain concrete operations")
     if applied["returncode"] != 0:
         errors.append("generated patch spec apply should succeed with concrete runtime-evidence proposal")
+    runtime_summary = ((proposal_report.get("proposals") or [{}])[0].get("evidence_summary") or {}).get("runtime_peer_evidence") or {}
+    if not runtime_summary.get("latest_apply_report_path", "").endswith("generated_patch_specs_review_pr_apply.json"):
+        errors.append("proposal builder did not discover nested-stamp generated patch-spec apply report")
+    if not runtime_summary.get("heap_exit_product_present"):
+        errors.append("proposal builder did not discover heap exchange exit product")
+    if not runtime_summary.get("heap_lifecycle_present"):
+        errors.append("proposal builder did not discover heap exchange lifecycle report")
     if apply_report.get("operation_count", 0) < 1:
         errors.append("apply report did not include concrete operation")
     if apply_report.get("changed_count", 0) < 1:

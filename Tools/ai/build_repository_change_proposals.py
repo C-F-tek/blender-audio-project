@@ -37,14 +37,21 @@ DEFAULT_REPORTS = (
 
 RUNTIME_REPORT_PATTERNS = (
     "output/validation/openvino_gpu0_workload_*.json",
+    "output/validation/openvino_gpu0_provider_support_*.json",
     "output/validation/npu_micro_peer_*.json",
+    "output/validation/npu_micro_task_companion*.json",
+    "output/validation/npu_gpu_deep_review_audit*.json",
+    "output/ai_pipeline/npu_micro_support_parallel/*.json",
     "output/validation/real_product_preflight_runtime_evidence_correlation.json",
     "output/validation/*runtime_evidence_correlation*.json",
     "output/validation/generated_patch_specs_review_pr_apply*.json",
     "output/validation/patch_suggestion_bundle_apply*.json",
+    "output/validation/heap_exchange_runtime_lifecycle_*.json",
+    "output/validation/*unified_chain_contract*.json",
     "output/local_ai_runs/*/ai_packets/heap_exchange_runtime_entry.json",
     "output/local_ai_runs/*/ai_packets/heap_peer_runtime_manifest.json",
     "output/local_ai_runs/*/ai_packets/heap_exchange_closure_audit.json",
+    "output/local_ai_runs/*/ai_packets/heap_exchange_runtime_exit_product.json",
     "output/patch_specs/*_manifest.json",
 )
 
@@ -96,13 +103,19 @@ def read_json_if_exists(path: Path) -> dict[str, Any]:
         return {"exists": True, "path": str(path), "data": None, "error": f"{type(exc).__name__}: {exc}"}
 
 
+def with_source_metadata(report: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+    copied = dict(data)
+    copied.setdefault("_source_path", str(report.get("path") or ""))
+    return copied
+
+
 def report_by_kind(reports: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     by_kind: dict[str, dict[str, Any]] = {}
     for report in reports:
         data = report.get("data")
         if isinstance(data, dict):
             kind = str(data.get("kind") or Path(report["path"]).stem)
-            by_kind[kind] = data
+            by_kind[kind] = with_source_metadata(report, data)
     return by_kind
 
 
@@ -112,7 +125,7 @@ def reports_by_kind(reports: list[dict[str, Any]]) -> dict[str, list[dict[str, A
         data = report.get("data")
         if isinstance(data, dict):
             kind = str(data.get("kind") or Path(report["path"]).stem)
-            by_kind.setdefault(kind, []).append(data)
+            by_kind.setdefault(kind, []).append(with_source_metadata(report, data))
     return by_kind
 
 
@@ -128,6 +141,20 @@ def infer_stamp_from_values(*values: str) -> str:
     return ""
 
 
+def value_contains_stamp(value: Any, stamp: str, *, depth: int = 0, max_depth: int = 6) -> bool:
+    if not stamp or depth > max_depth:
+        return False
+    if isinstance(value, str):
+        return stamp in value
+    if isinstance(value, (int, float, bool)) or value is None:
+        return stamp in str(value)
+    if isinstance(value, dict):
+        return any(value_contains_stamp(item, stamp, depth=depth + 1, max_depth=max_depth) for item in value.values())
+    if isinstance(value, list):
+        return any(value_contains_stamp(item, stamp, depth=depth + 1, max_depth=max_depth) for item in value)
+    return False
+
+
 def report_matches_stamp(path: Path, data: Any, stamp: str) -> bool:
     if not stamp:
         return True
@@ -137,7 +164,21 @@ def report_matches_stamp(path: Path, data: Any, stamp: str) -> bool:
         for key in ("Stamp", "stamp", "DataStamp", "generated_stamp"):
             if str(data.get(key) or "") == stamp:
                 return True
+        return value_contains_stamp(data, stamp)
     return False
+
+
+def report_time_key(report: dict[str, Any]) -> tuple[str, str]:
+    return (
+        str(report.get("generated_at") or report.get("timestamp") or report.get("created_at") or ""),
+        str(report.get("_source_path") or ""),
+    )
+
+
+def latest_report(reports: list[dict[str, Any]]) -> dict[str, Any]:
+    if not reports:
+        return {}
+    return sorted(reports, key=report_time_key)[-1]
 
 
 def discover_runtime_report_paths(repo_root: Path, stamp: str, max_files: int) -> list[str]:
@@ -294,15 +335,22 @@ def proposal(
 
 def runtime_peer_evidence_summary(by_kind_multi: dict[str, list[dict[str, Any]]], reports: list[dict[str, Any]]) -> dict[str, Any]:
     kinds = {kind: len(items) for kind, items in by_kind_multi.items()}
-    gpu0_reports = by_kind_multi.get("openvino_gpu0_workload", [])
-    npu_reports = by_kind_multi.get("npu_micro_peer", [])
+    gpu0_reports = by_kind_multi.get("openvino_gpu0_workload", []) + by_kind_multi.get("openvino_gpu0_secondary_workload", [])
+    npu_reports = (
+        by_kind_multi.get("npu_micro_peer", [])
+        + by_kind_multi.get("npu_micro_task_companion_report", [])
+        + by_kind_multi.get("npu_gpu_deep_review_audit", [])
+    )
     heap_entry_reports = by_kind_multi.get("heap_exchange_runtime_entry", [])
     heap_manifest_reports = by_kind_multi.get("heap_peer_runtime_manifest", [])
     closure_reports = by_kind_multi.get("heap_exchange_closure_audit", [])
+    exit_reports = by_kind_multi.get("heap_exchange_runtime_exit_product", [])
+    lifecycle_reports = by_kind_multi.get("heap_exchange_runtime_lifecycle", [])
+    chain_contract_reports = by_kind_multi.get("unified_chain_contract", [])
     correlation_reports = by_kind_multi.get("runtime_evidence_correlation", [])
-    apply_reports = by_kind_multi.get("patch_suggestion_bundle_apply", [])
+    apply_reports = by_kind_multi.get("patch_suggestion_bundle_apply", []) + by_kind_multi.get("generated_patch_specs_review_pr_apply", [])
 
-    latest_apply = apply_reports[-1] if apply_reports else {}
+    latest_apply = latest_report(apply_reports)
     manual_items = latest_apply.get("manual_review_items") if isinstance(latest_apply, dict) else []
     if not isinstance(manual_items, list):
         manual_items = []
@@ -327,13 +375,22 @@ def runtime_peer_evidence_summary(by_kind_multi: dict[str, list[dict[str, Any]]]
         "heap_entry_present": bool(heap_entry_reports),
         "heap_peer_runtime_manifest_present": bool(heap_manifest_reports),
         "heap_closure_audit_present": bool(closure_reports),
+        "heap_exit_product_present": bool(exit_reports),
+        "heap_lifecycle_present": bool(lifecycle_reports),
+        "unified_chain_contract_present": bool(chain_contract_reports),
+        "latest_apply_report_path": latest_apply.get("_source_path") if isinstance(latest_apply, dict) else "",
         "gpu0_workload_present": bool(gpu0_reports),
         "gpu0_observable": any(
             report.get("openvino_gpu0_observable_workload_passed") is True or report.get("passed") is True
             for report in gpu0_reports
         ),
         "npu_micro_peer_present": bool(npu_reports),
-        "npu_peer_activity_requested": any(report.get("npu_peer_activity_requested") is True for report in npu_reports),
+        "npu_peer_activity_requested": any(
+            report.get("npu_peer_activity_requested") is True
+            or report.get("provider_execution_requested") is True
+            or report.get("npu_activity_classification") == "diagnostic_report_only"
+            for report in npu_reports
+        ),
         "runtime_evidence_correlation_present": bool(correlation_reports),
         "patch_apply_report_present": bool(apply_reports),
         "patch_apply_operation_count": operation_count,
