@@ -45,7 +45,7 @@ The current product doctrine is one controlled entry, one dynamic heap/exchange 
 ```text
 operator product entrypoint = Tools/workflow/run_unified_real_product_pr.ps1
 internal dynamic launcher = Tools/workflow/run_unified_local_ai_refactor.ps1
-Full0To10 / 0Full10 = compatibility wording for whole-repository active-lane perimeter
+active_perimeter = whole-repository guarded heap/team runtime lanes
 single_dynamic_heap_exchange_run = current report/manifest model
 quick/balanced/deep/custom = intensity or budget, not reduced semantic scope
 -No* flags = explicit opt-out from selected lanes
@@ -322,7 +322,7 @@ run FFmpeg encode/mux or Blender render
 modify full analysis JSON files
 commit output/**, renders/**, generated media, *.db or *.sqlite
 hand-edit generated indexes
-change Full0To10 compatibility spelling into magic behavior
+reintroduce retired legacy compatibility naming as runtime semantics
 promote NPU/OpenVINO to compute-provider lane without quality-gated architecture change
 claim GPU0 success from device visibility only
 claim metadata-only generated patch specs as reviewable product

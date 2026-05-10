@@ -459,9 +459,7 @@ mapped capability
   -> recommendation, patch-plan or review-PR product when requested
 ```
 
-0Full10/Full0To10 is legacy compatibility wording for the whole active project perimeter. Current reports should be interpreted through the unified heap/exchange model.
-
-`-Full0To10` is a compatibility/shortcut CLI flag when present in the launcher. It must not be treated as a magic source of semantics. Its behavior should remain expressible as explicit lane composition:
+The heap/exchange model is the canonical semantics for the whole active project perimeter. Broad runs must remain explicit lane compositions, not compatibility aliases:
 
 ```text
 task input
@@ -471,7 +469,7 @@ intensity/budget
 provider lanes
 evidence lanes
 patch/review lanes
-explicit -No* opt-outs
+explicit opt-outs
 ```
 
 A valid run-unica execution includes every major selected phase unless the operator disables a phase explicitly with a `-No*` flag or the phase is classified unavailable/degraded.
