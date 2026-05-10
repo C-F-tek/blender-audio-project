@@ -5,6 +5,13 @@ This is the startup bridge between an operator request and the heap/exchange
 loop. It reuses existing report-only tools from the unified run lane and writes a
 single manifest plus a task Markdown file that can be passed to the heap with
 `--task-file` before provider lanes start.
+
+The startup reload has a strict core and an advisory extension:
+
+- tool catalog, memory inventory and transient request context are required;
+- AI context pack is advisory because repository documentation profiles can be
+  intentionally stale or partially unavailable while still producing useful
+  context artifacts.
 """
 from __future__ import annotations
 
@@ -53,6 +60,14 @@ def read_text(path: Path, max_chars: int = 6000) -> str:
     return text
 
 
+def read_json(path: Path) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
     if explicit:
         return str(Path(explicit).resolve())
@@ -66,7 +81,15 @@ def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
     return sys.executable
 
 
-def run_tool(command: list[str], repo_root: Path) -> dict[str, Any]:
+def run_tool(
+    command: list[str],
+    repo_root: Path,
+    *,
+    name: str,
+    requirement: str,
+    required: bool,
+    artifact_paths: list[Path] | None = None,
+) -> dict[str, Any]:
     completed = subprocess.run(
         command,
         cwd=repo_root,
@@ -74,10 +97,24 @@ def run_tool(command: list[str], repo_root: Path) -> dict[str, Any]:
         capture_output=True,
         check=False,
     )
+    artifacts = [repo_rel(repo_root, path) for path in (artifact_paths or [])]
+    existing_artifacts = [
+        repo_rel(repo_root, path)
+        for path in (artifact_paths or [])
+        if path.exists()
+    ]
+    passed = completed.returncode == 0
+    effective_passed = passed or (not required and bool(existing_artifacts))
     return {
+        "name": name,
+        "requirement": requirement,
+        "required": required,
         "command": command,
         "returncode": completed.returncode,
-        "passed": completed.returncode == 0,
+        "passed": passed,
+        "effective_passed": effective_passed,
+        "artifact_paths": artifacts,
+        "existing_artifact_paths": existing_artifacts,
         "stdout_tail": (completed.stdout or "")[-3000:],
         "stderr_tail": (completed.stderr or "")[-3000:],
     }
@@ -95,6 +132,7 @@ def build_task_markdown(
     context_files: list[str],
     artifacts: dict[str, str],
     commands: list[dict[str, Any]],
+    warnings: list[str],
 ) -> str:
     lines: list[str] = [
         "# Heap Startup Input-Ready Context",
@@ -117,6 +155,7 @@ def build_task_markdown(
         "- Do not answer from a single token window: write proposal chunks and let the final composer assemble them.",
         "- GPU0 must refine or reject generic/stub chunks.",
         "- NPU must contribute bounded audit/workload evidence when enabled.",
+        "- Advisory context-pack failures do not block heap startup when core reload artifacts passed.",
         "",
         "## Startup artifacts",
         "",
@@ -126,7 +165,20 @@ def build_task_markdown(
             lines.append(f"- `{name}`: `{value}`")
     lines.extend(["", "## Startup tool executions", ""])
     for item in commands:
-        lines.append(f"- passed=`{item.get('passed')}` rc=`{item.get('returncode')}` command=`{' '.join(str(part) for part in item.get('command', []))}`")
+        lines.append(
+            "- "
+            + f"name=`{item.get('name')}` "
+            + f"required=`{item.get('required')}` "
+            + f"passed=`{item.get('passed')}` "
+            + f"effective_passed=`{item.get('effective_passed')}` "
+            + f"rc=`{item.get('returncode')}` "
+            + f"artifacts=`{item.get('existing_artifact_paths')}` "
+            + f"command=`{' '.join(str(part) for part in item.get('command', []))}`"
+        )
+    if warnings:
+        lines.extend(["", "## Startup warnings", ""])
+        for warning in warnings:
+            lines.append(f"- {warning}")
     lines.extend(["", "## Canonical context files loaded", ""])
     for rel_path in context_files:
         lines.append(f"- `{rel_path}`")
@@ -149,6 +201,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-memory-chars", type=int, default=64000)
     parser.add_argument("--max-context-files", type=int, default=80)
     parser.add_argument("--max-chars-per-file", type=int, default=12000)
+    parser.add_argument(
+        "--strict-ai-context-pack",
+        action="store_true",
+        help="Treat build_ai_context_pack failures as startup-blocking. Default: advisory-only.",
+    )
     return parser.parse_args()
 
 
@@ -163,6 +220,7 @@ def main() -> int:
 
     artifacts: dict[str, str] = {}
     commands: list[dict[str, Any]] = []
+    warnings: list[str] = []
 
     tool_catalog_json = output_dir / "startup_tool_catalog.json"
     tool_catalog_md = output_dir / "startup_tool_catalog.md"
@@ -176,7 +234,16 @@ def main() -> int:
         "--markdown-output",
         str(tool_catalog_md),
     ]
-    commands.append(run_tool(cmd, repo_root))
+    commands.append(
+        run_tool(
+            cmd,
+            repo_root,
+            name="tool_catalog_reload",
+            requirement="tool_catalog",
+            required=True,
+            artifact_paths=[tool_catalog_json, tool_catalog_md],
+        )
+    )
     artifacts["tool_catalog_json"] = repo_rel(repo_root, tool_catalog_json)
     artifacts["tool_catalog_markdown"] = repo_rel(repo_root, tool_catalog_md)
 
@@ -196,7 +263,16 @@ def main() -> int:
         "--markdown-output",
         str(memory_md),
     ]
-    commands.append(run_tool(cmd, repo_root))
+    commands.append(
+        run_tool(
+            cmd,
+            repo_root,
+            name="shared_memory_reload",
+            requirement="shared_memory",
+            required=True,
+            artifact_paths=[memory_json, memory_md],
+        )
+    )
     artifacts["shared_memory_json"] = repo_rel(repo_root, memory_json)
     artifacts["shared_memory_markdown"] = repo_rel(repo_root, memory_md)
 
@@ -226,13 +302,26 @@ def main() -> int:
     ]
     for rel_path in context_files:
         cmd.extend(["--raw-file", rel_path])
-    commands.append(run_tool(cmd, repo_root))
+    commands.append(
+        run_tool(
+            cmd,
+            repo_root,
+            name="shared_context_reload",
+            requirement="shared_context_chunks",
+            required=True,
+            artifact_paths=[transient_json, transient_md],
+        )
+    )
     artifacts["shared_context_json"] = repo_rel(repo_root, transient_json)
     artifacts["shared_context_markdown"] = repo_rel(repo_root, transient_md)
 
     context_pack_dir = output_dir / "startup_ai_context_pack"
     context_evidence_dir = output_dir / "startup_ai_context_pack_evidence"
     context_basename = f"heap_startup_context_pack_{stamp}"
+    context_pack_json = context_pack_dir / f"{context_basename}.json"
+    context_pack_md = context_pack_dir / f"{context_basename}.md"
+    context_pack_evidence_json = context_evidence_dir / f"{context_basename}_evidence.json"
+    context_pack_evidence_md = context_evidence_dir / f"{context_basename}_evidence.md"
     cmd = [
         project_python,
         "Tools/ai/build_ai_context_pack.py",
@@ -249,13 +338,44 @@ def main() -> int:
         "--evidence-basename",
         f"{context_basename}_evidence",
     ]
-    commands.append(run_tool(cmd, repo_root))
-    artifacts["ai_context_pack_json"] = repo_rel(repo_root, context_pack_dir / f"{context_basename}.json")
-    artifacts["ai_context_pack_markdown"] = repo_rel(repo_root, context_pack_dir / f"{context_basename}.md")
-    artifacts["ai_context_pack_evidence_json"] = repo_rel(repo_root, context_evidence_dir / f"{context_basename}_evidence.json")
-    artifacts["ai_context_pack_evidence_markdown"] = repo_rel(repo_root, context_evidence_dir / f"{context_basename}_evidence.md")
+    context_pack_result = run_tool(
+        cmd,
+        repo_root,
+        name="ai_context_pack_reload",
+        requirement="ai_context_pack",
+        required=bool(args.strict_ai_context_pack),
+        artifact_paths=[
+            context_pack_json,
+            context_pack_md,
+            context_pack_evidence_json,
+            context_pack_evidence_md,
+        ],
+    )
+    commands.append(context_pack_result)
+    artifacts["ai_context_pack_json"] = repo_rel(repo_root, context_pack_json)
+    artifacts["ai_context_pack_markdown"] = repo_rel(repo_root, context_pack_md)
+    artifacts["ai_context_pack_evidence_json"] = repo_rel(repo_root, context_pack_evidence_json)
+    artifacts["ai_context_pack_evidence_markdown"] = repo_rel(repo_root, context_pack_evidence_md)
+    if not context_pack_result["passed"]:
+        pack_payload = read_json(context_pack_json)
+        pack_errors = pack_payload.get("errors") if isinstance(pack_payload.get("errors"), list) else []
+        pack_warnings = pack_payload.get("warnings") if isinstance(pack_payload.get("warnings"), list) else []
+        warning = (
+            "advisory ai_context_pack_reload returned non-zero "
+            + f"rc={context_pack_result['returncode']}; artifacts_exist={bool(context_pack_result['existing_artifact_paths'])}"
+        )
+        if pack_errors:
+            warning += "; errors=" + "; ".join(str(item) for item in pack_errors[:5])
+        warnings.append(warning)
+        for item in pack_warnings[:5]:
+            warnings.append(f"ai_context_pack warning: {item}")
 
     task_file = output_dir / "heap_startup_input_ready_context.md"
+    artifacts["heap_task_file"] = repo_rel(repo_root, task_file)
+    required_commands = [item for item in commands if item.get("required")]
+    optional_commands = [item for item in commands if not item.get("required")]
+    required_passed = all(bool(item.get("effective_passed")) for item in required_commands)
+    optional_passed = all(bool(item.get("effective_passed")) for item in optional_commands)
     task_markdown = build_task_markdown(
         repo_root=repo_root,
         request=args.request,
@@ -263,9 +383,9 @@ def main() -> int:
         context_files=context_files,
         artifacts=artifacts,
         commands=commands,
+        warnings=warnings,
     )
     task_file.write_text(task_markdown, encoding="utf-8")
-    artifacts["heap_task_file"] = repo_rel(repo_root, task_file)
 
     manifest = {
         "schema_version": 1,
@@ -274,7 +394,9 @@ def main() -> int:
         "repo_root": repo_root.as_posix(),
         "project_python": project_python,
         "request": args.request,
-        "passed": all(item.get("passed") for item in commands),
+        "passed": required_passed,
+        "required_reload_passed": required_passed,
+        "optional_reload_passed": optional_passed,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -282,11 +404,15 @@ def main() -> int:
         "context_files": context_files,
         "artifacts": artifacts,
         "tool_executions": commands,
+        "startup_warnings": warnings,
+        "required_requirements": [item["requirement"] for item in required_commands],
+        "optional_requirements": [item["requirement"] for item in optional_commands],
         "heap_task_file": artifacts["heap_task_file"],
         "contract": {
             "input_ready_before_heap": True,
             "load_context_into_heap": True,
             "reuse_existing_unified_run_tools": True,
+            "advisory_context_pack_non_blocking": not bool(args.strict_ai_context_pack),
             "final_composer_required": True,
         },
     }
