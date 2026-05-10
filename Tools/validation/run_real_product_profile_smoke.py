@@ -120,8 +120,8 @@ def main() -> int:
         "bounded_prerun_reset_passes_active_stamp": "--active-stamp" in text and "$Stamp" in text,
         "bounded_prerun_reset_writes_report": "prerun_local_ai_reset_" in text,
         "exposes_prerun_artifact_reset": "[switch]$ResetLocalAiArtifactsBeforeRun" in text and "Invoke-LocalAiArtifactReset" in text,
-        "prerun_reset_reuses_unified_reset_mode": '"-Mode", "reset"' in text and "DELETE LOCAL AI ARTIFACTS" in text,
-        "prerun_reset_supports_memory_and_index": "[switch]$ResetLocalAiMemoryBeforeRun" in text and "[switch]$ResetGeneratedIndexBeforeRun" in text and "-IncludeMemoryReset" in text and "-IncludeGeneratedIndexReset" in text,
+        "prerun_reset_uses_bounded_helper": "-ResetLocalAiArtifactsBeforeRun" in text and "run_local_ai_artifact_reset.py" in text,
+        "prerun_reset_supports_memory_and_index": "-ResetLocalAiMemoryBeforeRun" in text and "-ResetGeneratedIndexBeforeRun" in text and "run_local_ai_artifact_reset.py" in text,
         "prerun_reset_requires_main_switch_for_memory_index": "reset_flags_require_artifact_reset" in text,
     }
 
