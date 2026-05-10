@@ -11,7 +11,9 @@ request -> shared heap -> role needs -> brokered tools -> shared memory/context
 The loop is budget bounded. It exits with `ready` only after all required
 readiness requirements are met, otherwise it exits with `blocked_with_reason` and
 explicit missing requirements. It never applies patches, never writes source
-files, never runs Blender/FFmpeg and never executes providers.
+files, never runs Blender/FFmpeg. It always traverses the provider teamwork
+universe before product readiness: GPU1 planner, GPU0 peer workload and
+NPU micro-task auditor all write evidence back into the same heap.
 """
 from __future__ import annotations
 
@@ -51,6 +53,22 @@ REQUIREMENT_ORDER = (
     "shared_memory",
     "shared_context_chunks",
     "validation_evidence",
+    "gpu1_provider_planner",
+    "gpu0_provider_peer",
+    "npu_micro_task_auditor",
+)
+
+BASE_REQUIREMENTS = (
+    "tool_catalog",
+    "shared_memory",
+    "shared_context_chunks",
+    "validation_evidence",
+)
+
+PROVIDER_REQUIREMENTS = (
+    "gpu1_provider_planner",
+    "gpu0_provider_peer",
+    "npu_micro_task_auditor",
 )
 
 
@@ -84,6 +102,7 @@ def make_state(objective: str) -> dict[str, Any]:
         "needs": [],
         "tool_requests": [],
         "shared_evidence": [],
+        "provider_results": [],
         "claims": [],
         "decisions": [],
         "candidate_operations": [],
@@ -108,6 +127,29 @@ def event_payloads_by_type(events: list[dict[str, Any]], event_type: str) -> lis
         if payload:
             payloads.append(payload)
     return payloads
+
+
+PROVIDER_ROLE_TO_HEAP_LANE = {
+    "gpu1_planner": "gpu1",
+    "gpu1_primary_advisory": "gpu1",
+    "gpu0_peer": "gpu0",
+    "gpu0_diagnostic_peer": "gpu0",
+    "npu_micro_task": "npu",
+    "npu_micro_task_auditor": "npu",
+    "npu_critic": "npu",
+}
+
+
+def provider_heap_lane(value: str) -> str:
+    """Map logical provider roles to physical heap lanes.
+
+    provider_runtime_heap accepts physical lanes only: gpu1/gpu0/npu/broker/
+    deterministic/telemetry/orchestrator. Logical roles stay in payloads and
+    reports so the runtime can prove who contributed without inventing heap
+    lanes.
+    """
+    lane = str(value or "").strip().lower()
+    return PROVIDER_ROLE_TO_HEAP_LANE.get(lane, lane)
 
 
 class HeapRuntimeCompletenessGate:
@@ -158,6 +200,8 @@ class HeapRuntimeCompletenessGate:
         self.decision_count = 0
         self.candidate_operation_count = 0
         self.bridge_reports: list[str] = []
+        self.provider_reports: list[dict[str, Any]] = []
+        self.provider_execution_performed = False
         self.errors: list[str] = []
         self.warnings: list[str] = []
 
@@ -255,6 +299,12 @@ class HeapRuntimeCompletenessGate:
             requirement = self.requirement_for_tool(tool)
             if requirement != "unknown":
                 completed.add(requirement)
+        for provider_report in self.provider_reports:
+            if provider_report.get("passed") is not True:
+                continue
+            requirement = str(provider_report.get("requirement") or "")
+            if requirement in REQUIREMENT_ORDER:
+                completed.add(requirement)
         return completed
 
     def attempted_requirements(self, events: list[dict[str, Any]]) -> set[str]:
@@ -262,6 +312,10 @@ class HeapRuntimeCompletenessGate:
         for payload in self.broker_results(events):
             requirement = self.requirement_for_tool(str(payload.get("tool") or ""))
             if requirement != "unknown":
+                attempted.add(requirement)
+        for provider_report in self.provider_reports:
+            requirement = str(provider_report.get("requirement") or "")
+            if requirement in PROVIDER_REQUIREMENTS:
                 attempted.add(requirement)
         return attempted
 
@@ -444,6 +498,151 @@ class HeapRuntimeCompletenessGate:
         }
         self.publish("orchestrator", "product_signal", self.state["product"], correlation_id=f"{self.stamp}:product", round_id=round_id)
 
+
+    def base_requirements_complete(self, events: list[dict[str, Any]]) -> bool:
+        completed = self.completed_requirements(events)
+        return all(requirement in completed for requirement in BASE_REQUIREMENTS)
+
+    def provider_work_dir(self) -> Path:
+        if self.output_dir:
+            path = self.output_dir / "provider_teamwork"
+        else:
+            path = self.repo_root / "output" / "validation" / f"heap_runtime_provider_teamwork_{self.stamp}"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def provider_command_specs(self, work_dir: Path) -> list[dict[str, Any]]:
+        gpu1_json = work_dir / "gpu1_ollama_provider_probe.json"
+        gpu0_json = work_dir / "gpu0_openvino_peer_workload.json"
+        gpu0_md = work_dir / "gpu0_openvino_peer_workload.md"
+        npu_json = work_dir / "npu_micro_task_auditor.json"
+        npu_md = work_dir / "npu_micro_task_auditor.md"
+        return [
+            {
+                "lane": "gpu1_planner",
+                "requirement": "gpu1_provider_planner",
+                "role": "primary_planner",
+                "output": gpu1_json,
+                "command": [
+                    sys.executable,
+                    "Tools/ai/run_local_provider_probe.py",
+                    "--repo-root", ".",
+                    "--run-ollama",
+                    "--model", self.args.provider_model,
+                    "--timeout", str(self.args.timeout_seconds),
+                    "--output", repo_rel(self.repo_root, gpu1_json),
+                ],
+            },
+            {
+                "lane": "gpu0_peer",
+                "requirement": "gpu0_provider_peer",
+                "role": "diagnostic_peer_workload",
+                "output": gpu0_json,
+                "command": [
+                    sys.executable,
+                    "Tools/ai/build_openvino_gpu0_workload_report.py",
+                    "--repo-root", ".",
+                    "--iterations", str(self.args.gpu0_iterations),
+                    "--min-seconds", str(self.args.gpu0_min_seconds),
+                    "--role", "heap_runtime_diagnostic_peer",
+                    "--output", repo_rel(self.repo_root, gpu0_json),
+                    "--markdown-output", repo_rel(self.repo_root, gpu0_md),
+                ],
+            },
+            {
+                "lane": "npu_micro_task_auditor",
+                "requirement": "npu_micro_task_auditor",
+                "role": "static_micro_task_auditor",
+                "output": npu_json,
+                "command": [
+                    sys.executable,
+                    "Tools/ai/build_npu_micro_task_companion_report.py",
+                    "--repo-root", ".",
+                    "--task-file", self.args.task_file,
+                    "--timeout-seconds", str(self.args.npu_micro_timeout_seconds),
+                    "--max-context-chars", str(self.args.npu_max_context_chars),
+                    "--output", repo_rel(self.repo_root, npu_json),
+                    "--markdown-output", repo_rel(self.repo_root, npu_md),
+                ],
+            },
+        ]
+
+    def summarize_provider_report(self, spec: dict[str, Any], completed: subprocess.CompletedProcess[str], report_data: dict[str, Any]) -> dict[str, Any]:
+        lane = str(spec["lane"])
+        provider_execution = bool(
+            report_data.get("provider_execution_performed")
+            or report_data.get("openvino_gpu0_workload_performed")
+            or report_data.get("openvino_gpu0_probe_performed")
+        )
+        if provider_execution:
+            self.provider_execution_performed = True
+        errors = report_data.get("errors") if isinstance(report_data.get("errors"), list) else []
+        warnings = report_data.get("warnings") if isinstance(report_data.get("warnings"), list) else []
+        return {
+            "lane": lane,
+            "role": spec.get("role"),
+            "requirement": spec.get("requirement"),
+            "output": repo_rel(self.repo_root, Path(spec["output"])),
+            "returncode": completed.returncode,
+            "passed": completed.returncode == 0 and report_data.get("passed") is True,
+            "provider_execution_performed": provider_execution,
+            "report_kind": report_data.get("kind"),
+            "errors": errors,
+            "warnings": warnings,
+            "stdout_tail": (completed.stdout or "")[-1000:],
+            "stderr_tail": (completed.stderr or "")[-1000:],
+        }
+
+    def run_provider_teamwork(self, round_id: int) -> None:
+        if self.provider_reports:
+            return
+        work_dir = self.provider_work_dir()
+        for spec in self.provider_command_specs(work_dir):
+            lane = str(spec["lane"])
+            requirement = str(spec["requirement"])
+            correlation = f"{self.stamp}:provider:{requirement}"
+            self.publish(
+                provider_heap_lane(lane),
+                "provider_state",
+                {
+                    "id": correlation,
+                    "lane": lane,
+                    "role": spec.get("role"),
+                    "requirement": requirement,
+                    "output": repo_rel(self.repo_root, Path(spec["output"])),
+                },
+                target="orchestrator",
+                correlation_id=correlation,
+                round_id=round_id,
+            )
+            try:
+                completed = subprocess.run(
+                    spec["command"],
+                    cwd=self.repo_root,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    timeout=max(30, self.args.timeout_seconds),
+                )
+            except subprocess.TimeoutExpired as exc:
+                completed = subprocess.CompletedProcess(spec["command"], returncode=124, stdout=exc.stdout or "", stderr=exc.stderr or "provider timeout")
+            report_data = read_json(Path(spec["output"]))
+            provider_report = self.summarize_provider_report(spec, completed, report_data)
+            self.provider_reports.append(provider_report)
+            append_unique(self.state["provider_results"], provider_report, key="requirement")
+            self.publish(provider_heap_lane(lane), "telemetry_signal", provider_report, target="orchestrator", correlation_id=correlation, round_id=round_id)
+            claim = {
+                "id": f"{requirement}_claim",
+                "from": lane,
+                "claim": "provider lane contributed usable heap evidence" if provider_report.get("passed") else "provider lane did not produce usable heap evidence",
+                "confidence": 0.88 if provider_report.get("passed") else 0.35,
+                "requirement": requirement,
+                "evidence_ref": provider_report.get("output"),
+                "provider_execution_performed": provider_report.get("provider_execution_performed"),
+            }
+            append_unique(self.state["claims"], claim)
+            self.publish(provider_heap_lane(lane), "claim", claim, target="deterministic", correlation_id=f"{correlation}:claim", round_id=round_id)
+
     def run(self) -> dict[str, Any]:
         self.bootstrap()
         last_round = 0
@@ -455,6 +654,10 @@ class HeapRuntimeCompletenessGate:
                 self.run_bridge()
             events = self.read_events()
             self.publish_shared_evidence_facts(round_id, events)
+            if self.base_requirements_complete(events) and not self.provider_reports:
+                self.run_provider_teamwork(round_id)
+                events = self.read_events()
+                self.publish_shared_evidence_facts(round_id, events)
             self.critic_step(round_id, events)
             self.arbiter_step(round_id, events)
             if self.state["product"].get("status") in {"ready", "blocked_with_reason"}:
@@ -485,6 +688,13 @@ class HeapRuntimeCompletenessGate:
             "shared_context_chunk_evidence_count": 1 if "shared_context_chunks" in completed else 0,
             "tool_catalog_evidence_count": 1 if "tool_catalog" in completed else 0,
             "validation_evidence_count": 1 if "validation_evidence" in completed else 0,
+            "gpu1_provider_evidence_count": 1 if "gpu1_provider_planner" in completed else 0,
+            "gpu0_provider_evidence_count": 1 if "gpu0_provider_peer" in completed else 0,
+            "npu_micro_task_evidence_count": 1 if "npu_micro_task_auditor" in completed else 0,
+            "provider_result_count": len(self.provider_reports),
+            "provider_lane_count": len({item.get("lane") for item in self.provider_reports}),
+            "provider_execution_performed": self.provider_execution_performed,
+            "provider_teamwork_required": True,
             "budget_exhausted": bool(missing and (last_round >= self.max_iterations)),
             "invocation_contract_ready": bool(self.invocation_contract.get("passed")),
             "invocation_gate_decision": safe_dict(self.invocation_contract.get("real_run_gate")).get("decision"),
@@ -497,6 +707,10 @@ class HeapRuntimeCompletenessGate:
             metric_errors.append("product_status must be ready or blocked_with_reason")
         if metrics["product_status"] == "ready" and missing:
             metric_errors.append("ready product_status is forbidden while requirements are missing")
+        if metrics["product_status"] == "ready" and safe_int(metrics.get("provider_lane_count")) < 3:
+            metric_errors.append("ready product_status requires all three provider lanes")
+        if metrics["product_status"] == "ready" and not self.provider_execution_performed:
+            metric_errors.append("ready product_status requires observable provider execution")
         self.errors.extend(metric_errors)
         return {
             "schema_version": 1,
@@ -510,12 +724,32 @@ class HeapRuntimeCompletenessGate:
             "budget_governor": self.budget_governor,
             "heap_snapshot": {"event_count": snapshot.get("event_count"), "event_log": snapshot.get("event_log"), "pending_broker_request_count": snapshot.get("pending_broker_request_count")},
             "bridge_reports": self.bridge_reports,
-            "provider_execution_performed": False,
+            "provider_reports": self.provider_reports,
+            "real_run_input_contract": {
+                "kind": "heap_runtime_completeness_gate_input_contract",
+                "task_file": self.args.task_file,
+                "objective": self.args.objective,
+                "stamp": self.stamp,
+                "budget_minutes": self.args.budget_minutes,
+                "max_iterations": self.max_iterations,
+                "entry_files": ["AGENTS.md", "README.md"],
+            },
+            "real_run_output_contract": {
+                "kind": "heap_runtime_completeness_gate_output_contract",
+                "heap_event_log": snapshot.get("event_log"),
+                "heap_snapshot": snapshot.get("snapshot"),
+                "bridge_reports": self.bridge_reports,
+                "provider_report_outputs": [item.get("output") for item in self.provider_reports],
+                "product_status": self.state["product"].get("status"),
+                "completed_requirements": completed,
+                "missing_requirements": missing,
+            },
+            "provider_execution_performed": self.provider_execution_performed,
             "patch_application_performed": False,
             "source_writes_performed": False,
             "errors": self.errors,
             "warnings": self.warnings,
-            "guardrails": {"heap_completeness_gate": True, "provider_execution_performed": False, "patch_application_performed": False, "source_writes_performed": False},
+            "guardrails": {"heap_completeness_gate": True, "provider_teamwork_universe_required": True, "provider_execution_performed": self.provider_execution_performed, "patch_application_performed": False, "source_writes_performed": False},
         }
 
 
@@ -561,7 +795,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--stamp", default="")
-    parser.add_argument("--objective", default="prove complete heap-driven teamwork loop over repository context, shared memory and brokered tools")
+    parser.add_argument("--objective", default="prove complete heap-driven teamwork loop over repository context, shared memory, brokered tools and all provider lanes")
+    parser.add_argument("--task-file", default="")
     parser.add_argument("--tool", default="run_gpu_planner_json_contract_smoke", help="Compatibility flag; complete gate uses its internal readiness tool plan.")
     parser.add_argument("--max-iterations", type=int, default=4)
     parser.add_argument("--budget-minutes", type=int, default=5)
@@ -580,6 +815,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allow-provider-generation", action="store_true")
     parser.add_argument("--operator-intent", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=240)
+    parser.add_argument("--provider-model", default="")
+    parser.add_argument("--gpu0-iterations", type=int, default=16)
+    parser.add_argument("--gpu0-min-seconds", type=float, default=0.1)
     parser.add_argument("--output-dir", default="")
     parser.add_argument("--events", default="")
     parser.add_argument("--snapshot", default="")

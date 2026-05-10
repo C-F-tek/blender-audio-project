@@ -87,10 +87,11 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     budget_text = read_text(repo_root / "Tools/ai/heap_provider_budget_governor.py")
     invocation_text = read_text(repo_root / "Tools/ai/heap_provider_invocation_contract.py")
     product_text = read_text(repo_root / "Tools/ai/build_heap_runtime_product_package.py")
+    completeness_gate_text = read_text(repo_root / "Tools/ai/run_heap_runtime_completeness_gate.py")
 
     gpu1_provider_surface = "\n".join([ollama_probe_text, local_provider_probe_text]).lower()
     memory_surface = memory_sqlite_text.lower()
-    heap_contract_surface = "\n".join([heap_text, budget_text, invocation_text]).lower()
+    heap_contract_surface = "\n".join([heap_text, budget_text, invocation_text, completeness_gate_text]).lower()
 
     checks: dict[str, bool] = {
         "task_md_in": has(wrapper_text, "[string]$TaskFile")
@@ -178,7 +179,11 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "heap_runtime_completeness_gate": exists(repo_root, "Tools/ai/run_heap_runtime_completeness_gate.py")
         and exists(repo_root, "Tools/validation/run_heap_runtime_completeness_gate_smoke.py")
         and "product_signal" in heap_contract_surface
-        and "broker_request" in heap_contract_surface,
+        and "broker_request" in heap_contract_surface
+        and "gpu1_provider_planner" in heap_contract_surface
+        and "gpu0_provider_peer" in heap_contract_surface
+        and "npu_micro_task_auditor" in heap_contract_surface
+        and "provider_teamwork_universe_required" in heap_contract_surface,
 
         "heap_runtime_product_package": exists(repo_root, "Tools/ai/build_heap_runtime_product_package.py")
         and has(product_text, "heap_runtime_product_package")

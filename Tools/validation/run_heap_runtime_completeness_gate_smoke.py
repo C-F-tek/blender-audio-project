@@ -28,7 +28,7 @@ def read_json(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
-def run_gate(repo_root: Path, label: str, stamp: str, timeout_seconds: int, max_iterations: int) -> tuple[subprocess.CompletedProcess[str], dict[str, Any], Path]:
+def run_gate(repo_root: Path, label: str, stamp: str, timeout_seconds: int, max_iterations: int, provider_model: str) -> tuple[subprocess.CompletedProcess[str], dict[str, Any], Path]:
     run_dir = repo_root / "output" / "validation" / f"heap_runtime_completeness_gate_{label}_{stamp}"
     run_dir.mkdir(parents=True, exist_ok=True)
     output = run_dir / "heap_runtime_completeness_gate_report.json"
@@ -44,6 +44,7 @@ def run_gate(repo_root: Path, label: str, stamp: str, timeout_seconds: int, max_
         "--budget-minutes", "5",
         "--max-rounds", str(max_iterations),
         "--timeout-seconds", str(timeout_seconds),
+        "--provider-model", provider_model,
     ]
     completed = subprocess.run(command, cwd=repo_root, env=env, capture_output=True, text=True, check=False, timeout=timeout_seconds * max(2, max_iterations))
     return completed, read_json(output), run_dir
@@ -68,6 +69,11 @@ def validate_complete(report: dict[str, Any]) -> list[str]:
         "shared_context_chunk_evidence_count",
         "tool_catalog_evidence_count",
         "validation_evidence_count",
+        "gpu1_provider_evidence_count",
+        "gpu0_provider_evidence_count",
+        "npu_micro_task_evidence_count",
+        "provider_result_count",
+        "provider_lane_count",
     )
     for key in required_positive:
         if int(metrics.get(key) or 0) <= 0:
@@ -81,12 +87,19 @@ def validate_complete(report: dict[str, Any]) -> list[str]:
     if metrics.get("budget_decision") != "deny_provider_generation":
         errors.append("budget_decision must deny provider generation by default")
     state = report.get("state") if isinstance(report.get("state"), dict) else {}
-    for key in ("facts", "needs", "tool_requests", "shared_evidence", "claims", "decisions", "candidate_operations"):
+    for key in ("facts", "needs", "tool_requests", "shared_evidence", "provider_results", "claims", "decisions", "candidate_operations"):
         value = state.get(key)
         if not isinstance(value, list) or not value:
             errors.append(f"state.{key} must contain at least one item")
+    if report.get("provider_execution_performed") is not True or metrics.get("provider_execution_performed") is not True:
+        errors.append("complete run must perform observable provider execution")
+    if int(metrics.get("provider_lane_count") or 0) < 3:
+        errors.append("complete run must include all three provider lanes")
+    output_contract = report.get("real_run_output_contract") if isinstance(report.get("real_run_output_contract"), dict) else {}
+    if not output_contract.get("heap_event_log") or not output_contract.get("provider_report_outputs"):
+        errors.append("complete run must expose real-run-compatible output contract")
     guardrails = report.get("guardrails") if isinstance(report.get("guardrails"), dict) else {}
-    for key in ("provider_execution_performed", "patch_application_performed", "source_writes_performed"):
+    for key in ("patch_application_performed", "source_writes_performed"):
         if report.get(key) is not False or guardrails.get(key) is not False:
             errors.append(f"guardrail {key} must be false")
     return errors
@@ -129,6 +142,7 @@ def main() -> int:
     parser.add_argument("--output", default="output/validation/heap_runtime_completeness_gate_smoke.json")
     parser.add_argument("--markdown-output", default="output/validation/heap_runtime_completeness_gate_smoke.md")
     parser.add_argument("--timeout-seconds", type=int, default=240)
+    parser.add_argument("--provider-model", default="gpt-oss:20b")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -136,7 +150,7 @@ def main() -> int:
     runs: list[dict[str, Any]] = []
     errors: list[str] = []
 
-    complete_proc, complete_report, complete_dir = run_gate(repo_root, "complete", stamp, args.timeout_seconds, max_iterations=4)
+    complete_proc, complete_report, complete_dir = run_gate(repo_root, "complete", stamp, args.timeout_seconds, max_iterations=4, provider_model=args.provider_model)
     complete_errors = []
     if complete_proc.returncode != 0:
         complete_errors.append(f"complete gate returned {complete_proc.returncode}: {(complete_proc.stderr or complete_proc.stdout)[-1500:]}")
@@ -151,7 +165,7 @@ def main() -> int:
         "errors": complete_errors,
     })
 
-    blocked_proc, blocked_report, blocked_dir = run_gate(repo_root, "budget_block", stamp, args.timeout_seconds, max_iterations=2)
+    blocked_proc, blocked_report, blocked_dir = run_gate(repo_root, "budget_block", stamp, args.timeout_seconds, max_iterations=2, provider_model=args.provider_model)
     blocked_errors = []
     if blocked_proc.returncode != 0:
         blocked_errors.append(f"budget_block gate returned {blocked_proc.returncode}: {(blocked_proc.stderr or blocked_proc.stdout)[-1500:]}")
@@ -173,7 +187,7 @@ def main() -> int:
         "repo_root": repo_root.as_posix(),
         "passed": not errors,
         "runs": runs,
-        "provider_execution_performed": False,
+        "provider_execution_performed": any(bool((run.get("metrics") or {}).get("provider_execution_performed")) for run in runs),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": errors,
