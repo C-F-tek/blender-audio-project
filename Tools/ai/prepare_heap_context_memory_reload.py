@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
 """Prepare input-ready context and memory reload artifacts for heap runtime.
 
-This is the startup bridge between an operator request and the heap/exchange
-loop. It reuses existing report-only tools from the unified run lane and writes a
-single manifest plus a task Markdown file that can be passed to the heap with
-`--task-file` before provider lanes start.
-
-The startup reload has a strict core and an advisory extension:
-
-- tool catalog, memory inventory and transient request context are required;
-- AI context pack is advisory because repository documentation profiles can be
-  intentionally stale or partially unavailable while still producing useful
-  context artifacts.
+The startup reload is tool-owned: it runs the repository tools that know how to
+build tool catalogs, memory inventory, operational memory status/search,
+transient request context and AI context packs. Partial tool failure is not
+automatically fatal when useful artifacts were produced; the manifest records the
+degradation and the heap task file carries that fact into the shared runtime
+state before provider lanes start.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -36,6 +32,13 @@ CANONICAL_CONTEXT_FILES = (
     "docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md",
     "Tools/ai/README.md",
     "Tools/workflow/README.md",
+)
+
+SEMANTIC_CHUNK_ROOTS = (
+    "Tools/ai",
+    "Tools/validation",
+    "Tools/workflow",
+    "docs/LOCAL_AI_TASKS",
 )
 
 
@@ -68,6 +71,16 @@ def read_json(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def write_json(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def write_markdown(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
 def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
     if explicit:
         return str(Path(explicit).resolve())
@@ -79,6 +92,47 @@ def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
         if candidate.exists():
             return str(candidate.resolve())
     return sys.executable
+
+
+def summarize_artifact(path: Path, repo_root: Path) -> dict[str, Any]:
+    item: dict[str, Any] = {
+        "path": repo_rel(repo_root, path),
+        "exists": path.exists(),
+        "size_bytes": None,
+        "suffix": path.suffix.lower(),
+        "json_ok": False,
+        "json_passed": None,
+        "kind": "",
+        "useful": False,
+    }
+    if not path.exists() or not path.is_file():
+        return item
+    try:
+        size = path.stat().st_size
+    except OSError:
+        size = 0
+    item["size_bytes"] = size
+    item["useful"] = size > 0
+    if path.suffix.lower() == ".json" and size > 0:
+        data = read_json(path)
+        item["json_ok"] = bool(data)
+        item["json_passed"] = data.get("passed") if data else None
+        item["kind"] = str(data.get("kind") or data.get("report_kind") or "")
+        if data:
+            item["summary_fields"] = {
+                key: data.get(key)
+                for key in (
+                    "passed",
+                    "profile",
+                    "included_file_count",
+                    "truncated_file_count",
+                    "provider_execution_performed",
+                    "patch_application_performed",
+                    "source_writes_performed",
+                )
+                if key in data
+            }
+    return item
 
 
 def run_tool(
@@ -97,14 +151,14 @@ def run_tool(
         capture_output=True,
         check=False,
     )
-    artifacts = [repo_rel(repo_root, path) for path in (artifact_paths or [])]
-    existing_artifacts = [
-        repo_rel(repo_root, path)
-        for path in (artifact_paths or [])
-        if path.exists()
-    ]
+    artifacts = [summarize_artifact(path, repo_root) for path in (artifact_paths or [])]
+    existing_artifacts = [item["path"] for item in artifacts if item.get("exists")]
+    useful_artifacts = [item["path"] for item in artifacts if item.get("useful")]
     passed = completed.returncode == 0
-    effective_passed = passed or (not required and bool(existing_artifacts))
+    artifact_useful = bool(useful_artifacts)
+    effective_passed = passed or artifact_useful
+    degraded = (not passed) and artifact_useful
+    hard_failed = (not passed) and (not artifact_useful)
     return {
         "name": name,
         "requirement": requirement,
@@ -113,8 +167,13 @@ def run_tool(
         "returncode": completed.returncode,
         "passed": passed,
         "effective_passed": effective_passed,
-        "artifact_paths": artifacts,
+        "degraded": degraded,
+        "hard_failed": hard_failed,
+        "artifact_useful": artifact_useful,
+        "artifact_paths": [item["path"] for item in artifacts],
         "existing_artifact_paths": existing_artifacts,
+        "useful_artifact_paths": useful_artifacts,
+        "artifact_summaries": artifacts,
         "stdout_tail": (completed.stdout or "")[-3000:],
         "stderr_tail": (completed.stderr or "")[-3000:],
     }
@@ -122,6 +181,162 @@ def run_tool(
 
 def existing_context_files(repo_root: Path) -> list[str]:
     return [path for path in CANONICAL_CONTEXT_FILES if (repo_root / path).is_file()]
+
+
+def build_repo_docs_map(repo_root: Path, context_files: list[str], output_dir: Path) -> dict[str, str]:
+    docs = []
+    for rel_path in context_files:
+        full = repo_root / rel_path
+        text = read_text(full, max_chars=1200)
+        docs.append(
+            {
+                "path": rel_path,
+                "size_bytes": full.stat().st_size if full.exists() else 0,
+                "sha256": hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest() if text else "",
+                "preview": text,
+            }
+        )
+    data = {
+        "schema_version": 1,
+        "kind": "heap_startup_repo_docs_map",
+        "passed": True,
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+        "document_count": len(docs),
+        "documents": docs,
+    }
+    json_path = output_dir / "startup_repo_docs_map.json"
+    md_path = output_dir / "startup_repo_docs_map.md"
+    write_json(json_path, data)
+    lines = ["# Heap Startup Repo Docs Map", ""]
+    for item in docs:
+        lines.append(f"- `{item['path']}` size=`{item['size_bytes']}`")
+    write_markdown(md_path, "\n".join(lines) + "\n")
+    return {"repo_docs_map_json": repo_rel(repo_root, json_path), "repo_docs_map_markdown": repo_rel(repo_root, md_path)}
+
+
+def collect_semantic_code_chunks(repo_root: Path, output_dir: Path, request: str, limit: int = 48) -> dict[str, str]:
+    keywords = [part.lower() for part in request.replace("_", " ").replace("-", " ").split() if len(part) >= 4]
+    candidates: list[Path] = []
+    for root in SEMANTIC_CHUNK_ROOTS:
+        base = repo_root / root
+        if not base.exists():
+            continue
+        for suffix in ("*.py", "*.md", "*.ps1"):
+            candidates.extend(sorted(base.rglob(suffix)))
+    ranked: list[tuple[int, Path]] = []
+    for path in candidates:
+        rel = repo_rel(repo_root, path)
+        rel_lower = rel.lower()
+        score = sum(3 for key in keywords if key in rel_lower)
+        if any(token in rel_lower for token in ("heap", "context", "memory", "provider", "gpu", "npu", "composer")):
+            score += 8
+        if path.name in {
+            "run_heap_runtime_context_closure.py",
+            "prepare_heap_context_memory_reload.py",
+            "compose_heap_final_proposals.py",
+            "run_heap_runtime_completeness_gate.py",
+            "build_ai_context_pack.py",
+            "agent_runtime_sqlite_memory.py",
+        }:
+            score += 20
+        ranked.append((score, path))
+    ranked.sort(key=lambda item: (-item[0], repo_rel(repo_root, item[1])))
+    chunks = []
+    for score, path in ranked[:limit]:
+        rel = repo_rel(repo_root, path)
+        text = read_text(path, max_chars=1800)
+        chunks.append(
+            {
+                "path": rel,
+                "score": score,
+                "size_bytes": path.stat().st_size if path.exists() else 0,
+                "preview": text,
+                "sha256": hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest() if text else "",
+            }
+        )
+    data = {
+        "schema_version": 1,
+        "kind": "heap_startup_semantic_code_chunks",
+        "passed": True,
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+        "chunk_count": len(chunks),
+        "selection_policy": "deterministic_path_keyword_ranker",
+        "chunks": chunks,
+    }
+    json_path = output_dir / "startup_semantic_code_chunks.json"
+    md_path = output_dir / "startup_semantic_code_chunks.md"
+    write_json(json_path, data)
+    lines = ["# Heap Startup Semantic Code Chunks", ""]
+    for item in chunks:
+        lines.extend([f"## `{item['path']}`", "", f"- Score: `{item['score']}`", "", "```text", item["preview"], "```", ""])
+    write_markdown(md_path, "\n".join(lines))
+    return {
+        "semantic_code_chunks_json": repo_rel(repo_root, json_path),
+        "semantic_code_chunks_markdown": repo_rel(repo_root, md_path),
+    }
+
+
+def write_semantic_evidence(commands: list[dict[str, Any]], repo_root: Path, output_dir: Path) -> dict[str, str]:
+    evidence_items = []
+    for command in commands:
+        evidence_items.append(
+            {
+                "name": command.get("name"),
+                "requirement": command.get("requirement"),
+                "passed": command.get("passed"),
+                "effective_passed": command.get("effective_passed"),
+                "degraded": command.get("degraded"),
+                "hard_failed": command.get("hard_failed"),
+                "useful_artifact_paths": command.get("useful_artifact_paths", []),
+            }
+        )
+    data = {
+        "schema_version": 1,
+        "kind": "heap_startup_semantic_evidence_chunks",
+        "passed": all(bool(item.get("effective_passed")) for item in commands if item.get("required")),
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+        "evidence_count": len(evidence_items),
+        "evidence": evidence_items,
+    }
+    json_path = output_dir / "startup_semantic_evidence_chunks.json"
+    md_path = output_dir / "startup_semantic_evidence_chunks.md"
+    write_json(json_path, data)
+    lines = ["# Heap Startup Semantic Evidence Chunks", ""]
+    for item in evidence_items:
+        lines.append(
+            f"- `{item['requirement']}` name=`{item['name']}` passed=`{item['passed']}` "
+            f"effective=`{item['effective_passed']}` degraded=`{item['degraded']}`"
+        )
+    write_markdown(md_path, "\n".join(lines) + "\n")
+    return {
+        "semantic_evidence_chunks_json": repo_rel(repo_root, json_path),
+        "semantic_evidence_chunks_markdown": repo_rel(repo_root, md_path),
+    }
+
+
+def build_context_loaded_block(artifacts: dict[str, str]) -> list[str]:
+    key_labels = (
+        ("tool_catalog_json", "tool catalog"),
+        ("shared_memory_json", "memory inventory"),
+        ("operational_memory_status_json", "operational memory status"),
+        ("operational_memory_search_json", "operational memory search"),
+        ("shared_context_json", "transient request context"),
+        ("ai_context_pack_json", "AI context pack"),
+        ("semantic_code_chunks_json", "semantic chunks"),
+        ("semantic_evidence_chunks_json", "semantic evidence chunks"),
+        ("repo_docs_map_json", "repo docs map"),
+    )
+    lines = ["CONTEXT LOADED INTO HEAP:"]
+    for key, label in key_labels:
+        value = artifacts.get(key, "")
+        lines.append(f"- {label}: `{value or 'not_available'}`")
+    return lines
 
 
 def build_task_markdown(
@@ -133,13 +348,19 @@ def build_task_markdown(
     artifacts: dict[str, str],
     commands: list[dict[str, Any]],
     warnings: list[str],
+    startup_reload_degraded: bool,
+    degraded_requirements: list[str],
+    blocking_requirements: list[str],
 ) -> str:
     lines: list[str] = [
         "# Heap Startup Input-Ready Context",
         "",
         f"- Stamp: `{stamp}`",
         "- Source: `prepare_heap_context_memory_reload.py`",
-        "- Mode: `report_only_pre_provider_reload`",
+        "- Mode: `tool_owned_pre_provider_reload`",
+        f"- Startup reload degraded: `{startup_reload_degraded}`",
+        f"- Degraded requirements: `{degraded_requirements}`",
+        f"- Blocking requirements: `{blocking_requirements}`",
         "- Provider execution performed: `False`",
         "- Patch application performed: `False`",
         "- Source writes performed: `False`",
@@ -151,11 +372,16 @@ def build_task_markdown(
         "## Reload contract for heap providers",
         "",
         "- Before GPU1 planning, consume this task file as startup heap context.",
-        "- Treat the listed artifacts as the current source of knowledge for repo, docs, tool catalog and memory inventory.",
+        "- Treat listed artifacts as the current source of knowledge for repo, docs, tool catalog and memory inventory.",
+        "- If startup_reload_degraded is true, continue but carry the degradation as a fact in the heap.",
         "- Do not answer from a single token window: write proposal chunks and let the final composer assemble them.",
-        "- GPU0 must refine or reject generic/stub chunks.",
+        "- GPU0 must refine or reject generic/stub chunks using source anchors and quality diagnosis.",
         "- NPU must contribute bounded audit/workload evidence when enabled.",
-        "- Advisory context-pack failures do not block heap startup when core reload artifacts passed.",
+        "- Advisory context-pack failures do not block heap startup when useful artifacts exist.",
+        "",
+        "## Context loaded into heap",
+        "",
+        *build_context_loaded_block(artifacts),
         "",
         "## Startup artifacts",
         "",
@@ -171,9 +397,9 @@ def build_task_markdown(
             + f"required=`{item.get('required')}` "
             + f"passed=`{item.get('passed')}` "
             + f"effective_passed=`{item.get('effective_passed')}` "
+            + f"degraded=`{item.get('degraded')}` "
             + f"rc=`{item.get('returncode')}` "
-            + f"artifacts=`{item.get('existing_artifact_paths')}` "
-            + f"command=`{' '.join(str(part) for part in item.get('command', []))}`"
+            + f"artifacts=`{item.get('useful_artifact_paths')}`"
         )
     if warnings:
         lines.extend(["", "## Startup warnings", ""])
@@ -204,7 +430,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--strict-ai-context-pack",
         action="store_true",
-        help="Treat build_ai_context_pack failures as startup-blocking. Default: advisory-only.",
+        help="Treat build_ai_context_pack failures as startup-blocking.",
+    )
+    parser.add_argument(
+        "--strict-startup-reload",
+        action="store_true",
+        help="Return failure when any startup reload tool is degraded, even if artifacts are useful.",
     )
     return parser.parse_args()
 
@@ -216,27 +447,58 @@ def main() -> int:
     project_python = resolve_project_python(repo_root, args.python_exe)
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
-    context_files = existing_context_files(repo_root)
 
     artifacts: dict[str, str] = {}
     commands: list[dict[str, Any]] = []
     warnings: list[str] = []
 
-    tool_catalog_json = output_dir / "startup_tool_catalog.json"
-    tool_catalog_md = output_dir / "startup_tool_catalog.md"
+    required_context_json = output_dir / "startup_required_ai_context_files.json"
+    required_context_md = output_dir / "startup_required_ai_context_files.md"
     cmd = [
         project_python,
-        "Tools/ai/build_agent_agnostic_tool_inventory.py",
+        "Tools/ai/ensure_ai_context_required_files.py",
         "--repo-root",
         ".",
+        "--profile",
+        "project_self_improvement",
         "--output",
-        str(tool_catalog_json),
+        str(required_context_json),
         "--markdown-output",
-        str(tool_catalog_md),
+        str(required_context_md),
+        "--apply",
     ]
     commands.append(
         run_tool(
             cmd,
+            repo_root,
+            name="required_context_files_reload",
+            requirement="required_context_files",
+            required=True,
+            artifact_paths=[required_context_json, required_context_md],
+        )
+    )
+    artifacts["required_context_files_json"] = repo_rel(repo_root, required_context_json)
+    artifacts["required_context_files_markdown"] = repo_rel(repo_root, required_context_md)
+
+    context_files = existing_context_files(repo_root)
+
+    artifacts.update(build_repo_docs_map(repo_root, context_files, output_dir))
+    artifacts.update(collect_semantic_code_chunks(repo_root, output_dir, args.request, limit=max(12, min(args.max_context_files, 64))))
+
+    tool_catalog_json = output_dir / "startup_tool_catalog.json"
+    tool_catalog_md = output_dir / "startup_tool_catalog.md"
+    commands.append(
+        run_tool(
+            [
+                project_python,
+                "Tools/ai/build_agent_agnostic_tool_inventory.py",
+                "--repo-root",
+                ".",
+                "--output",
+                str(tool_catalog_json),
+                "--markdown-output",
+                str(tool_catalog_md),
+            ],
             repo_root,
             name="tool_catalog_reload",
             requirement="tool_catalog",
@@ -249,23 +511,22 @@ def main() -> int:
 
     memory_json = output_dir / "startup_memory_inventory.json"
     memory_md = output_dir / "startup_memory_inventory.md"
-    cmd = [
-        project_python,
-        "Tools/ai/build_agent_memory_inventory.py",
-        "--repo-root",
-        ".",
-        "--objective",
-        args.request or "heap startup memory reload",
-        "--max-memory-chars",
-        str(args.max_memory_chars),
-        "--output",
-        str(memory_json),
-        "--markdown-output",
-        str(memory_md),
-    ]
     commands.append(
         run_tool(
-            cmd,
+            [
+                project_python,
+                "Tools/ai/build_agent_memory_inventory.py",
+                "--repo-root",
+                ".",
+                "--objective",
+                args.request or "heap startup memory reload",
+                "--max-memory-chars",
+                str(args.max_memory_chars),
+                "--output",
+                str(memory_json),
+                "--markdown-output",
+                str(memory_md),
+            ],
             repo_root,
             name="shared_memory_reload",
             requirement="shared_memory",
@@ -276,9 +537,69 @@ def main() -> int:
     artifacts["shared_memory_json"] = repo_rel(repo_root, memory_json)
     artifacts["shared_memory_markdown"] = repo_rel(repo_root, memory_md)
 
+    operational_status_json = output_dir / "startup_operational_memory_status.json"
+    operational_status_md = output_dir / "startup_operational_memory_status.md"
+    commands.append(
+        run_tool(
+            [
+                project_python,
+                "Tools/ai/agent_runtime_sqlite_memory.py",
+                "--repo-root",
+                ".",
+                "--action",
+                "status",
+                "--scope",
+                "operational",
+                "--output",
+                str(operational_status_json),
+                "--markdown-output",
+                str(operational_status_md),
+            ],
+            repo_root,
+            name="operational_memory_status_reload",
+            requirement="operational_memory_status",
+            required=False,
+            artifact_paths=[operational_status_json, operational_status_md],
+        )
+    )
+    artifacts["operational_memory_status_json"] = repo_rel(repo_root, operational_status_json)
+    artifacts["operational_memory_status_markdown"] = repo_rel(repo_root, operational_status_md)
+
+    operational_search_json = output_dir / "startup_operational_memory_search.json"
+    operational_search_md = output_dir / "startup_operational_memory_search.md"
+    commands.append(
+        run_tool(
+            [
+                project_python,
+                "Tools/ai/agent_runtime_sqlite_memory.py",
+                "--repo-root",
+                ".",
+                "--action",
+                "search",
+                "--scope",
+                "operational",
+                "--query",
+                "heap context memory reload provider proposal GPU0 NPU",
+                "--limit",
+                "20",
+                "--output",
+                str(operational_search_json),
+                "--markdown-output",
+                str(operational_search_md),
+            ],
+            repo_root,
+            name="operational_memory_search_reload",
+            requirement="operational_memory_search",
+            required=False,
+            artifact_paths=[operational_search_json, operational_search_md],
+        )
+    )
+    artifacts["operational_memory_search_json"] = repo_rel(repo_root, operational_search_json)
+    artifacts["operational_memory_search_markdown"] = repo_rel(repo_root, operational_search_md)
+
     transient_json = output_dir / "startup_transient_request_context.json"
     transient_md = output_dir / "startup_transient_request_context.md"
-    cmd = [
+    transient_command = [
         project_python,
         "Tools/ai/build_agent_transient_request_context.py",
         "--repo-root",
@@ -291,6 +612,10 @@ def main() -> int:
         str(tool_catalog_json),
         "--report-file",
         str(memory_json),
+        "--report-file",
+        str(operational_status_json),
+        "--report-file",
+        str(operational_search_json),
         "--max-raw-files",
         str(args.max_context_files),
         "--max-chars-per-file",
@@ -301,10 +626,10 @@ def main() -> int:
         str(transient_md),
     ]
     for rel_path in context_files:
-        cmd.extend(["--raw-file", rel_path])
+        transient_command.extend(["--raw-file", rel_path])
     commands.append(
         run_tool(
-            cmd,
+            transient_command,
             repo_root,
             name="shared_context_reload",
             requirement="shared_context_chunks",
@@ -322,24 +647,23 @@ def main() -> int:
     context_pack_md = context_pack_dir / f"{context_basename}.md"
     context_pack_evidence_json = context_evidence_dir / f"{context_basename}_evidence.json"
     context_pack_evidence_md = context_evidence_dir / f"{context_basename}_evidence.md"
-    cmd = [
-        project_python,
-        "Tools/ai/build_ai_context_pack.py",
-        "--repo-root",
-        ".",
-        "--profile",
-        "project_self_improvement",
-        "--output-dir",
-        str(context_pack_dir),
-        "--basename",
-        context_basename,
-        "--evidence-dir",
-        str(context_evidence_dir),
-        "--evidence-basename",
-        f"{context_basename}_evidence",
-    ]
     context_pack_result = run_tool(
-        cmd,
+        [
+            project_python,
+            "Tools/ai/build_ai_context_pack.py",
+            "--repo-root",
+            ".",
+            "--profile",
+            "project_self_improvement",
+            "--output-dir",
+            str(context_pack_dir),
+            "--basename",
+            context_basename,
+            "--evidence-dir",
+            str(context_evidence_dir),
+            "--evidence-basename",
+            f"{context_basename}_evidence",
+        ],
         repo_root,
         name="ai_context_pack_reload",
         requirement="ai_context_pack",
@@ -356,13 +680,14 @@ def main() -> int:
     artifacts["ai_context_pack_markdown"] = repo_rel(repo_root, context_pack_md)
     artifacts["ai_context_pack_evidence_json"] = repo_rel(repo_root, context_pack_evidence_json)
     artifacts["ai_context_pack_evidence_markdown"] = repo_rel(repo_root, context_pack_evidence_md)
-    if not context_pack_result["passed"]:
+
+    if context_pack_result["degraded"]:
         pack_payload = read_json(context_pack_json)
         pack_errors = pack_payload.get("errors") if isinstance(pack_payload.get("errors"), list) else []
         pack_warnings = pack_payload.get("warnings") if isinstance(pack_payload.get("warnings"), list) else []
         warning = (
-            "advisory ai_context_pack_reload returned non-zero "
-            + f"rc={context_pack_result['returncode']}; artifacts_exist={bool(context_pack_result['existing_artifact_paths'])}"
+            "ai_context_pack_reload returned non-zero "
+            + f"rc={context_pack_result['returncode']} but useful artifacts exist"
         )
         if pack_errors:
             warning += "; errors=" + "; ".join(str(item) for item in pack_errors[:5])
@@ -370,12 +695,20 @@ def main() -> int:
         for item in pack_warnings[:5]:
             warnings.append(f"ai_context_pack warning: {item}")
 
-    task_file = output_dir / "heap_startup_input_ready_context.md"
-    artifacts["heap_task_file"] = repo_rel(repo_root, task_file)
+    artifacts.update(write_semantic_evidence(commands, repo_root, output_dir))
+
     required_commands = [item for item in commands if item.get("required")]
     optional_commands = [item for item in commands if not item.get("required")]
-    required_passed = all(bool(item.get("effective_passed")) for item in required_commands)
+    blocking_requirements = [str(item.get("requirement")) for item in required_commands if not item.get("effective_passed")]
+    degraded_requirements = [str(item.get("requirement")) for item in commands if item.get("degraded")]
+    optional_failed_requirements = [str(item.get("requirement")) for item in optional_commands if not item.get("effective_passed")]
+    startup_reload_degraded = bool(degraded_requirements or optional_failed_requirements)
+    required_passed = not blocking_requirements
     optional_passed = all(bool(item.get("effective_passed")) for item in optional_commands)
+    input_ready_before_heap = required_passed and bool(context_files)
+
+    task_file = output_dir / "heap_startup_input_ready_context.md"
+    artifacts["heap_task_file"] = repo_rel(repo_root, task_file)
     task_markdown = build_task_markdown(
         repo_root=repo_root,
         request=args.request,
@@ -384,9 +717,14 @@ def main() -> int:
         artifacts=artifacts,
         commands=commands,
         warnings=warnings,
+        startup_reload_degraded=startup_reload_degraded,
+        degraded_requirements=degraded_requirements,
+        blocking_requirements=blocking_requirements,
     )
     task_file.write_text(task_markdown, encoding="utf-8")
 
+    strict_startup = bool(args.strict_startup_reload or args.strict_ai_context_pack)
+    passed = bool(input_ready_before_heap and (not strict_startup or not startup_reload_degraded))
     manifest = {
         "schema_version": 1,
         "kind": "heap_context_memory_reload_manifest",
@@ -394,9 +732,16 @@ def main() -> int:
         "repo_root": repo_root.as_posix(),
         "project_python": project_python,
         "request": args.request,
-        "passed": required_passed,
+        "passed": passed,
+        "input_ready_before_heap": input_ready_before_heap,
+        "load_context_into_heap": True,
+        "startup_reload_degraded": startup_reload_degraded,
+        "strict_startup_reload": strict_startup,
         "required_reload_passed": required_passed,
         "optional_reload_passed": optional_passed,
+        "blocking_requirements": blocking_requirements,
+        "degraded_requirements": degraded_requirements,
+        "optional_failed_requirements": optional_failed_requirements,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -409,20 +754,27 @@ def main() -> int:
         "optional_requirements": [item["requirement"] for item in optional_commands],
         "heap_task_file": artifacts["heap_task_file"],
         "contract": {
-            "input_ready_before_heap": True,
+            "input_ready_before_heap": input_ready_before_heap,
             "load_context_into_heap": True,
-            "reuse_existing_unified_run_tools": True,
+            "tool_catalog_loaded": bool(artifacts.get("tool_catalog_json")),
+            "shared_memory_loaded": bool(artifacts.get("shared_memory_json")),
+            "operational_memory_loaded": bool(artifacts.get("operational_memory_status_json")),
+            "repo_docs_loaded": bool(artifacts.get("repo_docs_map_json")),
+            "semantic_code_chunks_loaded": bool(artifacts.get("semantic_code_chunks_json")),
+            "ai_context_pack_loaded": bool(artifacts.get("ai_context_pack_json")) and context_pack_result.get("artifact_useful"),
+            "semantic_evidence_chunks_loaded": bool(artifacts.get("semantic_evidence_chunks_json")),
+            "heap_task_file_written": task_file.exists(),
             "advisory_context_pack_non_blocking": not bool(args.strict_ai_context_pack),
             "final_composer_required": True,
         },
     }
     manifest_path = output_dir / "heap_context_memory_reload_manifest.json"
     manifest_md = output_dir / "heap_context_memory_reload_manifest.md"
-    manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    write_json(manifest_path, manifest)
     manifest_md.write_text(task_markdown, encoding="utf-8")
 
     print(json.dumps({**manifest, "manifest": repo_rel(repo_root, manifest_path), "markdown": repo_rel(repo_root, manifest_md)}, indent=2, ensure_ascii=False))
-    return 0 if manifest["passed"] else 2
+    return 0 if passed or (input_ready_before_heap and not strict_startup) else 2
 
 
 if __name__ == "__main__":
