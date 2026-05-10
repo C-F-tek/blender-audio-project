@@ -243,6 +243,14 @@ def main() -> int:
         errors.append("apply report did not include concrete operation")
     if apply_report.get("changed_count", 0) < 1:
         errors.append("apply report did not change a reviewable source/doc file")
+    metadata_manual_items = [
+        item
+        for item in apply_report.get("manual_review_items") or []
+        if isinstance(item, dict)
+        and "metadata-only" in str(item.get("reason") or "")
+    ]
+    if metadata_manual_items:
+        errors.append("concrete runtime-evidence specs should not retain metadata-only companion operations")
 
     report: dict[str, Any] = {
         "schema_version": 1,

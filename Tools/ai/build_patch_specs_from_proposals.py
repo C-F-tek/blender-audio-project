@@ -275,9 +275,16 @@ def build_spec_for_proposal(
     skipped.extend(concrete_skipped)
 
     concrete_paths = {str(item.get("path") or "") for item in concrete_ops}
+    suppress_metadata_outputs = bool(concrete_ops)
     for output in proposal_outputs(proposal):
         path = normalize_repo_path(output.get("path"))
         if path in concrete_paths:
+            continue
+        if suppress_metadata_outputs:
+            skipped.append({
+                "path": path,
+                "reason": "metadata-only companion suppressed because concrete_operations are present",
+            })
             continue
         artifact_kind = str(output.get("artifact_kind") or "")
         write_policy = output.get("write_policy")
