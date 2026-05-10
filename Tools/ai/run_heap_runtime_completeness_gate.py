@@ -131,6 +131,22 @@ OUTPUT_ARTIFACT_PREFIXES = ("output/", "renders/", "indexAI/code_chunks/")
 SOURCE_CONTEXT_KEYS = {"path", "file", "source_file", "repo_path", "target_file", "target_path"}
 
 
+SOURCE_ANCHOR_SEARCH_ROOTS = ("Tools/ai", "Tools/workflow", "Tools/npu", "Tools/validation", "docs")
+MEMORY_CONTEXT_RELOAD_REQUIREMENTS = {
+    "tool_catalog": "tool_catalog_reload",
+    "shared_memory": "shared_memory_reload",
+    "operational_memory_write": "operational_memory_write",
+    "operational_memory_search": "operational_memory_reload",
+    "shared_context_chunks": "shared_context_reload",
+    "semantic_code_chunks": "semantic_code_reload",
+    "ai_context_pack": "context_pack_reload",
+    "semantic_evidence_chunks": "semantic_evidence_reload",
+    "runtime_debug_lab_execution": "runtime_debug_lab_reload",
+}
+PROPOSAL_ITERATION_MAX_CHARS = 12000
+PROPOSAL_ITERATION_SUMMARY_CHARS = 1200
+
+
 
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
@@ -361,8 +377,29 @@ class HeapRuntimeCompletenessGate:
         refs = self.extracted_response_file_refs(text)
         output_refs = [ref for ref in refs if self.is_output_artifact_ref(ref)]
         source_refs = [ref for ref in refs if self.is_source_candidate_ref(ref)]
-        existing_source = [ref for ref in source_refs if self.repo_source_file_exists(ref)]
-        unverified_source = [ref for ref in source_refs if ref not in existing_source]
+        existing_source: list[str] = []
+        resolved_source: list[str] = []
+        unverified_source: list[str] = []
+        alias_refs: dict[str, str] = {}
+        ambiguous_source: dict[str, list[str]] = {}
+
+        for ref in source_refs:
+            normalized = self.normalize_ref_path(ref)
+            direct_exists = self.repo_source_file_exists(normalized)
+            resolved = normalized if direct_exists else self.resolve_source_ref_alias(normalized)
+            if resolved:
+                if resolved not in existing_source:
+                    existing_source.append(resolved)
+                if resolved not in resolved_source:
+                    resolved_source.append(resolved)
+                if resolved != normalized:
+                    alias_refs[normalized] = resolved
+                continue
+            matches = self.source_ref_alias_matches(normalized, limit=12)
+            if matches:
+                ambiguous_source[normalized] = matches
+            unverified_source.append(normalized)
+
         requires_existing = self.request_requires_existing_files()
         no_source_refs = requires_existing and not existing_source
         passed = not requires_existing or (not unverified_source and not no_source_refs)
@@ -373,6 +410,9 @@ class HeapRuntimeCompletenessGate:
             "source_file_refs": source_refs,
             "existing_file_refs": existing_source,
             "existing_source_file_refs": existing_source,
+            "resolved_source_file_refs": resolved_source,
+            "source_alias_refs": alias_refs,
+            "ambiguous_source_file_refs": ambiguous_source,
             "unverified_file_refs": unverified_source,
             "unverified_source_file_refs": unverified_source,
             "no_source_file_refs": no_source_refs,
@@ -418,6 +458,182 @@ class HeapRuntimeCompletenessGate:
                 if len(candidates) >= limit:
                     return candidates
         return candidates[:limit]
+
+
+    def source_ref_alias_matches(self, rel_path: str, limit: int = 20) -> list[str]:
+        normalized = self.normalize_ref_path(rel_path)
+        if not normalized or self.is_output_artifact_ref(normalized):
+            return []
+        suffix = Path(normalized).suffix.lower()
+        if suffix not in SOURCE_CODE_EXTENSIONS:
+            return []
+        name = Path(normalized).name
+        matches: list[str] = []
+        search_roots = [self.repo_root / root for root in SOURCE_ANCHOR_SEARCH_ROOTS]
+        for base in search_roots:
+            if not base.exists():
+                continue
+            for path in sorted(base.rglob(name)):
+                rel = repo_rel(self.repo_root, path)
+                if self.repo_source_file_exists(rel) and rel not in matches:
+                    matches.append(rel)
+                if len(matches) >= limit:
+                    return matches
+        return matches
+
+    def resolve_source_ref_alias(self, rel_path: str) -> str:
+        normalized = self.normalize_ref_path(rel_path)
+        if self.repo_source_file_exists(normalized):
+            return normalized
+        matches = self.source_ref_alias_matches(normalized, limit=25)
+        if len(matches) == 1:
+            return matches[0]
+        preferred_roots = ("Tools/ai/", "Tools/workflow/", "Tools/npu/", "Tools/validation/")
+        preferred = [item for item in matches if item.startswith(preferred_roots)]
+        if len(preferred) == 1:
+            return preferred[0]
+        return ""
+
+    def source_anchor_feedback(self, events: list[dict[str, Any]], quality: dict[str, Any] | None = None) -> str:
+        candidates = self.real_source_file_candidates(events, limit=20)
+        if not candidates:
+            return ""
+        requested = []
+        if isinstance(quality, dict):
+            requested = list(quality.get("unverified_source_file_refs") or quality.get("unverified_file_refs") or [])
+        lines = [
+            "SOURCE PATH ANCHORING REQUIRED:",
+            "Use only exact repo-relative paths from this allowlist when citing source files.",
+            "Do not cite basenames unless the exact repo-relative path is also present.",
+        ]
+        if requested:
+            lines.append("Unverified refs from prior proposal: " + ", ".join(str(item) for item in requested[:12]))
+        lines.append("Allowed source paths:")
+        lines.extend(f"- {item}" for item in candidates[:20])
+        return "\n".join(lines)
+
+    def append_reload_lifecycle_event(
+        self,
+        requirement: str,
+        round_id: int,
+        phase: str,
+        tool: str = "",
+        refs: list[str] | None = None,
+    ) -> None:
+        event_kind = MEMORY_CONTEXT_RELOAD_REQUIREMENTS.get(requirement)
+        if not event_kind:
+            return
+        payload: dict[str, Any] = {
+            "kind": "memory_context_reload",
+            "lane": "context_memory",
+            "phase": phase,
+            "round": round_id,
+            "requirement": requirement,
+            "reload_event": event_kind,
+            "tool": tool,
+            "summary": f"{event_kind} {phase} for {requirement}",
+        }
+        if refs:
+            payload["artifact_refs"] = refs[:12]
+        self.append_heap_exchange_event(payload)
+
+    def proposal_iteration_dir(self) -> Path:
+        path = self.runtime_context_dir() / "proposal_iterations"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def write_proposal_iteration_artifact(
+        self,
+        revision: int,
+        response_text: str,
+        quality: dict[str, Any],
+        events: list[dict[str, Any]],
+        source: str = "gpu1",
+    ) -> dict[str, str]:
+        out_dir = self.proposal_iteration_dir()
+        basename = f"heap_proposal_revision_{revision:03d}"
+        json_path = out_dir / f"{basename}.json"
+        md_path = out_dir / f"{basename}.md"
+        previous = self.latest_proposal_iteration_block(max_chars=PROPOSAL_ITERATION_SUMMARY_CHARS)
+        anchored_sources = self.real_source_file_candidates(events, limit=20)
+        clipped = (response_text or "")[:PROPOSAL_ITERATION_MAX_CHARS]
+        data = {
+            "schema_version": 1,
+            "kind": "heap_proposal_iteration",
+            "stamp": self.stamp,
+            "revision": revision,
+            "source": source,
+            "quality_passed": bool(quality.get("passed")),
+            "response_file_reference_quality": quality,
+            "anchored_source_candidates": anchored_sources,
+            "previous_iteration_available": bool(previous),
+            "response_text": clipped,
+        }
+        write_json_report(data, json_path)
+        md = [
+            "# Heap Proposal Iteration",
+            "",
+            f"- Revision: `{revision}`",
+            f"- Source: `{source}`",
+            f"- Quality passed: `{quality.get('passed')}`",
+            "",
+            "## Anchored source candidates",
+            "",
+            *[f"- `{item}`" for item in anchored_sources[:20]],
+            "",
+            "## Proposal chunk",
+            "",
+            clipped,
+            "",
+        ]
+        write_text_report("\n".join(md), md_path)
+        refs = {"json": repo_rel(self.repo_root, json_path), "markdown": repo_rel(self.repo_root, md_path)}
+        self.append_heap_exchange_event({
+            "kind": "proposal_iteration",
+            "lane": source,
+            "round": revision,
+            "path": refs["json"],
+            "markdown": refs["markdown"],
+            "quality_passed": bool(quality.get("passed")),
+            "summary": f"provider proposal revision {revision} persisted as reusable heap chunk",
+        })
+        return refs
+
+    def proposal_iteration_artifacts(self) -> list[str]:
+        out_dir = self.proposal_iteration_dir()
+        refs: list[str] = []
+        for path in sorted(out_dir.glob("heap_proposal_revision_*.json")):
+            refs.append(repo_rel(self.repo_root, path))
+            md = path.with_suffix(".md")
+            if md.exists():
+                refs.append(repo_rel(self.repo_root, md))
+        return refs
+
+    def latest_proposal_iteration_block(self, max_chars: int = 4000) -> str:
+        out_dir = self.proposal_iteration_dir()
+        candidates = sorted(out_dir.glob("heap_proposal_revision_*.md"))
+        if not candidates:
+            return ""
+        text = candidates[-1].read_text(encoding="utf-8", errors="replace")
+        if len(text) <= max_chars:
+            return text
+        return text[-max_chars:]
+
+    def proposal_iteration_feedback(self, events: list[dict[str, Any]], quality: dict[str, Any] | None = None) -> str:
+        latest = self.latest_proposal_iteration_block(max_chars=3500)
+        anchor = self.source_anchor_feedback(events, quality)
+        parts = [
+            "HEAP PROPOSAL ITERATION MODE:",
+            "NPU PIECE LANE REQUIRED: when provider generation/peer revision is permitted, NPU must contribute audit pieces, guardrail deltas, source anchors, or negative findings into the heap exchange instead of remaining only a device-visibility note.",
+            "The next revision must refine the previous proposal chunk and make it more operational.",
+            "Do not restart from scratch. Preserve useful decisions, add verified repo-relative paths, signatures, commands, and concrete implementation steps.",
+            "The final answer is assembled from proposal_iteration artifacts at heap exit, not only from raw GPU1 context.",
+        ]
+        if latest:
+            parts.extend(["", "Previous proposal chunk:", latest])
+        if anchor:
+            parts.extend(["", anchor])
+        return "\n".join(parts)
 
     def heap_exchange_paths(self) -> dict[str, Path]:
         """Return heap/exchange lifecycle artifact paths for this gate universe."""
@@ -515,7 +731,7 @@ class HeapRuntimeCompletenessGate:
         """Write the operator-facing heap exit product assembled from all lane artifacts."""
         paths = self.heap_exchange_paths()
         product_status = str(self.state.get("product", {}).get("status") or metrics.get("product_status") or "blocked_with_reason")
-        file_quality = self.response_file_reference_quality(self.response_text())
+        file_quality = self.response_file_reference_quality(response_text)
         product = {
             "schema_version": 1,
             "kind": "heap_runtime_exit_output",
@@ -538,6 +754,7 @@ class HeapRuntimeCompletenessGate:
             "runtime_debug_lab_required": self.runtime_debug_lab_required(),
             "runtime_debug_lab_passed": self.runtime_debug_lab_passed(events),
             "runtime_debug_lab_reports": self.runtime_debug_lab_reports(events),
+            "proposal_iteration_artifacts": self.proposal_iteration_artifacts(),
             "provider_execution_performed": self.provider_execution_performed,
             "patch_application_performed": False,
             "source_writes_performed": False,
@@ -564,6 +781,10 @@ class HeapRuntimeCompletenessGate:
             f"- Required: `{product.get('runtime_debug_lab_required')}`",
             f"- Passed: `{product.get('runtime_debug_lab_passed')}`",
             f"- Reports: `{product.get('runtime_debug_lab_reports')}`",
+            "",
+            "## Proposal iterations",
+            "",
+            f"- Artifacts: `{product.get('proposal_iteration_artifacts')}`",
         ]
         write_text_report("\n".join(md) + "\n", paths["exit_output_md"])
         self.append_heap_exchange_event({
@@ -1065,6 +1286,7 @@ class HeapRuntimeCompletenessGate:
             append_unique(self.state["tool_requests"], tool_request)
             self.publish("gpu1", "broker_request", tool_request, target="broker", correlation_id=request_id, round_id=round_id)
             self.tool_request_count += 1
+            self.append_reload_lifecycle_event(plan_item["requirement"], round_id, "requested", plan_item["tool"])
             self.append_heap_exchange_event({
                 "kind": "broker_request",
                 "lane": "gpu1",
@@ -1098,6 +1320,7 @@ class HeapRuntimeCompletenessGate:
         if completed.returncode != 0:
             self.errors.append(f"broker bridge returned {completed.returncode}: {(completed.stderr or completed.stdout)[-1000:]}")
         self.tool_execution_count += safe_int(report.get("tool_execution_count"))
+        self.append_reload_lifecycle_event("tool_catalog", 0, "bridge_result", "agent_runtime_tool_broker")
         self.append_heap_exchange_event({
             "kind": "broker_result",
             "lane": "broker",
@@ -1813,6 +2036,7 @@ class HeapRuntimeCompletenessGate:
                 "runtime_debug_lab_required": metrics.get("runtime_debug_lab_required"),
                 "runtime_debug_lab_passed": metrics.get("runtime_debug_lab_passed"),
                 "runtime_debug_lab_reports": metrics.get("runtime_debug_lab_reports"),
+                "proposal_iteration_artifacts": metrics.get("proposal_iteration_artifacts"),
                 "heap_runtime_exit_output": repo_rel(self.repo_root, self.heap_exchange_paths()["exit_output"]),
                 "heap_exchange_runtime_exit_product": repo_rel(self.repo_root, self.heap_exchange_paths()["exit_product"]),
                 "heap_exchange_runtime_state": repo_rel(self.repo_root, self.heap_exchange_paths()["runtime_state"]),
