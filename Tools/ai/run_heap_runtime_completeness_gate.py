@@ -512,6 +512,7 @@ class HeapRuntimeCompletenessGate:
             "heap_event_refs": [repo_rel(self.repo_root, self.heap.paths.events)],
             "provider_refs": self.provider_refs(),
             "provider_response_texts": self.provider_response_texts(),
+            "provider_role_decisions": self.provider_role_decisions(),
             "toolused": self.tool_execution_count > 0,
             "shared_memory_written_and_used": "shared_memory" in self.completed_requirements(events),
             "gpu0_audit": self.provider_response_text("gpu0_peer"),
@@ -548,6 +549,15 @@ class HeapRuntimeCompletenessGate:
             if text:
                 return text
         return ""
+
+    def provider_role_decisions(self) -> dict[str, str]:
+        decisions: dict[str, str] = {}
+        for report in self.provider_reports:
+            lane = str(report.get("lane") or "")
+            decision = str(report.get("role_decision") or "").strip()
+            if lane and decision:
+                decisions[lane] = decision
+        return decisions
 
     def provider_response_texts(self) -> dict[str, str]:
         responses: dict[str, str] = {}
@@ -624,7 +634,7 @@ class HeapRuntimeCompletenessGate:
             {
                 "lane": "npu_micro_task_auditor",
                 "requirement": "npu_micro_task_auditor",
-                "role": "static_micro_task_auditor",
+                "role": "npu_micro_task_auditor",
                 "output": npu_json,
                 "command": [
                     resolve_child_python(self.repo_root),
@@ -685,6 +695,7 @@ class HeapRuntimeCompletenessGate:
             "provider_execution_performed": provider_execution,
             "report_kind": report_data.get("kind"),
             "response_text": response_text,
+            "role_decision": report_data.get("role_decision"),
             "errors": errors,
             "warnings": warnings,
             "stdout_tail": (completed.stdout or "")[-1000:],

@@ -62,6 +62,65 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def classify_request(text: str) -> str:
+    normalized = " ".join(str(text or "").strip().lower().split())
+    if not normalized:
+        return "none"
+    greetings = {"ciao", "salve", "buongiorno", "buonasera", "hello", "hi", "hey"}
+    if normalized in greetings:
+        return "casual_greeting"
+    if any(token in normalized for token in ("errore", "traceback", "bug", "crash", "fallisce", "non funziona")):
+        return "debug_request"
+    if any(token in normalized for token in ("patch", "modifica", "codice", "script", "repo")):
+        return "repo_work_request"
+    return "general_request"
+
+
+def build_gpu0_peer_response(report: dict[str, Any]) -> dict[str, Any]:
+    request = str(report.get("request_input") or "").strip()
+    classification = classify_request(request)
+    workload_ok = bool(report.get("openvino_gpu0_observable_workload_passed") or report.get("openvino_gpu0_workload_passed"))
+    device = str(report.get("selected_device") or "GPU.0")
+    iterations = int(report.get("openvino_gpu0_sustained_iterations_performed") or 0)
+    infer_s = float(report.get("inference_seconds") or 0.0)
+    preview = str(report.get("output_preview") or "").strip()
+    errors = report.get("errors") if isinstance(report.get("errors"), list) else []
+    warnings = report.get("warnings") if isinstance(report.get("warnings"), list) else []
+
+    if not workload_ok:
+        decision = "blocked_peer_evidence"
+        summary = f"GPU0 peer non può contribuire: workload non osservabile; errors={len(errors)} warnings={len(warnings)}."
+    elif classification == "casual_greeting":
+        decision = "observe_only_for_greeting"
+        summary = (
+            f"GPU0 peer ha eseguito il tool OpenVINO su {device}: "
+            f"iterations={iterations}, inference_seconds={infer_s:.6f}, output_preview={preview}. "
+            "Ruolo: confermare che per un saluto casuale non serve computazione grafica aggiuntiva."
+        )
+    elif classification in {"debug_request", "repo_work_request"}:
+        decision = "diagnostic_peer_available"
+        summary = (
+            f"GPU0 peer ha eseguito il tool OpenVINO su {device}: "
+            f"iterations={iterations}, inference_seconds={infer_s:.6f}, output_preview={preview}. "
+            "Ruolo: lane diagnostica pronta a supportare analisi runtime/acceleratore, senza diventare planner primario."
+        )
+    else:
+        decision = "peer_observation_available"
+        summary = (
+            f"GPU0 peer ha eseguito il tool OpenVINO su {device}: "
+            f"iterations={iterations}, inference_seconds={infer_s:.6f}, output_preview={preview}. "
+            "Ruolo: contributo osservazionale disponibile per la sintesi GPU1."
+        )
+
+    return {
+        "request_classification": classification,
+        "role_decision": decision,
+        "tool_used": "run_openvino_gpu0_tensor_test",
+        "tool_result_summary": summary,
+        "response_text": summary,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
@@ -100,16 +159,7 @@ def main() -> int:
     if report["openvino_gpu0_observable_workload_required"] and not report["openvino_gpu0_observable_workload_passed"]:
         report.setdefault("errors", []).append("GPU.0 workload was not observable enough for real product peer evidence.")
         report["passed"] = False
-    if report.get("openvino_gpu0_observable_workload_passed"):
-        if report["request_input"]:
-            report["response_text"] = (
-                "GPU0 peer: richiesta osservata; workload OpenVINO GPU.0 eseguito come peer diagnostico; "
-                "nessuna azione aggiuntiva richiesta per un saluto casuale."
-            )
-        else:
-            report["response_text"] = "GPU0 peer: workload OpenVINO GPU.0 eseguito e osservabile."
-    else:
-        report["response_text"] = "GPU0 peer: workload non osservabile o non completato."
+    report.update(build_gpu0_peer_response(report))
     report["repo_root"] = str(repo_root)
 
     output = resolve_path(repo_root, args.output)

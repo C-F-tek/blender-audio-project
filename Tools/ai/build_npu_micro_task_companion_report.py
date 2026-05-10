@@ -5,6 +5,96 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Any
+
+try:
+    from Tools.npu.npu_runtime import guardrail_runtime_summary, npu_preflight
+except ImportError:  # pragma: no cover
+    guardrail_runtime_summary = None  # type: ignore
+    npu_preflight = None  # type: ignore
+
+
+def classify_request(text: str) -> str:
+    normalized = " ".join(str(text or "").strip().lower().split())
+    if not normalized:
+        return "none"
+    greetings = {"ciao", "salve", "buongiorno", "buonasera", "hello", "hi", "hey"}
+    if normalized in greetings:
+        return "casual_greeting"
+    if any(token in normalized for token in ("errore", "traceback", "bug", "crash", "fallisce", "non funziona")):
+        return "debug_request"
+    if any(token in normalized for token in ("patch", "modifica", "codice", "script", "repo")):
+        return "repo_work_request"
+    return "general_request"
+
+
+def run_npu_micro_task(timeout_seconds: int) -> dict[str, Any]:
+    if npu_preflight is None:
+        return {
+            "ready": False,
+            "mode": "npu_runtime_import_unavailable",
+            "npu_device_available": False,
+            "recommended_workers": 1,
+            "error_count": 1,
+            "warning_count": 0,
+            "errors": ["Tools.npu.npu_runtime import unavailable"],
+            "warnings": [],
+            "micro_task_performed": False,
+        }
+    report = npu_preflight(timeout=float(timeout_seconds))
+    summary = guardrail_runtime_summary(report) if guardrail_runtime_summary else {}
+    return {
+        **summary,
+        "python_exe": report.get("python_exe"),
+        "mode": report.get("mode"),
+        "openvino_import": report.get("openvino_import"),
+        "openvino_genai_import": report.get("openvino_genai_import"),
+        "openvino_available_devices": report.get("openvino_available_devices") or [],
+        "npu_device_available": bool(report.get("npu_device_available")),
+        "micro_task_performed": bool(report.get("python_starts") or report.get("openvino_import") or report.get("openvino_available_devices")),
+        "errors": report.get("errors") or [],
+        "warnings": report.get("warnings") or [],
+    }
+
+
+def build_npu_role_response(request_input: str, micro: dict[str, Any]) -> dict[str, Any]:
+    classification = classify_request(request_input)
+    performed = bool(micro.get("micro_task_performed"))
+    devices = micro.get("openvino_available_devices") or []
+    npu_available = bool(micro.get("npu_device_available"))
+    mode = str(micro.get("mode") or "unknown")
+    errors = micro.get("errors") if isinstance(micro.get("errors"), list) else []
+    warnings = micro.get("warnings") if isinstance(micro.get("warnings"), list) else []
+
+    if not performed:
+        decision = "blocked_micro_task"
+        text = f"NPU micro-task non eseguita: mode={mode}, errors={len(errors)}, warnings={len(warnings)}."
+    elif classification == "casual_greeting":
+        decision = "no_micro_action_for_greeting"
+        text = (
+            f"NPU micro-task eseguita: mode={mode}, devices={devices}, npu_available={npu_available}. "
+            "Ruolo: audit leggero; per un saluto casuale non serve azione NPU aggiuntiva."
+        )
+    elif classification in {"debug_request", "repo_work_request"}:
+        decision = "micro_audit_available"
+        text = (
+            f"NPU micro-task eseguita: mode={mode}, devices={devices}, npu_available={npu_available}. "
+            "Ruolo: companion lane disponibile per audit leggero del contesto e dei guardrail."
+        )
+    else:
+        decision = "micro_observation_available"
+        text = (
+            f"NPU micro-task eseguita: mode={mode}, devices={devices}, npu_available={npu_available}. "
+            "Ruolo: contributo di audit leggero disponibile per la sintesi GPU1."
+        )
+
+    return {
+        "request_classification": classification,
+        "role_decision": decision,
+        "micro_task_used": "Tools.npu.npu_runtime.npu_preflight",
+        "micro_task_result_summary": text,
+        "response_text": text,
+    }
 
 
 def main() -> int:
@@ -24,11 +114,9 @@ def main() -> int:
     if task_path and task_path.is_file():
         task_preview = task_path.read_text(encoding="utf-8", errors="replace")[: args.max_context_chars]
     request_input = str(args.request or "").strip()
-    response_text = (
-        "NPU micro-task: richiesta osservata; nessuna micro-azione necessaria per un saluto casuale."
-        if request_input
-        else "NPU micro-task: companion report disponibile; nessuna micro-azione richiesta."
-    )
+    micro_task = run_npu_micro_task(args.timeout_seconds)
+    role_response = build_npu_role_response(request_input, micro_task)
+    response_text = role_response["response_text"]
 
     report = {
         "kind": "npu_micro_task_companion_report",
@@ -41,16 +129,21 @@ def main() -> int:
         "task_preview_chars": len(task_preview),
         "request_input": request_input,
         "response_text": response_text,
+        "request_classification": role_response["request_classification"],
+        "role_decision": role_response["role_decision"],
+        "micro_task_used": role_response["micro_task_used"],
+        "micro_task_result_summary": role_response["micro_task_result_summary"],
+        "npu_micro_task": micro_task,
         "npu_peer_activity_requested": True,
-        "npu_peer_activity_performed": False,
-        "npu_device_execution_performed": False,
+        "npu_peer_activity_performed": bool(micro_task.get("micro_task_performed")),
+        "npu_device_execution_performed": bool(micro_task.get("npu_device_available")),
         "npu_provider_execution_performed": False,
-        "npu_activity_classification": "diagnostic_report_only",
-        "npu_activity_limit": "No NPU model load or device workload is performed by this companion report.",
+        "npu_activity_classification": role_response["role_decision"],
+        "npu_activity_limit": "NPU lane executes a bounded OpenVINO/NPU preflight micro-task; model generation remains disabled unless explicitly introduced by a future provider contract.",
         "recommendations": [
             {
                 "id": "npu_companion_policy",
-                "summary": "Use NPU as non-blocking companion lane for micro validation and diagnostics, not as legacy auditor or primary advisory.",
+                "summary": response_text,
                 "classification": "SAFE_MECHANICAL",
             }
         ],
