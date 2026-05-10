@@ -28,7 +28,7 @@
 param(
     [string]$RepoRoot = ".",
     [string[]]$Mode = @(),
-    [string]$TaskFile = ".\docs\LOCAL_AI_TASKS\docs-md-obsolete-pruning-next-step.md",
+    [string]$TaskFile = ".\docs\README.md",
     [string]$TaskBranch = "",
     [string]$Stamp = "",
     [string]$OutputDir = "output",
