@@ -27,12 +27,14 @@ from typing import Any, Callable
 
 try:
     from Tools.ai.agent_runtime_tool_broker_execution import execute_command_timed
+    from Tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
     from Tools.validation.report_utils import read_json_report, split_csv_values, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from Tools.ai.agent_runtime_tool_broker_execution import execute_command_timed  # type: ignore
+    from Tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python  # type: ignore
     from Tools.validation.report_utils import read_json_report, split_csv_values, write_json_report
 
 
@@ -121,7 +123,7 @@ def build_python_line_count_csv(repo_root: Path, out_dir: Path, request_id: str,
     report, markdown = base_outputs(out_dir, request_id, "python_line_count")
     csv_output = out_dir / f"{request_id}_python_line_count.csv"
     command = [
-        sys.executable,
+        resolve_child_python(repo_root),
         "Tools/validation/build_python_line_count_csv.py",
         "--repo-root",
         ".",
@@ -140,7 +142,7 @@ def build_python_line_count_csv(repo_root: Path, out_dir: Path, request_id: str,
 def build_agent_memory_inventory(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
     report, markdown = base_outputs(out_dir, request_id, "agent_memory_inventory")
     command = [
-        sys.executable,
+        resolve_child_python(repo_root),
         "Tools/ai/build_agent_memory_inventory.py",
         "--repo-root",
         ".",
@@ -159,7 +161,7 @@ def build_agent_memory_inventory(repo_root: Path, out_dir: Path, request_id: str
 def build_agent_agnostic_tool_inventory(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
     report, markdown = base_outputs(out_dir, request_id, "agent_agnostic_tool_inventory")
     command = [
-        sys.executable,
+        resolve_child_python(repo_root),
         "Tools/ai/build_agent_agnostic_tool_inventory.py",
         "--repo-root",
         ".",
@@ -176,7 +178,7 @@ def build_agent_agnostic_tool_inventory(repo_root: Path, out_dir: Path, request_
 def build_agent_transient_request_context(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
     report, markdown = base_outputs(out_dir, request_id, "agent_transient_request_context")
     command = [
-        sys.executable,
+        resolve_child_python(repo_root),
         "Tools/ai/build_agent_transient_request_context.py",
         "--repo-root",
         ".",
@@ -199,7 +201,7 @@ def build_agent_transient_request_context(repo_root: Path, out_dir: Path, reques
 def check_python_syntax(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
     report = out_dir / f"{request_id}_python_syntax.json"
     command = [
-        sys.executable,
+        resolve_child_python(repo_root),
         "Tools/validation/check_python_syntax.py",
         "--repo-root",
         ".",
@@ -212,7 +214,7 @@ def check_python_syntax(repo_root: Path, out_dir: Path, request_id: str, args: d
 def check_validation_report_contract(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
     report = out_dir / f"{request_id}_validation_report_contract.json"
     command = [
-        sys.executable,
+        resolve_child_python(repo_root),
         "Tools/validation/check_validation_report_contract.py",
         "--repo-root",
         ".",
@@ -229,7 +231,7 @@ def check_validation_report_contract(repo_root: Path, out_dir: Path, request_id:
 def run_gpu_planner_json_contract_smoke(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
     report, markdown = base_outputs(out_dir, request_id, "gpu_planner_json_contract_smoke")
     command = [
-        sys.executable,
+        resolve_child_python(repo_root),
         "Tools/validation/run_gpu_planner_json_contract_smoke.py",
         "--repo-root",
         ".",
@@ -244,7 +246,7 @@ def run_gpu_planner_json_contract_smoke(repo_root: Path, out_dir: Path, request_
 def build_code_interpreter_report(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
     report, markdown = base_outputs(out_dir, request_id, "code_interpreter_report")
     command = [
-        sys.executable,
+        resolve_child_python(repo_root),
         "Tools/ai/build_code_interpreter_report.py",
         "--repo-root",
         ".",
@@ -263,7 +265,7 @@ def build_code_interpreter_report(repo_root: Path, out_dir: Path, request_id: st
 def build_refactor_duplication_audit(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
     report, markdown = base_outputs(out_dir, request_id, "refactor_duplication_audit")
     command = [
-        sys.executable,
+        resolve_child_python(repo_root),
         "Tools/ai/build_refactor_duplication_audit.py",
         "--repo-root",
         ".",
@@ -287,10 +289,111 @@ def build_refactor_duplication_audit(repo_root: Path, out_dir: Path, request_id:
             command.extend([flag, value])
     return command, {"json_report": repo_rel(report, repo_root), "markdown_report": repo_rel(markdown, repo_root)}
 
+
+def build_semantic_code_chunk_selection(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
+    report, markdown = base_outputs(out_dir, request_id, "selected_semantic_code_chunks")
+    command = [
+        resolve_child_python(repo_root),
+        "Tools/ai/select_semantic_code_chunks.py",
+        "--repo-root",
+        ".",
+        "--query",
+        str(args.get("query") or "heap runtime provider teamwork memory context"),
+        "--output",
+        str(args.get("output") or report),
+        "--markdown-output",
+        str(args.get("markdown_output") or markdown),
+        "--max-chunks",
+        str(args.get("max_chunks") or 12),
+        "--max-total-chars",
+        str(args.get("max_total_chars") or 18000),
+        "--max-excerpt-chars",
+        str(args.get("max_excerpt_chars") or 2200),
+    ]
+    chunks = str(args.get("chunks") or "").strip()
+    if chunks:
+        command.extend(["--chunks", chunks])
+    for boost in split_values(args.get("path_boost")):
+        command.extend(["--path-boost", boost])
+    if truthy(args.get("no_code")):
+        command.append("--no-code")
+    return command, {"json_report": repo_rel(resolve_path(repo_root, str(args.get("output") or report)), repo_root), "markdown_report": repo_rel(resolve_path(repo_root, str(args.get("markdown_output") or markdown)), repo_root)}
+
+
+def build_ai_context_pack_tool(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
+    profile = str(args.get("profile") or "core_ai_backend")
+    basename = safe_id(args.get("basename") or request_id, "ai_context_pack")
+    output_dir = resolve_path(repo_root, str(args.get("output_dir") or out_dir / f"{request_id}_context_pack"))
+    evidence_dir = resolve_path(repo_root, str(args.get("evidence_dir") or out_dir / f"{request_id}_context_pack_evidence"))
+    evidence_basename = safe_id(args.get("evidence_basename") or f"{basename}_evidence", "ai_context_pack_evidence")
+    command = [
+        resolve_child_python(repo_root),
+        "Tools/ai/build_ai_context_pack.py",
+        "--repo-root",
+        ".",
+        "--profile",
+        profile,
+        "--basename",
+        basename,
+        "--output-dir",
+        repo_rel(output_dir, repo_root),
+        "--evidence-dir",
+        repo_rel(evidence_dir, repo_root),
+        "--evidence-basename",
+        evidence_basename,
+        "--max-total-chars",
+        str(args.get("max_total_chars") or 64000),
+        "--max-file-chars",
+        str(args.get("max_file_chars") or 4000),
+    ]
+    if truthy(args.get("no_evidence")):
+        command.append("--no-evidence")
+    pack_json = output_dir / f"{basename}.json"
+    pack_md = output_dir / f"{basename}.md"
+    evidence_json = evidence_dir / f"{evidence_basename}.json"
+    evidence_md = evidence_dir / f"{evidence_basename}.md"
+    return command, {
+        "json_report": repo_rel(pack_json, repo_root),
+        "markdown_report": repo_rel(pack_md, repo_root),
+        "evidence_json": repo_rel(evidence_json, repo_root),
+        "evidence_markdown": repo_rel(evidence_md, repo_root),
+    }
+
+
+def build_semantic_evidence_chunk_manifest(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
+    basename = safe_id(args.get("basename") or request_id, "semantic_evidence_chunks")
+    output_dir = resolve_path(repo_root, str(args.get("output_dir") or out_dir / f"{request_id}_semantic_chunks"))
+    chunk_dir = resolve_path(repo_root, str(args.get("chunk_output_dir") or output_dir / f"{basename}_chunks"))
+    command = [
+        resolve_child_python(repo_root),
+        "Tools/ai/build_semantic_evidence_chunks.py",
+        "--repo-root",
+        ".",
+        "--basename",
+        basename,
+        "--output-dir",
+        repo_rel(output_dir, repo_root),
+        "--chunk-output-dir",
+        repo_rel(chunk_dir, repo_root),
+        "--chunk-max-chars",
+        str(args.get("chunk_max_chars") or 12000),
+        "--chunk-overlap-lines",
+        str(args.get("chunk_overlap_lines") or 12),
+        "--no-ollama",
+    ]
+    for source in split_values(args.get("source")):
+        command.extend(["--source", source])
+    zip_output = str(args.get("zip_output") or "").strip()
+    if zip_output:
+        command.extend(["--zip-output", zip_output])
+    manifest_json = output_dir / f"{basename}_chunk_manifest.json"
+    manifest_md = output_dir / f"{basename}_chunk_manifest.md"
+    return command, {"json_report": repo_rel(manifest_json, repo_root), "markdown_report": repo_rel(manifest_md, repo_root), "chunk_output_dir": repo_rel(chunk_dir, repo_root)}
+
 def runtime_sqlite_memory(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
     report, markdown = base_outputs(out_dir, request_id, "runtime_sqlite_memory")
     command = [
-        sys.executable,
+        resolve_child_python(repo_root),
         "Tools/ai/agent_runtime_sqlite_memory.py",
         "--repo-root",
         ".",
@@ -390,6 +493,25 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         ),
         builder=build_refactor_duplication_audit,
     ),
+
+    "select_semantic_code_chunks": ToolSpec(
+        name="select_semantic_code_chunks",
+        description="Select bounded semantic code chunks for provider context from the existing chunk index.",
+        allowed_args=("query", "chunks", "output", "markdown_output", "max_chunks", "max_total_chars", "max_excerpt_chars", "path_boost", "no_code"),
+        builder=build_semantic_code_chunk_selection,
+    ),
+    "build_ai_context_pack": ToolSpec(
+        name="build_ai_context_pack",
+        description="Build a bounded final AI context pack from stable project profiles.",
+        allowed_args=("profile", "basename", "output_dir", "evidence_dir", "evidence_basename", "max_total_chars", "max_file_chars", "no_evidence"),
+        builder=build_ai_context_pack_tool,
+    ),
+    "build_semantic_evidence_chunks": ToolSpec(
+        name="build_semantic_evidence_chunks",
+        description="Build linked semantic evidence chunks with previous/next context and deterministic summaries.",
+        allowed_args=("basename", "source", "output_dir", "chunk_output_dir", "chunk_max_chars", "chunk_overlap_lines", "zip_output"),
+        builder=build_semantic_evidence_chunk_manifest,
+    ),
     "runtime_sqlite_memory": ToolSpec(
         name="runtime_sqlite_memory",
         description="Use protected persistent SQLite read-only or operational scratch SQLite memory under output/**.",
@@ -471,6 +593,7 @@ def execute_tool_request(
         "id": request_id,
         "tool": tool_name,
         "reason": str(request.get("reason") or ""),
+        "requirement": str(request.get("requirement") or ""),
         "requested": True,
         "executed": False,
         "blocked": False,

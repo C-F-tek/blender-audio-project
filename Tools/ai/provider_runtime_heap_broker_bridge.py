@@ -17,12 +17,14 @@ from typing import Any
 
 try:
     from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict
+    from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python
     from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict  # type: ignore
+    from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python  # type: ignore
     from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
 
 DEFAULT_OUTPUT = "output/validation/provider_runtime_heap_broker_bridge_{stamp}.json"
@@ -60,6 +62,7 @@ def event_to_tool_request(event: dict[str, Any], index: int) -> dict[str, Any]:
         "tool": str(payload.get("tool") or ""),
         "args": safe_dict(payload.get("args")),
         "reason": str(payload.get("reason") or "Provider runtime heap broker request."),
+        "requirement": str(payload.get("requirement") or ""),
         "source": str(event.get("source") or "provider_runtime_heap"),
         "heap_event": {
             "source": event.get("source"),
@@ -106,7 +109,7 @@ def run_broker(
     dry_run: bool,
 ) -> tuple[int, str, str]:
     command = [
-        sys.executable,
+        resolve_child_python(repo_root),
         "Tools/ai/agent_runtime_tool_broker.py",
         "--repo-root",
         ".",
@@ -125,7 +128,7 @@ def run_broker(
     ]
     if dry_run:
         command.append("--dry-run")
-    completed = subprocess.run(command, cwd=repo_root, text=True, capture_output=True, check=False)
+    completed = subprocess.run(command, cwd=repo_root, env=command_env(repo_root), text=True, capture_output=True, check=False)
     return completed.returncode, completed.stdout[-12000:], completed.stderr[-12000:]
 
 
@@ -157,6 +160,18 @@ def request_sources_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
     return mapping
 
 
+
+def request_requirements_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for request in broker_report.get("tool_requests", []):
+        if not isinstance(request, dict):
+            continue
+        request_id = str(request.get("id") or request.get("request_id") or "")
+        requirement = str(request.get("requirement") or "")
+        if request_id and requirement:
+            mapping[request_id] = requirement
+    return mapping
+
 def request_correlations_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
     mapping: dict[str, str] = {}
     for request in broker_report.get("tool_requests", []):
@@ -174,6 +189,7 @@ def append_broker_results(heap: ProviderRuntimeHeap, broker_report: dict[str, An
     events: list[dict[str, Any]] = []
     source_by_request_id = request_sources_by_id(broker_report)
     correlation_by_request_id = request_correlations_by_id(broker_report)
+    requirement_by_request_id = request_requirements_by_id(broker_report)
     for result in broker_report.get("tool_results", []):
         if not isinstance(result, dict):
             continue
@@ -190,6 +206,7 @@ def append_broker_results(heap: ProviderRuntimeHeap, broker_report: dict[str, An
                 "normalized_request_id": result_id,
                 "target_lane": target_lane,
                 "tool": result.get("tool"),
+                "requirement": result.get("requirement") or requirement_by_request_id.get(result_id, ""),
                 "executed": result.get("executed"),
                 "blocked": result.get("blocked"),
                 "returncode": result.get("returncode"),

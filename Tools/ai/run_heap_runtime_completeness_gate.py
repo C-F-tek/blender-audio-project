@@ -54,17 +54,27 @@ DEFAULT_BRIDGE_MD = "output/validation/heap_runtime_completeness_gate_broker_bri
 REQUIREMENT_ORDER = (
     "tool_catalog",
     "shared_memory",
+    "operational_memory_write",
+    "operational_memory_search",
     "shared_context_chunks",
+    "semantic_code_chunks",
+    "ai_context_pack",
+    "semantic_evidence_chunks",
     "validation_evidence",
-    "gpu1_provider_planner",
     "gpu0_provider_peer",
     "npu_micro_task_auditor",
+    "gpu1_provider_planner",
 )
 
 BASE_REQUIREMENTS = (
     "tool_catalog",
     "shared_memory",
+    "operational_memory_write",
+    "operational_memory_search",
     "shared_context_chunks",
+    "semantic_code_chunks",
+    "ai_context_pack",
+    "semantic_evidence_chunks",
     "validation_evidence",
 )
 
@@ -234,16 +244,30 @@ class HeapRuntimeCompletenessGate:
             return default
         return str(self.output_dir / filename)
 
+    def runtime_context_dir(self) -> Path:
+        if self.output_dir:
+            path = self.output_dir / "team_context"
+        else:
+            path = self.repo_root / "output" / "validation" / f"heap_runtime_team_context_{self.stamp}"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
     def tool_plan(self) -> list[dict[str, Any]]:
+        context_dir = self.runtime_context_dir()
+        request = self.request_text()
+        query = request or self.args.objective
+        memory_content = f"request={request}; objective={self.args.objective}; stamp={self.stamp}"
         return [
             {
+                "stage": 1,
                 "requirement": "tool_catalog",
                 "id": "tool-catalog-inventory",
                 "tool": "build_agent_agnostic_tool_inventory",
-                "args": {"root": ["Tools/ai", "Tools/validation", "Tools/workflow"]},
+                "args": {"root": ["Tools/ai", "Tools/validation", "Tools/workflow", "Tools/npu"]},
                 "reason": "discover allowlisted project tools before deciding product readiness",
             },
             {
+                "stage": 1,
                 "requirement": "shared_memory",
                 "id": "shared-memory-inventory",
                 "tool": "build_agent_memory_inventory",
@@ -251,20 +275,86 @@ class HeapRuntimeCompletenessGate:
                 "reason": "load read-only shared memory state into heap-visible evidence",
             },
             {
+                "stage": 1,
+                "requirement": "operational_memory_write",
+                "id": "operational-memory-write",
+                "tool": "runtime_sqlite_memory",
+                "args": {
+                    "action": "remember",
+                    "scope": "operational",
+                    "summary": "heap heartbeat request",
+                    "content": memory_content,
+                    "role": "heap_runtime_heartbeat",
+                    "tag": ["heap", "heartbeat", "teamwork"],
+                },
+                "reason": "write request-scoped operational memory before provider synthesis",
+            },
+            {
+                "stage": 1,
+                "requirement": "operational_memory_search",
+                "id": "operational-memory-search",
+                "tool": "runtime_sqlite_memory",
+                "args": {"action": "search", "scope": "operational", "query": query, "limit": 5},
+                "reason": "read request-scoped operational memory before provider synthesis",
+            },
+            {
+                "stage": 2,
                 "requirement": "shared_context_chunks",
                 "id": "shared-request-context",
                 "tool": "build_agent_transient_request_context",
                 "args": {
                     "objective": self.args.objective,
                     "memory_note": [
-                        "heap runtime completeness gate must prove tool, memory, context and validation evidence before product signal",
+                        "heap runtime completeness gate must prove tool, memory, context, chunks and validation evidence before product signal",
                         "budget/iterations define convergence and prevent endless repository loops",
+                        f"user_request={request}",
                     ],
                     "raw_file": ["AGENTS.md", "README.md"],
                 },
                 "reason": "materialize request-scoped shared context/chunks from repository policy documents",
             },
             {
+                "stage": 2,
+                "requirement": "semantic_code_chunks",
+                "id": "semantic-code-chunk-selection",
+                "tool": "select_semantic_code_chunks",
+                "args": {
+                    "query": query,
+                    "output": repo_rel(self.repo_root, context_dir / "selected_semantic_code_chunks.json"),
+                    "markdown_output": repo_rel(self.repo_root, context_dir / "selected_semantic_code_chunks.md"),
+                    "max_chunks": 12,
+                    "max_total_chars": min(int(self.args.max_context_files) * 500, 24000),
+                    "max_excerpt_chars": min(int(self.args.max_chars_per_file), 3000),
+                    "path_boost": ["Tools/ai", "Tools/npu", "Tools/workflow"],
+                },
+                "reason": "select bounded semantic code chunks so provider lanes share connected logical context",
+            },
+            {
+                "stage": 2,
+                "requirement": "ai_context_pack",
+                "id": "ai-context-pack",
+                "tool": "build_ai_context_pack",
+                "args": {
+                    "profile": "core_ai_backend",
+                    "basename": f"heap_runtime_context_pack_{self.stamp}",
+                    "output_dir": repo_rel(self.repo_root, context_dir / "ai_context_pack"),
+                    "evidence_dir": repo_rel(self.repo_root, context_dir / "ai_context_pack_evidence"),
+                    "evidence_basename": f"heap_runtime_context_pack_evidence_{self.stamp}",
+                    "max_total_chars": min(int(self.args.max_context_files) * int(self.args.max_chars_per_file), 96000),
+                    "max_file_chars": int(self.args.max_chars_per_file),
+                },
+                "reason": "assemble bounded final context pack from stable historical context builder",
+            },
+            {
+                "stage": 3,
+                "requirement": "semantic_evidence_chunks",
+                "id": "semantic-evidence-chunk-manifest",
+                "tool": "build_semantic_evidence_chunks",
+                "args": {},
+                "reason": "chunk oversized context/evidence into linked logical pieces before provider synthesis",
+            },
+            {
+                "stage": 3,
                 "requirement": "validation_evidence",
                 "id": "planner-json-contract-validation",
                 "tool": "run_gpu_planner_json_contract_smoke",
@@ -301,7 +391,7 @@ class HeapRuntimeCompletenessGate:
             errors = payload.get("errors") if isinstance(payload.get("errors"), list) else []
             if errors:
                 continue
-            requirement = self.requirement_for_tool(tool)
+            requirement = str(payload.get("requirement") or self.requirement_for_tool(tool))
             if requirement != "unknown":
                 completed.add(requirement)
         for provider_report in self.provider_reports:
@@ -315,7 +405,7 @@ class HeapRuntimeCompletenessGate:
     def attempted_requirements(self, events: list[dict[str, Any]]) -> set[str]:
         attempted: set[str] = set()
         for payload in self.broker_results(events):
-            requirement = self.requirement_for_tool(str(payload.get("tool") or ""))
+            requirement = str(payload.get("requirement") or self.requirement_for_tool(str(payload.get("tool") or "")))
             if requirement != "unknown":
                 attempted.add(requirement)
         for provider_report in self.provider_reports:
@@ -328,12 +418,65 @@ class HeapRuntimeCompletenessGate:
         completed = self.completed_requirements(events)
         return [item for item in REQUIREMENT_ORDER if item not in completed]
 
-    def next_unattempted_plan_item(self, events: list[dict[str, Any]]) -> dict[str, Any] | None:
+
+    def broker_output_refs(self, events: list[dict[str, Any]]) -> list[str]:
+        refs: list[str] = []
+        for payload in self.broker_results(events):
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+            for key in ("json_report", "markdown_report", "evidence_json", "evidence_markdown", "chunk_output_dir"):
+                value = str(outputs.get(key) or "").strip()
+                if value and value not in refs:
+                    refs.append(value)
+        return refs
+
+    def semantic_evidence_sources(self, events: list[dict[str, Any]]) -> list[str]:
+        sources: list[str] = []
+        for payload in self.broker_results(events):
+            requirement = str(payload.get("requirement") or self.requirement_for_tool(str(payload.get("tool") or "")))
+            if requirement not in {"shared_context_chunks", "semantic_code_chunks", "ai_context_pack", "operational_memory_search"}:
+                continue
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+            for key in ("json_report", "markdown_report", "evidence_json", "evidence_markdown"):
+                value = str(outputs.get(key) or "").strip()
+                if value and value not in sources:
+                    sources.append(value)
+        return sources[:8]
+
+    def enrich_plan_item_args(self, plan_item: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any]:
+        item = dict(plan_item)
+        args = dict(item.get("args") or {})
+        if item.get("requirement") == "shared_context_chunks":
+            refs = self.broker_output_refs(events)
+            if refs:
+                args["report_file"] = refs[:10]
+        if item.get("requirement") == "semantic_evidence_chunks":
+            sources = self.semantic_evidence_sources(events)
+            args.update(
+                {
+                    "basename": f"heap_runtime_semantic_evidence_{self.stamp}",
+                    "source": sources,
+                    "output_dir": repo_rel(self.repo_root, self.runtime_context_dir() / "semantic_evidence_chunks"),
+                    "chunk_output_dir": repo_rel(self.repo_root, self.runtime_context_dir() / "semantic_evidence_chunks" / "chunks"),
+                    "chunk_max_chars": min(max(int(self.args.max_chars_per_file), 4000), 12000),
+                    "chunk_overlap_lines": 12,
+                }
+            )
+        item["args"] = args
+        return item
+
+    def next_unattempted_plan_items(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
         attempted = self.attempted_requirements(events)
-        for item in self.tool_plan():
-            if item["requirement"] not in attempted:
-                return item
-        return None
+        pending = [item for item in self.tool_plan() if item["requirement"] not in attempted]
+        if not pending:
+            return []
+        if self.max_iterations < 4:
+            return [self.enrich_plan_item_args(pending[0], events)]
+        stage = min(int(item.get("stage") or 1) for item in pending)
+        return [self.enrich_plan_item_args(item, events) for item in pending if int(item.get("stage") or 1) == stage]
+
+    def next_unattempted_plan_item(self, events: list[dict[str, Any]]) -> dict[str, Any] | None:
+        items = self.next_unattempted_plan_items(events)
+        return items[0] if items else None
 
     def publish_shared_evidence_facts(self, round_id: int, events: list[dict[str, Any]]) -> None:
         existing = {item.get("requirement") for item in self.state["shared_evidence"]}
@@ -391,32 +534,33 @@ class HeapRuntimeCompletenessGate:
     def planner_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
         if self.heap.pending_broker_requests():
             return
-        plan_item = self.next_unattempted_plan_item(events)
-        if not plan_item:
+        plan_items = self.next_unattempted_plan_items(events)
+        if not plan_items:
             return
-        request_id = f"{self.stamp}:{plan_item['id']}"
-        need = {
-            "id": f"need_{plan_item['requirement']}",
-            "owner": "planner",
-            "kind": "brokered_runtime_evidence",
-            "target": plan_item["tool"],
-            "requirement": plan_item["requirement"],
-            "reason": plan_item["reason"],
-            "budget_ref": "provider_budget_governor_loaded",
-            "round": round_id,
-        }
-        append_unique(self.state["needs"], need)
-        self.publish("gpu1", "need", need, target="broker", correlation_id=request_id, round_id=round_id)
-        tool_request = {
-            "id": request_id,
-            "tool": plan_item["tool"],
-            "args": plan_item.get("args") or {},
-            "reason": plan_item["reason"],
-            "requirement": plan_item["requirement"],
-        }
-        append_unique(self.state["tool_requests"], tool_request)
-        self.publish("gpu1", "broker_request", tool_request, target="broker", correlation_id=request_id, round_id=round_id)
-        self.tool_request_count += 1
+        for plan_item in plan_items:
+            request_id = f"{self.stamp}:{plan_item['id']}"
+            need = {
+                "id": f"need_{plan_item['requirement']}",
+                "owner": "planner",
+                "kind": "brokered_runtime_evidence",
+                "target": plan_item["tool"],
+                "requirement": plan_item["requirement"],
+                "reason": plan_item["reason"],
+                "budget_ref": "provider_budget_governor_loaded",
+                "round": round_id,
+            }
+            append_unique(self.state["needs"], need)
+            self.publish("gpu1", "need", need, target="broker", correlation_id=request_id, round_id=round_id)
+            tool_request = {
+                "id": request_id,
+                "tool": plan_item["tool"],
+                "args": plan_item.get("args") or {},
+                "reason": plan_item["reason"],
+                "requirement": plan_item["requirement"],
+            }
+            append_unique(self.state["tool_requests"], tool_request)
+            self.publish("gpu1", "broker_request", tool_request, target="broker", correlation_id=request_id, round_id=round_id)
+            self.tool_request_count += 1
 
     def run_bridge(self) -> dict[str, Any]:
         bridge_json = resolve_output_path(self.repo_root, self.path_arg(self.args.bridge_output, DEFAULT_BRIDGE_JSON).format(stamp=self.stamp))
@@ -431,7 +575,7 @@ class HeapRuntimeCompletenessGate:
             "--heap-markdown", repo_rel(self.repo_root, self.heap.paths.markdown),
             "--bridge-dir", self.path_arg(self.args.bridge_dir, DEFAULT_BRIDGE_DIR),
             "--timeout-seconds", str(self.args.timeout_seconds),
-            "--max-requests", "1",
+            "--max-requests", "0",
             "--output", repo_rel(self.repo_root, bridge_json),
             "--markdown-output", repo_rel(self.repo_root, bridge_md),
         ]
@@ -512,6 +656,7 @@ class HeapRuntimeCompletenessGate:
             "heap_event_refs": [repo_rel(self.repo_root, self.heap.paths.events)],
             "provider_refs": self.provider_refs(),
             "provider_response_texts": self.provider_response_texts(),
+            "context_artifact_refs": self.broker_output_refs(events),
             "provider_role_decisions": self.provider_role_decisions(),
             "toolused": self.tool_execution_count > 0,
             "shared_memory_written_and_used": "shared_memory" in self.completed_requirements(events),
@@ -568,6 +713,26 @@ class HeapRuntimeCompletenessGate:
                 responses[lane] = text
         return responses
 
+
+    def team_context_summary(self, max_chars: int = 6000) -> str:
+        events = self.read_events()
+        parts: list[str] = []
+        for payload in self.broker_results(events):
+            requirement = str(payload.get("requirement") or self.requirement_for_tool(str(payload.get("tool") or "")))
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+            summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+            line = {
+                "requirement": requirement,
+                "tool": payload.get("tool"),
+                "returncode": payload.get("returncode"),
+                "outputs": outputs,
+                "summary": summary,
+            }
+            text = json.dumps(line, ensure_ascii=False, default=str)
+            parts.append(text)
+        joined = "\n".join(parts)
+        return joined[:max_chars] + ("\n...[team context truncated]" if len(joined) > max_chars else "")
+
     def gpu1_request_prompt(self) -> str:
         request = self.request_text()
         if not request:
@@ -578,13 +743,16 @@ class HeapRuntimeCompletenessGate:
             if text:
                 peer_lines.append(f"{lane}: {text}")
         peer_context = "\n".join(peer_lines) if peer_lines else "nessun contributo peer ancora disponibile"
+        team_context = self.team_context_summary()
         return (
             "Sei GPU1 planner finale nel runtime heap IA-Carmine. "
             "Devi produrre la risposta cumulativa finale per l'utente usando anche i contributi GPU0/NPU già scritti nell'heap. "
             "Rispondi in italiano, breve, senza markdown, senza patch e senza descrivere il sistema. "
             f"Richiesta utente: {request}\n"
             f"Contributi peer heap:\n{peer_context}\n"
-            "Risposta finale:"
+            f"Memoria/chunk/context pack condivisi:\n{team_context}\n"
+            "Regola: non dire che sei solo; rispondi come sintesi GPU1 del team heap, citando in modo breve GPU0/NPU e contesto condiviso solo se utile.\n"
+            "Risposta finale completa e chiusa:"
         )
 
     def response_text(self) -> str:
@@ -802,9 +970,15 @@ class HeapRuntimeCompletenessGate:
             "response_text_present": bool(self.response_text()),
             "provider_refs": self.provider_refs(),
             "provider_response_texts": self.provider_response_texts(),
+            "context_artifact_refs": self.broker_output_refs(final_events),
             "shared_evidence_count": len(self.state["shared_evidence"]),
             "shared_memory_evidence_count": 1 if "shared_memory" in completed else 0,
             "shared_context_chunk_evidence_count": 1 if "shared_context_chunks" in completed else 0,
+            "semantic_code_chunk_evidence_count": 1 if "semantic_code_chunks" in completed else 0,
+            "ai_context_pack_evidence_count": 1 if "ai_context_pack" in completed else 0,
+            "semantic_evidence_chunk_count": 1 if "semantic_evidence_chunks" in completed else 0,
+            "operational_memory_write_count": 1 if "operational_memory_write" in completed else 0,
+            "operational_memory_search_count": 1 if "operational_memory_search" in completed else 0,
             "tool_catalog_evidence_count": 1 if "tool_catalog" in completed else 0,
             "validation_evidence_count": 1 if "validation_evidence" in completed else 0,
             "gpu1_provider_evidence_count": 1 if "gpu1_provider_planner" in completed else 0,
@@ -830,6 +1004,12 @@ class HeapRuntimeCompletenessGate:
             metric_errors.append("ready product_status requires all three provider lanes")
         if metrics["product_status"] == "ready" and not self.provider_execution_performed:
             metric_errors.append("ready product_status requires observable provider execution")
+        if metrics["product_status"] == "ready" and not self.bridge_reports:
+            metric_errors.append("ready product_status requires broker bridge reports")
+        if metrics["product_status"] == "ready" and not metrics.get("context_artifact_refs"):
+            metric_errors.append("ready product_status requires memory/chunk/context artifacts")
+        if metrics["product_status"] == "ready" and self.response_text().rstrip().endswith((" in", " con", " e", " di", " su", " per", " da", ":", ",")):
+            metric_errors.append("ready product_status requires a complete final response_text")
         self.errors.extend(metric_errors)
         return {
             "schema_version": 1,
@@ -865,6 +1045,7 @@ class HeapRuntimeCompletenessGate:
                 "response_source": self.response_source(),
                 "provider_refs": self.provider_refs(),
                 "provider_response_texts": self.provider_response_texts(),
+                "context_artifact_refs": self.broker_output_refs(final_events),
                 "product_status": self.state["product"].get("status"),
                 "completed_requirements": completed,
                 "missing_requirements": missing,
