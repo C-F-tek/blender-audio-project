@@ -53,6 +53,15 @@ function Invoke-LocalAiTaskPipelineValidation {
         $ProposalBasename -match "official_adapter|real-product|heap-exchange" -or
         $TaskRel -match "heap-exchange-process-gate|real-product|single_dynamic_heap_exchange_run"
     )
+    $OfficialAdapterConcreteGateDeferred = (
+        $StrictRealProductPatchSpecs -and
+        ($Basename -match "official_adapter" -or $ProposalBasename -match "official_adapter")
+    )
+    $RequireConcreteProposalBuild = ($StrictRealProductPatchSpecs -and -not $OfficialAdapterConcreteGateDeferred)
+
+    if ($OfficialAdapterConcreteGateDeferred) {
+        Write-Host "[INFO] official_adapter_patch_specs_deferred: official adapter will build advisory/provider reports only; concrete patch-spec gate is deferred to the unified product phase."
+    }
 
     if ($RunMultistepProviderWorkflow) {
         $MultistepArgs = @(
@@ -90,7 +99,7 @@ function Invoke-LocalAiTaskPipelineValidation {
         "-MaxContextChars", "$MaxContextChars"
     )
     if ($UsePrimaryAdvisoryProvider) { $PacketArgs += "-UsePrimaryAdvisoryProvider" }
-    if ($StrictRealProductPatchSpecs) { $PacketArgs += "-RequireConcreteProposals" }
+    if ($RequireConcreteProposalBuild) { $PacketArgs += "-RequireConcreteProposals" }
     if ($Model -ne "") { $PacketArgs += @("-Model", $Model) }
 
     Invoke-CommandChecked -Label "Build advisory packet and repository proposals" -Block { powershell.exe @PacketArgs }
@@ -114,27 +123,36 @@ function Invoke-LocalAiTaskPipelineValidation {
         $PatchBasename = "${Basename}_patch_specs"
         $PatchManifest = "output/patch_specs/${PatchBasename}_manifest.json"
         $PatchManifestMd = "output/patch_specs/${PatchBasename}_manifest.md"
-        # IA-CARMINE-STRICT-REAL-PRODUCT-PATCH-SPECS-BEGIN
-        $PatchSpecArgs = @(
-            ".\Tools\ai\build_patch_specs_from_proposals.py",
-            "--repo-root", ".",
-            "--proposal", $ProposalRel,
-            "--output-dir", "output\patch_specs",
-            "--basename", $PatchBasename
-        )
-        if ($StrictRealProductPatchSpecs) {
-            $PatchSpecArgs += "--require-concrete"
-            if ($UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow) {
-                $PatchSpecArgs += "--require-provider-execution"
+
+        if ($OfficialAdapterConcreteGateDeferred) {
+            Write-Host "[INFO] Official adapter patch-spec generation deferred to unified product phase."
+            Write-Host "[INFO] official_adapter_patch_specs_deferred: no metadata-only patch specs will be produced by the official adapter phase."
+            $PatchManifest = ""
+            $PatchManifestMd = ""
+        }
+        else {
+            # IA-CARMINE-STRICT-REAL-PRODUCT-PATCH-SPECS-BEGIN
+            $PatchSpecArgs = @(
+                ".\Tools\ai\build_patch_specs_from_proposals.py",
+                "--repo-root", ".",
+                "--proposal", $ProposalRel,
+                "--output-dir", "output\patch_specs",
+                "--basename", $PatchBasename
+            )
+            if ($StrictRealProductPatchSpecs) {
+                $PatchSpecArgs += "--require-concrete"
+                if ($UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow) {
+                    $PatchSpecArgs += "--require-provider-execution"
+                }
+                Write-Host "[INFO] Strict real-product patch specs enabled: no metadata-only fallback."
             }
-            Write-Host "[INFO] Strict real-product patch specs enabled: no metadata-only fallback."
-        }
-        # IA-CARMINE-STRICT-REAL-PRODUCT-PATCH-SPECS-END
-        Invoke-CommandChecked -Label "Build draft patch specs from proposals" -Block {
-            & $PythonExe @PatchSpecArgs
-        }
-        Invoke-CommandChecked -Label "Validate draft patch specs" -Block {
-            & $PythonExe .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest $PatchManifest --output "output/validation/${Basename}_patch_spec_drafts.json"
+            # IA-CARMINE-STRICT-REAL-PRODUCT-PATCH-SPECS-END
+            Invoke-CommandChecked -Label "Build draft patch specs from proposals" -Block {
+                & $PythonExe @PatchSpecArgs
+            }
+            Invoke-CommandChecked -Label "Validate draft patch specs" -Block {
+                & $PythonExe .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest $PatchManifest --output "output/validation/${Basename}_patch_spec_drafts.json"
+            }
         }
     }
 
