@@ -431,44 +431,51 @@ function Invoke-LocalAiArtifactReset {
         (Get-Date).AddSeconds(1)
     }
 
+    $ResetTool = Join-Path $Root "Tools/workflow/run_local_ai_artifact_reset.py"
+    if (-not (Test-Path -LiteralPath $ResetTool -PathType Leaf)) {
+        Stop-RealProductLauncher -Code "bounded_reset_tool_missing" -Message "Bounded pre-run reset helper missing: $ResetTool" -Root $Root -StampValue $Stamp -DetailPath $ResetTool
+    }
+
+    $ResetJson = Join-Path $Root ("output/validation/prerun_local_ai_reset_{0}.json" -f $Stamp)
+    $ResetMd = Join-Path $Root ("output/validation/prerun_local_ai_reset_{0}.md" -f $Stamp)
+
     $ResetArgs = @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass",
-        "-File", $LauncherPath,
-        "-RepoRoot", $Root,
-        "-Mode", "reset",
-        "-ResetBeforeDate", $ResetBefore.ToString("s"),
-        "-ApplyReset",
-        "-ConfirmResetText", "DELETE LOCAL AI ARTIFACTS",
-        "-SkipGitSync",
-        "-NoBranch",
-        "-AllowDirty"
+        $ResetTool,
+        "--repo-root", $Root,
+        "--before-date", $ResetBefore.ToString("s"),
+        "--active-stamp", $Stamp,
+        "--output", $ResetJson,
+        "--markdown-output", $ResetMd
     )
 
-    if (-not [string]::IsNullOrWhiteSpace($PythonPath)) {
-        $ResetArgs += @("-PythonExe", $PythonPath)
+    if (-not $DryRun) {
+        $ResetArgs += @("--apply", "--confirm-reset-text", "DELETE LOCAL AI ARTIFACTS")
     }
     if ($IncludeMemory) {
-        $ResetArgs += "-IncludeMemoryReset"
+        $ResetArgs += "--include-memory-reset"
     }
     if ($IncludeGeneratedIndex) {
-        $ResetArgs += "-IncludeGeneratedIndexReset"
+        $ResetArgs += "--include-generated-index-reset"
     }
 
-    Write-Host "=== IA-Carmine pre-run local AI reset ==="
+    Write-Host "=== IA-Carmine bounded pre-run local AI reset ==="
     Write-Host "Reset before: $($ResetBefore.ToString("s"))"
     Write-Host "Retention days: $RetentionDays"
     Write-Host "Include memory reset: $IncludeMemory"
     Write-Host "Include generated index reset: $IncludeGeneratedIndex"
-    Write-Host "[RUN] powershell.exe $($ResetArgs -join ' ')"
+    Write-Host "Active stamp: $Stamp"
+    Write-Host "Report: $ResetJson"
+    Write-Host "[RUN] $PythonPath $($ResetArgs -join ' ')"
 
-    & powershell.exe @ResetArgs
+    & $PythonPath @ResetArgs
     if ($LASTEXITCODE -ne 0) {
-        Stop-RealProductLauncher -Code "local_ai_prerun_reset_failed" -Message "Pre-run local AI reset failed with exit code $LASTEXITCODE." -Root $Root -StampValue $Stamp
+        Stop-RealProductLauncher -Code "local_ai_prerun_reset_failed" -Message "Pre-run local AI reset failed with exit code $LASTEXITCODE. See $ResetJson" -Root $Root -StampValue $Stamp -DetailPath $ResetJson
     }
 
-    Write-Host "[OK] Pre-run local AI reset completed."
+    Write-Host "[OK] Bounded pre-run local AI reset completed: $ResetJson"
     Write-Host ""
 }
+
 
 if ($CreatePr -and -not $Push) {
     Stop-RealProductLauncher -Code "create_pr_requires_push" -Message "-CreatePr requires -Push because prepare_review_pr.py needs the branch on the remote" -Root $RepoRoot -StampValue $Stamp
