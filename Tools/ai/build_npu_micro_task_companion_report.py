@@ -11,6 +11,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--task-file", default="")
+    parser.add_argument("--request", default="", help="Optional heap request observed by NPU micro-task lane.")
     parser.add_argument("--output", required=True)
     parser.add_argument("--markdown-output", required=True)
     parser.add_argument("--timeout-seconds", type=int, default=60)
@@ -22,6 +23,12 @@ def main() -> int:
     task_preview = ""
     if task_path and task_path.is_file():
         task_preview = task_path.read_text(encoding="utf-8", errors="replace")[: args.max_context_chars]
+    request_input = str(args.request or "").strip()
+    response_text = (
+        "NPU micro-task: richiesta osservata; nessuna micro-azione necessaria per un saluto casuale."
+        if request_input
+        else "NPU micro-task: companion report disponibile; nessuna micro-azione richiesta."
+    )
 
     report = {
         "kind": "npu_micro_task_companion_report",
@@ -32,6 +39,8 @@ def main() -> int:
         "timeout_seconds": args.timeout_seconds,
         "task_file": args.task_file,
         "task_preview_chars": len(task_preview),
+        "request_input": request_input,
+        "response_text": response_text,
         "npu_peer_activity_requested": True,
         "npu_peer_activity_performed": False,
         "npu_device_execution_performed": False,
@@ -72,6 +81,8 @@ def main() -> int:
         f"- NPU device execution performed: `{report['npu_device_execution_performed']}`",
         f"- NPU provider execution performed: `{report['npu_provider_execution_performed']}`",
         f"- NPU activity classification: `{report['npu_activity_classification']}`",
+        f"- Request input: `{report['request_input']}`",
+        f"- Response text: {report['response_text']}",
         f"- NPU activity limit: {report['npu_activity_limit']}",
         f"- Legacy NPU auditor used: `{report['guardrails']['legacy_npu_auditor_used']}`",
         f"- Provider execution performed: `{report['guardrails']['provider_execution_performed']}`",

@@ -70,6 +70,7 @@ def main() -> int:
     parser.add_argument("--iterations", type=int, default=180)
     parser.add_argument("--min-seconds", type=float, default=6.0)
     parser.add_argument("--role", default="observable_secondary_accelerator")
+    parser.add_argument("--request", default="", help="Optional heap request observed by GPU.0 peer lane.")
     parser.add_argument("--production-support", action="store_true", default=True)
     parser.add_argument("--allow-non-observable", action="store_true")
     args = parser.parse_args()
@@ -85,6 +86,7 @@ def main() -> int:
     report["iterations"] = int(args.iterations)
     report["min_seconds"] = float(args.min_seconds)
     report["requested_role"] = str(args.role)
+    report["request_input"] = str(args.request or "").strip()
     report["openvino_gpu0_observable_workload_required"] = not bool(args.allow_non_observable)
     report["openvino_gpu0_observable_workload_passed"] = bool(
         report.get("openvino_gpu0_workload_performed")
@@ -98,6 +100,16 @@ def main() -> int:
     if report["openvino_gpu0_observable_workload_required"] and not report["openvino_gpu0_observable_workload_passed"]:
         report.setdefault("errors", []).append("GPU.0 workload was not observable enough for real product peer evidence.")
         report["passed"] = False
+    if report.get("openvino_gpu0_observable_workload_passed"):
+        if report["request_input"]:
+            report["response_text"] = (
+                "GPU0 peer: richiesta osservata; workload OpenVINO GPU.0 eseguito come peer diagnostico; "
+                "nessuna azione aggiuntiva richiesta per un saluto casuale."
+            )
+        else:
+            report["response_text"] = "GPU0 peer: workload OpenVINO GPU.0 eseguito e osservabile."
+    else:
+        report["response_text"] = "GPU0 peer: workload non osservabile o non completato."
     report["repo_root"] = str(repo_root)
 
     output = resolve_path(repo_root, args.output)

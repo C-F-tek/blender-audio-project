@@ -511,10 +511,11 @@ class HeapRuntimeCompletenessGate:
             "response_source": self.response_source(),
             "heap_event_refs": [repo_rel(self.repo_root, self.heap.paths.events)],
             "provider_refs": self.provider_refs(),
+            "provider_response_texts": self.provider_response_texts(),
             "toolused": self.tool_execution_count > 0,
             "shared_memory_written_and_used": "shared_memory" in self.completed_requirements(events),
-            "gpu0_audit": "observed response; no extra action required for casual request" if self.request_text() else "",
-            "npu_audit": "no micro action needed for casual request" if self.request_text() else "",
+            "gpu0_audit": self.provider_response_text("gpu0_peer"),
+            "npu_audit": self.provider_response_text("npu_micro_task_auditor"),
             "reason": "heap loop consumed tool catalog, memory, context/chunks and validation evidence" if ready else "heap loop stopped by budget/failed requirement before readiness",
             "completed_requirements": sorted(self.completed_requirements(events)),
             "missing_requirements": missing,
@@ -539,15 +540,41 @@ class HeapRuntimeCompletenessGate:
     def request_text(self) -> str:
         return str(getattr(self.args, "request", "") or "").strip()
 
+    def provider_response_text(self, lane: str) -> str:
+        for report in self.provider_reports:
+            if report.get("lane") != lane:
+                continue
+            text = str(report.get("response_text") or "").strip()
+            if text:
+                return text
+        return ""
+
+    def provider_response_texts(self) -> dict[str, str]:
+        responses: dict[str, str] = {}
+        for report in self.provider_reports:
+            lane = str(report.get("lane") or "")
+            text = str(report.get("response_text") or "").strip()
+            if lane and text:
+                responses[lane] = text
+        return responses
+
     def gpu1_request_prompt(self) -> str:
         request = self.request_text()
         if not request:
             return "Return exactly this JSON object and no prose: {\"ok\": true, \"lane\": \"ollama\"}"
+        peer_lines = []
+        for lane in ("gpu0_peer", "npu_micro_task_auditor"):
+            text = self.provider_response_text(lane)
+            if text:
+                peer_lines.append(f"{lane}: {text}")
+        peer_context = "\n".join(peer_lines) if peer_lines else "nessun contributo peer ancora disponibile"
         return (
-            "Sei GPU1 planner nel runtime heap IA-Carmine. "
-            "Rispondi direttamente alla richiesta utente in italiano, in modo breve. "
-            "Non generare patch, non usare markdown, non descrivere il sistema. "
-            f"Richiesta utente: {request}"
+            "Sei GPU1 planner finale nel runtime heap IA-Carmine. "
+            "Devi produrre la risposta cumulativa finale per l'utente usando anche i contributi GPU0/NPU già scritti nell'heap. "
+            "Rispondi in italiano, breve, senza markdown, senza patch e senza descrivere il sistema. "
+            f"Richiesta utente: {request}\n"
+            f"Contributi peer heap:\n{peer_context}\n"
+            "Risposta finale:"
         )
 
     def response_text(self) -> str:
@@ -578,22 +605,6 @@ class HeapRuntimeCompletenessGate:
         npu_md = work_dir / "npu_micro_task_auditor.md"
         return [
             {
-                "lane": "gpu1_planner",
-                "requirement": "gpu1_provider_planner",
-                "role": "primary_planner",
-                "output": gpu1_json,
-                "command": [
-                    resolve_child_python(self.repo_root),
-                    "Tools/ai/run_local_provider_probe.py",
-                    "--repo-root", ".",
-                    "--run-ollama",
-                    "--model", self.args.provider_model,
-                    "--prompt", self.gpu1_request_prompt(),
-                    "--timeout", str(self.args.timeout_seconds),
-                    "--output", repo_rel(self.repo_root, gpu1_json),
-                ],
-            },
-            {
                 "lane": "gpu0_peer",
                 "requirement": "gpu0_provider_peer",
                 "role": "diagnostic_peer_workload",
@@ -605,6 +616,7 @@ class HeapRuntimeCompletenessGate:
                     "--iterations", str(self.args.gpu0_iterations),
                     "--min-seconds", str(self.args.gpu0_min_seconds),
                     "--role", "heap_runtime_diagnostic_peer",
+                    "--request", self.request_text(),
                     "--output", repo_rel(self.repo_root, gpu0_json),
                     "--markdown-output", repo_rel(self.repo_root, gpu0_md),
                 ],
@@ -619,10 +631,27 @@ class HeapRuntimeCompletenessGate:
                     "Tools/ai/build_npu_micro_task_companion_report.py",
                     "--repo-root", ".",
                     "--task-file", self.args.task_file,
+                    "--request", self.request_text(),
                     "--timeout-seconds", str(self.args.npu_micro_timeout_seconds),
                     "--max-context-chars", str(self.args.npu_max_context_chars),
                     "--output", repo_rel(self.repo_root, npu_json),
                     "--markdown-output", repo_rel(self.repo_root, npu_md),
+                ],
+            },
+            {
+                "lane": "gpu1_planner",
+                "requirement": "gpu1_provider_planner",
+                "role": "primary_planner_cumulative_responder",
+                "output": gpu1_json,
+                "command": [
+                    resolve_child_python(self.repo_root),
+                    "Tools/ai/run_local_provider_probe.py",
+                    "--repo-root", ".",
+                    "--run-ollama",
+                    "--model", self.args.provider_model,
+                    "--prompt", "__GPU1_CUMULATIVE_PROMPT__",
+                    "--timeout", str(self.args.timeout_seconds),
+                    "--output", repo_rel(self.repo_root, gpu1_json),
                 ],
             },
         ]
@@ -638,12 +667,12 @@ class HeapRuntimeCompletenessGate:
             self.provider_execution_performed = True
         errors = report_data.get("errors") if isinstance(report_data.get("errors"), list) else []
         warnings = report_data.get("warnings") if isinstance(report_data.get("warnings"), list) else []
-        response_text = ""
+        response_text = str(report_data.get("response_text") or "").strip()
         lane_reports = report_data.get("lane_reports")
         if isinstance(lane_reports, list):
             for lane_report in lane_reports:
                 if isinstance(lane_report, dict) and lane_report.get("lane") == "ollama":
-                    response_text = str(lane_report.get("response_text") or lane_report.get("text_preview") or "").strip()
+                    response_text = str(lane_report.get("response_text") or lane_report.get("text_preview") or response_text).strip()
                     if response_text:
                         break
         return {
@@ -684,9 +713,10 @@ class HeapRuntimeCompletenessGate:
                 correlation_id=correlation,
                 round_id=round_id,
             )
+            command = [self.gpu1_request_prompt() if item == "__GPU1_CUMULATIVE_PROMPT__" else item for item in spec["command"]]
             try:
                 completed = subprocess.run(
-                    spec["command"],
+                    command,
                     cwd=self.repo_root,
                     env=command_env(self.repo_root),
                     capture_output=True,
@@ -695,7 +725,7 @@ class HeapRuntimeCompletenessGate:
                     timeout=max(30, self.args.timeout_seconds),
                 )
             except subprocess.TimeoutExpired as exc:
-                completed = subprocess.CompletedProcess(spec["command"], returncode=124, stdout=exc.stdout or "", stderr=exc.stderr or "provider timeout")
+                completed = subprocess.CompletedProcess(command, returncode=124, stdout=exc.stdout or "", stderr=exc.stderr or "provider timeout")
             report_data = read_json(Path(spec["output"]))
             provider_report = self.summarize_provider_report(spec, completed, report_data)
             self.provider_reports.append(provider_report)
@@ -710,7 +740,7 @@ class HeapRuntimeCompletenessGate:
                 "evidence_ref": provider_report.get("output"),
                 "provider_execution_performed": provider_report.get("provider_execution_performed"),
                 "observed_request": self.request_text(),
-                "observed_response": self.response_text(),
+                "observed_response": provider_report.get("response_text") or self.response_text(),
             }
             append_unique(self.state["claims"], claim)
             self.publish(provider_heap_lane(lane), "claim", claim, target="deterministic", correlation_id=f"{correlation}:claim", round_id=round_id)
@@ -760,6 +790,7 @@ class HeapRuntimeCompletenessGate:
             "response_source": self.response_source(),
             "response_text_present": bool(self.response_text()),
             "provider_refs": self.provider_refs(),
+            "provider_response_texts": self.provider_response_texts(),
             "shared_evidence_count": len(self.state["shared_evidence"]),
             "shared_memory_evidence_count": 1 if "shared_memory" in completed else 0,
             "shared_context_chunk_evidence_count": 1 if "shared_context_chunks" in completed else 0,
@@ -822,6 +853,7 @@ class HeapRuntimeCompletenessGate:
                 "response_text": self.response_text(),
                 "response_source": self.response_source(),
                 "provider_refs": self.provider_refs(),
+                "provider_response_texts": self.provider_response_texts(),
                 "product_status": self.state["product"].get("status"),
                 "completed_requirements": completed,
                 "missing_requirements": missing,
