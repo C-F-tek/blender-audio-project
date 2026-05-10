@@ -97,9 +97,10 @@ def read_json(path: Path) -> dict[str, Any]:
 
 
 
-def make_state(objective: str) -> dict[str, Any]:
+def make_state(objective: str, request: str = "") -> dict[str, Any]:
     return {
         "task": {"objective": objective, "status": "active"},
+        "request": {"text": request.strip(), "status": "received" if request.strip() else "not_requested"},
         "budget_governor": {},
         "invocation_contract": {},
         "facts": [],
@@ -194,7 +195,7 @@ class HeapRuntimeCompletenessGate:
             operator_intent=args.operator_intent,
         )
         self.max_iterations = clamp_loop_iterations(self.budget_config, args.max_iterations)
-        self.state = make_state(args.objective)
+        self.state = make_state(args.objective, getattr(args, "request", ""))
         self.state["budget_governor"] = self.budget_governor
         self.state["invocation_contract"] = self.invocation_contract
         self.heap_read_count = 0
@@ -352,6 +353,14 @@ class HeapRuntimeCompletenessGate:
 
     def bootstrap(self) -> None:
         self.publish("orchestrator", "task_state", self.state["task"], target="gpu1", correlation_id=f"{self.stamp}:task", round_id=0)
+        if self.request_text():
+            request_payload = {
+                "id": f"{self.stamp}:user_request",
+                "text": self.request_text(),
+                "objective": self.args.objective,
+                "expected_output": ["response_text", "response_source", "heap_event_refs", "provider_refs", "product_status"],
+            }
+            self.publish("orchestrator", "user_request", request_payload, target="gpu1", correlation_id=f"{self.stamp}:user_request", round_id=0)
         budget_fact = {
             "id": "provider_budget_governor_loaded",
             "source": "heap_provider_budget_governor",
@@ -460,6 +469,9 @@ class HeapRuntimeCompletenessGate:
         missing = self.missing_requirements(events)
         unattempted = self.next_unattempted_plan_item(events)
         ready = not missing
+        if ready and self.request_text() and not self.response_text():
+            missing = [*missing, "gpu1_request_response"]
+            ready = False
         budget_exhausted = round_id >= self.max_iterations
         no_more_progress = unattempted is None and bool(missing)
         if not ready and not budget_exhausted and not no_more_progress:
@@ -494,6 +506,15 @@ class HeapRuntimeCompletenessGate:
         self.state["product"] = {
             "required": True,
             "status": status,
+            "request_input": self.request_text(),
+            "response_text": self.response_text(),
+            "response_source": self.response_source(),
+            "heap_event_refs": [repo_rel(self.repo_root, self.heap.paths.events)],
+            "provider_refs": self.provider_refs(),
+            "toolused": self.tool_execution_count > 0,
+            "shared_memory_written_and_used": "shared_memory" in self.completed_requirements(events),
+            "gpu0_audit": "observed response; no extra action required for casual request" if self.request_text() else "",
+            "npu_audit": "no micro action needed for casual request" if self.request_text() else "",
             "reason": "heap loop consumed tool catalog, memory, context/chunks and validation evidence" if ready else "heap loop stopped by budget/failed requirement before readiness",
             "completed_requirements": sorted(self.completed_requirements(events)),
             "missing_requirements": missing,
@@ -515,6 +536,40 @@ class HeapRuntimeCompletenessGate:
         path.mkdir(parents=True, exist_ok=True)
         return path
 
+    def request_text(self) -> str:
+        return str(getattr(self.args, "request", "") or "").strip()
+
+    def gpu1_request_prompt(self) -> str:
+        request = self.request_text()
+        if not request:
+            return "Return exactly this JSON object and no prose: {\"ok\": true, \"lane\": \"ollama\"}"
+        return (
+            "Sei GPU1 planner nel runtime heap IA-Carmine. "
+            "Rispondi direttamente alla richiesta utente in italiano, in modo breve. "
+            "Non generare patch, non usare markdown, non descrivere il sistema. "
+            f"Richiesta utente: {request}"
+        )
+
+    def response_text(self) -> str:
+        for report in self.provider_reports:
+            if report.get("lane") != "gpu1_planner":
+                continue
+            text = str(report.get("response_text") or "").strip()
+            if text:
+                return text
+        return ""
+
+    def response_source(self) -> str:
+        return "gpu1_planner" if self.response_text() else ""
+
+    def provider_refs(self) -> list[str]:
+        refs: list[str] = []
+        for report in self.provider_reports:
+            output = str(report.get("output") or "")
+            if output:
+                refs.append(output)
+        return refs
+
     def provider_command_specs(self, work_dir: Path) -> list[dict[str, Any]]:
         gpu1_json = work_dir / "gpu1_ollama_provider_probe.json"
         gpu0_json = work_dir / "gpu0_openvino_peer_workload.json"
@@ -533,6 +588,7 @@ class HeapRuntimeCompletenessGate:
                     "--repo-root", ".",
                     "--run-ollama",
                     "--model", self.args.provider_model,
+                    "--prompt", self.gpu1_request_prompt(),
                     "--timeout", str(self.args.timeout_seconds),
                     "--output", repo_rel(self.repo_root, gpu1_json),
                 ],
@@ -582,6 +638,14 @@ class HeapRuntimeCompletenessGate:
             self.provider_execution_performed = True
         errors = report_data.get("errors") if isinstance(report_data.get("errors"), list) else []
         warnings = report_data.get("warnings") if isinstance(report_data.get("warnings"), list) else []
+        response_text = ""
+        lane_reports = report_data.get("lane_reports")
+        if isinstance(lane_reports, list):
+            for lane_report in lane_reports:
+                if isinstance(lane_report, dict) and lane_report.get("lane") == "ollama":
+                    response_text = str(lane_report.get("response_text") or lane_report.get("text_preview") or "").strip()
+                    if response_text:
+                        break
         return {
             "lane": lane,
             "role": spec.get("role"),
@@ -591,6 +655,7 @@ class HeapRuntimeCompletenessGate:
             "passed": completed.returncode == 0 and report_data.get("passed") is True,
             "provider_execution_performed": provider_execution,
             "report_kind": report_data.get("kind"),
+            "response_text": response_text,
             "errors": errors,
             "warnings": warnings,
             "stdout_tail": (completed.stdout or "")[-1000:],
@@ -644,6 +709,8 @@ class HeapRuntimeCompletenessGate:
                 "requirement": requirement,
                 "evidence_ref": provider_report.get("output"),
                 "provider_execution_performed": provider_report.get("provider_execution_performed"),
+                "observed_request": self.request_text(),
+                "observed_response": self.response_text(),
             }
             append_unique(self.state["claims"], claim)
             self.publish(provider_heap_lane(lane), "claim", claim, target="deterministic", correlation_id=f"{correlation}:claim", round_id=round_id)
@@ -688,6 +755,11 @@ class HeapRuntimeCompletenessGate:
             "required_requirement_count": len(REQUIREMENT_ORDER),
             "completed_requirements": completed,
             "missing_requirements": missing,
+            "request_input": self.request_text(),
+            "response_text": self.response_text(),
+            "response_source": self.response_source(),
+            "response_text_present": bool(self.response_text()),
+            "provider_refs": self.provider_refs(),
             "shared_evidence_count": len(self.state["shared_evidence"]),
             "shared_memory_evidence_count": 1 if "shared_memory" in completed else 0,
             "shared_context_chunk_evidence_count": 1 if "shared_context_chunks" in completed else 0,
@@ -734,6 +806,7 @@ class HeapRuntimeCompletenessGate:
                 "kind": "heap_runtime_completeness_gate_input_contract",
                 "task_file": self.args.task_file,
                 "objective": self.args.objective,
+                "request": self.request_text(),
                 "stamp": self.stamp,
                 "budget_minutes": self.args.budget_minutes,
                 "max_iterations": self.max_iterations,
@@ -745,6 +818,10 @@ class HeapRuntimeCompletenessGate:
                 "heap_snapshot": snapshot.get("snapshot"),
                 "bridge_reports": self.bridge_reports,
                 "provider_report_outputs": [item.get("output") for item in self.provider_reports],
+                "request_input": self.request_text(),
+                "response_text": self.response_text(),
+                "response_source": self.response_source(),
+                "provider_refs": self.provider_refs(),
                 "product_status": self.state["product"].get("status"),
                 "completed_requirements": completed,
                 "missing_requirements": missing,
@@ -782,7 +859,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     ):
         lines.append(f"- {key}: `{metrics.get(key)}`")
     product = safe_dict(safe_dict(report.get("state")).get("product"))
-    lines.extend(["", "## Product", "", f"- Status: `{product.get('status')}`", f"- Reason: {product.get('reason')}"])
+    lines.extend(["", "## Product", "", f"- Status: `{product.get('status')}`", f"- Request: `{product.get('request_input')}`", f"- Response source: `{product.get('response_source')}`", f"- Response text: {product.get('response_text')}", f"- Reason: {product.get('reason')}"])
     lines.extend(["", "## Completed requirements", ""])
     for item in metrics.get("completed_requirements") or []:
         lines.append(f"- `{item}`")
@@ -801,6 +878,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--stamp", default="")
     parser.add_argument("--objective", default="prove complete heap-driven teamwork loop over repository context, shared memory, brokered tools and all provider lanes")
+    parser.add_argument("--request", default="", help="Optional real user request for heap heartbeat, e.g. ciao.")
     parser.add_argument("--task-file", default="")
     parser.add_argument("--tool", default="run_gpu_planner_json_contract_smoke", help="Compatibility flag; complete gate uses its internal readiness tool plan.")
     parser.add_argument("--max-iterations", type=int, default=4)

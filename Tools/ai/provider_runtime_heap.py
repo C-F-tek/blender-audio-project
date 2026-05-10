@@ -33,6 +33,7 @@ except ImportError:
 
 LANES = ("gpu1", "gpu0", "npu", "broker", "deterministic", "telemetry", "orchestrator")
 EVENT_TYPES = (
+    "user_request",
     "provider_state",
     "task_state",
     "fact",

@@ -26,7 +26,7 @@ def ensure_repo_imports(repo_root: Path) -> None:
             sys.path.insert(0, text)
 
 
-def run_ollama_probe(repo_root: Path, model: str | None) -> dict[str, Any]:
+def run_ollama_probe(repo_root: Path, model: str | None, prompt: str | None = None) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     from Tools.npu.ollama_runtime import OllamaSession, choose_model, is_server_ready, list_models, list_models_from_disk  # noqa: PLC0415
 
@@ -43,10 +43,13 @@ def run_ollama_probe(repo_root: Path, model: str | None) -> dict[str, Any]:
             "error": "no Ollama model available",
             "elapsed_sec": round(time.perf_counter() - started, 4),
         }
-    prompts = [
-        "Return exactly this JSON object and no prose: {\"ok\": true, \"lane\": \"ollama\"}",
-        "{\"ok\": true, \"lane\": \"ollama\"}",
-    ]
+    if prompt and prompt.strip():
+        prompts = [prompt.strip()]
+    else:
+        prompts = [
+            "Return exactly this JSON object and no prose: {\"ok\": true, \"lane\": \"ollama\"}",
+            "{\"ok\": true, \"lane\": \"ollama\"}",
+        ]
 
     text = ""
     prompt_attempts: list[dict[str, Any]] = []
@@ -80,10 +83,12 @@ def run_ollama_probe(repo_root: Path, model: str | None) -> dict[str, Any]:
     empty_output = not text.strip()
     return {
         "lane": "ollama",
-        "passed": (not empty_output) and parsed.ok,
+        "passed": (not empty_output) and (parsed.ok or bool(prompt and prompt.strip())),
         "provider_execution_performed": True,
         "elapsed_sec": round(time.perf_counter() - started, 4),
         "selected_model": selected_model,
+        "request_prompt": prompt or "",
+        "response_text": text.strip(),
         "model_count": len(models),
         "server_ready": is_server_ready(),
         "empty_output": empty_output,
@@ -139,7 +144,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     errors: list[str] = []
     if args.run_ollama:
         try:
-            lane_reports.append(run_ollama_probe(repo_root, args.model))
+            lane_reports.append(run_ollama_probe(repo_root, args.model, args.prompt))
         except Exception as exc:  # noqa: BLE001 - report-only tool.
             lane_reports.append({"lane": "ollama", "passed": False, "provider_execution_performed": False, "error": f"{type(exc).__name__}: {exc}"})
     if args.run_npu:
@@ -187,6 +192,7 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/local_provider_probe.json")
     parser.add_argument("--model", help="Preferred Ollama model.")
+    parser.add_argument("--prompt", default="", help="Optional user prompt for observable provider response.")
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--npu-python-exe", default="", help="Explicit NPU/OpenVINO Python executable.")
     parser.add_argument("--run-ollama", action="store_true")
