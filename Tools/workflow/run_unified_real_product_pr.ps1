@@ -599,6 +599,7 @@ $script:LauncherArgs = @(
     "-Mode", $RealProductPostPreflightModes,
     "-RunIntensity", $RunIntensity,
     "-Model", $Model,
+    "-Profile", "core",
 
     "-UseOllamaAdvisory",
     "-UsePrimaryAdvisoryProvider",
@@ -630,6 +631,14 @@ Add-LauncherArg -Name "-MaxNewTokens" -Value ([string]$MaxNewTokens)
 Add-LauncherArg -Name "-KeepAlive" -Value $KeepAlive
 Add-LauncherArg -Name "-NpuMicroStartMode" -Value $NpuMicroStartMode
 Add-LauncherArg -Name "-ProviderMaxContextChars" -Value ([string]$ProviderMaxContextChars)
+
+# IA-CARMINE-REAL-PRODUCT-OFFICIAL-MAX-CONTEXT-BEGIN
+$OfficialAdapterMaxContextChars = $ProviderMaxContextChars
+if ($OfficialAdapterMaxContextChars -le 0) {
+    $OfficialAdapterMaxContextChars = 14000
+}
+Add-LauncherArg -Name "-MaxContextChars" -Value ([string]$OfficialAdapterMaxContextChars)
+# IA-CARMINE-REAL-PRODUCT-OFFICIAL-MAX-CONTEXT-END
 Add-LauncherArg -Name "-ContextPackMaxTotalChars" -Value ([string]$ContextPackMaxTotalChars)
 Add-LauncherArg -Name "-ContextPackMaxFileChars" -Value ([string]$ContextPackMaxFileChars)
 Add-LauncherArg -Name "-AgentStateMaxMemoryChars" -Value ([string]$AgentStateMaxMemoryChars)
@@ -670,6 +679,7 @@ Write-Host "Max chars per file: $MaxCharsPerFile"
 Write-Host "Max new tokens: $MaxNewTokens"
 Write-Host "NPU micro start mode: $NpuMicroStartMode"
 Write-Host "Provider max context chars: $ProviderMaxContextChars"
+Write-Host "Official adapter max context chars: $OfficialAdapterMaxContextChars"
 Write-Host "Context pack max total chars: $ContextPackMaxTotalChars"
 Write-Host "Context pack max file chars: $ContextPackMaxFileChars"
 Write-Host "Agent state max memory chars: $AgentStateMaxMemoryChars"

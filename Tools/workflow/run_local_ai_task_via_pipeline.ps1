@@ -128,6 +128,79 @@ if ($FullContextGoldenPath) {
     }
 }
 
+
+# IA-CARMINE-REAL-PRODUCT-OFFICIAL-CONTEXT-BEGIN
+$IsRealProductOfficialAdapter = (
+    $Basename -match "official_adapter" -or
+    $ProposalBasename -match "official_adapter" -or
+    $TaskFile -match "heap-exchange-process-gate|real-product|single_dynamic_heap_exchange_run"
+)
+
+if ($IsRealProductOfficialAdapter) {
+    if ($Profile -eq "docs") { $Profile = "core" }
+    if ($MaxContextChars -lt 14000) { $MaxContextChars = 14000 }
+    if ($ContextPackMaxTotalChars -lt 72000) { $ContextPackMaxTotalChars = 72000 }
+    if ($ContextPackMaxFileChars -lt 5000) { $ContextPackMaxFileChars = 5000 }
+    if ($AgentStateMaxMemoryChars -lt 28000) { $AgentStateMaxMemoryChars = 28000 }
+
+    $SelectSemanticChunks = $true
+    $BuildSelectedChunksEvidence = $true
+    $BuildContextPack = $true
+    $BuildAgentStatePacket = $true
+    $BuildEnrichmentPlan = $true
+    $SaveInputsToMemoryDb = $true
+
+    if (-not (Test-Path -LiteralPath (Join-Path $RepoRootPath "indexAI/code_chunks/semantic_code_chunks.json") -PathType Leaf)) {
+        $BuildSemanticChunks = $true
+    }
+
+    if ([string]::IsNullOrWhiteSpace($AgentStateObjective) -or $AgentStateObjective -like "Run local AI task *") {
+        $AgentStateObjective = "Run the IA-Carmine real-product heap/exchange process gate with current-stamp runtime evidence, GPU0 workload, NPU diagnostic peer, provider advisory, concrete patch specs and review-PR product separation."
+    }
+
+    if ([string]::IsNullOrWhiteSpace($ChunkQuery) -or $ChunkQuery -eq $AgentStateObjective) {
+        $ChunkQuery = "IA-Carmine real product heap exchange single dynamic run GPU0 OpenVINO NPU diagnostic provider advisory runtime evidence repository change proposals concrete_operations generated patch specs review PR prepare final product contract"
+    }
+
+    if ($ChunkPathBoost.Count -eq 0) {
+        $ChunkPathBoost = @(
+            "Tools/workflow",
+            "Tools/ai",
+            "Tools/validation",
+            "docs/LOCAL_AI_TASKS"
+        )
+    }
+
+    $RealProductExtraContextFiles = @(
+        "docs/README.md",
+        "docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md",
+        "docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md",
+        "docs/LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md",
+        "docs/LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md",
+        "docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md",
+        "Tools/workflow/run_unified_real_product_pr.ps1",
+        "Tools/workflow/run_unified_local_ai_refactor.ps1",
+        "Tools/workflow/run_local_ai_task_via_pipeline.ps1",
+        "Tools/ai/build_repository_change_proposals.py",
+        "Tools/ai/build_patch_specs_from_proposals.py",
+        "Tools/ai/apply_generated_patch_specs_for_review_pr.py",
+        "Tools/ai/build_openvino_gpu0_workload_report.py",
+        "Tools/ai/build_npu_micro_task_companion_report.py"
+    )
+
+    foreach ($ContextPath in $RealProductExtraContextFiles) {
+        if ((Test-Path -LiteralPath (Join-Path $RepoRootPath $ContextPath) -PathType Leaf) -and ($ExtraContextFile -notcontains $ContextPath)) {
+            $ExtraContextFile += $ContextPath
+        }
+    }
+
+    Write-Host "[INFO] Real-product official adapter context enabled."
+    Write-Host "[INFO] Official adapter profile: $Profile"
+    Write-Host "[INFO] Official adapter max context chars: $MaxContextChars"
+    Write-Host "[INFO] Official adapter extra context files: $($ExtraContextFile -join ', ')"
+}
+# IA-CARMINE-REAL-PRODUCT-OFFICIAL-CONTEXT-END
+
 if ($BuildSelectedChunksEvidence -and -not $SelectSemanticChunks) {
     throw "-BuildSelectedChunksEvidence requires -SelectSemanticChunks"
 }
