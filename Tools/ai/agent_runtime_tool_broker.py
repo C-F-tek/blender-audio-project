@@ -390,6 +390,35 @@ def build_semantic_evidence_chunk_manifest(repo_root: Path, out_dir: Path, reque
     manifest_md = output_dir / f"{basename}_chunk_manifest.md"
     return command, {"json_report": repo_rel(manifest_json, repo_root), "markdown_report": repo_rel(manifest_md, repo_root), "chunk_output_dir": repo_rel(chunk_dir, repo_root)}
 
+
+def run_agent_runtime_debug_lab(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
+    request_file = str(args.get("request_file") or "").strip()
+    if not request_file:
+        request_file = str(out_dir / f"{request_id}_agent_runtime_debug_lab_request.json")
+    report = resolve_path(repo_root, str(args.get("output") or out_dir / f"{request_id}_agent_runtime_debug_lab.json"))
+    markdown = resolve_path(repo_root, str(args.get("markdown_output") or out_dir / f"{request_id}_agent_runtime_debug_lab.md"))
+    command = [
+        resolve_child_python(repo_root),
+        "Tools/ai/agent_runtime_debug_lab.py",
+        "--repo-root",
+        ".",
+        "--request-file",
+        request_file,
+        "--output",
+        repo_rel(report, repo_root),
+        "--markdown-output",
+        repo_rel(markdown, repo_root),
+    ]
+    if args.get("timeout_seconds") is not None:
+        command.extend(["--timeout-seconds", str(args.get("timeout_seconds"))])
+    if args.get("tail_chars") is not None:
+        command.extend(["--tail-chars", str(args.get("tail_chars"))])
+    return command, {
+        "json_report": repo_rel(report, repo_root),
+        "markdown_report": repo_rel(markdown, repo_root),
+        "request_file": request_file,
+    }
+
 def runtime_sqlite_memory(repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]) -> tuple[list[str], dict[str, str]]:
     report, markdown = base_outputs(out_dir, request_id, "runtime_sqlite_memory")
     command = [
@@ -512,6 +541,13 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         allowed_args=("basename", "source", "output_dir", "chunk_output_dir", "chunk_max_chars", "chunk_overlap_lines", "zip_output"),
         builder=build_semantic_evidence_chunk_manifest,
     ),
+    "agent_runtime_debug_lab": ToolSpec(
+        name="agent_runtime_debug_lab",
+        description="Run the controlled report-only Python debug lab with an allowlisted request file.",
+        allowed_args=("request_file", "output", "markdown_output", "timeout_seconds", "tail_chars"),
+        builder=run_agent_runtime_debug_lab,
+    ),
+
     "runtime_sqlite_memory": ToolSpec(
         name="runtime_sqlite_memory",
         description="Use protected persistent SQLite read-only or operational scratch SQLite memory under output/**.",

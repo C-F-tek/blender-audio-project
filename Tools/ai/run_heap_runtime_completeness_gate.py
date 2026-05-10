@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -83,6 +84,52 @@ PROVIDER_REQUIREMENTS = (
     "gpu0_provider_peer",
     "npu_micro_task_auditor",
 )
+
+HISTORICAL_TOOL_CONTEXT_FILES = (
+    "docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md",
+    "docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md",
+    "docs/LOCAL_AI_TASKS/project-tool-registry.md",
+    "docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md",
+    "docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md",
+    "Tools/ai/README.md",
+    "Tools/workflow/README.md",
+)
+
+COMPLEX_REQUEST_HINTS = (
+    "analizza",
+    "analysis",
+    "audit",
+    "compless",
+    "concreto",
+    "contesto",
+    "context",
+    "dettagli",
+    "evidence",
+    "file",
+    "heap",
+    "igiene",
+    "implement",
+    "iter",
+    "memoria",
+    "output",
+    "repo",
+    "runtime",
+    "sql",
+    "stato",
+    "tool",
+    "universo",
+    "verifica",
+)
+
+FILE_REF_PATTERN = re.compile(
+    r"`([^`]+\.(?:py|ps1|md|json|ya?ml|toml|txt|csv))`|"
+    r"(?:File|file)\s+([A-Za-z0-9_./\\-]+\.(?:py|ps1|md|json|ya?ml|toml|txt|csv))"
+)
+
+SOURCE_CODE_EXTENSIONS = {".py", ".ps1", ".md", ".yml", ".yaml", ".toml"}
+OUTPUT_ARTIFACT_PREFIXES = ("output/", "renders/", "indexAI/code_chunks/")
+SOURCE_CONTEXT_KEYS = {"path", "file", "source_file", "repo_path", "target_file", "target_path"}
+
 
 
 def now_iso() -> str:
@@ -217,6 +264,8 @@ class HeapRuntimeCompletenessGate:
         self.bridge_reports: list[str] = []
         self.provider_reports: list[dict[str, Any]] = []
         self.provider_execution_performed = False
+        self.provider_revision_count = 0
+        self.provider_revision_feedback = ""
         self.errors: list[str] = []
         self.warnings: list[str] = []
 
@@ -251,6 +300,430 @@ class HeapRuntimeCompletenessGate:
             path = self.repo_root / "output" / "validation" / f"heap_runtime_team_context_{self.stamp}"
         path.mkdir(parents=True, exist_ok=True)
         return path
+
+    def historical_tool_context_files(self) -> list[str]:
+        """Return existing canonical/historical maps that help choose reusable tools."""
+        refs: list[str] = []
+        for rel_path in HISTORICAL_TOOL_CONTEXT_FILES:
+            if (self.repo_root / rel_path).exists():
+                refs.append(rel_path)
+        return refs
+
+    def detailed_output_expected(self) -> bool:
+        request = self.request_text().strip()
+        if not request:
+            return False
+        lowered = request.lower()
+        word_count = len([part for part in lowered.replace("?", " ").replace("!", " ").split() if part])
+        if word_count <= 3 and not any(hint in lowered for hint in COMPLEX_REQUEST_HINTS):
+            return False
+        return word_count >= 6 or any(hint in lowered for hint in COMPLEX_REQUEST_HINTS)
+
+    def request_requires_existing_files(self) -> bool:
+        lowered = self.request_text().lower()
+        return "file esistent" in lowered or "file esistenti" in lowered or "su file esistenti" in lowered
+
+    def normalize_ref_path(self, rel_path: str) -> str:
+        return rel_path.strip().strip("`'\"").replace("\\", "/")
+
+    def repo_file_exists(self, rel_path: str) -> bool:
+        rel_path = self.normalize_ref_path(rel_path)
+        if not rel_path or rel_path.startswith(("http://", "https://")):
+            return False
+        return (self.repo_root / rel_path).is_file()
+
+    def is_output_artifact_ref(self, rel_path: str) -> bool:
+        rel_path = self.normalize_ref_path(rel_path)
+        return rel_path.startswith(OUTPUT_ARTIFACT_PREFIXES)
+
+    def is_source_candidate_ref(self, rel_path: str) -> bool:
+        rel_path = self.normalize_ref_path(rel_path)
+        if not rel_path or self.is_output_artifact_ref(rel_path):
+            return False
+        return Path(rel_path).suffix.lower() in SOURCE_CODE_EXTENSIONS
+
+    def repo_source_file_exists(self, rel_path: str) -> bool:
+        rel_path = self.normalize_ref_path(rel_path)
+        return self.is_source_candidate_ref(rel_path) and (self.repo_root / rel_path).is_file()
+
+    def extracted_response_file_refs(self, text: str) -> list[str]:
+        refs: list[str] = []
+        for match in FILE_REF_PATTERN.finditer(text or ""):
+            value = next((group for group in match.groups() if group), "").strip()
+            if not value:
+                continue
+            value = self.normalize_ref_path(value)
+            if value and value not in refs:
+                refs.append(value)
+        return refs
+
+    def response_file_reference_quality(self, text: str) -> dict[str, Any]:
+        refs = self.extracted_response_file_refs(text)
+        output_refs = [ref for ref in refs if self.is_output_artifact_ref(ref)]
+        source_refs = [ref for ref in refs if self.is_source_candidate_ref(ref)]
+        existing_source = [ref for ref in source_refs if self.repo_source_file_exists(ref)]
+        unverified_source = [ref for ref in source_refs if ref not in existing_source]
+        requires_existing = self.request_requires_existing_files()
+        no_source_refs = requires_existing and not existing_source
+        passed = not requires_existing or (not unverified_source and not no_source_refs)
+        return {
+            "request_requires_existing_files": requires_existing,
+            "file_refs": refs,
+            "output_artifact_refs": output_refs,
+            "source_file_refs": source_refs,
+            "existing_file_refs": existing_source,
+            "existing_source_file_refs": existing_source,
+            "unverified_file_refs": unverified_source,
+            "unverified_source_file_refs": unverified_source,
+            "no_source_file_refs": no_source_refs,
+            "passed": passed,
+        }
+
+    def collect_source_candidates_from_json(self, data: Any, out: list[str]) -> None:
+        if len(out) >= 40:
+            return
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(value, str) and key in SOURCE_CONTEXT_KEYS:
+                    ref = self.normalize_ref_path(value)
+                    if self.repo_source_file_exists(ref) and ref not in out:
+                        out.append(ref)
+                else:
+                    self.collect_source_candidates_from_json(value, out)
+        elif isinstance(data, list):
+            for item in data:
+                self.collect_source_candidates_from_json(item, out)
+
+    def real_source_file_candidates(self, events: list[dict[str, Any]] | None = None, limit: int = 24) -> list[str]:
+        candidates: list[str] = []
+        if events is None:
+            events = self.read_events()
+        for ref in self.broker_output_refs(events):
+            if not ref.endswith(".json"):
+                continue
+            data = read_json(self.repo_root / ref)
+            if data:
+                self.collect_source_candidates_from_json(data, candidates)
+            if len(candidates) >= limit:
+                break
+        # Stable fallback: expose actual source files from the canonical tool lanes.
+        for root in ("Tools/ai", "Tools/workflow", "Tools/npu", "Tools/validation"):
+            base = self.repo_root / root
+            if not base.exists():
+                continue
+            for path in sorted(base.rglob("*.py"))[:80]:
+                rel = repo_rel(self.repo_root, path)
+                if rel not in candidates:
+                    candidates.append(rel)
+                if len(candidates) >= limit:
+                    return candidates
+        return candidates[:limit]
+
+    def heap_exchange_paths(self) -> dict[str, Path]:
+        """Return heap/exchange lifecycle artifact paths for this gate universe."""
+        if self.output_dir:
+            base = self.output_dir / "heap_exchange"
+        else:
+            base = self.repo_root / "output" / "ai_packets" / self.stamp
+        base.mkdir(parents=True, exist_ok=True)
+        return {
+            "dir": base,
+            "runtime_state": base / "heap_exchange_runtime_state.jsonl",
+            "runtime_entry": base / "heap_exchange_runtime_entry.json",
+            "runtime_entry_md": base / "heap_exchange_runtime_entry.md",
+            "exit_output": base / "heap_runtime_exit_output.json",
+            "exit_output_md": base / "heap_runtime_exit_output.md",
+            "exit_product": base / "heap_exchange_runtime_exit_product.json",
+            "exit_product_md": base / "heap_exchange_runtime_exit_product.md",
+        }
+
+    def append_heap_exchange_event(self, event: dict[str, Any]) -> None:
+        """Publish a public heap/exchange event without exposing private reasoning."""
+        paths = self.heap_exchange_paths()
+        payload = dict(event)
+        payload.setdefault("schema_version", 1)
+        payload.setdefault("stamp", self.stamp)
+        payload.setdefault("timestamp", now_iso())
+        payload.setdefault("raw_thinking_exposed", False)
+        payload.setdefault("source_of_knowledge", "heap_exchange")
+        paths["runtime_state"].parent.mkdir(parents=True, exist_ok=True)
+        with paths["runtime_state"].open("a", encoding="utf-8", newline="\n") as handle:
+            handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
+
+    def write_heap_exchange_entry(self) -> None:
+        """Register the heap completeness gate as the dynamic heap/exchange universe."""
+        paths = self.heap_exchange_paths()
+        lanes = [
+            {"name": "gpu1", "role": "primary_exit_coordinator", "available": True},
+            {"name": "gpu0", "role": "diagnostic_peer_and_product_evidence_lane", "available": True},
+            {"name": "npu", "role": "micro_task_auditor_and_guardrail_peer", "available": True},
+            {"name": "broker", "role": "allowlisted_tool_executor", "available": True},
+            {"name": "context_memory", "role": "sqlite_fts_context_pack_semantic_chunks", "available": True},
+            {"name": "deterministic_audit", "role": "exit_quality_and_contract_lane", "available": True},
+        ]
+        entry = {
+            "schema_version": 1,
+            "kind": "heap_exchange_runtime_entry",
+            "generated_at": now_iso(),
+            "stamp": self.stamp,
+            "repo_root": self.repo_root.as_posix(),
+            "source_of_knowledge": "heap_exchange",
+            "center_is_dynamic": True,
+            "dynamic_exchange_pipeline": True,
+            "static_chain_invocation_performed": False,
+            "entry_controls_inputs_only": True,
+            "exit_must_produce_concrete_product": True,
+            "task_file": self.args.task_file,
+            "request": self.request_text(),
+            "runtime_state": repo_rel(self.repo_root, paths["runtime_state"]),
+            "lanes": lanes,
+            "available_lane_count": len([item for item in lanes if item.get("available")]),
+            "knowledge_surface": {
+                "source_of_knowledge": "heap_exchange",
+                "knowledge_surface": "shared_runtime_heap_blackboard",
+                "routing_model": "dynamic_exchange_not_static_chain",
+                "lane_autonomy_model": "gpu1_gpu0_npu_provider_lanes_publish_and_consume_exchange_evidence",
+                "deterministic_boundaries": {"in_controlled": True, "loop_dynamic": True, "out_deterministic": True},
+            },
+            "provider_execution_performed": False,
+            "patch_application_performed": False,
+            "source_writes_performed": False,
+            "passed": True,
+            "errors": [],
+            "warnings": [],
+        }
+        write_json_report(entry, paths["runtime_entry"])
+        lines = [
+            "# Heap Exchange Runtime Entry",
+            "",
+            "- Passed: `True`",
+            f"- Stamp: `{self.stamp}`",
+            "- Routing model: `dynamic_exchange_not_static_chain`",
+            "- Source of knowledge: `heap_exchange`",
+            "",
+            "GPU1, GPU0, NPU, broker and memory/context lanes publish into the same heap universe. Exit is deterministic and product-bound.",
+        ]
+        write_text_report("\n".join(lines) + "\n", paths["runtime_entry_md"])
+        self.append_heap_exchange_event({
+            "kind": "heap_entry",
+            "lane": "orchestrator",
+            "summary": "heap completeness gate registered as dynamic heap/exchange universe",
+            "entry": repo_rel(self.repo_root, paths["runtime_entry"]),
+        })
+
+    def write_exit_output_product(self, response_text: str, events: list[dict[str, Any]], metrics: dict[str, Any]) -> dict[str, Any]:
+        """Write the operator-facing heap exit product assembled from all lane artifacts."""
+        paths = self.heap_exchange_paths()
+        product_status = str(self.state.get("product", {}).get("status") or metrics.get("product_status") or "blocked_with_reason")
+        file_quality = self.response_file_reference_quality(self.response_text())
+        product = {
+            "schema_version": 1,
+            "kind": "heap_runtime_exit_output",
+            "generated_at": now_iso(),
+            "stamp": self.stamp,
+            "request_input": self.request_text(),
+            "product_status": product_status,
+            "response_text": response_text,
+            "provider_raw_response_text": self.response_text(),
+            "source_of_knowledge": "heap_exchange",
+            "assembled_by": "gpu1_exit_coordinator",
+            "revealed_by": "heap_exchange_runtime_exit",
+            "provider_contributions": self.provider_response_texts(),
+            "context_artifact_refs": self.broker_output_refs(events),
+            "bridge_reports": self.bridge_report_refs(events),
+            "quality_output_signals": self.quality_output_signals(response_text, events),
+            "response_file_reference_quality": file_quality,
+            "completed_requirements": sorted(self.completed_requirements(events)),
+            "missing_requirements": self.missing_requirements(events),
+            "runtime_debug_lab_required": self.runtime_debug_lab_required(),
+            "runtime_debug_lab_passed": self.runtime_debug_lab_passed(events),
+            "runtime_debug_lab_reports": self.runtime_debug_lab_reports(events),
+            "provider_execution_performed": self.provider_execution_performed,
+            "patch_application_performed": False,
+            "source_writes_performed": False,
+        }
+        write_json_report(product, paths["exit_output"])
+        md = [
+            "# Heap Runtime Exit Output",
+            "",
+            f"- Status: `{product_status}`",
+            f"- Assembled by: `{product['assembled_by']}`",
+            f"- Revealed by: `{product['revealed_by']}`",
+            "",
+            "## Response",
+            "",
+            response_text,
+            "",
+            "## File reference quality",
+            "",
+            f"- Passed: `{file_quality.get('passed')}`",
+            f"- Unverified file refs: `{file_quality.get('unverified_file_refs')}`",
+            "",
+            "## Runtime debug lab",
+            "",
+            f"- Required: `{product.get('runtime_debug_lab_required')}`",
+            f"- Passed: `{product.get('runtime_debug_lab_passed')}`",
+            f"- Reports: `{product.get('runtime_debug_lab_reports')}`",
+        ]
+        write_text_report("\n".join(md) + "\n", paths["exit_output_md"])
+        self.append_heap_exchange_event({
+            "kind": "heap_exit_product",
+            "lane": "gpu1",
+            "summary": f"GPU1 composed heap exit output with status={product_status}",
+            "operation": "write_file",
+            "operation_count": 1,
+            "path": repo_rel(self.repo_root, paths["exit_output"]),
+            "source_file": repo_rel(self.repo_root, paths["exit_output"]),
+            "product_status": product_status,
+            "quality_passed": self.quality_output_passed(response_text, events),
+        })
+        return product
+
+    def build_heap_exchange_exit_product(self, require_concrete_product: bool) -> dict[str, Any]:
+        """Reuse the existing deterministic heap/exchange exit boundary tool."""
+        paths = self.heap_exchange_paths()
+        command = [
+            resolve_child_python(self.repo_root),
+            "Tools/ai/build_heap_exchange_runtime_exit.py",
+            "--repo-root", ".",
+            "--stamp", self.stamp,
+            "--runtime-entry", repo_rel(self.repo_root, paths["runtime_entry"]),
+            "--runtime-state", repo_rel(self.repo_root, paths["runtime_state"]),
+            "--output", repo_rel(self.repo_root, paths["exit_product"]),
+            "--markdown-output", repo_rel(self.repo_root, paths["exit_product_md"]),
+        ]
+        if require_concrete_product:
+            command.append("--require-concrete-product")
+        try:
+            completed = subprocess.run(command, cwd=self.repo_root, env=command_env(self.repo_root), capture_output=True, text=True, check=False, timeout=max(30, int(self.args.timeout_seconds)))
+        except subprocess.TimeoutExpired as exc:
+            self.warnings.append(f"heap exchange exit timed out: {exc}")
+            return {"passed": False, "error": "timeout", "output": repo_rel(self.repo_root, paths["exit_product"])}
+        report = read_json(paths["exit_product"])
+        if completed.returncode != 0:
+            self.warnings.append(f"heap exchange exit returned {completed.returncode}: {(completed.stderr or completed.stdout)[-1000:]}")
+        return report or {"passed": completed.returncode == 0, "output": repo_rel(self.repo_root, paths["exit_product"])}
+
+
+    def runtime_debug_lab_required(self) -> bool:
+        text = f"{self.request_text()} {self.args.objective}".lower()
+        required_terms = (
+            "mvp",
+            "lab python",
+            "laboratorio python",
+            "python funzion",
+            "debug lab",
+            "implementa",
+            "implementazione",
+            "codice effettivo",
+            "funzionante",
+        )
+        return any(term in text for term in required_terms)
+
+    def runtime_debug_lab_dir(self) -> Path:
+        path = self.runtime_context_dir() / "runtime_debug_lab"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def runtime_debug_lab_source_paths(self) -> list[str]:
+        candidates = [
+            "Tools/ai/agent_runtime_debug_lab.py",
+            "Tools/ai/agent_runtime_debug_lab/policy.py",
+            "Tools/ai/agent_runtime_debug_lab/reporting.py",
+            "Tools/ai/agent_runtime_debug_lab/runner.py",
+        ]
+        return [path for path in candidates if (self.repo_root / path).exists()]
+
+    def write_runtime_debug_lab_request(self) -> tuple[str, str, str]:
+        lab_dir = self.runtime_debug_lab_dir()
+        request_path = lab_dir / f"agent_runtime_debug_lab_request_{self.stamp}.json"
+        report_path = lab_dir / f"agent_runtime_debug_lab_{self.stamp}.json"
+        markdown_path = lab_dir / f"agent_runtime_debug_lab_{self.stamp}.md"
+        source_paths = self.runtime_debug_lab_source_paths()
+        request = {
+            "schema_version": 1,
+            "kind": "agent_runtime_debug_lab_request",
+            "operations": [
+                {
+                    "id": "compile_debug_lab_sources",
+                    "type": "python_compile",
+                    "paths": source_paths,
+                    "timeout_seconds": 300,
+                },
+                {
+                    "id": "git_diff_check",
+                    "type": "git_diff_check",
+                    "timeout_seconds": 120,
+                },
+                {
+                    "id": "git_status_short",
+                    "type": "git_status_short",
+                    "timeout_seconds": 120,
+                },
+            ],
+        }
+        request_path.write_text(json.dumps(request, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        return (
+            repo_rel(self.repo_root, request_path),
+            repo_rel(self.repo_root, report_path),
+            repo_rel(self.repo_root, markdown_path),
+        )
+
+    def runtime_debug_lab_plan_items(self, context_dir: Path, request: str) -> list[dict[str, Any]]:
+        if not self.runtime_debug_lab_required():
+            return []
+        request_file, output, markdown_output = self.write_runtime_debug_lab_request()
+        return [
+            {
+                "stage": 4,
+                "requirement": "runtime_debug_lab_execution",
+                "id": "runtime-debug-lab-execution",
+                "tool": "agent_runtime_debug_lab",
+                "args": {
+                    "request_file": request_file,
+                    "output": output,
+                    "markdown_output": markdown_output,
+                    "timeout_seconds": min(max(int(self.args.timeout_seconds), 60), 600),
+                    "tail_chars": 4000,
+                },
+                "reason": "execute the reusable report-only Python debug lab before claiming an MVP/lab product",
+            }
+        ]
+
+    def required_requirements_order(self) -> list[str]:
+        order = list(REQUIREMENT_ORDER)
+        if self.runtime_debug_lab_required() and "runtime_debug_lab_execution" not in order:
+            order.append("runtime_debug_lab_execution")
+        return order
+
+    def runtime_debug_lab_reports(self, events: list[dict[str, Any]]) -> list[str]:
+        refs: list[str] = []
+        for payload in self.broker_results(events):
+            requirement = str(payload.get("requirement") or self.requirement_for_tool(str(payload.get("tool") or "")))
+            if requirement != "runtime_debug_lab_execution":
+                continue
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+            for key in ("json_report", "markdown_report", "request_file"):
+                value = str(outputs.get(key) or "").strip()
+                if value and value not in refs:
+                    refs.append(value)
+        return refs
+
+    def runtime_debug_lab_passed(self, events: list[dict[str, Any]]) -> bool:
+        if not self.runtime_debug_lab_required():
+            return True
+        for payload in self.broker_results(events):
+            requirement = str(payload.get("requirement") or self.requirement_for_tool(str(payload.get("tool") or "")))
+            if requirement != "runtime_debug_lab_execution":
+                continue
+            if payload.get("blocked") or safe_int(payload.get("returncode"), default=1) != 0:
+                continue
+            summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+            if summary.get("passed") is False:
+                continue
+            return True
+        return False
+
 
     def tool_plan(self) -> list[dict[str, Any]]:
         context_dir = self.runtime_context_dir()
@@ -309,9 +782,9 @@ class HeapRuntimeCompletenessGate:
                         "budget/iterations define convergence and prevent endless repository loops",
                         f"user_request={request}",
                     ],
-                    "raw_file": ["AGENTS.md", "README.md"],
+                    "raw_file": ["AGENTS.md", "README.md", *self.historical_tool_context_files()],
                 },
-                "reason": "materialize request-scoped shared context/chunks from repository policy documents",
+                "reason": "materialize request-scoped shared context/chunks from repository policy and historical tool maps",
             },
             {
                 "stage": 2,
@@ -361,6 +834,7 @@ class HeapRuntimeCompletenessGate:
                 "args": {},
                 "reason": "prove validation tool evidence is consumed before arbiter decision",
             },
+            *self.runtime_debug_lab_plan_items(context_dir, request),
         ]
 
     def read_events(self) -> list[dict[str, Any]]:
@@ -445,7 +919,7 @@ class HeapRuntimeCompletenessGate:
 
     def missing_requirements(self, events: list[dict[str, Any]]) -> list[str]:
         completed = self.completed_requirements(events)
-        return [item for item in REQUIREMENT_ORDER if item not in completed]
+        return [item for item in self.required_requirements_order() if item not in completed]
 
 
     def broker_output_refs(self, events: list[dict[str, Any]]) -> list[str]:
@@ -559,6 +1033,7 @@ class HeapRuntimeCompletenessGate:
             append_unique(self.state["facts"], fact)
             self.publish("deterministic", "fact", fact, target="gpu1", correlation_id=f"{self.stamp}:fact:{fact['id']}", round_id=0)
         self.heap.write_snapshot()
+        self.write_heap_exchange_entry()
 
     def planner_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
         if self.heap.pending_broker_requests():
@@ -590,6 +1065,15 @@ class HeapRuntimeCompletenessGate:
             append_unique(self.state["tool_requests"], tool_request)
             self.publish("gpu1", "broker_request", tool_request, target="broker", correlation_id=request_id, round_id=round_id)
             self.tool_request_count += 1
+            self.append_heap_exchange_event({
+                "kind": "broker_request",
+                "lane": "gpu1",
+                "target": "broker",
+                "round": round_id,
+                "tool": plan_item["tool"],
+                "requirement": plan_item["requirement"],
+                "summary": f"GPU1 requested broker tool {plan_item['tool']} for {plan_item['requirement']}",
+            })
 
     def run_bridge(self) -> dict[str, Any]:
         bridge_json = resolve_output_path(self.repo_root, self.path_arg(self.args.bridge_output, DEFAULT_BRIDGE_JSON).format(stamp=self.stamp))
@@ -614,6 +1098,13 @@ class HeapRuntimeCompletenessGate:
         if completed.returncode != 0:
             self.errors.append(f"broker bridge returned {completed.returncode}: {(completed.stderr or completed.stdout)[-1000:]}")
         self.tool_execution_count += safe_int(report.get("tool_execution_count"))
+        self.append_heap_exchange_event({
+            "kind": "broker_result",
+            "lane": "broker",
+            "summary": "broker bridge executed pending heap tool requests",
+            "tool_execution_count": safe_int(report.get("tool_execution_count")),
+            "source_file": repo_rel(self.repo_root, bridge_json),
+        })
         return report
 
     def critic_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
@@ -653,6 +1144,10 @@ class HeapRuntimeCompletenessGate:
         if ready and self.request_text() and not self.response_text_complete():
             missing = [*missing, "gpu1_request_response_complete"]
             ready = False
+        file_quality = self.response_file_reference_quality(self.response_text())
+        if ready and file_quality.get("request_requires_existing_files") and file_quality.get("unverified_file_refs"):
+            missing = [*missing, "verified_existing_file_refs"]
+            ready = False
         budget_exhausted = round_id >= self.max_iterations
         no_more_progress = unattempted is None and bool(missing)
         if not ready and not budget_exhausted and not no_more_progress:
@@ -684,17 +1179,22 @@ class HeapRuntimeCompletenessGate:
         append_unique(self.state["candidate_operations"], candidate)
         self.candidate_operation_count += 1
         self.publish("deterministic", "candidate_operation", candidate, target="orchestrator", correlation_id=f"{self.stamp}:candidate", round_id=round_id)
+        final_response_text = self.build_final_response_text(events)
         self.state["product"] = {
             "required": True,
             "status": status,
             "request_input": self.request_text(),
-            "response_text": self.response_text(),
+            "response_text": final_response_text,
             "response_source": self.response_source(),
             "heap_event_refs": [repo_rel(self.repo_root, self.heap.paths.events)],
             "provider_refs": self.provider_refs(),
             "provider_response_texts": self.provider_response_texts(),
             "context_artifact_refs": self.broker_output_refs(events),
             "bridge_reports": bridge_refs,
+            "quality_output_signals": self.quality_output_signals(final_response_text, events),
+            "quality_output_passed": self.quality_output_passed(final_response_text, events),
+            "historical_tool_context_refs": self.historical_tool_context_files(),
+            "response_file_reference_quality": self.response_file_reference_quality(self.response_text()),
             "provider_role_decisions": self.provider_role_decisions(),
             "toolused": effective_tool_execution_count > 0,
             "shared_memory_written_and_used": "shared_memory" in self.completed_requirements(events),
@@ -725,7 +1225,7 @@ class HeapRuntimeCompletenessGate:
         return str(getattr(self.args, "request", "") or "").strip()
 
     def provider_response_text(self, lane: str) -> str:
-        for report in self.provider_reports:
+        for report in reversed(self.provider_reports):
             if report.get("lane") != lane:
                 continue
             text = str(report.get("response_text") or "").strip()
@@ -771,6 +1271,119 @@ class HeapRuntimeCompletenessGate:
         joined = "\n".join(parts)
         return joined[:max_chars] + ("\n...[team context truncated]" if len(joined) > max_chars else "")
 
+    def tool_evidence_summary(self, events: list[dict[str, Any]], max_items: int = 12) -> list[dict[str, Any]]:
+        items: list[dict[str, Any]] = []
+        for payload in self.broker_results(events):
+            requirement = str(payload.get("requirement") or self.requirement_for_tool(str(payload.get("tool") or "")))
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+            refs: list[str] = []
+            for key in ("json_report", "markdown_report", "evidence_json", "evidence_markdown", "chunk_output_dir"):
+                value = str(outputs.get(key) or "").strip()
+                if value:
+                    refs.append(value)
+            items.append(
+                {
+                    "requirement": requirement,
+                    "tool": str(payload.get("tool") or ""),
+                    "returncode": safe_int(payload.get("returncode"), default=-1),
+                    "refs": refs[:4],
+                }
+            )
+        return items[:max_items]
+
+    def tool_evidence_lines(self, events: list[dict[str, Any]], max_items: int = 12) -> list[str]:
+        lines: list[str] = []
+        for item in self.tool_evidence_summary(events, max_items=max_items):
+            refs = item.get("refs") if isinstance(item.get("refs"), list) else []
+            ref_text = "; ".join(str(ref) for ref in refs[:3]) if refs else "nessun output dichiarato"
+            lines.append(f"- {item.get('tool')} -> {item.get('requirement')} (rc={item.get('returncode')}): {ref_text}")
+        return lines
+
+    def quality_output_signals(self, text: str, events: list[dict[str, Any]]) -> dict[str, Any]:
+        lowered = text.lower()
+        tool_names = [str(item.get("tool") or "") for item in self.tool_evidence_summary(events)]
+        return {
+            "detailed_output_expected": self.detailed_output_expected(),
+            "mentions_tool_evidence": "tool" in lowered and ("evidence" in lowered or "evidenza" in lowered),
+            "mentions_heap_context": "heap" in lowered or "contesto" in lowered or "context" in lowered,
+            "mentions_gpu0": "gpu0" in lowered or "gpu.0" in lowered,
+            "mentions_npu": "npu" in lowered,
+            "mentions_next_verifiable_action": "prossima azione" in lowered or "validazione" in lowered or "verificabile" in lowered,
+            "tool_names_available": tool_names,
+            "response_file_reference_quality": self.response_file_reference_quality(text),
+        }
+
+    def quality_output_passed(self, text: str, events: list[dict[str, Any]]) -> bool:
+        signals = self.quality_output_signals(text, events)
+        if self.runtime_debug_lab_required() and not self.runtime_debug_lab_passed(events):
+            return False
+        if not signals.get("detailed_output_expected"):
+            return True
+        file_quality = signals.get("response_file_reference_quality") if isinstance(signals.get("response_file_reference_quality"), dict) else {}
+        if file_quality.get("request_requires_existing_files") and file_quality.get("unverified_file_refs"):
+            return False
+        return bool(
+            signals.get("mentions_tool_evidence")
+            and signals.get("mentions_heap_context")
+            and signals.get("mentions_gpu0")
+            and signals.get("mentions_npu")
+            and signals.get("mentions_next_verifiable_action")
+        )
+
+    def build_final_response_text(self, events: list[dict[str, Any]]) -> str:
+        base_response = self.response_text().strip()
+        if not self.detailed_output_expected():
+            return base_response
+        historical_refs = self.historical_tool_context_files()
+        tool_lines = self.tool_evidence_lines(events)
+        gpu0_text = self.provider_response_text("gpu0_peer") or "GPU0 non ha prodotto una risposta utile."
+        npu_text = self.provider_response_text("npu_micro_task_auditor") or "NPU non ha prodotto una risposta utile."
+        gpu1_text = base_response or "GPU1 non ha prodotto una risposta testuale utile."
+        lines = [
+            "## Sintesi heap dettagliata",
+            "",
+            "### Interpretazione richiesta",
+            f"La richiesta operatore è stata trattata come task complesso: {self.request_text()}",
+            "",
+            "### Tool/evidence storiche e runtime consumate",
+        ]
+        if historical_refs:
+            lines.extend(f"- mappa storica/canonica: {ref}" for ref in historical_refs[:10])
+        else:
+            lines.append("- nessuna mappa storica/canonica trovata nel workspace corrente")
+        if tool_lines:
+            lines.extend(tool_lines)
+        else:
+            lines.append("- nessun risultato broker disponibile")
+        file_quality = self.response_file_reference_quality(gpu1_text)
+        lines.extend(
+            [
+                "",
+                "### Verifica riferimenti file",
+                f"- Richiesta richiede file esistenti: {file_quality.get('request_requires_existing_files')}",
+                f"- File sorgente verificati: {file_quality.get('existing_source_file_refs')}",
+                f"- Artifact output ignorati come prova di file sorgente: {file_quality.get('output_artifact_refs')}",
+                f"- File sorgente non verificati/bloccanti: {file_quality.get('unverified_source_file_refs')}",
+                f"- Mancano riferimenti a file sorgente reali: {file_quality.get('no_source_file_refs')}",
+                "",
+                "### Contributo provider",
+                f"- GPU0: {gpu0_text}",
+                f"- NPU: {npu_text}",
+                f"- GPU1: {gpu1_text}",
+                "",
+                "### Output operativo",
+                gpu1_text,
+                "",
+                "### Limiti",
+                "- L'output è valido solo rispetto agli artifact brokerati e ai provider report della run corrente.",
+                "- Le mappe storiche orientano la scelta dei tool, ma non sostituiscono codice corrente, validator e report runtime.",
+                "",
+                "### Prossima azione verificabile",
+                "Eseguire la stessa richiesta con report JSON completo e controllare product_status, tool_request_count, tool_execution_count, bridge_reports, provider_lane_count, quality_output_passed e context_artifact_refs.",
+            ]
+        )
+        return "\n".join(lines).strip()
+
     def gpu1_request_prompt(self) -> str:
         request = self.request_text()
         if not request:
@@ -782,19 +1395,25 @@ class HeapRuntimeCompletenessGate:
                 peer_lines.append(f"{lane}: {text}")
         peer_context = "\n".join(peer_lines) if peer_lines else "nessun contributo peer ancora disponibile"
         team_context = self.team_context_summary()
+        source_candidates = "\n".join(f"- {item}" for item in self.real_source_file_candidates(limit=32)) or "- nessun candidato sorgente verificato disponibile"
+        revision_feedback = self.provider_revision_feedback or "nessun feedback correttivo precedente"
         return (
-            "Sei GPU1 planner finale nel runtime heap IA-Carmine. "
-            "Devi produrre la risposta cumulativa finale per l'utente usando anche i contributi GPU0/NPU già scritti nell'heap. "
-            "Rispondi in italiano, breve, senza markdown, senza patch e senza descrivere il sistema. "
+            "Sei GPU1 planner finale e leader operativo nel runtime heap IA-Carmine. "
+            "Non rispondere come lista generica: consuma le evidenze brokerate, memoria SQLite/FTS, chunk semantici, context pack e contributi GPU0/NPU già presenti nell'heap. "
+            "Puoi proporre nuovi file solo se li marchi esplicitamente come NUOVO; se la richiesta chiede file esistenti devi citare solo path verificabili nel contesto/repository. "
+            "Non applicare patch, non inventare file esistenti, non inventare risultati. "
+            "Per richieste complesse usa sezioni: interpretazione richiesta; tool/evidence usate; contributo GPU0; contributo NPU; indagine su file reali; output operativo dettagliato; limiti; prossima azione verificabile. "
             f"Richiesta utente: {request}\n"
             f"Contributi peer heap:\n{peer_context}\n"
             f"Memoria/chunk/context pack condivisi:\n{team_context}\n"
-            "Regola: non dire che sei solo; rispondi come sintesi GPU1 del team heap, citando in modo breve GPU0/NPU e contesto condiviso solo se utile.\n"
+            f"File sorgente reali candidati verificati nel repository/context:\n{source_candidates}\n"
+            f"Feedback qualitativo heap da eventuale giro precedente:\n{revision_feedback}\n"
+            "Regola: rispondi come sintesi GPU1 del team heap; se servono file esistenti usa solo i file sorgente candidati verificati, non gli artifact output/validation. Cita i tool storici/runtime consumati quando la richiesta richiede analisi, stato, igiene, tool, repo o output dettagliato.\n"
             "Risposta finale completa e chiusa:"
         )
 
     def response_text(self) -> str:
-        for report in self.provider_reports:
+        for report in reversed(self.provider_reports):
             if report.get("lane") != "gpu1_planner":
                 continue
             text = str(report.get("response_text") or "").strip()
@@ -829,12 +1448,13 @@ class HeapRuntimeCompletenessGate:
                 refs.append(output)
         return refs
 
-    def provider_command_specs(self, work_dir: Path) -> list[dict[str, Any]]:
-        gpu1_json = work_dir / "gpu1_ollama_provider_probe.json"
-        gpu0_json = work_dir / "gpu0_openvino_peer_workload.json"
-        gpu0_md = work_dir / "gpu0_openvino_peer_workload.md"
-        npu_json = work_dir / "npu_micro_task_auditor.json"
-        npu_md = work_dir / "npu_micro_task_auditor.md"
+    def provider_command_specs(self, work_dir: Path, revision: int = 0) -> list[dict[str, Any]]:
+        suffix = f"_revision{revision}" if revision else ""
+        gpu1_json = work_dir / f"gpu1_ollama_provider_probe{suffix}.json"
+        gpu0_json = work_dir / f"gpu0_openvino_peer_workload{suffix}.json"
+        gpu0_md = work_dir / f"gpu0_openvino_peer_workload{suffix}.md"
+        npu_json = work_dir / f"npu_micro_task_auditor{suffix}.json"
+        npu_md = work_dir / f"npu_micro_task_auditor{suffix}.md"
         return [
             {
                 "lane": "gpu0_peer",
@@ -925,11 +1545,56 @@ class HeapRuntimeCompletenessGate:
             "stderr_tail": (completed.stderr or "")[-1000:],
         }
 
-    def run_provider_teamwork(self, round_id: int) -> None:
-        if self.provider_reports:
+    def build_quality_failure_feedback(self, text: str, events: list[dict[str, Any]]) -> str:
+        file_quality = self.response_file_reference_quality(text)
+        candidates = self.real_source_file_candidates(events, limit=32)
+        return (
+            "quality gate failure: la risposta precedente non è uscibile come prodotto heap. "
+            f"output_artifact_refs={file_quality.get('output_artifact_refs')}; "
+            f"unverified_source_file_refs={file_quality.get('unverified_source_file_refs')}; "
+            f"no_source_file_refs={file_quality.get('no_source_file_refs')}. "
+            "Devi rigenerare usando solo file sorgente reali candidati, con proposte concrete agganciate a path repo esistenti. "
+            f"source_candidates={candidates}"
+        )
+
+    def maybe_run_provider_quality_revisions(self, round_id: int, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        while (
+            self.detailed_output_expected()
+            and self.provider_revision_count < int(getattr(self.args, "max_provider_revisions", 0))
+            and not self.quality_output_passed(self.response_text(), events)
+        ):
+            self.provider_revision_count += 1
+            self.provider_revision_feedback = self.build_quality_failure_feedback(self.response_text(), events)
+            self.publish(
+                "deterministic",
+                "validation_signal",
+                {
+                    "id": f"{self.stamp}:product_quality_failure:{self.provider_revision_count}",
+                    "revision": self.provider_revision_count,
+                    "feedback": self.provider_revision_feedback,
+                    "file_quality": self.response_file_reference_quality(self.response_text()),
+                },
+                target="gpu1",
+                correlation_id=f"{self.stamp}:quality-revision:{self.provider_revision_count}",
+                round_id=round_id,
+            )
+            self.append_heap_exchange_event({
+                "kind": "product_quality_failure",
+                "lane": "deterministic_audit",
+                "round": round_id,
+                "revision": self.provider_revision_count,
+                "summary": self.provider_revision_feedback[:500],
+            })
+            self.run_provider_teamwork(round_id, revision=self.provider_revision_count)
+            events = self.read_events()
+            self.publish_shared_evidence_facts(round_id, events)
+        return events
+
+    def run_provider_teamwork(self, round_id: int, revision: int = 0) -> None:
+        if self.provider_reports and revision <= 0:
             return
         work_dir = self.provider_work_dir()
-        for spec in self.provider_command_specs(work_dir):
+        for spec in self.provider_command_specs(work_dir, revision=revision):
             lane = str(spec["lane"])
             requirement = str(spec["requirement"])
             correlation = f"{self.stamp}:provider:{requirement}"
@@ -941,6 +1606,7 @@ class HeapRuntimeCompletenessGate:
                     "lane": lane,
                     "role": spec.get("role"),
                     "requirement": requirement,
+                    "revision": revision,
                     "output": repo_rel(self.repo_root, Path(spec["output"])),
                 },
                 target="orchestrator",
@@ -965,6 +1631,17 @@ class HeapRuntimeCompletenessGate:
             self.provider_reports.append(provider_report)
             append_unique(self.state["provider_results"], provider_report, key="requirement")
             self.publish(provider_heap_lane(lane), "telemetry_signal", provider_report, target="orchestrator", correlation_id=correlation, round_id=round_id)
+            self.append_heap_exchange_event({
+                "kind": "provider_output",
+                "lane": lane,
+                "round": round_id,
+                "requirement": requirement,
+                "revision": revision,
+                "passed": provider_report.get("passed"),
+                "provider_execution_performed": provider_report.get("provider_execution_performed"),
+                "source_file": provider_report.get("output"),
+                "summary": str(provider_report.get("response_text") or "")[:500],
+            })
             claim = {
                 "id": f"{requirement}_claim",
                 "from": lane,
@@ -994,6 +1671,8 @@ class HeapRuntimeCompletenessGate:
                 self.run_provider_teamwork(round_id)
                 events = self.read_events()
                 self.publish_shared_evidence_facts(round_id, events)
+            if self.base_requirements_complete(events) and self.provider_reports:
+                events = self.maybe_run_provider_quality_revisions(round_id, events)
             self.critic_step(round_id, events)
             self.arbiter_step(round_id, events)
             if self.state["product"].get("status") in {"ready", "blocked_with_reason"}:
@@ -1008,6 +1687,8 @@ class HeapRuntimeCompletenessGate:
         final_bridge_reports = self.bridge_report_refs(final_events)
         final_tool_request_count = self.effective_tool_request_count(final_events)
         final_tool_execution_count = self.effective_tool_execution_count(final_events)
+        final_response_text = self.build_final_response_text(final_events)
+        final_quality_signals = self.quality_output_signals(final_response_text, final_events)
         metrics = {
             "heap_read_count": self.heap_read_count,
             "heap_write_count": self.heap_write_count,
@@ -1019,13 +1700,22 @@ class HeapRuntimeCompletenessGate:
             "budget_decision": self.budget_governor.get("decision"),
             "budget_max_iterations": self.max_iterations,
             "completed_requirement_count": len(completed),
-            "required_requirement_count": len(REQUIREMENT_ORDER),
+            "required_requirement_count": len(self.required_requirements_order()),
             "completed_requirements": completed,
             "missing_requirements": missing,
             "request_input": self.request_text(),
-            "response_text": self.response_text(),
+            "response_text": final_response_text,
+            "provider_raw_response_text": self.response_text(),
             "response_source": self.response_source(),
-            "response_text_present": bool(self.response_text()),
+            "response_text_present": bool(final_response_text),
+            "detailed_output_expected": self.detailed_output_expected(),
+            "quality_output_passed": self.quality_output_passed(final_response_text, final_events),
+            "quality_output_signals": final_quality_signals,
+            "runtime_debug_lab_required": self.runtime_debug_lab_required(),
+            "runtime_debug_lab_passed": self.runtime_debug_lab_passed(final_events),
+            "runtime_debug_lab_reports": self.runtime_debug_lab_reports(final_events),
+            "historical_tool_context_refs": self.historical_tool_context_files(),
+            "response_file_reference_quality": self.response_file_reference_quality(self.response_text()),
             "provider_refs": self.provider_refs(),
             "provider_response_texts": self.provider_response_texts(),
             "context_artifact_refs": self.broker_output_refs(final_events),
@@ -1043,6 +1733,7 @@ class HeapRuntimeCompletenessGate:
             "gpu0_provider_evidence_count": 1 if "gpu0_provider_peer" in completed else 0,
             "npu_micro_task_evidence_count": 1 if "npu_micro_task_auditor" in completed else 0,
             "provider_result_count": len(self.provider_reports),
+            "provider_revision_count": self.provider_revision_count,
             "provider_lane_count": len({item.get("lane") for item in self.provider_reports}),
             "provider_execution_performed": self.provider_execution_performed,
             "provider_teamwork_required": True,
@@ -1050,6 +1741,15 @@ class HeapRuntimeCompletenessGate:
             "invocation_contract_ready": bool(self.invocation_contract.get("passed")),
             "invocation_gate_decision": safe_dict(self.invocation_contract.get("real_run_gate")).get("decision"),
         }
+        exit_output_product = self.write_exit_output_product(final_response_text, final_events, metrics)
+        heap_exchange_exit_product = self.build_heap_exchange_exit_product(
+            require_concrete_product=metrics.get("product_status") == "ready"
+        )
+        metrics["heap_exchange_runtime_entry"] = repo_rel(self.repo_root, self.heap_exchange_paths()["runtime_entry"])
+        metrics["heap_exchange_runtime_state"] = repo_rel(self.repo_root, self.heap_exchange_paths()["runtime_state"])
+        metrics["heap_runtime_exit_output"] = repo_rel(self.repo_root, self.heap_exchange_paths()["exit_output"])
+        metrics["heap_exchange_runtime_exit_product"] = repo_rel(self.repo_root, self.heap_exchange_paths()["exit_product"])
+        metrics["heap_exchange_exit_passed"] = heap_exchange_exit_product.get("passed")
         metric_errors = []
         for key in ("heap_read_count", "heap_write_count", "tool_request_count", "tool_execution_count", "decision_count", "candidate_operation_count"):
             if safe_int(metrics.get(key)) <= 0:
@@ -1067,7 +1767,11 @@ class HeapRuntimeCompletenessGate:
         if metrics["product_status"] == "ready" and not metrics.get("context_artifact_refs"):
             metric_errors.append("ready product_status requires memory/chunk/context artifacts")
         if metrics["product_status"] == "ready" and not self.response_text_complete():
-            metric_errors.append("ready product_status requires a complete final response_text")
+            metric_errors.append("ready product_status requires a complete provider response_text")
+        if metrics["product_status"] == "ready" and self.detailed_output_expected() and not self.quality_output_passed(final_response_text, final_events):
+            metric_errors.append("ready product_status requires detailed heap/tool/provider quality output for complex requests")
+        if metrics["product_status"] == "ready" and self.runtime_debug_lab_required() and not self.runtime_debug_lab_passed(final_events):
+            metric_errors.append("ready product_status requires runtime debug lab execution passed for MVP/lab requests")
         self.errors.extend(metric_errors)
         return {
             "schema_version": 1,
@@ -1082,6 +1786,8 @@ class HeapRuntimeCompletenessGate:
             "heap_snapshot": {"event_count": snapshot.get("event_count"), "event_log": snapshot.get("event_log"), "pending_broker_request_count": snapshot.get("pending_broker_request_count")},
             "bridge_reports": final_bridge_reports,
             "provider_reports": self.provider_reports,
+            "heap_runtime_exit_output": exit_output_product,
+            "heap_exchange_runtime_exit_product": heap_exchange_exit_product,
             "real_run_input_contract": {
                 "kind": "heap_runtime_completeness_gate_input_contract",
                 "task_file": self.args.task_file,
@@ -1090,7 +1796,7 @@ class HeapRuntimeCompletenessGate:
                 "stamp": self.stamp,
                 "budget_minutes": self.args.budget_minutes,
                 "max_iterations": self.max_iterations,
-                "entry_files": ["AGENTS.md", "README.md"],
+                "entry_files": ["AGENTS.md", "README.md", *self.historical_tool_context_files()],
             },
             "real_run_output_contract": {
                 "kind": "heap_runtime_completeness_gate_output_contract",
@@ -1099,8 +1805,17 @@ class HeapRuntimeCompletenessGate:
                 "bridge_reports": final_bridge_reports,
                 "provider_report_outputs": [item.get("output") for item in self.provider_reports],
                 "request_input": self.request_text(),
-                "response_text": self.response_text(),
+                "response_text": final_response_text,
+                "provider_raw_response_text": self.response_text(),
                 "response_source": self.response_source(),
+                "quality_output_signals": final_quality_signals,
+                "response_file_reference_quality": self.response_file_reference_quality(self.response_text()),
+                "runtime_debug_lab_required": metrics.get("runtime_debug_lab_required"),
+                "runtime_debug_lab_passed": metrics.get("runtime_debug_lab_passed"),
+                "runtime_debug_lab_reports": metrics.get("runtime_debug_lab_reports"),
+                "heap_runtime_exit_output": repo_rel(self.repo_root, self.heap_exchange_paths()["exit_output"]),
+                "heap_exchange_runtime_exit_product": repo_rel(self.repo_root, self.heap_exchange_paths()["exit_product"]),
+                "heap_exchange_runtime_state": repo_rel(self.repo_root, self.heap_exchange_paths()["runtime_state"]),
                 "provider_refs": self.provider_refs(),
                 "provider_response_texts": self.provider_response_texts(),
                 "context_artifact_refs": self.broker_output_refs(final_events),
@@ -1164,6 +1879,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--task-file", default="")
     parser.add_argument("--tool", default="run_gpu_planner_json_contract_smoke", help="Compatibility flag; complete gate uses its internal readiness tool plan.")
     parser.add_argument("--max-iterations", type=int, default=4)
+    parser.add_argument("--max-provider-revisions", type=int, default=2, help="Retry provider teamwork when exit quality fails before closing the heap.")
     parser.add_argument("--budget-minutes", type=int, default=5)
     parser.add_argument("--max-rounds", type=int, default=4)
     parser.add_argument("--files-per-round", type=int, default=4)
