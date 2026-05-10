@@ -42,6 +42,7 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
         "runtime_mesh_contract": source_repo / "Tools/validation/check_real_product_runtime_mesh_contract.py",
         "runtime_mesh_smoke": source_repo / "Tools/validation/run_real_product_runtime_mesh_contract_smoke.py",
         "runtime_evidence_correlation_launcher_wiring_smoke": source_repo / "Tools/validation/run_runtime_evidence_correlation_launcher_wiring_smoke.py",
+        "runtime_flow_map": source_repo / "Tools/ai/build_runtime_flow_map.py",
     }
 
     texts = {
@@ -71,6 +72,9 @@ def inspect_real_workflow(source_repo: Path) -> dict[str, Any]:
         "workflow:runtime_evidence_correlation_final": ("workflow", "IA-CARMINE-RUNTIME-EVIDENCE-CORRELATION-FINAL-BEGIN"),
         "workflow:runtime_evidence_correlation_validator": ("workflow", "check_runtime_evidence_correlation.py"),
         "workflow:runtime_evidence_correlation_phase": ("workflow", "Build runtime evidence correlation"),
+
+        "workflow:runtime_flow_map": ("workflow", "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN"),
+        "runtime_flow:file": ("runtime_flow_map", "ia_carmine_runtime_flow"),
 
         "review_args:auto_include": ("review_pr_args_builder", "--auto-include-from-apply-report"),
         "review_args:apply_report": ("review_pr_args_builder", "--apply-report"),

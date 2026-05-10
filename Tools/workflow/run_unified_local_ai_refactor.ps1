@@ -2386,6 +2386,63 @@ if ($BuildRuntimeEvidenceCorrelation) {
 # IA-CARMINE-RUNTIME-EVIDENCE-CORRELATION-FINAL-END
 
 
+# IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN
+if ($BuildRuntimeEvidenceCorrelation -or $PrepareReviewPr) {
+    $RuntimeFlowDir = Join-Path $ResolvedRepoRoot $EvidenceDir
+    New-Item -ItemType Directory -Force -Path $RuntimeFlowDir | Out-Null
+
+    $RuntimeFlowJson = Join-Path $RuntimeFlowDir ("runtime_flow_{0}.json" -f $DataStamp)
+    $RuntimeFlowJsonl = Join-Path $RuntimeFlowDir ("runtime_flow_{0}.jsonl" -f $DataStamp)
+    $RuntimeFlowMd = Join-Path $RuntimeFlowDir ("runtime_flow_{0}.md" -f $DataStamp)
+    $RuntimeFlowMmd = Join-Path $RuntimeFlowDir ("runtime_flow_{0}.mmd" -f $DataStamp)
+
+    $RuntimeFlowReportFiles = @()
+    foreach ($RuntimeFlowPattern in @(
+        ("output/validation/*{0}*.json" -f $DataStamp),
+        ("output/analysis/*{0}*.json" -f $DataStamp),
+        ("output/ai_pipeline/*{0}*.json" -f $DataStamp),
+        ("output/patch_specs/*{0}*.json" -f $DataStamp),
+        ("{0}/*{1}*.json" -f $EvidenceDir, $DataStamp)
+    )) {
+        $RuntimeFlowReportFiles += Get-ChildItem -Path (Join-Path $ResolvedRepoRoot $RuntimeFlowPattern) -File -ErrorAction SilentlyContinue
+    }
+
+    $RuntimeFlowReportFiles = @(
+        $RuntimeFlowReportFiles |
+            Where-Object { $_.FullName -ne $RuntimeFlowJson } |
+            Sort-Object FullName -Unique
+    )
+
+    $RuntimeFlowArgs = @(
+        "Tools/ai/build_runtime_flow_map.py",
+        "--repo-root", ".",
+        "--stamp", $DataStamp,
+        "--entrypoint", "Tools/workflow/run_unified_local_ai_refactor.ps1",
+        "--output", $RuntimeFlowJson,
+        "--jsonl-output", $RuntimeFlowJsonl,
+        "--markdown-output", $RuntimeFlowMd,
+        "--mermaid-output", $RuntimeFlowMmd
+    )
+
+    foreach ($RuntimeFlowReport in $RuntimeFlowReportFiles) {
+        $RuntimeFlowArgs += @("--report", (Convert-ToRepoRelativePath $ResolvedRepoRoot $RuntimeFlowReport.FullName))
+    }
+
+    Invoke-Checked "Runtime flow map evidence" { Invoke-Python $RuntimeFlowArgs }
+
+    if (-not (Test-Path -LiteralPath $RuntimeFlowJson -PathType Leaf)) {
+        throw "Runtime flow map JSON missing: $RuntimeFlowJson"
+    }
+
+    $RuntimeFlowPayload = Get-Content -LiteralPath $RuntimeFlowJson -Raw | ConvertFrom-Json
+    $RuntimeFlowReportCount = [int](Get-OptionalPropertyValue -Object $RuntimeFlowPayload.summary -Name "report_count" -Default 0)
+    if ($RuntimeFlowReportCount -le 0) {
+        throw "Runtime flow map did not ingest any current-stamp reports. This is not a complete real-product run."
+    }
+}
+# IA-CARMINE-RUNTIME-FLOW-MAP-END
+
+
 
 Write-Host ""
 Write-Host "[OK] Unified local-AI launcher complete" -ForegroundColor Green

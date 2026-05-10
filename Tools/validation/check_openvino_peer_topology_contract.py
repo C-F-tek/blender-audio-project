@@ -110,7 +110,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "real_product_wrapper_requests_openvino_npu_peer_lanes": has(wrapper, "-RunOpenVinoGpu0Workload")
         and has(wrapper, "-RunNpuProbe")
         and has(wrapper, "-RunNpuDecodeSmoke")
-        and has(wrapper, '[string]$NpuMicroStartMode = "peer"'),
+        and (
+            has(wrapper, '[string]$NpuMicroStartMode = "startup"')
+            or has(wrapper, '[string]$NpuMicroStartMode = "peer"')
+        ),
     }
 
     check_order = [

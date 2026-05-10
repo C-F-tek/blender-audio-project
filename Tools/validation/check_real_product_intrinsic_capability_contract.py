@@ -47,6 +47,7 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
         f"- Static deterministic script lane: `{report.get('static_deterministic_script_lane')}`",
         f"- Heap/exchange close: `{report.get('heap_exchange_close')}`",
         f"- Product readiness: `{report.get('product_readiness')}`",
+        f"- Runtime flow map evidence: `{report.get('runtime_flow_map_evidence')}`",
         f"- prepare_review_pr.py: `{report.get('prepare_review_pr')}`",
         f"- Final PR product: `{report.get('final_pr_product')}`",
         "",
@@ -87,10 +88,17 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "gpu1_primary_advisory": check_token(wrapper_text, "-UsePrimaryAdvisoryProvider")
         and check_token(wrapper_text, "-UseOllamaAdvisory"),
         "gpu0_openvino_workload": check_token(wrapper_text, "-RunOpenVinoGpu0Workload"),
-        "npu_peer_micro_lane": check_token(wrapper_text, '[string]$NpuMicroStartMode = "peer"')
+        "npu_peer_micro_lane": (
+            check_token(wrapper_text, '[string]$NpuMicroStartMode = "startup"')
+            or check_token(wrapper_text, '[string]$NpuMicroStartMode = "peer"')
+        )
         and check_token(wrapper_text, "-NpuMicroStartMode")
         and check_token(wrapper_text, "-RunNpuProbe")
         and check_token(wrapper_text, "-RunNpuDecodeSmoke"),
+        "runtime_flow_map_evidence": (repo_root / "Tools/ai/build_runtime_flow_map.py").exists()
+        and check_token(launcher_text, "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN")
+        and check_token(launcher_text, "build_runtime_flow_map.py")
+        and check_token(launcher_text, "runtime_flow_"),
         "shared_memory_evidence": check_token(wrapper_text, "-SaveInputsToMemoryDb")
         and check_token(wrapper_text, "-BuildEvidence")
         and check_token(launcher_text, "shared_memory_evidence"),
@@ -124,6 +132,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "NPU peer micro lane",
         "shared memory / evidence / static deterministic script",
         "heap/exchange CLOSE",
+        "runtime flow map evidence",
         "product readiness",
         "prepare_review_pr.py",
         "PR finale testabile",

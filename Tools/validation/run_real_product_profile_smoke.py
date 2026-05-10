@@ -87,6 +87,8 @@ def main() -> int:
         "runtime_mesh_contract_exists": runtime_mesh_contract.exists(),
         "runtime_mesh_contract_mentions_sqlite_broker": "sqlite_fts_memory" in runtime_mesh_contract_text and "tool_agnostic_broker" in runtime_mesh_contract_text,
         "runtime_mesh_contract_mentions_direct_reasoning": "direct_reasoning_assistance" in runtime_mesh_contract_text,
+        "runtime_flow_map_builder_exists": (repo / "Tools/ai/build_runtime_flow_map.py").exists(),
+        "launcher_invokes_runtime_flow_map": "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN" in launcher_text and "build_runtime_flow_map.py" in launcher_text and "runtime_flow_" in launcher_text,
         "supports_generated_patch_specs": "-ReviewPrFromGeneratedPatchSpecs" in text,
         "supports_deterministic_suggestions": "-ReviewPrApplyDeterministicSuggestions" in text,
         "saves_inputs_to_memory": "-SaveInputsToMemoryDb" in text,
@@ -98,7 +100,12 @@ def main() -> int:
         "exposes_max_chars_per_file": "[int]$MaxCharsPerFile" in text and "-MaxCharsPerFile" in text,
         "exposes_max_new_tokens": "[int]$MaxNewTokens" in text and "-MaxNewTokens" in text,
         "exposes_keep_alive": "[string]$KeepAlive" in text and "-KeepAlive" in text,
-        "exposes_npu_micro_peer_mode": "[string]$NpuMicroStartMode = \"peer\"" in text,
+        "exposes_npu_micro_peer_mode": (
+            "[string]$NpuMicroStartMode = \"startup\"" in text
+            or "[string]$NpuMicroStartMode = \"peer\"" in text
+        )
+        and "'startup'" in text
+        and "'peer'" in text,
         "forwards_npu_micro_start_mode": "-NpuMicroStartMode" in text,
         "exposes_provider_max_context": "[int]$ProviderMaxContextChars" in text and "-ProviderMaxContextChars" in text,
         "exposes_context_pack_total": "[int]$ContextPackMaxTotalChars" in text and "-ContextPackMaxTotalChars" in text,

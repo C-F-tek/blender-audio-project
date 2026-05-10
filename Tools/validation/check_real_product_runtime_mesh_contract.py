@@ -134,13 +134,16 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and ("gpu0" in openvino_gpu0_text.lower() or "gpu.0" in openvino_gpu0_text.lower())
         and ("companion" in gpu0_companion_text.lower()),
 
-        "npu_peer_micro_lane": has(wrapper_text, '[string]$NpuMicroStartMode = "peer"')
+        "npu_peer_micro_lane": (
+            has(wrapper_text, '[string]$NpuMicroStartMode = "startup"')
+            or has(wrapper_text, '[string]$NpuMicroStartMode = "peer"')
+        )
         and has(wrapper_text, "-NpuMicroStartMode")
         and has(wrapper_text, "-RunNpuProbe")
         and has(wrapper_text, "-RunNpuDecodeSmoke")
         and exists(repo_root, "Tools/ai/build_npu_micro_task_companion_report.py")
         and ("npu" in npu_companion_text.lower())
-        and ("peer" in wrapper_text.lower()),
+        and ("startup" in wrapper_text.lower() or "peer" in wrapper_text.lower()),
 
         "shared_memory_evidence": has(wrapper_text, "-SaveInputsToMemoryDb")
         and has(wrapper_text, "-BuildEvidence")
@@ -169,6 +172,11 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and exists(repo_root, "Tools/ai/provider_runtime_heap_broker_bridge.py")
         and exists(repo_root, "Tools/ai/provider_runtime_heap_live_signals.py")
         and exists(repo_root, "Tools/ai/build_provider_runtime_heap_telemetry.py"),
+
+        "runtime_flow_map_evidence": exists(repo_root, "Tools/ai/build_runtime_flow_map.py")
+        and has(launcher_text, "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN")
+        and has(launcher_text, "build_runtime_flow_map.py")
+        and has(launcher_text, "runtime_flow_"),
 
         "static_deterministic_script_lane": has(wrapper_text, "-GeneratePatchSpecs")
         and has(wrapper_text, "-BuildTaskPatchSuggestionReport")
@@ -219,6 +227,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "sqlite_fts_memory",
         "tool_agnostic_broker",
         "direct_reasoning_assistance",
+        "runtime_flow_map_evidence",
         "static_deterministic_script_lane",
         "heap_exchange_close",
         "product_readiness",
@@ -235,6 +244,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "GPU0 OpenVINO/tool workload",
         "NPU peer micro lane",
         "shared memory / SQLite FTS / tool broker / direct reasoning assistance",
+        "runtime flow map evidence",
         "static deterministic script/product lane",
         "heap/exchange CLOSE",
         "product readiness",
