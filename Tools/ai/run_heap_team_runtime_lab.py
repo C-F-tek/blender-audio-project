@@ -162,7 +162,11 @@ class HeapCompletenessGate:
         self.warnings: list[str] = []
 
     def path_arg(self, explicit: str, default: str) -> str:
-        if explicit:
+        # With --output-dir, parser defaults such as DEFAULT_OUTPUT/DEFAULT_MARKDOWN
+        # are not operator-supplied explicit paths. They must resolve inside the
+        # single run directory, otherwise the universe test writes the exit report
+        # to the global default while the preflight/smoke reads the run_dir product.
+        if explicit and not (self.output_dir and explicit == default):
             return explicit
         if not self.output_dir:
             return default
