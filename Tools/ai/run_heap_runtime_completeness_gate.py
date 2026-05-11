@@ -2191,7 +2191,13 @@ class HeapRuntimeCompletenessGate:
         implementation_quality = signals.get("implementation_quality") if isinstance(signals.get("implementation_quality"), dict) else {}
         if implementation_quality.get("required") and not implementation_quality.get("passed"):
             return False
-        if self.provider_revision_count > 0 and self.proposal_iteration_artifacts() and not self.latest_proposal_quality_passed():
+        # Proposal artifacts are the heap blackboard contract. Once GPU1 has
+        # emitted a proposal chunk, final quality must follow the same-heap
+        # GPU0/NPU cross-lane decision, even for revision 0. Previously this
+        # check only applied after provider_revision_count > 0, so the initial
+        # GPU1 response could look textually acceptable and exit before the
+        # cross-lane veto had a chance to drive an in-heap refinement cycle.
+        if self.proposal_iteration_artifacts() and not self.latest_proposal_quality_passed():
             return False
         return bool(
             signals.get("mentions_tool_evidence")
@@ -2457,14 +2463,54 @@ class HeapRuntimeCompletenessGate:
         iteration_feedback = self.proposal_iteration_feedback(events, file_quality)
         return "\n".join(part for part in (base_feedback, iteration_feedback) if part)
 
+    def proposal_cycle_requires_refinement(self, text: str, events: list[dict[str, Any]]) -> bool:
+        """Return True when the current heap proposal block still needs another GPU1 pass."""
+        if not self.detailed_output_expected():
+            return False
+        if not str(text or "").strip():
+            return True
+        # Raw response quality still matters, but the accepted/rejected proposal
+        # artifact is the authoritative same-heap decision because it includes
+        # GPU0 review, NPU audit, progress checks and the parallel-cycle verdict.
+        if not self.quality_output_passed(text, events):
+            return True
+        if self.proposal_iteration_artifacts() and not self.latest_proposal_quality_passed():
+            return True
+        return False
+
+    def persist_current_gpu1_proposal_iteration(
+        self,
+        revision: int,
+        events: list[dict[str, Any]],
+        source: str,
+    ) -> list[dict[str, Any]]:
+        """Persist the current GPU1 response as a proposal block before quality exit."""
+        text = self.response_text()
+        if not text:
+            return events
+        self.write_proposal_iteration_artifact(
+            revision,
+            text,
+            self.response_file_reference_quality(text),
+            events,
+            source=source,
+        )
+        updated_events = self.read_events()
+        self.publish_shared_evidence_facts(revision, updated_events)
+        return updated_events
+
     def maybe_run_provider_quality_revisions(self, round_id: int, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
         while (
             self.detailed_output_expected()
             and self.provider_revision_count < int(getattr(self.args, "max_provider_revisions", 0))
-            and not self.quality_output_passed(self.response_text(), events)
+            and self.proposal_cycle_requires_refinement(self.response_text(), events)
         ):
             self.provider_revision_count += 1
-            self.provider_revision_feedback = self.build_quality_failure_feedback(self.response_text(), events)
+            previous_veto_feedback = self.provider_revision_feedback.strip()
+            quality_feedback = self.build_quality_failure_feedback(self.response_text(), events)
+            self.provider_revision_feedback = "\n\n".join(
+                part for part in (previous_veto_feedback, quality_feedback) if part
+            )
             self.publish(
                 "deterministic",
                 "validation_signal",
@@ -2581,6 +2627,12 @@ class HeapRuntimeCompletenessGate:
                 self.run_provider_teamwork(round_id)
                 events = self.read_events()
                 self.publish_shared_evidence_facts(round_id, events)
+                if self.detailed_output_expected() and self.response_text():
+                    events = self.persist_current_gpu1_proposal_iteration(
+                        revision=0,
+                        events=events,
+                        source="gpu1_initial",
+                    )
             if self.base_requirements_complete(events) and self.provider_reports:
                 events = self.maybe_run_provider_quality_revisions(round_id, events)
             self.critic_step(round_id, events)
