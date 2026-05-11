@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -63,12 +64,41 @@ def latest_block(blocks: list[dict[str, Any]]) -> dict[str, Any]:
     return blocks[-1] if blocks else {}
 
 
+def clean_import_line(line: str) -> str:
+    stripped = line.strip()
+    if stripped.startswith("import ") or stripped.startswith("from "):
+        return stripped
+    return ""
+
+
 def extract_symbols(text: str) -> dict[str, list[str]]:
-    imports = sorted(set(re.findall(r"^\s*(?:from\s+[\w.]+\s+import\s+[^\n]+|import\s+[\w.,\s]+)", text, flags=re.MULTILINE)))
-    defs = sorted(set(re.findall(r"^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", text, flags=re.MULTILINE)))
-    classes = sorted(set(re.findall(r"^\s*class\s+([A-Za-z_][A-Za-z0-9_]*)\s*[:(]", text, flags=re.MULTILINE)))
-    assignments = sorted(set(re.findall(r"^\s*([A-Z][A-Z0-9_]{2,}|[a-z_][a-z0-9_]{3,})\s*=", text, flags=re.MULTILINE)))
-    return {"imports": imports, "defs": defs, "classes": classes, "assignments": assignments[:80]}
+    imports: set[str] = set()
+    defs: set[str] = set()
+    classes: set[str] = set()
+    assignments: set[str] = set()
+    for raw_line in text.splitlines():
+        line = raw_line.rstrip()
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        import_line = clean_import_line(line)
+        if import_line:
+            imports.add(import_line)
+        def_match = re.match(r"^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", line)
+        if def_match:
+            defs.add(def_match.group(1))
+        class_match = re.match(r"^\s*class\s+([A-Za-z_][A-Za-z0-9_]*)\s*[:(]", line)
+        if class_match:
+            classes.add(class_match.group(1))
+        assignment_match = re.match(r"^\s*([A-Z][A-Z0-9_]{2,}|[a-z_][a-z0-9_]{3,})\s*=", line)
+        if assignment_match and not stripped.startswith(("return ", "if ", "for ", "while ")):
+            assignments.add(assignment_match.group(1))
+    return {
+        "imports": sorted(imports),
+        "defs": sorted(defs),
+        "classes": sorted(classes),
+        "assignments": sorted(assignments)[:80],
+    }
 
 
 def rejection_reasons(composer: dict[str, Any], block: dict[str, Any]) -> list[str]:
@@ -247,6 +277,45 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def append_download_manifest(manifest_path: Path, output_paths: list[Path]) -> None:
+    lines: list[str] = []
+    if manifest_path.exists():
+        try:
+            lines = manifest_path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+        except Exception:
+            lines = []
+    existing = set(lines)
+    additions = ["", "External heap revision context:"]
+    for path in output_paths:
+        line = f"- {path}"
+        if line not in existing:
+            additions.append(line)
+    if len(additions) > 2:
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text("\n".join(lines + additions).rstrip() + "\n", encoding="utf-8")
+
+
+def attach_to_composer_documents(composer: dict[str, Any], json_path: Path, markdown_path: Path, explicit_documents_dir: str) -> dict[str, str]:
+    documents_dir_value = explicit_documents_dir or str(composer.get("documents_dir") or "")
+    if not documents_dir_value:
+        return {}
+    documents_dir = Path(documents_dir_value).expanduser().resolve()
+    documents_dir.mkdir(parents=True, exist_ok=True)
+    target_json = documents_dir / json_path.name
+    target_md = documents_dir / markdown_path.name
+    shutil.copyfile(json_path, target_json)
+    shutil.copyfile(markdown_path, target_md)
+    manifest_value = str(composer.get("download_manifest_txt") or "")
+    if manifest_value:
+        append_download_manifest(Path(manifest_value).expanduser().resolve(), [target_md, target_json])
+    return {
+        "documents_dir": str(documents_dir),
+        "documents_json": str(target_json),
+        "documents_markdown": str(target_md),
+        "download_manifest_txt": manifest_value,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pointer-manifest", required=True)
@@ -254,6 +323,8 @@ def main() -> int:
     parser.add_argument("--causality-json", default="")
     parser.add_argument("--output", default="")
     parser.add_argument("--markdown-output", default="")
+    parser.add_argument("--documents-dir", default="")
+    parser.add_argument("--no-documents-copy", action="store_true")
     args = parser.parse_args()
 
     pointer_path = Path(args.pointer_manifest).resolve()
@@ -265,8 +336,19 @@ def main() -> int:
     output = Path(args.output).resolve() if args.output else pointer_path.with_name("external_heap_revision_context.json")
     markdown = Path(args.markdown_output).resolve() if args.markdown_output else output.with_suffix(".md")
     report = build_report(pointer, composer, causality)
+    report["documents_copy_performed"] = False
+    report["documents_outputs"] = {}
     write_json(output, report)
     write_text(markdown, render_markdown(report))
+    if not args.no_documents_copy:
+        documents_outputs = attach_to_composer_documents(composer, output, markdown, args.documents_dir)
+        if documents_outputs:
+            report["documents_copy_performed"] = True
+            report["documents_outputs"] = documents_outputs
+            write_json(output, report)
+        else:
+            report["warnings"].append("composer documents_dir not found; revision context kept in run dir only")
+            write_json(output, report)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0
 
