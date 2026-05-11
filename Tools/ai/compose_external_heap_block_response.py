@@ -6,6 +6,11 @@ existing composer/causality reports, then produces the main human-readable heap
 answer as a file artifact. It is intentionally file-based so the answer can grow
 beyond the provider token window.
 
+Pointer blocks are the heap product contract: they recover decisions, preserve
+forward/back-refinement/resume navigation, and compose the long product. Provider
+execution evidence is reported separately and must not be inferred from block
+presence alone.
+
 When a composer JSON is provided, the adapter also attaches its outputs to the
 existing composer Documents package. It does not replace the old composer; it
 adds the long-response artifact to the same operator package.
@@ -66,8 +71,6 @@ def role_blocks(pointer: dict[str, Any], role: str) -> list[dict[str, Any]]:
     return sorted(items, key=lambda item: int(item.get("step_index") or 0))
 
 
-
-
 def block_provider_execution_performed(block: dict[str, Any]) -> bool:
     if block.get("provider_execution_performed") is True:
         return True
@@ -75,9 +78,27 @@ def block_provider_execution_performed(block: dict[str, Any]) -> bool:
     lowered = preview.lower()
     return "provider_execution_performed=true" in lowered or "workload_performed=true" in lowered
 
+
+def pointer_product_contract(pointer: dict[str, Any]) -> dict[str, Any]:
+    value = pointer.get("pointer_product_contract")
+    if isinstance(value, dict):
+        return value
+    return {
+        "product_contract": True,
+        "decision_recovery": True,
+        "supports_forward_navigation": bool(pointer.get("has_forward_pointers")),
+        "supports_backrefinement": bool(pointer.get("has_backrefinement_pointers")),
+        "supports_resume": bool(pointer.get("has_resume_pointers")),
+        "provider_execution_is_separate_guardrail": True,
+    }
+
+
 def status_lines(pointer: dict[str, Any], causality: dict[str, Any]) -> list[str]:
     lines = [
         f"- Pointer protocol: `{pointer.get('protocol')}`",
+        f"- Pointer product contract: `{pointer_product_contract(pointer)}`",
+        f"- Pointer contract role: `{pointer.get('pointer_contract_role') or 'product_graph_decision_recovery_and_long_response_composition'}`",
+        f"- Provider execution semantics: `{pointer.get('provider_execution_semantics') or 'separate_guardrail_true_only_with_explicit_provider_or_workload_evidence'}`",
         f"- Blocks: `{pointer.get('block_count')}`",
         f"- Edges: `{pointer.get('edge_count')}`",
         f"- Roles present: `{pointer.get('roles_present')}`",
@@ -106,6 +127,7 @@ def block_section(title: str, block: dict[str, Any], max_chars: int) -> list[str
         f"- Refines: `{block.get('refines_block_id')}`",
         f"- Resume from: `{block.get('resume_from_block_id')}`",
         f"- Accepted: `{block.get('accepted')}`",
+        f"- Pointer contract: `{block.get('pointer_contract')}`",
         "",
         "```markdown",
         compact(str(block.get("preview") or ""), max_chars),
@@ -133,7 +155,7 @@ def build_markdown(
     lines = [
         "# External Heap Primary Long Response",
         "",
-        "Questo e' l'output principale file-based dell'heap esterno. Ricostruisce una risposta lunga usando blocchi persistenti e puntatori, non la singola finestra token del provider.",
+        "Questo e' l'output principale file-based dell'heap esterno. Ricostruisce una risposta lunga usando blocchi persistenti e puntatori come product contract, non la singola finestra token del provider.",
         "",
         "## Stato",
         "",
@@ -248,6 +270,7 @@ def main() -> int:
         include_peer_blocks=args.include_peer_blocks,
     )
     write_text(output, markdown)
+    contract = pointer_product_contract(pointer)
     report = {
         "schema_version": 1,
         "kind": "external_heap_primary_long_response_composer",
@@ -258,6 +281,9 @@ def main() -> int:
         "output": str(output),
         "documents_copy_performed": False,
         "documents_outputs": {},
+        "pointer_product_contract": contract,
+        "pointer_contract_role": pointer.get("pointer_contract_role") or "product_graph_decision_recovery_and_long_response_composition",
+        "provider_execution_semantics": pointer.get("provider_execution_semantics") or "separate_guardrail_true_only_with_explicit_provider_or_workload_evidence",
         "stats": stats,
         "provider_execution_performed": any(
             block_provider_execution_performed(block)
@@ -288,4 +314,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
