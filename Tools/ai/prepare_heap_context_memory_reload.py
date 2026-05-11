@@ -41,6 +41,37 @@ SEMANTIC_CHUNK_ROOTS = (
     "docs/LOCAL_AI_TASKS",
 )
 
+REPO_SCAN_EXCLUDED_DIRS = {
+    ".git",
+    ".venv",
+    "venv",
+    ".venv314",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "node_modules",
+    "renders",
+    "output",
+    "indexAI/code_chunks",
+}
+
+REPO_SCAN_TEXT_SUFFIXES = {
+    ".py",
+    ".ps1",
+    ".md",
+    ".txt",
+    ".json",
+    ".yml",
+    ".yaml",
+    ".toml",
+    ".ini",
+    ".cfg",
+    ".csv",
+    ".bat",
+    ".sh",
+}
+
 
 def now_stamp() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -179,8 +210,74 @@ def run_tool(
     }
 
 
-def existing_context_files(repo_root: Path) -> list[str]:
-    return [path for path in CANONICAL_CONTEXT_FILES if (repo_root / path).is_file()]
+
+def is_repo_scan_excluded(rel_path: str) -> bool:
+    normalized = rel_path.replace("\\", "/").strip("/")
+    parts = normalized.split("/")
+    for excluded in REPO_SCAN_EXCLUDED_DIRS:
+        excluded = excluded.strip("/")
+        if not excluded:
+            continue
+        if "/" in excluded:
+            if normalized == excluded or normalized.startswith(excluded + "/"):
+                return True
+        elif excluded in parts:
+            return True
+    return False
+
+
+def repo_scan_files(repo_root: Path, *, max_files: int, suffixes: set[str] | None = None) -> list[Path]:
+    suffix_filter = suffixes or REPO_SCAN_TEXT_SUFFIXES
+    files: list[Path] = []
+    for root, dirs, names in __import__("os").walk(repo_root):
+        root_path = Path(root)
+        dirs[:] = [
+            dirname
+            for dirname in dirs
+            if not is_repo_scan_excluded(repo_rel(repo_root, root_path / dirname))
+        ]
+        for name in names:
+            path = root_path / name
+            rel_path = repo_rel(repo_root, path)
+            if is_repo_scan_excluded(rel_path):
+                continue
+            if path.suffix.lower() not in suffix_filter:
+                continue
+            files.append(path)
+            if len(files) >= max_files:
+                return sorted(files, key=lambda item: repo_rel(repo_root, item).lower())
+    return sorted(files, key=lambda item: repo_rel(repo_root, item).lower())
+
+
+def repo_scan_context_files(repo_root: Path, *, max_files: int) -> list[str]:
+    priority_names = {"AGENTS.md", "README.md", "WORKFLOW.md"}
+    selected: list[str] = []
+
+    for rel_path in CANONICAL_CONTEXT_FILES:
+        if (repo_root / rel_path).is_file() and rel_path not in selected:
+            selected.append(rel_path)
+
+    for path in repo_scan_files(repo_root, max_files=max_files, suffixes={".md"}):
+        rel_path = repo_rel(repo_root, path)
+        if path.name in priority_names or rel_path.startswith("docs/"):
+            if rel_path not in selected:
+                selected.append(rel_path)
+        if len(selected) >= max_files:
+            break
+
+    return selected[:max_files]
+
+
+def repo_scan_semantic_candidates(repo_root: Path, *, max_files: int) -> list[Path]:
+    return repo_scan_files(
+        repo_root,
+        max_files=max_files,
+        suffixes={".py", ".ps1", ".md", ".json", ".yml", ".yaml", ".toml"},
+    )
+
+
+def existing_context_files(repo_root: Path, max_files: int = 240) -> list[str]:
+    return repo_scan_context_files(repo_root, max_files=max_files)
 
 
 def build_repo_docs_map(repo_root: Path, context_files: list[str], output_dir: Path) -> dict[str, str]:
@@ -218,13 +315,7 @@ def build_repo_docs_map(repo_root: Path, context_files: list[str], output_dir: P
 
 def collect_semantic_code_chunks(repo_root: Path, output_dir: Path, request: str, limit: int = 48) -> dict[str, str]:
     keywords = [part.lower() for part in request.replace("_", " ").replace("-", " ").split() if len(part) >= 4]
-    candidates: list[Path] = []
-    for root in SEMANTIC_CHUNK_ROOTS:
-        base = repo_root / root
-        if not base.exists():
-            continue
-        for suffix in ("*.py", "*.md", "*.ps1"):
-            candidates.extend(sorted(base.rglob(suffix)))
+    candidates: list[Path] = repo_scan_semantic_candidates(repo_root, max_files=max(1000, limit * 80))
     ranked: list[tuple[int, Path]] = []
     for path in candidates:
         rel = repo_rel(repo_root, path)
@@ -491,6 +582,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--max-memory-chars", type=int, default=64000)
     parser.add_argument("--max-context-files", type=int, default=80)
+    parser.add_argument("--startup-scan-context-files", type=int, default=10000)
     parser.add_argument("--max-chars-per-file", type=int, default=12000)
     parser.add_argument(
         "--strict-ai-context-pack",
@@ -545,7 +637,7 @@ def main() -> int:
     artifacts["required_context_files_json"] = repo_rel(repo_root, required_context_json)
     artifacts["required_context_files_markdown"] = repo_rel(repo_root, required_context_md)
 
-    context_files = existing_context_files(repo_root)
+    context_files = existing_context_files(repo_root, max_files=args.startup_scan_context_files)
 
     artifacts.update(build_repo_docs_map(repo_root, context_files, output_dir))
     artifacts.update(collect_semantic_code_chunks(repo_root, output_dir, args.request, limit=max(12, min(args.max_context_files, 64))))
@@ -682,7 +774,7 @@ def main() -> int:
         "--report-file",
         str(operational_search_json),
         "--max-raw-files",
-        str(args.max_context_files),
+        str(min(args.startup_scan_context_files, max(args.max_context_files, 240))),
         "--max-chars-per-file",
         str(args.max_chars_per_file),
         "--output",

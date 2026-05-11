@@ -328,6 +328,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--strict-startup-reload", action="store_true")
     parser.add_argument("--startup-max-memory-chars", type=int, default=64000)
     parser.add_argument("--startup-max-context-files", type=int, default=80)
+    parser.add_argument("--startup-scan-context-files", type=int, default=10000)
     parser.add_argument("--startup-max-chars-per-file", type=int, default=12000)
     parser.add_argument("--revision-context", default="auto_latest", help="Revision context path, 'auto_latest' or 'off'. Default auto-loads latest complete heap run context.")
     parser.add_argument("--revision-context-max-tasks", type=int, default=12)
@@ -410,6 +411,8 @@ def main() -> int:
             str(args.startup_max_memory_chars),
             "--max-context-files",
             str(args.startup_max_context_files),
+            "--startup-scan-context-files",
+            str(args.startup_scan_context_files),
             "--max-chars-per-file",
             str(args.startup_max_chars_per_file),
         ]
