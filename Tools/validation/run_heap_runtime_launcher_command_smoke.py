@@ -3,7 +3,7 @@
 
 This smoke does not run providers and does not execute the heap runtime. It only
 checks that profile-driven command generation exposes the expected external heap
-operator commands and, when a prior revision context exists, injects it into the
+operator commands and injects an explicitly supplied revision context into the
 reviewable launcher request.
 """
 from __future__ import annotations
@@ -55,19 +55,12 @@ def read_json(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
-def latest_revision_context_exists(repo_root: Path) -> bool:
-    validation_dir = repo_root / "output" / "validation"
-    if not validation_dir.exists():
-        return False
-    return any(validation_dir.glob("heap_context_closure_*/external_heap_revision_context.json"))
-
-
 def render_markdown(report: dict[str, Any]) -> str:
     lines = [
         "# Heap Runtime Launcher Command Smoke",
         "",
         f"- Passed: `{report.get('passed')}`",
-        f"- Revision context fixture used: `{report.get('revision_context_fixture_used')}`",
+        f"- Revision context fixture path: `{report.get('revision_context_fixture_path')}`",
         f"- Output artifact writes performed: `{report.get('output_artifact_writes_performed')}`",
         "",
         "## Checks",
@@ -81,9 +74,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def ensure_revision_context_fixture(repo_root: Path) -> tuple[bool, Path]:
-    if latest_revision_context_exists(repo_root):
-        return False, Path("")
+def write_revision_context_fixture(repo_root: Path) -> Path:
     run_dir = repo_root / "output" / "validation" / "heap_context_closure_smoke_revision_context"
     run_dir.mkdir(parents=True, exist_ok=True)
     fixture = run_dir / "external_heap_revision_context.json"
@@ -113,7 +104,7 @@ def ensure_revision_context_fixture(repo_root: Path) -> tuple[bool, Path]:
         + "\n",
         encoding="utf-8",
     )
-    return True, fixture
+    return fixture
 
 
 def main() -> int:
@@ -124,7 +115,7 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    fixture_used, fixture_path = ensure_revision_context_fixture(repo_root)
+    fixture_path = write_revision_context_fixture(repo_root)
     output_json = repo_root / "output" / "validation" / "heap_launcher_command_smoke.json"
     command = [
         sys.executable,
@@ -133,6 +124,8 @@ def main() -> int:
         ".",
         "--profile",
         "balanced_external_heap",
+        "--revision-context",
+        str(fixture_path),
         "--include-postrun-package-command",
         "--output",
         str(output_json),
@@ -142,10 +135,11 @@ def main() -> int:
     generated_command = str(payload.get("command") or "")
     checks = [
         {"name": "command_builder_returncode_zero", "passed": result.get("passed") is True},
-        {"name": "schema_version_5", "passed": payload.get("schema_version") == 5},
+        {"name": "schema_version_6", "passed": payload.get("schema_version") == 6},
         {"name": "profile_balanced", "passed": payload.get("profile_name") == "balanced_external_heap"},
         {"name": "postrun_package_command_present", "passed": bool(payload.get("postrun_package_command"))},
         {"name": "revision_context_loaded", "passed": payload.get("revision_context_loaded") is True},
+        {"name": "revision_context_selection_explicit", "passed": payload.get("revision_context_selection_policy") == "explicit_revision_context"},
         {
             "name": "revision_context_injected_into_request",
             "passed": "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN" in generated_command,
@@ -161,16 +155,16 @@ def main() -> int:
     ]
     errors = [check["name"] for check in checks if not check.get("passed")]
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "heap_runtime_launcher_command_smoke",
         "repo_root": repo_root.as_posix(),
         "passed": not errors,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
-        "output_artifact_writes_performed": bool(fixture_used),
-        "revision_context_fixture_used": fixture_used,
-        "revision_context_fixture_path": str(fixture_path) if fixture_used else "",
+        "output_artifact_writes_performed": True,
+        "revision_context_fixture_used": True,
+        "revision_context_fixture_path": str(fixture_path),
         "generated_command_json": str(output_json),
         "checks": checks,
         "command_result": result,
