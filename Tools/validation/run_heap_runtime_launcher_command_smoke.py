@@ -56,7 +56,10 @@ def read_json(path: Path) -> dict[str, Any]:
 
 
 def latest_revision_context_exists(repo_root: Path) -> bool:
-    return any((repo_root / "output" / "validation").glob("heap_context_closure_*/external_heap_revision_context.json"))
+    validation_dir = repo_root / "output" / "validation"
+    if not validation_dir.exists():
+        return False
+    return any(validation_dir.glob("heap_context_closure_*/external_heap_revision_context.json"))
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -65,6 +68,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         f"- Passed: `{report.get('passed')}`",
         f"- Revision context fixture used: `{report.get('revision_context_fixture_used')}`",
+        f"- Output artifact writes performed: `{report.get('output_artifact_writes_performed')}`",
         "",
         "## Checks",
         "",
@@ -163,7 +167,8 @@ def main() -> int:
         "passed": not errors,
         "provider_execution_performed": False,
         "patch_application_performed": False,
-        "source_writes_performed": bool(fixture_used),
+        "source_writes_performed": False,
+        "output_artifact_writes_performed": bool(fixture_used),
         "revision_context_fixture_used": fixture_used,
         "revision_context_fixture_path": str(fixture_path) if fixture_used else "",
         "generated_command_json": str(output_json),
