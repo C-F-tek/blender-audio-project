@@ -2849,7 +2849,7 @@ class HeapRuntimeCompletenessGate:
             "import sys\n"
             "from pathlib import Path\n\n"
             f"repo_root = Path({str(self.repo_root)!r})\n"
-            f"child_argv = json.loads({json.dumps(json.dumps(child_argv, ensure_ascii=False))!r})\n"
+            f"child_argv = json.loads({json.dumps(child_argv, ensure_ascii=False)!r})\n"
             "script = Path(child_argv[0])\n"
             "if not script.is_absolute():\n"
             "    script = repo_root / script\n"
