@@ -288,6 +288,18 @@ def render_revision_context_command(repo_root: Path, project_python: str) -> str
     )
 
 
+def render_postrun_package_command(repo_root: Path, project_python: str) -> str:
+    return (
+        "& "
+        + ps_quote(project_python)
+        + " "
+        + ps_quote(".\\Tools\\ai\\run_external_heap_postrun_package.py")
+        + " `\n  --repo-root ."
+        + " `\n  --include-rejected-history"
+        + " `\n  --include-peer-blocks\n"
+    )
+
+
 def list_profiles(profile_doc: dict[str, Any]) -> dict[str, Any]:
     profiles = profile_doc.get("profiles") if isinstance(profile_doc.get("profiles"), dict) else {}
     return {
@@ -321,6 +333,7 @@ def main() -> int:
     parser.add_argument("--list-profiles", action="store_true")
     parser.add_argument("--include-block-pointer-command", action="store_true")
     parser.add_argument("--include-revision-context-command", action="store_true")
+    parser.add_argument("--include-postrun-package-command", action="store_true")
     parser.add_argument("--output", default="")
     args = parser.parse_args()
 
@@ -340,8 +353,9 @@ def main() -> int:
     command = render_command(repo_root, project_python, profile, args.request, revision_context_path, revision_context_payload)
     block_pointer_command = render_block_pointer_command(repo_root, project_python, profile)
     revision_context_command = render_revision_context_command(repo_root, project_python)
+    postrun_package_command = render_postrun_package_command(repo_root, project_python)
     report = {
-        "schema_version": 4,
+        "schema_version": 5,
         "kind": "heap_runtime_launcher_command",
         "repo_root": repo_root.as_posix(),
         "profiles_file": str(profiles_path),
@@ -355,12 +369,13 @@ def main() -> int:
         "command": command,
         "block_pointer_command": block_pointer_command,
         "revision_context_command": revision_context_command,
+        "postrun_package_command": postrun_package_command,
         "execution_performed": False,
         "notes": [
             "command targets run_heap_runtime_context_closure.py",
             "revision context is injected into --request text, not into the gate",
-            "block_pointer_command targets the external heap block-pointer manifest adapter",
-            "revision_context_command builds GPU1/GPU0/NPU follow-up tasks from old pointers",
+            "postrun_package_command runs the external post-run adapter chain after the heap run",
+            "block_pointer_command and revision_context_command remain available for manual step-by-step debugging",
         ],
     }
     if args.output:
@@ -376,6 +391,9 @@ def main() -> int:
     if args.include_revision_context_command:
         print("\n# External heap revision context command")
         print(revision_context_command)
+    if args.include_postrun_package_command:
+        print("\n# External heap post-run package command")
+        print(postrun_package_command)
     return 0
 
 
