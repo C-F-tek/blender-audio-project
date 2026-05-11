@@ -2815,6 +2815,51 @@ class HeapRuntimeCompletenessGate:
             self.publish_shared_evidence_facts(round_id, events)
         return events
 
+
+    def command_line_char_count(self, command: list[Any]) -> int:
+        """Approximate Windows command-line length for subprocess argv."""
+        return sum(len(str(part)) + 3 for part in command)
+
+    def provider_command_for_windows(self, command: list[Any], revision: int) -> tuple[list[str], str]:
+        """Shorten oversized provider invocations on Windows.
+
+        Windows CreateProcess fails with WinError 206 when argv becomes too long.
+        Provider feedback/context can legitimately grow across heap revisions, so
+        keep the real provider argv in a generated Python wrapper file and launch
+        only that wrapper. This preserves the configured project Python and does
+        not alter provider CLI contracts.
+        """
+        normalized_command = [str(part) for part in command]
+        if os.name != "nt":
+            return normalized_command, ""
+        if self.command_line_char_count(normalized_command) < 24000:
+            return normalized_command, ""
+        if len(normalized_command) < 2:
+            return normalized_command, ""
+
+        wrapper_dir = self.runtime_context_dir() / "provider_invocations"
+        wrapper_dir.mkdir(parents=True, exist_ok=True)
+        wrapper_path = wrapper_dir / f"provider_teamwork_invocation_revision_{revision:03d}.py"
+
+        child_argv = normalized_command[1:]
+        wrapper_text = (
+            "from __future__ import annotations\n"
+            "import json\n"
+            "import runpy\n"
+            "import sys\n"
+            "from pathlib import Path\n\n"
+            f"repo_root = Path({str(self.repo_root)!r})\n"
+            f"child_argv = json.loads({json.dumps(json.dumps(child_argv, ensure_ascii=False))!r})\n"
+            "script = Path(child_argv[0])\n"
+            "if not script.is_absolute():\n"
+            "    script = repo_root / script\n"
+            "sys.argv = [str(script), *child_argv[1:]]\n"
+            "runpy.run_path(str(script), run_name='__main__')\n"
+        )
+        wrapper_path.write_text(wrapper_text, encoding="utf-8")
+        return [normalized_command[0], str(wrapper_path)], repo_rel(self.repo_root, wrapper_path)
+
+
     def run_provider_teamwork(self, round_id: int, revision: int = 0) -> None:
         if self.provider_reports and revision <= 0:
             return
@@ -2840,6 +2885,11 @@ class HeapRuntimeCompletenessGate:
             )
             command = [self.gpu1_request_prompt() if item == "__GPU1_CUMULATIVE_PROMPT__" else item for item in spec["command"]]
             try:
+                command, provider_command_wrapper = self.provider_command_for_windows(command, revision)
+                if provider_command_wrapper:
+                    self.warnings.append(
+                        f"provider command exceeded Windows argv limit; executed wrapper={provider_command_wrapper}"
+                    )
                 completed = subprocess.run(
                     command,
                     cwd=self.repo_root,
