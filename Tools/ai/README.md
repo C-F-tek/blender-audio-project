@@ -314,3 +314,35 @@ docs/DATA_FLOW.md
 docs/MODULE_MAP.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
+
+## Standalone heap universe tool owners
+
+The standalone heap incubation lane is owned from `Tools/ai/`, not from the workflow wrapper.
+
+Primary standalone path:
+
+```text
+Tools/ai/run_heap_runtime_context_closure.py
+```
+
+Tool surface map:
+
+```text
+docs/LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md
+```
+
+Relevant owners:
+
+| Surface | Owner |
+|---|---|
+| Strict startup launcher | `run_heap_runtime_context_closure.py` |
+| Context/memory preload | `prepare_heap_context_memory_reload.py` |
+| Required docs initialization | `ensure_ai_context_required_files.py` |
+| Startup-to-heap reconciliation | `reconcile_heap_report_with_startup_reload.py` |
+| Heap universe / provider loop | `run_heap_runtime_completeness_gate.py` |
+| Final assembly | `compose_heap_final_proposals.py` |
+| SQLite operational memory | `agent_runtime_sqlite_memory.py` |
+| Tool catalog | `build_agent_agnostic_tool_inventory.py` |
+| Runtime broker | `agent_runtime_tool_broker.py` |
+
+Do not promote this lane into the full run until same-heap GPU1/GPU0/NPU participation, refinement artifacts and final package semantics are validator-backed.

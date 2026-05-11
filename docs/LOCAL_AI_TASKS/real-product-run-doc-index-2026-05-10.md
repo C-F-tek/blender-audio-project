@@ -60,3 +60,17 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 5. se passa e crea PR, ispezionare touched files, line counts, validators e product contract;
 6. prima di espandere docs, consultare `md-line-budget-triage-2026-05-10.md`;
 7. solo dopo valutare refactor README/line-budget.
+
+## Standalone heap incubation document
+
+| Documento | Ruolo | Quando usarlo |
+|---|---|---|
+| `docs/LOCAL_AI_TASKS/standalone-heap-universe-incubation-2026-05-10.md` | standalone heap universe incubation | Quando si lavora sul nuovo runtime heap slegato dalla full run, prima della promozione nella run-unica. |
+
+The standalone heap lane is not the current full product entrypoint. It is the robustness lane for testing strict input, preload, SQLite/memory/chunk context, GPU1/GPU0/NPU cooperation, in-heap refinement and composed output before promotion into `run_unified_real_product_pr.ps1`.
+
+## Standalone heap tool surface document
+
+| Documento | Ruolo | Quando usarlo |
+|---|---|---|
+| `docs/LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md` | standalone heap tool/memory surface map | Quando si verifica che SQLite/FTS5, chunk memory, context namespace, tool catalog, broker, provider lanes and validators siano caricati come fatti heap prima della promozione nella run-unica. |

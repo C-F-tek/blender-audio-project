@@ -202,3 +202,31 @@ git diff --check
 - GPU0 JSON passa ma senza attività visibile: workload osservabile da aumentare;
 - NPU dichiarata come compute mentre è diagnostic-only: classificazione da bloccare;
 - working tree sporco prima del task: pulire/ripristinare artifact generati prima della run.
+
+## Standalone heap lane before full-run promotion
+
+A new standalone heap universe lane is being incubated outside the full run.
+
+```text
+Tools/ai/run_heap_runtime_context_closure.py
+```
+
+Purpose:
+
+```text
+test the heap universe as a strict IN -> dynamic heap/refinement loop -> composed OUT runtime before wiring it as a mandatory full-run phase
+```
+
+This lane must prove:
+
+```text
+tool-owned preload
+SQLite/operational memory visibility
+semantic chunk/context artifact visibility
+same-heap GPU1/GPU0/NPU participation
+refinement artifacts consumed across revisions
+composer as assembler only
+final package exported on success and blocked states
+```
+
+Until those criteria are stable, the full run remains the product path and the standalone heap lane remains an incubation path. After validation, it should be promoted into the selected run-unica phase set rather than duplicated as another parallel architecture.

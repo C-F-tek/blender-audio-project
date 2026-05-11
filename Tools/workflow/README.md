@@ -525,3 +525,19 @@ If those reports prove that the runtime mesh existed but generated patch specs w
 
 `Tools/validation/run_repository_change_proposals_runtime_evidence_smoke.py` covers the complete route: runtime evidence -> proposal -> patch spec -> generated patch apply.
 <!-- IA-CARMINE-RUNTIME-PEER-EVIDENCE-FEED-END -->
+
+## Standalone heap lane is not the full-run entrypoint yet
+
+The standalone heap universe lane is currently an incubation path under `Tools/ai/`:
+
+```text
+Tools/ai/run_heap_runtime_context_closure.py
+```
+
+Workflow wrappers should not treat it as the canonical product entrypoint until its promotion checklist passes. The full product entrypoint remains:
+
+```text
+Tools/workflow/run_unified_real_product_pr.ps1
+```
+
+Promotion into run-unica should happen only after the standalone lane proves tool-owned preload, SQLite/FTS5 or operational memory visibility, semantic chunk/context artifacts, same-heap GPU1/GPU0/NPU participation, in-heap refinement and composer package export.

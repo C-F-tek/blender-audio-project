@@ -59,3 +59,24 @@ LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 
 Do not add competing first-read orders here. Keep this file as a compact index
 and route detailed instructions to the active task/runbook documents.
+
+## Standalone heap universe incubation
+
+New local-AI architecture work should also read:
+
+```text
+LOCAL_AI_TASKS/standalone-heap-universe-incubation-2026-05-10.md
+```
+
+This document describes the standalone heap function that is currently separate from the full run-unica path. It is used to harden strict input, context/memory preload, SQLite/FTS5/chunk memory surfaces, GPU1/GPU0/NPU same-heap cooperation, in-heap refinement and composed output before promotion into the full product run.
+
+## Standalone heap tool surface
+
+For the new standalone heap function, read both:
+
+```text
+LOCAL_AI_TASKS/standalone-heap-universe-incubation-2026-05-10.md
+LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md
+```
+
+The second document maps SQLite/FTS5, chunk memory, context namespace, tool catalog, broker outputs, provider lanes and validator evidence as heap-owned surfaces.

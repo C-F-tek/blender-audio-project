@@ -307,3 +307,48 @@ connect heap/exchange exit product to patchkit bundle detection
 add memory/context namespace manifest as heap input/output surface
 expand broker/tool capability map consumed by context packs
 ```
+
+## Standalone heap universe incubation lane
+
+A standalone heap universe lane now exists as an incubation path for the core heap behavior before it is promoted into the full run-unica product path.
+
+Current owner path:
+
+```text
+Tools/ai/run_heap_runtime_context_closure.py
+```
+
+Dedicated operating note:
+
+```text
+docs/LOCAL_AI_TASKS/standalone-heap-universe-incubation-2026-05-10.md
+```
+
+This lane is deliberately separate from `Tools/workflow/run_unified_real_product_pr.ps1` while robustness is being tested. The full run remains the product path; the standalone heap lane is the controlled laboratory for:
+
+```text
+strict single input
+tool-owned context/memory preload
+SQLite/operational memory and semantic chunk state
+GPU1/GPU0/NPU same-heap participation
+refinement loop inside the heap
+output composed from heap states and artifacts
+```
+
+Promotion rule:
+
+```text
+do not make the standalone heap lane mandatory inside run-unica until preload, provider participation, refinement artifacts and final packaging are stable and validator-backed
+```
+
+The composer remains a final assembler. The heap universe owns acceptance, rejection and refinement decisions.
+
+## Standalone heap tool surface
+
+The standalone heap incubation lane has a companion tool-surface map:
+
+```text
+docs/LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md
+```
+
+Use that map when changing context preload, SQLite/FTS5 memory, semantic chunking, broker/tool catalog wiring or provider lane evidence. The rule remains: tool outputs and memory retrieval become heap facts before acceptance decisions.
