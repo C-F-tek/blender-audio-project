@@ -35,6 +35,7 @@ Current external heap adapters:
 - `Tools/ai/build_external_heap_block_pointer_manifest.py`
 - `Tools/ai/compose_external_heap_block_response.py`
 - `Tools/ai/build_external_heap_revision_context.py`
+- `Tools/ai/run_external_heap_postrun_package.py`
 
 The external layer models long AI work as persistent blocks rather than a single provider response window. Blocks may carry navigation and refinement pointers:
 
@@ -52,6 +53,15 @@ Runtime intent:
 - The final operator package can include a file-based long response composed from persisted blocks.
 
 The revision context feed is currently performed by `build_heap_runtime_launcher_command.py`: operational profiles use `revision_context_mode = auto_latest`, load the latest `external_heap_revision_context.json` when present, and inject a bounded task summary into the generated `--request`. This keeps the gate unchanged while allowing the next run to consume previous pointer tasks.
+
+The external post-run package can be generated through `Tools/ai/run_external_heap_postrun_package.py`. This orchestrator runs the external sequence in order for an existing `heap_context_closure_*` run:
+
+1. causality normalization;
+2. block pointer manifest generation;
+3. primary long-response composition;
+4. revision-context generation for the next run.
+
+It does not replace the old composer. It consumes the old composer JSON and attaches the new long-response/revision artifacts to the same Documents package when the composer exposes `documents_dir`.
 
 ## Runtime policy
 
@@ -75,6 +85,7 @@ When the external heap universe layer is used, a valid long response may be file
 - `external_heap_primary_long_response.md/json`
 - `external_heap_revision_context.json/md`
 - `heap_final_causality_normalized.json/md`
+- `external_heap_postrun_package.json`
 - the existing composer Documents package and download manifest
 
 ## Non-negotiable runtime constraints
