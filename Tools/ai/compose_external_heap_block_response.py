@@ -263,6 +263,9 @@ def main() -> int:
             report["documents_copy_performed"] = True
             report["documents_outputs"] = documents_outputs
             write_json(json_output, report)
+            documents_json = documents_outputs.get("documents_json")
+            if documents_json:
+                shutil.copyfile(json_output, Path(documents_json).expanduser().resolve())
         else:
             report["warnings"].append("composer documents_dir not found; long response kept in run dir only")
             write_json(json_output, report)
