@@ -2883,9 +2883,20 @@ class HeapRuntimeCompletenessGate:
         """GPU1 prompt enriched with startup context digest."""
         base = self.gpu1_request_prompt()
         digest = self.startup_context_digest()
+        pointer_protocol = (
+            "HEAP_POINTER_DELTA_PROTOCOL:\n"
+            "- Non produrre una soluzione totale se il problema e' ampio. Produci il prossimo delta concreto.\n"
+            "- Ogni revisione deve dichiarare POINTER_ACTION=STAY_FORWARD | BACKTRACK_PROPAGATE | RESUME_FORWARD | SPLIT_TASKS | NO_PATCHABLE_TARGET.\n"
+            "- Se introduci import, simboli, schema field, CLI flag o contratti, crea PROPAGATION_TASKS e usa BACKTRACK_PROPAGATE.\n"
+            "- Dopo la propagazione torna avanti con RESUME_FORWARD usando resume_from_block_id.\n"
+            "- Usa BACKLOG_TASKS per il lavoro successivo; il pointer graph mantiene memoria e contesto.\n"
+            "- GPU0 deve verificare path/diff/validazione del delta; NPU deve auditare guardrail e placeholder.\n"
+            "- Il delta corrente deve contenere TARGET_FILES repo-relative reali, PATCH_SKETCH e VALIDATION_COMMANDS.\n"
+            "- Non ripetere blocchi gia' rigettati e non generare overview documentale.\n"
+        )
         if not digest:
-            return base
-        return "\n\n".join([base, digest])
+            return "\n\n".join([base, pointer_protocol])
+        return "\n\n".join([base, pointer_protocol, digest])
 
     def write_provider_prompt_file(self, prompt: str, revision: int) -> str:
         """Persist the large GPU1 provider prompt and return repo-relative path."""
@@ -2958,6 +2969,152 @@ class HeapRuntimeCompletenessGate:
         )
         wrapper_path.write_text(wrapper_text, encoding="utf-8")
         return [normalized_command[0], str(wrapper_path)], repo_rel(self.repo_root, wrapper_path)
+
+
+
+    def extract_text_from_provider_json(self, payload: dict[str, Any]) -> str:
+        """Extract provider response text from heterogeneous provider reports."""
+        if not isinstance(payload, dict):
+            return ""
+        direct = payload.get("response_text") or payload.get("text") or payload.get("stdout_tail")
+        if isinstance(direct, str) and direct.strip():
+            return direct.strip()
+        for item in payload.get("lane_reports") or []:
+            if not isinstance(item, dict):
+                continue
+            value = item.get("response_text") or item.get("text_preview") or item.get("raw_preview")
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        return ""
+
+    def gpu1_delta_report_path(self, work_dir: Path, revision: int) -> Path:
+        if revision <= 0:
+            return work_dir / "gpu1_ollama_provider_probe.json"
+        return work_dir / f"gpu1_ollama_provider_probe_revision{revision}.json"
+
+    def gpu1_delta_text_for_revision(self, work_dir: Path, revision: int) -> str:
+        """Return the GPU1 delta text for the current provider teamwork cycle."""
+        payload = read_json(self.gpu1_delta_report_path(work_dir, revision))
+        text = self.extract_text_from_provider_json(payload)
+        if text:
+            return text
+        for report in reversed(self.provider_reports):
+            if str(report.get("lane") or "") == "gpu1_planner":
+                text = str(report.get("response_text") or "").strip()
+                if text:
+                    return text
+        return self.response_text()
+
+    def section_presence(self, text: str, names: tuple[str, ...]) -> dict[str, bool]:
+        lowered = (text or "").lower()
+        return {name: name.lower() in lowered for name in names}
+
+    def enrich_provider_report_with_operational_peer_review(
+        self,
+        provider_report: dict[str, Any],
+        lane: str,
+        work_dir: Path,
+        revision: int,
+    ) -> dict[str, Any]:
+        """Make GPU0/NPU reports operational peers, not only hardware probes.
+
+        The hardware workload remains useful evidence, but the heap needs peer
+        cognition on the current GPU1 delta. This function binds GPU0 and NPU to
+        the GPU1 proposal text of the same revision and appends a structured
+        review/audit into the provider report consumed by the composer.
+        """
+        if lane not in {"gpu0_peer", "npu_micro_task_auditor"}:
+            return provider_report
+
+        delta_text = self.gpu1_delta_text_for_revision(work_dir, revision)
+        sections = self.section_presence(
+            delta_text,
+            (
+                "HEAP_DELTA_PROPOSAL",
+                "EXIT_DECISION=",
+                "POINTER_ACTION=",
+                "CURRENT_POINTER",
+                "CURRENT_ITERATION_SCOPE",
+                "TARGET_FILES",
+                "PROBLEM",
+                "EVIDENCE",
+                "IMPLEMENTATION_CHANGES",
+                "PROPAGATION_TASKS",
+                "BACKLOG_TASKS",
+                "PATCH_SKETCH",
+                "VALIDATION_COMMANDS",
+                "RISKS",
+            ),
+        )
+        missing = [name for name, present in sections.items() if not present]
+        file_quality = self.response_file_reference_quality(delta_text)
+        implementation_quality = self.implementation_quality_report(delta_text)
+        pointer_action_match = re.search(r"(?im)^\\s*POINTER_ACTION\\s*=\\s*([^\\n\\r]+)", delta_text or "")
+        pointer_action = pointer_action_match.group(1).strip() if pointer_action_match else ""
+
+        if lane == "gpu0_peer":
+            review_lines = [
+                "GPU0 operational peer review:",
+                f"- revision={revision}",
+                f"- pointer_action={pointer_action or 'missing'}",
+                f"- target_files_verified={bool(file_quality.get('existing_source_file_refs'))}",
+                f"- file_quality_passed={file_quality.get('passed')}",
+                f"- implementation_quality_passed={implementation_quality.get('passed')}",
+                f"- missing_delta_sections={missing}",
+                "- decision=" + (
+                    "accept_delta_shape_for_next_audit"
+                    if not missing and file_quality.get("passed") and implementation_quality.get("passed")
+                    else "reject_until_concrete_repo_relative_delta"
+                ),
+            ]
+            provider_report["gpu0_operational_review"] = {
+                "performed": True,
+                "revision": revision,
+                "pointer_action": pointer_action,
+                "missing_delta_sections": missing,
+                "file_quality": file_quality,
+                "implementation_quality": implementation_quality,
+                "decision": "accept_delta_shape_for_next_audit"
+                if not missing and file_quality.get("passed") and implementation_quality.get("passed")
+                else "reject_until_concrete_repo_relative_delta",
+            }
+        else:
+            placeholder_hits = implementation_quality.get("placeholder_hits") or []
+            forbidden_claims = []
+            lowered = (delta_text or "").lower()
+            for marker in ("source_writes_performed: true", '"source_writes_performed": true', "patch_application_performed: true", '"patch_application_performed": true'):
+                if marker in lowered:
+                    forbidden_claims.append(marker)
+            review_lines = [
+                "NPU operational guardrail audit:",
+                f"- revision={revision}",
+                f"- pointer_action={pointer_action or 'missing'}",
+                f"- placeholder_hits={placeholder_hits}",
+                f"- forbidden_runtime_claims={forbidden_claims}",
+                f"- validation_commands_present={'VALIDATION_COMMANDS' in (delta_text or '')}",
+                "- decision=" + (
+                    "accept_guardrails"
+                    if not placeholder_hits and not forbidden_claims and "VALIDATION_COMMANDS" in (delta_text or "")
+                    else "reject_until_guardrails_and_validation_are_concrete"
+                ),
+            ]
+            provider_report["npu_operational_audit"] = {
+                "performed": True,
+                "revision": revision,
+                "pointer_action": pointer_action,
+                "placeholder_hits": placeholder_hits,
+                "forbidden_runtime_claims": forbidden_claims,
+                "validation_commands_present": "VALIDATION_COMMANDS" in (delta_text or ""),
+                "decision": "accept_guardrails"
+                if not placeholder_hits and not forbidden_claims and "VALIDATION_COMMANDS" in (delta_text or "")
+                else "reject_until_guardrails_and_validation_are_concrete",
+            }
+
+        previous_text = str(provider_report.get("response_text") or "").strip()
+        provider_report["response_text"] = "\\n".join(part for part in (previous_text, "\\n".join(review_lines)) if part)
+        provider_report["operational_peer_review_performed"] = True
+        provider_report["operational_peer_review_source"] = repo_rel(self.repo_root, self.gpu1_delta_report_path(work_dir, revision))
+        return provider_report
 
 
     def run_provider_teamwork(self, round_id: int, revision: int = 0) -> None:
@@ -3079,6 +3236,12 @@ class HeapRuntimeCompletenessGate:
 
             report_data = read_json(Path(spec["output"]))
             provider_report = self.summarize_provider_report(spec, completed, report_data)
+            provider_report = self.enrich_provider_report_with_operational_peer_review(
+                provider_report,
+                lane,
+                work_dir,
+                revision,
+            )
             provider_report["execution_mode"] = "concurrent_provider_teamwork"
             provider_report["revision"] = revision
 
