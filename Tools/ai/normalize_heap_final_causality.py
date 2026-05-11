@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+"""Normalize final heap composer causality into separate chain/product statuses.
+
+This adapter is external to the gate. It reads an existing composer JSON and
+writes an enriched report that distinguishes:
+
+- causal_chain: whether the heap universe produced traceable evidence/artifacts;
+- product_acceptance: whether the produced proposal is acceptable/concrete.
+
+A run can have causal_chain_passed=true and product_acceptance_passed=false. That
+is expected when GPU1/GPU0/NPU exchanged evidence but all proposal chunks were
+rejected for placeholders, stubs or repeated output.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+
+def read_json(path: Path) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def normalize_bool(value: Any) -> bool:
+    return value is True or str(value).lower() == "true"
+
+
+def list_len(value: Any) -> int:
+    return len(value) if isinstance(value, list) else 0
+
+
+def artifact_count(composer: dict[str, Any]) -> int:
+    startup = composer.get("startup_manifest") if isinstance(composer.get("startup_manifest"), dict) else {}
+    artifacts = startup.get("artifacts") if isinstance(startup.get("artifacts"), dict) else {}
+    reconciliation = composer.get("startup_reconciliation") if isinstance(composer.get("startup_reconciliation"), dict) else {}
+    refs = set()
+    for value in artifacts.values():
+        if isinstance(value, str) and value:
+            refs.add(value.replace("\\", "/"))
+    for value in reconciliation.get("artifact_refs") or []:
+        if isinstance(value, str) and value:
+            refs.add(value.replace("\\", "/"))
+    return len(refs)
+
+
+def compute_causal_chain(composer: dict[str, Any]) -> dict[str, Any]:
+    reasons: list[str] = []
+    startup = composer.get("startup_manifest") if isinstance(composer.get("startup_manifest"), dict) else {}
+    startup_contract = startup.get("contract") if isinstance(startup.get("contract"), dict) else {}
+    reconciliation = composer.get("startup_reconciliation") if isinstance(composer.get("startup_reconciliation"), dict) else {}
+    provider_count = int(composer.get("provider_report_count") or list_len(composer.get("provider_reports")))
+    proposal_count = int(composer.get("proposal_count") or list_len(composer.get("proposals")))
+    gpu0_count = int(composer.get("gpu0_review_count") or list_len(composer.get("gpu0_reviews")))
+    npu_count = int(composer.get("npu_audit_count") or list_len(composer.get("npu_audits")))
+    refs = artifact_count(composer)
+
+    if not (startup.get("input_ready_before_heap") is True or startup_contract.get("input_ready_before_heap") is True):
+        reasons.append("startup input_ready_before_heap not proven")
+    if refs <= 0:
+        reasons.append("startup/context artifact refs missing")
+    if provider_count <= 0:
+        reasons.append("provider reports missing")
+    if proposal_count <= 0:
+        reasons.append("proposal chunks missing")
+    if gpu0_count <= 0:
+        reasons.append("GPU0 review/refine evidence missing")
+    if npu_count <= 0:
+        reasons.append("NPU audit/workload evidence missing")
+    if reconciliation and reconciliation.get("passed") is not True:
+        reasons.append("startup reconciliation did not pass")
+
+    status = "passed" if not reasons else "failed"
+    return {
+        "status": status,
+        "passed": not reasons,
+        "artifact_ref_count": refs,
+        "provider_report_count": provider_count,
+        "proposal_count": proposal_count,
+        "gpu0_review_count": gpu0_count,
+        "npu_audit_count": npu_count,
+        "reasons": reasons,
+    }
+
+
+def compute_product_acceptance(composer: dict[str, Any]) -> dict[str, Any]:
+    reasons: list[str] = []
+    product_status = str(composer.get("product_status") or "")
+    quality_output_passed = composer.get("quality_output_passed")
+    accepted_count = int(composer.get("accepted_proposal_count") or 0)
+    rejected_count = int(composer.get("rejected_proposal_count") or 0)
+    blockers = composer.get("blocking_issues") if isinstance(composer.get("blocking_issues"), list) else []
+
+    if product_status != "ready":
+        reasons.append(f"product_status={product_status or 'missing'}")
+    if quality_output_passed is not True:
+        reasons.append(f"quality_output_passed={quality_output_passed}")
+    if accepted_count <= 0:
+        reasons.append("no accepted proposal chunks")
+    if blockers:
+        reasons.append(f"blocking_issue_count={len(blockers)}")
+    if rejected_count > 0 and accepted_count <= 0:
+        reasons.append("all proposal chunks rejected")
+
+    if not reasons:
+        status = "passed"
+        passed: bool | None = True
+    elif product_status == "blocked_with_reason" or blockers:
+        status = "blocked"
+        passed = False
+    else:
+        status = "failed"
+        passed = False
+    return {
+        "status": status,
+        "passed": passed,
+        "product_status": product_status,
+        "quality_output_passed": quality_output_passed,
+        "accepted_proposal_count": accepted_count,
+        "rejected_proposal_count": rejected_count,
+        "blocking_issue_count": len(blockers),
+        "reasons": reasons,
+    }
+
+
+def build_report(composer: dict[str, Any], composer_path: Path) -> dict[str, Any]:
+    causal_chain = compute_causal_chain(composer)
+    product_acceptance = compute_product_acceptance(composer)
+    return {
+        "schema_version": 1,
+        "kind": "external_heap_final_causality_normalization",
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "composer_json": str(composer_path),
+        "causal_chain_status": causal_chain["status"],
+        "causal_chain_passed": causal_chain["passed"],
+        "product_acceptance_status": product_acceptance["status"],
+        "product_acceptance_passed": product_acceptance["passed"],
+        "legacy_product_causality_status": composer.get("product_causality_status"),
+        "legacy_product_causality_passed": composer.get("product_causality_passed"),
+        "causal_chain": causal_chain,
+        "product_acceptance": product_acceptance,
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+        "errors": [],
+        "warnings": [
+            "causal_chain_passed does not imply product_acceptance_passed",
+            "this adapter is external to run_heap_runtime_completeness_gate.py",
+        ],
+    }
+
+
+def render_markdown(report: dict[str, Any]) -> str:
+    lines = [
+        "# External Heap Final Causality Normalization",
+        "",
+        f"- Causal chain status: `{report['causal_chain_status']}`",
+        f"- Causal chain passed: `{report['causal_chain_passed']}`",
+        f"- Product acceptance status: `{report['product_acceptance_status']}`",
+        f"- Product acceptance passed: `{report['product_acceptance_passed']}`",
+        "",
+        "## Causal chain reasons",
+        "",
+    ]
+    chain_reasons = report.get("causal_chain", {}).get("reasons", [])
+    lines.extend(f"- {item}" for item in chain_reasons) if chain_reasons else lines.append("- none")
+    lines.extend(["", "## Product acceptance reasons", ""])
+    product_reasons = report.get("product_acceptance", {}).get("reasons", [])
+    lines.extend(f"- {item}" for item in product_reasons) if product_reasons else lines.append("- none")
+    return "\n".join(lines) + "\n"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--composer-json", required=True)
+    parser.add_argument("--output", default="")
+    parser.add_argument("--markdown-output", default="")
+    args = parser.parse_args()
+
+    composer_path = Path(args.composer_json).resolve()
+    composer = read_json(composer_path)
+    if not composer:
+        raise SystemExit(f"composer JSON unreadable or empty: {composer_path}")
+    output = Path(args.output).resolve() if args.output else composer_path.with_name("heap_final_causality_normalized.json")
+    markdown_output = Path(args.markdown_output).resolve() if args.markdown_output else output.with_suffix(".md")
+    report = build_report(composer, composer_path)
+    write_json(output, report)
+    markdown_output.parent.mkdir(parents=True, exist_ok=True)
+    markdown_output.write_text(render_markdown(report), encoding="utf-8")
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    return 0 if report["causal_chain_passed"] else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
