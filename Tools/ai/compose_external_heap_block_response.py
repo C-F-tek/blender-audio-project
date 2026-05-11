@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Compose the primary external-heap long response from block pointers.
 
 The gate remains untouched. This adapter reads the block-pointer manifest and
@@ -250,7 +250,10 @@ def main() -> int:
         "documents_copy_performed": False,
         "documents_outputs": {},
         "stats": stats,
-        "provider_execution_performed": False,
+        "provider_execution_performed": bool(role_blocks(pointer, "gpu0_reviewer_refiner") or role_blocks(pointer, "npu_auditor") or [
+            block for block in role_blocks(pointer, "gpu1_planner")
+            if block.get("block_type") == "provider_evidence_block"
+        ]),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": [],
@@ -275,3 +278,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

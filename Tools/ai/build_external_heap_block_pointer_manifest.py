@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Build an external heap block-pointer manifest from a run directory.
 
 The manifest is external to the gate. It models the heap/universe output as
@@ -192,7 +192,10 @@ def build_report(repo_root: Path, run_dir: Path, max_block_chars: int, max_block
         "has_resume_pointers": any(edge.get("edge_type") == "resume_from" for edge in edges),
         "blocks": blocks,
         "edges": edges,
-        "provider_execution_performed": False,
+        "provider_execution_performed": any(
+            block.get("block_type") in {"review_refinement_block", "audit_block", "provider_evidence_block"}
+            for block in blocks
+        ),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": [],
@@ -259,3 +262,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

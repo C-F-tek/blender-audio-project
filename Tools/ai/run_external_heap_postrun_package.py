@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Run the external heap post-run package chain.
 
 This orchestrator is outside the gate. It does not replace the existing composer
@@ -226,3 +226,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
