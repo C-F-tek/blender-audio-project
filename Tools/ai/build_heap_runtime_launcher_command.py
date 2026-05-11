@@ -45,6 +45,8 @@ EXTERNAL_METADATA_KEYS = (
     "semantic_evidence_chunk_limit",
     "memory_search_limit",
     "tool_catalog_limit",
+    "revision_context_mode",
+    "revision_context_max_tasks",
     "universe_enabled",
     "universe_roles",
     "universe_max_steps",
@@ -65,6 +67,16 @@ def read_json(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise SystemExit(f"JSON profile file must contain an object: {path}")
     return data
+
+
+def read_optional_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
 
 
 def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
@@ -131,7 +143,81 @@ def profile_external_metadata(profile: dict[str, Any]) -> dict[str, Any]:
     return {key: profile[key] for key in EXTERNAL_METADATA_KEYS if key in profile}
 
 
-def render_command(repo_root: Path, project_python: str, profile: dict[str, Any], request_override: str) -> str:
+def latest_revision_context(repo_root: Path) -> tuple[Path | None, dict[str, Any]]:
+    validation_dir = repo_root / "output" / "validation"
+    if not validation_dir.exists():
+        return None, {}
+    candidates = sorted(
+        validation_dir.glob("heap_context_closure_*/external_heap_revision_context.json"),
+        key=lambda path: path.stat().st_mtime if path.exists() else 0,
+        reverse=True,
+    )
+    if not candidates:
+        return None, {}
+    path = candidates[0].resolve()
+    return path, read_optional_json(path)
+
+
+def revision_context_from_profile(repo_root: Path, profile: dict[str, Any], explicit_path: str) -> tuple[Path | None, dict[str, Any]]:
+    mode = str(profile.get("revision_context_mode") or "off")
+    if mode == "off":
+        return None, {}
+    if explicit_path.strip():
+        path = Path(explicit_path)
+        if not path.is_absolute():
+            path = repo_root / path
+        path = path.resolve()
+        return path, read_optional_json(path)
+    if mode == "auto_latest":
+        return latest_revision_context(repo_root)
+    return None, {}
+
+
+def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_tasks: int) -> str:
+    if not payload:
+        return ""
+    tasks = payload.get("tasks") if isinstance(payload.get("tasks"), list) else []
+    limit = max(0, max_tasks)
+    selected = tasks[:limit]
+    lines = [
+        "",
+        "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN:",
+        f"- path: {path if path else ''}",
+        f"- protocol: {payload.get('protocol')}",
+        f"- product_acceptance_status: {payload.get('product_acceptance_status')}",
+        f"- resume_from_block_id: {payload.get('resume_from_block_id')}",
+        f"- latest_block_id: {payload.get('latest_block_id')}",
+        f"- task_count: {len(tasks)}",
+        "- GPU1 must consume rewrite/propagation tasks before emitting new proposal blocks.",
+        "- GPU1 may move backward to propagate imports, variables, functions, classes and contracts, then resume forward.",
+        "- GPU0 and NPU tasks are parallel recheck/audit work over old pointers.",
+        "TASKS:",
+    ]
+    for idx, task in enumerate(selected, start=1):
+        if not isinstance(task, dict):
+            continue
+        lines.append(
+            f"{idx}. {task.get('task_id')} role={task.get('role')} type={task.get('task_type')} target={task.get('target_block_id')} resume={task.get('resume_from_block_id')}"
+        )
+        if task.get("discovered_symbols"):
+            lines.append(f"   discovered_symbols={json.dumps(task.get('discovered_symbols'), ensure_ascii=False)}")
+        if task.get("rejection_reasons"):
+            lines.append(f"   rejection_reasons={json.dumps(task.get('rejection_reasons'), ensure_ascii=False)}")
+        if task.get("instruction"):
+            lines.append(f"   instruction={task.get('instruction')}")
+    if len(tasks) > len(selected):
+        lines.append(f"- omitted_tasks={len(tasks) - len(selected)}; read full revision context artifact for remaining tasks.")
+    return "\n".join(lines)
+
+
+def render_command(
+    repo_root: Path,
+    project_python: str,
+    profile: dict[str, Any],
+    request_override: str,
+    revision_context_path: Path | None,
+    revision_context_payload: dict[str, Any],
+) -> str:
     parts = [
         "& " + ps_quote(project_python),
         ps_quote(".\\Tools\\ai\\run_heap_runtime_context_closure.py"),
@@ -139,6 +225,11 @@ def render_command(repo_root: Path, project_python: str, profile: dict[str, Any]
         "`\n  --python-exe " + ps_quote(project_python),
     ]
     request = request_override.strip() or str(profile.get("request") or "")
+    request += revision_context_prompt(
+        revision_context_payload,
+        revision_context_path,
+        int(profile.get("revision_context_max_tasks") or 12),
+    )
     if request:
         parts.append("`\n  --request " + ps_quote(request))
     for key, (cli_arg, mode) in PROFILE_TO_CLI.items():
@@ -209,6 +300,7 @@ def list_profiles(profile_doc: dict[str, Any]) -> dict[str, Any]:
                 "name": name,
                 "description": value.get("description", "") if isinstance(value, dict) else "",
                 "universe_enabled": value.get("universe_enabled") if isinstance(value, dict) else None,
+                "revision_context_mode": value.get("revision_context_mode") if isinstance(value, dict) else None,
                 "context_document_count": value.get("context_document_count") if isinstance(value, dict) else None,
                 "semantic_code_chunk_limit": value.get("semantic_code_chunk_limit") if isinstance(value, dict) else None,
             }
@@ -224,6 +316,7 @@ def main() -> int:
     parser.add_argument("--profiles", default=DEFAULT_PROFILE_FILE)
     parser.add_argument("--profile", default="")
     parser.add_argument("--request", default="")
+    parser.add_argument("--revision-context", default="")
     parser.add_argument("--set", action="append", default=[])
     parser.add_argument("--list-profiles", action="store_true")
     parser.add_argument("--include-block-pointer-command", action="store_true")
@@ -243,16 +336,20 @@ def main() -> int:
         return 0
 
     profile = apply_overrides(choose_profile(profile_doc, args.profile), args.set)
-    command = render_command(repo_root, project_python, profile, args.request)
+    revision_context_path, revision_context_payload = revision_context_from_profile(repo_root, profile, args.revision_context)
+    command = render_command(repo_root, project_python, profile, args.request, revision_context_path, revision_context_payload)
     block_pointer_command = render_block_pointer_command(repo_root, project_python, profile)
     revision_context_command = render_revision_context_command(repo_root, project_python)
     report = {
-        "schema_version": 3,
+        "schema_version": 4,
         "kind": "heap_runtime_launcher_command",
         "repo_root": repo_root.as_posix(),
         "profiles_file": str(profiles_path),
         "profile_name": profile.get("profile_name"),
         "profile": profile,
+        "revision_context_path": str(revision_context_path) if revision_context_path else "",
+        "revision_context_loaded": bool(revision_context_payload),
+        "revision_context_task_count": len(revision_context_payload.get("tasks", [])) if isinstance(revision_context_payload.get("tasks"), list) else 0,
         "cli_bound_profile_keys": profile_cli_keys(profile),
         "external_metadata": profile_external_metadata(profile),
         "command": command,
@@ -261,9 +358,9 @@ def main() -> int:
         "execution_performed": False,
         "notes": [
             "command targets run_heap_runtime_context_closure.py",
+            "revision context is injected into --request text, not into the gate",
             "block_pointer_command targets the external heap block-pointer manifest adapter",
             "revision_context_command builds GPU1/GPU0/NPU follow-up tasks from old pointers",
-            "non-CLI metadata is preserved for external adapters and future launcher wiring",
         ],
     }
     if args.output:
