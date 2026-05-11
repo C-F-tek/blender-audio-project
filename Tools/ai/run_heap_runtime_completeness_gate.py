@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Budget-driven heap runtime completeness gate for IA-Carmine.
 
 This is the canonical runtime completeness gate used by the real product
@@ -664,7 +664,7 @@ class HeapRuntimeCompletenessGate:
                 "source_writes_performed": False,
             }
             self.publish(
-                "context_memory",
+                "broker",
                 "broker_result",
                 payload,
                 target="gpu1",
@@ -3016,3 +3016,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
