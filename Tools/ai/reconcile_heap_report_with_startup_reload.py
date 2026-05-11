@@ -41,25 +41,35 @@ def relpath(path_value: str, repo_root: Path) -> str:
         return str(path_value).replace("\\", "/")
 
 
+def append_ref(refs: list[str], value: Any) -> None:
+    if not isinstance(value, str) or not value.strip():
+        return
+    normalized = value.replace("\\", "/")
+    if normalized not in refs:
+        refs.append(normalized)
+
+
 def useful_artifact_refs(manifest: dict[str, Any]) -> list[str]:
     refs: list[str] = []
     artifacts = manifest.get("artifacts")
     if isinstance(artifacts, dict):
         for value in artifacts.values():
-            if isinstance(value, str) and value:
-                normalized = value.replace("\\", "/")
-                if normalized not in refs:
-                    refs.append(normalized)
+            append_ref(refs, value)
+
     for execution in manifest.get("tool_executions") or []:
         if not isinstance(execution, dict):
             continue
+        for key in ("useful_artifact_paths", "existing_artifact_paths", "artifact_paths"):
+            for value in execution.get(key) or []:
+                append_ref(refs, value)
+        for summary in execution.get("artifact_summaries") or []:
+            if isinstance(summary, dict):
+                append_ref(refs, summary.get("path"))
         for artifact in execution.get("artifacts") or []:
             if isinstance(artifact, dict):
-                value = artifact.get("path")
-                if isinstance(value, str) and value:
-                    normalized = value.replace("\\", "/")
-                    if normalized not in refs:
-                        refs.append(normalized)
+                append_ref(refs, artifact.get("path"))
+            else:
+                append_ref(refs, artifact)
     return refs
 
 
@@ -81,6 +91,15 @@ def completed_from_startup(manifest: dict[str, Any]) -> tuple[list[str], dict[st
     return completed, requirement_refs
 
 
+def startup_input_ready(startup: dict[str, Any]) -> bool:
+    contract = startup.get("contract") if isinstance(startup.get("contract"), dict) else {}
+    return bool(
+        startup.get("passed") is True
+        or startup.get("input_ready_before_heap") is True
+        or contract.get("input_ready_before_heap") is True
+    )
+
+
 def render_markdown(report: dict[str, Any], output: Path) -> None:
     lines = [
         "# Heap Startup Context Reconciliation",
@@ -88,6 +107,8 @@ def render_markdown(report: dict[str, Any], output: Path) -> None:
         f"- Passed: `{report.get('passed')}`",
         f"- Startup manifest: `{report.get('startup_manifest')}`",
         f"- Heap report: `{report.get('heap_report')}`",
+        f"- Startup degraded: `{report.get('startup_degraded')}`",
+        f"- Degraded startup reconciled: `{report.get('degraded_startup_reconciled')}`",
         f"- Requirements completed from startup: `{len(report.get('requirements_completed_from_startup') or [])}`",
         "",
         "## Completed from startup",
@@ -98,6 +119,12 @@ def render_markdown(report: dict[str, Any], output: Path) -> None:
     lines.extend(["", "## Remaining missing requirements", ""])
     for item in report.get("remaining_missing_requirements") or []:
         lines.append(f"- `{item}`")
+    if report.get("warnings"):
+        lines.extend(["", "## Warnings", ""])
+        lines.extend(f"- {warning}" for warning in report["warnings"])
+    if report.get("errors"):
+        lines.extend(["", "## Errors", ""])
+        lines.extend(f"- {error}" for error in report["errors"])
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -109,6 +136,11 @@ def main() -> int:
     parser.add_argument("--heap-report", required=True)
     parser.add_argument("--output", default="")
     parser.add_argument("--markdown-output", default="")
+    parser.add_argument(
+        "--allow-degraded-startup",
+        action="store_true",
+        help="Reconcile useful startup artifacts even when startup_reload_degraded=true.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -127,15 +159,19 @@ def main() -> int:
     if not heap:
         errors.append(f"heap report unreadable: {heap_report_path}")
 
-    startup_passed = bool(startup.get("passed") is True or startup.get("contract", {}).get("input_ready_before_heap") is True)
+    startup_passed = startup_input_ready(startup)
     startup_degraded = bool(startup.get("startup_reload_degraded") is True or startup.get("degraded_requirements"))
     if not startup_passed:
-        errors.append("startup manifest did not pass")
-    if startup_degraded:
-        errors.append("startup manifest is degraded; refusing to reconcile missing base requirements")
+        errors.append("startup manifest did not pass and is not input_ready_before_heap")
+    if startup_degraded and not args.allow_degraded_startup:
+        errors.append("startup manifest is degraded; pass --allow-degraded-startup to reconcile useful artifacts")
+    if startup_degraded and args.allow_degraded_startup:
+        warnings.append("startup manifest is degraded; useful artifacts reconciled by explicit policy")
 
     completed_from_preload, requirement_refs = completed_from_startup(startup)
     artifact_refs = useful_artifact_refs(startup)
+    if args.allow_degraded_startup and startup_degraded and startup_passed and not artifact_refs:
+        errors.append("degraded startup reconciliation requested but no useful artifact refs were found")
 
     if not errors:
         completed = list(heap.get("completed_requirements") or [])
@@ -146,16 +182,22 @@ def main() -> int:
             if requirement in missing:
                 missing.remove(requirement)
 
+        heap["startup_preload_reconciled_into_report"] = True
         heap["startup_preload_integrated"] = True
+        heap["startup_preload_ingested_into_heap"] = heap.get("startup_preload_ingested_into_heap", "unknown")
+        heap["startup_preload_seen_by_provider_lanes"] = heap.get("startup_preload_seen_by_provider_lanes", "unknown")
         heap["startup_manifest"] = relpath(str(startup_manifest_path), repo_root)
         heap["startup_preload_integrated_at"] = datetime.now().isoformat(timespec="seconds")
         heap["startup_preload_requirement_refs"] = requirement_refs
+        heap["startup_reload_degraded"] = startup_degraded
         heap["completed_requirements"] = completed
         heap["missing_requirements"] = missing
         heap["context_artifact_refs"] = sorted(set(list(heap.get("context_artifact_refs") or []) + artifact_refs))
         heap.setdefault("warnings", [])
         if isinstance(heap["warnings"], list):
-            heap["warnings"].append("startup preload artifacts integrated into heap requirement state")
+            heap["warnings"].append("startup preload artifacts reconciled into heap report state")
+            if startup_degraded:
+                heap["warnings"].append("startup preload was degraded; reconciliation did not prove provider consumption")
         if missing:
             heap["product_status"] = "blocked_with_reason"
         elif not heap.get("proposal_iteration_artifacts") and not heap.get("provider_results"):
@@ -174,9 +216,12 @@ def main() -> int:
         "passed": not errors,
         "startup_passed": startup_passed,
         "startup_degraded": startup_degraded,
+        "allow_degraded_startup": bool(args.allow_degraded_startup),
+        "degraded_startup_reconciled": bool(startup_degraded and args.allow_degraded_startup and not errors),
         "requirements_completed_from_startup": completed_from_preload,
         "remaining_missing_requirements": heap.get("missing_requirements") if isinstance(heap, dict) else [],
         "artifact_ref_count": len(artifact_refs),
+        "artifact_refs": artifact_refs,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
