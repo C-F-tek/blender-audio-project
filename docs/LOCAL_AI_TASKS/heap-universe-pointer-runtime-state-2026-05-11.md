@@ -2,9 +2,9 @@
 
 ## Stato consolidato
 
-Questa nota registra lo stato code-driven dopo la chiusura e il merge della PR #298 `feat(ai): externalize heap launcher profiles`, l'aggiunta dell'orchestratore post-run esterno e l'integrazione del comando post-run nel command builder.
+Questa nota registra lo stato code-driven dopo la chiusura e il merge della PR #298 `feat(ai): externalize heap launcher profiles`, l'aggiunta dell'orchestratore post-run esterno, l'integrazione del comando post-run nel command builder e lo smoke dedicato al launcher command.
 
-La PR e' stata portata su `master`. Il gate runtime principale resta invariato: la logica nuova e' esterna al gate e opera come profili, adapter post-run, composer lungo, contesto di revisione per la run successiva e orchestratore post-run.
+La PR e' stata portata su `master`. Il gate runtime principale resta invariato: la logica nuova e' esterna al gate e opera come profili, adapter post-run, composer lungo, contesto di revisione per la run successiva, orchestratore post-run e smoke di command generation.
 
 ## Vincoli rispettati
 
@@ -182,6 +182,25 @@ Campi/garanzie:
 - fail-fast se uno step esterno non passa;
 - default su latest `output/validation/heap_context_closure_*` se `--run-dir` non viene passato.
 
+### `Tools/validation/run_heap_runtime_launcher_command_smoke.py`
+
+Smoke dedicato alla generazione comando heap esterno.
+
+Non esegue provider, non lancia heap runtime e non tocca il gate.
+
+Valida:
+
+- returncode zero del command builder;
+- `schema_version = 5` del JSON command;
+- profilo `balanced_external_heap`;
+- presenza di `postrun_package_command`;
+- caricamento di revision context;
+- injection del revision context dentro `--request`;
+- target corretto per `run_heap_runtime_context_closure.py`;
+- target corretto per `run_external_heap_postrun_package.py`.
+
+Se manca un revision context precedente, crea una fixture sotto `output/validation/heap_context_closure_smoke_revision_context/external_heap_revision_context.json`. Questa e' un output artifact, non una source write. Bug corretto: lo smoke ora marca `source_writes_performed = false` e usa `output_artifact_writes_performed` per indicare la fixture.
+
 ## Flusso operativo attuale
 
 1. Generare comando launcher da profilo:
@@ -299,7 +318,8 @@ $env:PYTHONPATH = (Resolve-Path .).Path
   .\Tools\ai\build_external_heap_block_pointer_manifest.py `
   .\Tools\ai\compose_external_heap_block_response.py `
   .\Tools\ai\build_external_heap_revision_context.py `
-  .\Tools\ai\run_external_heap_postrun_package.py
+  .\Tools\ai\run_external_heap_postrun_package.py `
+  .\Tools\validation\run_heap_runtime_launcher_command_smoke.py
 ```
 
 Generare comando run + post-run:
@@ -334,6 +354,15 @@ Invoke-Expression $Cmd.command
 Invoke-Expression $Cmd.postrun_package_command
 ```
 
+Eseguire smoke command builder:
+
+```powershell
+& $RepoPy .\Tools\validation\run_heap_runtime_launcher_command_smoke.py `
+  --repo-root . `
+  --output .\output\validation\heap_runtime_launcher_command_smoke.json `
+  --markdown-output .\output\validation\heap_runtime_launcher_command_smoke.md
+```
+
 ## Decisione operativa
 
 La fase attuale e' chiusa positivamente:
@@ -347,6 +376,7 @@ La fase attuale e' chiusa positivamente:
 - revision context generato e consumabile dalla run successiva;
 - bug estrazione import corretto;
 - sequenza post-run esterna automatizzabile tramite orchestratore dedicato;
-- command builder ora produce anche `postrun_package_command`.
+- command builder ora produce anche `postrun_package_command`;
+- smoke dedicato al command builder presente.
 
 Prossima priorita': bindare i budget profilo non ancora CLI-bound o rendere opzionale il post-run package direttamente dal launcher, a seconda della prossima evidenza runtime.
