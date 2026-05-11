@@ -1,52 +1,14 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "kind": "heap_runtime_launcher_profiles",
   "default_profile": "balanced_external_heap",
   "profile_control_groups": {
-    "runtime": [
-      "budget_minutes",
-      "max_iterations",
-      "max_provider_revisions",
-      "timeout_seconds",
-      "preflight_timeout_seconds",
-      "allow_provider_generation"
-    ],
-    "startup_context": [
-      "startup_max_memory_chars",
-      "startup_max_context_files",
-      "startup_max_chars_per_file",
-      "context_document_count",
-      "context_document_preview_chars",
-      "semantic_code_chunk_limit",
-      "semantic_code_chunk_preview_chars",
-      "semantic_evidence_chunk_limit",
-      "memory_search_limit",
-      "tool_catalog_limit"
-    ],
-    "heap_universe": [
-      "universe_enabled",
-      "universe_roles",
-      "universe_max_steps",
-      "universe_stop_condition",
-      "block_pointer_protocol",
-      "max_blocks_per_step",
-      "max_block_chars",
-      "max_revision_depth",
-      "allow_backrefinement",
-      "allow_forward_pointers",
-      "require_resume_pointer",
-      "require_refines_pointer"
-    ],
-    "hardware": [
-      "npu_device_workload_seconds",
-      "npu_device_workload_iterations"
-    ],
-    "outputs": [
-      "documents_root",
-      "output_dir",
-      "no_documents",
-      "stamp"
-    ]
+    "runtime": ["budget_minutes", "max_iterations", "max_provider_revisions", "timeout_seconds", "preflight_timeout_seconds", "allow_provider_generation"],
+    "startup_context": ["startup_max_memory_chars", "startup_max_context_files", "startup_max_chars_per_file", "context_document_count", "context_document_preview_chars", "semantic_code_chunk_limit", "semantic_code_chunk_preview_chars", "semantic_evidence_chunk_limit", "memory_search_limit", "tool_catalog_limit"],
+    "revision_context": ["revision_context_mode", "revision_context_max_tasks"],
+    "heap_universe": ["universe_enabled", "universe_roles", "universe_max_steps", "universe_stop_condition", "block_pointer_protocol", "max_blocks_per_step", "max_block_chars", "max_revision_depth", "allow_backrefinement", "allow_forward_pointers", "require_resume_pointer", "require_refines_pointer"],
+    "hardware": ["npu_device_workload_seconds", "npu_device_workload_iterations"],
+    "outputs": ["documents_root", "output_dir", "no_documents", "stamp"]
   },
   "profiles": {
     "fast_external_heap": {
@@ -69,6 +31,8 @@
       "semantic_evidence_chunk_limit": 24,
       "memory_search_limit": 12,
       "tool_catalog_limit": 80,
+      "revision_context_mode": "auto_latest",
+      "revision_context_max_tasks": 6,
       "universe_enabled": true,
       "universe_roles": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
       "universe_max_steps": 2,
@@ -85,7 +49,7 @@
       "skip_startup_reload": false,
       "strict_startup_reload": false,
       "no_documents": false,
-      "request": "Run heap esterno FAST: preload repo/docs/memoria/tool, operational scratch memory, GPU1 planner, GPU0 companion review, NPU audit breve, proposal chunks concreti con path repo reali, blocca placeholder/stub, usa block pointers per next/resume/refine."
+      "request": "Run heap esterno FAST: preload repo/docs/memoria/tool, operational scratch memory, GPU1 planner, GPU0 companion review, NPU audit breve, proposal chunks concreti con path repo reali, blocca placeholder/stub, usa block pointers per next/resume/refine e consuma il revision context esterno se presente."
     },
     "balanced_external_heap": {
       "description": "Balanced external heap run matching the current validated operator workflow.",
@@ -107,6 +71,8 @@
       "semantic_evidence_chunk_limit": 48,
       "memory_search_limit": 20,
       "tool_catalog_limit": 160,
+      "revision_context_mode": "auto_latest",
+      "revision_context_max_tasks": 12,
       "universe_enabled": true,
       "universe_roles": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
       "universe_max_steps": 4,
@@ -123,7 +89,7 @@
       "skip_startup_reload": false,
       "strict_startup_reload": false,
       "no_documents": false,
-      "request": "Run heap esterno BALANCED: usa preload completo repo/docs/memoria/tool, scrivi startup reload nella operational scratch memory, riconcilia artifact utili anche se degradati, usa GPU1 planner, GPU0 companion reviewer/refiner e NPU audit nella stessa evidenza, gestisci output oltre il contesto tramite artifact/chunk/refinement task e block pointers next/previous/refines/resume, produci proposal chunks concreti con path repo reali e blocca placeholder/stub."
+      "request": "Run heap esterno BALANCED: usa preload completo repo/docs/memoria/tool, scrivi startup reload nella operational scratch memory, riconcilia artifact utili anche se degradati, usa GPU1 planner, GPU0 companion reviewer/refiner e NPU audit nella stessa evidenza, consuma il revision context precedente se presente, gestisci output oltre il contesto tramite artifact/chunk/refinement task e block pointers next/previous/refines/resume, produci proposal chunks concreti con path repo reali e blocca placeholder/stub."
     },
     "deep_external_heap": {
       "description": "Deep external heap run for stronger refinement pressure, larger startup context and richer block-pointer navigation.",
@@ -145,6 +111,8 @@
       "semantic_evidence_chunk_limit": 120,
       "memory_search_limit": 50,
       "tool_catalog_limit": 320,
+      "revision_context_mode": "auto_latest",
+      "revision_context_max_tasks": 24,
       "universe_enabled": true,
       "universe_roles": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
       "universe_max_steps": 8,
@@ -161,7 +129,7 @@
       "skip_startup_reload": false,
       "strict_startup_reload": false,
       "no_documents": false,
-      "request": "Run heap esterno DEEP: massimizza contesto preload repo/docs/memoria/tool, operational scratch memory, più revisioni GPU1/GPU0/NPU, usa block pointers persistenti per forward/backrefinement, forza proposal chunks concreti con repo-relative paths, rigetta ripetizioni e placeholder/stub, produci package finale di revisione operatore."
+      "request": "Run heap esterno DEEP: massimizza contesto preload repo/docs/memoria/tool, operational scratch memory, più revisioni GPU1/GPU0/NPU, consuma revision context precedente, usa block pointers persistenti per forward/backrefinement, forza proposal chunks concreti con repo-relative paths, rigetta ripetizioni e placeholder/stub, produci package finale di revisione operatore."
     },
     "strict_startup_external_heap": {
       "description": "Strict startup profile: preload degradation blocks the launcher before provider work.",
@@ -183,6 +151,8 @@
       "semantic_evidence_chunk_limit": 48,
       "memory_search_limit": 20,
       "tool_catalog_limit": 160,
+      "revision_context_mode": "auto_latest",
+      "revision_context_max_tasks": 12,
       "universe_enabled": true,
       "universe_roles": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
       "universe_max_steps": 4,
@@ -199,7 +169,7 @@
       "skip_startup_reload": false,
       "strict_startup_reload": true,
       "no_documents": false,
-      "request": "Run heap esterno STRICT STARTUP: fallisci se il preload context/memory/tool/docs degrada; se passa, esegui GPU1/GPU0/NPU, usa block pointers e composer finale."
+      "request": "Run heap esterno STRICT STARTUP: fallisci se il preload context/memory/tool/docs degrada; se passa, esegui GPU1/GPU0/NPU, consuma revision context precedente se disponibile, usa block pointers e composer finale."
     },
     "dry_packaging_external_heap": {
       "description": "Packaging/debug profile: no provider generation, useful for checking preflight/startup/composer/block-pointer wiring.",
@@ -221,6 +191,8 @@
       "semantic_evidence_chunk_limit": 24,
       "memory_search_limit": 12,
       "tool_catalog_limit": 80,
+      "revision_context_mode": "off",
+      "revision_context_max_tasks": 0,
       "universe_enabled": true,
       "universe_roles": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
       "universe_max_steps": 1,
