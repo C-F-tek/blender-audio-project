@@ -27,7 +27,6 @@ DEFAULT_REQUEST = (
 
 REQUIRED_COMPOSER_JSON = "heap_final_proposal_composer.json"
 REVISION_CONTEXT_MARKER = "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN"
-REVISION_CONTEXT_TASK_PREVIEW_CHARS = 1200
 
 
 def now_stamp() -> str:
@@ -124,32 +123,6 @@ def resolve_revision_context(repo_root: Path, value: str) -> tuple[Path | None, 
     return path, load_json(path), "explicit_revision_context"
 
 
-def task_revision_context_lines(task: dict[str, Any]) -> list[str]:
-    lines: list[str] = []
-    source_path = str(task.get("source_path") or "")
-    markdown_path = str(task.get("markdown_path") or "")
-    if source_path:
-        lines.append(f"   source_path={source_path}")
-    if markdown_path:
-        lines.append(f"   markdown_path={markdown_path}")
-    pointer_parts = []
-    for key in ("previous_block_id", "next_block_id", "refines_block_id"):
-        value = str(task.get(key) or "")
-        if value:
-            pointer_parts.append(f"{key}={value}")
-    if pointer_parts:
-        lines.append("   pointers=" + "; ".join(pointer_parts))
-    if "block_quality_passed" in task or "block_accepted" in task:
-        lines.append(f"   block_quality_passed={task.get('block_quality_passed')} block_accepted={task.get('block_accepted')}")
-    preview = str(task.get("source_preview") or "")
-    if preview:
-        if len(preview) > REVISION_CONTEXT_TASK_PREVIEW_CHARS:
-            preview = preview[:REVISION_CONTEXT_TASK_PREVIEW_CHARS] + "\n...[truncated]"
-        lines.append("   source_preview:")
-        lines.extend("     " + line for line in preview.splitlines()[:80])
-    return lines
-
-
 def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_tasks: int) -> str:
     if not payload:
         return ""
@@ -176,7 +149,6 @@ def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_task
             f"{idx}. {task.get('task_id')} role={task.get('role')} type={task.get('task_type')} "
             f"target={task.get('target_block_id')} resume={task.get('resume_from_block_id')}"
         )
-        lines.extend(task_revision_context_lines(task))
         if task.get("discovered_symbols"):
             lines.append(f"   discovered_symbols={json.dumps(task.get('discovered_symbols'), ensure_ascii=False)}")
         if task.get("rejection_reasons"):
@@ -342,6 +314,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--budget-minutes", type=int, default=10)
     parser.add_argument("--max-iterations", type=int, default=6)
     parser.add_argument("--max-provider-revisions", type=int, default=6)
+    parser.add_argument("--max-rounds", type=int, default=12, help="Gate planning rounds; must be high enough to complete base evidence before provider lanes.")
     parser.add_argument("--allow-provider-generation", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=900)
     parser.add_argument("--npu-device-workload-seconds", type=float, default=5.0)
@@ -445,14 +418,13 @@ def main() -> int:
         startup_result = run_command(startup_command, repo_root)
         startup_payload = load_json(startup_manifest)
 
-    preflight_allows_execution = bool(args.skip_preflight or preflight_result.get("passed"))
-    can_continue = bool(preflight_allows_execution and startup_can_continue(
+    can_continue = startup_can_continue(
         startup_result=startup_result,
         startup_payload=startup_payload,
         startup_task_file=startup_task_file,
         strict_startup_reload=args.strict_startup_reload,
         skipped=args.skip_startup_reload,
-    ))
+    )
     startup_reload_degraded = bool(
         (not args.skip_startup_reload)
         and (
@@ -472,6 +444,8 @@ def main() -> int:
         str(args.budget_minutes),
         "--max-iterations",
         str(args.max_iterations),
+        "--max-rounds",
+        str(args.max_rounds),
         "--max-provider-revisions",
         str(args.max_provider_revisions),
         "--timeout-seconds",
@@ -509,9 +483,7 @@ def main() -> int:
     fallback_heap_report_written = False
     if not report_file.exists():
         reason = (
-            "preflight gate failed"
-            if not preflight_allows_execution
-            else "startup context/memory reload hard failed"
+            "startup context/memory reload hard failed"
             if not can_continue
             else "heap report missing after heap command"
         )
@@ -599,9 +571,10 @@ def main() -> int:
         "revision_context_path": str(revision_context_path) if revision_context_path else "",
         "revision_context_loaded": bool(revision_context_payload),
         "revision_context_task_count": len(revision_context_payload.get("tasks", [])) if isinstance(revision_context_payload.get("tasks"), list) else 0,
+        "max_iterations_requested": args.max_iterations,
+        "max_rounds_forwarded": args.max_rounds,
         "preflight_performed": not args.skip_preflight,
         "preflight_passed": bool(preflight_result["passed"]),
-        "preflight_allows_execution": preflight_allows_execution,
         "preflight_report": str(preflight_report) if preflight_report.exists() else "",
         "preflight_markdown": str(preflight_markdown) if preflight_markdown.exists() else "",
         "preflight_returncode": preflight_result["returncode"],

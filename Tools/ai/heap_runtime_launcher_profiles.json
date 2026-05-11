@@ -3,18 +3,62 @@
   "kind": "heap_runtime_launcher_profiles",
   "default_profile": "balanced_external_heap",
   "profile_control_groups": {
-    "runtime": ["budget_minutes", "max_iterations", "max_provider_revisions", "timeout_seconds", "preflight_timeout_seconds", "allow_provider_generation"],
-    "startup_context": ["startup_max_memory_chars", "startup_max_context_files", "startup_max_chars_per_file", "context_document_count", "context_document_preview_chars", "semantic_code_chunk_limit", "semantic_code_chunk_preview_chars", "semantic_evidence_chunk_limit", "memory_search_limit", "tool_catalog_limit"],
-    "revision_context": ["revision_context_mode", "revision_context_max_tasks"],
-    "heap_universe": ["universe_enabled", "universe_roles", "universe_max_steps", "universe_stop_condition", "block_pointer_protocol", "max_blocks_per_step", "max_block_chars", "max_revision_depth", "allow_backrefinement", "allow_forward_pointers", "require_resume_pointer", "require_refines_pointer"],
-    "hardware": ["npu_device_workload_seconds", "npu_device_workload_iterations"],
-    "outputs": ["documents_root", "output_dir", "no_documents", "stamp"]
+    "runtime": [
+      "budget_minutes",
+      "max_iterations",
+      "max_rounds",
+      "max_provider_revisions",
+      "timeout_seconds",
+      "preflight_timeout_seconds",
+      "allow_provider_generation"
+    ],
+    "startup_context": [
+      "startup_max_memory_chars",
+      "startup_max_context_files",
+      "startup_max_chars_per_file",
+      "context_document_count",
+      "context_document_preview_chars",
+      "semantic_code_chunk_limit",
+      "semantic_code_chunk_preview_chars",
+      "semantic_evidence_chunk_limit",
+      "memory_search_limit",
+      "tool_catalog_limit"
+    ],
+    "revision_context": [
+      "revision_context_mode",
+      "revision_context_max_tasks"
+    ],
+    "heap_universe": [
+      "universe_enabled",
+      "universe_roles",
+      "universe_max_steps",
+      "universe_stop_condition",
+      "block_pointer_protocol",
+      "max_blocks_per_step",
+      "max_block_chars",
+      "max_revision_depth",
+      "allow_backrefinement",
+      "allow_forward_pointers",
+      "require_resume_pointer",
+      "require_refines_pointer"
+    ],
+    "hardware": [
+      "npu_device_workload_seconds",
+      "npu_device_workload_iterations"
+    ],
+    "outputs": [
+      "documents_root",
+      "output_dir",
+      "no_documents",
+      "stamp"
+    ]
   },
   "profiles": {
     "fast_external_heap": {
       "description": "Fast external heap run for quick feedback with provider generation enabled and bounded iterations.",
       "budget_minutes": 5,
       "max_iterations": 2,
+      "max_rounds": 8,
       "max_provider_revisions": 2,
       "timeout_seconds": 600,
       "preflight_timeout_seconds": 90,
@@ -34,7 +78,11 @@
       "revision_context_mode": "auto_latest",
       "revision_context_max_tasks": 6,
       "universe_enabled": true,
-      "universe_roles": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
+      "universe_roles": [
+        "gpu1_planner",
+        "gpu0_reviewer_refiner",
+        "npu_auditor"
+      ],
       "universe_max_steps": 2,
       "universe_stop_condition": "first_concrete_product_or_blocked_reason",
       "block_pointer_protocol": "external_heap_block_pointer_v1",
@@ -55,6 +103,7 @@
       "description": "Balanced external heap run matching the current validated operator workflow.",
       "budget_minutes": 10,
       "max_iterations": 4,
+      "max_rounds": 12,
       "max_provider_revisions": 3,
       "timeout_seconds": 1200,
       "preflight_timeout_seconds": 120,
@@ -74,7 +123,11 @@
       "revision_context_mode": "auto_latest",
       "revision_context_max_tasks": 12,
       "universe_enabled": true,
-      "universe_roles": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
+      "universe_roles": [
+        "gpu1_planner",
+        "gpu0_reviewer_refiner",
+        "npu_auditor"
+      ],
       "universe_max_steps": 4,
       "universe_stop_condition": "concrete_product_or_explicit_blocked_reason",
       "block_pointer_protocol": "external_heap_block_pointer_v1",
@@ -95,6 +148,7 @@
       "description": "Deep external heap run for stronger refinement pressure, larger startup context and richer block-pointer navigation.",
       "budget_minutes": 20,
       "max_iterations": 8,
+      "max_rounds": 24,
       "max_provider_revisions": 6,
       "timeout_seconds": 2400,
       "preflight_timeout_seconds": 180,
@@ -114,7 +168,11 @@
       "revision_context_mode": "auto_latest",
       "revision_context_max_tasks": 24,
       "universe_enabled": true,
-      "universe_roles": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
+      "universe_roles": [
+        "gpu1_planner",
+        "gpu0_reviewer_refiner",
+        "npu_auditor"
+      ],
       "universe_max_steps": 8,
       "universe_stop_condition": "accepted_concrete_product_or_exhausted_revision_depth_with_blocking_reason",
       "block_pointer_protocol": "external_heap_block_pointer_v1",
@@ -135,6 +193,7 @@
       "description": "Strict startup profile: preload degradation blocks the launcher before provider work.",
       "budget_minutes": 10,
       "max_iterations": 4,
+      "max_rounds": 12,
       "max_provider_revisions": 3,
       "timeout_seconds": 1200,
       "preflight_timeout_seconds": 120,
@@ -154,7 +213,11 @@
       "revision_context_mode": "auto_latest",
       "revision_context_max_tasks": 12,
       "universe_enabled": true,
-      "universe_roles": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
+      "universe_roles": [
+        "gpu1_planner",
+        "gpu0_reviewer_refiner",
+        "npu_auditor"
+      ],
       "universe_max_steps": 4,
       "universe_stop_condition": "strict_startup_then_concrete_product",
       "block_pointer_protocol": "external_heap_block_pointer_v1",
@@ -175,6 +238,7 @@
       "description": "Packaging/debug profile: no provider generation, useful for checking preflight/startup/composer/block-pointer wiring.",
       "budget_minutes": 3,
       "max_iterations": 1,
+      "max_rounds": 4,
       "max_provider_revisions": 1,
       "timeout_seconds": 300,
       "preflight_timeout_seconds": 90,
@@ -194,7 +258,11 @@
       "revision_context_mode": "off",
       "revision_context_max_tasks": 0,
       "universe_enabled": true,
-      "universe_roles": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
+      "universe_roles": [
+        "gpu1_planner",
+        "gpu0_reviewer_refiner",
+        "npu_auditor"
+      ],
       "universe_max_steps": 1,
       "universe_stop_condition": "packaging_only",
       "block_pointer_protocol": "external_heap_block_pointer_v1",
