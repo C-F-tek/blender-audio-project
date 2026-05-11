@@ -144,6 +144,7 @@ def build_report(
     max_lines: int,
     include_suffixes: tuple[str, ...],
     excluded_dirs: set[str],
+    fail_on_violations: bool,
 ) -> dict[str, object]:
     checked: list[dict[str, object]] = []
     violations: list[dict[str, object]] = []
@@ -170,6 +171,8 @@ def build_report(
         if item["over_limit"]:
             violations.append(item)
 
+    violation_count = len(violations)
+    enforced_violation_count = violation_count if fail_on_violations else 0
     return {
         "schema_version": 1,
         "kind": "file_line_limit_report",
@@ -178,14 +181,18 @@ def build_report(
         "max_lines": max_lines,
         "include_suffixes": list(include_suffixes),
         "excluded_dirs": sorted(excluded_dirs),
+        "report_mode": "enforcing" if fail_on_violations else "advisory",
+        "fail_on_violations": fail_on_violations,
         "checked_file_count": len(checked),
         "split_container_count": len(split_containers),
         "split_containers": split_containers,
         "split_markdown_file_count": sum(1 for item in checked if item["directory_form_md_suffix"]),
-        "violation_count": len(violations),
+        "violation_count": violation_count,
+        "advisory_violation_count": violation_count,
+        "enforced_violation_count": enforced_violation_count,
         "violations": violations,
         "errors": errors,
-        "passed": not errors and not violations,
+        "passed": not errors and enforced_violation_count == 0,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -205,11 +212,14 @@ def write_markdown(path: Path, data: dict[str, object]) -> None:
         "# File line-limit report",
         "",
         f"- Passed: `{data.get('passed')}`",
+        f"- Report mode: `{data.get('report_mode')}`",
+        f"- Fail on violations: `{data.get('fail_on_violations')}`",
         f"- Max lines: `{data.get('max_lines')}`",
         f"- Checked files: `{data.get('checked_file_count')}`",
         f"- Split containers: `{data.get('split_container_count')}`",
         f"- Split Markdown files: `{data.get('split_markdown_file_count')}`",
-        f"- Violations: `{data.get('violation_count')}`",
+        f"- Advisory violations: `{data.get('advisory_violation_count')}`",
+        f"- Enforced violations: `{data.get('enforced_violation_count')}`",
         "",
         "## Violations",
         "",
@@ -257,6 +267,7 @@ def main() -> int:
         max_lines=args.max_lines,
         include_suffixes=suffixes,
         excluded_dirs=excluded_dirs,
+        fail_on_violations=bool(args.fail_on_violations),
     )
     write_json(Path(args.output), report)
     if args.markdown_output:
