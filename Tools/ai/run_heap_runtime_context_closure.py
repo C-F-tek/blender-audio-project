@@ -560,6 +560,65 @@ def main() -> int:
     final_download_manifest_txt = str(composer_report.get("download_manifest_txt", "") or "")
     proposal_txt_outputs = composer_report.get("proposal_txt_outputs") if isinstance(composer_report.get("proposal_txt_outputs"), list) else []
 
+    external_postrun_result: dict[str, Any] = {
+        "performed": False,
+        "passed": False,
+        "returncode": None,
+        "report": "",
+        "stdout_tail": "",
+        "stderr_tail": "",
+    }
+    if composer_packaging_performed:
+        external_postrun_report = run_dir / "external_heap_postrun_package.json"
+        external_postrun_command = [
+            project_python,
+            "Tools/ai/run_external_heap_postrun_package.py",
+            "--repo-root",
+            ".",
+            "--python-exe",
+            project_python,
+            "--run-dir",
+            str(run_dir),
+            "--include-rejected-history",
+            "--include-peer-blocks",
+            "--output",
+            str(external_postrun_report),
+        ]
+        try:
+            completed = subprocess.run(
+                external_postrun_command,
+                cwd=repo_root,
+                text=True,
+                capture_output=True,
+                check=False,
+                timeout=max(60, int(args.timeout_seconds)),
+            )
+            external_postrun_result.update(
+                {
+                    "performed": True,
+                    "passed": completed.returncode == 0,
+                    "returncode": completed.returncode,
+                    "report": str(external_postrun_report),
+                    "stdout_tail": (completed.stdout or "")[-4000:],
+                    "stderr_tail": (completed.stderr or "")[-4000:],
+                }
+            )
+        except Exception as exc:  # noqa: BLE001 - post-run package is report-only.
+            external_postrun_result.update(
+                {
+                    "performed": True,
+                    "passed": False,
+                    "returncode": -1,
+                    "report": str(external_postrun_report),
+                    "stderr_tail": f"{type(exc).__name__}: {exc}",
+                }
+            )
+
+    external_postrun_payload = load_json(Path(str(external_postrun_result.get("report") or "")))
+    external_long_response_markdown = str(external_postrun_payload.get("long_response_markdown", "") or "")
+    external_revision_context_json = str(external_postrun_payload.get("revision_context_json", "") or "")
+    external_pointer_manifest_json = str(external_postrun_payload.get("pointer_manifest_json", "") or "")
+
     summary = {
         "schema_version": 1,
         "kind": "heap_runtime_context_closure_launcher",
@@ -610,6 +669,13 @@ def main() -> int:
         "final_proposal_json": final_proposal_json,
         "final_download_manifest_txt": final_download_manifest_txt,
         "proposal_txt_outputs": proposal_txt_outputs,
+        "external_postrun_package_performed": bool(external_postrun_result.get("performed")),
+        "external_postrun_package_passed": bool(external_postrun_result.get("passed")),
+        "external_postrun_package_returncode": external_postrun_result.get("returncode"),
+        "external_postrun_package_report": external_postrun_result.get("report", ""),
+        "external_long_response_markdown": external_long_response_markdown,
+        "external_revision_context_json": external_revision_context_json,
+        "external_pointer_manifest_json": external_pointer_manifest_json,
         "download_hint": composer_report.get("download_hint", ""),
         "launcher_passed": bool(startup_result["passed"] and heap_result["passed"] and composer_result["passed"]),
         "launcher_packaging_succeeded": bool(composer_packaging_performed and (can_continue or fallback_heap_report_written)),
@@ -621,6 +687,8 @@ def main() -> int:
         "startup_stderr_tail": startup_result["stderr_tail"],
         "composer_stdout_tail": composer_result["stdout_tail"],
         "composer_stderr_tail": composer_result["stderr_tail"],
+        "external_postrun_stdout_tail": external_postrun_result.get("stdout_tail", ""),
+        "external_postrun_stderr_tail": external_postrun_result.get("stderr_tail", ""),
     }
 
     launcher_report = run_dir / "heap_runtime_context_closure_launcher.json"
