@@ -570,6 +570,116 @@ class HeapRuntimeCompletenessGate:
         return "\n".join(lines)
 
 
+
+    def startup_manifest_from_task_file(self) -> tuple[Path | None, dict[str, Any]]:
+        """Load the tool-owned startup manifest associated with --task-file.
+
+        run_heap_runtime_context_closure.py already prepares repo/docs/memory/tool
+        context before this gate starts and passes the ready task file with
+        --task-file. The sibling manifest is the structured proof of that preload.
+        Seeding passed startup requirements into the heap prevents the provider
+        universe from being blocked by re-running already completed context tools.
+        """
+        task_file = str(getattr(self.args, "task_file", "") or "").strip()
+        if not task_file:
+            return None, {}
+        task_path = Path(task_file)
+        if not task_path.is_absolute():
+            task_path = self.repo_root / task_path
+        manifest_path = task_path.resolve(strict=False).parent / "heap_context_memory_reload_manifest.json"
+        payload = read_json(manifest_path)
+        if not payload:
+            return manifest_path, {}
+        return manifest_path, payload
+
+    def startup_execution_artifact_outputs(self, execution: dict[str, Any]) -> dict[str, Any]:
+        refs: list[str] = []
+        for key in ("useful_artifact_paths", "existing_artifact_paths", "artifact_paths"):
+            for value in execution.get(key) or []:
+                if isinstance(value, str) and value and value not in refs:
+                    refs.append(value)
+        outputs: dict[str, Any] = {}
+        json_refs = [ref for ref in refs if ref.lower().endswith(".json")]
+        md_refs = [ref for ref in refs if ref.lower().endswith(".md")]
+        if json_refs:
+            outputs["json_report"] = json_refs[0]
+        if md_refs:
+            outputs["markdown_report"] = md_refs[0]
+        if refs:
+            outputs["artifact_refs"] = refs
+        return outputs
+
+    def startup_manifest_completed_requirements(self, manifest: dict[str, Any]) -> list[dict[str, Any]]:
+        completed: list[dict[str, Any]] = []
+        for execution in manifest.get("tool_executions") or []:
+            if not isinstance(execution, dict):
+                continue
+            requirement = str(execution.get("requirement") or "").strip()
+            if requirement not in REQUIREMENT_ORDER:
+                continue
+            if execution.get("passed") is not True:
+                continue
+            if safe_int(execution.get("returncode"), default=1) != 0:
+                continue
+            errors = execution.get("errors") if isinstance(execution.get("errors"), list) else []
+            if errors:
+                continue
+            completed.append(execution)
+        return completed
+
+    def publish_startup_manifest_evidence(self) -> None:
+        """Seed passed startup preload requirements as heap broker evidence.
+
+        This keeps the architecture tool-owned: startup reload prepares context,
+        memory and chunks before provider work; the heap consumes that manifest
+        instead of treating the same requirements as missing just because a later
+        duplicate broker attempt failed or was not needed.
+        """
+        manifest_path, manifest = self.startup_manifest_from_task_file()
+        if not manifest:
+            return
+        existing = self.completed_requirements(self.heap.read_events())
+        for execution in self.startup_manifest_completed_requirements(manifest):
+            requirement = str(execution.get("requirement") or "").strip()
+            if requirement in existing:
+                continue
+            outputs = self.startup_execution_artifact_outputs(execution)
+            artifact_refs = list(outputs.get("artifact_refs") or [])
+            payload = {
+                "schema_version": 1,
+                "kind": "startup_manifest_broker_result",
+                "requirement": requirement,
+                "tool": str(execution.get("tool") or "startup_context_memory_reload"),
+                "returncode": 0,
+                "executed": True,
+                "blocked": False,
+                "outputs": outputs,
+                "summary": {
+                    "passed": True,
+                    "source": "startup_context_memory_reload_manifest",
+                    "startup_manifest": repo_rel(self.repo_root, manifest_path) if manifest_path else "",
+                },
+                "provider_execution_performed": False,
+                "patch_application_performed": False,
+                "source_writes_performed": False,
+            }
+            self.publish(
+                "context_memory",
+                "broker_result",
+                payload,
+                target="gpu1",
+                correlation_id=f"{self.stamp}:startup_manifest:{requirement}",
+                round_id=0,
+            )
+            self.append_reload_lifecycle_event(
+                requirement=requirement,
+                round_id=0,
+                phase="startup_manifest_completed",
+                tool=str(execution.get("tool") or "startup_context_memory_reload"),
+                refs=artifact_refs,
+            )
+            existing.add(requirement)
+
     def publish_startup_memory_context_reload_events(self) -> None:
         # Expose startup reload lifecycle for memory/context/tool surfaces.
         # This mirrors the unified run behavior: before the heap starts consuming
@@ -1893,6 +2003,7 @@ class HeapRuntimeCompletenessGate:
         self.heap.write_snapshot()
         self.write_heap_exchange_entry()
         self.publish_startup_memory_context_reload_events()
+        self.publish_startup_manifest_evidence()
 
     def planner_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
         if self.heap.pending_broker_requests():
