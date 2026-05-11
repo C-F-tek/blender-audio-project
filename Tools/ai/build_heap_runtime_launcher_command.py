@@ -4,7 +4,7 @@
 This tool does not execute the heap runtime. It externalizes launcher variables,
 prints/writes a command that an operator can review, and preserves non-CLI
 profile metadata for external heap-universe adapters such as block pointer
-manifests.
+manifests and revision-context propagation.
 """
 from __future__ import annotations
 
@@ -153,15 +153,21 @@ def render_command(repo_root: Path, project_python: str, profile: dict[str, Any]
     return " ".join(parts) + "\n"
 
 
-def render_block_pointer_command(repo_root: Path, project_python: str, profile: dict[str, Any]) -> str:
-    max_block_chars = profile.get("max_block_chars", 9000)
-    max_blocks = int(profile.get("max_blocks_per_step", 0) or 0) * int(profile.get("universe_max_steps", 0) or 0)
+def latest_run_dir_snippet() -> str:
     return (
         "$RunDir = Get-ChildItem .\\output\\validation -Directory | `\n"
         "  Where-Object Name -like \"heap_context_closure_*\" | `\n"
         "  Sort-Object LastWriteTime -Descending | `\n"
-        "  Select-Object -First 1\n\n"
-        "& "
+        "  Select-Object -First 1\n"
+    )
+
+
+def render_block_pointer_command(repo_root: Path, project_python: str, profile: dict[str, Any]) -> str:
+    max_block_chars = profile.get("max_block_chars", 9000)
+    max_blocks = int(profile.get("max_blocks_per_step", 0) or 0) * int(profile.get("universe_max_steps", 0) or 0)
+    return (
+        latest_run_dir_snippet()
+        + "\n& "
         + ps_quote(project_python)
         + " "
         + ps_quote(".\\Tools\\ai\\build_external_heap_block_pointer_manifest.py")
@@ -171,6 +177,23 @@ def render_block_pointer_command(repo_root: Path, project_python: str, profile: 
         + ps_quote(max_block_chars)
         + (" `\n  --max-blocks " + ps_quote(max_blocks) if max_blocks > 0 else "")
         + "\n"
+    )
+
+
+def render_revision_context_command(repo_root: Path, project_python: str) -> str:
+    return (
+        latest_run_dir_snippet()
+        + "\n$PointerPath = Join-Path $RunDir.FullName \"external_heap_block_pointer_manifest.json\"\n"
+        + "$ComposerPath = Join-Path $RunDir.FullName \"heap_final_proposal_composer.json\"\n"
+        + "$CausalityPath = Join-Path $RunDir.FullName \"heap_final_causality_normalized.json\"\n\n"
+        + "& "
+        + ps_quote(project_python)
+        + " "
+        + ps_quote(".\\Tools\\ai\\build_external_heap_revision_context.py")
+        + " `\n  --pointer-manifest $PointerPath"
+        + " `\n  --composer-json $ComposerPath"
+        + " `\n  --causality-json $CausalityPath"
+        + " `\n  --output (Join-Path $RunDir.FullName \"external_heap_revision_context.json\")\n"
     )
 
 
@@ -204,6 +227,7 @@ def main() -> int:
     parser.add_argument("--set", action="append", default=[])
     parser.add_argument("--list-profiles", action="store_true")
     parser.add_argument("--include-block-pointer-command", action="store_true")
+    parser.add_argument("--include-revision-context-command", action="store_true")
     parser.add_argument("--output", default="")
     args = parser.parse_args()
 
@@ -221,8 +245,9 @@ def main() -> int:
     profile = apply_overrides(choose_profile(profile_doc, args.profile), args.set)
     command = render_command(repo_root, project_python, profile, args.request)
     block_pointer_command = render_block_pointer_command(repo_root, project_python, profile)
+    revision_context_command = render_revision_context_command(repo_root, project_python)
     report = {
-        "schema_version": 2,
+        "schema_version": 3,
         "kind": "heap_runtime_launcher_command",
         "repo_root": repo_root.as_posix(),
         "profiles_file": str(profiles_path),
@@ -232,10 +257,12 @@ def main() -> int:
         "external_metadata": profile_external_metadata(profile),
         "command": command,
         "block_pointer_command": block_pointer_command,
+        "revision_context_command": revision_context_command,
         "execution_performed": False,
         "notes": [
             "command targets run_heap_runtime_context_closure.py",
             "block_pointer_command targets the external heap block-pointer manifest adapter",
+            "revision_context_command builds GPU1/GPU0/NPU follow-up tasks from old pointers",
             "non-CLI metadata is preserved for external adapters and future launcher wiring",
         ],
     }
@@ -249,6 +276,9 @@ def main() -> int:
     if args.include_block_pointer_command:
         print("\n# External heap block-pointer manifest command")
         print(block_pointer_command)
+    if args.include_revision_context_command:
+        print("\n# External heap revision context command")
+        print(revision_context_command)
     return 0
 
 
