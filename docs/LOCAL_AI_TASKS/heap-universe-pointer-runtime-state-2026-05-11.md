@@ -2,9 +2,9 @@
 
 ## Stato consolidato
 
-Questa nota registra lo stato code-driven dopo la chiusura e il merge della PR #298 `feat(ai): externalize heap launcher profiles`.
+Questa nota registra lo stato code-driven dopo la chiusura e il merge della PR #298 `feat(ai): externalize heap launcher profiles` e dopo l'aggiunta dell'orchestratore post-run esterno.
 
-La PR e' stata portata su `master`. Il gate runtime principale resta invariato: la logica nuova e' esterna al gate e opera come profili, adapter post-run, composer lungo e contesto di revisione per la run successiva.
+La PR e' stata portata su `master`. Il gate runtime principale resta invariato: la logica nuova e' esterna al gate e opera come profili, adapter post-run, composer lungo, contesto di revisione per la run successiva e orchestratore post-run.
 
 ## Vincoli rispettati
 
@@ -156,6 +156,29 @@ Caso valido osservato:
 - tutte le proposal rigettate;
 - nessun falso positivo.
 
+### `Tools/ai/run_external_heap_postrun_package.py`
+
+Nuovo orchestratore esterno post-run.
+
+Non sostituisce il vecchio composer e non modifica il gate. Automatizza la sequenza esterna per una run `heap_context_closure_*` esistente:
+
+1. `normalize_heap_final_causality.py`
+2. `build_external_heap_block_pointer_manifest.py`
+3. `compose_external_heap_block_response.py`
+4. `build_external_heap_revision_context.py`
+
+Output principale:
+
+- `external_heap_postrun_package.json`
+
+Campi/garanzie:
+
+- `provider_execution_performed = false`
+- `patch_application_performed = false`
+- `source_writes_performed = false`
+- fail-fast se uno step esterno non passa;
+- default su latest `output/validation/heap_context_closure_*` se `--run-dir` non viene passato.
+
 ## Flusso operativo attuale
 
 1. Generare comando launcher da profilo:
@@ -173,12 +196,14 @@ python .\Tools\ai\build_heap_runtime_launcher_command.py `
 
 3. Eseguire il comando generato.
 
-4. Post-run:
+4. Post-run consigliato tramite orchestratore:
 
-- normalizzare causality;
-- generare block pointer manifest;
-- comporre long response esterna;
-- generare revision context per la run successiva.
+```powershell
+python .\Tools\ai\run_external_heap_postrun_package.py `
+  --repo-root . `
+  --include-rejected-history `
+  --include-peer-blocks
+```
 
 5. La run successiva consuma il revision context precedente tramite profilo `auto_latest`.
 
@@ -192,10 +217,11 @@ request corrente
 → GPU1 planner produce proposal blocks
 → GPU0 reviewer/refiner rivaluta anche pointer vecchi
 → NPU auditor audita anche pointer vecchi
-→ block pointer manifest registra next/previous/refines/resume
-→ causality normalizer separa catena da accettazione prodotto
-→ long response composer ricostruisce output file-based lungo
-→ revision context crea task per run successiva
+→ vecchio composer produce package base
+→ external postrun package normalizza causality
+→ external postrun package genera block pointer manifest
+→ external postrun package ricostruisce output file-based lungo
+→ external postrun package genera revision context per run successiva
 → nuova run consuma revision context nel request
 ```
 
@@ -243,28 +269,21 @@ Target potenziali:
 - `Tools/ai/build_heap_runtime_launcher_command.py`
 - `Tools/ai/prepare_heap_context_memory_reload.py`
 
-### 3. Output post-run ancora composto come sequenza manuale
+### 3. Orchestratore post-run non e' ancora integrato automaticamente nel launcher
 
-La catena post-run e' attualmente:
-
-- `normalize_heap_final_causality.py`
-- `build_external_heap_block_pointer_manifest.py`
-- `compose_external_heap_block_response.py`
-- `build_external_heap_revision_context.py`
-
-Funziona, ma richiede comandi separati.
+La sequenza post-run e' ora automatizzabile con `run_external_heap_postrun_package.py`, ma il launcher non la invoca automaticamente.
 
 Possibile patch futura:
 
 ```text
-feat(ai): add external heap post-run packaging orchestrator
+feat(ai): let heap closure launcher optionally run external postrun package
 ```
 
 Target potenziale:
 
-- nuovo `Tools/ai/run_external_heap_postrun_package.py`
+- `Tools/ai/run_heap_runtime_context_closure.py`
 
-Vincolo: non sostituire il vecchio composer; estendere il package Documents esistente.
+Vincolo: mantenere opzionale e non sostituire il vecchio composer.
 
 ## Comandi locali consigliati dopo sync master
 
@@ -282,7 +301,8 @@ $env:PYTHONPATH = (Resolve-Path .).Path
   .\Tools\ai\normalize_heap_final_causality.py `
   .\Tools\ai\build_external_heap_block_pointer_manifest.py `
   .\Tools\ai\compose_external_heap_block_response.py `
-  .\Tools\ai\build_external_heap_revision_context.py
+  .\Tools\ai\build_external_heap_revision_context.py `
+  .\Tools\ai\run_external_heap_postrun_package.py
 ```
 
 Generare comando run:
@@ -311,6 +331,15 @@ $Cmd |
   Format-List
 ```
 
+Eseguire post-run package dopo la run:
+
+```powershell
+& $RepoPy .\Tools\ai\run_external_heap_postrun_package.py `
+  --repo-root . `
+  --include-rejected-history `
+  --include-peer-blocks
+```
+
 ## Decisione operativa
 
 La fase attuale e' chiusa positivamente:
@@ -322,6 +351,7 @@ La fase attuale e' chiusa positivamente:
 - pointer manifest attivo;
 - long response integrata nel package Documents del composer;
 - revision context generato e consumabile dalla run successiva;
-- bug estrazione import corretto.
+- bug estrazione import corretto;
+- sequenza post-run esterna automatizzabile tramite orchestratore dedicato.
 
-Prossima priorita': rendere automatica la sequenza post-run oppure bindare i budget profilo non ancora CLI-bound, a seconda della prossima evidenza runtime.
+Prossima priorita': bindare i budget profilo non ancora CLI-bound o rendere opzionale il post-run package direttamente dal launcher, a seconda della prossima evidenza runtime.
