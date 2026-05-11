@@ -38,6 +38,8 @@ PROFILE_TO_CLI: dict[str, tuple[str, str]] = {
     "no_documents": ("--no-documents", "flag"),
 }
 
+REVISION_CONTEXT_TASK_PREVIEW_CHARS = 1200
+
 EXTERNAL_METADATA_KEYS = (
     "context_document_count",
     "context_document_preview_chars",
@@ -178,6 +180,32 @@ def revision_context_from_profile(repo_root: Path, profile: dict[str, Any], expl
     return None, {}
 
 
+def task_revision_context_lines(task: dict[str, Any]) -> list[str]:
+    lines: list[str] = []
+    source_path = str(task.get("source_path") or "")
+    markdown_path = str(task.get("markdown_path") or "")
+    if source_path:
+        lines.append(f"   source_path={source_path}")
+    if markdown_path:
+        lines.append(f"   markdown_path={markdown_path}")
+    pointer_parts = []
+    for key in ("previous_block_id", "next_block_id", "refines_block_id"):
+        value = str(task.get(key) or "")
+        if value:
+            pointer_parts.append(f"{key}={value}")
+    if pointer_parts:
+        lines.append("   pointers=" + "; ".join(pointer_parts))
+    if "block_quality_passed" in task or "block_accepted" in task:
+        lines.append(f"   block_quality_passed={task.get('block_quality_passed')} block_accepted={task.get('block_accepted')}")
+    preview = str(task.get("source_preview") or "")
+    if preview:
+        if len(preview) > REVISION_CONTEXT_TASK_PREVIEW_CHARS:
+            preview = preview[:REVISION_CONTEXT_TASK_PREVIEW_CHARS] + "\n...[truncated]"
+        lines.append("   source_preview:")
+        lines.extend("     " + line for line in preview.splitlines()[:80])
+    return lines
+
+
 def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_tasks: int) -> str:
     if not payload:
         return ""
@@ -202,8 +230,10 @@ def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_task
         if not isinstance(task, dict):
             continue
         lines.append(
-            f"{idx}. {task.get('task_id')} role={task.get('role')} type={task.get('task_type')} target={task.get('target_block_id')} resume={task.get('resume_from_block_id')}"
+            f"{idx}. {task.get('task_id')} role={task.get('role')} type={task.get('task_type')} "
+            f"target={task.get('target_block_id')} resume={task.get('resume_from_block_id')}"
         )
+        lines.extend(task_revision_context_lines(task))
         if task.get("discovered_symbols"):
             lines.append(f"   discovered_symbols={json.dumps(task.get('discovered_symbols'), ensure_ascii=False)}")
         if task.get("rejection_reasons"):

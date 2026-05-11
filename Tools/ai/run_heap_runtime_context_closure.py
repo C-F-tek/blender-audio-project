@@ -25,6 +25,10 @@ DEFAULT_REQUEST = (
     "usa debug lab e chiudi con composer finale su file persistenti."
 )
 
+REQUIRED_COMPOSER_JSON = "heap_final_proposal_composer.json"
+REVISION_CONTEXT_MARKER = "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN"
+REVISION_CONTEXT_TASK_PREVIEW_CHARS = 1200
+
 
 def now_stamp() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -84,10 +88,120 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def augmented_request(base_request: str) -> str:
+def is_complete_heap_run_dir(path: Path) -> bool:
+    return path.is_dir() and path.name.startswith("heap_context_closure_") and (path / REQUIRED_COMPOSER_JSON).exists()
+
+
+def latest_revision_context(repo_root: Path) -> tuple[Path | None, dict[str, Any], str]:
+    validation_dir = repo_root / "output" / "validation"
+    if not validation_dir.exists():
+        return None, {}, "none"
+    candidates = sorted(
+        [
+            run_dir / "external_heap_revision_context.json"
+            for run_dir in validation_dir.iterdir()
+            if is_complete_heap_run_dir(run_dir) and (run_dir / "external_heap_revision_context.json").exists()
+        ],
+        key=lambda path: path.stat().st_mtime if path.exists() else 0,
+        reverse=True,
+    )
+    if not candidates:
+        return None, {}, "none"
+    path = candidates[0].resolve()
+    return path, load_json(path), "latest_complete_heap_context_closure_with_composer_json"
+
+
+def resolve_revision_context(repo_root: Path, value: str) -> tuple[Path | None, dict[str, Any], str]:
+    mode = str(value or "auto_latest").strip()
+    if not mode or mode.lower() in {"off", "none", "false", "0"}:
+        return None, {}, "off"
+    if mode == "auto_latest":
+        return latest_revision_context(repo_root)
+    path = Path(mode)
+    if not path.is_absolute():
+        path = repo_root / path
+    path = path.resolve()
+    return path, load_json(path), "explicit_revision_context"
+
+
+def task_revision_context_lines(task: dict[str, Any]) -> list[str]:
+    lines: list[str] = []
+    source_path = str(task.get("source_path") or "")
+    markdown_path = str(task.get("markdown_path") or "")
+    if source_path:
+        lines.append(f"   source_path={source_path}")
+    if markdown_path:
+        lines.append(f"   markdown_path={markdown_path}")
+    pointer_parts = []
+    for key in ("previous_block_id", "next_block_id", "refines_block_id"):
+        value = str(task.get(key) or "")
+        if value:
+            pointer_parts.append(f"{key}={value}")
+    if pointer_parts:
+        lines.append("   pointers=" + "; ".join(pointer_parts))
+    if "block_quality_passed" in task or "block_accepted" in task:
+        lines.append(f"   block_quality_passed={task.get('block_quality_passed')} block_accepted={task.get('block_accepted')}")
+    preview = str(task.get("source_preview") or "")
+    if preview:
+        if len(preview) > REVISION_CONTEXT_TASK_PREVIEW_CHARS:
+            preview = preview[:REVISION_CONTEXT_TASK_PREVIEW_CHARS] + "\n...[truncated]"
+        lines.append("   source_preview:")
+        lines.extend("     " + line for line in preview.splitlines()[:80])
+    return lines
+
+
+def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_tasks: int) -> str:
+    if not payload:
+        return ""
+    tasks = payload.get("tasks") if isinstance(payload.get("tasks"), list) else []
+    selected = tasks[: max(0, int(max_tasks))]
+    lines = [
+        "",
+        REVISION_CONTEXT_MARKER + ":",
+        f"- path: {path if path else ''}",
+        f"- protocol: {payload.get('protocol')}",
+        f"- product_acceptance_status: {payload.get('product_acceptance_status')}",
+        f"- resume_from_block_id: {payload.get('resume_from_block_id')}",
+        f"- latest_block_id: {payload.get('latest_block_id')}",
+        f"- task_count: {len(tasks)}",
+        "- GPU1 must consume rewrite/propagation tasks before emitting new proposal blocks.",
+        "- GPU1 may move backward to propagate imports, variables, functions, classes and contracts, then resume forward.",
+        "- GPU0 and NPU tasks are parallel recheck/audit work over old pointers.",
+        "TASKS:",
+    ]
+    for idx, task in enumerate(selected, start=1):
+        if not isinstance(task, dict):
+            continue
+        lines.append(
+            f"{idx}. {task.get('task_id')} role={task.get('role')} type={task.get('task_type')} "
+            f"target={task.get('target_block_id')} resume={task.get('resume_from_block_id')}"
+        )
+        lines.extend(task_revision_context_lines(task))
+        if task.get("discovered_symbols"):
+            lines.append(f"   discovered_symbols={json.dumps(task.get('discovered_symbols'), ensure_ascii=False)}")
+        if task.get("rejection_reasons"):
+            lines.append(f"   rejection_reasons={json.dumps(task.get('rejection_reasons'), ensure_ascii=False)}")
+        if task.get("instruction"):
+            lines.append(f"   instruction={task.get('instruction')}")
+    if len(tasks) > len(selected):
+        lines.append(f"- omitted_tasks={len(tasks) - len(selected)}; read full revision context artifact for remaining tasks.")
+    return "\n".join(lines)
+
+
+def augmented_request(
+    base_request: str,
+    revision_context_path: Path | None = None,
+    revision_context_payload: dict[str, Any] | None = None,
+    revision_context_max_tasks: int = 12,
+) -> str:
     operator = base_request.strip() or DEFAULT_REQUEST
+    revision_payload = revision_context_payload or {}
+    revision_text = ""
+    if REVISION_CONTEXT_MARKER not in operator:
+        revision_text = revision_context_prompt(revision_payload, revision_context_path, revision_context_max_tasks)
     return (
         operator
+        + revision_text
         + "\n\nHEAP CHUNK/COMPOSER CONTRACT:\n"
         + "- Treat context as persistent chunks, not as a single response window.\n"
         + "- Startup context/memory/tool/docs reload has prepared a task-file artifact; consume it as current heap input.\n"
@@ -242,6 +356,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--startup-max-memory-chars", type=int, default=64000)
     parser.add_argument("--startup-max-context-files", type=int, default=80)
     parser.add_argument("--startup-max-chars-per-file", type=int, default=12000)
+    parser.add_argument("--revision-context", default="auto_latest", help="Revision context path, 'auto_latest' or 'off'. Default auto-loads latest complete heap run context.")
+    parser.add_argument("--revision-context-max-tasks", type=int, default=12)
     return parser.parse_args()
 
 
@@ -253,6 +369,17 @@ def main() -> int:
     run_dir = Path(args.output_dir) if args.output_dir else repo_root / "output" / "validation" / f"heap_context_closure_{stamp}"
     run_dir = run_dir.resolve()
     run_dir.mkdir(parents=True, exist_ok=True)
+
+    revision_context_path, revision_context_payload, revision_context_selection_policy = resolve_revision_context(
+        repo_root,
+        args.revision_context,
+    )
+    heap_request = augmented_request(
+        args.request,
+        revision_context_path=revision_context_path,
+        revision_context_payload=revision_context_payload,
+        revision_context_max_tasks=args.revision_context_max_tasks,
+    )
 
     report_file = run_dir / "heap_runtime_completeness_gate_report.json"
     markdown_file = run_dir / "heap_runtime_completeness_gate_report.md"
@@ -299,7 +426,7 @@ def main() -> int:
             "--repo-root",
             ".",
             "--request",
-            augmented_request(args.request),
+            heap_request,
             "--stamp",
             stamp,
             "--python-exe",
@@ -318,13 +445,14 @@ def main() -> int:
         startup_result = run_command(startup_command, repo_root)
         startup_payload = load_json(startup_manifest)
 
-    can_continue = startup_can_continue(
+    preflight_allows_execution = bool(args.skip_preflight or preflight_result.get("passed"))
+    can_continue = bool(preflight_allows_execution and startup_can_continue(
         startup_result=startup_result,
         startup_payload=startup_payload,
         startup_task_file=startup_task_file,
         strict_startup_reload=args.strict_startup_reload,
         skipped=args.skip_startup_reload,
-    )
+    ))
     startup_reload_degraded = bool(
         (not args.skip_startup_reload)
         and (
@@ -339,7 +467,7 @@ def main() -> int:
         "--repo-root",
         ".",
         "--request",
-        augmented_request(args.request),
+        heap_request,
         "--budget-minutes",
         str(args.budget_minutes),
         "--max-iterations",
@@ -381,7 +509,9 @@ def main() -> int:
     fallback_heap_report_written = False
     if not report_file.exists():
         reason = (
-            "startup context/memory reload hard failed"
+            "preflight gate failed"
+            if not preflight_allows_execution
+            else "startup context/memory reload hard failed"
             if not can_continue
             else "heap report missing after heap command"
         )
@@ -465,8 +595,13 @@ def main() -> int:
         "repo_root": repo_root.as_posix(),
         "project_python": project_python,
         "run_dir": str(run_dir),
+        "revision_context_selection_policy": revision_context_selection_policy,
+        "revision_context_path": str(revision_context_path) if revision_context_path else "",
+        "revision_context_loaded": bool(revision_context_payload),
+        "revision_context_task_count": len(revision_context_payload.get("tasks", [])) if isinstance(revision_context_payload.get("tasks"), list) else 0,
         "preflight_performed": not args.skip_preflight,
         "preflight_passed": bool(preflight_result["passed"]),
+        "preflight_allows_execution": preflight_allows_execution,
         "preflight_report": str(preflight_report) if preflight_report.exists() else "",
         "preflight_markdown": str(preflight_markdown) if preflight_markdown.exists() else "",
         "preflight_returncode": preflight_result["returncode"],

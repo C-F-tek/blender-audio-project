@@ -20,6 +20,9 @@ from pathlib import Path
 from typing import Any
 
 
+REVISION_TASK_PREVIEW_CHARS = 1600
+
+
 def read_json(path_value: str) -> dict[str, Any]:
     if not path_value:
         return {}
@@ -118,6 +121,22 @@ def rejection_reasons(composer: dict[str, Any], block: dict[str, Any]) -> list[s
     return reasons
 
 
+def task_block_context(block: dict[str, Any], preview_limit: int = REVISION_TASK_PREVIEW_CHARS) -> dict[str, Any]:
+    preview = str(block.get("preview") or "")
+    if preview_limit > 0 and len(preview) > preview_limit:
+        preview = preview[:preview_limit] + "\n...[truncated]"
+    return {
+        "source_path": str(block.get("source_path") or ""),
+        "markdown_path": str(block.get("markdown_path") or ""),
+        "previous_block_id": str(block.get("previous_block_id") or ""),
+        "next_block_id": str(block.get("next_block_id") or ""),
+        "refines_block_id": str(block.get("refines_block_id") or ""),
+        "block_quality_passed": block.get("quality_passed"),
+        "block_accepted": block.get("accepted"),
+        "source_preview": preview,
+    }
+
+
 def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) -> list[dict[str, Any]]:
     tasks: list[dict[str, Any]] = []
     previous_symbols: dict[str, set[str]] = {"imports": set(), "defs": set(), "classes": set(), "assignments": set()}
@@ -142,6 +161,7 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
                     "resume_from_block_id": block_id,
                     "discovered_symbols": discovered,
                     "instruction": "Propaga import/variabili/classi/funzioni scoperte in questo blocco ai blocchi precedenti compatibili, poi riprendi dal source_block_id senza perdere il cursore forward.",
+                    **task_block_context(block),
                 }
             )
         if reasons:
@@ -155,6 +175,7 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
                     "resume_from_block_id": block.get("resume_from_block_id") or block.get("previous_block_id") or block_id,
                     "rejection_reasons": reasons,
                     "instruction": "Riscrivi il blocco eliminando placeholder/stub/ripetizione. Usa path repo reali e operazioni concrete. Mantieni i pointer previous/next/refines/resume.",
+                    **task_block_context(block),
                 }
             )
     return tasks
@@ -177,6 +198,7 @@ def build_peer_tasks(proposals: list[dict[str, Any]], gpu0: list[dict[str, Any]]
                     "target_block_id": block_id,
                     "can_edit_pointer": True,
                     "instruction": "Rivaluta il blocco anche se non e' l'ultimo. Se serve, proponi refines_block_id e resume_from_block_id per una riscrittura concreta.",
+                    **task_block_context(block),
                 }
             )
         if npu_available:
@@ -188,6 +210,7 @@ def build_peer_tasks(proposals: list[dict[str, Any]], gpu0: list[dict[str, Any]]
                     "target_block_id": block_id,
                     "can_edit_pointer": False,
                     "instruction": "Audita il blocco vecchio per placeholder/stub, path inventati, source writes non dichiarati e ripetizioni. Restituisci decisione accept/reject e motivi.",
+                    **task_block_context(block),
                 }
             )
     return tasks
@@ -346,6 +369,9 @@ def main() -> int:
             report["documents_copy_performed"] = True
             report["documents_outputs"] = documents_outputs
             write_json(output, report)
+            documents_json = documents_outputs.get("documents_json")
+            if documents_json:
+                shutil.copyfile(output, Path(documents_json).expanduser().resolve())
         else:
             report["warnings"].append("composer documents_dir not found; revision context kept in run dir only")
             write_json(output, report)
