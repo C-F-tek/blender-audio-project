@@ -106,6 +106,19 @@ def startup_artifact_refs(startup_payload: dict[str, Any]) -> list[str]:
     for value in artifacts.values():
         if isinstance(value, str) and value and value not in refs:
             refs.append(value)
+    for execution in startup_payload.get("tool_executions") or []:
+        if not isinstance(execution, dict):
+            continue
+        for key in ("useful_artifact_paths", "existing_artifact_paths", "artifact_paths"):
+            for value in execution.get(key) or []:
+                if isinstance(value, str) and value and value not in refs:
+                    refs.append(value)
+        for summary in execution.get("artifact_summaries") or []:
+            if not isinstance(summary, dict):
+                continue
+            value = summary.get("path")
+            if isinstance(value, str) and value and value not in refs:
+                refs.append(value)
     return refs
 
 
@@ -411,6 +424,8 @@ def main() -> int:
             "--markdown-output",
             str(startup_heap_reconcile_markdown),
         ]
+        if startup_reload_degraded and can_continue and not args.strict_startup_reload:
+            startup_heap_reconcile_command.append("--allow-degraded-startup")
         startup_heap_reconcile_result = run_command(startup_heap_reconcile_command, repo_root)
 
     composer_command = [
@@ -465,8 +480,10 @@ def main() -> int:
         "startup_heap_reconcile_passed": bool(startup_heap_reconcile_result["passed"]),
         "startup_heap_reconcile_report": str(startup_heap_reconcile_report) if startup_heap_reconcile_report.exists() else "",
         "startup_heap_reconcile_markdown": str(startup_heap_reconcile_markdown) if startup_heap_reconcile_markdown.exists() else "",
+        "startup_reconcile_degraded_policy_used": bool(startup_reload_degraded and can_continue and not args.strict_startup_reload),
         "startup_task_file": str(startup_task_file) if startup_task_file.exists() else "",
         "startup_artifacts": startup_payload.get("artifacts", {}) if isinstance(startup_payload, dict) else {},
+        "startup_artifact_ref_count": len(startup_artifact_refs(startup_payload)) if isinstance(startup_payload, dict) else 0,
         "startup_blocking_requirements": startup_payload.get("blocking_requirements", []) if isinstance(startup_payload, dict) else [],
         "startup_degraded_requirements": startup_payload.get("degraded_requirements", []) if isinstance(startup_payload, dict) else [],
         "heap_report": str(report_file),
