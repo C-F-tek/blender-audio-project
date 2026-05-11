@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Build an external heap block-pointer manifest from a run directory.
 
 The manifest is external to the gate. It models the heap/universe output as
@@ -149,6 +149,20 @@ def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
     return blocks
 
 
+
+
+def block_provider_execution_performed(block: dict[str, Any]) -> bool:
+    """Return true only for explicit provider execution evidence.
+
+    Pointer blocks can be diagnostic/navigation artifacts. Their mere presence
+    must not upgrade provider_execution_performed to true, otherwise the
+    post-run package can overstate a dry/static run.
+    """
+    if block.get("provider_execution_performed") is True:
+        return True
+    preview = str(block.get("preview") or "")
+    return "provider_execution_performed=true" in preview.lower() or "workload_performed=true" in preview.lower()
+
 def build_pointer_edges(blocks: list[dict[str, Any]]) -> list[dict[str, str]]:
     ids = {str(block.get("block_id")) for block in blocks}
     edges: list[dict[str, str]] = []
@@ -192,10 +206,7 @@ def build_report(repo_root: Path, run_dir: Path, max_block_chars: int, max_block
         "has_resume_pointers": any(edge.get("edge_type") == "resume_from" for edge in edges),
         "blocks": blocks,
         "edges": edges,
-        "provider_execution_performed": any(
-            block.get("block_type") in {"review_refinement_block", "audit_block", "provider_evidence_block"}
-            for block in blocks
-        ),
+        "provider_execution_performed": any(block_provider_execution_performed(block) for block in blocks),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": [],

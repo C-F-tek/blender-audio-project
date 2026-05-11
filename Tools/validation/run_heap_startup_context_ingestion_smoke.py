@@ -63,6 +63,12 @@ def def_body_call_count(source: str, name: str) -> int:
     return count
 
 
+
+
+def first_position(source: str, needle: str) -> int:
+    position = source.find(needle)
+    return position if position >= 0 else 10**12
+
 def bool_check(
     checks: list[dict[str, Any]],
     *,
@@ -192,6 +198,22 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         severity="critical",
         evidence="provider lanes need startup artifact refs available from heap state",
         recommendation="Propagate startup manifest/task-file/artifact refs into heap events and provider context.",
+    )
+
+    startup_publish_positions = [
+        first_position(gate, "self.publish_startup_task_file_context()"),
+        first_position(gate, "self.publish_startup_memory_context_reload_events()"),
+        first_position(gate, "self.publish_startup_manifest_evidence()"),
+    ]
+    first_snapshot_position = first_position(gate, "self.heap.write_snapshot()")
+    startup_before_snapshot = all(position < first_snapshot_position for position in startup_publish_positions)
+    bool_check(
+        checks,
+        check_id="startup_context_published_before_initial_snapshot",
+        passed=startup_before_snapshot,
+        severity="critical",
+        evidence="startup task-file/manifest/reload events must be published before the first heap snapshot",
+        recommendation="Move startup preload publication before self.heap.write_snapshot() in bootstrap().",
     )
 
     bool_check(

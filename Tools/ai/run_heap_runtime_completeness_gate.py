@@ -2175,11 +2175,14 @@ class HeapRuntimeCompletenessGate:
         for fact in (budget_fact, contract_fact, completeness_fact):
             append_unique(self.state["facts"], fact)
             self.publish("deterministic", "fact", fact, target="gpu1", correlation_id=f"{self.stamp}:fact:{fact['id']}", round_id=0)
-        self.heap.write_snapshot()
-        self.write_heap_exchange_entry()
+        # Startup preload is active heap input, not a post-hoc diagnostic pointer.
+        # Publish it before the first snapshot/exchange entry so provider lanes and
+        # external observers see a single causally ordered universe from startup.
         self.publish_startup_task_file_context()
         self.publish_startup_memory_context_reload_events()
         self.publish_startup_manifest_evidence()
+        self.heap.write_snapshot()
+        self.write_heap_exchange_entry()
 
     def planner_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
         if self.heap.pending_broker_requests():

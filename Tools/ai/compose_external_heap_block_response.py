@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Compose the primary external-heap long response from block pointers.
 
 The gate remains untouched. This adapter reads the block-pointer manifest and
@@ -65,6 +65,15 @@ def role_blocks(pointer: dict[str, Any], role: str) -> list[dict[str, Any]]:
     ]
     return sorted(items, key=lambda item: int(item.get("step_index") or 0))
 
+
+
+
+def block_provider_execution_performed(block: dict[str, Any]) -> bool:
+    if block.get("provider_execution_performed") is True:
+        return True
+    preview = str(block.get("preview") or "")
+    lowered = preview.lower()
+    return "provider_execution_performed=true" in lowered or "workload_performed=true" in lowered
 
 def status_lines(pointer: dict[str, Any], causality: dict[str, Any]) -> list[str]:
     lines = [
@@ -250,10 +259,11 @@ def main() -> int:
         "documents_copy_performed": False,
         "documents_outputs": {},
         "stats": stats,
-        "provider_execution_performed": bool(role_blocks(pointer, "gpu0_reviewer_refiner") or role_blocks(pointer, "npu_auditor") or [
-            block for block in role_blocks(pointer, "gpu1_planner")
-            if block.get("block_type") == "provider_evidence_block"
-        ]),
+        "provider_execution_performed": any(
+            block_provider_execution_performed(block)
+            for block in (pointer.get("blocks") or [])
+            if isinstance(block, dict)
+        ),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": [],
