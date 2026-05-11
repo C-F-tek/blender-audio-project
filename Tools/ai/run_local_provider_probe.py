@@ -26,6 +26,76 @@ def ensure_repo_imports(repo_root: Path) -> None:
             sys.path.insert(0, text)
 
 
+def heap_patch_prompt_required(prompt: str) -> bool:
+    """Return True when the provider prompt is a heap proposal-generation task."""
+    text = (prompt or "").lower()
+    markers = (
+        "heap chunk/composer contract",
+        "startup_context_digest_for_gpu1",
+        "external heap revision context",
+        "target_files",
+        "forced concrete delta required",
+        "proposal chunks",
+    )
+    return any(marker in text for marker in markers)
+
+
+def build_heap_patch_proposal_prompt(prompt: str) -> str:
+    """Wrap heap prompts so GPU1 cannot answer with a documentation summary.
+
+    The heap already sends large startup context and previous pointer history.
+    Without a final, stronger contract at the end of the prompt, local LLMs tend
+    to summarize the docs section repeatedly. This wrapper keeps the full context
+    available but makes the final instruction unambiguous and quality-gate aware:
+    emit a concrete patch proposal with repo-relative targets, diff/code markers,
+    validation commands and an explicit exit decision.
+    """
+    if not heap_patch_prompt_required(prompt):
+        return prompt
+    return (
+        "IA-CARMINE GPU1 PROVIDER MODE: CONCRETE PATCH PROPOSAL ONLY.\n"
+        "You are not a documentation summarizer. You are the GPU1 patch planner inside the heap.\n"
+        "Use the context, pointers, startup artifacts, memory hits, source anchors and prior vetoes below as evidence.\n"
+        "Your output is consumed by deterministic quality gates. Generic summaries are invalid.\n\n"
+        "BEGIN_HEAP_CONTEXT_AND_POINTERS\n"
+        f"{prompt.rstrip()}\n"
+        "END_HEAP_CONTEXT_AND_POINTERS\n\n"
+        "FINAL OUTPUT CONTRACT - OBEY EXACTLY:\n"
+        "Return one Markdown block with these exact sections and no repository overview.\n\n"
+        "# PATCH_PROPOSAL\n"
+        "EXIT_DECISION=PATCHABLE_TARGET\n"
+        "TARGET_FILES:\n"
+        "- Tools/.../real_existing_file.py\n\n"
+        "PROBLEM:\n"
+        "- Describe the concrete runtime/code defect in one or two bullets.\n\n"
+        "EVIDENCE:\n"
+        "- Cite concrete artifact paths, function names, report fields or error strings from the heap context.\n\n"
+        "IMPLEMENTATION_CHANGES:\n"
+        "- Describe exact code changes, functions, arguments and control-flow changes.\n\n"
+        "PATCH_SKETCH:\n"
+        "```diff\n"
+        "diff --git a/Tools/.../real_existing_file.py b/Tools/.../real_existing_file.py\n"
+        "@@\n"
+        "- old concrete behavior\n"
+        "+ new concrete behavior\n"
+        "```\n\n"
+        "VALIDATION_COMMANDS:\n"
+        "```powershell\n"
+        "$RepoPy = (Resolve-Path .\\.venv\\Scripts\\python.exe).Path\n"
+        "$env:PYTHONPATH = (Resolve-Path .).Path\n"
+        "& $RepoPy -m py_compile .\\Tools\\...\\real_existing_file.py\n"
+        "```\n\n"
+        "RISKS:\n"
+        "- State compatibility risk and rollback path.\n\n"
+        "EXIT_DECISION_RULES:\n"
+        "- Use EXIT_DECISION=PATCHABLE_TARGET when at least one exact repo-relative target file is patchable.\n"
+        "- Use EXIT_DECISION=NO_PATCHABLE_TARGET only when no concrete edit is possible from the supplied evidence; still list the closest real target files and the missing evidence.\n"
+        "- Never output a README/docs/project summary.\n"
+        "- Never repeat a previous proposal if the heap veto reported similarity >= 0.95.\n"
+        "- Never emit TODO/FIXME/placeholder/pass-only code.\n"
+    )
+
+
 def run_ollama_probe(repo_root: Path, model: str | None, prompt: str | None = None, max_new_tokens: int = 64) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     from Tools.npu.ollama_runtime import OllamaSession, choose_model, is_server_ready, list_models, list_models_from_disk  # noqa: PLC0415
@@ -168,6 +238,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
             errors.append(f"prompt_file: {type(exc).__name__}: {exc}")
     if args.run_ollama:
         try:
+            effective_prompt = build_heap_patch_proposal_prompt(effective_prompt)
             lane_reports.append(run_ollama_probe(repo_root, args.model, effective_prompt, max_new_tokens=max(1, min(args.max_new_tokens, 4096))))
         except Exception as exc:  # noqa: BLE001 - report-only tool.
             lane_reports.append({"lane": "ollama", "passed": False, "provider_execution_performed": False, "error": f"{type(exc).__name__}: {exc}"})
