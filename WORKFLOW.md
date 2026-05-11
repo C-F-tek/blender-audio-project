@@ -23,6 +23,36 @@ Tools/workflow/run_unified_local_ai_refactor.ps1
 
 The heap runtime completeness gate is not a product generator by itself. It validates that the runtime universe is connected before the larger real-product run uses it.
 
+## External heap universe layer
+
+The heap universe can now be extended by external, gate-safe adapters. These adapters do not replace the heap runtime completeness gate and do not modify its tool-call semantics.
+
+Current external heap adapters:
+
+- `Tools/ai/heap_runtime_launcher_profiles.json`
+- `Tools/ai/build_heap_runtime_launcher_command.py`
+- `Tools/ai/normalize_heap_final_causality.py`
+- `Tools/ai/build_external_heap_block_pointer_manifest.py`
+- `Tools/ai/compose_external_heap_block_response.py`
+- `Tools/ai/build_external_heap_revision_context.py`
+
+The external layer models long AI work as persistent blocks rather than a single provider response window. Blocks may carry navigation and refinement pointers:
+
+- `previous_block_id`
+- `next_block_id`
+- `refines_block_id`
+- `resume_from_block_id`
+
+Runtime intent:
+
+- GPU1 can move forward or backward across proposal blocks.
+- GPU1 can propagate newly discovered imports, variables, functions, classes or contracts into older blocks, then resume from the correct forward cursor.
+- GPU0 can re-check old pointers in parallel and request refinement.
+- NPU can audit old pointers in parallel for guardrails, placeholders, invented paths, undeclared source writes and repeated output.
+- The final operator package can include a file-based long response composed from persisted blocks.
+
+The revision context feed is currently performed by `build_heap_runtime_launcher_command.py`: operational profiles use `revision_context_mode = auto_latest`, load the latest `external_heap_revision_context.json` when present, and inject a bounded task summary into the generated `--request`. This keeps the gate unchanged while allowing the next run to consume previous pointer tasks.
+
 ## Runtime policy
 
 Every heap response must be validated by evidence produced in the same run universe.
@@ -39,6 +69,14 @@ A response is not valid when it is only static text. A valid response must prove
 - GPU1 consumed shared context and peer contributions before producing the final response
 - product status is either ready or blocked_with_reason
 
+When the external heap universe layer is used, a valid long response may be file-based instead of being fully contained in `response_text`. The package must then expose, as applicable:
+
+- `external_heap_block_pointer_manifest.json/md`
+- `external_heap_primary_long_response.md/json`
+- `external_heap_revision_context.json/md`
+- `heap_final_causality_normalized.json/md`
+- the existing composer Documents package and download manifest
+
 ## Non-negotiable runtime constraints
 
 - Do not use gpt-oss as runtime/provider model.
@@ -48,6 +86,7 @@ A response is not valid when it is only static text. A valid response must prove
 - Do not mute required context files to make a gate pass.
 - Do not claim provider execution unless provider reports prove it.
 - Do not claim product readiness if required memory/chunk/context artifacts are missing.
+- Do not claim product readiness when causal chain passed but product acceptance is blocked.
 - Do not run Blender or FFmpeg unless the task explicitly enters that application-domain scope.
 - Do not apply patches, write source, push, merge or delete from provider output alone.
 
@@ -67,8 +106,8 @@ The runtime should prove:
 - GPU0 peer produces a real observation from its tool/workload
 - NPU micro-task produces a real audit/observation
 - GPU1 sees the team context and produces the final cumulative response
-- response_text is complete and not truncated
-- response_source identifies GPU1 as final synthesizer
+- response_text is complete and not truncated, or a file-based long response artifact is present and linked from the composer package
+- response_source identifies GPU1 as final synthesizer or identifies the external heap long-response composer as the file-based product assembler
 - provider_refs and heap_event_refs point to real artifacts
 
 ## Failure semantics
@@ -80,3 +119,5 @@ If a required context file is missing, the correct behavior is to fail visibly a
 If broker tool execution fails, provider execution must not hide the failure.
 
 If GPU1 says it is alone while GPU0/NPU contributions exist, the team manifest/context was not visible enough to the final provider and the run must be treated as semantically incomplete.
+
+If the causal chain is passed but all proposal blocks are rejected, the correct product result is blocked_with_reason. The causality normalizer must keep causal-chain status separate from product-acceptance status.
