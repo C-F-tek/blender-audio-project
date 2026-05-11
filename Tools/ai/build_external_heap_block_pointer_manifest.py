@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """Build an external heap block-pointer manifest from a run directory.
 
-The manifest is external to the gate. It models the heap/universe output as
-persistent blocks with navigation and refinement pointers:
+The manifest is external to the gate. It models the heap/universe product
+contract as persistent blocks with navigation and refinement pointers:
 
 - previous_block_id / next_block_id for forward continuation;
 - refines_block_id for back-refinement;
 - resume_from_block_id for continuing after a rewrite;
 - role ownership for gpu1_planner, gpu0_reviewer_refiner and npu_auditor.
 
-This lets the three AI lanes reason over long outputs through artifacts instead
-of relying on a single token window.
+These pointers are not a side channel: they are the product graph used to recover
+old decisions, backtrack, refine, resume, and compose the final long-form heap
+answer beyond a single provider token window. Provider execution evidence remains
+a separate guardrail flag and must not be inferred from block presence alone.
 """
 from __future__ import annotations
 
@@ -23,6 +25,14 @@ from typing import Any
 
 
 DEFAULT_ROLES = ("gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor")
+POINTER_PRODUCT_CONTRACT = {
+    "product_contract": True,
+    "decision_recovery": True,
+    "supports_forward_navigation": True,
+    "supports_backrefinement": True,
+    "supports_resume": True,
+    "provider_execution_is_separate_guardrail": True,
+}
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -87,6 +97,9 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             "sha256": hashlib.sha256(preview.encode("utf-8", errors="replace")).hexdigest() if preview else "",
             "preview": preview,
             "pointer_contract": {
+                "product_contract": True,
+                "decision_recovery": True,
+                "navigation_role": "proposal_chain",
                 "can_continue_to_next": True,
                 "can_backrefine": bool(previous_id),
                 "requires_review": data.get("quality_passed") is not True,
@@ -140,6 +153,9 @@ def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
                 "sha256": hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest() if text else "",
                 "preview": text,
                 "pointer_contract": {
+                    "product_contract": True,
+                    "decision_recovery": True,
+                    "navigation_role": "peer_decision_evidence",
                     "can_continue_to_next": False,
                     "can_backrefine": role == "gpu0_reviewer_refiner",
                     "requires_review": role != "gpu0_reviewer_refiner",
@@ -149,21 +165,21 @@ def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
     return blocks
 
 
-
-
 def block_provider_execution_performed(block: dict[str, Any]) -> bool:
-    """Return true only for explicit provider execution evidence.
+    """Return true only for explicit provider/workload execution evidence.
 
-    Pointer blocks can be diagnostic/navigation artifacts. Their mere presence
-    must not upgrade provider_execution_performed to true, otherwise the
-    post-run package can overstate a dry/static run.
+    Pointer blocks are part of the heap product contract and decision-recovery
+    graph. Their presence is required for the final product, but it must not be
+    used as proof that a provider or hardware workload actually executed.
     """
     if block.get("provider_execution_performed") is True:
         return True
     preview = str(block.get("preview") or "")
-    return "provider_execution_performed=true" in preview.lower() or "workload_performed=true" in preview.lower()
+    lowered = preview.lower()
+    return "provider_execution_performed=true" in lowered or "workload_performed=true" in lowered
 
-def build_pointer_edges(blocks: list[dict[str, Any]]) -> list[dict[str, str]]:
+
+def build_pointer_edges(blocks: list[dict[str, str]]) -> list[dict[str, str]]:
     ids = {str(block.get("block_id")) for block in blocks}
     edges: list[dict[str, str]] = []
     for block in blocks:
@@ -195,6 +211,9 @@ def build_report(repo_root: Path, run_dir: Path, max_block_chars: int, max_block
         "repo_root": repo_root.as_posix(),
         "run_dir": repo_rel(repo_root, run_dir),
         "protocol": "external_heap_block_pointer_v1",
+        "pointer_product_contract": POINTER_PRODUCT_CONTRACT,
+        "pointer_contract_role": "product_graph_decision_recovery_and_long_response_composition",
+        "provider_execution_semantics": "separate_guardrail_true_only_with_explicit_provider_or_workload_evidence",
         "roles_expected": list(DEFAULT_ROLES),
         "roles_present": roles_present,
         "block_count": len(blocks),
@@ -219,6 +238,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "# External Heap Block Pointer Manifest",
         "",
         f"- Protocol: `{report.get('protocol')}`",
+        f"- Pointer product contract: `{report.get('pointer_product_contract')}`",
+        f"- Pointer contract role: `{report.get('pointer_contract_role')}`",
+        f"- Provider execution semantics: `{report.get('provider_execution_semantics')}`",
         f"- Block count: `{report.get('block_count')}`",
         f"- Edge count: `{report.get('edge_count')}`",
         f"- Roles present: `{report.get('roles_present')}`",
@@ -242,6 +264,7 @@ def render_markdown(report: dict[str, Any]) -> str:
                 f"- Refines: `{block.get('refines_block_id')}`",
                 f"- Resume from: `{block.get('resume_from_block_id')}`",
                 f"- Accepted: `{block.get('accepted')}`",
+                f"- Pointer contract: `{block.get('pointer_contract')}`",
                 "",
             ]
         )
@@ -273,4 +296,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
