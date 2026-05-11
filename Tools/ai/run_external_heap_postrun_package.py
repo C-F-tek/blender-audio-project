@@ -21,8 +21,15 @@ from pathlib import Path
 from typing import Any
 
 
+REQUIRED_COMPOSER_JSON = "heap_final_proposal_composer.json"
+
+
 def resolve_repo_root(value: str) -> Path:
     return Path(value).resolve()
+
+
+def is_complete_heap_run_dir(path: Path) -> bool:
+    return path.is_dir() and path.name.startswith("heap_context_closure_") and (path / REQUIRED_COMPOSER_JSON).exists()
 
 
 def latest_run_dir(repo_root: Path) -> Path | None:
@@ -30,7 +37,7 @@ def latest_run_dir(repo_root: Path) -> Path | None:
     if not validation_dir.exists():
         return None
     candidates = sorted(
-        [path for path in validation_dir.iterdir() if path.is_dir() and path.name.startswith("heap_context_closure_")],
+        [path for path in validation_dir.iterdir() if is_complete_heap_run_dir(path)],
         key=lambda path: path.stat().st_mtime,
         reverse=True,
     )
@@ -45,7 +52,7 @@ def resolve_run_dir(repo_root: Path, value: str) -> Path:
         return path.resolve()
     latest = latest_run_dir(repo_root)
     if latest is None:
-        raise SystemExit("no heap_context_closure_* run directory found under output/validation")
+        raise SystemExit("no complete heap_context_closure_* run directory with heap_final_proposal_composer.json found under output/validation")
     return latest
 
 
@@ -93,7 +100,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--python-exe", default="")
-    parser.add_argument("--run-dir", default="", help="Defaults to latest output/validation/heap_context_closure_* directory.")
+    parser.add_argument("--run-dir", default="", help="Defaults to latest complete output/validation/heap_context_closure_* directory.")
     parser.add_argument("--max-block-chars", type=int, default=9000)
     parser.add_argument("--max-blocks", type=int, default=24)
     parser.add_argument("--include-rejected-history", action="store_true")
@@ -109,7 +116,7 @@ def main() -> int:
     project_python = resolve_project_python(repo_root, args.python_exe)
     run_dir = resolve_run_dir(repo_root, args.run_dir)
 
-    composer_json = run_dir / "heap_final_proposal_composer.json"
+    composer_json = run_dir / REQUIRED_COMPOSER_JSON
     required_file(composer_json, "composer json")
 
     causality_json = run_dir / "heap_final_causality_normalized.json"
@@ -193,11 +200,12 @@ def main() -> int:
             break
 
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "external_heap_postrun_package",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": repo_root.as_posix(),
         "run_dir": str(run_dir),
+        "run_dir_selection_policy": "latest_complete_heap_context_closure_with_composer_json" if not args.run_dir else "explicit_run_dir",
         "passed": all(result.get("passed") for result in results) and len(results) == len(commands),
         "causality_json": str(causality_json),
         "pointer_manifest_json": str(pointer_json),
