@@ -2816,6 +2816,106 @@ class HeapRuntimeCompletenessGate:
         return events
 
 
+
+    def startup_context_digest(self, max_chars: int = 36000) -> str:
+        """Build a bounded digest of startup context artifacts for GPU1.
+
+        The startup reload already creates tool catalog, memory inventory,
+        operational memory search, transient context, semantic chunks and the
+        heap task file. This digest turns those refs into active GPU1 context
+        without treating the whole universe as one unbounded argv string.
+        """
+        manifest_path, manifest = self.startup_manifest_from_task_file()
+        if not manifest:
+            return ""
+
+        artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), dict) else {}
+        preferred_keys = (
+            "heap_task_file",
+            "shared_context_markdown",
+            "shared_memory_markdown",
+            "operational_memory_search_markdown",
+            "tool_catalog_markdown",
+            "semantic_code_chunks_markdown",
+            "semantic_evidence_chunks_markdown",
+            "ai_context_pack_markdown",
+            "ai_context_pack_evidence_markdown",
+            "repo_docs_map_markdown",
+            "required_context_files_markdown",
+        )
+
+        sections: list[str] = []
+        remaining = max(1000, int(max_chars))
+        for key in preferred_keys:
+            value = artifacts.get(key)
+            if not isinstance(value, str) or not value.strip():
+                continue
+            path = self.repo_root / value
+            if not path.exists() or not path.is_file():
+                continue
+            try:
+                content = path.read_text(encoding="utf-8-sig")
+            except Exception as exc:  # noqa: BLE001 - context digest must not crash heap.
+                sections.append(f"## {key}\n- unreadable: {value}: {type(exc).__name__}: {exc}\n")
+                continue
+
+            header = f"## {key}\nsource: {value}\n\n"
+            budget = max(0, remaining - len(header) - 128)
+            if budget <= 0:
+                break
+            chunk = content[:budget]
+            if len(content) > budget:
+                chunk += "\n\n...[truncated by startup_context_digest]...\n"
+            sections.append(header + chunk)
+            remaining -= len(sections[-1])
+            if remaining <= 0:
+                break
+
+        if not sections:
+            return ""
+        return (
+            "STARTUP_CONTEXT_DIGEST_FOR_GPU1:\n"
+            "Use this as active heap context. Prefer exact repo-relative paths and concrete validation commands.\n\n"
+            + "\n\n".join(sections)
+        )
+
+    def gpu1_provider_prompt(self) -> str:
+        """GPU1 prompt enriched with startup context digest."""
+        base = self.gpu1_request_prompt()
+        digest = self.startup_context_digest()
+        if not digest:
+            return base
+        return "\n\n".join([base, digest])
+
+    def write_provider_prompt_file(self, prompt: str, revision: int) -> str:
+        """Persist the large GPU1 provider prompt and return repo-relative path."""
+        prompt_dir = self.runtime_context_dir() / "provider_prompts"
+        prompt_dir.mkdir(parents=True, exist_ok=True)
+        prompt_path = prompt_dir / f"gpu1_provider_prompt_revision_{revision:03d}.md"
+        prompt_path.write_text(prompt.rstrip() + "\n", encoding="utf-8")
+        return repo_rel(self.repo_root, prompt_path)
+
+    def provider_command_with_prompt_file(self, command: list[Any], revision: int) -> tuple[list[str], str]:
+        """Move run_local_provider_probe --prompt payload into --prompt-file."""
+        normalized = [str(part) for part in command]
+        script_hit = any(part.replace("\\", "/").endswith("Tools/ai/run_local_provider_probe.py") for part in normalized)
+        if not script_hit or "--prompt" not in normalized:
+            return normalized, ""
+
+        index = normalized.index("--prompt")
+        if index + 1 >= len(normalized):
+            return normalized, ""
+
+        prompt = normalized[index + 1]
+        if not prompt.strip():
+            return normalized, ""
+
+        prompt_file = self.write_provider_prompt_file(prompt, revision)
+        rewritten = normalized[:index] + normalized[index + 2 :]
+        rewritten.extend(["--prompt-file", prompt_file])
+        return rewritten, prompt_file
+
+
     def command_line_char_count(self, command: list[Any]) -> int:
         """Approximate Windows command-line length for subprocess argv."""
         return sum(len(str(part)) + 3 for part in command)
@@ -2883,8 +2983,13 @@ class HeapRuntimeCompletenessGate:
                 correlation_id=correlation,
                 round_id=round_id,
             )
-            command = [self.gpu1_request_prompt() if item == "__GPU1_CUMULATIVE_PROMPT__" else item for item in spec["command"]]
+            command = [self.gpu1_provider_prompt() if item == "__GPU1_CUMULATIVE_PROMPT__" else item for item in spec["command"]]
             try:
+                command, provider_prompt_file = self.provider_command_with_prompt_file(command, revision)
+                if provider_prompt_file:
+                    self.warnings.append(
+                        f"provider GPU1 prompt written to prompt-file={provider_prompt_file}"
+                    )
                 command, provider_command_wrapper = self.provider_command_for_windows(command, revision)
                 if provider_command_wrapper:
                     self.warnings.append(

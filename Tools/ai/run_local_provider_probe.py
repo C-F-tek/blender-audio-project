@@ -137,15 +137,38 @@ print(json.dumps(result))
     }
 
 
+
+def read_prompt_file(repo_root: Path, prompt_file: str) -> str:
+    """Read an optional provider prompt from disk.
+
+    This keeps large heap/GPU1 prompts out of Windows argv and makes the exact
+    provider input inspectable as a run artifact.
+    """
+    if not prompt_file:
+        return ""
+    path = Path(prompt_file)
+    if not path.is_absolute():
+        path = repo_root / path
+    return path.read_text(encoding="utf-8-sig")
+
+
 def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     from Tools.npu.pipeline import build_provider_result_report, parse_provider_result  # noqa: PLC0415
 
     lane_reports: list[dict[str, Any]] = []
     errors: list[str] = []
+    effective_prompt = args.prompt
+    if getattr(args, "prompt_file", ""):
+        try:
+            file_prompt = read_prompt_file(repo_root, args.prompt_file)
+            if file_prompt.strip():
+                effective_prompt = file_prompt
+        except Exception as exc:  # noqa: BLE001 - report-only tool.
+            errors.append(f"prompt_file: {type(exc).__name__}: {exc}")
     if args.run_ollama:
         try:
-            lane_reports.append(run_ollama_probe(repo_root, args.model, args.prompt, max_new_tokens=max(1, min(args.max_new_tokens, 4096))))
+            lane_reports.append(run_ollama_probe(repo_root, args.model, effective_prompt, max_new_tokens=max(1, min(args.max_new_tokens, 4096))))
         except Exception as exc:  # noqa: BLE001 - report-only tool.
             lane_reports.append({"lane": "ollama", "passed": False, "provider_execution_performed": False, "error": f"{type(exc).__name__}: {exc}"})
     if args.run_npu:
@@ -194,6 +217,7 @@ def main() -> int:
     parser.add_argument("--output", default="output/validation/local_provider_probe.json")
     parser.add_argument("--model", help="Preferred Ollama model.")
     parser.add_argument("--prompt", default="", help="Optional user prompt for observable provider response.")
+    parser.add_argument("--prompt-file", default="", help="Optional UTF-8 file containing the provider prompt.")
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--max-new-tokens", type=int, default=64, help="Maximum Ollama tokens for an observable response.")
     parser.add_argument("--npu-python-exe", default="", help="Explicit NPU/OpenVINO Python executable.")
