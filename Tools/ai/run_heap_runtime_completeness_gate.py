@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Budget-driven heap runtime completeness gate for IA-Carmine.
 
 This is the canonical runtime completeness gate used by the real product
@@ -2572,7 +2572,88 @@ class HeapRuntimeCompletenessGate:
             f"source_candidates={candidates}"
         )
         iteration_feedback = self.proposal_iteration_feedback(events, file_quality)
-        return "\n".join(part for part in (base_feedback, iteration_feedback) if part)
+        concrete_delta_feedback = self.force_concrete_delta_feedback(events)
+        return "\n".join(part for part in (base_feedback, iteration_feedback, concrete_delta_feedback) if part)
+
+
+    def force_concrete_delta_feedback(self, events: list[dict[str, Any]]) -> str:
+        """Force GPU1 to produce a materially different concrete block after veto loops.
+
+        This is intentionally feedback-only: it does not change provider calls,
+        does not apply patches and does not alter the composer format. It raises
+        the in-heap contract pressure when repeated proposal chunks are rejected
+        for placeholder/stub markers or near-identical revisions.
+        """
+        report = self.latest_proposal_iteration_report()
+        if not report:
+            return ""
+
+        implementation = report.get("implementation_quality") if isinstance(report.get("implementation_quality"), dict) else {}
+        progress = report.get("proposal_progress") if isinstance(report.get("proposal_progress"), dict) else {}
+        veto = report.get("cross_lane_veto") if isinstance(report.get("cross_lane_veto"), dict) else {}
+
+        def listify(value: Any) -> list[str]:
+            if isinstance(value, list):
+                return [str(item) for item in value if str(item).strip()]
+            if isinstance(value, tuple):
+                return [str(item) for item in value if str(item).strip()]
+            if isinstance(value, str) and value.strip():
+                return [value.strip()]
+            return []
+
+        def parse_similarity(value: Any) -> float:
+            try:
+                return float(str(value or "0").replace(",", "."))
+            except ValueError:
+                return 0.0
+
+        placeholder_hits = listify(implementation.get("placeholder_hits"))
+        implementation_errors = listify(implementation.get("errors"))
+        progress_errors = listify(progress.get("errors"))
+        veto_reasons = listify(veto.get("reasons"))
+        similarity = parse_similarity(progress.get("similarity"))
+
+        has_placeholder = bool(placeholder_hits) or any(
+            marker in item.lower()
+            for item in implementation_errors + veto_reasons
+            for marker in ("placeholder", "todo", "fixme", "bare_pass", "stub")
+        )
+        repeated = similarity >= 0.95 or any("similarity=" in item.lower() for item in progress_errors + veto_reasons)
+        vetoed = veto.get("vetoed") is True
+
+        if not (has_placeholder or repeated or vetoed):
+            return ""
+
+        candidates = self.real_source_file_candidates(events, limit=18)
+        latest_revision = report.get("revision")
+        latest_source = report.get("source")
+        lines = [
+            "FORCED CONCRETE DELTA REQUIRED:",
+            f"- Previous proposal revision: {latest_revision}",
+            f"- Previous proposal source: {latest_source}",
+            f"- Similarity with previous proposal: {similarity:.3f}",
+            "- The previous block was rejected by the same heap. Do not repeat it.",
+            "- Produce a materially different proposal chunk, not a paraphrase.",
+            "- Remove every TODO/FIXME/pass/placeholder/stub marker from the proposal text.",
+            "- Use concrete repo-relative TARGET_FILES only.",
+            "- For each TARGET_FILE include PROBLEM, EVIDENCE, IMPLEMENTATION_CHANGES, VALIDATION_COMMANDS, RISKS and EXIT_DECISION.",
+            "- If no concrete target is patchable from current evidence, return EXIT_DECISION=NO_PATCHABLE_TARGET with explicit reason.",
+            "- GPU1 may move backward on previous/refines/resume pointers to propagate imports, symbols, contracts and validation commands, then resume forward.",
+            "- GPU0 and NPU vetoes are authoritative quality signals inside this heap loop.",
+        ]
+        if placeholder_hits:
+            lines.append("- Placeholder hits to eliminate: " + ", ".join(placeholder_hits[:12]))
+        if implementation_errors:
+            lines.append("- Implementation errors to resolve: " + " | ".join(implementation_errors[:8]))
+        if progress_errors:
+            lines.append("- Progress errors to resolve: " + " | ".join(progress_errors[:8]))
+        if veto_reasons:
+            lines.append("- Cross-lane veto reasons to resolve: " + " | ".join(veto_reasons[:8]))
+        if candidates:
+            lines.append("Allowed concrete source targets:")
+            lines.extend(f"- {item}" for item in candidates[:18])
+        return "\n".join(lines)
+
 
     def proposal_cycle_requires_refinement(self, text: str, events: list[dict[str, Any]]) -> bool:
         """Return True when the current heap proposal block still needs another GPU1 pass."""
@@ -3016,5 +3097,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-
