@@ -102,7 +102,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--python-exe", default="")
     parser.add_argument("--run-dir", default="", help="Defaults to latest complete output/validation/heap_context_closure_* directory.")
     parser.add_argument("--max-block-chars", type=int, default=9000)
-    parser.add_argument("--max-blocks", type=int, default=24)
+    parser.add_argument("--max-blocks", type=int, default=0)
     parser.add_argument("--include-rejected-history", action="store_true")
     parser.add_argument("--include-peer-blocks", action="store_true")
     parser.add_argument("--no-documents-copy", action="store_true")
@@ -199,6 +199,14 @@ def main() -> int:
         if not result["passed"]:
             break
 
+    pointer_report = {}
+    if pointer_json.exists():
+        try:
+            pointer_data = json.loads(pointer_json.read_text(encoding="utf-8-sig"))
+            pointer_report = pointer_data if isinstance(pointer_data, dict) else {}
+        except Exception:
+            pointer_report = {}
+
     report = {
         "schema_version": 2,
         "kind": "external_heap_postrun_package",
@@ -211,7 +219,7 @@ def main() -> int:
         "pointer_manifest_json": str(pointer_json),
         "long_response_markdown": str(long_response_md),
         "revision_context_json": str(revision_json),
-        "provider_execution_performed": False,
+        "provider_execution_performed": pointer_report.get("provider_execution_performed") is True,
         "patch_application_performed": False,
         "source_writes_performed": False,
         "results": results,
