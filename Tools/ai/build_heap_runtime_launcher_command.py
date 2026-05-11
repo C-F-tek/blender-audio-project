@@ -16,6 +16,7 @@ from typing import Any
 
 
 DEFAULT_PROFILE_FILE = "Tools/ai/heap_runtime_launcher_profiles.json"
+REQUIRED_COMPOSER_JSON = "heap_final_proposal_composer.json"
 PROFILE_TO_CLI: dict[str, tuple[str, str]] = {
     "budget_minutes": ("--budget-minutes", "value"),
     "max_iterations": ("--max-iterations", "value"),
@@ -143,12 +144,16 @@ def profile_external_metadata(profile: dict[str, Any]) -> dict[str, Any]:
     return {key: profile[key] for key in EXTERNAL_METADATA_KEYS if key in profile}
 
 
+def is_complete_heap_run_dir(path: Path) -> bool:
+    return path.is_dir() and path.name.startswith("heap_context_closure_") and (path / REQUIRED_COMPOSER_JSON).exists()
+
+
 def latest_revision_context(repo_root: Path) -> tuple[Path | None, dict[str, Any]]:
     validation_dir = repo_root / "output" / "validation"
     if not validation_dir.exists():
         return None, {}
     candidates = sorted(
-        validation_dir.glob("heap_context_closure_*/external_heap_revision_context.json"),
+        [path / "external_heap_revision_context.json" for path in validation_dir.iterdir() if is_complete_heap_run_dir(path) and (path / "external_heap_revision_context.json").exists()],
         key=lambda path: path.stat().st_mtime if path.exists() else 0,
         reverse=True,
     )
@@ -247,7 +252,7 @@ def render_command(
 def latest_run_dir_snippet() -> str:
     return (
         "$RunDir = Get-ChildItem .\\output\\validation -Directory | `\n"
-        "  Where-Object Name -like \"heap_context_closure_*\" | `\n"
+        "  Where-Object { $_.Name -like \"heap_context_closure_*\" -and (Test-Path (Join-Path $_.FullName \"heap_final_proposal_composer.json\")) } | `\n"
         "  Sort-Object LastWriteTime -Descending | `\n"
         "  Select-Object -First 1\n"
     )
@@ -355,12 +360,13 @@ def main() -> int:
     revision_context_command = render_revision_context_command(repo_root, project_python)
     postrun_package_command = render_postrun_package_command(repo_root, project_python)
     report = {
-        "schema_version": 5,
+        "schema_version": 6,
         "kind": "heap_runtime_launcher_command",
         "repo_root": repo_root.as_posix(),
         "profiles_file": str(profiles_path),
         "profile_name": profile.get("profile_name"),
         "profile": profile,
+        "revision_context_selection_policy": "latest_complete_heap_context_closure_with_composer_json" if profile.get("revision_context_mode") == "auto_latest" and not args.revision_context else ("explicit_revision_context" if args.revision_context else "off"),
         "revision_context_path": str(revision_context_path) if revision_context_path else "",
         "revision_context_loaded": bool(revision_context_payload),
         "revision_context_task_count": len(revision_context_payload.get("tasks", [])) if isinstance(revision_context_payload.get("tasks"), list) else 0,
@@ -374,6 +380,7 @@ def main() -> int:
         "notes": [
             "command targets run_heap_runtime_context_closure.py",
             "revision context is injected into --request text, not into the gate",
+            "auto_latest revision context ignores smoke fixtures and requires a complete heap run with composer json",
             "postrun_package_command runs the external post-run adapter chain after the heap run",
             "block_pointer_command and revision_context_command remain available for manual step-by-step debugging",
         ],
