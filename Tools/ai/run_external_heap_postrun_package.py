@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+"""Run the external heap post-run package chain.
+
+This orchestrator is outside the gate. It does not replace the existing composer
+and does not modify provider/tool-call semantics. It only runs the external
+post-run adapters in the correct order for an existing heap_context_closure_* run:
+
+1. normalize_heap_final_causality.py
+2. build_external_heap_block_pointer_manifest.py
+3. compose_external_heap_block_response.py
+4. build_external_heap_revision_context.py
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+
+def resolve_repo_root(value: str) -> Path:
+    return Path(value).resolve()
+
+
+def latest_run_dir(repo_root: Path) -> Path | None:
+    validation_dir = repo_root / "output" / "validation"
+    if not validation_dir.exists():
+        return None
+    candidates = sorted(
+        [path for path in validation_dir.iterdir() if path.is_dir() and path.name.startswith("heap_context_closure_")],
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    return candidates[0].resolve() if candidates else None
+
+
+def resolve_run_dir(repo_root: Path, value: str) -> Path:
+    if value.strip():
+        path = Path(value)
+        if not path.is_absolute():
+            path = repo_root / path
+        return path.resolve()
+    latest = latest_run_dir(repo_root)
+    if latest is None:
+        raise SystemExit("no heap_context_closure_* run directory found under output/validation")
+    return latest
+
+
+def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
+    if explicit:
+        return str(Path(explicit).resolve())
+    for candidate in (
+        repo_root / ".venv" / "Scripts" / "python.exe",
+        repo_root / "venv" / "Scripts" / "python.exe",
+        repo_root / ".venv314" / "Scripts" / "python.exe",
+    ):
+        if candidate.exists():
+            return str(candidate.resolve())
+    return sys.executable
+
+
+def run_command(command: list[str], repo_root: Path) -> dict[str, Any]:
+    completed = subprocess.run(
+        command,
+        cwd=repo_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return {
+        "command": command,
+        "returncode": completed.returncode,
+        "passed": completed.returncode == 0,
+        "stdout_tail": (completed.stdout or "")[-4000:],
+        "stderr_tail": (completed.stderr or "")[-4000:],
+    }
+
+
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def required_file(path: Path, label: str) -> None:
+    if not path.exists():
+        raise SystemExit(f"missing required {label}: {path}")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repo-root", default=".")
+    parser.add_argument("--python-exe", default="")
+    parser.add_argument("--run-dir", default="", help="Defaults to latest output/validation/heap_context_closure_* directory.")
+    parser.add_argument("--max-block-chars", type=int, default=9000)
+    parser.add_argument("--max-blocks", type=int, default=24)
+    parser.add_argument("--include-rejected-history", action="store_true")
+    parser.add_argument("--include-peer-blocks", action="store_true")
+    parser.add_argument("--no-documents-copy", action="store_true")
+    parser.add_argument("--output", default="")
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    repo_root = resolve_repo_root(args.repo_root)
+    project_python = resolve_project_python(repo_root, args.python_exe)
+    run_dir = resolve_run_dir(repo_root, args.run_dir)
+
+    composer_json = run_dir / "heap_final_proposal_composer.json"
+    required_file(composer_json, "composer json")
+
+    causality_json = run_dir / "heap_final_causality_normalized.json"
+    pointer_json = run_dir / "external_heap_block_pointer_manifest.json"
+    long_response_md = run_dir / "external_heap_primary_long_response.md"
+    revision_json = run_dir / "external_heap_revision_context.json"
+
+    commands: list[tuple[str, list[str]]] = []
+    commands.append(
+        (
+            "normalize_causality",
+            [
+                project_python,
+                "Tools/ai/normalize_heap_final_causality.py",
+                "--composer-json",
+                str(composer_json),
+                "--output",
+                str(causality_json),
+            ],
+        )
+    )
+    commands.append(
+        (
+            "build_pointer_manifest",
+            [
+                project_python,
+                "Tools/ai/build_external_heap_block_pointer_manifest.py",
+                "--repo-root",
+                ".",
+                "--run-dir",
+                str(run_dir),
+                "--max-block-chars",
+                str(args.max_block_chars),
+                "--max-blocks",
+                str(args.max_blocks),
+            ],
+        )
+    )
+    long_command = [
+        project_python,
+        "Tools/ai/compose_external_heap_block_response.py",
+        "--pointer-manifest",
+        str(pointer_json),
+        "--composer-json",
+        str(composer_json),
+        "--causality-json",
+        str(causality_json),
+        "--output",
+        str(long_response_md),
+    ]
+    if args.include_rejected_history:
+        long_command.append("--include-rejected-history")
+    if args.include_peer_blocks:
+        long_command.append("--include-peer-blocks")
+    if args.no_documents_copy:
+        long_command.append("--no-documents-copy")
+    commands.append(("compose_long_response", long_command))
+
+    revision_command = [
+        project_python,
+        "Tools/ai/build_external_heap_revision_context.py",
+        "--pointer-manifest",
+        str(pointer_json),
+        "--composer-json",
+        str(composer_json),
+        "--causality-json",
+        str(causality_json),
+        "--output",
+        str(revision_json),
+    ]
+    if args.no_documents_copy:
+        revision_command.append("--no-documents-copy")
+    commands.append(("build_revision_context", revision_command))
+
+    results: list[dict[str, Any]] = []
+    for name, command in commands:
+        result = run_command(command, repo_root)
+        result["name"] = name
+        results.append(result)
+        if not result["passed"]:
+            break
+
+    report = {
+        "schema_version": 1,
+        "kind": "external_heap_postrun_package",
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "repo_root": repo_root.as_posix(),
+        "run_dir": str(run_dir),
+        "passed": all(result.get("passed") for result in results) and len(results) == len(commands),
+        "causality_json": str(causality_json),
+        "pointer_manifest_json": str(pointer_json),
+        "long_response_markdown": str(long_response_md),
+        "revision_context_json": str(revision_json),
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+        "results": results,
+        "errors": [result["stderr_tail"] for result in results if not result.get("passed") and result.get("stderr_tail")],
+        "warnings": [],
+    }
+    output = Path(args.output).resolve() if args.output else run_dir / "external_heap_postrun_package.json"
+    write_json(output, report)
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    return 0 if report["passed"] else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
