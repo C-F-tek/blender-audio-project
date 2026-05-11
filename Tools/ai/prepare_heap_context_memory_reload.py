@@ -417,6 +417,71 @@ def build_task_markdown(
     return "\n".join(lines)
 
 
+
+
+def append_artifact_ref(refs: list[str], value: Any) -> None:
+    if not isinstance(value, str) or not value.strip():
+        return
+    normalized = value.replace("\\", "/")
+    if normalized not in refs:
+        refs.append(normalized)
+
+
+def collect_startup_artifact_refs(artifacts: dict[str, str], commands: list[dict[str, Any]]) -> list[str]:
+    refs: list[str] = []
+    for value in artifacts.values():
+        append_artifact_ref(refs, value)
+    for execution in commands:
+        if not isinstance(execution, dict):
+            continue
+        for key in ("useful_artifact_paths", "existing_artifact_paths", "artifact_paths"):
+            for value in execution.get(key) or []:
+                append_artifact_ref(refs, value)
+        for summary in execution.get("artifact_summaries") or []:
+            if isinstance(summary, dict):
+                append_artifact_ref(refs, summary.get("path"))
+        for artifact in execution.get("artifacts") or []:
+            if isinstance(artifact, dict):
+                append_artifact_ref(refs, artifact.get("path"))
+            else:
+                append_artifact_ref(refs, artifact)
+    return refs
+
+
+def build_operational_memory_write_content(
+    *,
+    repo_root: Path,
+    stamp: str,
+    request: str,
+    startup_reload_degraded: bool,
+    degraded_requirements: list[str],
+    blocking_requirements: list[str],
+    artifacts: dict[str, str],
+    commands: list[dict[str, Any]],
+) -> str:
+    payload = {
+        "schema_version": 1,
+        "kind": "heap_startup_operational_memory_note",
+        "stamp": stamp,
+        "request_preview": request[:1200],
+        "startup_reload_degraded": startup_reload_degraded,
+        "degraded_requirements": degraded_requirements,
+        "blocking_requirements": blocking_requirements,
+        "artifact_refs": collect_startup_artifact_refs(artifacts, commands)[:80],
+        "tool_execution_summary": [
+            {
+                "name": item.get("name"),
+                "requirement": item.get("requirement"),
+                "passed": item.get("passed"),
+                "effective_passed": item.get("effective_passed"),
+                "degraded": item.get("degraded"),
+                "useful_artifact_paths": item.get("useful_artifact_paths", []),
+            }
+            for item in commands
+        ],
+    }
+    return json.dumps(payload, indent=2, ensure_ascii=False)
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
@@ -697,6 +762,73 @@ def main() -> int:
 
     artifacts.update(write_semantic_evidence(commands, repo_root, output_dir))
 
+    task_file = output_dir / "heap_startup_input_ready_context.md"
+    artifacts["heap_task_file"] = repo_rel(repo_root, task_file)
+
+    preliminary_required_commands = [item for item in commands if item.get("required")]
+    preliminary_optional_commands = [item for item in commands if not item.get("required")]
+    blocking_requirements = [
+        str(item.get("requirement"))
+        for item in preliminary_required_commands
+        if not item.get("effective_passed")
+    ]
+    degraded_requirements = [str(item.get("requirement")) for item in commands if item.get("degraded")]
+    optional_failed_requirements = [
+        str(item.get("requirement"))
+        for item in preliminary_optional_commands
+        if not item.get("effective_passed")
+    ]
+    startup_reload_degraded = bool(degraded_requirements or optional_failed_requirements)
+
+    operational_write_json = output_dir / "startup_operational_memory_write.json"
+    operational_write_md = output_dir / "startup_operational_memory_write.md"
+    commands.append(
+        run_tool(
+            [
+                project_python,
+                "Tools/ai/agent_runtime_sqlite_memory.py",
+                "--repo-root",
+                ".",
+                "--action",
+                "remember",
+                "--scope",
+                "operational",
+                "--request-id",
+                f"heap_startup_reload_{stamp}",
+                "--role",
+                "heap_startup_reload",
+                "--summary",
+                "startup context/memory reload manifest",
+                "--content",
+                build_operational_memory_write_content(
+                    repo_root=repo_root,
+                    stamp=stamp,
+                    request=args.request,
+                    startup_reload_degraded=startup_reload_degraded,
+                    degraded_requirements=degraded_requirements,
+                    blocking_requirements=blocking_requirements,
+                    artifacts=artifacts,
+                    commands=commands,
+                ),
+                "--tag",
+                "heap_startup_context",
+                "--tag",
+                stamp,
+                "--output",
+                str(operational_write_json),
+                "--markdown-output",
+                str(operational_write_md),
+            ],
+            repo_root,
+            name="operational_memory_write_reload",
+            requirement="operational_memory_write",
+            required=False,
+            artifact_paths=[operational_write_json, operational_write_md],
+        )
+    )
+    artifacts["operational_memory_write_json"] = repo_rel(repo_root, operational_write_json)
+    artifacts["operational_memory_write_markdown"] = repo_rel(repo_root, operational_write_md)
+
     required_commands = [item for item in commands if item.get("required")]
     optional_commands = [item for item in commands if not item.get("required")]
     blocking_requirements = [str(item.get("requirement")) for item in required_commands if not item.get("effective_passed")]
@@ -707,8 +839,6 @@ def main() -> int:
     optional_passed = all(bool(item.get("effective_passed")) for item in optional_commands)
     input_ready_before_heap = required_passed and bool(context_files)
 
-    task_file = output_dir / "heap_startup_input_ready_context.md"
-    artifacts["heap_task_file"] = repo_rel(repo_root, task_file)
     task_markdown = build_task_markdown(
         repo_root=repo_root,
         request=args.request,
@@ -759,6 +889,7 @@ def main() -> int:
             "tool_catalog_loaded": bool(artifacts.get("tool_catalog_json")),
             "shared_memory_loaded": bool(artifacts.get("shared_memory_json")),
             "operational_memory_loaded": bool(artifacts.get("operational_memory_status_json")),
+            "operational_memory_write_recorded": bool(artifacts.get("operational_memory_write_json")),
             "repo_docs_loaded": bool(artifacts.get("repo_docs_map_json")),
             "semantic_code_chunks_loaded": bool(artifacts.get("semantic_code_chunks_json")),
             "ai_context_pack_loaded": bool(artifacts.get("ai_context_pack_json")) and context_pack_result.get("artifact_useful"),

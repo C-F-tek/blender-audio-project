@@ -80,6 +80,126 @@ def load_startup_manifest(run_dir: Path) -> dict[str, Any]:
     return read_json(run_dir / "startup_context_memory_reload" / "heap_context_memory_reload_manifest.json")
 
 
+def load_startup_reconciliation(run_dir: Path) -> dict[str, Any]:
+    return read_json(run_dir / "heap_startup_context_reconciliation.json")
+
+
+def append_artifact_ref(refs: list[str], value: Any) -> None:
+    if not isinstance(value, str) or not value.strip():
+        return
+    normalized = value.replace("\\", "/")
+    if normalized not in refs:
+        refs.append(normalized)
+
+
+def startup_artifact_refs(startup_manifest: dict[str, Any], report: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    artifacts = startup_manifest.get("artifacts") if isinstance(startup_manifest.get("artifacts"), dict) else {}
+    for value in artifacts.values():
+        append_artifact_ref(refs, value)
+    for execution in startup_manifest.get("tool_executions") or []:
+        if not isinstance(execution, dict):
+            continue
+        for key in ("useful_artifact_paths", "existing_artifact_paths", "artifact_paths"):
+            for value in execution.get(key) or []:
+                append_artifact_ref(refs, value)
+        for summary in execution.get("artifact_summaries") or []:
+            if isinstance(summary, dict):
+                append_artifact_ref(refs, summary.get("path"))
+        for artifact in execution.get("artifacts") or []:
+            if isinstance(artifact, dict):
+                append_artifact_ref(refs, artifact.get("path"))
+            else:
+                append_artifact_ref(refs, artifact)
+    output_contract = report.get("real_run_output_contract") if isinstance(report.get("real_run_output_contract"), dict) else {}
+    for value in output_contract.get("context_artifact_refs") or []:
+        append_artifact_ref(refs, value)
+    for value in report.get("context_artifact_refs") or []:
+        append_artifact_ref(refs, value)
+    return refs
+
+
+def compute_product_causality(
+    *,
+    report: dict[str, Any],
+    startup_manifest: dict[str, Any],
+    startup_reconciliation: dict[str, Any],
+    proposals: list[dict[str, Any]],
+    provider_reports: list[dict[str, Any]],
+) -> dict[str, Any]:
+    metrics = report.get("metrics") if isinstance(report.get("metrics"), dict) else {}
+    output_contract = report.get("real_run_output_contract") if isinstance(report.get("real_run_output_contract"), dict) else {}
+    product_status = metrics.get("product_status") or output_contract.get("product_status")
+    startup_contract = startup_manifest.get("contract") if isinstance(startup_manifest.get("contract"), dict) else {}
+    input_ready = bool(
+        startup_manifest.get("input_ready_before_heap") is True
+        or startup_contract.get("input_ready_before_heap") is True
+    )
+    artifact_refs = startup_artifact_refs(startup_manifest, report)
+    provider_execution = bool(
+        report.get("provider_execution_performed")
+        or metrics.get("provider_execution_performed")
+        or output_contract.get("provider_execution_performed")
+        or any(item.get("provider_execution_performed") for item in provider_reports)
+    )
+    proposal_artifacts = report.get("proposal_iteration_artifacts") if isinstance(report.get("proposal_iteration_artifacts"), list) else []
+    proposal_count = len(proposals) or len(proposal_artifacts)
+    reconciliation_passed = (
+        startup_reconciliation.get("passed") is True
+        if startup_reconciliation
+        else None
+    )
+
+    failed_reasons: list[str] = []
+    unknown_reasons: list[str] = []
+    if report.get("fallback_heap_report"):
+        failed_reasons.append("fallback heap report used")
+    if startup_manifest and not input_ready:
+        failed_reasons.append("startup manifest is not input_ready_before_heap")
+    if startup_manifest and not artifact_refs:
+        failed_reasons.append("startup/context artifact refs are empty")
+    if product_status == "ready" and not provider_execution:
+        failed_reasons.append("product_status=ready without provider execution evidence")
+    if product_status == "ready" and proposal_count == 0:
+        failed_reasons.append("product_status=ready without proposal iteration artifacts")
+    if not startup_manifest:
+        unknown_reasons.append("startup manifest missing")
+    if not report:
+        unknown_reasons.append("heap report missing")
+    if reconciliation_passed is False:
+        unknown_reasons.append("startup reconciliation failed or was not usable")
+    if product_status != "ready" and proposal_count == 0:
+        unknown_reasons.append("no proposal chunks available for causal inspection")
+
+    if failed_reasons:
+        status = "failed"
+        passed: bool | None = False
+        reasons = failed_reasons
+    elif unknown_reasons:
+        status = "unknown"
+        passed = None
+        reasons = unknown_reasons
+    else:
+        status = "passed"
+        passed = True
+        reasons = []
+
+    return {
+        "schema_version": 1,
+        "kind": "external_heap_product_causality",
+        "product_causality_status": status,
+        "product_causality_passed": passed,
+        "product_status": product_status,
+        "startup_input_ready_before_heap": input_ready,
+        "startup_artifact_ref_count": len(artifact_refs),
+        "provider_execution_evidence_present": provider_execution,
+        "proposal_artifact_count": proposal_count,
+        "startup_reconciliation_passed": reconciliation_passed,
+        "composer_packaging_performed": True,
+        "causality_reasons": reasons,
+    }
+
+
 def list_proposals(run_dir: Path) -> list[dict[str, Any]]:
     proposal_dir = run_dir / "team_context" / "proposal_iterations"
     proposals: list[dict[str, Any]] = []
@@ -285,6 +405,7 @@ def render_markdown(
     gpu0_reviews: list[dict[str, Any]],
     npu_audits: list[dict[str, Any]],
     action_list: list[str],
+    product_causality: dict[str, Any],
     max_proposal_chars: int,
 ) -> str:
     metrics = report.get("metrics") if isinstance(report.get("metrics"), dict) else {}
@@ -305,12 +426,27 @@ def render_markdown(
         f"- Runtime debug lab required: `{output_contract.get('runtime_debug_lab_required')}`",
         f"- Runtime debug lab passed: `{output_contract.get('runtime_debug_lab_passed')}`",
         f"- Fallback heap report: `{report.get('fallback_heap_report', False)}`",
+        f"- Product causality status: `{product_causality.get('product_causality_status')}`",
+        f"- Product causality passed: `{product_causality.get('product_causality_passed')}`",
+        f"- Startup artifact refs: `{product_causality.get('startup_artifact_ref_count')}`",
+        f"- Provider execution evidence present: `{product_causality.get('provider_execution_evidence_present')}`",
+        f"- Proposal artifact count: `{product_causality.get('proposal_artifact_count')}`",
+        "",
+        "## External heap product causality",
+        "",
+    ]
+    reasons = product_causality.get("causality_reasons") if isinstance(product_causality.get("causality_reasons"), list) else []
+    if reasons:
+        lines.extend(f"- {reason}" for reason in reasons)
+    else:
+        lines.append("- Causalita' esterna coerente con artifact/report disponibili.")
+    lines.extend([
         "",
         "## Context-limit escape protocol",
         "",
         "Il prodotto finale non dipende dalla sola finestra token di GPU1: ogni proposta viene salvata come chunk riusabile, GPU0/NPU producono review e audit separati, e questo composer assembla il risultato finale dai file persistenti.",
         "",
-    ]
+    ])
     lines.extend(render_startup_section(repo_root, startup_manifest))
 
     if blockers:
@@ -508,6 +644,7 @@ def main() -> int:
     report_file = resolve_path(repo_root, args.report_file) if args.report_file else run_dir / "heap_runtime_completeness_gate_report.json"
     report = read_json(report_file)
     startup_manifest = load_startup_manifest(run_dir)
+    startup_reconciliation = load_startup_reconciliation(run_dir)
     stamp = str(report.get("stamp") or startup_manifest.get("stamp") or (report.get("metrics") or {}).get("stamp") or now_stamp())
 
     proposals = list_proposals(run_dir)
@@ -516,6 +653,13 @@ def main() -> int:
     gpu0_reviews = collect_gpu0_reviews(proposals, provider_reports)
     npu_audits = collect_npu_audits(proposals, provider_reports)
     action_list = build_action_list(blockers, proposals, startup_manifest)
+    product_causality = compute_product_causality(
+        report=report,
+        startup_manifest=startup_manifest,
+        startup_reconciliation=startup_reconciliation,
+        proposals=proposals,
+        provider_reports=provider_reports,
+    )
 
     markdown = render_markdown(
         repo_root=repo_root,
@@ -528,6 +672,7 @@ def main() -> int:
         gpu0_reviews=gpu0_reviews,
         npu_audits=npu_audits,
         action_list=action_list,
+        product_causality=product_causality,
         max_proposal_chars=max(2000, int(args.max_proposal_chars)),
     )
     accepted = [item for item in proposals if item.get("accepted")]
@@ -552,6 +697,10 @@ def main() -> int:
         "action_list": action_list,
         "product_status": (report.get("metrics") or {}).get("product_status") or (report.get("real_run_output_contract") or {}).get("product_status"),
         "quality_output_passed": (report.get("metrics") or {}).get("quality_output_passed"),
+        "product_causality": product_causality,
+        "product_causality_status": product_causality.get("product_causality_status"),
+        "product_causality_passed": product_causality.get("product_causality_passed"),
+        "startup_reconciliation": startup_reconciliation,
         "proposals": [
             {
                 "name": item.get("name"),

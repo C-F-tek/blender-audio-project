@@ -11,7 +11,12 @@ from typing import Any
 STARTUP_REQUIREMENT_TO_ARTIFACT_KEYS: dict[str, tuple[str, ...]] = {
     "tool_catalog": ("tool_catalog_json", "tool_catalog_markdown"),
     "shared_memory": ("shared_memory_json", "shared_memory_markdown"),
-    "operational_memory_write": ("operational_memory_status_json", "operational_memory_status_markdown"),
+    "operational_memory_write": (
+        "operational_memory_write_json",
+        "operational_memory_write_markdown",
+        "operational_memory_status_json",
+        "operational_memory_status_markdown",
+    ),
     "operational_memory_search": ("operational_memory_search_json", "operational_memory_search_markdown"),
     "shared_context_chunks": ("shared_context_json", "shared_context_markdown"),
     "semantic_code_chunks": ("semantic_code_chunks_json", "semantic_code_chunks_markdown"),
