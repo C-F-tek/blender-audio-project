@@ -627,6 +627,75 @@ class HeapRuntimeCompletenessGate:
             completed.append(execution)
         return completed
 
+
+    def startup_manifest_artifact_completed_requirements(
+        self,
+        manifest_path: Path | None,
+        manifest: dict[str, Any],
+        existing: set[str],
+    ) -> list[dict[str, Any]]:
+        """Derive completed startup requirements from manifest artifact refs.
+
+        Some startup reload lanes are tool-owned aggregate outputs rather than
+        one-to-one broker tool executions. If their JSON/Markdown artifacts are
+        present and the startup contract marks them loaded, they are valid heap
+        context inputs and should not block provider teamwork.
+        """
+        artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), dict) else {}
+        contract = manifest.get("contract") if isinstance(manifest.get("contract"), dict) else {}
+
+        artifact_requirements = {
+            "semantic_code_chunks": (
+                "semantic_code_chunks_loaded",
+                ("semantic_code_chunks_json", "semantic_code_chunks_markdown"),
+            ),
+            "semantic_evidence_chunks": (
+                "semantic_evidence_chunks_loaded",
+                ("semantic_evidence_chunks_json", "semantic_evidence_chunks_markdown"),
+            ),
+        }
+
+        completed: list[dict[str, Any]] = []
+        for requirement, (contract_key, artifact_keys) in artifact_requirements.items():
+            if requirement in existing:
+                continue
+            if contract.get(contract_key) is not True:
+                continue
+
+            refs: list[str] = []
+            for key in artifact_keys:
+                value = artifacts.get(key)
+                if isinstance(value, str) and value.strip():
+                    candidate = self.repo_root / value
+                    if candidate.exists():
+                        refs.append(value.replace("\\", "/"))
+
+            if not refs:
+                continue
+
+            completed.append(
+                {
+                    "requirement": requirement,
+                    "tool": "startup_context_memory_reload",
+                    "returncode": 0,
+                    "passed": True,
+                    "artifact_paths": refs,
+                    "useful_artifact_paths": refs,
+                    "existing_artifact_paths": refs,
+                    "summary": {
+                        "passed": True,
+                        "source": "startup_context_memory_reload_manifest_artifacts",
+                        "startup_manifest": repo_rel(self.repo_root, manifest_path) if manifest_path else "",
+                    },
+                    "provider_execution_performed": False,
+                    "patch_application_performed": False,
+                    "source_writes_performed": False,
+                }
+            )
+
+        return completed
+
+
     def publish_startup_manifest_evidence(self) -> None:
         """Seed passed startup preload requirements as heap broker evidence.
 
@@ -639,7 +708,15 @@ class HeapRuntimeCompletenessGate:
         if not manifest:
             return
         existing = self.completed_requirements(self.heap.read_events())
-        for execution in self.startup_manifest_completed_requirements(manifest):
+        startup_completed = self.startup_manifest_completed_requirements(manifest)
+        startup_completed.extend(
+            self.startup_manifest_artifact_completed_requirements(
+                manifest_path,
+                manifest,
+                existing,
+            )
+        )
+        for execution in startup_completed:
             requirement = str(execution.get("requirement") or "").strip()
             if requirement in existing:
                 continue
