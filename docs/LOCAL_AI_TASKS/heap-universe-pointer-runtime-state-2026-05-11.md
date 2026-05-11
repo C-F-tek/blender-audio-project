@@ -2,7 +2,7 @@
 
 ## Stato consolidato
 
-Questa nota registra lo stato code-driven dopo la chiusura e il merge della PR #298 `feat(ai): externalize heap launcher profiles` e dopo l'aggiunta dell'orchestratore post-run esterno.
+Questa nota registra lo stato code-driven dopo la chiusura e il merge della PR #298 `feat(ai): externalize heap launcher profiles`, l'aggiunta dell'orchestratore post-run esterno e l'integrazione del comando post-run nel command builder.
 
 La PR e' stata portata su `master`. Il gate runtime principale resta invariato: la logica nuova e' esterna al gate e opera come profili, adapter post-run, composer lungo, contesto di revisione per la run successiva e orchestratore post-run.
 
@@ -77,7 +77,10 @@ Funzioni correnti:
 - preserva metadati esterni non ancora CLI-bound;
 - cerca il latest `output/validation/heap_context_closure_*/external_heap_revision_context.json` quando il profilo usa `revision_context_mode = auto_latest`;
 - inietta un riassunto bounded del revision context direttamente dentro `--request`;
-- genera anche i comandi post-run per block pointer manifest e revision context.
+- genera il comando run principale;
+- genera comandi debug step-by-step per block pointer manifest e revision context;
+- genera `postrun_package_command` per `run_external_heap_postrun_package.py`;
+- puo' stampare il comando post-run con `--include-postrun-package-command`.
 
 Nota architetturale: il feed del revision context avviene nel testo `--request`, non tramite modifica del gate.
 
@@ -187,25 +190,19 @@ Campi/garanzie:
 python .\Tools\ai\build_heap_runtime_launcher_command.py `
   --repo-root . `
   --profile balanced_external_heap `
-  --include-block-pointer-command `
-  --include-revision-context-command `
+  --include-postrun-package-command `
   --output .\output\validation\heap_launcher_command_balanced.json
 ```
 
 2. Il command builder, se presente un revision context precedente, lo inietta in `--request`.
 
-3. Eseguire il comando generato.
+3. Eseguire il comando principale salvato in `command`.
 
-4. Post-run consigliato tramite orchestratore:
+4. Post-run consigliato: eseguire `postrun_package_command` dal JSON generato.
 
-```powershell
-python .\Tools\ai\run_external_heap_postrun_package.py `
-  --repo-root . `
-  --include-rejected-history `
-  --include-peer-blocks
-```
+5. Per debug manuale restano disponibili anche `block_pointer_command` e `revision_context_command`.
 
-5. La run successiva consuma il revision context precedente tramite profilo `auto_latest`.
+6. La run successiva consuma il revision context precedente tramite profilo `auto_latest`.
 
 ## Stato logico dell'universo heap
 
@@ -269,9 +266,9 @@ Target potenziali:
 - `Tools/ai/build_heap_runtime_launcher_command.py`
 - `Tools/ai/prepare_heap_context_memory_reload.py`
 
-### 3. Orchestratore post-run non e' ancora integrato automaticamente nel launcher
+### 3. Post-run package non e' ancora invocato automaticamente dal launcher core
 
-La sequenza post-run e' ora automatizzabile con `run_external_heap_postrun_package.py`, ma il launcher non la invoca automaticamente.
+La sequenza post-run e' ora automatizzabile con `run_external_heap_postrun_package.py` e il command builder genera `postrun_package_command`, ma `run_heap_runtime_context_closure.py` non lo invoca automaticamente.
 
 Possibile patch futura:
 
@@ -305,14 +302,13 @@ $env:PYTHONPATH = (Resolve-Path .).Path
   .\Tools\ai\run_external_heap_postrun_package.py
 ```
 
-Generare comando run:
+Generare comando run + post-run:
 
 ```powershell
 & $RepoPy .\Tools\ai\build_heap_runtime_launcher_command.py `
   --repo-root . `
   --profile balanced_external_heap `
-  --include-block-pointer-command `
-  --include-revision-context-command `
+  --include-postrun-package-command `
   --output .\output\validation\heap_launcher_command_balanced.json
 ```
 
@@ -331,13 +327,11 @@ $Cmd |
   Format-List
 ```
 
-Eseguire post-run package dopo la run:
+Eseguire run e post-run:
 
 ```powershell
-& $RepoPy .\Tools\ai\run_external_heap_postrun_package.py `
-  --repo-root . `
-  --include-rejected-history `
-  --include-peer-blocks
+Invoke-Expression $Cmd.command
+Invoke-Expression $Cmd.postrun_package_command
 ```
 
 ## Decisione operativa
@@ -352,6 +346,7 @@ La fase attuale e' chiusa positivamente:
 - long response integrata nel package Documents del composer;
 - revision context generato e consumabile dalla run successiva;
 - bug estrazione import corretto;
-- sequenza post-run esterna automatizzabile tramite orchestratore dedicato.
+- sequenza post-run esterna automatizzabile tramite orchestratore dedicato;
+- command builder ora produce anche `postrun_package_command`.
 
 Prossima priorita': bindare i budget profilo non ancora CLI-bound o rendere opzionale il post-run package direttamente dal launcher, a seconda della prossima evidenza runtime.
