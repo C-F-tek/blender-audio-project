@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Build external heap revision context from block pointers.
 
 This adapter is outside the gate. It converts a block-pointer manifest plus the
@@ -257,7 +257,7 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
             "necessario, deve generare un task di propagazione sui blocchi precedenti, far rivalutare in parallelo GPU0/NPU, "
             "poi riprendere dal resume_from_block_id mantenendo la catena next/previous/refines."
         ),
-        "provider_execution_performed": False,
+        "provider_execution_performed": pointer.get("provider_execution_performed") is True,
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": [],
@@ -381,3 +381,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
