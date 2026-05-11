@@ -386,14 +386,25 @@ def main() -> int:
         preflight_result = run_command(preflight_command, repo_root)
 
     startup_result: dict[str, Any] = {
-        "passed": True,
-        "returncode": 0,
+        "passed": False,
+        "returncode": None,
         "stdout_tail": "",
         "stderr_tail": "",
         "command": [],
+        "skipped": False,
     }
     startup_payload: dict[str, Any] = {}
-    if preflight_result["passed"] and not args.skip_startup_reload:
+    startup_reload_performed = False
+    if args.skip_startup_reload:
+        startup_result.update({"passed": True, "returncode": 0, "skipped": True})
+    elif not preflight_result["passed"]:
+        startup_result.update({
+            "passed": False,
+            "returncode": 2,
+            "skipped": True,
+            "stderr_tail": "startup context/memory reload skipped because preflight failed",
+        })
+    else:
         startup_command = [
             project_python,
             "Tools/ai/prepare_heap_context_memory_reload.py",
@@ -418,6 +429,7 @@ def main() -> int:
         ]
         if args.strict_startup_reload:
             startup_command.append("--strict-startup-reload")
+        startup_reload_performed = True
         startup_result = run_command(startup_command, repo_root)
         startup_payload = load_json(startup_manifest)
 
@@ -426,10 +438,10 @@ def main() -> int:
         startup_payload=startup_payload,
         startup_task_file=startup_task_file,
         strict_startup_reload=args.strict_startup_reload,
-        skipped=args.skip_startup_reload,
+        skipped=bool(args.skip_startup_reload),
     )
     startup_reload_degraded = bool(
-        (not args.skip_startup_reload)
+        startup_reload_performed
         and (
             startup_payload.get("startup_reload_degraded")
             or (not startup_result.get("passed") and can_continue)
@@ -640,7 +652,7 @@ def main() -> int:
         "preflight_report": str(preflight_report) if preflight_report.exists() else "",
         "preflight_markdown": str(preflight_markdown) if preflight_markdown.exists() else "",
         "preflight_returncode": preflight_result["returncode"],
-        "startup_reload_performed": not args.skip_startup_reload,
+        "startup_reload_performed": startup_reload_performed,
         "startup_reload_passed": bool(startup_result["passed"]),
         "startup_reload_degraded": startup_reload_degraded,
         "startup_can_continue": can_continue,
@@ -680,7 +692,7 @@ def main() -> int:
         "external_revision_context_json": external_revision_context_json,
         "external_pointer_manifest_json": external_pointer_manifest_json,
         "download_hint": composer_report.get("download_hint", ""),
-        "launcher_passed": bool(startup_result["passed"] and heap_result["passed"] and composer_result["passed"]),
+        "launcher_passed": bool(can_continue and heap_result["passed"] and composer_result["passed"]),
         "launcher_packaging_succeeded": bool(composer_packaging_performed and (can_continue or fallback_heap_report_written)),
         "preflight_stdout_tail": preflight_result["stdout_tail"],
         "preflight_stderr_tail": preflight_result["stderr_tail"],

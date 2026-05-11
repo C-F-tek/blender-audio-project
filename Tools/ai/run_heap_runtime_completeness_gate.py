@@ -18,6 +18,7 @@ NPU micro-task auditor all write evidence back into the same heap.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -571,6 +572,106 @@ class HeapRuntimeCompletenessGate:
 
 
 
+    def startup_task_file_path(self) -> Path | None:
+        task_file = str(getattr(self.args, "task_file", "") or "").strip()
+        if not task_file:
+            return None
+        task_file_path = Path(task_file)
+        if not task_file_path.is_absolute():
+            task_file_path = self.repo_root / task_file_path
+        return task_file_path.resolve(strict=False)
+
+    def startup_task_file_context(self, max_preview_chars: int = 12000) -> dict[str, Any]:
+        """Read the startup task file as active heap input.
+
+        The task file is not a diagnostic pointer: prepare_heap_context_memory_reload.py
+        writes the current repo/docs/memory/tool context there before provider work.
+        The gate must read it and publish a bounded fact/event so GPU1/GPU0/NPU
+        operate over the same dynamic universe rather than only seeing a path.
+        """
+        task_file_path = self.startup_task_file_path()
+        if task_file_path is None:
+            return {"loaded": False, "task_file": "", "reason": "task_file argument missing"}
+        rel_path = repo_rel(self.repo_root, task_file_path)
+        if not task_file_path.is_file():
+            return {"loaded": False, "task_file": rel_path, "reason": "task file missing"}
+        try:
+            task_file_text = task_file_path.read_text(encoding="utf-8-sig", errors="replace")
+        except Exception as exc:  # noqa: BLE001 - context ingestion must not crash the gate.
+            return {
+                "loaded": False,
+                "task_file": rel_path,
+                "reason": f"task file unreadable: {type(exc).__name__}: {exc}",
+            }
+        digest = hashlib.sha256(task_file_text.encode("utf-8", errors="replace")).hexdigest()
+        preview = task_file_text[: max(0, int(max_preview_chars))]
+        return {
+            "loaded": True,
+            "task_file": rel_path,
+            "sha256": digest,
+            "char_count": len(task_file_text),
+            "preview": preview,
+            "preview_truncated": len(task_file_text) > len(preview),
+            "source": "startup_task_file",
+        }
+
+    def publish_startup_task_file_context(self) -> None:
+        context = self.startup_task_file_context()
+        if not context.get("loaded"):
+            if context.get("task_file"):
+                self.warnings.append(str(context.get("reason") or "startup task file not loaded"))
+            return
+        fact = {
+            "id": "startup_task_file_context_loaded",
+            "kind": "startup_task_file_context",
+            "source": "prepare_heap_context_memory_reload",
+            "status": "available",
+            "task_file": context.get("task_file"),
+            "sha256": context.get("sha256"),
+            "char_count": context.get("char_count"),
+            "preview_truncated": context.get("preview_truncated"),
+        }
+        evidence = {
+            "id": "shared_evidence_startup_task_file_context",
+            "requirement": "shared_context_chunks",
+            "kind": "startup_task_file_context",
+            "source": "startup_task_file",
+            "status": "available",
+            "task_file": context.get("task_file"),
+            "sha256": context.get("sha256"),
+        }
+        append_unique(self.state["facts"], fact)
+        append_unique(self.state["shared_evidence"], evidence)
+        self.publish(
+            "context_memory",
+            "fact",
+            fact,
+            target="gpu1",
+            correlation_id=f"{self.stamp}:startup_task_file_context",
+            round_id=0,
+        )
+        self.publish(
+            "context_memory",
+            "startup_task_file_context",
+            context,
+            target="gpu1",
+            correlation_id=f"{self.stamp}:startup_task_file_content",
+            round_id=0,
+        )
+        self.append_heap_exchange_event({
+            "kind": "startup_task_file_context",
+            "lane": "context_memory",
+            "phase": "startup_task_file_loaded",
+            "task_file": context.get("task_file"),
+            "sha256": context.get("sha256"),
+            "char_count": context.get("char_count"),
+            "preview": context.get("preview"),
+            "preview_truncated": context.get("preview_truncated"),
+            "summary": "startup task-file content loaded into heap before provider teamwork",
+        })
+
+
+
     def startup_manifest_from_task_file(self) -> tuple[Path | None, dict[str, Any]]:
         """Load the tool-owned startup manifest associated with --task-file.
 
@@ -580,13 +681,10 @@ class HeapRuntimeCompletenessGate:
         Seeding passed startup requirements into the heap prevents the provider
         universe from being blocked by re-running already completed context tools.
         """
-        task_file = str(getattr(self.args, "task_file", "") or "").strip()
-        if not task_file:
+        task_path = self.startup_task_file_path()
+        if task_path is None:
             return None, {}
-        task_path = Path(task_file)
-        if not task_path.is_absolute():
-            task_path = self.repo_root / task_path
-        manifest_path = task_path.resolve(strict=False).parent / "heap_context_memory_reload_manifest.json"
+        manifest_path = task_path.parent / "heap_context_memory_reload_manifest.json"
         payload = read_json(manifest_path)
         if not payload:
             return manifest_path, {}
@@ -2079,6 +2177,7 @@ class HeapRuntimeCompletenessGate:
             self.publish("deterministic", "fact", fact, target="gpu1", correlation_id=f"{self.stamp}:fact:{fact['id']}", round_id=0)
         self.heap.write_snapshot()
         self.write_heap_exchange_entry()
+        self.publish_startup_task_file_context()
         self.publish_startup_memory_context_reload_events()
         self.publish_startup_manifest_evidence()
 
@@ -3048,7 +3147,7 @@ class HeapRuntimeCompletenessGate:
         )
         missing = [name for name, present in sections.items() if not present]
         file_quality = self.response_file_reference_quality(delta_text)
-        implementation_quality = self.implementation_quality_report(delta_text)
+        implementation_quality = self.implementation_quality_report(delta_text, events)
         pointer_action_match = re.search(r"(?im)^\\s*POINTER_ACTION\\s*=\\s*([^\\n\\r]+)", delta_text or "")
         pointer_action = pointer_action_match.group(1).strip() if pointer_action_match else ""
 
