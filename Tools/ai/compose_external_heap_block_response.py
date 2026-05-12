@@ -281,6 +281,7 @@ def main() -> int:
         "schema_version": 1,
         "kind": "external_heap_primary_long_response_composer",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "passed": True,
         "pointer_manifest": str(pointer_path),
         "composer_json": str(Path(args.composer_json).resolve()) if args.composer_json else "",
         "causality_json": str(Path(args.causality_json).resolve()) if args.causality_json else "",
