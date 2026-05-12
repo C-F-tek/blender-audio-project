@@ -101,17 +101,30 @@ def required_file(path: Path, label: str) -> None:
         raise SystemExit(f"missing required {label}: {path}")
 
 
-def json_file_bool(path: Path, key: str) -> bool | None:
+def read_json_object(path: Path) -> dict[str, Any]:
     if not path.exists():
-        return None
+        return {}
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
     except Exception:
-        return None
-    if not isinstance(data, dict):
-        return None
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def json_file_bool(path: Path, key: str) -> bool | None:
+    data = read_json_object(path)
     value = data.get(key)
     return value if isinstance(value, bool) else None
+
+
+def explicit_provider_execution_from_reports(*reports: dict[str, Any]) -> bool:
+    """Aggregate explicit execution flags written by post-run artifacts.
+
+    This does not infer provider execution from pointer/block presence. It only
+    preserves boolean evidence already computed by the normalizer, pointer
+    manifest, long-response composer, or revision context.
+    """
+    return any(report.get("provider_execution_performed") is True for report in reports if isinstance(report, dict))
 
 
 def parse_args() -> argparse.Namespace:
@@ -140,6 +153,7 @@ def main() -> int:
     causality_json = run_dir / "heap_final_causality_normalized.json"
     pointer_json = run_dir / "external_heap_block_pointer_manifest.json"
     long_response_md = run_dir / "external_heap_primary_long_response.md"
+    long_response_json = long_response_md.with_suffix(".json")
     revision_json = run_dir / "external_heap_revision_context.json"
 
     commands: list[tuple[str, list[str]]] = []
@@ -230,18 +244,15 @@ def main() -> int:
             hard_failure = True
             break
 
-    pointer_report = {}
-    if pointer_json.exists():
-        try:
-            pointer_data = json.loads(pointer_json.read_text(encoding="utf-8-sig"))
-            pointer_report = pointer_data if isinstance(pointer_data, dict) else {}
-        except Exception:
-            pointer_report = {}
+    causality_report = read_json_object(causality_json)
+    pointer_report = read_json_object(pointer_json)
+    long_response_report = read_json_object(long_response_json)
+    revision_report = read_json_object(revision_json)
 
     causality_passed = json_file_bool(causality_json, "causal_chain_passed")
     product_acceptance_passed = json_file_bool(causality_json, "product_acceptance_passed")
     pointer_passed = json_file_bool(pointer_json, "passed")
-    long_response_passed = json_file_bool(long_response_md.with_suffix(".json"), "passed")
+    long_response_passed = json_file_bool(long_response_json, "passed")
     revision_passed = json_file_bool(revision_json, "passed")
     packaging_complete = all(path.exists() for path in (causality_json, pointer_json, long_response_md, revision_json))
     command_failures = [result for result in results if not result.get("passed")]
@@ -265,7 +276,12 @@ def main() -> int:
         "pointer_passed": pointer_passed,
         "long_response_passed": long_response_passed,
         "revision_passed": revision_passed,
-        "provider_execution_performed": pointer_report.get("provider_execution_performed") is True,
+        "provider_execution_performed": explicit_provider_execution_from_reports(
+            causality_report,
+            pointer_report,
+            long_response_report,
+            revision_report,
+        ),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "results": results,
