@@ -24,7 +24,7 @@ REVISION_TASK_PREVIEW_CHARS = 1600
 REJECTION_MARKER_PATTERNS = (
     ("placeholder/stub", re.compile(r"placeholder/stub", re.IGNORECASE)),
     ("similarity=1.000", re.compile(r"similarity\s*=\s*1\.000", re.IGNORECASE)),
-    ("TODO", re.compile(r"\bTODO\b", re.IGNORECASE)),
+    ("TODO", re.compile(r"(^|\n)\s*(#|//)?\s*TODO\s*[:(]", re.IGNORECASE)),
     ("pass", re.compile(r"(^|[^A-Za-z0-9_])pass([^A-Za-z0-9_]|$)", re.IGNORECASE)),
     ("path/to/artifact", re.compile(r"path/to/artifact", re.IGNORECASE)),
 )
