@@ -135,7 +135,36 @@ def block_is_terminal_no_patchable_target(block: dict[str, Any]) -> bool:
     for key in ("candidate_response_preview", "source_preview", "preview", "response_text"):
         if no_patchable_target_text(str(block.get(key) or "")):
             return True
-    return False
+
+    evidence_text = candidate_text_from_block(block)
+    lowered = evidence_text.lower()
+    flags = candidate_applicability_flags(evidence_text)
+    for flag in as_list(block.get("candidate_applicability_flags")):
+        flag_text = str(flag).strip()
+        if flag_text and flag_text not in flags:
+            flags.append(flag_text)
+
+    no_verified_target_signals = (
+        "no verified source file references",
+        "source refs non verificati",
+        "target_files must come from source allowlist only",
+        "invented_source_path veto",
+        "decision=reject_until_concrete_code_and_full_repo_relative_paths",
+        "no verified/allowlisted repo-relative patch target",
+        "none_verified",
+    )
+
+    has_no_verified_target_signal = any(signal in lowered for signal in no_verified_target_signals)
+    has_terminal_blocker = any(
+        flag in flags
+        for flag in (
+            "invented_source_path",
+            "unresolved_pointer_placeholder",
+            "unresolved_angle_bracket_token",
+        )
+    )
+
+    return has_terminal_blocker and has_no_verified_target_signal
 
 
 def terminal_no_patchable_target_summary(proposals: list[dict[str, Any]]) -> dict[str, Any]:
