@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -51,6 +52,50 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
     if not path.is_absolute():
         path = repo_root / path
     return path.resolve()
+
+
+EXECUTION_TRUE_PATTERNS = (
+    re.compile(r"\b(provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)\b\s*[:=]\s*true\b", re.IGNORECASE),
+    re.compile(r"[\"'](provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)[\"']\s*:\s*true\b", re.IGNORECASE),
+    re.compile(r"\b(NPU|GPU|provider|workload)[^\n]{0,120}\bperformed\s*[:=]\s*true\b", re.IGNORECASE),
+    re.compile(r"\bperformed\s*=\s*true\b", re.IGNORECASE),
+)
+EXECUTION_BOOL_KEYS = {
+    "provider_execution_performed",
+    "gpu0_provider_execution_performed",
+    "gpu1_provider_execution_performed",
+    "npu_provider_execution_performed",
+    "workload_performed",
+}
+WORKLOAD_CONTAINER_KEYS = {"npu_device_workload", "gpu_device_workload", "device_workload", "workload"}
+
+
+def normalize_bool(value: Any) -> bool:
+    return value is True or str(value).strip().lower() == "true"
+
+
+def mapping_has_execution_evidence(value: Any, parent_key: str = "") -> bool:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            key_text = str(key)
+            key_lower = key_text.lower()
+            if key_lower in EXECUTION_BOOL_KEYS and normalize_bool(item):
+                return True
+            if key_lower == "performed" and parent_key.lower() in WORKLOAD_CONTAINER_KEYS and normalize_bool(item):
+                return True
+            if mapping_has_execution_evidence(item, key_text):
+                return True
+    elif isinstance(value, list):
+        return any(mapping_has_execution_evidence(item, parent_key) for item in value)
+    return False
+
+
+def text_has_execution_evidence(text: str) -> bool:
+    return any(pattern.search(text) for pattern in EXECUTION_TRUE_PATTERNS)
+
+
+def provider_report_execution_performed(data: dict[str, Any]) -> bool:
+    return mapping_has_execution_evidence(data) or text_has_execution_evidence(str(data.get("response_text") or ""))
 
 
 def discover_run_dir(repo_root: Path, report_file: str, run_dir: str) -> Path:
@@ -250,7 +295,7 @@ def list_provider_reports(run_dir: Path) -> list[dict[str, Any]]:
                 "kind": data.get("kind") or data.get("report_kind"),
                 "lane": lane,
                 "passed": data.get("passed"),
-                "provider_execution_performed": data.get("provider_execution_performed"),
+                "provider_execution_performed": provider_report_execution_performed(data),
                 "response_text": data.get("response_text", ""),
                 "npu_device_workload": data.get("npu_device_workload"),
                 "warnings": data.get("warnings", []),

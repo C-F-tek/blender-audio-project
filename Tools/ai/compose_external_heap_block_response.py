@@ -27,8 +27,10 @@ from typing import Any
 
 
 EXECUTION_TRUE_PATTERNS = (
-    re.compile(r"\bprovider_execution_performed\b\s*[:=]\s*true\b", re.IGNORECASE),
-    re.compile(r"\bworkload_performed\b\s*[:=]\s*true\b", re.IGNORECASE),
+    re.compile(r"\b(provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)\b\s*[:=]\s*true\b", re.IGNORECASE),
+    re.compile(r"[\"'](provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)[\"']\s*:\s*true\b", re.IGNORECASE),
+    re.compile(r"\b(NPU|GPU|provider|workload)[^\n]{0,120}\bperformed\s*[:=]\s*true\b", re.IGNORECASE),
+    re.compile(r"\bperformed\s*=\s*true\b", re.IGNORECASE),
 )
 
 
@@ -78,8 +80,12 @@ def role_blocks(pointer: dict[str, Any], role: str) -> list[dict[str, Any]]:
     return sorted(items, key=lambda item: int(item.get("step_index") or 0))
 
 
+def normalize_bool(value: Any) -> bool:
+    return value is True or str(value).strip().lower() == "true"
+
+
 def block_provider_execution_performed(block: dict[str, Any]) -> bool:
-    if block.get("provider_execution_performed") is True:
+    if normalize_bool(block.get("provider_execution_performed")):
         return True
     preview = str(block.get("preview") or "")
     return any(pattern.search(preview) for pattern in EXECUTION_TRUE_PATTERNS)

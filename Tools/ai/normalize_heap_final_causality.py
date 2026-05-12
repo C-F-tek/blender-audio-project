@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -35,6 +36,42 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 def normalize_bool(value: Any) -> bool:
     return value is True or str(value).lower() == "true"
+
+
+EXECUTION_TRUE_PATTERNS = (
+    re.compile(r"\b(provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)\b\s*[:=]\s*true\b", re.IGNORECASE),
+    re.compile(r"[\"'](provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)[\"']\s*:\s*true\b", re.IGNORECASE),
+    re.compile(r"\b(NPU|GPU|provider|workload)[^\n]{0,120}\bperformed\s*[:=]\s*true\b", re.IGNORECASE),
+    re.compile(r"\bperformed\s*=\s*true\b", re.IGNORECASE),
+)
+EXECUTION_BOOL_KEYS = {
+    "provider_execution_performed",
+    "gpu0_provider_execution_performed",
+    "gpu1_provider_execution_performed",
+    "npu_provider_execution_performed",
+    "workload_performed",
+}
+WORKLOAD_CONTAINER_KEYS = {"npu_device_workload", "gpu_device_workload", "device_workload", "workload"}
+
+
+def mapping_has_execution_evidence(value: Any, parent_key: str = "") -> bool:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            key_text = str(key)
+            key_lower = key_text.lower()
+            if key_lower in EXECUTION_BOOL_KEYS and normalize_bool(item):
+                return True
+            if key_lower == "performed" and parent_key.lower() in WORKLOAD_CONTAINER_KEYS and normalize_bool(item):
+                return True
+            if mapping_has_execution_evidence(item, key_text):
+                return True
+    elif isinstance(value, list):
+        return any(mapping_has_execution_evidence(item, parent_key) for item in value)
+    return False
+
+
+def text_has_execution_evidence(text: str) -> bool:
+    return any(pattern.search(text) for pattern in EXECUTION_TRUE_PATTERNS)
 
 
 def list_len(value: Any) -> int:
@@ -71,22 +108,21 @@ def provider_execution_performed(composer: dict[str, Any]) -> bool:
         if not isinstance(provider, dict):
             continue
         workload = provider.get("npu_device_workload") if isinstance(provider.get("npu_device_workload"), dict) else {}
-        if any(
-            normalize_bool(value)
-            for value in (
-                provider.get("provider_execution_performed"),
-                provider.get("npu_provider_execution_performed"),
-                provider.get("gpu0_provider_execution_performed"),
-                provider.get("gpu1_provider_execution_performed"),
-                workload.get("performed"),
-            )
+        if (
+            mapping_has_execution_evidence(provider)
+            or normalize_bool(workload.get("performed"))
+            or text_has_execution_evidence(str(provider.get("response_text") or ""))
         ):
             return True
     for audit in composer.get("npu_audits") or []:
         if not isinstance(audit, dict):
             continue
         workload = audit.get("npu_device_workload") if isinstance(audit.get("npu_device_workload"), dict) else {}
-        if normalize_bool(audit.get("provider_execution_performed")) or normalize_bool(workload.get("performed")):
+        if (
+            mapping_has_execution_evidence(audit)
+            or normalize_bool(workload.get("performed"))
+            or text_has_execution_evidence(str(audit.get("summary") or audit.get("response_text") or audit.get("micro_task_piece") or ""))
+        ):
             return True
     return False
 
