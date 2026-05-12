@@ -21,6 +21,13 @@ from typing import Any
 
 
 REVISION_TASK_PREVIEW_CHARS = 1600
+REJECTION_MARKER_PATTERNS = (
+    ("placeholder/stub", re.compile(r"placeholder/stub", re.IGNORECASE)),
+    ("similarity=1.000", re.compile(r"similarity\s*=\s*1\.000", re.IGNORECASE)),
+    ("TODO", re.compile(r"\bTODO\b", re.IGNORECASE)),
+    ("pass", re.compile(r"(^|[^A-Za-z0-9_])pass([^A-Za-z0-9_]|$)", re.IGNORECASE)),
+    ("path/to/artifact", re.compile(r"path/to/artifact", re.IGNORECASE)),
+)
 
 
 def read_json(path_value: str) -> dict[str, Any]:
@@ -115,8 +122,8 @@ def rejection_reasons(composer: dict[str, Any], block: dict[str, Any]) -> list[s
             if reason:
                 reasons.append(reason)
     preview = str(block.get("preview") or "")
-    for marker in ("placeholder/stub", "similarity=1.000", "TODO", "pass", "path/to/artifact"):
-        if marker.lower() in preview.lower() and marker not in reasons:
+    for marker, pattern in REJECTION_MARKER_PATTERNS:
+        if pattern.search(preview) and marker not in reasons:
             reasons.append(marker)
     return reasons
 
