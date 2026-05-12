@@ -58,6 +58,13 @@ def as_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
 
 
+def compact_text(value: Any, limit: int) -> str:
+    text = str(value or "")
+    if limit > 0 and len(text) > limit:
+        return text[:limit] + "\n...[truncated]"
+    return text
+
+
 def proposal_blocks(pointer: dict[str, Any]) -> list[dict[str, Any]]:
     blocks = [
         block for block in as_list(pointer.get("blocks"))
@@ -126,16 +133,18 @@ def rejection_reasons(composer: dict[str, Any], block: dict[str, Any]) -> list[s
             if reason:
                 reasons.append(reason)
     preview = str(block.get("preview") or "")
+    diagnostic_preview = str(block.get("diagnostic_preview") or "")
+    marker_text = "\n".join(part for part in (preview, diagnostic_preview) if part)
     for marker, pattern in REJECTION_MARKER_PATTERNS:
-        if pattern.search(preview) and marker not in reasons:
+        if pattern.search(marker_text) and marker not in reasons:
             reasons.append(marker)
     return reasons
 
 
 def task_block_context(block: dict[str, Any], preview_limit: int = REVISION_TASK_PREVIEW_CHARS) -> dict[str, Any]:
-    preview = str(block.get("preview") or "")
-    if preview_limit > 0 and len(preview) > preview_limit:
-        preview = preview[:preview_limit] + "\n...[truncated]"
+    source_preview = compact_text(block.get("preview"), preview_limit)
+    candidate_preview = compact_text(block.get("candidate_response_preview"), preview_limit)
+    diagnostic_preview = compact_text(block.get("diagnostic_preview"), preview_limit)
     return {
         "source_path": str(block.get("source_path") or ""),
         "markdown_path": str(block.get("markdown_path") or ""),
@@ -144,7 +153,12 @@ def task_block_context(block: dict[str, Any], preview_limit: int = REVISION_TASK
         "refines_block_id": str(block.get("refines_block_id") or ""),
         "block_quality_passed": block.get("quality_passed"),
         "block_accepted": block.get("accepted"),
-        "source_preview": preview,
+        "preview_source": str(block.get("preview_source") or ""),
+        "source_preview": source_preview,
+        "candidate_response_preview": candidate_preview,
+        "diagnostic_preview": diagnostic_preview,
+        "candidate_response_available": bool(candidate_preview.strip()),
+        "diagnostic_preview_available": bool(diagnostic_preview.strip()),
     }
 
 
@@ -153,7 +167,8 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
     previous_symbols: dict[str, set[str]] = {"imports": set(), "defs": set(), "classes": set(), "assignments": set()}
     for block in proposals:
         block_id = str(block.get("block_id") or "")
-        symbols = extract_symbols(str(block.get("preview") or ""))
+        symbol_text = str(block.get("candidate_response_preview") or block.get("preview") or "")
+        symbols = extract_symbols(symbol_text)
         discovered: dict[str, list[str]] = {}
         for key, values in symbols.items():
             new_values = [value for value in values if value not in previous_symbols[key]]
@@ -171,7 +186,7 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
                     "target_block_id": block.get("previous_block_id"),
                     "resume_from_block_id": block_id,
                     "discovered_symbols": discovered,
-                    "instruction": "Propaga import/variabili/classi/funzioni scoperte in questo blocco ai blocchi precedenti compatibili, poi riprendi dal source_block_id senza perdere il cursore forward.",
+                    "instruction": "Propaga import/variabili/classi/funzioni scoperte nel candidate_response_preview ai blocchi precedenti compatibili, poi riprendi dal source_block_id senza perdere il cursore forward.",
                     **task_block_context(block),
                 }
             )
@@ -185,7 +200,7 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
                     "target_block_id": block_id,
                     "resume_from_block_id": block.get("resume_from_block_id") or block.get("previous_block_id") or block_id,
                     "rejection_reasons": reasons,
-                    "instruction": "Riscrivi il blocco eliminando placeholder/stub/ripetizione. Usa path repo reali e operazioni concrete. Mantieni i pointer previous/next/refines/resume.",
+                    "instruction": "Riscrivi il blocco usando candidate_response_preview come input primario e diagnostic_preview solo come diagnosi. Produci path repo reali e operazioni concrete. Mantieni i pointer previous/next/refines/resume.",
                     **task_block_context(block),
                 }
             )
@@ -208,7 +223,7 @@ def build_peer_tasks(proposals: list[dict[str, Any]], gpu0: list[dict[str, Any]]
                     "task_type": "parallel_recheck_old_pointer",
                     "target_block_id": block_id,
                     "can_edit_pointer": True,
-                    "instruction": "Rivaluta il blocco anche se non e' l'ultimo. Se serve, proponi refines_block_id e resume_from_block_id per una riscrittura concreta.",
+                    "instruction": "Rivaluta il candidate_response_preview anche se il blocco non e' l'ultimo. Usa diagnostic_preview solo come diagnosi. Se serve, proponi refines_block_id e resume_from_block_id per una riscrittura concreta.",
                     **task_block_context(block),
                 }
             )
@@ -220,7 +235,7 @@ def build_peer_tasks(proposals: list[dict[str, Any]], gpu0: list[dict[str, Any]]
                     "task_type": "parallel_guardrail_audit_old_pointer",
                     "target_block_id": block_id,
                     "can_edit_pointer": False,
-                    "instruction": "Audita il blocco vecchio per placeholder/stub, path inventati, source writes non dichiarati e ripetizioni. Restituisci decisione accept/reject e motivi.",
+                    "instruction": "Audita candidate_response_preview per placeholder/stub, path inventati, source writes non dichiarati e ripetizioni. Usa diagnostic_preview come contesto secondario. Restituisci decisione accept/reject e motivi.",
                     **task_block_context(block),
                 }
             )
