@@ -649,7 +649,7 @@ def main() -> int:
     context_files = existing_context_files(repo_root, max_files=args.startup_scan_context_files)
 
     artifacts.update(build_repo_docs_map(repo_root, context_files, output_dir))
-    artifacts.update(collect_semantic_code_chunks(repo_root, output_dir, args.request, limit=max(12, min(args.max_context_files, 64))))
+    artifacts.update(collect_semantic_code_chunks(repo_root, output_dir, request_text, limit=max(12, min(args.max_context_files, 64))))
 
     tool_catalog_json = output_dir / "startup_tool_catalog.json"
     tool_catalog_md = output_dir / "startup_tool_catalog.md"
@@ -685,7 +685,7 @@ def main() -> int:
                 "--repo-root",
                 ".",
                 "--objective",
-                args.request or "heap startup memory reload",
+                request_text or "heap startup memory reload",
                 "--max-memory-chars",
                 str(args.max_memory_chars),
                 "--output",
@@ -765,6 +765,9 @@ def main() -> int:
 
     startup_request_file = output_dir / "heap_startup_request.md"
     startup_request_file.write_text(request_text or "heap startup request", encoding="utf-8")
+    startup_raw_file_list = output_dir / "startup_context_raw_files.txt"
+    startup_raw_file_list.write_text("\n".join(context_files) + "\n", encoding="utf-8")
+    artifacts["startup_context_raw_file_list"] = repo_rel(repo_root, startup_raw_file_list)
 
     transient_json = output_dir / "startup_transient_request_context.json"
     transient_md = output_dir / "startup_transient_request_context.md"
@@ -777,6 +780,8 @@ def main() -> int:
         "heap startup context/memory reload before provider lanes",
         "--memory-note-file",
         str(startup_request_file),
+        "--raw-file-list",
+        str(startup_raw_file_list),
         "--report-file",
         str(tool_catalog_json),
         "--report-file",
@@ -794,8 +799,6 @@ def main() -> int:
         "--markdown-output",
         str(transient_md),
     ]
-    for rel_path in context_files:
-        transient_command.extend(["--raw-file", rel_path])
     commands.append(
         run_tool(
             transient_command,

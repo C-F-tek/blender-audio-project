@@ -91,6 +91,21 @@ def read_note_file(repo_root: Path, value: str) -> str:
         return f"[memory note file read failed: {repo_rel(path, repo_root)}: {type(exc).__name__}: {exc}]"
 
 
+def read_raw_file_list(repo_root: Path, value: str) -> list[str]:
+    path = resolve_path(repo_root, value)
+    try:
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError:
+        return []
+    refs: list[str] = []
+    for line in text.splitlines():
+        item = line.strip()
+        if not item or item.startswith("#"):
+            continue
+        refs.append(item)
+    return refs
+
+
 def collect_raw_files(repo_root: Path, values: list[str], *, max_files: int, max_chars_per_file: int) -> list[dict[str, Any]]:
     files: list[dict[str, Any]] = []
     seen: set[Path] = set()
@@ -152,7 +167,10 @@ def build_context(args: argparse.Namespace) -> dict[str, Any]:
     memory_notes = [item for item in split_values(args.memory_note or [])]
     for value in split_values(getattr(args, "memory_note_file", []) or []):
         memory_notes.append(read_note_file(repo_root, value))
-    raw_files = collect_raw_files(repo_root, args.raw_file or [], max_files=args.max_raw_files, max_chars_per_file=args.max_chars_per_file)
+    raw_file_values = list(args.raw_file or [])
+    for value in split_values(getattr(args, "raw_file_list", []) or []):
+        raw_file_values.extend(read_raw_file_list(repo_root, value))
+    raw_files = collect_raw_files(repo_root, raw_file_values, max_files=args.max_raw_files, max_chars_per_file=args.max_chars_per_file)
     report_refs = [build_report_reference(repo_root, value) for value in split_values(args.report_file or [])]
     warnings: list[str] = []
     for item in raw_files:
@@ -265,6 +283,7 @@ def main() -> int:
     parser.add_argument("--memory-note", action="append", default=[])
     parser.add_argument("--memory-note-file", action="append", default=[], help="Read a memory note from file to avoid long Windows command lines.")
     parser.add_argument("--raw-file", action="append", default=[])
+    parser.add_argument("--raw-file-list", action="append", default=[], help="Read raw-file refs from newline-delimited file to avoid long Windows command lines.")
     parser.add_argument("--report-file", action="append", default=[])
     parser.add_argument("--max-raw-files", type=int, default=80)
     parser.add_argument("--max-chars-per-file", type=int, default=12000)
