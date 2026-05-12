@@ -8,6 +8,16 @@ composer/causality reports into a next-run context that lets:
 - GPU1 propagate newly discovered imports/variables/contracts into older blocks;
 - GPU0 and NPU independently re-check older pointers in parallel;
 - the next run resume from the correct block instead of repeating generic output.
+
+Important runtime semantics:
+
+- `causal_chain_passed=true` means the heap universe executed and produced
+  resumable evidence.
+- `product_acceptance_passed=false` can still be correct when every proposal is
+  rejected by deterministic quality lanes.
+- non-concrete candidate proposals must force
+  `priority_next_action=rewrite_non_concrete_candidates`;
+- symbol propagation is disabled for non-concrete candidate proposals.
 """
 from __future__ import annotations
 
@@ -28,13 +38,35 @@ REJECTION_MARKER_PATTERNS = (
     ("pass", re.compile(r"(^|[^A-Za-z0-9_])pass([^A-Za-z0-9_]|$)", re.IGNORECASE)),
     ("path/to/artifact", re.compile(r"path/to/artifact", re.IGNORECASE)),
 )
+
 CANDIDATE_APPLICABILITY_PATTERNS = (
     ("generic_patch_sketch", re.compile(r"\bCODE_OR_PATCH_SKETCH\b", re.IGNORECASE)),
     ("generic_missing_functionality", re.compile(r"implementa(?:re|zione)\s+(?:le\s+)?funzionalit", re.IGNORECASE)),
-    ("synthetic_stub_function", re.compile(r"def\s+[A-Za-z_][A-Za-z0-9_]*\s*\([^)]*\)\s*:\s*(?:\n\s*#\s*Implementazione|\n\s*context_pack\s*=\s*\{)", re.IGNORECASE)),
+    (
+        "synthetic_stub_function",
+        re.compile(
+            r"def\s+[A-Za-z_][A-Za-z0-9_]*\s*\([^)]*\)\s*:"
+            r"\s*(?:\n\s*#\s*Implementazione|\n\s*context_pack\s*=\s*\{)",
+            re.IGNORECASE,
+        ),
+    ),
     ("comment_only_implementation", re.compile(r"^\s*#\s*Implementazione\b", re.IGNORECASE | re.MULTILINE)),
-    ("unverified_unit_test_path", re.compile(r"\bpytest\s+(?:\.\\)?Tests[/\\]unit[/\\]test_[A-Za-z0-9_./\\-]+\.py\b", re.IGNORECASE)),
+    (
+        "unverified_unit_test_path",
+        re.compile(r"\bpytest\s+(?:\.\\)?Tests[/\\]unit[/\\]test_[A-Za-z0-9_./\\-]+\.py\b", re.IGNORECASE),
+    ),
     ("run_script_as_validation_only", re.compile(r"\bpython\s+Tools[/\\]ai[/\\][A-Za-z0-9_./\\-]+\.py\b", re.IGNORECASE)),
+    ("bare_pass", re.compile(r"(^|[^A-Za-z0-9_])pass([^A-Za-z0-9_]|$)", re.IGNORECASE)),
+    ("comment_only_function_stub", re.compile(r"comment_only_function_stub|def\s+[A-Za-z_][A-Za-z0-9_]*\([^)]*\):\s*(?:#.*\n\s*)*pass\b", re.IGNORECASE)),
+    ("unresolved_angle_bracket_token", re.compile(r"<(?:id-or-empty|[^>\n]*placeholder[^>\n]*)>", re.IGNORECASE)),
+    ("invalid_ps1_py_compile_validation", re.compile(r"py_compile\s+[^\n`]*\.ps1\b", re.IGNORECASE)),
+    (
+        "generic_diff_without_file_context",
+        re.compile(
+            r"generic_diff_without_file_context|PATCH_SKETCH:\s*```diff\s*diff --git[^\n]*\n@@\s*\n\s*#",
+            re.IGNORECASE | re.DOTALL,
+        ),
+    ),
 )
 
 
@@ -76,13 +108,56 @@ def compact_text(value: Any, limit: int) -> str:
 def candidate_applicability_flags(text: str) -> list[str]:
     flags: list[str] = []
     for flag, pattern in CANDIDATE_APPLICABILITY_PATTERNS:
-        if pattern.search(text) and flag not in flags:
+        if pattern.search(text or "") and flag not in flags:
             flags.append(flag)
+    return flags
+
+
+def candidate_text_from_block(block: dict[str, Any]) -> str:
+    """Return the full evidence text used to classify candidate applicability.
+
+    The old implementation looked mainly at candidate_response_preview. That was
+    insufficient once the deterministic lanes reported placeholder/stub markers
+    only in diagnostic previews or composer rejection reasons. This function
+    deliberately combines candidate response, source preview, diagnostic preview,
+    rejection snippets and existing block quality metadata.
+    """
+    parts: list[str] = []
+    for key in (
+        "candidate_response_preview",
+        "source_preview",
+        "preview",
+        "diagnostic_preview",
+        "response_text",
+    ):
+        value = block.get(key)
+        if value:
+            parts.append(str(value))
+    for key in ("rejection_reasons", "errors", "warnings", "candidate_applicability_flags"):
+        for value in as_list(block.get(key)):
+            parts.append(str(value))
+    for key in ("implementation_quality", "proposal_progress", "cross_lane_veto"):
+        value = block.get(key)
+        if isinstance(value, dict):
+            parts.append(json.dumps(value, ensure_ascii=False, sort_keys=True))
+    return "\n".join(parts)
+
+
+def candidate_applicability_flags_from_block(block: dict[str, Any]) -> list[str]:
+    flags = candidate_applicability_flags(candidate_text_from_block(block))
+    for flag in as_list(block.get("candidate_applicability_flags")):
+        text = str(flag).strip()
+        if text and text not in flags:
+            flags.append(text)
     return flags
 
 
 def candidate_concrete_enough(text: str) -> bool:
     return not candidate_applicability_flags(text)
+
+
+def candidate_block_concrete_enough(block: dict[str, Any]) -> bool:
+    return not candidate_applicability_flags_from_block(block)
 
 
 def proposal_blocks(pointer: dict[str, Any]) -> list[dict[str, Any]]:
@@ -152,13 +227,11 @@ def rejection_reasons(composer: dict[str, Any], block: dict[str, Any]) -> list[s
             reason = str(item.get("reason") or "").strip()
             if reason:
                 reasons.append(reason)
-    preview = str(block.get("preview") or "")
-    diagnostic_preview = str(block.get("diagnostic_preview") or "")
-    marker_text = "\n".join(part for part in (preview, diagnostic_preview) if part)
+    marker_text = candidate_text_from_block(block)
     for marker, pattern in REJECTION_MARKER_PATTERNS:
         if pattern.search(marker_text) and marker not in reasons:
             reasons.append(marker)
-    for flag in candidate_applicability_flags(str(block.get("candidate_response_preview") or preview)):
+    for flag in candidate_applicability_flags_from_block(block):
         reason = f"candidate_applicability.{flag}"
         if reason not in reasons:
             reasons.append(reason)
@@ -169,7 +242,7 @@ def task_block_context(block: dict[str, Any], preview_limit: int = REVISION_TASK
     source_preview = compact_text(block.get("preview"), preview_limit)
     candidate_preview = compact_text(block.get("candidate_response_preview"), preview_limit)
     diagnostic_preview = compact_text(block.get("diagnostic_preview"), preview_limit)
-    candidate_flags = candidate_applicability_flags(str(block.get("candidate_response_preview") or block.get("preview") or ""))
+    candidate_flags = candidate_applicability_flags_from_block(block)
     return {
         "source_path": str(block.get("source_path") or ""),
         "markdown_path": str(block.get("markdown_path") or ""),
@@ -194,8 +267,8 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
     previous_symbols: dict[str, set[str]] = {"imports": set(), "defs": set(), "classes": set(), "assignments": set()}
     for block in proposals:
         block_id = str(block.get("block_id") or "")
-        symbol_text = str(block.get("candidate_response_preview") or block.get("preview") or "")
-        concrete_candidate = candidate_concrete_enough(symbol_text)
+        symbol_text = candidate_text_from_block(block)
+        concrete_candidate = candidate_block_concrete_enough(block)
         symbols = extract_symbols(symbol_text) if concrete_candidate else {"imports": [], "defs": [], "classes": [], "assignments": []}
         discovered: dict[str, list[str]] = {}
         for key, values in symbols.items():
@@ -323,17 +396,28 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
     candidate_summary = candidate_applicability_summary(all_tasks)
     latest = latest_block(proposals)
     pointer_limited = bool(pointer.get("max_blocks_applied"))
+    source_run_was_fallback = bool(composer.get("fallback_heap_report_used")) or str(composer.get("product_status") or "") == "blocked_with_reason" and not proposals
+    operational_revision_context = bool(
+        proposals
+        and normalize_bool(pointer.get("provider_execution_performed"))
+        and normalize_bool(causality.get("causal_chain_passed"))
+    )
     warnings: list[str] = []
     if pointer_limited:
         warnings.append("pointer manifest was limited by max_blocks; revision tasks are based on exposed blocks only")
     if candidate_summary.get("requires_concrete_rewrite"):
         warnings.append("non-concrete candidate proposals require rewrite before symbol propagation or product acceptance")
+    if not operational_revision_context:
+        warnings.append("revision context is non-operational: source run had no resumable provider/pointer blocks")
     return {
         "schema_version": 1,
         "kind": "external_heap_revision_context",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "protocol": "external_heap_revision_context_v1",
         "passed": True,
+        "operational_revision_context": operational_revision_context,
+        "source_run_was_fallback": source_run_was_fallback,
+        "can_resume_universe": operational_revision_context,
         "source_pointer_protocol": pointer.get("protocol"),
         "pointer_product_contract": pointer.get("pointer_product_contract"),
         "pointer_contract_role": pointer.get("pointer_contract_role"),
@@ -380,6 +464,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         f"- Protocol: `{report['protocol']}`",
         f"- Passed: `{report.get('passed')}`",
+        f"- Operational revision context: `{report.get('operational_revision_context')}`",
+        f"- Can resume universe: `{report.get('can_resume_universe')}`",
+        f"- Source run was fallback: `{report.get('source_run_was_fallback')}`",
         f"- Pointer contract role: `{report.get('pointer_contract_role')}`",
         f"- Provider execution semantics: `{report.get('provider_execution_semantics')}`",
         f"- Causal chain passed: `{report.get('causal_chain_passed')}`",
@@ -413,6 +500,9 @@ def render_markdown(report: dict[str, Any]) -> str:
                 f"- Type: `{task.get('task_type')}`",
                 f"- Target: `{task.get('target_block_id')}`",
                 f"- Resume: `{task.get('resume_from_block_id')}`",
+                f"- Candidate concrete enough: `{task.get('candidate_concrete_enough')}`",
+                f"- Symbol propagation skipped: `{task.get('symbol_propagation_skipped')}`",
+                f"- Candidate applicability flags: `{task.get('candidate_applicability_flags')}`",
                 f"- Instruction: {task.get('instruction')}",
                 "",
             ]
