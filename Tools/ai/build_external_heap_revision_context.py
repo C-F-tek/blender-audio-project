@@ -50,6 +50,10 @@ def write_text(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def normalize_bool(value: Any) -> bool:
+    return value is True or str(value).strip().lower() == "true"
+
+
 def as_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
 
@@ -241,6 +245,10 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
     peer_tasks = build_peer_tasks(proposals, gpu0, npu)
     all_tasks = gpu1_tasks + peer_tasks
     latest = latest_block(proposals)
+    pointer_limited = bool(pointer.get("max_blocks_applied"))
+    warnings: list[str] = []
+    if pointer_limited:
+        warnings.append("pointer manifest was limited by max_blocks; revision tasks are based on exposed blocks only")
     return {
         "schema_version": 1,
         "kind": "external_heap_revision_context",
@@ -251,6 +259,11 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
         "causal_chain_status": causality.get("causal_chain_status"),
         "product_acceptance_status": causality.get("product_acceptance_status"),
         "proposal_block_count": len(proposals),
+        "source_block_count": pointer.get("source_block_count"),
+        "pointer_block_count": pointer.get("block_count"),
+        "pointer_max_blocks_applied": pointer_limited,
+        "roles_present": pointer.get("roles_present"),
+        "all_roles_present": pointer.get("all_roles_present", pointer.get("roles_present")),
         "gpu0_block_count": len(gpu0),
         "npu_block_count": len(npu),
         "resume_from_block_id": choose_resume_block(proposals),
@@ -265,11 +278,11 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
             "necessario, deve generare un task di propagazione sui blocchi precedenti, far rivalutare in parallelo GPU0/NPU, "
             "poi riprendere dal resume_from_block_id mantenendo la catena next/previous/refines."
         ),
-        "provider_execution_performed": pointer.get("provider_execution_performed") is True,
+        "provider_execution_performed": normalize_bool(pointer.get("provider_execution_performed")),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": [],
-        "warnings": [],
+        "warnings": warnings,
     }
 
 
@@ -279,6 +292,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         f"- Protocol: `{report['protocol']}`",
         f"- Passed: `{report.get('passed')}`",
+        f"- Pointer max blocks applied: `{report.get('pointer_max_blocks_applied')}`",
+        f"- Pointer block count: `{report.get('pointer_block_count')}`",
+        f"- Source block count: `{report.get('source_block_count')}`",
         f"- Resume from block: `{report.get('resume_from_block_id')}`",
         f"- Latest block: `{report.get('latest_block_id')}`",
         f"- Parallel task count: `{report.get('parallel_task_count')}`",
