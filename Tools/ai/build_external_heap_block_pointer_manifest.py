@@ -240,13 +240,15 @@ def build_pointer_edges(blocks: list[dict[str, Any]]) -> list[dict[str, str]]:
 
 
 def build_report(repo_root: Path, run_dir: Path, max_block_chars: int, max_blocks: int) -> dict[str, Any]:
-    blocks = proposal_blocks(repo_root, run_dir, max_block_chars) + provider_blocks(repo_root, run_dir, max_block_chars)
-    if max_blocks > 0:
-        blocks = blocks[:max_blocks]
+    all_blocks = proposal_blocks(repo_root, run_dir, max_block_chars) + provider_blocks(repo_root, run_dir, max_block_chars)
+    blocks = all_blocks[:max_blocks] if max_blocks > 0 else all_blocks
     edges = build_pointer_edges(blocks)
     roles_present = sorted({str(block.get("role")) for block in blocks if block.get("role")})
+    all_roles_present = sorted({str(block.get("role")) for block in all_blocks if block.get("role")})
     accepted_blocks = [block for block in blocks if block.get("accepted") is True]
     rejected_blocks = [block for block in blocks if block.get("block_type") == "proposal_chunk" and block.get("accepted") is not True]
+    all_accepted_blocks = [block for block in all_blocks if block.get("accepted") is True]
+    all_rejected_blocks = [block for block in all_blocks if block.get("block_type") == "proposal_chunk" and block.get("accepted") is not True]
     return {
         "schema_version": 1,
         "kind": "external_heap_block_pointer_manifest",
@@ -260,16 +262,21 @@ def build_report(repo_root: Path, run_dir: Path, max_block_chars: int, max_block
         "provider_execution_semantics": "separate_guardrail_true_only_with_explicit_provider_or_workload_evidence",
         "roles_expected": list(DEFAULT_ROLES),
         "roles_present": roles_present,
+        "all_roles_present": all_roles_present,
         "block_count": len(blocks),
+        "source_block_count": len(all_blocks),
+        "max_blocks_applied": max_blocks > 0 and len(all_blocks) > len(blocks),
         "edge_count": len(edges),
         "accepted_block_count": len(accepted_blocks),
+        "source_accepted_block_count": len(all_accepted_blocks),
         "rejected_proposal_block_count": len(rejected_blocks),
+        "source_rejected_proposal_block_count": len(all_rejected_blocks),
         "has_forward_pointers": any(edge.get("edge_type") == "next" for edge in edges),
         "has_backrefinement_pointers": any(edge.get("edge_type") == "refines" for edge in edges),
         "has_resume_pointers": any(edge.get("edge_type") == "resume_from" for edge in edges),
         "blocks": blocks,
         "edges": edges,
-        "provider_execution_performed": any(block_provider_execution_performed(block) for block in blocks),
+        "provider_execution_performed": any(block_provider_execution_performed(block) for block in all_blocks),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": [],
@@ -287,8 +294,11 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Pointer contract role: `{report.get('pointer_contract_role')}`",
         f"- Provider execution semantics: `{report.get('provider_execution_semantics')}`",
         f"- Block count: `{report.get('block_count')}`",
+        f"- Source block count: `{report.get('source_block_count')}`",
+        f"- Max blocks applied: `{report.get('max_blocks_applied')}`",
         f"- Edge count: `{report.get('edge_count')}`",
         f"- Roles present: `{report.get('roles_present')}`",
+        f"- All roles present: `{report.get('all_roles_present')}`",
         f"- Forward pointers: `{report.get('has_forward_pointers')}`",
         f"- Back-refinement pointers: `{report.get('has_backrefinement_pointers')}`",
         f"- Resume pointers: `{report.get('has_resume_pointers')}`",
