@@ -185,16 +185,23 @@ def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_task
     tasks = payload.get("tasks") if isinstance(payload.get("tasks"), list) else []
     limit = max(0, max_tasks)
     selected = tasks[:limit]
+    candidate_summary = payload.get("candidate_applicability_summary") if isinstance(payload.get("candidate_applicability_summary"), dict) else {}
     lines = [
         "",
         "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN:",
         f"- path: {path if path else ''}",
         f"- protocol: {payload.get('protocol')}",
         f"- product_acceptance_status: {payload.get('product_acceptance_status')}",
+        f"- product_acceptance_passed: {payload.get('product_acceptance_passed')}",
+        f"- requires_concrete_rewrite: {payload.get('requires_concrete_rewrite')}",
+        f"- priority_next_action: {payload.get('priority_next_action')}",
+        f"- candidate_applicability_summary: {json.dumps(candidate_summary, ensure_ascii=False)}",
         f"- resume_from_block_id: {payload.get('resume_from_block_id')}",
         f"- latest_block_id: {payload.get('latest_block_id')}",
         f"- task_count: {len(tasks)}",
         "- GPU1 must consume rewrite/propagation tasks before emitting new proposal blocks.",
+        "- If requires_concrete_rewrite=true, GPU1 must first rewrite non-concrete candidates with real repo paths and concrete operations.",
+        "- GPU1 must not propagate symbols from candidates marked non-concrete or from sketch/stub code.",
         "- GPU1 may move backward to propagate imports, variables, functions, classes and contracts, then resume forward.",
         "- GPU0 and NPU tasks are parallel recheck/audit work over old pointers.",
         "TASKS:",
@@ -205,6 +212,10 @@ def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_task
         lines.append(
             f"{idx}. {task.get('task_id')} role={task.get('role')} type={task.get('task_type')} target={task.get('target_block_id')} resume={task.get('resume_from_block_id')}"
         )
+        if task.get("candidate_applicability_flags"):
+            lines.append(f"   candidate_applicability_flags={json.dumps(task.get('candidate_applicability_flags'), ensure_ascii=False)}")
+        if task.get("symbol_propagation_skipped"):
+            lines.append(f"   symbol_propagation_skipped={task.get('symbol_propagation_skipped')} reason={task.get('symbol_propagation_skip_reason')}")
         if task.get("discovered_symbols"):
             lines.append(f"   discovered_symbols={json.dumps(task.get('discovered_symbols'), ensure_ascii=False)}")
         if task.get("rejection_reasons"):
@@ -360,6 +371,7 @@ def main() -> int:
     block_pointer_command = render_block_pointer_command(repo_root, project_python, profile)
     revision_context_command = render_revision_context_command(repo_root, project_python)
     postrun_package_command = render_postrun_package_command(repo_root, project_python)
+    candidate_summary = revision_context_payload.get("candidate_applicability_summary") if isinstance(revision_context_payload.get("candidate_applicability_summary"), dict) else {}
     report = {
         "schema_version": 6,
         "kind": "heap_runtime_launcher_command",
@@ -371,6 +383,9 @@ def main() -> int:
         "revision_context_path": str(revision_context_path) if revision_context_path else "",
         "revision_context_loaded": bool(revision_context_payload),
         "revision_context_task_count": len(revision_context_payload.get("tasks", [])) if isinstance(revision_context_payload.get("tasks"), list) else 0,
+        "revision_context_requires_concrete_rewrite": revision_context_payload.get("requires_concrete_rewrite"),
+        "revision_context_priority_next_action": revision_context_payload.get("priority_next_action"),
+        "revision_context_candidate_applicability_summary": candidate_summary,
         "cli_bound_profile_keys": profile_cli_keys(profile),
         "external_metadata": profile_external_metadata(profile),
         "command": command,
