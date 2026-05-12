@@ -19,10 +19,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+
+EXECUTION_TRUE_PATTERNS = (
+    re.compile(r"\bprovider_execution_performed\b\s*[:=]\s*true\b", re.IGNORECASE),
+    re.compile(r"\bworkload_performed\b\s*[:=]\s*true\b", re.IGNORECASE),
+)
 
 
 def read_json(path_value: str) -> dict[str, Any]:
@@ -75,8 +82,7 @@ def block_provider_execution_performed(block: dict[str, Any]) -> bool:
     if block.get("provider_execution_performed") is True:
         return True
     preview = str(block.get("preview") or "")
-    lowered = preview.lower()
-    return "provider_execution_performed=true" in lowered or "workload_performed=true" in lowered
+    return any(pattern.search(preview) for pattern in EXECUTION_TRUE_PATTERNS)
 
 
 def pointer_product_contract(pointer: dict[str, Any]) -> dict[str, Any]:
