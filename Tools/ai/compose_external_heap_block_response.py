@@ -112,8 +112,11 @@ def status_lines(pointer: dict[str, Any], causality: dict[str, Any]) -> list[str
         f"- Pointer contract role: `{pointer.get('pointer_contract_role') or 'product_graph_decision_recovery_and_long_response_composition'}`",
         f"- Provider execution semantics: `{pointer.get('provider_execution_semantics') or 'separate_guardrail_true_only_with_explicit_provider_or_workload_evidence'}`",
         f"- Blocks: `{pointer.get('block_count')}`",
+        f"- Source blocks: `{pointer.get('source_block_count')}`",
+        f"- Max blocks applied: `{pointer.get('max_blocks_applied')}`",
         f"- Edges: `{pointer.get('edge_count')}`",
         f"- Roles present: `{pointer.get('roles_present')}`",
+        f"- All roles present: `{pointer.get('all_roles_present', pointer.get('roles_present'))}`",
         f"- Forward pointers: `{pointer.get('has_forward_pointers')}`",
         f"- Back-refinement pointers: `{pointer.get('has_backrefinement_pointers')}`",
         f"- Resume pointers: `{pointer.get('has_resume_pointers')}`",
@@ -176,6 +179,11 @@ def build_markdown(
         "## Risposta ricostruita dai blocchi",
         "",
     ]
+    if pointer.get("max_blocks_applied"):
+        lines.extend([
+            "- Nota: il pointer manifest e' una finestra limitata da max_blocks; la risposta usa i blocchi esposti ma conserva i metadati source_* del grafo sorgente.",
+            "",
+        ])
     if not rendered:
         lines.extend(["- Nessun blocco accettato disponibile. Il prodotto resta bloccato; vedere storia e peer review.", ""])
     for index, block in enumerate(rendered, start=1):
@@ -203,6 +211,10 @@ def build_markdown(
         "gpu0_block_count": len(gpu0),
         "npu_block_count": len(npu),
         "blocking_issue_count": len(blocking),
+        "source_block_count": pointer.get("source_block_count"),
+        "pointer_block_count": pointer.get("block_count"),
+        "pointer_max_blocks_applied": pointer.get("max_blocks_applied"),
+        "all_roles_present": pointer.get("all_roles_present", pointer.get("roles_present")),
     }
     return "\n".join(lines).rstrip() + "\n", stats
 
@@ -298,7 +310,7 @@ def main() -> int:
         "pointer_contract_role": pointer.get("pointer_contract_role") or "product_graph_decision_recovery_and_long_response_composition",
         "provider_execution_semantics": pointer.get("provider_execution_semantics") or "separate_guardrail_true_only_with_explicit_provider_or_workload_evidence",
         "stats": stats,
-        "provider_execution_performed": any(
+        "provider_execution_performed": normalize_bool(pointer.get("provider_execution_performed")) or any(
             block_provider_execution_performed(block)
             for block in (pointer.get("blocks") or [])
             if isinstance(block, dict)
@@ -306,7 +318,9 @@ def main() -> int:
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": [],
-        "warnings": [],
+        "warnings": [
+            "pointer manifest was limited by max_blocks; long response is based on exposed blocks only"
+        ] if pointer.get("max_blocks_applied") else [],
     }
     write_json(json_output, report)
     if not args.no_documents_copy:
