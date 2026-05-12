@@ -55,6 +55,42 @@ def artifact_count(composer: dict[str, Any]) -> int:
     return len(refs)
 
 
+def provider_execution_performed(composer: dict[str, Any]) -> bool:
+    metrics = composer.get("metrics") if isinstance(composer.get("metrics"), dict) else {}
+    output_contract = composer.get("real_run_output_contract") if isinstance(composer.get("real_run_output_contract"), dict) else {}
+    if any(
+        normalize_bool(value)
+        for value in (
+            composer.get("provider_execution_performed"),
+            metrics.get("provider_execution_performed"),
+            output_contract.get("provider_execution_performed"),
+        )
+    ):
+        return True
+    for provider in composer.get("provider_reports") or []:
+        if not isinstance(provider, dict):
+            continue
+        workload = provider.get("npu_device_workload") if isinstance(provider.get("npu_device_workload"), dict) else {}
+        if any(
+            normalize_bool(value)
+            for value in (
+                provider.get("provider_execution_performed"),
+                provider.get("npu_provider_execution_performed"),
+                provider.get("gpu0_provider_execution_performed"),
+                provider.get("gpu1_provider_execution_performed"),
+                workload.get("performed"),
+            )
+        ):
+            return True
+    for audit in composer.get("npu_audits") or []:
+        if not isinstance(audit, dict):
+            continue
+        workload = audit.get("npu_device_workload") if isinstance(audit.get("npu_device_workload"), dict) else {}
+        if normalize_bool(audit.get("provider_execution_performed")) or normalize_bool(workload.get("performed")):
+            return True
+    return False
+
+
 def compute_causal_chain(composer: dict[str, Any]) -> dict[str, Any]:
     reasons: list[str] = []
     startup = composer.get("startup_manifest") if isinstance(composer.get("startup_manifest"), dict) else {}
@@ -150,7 +186,7 @@ def build_report(composer: dict[str, Any], composer_path: Path) -> dict[str, Any
         "legacy_product_causality_passed": composer.get("product_causality_passed"),
         "causal_chain": causal_chain,
         "product_acceptance": product_acceptance,
-        "provider_execution_performed": False,
+        "provider_execution_performed": provider_execution_performed(composer),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": [],
@@ -169,6 +205,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Causal chain passed: `{report['causal_chain_passed']}`",
         f"- Product acceptance status: `{report['product_acceptance_status']}`",
         f"- Product acceptance passed: `{report['product_acceptance_passed']}`",
+        f"- Provider execution performed: `{report['provider_execution_performed']}`",
         "",
         "## Causal chain reasons",
         "",
