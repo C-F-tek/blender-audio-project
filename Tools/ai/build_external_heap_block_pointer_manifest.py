@@ -68,6 +68,13 @@ def read_text(path: Path, limit: int) -> str:
     return text
 
 
+def compact_text(value: Any, limit: int) -> str:
+    text = str(value or "")
+    if limit > 0 and len(text) > limit:
+        return text[:limit] + "\n...[truncated]\n"
+    return text
+
+
 def normalize_bool(value: Any) -> bool:
     return value is True or str(value).strip().lower() == "true"
 
@@ -121,7 +128,9 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
     for index, path in enumerate(proposal_files, start=1):
         data = read_json(path)
         md_path = path.with_suffix(".md")
-        preview = read_text(md_path if md_path.exists() else path, max_block_chars)
+        diagnostic_preview = read_text(md_path if md_path.exists() else path, max_block_chars)
+        candidate_preview = compact_text(data.get("response_text") or data.get("proposal_text") or "", max_block_chars)
+        preview = candidate_preview or diagnostic_preview
         block_id = stable_id("proposal", f"{repo_rel(repo_root, path)}:{data.get('revision')}:{index}")
         block = {
             "block_id": block_id,
@@ -139,6 +148,9 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             "accepted": data.get("quality_passed") is True,
             "sha256": hashlib.sha256(preview.encode("utf-8", errors="replace")).hexdigest() if preview else "",
             "preview": preview,
+            "candidate_response_preview": candidate_preview,
+            "diagnostic_preview": diagnostic_preview,
+            "preview_source": "candidate_response" if candidate_preview else "diagnostic_markdown",
             "pointer_contract": {
                 "product_contract": True,
                 "decision_recovery": True,
@@ -319,6 +331,7 @@ def render_markdown(report: dict[str, Any]) -> str:
                 f"- Refines: `{block.get('refines_block_id')}`",
                 f"- Resume from: `{block.get('resume_from_block_id')}`",
                 f"- Accepted: `{block.get('accepted')}`",
+                f"- Preview source: `{block.get('preview_source')}`",
                 f"- Pointer contract: `{block.get('pointer_contract')}`",
                 "",
             ]
