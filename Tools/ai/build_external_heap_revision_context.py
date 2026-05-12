@@ -262,11 +262,64 @@ def rejection_reasons(composer: dict[str, Any], block: dict[str, Any]) -> list[s
     return reasons
 
 
+def sanitize_revision_context_text(text: str) -> str:
+    """Remove rejected generated refs from next-run operational context."""
+    cleaned = str(text or "")
+    cleaned = re.sub(
+        r"`?(?:[A-Za-z0-9_.-]+[/\\])+[A-Za-z0-9_.-]+\.(?:py|ps1|md|json|ya?ml|toml|txt)`?",
+        "`[REJECTED_NON_ALLOWLISTED_SOURCE_PATH]`",
+        cleaned,
+    )
+    cleaned = re.sub(
+        r"`?[A-Za-z0-9_.-]+\.(?:py|ps1)`?",
+        "`[REJECTED_SOURCE_BASENAME]`",
+        cleaned,
+    )
+    cleaned = re.sub(r"<id-or-empty>", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"<[^>\n]*placeholder[^>\n]*>", "", cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+def no_patchable_target_preview(block: dict[str, Any], flags: list[str], preview_limit: int) -> str:
+    previous_block_id = str(block.get("previous_block_id") or "")
+    refines_block_id = str(block.get("refines_block_id") or "")
+    resume_from_block_id = str(block.get("resume_from_block_id") or previous_block_id or "")
+    reason = ", ".join(flags) if flags else "candidate_not_concrete_enough"
+    text = (
+        "# HEAP_DELTA_PROPOSAL\n"
+        "EXIT_DECISION=NO_PATCHABLE_TARGET\n"
+        "POINTER_ACTION=STAY_FORWARD\n"
+        "CURRENT_POINTER:\n"
+        f"- previous_block_id={previous_block_id}\n"
+        f"- refines_block_id={refines_block_id}\n"
+        f"- resume_from_block_id={resume_from_block_id}\n"
+        "\n"
+        "TARGET_FILES:\n"
+        "- none_verified\n"
+        "\n"
+        "BLOCKED_NO_VERIFIED_TARGET_REASON:\n"
+        f"- rejected candidate cannot be reused as operational input: {reason}\n"
+        "- no verified/allowlisted repo-relative patch target is available from this block.\n"
+        "\n"
+        "PATCH_SKETCH:\n"
+        "- omitted because emitting a diff without a verified target would create a fake patch.\n"
+    )
+    return compact_text(text, preview_limit)
+
+
 def task_block_context(block: dict[str, Any], preview_limit: int = REVISION_TASK_PREVIEW_CHARS) -> dict[str, Any]:
-    source_preview = compact_text(block.get("preview"), preview_limit)
-    candidate_preview = compact_text(block.get("candidate_response_preview"), preview_limit)
-    diagnostic_preview = compact_text(block.get("diagnostic_preview"), preview_limit)
     candidate_flags = candidate_applicability_flags_from_block(block)
+    raw_diagnostic_preview = compact_text(block.get("diagnostic_preview"), preview_limit)
+
+    if candidate_flags:
+        source_preview = no_patchable_target_preview(block, candidate_flags, preview_limit)
+        candidate_preview = source_preview
+        diagnostic_preview = sanitize_revision_context_text(raw_diagnostic_preview)
+    else:
+        source_preview = compact_text(block.get("preview"), preview_limit)
+        candidate_preview = compact_text(block.get("candidate_response_preview"), preview_limit)
+        diagnostic_preview = raw_diagnostic_preview
+
     return {
         "source_path": str(block.get("source_path") or ""),
         "markdown_path": str(block.get("markdown_path") or ""),
@@ -279,6 +332,8 @@ def task_block_context(block: dict[str, Any], preview_limit: int = REVISION_TASK
         "source_preview": source_preview,
         "candidate_response_preview": candidate_preview,
         "diagnostic_preview": diagnostic_preview,
+        "rejected_candidate_preview_omitted": bool(candidate_flags),
+        "rejected_candidate_preview_reason": "candidate_not_concrete_enough" if candidate_flags else "",
         "candidate_response_available": bool(candidate_preview.strip()),
         "diagnostic_preview_available": bool(diagnostic_preview.strip()),
         "candidate_applicability_flags": candidate_flags,
@@ -301,6 +356,8 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
                 discovered[key] = new_values
             previous_symbols[key].update(values)
         reasons = rejection_reasons(composer, block)
+        if candidate_applicability_flags_from_block(block):
+            reasons = [sanitize_revision_context_text(reason) for reason in reasons]
         if discovered and block.get("previous_block_id"):
             tasks.append(
                 {
