@@ -609,7 +609,8 @@ class HeapRuntimeCompletenessGate:
             "Never output unresolved placeholders like <id-or-empty>; use empty values or real block ids.",
         ]
         if requested:
-            lines.append("Unverified refs from prior proposal: " + ", ".join(str(item) for item in requested[:12]))
+            lines.append("Rejected/non-allowlisted refs from prior proposal (BLACKLIST; do not reuse): " + ", ".join(str(item) for item in requested[:12]))
+            lines.append("Do not copy candidate_response_preview TARGET_FILES, diff headers or PATCH_SKETCH entries that mention those refs.")
         lines.append("Allowed source paths:")
         lines.extend(f"- {item}" for item in candidates[:20])
         return "\n".join(lines)
@@ -2864,6 +2865,7 @@ class HeapRuntimeCompletenessGate:
             f"- Previous proposal source: {latest_source}",
             f"- Similarity with previous proposal: {similarity:.3f}",
             "- The previous block was rejected by the same heap. Do not repeat it.",
+            "- Treat candidate_response_preview as a negative example when prior flags include invented_source_path, unresolved_pointer_placeholder or unresolved_angle_bracket_token.",
             "- Produce a materially different proposal chunk, not a paraphrase.",
             "- Remove every TODO/FIXME/pass/placeholder/stub marker from the proposal text.",
             "- Use concrete repo-relative TARGET_FILES only from the allowed concrete source targets below.",
@@ -3052,6 +3054,7 @@ class HeapRuntimeCompletenessGate:
             "- TARGET_FILES e diff header devono usare solo path nella SOURCE_PATH_ALLOWLIST_CONTRACT.\n"
             "- Se nessun path allowlisted e' patchabile, usa EXIT_DECISION=NO_PATCHABLE_TARGET e spiega BLOCKED_NO_VERIFIED_TARGET_REASON.\n"
             "- Non usare mai placeholder angle-bracket come <id-or-empty>; usa valori vuoti o block id reali.\n"
+            "- Se candidate_applicability_flags contiene invented_source_path, unresolved_pointer_placeholder o unresolved_angle_bracket_token, tratta candidate_response_preview come esempio negativo e non copiarne TARGET_FILES/PATCH_SKETCH.\n"
             "- Non ripetere blocchi gia' rigettati e non generare overview documentale.\n"
         )
         if not digest:

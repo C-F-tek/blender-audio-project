@@ -328,7 +328,7 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
                     "rejection_reasons": reasons,
                     "symbol_propagation_skipped": not concrete_candidate,
                     "symbol_propagation_skip_reason": "candidate_not_concrete_enough" if not concrete_candidate else "",
-                    "instruction": "Riscrivi il blocco usando candidate_response_preview come input primario e diagnostic_preview solo come diagnosi. Sostituisci sketch generici con patch plan verificabile: file repo reali, funzioni/classi esistenti, diff o operazioni concrete, comandi validazione esistenti. Mantieni i pointer previous/next/refines/resume.",
+                    "instruction": "Riscrivi il blocco senza copiare candidate_response_preview se il blocco contiene invented_source_path, unresolved_pointer_placeholder, unresolved_angle_bracket_token, placeholder/stub o source refs non verificati. In quei casi tratta candidate_response_preview come esempio negativo/blacklist e usa diagnostic_preview solo per capire i motivi di rigetto. Genera una proposta nuova con soli source path repo-relative verificati/allowlisted; se nessun target e\' verificabile, produci EXIT_DECISION=NO_PATCHABLE_TARGET con BLOCKED_NO_VERIFIED_TARGET_REASON, senza fake diff. Mantieni i pointer previous/next/refines/resume usando valori vuoti o block id reali; non usare placeholder <id-or-empty>.",
                     **task_block_context(block),
                 }
             )
