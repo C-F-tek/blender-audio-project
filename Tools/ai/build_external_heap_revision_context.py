@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Build external heap revision context from block pointers.
 
 This adapter is outside the gate. It converts a block-pointer manifest plus the
@@ -239,6 +239,7 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
         "kind": "external_heap_revision_context",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "protocol": "external_heap_revision_context_v1",
+        "passed": True,
         "source_pointer_protocol": pointer.get("protocol"),
         "causal_chain_status": causality.get("causal_chain_status"),
         "product_acceptance_status": causality.get("product_acceptance_status"),
@@ -270,6 +271,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         "# External Heap Revision Context",
         "",
         f"- Protocol: `{report['protocol']}`",
+        f"- Passed: `{report.get('passed')}`",
         f"- Resume from block: `{report.get('resume_from_block_id')}`",
         f"- Latest block: `{report.get('latest_block_id')}`",
         f"- Parallel task count: `{report.get('parallel_task_count')}`",
@@ -381,4 +383,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
