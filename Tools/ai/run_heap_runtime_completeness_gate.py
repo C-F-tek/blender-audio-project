@@ -3117,6 +3117,7 @@ class HeapRuntimeCompletenessGate:
         lane: str,
         work_dir: Path,
         revision: int,
+        events: list[dict[str, Any]],
     ) -> dict[str, Any]:
         """Make GPU0/NPU reports operational peers, not only hardware probes.
 
@@ -3338,11 +3339,13 @@ class HeapRuntimeCompletenessGate:
 
             report_data = read_json(Path(spec["output"]))
             provider_report = self.summarize_provider_report(spec, completed, report_data)
+            events = self.read_events()
             provider_report = self.enrich_provider_report_with_operational_peer_review(
                 provider_report,
                 lane,
                 work_dir,
                 revision,
+                events,
             )
             provider_report["execution_mode"] = "concurrent_provider_teamwork"
             provider_report["revision"] = revision

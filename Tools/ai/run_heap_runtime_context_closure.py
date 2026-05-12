@@ -634,6 +634,7 @@ def main() -> int:
                     "passed": completed.returncode == 0,
                     "returncode": completed.returncode,
                     "report": str(external_postrun_report),
+                    "command": external_postrun_command,
                     "stdout_tail": (completed.stdout or "")[-4000:],
                     "stderr_tail": (completed.stderr or "")[-4000:],
                 }
@@ -645,6 +646,7 @@ def main() -> int:
                     "passed": False,
                     "returncode": -1,
                     "report": str(external_postrun_report),
+                    "command": external_postrun_command,
                     "stderr_tail": f"{type(exc).__name__}: {exc}",
                 }
             )
@@ -725,6 +727,11 @@ def main() -> int:
         "preflight_stderr_tail": preflight_result["stderr_tail"],
         "heap_stdout_tail": heap_result["stdout_tail"],
         "heap_stderr_tail": heap_result["stderr_tail"],
+        "preflight_command": preflight_result.get("command", []),
+        "startup_command": startup_result.get("command", []),
+        "heap_command": heap_result.get("command", []),
+        "composer_command": composer_result.get("command", []),
+        "external_postrun_command": external_postrun_result.get("command", []),
         "startup_stdout_tail": startup_result["stdout_tail"],
         "startup_stderr_tail": startup_result["stderr_tail"],
         "composer_stdout_tail": composer_result["stdout_tail"],
