@@ -377,6 +377,9 @@ def main() -> int:
 
     report_file = run_dir / "heap_runtime_completeness_gate_report.json"
     markdown_file = run_dir / "heap_runtime_completeness_gate_report.md"
+    heap_request_file = run_dir / "heap_operator_request.md"
+    heap_request_file.write_text(heap_request, encoding="utf-8")
+
     startup_dir = run_dir / "startup_context_memory_reload"
     startup_manifest = startup_dir / "heap_context_memory_reload_manifest.json"
     startup_task_file = startup_dir / "heap_startup_input_ready_context.md"
@@ -430,8 +433,8 @@ def main() -> int:
             "Tools/ai/prepare_heap_context_memory_reload.py",
             "--repo-root",
             ".",
-            "--request",
-            heap_request,
+            "--request-file",
+            str(heap_request_file),
             "--stamp",
             stamp,
             "--python-exe",
@@ -473,8 +476,8 @@ def main() -> int:
         "Tools/ai/run_heap_runtime_completeness_gate.py",
         "--repo-root",
         ".",
-        "--request",
-        heap_request,
+        "--request-file",
+        str(heap_request_file),
         "--budget-minutes",
         str(args.budget_minutes),
         "--max-iterations",
@@ -634,6 +637,7 @@ def main() -> int:
                     "passed": completed.returncode == 0,
                     "returncode": completed.returncode,
                     "report": str(external_postrun_report),
+                    "command": external_postrun_command,
                     "stdout_tail": (completed.stdout or "")[-4000:],
                     "stderr_tail": (completed.stderr or "")[-4000:],
                 }
@@ -645,6 +649,7 @@ def main() -> int:
                     "passed": False,
                     "returncode": -1,
                     "report": str(external_postrun_report),
+                    "command": external_postrun_command,
                     "stderr_tail": f"{type(exc).__name__}: {exc}",
                 }
             )
@@ -664,6 +669,7 @@ def main() -> int:
         "revision_context_selection_policy": revision_context_selection_policy,
         "revision_context_path": str(revision_context_path) if revision_context_path else "",
         "revision_context_loaded": bool(revision_context_payload),
+        "request_file": str(heap_request_file),
         "revision_context_task_count": len(revision_context_payload.get("tasks", [])) if isinstance(revision_context_payload.get("tasks"), list) else 0,
         "revision_context_requires_concrete_rewrite": revision_context_payload.get("requires_concrete_rewrite"),
         "revision_context_priority_next_action": revision_context_payload.get("priority_next_action"),
@@ -725,6 +731,11 @@ def main() -> int:
         "preflight_stderr_tail": preflight_result["stderr_tail"],
         "heap_stdout_tail": heap_result["stdout_tail"],
         "heap_stderr_tail": heap_result["stderr_tail"],
+        "preflight_command": preflight_result.get("command", []),
+        "startup_command": startup_result.get("command", []),
+        "heap_command": heap_result.get("command", []),
+        "composer_command": composer_result.get("command", []),
+        "external_postrun_command": external_postrun_result.get("command", []),
         "startup_stdout_tail": startup_result["stdout_tail"],
         "startup_stderr_tail": startup_result["stderr_tail"],
         "composer_stdout_tail": composer_result["stdout_tail"],

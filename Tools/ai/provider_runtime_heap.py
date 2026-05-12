@@ -3,7 +3,8 @@
 
 The heap is a local, append-only JSONL event stream used by provider lanes to
 share runtime context without executing tools directly. GPU1, GPU0, NPU,
-broker and deterministic validators can all publish/read structured events.
+broker, deterministic validators, telemetry/orchestrator and the startup
+context-memory lane can all publish/read structured events.
 
 Guardrails:
 - no provider execution;
@@ -31,7 +32,16 @@ except ImportError:
         sys.path.insert(0, str(repo_root_for_import))
     from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
 
-LANES = ("gpu1", "gpu0", "npu", "broker", "deterministic", "telemetry", "orchestrator")
+LANES = (
+    "gpu1",
+    "gpu0",
+    "npu",
+    "broker",
+    "context_memory",
+    "deterministic",
+    "telemetry",
+    "orchestrator",
+)
 EVENT_TYPES = (
     "user_request",
     "provider_state",
@@ -51,6 +61,7 @@ EVENT_TYPES = (
     "patch_plan_signal",
     "product_signal",
     "telemetry_signal",
+    "startup_task_file_context",
 )
 DEFAULT_EVENTS = "output/ai_runtime_heap/{stamp}/events.jsonl"
 DEFAULT_SNAPSHOT = "output/ai_runtime_heap/{stamp}/snapshot.json"
@@ -302,6 +313,7 @@ class ProviderRuntimeHeap:
                 "gpu0": "coworker_helper_openvino",
                 "npu": "microtask_responder",
                 "broker": "single_controlled_executor",
+                "context_memory": "startup_context_memory_reload_and_task_file_input",
                 "semantic_tools_registry": "agent_runtime_tool_broker.TOOL_SPECS",
                 "deterministic_validators": "cpu_authority_validation_lane",
                 "telemetry": "append_only_event_stream",
