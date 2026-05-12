@@ -2,9 +2,9 @@
 
 ## Stato consolidato
 
-Questa nota registra lo stato code-driven dopo la chiusura e il merge della PR #298 `feat(ai): externalize heap launcher profiles`, l'aggiunta dell'orchestratore post-run esterno, l'integrazione del comando post-run nel command builder e lo smoke dedicato al launcher command.
+Questa nota registra lo stato code-driven del layer esterno heap/universe dopo la PR #298 `feat(ai): externalize heap launcher profiles` e le successive patch di bug fixing su pointer contract, post-run package, revision context e launcher command.
 
-La PR e' stata portata su `master`. Il gate runtime principale resta invariato: la logica nuova e' esterna al gate e opera come profili, adapter post-run, composer lungo, contesto di revisione per la run successiva, orchestratore post-run e smoke di command generation.
+Il gate runtime principale resta invariato: la logica nuova opera intorno al gate tramite profili, adapter post-run, composer lungo, block pointer manifest, revision context per la run successiva e command builder.
 
 ## Vincoli rispettati
 
@@ -17,19 +17,23 @@ Non modificare questi componenti per questa fase:
 
 Il nuovo layer opera intorno al gate, non dentro il gate.
 
-## File code-driven coinvolti
+## Profili launcher attuali
 
-### `Tools/ai/heap_runtime_launcher_profiles.json`
-
-Schema corrente: `schema_version = 3`.
-
-Il file espone profili esterni per il runtime heap:
+Il file `Tools/ai/heap_runtime_launcher_profiles.json` espone solo questi profili:
 
 - `fast_external_heap`
 - `balanced_external_heap`
 - `deep_external_heap`
 - `strict_startup_external_heap`
 - `dry_packaging_external_heap`
+
+`full0to10` / `Full0To10` e' nomenclatura storica non piu' registrata nei profili launcher correnti. I comandi operativi devono usare i profili sopra.
+
+## File code-driven coinvolti
+
+### `Tools/ai/heap_runtime_launcher_profiles.json`
+
+Schema corrente: `schema_version = 3`.
 
 Gruppi configurabili:
 
@@ -62,9 +66,7 @@ Campi importanti:
 - `require_resume_pointer`
 - `require_refines_pointer`
 
-I profili operativi usano `revision_context_mode = auto_latest`.
-
-Il profilo `dry_packaging_external_heap` usa `revision_context_mode = off`, per evitare che un dry-run di packaging consumi automaticamente task di revisione precedenti.
+I profili operativi usano `revision_context_mode = auto_latest`. Il profilo `dry_packaging_external_heap` usa `revision_context_mode = off` per evitare che un dry-run di packaging consumi automaticamente task di revisione precedenti.
 
 ### `Tools/ai/build_heap_runtime_launcher_command.py`
 
@@ -77,6 +79,7 @@ Funzioni correnti:
 - preserva metadati esterni non ancora CLI-bound;
 - cerca il latest `output/validation/heap_context_closure_*/external_heap_revision_context.json` quando il profilo usa `revision_context_mode = auto_latest`;
 - inietta un riassunto bounded del revision context direttamente dentro `--request`;
+- espone nel report JSON `revision_context_requires_concrete_rewrite`, `revision_context_priority_next_action` e `revision_context_candidate_applicability_summary`;
 - genera il comando run principale;
 - genera comandi debug step-by-step per block pointer manifest e revision context;
 - genera `postrun_package_command` per `run_external_heap_postrun_package.py`;
@@ -103,6 +106,13 @@ Ruoli previsti:
 
 Scopo: uscire dal limite della singola finestra token. Le AI possono lavorare su blocchi persistenti, non solo sul testo immediato della risposta provider.
 
+Stato attuale:
+
+- i pointer sono product contract per recupero decisioni, navigazione forward/back-refinement/resume e composizione del prodotto finale lungo;
+- `provider_execution_performed` e' una guardrail evidence separata e non viene dedotta dalla sola presenza di blocchi;
+- se `--max-blocks` limita i blocchi esposti, il manifest conserva `source_block_count`, `all_roles_present` e il provider execution calcolato sui blocchi sorgente completi;
+- i proposal block separano `candidate_response_preview`, `diagnostic_preview` e `preview_source`.
+
 ### `Tools/ai/build_external_heap_revision_context.py`
 
 Produce `external_heap_revision_context.json/md` da:
@@ -120,15 +130,32 @@ Genera task per la run successiva:
 
 Semantica:
 
-- GPU1 puo' andare avanti o indietro sui pointer.
-- GPU1 puo' propagare import, variabili, funzioni, classi o contratti scoperti in un blocco successivo verso blocchi precedenti compatibili.
-- GPU0 puo' rivalutare anche blocchi vecchi in parallelo.
-- NPU puo' auditarli in parallelo per guardrail, placeholder, path inventati, source write non dichiarati e ripetizione.
-- Il ciclo riparte da `resume_from_block_id`.
+- GPU1 puo' andare avanti o indietro sui pointer;
+- GPU1 puo' propagare import, variabili, funzioni, classi o contratti scoperti in un blocco successivo verso blocchi precedenti compatibili;
+- GPU1 non deve propagare simboli se il candidato e' marcato non concreto;
+- GPU0 puo' rivalutare anche blocchi vecchi in parallelo;
+- NPU puo' auditarli in parallelo per guardrail, placeholder, path inventati, source write non dichiarati, ripetizione e candidate applicability flags;
+- il ciclo riparte da `resume_from_block_id`.
 
-Bug corretto durante la validazione locale: la prima estrazione import era troppo permissiva e catturava righe successive. Ora l'estrazione simboli lavora riga per riga.
+Stato attuale:
 
-L'adapter copia anche JSON/MD nella cartella Documents del composer quando `documents_dir` e' disponibile, e aggiorna il manifest download.
+- conserva `pointer_product_contract`, `pointer_contract_role`, `provider_execution_semantics`, `causal_chain_passed` e `product_acceptance_passed`;
+- espone `pointer_block_count`, `source_block_count`, `pointer_max_blocks_applied`, `roles_present`, `all_roles_present`;
+- propaga nei task `candidate_response_preview` e `diagnostic_preview` separati;
+- classifica candidati non applicabili con `candidate_applicability_flags` e `candidate_concrete_enough`;
+- salta la propagazione simboli da candidati non concreti usando `symbol_propagation_skipped` e `symbol_propagation_skip_reason`;
+- aggrega a top-level `candidate_applicability_summary`, `requires_concrete_rewrite` e `priority_next_action`.
+
+Esempio stato osservato su run reale:
+
+```text
+causal_chain_passed = true
+product_acceptance_passed = false
+requires_concrete_rewrite = true
+priority_next_action = rewrite_non_concrete_candidates
+candidate_applicability_summary.non_concrete_candidate_task_count = 3
+candidate_applicability_summary.symbol_propagation_skipped_task_count = 3
+```
 
 ### `Tools/ai/compose_external_heap_block_response.py`
 
@@ -142,6 +169,8 @@ Comportamento:
 - ricostruisce una risposta lunga da blocchi persistenti;
 - se ci sono blocchi accettati, usa quelli come risposta principale;
 - se non ci sono blocchi accettati, puo' includere storia rigettata e blocchi peer per debug;
+- eredita `provider_execution_performed` dal pointer manifest e usa l'ispezione blocchi solo come fallback;
+- espone `pointer_max_blocks_applied`, `source_block_count`, `pointer_block_count` e `all_roles_present`;
 - copia MD/JSON nella cartella Documents del composer quando possibile;
 - aggiorna `DOWNLOADS.txt` del composer.
 
@@ -159,9 +188,11 @@ Caso valido osservato:
 - tutte le proposal rigettate;
 - nessun falso positivo.
 
+La normalizzazione conserva `provider_execution_performed` quando presente nel composer/report sorgente.
+
 ### `Tools/ai/run_external_heap_postrun_package.py`
 
-Nuovo orchestratore esterno post-run.
+Orchestratore esterno post-run.
 
 Non sostituisce il vecchio composer e non modifica il gate. Automatizza la sequenza esterna per una run `heap_context_closure_*` esistente:
 
@@ -176,10 +207,12 @@ Output principale:
 
 Campi/garanzie:
 
-- `provider_execution_performed = false`
-- `patch_application_performed = false`
-- `source_writes_performed = false`
-- fail-fast se uno step esterno non passa;
+- `packaging_complete` indica se la catena esterna ha prodotto gli artifact attesi;
+- `hard_failure` distingue fallimento tecnico da prodotto bloccato;
+- `provider_execution_performed` aggrega l'evidenza reale da causality, pointer manifest, long response e revision context;
+- `product_acceptance_passed` resta separato da `passed`, perche' il package puo' essere valido anche quando il prodotto e' bloccato;
+- `patch_application_performed = false`;
+- `source_writes_performed = false`;
 - default su latest `output/validation/heap_context_closure_*` se `--run-dir` non viene passato.
 
 ### `Tools/validation/run_heap_runtime_launcher_command_smoke.py`
@@ -191,15 +224,18 @@ Non esegue provider, non lancia heap runtime e non tocca il gate.
 Valida:
 
 - returncode zero del command builder;
-- `schema_version = 5` del JSON command;
+- `schema_version = 6` del JSON command;
 - profilo `balanced_external_heap`;
 - presenza di `postrun_package_command`;
 - caricamento di revision context;
 - injection del revision context dentro `--request`;
+- esposizione di `requires_concrete_rewrite` e `priority_next_action` nel report;
+- injection della priorita' rewrite nel request;
+- injection di `symbol_propagation_skipped` e `candidate_not_concrete_enough` nel request;
 - target corretto per `run_heap_runtime_context_closure.py`;
 - target corretto per `run_external_heap_postrun_package.py`.
 
-Se manca un revision context precedente, crea una fixture sotto `output/validation/heap_context_closure_smoke_revision_context/external_heap_revision_context.json`. Questa e' un output artifact, non una source write. Bug corretto: lo smoke ora marca `source_writes_performed = false` e usa `output_artifact_writes_performed` per indicare la fixture.
+Lo smoke crea una fixture sotto `output/validation/heap_context_closure_smoke_revision_context/external_heap_revision_context.json`. Questa e' un output artifact, non una source write. Lo smoke marca `source_writes_performed = false` e usa `output_artifact_writes_performed` per indicare la fixture.
 
 ## Flusso operativo attuale
 
@@ -215,13 +251,15 @@ python .\Tools\ai\build_heap_runtime_launcher_command.py `
 
 2. Il command builder, se presente un revision context precedente, lo inietta in `--request`.
 
-3. Eseguire il comando principale salvato in `command`.
+3. Se il revision context espone `requires_concrete_rewrite=true`, la run deve prima riscrivere i candidati non concreti e non propagare simboli da sketch/stub.
 
-4. Post-run consigliato: eseguire `postrun_package_command` dal JSON generato.
+4. Eseguire il comando principale salvato in `command`.
 
-5. Per debug manuale restano disponibili anche `block_pointer_command` e `revision_context_command`.
+5. Post-run consigliato: eseguire `postrun_package_command` dal JSON generato.
 
-6. La run successiva consuma il revision context precedente tramite profilo `auto_latest`.
+6. Per debug manuale restano disponibili anche `block_pointer_command` e `revision_context_command`.
+
+7. La run successiva consuma il revision context precedente tramite profilo `auto_latest`.
 
 ## Stato logico dell'universo heap
 
@@ -241,13 +279,13 @@ request corrente
 → nuova run consuma revision context nel request
 ```
 
-Questa architettura permette a GPU1 di generare output molto lungo in blocchi. Se durante un blocco successivo emergono nuovi import, variabili o contratti, GPU1 puo' creare task di propagazione verso blocchi precedenti, farli rivalutare in parallelo da GPU0/NPU e poi riprendere dal cursore forward corretto.
+Questa architettura permette a GPU1 di generare output lungo in blocchi persistenti. Se durante un blocco successivo emergono nuovi import, variabili o contratti, GPU1 puo' creare task di propagazione verso blocchi precedenti, farli rivalutare in parallelo da GPU0/NPU e poi riprendere dal cursore forward corretto. Se il blocco e' uno sketch/stub non concreto, il revision context blocca la propagazione simboli e forza `rewrite_non_concrete_candidates`.
 
 ## Bug o limiti residui annotati
 
 ### 1. Feed revision context nel launcher core non applicato direttamente
 
-Tentativo diretto di patchare `run_heap_runtime_context_closure.py` e' stato evitato/bloccato durante la modifica remota per payload troppo grande. La soluzione applicata e' piu' sicura e coerente con il vincolo di non toccare gate/tool call: il revision context viene iniettato dal command builder nel testo `--request`.
+Tentativo diretto di patchare `run_heap_runtime_context_closure.py` e' stato evitato/bloccato durante modifica remota per payload troppo grande. La soluzione applicata e' piu' sicura e coerente con il vincolo di non toccare gate/tool call: il revision context viene iniettato dal command builder nel testo `--request`.
 
 Impatto: funzionale, ma il launcher core non espone ancora flag dedicati tipo `--revision-context`.
 
@@ -301,6 +339,17 @@ Target potenziale:
 
 Vincolo: mantenere opzionale e non sostituire il vecchio composer.
 
+### 4. Il prodotto resta bloccato finche' GPU1 produce sketch generici
+
+La run reale validata ha catena causale e provider execution OK, ma `product_acceptance_passed=false` perche' i proposal chunk sono non concreti. Il prossimo ciclo deve consumare `priority_next_action=rewrite_non_concrete_candidates` e produrre proposal con:
+
+- file repo-relative reali;
+- funzioni/classi esistenti;
+- diff o operazioni concrete;
+- comandi di validazione esistenti;
+- nessun placeholder/stub;
+- nessuna propagazione simboli da codice non concreto.
+
 ## Comandi locali consigliati dopo sync master
 
 ```powershell
@@ -343,8 +392,12 @@ $Cmd |
     profile_name,
     revision_context_loaded,
     revision_context_path,
-    revision_context_task_count |
+    revision_context_task_count,
+    revision_context_requires_concrete_rewrite,
+    revision_context_priority_next_action |
   Format-List
+
+$Cmd.revision_context_candidate_applicability_summary.flag_counts | Format-List
 ```
 
 Eseguire run e post-run:
@@ -365,18 +418,21 @@ Eseguire smoke command builder:
 
 ## Decisione operativa
 
-La fase attuale e' chiusa positivamente:
+La fase attuale e' coerente:
 
-- PR #298 mergeata su `master`;
 - gate invariato;
 - tool call interni del gate invariati;
 - profili esterni attivi;
-- pointer manifest attivo;
+- pointer manifest attivo come product contract, non sola diagnostica;
+- provider execution preservato lungo causality, pointer, long response, revision context e post-run;
 - long response integrata nel package Documents del composer;
 - revision context generato e consumabile dalla run successiva;
-- bug estrazione import corretto;
+- candidate response e diagnostic preview separati;
+- candidati non concreti marcati e aggregati;
+- propagazione simboli bloccata da sketch/stub;
+- command builder inietta rewrite priority nel request;
 - sequenza post-run esterna automatizzabile tramite orchestratore dedicato;
-- command builder ora produce anche `postrun_package_command`;
-- smoke dedicato al command builder presente.
+- command builder produce `postrun_package_command`;
+- smoke command builder aggiornato a schema 6 e rewrite priority.
 
-Prossima priorita': bindare i budget profilo non ancora CLI-bound o rendere opzionale il post-run package direttamente dal launcher, a seconda della prossima evidenza runtime.
+Prossima priorita': eseguire un nuovo ciclo con profilo `balanced_external_heap` o `deep_external_heap` e verificare se GPU1 produce almeno una proposta concreta applicabile. Se continua a produrre sketch, il bug successivo e' nel prompt/contratto del gate o nella trasformazione di `rewrite_non_concrete_candidates` in vincoli hard per la proposta.
