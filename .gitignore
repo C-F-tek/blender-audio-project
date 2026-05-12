@@ -9,6 +9,8 @@ __pycache__/
 
 output/
 renders/
+.claude/
+
 
 Scripting/v61b_backgood/
 old script legacy/
