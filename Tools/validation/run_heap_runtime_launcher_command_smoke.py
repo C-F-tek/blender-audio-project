@@ -9,6 +9,7 @@ reviewable launcher request.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import subprocess
@@ -53,6 +54,16 @@ def read_json(path: Path) -> dict[str, Any]:
     except Exception:
         return {}
     return data if isinstance(data, dict) else {}
+
+
+def load_heap_closure_module(repo_root: Path) -> Any:
+    module_path = repo_root / "Tools" / "ai" / "run_heap_runtime_context_closure.py"
+    spec = importlib.util.spec_from_file_location("heap_runtime_context_closure_smoke_module", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load module spec for {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -151,6 +162,9 @@ def main() -> int:
     result = run(command, repo_root)
     payload = read_json(output_json)
     generated_command = str(payload.get("command") or "")
+    revision_fixture_payload = read_json(fixture_path)
+    closure_module = load_heap_closure_module(repo_root)
+    native_revision_prompt = closure_module.revision_context_prompt(revision_fixture_payload, fixture_path, 12)
     checks = [
         {"name": "command_builder_returncode_zero", "passed": result.get("passed") is True},
         {"name": "schema_version_6", "passed": payload.get("schema_version") == 6},
@@ -178,6 +192,16 @@ def main() -> int:
             and "candidate_not_concrete_enough" in generated_command,
         },
         {
+            "name": "native_closure_revision_prompt_exposes_rewrite_priority",
+            "passed": "requires_concrete_rewrite: True" in native_revision_prompt
+            and "rewrite_non_concrete_candidates" in native_revision_prompt,
+        },
+        {
+            "name": "native_closure_revision_prompt_preserves_symbol_skip",
+            "passed": "symbol_propagation_skipped=True" in native_revision_prompt
+            and "candidate_not_concrete_enough" in native_revision_prompt,
+        },
+        {
             "name": "main_command_targets_heap_closure",
             "passed": "run_heap_runtime_context_closure.py" in generated_command,
         },
@@ -199,6 +223,7 @@ def main() -> int:
         "revision_context_fixture_used": True,
         "revision_context_fixture_path": str(fixture_path),
         "generated_command_json": str(output_json),
+        "native_revision_prompt_preview": native_revision_prompt[-4000:],
         "checks": checks,
         "command_result": result,
         "errors": errors,
