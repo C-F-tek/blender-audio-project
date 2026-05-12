@@ -122,6 +122,36 @@ def candidate_applicability_flags(text: str) -> list[str]:
     return flags
 
 
+def no_patchable_target_text(text: str) -> bool:
+    candidate = str(text or "")
+    return (
+        "EXIT_DECISION=NO_PATCHABLE_TARGET" in candidate
+        and re.search(r"(?im)^\s*-\s*none_verified\s*$", candidate) is not None
+        and "PATCH_SKETCH:" in candidate
+    )
+
+
+def block_is_terminal_no_patchable_target(block: dict[str, Any]) -> bool:
+    for key in ("candidate_response_preview", "source_preview", "preview", "response_text"):
+        if no_patchable_target_text(str(block.get(key) or "")):
+            return True
+    return False
+
+
+def terminal_no_patchable_target_summary(proposals: list[dict[str, Any]]) -> dict[str, Any]:
+    terminal_ids = [
+        str(block.get("block_id") or "")
+        for block in proposals
+        if block_is_terminal_no_patchable_target(block)
+    ]
+    all_terminal = bool(proposals) and len(terminal_ids) == len(proposals)
+    return {
+        "count": len(terminal_ids),
+        "block_ids": terminal_ids,
+        "all_proposals_terminal_no_patchable_target": all_terminal,
+    }
+
+
 def candidate_text_from_block(block: dict[str, Any]) -> str:
     """Return the full evidence text used to classify candidate applicability.
 
@@ -168,6 +198,8 @@ def candidate_symbol_text_from_block(block: dict[str, Any]) -> str:
 
 
 def candidate_applicability_flags_from_block(block: dict[str, Any]) -> list[str]:
+    if block_is_terminal_no_patchable_target(block):
+        return []
     flags = candidate_applicability_flags(candidate_text_from_block(block))
     for flag in as_list(block.get("candidate_applicability_flags")):
         text = str(flag).strip()
@@ -346,6 +378,8 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
     previous_symbols: dict[str, set[str]] = {"imports": set(), "defs": set(), "classes": set(), "assignments": set()}
     for block in proposals:
         block_id = str(block.get("block_id") or "")
+        if block_is_terminal_no_patchable_target(block):
+            continue
         symbol_text = candidate_symbol_text_from_block(block)
         concrete_candidate = candidate_block_concrete_enough(block)
         symbols = extract_symbols(symbol_text) if concrete_candidate else {"imports": [], "defs": [], "classes": [], "assignments": []}
@@ -398,6 +432,8 @@ def build_peer_tasks(proposals: list[dict[str, Any]], gpu0: list[dict[str, Any]]
     npu_available = bool(npu)
     for block in proposals:
         block_id = str(block.get("block_id") or "")
+        if block_is_terminal_no_patchable_target(block):
+            continue
         if block.get("accepted") is True:
             continue
         if gpu0_available:
@@ -475,6 +511,11 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
     peer_tasks = build_peer_tasks(proposals, gpu0, npu)
     all_tasks = gpu1_tasks + peer_tasks
     candidate_summary = candidate_applicability_summary(all_tasks)
+    terminal_no_patchable = terminal_no_patchable_target_summary(proposals)
+    if terminal_no_patchable.get("all_proposals_terminal_no_patchable_target"):
+        candidate_summary = dict(candidate_summary)
+        candidate_summary["requires_concrete_rewrite"] = False
+        candidate_summary["priority_next_action"] = "blocked_no_verified_target"
     latest = latest_block(proposals)
     pointer_limited = bool(pointer.get("max_blocks_applied"))
     source_run_was_fallback = bool(composer.get("fallback_heap_report_used")) or str(composer.get("product_status") or "") == "blocked_with_reason" and not proposals
@@ -522,6 +563,9 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
         "gpu0_task_count": len([task for task in peer_tasks if task.get("role") == "gpu0_reviewer_refiner"]),
         "npu_task_count": len([task for task in peer_tasks if task.get("role") == "npu_auditor"]),
         "candidate_applicability_summary": candidate_summary,
+        "terminal_no_patchable_target": terminal_no_patchable.get("all_proposals_terminal_no_patchable_target"),
+        "terminal_no_patchable_target_count": terminal_no_patchable.get("count"),
+        "terminal_no_patchable_target_block_ids": terminal_no_patchable.get("block_ids"),
         "requires_concrete_rewrite": candidate_summary.get("requires_concrete_rewrite"),
         "priority_next_action": candidate_summary.get("priority_next_action"),
         "tasks": all_tasks,
