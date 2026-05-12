@@ -3213,7 +3213,78 @@ class HeapRuntimeCompletenessGate:
         missing = [name for name, present in sections.items() if not present]
         file_quality = self.response_file_reference_quality(delta_text)
         events = self.read_events()
+        no_patchable_target_forced = False
+        unverified_source_refs = list(
+            file_quality.get("unverified_source_file_refs")
+            or file_quality.get("unverified_file_refs")
+            or []
+        )
+        request_text = self.request_text()
+        no_patchable_requested = (
+            "NO_PATCHABLE_TARGET" in request_text
+            or "BLOCKED_NO_VERIFIED_TARGET_REASON" in request_text
+        )
+        if (
+            no_patchable_requested
+            and file_quality.get("passed") is not True
+            and unverified_source_refs
+        ):
+            sanitized_refs = [
+                str(ref).replace(".", "[dot]").replace("/", " / ")
+                for ref in unverified_source_refs[:12]
+            ]
+            delta_text = "\n".join(
+                [
+                    "# HEAP_DELTA_PROPOSAL",
+                    "EXIT_DECISION=NO_PATCHABLE_TARGET",
+                    "POINTER_ACTION=STAY_FORWARD",
+                    "CURRENT_POINTER:",
+                    "- previous_block_id=",
+                    "- refines_block_id=",
+                    "- resume_from_block_id=",
+                    "",
+                    "CURRENT_ITERATION_SCOPE:",
+                    "- Deterministic heap guardrail converted a provider proposal because it referenced source paths that are not verified repo-relative targets.",
+                    "",
+                    "BLOCKED_NO_VERIFIED_TARGET_REASON:",
+                    "- Provider output referenced source paths that failed SOURCE_PATH_ALLOWLIST_CONTRACT.",
+                    "- No verified repo-relative source target remained patchable after deterministic file-reference validation.",
+                    "- Suppressed unverified source refs: " + (", ".join(sanitized_refs) if sanitized_refs else "none"),
+                    "",
+                    "PATCH_DECISION:",
+                    "- No patch generated.",
+                    "- No fake diff emitted.",
+                    "- No source writes performed.",
+                    "",
+                    "VALIDATION_COMMANDS:",
+                    "- Not applicable: no verified target file exists for this proposal.",
+                ]
+            )
+            coerced_file_quality = self.response_file_reference_quality(delta_text)
+            coerced_file_quality.update(
+                {
+                    "passed": True,
+                    "no_patchable_target_declared": True,
+                    "coerced_from_invented_source_path": True,
+                    "suppressed_unverified_source_refs": unverified_source_refs,
+                    "blocked_no_verified_target_reason": (
+                        "provider proposal referenced non-allowlisted source paths"
+                    ),
+                }
+            )
+            file_quality = coerced_file_quality
+            no_patchable_target_forced = True
         implementation_quality = self.implementation_quality_report(delta_text, events)
+        if no_patchable_target_forced:
+            implementation_quality.update(
+                {
+                    "required": False,
+                    "passed": True,
+                    "errors": [],
+                    "no_patchable_target_declared": True,
+                    "coerced_from_invented_source_path": True,
+                }
+            )
         pointer_action_match = re.search(r"(?im)^\\s*POINTER_ACTION\\s*=\\s*([^\\n\\r]+)", delta_text or "")
         pointer_action = pointer_action_match.group(1).strip() if pointer_action_match else ""
 
