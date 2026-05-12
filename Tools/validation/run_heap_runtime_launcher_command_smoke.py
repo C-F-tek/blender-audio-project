@@ -85,6 +85,20 @@ def write_revision_context_fixture(repo_root: Path) -> Path:
                 "kind": "external_heap_revision_context",
                 "protocol": "external_heap_revision_context_v1",
                 "product_acceptance_status": "blocked",
+                "product_acceptance_passed": False,
+                "requires_concrete_rewrite": True,
+                "priority_next_action": "rewrite_non_concrete_candidates",
+                "candidate_applicability_summary": {
+                    "rewrite_task_count": 1,
+                    "non_concrete_candidate_task_count": 1,
+                    "concrete_candidate_task_count": 0,
+                    "symbol_propagation_skipped_task_count": 1,
+                    "flag_counts": {"generic_patch_sketch": 1},
+                    "non_concrete_task_ids": ["gpu1_rewrite_rejected_proposal_smoke"],
+                    "symbol_propagation_skipped_task_ids": ["gpu1_rewrite_rejected_proposal_smoke"],
+                    "requires_concrete_rewrite": True,
+                    "priority_next_action": "rewrite_non_concrete_candidates",
+                },
                 "resume_from_block_id": "proposal_smoke_previous",
                 "latest_block_id": "proposal_smoke_latest",
                 "tasks": [
@@ -94,6 +108,10 @@ def write_revision_context_fixture(repo_root: Path) -> Path:
                         "task_type": "rewrite_rejected_block",
                         "target_block_id": "proposal_smoke_latest",
                         "resume_from_block_id": "proposal_smoke_previous",
+                        "candidate_applicability_flags": ["generic_patch_sketch"],
+                        "candidate_concrete_enough": False,
+                        "symbol_propagation_skipped": True,
+                        "symbol_propagation_skip_reason": "candidate_not_concrete_enough",
                         "instruction": "Smoke fixture task.",
                     }
                 ],
@@ -143,6 +161,21 @@ def main() -> int:
         {
             "name": "revision_context_injected_into_request",
             "passed": "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN" in generated_command,
+        },
+        {
+            "name": "rewrite_priority_exposed_in_report",
+            "passed": payload.get("revision_context_requires_concrete_rewrite") is True
+            and payload.get("revision_context_priority_next_action") == "rewrite_non_concrete_candidates",
+        },
+        {
+            "name": "rewrite_priority_injected_into_request",
+            "passed": "requires_concrete_rewrite: True" in generated_command
+            and "rewrite_non_concrete_candidates" in generated_command,
+        },
+        {
+            "name": "symbol_propagation_skip_injected_into_request",
+            "passed": "symbol_propagation_skipped=True" in generated_command
+            and "candidate_not_concrete_enough" in generated_command,
         },
         {
             "name": "main_command_targets_heap_closure",
