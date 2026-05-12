@@ -283,6 +283,36 @@ def choose_resume_block(proposals: list[dict[str, Any]]) -> str:
     return ""
 
 
+def candidate_applicability_summary(tasks: list[dict[str, Any]]) -> dict[str, Any]:
+    flag_counts: dict[str, int] = {}
+    non_concrete_task_ids: list[str] = []
+    concrete_task_ids: list[str] = []
+    symbol_skipped_task_ids: list[str] = []
+    for task in tasks:
+        if task.get("task_type") != "rewrite_rejected_block":
+            continue
+        if task.get("candidate_concrete_enough") is True:
+            concrete_task_ids.append(str(task.get("task_id") or ""))
+        else:
+            non_concrete_task_ids.append(str(task.get("task_id") or ""))
+        if task.get("symbol_propagation_skipped") is True:
+            symbol_skipped_task_ids.append(str(task.get("task_id") or ""))
+        for flag in as_list(task.get("candidate_applicability_flags")):
+            flag_text = str(flag)
+            flag_counts[flag_text] = flag_counts.get(flag_text, 0) + 1
+    return {
+        "rewrite_task_count": len(non_concrete_task_ids) + len(concrete_task_ids),
+        "non_concrete_candidate_task_count": len(non_concrete_task_ids),
+        "concrete_candidate_task_count": len(concrete_task_ids),
+        "symbol_propagation_skipped_task_count": len(symbol_skipped_task_ids),
+        "flag_counts": dict(sorted(flag_counts.items())),
+        "non_concrete_task_ids": non_concrete_task_ids,
+        "symbol_propagation_skipped_task_ids": symbol_skipped_task_ids,
+        "requires_concrete_rewrite": bool(non_concrete_task_ids),
+        "priority_next_action": "rewrite_non_concrete_candidates" if non_concrete_task_ids else "review_or_continue",
+    }
+
+
 def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: dict[str, Any]) -> dict[str, Any]:
     proposals = proposal_blocks(pointer)
     gpu0 = peer_blocks(pointer, "gpu0_reviewer_refiner")
@@ -290,11 +320,14 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
     gpu1_tasks = build_gpu1_tasks(proposals, composer)
     peer_tasks = build_peer_tasks(proposals, gpu0, npu)
     all_tasks = gpu1_tasks + peer_tasks
+    candidate_summary = candidate_applicability_summary(all_tasks)
     latest = latest_block(proposals)
     pointer_limited = bool(pointer.get("max_blocks_applied"))
     warnings: list[str] = []
     if pointer_limited:
         warnings.append("pointer manifest was limited by max_blocks; revision tasks are based on exposed blocks only")
+    if candidate_summary.get("requires_concrete_rewrite"):
+        warnings.append("non-concrete candidate proposals require rewrite before symbol propagation or product acceptance")
     return {
         "schema_version": 1,
         "kind": "external_heap_revision_context",
@@ -323,11 +356,15 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
         "gpu1_task_count": len(gpu1_tasks),
         "gpu0_task_count": len([task for task in peer_tasks if task.get("role") == "gpu0_reviewer_refiner"]),
         "npu_task_count": len([task for task in peer_tasks if task.get("role") == "npu_auditor"]),
+        "candidate_applicability_summary": candidate_summary,
+        "requires_concrete_rewrite": candidate_summary.get("requires_concrete_rewrite"),
+        "priority_next_action": candidate_summary.get("priority_next_action"),
         "tasks": all_tasks,
         "runtime_instruction": (
             "GPU1 puo' avanzare o tornare indietro sui pointer. Se scopre un import, variabile, classe o contratto "
             "necessario, deve generare un task di propagazione sui blocchi precedenti, far rivalutare in parallelo GPU0/NPU, "
-            "poi riprendere dal resume_from_block_id mantenendo la catena next/previous/refines."
+            "poi riprendere dal resume_from_block_id mantenendo la catena next/previous/refines. Se requires_concrete_rewrite=true, "
+            "prima deve riscrivere i candidati non concreti e non propagare simboli da sketch o stub."
         ),
         "provider_execution_performed": normalize_bool(pointer.get("provider_execution_performed")),
         "patch_application_performed": False,
@@ -347,6 +384,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Provider execution semantics: `{report.get('provider_execution_semantics')}`",
         f"- Causal chain passed: `{report.get('causal_chain_passed')}`",
         f"- Product acceptance passed: `{report.get('product_acceptance_passed')}`",
+        f"- Requires concrete rewrite: `{report.get('requires_concrete_rewrite')}`",
+        f"- Priority next action: `{report.get('priority_next_action')}`",
+        f"- Candidate applicability summary: `{report.get('candidate_applicability_summary')}`",
         f"- Pointer max blocks applied: `{report.get('pointer_max_blocks_applied')}`",
         f"- Pointer block count: `{report.get('pointer_block_count')}`",
         f"- Source block count: `{report.get('source_block_count')}`",
