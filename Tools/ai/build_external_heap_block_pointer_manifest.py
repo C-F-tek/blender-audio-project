@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -33,6 +34,10 @@ POINTER_PRODUCT_CONTRACT = {
     "supports_resume": True,
     "provider_execution_is_separate_guardrail": True,
 }
+EXECUTION_TRUE_PATTERNS = (
+    re.compile(r"\bprovider_execution_performed\b\s*[:=]\s*true\b", re.IGNORECASE),
+    re.compile(r"\bworkload_performed\b\s*[:=]\s*true\b", re.IGNORECASE),
+)
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -175,11 +180,10 @@ def block_provider_execution_performed(block: dict[str, Any]) -> bool:
     if block.get("provider_execution_performed") is True:
         return True
     preview = str(block.get("preview") or "")
-    lowered = preview.lower()
-    return "provider_execution_performed=true" in lowered or "workload_performed=true" in lowered
+    return any(pattern.search(preview) for pattern in EXECUTION_TRUE_PATTERNS)
 
 
-def build_pointer_edges(blocks: list[dict[str, str]]) -> list[dict[str, str]]:
+def build_pointer_edges(blocks: list[dict[str, Any]]) -> list[dict[str, str]]:
     ids = {str(block.get("block_id")) for block in blocks}
     edges: list[dict[str, str]] = []
     for block in blocks:
