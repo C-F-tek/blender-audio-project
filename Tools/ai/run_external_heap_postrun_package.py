@@ -101,7 +101,7 @@ def required_file(path: Path, label: str) -> None:
         raise SystemExit(f"missing required {label}: {path}")
 
 
-def json_file_passed(path: Path, *keys: str) -> bool | None:
+def json_file_bool(path: Path, key: str) -> bool | None:
     if not path.exists():
         return None
     try:
@@ -110,11 +110,8 @@ def json_file_passed(path: Path, *keys: str) -> bool | None:
         return None
     if not isinstance(data, dict):
         return None
-    for key in keys:
-        value = data.get(key)
-        if isinstance(value, bool):
-            return value
-    return None
+    value = data.get(key)
+    return value if isinstance(value, bool) else None
 
 
 def parse_args() -> argparse.Namespace:
@@ -241,10 +238,11 @@ def main() -> int:
         except Exception:
             pointer_report = {}
 
-    causality_passed = json_file_passed(causality_json, "causal_chain_passed", "product_acceptance_passed")
-    pointer_passed = json_file_passed(pointer_json, "passed")
-    long_response_passed = json_file_passed(long_response_md.with_suffix(".json"), "passed")
-    revision_passed = json_file_passed(revision_json, "passed")
+    causality_passed = json_file_bool(causality_json, "causal_chain_passed")
+    product_acceptance_passed = json_file_bool(causality_json, "product_acceptance_passed")
+    pointer_passed = json_file_bool(pointer_json, "passed")
+    long_response_passed = json_file_bool(long_response_md.with_suffix(".json"), "passed")
+    revision_passed = json_file_bool(revision_json, "passed")
     packaging_complete = all(path.exists() for path in (causality_json, pointer_json, long_response_md, revision_json))
     command_failures = [result for result in results if not result.get("passed")]
 
@@ -256,7 +254,7 @@ def main() -> int:
         "run_dir": str(run_dir),
         "run_dir_selection_policy": "latest_complete_heap_context_closure_with_composer_json" if not args.run_dir else "explicit_run_dir",
         "passed": packaging_complete and not hard_failure,
-        "product_acceptance_passed": causality_passed,
+        "product_acceptance_passed": product_acceptance_passed,
         "packaging_complete": packaging_complete,
         "hard_failure": hard_failure,
         "causality_json": str(causality_json),
