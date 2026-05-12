@@ -561,6 +561,38 @@ class HeapRuntimeCompletenessGate:
             return preferred[0]
         return ""
 
+    def source_allowlist_contract(self, events: list[dict[str, Any]] | None = None, limit: int = 32) -> dict[str, Any]:
+        """Return the strict source-path allowlist for GPU1 proposal targets."""
+        candidates = self.real_source_file_candidates(events, limit=limit)
+        return {
+            "allowed_source_paths": candidates,
+            "allowed_source_path_count": len(candidates),
+            "blocked_exit_decision": "NO_PATCHABLE_TARGET",
+            "blocked_reason_field": "BLOCKED_NO_VERIFIED_TARGET_REASON",
+            "forbid_unlisted_source_paths": True,
+            "forbid_angle_bracket_placeholders": True,
+        }
+
+    def render_source_allowlist_contract(self, events: list[dict[str, Any]] | None = None, limit: int = 32) -> str:
+        """Render a hard provider contract that prevents invented source paths."""
+        contract = self.source_allowlist_contract(events, limit=limit)
+        candidates = [str(item) for item in contract.get("allowed_source_paths") or []]
+        lines = [
+            "SOURCE_PATH_ALLOWLIST_CONTRACT:",
+            "- Every TARGET_FILES entry MUST be an exact repo-relative path from Allowed source paths below.",
+            "- Every diff header path MUST match the same allowlist; do not cite basenames or invented directories.",
+            "- Do not invent files such as Tools/data_processor/real_existing_file.py or any other non-allowlisted path.",
+            "- If no allowed source path is patchable from current evidence, emit EXIT_DECISION=NO_PATCHABLE_TARGET.",
+            "- In that case include BLOCKED_NO_VERIFIED_TARGET_REASON and do not output a fake diff.",
+            "- Never emit unresolved angle-bracket placeholders such as <id-or-empty>; use an empty value or a real block id.",
+            "Allowed source paths:",
+        ]
+        if candidates:
+            lines.extend(f"- {item}" for item in candidates)
+        else:
+            lines.append("- none_available")
+        return "\n".join(lines)
+
     def source_anchor_feedback(self, events: list[dict[str, Any]], quality: dict[str, Any] | None = None) -> str:
         candidates = self.real_source_file_candidates(events, limit=20)
         if not candidates:
@@ -572,6 +604,9 @@ class HeapRuntimeCompletenessGate:
             "SOURCE PATH ANCHORING REQUIRED:",
             "Use only exact repo-relative paths from this allowlist when citing source files.",
             "Do not cite basenames unless the exact repo-relative path is also present.",
+            "Every TARGET_FILES entry and every diff header path must be one of the allowed source paths below.",
+            "If no allowed path fits the evidence, return EXIT_DECISION=NO_PATCHABLE_TARGET with BLOCKED_NO_VERIFIED_TARGET_REASON.",
+            "Never output unresolved placeholders like <id-or-empty>; use empty values or real block ids.",
         ]
         if requested:
             lines.append("Unverified refs from prior proposal: " + ", ".join(str(item) for item in requested[:12]))
@@ -1494,8 +1529,10 @@ class HeapRuntimeCompletenessGate:
         errors: list[str] = []
         if required and source_count <= 0:
             errors.append("no verified source file references")
-        if required and file_quality.get("unverified_source_file_refs"):
-            errors.append(f"unverified source file refs: {file_quality.get('unverified_source_file_refs')}")
+        invented_source_path_refs = list(file_quality.get("unverified_source_file_refs") or [])
+        if required and invented_source_path_refs:
+            errors.append(f"unverified source file refs: {invented_source_path_refs}")
+            errors.append(f"invented/non-allowlisted source path refs: {invented_source_path_refs}")
         if required and file_quality.get("ambiguous_source_file_refs"):
             errors.append(f"ambiguous source file refs: {sorted(file_quality.get('ambiguous_source_file_refs', {}).keys())}")
         if required and not file_quality.get("passed"):
@@ -1515,6 +1552,7 @@ class HeapRuntimeCompletenessGate:
             "concrete_operation_markers": concrete_operation_markers,
             "generic_marker_hits": generic_marker_hits,
             "placeholder_hits": placeholder_hits,
+            "invented_source_path_refs": invented_source_path_refs if required else [],
             "errors": errors,
         }
 
@@ -1526,6 +1564,7 @@ class HeapRuntimeCompletenessGate:
             gpu0_notes.append("GPU0 deterministic review: proposta non soddisfacente; manca implementazione concreta/codice/operazioni validabili.")
         if file_quality.get("unverified_source_file_refs"):
             gpu0_notes.append(f"GPU0 deterministic review: source refs non verificati={file_quality.get('unverified_source_file_refs')}.")
+            gpu0_notes.append("GPU0 deterministic review: invented_source_path veto; TARGET_FILES must come from source allowlist only.")
         if file_quality.get("ambiguous_source_file_refs"):
             gpu0_notes.append(f"GPU0 deterministic review: source refs ambigui={sorted(file_quality.get('ambiguous_source_file_refs', {}).keys())}.")
         if implementation_quality.get("placeholder_hits"):
@@ -1539,6 +1578,8 @@ class HeapRuntimeCompletenessGate:
             f"NPU micro-task piece: workload_requested={npu_audit.get('requested')}, workload_performed={npu_audit.get('performed')}, workload_passed={npu_audit.get('passed')}, iterations={npu_audit.get('iterations')}, seconds={npu_audit.get('seconds')}.",
         ]
         if implementation_quality.get("placeholder_hits") or file_quality.get("unverified_source_file_refs") or file_quality.get("ambiguous_source_file_refs"):
+            if file_quality.get("unverified_source_file_refs"):
+                npu_notes.append("NPU micro-task piece: veto=invented_source_path_or_non_allowlisted_target.")
             npu_notes.append("NPU micro-task piece: decision=reject_until_concrete_code_and_full_repo_relative_paths.")
         return {
             "gpu0_review": gpu0_notes,
@@ -2579,6 +2620,7 @@ class HeapRuntimeCompletenessGate:
         peer_context = "\n".join(peer_lines) if peer_lines else "nessun contributo peer ancora disponibile"
         team_context = self.team_context_summary()
         source_candidates = "\n".join(f"- {item}" for item in self.real_source_file_candidates(limit=32)) or "- nessun candidato sorgente verificato disponibile"
+        source_allowlist_contract = self.render_source_allowlist_contract(limit=32)
         revision_feedback = self.provider_revision_feedback or "nessun feedback correttivo precedente"
         return (
             "Sei GPU1 planner finale e leader operativo nel runtime heap IA-Carmine. "
@@ -2590,6 +2632,7 @@ class HeapRuntimeCompletenessGate:
             f"Contributi peer heap:\n{peer_context}\n"
             f"Memoria/chunk/context pack condivisi:\n{team_context}\n"
             f"File sorgente reali candidati verificati nel repository/context:\n{source_candidates}\n"
+            f"{source_allowlist_contract}\n"
             f"Feedback qualitativo heap da eventuale giro precedente:\n{revision_feedback}\n"
             "Regola: rispondi come sintesi GPU1 del team heap; se servono file esistenti usa solo i file sorgente candidati verificati, non gli artifact output/validation. Cita i tool storici/runtime consumati quando la richiesta richiede analisi, stato, igiene, tool, repo o output dettagliato.\n"
             "Per richieste implementative devi produrre un blocco operativo, non consigli generici. Usa sezioni TARGET_FILES, PROBLEM, IMPLEMENTATION_CHANGES, CODE_OR_PATCH_SKETCH, VALIDATION_COMMANDS, RISKS, EXIT_DECISION. Includi almeno un path repo-relative verificato e comandi/patch-level code quando possibile.\n"
@@ -2823,7 +2866,10 @@ class HeapRuntimeCompletenessGate:
             "- The previous block was rejected by the same heap. Do not repeat it.",
             "- Produce a materially different proposal chunk, not a paraphrase.",
             "- Remove every TODO/FIXME/pass/placeholder/stub marker from the proposal text.",
-            "- Use concrete repo-relative TARGET_FILES only.",
+            "- Use concrete repo-relative TARGET_FILES only from the allowed concrete source targets below.",
+            "- Every diff header path must match an allowed concrete source target exactly.",
+            "- If the only possible target is unverified or invented, return EXIT_DECISION=NO_PATCHABLE_TARGET instead of inventing a path.",
+            "- Never output unresolved angle-bracket placeholders such as <id-or-empty>.",
             "- For each TARGET_FILE include PROBLEM, EVIDENCE, IMPLEMENTATION_CHANGES, VALIDATION_COMMANDS, RISKS and EXIT_DECISION.",
             "- If no concrete target is patchable from current evidence, return EXIT_DECISION=NO_PATCHABLE_TARGET with explicit reason.",
             "- GPU1 may move backward on previous/refines/resume pointers to propagate imports, symbols, contracts and validation commands, then resume forward.",
@@ -3003,6 +3049,9 @@ class HeapRuntimeCompletenessGate:
             "- Usa BACKLOG_TASKS per il lavoro successivo; il pointer graph mantiene memoria e contesto.\n"
             "- GPU0 deve verificare path/diff/validazione del delta; NPU deve auditare guardrail e placeholder.\n"
             "- Il delta corrente deve contenere TARGET_FILES repo-relative reali, PATCH_SKETCH e VALIDATION_COMMANDS.\n"
+            "- TARGET_FILES e diff header devono usare solo path nella SOURCE_PATH_ALLOWLIST_CONTRACT.\n"
+            "- Se nessun path allowlisted e' patchabile, usa EXIT_DECISION=NO_PATCHABLE_TARGET e spiega BLOCKED_NO_VERIFIED_TARGET_REASON.\n"
+            "- Non usare mai placeholder angle-bracket come <id-or-empty>; usa valori vuoti o block id reali.\n"
             "- Non ripetere blocchi gia' rigettati e non generare overview documentale.\n"
         )
         if not digest:

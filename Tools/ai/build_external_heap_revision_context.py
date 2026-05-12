@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Build external heap revision context from block pointers.
 
 This adapter is outside the gate. It converts a block-pointer manifest plus the
@@ -40,6 +40,15 @@ REJECTION_MARKER_PATTERNS = (
 )
 
 CANDIDATE_APPLICABILITY_PATTERNS = (
+    (
+        "invented_source_path",
+        re.compile(
+            r"(?:no verified source file references|unverified source file refs?|source refs non verificati|"
+            r"invented_source_path|non-allowlisted source|invented/non-allowlisted source path refs)",
+            re.IGNORECASE,
+        ),
+    ),
+    ("unresolved_pointer_placeholder", re.compile(r"<id-or-empty>", re.IGNORECASE)),
     ("generic_patch_sketch", re.compile(r"\bCODE_OR_PATCH_SKETCH\b", re.IGNORECASE)),
     ("generic_missing_functionality", re.compile(r"implementa(?:re|zione)\s+(?:le\s+)?funzionalit", re.IGNORECASE)),
     (
@@ -463,7 +472,9 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
             "GPU1 puo' avanzare o tornare indietro sui pointer. Se scopre un import, variabile, classe o contratto "
             "necessario, deve generare un task di propagazione sui blocchi precedenti, far rivalutare in parallelo GPU0/NPU, "
             "poi riprendere dal resume_from_block_id mantenendo la catena next/previous/refines. Se requires_concrete_rewrite=true, "
-            "prima deve riscrivere i candidati non concreti e non propagare simboli da sketch o stub."
+            "prima deve riscrivere i candidati non concreti e non propagare simboli da sketch o stub. "
+            "La riscrittura deve usare solo source path repo-relative verificati/allowlisted; se il target non e' verificabile, "
+            "deve produrre EXIT_DECISION=NO_PATCHABLE_TARGET invece di inventare path. Non usare placeholder <id-or-empty>."
         ),
         "provider_execution_performed": normalize_bool(pointer.get("provider_execution_performed")),
         "patch_application_performed": False,
