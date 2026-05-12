@@ -77,6 +77,13 @@ def now_stamp() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
+def read_request_file(repo_root: Path, value: str) -> str:
+    path = Path(value)
+    if not path.is_absolute():
+        path = repo_root / path
+    return path.read_text(encoding="utf-8-sig", errors="replace")
+
+
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
         return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
@@ -577,6 +584,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--request", default="")
+    parser.add_argument("--request-file", default="", help="Read startup request text from file to avoid long Windows command lines.")
     parser.add_argument("--stamp", default="")
     parser.add_argument("--python-exe", default="")
     parser.add_argument("--output-dir", required=True)
@@ -604,6 +612,7 @@ def main() -> int:
     project_python = resolve_project_python(repo_root, args.python_exe)
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+    request_text = read_request_file(repo_root, args.request_file) if args.request_file else (args.request or "")
 
     artifacts: dict[str, str] = {}
     commands: list[dict[str, Any]] = []
@@ -754,6 +763,9 @@ def main() -> int:
     artifacts["operational_memory_search_json"] = repo_rel(repo_root, operational_search_json)
     artifacts["operational_memory_search_markdown"] = repo_rel(repo_root, operational_search_md)
 
+    startup_request_file = output_dir / "heap_startup_request.md"
+    startup_request_file.write_text(request_text or "heap startup request", encoding="utf-8")
+
     transient_json = output_dir / "startup_transient_request_context.json"
     transient_md = output_dir / "startup_transient_request_context.md"
     transient_command = [
@@ -763,8 +775,8 @@ def main() -> int:
         ".",
         "--objective",
         "heap startup context/memory reload before provider lanes",
-        "--memory-note",
-        args.request or "heap startup request",
+        "--memory-note-file",
+        str(startup_request_file),
         "--report-file",
         str(tool_catalog_json),
         "--report-file",
@@ -856,6 +868,7 @@ def main() -> int:
 
     task_file = output_dir / "heap_startup_input_ready_context.md"
     artifacts["heap_task_file"] = repo_rel(repo_root, task_file)
+    artifacts["startup_request_file"] = repo_rel(repo_root, startup_request_file)
 
     preliminary_required_commands = [item for item in commands if item.get("required")]
     preliminary_optional_commands = [item for item in commands if not item.get("required")]
@@ -874,6 +887,21 @@ def main() -> int:
 
     operational_write_json = output_dir / "startup_operational_memory_write.json"
     operational_write_md = output_dir / "startup_operational_memory_write.md"
+    operational_write_content = output_dir / "startup_operational_memory_content.md"
+    operational_write_content.write_text(
+        build_operational_memory_write_content(
+            repo_root=repo_root,
+            stamp=stamp,
+            request=request_text,
+            startup_reload_degraded=startup_reload_degraded,
+            degraded_requirements=degraded_requirements,
+            blocking_requirements=blocking_requirements,
+            artifacts=artifacts,
+            commands=commands,
+        ),
+        encoding="utf-8",
+    )
+    artifacts["operational_memory_content_file"] = repo_rel(repo_root, operational_write_content)
     commands.append(
         run_tool(
             [
@@ -891,17 +919,8 @@ def main() -> int:
                 "heap_startup_reload",
                 "--summary",
                 "startup context/memory reload manifest",
-                "--content",
-                build_operational_memory_write_content(
-                    repo_root=repo_root,
-                    stamp=stamp,
-                    request=args.request,
-                    startup_reload_degraded=startup_reload_degraded,
-                    degraded_requirements=degraded_requirements,
-                    blocking_requirements=blocking_requirements,
-                    artifacts=artifacts,
-                    commands=commands,
-                ),
+                "--content-file",
+                str(operational_write_content),
                 "--tag",
                 "heap_startup_context",
                 "--tag",
@@ -933,7 +952,7 @@ def main() -> int:
 
     task_markdown = build_task_markdown(
         repo_root=repo_root,
-        request=args.request,
+        request=request_text,
         stamp=stamp,
         context_files=context_files,
         artifacts=artifacts,
@@ -953,7 +972,10 @@ def main() -> int:
         "stamp": stamp,
         "repo_root": repo_root.as_posix(),
         "project_python": project_python,
-        "request": args.request,
+        "request_file": artifacts.get("startup_request_file", ""),
+        "request_chars": len(request_text),
+        "request_sha256": hashlib.sha256(request_text.encode("utf-8", errors="replace")).hexdigest() if request_text else "",
+        "request_preview": request_text[:4000],
         "passed": passed,
         "input_ready_before_heap": input_ready_before_heap,
         "load_context_into_heap": True,
@@ -996,7 +1018,29 @@ def main() -> int:
     write_json(manifest_path, manifest)
     manifest_md.write_text(task_markdown, encoding="utf-8")
 
-    print(json.dumps({**manifest, "manifest": repo_rel(repo_root, manifest_path), "markdown": repo_rel(repo_root, manifest_md)}, indent=2, ensure_ascii=False))
+    print_payload = {
+        "schema_version": manifest["schema_version"],
+        "kind": manifest["kind"],
+        "stamp": manifest["stamp"],
+        "passed": manifest["passed"],
+        "input_ready_before_heap": manifest["input_ready_before_heap"],
+        "startup_reload_degraded": manifest["startup_reload_degraded"],
+        "required_reload_passed": manifest["required_reload_passed"],
+        "optional_reload_passed": manifest["optional_reload_passed"],
+        "request_file": manifest.get("request_file", ""),
+        "request_chars": manifest.get("request_chars", 0),
+        "request_sha256": manifest.get("request_sha256", ""),
+        "context_file_count": manifest.get("context_file_count", 0),
+        "artifact_count": len(manifest.get("artifacts", {})),
+        "tool_execution_count": len(manifest.get("tool_executions", [])),
+        "blocking_requirements": manifest.get("blocking_requirements", []),
+        "degraded_requirements": manifest.get("degraded_requirements", []),
+        "optional_failed_requirements": manifest.get("optional_failed_requirements", []),
+        "manifest": repo_rel(repo_root, manifest_path),
+        "markdown": repo_rel(repo_root, manifest_md),
+        "heap_task_file": manifest.get("heap_task_file", ""),
+    }
+    print(json.dumps(print_payload, indent=2, ensure_ascii=False))
     return 0 if passed or (input_ready_before_heap and not strict_startup) else 2
 
 

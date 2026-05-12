@@ -42,6 +42,15 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
     return path.resolve()
 
 
+def read_arg_file(repo_root: Path, value: str) -> str:
+    if not value:
+        return ""
+    path = Path(value)
+    if not path.is_absolute():
+        path = repo_root / path
+    return path.read_text(encoding="utf-8-sig", errors="replace")
+
+
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
         return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
@@ -345,6 +354,12 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     output_root = resolve_path(repo_root, "output")
     errors: list[str] = []
     warnings: list[str] = []
+    content_text = args.content
+    if getattr(args, "content_file", ""):
+        try:
+            content_text = read_arg_file(repo_root, args.content_file)
+        except OSError as exc:
+            errors.append(f"content_file read failed: {type(exc).__name__}: {exc}")
     result: dict[str, Any] = {}
     operation = args.action
     memory_scope = args.scope
@@ -364,7 +379,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                     result = remember_operational(
                         operational_db,
                         summary=args.summary,
-                        content=args.content,
+                        content=content_text,
                         role=args.role,
                         tags=parse_tags(args.tag),
                         metadata={"tool": "agent_runtime_sqlite_memory", "request_id": args.request_id},
@@ -376,7 +391,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                     result = remember_persistent(
                         persistent_db,
                         summary=args.summary,
-                        content=args.content,
+                        content=content_text,
                         source=args.role,
                         tags=parse_tags(args.tag),
                         metadata={"tool": "agent_runtime_sqlite_memory", "request_id": args.request_id, "explicit_confirm": args.confirm},
@@ -483,6 +498,7 @@ def main() -> int:
     parser.add_argument("--request-id", default="runtime_sqlite_memory")
     parser.add_argument("--summary", default="")
     parser.add_argument("--content", default="")
+    parser.add_argument("--content-file", default="", help="Read remember content from file to avoid long Windows command lines.")
     parser.add_argument("--role", default="doctor_tool")
     parser.add_argument("--tag", action="append", default=[])
     parser.add_argument("--query", default="")

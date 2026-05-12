@@ -83,6 +83,14 @@ def read_text(path: Path, *, max_chars: int) -> tuple[str, bool, str | None]:
     return text, truncated, None
 
 
+def read_note_file(repo_root: Path, value: str) -> str:
+    path = resolve_path(repo_root, value)
+    try:
+        return path.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError as exc:
+        return f"[memory note file read failed: {repo_rel(path, repo_root)}: {type(exc).__name__}: {exc}]"
+
+
 def collect_raw_files(repo_root: Path, values: list[str], *, max_files: int, max_chars_per_file: int) -> list[dict[str, Any]]:
     files: list[dict[str, Any]] = []
     seen: set[Path] = set()
@@ -142,6 +150,8 @@ def build_report_reference(repo_root: Path, value: str) -> dict[str, Any]:
 def build_context(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     memory_notes = [item for item in split_values(args.memory_note or [])]
+    for value in split_values(getattr(args, "memory_note_file", []) or []):
+        memory_notes.append(read_note_file(repo_root, value))
     raw_files = collect_raw_files(repo_root, args.raw_file or [], max_files=args.max_raw_files, max_chars_per_file=args.max_chars_per_file)
     report_refs = [build_report_reference(repo_root, value) for value in split_values(args.report_file or [])]
     warnings: list[str] = []
@@ -253,6 +263,7 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--objective", default="Capture request-scoped transient context for IA-Carmine orchestration.")
     parser.add_argument("--memory-note", action="append", default=[])
+    parser.add_argument("--memory-note-file", action="append", default=[], help="Read a memory note from file to avoid long Windows command lines.")
     parser.add_argument("--raw-file", action="append", default=[])
     parser.add_argument("--report-file", action="append", default=[])
     parser.add_argument("--max-raw-files", type=int, default=80)

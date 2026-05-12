@@ -166,6 +166,13 @@ def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
+def read_request_file(repo_root: Path, value: str) -> str:
+    path = Path(value)
+    if not path.is_absolute():
+        path = repo_root / path
+    return path.read_text(encoding="utf-8-sig", errors="replace")
+
+
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
         return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
@@ -248,6 +255,8 @@ class HeapRuntimeCompletenessGate:
     def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
         self.repo_root = Path(args.repo_root).resolve()
+        if getattr(args, "request_file", ""):
+            args.request = read_request_file(self.repo_root, args.request_file)
         self.stamp = args.stamp or datetime.now().strftime("%Y%m%d-%H%M%S")
         self.output_dir = Path(args.output_dir).resolve() if args.output_dir else None
         self.heap = ProviderRuntimeHeap.from_args(
@@ -3634,6 +3643,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stamp", default="")
     parser.add_argument("--objective", default="prove complete heap-driven teamwork loop over repository context, shared memory, brokered tools and all provider lanes")
     parser.add_argument("--request", default="", help="Optional real user request for heap heartbeat, e.g. ciao.")
+    parser.add_argument("--request-file", default="", help="Read request text from file to avoid long Windows command lines.")
     parser.add_argument("--python-exe", default="", help="Explicit project Python executable for child tools. Defaults to repo .venv resolver; no system env fallback.")
     parser.add_argument("--task-file", default="")
     parser.add_argument("--tool", default="run_gpu_planner_json_contract_smoke", help="Compatibility flag; complete gate uses its internal readiness tool plan.")
