@@ -3212,6 +3212,7 @@ class HeapRuntimeCompletenessGate:
         )
         missing = [name for name, present in sections.items() if not present]
         file_quality = self.response_file_reference_quality(delta_text)
+        events = self.read_events()
         implementation_quality = self.implementation_quality_report(delta_text, events)
         pointer_action_match = re.search(r"(?im)^\\s*POINTER_ACTION\\s*=\\s*([^\\n\\r]+)", delta_text or "")
         pointer_action = pointer_action_match.group(1).strip() if pointer_action_match else ""
