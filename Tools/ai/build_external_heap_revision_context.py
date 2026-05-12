@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Build external heap revision context from block pointers.
 
 This adapter is outside the gate. It converts a block-pointer manifest plus the
@@ -142,6 +142,21 @@ def candidate_text_from_block(block: dict[str, Any]) -> str:
             parts.append(json.dumps(value, ensure_ascii=False, sort_keys=True))
     return "\n".join(parts)
 
+def candidate_symbol_text_from_block(block: dict[str, Any]) -> str:
+    """Return candidate-only text used for symbol propagation.
+
+    Diagnostic previews, rejection reasons and quality metadata are intentionally
+    excluded here. They are valid evidence for applicability blockers, but they
+    must not introduce synthetic imports, defs, classes or assignments into the
+    back-propagation lane.
+    """
+    parts: list[str] = []
+    for key in ("candidate_response_preview", "source_preview", "preview", "response_text"):
+        value = block.get(key)
+        if value:
+            parts.append(str(value))
+    return "\n".join(parts)
+
 
 def candidate_applicability_flags_from_block(block: dict[str, Any]) -> list[str]:
     flags = candidate_applicability_flags(candidate_text_from_block(block))
@@ -267,7 +282,7 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
     previous_symbols: dict[str, set[str]] = {"imports": set(), "defs": set(), "classes": set(), "assignments": set()}
     for block in proposals:
         block_id = str(block.get("block_id") or "")
-        symbol_text = candidate_text_from_block(block)
+        symbol_text = candidate_symbol_text_from_block(block)
         concrete_candidate = candidate_block_concrete_enough(block)
         symbols = extract_symbols(symbol_text) if concrete_candidate else {"imports": [], "defs": [], "classes": [], "assignments": []}
         discovered: dict[str, list[str]] = {}
@@ -591,3 +606,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
