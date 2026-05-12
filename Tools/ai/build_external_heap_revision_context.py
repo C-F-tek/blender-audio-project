@@ -81,6 +81,10 @@ def candidate_applicability_flags(text: str) -> list[str]:
     return flags
 
 
+def candidate_concrete_enough(text: str) -> bool:
+    return not candidate_applicability_flags(text)
+
+
 def proposal_blocks(pointer: dict[str, Any]) -> list[dict[str, Any]]:
     blocks = [
         block for block in as_list(pointer.get("blocks"))
@@ -191,7 +195,8 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
     for block in proposals:
         block_id = str(block.get("block_id") or "")
         symbol_text = str(block.get("candidate_response_preview") or block.get("preview") or "")
-        symbols = extract_symbols(symbol_text)
+        concrete_candidate = candidate_concrete_enough(symbol_text)
+        symbols = extract_symbols(symbol_text) if concrete_candidate else {"imports": [], "defs": [], "classes": [], "assignments": []}
         discovered: dict[str, list[str]] = {}
         for key, values in symbols.items():
             new_values = [value for value in values if value not in previous_symbols[key]]
@@ -209,6 +214,7 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
                     "target_block_id": block.get("previous_block_id"),
                     "resume_from_block_id": block_id,
                     "discovered_symbols": discovered,
+                    "symbol_propagation_source_concrete": True,
                     "instruction": "Propaga import/variabili/classi/funzioni scoperte nel candidate_response_preview ai blocchi precedenti compatibili, poi riprendi dal source_block_id senza perdere il cursore forward.",
                     **task_block_context(block),
                 }
@@ -223,6 +229,8 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
                     "target_block_id": block_id,
                     "resume_from_block_id": block.get("resume_from_block_id") or block.get("previous_block_id") or block_id,
                     "rejection_reasons": reasons,
+                    "symbol_propagation_skipped": not concrete_candidate,
+                    "symbol_propagation_skip_reason": "candidate_not_concrete_enough" if not concrete_candidate else "",
                     "instruction": "Riscrivi il blocco usando candidate_response_preview come input primario e diagnostic_preview solo come diagnosi. Sostituisci sketch generici con patch plan verificabile: file repo reali, funzioni/classi esistenti, diff o operazioni concrete, comandi validazione esistenti. Mantieni i pointer previous/next/refines/resume.",
                     **task_block_context(block),
                 }
