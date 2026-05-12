@@ -28,6 +28,14 @@ REJECTION_MARKER_PATTERNS = (
     ("pass", re.compile(r"(^|[^A-Za-z0-9_])pass([^A-Za-z0-9_]|$)", re.IGNORECASE)),
     ("path/to/artifact", re.compile(r"path/to/artifact", re.IGNORECASE)),
 )
+CANDIDATE_APPLICABILITY_PATTERNS = (
+    ("generic_patch_sketch", re.compile(r"\bCODE_OR_PATCH_SKETCH\b", re.IGNORECASE)),
+    ("generic_missing_functionality", re.compile(r"implementa(?:re|zione)\s+(?:le\s+)?funzionalit", re.IGNORECASE)),
+    ("synthetic_stub_function", re.compile(r"def\s+[A-Za-z_][A-Za-z0-9_]*\s*\([^)]*\)\s*:\s*(?:\n\s*#\s*Implementazione|\n\s*context_pack\s*=\s*\{)", re.IGNORECASE)),
+    ("comment_only_implementation", re.compile(r"^\s*#\s*Implementazione\b", re.IGNORECASE | re.MULTILINE)),
+    ("unverified_unit_test_path", re.compile(r"\bpytest\s+(?:\.\\)?Tests[/\\]unit[/\\]test_[A-Za-z0-9_./\\-]+\.py\b", re.IGNORECASE)),
+    ("run_script_as_validation_only", re.compile(r"\bpython\s+Tools[/\\]ai[/\\][A-Za-z0-9_./\\-]+\.py\b", re.IGNORECASE)),
+)
 
 
 def read_json(path_value: str) -> dict[str, Any]:
@@ -63,6 +71,14 @@ def compact_text(value: Any, limit: int) -> str:
     if limit > 0 and len(text) > limit:
         return text[:limit] + "\n...[truncated]"
     return text
+
+
+def candidate_applicability_flags(text: str) -> list[str]:
+    flags: list[str] = []
+    for flag, pattern in CANDIDATE_APPLICABILITY_PATTERNS:
+        if pattern.search(text) and flag not in flags:
+            flags.append(flag)
+    return flags
 
 
 def proposal_blocks(pointer: dict[str, Any]) -> list[dict[str, Any]]:
@@ -138,6 +154,10 @@ def rejection_reasons(composer: dict[str, Any], block: dict[str, Any]) -> list[s
     for marker, pattern in REJECTION_MARKER_PATTERNS:
         if pattern.search(marker_text) and marker not in reasons:
             reasons.append(marker)
+    for flag in candidate_applicability_flags(str(block.get("candidate_response_preview") or preview)):
+        reason = f"candidate_applicability.{flag}"
+        if reason not in reasons:
+            reasons.append(reason)
     return reasons
 
 
@@ -145,6 +165,7 @@ def task_block_context(block: dict[str, Any], preview_limit: int = REVISION_TASK
     source_preview = compact_text(block.get("preview"), preview_limit)
     candidate_preview = compact_text(block.get("candidate_response_preview"), preview_limit)
     diagnostic_preview = compact_text(block.get("diagnostic_preview"), preview_limit)
+    candidate_flags = candidate_applicability_flags(str(block.get("candidate_response_preview") or block.get("preview") or ""))
     return {
         "source_path": str(block.get("source_path") or ""),
         "markdown_path": str(block.get("markdown_path") or ""),
@@ -159,6 +180,8 @@ def task_block_context(block: dict[str, Any], preview_limit: int = REVISION_TASK
         "diagnostic_preview": diagnostic_preview,
         "candidate_response_available": bool(candidate_preview.strip()),
         "diagnostic_preview_available": bool(diagnostic_preview.strip()),
+        "candidate_applicability_flags": candidate_flags,
+        "candidate_concrete_enough": not candidate_flags,
     }
 
 
@@ -200,7 +223,7 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
                     "target_block_id": block_id,
                     "resume_from_block_id": block.get("resume_from_block_id") or block.get("previous_block_id") or block_id,
                     "rejection_reasons": reasons,
-                    "instruction": "Riscrivi il blocco usando candidate_response_preview come input primario e diagnostic_preview solo come diagnosi. Produci path repo reali e operazioni concrete. Mantieni i pointer previous/next/refines/resume.",
+                    "instruction": "Riscrivi il blocco usando candidate_response_preview come input primario e diagnostic_preview solo come diagnosi. Sostituisci sketch generici con patch plan verificabile: file repo reali, funzioni/classi esistenti, diff o operazioni concrete, comandi validazione esistenti. Mantieni i pointer previous/next/refines/resume.",
                     **task_block_context(block),
                 }
             )
@@ -223,7 +246,7 @@ def build_peer_tasks(proposals: list[dict[str, Any]], gpu0: list[dict[str, Any]]
                     "task_type": "parallel_recheck_old_pointer",
                     "target_block_id": block_id,
                     "can_edit_pointer": True,
-                    "instruction": "Rivaluta il candidate_response_preview anche se il blocco non e' l'ultimo. Usa diagnostic_preview solo come diagnosi. Se serve, proponi refines_block_id e resume_from_block_id per una riscrittura concreta.",
+                    "instruction": "Rivaluta il candidate_response_preview anche se il blocco non e' l'ultimo. Usa diagnostic_preview solo come diagnosi. Se candidate_applicability_flags non e' vuoto, proponi refines_block_id e resume_from_block_id per una riscrittura concreta.",
                     **task_block_context(block),
                 }
             )
@@ -235,7 +258,7 @@ def build_peer_tasks(proposals: list[dict[str, Any]], gpu0: list[dict[str, Any]]
                     "task_type": "parallel_guardrail_audit_old_pointer",
                     "target_block_id": block_id,
                     "can_edit_pointer": False,
-                    "instruction": "Audita candidate_response_preview per placeholder/stub, path inventati, source writes non dichiarati e ripetizioni. Usa diagnostic_preview come contesto secondario. Restituisci decisione accept/reject e motivi.",
+                    "instruction": "Audita candidate_response_preview per placeholder/stub, path inventati, source writes non dichiarati, ripetizioni e candidate_applicability_flags. Usa diagnostic_preview come contesto secondario. Restituisci decisione accept/reject e motivi.",
                     **task_block_context(block),
                 }
             )
