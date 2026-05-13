@@ -7,6 +7,7 @@ without committing raw `output/**` or runtime artifacts.
 
 It does not execute providers, run Blender, apply patches or write source files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,7 +21,7 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from Tools.ai.code_patch_plan_common import (  # noqa: E402
+from tools.ai.code_patch_plan_common import (  # noqa: E402
     now_iso,
     repo_rel,
     report_only_guardrails,
@@ -64,7 +65,17 @@ DEFAULT_EXCLUDED_DIRS = {
     "renders",
     "venv",
 }
-DEFAULT_EXCLUDED_SUFFIXES = {".db", ".sqlite", ".sqlite3", ".png", ".jpg", ".jpeg", ".mp4", ".wav", ".blend"}
+DEFAULT_EXCLUDED_SUFFIXES = {
+    ".db",
+    ".sqlite",
+    ".sqlite3",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".mp4",
+    ".wav",
+    ".blend",
+}
 
 
 def sha256_file(path: Path) -> str | None:
@@ -88,16 +99,24 @@ def text_line_count(text: str) -> int:
 
 def split_csv_values(values: list[str]) -> set[str]:
     """Expand repeated comma-separated CLI values into a set."""
-    return {item.strip() for value in values for item in value.split(",") if item.strip()}
+    return {
+        item.strip() for value in values for item in value.split(",") if item.strip()
+    }
 
 
-def is_excluded(path: Path, repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]) -> bool:
+def is_excluded(
+    path: Path, repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]
+) -> bool:
     """Return true when a file should not be included in analysis input."""
     suffix = path.suffix.lower()
     if suffix in excluded_suffixes:
         return True
     try:
-        parts = path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).parts
+        parts = (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .parts
+        )
     except ValueError:
         parts = path.parts
     return any(part in excluded_dirs for part in parts)
@@ -108,12 +127,22 @@ def resolve_inputs(repo_root: Path, values: list[str]) -> list[Path]:
     paths: list[Path] = []
     for value in values:
         candidate = Path(value)
-        full = candidate.resolve() if candidate.is_absolute() else (repo_root / candidate).resolve()
+        full = (
+            candidate.resolve()
+            if candidate.is_absolute()
+            else (repo_root / candidate).resolve()
+        )
         paths.append(full)
     return paths
 
 
-def iter_candidate_files(repo_root: Path, roots: list[Path], include_extensions: set[str], excluded_dirs: set[str], excluded_suffixes: set[str]) -> list[Path]:
+def iter_candidate_files(
+    repo_root: Path,
+    roots: list[Path],
+    include_extensions: set[str],
+    excluded_dirs: set[str],
+    excluded_suffixes: set[str],
+) -> list[Path]:
     """Return sorted candidate files from explicit files/directories."""
     candidates: list[Path] = []
     search_roots = roots or [repo_root]
@@ -123,7 +152,12 @@ def iter_candidate_files(repo_root: Path, roots: list[Path], include_extensions:
             continue
         if root.is_dir():
             candidates.extend(path for path in root.rglob("*") if path.is_file())
-    filtered = [path for path in candidates if path.suffix.lower() in include_extensions and not is_excluded(path, repo_root, excluded_dirs, excluded_suffixes)]
+    filtered = [
+        path
+        for path in candidates
+        if path.suffix.lower() in include_extensions
+        and not is_excluded(path, repo_root, excluded_dirs, excluded_suffixes)
+    ]
     unique = {path.resolve(strict=False): path for path in filtered}
     return sorted(unique, key=lambda path: repo_rel(repo_root, path).lower())
 
@@ -136,7 +170,9 @@ def read_text_file(path: Path) -> tuple[str, str | None]:
         return "", f"{type(exc).__name__}: {exc}"
 
 
-def build_entry(repo_root: Path, path: Path, max_file_chars: int, remaining_chars: int) -> tuple[dict[str, Any], int, str | None]:
+def build_entry(
+    repo_root: Path, path: Path, max_file_chars: int, remaining_chars: int
+) -> tuple[dict[str, Any], int, str | None]:
     """Build one bundle entry and return chars consumed plus optional error."""
     rel = repo_rel(repo_root, path)
     text, error = read_text_file(path)
@@ -197,12 +233,16 @@ def build_bundle(
     warnings: list[str] = []
     entries: list[dict[str, Any]] = []
     consumed = 0
-    candidates = iter_candidate_files(repo_root, input_paths, include_extensions, excluded_dirs, excluded_suffixes)
+    candidates = iter_candidate_files(
+        repo_root, input_paths, include_extensions, excluded_dirs, excluded_suffixes
+    )
     for path in candidates:
         if consumed >= max_total_chars:
             warnings.append("max_total_chars reached; remaining candidates omitted")
             break
-        entry, used_chars, error = build_entry(repo_root, path, max_file_chars, max_total_chars - consumed)
+        entry, used_chars, error = build_entry(
+            repo_root, path, max_file_chars, max_total_chars - consumed
+        )
         if error:
             errors.append(f"{entry.get('path')}: {error}")
         entries.append(entry)
@@ -248,21 +288,33 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Candidate count: `{report['candidate_count']}`")
     lines.append(f"- Included count: `{report['included_count']}`")
     lines.append(f"- Included chars: `{report['included_chars']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{report['provider_execution_performed']}`"
+    )
+    lines.append(
+        f"- Patch application performed: `{report['patch_application_performed']}`"
+    )
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
     lines.append("")
     lines.append("## Largest included files")
     lines.append("")
-    largest = (report.get("summary") or {}).get("largest_files", []) if isinstance(report.get("summary"), dict) else []
+    largest = (
+        (report.get("summary") or {}).get("largest_files", [])
+        if isinstance(report.get("summary"), dict)
+        else []
+    )
     if not largest:
         lines.append("- none")
     for item in largest:
-        lines.append(f"- `{item.get('path')}` — chars `{item.get('raw_chars')}`, lines `{item.get('line_count')}`, truncated `{item.get('truncated')}`")
+        lines.append(
+            f"- `{item.get('path')}` — chars `{item.get('raw_chars')}`, lines `{item.get('line_count')}`, truncated `{item.get('truncated')}`"
+        )
     lines.append("")
     lines.append("## Guardrail")
     lines.append("")
-    lines.append("This bundle is bounded analysis input only. It should feed review/proposal tools, not mutate source files.")
+    lines.append(
+        "This bundle is bounded analysis input only. It should feed review/proposal tools, not mutate source files."
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -270,9 +322,24 @@ def parse_args() -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--input", action="append", default=[], help="File or directory to include; may be repeated.")
-    parser.add_argument("--include-extension", action="append", default=[], help="Additional extension(s), comma-separated accepted.")
-    parser.add_argument("--exclude-dir", action="append", default=[], help="Additional directory names to exclude.")
+    parser.add_argument(
+        "--input",
+        action="append",
+        default=[],
+        help="File or directory to include; may be repeated.",
+    )
+    parser.add_argument(
+        "--include-extension",
+        action="append",
+        default=[],
+        help="Additional extension(s), comma-separated accepted.",
+    )
+    parser.add_argument(
+        "--exclude-dir",
+        action="append",
+        default=[],
+        help="Additional directory names to exclude.",
+    )
     parser.add_argument("--max-file-chars", type=int, default=DEFAULT_MAX_FILE_CHARS)
     parser.add_argument("--max-total-chars", type=int, default=DEFAULT_MAX_TOTAL_CHARS)
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
@@ -284,7 +351,10 @@ def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
     include_extensions = set(DEFAULT_INCLUDE_EXTENSIONS)
-    include_extensions.update(ext if ext.startswith(".") else f".{ext}" for ext in split_csv_values(args.include_extension))
+    include_extensions.update(
+        ext if ext.startswith(".") else f".{ext}"
+        for ext in split_csv_values(args.include_extension)
+    )
     excluded_dirs = set(DEFAULT_EXCLUDED_DIRS)
     excluded_dirs.update(split_csv_values(args.exclude_dir))
     report = build_bundle(
@@ -296,7 +366,16 @@ def main() -> int:
         args.max_file_chars,
         args.max_total_chars,
     )
-    print(write_json_and_markdown(repo_root, report, args.output, args.markdown_output, render_markdown(report)), end="")
+    print(
+        write_json_and_markdown(
+            repo_root,
+            report,
+            args.output,
+            args.markdown_output,
+            render_markdown(report),
+        ),
+        end="",
+    )
     return 0 if report["passed"] else 2
 
 

@@ -6,6 +6,7 @@ repository files, validation commands and stop conditions for a specific task
 profile so a human or AI assistant can start from the right context without
 reading generated indexes or unrelated Blender runtime files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,12 +19,12 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import physical_line_count
+    from tools.validation.report_utils import physical_line_count
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation.report_utils import physical_line_count
+    from tools.validation.report_utils import physical_line_count
 
 DEFAULT_OUTPUT_DIR = "output/ai_context_packs"
 DEFAULT_EVIDENCE_DIR = "docs/LOCAL_VALIDATION_EVIDENCE"
@@ -73,15 +74,30 @@ PROFILES: dict[str, dict[str, Any]] = {
             {"path": "docs/LOCAL_AI_WORKFLOW.md", "role": "ai_workflow"},
             {"path": "docs/PATCH_SPEC_WORKFLOW.md", "role": "patch_spec_workflow"},
             {"path": "docs/JSON_SCHEMAS.md", "role": "schema_notes"},
-            {"path": "Tools/validation/README.md", "role": "validation_commands"},
-            {"path": "Tools/ai/build_repository_change_proposals.py", "role": "proposal_builder"},
-            {"path": "Tools/ai/build_patch_specs_from_proposals.py", "role": "draft_patch_spec_builder"},
-            {"path": "Tools/ai/promote_patch_spec_draft.py", "role": "reviewed_patch_spec_builder"},
+            {"path": "tools/validation/README.md", "role": "validation_commands"},
+            {
+                "path": "tools/ai/build_repository_change_proposals.py",
+                "role": "proposal_builder",
+            },
+            {
+                "path": "tools/ai/build_patch_specs_from_proposals.py",
+                "role": "draft_patch_spec_builder",
+            },
+            {
+                "path": "tools/ai/promote_patch_spec_draft.py",
+                "role": "reviewed_patch_spec_builder",
+            },
         ],
         "optional_files": [
             {"path": "docs/TECH_DEBT_TRACKER.md", "role": "debt_tracker"},
-            {"path": "docs/LOCAL_VALIDATION_EVIDENCE/patch_spec_review_promotion_gpu_npu_multistep_evidence.md", "role": "latest_patch_spec_evidence"},
-            {"path": "docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md", "role": "github_only_mode"},
+            {
+                "path": "docs/LOCAL_VALIDATION_EVIDENCE/patch_spec_review_promotion_gpu_npu_multistep_evidence.md",
+                "role": "latest_patch_spec_evidence",
+            },
+            {
+                "path": "docs/GITHUB_ONLY_AI_CONTINUATION_GUIDE.md",
+                "role": "github_only_mode",
+            },
         ],
         "validation_commands": [
             "python .\\Tools\\validation\\check_python_syntax.py --repo-root . --output .\\output\\validation\\python_syntax.json",
@@ -103,13 +119,25 @@ PROFILES: dict[str, dict[str, Any]] = {
             {"path": "docs/DATA_FLOW.md", "role": "data_flow"},
             {"path": "docs/LOCAL_AI_WORKFLOW.md", "role": "ai_workflow"},
             {"path": "docs/JSON_SCHEMAS.md", "role": "schema_notes"},
-            {"path": "Tools/ai/build_workload_quality_lane_routing.py", "role": "lane_routing"},
-            {"path": "Tools/ai/suggest_repository_updates.py", "role": "advisory_packet"},
-            {"path": "Tools/ai/build_github_evidence_bundle.py", "role": "evidence_builder"},
-            {"path": "Tools/validation/README.md", "role": "validation_commands"},
+            {
+                "path": "tools/ai/build_workload_quality_lane_routing.py",
+                "role": "lane_routing",
+            },
+            {
+                "path": "tools/ai/suggest_repository_updates.py",
+                "role": "advisory_packet",
+            },
+            {
+                "path": "tools/ai/build_github_evidence_bundle.py",
+                "role": "evidence_builder",
+            },
+            {"path": "tools/validation/README.md", "role": "validation_commands"},
         ],
         "optional_files": [
-            {"path": "docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md", "role": "baseline_evidence"},
+            {
+                "path": "docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md",
+                "role": "baseline_evidence",
+            },
             {"path": "docs/TECH_DEBT_TRACKER.md", "role": "debt_tracker"},
         ],
         "validation_commands": [
@@ -126,14 +154,23 @@ PROFILES: dict[str, dict[str, Any]] = {
         "required_files": [
             {"path": "docs/LOCAL_AI_WORKFLOW.md", "role": "ai_workflow"},
             {"path": "docs/DATA_FLOW.md", "role": "data_flow"},
-            {"path": "Tools/ai/run_local_provider_probe.py", "role": "provider_probe"},
-            {"path": "Tools/ai/run_npu_decode_smoke_diagnostic.py", "role": "npu_decode_smoke"},
-            {"path": "Tools/validation/check_npu_decode_quality_remediation.py", "role": "npu_remediation"},
-            {"path": "Tools/npu/pipeline/providers.py", "role": "provider_envelopes"},
-            {"path": "Tools/validation/README.md", "role": "validation_commands"},
+            {"path": "tools/ai/run_local_provider_probe.py", "role": "provider_probe"},
+            {
+                "path": "tools/ai/run_npu_decode_smoke_diagnostic.py",
+                "role": "npu_decode_smoke",
+            },
+            {
+                "path": "tools/validation/check_npu_decode_quality_remediation.py",
+                "role": "npu_remediation",
+            },
+            {"path": "tools/npu/pipeline/providers.py", "role": "provider_envelopes"},
+            {"path": "tools/validation/README.md", "role": "validation_commands"},
         ],
         "optional_files": [
-            {"path": "docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md", "role": "baseline_evidence"},
+            {
+                "path": "docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md",
+                "role": "baseline_evidence",
+            },
         ],
         "validation_commands": [
             "python .\\Tools\\validation\\check_ai_workload_report_quality.py --repo-root . --output .\\output\\validation\\ai_workload_report_quality.json",
@@ -148,16 +185,31 @@ PROFILES: dict[str, dict[str, Any]] = {
     "artifact_pipeline": {
         "description": "AI artifact pipeline, dry-run matrix and refactor-status context.",
         "required_files": [
-            {"path": "docs/AI_PIPELINE_ARCHITECTURE.md", "role": "pipeline_architecture"},
-            {"path": "docs/AI_PIPELINE_REFACTOR_STATUS.md", "role": "pipeline_refactor_status"},
+            {
+                "path": "docs/AI_PIPELINE_ARCHITECTURE.md",
+                "role": "pipeline_architecture",
+            },
+            {
+                "path": "docs/AI_PIPELINE_REFACTOR_STATUS.md",
+                "role": "pipeline_refactor_status",
+            },
             {"path": "docs/AI_ARTIFACT_SCHEMAS.md", "role": "artifact_schema_notes"},
-            {"path": "Tools/ai/pipeline/refactor_status.py", "role": "machine_readable_status"},
-            {"path": "Tools/ai/run_pipeline_dry_run_matrix.py", "role": "dry_run_matrix"},
-            {"path": "Tools/validation/check_refactor_status_consistency.py", "role": "status_validator"},
-            {"path": "Tools/validation/README.md", "role": "validation_commands"},
+            {
+                "path": "tools/ai/pipeline/refactor_status.py",
+                "role": "machine_readable_status",
+            },
+            {
+                "path": "tools/ai/run_pipeline_dry_run_matrix.py",
+                "role": "dry_run_matrix",
+            },
+            {
+                "path": "tools/validation/check_refactor_status_consistency.py",
+                "role": "status_validator",
+            },
+            {"path": "tools/validation/README.md", "role": "validation_commands"},
         ],
         "optional_files": [
-            {"path": "Tools/ai/pipeline/markdown_report.py", "role": "markdown_report"},
+            {"path": "tools/ai/pipeline/markdown_report.py", "role": "markdown_report"},
         ],
         "validation_commands": [
             "python .\\Tools\\validation\\check_refactor_status_consistency.py --repo-root . --output .\\output\\validation\\refactor_status_consistency.json",
@@ -177,7 +229,7 @@ PROFILES: dict[str, dict[str, Any]] = {
             {"path": "docs/PROJECT_STATUS_POINT.md", "role": "status_checkpoint"},
             {"path": "docs/DATA_FLOW.md", "role": "data_flow"},
             {"path": "docs/JSON_SCHEMAS.md", "role": "schema_notes"},
-            {"path": "Tools/validation/README.md", "role": "validation_commands"},
+            {"path": "tools/validation/README.md", "role": "validation_commands"},
         ],
         "optional_files": [
             {"path": "docs/TECH_DEBT_TRACKER.md", "role": "debt_tracker"},
@@ -247,7 +299,9 @@ def path_policy_error(path: str) -> str | None:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_PATH_PREFIXES):
         return f"forbidden path prefix: {normalized}"
     lower = normalized.lower()
-    if any(fragment in lower for fragment in FORBIDDEN_PATH_FRAGMENTS) and lower.endswith(".json"):
+    if any(
+        fragment in lower for fragment in FORBIDDEN_PATH_FRAGMENTS
+    ) and lower.endswith(".json"):
         return f"forbidden full-analysis JSON path: {normalized}"
     if "*" in normalized or normalized.endswith("/"):
         return "context profile entries must be concrete files"
@@ -293,7 +347,11 @@ def safe_read_split_markdown(path: Path) -> tuple[str | None, str | None, int]:
     for part in parts:
         text, error = safe_read_text(part)
         if error or text is None:
-            return None, f"split markdown read failed for {part.name}: {error}", total_size
+            return (
+                None,
+                f"split markdown read failed for {part.name}: {error}",
+                total_size,
+            )
         total_size += part.stat().st_size
         chunks.append(f"<!-- split-source: {part.name} -->\n{text.rstrip()}\n")
     return "\n".join(chunks), None, total_size
@@ -370,8 +428,16 @@ def build_file_entry(
 
 
 def profile_items(profile: dict[str, Any]) -> list[tuple[dict[str, Any], bool]]:
-    required = [(item, True) for item in profile.get("required_files", []) if isinstance(item, dict)]
-    optional = [(item, False) for item in profile.get("optional_files", []) if isinstance(item, dict)]
+    required = [
+        (item, True)
+        for item in profile.get("required_files", [])
+        if isinstance(item, dict)
+    ]
+    optional = [
+        (item, False)
+        for item in profile.get("optional_files", [])
+        if isinstance(item, dict)
+    ]
     return [*required, *optional]
 
 
@@ -395,7 +461,9 @@ def build_pack(
     for item, required in profile_items(profile):
         path = normalize_repo_path(item.get("path"))
         if path in seen_paths:
-            warnings.append(f"duplicate profile path ignored after first occurrence: {path}")
+            warnings.append(
+                f"duplicate profile path ignored after first occurrence: {path}"
+            )
             continue
         seen_paths.add(path)
         entry, remaining = build_file_entry(
@@ -406,15 +474,26 @@ def build_pack(
             max_file_chars=max_file_chars,
         )
         file_entries.append(entry)
-        if required and (not entry["exists"] or not entry["included"] or not entry["policy_ok"]):
-            errors.append(f"required file unavailable for context: {path} ({context_unavailable_reason(entry)})")
-        elif (not required) and (not entry["exists"] or not entry["included"] or not entry["policy_ok"]):
-            warnings.append(f"optional file unavailable for context: {path} ({context_unavailable_reason(entry)})")
+        if required and (
+            not entry["exists"] or not entry["included"] or not entry["policy_ok"]
+        ):
+            errors.append(
+                f"required file unavailable for context: {path} ({context_unavailable_reason(entry)})"
+            )
+        elif (not required) and (
+            not entry["exists"] or not entry["included"] or not entry["policy_ok"]
+        ):
+            warnings.append(
+                f"optional file unavailable for context: {path} ({context_unavailable_reason(entry)})"
+            )
         if entry.get("truncated"):
             warnings.append(f"context content truncated for {path}")
 
     validation_commands = list(profile.get("validation_commands") or [])
-    stop_conditions = [*PROFILE_COMMON_STOP_CONDITIONS, *list(profile.get("stop_conditions") or [])]
+    stop_conditions = [
+        *PROFILE_COMMON_STOP_CONDITIONS,
+        *list(profile.get("stop_conditions") or []),
+    ]
     pack = {
         "schema_version": 1,
         "kind": PACK_KIND,
@@ -429,10 +508,16 @@ def build_pack(
         "warnings": warnings,
         "max_total_chars": max_total_chars,
         "max_file_chars": max_file_chars,
-        "total_included_chars": sum(int(item.get("included_chars") or 0) for item in file_entries),
+        "total_included_chars": sum(
+            int(item.get("included_chars") or 0) for item in file_entries
+        ),
         "file_count": len(file_entries),
-        "included_file_count": sum(1 for item in file_entries if item.get("included") is True),
-        "truncated_file_count": sum(1 for item in file_entries if item.get("truncated") is True),
+        "included_file_count": sum(
+            1 for item in file_entries if item.get("included") is True
+        ),
+        "truncated_file_count": sum(
+            1 for item in file_entries if item.get("truncated") is True
+        ),
         "validation_commands": validation_commands,
         "stop_conditions": stop_conditions,
         "files": file_entries,
@@ -442,12 +527,16 @@ def build_pack(
     md_path = output_dir / f"{basename}.md"
     pack["pack_json"] = repo_relative(json_path, repo_root)
     pack["pack_markdown"] = repo_relative(md_path, repo_root)
-    json_path.write_text(json.dumps(pack, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    json_path.write_text(
+        json.dumps(pack, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     md_path.write_text(render_pack_markdown(pack), encoding="utf-8")
     return pack
 
 
-def build_evidence(pack: dict[str, Any], repo_root: Path, evidence_dir: Path, evidence_basename: str) -> dict[str, Any]:
+def build_evidence(
+    pack: dict[str, Any], repo_root: Path, evidence_dir: Path, evidence_basename: str
+) -> dict[str, Any]:
     evidence_dir.mkdir(parents=True, exist_ok=True)
     json_path = evidence_dir / f"{evidence_basename}.json"
     md_path = evidence_dir / f"{evidence_basename}.md"
@@ -474,10 +563,15 @@ def build_evidence(pack: dict[str, Any], repo_root: Path, evidence_dir: Path, ev
         "required_missing": [
             item.get("path")
             for item in files
-            if item.get("required") is True and (item.get("exists") is not True or item.get("included") is not True)
+            if item.get("required") is True
+            and (item.get("exists") is not True or item.get("included") is not True)
         ],
-        "forbidden_path_count": sum(1 for item in files if item.get("policy_ok") is not True),
-        "blender_runtime_touched": any(str(item.get("path") or "").startswith("Scripting/") for item in files),
+        "forbidden_path_count": sum(
+            1 for item in files if item.get("policy_ok") is not True
+        ),
+        "blender_runtime_touched": any(
+            str(item.get("path") or "").startswith("Scripting/") for item in files
+        ),
         "included_paths": [
             {
                 "path": item.get("path"),
@@ -493,13 +587,18 @@ def build_evidence(pack: dict[str, Any], repo_root: Path, evidence_dir: Path, ev
         "decision": {
             "context_pack_built": pack.get("passed") is True,
             "provider_execution_seen": False,
-            "forbidden_paths_blocked": sum(1 for item in files if item.get("policy_ok") is not True) == 0,
+            "forbidden_paths_blocked": sum(
+                1 for item in files if item.get("policy_ok") is not True
+            )
+            == 0,
             "source_writes_performed": False,
         },
     }
     evidence["evidence_json"] = repo_relative(json_path, repo_root)
     evidence["evidence_markdown"] = repo_relative(md_path, repo_root)
-    json_path.write_text(json.dumps(evidence, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    json_path.write_text(
+        json.dumps(evidence, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     md_path.write_text(render_evidence_markdown(evidence), encoding="utf-8")
     return evidence
 
@@ -508,8 +607,12 @@ def render_pack_markdown(pack: dict[str, Any]) -> str:
     lines = [f"# AI Context Pack: {pack['profile']}", ""]
     lines.append(f"- Generated at: `{pack['generated_at']}`")
     lines.append(f"- Passed: `{pack['passed']}`")
-    lines.append(f"- Provider execution performed: `{pack['provider_execution_performed']}`")
-    lines.append(f"- Included files: `{pack['included_file_count']}/{pack['file_count']}`")
+    lines.append(
+        f"- Provider execution performed: `{pack['provider_execution_performed']}`"
+    )
+    lines.append(
+        f"- Included files: `{pack['included_file_count']}/{pack['file_count']}`"
+    )
     lines.append(f"- Included chars: `{pack['total_included_chars']}`")
     lines.append("")
     lines.append("## Validation Commands")
@@ -548,9 +651,13 @@ def render_evidence_markdown(evidence: dict[str, Any]) -> str:
     lines = [f"# AI Context Pack Evidence: {evidence['profile']}", ""]
     lines.append(f"- Generated at: `{evidence['generated_at']}`")
     lines.append(f"- Passed: `{evidence['passed']}`")
-    lines.append(f"- Provider execution performed: `{evidence['provider_execution_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{evidence['provider_execution_performed']}`"
+    )
     lines.append(f"- Source pack: `{evidence['source_pack']}`")
-    lines.append(f"- Included files: `{evidence['included_file_count']}/{evidence['file_count']}`")
+    lines.append(
+        f"- Included files: `{evidence['included_file_count']}/{evidence['file_count']}`"
+    )
     lines.append(f"- Truncated files: `{evidence['truncated_file_count']}`")
     lines.append(f"- Forbidden path count: `{evidence['forbidden_path_count']}`")
     lines.append(f"- Blender runtime touched: `{evidence['blender_runtime_touched']}`")
@@ -568,7 +675,9 @@ def render_evidence_markdown(evidence: dict[str, Any]) -> str:
             f"required `{item['required']}`, truncated `{item['truncated']}`"
         )
     lines.append("")
-    lines.append("This evidence summarizes a local context pack. It does not prove provider execution and does not include source changes.")
+    lines.append(
+        "This evidence summarizes a local context pack. It does not prove provider execution and does not include source changes."
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -587,7 +696,9 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     basename = sanitize_filename(args.basename or args.profile)
-    evidence_basename = sanitize_filename(args.evidence_basename or f"{args.profile}_context_pack_evidence")
+    evidence_basename = sanitize_filename(
+        args.evidence_basename or f"{args.profile}_context_pack_evidence"
+    )
     output_dir = resolve_repo_path(repo_root, args.output_dir)
     evidence_dir = resolve_repo_path(repo_root, args.evidence_dir)
     pack = build_pack(
@@ -598,7 +709,11 @@ def main() -> int:
         max_total_chars=args.max_total_chars,
         max_file_chars=args.max_file_chars,
     )
-    evidence = None if args.no_evidence else build_evidence(pack, repo_root, evidence_dir, evidence_basename)
+    evidence = (
+        None
+        if args.no_evidence
+        else build_evidence(pack, repo_root, evidence_dir, evidence_basename)
+    )
     print(
         json.dumps(
             {
@@ -606,7 +721,9 @@ def main() -> int:
                 "profile": pack["profile"],
                 "pack_json": pack["pack_json"],
                 "pack_markdown": pack["pack_markdown"],
-                "evidence_json": None if evidence is None else evidence["evidence_json"],
+                "evidence_json": (
+                    None if evidence is None else evidence["evidence_json"]
+                ),
                 "included_file_count": pack["included_file_count"],
                 "truncated_file_count": pack["truncated_file_count"],
                 "provider_execution_performed": False,

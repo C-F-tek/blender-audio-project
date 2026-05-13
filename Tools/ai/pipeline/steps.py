@@ -1,4 +1,5 @@
 """Pipeline step builders for AI artifact orchestration."""
+
 from __future__ import annotations
 
 import shlex
@@ -36,7 +37,12 @@ def build_step_commands(repo: Path, out: Path, args: Any) -> dict[str, list[str]
             str(out / "wave_entrypoint_review.json"),
         ]
     if args.build_chunks:
-        commands["build_semantic_code_chunks"] = [py, script("Tools/npu/build_semantic_code_chunks.py"), "--repo-root", str(repo)]
+        commands["build_semantic_code_chunks"] = [
+            py,
+            script("Tools/npu/build_semantic_code_chunks.py"),
+            "--repo-root",
+            str(repo),
+        ]
     if args.build_music_summary:
         commands["build_music_intermediates"] = [
             py,
@@ -75,7 +81,11 @@ def build_step_commands(repo: Path, out: Path, args: Any) -> dict[str, list[str]
             str(args.npu_workers),
         ]
     if args.npu_guardrail:
-        guardrail_input = out / "smart_context" / f"{track_slug}_smart_context_packet.json" if args.smart_context else out
+        guardrail_input = (
+            out / "smart_context" / f"{track_slug}_smart_context_packet.json"
+            if args.smart_context
+            else out
+        )
         commands["npu_guardrail"] = [
             py,
             script("Tools/npu/npu_guardrail_service.py"),
@@ -99,7 +109,9 @@ def build_step_commands(repo: Path, out: Path, args: Any) -> dict[str, list[str]
     return commands
 
 
-def build_serial_steps(commands: dict[str, list[str]], track_slug: str) -> list[PipelineStep]:
+def build_serial_steps(
+    commands: dict[str, list[str]], track_slug: str
+) -> list[PipelineStep]:
     """Build ordered CPU-side pipeline steps."""
     serial: list[PipelineStep] = []
     if "review_wave_entrypoints" in commands:
@@ -138,7 +150,10 @@ def build_serial_steps(commands: dict[str, list[str]], track_slug: str) -> list[
                 "build_smart_ai_context",
                 "CPU",
                 "Build hierarchical capsules and ranked smart context packet for central AI.",
-                [item.format(track_slug=track_slug) for item in EXPECTED_SMART_CONTEXT_ARTIFACTS],
+                [
+                    item.format(track_slug=track_slug)
+                    for item in EXPECTED_SMART_CONTEXT_ARTIFACTS
+                ],
                 commands["build_smart_ai_context"],
             )
         )
@@ -155,7 +170,9 @@ def build_serial_steps(commands: dict[str, list[str]], track_slug: str) -> list[
     return serial
 
 
-def build_parallel_steps(commands: dict[str, list[str]], out: Path, args: Any) -> list[PipelineStep]:
+def build_parallel_steps(
+    commands: dict[str, list[str]], out: Path, args: Any
+) -> list[PipelineStep]:
     """Build concurrent NPU/GPU pipeline steps."""
     parallel: list[PipelineStep] = []
     if "npu_artifact_review" in commands:
@@ -174,7 +191,10 @@ def build_parallel_steps(commands: dict[str, list[str]], out: Path, args: Any) -
                 "npu_guardrail",
                 "NPU",
                 "Always-on guardrail/preflight plus action queue for corrections and enrichment.",
-                [str(out / "npu_guardrail_report.json"), str(out / "npu_guardrail_action_queue.json")],
+                [
+                    str(out / "npu_guardrail_report.json"),
+                    str(out / "npu_guardrail_action_queue.json"),
+                ],
                 commands["npu_guardrail"],
             )
         )

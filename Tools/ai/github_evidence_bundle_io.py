@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Shared IO, path and policy helpers for GitHub evidence bundles."""
+
 from __future__ import annotations
 
 import hashlib
@@ -8,12 +9,14 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import physical_line_count
+    from tools.validation.report_utils import physical_line_count
 except ImportError:  # pragma: no cover - fallback for direct package-local execution.
+
     def physical_line_count(text: str) -> int:
         if not text:
             return 0
         return text.count("\n") + (0 if text.endswith("\n") else 1)
+
 
 DEFAULT_REPORTS = (
     "output/validation/ai_workload_report_quality.json",
@@ -33,7 +36,19 @@ MAX_ARTIFACT_PREVIEW_CHARS = 1500
 MAX_PATCH_PLAN_TEXT_CHARS = 1200
 DEFAULT_INCLUDED_ARTIFACT_CHARS = 6000
 DEFAULT_MAX_INCLUDED_ARTIFACTS = 40
-CONTENT_EXTENSION_ALLOWLIST = {".json", ".md", ".txt", ".csv", ".yml", ".yaml", ".toml", ".ini", ".cfg", ".py", ".ps1"}
+CONTENT_EXTENSION_ALLOWLIST = {
+    ".json",
+    ".md",
+    ".txt",
+    ".csv",
+    ".yml",
+    ".yaml",
+    ".toml",
+    ".ini",
+    ".cfg",
+    ".py",
+    ".ps1",
+}
 
 RAW_ARTIFACT_DENY_PREFIXES = (
     "output/ai_context_packs/",
@@ -109,11 +124,16 @@ def line_count(text: str) -> int:
 def compact_value(value: Any, *, max_string: int = 500) -> Any:
     """Bound nested values for compact evidence summaries."""
     if isinstance(value, str):
-        return value if len(value) <= max_string else value[:max_string] + "...[truncated]"
+        return (
+            value if len(value) <= max_string else value[:max_string] + "...[truncated]"
+        )
     if isinstance(value, list):
         return [compact_value(item, max_string=max_string) for item in value[:20]]
     if isinstance(value, dict):
-        return {str(key): compact_value(item, max_string=max_string) for key, item in value.items()}
+        return {
+            str(key): compact_value(item, max_string=max_string)
+            for key, item in value.items()
+        }
     return value
 
 

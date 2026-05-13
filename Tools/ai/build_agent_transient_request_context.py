@@ -14,6 +14,7 @@ It is intentionally temporary and report-only:
 - no Blender runtime execution;
 - no source writes except requested JSON/Markdown outputs.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -24,20 +25,31 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
 try:
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 
 DEFAULT_OUTPUT = "output/ai_pipeline/agent_transient_request_context.json"
 DEFAULT_MARKDOWN = "output/ai_pipeline/agent_transient_request_context.md"
-RAW_TEXT_EXTENSIONS = {".md", ".txt", ".json", ".jsonl", ".yaml", ".yml", ".csv", ".log", ".py", ".ps1", ".sh"}
+RAW_TEXT_EXTENSIONS = {
+    ".md",
+    ".txt",
+    ".json",
+    ".jsonl",
+    ".yaml",
+    ".yml",
+    ".csv",
+    ".log",
+    ".py",
+    ".ps1",
+    ".sh",
+}
 
 
 def now_iso() -> str:
@@ -53,7 +65,11 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -106,18 +122,33 @@ def read_raw_file_list(repo_root: Path, value: str) -> list[str]:
     return refs
 
 
-def collect_raw_files(repo_root: Path, values: list[str], *, max_files: int, max_chars_per_file: int) -> list[dict[str, Any]]:
+def collect_raw_files(
+    repo_root: Path, values: list[str], *, max_files: int, max_chars_per_file: int
+) -> list[dict[str, Any]]:
     files: list[dict[str, Any]] = []
     seen: set[Path] = set()
     for value in split_values(values):
         path = resolve_path(repo_root, value)
         candidates: list[Path] = []
         if path.is_dir():
-            candidates.extend(sorted(item for item in path.rglob("*") if item.is_file() and item.suffix.lower() in RAW_TEXT_EXTENSIONS))
+            candidates.extend(
+                sorted(
+                    item
+                    for item in path.rglob("*")
+                    if item.is_file() and item.suffix.lower() in RAW_TEXT_EXTENSIONS
+                )
+            )
         elif path.is_file():
             candidates.append(path)
         else:
-            files.append({"path": repo_rel(path, repo_root), "exists": False, "error": "missing", "truncated": False})
+            files.append(
+                {
+                    "path": repo_rel(path, repo_root),
+                    "exists": False,
+                    "error": "missing",
+                    "truncated": False,
+                }
+            )
             continue
         for candidate in candidates:
             if candidate in seen:
@@ -146,7 +177,14 @@ def collect_raw_files(repo_root: Path, values: list[str], *, max_files: int, max
 
 def build_report_reference(repo_root: Path, value: str) -> dict[str, Any]:
     path = resolve_path(repo_root, value)
-    out: dict[str, Any] = {"path": repo_rel(path, repo_root), "exists": path.exists(), "kind": None, "passed": None, "error": "", "summary": {}}
+    out: dict[str, Any] = {
+        "path": repo_rel(path, repo_root),
+        "exists": path.exists(),
+        "kind": None,
+        "passed": None,
+        "error": "",
+        "summary": {},
+    }
     if not path.exists():
         out["error"] = "missing"
         return out
@@ -170,8 +208,16 @@ def build_context(args: argparse.Namespace) -> dict[str, Any]:
     raw_file_values = list(args.raw_file or [])
     for value in split_values(getattr(args, "raw_file_list", []) or []):
         raw_file_values.extend(read_raw_file_list(repo_root, value))
-    raw_files = collect_raw_files(repo_root, raw_file_values, max_files=args.max_raw_files, max_chars_per_file=args.max_chars_per_file)
-    report_refs = [build_report_reference(repo_root, value) for value in split_values(args.report_file or [])]
+    raw_files = collect_raw_files(
+        repo_root,
+        raw_file_values,
+        max_files=args.max_raw_files,
+        max_chars_per_file=args.max_chars_per_file,
+    )
+    report_refs = [
+        build_report_reference(repo_root, value)
+        for value in split_values(args.report_file or [])
+    ]
     warnings: list[str] = []
     for item in raw_files:
         if item.get("error"):
@@ -180,7 +226,9 @@ def build_context(args: argparse.Namespace) -> dict[str, Any]:
         if item.get("error"):
             warnings.append(f"report: {item.get('path')}: {item.get('error')}")
 
-    total_raw_chars = sum(int(item.get("chars") or 0) for item in raw_files if item.get("exists"))
+    total_raw_chars = sum(
+        int(item.get("chars") or 0) for item in raw_files if item.get("exists")
+    )
     return {
         "schema_version": 1,
         "kind": "agent_transient_request_context",
@@ -203,7 +251,12 @@ def build_context(args: argparse.Namespace) -> dict[str, Any]:
             "commit_allowed": False,
         },
         "memory_notes": [
-            {"id": f"note-{index+1:03d}", "chars": len(note), "sha256": sha256_text(note), "content": note}
+            {
+                "id": f"note-{index+1:03d}",
+                "chars": len(note),
+                "sha256": sha256_text(note),
+                "content": note,
+            }
             for index, note in enumerate(memory_notes)
         ],
         "raw_context": {
@@ -241,9 +294,15 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Agent Transient Request Context", ""]
     lines.append(f"- Scope: `{report['scope']}`")
     lines.append(f"- Passed: `{report['passed']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
-    lines.append(f"- Persistent memory write: `{report['persistence']['persistent_memory_write_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{report['provider_execution_performed']}`"
+    )
+    lines.append(
+        f"- Patch application performed: `{report['patch_application_performed']}`"
+    )
+    lines.append(
+        f"- Persistent memory write: `{report['persistence']['persistent_memory_write_performed']}`"
+    )
     lines.append(f"- SQLite write: `{report['persistence']['sqlite_write_performed']}`")
     lines.append(f"- Memory notes: `{len(report['memory_notes'])}`")
     lines.append(f"- Raw files: `{report['raw_context']['file_count']}`")
@@ -261,13 +320,17 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("## RAW context files")
         lines.append("")
         for item in report["raw_context"]["files"]:
-            lines.append(f"- `{item.get('path')}` exists=`{item.get('exists')}` chars=`{item.get('chars')}` truncated=`{item.get('truncated')}` error=`{item.get('error')}`")
+            lines.append(
+                f"- `{item.get('path')}` exists=`{item.get('exists')}` chars=`{item.get('chars')}` truncated=`{item.get('truncated')}` error=`{item.get('error')}`"
+            )
         lines.append("")
     if report["report_context"]["reports"]:
         lines.append("## Report context")
         lines.append("")
         for item in report["report_context"]["reports"]:
-            lines.append(f"- `{item.get('path')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}` error=`{item.get('error')}`")
+            lines.append(
+                f"- `{item.get('path')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}` error=`{item.get('error')}`"
+            )
         lines.append("")
     lines.append("## Guardrails")
     lines.append("")
@@ -279,11 +342,24 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--objective", default="Capture request-scoped transient context for IA-Carmine orchestration.")
+    parser.add_argument(
+        "--objective",
+        default="Capture request-scoped transient context for IA-Carmine orchestration.",
+    )
     parser.add_argument("--memory-note", action="append", default=[])
-    parser.add_argument("--memory-note-file", action="append", default=[], help="Read a memory note from file to avoid long Windows command lines.")
+    parser.add_argument(
+        "--memory-note-file",
+        action="append",
+        default=[],
+        help="Read a memory note from file to avoid long Windows command lines.",
+    )
     parser.add_argument("--raw-file", action="append", default=[])
-    parser.add_argument("--raw-file-list", action="append", default=[], help="Read raw-file refs from newline-delimited file to avoid long Windows command lines.")
+    parser.add_argument(
+        "--raw-file-list",
+        action="append",
+        default=[],
+        help="Read raw-file refs from newline-delimited file to avoid long Windows command lines.",
+    )
     parser.add_argument("--report-file", action="append", default=[])
     parser.add_argument("--max-raw-files", type=int, default=80)
     parser.add_argument("--max-chars-per-file", type=int, default=12000)

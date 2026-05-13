@@ -1,10 +1,10 @@
 """Product-facing vs supplemental suggestion classification."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from Tools.ai.patch_suggestion_bundle.operations import is_safe_target
-
+from tools.ai.patch_suggestion_bundle.operations import is_safe_target
 
 AUXILIARY_FAMILIES = {
     "validation",
@@ -71,7 +71,9 @@ def classify_manual_item(item: dict[str, Any]) -> dict[str, Any]:
     )
     auxiliary = not product_ready
     if product_ready:
-        reason = "concrete target files plus patch sketch and validation/stop conditions"
+        reason = (
+            "concrete target files plus patch sketch and validation/stop conditions"
+        )
     elif family in AUXILIARY_FAMILIES:
         reason = "auxiliary validation/telemetry/debug signal"
     elif not quality["has_safe_source_target"]:

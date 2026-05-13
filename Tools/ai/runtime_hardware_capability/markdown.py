@@ -36,20 +36,25 @@ def render_markdown(report: dict[str, Any]) -> str:
     ]
     for key, label in lane_rows:
         item = policy.get(key) if isinstance(policy.get(key), dict) else {}
-        workload_allowed = item.get("openvino_workload_allowed", item.get("workload_allowed", item.get("exclusive") is False))
+        workload_allowed = item.get(
+            "openvino_workload_allowed",
+            item.get("workload_allowed", item.get("exclusive") is False),
+        )
         lines.append(
             f"| `{label}` | `{item.get('full_device_name') or item.get('device')}` | "
             f"`{item.get('owner')}` | `{item.get('role')}` | `{_yes_no(item.get('visible', True))}` | "
             f"`{_yes_no(workload_allowed)}` | `{item.get('policy') or item.get('rationale') or ''}` |"
         )
 
-    lines.extend([
-        "",
-        "## Capabilities",
-        "",
-        "| Resource | Name | Role | Provider | Status | Workload allowed | Exclusive |",
-        "|---|---|---|---|---|---|---|",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Capabilities",
+            "",
+            "| Resource | Name | Role | Provider | Status | Workload allowed | Exclusive |",
+            "|---|---|---|---|---|---|---|",
+        ]
+    )
     for item in report.get("capabilities", []):
         lines.append(
             f"| `{item.get('resource')}` | `{item.get('name')}` | `{item.get('role')}` | "

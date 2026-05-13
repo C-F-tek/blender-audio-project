@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Filesystem primitives for controlled patch bundles."""
+
 from __future__ import annotations
 
 import shutil
@@ -28,7 +29,12 @@ def load_text(path: Path) -> LoadedText:
     raw = path.read_bytes()
     had_bom = raw.startswith(b"\xef\xbb\xbf")
     text = raw.decode("utf-8-sig")
-    return LoadedText(path=path, text_lf=normalize_lf(text), newline=detect_newline(raw), had_bom=had_bom)
+    return LoadedText(
+        path=path,
+        text_lf=normalize_lf(text),
+        newline=detect_newline(raw),
+        had_bom=had_bom,
+    )
 
 
 def write_text_preserved(loaded: LoadedText, text_lf: str) -> None:
@@ -38,7 +44,9 @@ def write_text_preserved(loaded: LoadedText, text_lf: str) -> None:
     loaded.path.write_bytes(payload)
 
 
-def backup_file(repo_root: Path, target: Path, *, namespace: str = "patchkit_backups") -> Path:
+def backup_file(
+    repo_root: Path, target: Path, *, namespace: str = "patchkit_backups"
+) -> Path:
     backup_dir = repo_root / "output" / "validation" / namespace
     backup_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")

@@ -6,6 +6,7 @@ thing that must be deterministic at the boundary: the run must expose concrete
 reviewable operations, or fail with a precise reason before a misleading PR is
 created.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -15,9 +16,17 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:  # pragma: no cover
-    from report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 CONCRETE_OPERATION_NAMES = {
     "replace_once",
@@ -65,7 +74,9 @@ def load_jsonl(path: Path | None) -> tuple[list[dict[str, Any]], str | None]:
         return [], "missing"
     events: list[dict[str, Any]] = []
     errors: list[str] = []
-    for index, line in enumerate(path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1):
+    for index, line in enumerate(
+        path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1
+    ):
         stripped = line.strip()
         if not stripped:
             continue
@@ -83,7 +94,9 @@ def append_jsonl(path: Path, event: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     event = dict(event)
     event.setdefault("timestamp", datetime.now().isoformat(timespec="seconds"))
-    path.open("a", encoding="utf-8", newline="\n").write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
+    path.open("a", encoding="utf-8", newline="\n").write(
+        json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n"
+    )
 
 
 def write_public_event(observer_dir: Path | None, event: dict[str, Any]) -> None:
@@ -106,7 +119,11 @@ def write_public_event(observer_dir: Path | None, event: dict[str, Any]) -> None
 
 def discover_first(repo_root: Path, patterns: list[str]) -> Path | None:
     for pattern in patterns:
-        matches = sorted(repo_root.glob(pattern), key=lambda item: item.stat().st_mtime if item.exists() else 0, reverse=True)
+        matches = sorted(
+            repo_root.glob(pattern),
+            key=lambda item: item.stat().st_mtime if item.exists() else 0,
+            reverse=True,
+        )
         if matches:
             return matches[0]
     return None
@@ -124,16 +141,27 @@ def concrete_ops_from_apply(report: dict[str, Any] | None) -> list[dict[str, Any
             concrete.append(item)
     operation_count = int(report.get("operation_count") or 0)
     if operation_count and not concrete:
-        concrete.append({"operation_count": operation_count, "source": "apply_report_operation_count"})
+        concrete.append(
+            {
+                "operation_count": operation_count,
+                "source": "apply_report_operation_count",
+            }
+        )
     return concrete
 
 
-def concrete_candidates_from_runtime(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def concrete_candidates_from_runtime(
+    events: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     candidates: list[dict[str, Any]] = []
     for event in events:
         kind = str(event.get("kind") or event.get("event_type") or "").lower()
         op = str(event.get("operation") or "").strip().lower()
-        if kind in {"concrete_operation_candidate", "heap_exit_product", "patch_spec_candidate"} and (op in CONCRETE_OPERATION_NAMES or event.get("operation_count")):
+        if kind in {
+            "concrete_operation_candidate",
+            "heap_exit_product",
+            "patch_spec_candidate",
+        } and (op in CONCRETE_OPERATION_NAMES or event.get("operation_count")):
             candidates.append(event)
     return candidates
 
@@ -156,11 +184,15 @@ def render_markdown(report: dict[str, Any]) -> str:
     if report.get("concrete_operations"):
         lines.extend(["## Concrete operations", ""])
         for item in report["concrete_operations"][:50]:
-            lines.append(f"- `{item.get('path', item.get('source', 'runtime'))}` op=`{item.get('operation', item.get('operation_count'))}` changed=`{item.get('changed', '')}`")
+            lines.append(
+                f"- `{item.get('path', item.get('source', 'runtime'))}` op=`{item.get('operation', item.get('operation_count'))}` changed=`{item.get('changed', '')}`"
+            )
     if report.get("manual_review_items"):
         lines.extend(["", "## Manual review items", ""])
         for item in report["manual_review_items"][:50]:
-            lines.append(f"- `{item.get('id')}` {item.get('reason')} targets=`{item.get('target_files')}`")
+            lines.append(
+                f"- `{item.get('id')}` {item.get('reason')} targets=`{item.get('target_files')}`"
+            )
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {error}" for error in report["errors"])
@@ -190,12 +222,28 @@ def main() -> int:
     stamp = args.stamp
     packets_dir = repo_root / "output" / "ai_packets" / stamp
 
-    runtime_entry_path = repo_path(repo_root, args.runtime_entry) or (packets_dir / "heap_exchange_runtime_entry.json")
-    runtime_state_path = repo_path(repo_root, args.runtime_state) or (packets_dir / "heap_exchange_runtime_state.jsonl")
-    apply_report_path = repo_path(repo_root, args.apply_report) or discover_first(repo_root, [f"output/validation/*patch_suggestion_bundle_apply*{stamp}*.json", f"output/validation/*generated_patch_specs*{stamp}*.json"])
-    observer_dir = repo_path(repo_root, args.observer_dir) or discover_first(repo_root, [f"output/local_ai_runs/*{stamp}*_observer"])
-    output = repo_path(repo_root, args.output) or (packets_dir / "heap_exchange_runtime_exit_product.json")
-    markdown_output = repo_path(repo_root, args.markdown_output) or (packets_dir / "heap_exchange_runtime_exit_product.md")
+    runtime_entry_path = repo_path(repo_root, args.runtime_entry) or (
+        packets_dir / "heap_exchange_runtime_entry.json"
+    )
+    runtime_state_path = repo_path(repo_root, args.runtime_state) or (
+        packets_dir / "heap_exchange_runtime_state.jsonl"
+    )
+    apply_report_path = repo_path(repo_root, args.apply_report) or discover_first(
+        repo_root,
+        [
+            f"output/validation/*patch_suggestion_bundle_apply*{stamp}*.json",
+            f"output/validation/*generated_patch_specs*{stamp}*.json",
+        ],
+    )
+    observer_dir = repo_path(repo_root, args.observer_dir) or discover_first(
+        repo_root, [f"output/local_ai_runs/*{stamp}*_observer"]
+    )
+    output = repo_path(repo_root, args.output) or (
+        packets_dir / "heap_exchange_runtime_exit_product.json"
+    )
+    markdown_output = repo_path(repo_root, args.markdown_output) or (
+        packets_dir / "heap_exchange_runtime_exit_product.md"
+    )
 
     runtime_entry, entry_error = load_json(runtime_entry_path)
     runtime_events, runtime_error = load_jsonl(runtime_state_path)
@@ -211,7 +259,11 @@ def main() -> int:
         manual_items = apply_report.get("manual_review_items", [])[:200]
 
     changed_count = int(apply_report.get("changed_count") or 0) if apply_report else 0
-    operation_count = int(apply_report.get("operation_count") or 0) if apply_report else len(concrete_operations)
+    operation_count = (
+        int(apply_report.get("operation_count") or 0)
+        if apply_report
+        else len(concrete_operations)
+    )
     errors: list[str] = []
     warnings: list[str] = []
     if entry_error:
@@ -221,7 +273,9 @@ def main() -> int:
     if apply_error:
         warnings.append(f"apply report unavailable at exit: {apply_error}")
     if args.require_concrete_product and not concrete_operations:
-        errors.append("heap/exchange exit has no concrete deterministic operation candidate")
+        errors.append(
+            "heap/exchange exit has no concrete deterministic operation candidate"
+        )
     if args.require_concrete_product and operation_count <= 0:
         errors.append("heap/exchange exit has operation_count=0")
 
@@ -235,7 +289,9 @@ def main() -> int:
         "runtime_state": rel(repo_root, runtime_state_path),
         "apply_report": rel(repo_root, apply_report_path),
         "observer_dir": rel(repo_root, observer_dir),
-        "center_was_dynamic": bool(runtime_entry and runtime_entry.get("center_is_dynamic") is True),
+        "center_was_dynamic": bool(
+            runtime_entry and runtime_entry.get("center_is_dynamic") is True
+        ),
         "runtime_event_count": len(runtime_events),
         "operation_count": operation_count,
         "changed_count": changed_count,
@@ -252,9 +308,30 @@ def main() -> int:
     }
 
     write_json_report(report, resolve_output_path(repo_root, output.as_posix()))
-    write_text_report(render_markdown(report), resolve_output_path(repo_root, markdown_output.as_posix()))
-    append_jsonl(runtime_state_path, {"kind": "heap_exit", "schema_version": 1, "stamp": stamp, "summary": "heap/exchange runtime exit evaluated", "passed": report["passed"], "concrete_operation_count": len(concrete_operations)})
-    write_public_event(observer_dir, {"kind": "heap_exit", "stamp": stamp, "summary": f"heap/exchange exit concrete_ops={len(concrete_operations)} passed={report['passed']}", "source_file": rel(repo_root, output)})
+    write_text_report(
+        render_markdown(report),
+        resolve_output_path(repo_root, markdown_output.as_posix()),
+    )
+    append_jsonl(
+        runtime_state_path,
+        {
+            "kind": "heap_exit",
+            "schema_version": 1,
+            "stamp": stamp,
+            "summary": "heap/exchange runtime exit evaluated",
+            "passed": report["passed"],
+            "concrete_operation_count": len(concrete_operations),
+        },
+    )
+    write_public_event(
+        observer_dir,
+        {
+            "kind": "heap_exit",
+            "stamp": stamp,
+            "summary": f"heap/exchange exit concrete_ops={len(concrete_operations)} passed={report['passed']}",
+            "source_file": rel(repo_root, output),
+        },
+    )
 
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2

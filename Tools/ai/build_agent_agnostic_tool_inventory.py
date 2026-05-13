@@ -14,19 +14,20 @@ The tool is report-only:
 - no Blender runtime execution;
 - no SQLite writes.
 """
+
 from __future__ import annotations
 
 import argparse
 import ast
 import json
 import re
-import sys
 import warnings
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 DEFAULT_OUTPUT = "output/ai_pipeline/agent_agnostic_tool_inventory.json"
 DEFAULT_MARKDOWN = "output/ai_pipeline/agent_agnostic_tool_inventory.md"
@@ -73,7 +74,11 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -94,7 +99,15 @@ def python_symbols(text: str) -> tuple[str, ...]:
             warnings.simplefilter("ignore", SyntaxWarning)
             tree = ast.parse(text)
     except SyntaxError:
-        return tuple(sorted(set(re.findall(r"(?m)^\s*(?:def|class)\s+([A-Za-z_][A-Za-z0-9_]*)", text))))
+        return tuple(
+            sorted(
+                set(
+                    re.findall(
+                        r"(?m)^\s*(?:def|class)\s+([A-Za-z_][A-Za-z0-9_]*)", text
+                    )
+                )
+            )
+        )
     names: list[str] = []
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
@@ -122,15 +135,34 @@ def extract_flags(text: str) -> tuple[str, ...]:
 def classify_category(rel_path: str, text: str) -> str:
     lower = rel_path.lower()
     content = text.lower()
-    if "/validation/" in lower or lower.startswith("tools/validation/") or lower.startswith("tools/ai/check_") or "contract" in lower:
+    if (
+        "/validation/" in lower
+        or lower.startswith("tools/validation/")
+        or lower.startswith("tools/ai/check_")
+        or "contract" in lower
+    ):
         return "validator"
-    if "run_local_ai_core_tool_activation" in lower or "run_local_ai_task_via_pipeline" in lower or "workflow" in lower:
+    if (
+        "run_local_ai_core_tool_activation" in lower
+        or "run_local_ai_task_via_pipeline" in lower
+        or "workflow" in lower
+    ):
         return "orchestrator_pipeline"
-    if "build_agent" in lower or "agent_state" in lower or "context_pack" in lower or "selected_chunks" in lower:
+    if (
+        "build_agent" in lower
+        or "agent_state" in lower
+        or "context_pack" in lower
+        or "selected_chunks" in lower
+    ):
         return "agent_context_builder"
     if "proposal" in lower or "patch_spec" in lower or "pr_draft" in lower:
         return "proposal_or_review_builder"
-    if "npu" in lower or "ollama" in lower or "provider" in lower or "openvino" in content:
+    if (
+        "npu" in lower
+        or "ollama" in lower
+        or "provider" in lower
+        or "openvino" in content
+    ):
         return "provider_probe_or_adapter"
     if "megalithic" in lower or "review" in lower:
         return "review_helper"
@@ -175,7 +207,12 @@ def provider_execution_default(text: str) -> str:
     lower = text.lower()
     if "provider_execution_performed":
         pass
-    if "--use-ollama" in lower or "useexplicitproviders" in lower or "run-npu" in lower or "run-ollama" in lower:
+    if (
+        "--use-ollama" in lower
+        or "useexplicitproviders" in lower
+        or "run-npu" in lower
+        or "run-ollama" in lower
+    ):
         return "explicit_only"
     if "provider_execution_performed":
         return "none_or_reported"
@@ -226,7 +263,9 @@ def iter_tool_files(repo_root: Path, roots: Iterable[str]) -> list[Path]:
     return paths
 
 
-def build_records(repo_root: Path, roots: list[str]) -> tuple[list[ToolRecord], list[str]]:
+def build_records(
+    repo_root: Path, roots: list[str]
+) -> tuple[list[ToolRecord], list[str]]:
     records: list[ToolRecord] = []
     warnings: list[str] = []
     for path in iter_tool_files(repo_root, roots):
@@ -259,7 +298,9 @@ def summarize(records: list[ToolRecord]) -> dict[str, Any]:
     category_counts = Counter(record.category for record in records)
     owner_lane_counts = Counter(record.owner_lane for record in records)
     apply_mode_counts = Counter(record.apply_mode for record in records)
-    provider_default_counts = Counter(record.provider_execution_default for record in records)
+    provider_default_counts = Counter(
+        record.provider_execution_default for record in records
+    )
     lane_counts: Counter[str] = Counter()
     for record in records:
         for lane in record.consumed_by_lanes:
@@ -270,7 +311,9 @@ def summarize(records: list[ToolRecord]) -> dict[str, Any]:
         "owner_lane_counts": dict(owner_lane_counts.most_common()),
         "consumed_lane_counts": dict(lane_counts.most_common()),
         "apply_mode_counts": dict(apply_mode_counts.most_common()),
-        "provider_execution_default_counts": dict(provider_default_counts.most_common()),
+        "provider_execution_default_counts": dict(
+            provider_default_counts.most_common()
+        ),
     }
 
 
@@ -343,11 +386,21 @@ def build_inventory(args: argparse.Namespace) -> dict[str, Any]:
 def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Agent Agnostic Tool Inventory", ""]
     lines.append(f"- Passed: `{report['passed']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{report['provider_execution_performed']}`"
+    )
+    lines.append(
+        f"- Patch application performed: `{report['patch_application_performed']}`"
+    )
     lines.append(f"- Tool count: `{report['summary']['tool_count']}`")
     lines.append("")
-    for section in ("category_counts", "owner_lane_counts", "consumed_lane_counts", "apply_mode_counts", "provider_execution_default_counts"):
+    for section in (
+        "category_counts",
+        "owner_lane_counts",
+        "consumed_lane_counts",
+        "apply_mode_counts",
+        "provider_execution_default_counts",
+    ):
         lines.append(f"## {section}")
         lines.append("")
         for key, count in report["summary"].get(section, {}).items():
@@ -359,7 +412,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(f"### {category}")
         lines.append("")
         for record in records[:20]:
-            lines.append(f"- `{record['path']}` lane=`{record['owner_lane']}` apply=`{record['apply_mode']}` provider=`{record['provider_execution_default']}`")
+            lines.append(
+                f"- `{record['path']}` lane=`{record['owner_lane']}` apply=`{record['apply_mode']}` provider=`{record['provider_execution_default']}`"
+            )
         lines.append("")
     lines.append("## Guardrails")
     lines.append("")
@@ -384,7 +439,9 @@ def main() -> int:
     markdown_output = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     markdown_output.write_text(render_markdown(report), encoding="utf-8")
 
     print(

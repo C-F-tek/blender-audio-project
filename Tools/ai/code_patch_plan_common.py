@@ -5,9 +5,9 @@ The helpers in this module are intentionally side-effect-light. They centralize
 path normalization, compact JSON loading, line-count evidence loading,
 guardrail checks and Markdown writing for the code patch-plan lane.
 """
+
 from __future__ import annotations
 
-import csv
 import json
 import sys
 from datetime import datetime
@@ -19,8 +19,10 @@ if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
 try:
-    from Tools.validation.report_utils import (
+    from tools.validation.report_utils import (
         line_count_for_path as shared_line_count_for_path,
+    )
+    from tools.validation.report_utils import (
         load_line_count_csv_map,
         parse_line_count_csv_row,
         resolve_output_path,
@@ -29,6 +31,8 @@ try:
 except ImportError:  # pragma: no cover - fallback for direct package-local execution.
     from report_utils import (  # type: ignore
         line_count_for_path as shared_line_count_for_path,
+    )
+    from report_utils import (
         load_line_count_csv_map,
         parse_line_count_csv_row,
         resolve_output_path,
@@ -74,12 +78,18 @@ def normalize_repo_path(value: Any) -> str:
 def repo_rel(repo_root: Path, path: Path) -> str:
     """Return a repository-relative path when possible."""
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
 
-def read_json_object(path: Path, *, missing_is_error: bool = True) -> tuple[dict[str, Any], list[str]]:
+def read_json_object(
+    path: Path, *, missing_is_error: bool = True
+) -> tuple[dict[str, Any], list[str]]:
     """Read a JSON object and return `(data, errors)` without raising."""
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
@@ -97,11 +107,14 @@ def parse_line_count_row(row: dict[str, Any]) -> tuple[str, int] | None:
     return parse_line_count_csv_row(row)
 
 
-def load_line_counts(repo_root: Path, csv_path: Path) -> tuple[dict[str, int], list[str]]:
+def load_line_counts(
+    repo_root: Path, csv_path: Path
+) -> tuple[dict[str, int], list[str]]:
     """Load optional line-count CSV evidence as a sizing hint."""
     counts, warnings = load_line_count_csv_map(csv_path)
     normalized_warnings = [
-        warning.replace(str(csv_path), repo_rel(repo_root, csv_path)) for warning in warnings
+        warning.replace(str(csv_path), repo_rel(repo_root, csv_path))
+        for warning in warnings
     ]
     return counts, normalized_warnings
 
@@ -117,13 +130,17 @@ def compact_text(value: Any, limit: int = MAX_TEXT_CHARS) -> str:
     return text if len(text) <= limit else text[:limit] + "...[truncated]"
 
 
-def compact_list(value: Any, *, max_items: int = MAX_ITEMS, text_limit: int = MAX_TEXT_CHARS) -> list[Any]:
+def compact_list(
+    value: Any, *, max_items: int = MAX_ITEMS, text_limit: int = MAX_TEXT_CHARS
+) -> list[Any]:
     """Compact lists while preserving non-string values as-is."""
     if not isinstance(value, list):
         return []
     compacted: list[Any] = []
     for item in value[:max_items]:
-        compacted.append(compact_text(item, text_limit) if isinstance(item, str) else item)
+        compacted.append(
+            compact_text(item, text_limit) if isinstance(item, str) else item
+        )
     return compacted
 
 
@@ -174,7 +191,13 @@ def forbidden_target_errors(path: str) -> list[str]:
     return errors
 
 
-def target_path_errors(repo_root: Path, path_value: str, *, require_existing: bool = True, require_code_like: bool = True) -> list[str]:
+def target_path_errors(
+    repo_root: Path,
+    path_value: str,
+    *,
+    require_existing: bool = True,
+    require_code_like: bool = True,
+) -> list[str]:
     """Validate a repository target path for manual-review code patch plans."""
     path = normalize_repo_path(path_value)
     errors: list[str] = []
@@ -189,13 +212,21 @@ def target_path_errors(repo_root: Path, path_value: str, *, require_existing: bo
         errors.append("target path escapes repository root")
     errors.extend(forbidden_target_errors(path))
     if require_code_like and not is_code_like_path(path):
-        errors.append("target is not a code/config script path for the code patch-plan lane")
+        errors.append(
+            "target is not a code/config script path for the code patch-plan lane"
+        )
     if require_existing and not full.is_file():
         errors.append("target file does not exist")
     return errors
 
 
-def write_json_and_markdown(repo_root: Path, report: dict[str, Any], output_value: str, markdown_value: str, markdown_text: str) -> str:
+def write_json_and_markdown(
+    repo_root: Path,
+    report: dict[str, Any],
+    output_value: str,
+    markdown_value: str,
+    markdown_text: str,
+) -> str:
     """Write paired JSON/Markdown reports and return the JSON report string."""
     output = resolve_output_path(repo_root, output_value)
     markdown_output = resolve_output_path(repo_root, markdown_value)

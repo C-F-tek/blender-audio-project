@@ -14,6 +14,7 @@ It is intentionally report-only:
 - no patch application;
 - no Blender runtime execution.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -47,7 +48,11 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 def safe_rel(path: Path, repo_root: Path) -> str:
     """Return a repo-relative path when possible."""
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -57,7 +62,9 @@ def quote_identifier(name: str) -> str:
     return '"' + str(name).replace('"', '""') + '"'
 
 
-def read_sqlite_metadata(memory_db: Path, repo_root: Path, *, max_tables: int) -> dict[str, Any]:
+def read_sqlite_metadata(
+    memory_db: Path, repo_root: Path, *, max_tables: int
+) -> dict[str, Any]:
     """Inspect a SQLite memory DB in read-only mode."""
     meta: dict[str, Any] = {
         "path": safe_rel(memory_db, repo_root),
@@ -89,7 +96,9 @@ def read_sqlite_metadata(memory_db: Path, repo_root: Path, *, max_tables: int) -
                     "columns": [],
                 }
                 try:
-                    table_info["row_count"] = conn.execute(f"select count(*) from {quoted}").fetchone()[0]
+                    table_info["row_count"] = conn.execute(
+                        f"select count(*) from {quoted}"
+                    ).fetchone()[0]
                     cols = conn.execute(f"pragma table_info({quoted})").fetchall()
                     table_info["columns"] = [
                         {
@@ -109,7 +118,7 @@ def read_sqlite_metadata(memory_db: Path, repo_root: Path, *, max_tables: int) -
             ).fetchall()
             meta["indexes"] = [
                 {"name": str(row["name"]), "table": str(row["tbl_name"])}
-                for row in index_rows[:max_tables * 2]
+                for row in index_rows[: max_tables * 2]
             ]
 
             if any(item["name"] == "memory_meta" for item in meta["tables"]):
@@ -120,7 +129,9 @@ def read_sqlite_metadata(memory_db: Path, repo_root: Path, *, max_tables: int) -
                     if row:
                         meta["schema_version"] = str(row["value"])
                 except Exception as exc:  # noqa: BLE001
-                    meta["errors"].append(f"memory_meta schema_version read failed: {type(exc).__name__}: {exc}")
+                    meta["errors"].append(
+                        f"memory_meta schema_version read failed: {type(exc).__name__}: {exc}"
+                    )
     except Exception as exc:  # noqa: BLE001
         meta["errors"].append(f"{type(exc).__name__}: {exc}")
     return meta
@@ -204,7 +215,15 @@ def build_inventory(args: argparse.Namespace) -> dict[str, Any]:
     sqlite_meta = (
         read_sqlite_metadata(memory_db, repo_root, max_tables=args.max_sqlite_tables)
         if memory_db is not None
-        else {"path": None, "exists": False, "read_only": True, "opened": False, "tables": [], "indexes": [], "errors": []}
+        else {
+            "path": None,
+            "exists": False,
+            "read_only": True,
+            "opened": False,
+            "tables": [],
+            "indexes": [],
+            "errors": [],
+        }
     )
     record_summary = summarize_records(records)
     selected_preview = selected_memory_preview(
@@ -253,7 +272,9 @@ def build_inventory(args: argparse.Namespace) -> dict[str, Any]:
             "risk_count": policy_report.get("risk_count"),
             "duplicate_group_count": policy_report.get("duplicate_group_count"),
             "action_counts": policy_report.get("action_counts", {}),
-            "promotion_candidates": policy_report.get("promotion_candidates", [])[: args.max_policy_items],
+            "promotion_candidates": policy_report.get("promotion_candidates", [])[
+                : args.max_policy_items
+            ],
             "risks": [
                 item
                 for item in policy_report.get("reviews", [])
@@ -302,7 +323,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
     ]
     for table in report.get("sqlite", {}).get("tables", []):
-        lines.append(f"- `{table.get('name')}` rows=`{table.get('row_count')}` columns=`{len(table.get('columns', []))}`")
+        lines.append(
+            f"- `{table.get('name')}` rows=`{table.get('row_count')}` columns=`{len(table.get('columns', []))}`"
+        )
     lines.extend(["", "## Record distributions", ""])
     for name in ("kind_counts", "scope_counts", "confidence_buckets"):
         lines.append(f"### {name}")
@@ -353,7 +376,10 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--objective", default="Inventory generic agent memory for IA-Carmine orchestration and megalithic review.")
+    parser.add_argument(
+        "--objective",
+        default="Inventory generic agent memory for IA-Carmine orchestration and megalithic review.",
+    )
     parser.add_argument("--memory-db", default=DEFAULT_MEMORY_DB)
     parser.add_argument("--memory-jsonl", action="append", default=[])
     parser.add_argument("--memory-db-limit", type=int, default=1000)
@@ -372,7 +398,9 @@ def main() -> int:
     markdown_output = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     markdown_output.write_text(render_markdown(report), encoding="utf-8")
 
     print(

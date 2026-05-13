@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from typing import Any
 
-from Tools.ai.repository_consistency_map.python_inventory import smoke_candidates_for_script
-
+from tools.ai.repository_consistency_map.python_inventory import (
+    smoke_candidates_for_script,
+)
 
 PLANNED_SHARED_UTILITY_DOC = "docs/SHARED_SCRIPTING_UTILITIES.md"
 PLANNED_SHARED_PREFIX = "Scripting/shared/"
@@ -17,13 +18,13 @@ PLANNED_SHARED_BASENAMES = {
     "scene_registry.py",
 }
 GENERATED_CONTEXT_PREFIXES = (
-    "Tools/npu/npu_code_chunks/",
+    "tools/npu/npu_code_chunks/",
     "npu_code_chunks/",
     "indexAI/project_code_chunks/",
     "indexAI/code_chunks/",
 )
 GENERATED_CONTEXT_GLOB_PREFIXES = (
-    "Tools/npu/npu_code_chunks/chunk_",
+    "tools/npu/npu_code_chunks/chunk_",
     "npu_code_chunks/chunk_",
 )
 
@@ -68,11 +69,13 @@ def is_generated_context_reference(ref: dict[str, Any]) -> bool:
     """Return true for generated/index context paths referenced from docs."""
     target = normalized_path(ref.get("raw_ref"))
     source = normalized_path(ref.get("source"))
-    if not source.startswith("Tools/npu/"):
+    if not source.startswith("tools/npu/"):
         return False
     if any(target.startswith(prefix) for prefix in GENERATED_CONTEXT_PREFIXES):
         return True
-    if "*" in target and any(target.startswith(prefix) for prefix in GENERATED_CONTEXT_GLOB_PREFIXES):
+    if "*" in target and any(
+        target.startswith(prefix) for prefix in GENERATED_CONTEXT_GLOB_PREFIXES
+    ):
         return True
     return False
 
@@ -178,7 +181,13 @@ def build_findings(
             }
         )
     all_py = sorted(py_inventory)
-    cited_scripts = sorted({command["script_resolved"] for command in md_commands if command.get("script_exists")})
+    cited_scripts = sorted(
+        {
+            command["script_resolved"]
+            for command in md_commands
+            if command.get("script_exists")
+        }
+    )
     for script in cited_scripts:
         if script not in py_inventory:
             continue
@@ -190,7 +199,7 @@ def build_findings(
                     "source": script,
                     "line": 0,
                     "target": script,
-                    "evidence": "Script is cited by documentation commands but no obvious smoke/check/test file references its stem under Tools/validation.",
+                    "evidence": "Script is cited by documentation commands but no obvious smoke/check/test file references its stem under tools/validation.",
                     "recommendation": "Consider adding a smoke validator or documenting why none is needed.",
                 }
             )
@@ -202,14 +211,26 @@ def build_provider_hints(findings: list[dict[str, Any]]) -> list[dict[str, Any]]
     for finding in findings:
         by_kind[str(finding.get("kind"))].append(finding)
     hints: list[dict[str, Any]] = []
-    for kind, items in sorted(by_kind.items(), key=lambda pair: (-len(pair[1]), pair[0])):
-        targets = sorted({str(item.get("target") or item.get("source") or "") for item in items if item.get("target") or item.get("source")})
-        sources = sorted({str(item.get("source") or "") for item in items if item.get("source")})
+    for kind, items in sorted(
+        by_kind.items(), key=lambda pair: (-len(pair[1]), pair[0])
+    ):
+        targets = sorted(
+            {
+                str(item.get("target") or item.get("source") or "")
+                for item in items
+                if item.get("target") or item.get("source")
+            }
+        )
+        sources = sorted(
+            {str(item.get("source") or "") for item in items if item.get("source")}
+        )
         hints.append(
             {
                 "kind": kind,
                 "count": len(items),
-                "severity_counts": dict(Counter(str(item.get("severity")) for item in items)),
+                "severity_counts": dict(
+                    Counter(str(item.get("severity")) for item in items)
+                ),
                 "sample_sources": sources[:12],
                 "sample_targets": targets[:12],
                 "planner_instruction": "Prioritize concrete patch plans that correct the cited source/target pairs without touching generated output, SQLite, provider settings or Blender runtime.",

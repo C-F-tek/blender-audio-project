@@ -7,6 +7,7 @@ exist. If the heap itself cannot emit a report, the wrapper writes a determinist
 fallback heap report so the final composer always exports an operator-readable
 package under Documents when requested.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,7 +17,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
 
 DEFAULT_REQUEST = (
     "Esegui heap runtime con proposal chunks multi-parte. "
@@ -39,7 +39,11 @@ def resolve_repo_root(value: str) -> Path:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -84,11 +88,17 @@ def load_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def is_complete_heap_run_dir(path: Path) -> bool:
-    return path.is_dir() and path.name.startswith("heap_context_closure_") and (path / REQUIRED_COMPOSER_JSON).exists()
+    return (
+        path.is_dir()
+        and path.name.startswith("heap_context_closure_")
+        and (path / REQUIRED_COMPOSER_JSON).exists()
+    )
 
 
 def latest_revision_context(repo_root: Path) -> tuple[Path | None, dict[str, Any], str]:
@@ -99,7 +109,8 @@ def latest_revision_context(repo_root: Path) -> tuple[Path | None, dict[str, Any
         [
             run_dir / "external_heap_revision_context.json"
             for run_dir in validation_dir.iterdir()
-            if is_complete_heap_run_dir(run_dir) and (run_dir / "external_heap_revision_context.json").exists()
+            if is_complete_heap_run_dir(run_dir)
+            and (run_dir / "external_heap_revision_context.json").exists()
         ],
         key=lambda path: path.stat().st_mtime if path.exists() else 0,
         reverse=True,
@@ -107,10 +118,16 @@ def latest_revision_context(repo_root: Path) -> tuple[Path | None, dict[str, Any
     if not candidates:
         return None, {}, "none"
     path = candidates[0].resolve()
-    return path, load_json(path), "latest_complete_heap_context_closure_with_composer_json"
+    return (
+        path,
+        load_json(path),
+        "latest_complete_heap_context_closure_with_composer_json",
+    )
 
 
-def resolve_revision_context(repo_root: Path, value: str) -> tuple[Path | None, dict[str, Any], str]:
+def resolve_revision_context(
+    repo_root: Path, value: str
+) -> tuple[Path | None, dict[str, Any], str]:
     mode = str(value or "auto_latest").strip()
     if not mode or mode.lower() in {"off", "none", "false", "0"}:
         return None, {}, "off"
@@ -123,7 +140,9 @@ def resolve_revision_context(repo_root: Path, value: str) -> tuple[Path | None, 
     return path, load_json(path), "explicit_revision_context"
 
 
-def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_tasks: int) -> str:
+def revision_context_prompt(
+    payload: dict[str, Any], path: Path | None, max_tasks: int
+) -> str:
     if not payload:
         return ""
     tasks = payload.get("tasks") if isinstance(payload.get("tasks"), list) else []
@@ -170,13 +189,19 @@ def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_task
                 f"reason={task.get('symbol_propagation_skip_reason')}"
             )
         if task.get("discovered_symbols"):
-            lines.append(f"   discovered_symbols={json.dumps(task.get('discovered_symbols'), ensure_ascii=False)}")
+            lines.append(
+                f"   discovered_symbols={json.dumps(task.get('discovered_symbols'), ensure_ascii=False)}"
+            )
         if task.get("rejection_reasons"):
-            lines.append(f"   rejection_reasons={json.dumps(task.get('rejection_reasons'), ensure_ascii=False)}")
+            lines.append(
+                f"   rejection_reasons={json.dumps(task.get('rejection_reasons'), ensure_ascii=False)}"
+            )
         if task.get("instruction"):
             lines.append(f"   instruction={task.get('instruction')}")
     if len(tasks) > len(selected):
-        lines.append(f"- omitted_tasks={len(tasks) - len(selected)}; read full revision context artifact for remaining tasks.")
+        lines.append(
+            f"- omitted_tasks={len(tasks) - len(selected)}; read full revision context artifact for remaining tasks."
+        )
     return "\n".join(lines)
 
 
@@ -190,7 +215,9 @@ def augmented_request(
     revision_payload = revision_context_payload or {}
     revision_text = ""
     if REVISION_CONTEXT_MARKER not in operator:
-        revision_text = revision_context_prompt(revision_payload, revision_context_path, revision_context_max_tasks)
+        revision_text = revision_context_prompt(
+            revision_payload, revision_context_path, revision_context_max_tasks
+        )
     return (
         operator
         + revision_text
@@ -207,7 +234,11 @@ def augmented_request(
 
 
 def startup_artifact_refs(startup_payload: dict[str, Any]) -> list[str]:
-    artifacts = startup_payload.get("artifacts") if isinstance(startup_payload.get("artifacts"), dict) else {}
+    artifacts = (
+        startup_payload.get("artifacts")
+        if isinstance(startup_payload.get("artifacts"), dict)
+        else {}
+    )
     refs: list[str] = []
     for value in artifacts.values():
         if isinstance(value, str) and value and value not in refs:
@@ -215,7 +246,11 @@ def startup_artifact_refs(startup_payload: dict[str, Any]) -> list[str]:
     for execution in startup_payload.get("tool_executions") or []:
         if not isinstance(execution, dict):
             continue
-        for key in ("useful_artifact_paths", "existing_artifact_paths", "artifact_paths"):
+        for key in (
+            "useful_artifact_paths",
+            "existing_artifact_paths",
+            "artifact_paths",
+        ):
             for value in execution.get(key) or []:
                 if isinstance(value, str) and value and value not in refs:
                     refs.append(value)
@@ -242,7 +277,10 @@ def startup_can_continue(
         return True
     if strict_startup_reload:
         return False
-    if startup_payload.get("input_ready_before_heap") is True and startup_task_file.exists():
+    if (
+        startup_payload.get("input_ready_before_heap") is True
+        and startup_task_file.exists()
+    ):
         return True
     if startup_task_file.exists() and startup_artifact_refs(startup_payload):
         return True
@@ -266,7 +304,11 @@ def write_fallback_heap_report(
     blocking = [reason]
     if startup_payload.get("startup_reload_degraded"):
         blocking.append("startup_reload_degraded=True")
-    for item in startup_payload.get("blocking_requirements", []) if isinstance(startup_payload.get("blocking_requirements"), list) else []:
+    for item in (
+        startup_payload.get("blocking_requirements", [])
+        if isinstance(startup_payload.get("blocking_requirements"), list)
+        else []
+    ):
         blocking.append(f"startup blocking requirement: {item}")
     report = {
         "schema_version": 1,
@@ -280,13 +322,19 @@ def write_fallback_heap_report(
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": blocking,
-        "warnings": startup_payload.get("startup_warnings", []) if isinstance(startup_payload.get("startup_warnings"), list) else [],
+        "warnings": (
+            startup_payload.get("startup_warnings", [])
+            if isinstance(startup_payload.get("startup_warnings"), list)
+            else []
+        ),
         "metrics": {
             "stamp": stamp,
             "product_status": "blocked_with_reason",
             "quality_output_passed": False,
             "provider_revision_count": 0,
-            "startup_reload_degraded": bool(startup_payload.get("startup_reload_degraded")),
+            "startup_reload_degraded": bool(
+                startup_payload.get("startup_reload_degraded")
+            ),
         },
         "real_run_output_contract": {
             "product_status": "blocked_with_reason",
@@ -294,9 +342,21 @@ def write_fallback_heap_report(
             "runtime_debug_lab_required": True,
             "runtime_debug_lab_passed": False,
             "context_artifact_refs": context_refs,
-            "startup_manifest": repo_rel(repo_root, run_dir / "startup_context_memory_reload" / "heap_context_memory_reload_manifest.json"),
-            "startup_task_file": repo_rel(repo_root, run_dir / "startup_context_memory_reload" / "heap_startup_input_ready_context.md"),
-            "startup_reload_degraded": bool(startup_payload.get("startup_reload_degraded")),
+            "startup_manifest": repo_rel(
+                repo_root,
+                run_dir
+                / "startup_context_memory_reload"
+                / "heap_context_memory_reload_manifest.json",
+            ),
+            "startup_task_file": repo_rel(
+                repo_root,
+                run_dir
+                / "startup_context_memory_reload"
+                / "heap_startup_input_ready_context.md",
+            ),
+            "startup_reload_degraded": bool(
+                startup_payload.get("startup_reload_degraded")
+            ),
             "fallback_reason": reason,
         },
         "startup_context_memory_reload": startup_payload,
@@ -334,7 +394,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--budget-minutes", type=int, default=10)
     parser.add_argument("--max-iterations", type=int, default=6)
     parser.add_argument("--max-provider-revisions", type=int, default=6)
-    parser.add_argument("--max-rounds", type=int, default=12, help="Gate planning rounds; must be high enough to complete base evidence before provider lanes.")
+    parser.add_argument(
+        "--max-rounds",
+        type=int,
+        default=12,
+        help="Gate planning rounds; must be high enough to complete base evidence before provider lanes.",
+    )
     parser.add_argument("--allow-provider-generation", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=900)
     parser.add_argument("--npu-device-workload-seconds", type=float, default=5.0)
@@ -350,7 +415,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--startup-max-context-files", type=int, default=80)
     parser.add_argument("--startup-scan-context-files", type=int, default=10000)
     parser.add_argument("--startup-max-chars-per-file", type=int, default=12000)
-    parser.add_argument("--revision-context", default="auto_latest", help="Revision context path, 'auto_latest' or 'off'. Default auto-loads latest complete heap run context.")
+    parser.add_argument(
+        "--revision-context",
+        default="auto_latest",
+        help="Revision context path, 'auto_latest' or 'off'. Default auto-loads latest complete heap run context.",
+    )
     parser.add_argument("--revision-context-max-tasks", type=int, default=12)
     return parser.parse_args()
 
@@ -360,11 +429,19 @@ def main() -> int:
     repo_root = resolve_repo_root(args.repo_root)
     stamp = args.stamp or now_stamp()
     project_python = resolve_project_python(repo_root, args.python_exe)
-    run_dir = Path(args.output_dir) if args.output_dir else repo_root / "output" / "validation" / f"heap_context_closure_{stamp}"
+    run_dir = (
+        Path(args.output_dir)
+        if args.output_dir
+        else repo_root / "output" / "validation" / f"heap_context_closure_{stamp}"
+    )
     run_dir = run_dir.resolve()
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    revision_context_path, revision_context_payload, revision_context_selection_policy = resolve_revision_context(
+    (
+        revision_context_path,
+        revision_context_payload,
+        revision_context_selection_policy,
+    ) = resolve_revision_context(
         repo_root,
         args.revision_context,
     )
@@ -421,12 +498,14 @@ def main() -> int:
     if args.skip_startup_reload:
         startup_result.update({"passed": True, "returncode": 0, "skipped": True})
     elif not preflight_result["passed"]:
-        startup_result.update({
-            "passed": False,
-            "returncode": 2,
-            "skipped": True,
-            "stderr_tail": "startup context/memory reload skipped because preflight failed",
-        })
+        startup_result.update(
+            {
+                "passed": False,
+                "returncode": 2,
+                "skipped": True,
+                "stderr_tail": "startup context/memory reload skipped because preflight failed",
+            }
+        )
     else:
         startup_command = [
             project_python,
@@ -539,7 +618,6 @@ def main() -> int:
         )
         fallback_heap_report_written = True
 
-
     startup_heap_reconcile_report = run_dir / "heap_startup_context_reconciliation.json"
     startup_heap_reconcile_markdown = run_dir / "heap_startup_context_reconciliation.md"
     startup_heap_reconcile_result: dict[str, Any] = {
@@ -566,7 +644,9 @@ def main() -> int:
         ]
         if startup_reload_degraded and can_continue and not args.strict_startup_reload:
             startup_heap_reconcile_command.append("--allow-degraded-startup")
-        startup_heap_reconcile_result = run_command(startup_heap_reconcile_command, repo_root)
+        startup_heap_reconcile_result = run_command(
+            startup_heap_reconcile_command, repo_root
+        )
 
     composer_command = [
         project_python,
@@ -589,14 +669,27 @@ def main() -> int:
 
     composer_result = run_command(composer_command, repo_root)
     composer_report = load_json(run_dir / "heap_final_proposal_composer.json")
-    composer_packaging_performed = bool((run_dir / "heap_final_proposal_composer.json").exists() and (run_dir / "heap_final_proposal_composer.md").exists())
+    composer_packaging_performed = bool(
+        (run_dir / "heap_final_proposal_composer.json").exists()
+        and (run_dir / "heap_final_proposal_composer.md").exists()
+    )
     composer_documents_dir = str(composer_report.get("documents_dir", "") or "")
-    composer_documents_outputs = composer_report.get("documents_outputs") if isinstance(composer_report.get("documents_outputs"), list) else []
+    composer_documents_outputs = (
+        composer_report.get("documents_outputs")
+        if isinstance(composer_report.get("documents_outputs"), list)
+        else []
+    )
     final_proposal_txt = str(composer_report.get("primary_txt", "") or "")
     final_proposal_markdown = str(composer_report.get("primary_markdown", "") or "")
     final_proposal_json = str(composer_report.get("primary_json", "") or "")
-    final_download_manifest_txt = str(composer_report.get("download_manifest_txt", "") or "")
-    proposal_txt_outputs = composer_report.get("proposal_txt_outputs") if isinstance(composer_report.get("proposal_txt_outputs"), list) else []
+    final_download_manifest_txt = str(
+        composer_report.get("download_manifest_txt", "") or ""
+    )
+    proposal_txt_outputs = (
+        composer_report.get("proposal_txt_outputs")
+        if isinstance(composer_report.get("proposal_txt_outputs"), list)
+        else []
+    )
 
     external_postrun_result: dict[str, Any] = {
         "performed": False,
@@ -654,10 +747,18 @@ def main() -> int:
                 }
             )
 
-    external_postrun_payload = load_json(Path(str(external_postrun_result.get("report") or "")))
-    external_long_response_markdown = str(external_postrun_payload.get("long_response_markdown", "") or "")
-    external_revision_context_json = str(external_postrun_payload.get("revision_context_json", "") or "")
-    external_pointer_manifest_json = str(external_postrun_payload.get("pointer_manifest_json", "") or "")
+    external_postrun_payload = load_json(
+        Path(str(external_postrun_result.get("report") or ""))
+    )
+    external_long_response_markdown = str(
+        external_postrun_payload.get("long_response_markdown", "") or ""
+    )
+    external_revision_context_json = str(
+        external_postrun_payload.get("revision_context_json", "") or ""
+    )
+    external_pointer_manifest_json = str(
+        external_postrun_payload.get("pointer_manifest_json", "") or ""
+    )
 
     summary = {
         "schema_version": 1,
@@ -667,15 +768,27 @@ def main() -> int:
         "project_python": project_python,
         "run_dir": str(run_dir),
         "revision_context_selection_policy": revision_context_selection_policy,
-        "revision_context_path": str(revision_context_path) if revision_context_path else "",
+        "revision_context_path": (
+            str(revision_context_path) if revision_context_path else ""
+        ),
         "revision_context_loaded": bool(revision_context_payload),
         "request_file": str(heap_request_file),
-        "revision_context_task_count": len(revision_context_payload.get("tasks", [])) if isinstance(revision_context_payload.get("tasks"), list) else 0,
-        "revision_context_requires_concrete_rewrite": revision_context_payload.get("requires_concrete_rewrite"),
-        "revision_context_priority_next_action": revision_context_payload.get("priority_next_action"),
+        "revision_context_task_count": (
+            len(revision_context_payload.get("tasks", []))
+            if isinstance(revision_context_payload.get("tasks"), list)
+            else 0
+        ),
+        "revision_context_requires_concrete_rewrite": revision_context_payload.get(
+            "requires_concrete_rewrite"
+        ),
+        "revision_context_priority_next_action": revision_context_payload.get(
+            "priority_next_action"
+        ),
         "revision_context_candidate_applicability_summary": (
             revision_context_payload.get("candidate_applicability_summary")
-            if isinstance(revision_context_payload.get("candidate_applicability_summary"), dict)
+            if isinstance(
+                revision_context_payload.get("candidate_applicability_summary"), dict
+            )
             else {}
         ),
         "max_iterations_requested": args.max_iterations,
@@ -683,7 +796,9 @@ def main() -> int:
         "preflight_performed": not args.skip_preflight,
         "preflight_passed": bool(preflight_result["passed"]),
         "preflight_report": str(preflight_report) if preflight_report.exists() else "",
-        "preflight_markdown": str(preflight_markdown) if preflight_markdown.exists() else "",
+        "preflight_markdown": (
+            str(preflight_markdown) if preflight_markdown.exists() else ""
+        ),
         "preflight_returncode": preflight_result["returncode"],
         "startup_reload_performed": startup_reload_performed,
         "startup_reload_passed": bool(startup_result["passed"]),
@@ -691,16 +806,46 @@ def main() -> int:
         "startup_can_continue": can_continue,
         "strict_startup_reload": bool(args.strict_startup_reload),
         "startup_manifest": str(startup_manifest) if startup_manifest.exists() else "",
-        "startup_heap_reconcile_returncode": startup_heap_reconcile_result["returncode"],
+        "startup_heap_reconcile_returncode": startup_heap_reconcile_result[
+            "returncode"
+        ],
         "startup_heap_reconcile_passed": bool(startup_heap_reconcile_result["passed"]),
-        "startup_heap_reconcile_report": str(startup_heap_reconcile_report) if startup_heap_reconcile_report.exists() else "",
-        "startup_heap_reconcile_markdown": str(startup_heap_reconcile_markdown) if startup_heap_reconcile_markdown.exists() else "",
-        "startup_reconcile_degraded_policy_used": bool(startup_reload_degraded and can_continue and not args.strict_startup_reload),
-        "startup_task_file": str(startup_task_file) if startup_task_file.exists() else "",
-        "startup_artifacts": startup_payload.get("artifacts", {}) if isinstance(startup_payload, dict) else {},
-        "startup_artifact_ref_count": len(startup_artifact_refs(startup_payload)) if isinstance(startup_payload, dict) else 0,
-        "startup_blocking_requirements": startup_payload.get("blocking_requirements", []) if isinstance(startup_payload, dict) else [],
-        "startup_degraded_requirements": startup_payload.get("degraded_requirements", []) if isinstance(startup_payload, dict) else [],
+        "startup_heap_reconcile_report": (
+            str(startup_heap_reconcile_report)
+            if startup_heap_reconcile_report.exists()
+            else ""
+        ),
+        "startup_heap_reconcile_markdown": (
+            str(startup_heap_reconcile_markdown)
+            if startup_heap_reconcile_markdown.exists()
+            else ""
+        ),
+        "startup_reconcile_degraded_policy_used": bool(
+            startup_reload_degraded and can_continue and not args.strict_startup_reload
+        ),
+        "startup_task_file": (
+            str(startup_task_file) if startup_task_file.exists() else ""
+        ),
+        "startup_artifacts": (
+            startup_payload.get("artifacts", {})
+            if isinstance(startup_payload, dict)
+            else {}
+        ),
+        "startup_artifact_ref_count": (
+            len(startup_artifact_refs(startup_payload))
+            if isinstance(startup_payload, dict)
+            else 0
+        ),
+        "startup_blocking_requirements": (
+            startup_payload.get("blocking_requirements", [])
+            if isinstance(startup_payload, dict)
+            else []
+        ),
+        "startup_degraded_requirements": (
+            startup_payload.get("degraded_requirements", [])
+            if isinstance(startup_payload, dict)
+            else []
+        ),
         "heap_report": str(report_file),
         "heap_markdown": str(markdown_file),
         "heap_returncode": heap_result["returncode"],
@@ -717,16 +862,25 @@ def main() -> int:
         "final_proposal_json": final_proposal_json,
         "final_download_manifest_txt": final_download_manifest_txt,
         "proposal_txt_outputs": proposal_txt_outputs,
-        "external_postrun_package_performed": bool(external_postrun_result.get("performed")),
+        "external_postrun_package_performed": bool(
+            external_postrun_result.get("performed")
+        ),
         "external_postrun_package_passed": bool(external_postrun_result.get("passed")),
-        "external_postrun_package_returncode": external_postrun_result.get("returncode"),
+        "external_postrun_package_returncode": external_postrun_result.get(
+            "returncode"
+        ),
         "external_postrun_package_report": external_postrun_result.get("report", ""),
         "external_long_response_markdown": external_long_response_markdown,
         "external_revision_context_json": external_revision_context_json,
         "external_pointer_manifest_json": external_pointer_manifest_json,
         "download_hint": composer_report.get("download_hint", ""),
-        "launcher_passed": bool(can_continue and heap_result["passed"] and composer_result["passed"]),
-        "launcher_packaging_succeeded": bool(composer_packaging_performed and (can_continue or fallback_heap_report_written)),
+        "launcher_passed": bool(
+            can_continue and heap_result["passed"] and composer_result["passed"]
+        ),
+        "launcher_packaging_succeeded": bool(
+            composer_packaging_performed
+            and (can_continue or fallback_heap_report_written)
+        ),
         "preflight_stdout_tail": preflight_result["stdout_tail"],
         "preflight_stderr_tail": preflight_result["stderr_tail"],
         "heap_stdout_tail": heap_result["stdout_tail"],

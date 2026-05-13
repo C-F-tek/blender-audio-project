@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Controlled report-only runtime debug lab for AI programming/debug tasks."""
+
 from __future__ import annotations
 
 import argparse
@@ -21,7 +22,10 @@ def load_request(path: Path) -> tuple[dict[str, object] | None, str | None]:
     except FileNotFoundError:
         return None, f"request file not found: {path}"
     except json.JSONDecodeError as exc:
-        return None, f"invalid request JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}"
+        return (
+            None,
+            f"invalid request JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}",
+        )
     except OSError as exc:
         return None, f"unable to read request file: {type(exc).__name__}: {exc}"
     if not isinstance(data, dict):
@@ -33,8 +37,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--request-file", required=True)
-    parser.add_argument("--output", default="output/validation/agent_runtime_debug_lab.json")
-    parser.add_argument("--markdown-output", default="output/validation/agent_runtime_debug_lab.md")
+    parser.add_argument(
+        "--output", default="output/validation/agent_runtime_debug_lab.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/agent_runtime_debug_lab.md"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=300)
     parser.add_argument("--tail-chars", type=int, default=4000)
     return parser.parse_args()

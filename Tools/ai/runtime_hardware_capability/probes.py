@@ -21,7 +21,11 @@ def command_json(cmd: list[str], timeout: int = 20) -> dict[str, Any]:
             timeout=timeout,
         )
     except Exception as exc:
-        return {"available": False, "command": cmd, "error": f"{type(exc).__name__}: {exc}"}
+        return {
+            "available": False,
+            "command": cmd,
+            "error": f"{type(exc).__name__}: {exc}",
+        }
     return {
         "available": result.returncode == 0,
         "command": cmd,
@@ -53,7 +57,12 @@ def detect_openvino_devices() -> dict[str, Any]:
         except ImportError:
             from openvino.runtime import Core  # type: ignore
     except Exception as exc:
-        return {"available": False, "devices": [], "device_details": {}, "error": f"{type(exc).__name__}: {exc}"}
+        return {
+            "available": False,
+            "devices": [],
+            "device_details": {},
+            "error": f"{type(exc).__name__}: {exc}",
+        }
 
     try:
         core = Core()
@@ -61,12 +70,26 @@ def detect_openvino_devices() -> dict[str, Any]:
         details: dict[str, Any] = {}
         for device in devices:
             details[device] = {
-                "full_device_name": _safe_openvino_property(core, device, "FULL_DEVICE_NAME"),
-                "optimization_capabilities": _safe_openvino_property(core, device, "OPTIMIZATION_CAPABILITIES"),
+                "full_device_name": _safe_openvino_property(
+                    core, device, "FULL_DEVICE_NAME"
+                ),
+                "optimization_capabilities": _safe_openvino_property(
+                    core, device, "OPTIMIZATION_CAPABILITIES"
+                ),
             }
     except Exception as exc:
-        return {"available": False, "devices": [], "device_details": {}, "error": f"{type(exc).__name__}: {exc}"}
-    return {"available": True, "devices": devices, "device_details": details, "error": None}
+        return {
+            "available": False,
+            "devices": [],
+            "device_details": {},
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+    return {
+        "available": True,
+        "devices": devices,
+        "device_details": details,
+        "error": None,
+    }
 
 
 def cpu_diagnostics() -> dict[str, Any]:
@@ -83,6 +106,10 @@ def cpu_diagnostics() -> dict[str, Any]:
 def nvidia_smi_diagnostics() -> dict[str, Any]:
     """Return bounded NVIDIA visibility diagnostics."""
     return command_json(
-        ["nvidia-smi", "--query-gpu=name,memory.total,driver_version", "--format=csv,noheader"],
+        [
+            "nvidia-smi",
+            "--query-gpu=name,memory.total,driver_version",
+            "--format=csv,noheader",
+        ],
         timeout=20,
     )

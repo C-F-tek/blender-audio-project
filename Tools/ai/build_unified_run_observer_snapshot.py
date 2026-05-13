@@ -11,7 +11,9 @@ def read_jsonl(path: Path, limit: int) -> list[dict]:
     if not path.is_file():
         return []
     rows: list[dict] = []
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]:
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[
+        -limit:
+    ]:
         try:
             rows.append(json.loads(line))
         except json.JSONDecodeError:
@@ -61,15 +63,23 @@ def main() -> int:
         "## Recent progress",
     ]
     for event in progress[-10:]:
-        lines.append(f"- `{event.get('timestamp','')}` `{event.get('phase','')}` `{event.get('status','')}` {event.get('message','')}")
+        lines.append(
+            f"- `{event.get('timestamp','')}` `{event.get('phase','')}` `{event.get('status','')}` {event.get('message','')}"
+        )
     lines += ["", "## Recent AI public exchange"]
     for event in exchange[-10:]:
-        lines.append(f"- `{event.get('speaker','')}` `{event.get('event_type','')}` {event.get('summary','')}")
+        lines.append(
+            f"- `{event.get('speaker','')}` `{event.get('event_type','')}` {event.get('summary','')}"
+        )
     markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(json.dumps({"passed": True, "output": str(output), "markdown_output": str(markdown)}, indent=2))
+    print(
+        json.dumps(
+            {"passed": True, "output": str(output), "markdown_output": str(markdown)},
+            indent=2,
+        )
+    )
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

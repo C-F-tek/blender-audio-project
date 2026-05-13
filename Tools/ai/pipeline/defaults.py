@@ -1,6 +1,6 @@
 """Central defaults for the AI artifact pipeline."""
-from __future__ import annotations
 
+from __future__ import annotations
 
 PIPELINE_SCHEMA_VERSION = 6
 DEFAULT_REPO_ROOT = "."

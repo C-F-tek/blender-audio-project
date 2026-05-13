@@ -10,9 +10,9 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from Tools.ai.patch_notes_quality_product.builder import build_report
-from Tools.ai.patch_notes_quality_product.reporting import render_markdown
-from Tools.ai.patch_plan_quality_product.io_utils import resolve, write_json, write_text
+from tools.ai.patch_notes_quality_product.builder import build_report
+from tools.ai.patch_notes_quality_product.reporting import render_markdown
+from tools.ai.patch_plan_quality_product.io_utils import resolve, write_json, write_text
 
 
 def parse_args() -> argparse.Namespace:

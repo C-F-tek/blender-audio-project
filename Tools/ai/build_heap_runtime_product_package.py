@@ -6,6 +6,7 @@ reports and artifacts already produced by the heap/team runtime, broker,
 telemetry, recommendations and patch-plan lanes into a small product surface
 that downstream bundle builders can consume.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -17,7 +18,9 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from tools.validation.report_utils import (  # type: ignore
+        write_json_report,
+    )
 
 
 def now_iso() -> str:
@@ -26,7 +29,11 @@ def now_iso() -> str:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
@@ -56,9 +63,15 @@ def compact_report(path: Path, repo_root: Path) -> dict[str, Any]:
         "json_ok": data is not None,
         "kind": data.get("kind") if data else None,
         "passed": data.get("passed") if data else None,
-        "provider_execution_performed": data.get("provider_execution_performed") if data else None,
-        "patch_application_performed": data.get("patch_application_performed") if data else None,
-        "source_writes_performed": data.get("source_writes_performed") if data else None,
+        "provider_execution_performed": (
+            data.get("provider_execution_performed") if data else None
+        ),
+        "patch_application_performed": (
+            data.get("patch_application_performed") if data else None
+        ),
+        "source_writes_performed": (
+            data.get("source_writes_performed") if data else None
+        ),
         "errors": (data.get("errors") if data else []) or [],
         "warnings": (data.get("warnings") if data else []) or [],
     }
@@ -94,7 +107,11 @@ def compact_artifact(path: Path, repo_root: Path) -> dict[str, Any]:
         "suffix": path.suffix.lower(),
         "size_bytes": path.stat().st_size if path.exists() and path.is_file() else None,
     }
-    if path.exists() and path.is_file() and path.suffix.lower() in {".md", ".txt", ".json", ".jsonl", ".mmd"}:
+    if (
+        path.exists()
+        and path.is_file()
+        and path.suffix.lower() in {".md", ".txt", ".json", ".jsonl", ".mmd"}
+    ):
         text = path.read_text(encoding="utf-8-sig", errors="replace")
         item["preview"] = text[:1200]
         item["preview_chars"] = min(len(text), 1200)
@@ -104,16 +121,22 @@ def compact_artifact(path: Path, repo_root: Path) -> dict[str, Any]:
 def infer_product_status(reports: list[dict[str, Any]]) -> tuple[str, str, list[str]]:
     errors: list[str] = []
     if not reports:
-        return "blocked_with_reason", "no run reports supplied", ["no run reports supplied"]
+        return (
+            "blocked_with_reason",
+            "no run reports supplied",
+            ["no run reports supplied"],
+        )
 
     failed = [item for item in reports if item.get("passed") is False]
     explicit_ready = [
-        item for item in reports
+        item
+        for item in reports
         if isinstance(item.get("metrics"), dict)
         and item["metrics"].get("product_status") in {"ready", "blocked_with_reason"}
     ]
     product_items = [
-        item for item in reports
+        item
+        for item in reports
         if isinstance(item.get("product"), dict)
         and item["product"].get("status") in {"ready", "blocked_with_reason"}
     ]
@@ -127,7 +150,11 @@ def infer_product_status(reports: list[dict[str, Any]]) -> tuple[str, str, list[
         return str(status), reason, []
     if product_items:
         product = product_items[-1]["product"]
-        return str(product.get("status")), str(product.get("reason") or "product status supplied by source report"), []
+        return (
+            str(product.get("status")),
+            str(product.get("reason") or "product status supplied by source report"),
+            [],
+        )
     return "ready", "all supplied reports are readable and non-failing", []
 
 
@@ -202,10 +229,14 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
     ]
     for item in report.get("reports") or []:
-        lines.append(f"- `{item.get('path')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}`")
+        lines.append(
+            f"- `{item.get('path')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}`"
+        )
     lines.extend(["", "## Artifacts", ""])
     for item in report.get("artifacts") or []:
-        lines.append(f"- `{item.get('path')}` exists=`{item.get('exists')}` size=`{item.get('size_bytes')}`")
+        lines.append(
+            f"- `{item.get('path')}` exists=`{item.get('exists')}` size=`{item.get('size_bytes')}`"
+        )
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {item}" for item in report["errors"])
@@ -221,14 +252,24 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     report_paths = [resolve_repo_path(repo_root, value) for value in args.run_report]
-    artifact_paths = [resolve_repo_path(repo_root, value) for value in args.run_artifact]
+    artifact_paths = [
+        resolve_repo_path(repo_root, value) for value in args.run_artifact
+    ]
 
-    reports = [compact_report(path, repo_root) for path in report_paths if str(path).strip()]
-    artifacts = [compact_artifact(path, repo_root) for path in artifact_paths if str(path).strip()]
+    reports = [
+        compact_report(path, repo_root) for path in report_paths if str(path).strip()
+    ]
+    artifacts = [
+        compact_artifact(path, repo_root)
+        for path in artifact_paths
+        if str(path).strip()
+    ]
 
     missing_reports = [item["path"] for item in reports if not item["exists"]]
     warnings = [f"missing run report: {path}" for path in missing_reports]
-    product_status, product_reason, status_errors = infer_product_status([item for item in reports if item["exists"]])
+    product_status, product_reason, status_errors = infer_product_status(
+        [item for item in reports if item["exists"]]
+    )
 
     errors = list(status_errors)
     passed = not errors and product_status in {"ready", "blocked_with_reason"}
@@ -263,11 +304,19 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     manifest = write_manifest(output_dir, report)
     evidence = write_evidence_index(output_dir, report)
     readiness = write_readiness(output_dir, report)
-    report["manifest"] = repo_rel(output_dir / "heap_runtime_product_manifest.json", repo_root)
-    report["evidence_index"] = repo_rel(output_dir / "heap_runtime_product_evidence_index.json", repo_root)
-    report["readiness"] = repo_rel(output_dir / "heap_runtime_product_readiness.json", repo_root)
+    report["manifest"] = repo_rel(
+        output_dir / "heap_runtime_product_manifest.json", repo_root
+    )
+    report["evidence_index"] = repo_rel(
+        output_dir / "heap_runtime_product_evidence_index.json", repo_root
+    )
+    report["readiness"] = repo_rel(
+        output_dir / "heap_runtime_product_readiness.json", repo_root
+    )
 
-    (output_dir / "heap_runtime_product.md").write_text(render_markdown(report), encoding="utf-8")
+    (output_dir / "heap_runtime_product.md").write_text(
+        render_markdown(report), encoding="utf-8"
+    )
     (output_dir / "README.md").write_text(
         "# Heap Runtime Product Package\n\n"
         "Deterministic product package built from heap/runtime reports and artifacts.\n"

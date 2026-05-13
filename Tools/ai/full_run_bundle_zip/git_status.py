@@ -18,5 +18,8 @@ def run_git_status(repo_root: Path) -> tuple[str, str | None]:
     except Exception as exc:
         return "", f"{type(exc).__name__}: {exc}"
     if result.returncode != 0:
-        return result.stdout, result.stderr.strip() or f"git status exited {result.returncode}"
+        return (
+            result.stdout,
+            result.stderr.strip() or f"git status exited {result.returncode}",
+        )
     return result.stdout, None

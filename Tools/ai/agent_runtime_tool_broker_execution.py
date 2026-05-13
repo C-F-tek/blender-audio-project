@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Execution helper for the report-only runtime tool broker."""
+
 from __future__ import annotations
 
 import subprocess
@@ -24,7 +25,9 @@ class TimedCommandResult:
     elapsed_seconds: float
 
 
-def execute_command_timed(command: list[str], repo_root: Path, timeout_seconds: int) -> TimedCommandResult:
+def execute_command_timed(
+    command: list[str], repo_root: Path, timeout_seconds: int
+) -> TimedCommandResult:
     started_at = now_iso()
     start = perf_counter()
     try:

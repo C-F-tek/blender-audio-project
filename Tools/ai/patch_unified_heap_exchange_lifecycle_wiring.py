@@ -9,6 +9,7 @@ The wiring does not guide the dynamic center of the run. It adds:
 - exit product after generated patch specs review bridge when present;
 - lifecycle validation before the unified chain contract.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,7 +37,9 @@ def detect_newline(text: str) -> str:
 
 
 def write_preserved(path: Path, text_lf: str, newline: str) -> None:
-    path.write_text(text_lf.rstrip("\n").replace("\n", newline) + newline, encoding="utf-8-sig")
+    path.write_text(
+        text_lf.rstrip("\n").replace("\n", newline) + newline, encoding="utf-8-sig"
+    )
 
 
 def run_parser(path: Path) -> tuple[bool, str]:
@@ -47,12 +50,17 @@ def run_parser(path: Path) -> tuple[bool, str]:
         f"$null=[System.Management.Automation.Language.Parser]::ParseFile('{ps_path}',[ref]$tokens,[ref]$errors);"
         "if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_.Message };exit 1}else{exit 0}"
     )
-    result = subprocess.run(["powershell.exe", "-NoProfile", "-Command", command], capture_output=True, text=True, check=False)
+    result = subprocess.run(
+        ["powershell.exe", "-NoProfile", "-Command", command],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
     return result.returncode == 0, result.stdout + result.stderr
 
 
 def entry_block() -> str:
-    return r'''
+    return r"""
 # IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-BEGIN
 $HeapExchangeObserverDir = $ObserverOutputDir
 if ([string]::IsNullOrWhiteSpace($HeapExchangeObserverDir)) {
@@ -77,11 +85,11 @@ $HeapExchangeEntryOk = Invoke-Checked "Build heap/exchange runtime entry" {
 $ReportFiles += $HeapExchangeEntryJson
 $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapExchangeEntryMd
 # IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-END
-'''.strip("\n")
+""".strip("\n")
 
 
 def exit_block() -> str:
-    return r'''
+    return r"""
 # IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-BEGIN
 $HeapExchangeExitJson = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.json"
 $HeapExchangeExitMd = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.md"
@@ -102,11 +110,11 @@ $HeapExchangeExitOk = Invoke-Checked "Build heap/exchange runtime exit product" 
 $ReportFiles += $HeapExchangeExitJson
 $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapExchangeExitMd
 # IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-END
-'''.strip("\n")
+""".strip("\n")
 
 
 def lifecycle_block() -> str:
-    return r'''
+    return r"""
 # IA-CARMINE-HEAP-EXCHANGE-LIFECYCLE-GATE-BEGIN
 $HeapExchangeLifecycleJson = Join-Path $OutputDir ("validation/heap_exchange_runtime_lifecycle_{0}.json" -f $DataStamp)
 $HeapExchangeLifecycleMd = Join-Path $OutputDir ("validation/heap_exchange_runtime_lifecycle_{0}.md" -f $DataStamp)
@@ -129,7 +137,7 @@ $HeapExchangeLifecycleOk = Invoke-Checked "Validate heap/exchange runtime lifecy
 $ReportFiles += $HeapExchangeLifecycleJson
 $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapExchangeLifecycleMd
 # IA-CARMINE-HEAP-EXCHANGE-LIFECYCLE-GATE-END
-'''.strip("\n")
+""".strip("\n")
 
 
 def line_has_label(line: str, label: str) -> bool:
@@ -162,7 +170,9 @@ def find_invoke_checked_block_end(lines: list[str], label: str) -> int | None:
     return None
 
 
-def insert_after_invoke_checked_label(text: str, label: str, block: str, marker: str) -> tuple[str, bool]:
+def insert_after_invoke_checked_label(
+    text: str, label: str, block: str, marker: str
+) -> tuple[str, bool]:
     if marker in text:
         return text, False
     lines = text.splitlines()
@@ -173,7 +183,9 @@ def insert_after_invoke_checked_label(text: str, label: str, block: str, marker:
     return "\n".join(new_lines) + "\n", True
 
 
-def insert_before_anchor(text: str, anchor_terms: list[str], block: str, marker: str) -> tuple[str, bool]:
+def insert_before_anchor(
+    text: str, anchor_terms: list[str], block: str, marker: str
+) -> tuple[str, bool]:
     if marker in text:
         return text, False
     lines = text.splitlines()
@@ -183,9 +195,27 @@ def insert_before_anchor(text: str, anchor_terms: list[str], block: str, marker:
             anchor_index = index
             break
     if anchor_index is None:
-        diagnostics = [f"{idx + 1}: {line}" for idx, line in enumerate(lines) if any(word in line.lower() for word in ("product", "separation", "patch_suggestion", "chain", "review pr"))]
-        raise RuntimeError("could not locate insertion anchor. Diagnostics:\n" + "\n".join(diagnostics[:80]))
-    new_lines = lines[:anchor_index] + ["", *block.splitlines(), ""] + lines[anchor_index:]
+        diagnostics = [
+            f"{idx + 1}: {line}"
+            for idx, line in enumerate(lines)
+            if any(
+                word in line.lower()
+                for word in (
+                    "product",
+                    "separation",
+                    "patch_suggestion",
+                    "chain",
+                    "review pr",
+                )
+            )
+        ]
+        raise RuntimeError(
+            "could not locate insertion anchor. Diagnostics:\n"
+            + "\n".join(diagnostics[:80])
+        )
+    new_lines = (
+        lines[:anchor_index] + ["", *block.splitlines(), ""] + lines[anchor_index:]
+    )
     return "\n".join(new_lines) + "\n", True
 
 
@@ -193,11 +223,20 @@ def insert_entry(text_lf: str) -> tuple[str, bool]:
     if ENTRY_MARKER in text_lf:
         return text_lf, False
     try:
-        return insert_after_invoke_checked_label(text_lf, "Build AI workload quality routing report", entry_block(), ENTRY_MARKER)
+        return insert_after_invoke_checked_label(
+            text_lf,
+            "Build AI workload quality routing report",
+            entry_block(),
+            ENTRY_MARKER,
+        )
     except RuntimeError:
         return insert_before_anchor(
             text_lf,
-            ["Run official local AI pipeline adapter", "Run Ollama advisory packet", "IA-CARMINE-STRICT-REAL-RUN-ACTIVATION-END"],
+            [
+                "Run official local AI pipeline adapter",
+                "Run Ollama advisory packet",
+                "IA-CARMINE-STRICT-REAL-RUN-ACTIVATION-END",
+            ],
             entry_block(),
             ENTRY_MARKER,
         )
@@ -207,11 +246,19 @@ def insert_exit(text_lf: str) -> tuple[str, bool]:
     if EXIT_MARKER in text_lf:
         return text_lf, False
     try:
-        return insert_after_invoke_checked_label(text_lf, "Apply generated patch specs for review PR", exit_block(), EXIT_MARKER)
+        return insert_after_invoke_checked_label(
+            text_lf,
+            "Apply generated patch specs for review PR",
+            exit_block(),
+            EXIT_MARKER,
+        )
     except RuntimeError:
         return insert_before_anchor(
             text_lf,
-            ["Validate unified heap/exchange chain contract", "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-BEGIN"],
+            [
+                "Validate unified heap/exchange chain contract",
+                "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-BEGIN",
+            ],
             exit_block(),
             EXIT_MARKER,
         )
@@ -227,7 +274,10 @@ def patch_launcher(text_lf: str) -> tuple[str, list[str]]:
         changes.append("insert_heap_exchange_runtime_exit")
     text_lf, changed = insert_before_anchor(
         text_lf,
-        ["Validate unified heap/exchange chain contract", "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-BEGIN"],
+        [
+            "Validate unified heap/exchange chain contract",
+            "IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-BEGIN",
+        ],
         lifecycle_block(),
         LIFECYCLE_MARKER,
     )
@@ -261,11 +311,15 @@ def validate_policy(text_lf: str) -> list[str]:
     if entry_pos < 0 or exit_pos < 0 or lifecycle_pos < 0:
         errors.append("one or more lifecycle phase labels are missing after patch")
     if official_pos >= 0 and entry_pos > official_pos:
-        errors.append("heap/exchange entry must be before official/provider dynamic center")
+        errors.append(
+            "heap/exchange entry must be before official/provider dynamic center"
+        )
     if chain_pos >= 0 and exit_pos > chain_pos:
         errors.append("heap/exchange exit must be before unified chain contract")
     if chain_pos >= 0 and lifecycle_pos > chain_pos:
-        errors.append("heap/exchange lifecycle gate must be before unified chain contract")
+        errors.append(
+            "heap/exchange lifecycle gate must be before unified chain contract"
+        )
     if re.search(r"^\s*throw\s*$", text_lf, flags=re.MULTILINE):
         errors.append("naked throw remains in launcher")
     return errors
@@ -274,13 +328,17 @@ def validate_policy(text_lf: str) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--target", default="Tools/workflow/run_unified_local_ai_refactor.ps1")
+    parser.add_argument(
+        "--target", default="Tools/workflow/run_unified_local_ai_refactor.ps1"
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
     target = (repo / args.target).resolve()
-    backup_dir = repo / "output" / "validation" / "heap_exchange_lifecycle_wiring_backups"
+    backup_dir = (
+        repo / "output" / "validation" / "heap_exchange_lifecycle_wiring_backups"
+    )
     backup_dir.mkdir(parents=True, exist_ok=True)
 
     parser_ok, parser_output = run_parser(target)
@@ -305,7 +363,9 @@ def main() -> int:
         print(f"line_count={len(original_lf.splitlines())}")
         return 0
 
-    backup = backup_dir / f"{target.name}.{datetime.now().strftime('%Y%m%d-%H%M%S')}.bak"
+    backup = (
+        backup_dir / f"{target.name}.{datetime.now().strftime('%Y%m%d-%H%M%S')}.bak"
+    )
     shutil.copy2(target, backup)
     if args.dry_run:
         print("DRY_RUN")

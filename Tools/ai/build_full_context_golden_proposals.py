@@ -6,6 +6,7 @@ runtime outputs unless supplied as optional evidence metadata, and does not appl
 patches. It creates concrete manual-review-only proposal objects that satisfy the
 full-context golden proposal contract.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -123,7 +124,10 @@ def build_proposals() -> list[dict[str, Any]]:
                 "Do not require provider execution to validate the manifest.",
                 "Do not touch Blender runtime files.",
             ],
-            suggestion_outputs=[suggestion("Tools/validation/check_local_ai_adapter_manifest.py"), suggestion("Tools/validation/README.md", "markdown")],
+            suggestion_outputs=[
+                suggestion("Tools/validation/check_local_ai_adapter_manifest.py"),
+                suggestion("Tools/validation/README.md", "markdown"),
+            ],
         ),
         base_proposal(
             pid="P2-REUSABLE-ENRICHMENT-PLAN-HELPER",
@@ -155,7 +159,10 @@ def build_proposals() -> list[dict[str, Any]]:
                 "Do not execute providers from the helper.",
                 "Do not emit source patches from the helper.",
             ],
-            suggestion_outputs=[suggestion("Tools/ai/build_local_ai_enrichment_plan.py"), suggestion("Tools/validation/check_local_ai_enrichment_plan.py")],
+            suggestion_outputs=[
+                suggestion("Tools/ai/build_local_ai_enrichment_plan.py"),
+                suggestion("Tools/validation/check_local_ai_enrichment_plan.py"),
+            ],
         ),
         base_proposal(
             pid="P3-FULL-CONTEXT-GOLDEN-DOCS-CONTRACT",
@@ -188,7 +195,11 @@ def build_proposals() -> list[dict[str, Any]]:
                 "Do not document NPU as primary advisory provider.",
                 "Do not require committing output or SQLite files.",
             ],
-            suggestion_outputs=[suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown"), suggestion("docs/LOCAL_AI_RUN_BOOTSTRAP.md", "markdown"), suggestion("docs/LOCAL_AI_TASKS/README.md", "markdown")],
+            suggestion_outputs=[
+                suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown"),
+                suggestion("docs/LOCAL_AI_RUN_BOOTSTRAP.md", "markdown"),
+                suggestion("docs/LOCAL_AI_TASKS/README.md", "markdown"),
+            ],
         ),
         base_proposal(
             pid="P4-FULL-CONTEXT-GOLDEN-WRAPPER-PRESET",
@@ -219,7 +230,12 @@ def build_proposals() -> list[dict[str, Any]]:
                 "The preset must not apply patches.",
                 "The preset must not touch Blender runtime files.",
             ],
-            suggestion_outputs=[suggestion("Tools/workflow/run_local_ai_task_via_pipeline.ps1", "powershell"), suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown")],
+            suggestion_outputs=[
+                suggestion(
+                    "Tools/workflow/run_local_ai_task_via_pipeline.ps1", "powershell"
+                ),
+                suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown"),
+            ],
         ),
         base_proposal(
             pid="P5-SELECTED-CHUNKS-STANDARD-VALIDATION-BLOCK",
@@ -250,7 +266,10 @@ def build_proposals() -> list[dict[str, Any]]:
                 "Do not include raw output/ai_context_packs files in Git evidence.",
                 "Do not execute providers from evidence bundling.",
             ],
-            suggestion_outputs=[suggestion("Tools/ai/build_github_evidence_bundle.py"), suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown")],
+            suggestion_outputs=[
+                suggestion("Tools/ai/build_github_evidence_bundle.py"),
+                suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown"),
+            ],
         ),
         base_proposal(
             pid="P6-NPU-KNOWLEDGE-BROKER-CONTEXT-ORACLE",
@@ -274,7 +293,7 @@ def build_proposals() -> list[dict[str, Any]]:
                 "Document NPU as retrieval/context-preparation lane, not advisory lane.",
             ],
             validation_commands=[
-                "python Tools/npu/build_npu_knowledge_broker_packet.py --repo-root . --objective \"workflow adapter npu knowledge broker\" --output output/ai_pipeline/npu_knowledge_broker_packet.json",
+                'python Tools/npu/build_npu_knowledge_broker_packet.py --repo-root . --objective "workflow adapter npu knowledge broker" --output output/ai_pipeline/npu_knowledge_broker_packet.json',
                 "python Tools/validation/check_npu_knowledge_broker_packet.py --repo-root . --packet output/ai_pipeline/npu_knowledge_broker_packet.json --output output/validation/npu_knowledge_broker_packet.json",
                 "git diff --check",
             ],
@@ -284,7 +303,11 @@ def build_proposals() -> list[dict[str, Any]]:
                 "Do not use OpenVINO GPU as a primary lane.",
                 "Do not apply or generate direct source patches from NPU output.",
             ],
-            suggestion_outputs=[suggestion("Tools/npu/build_npu_knowledge_broker_packet.py"), suggestion("Tools/validation/check_npu_knowledge_broker_packet.py"), suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown")],
+            suggestion_outputs=[
+                suggestion("Tools/npu/build_npu_knowledge_broker_packet.py"),
+                suggestion("Tools/validation/check_npu_knowledge_broker_packet.py"),
+                suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown"),
+            ],
         ),
     ]
 
@@ -307,7 +330,9 @@ def render_markdown(payload: dict[str, Any]) -> str:
         lines.append(f"- Change type: `{proposal['change_type']}`")
         lines.append(f"- Risk: `{proposal['risk_level']}`")
         lines.append(f"- Apply allowed now: `{proposal['apply_allowed_now']}`")
-        lines.append(f"- Requires manual review: `{proposal['requires_manual_review']}`")
+        lines.append(
+            f"- Requires manual review: `{proposal['requires_manual_review']}`"
+        )
         lines.append("")
         lines.append(proposal["rationale"])
         lines.append("")
@@ -365,9 +390,18 @@ def build_payload(repo_root: Path, source_report: str = "") -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--source-report", default="", help="Optional source proposal/report JSON for provenance")
-    parser.add_argument("--output", default="output/ai_pipeline/full_context_golden_proposals.json")
-    parser.add_argument("--markdown-output", default="output/ai_pipeline/full_context_golden_proposals.md")
+    parser.add_argument(
+        "--source-report",
+        default="",
+        help="Optional source proposal/report JSON for provenance",
+    )
+    parser.add_argument(
+        "--output", default="output/ai_pipeline/full_context_golden_proposals.json"
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/ai_pipeline/full_context_golden_proposals.md",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -376,15 +410,23 @@ def main() -> int:
     payload = build_payload(repo_root, args.source_report)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     markdown_output.write_text(render_markdown(payload), encoding="utf-8")
-    print(json.dumps({
-        "passed": payload["passed"],
-        "kind": payload["kind"],
-        "proposal_count": len(payload["proposals"]),
-        "output": repo_relative(output, repo_root),
-        "markdown_output": repo_relative(markdown_output, repo_root),
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": payload["passed"],
+                "kind": payload["kind"],
+                "proposal_count": len(payload["proposals"]),
+                "output": repo_relative(output, repo_root),
+                "markdown_output": repo_relative(markdown_output, repo_root),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 

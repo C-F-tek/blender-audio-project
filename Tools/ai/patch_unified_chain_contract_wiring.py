@@ -6,6 +6,7 @@ control the dynamic center of the heap/exchange. The inserted gate validates
 that a full review-PR run leaves observable exchange evidence and concrete patch
 products before continuing toward product separation / PR creation.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -14,7 +15,6 @@ import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
-
 
 CHAIN_GATE_MARKER = "# IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-BEGIN"
 
@@ -32,7 +32,9 @@ def detect_newline(text: str) -> str:
 
 
 def write_preserved(path: Path, text_lf: str, newline: str) -> None:
-    path.write_text(text_lf.rstrip("\n").replace("\n", newline) + newline, encoding="utf-8-sig")
+    path.write_text(
+        text_lf.rstrip("\n").replace("\n", newline) + newline, encoding="utf-8-sig"
+    )
 
 
 def run_parser(path: Path) -> tuple[bool, str]:
@@ -53,7 +55,7 @@ def run_parser(path: Path) -> tuple[bool, str]:
 
 
 def build_gate_block() -> str:
-    return r'''
+    return r"""
 # IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-BEGIN
 $UnifiedChainContractJson = Join-Path $OutputDir ("validation/unified_chain_contract_{0}.json" -f $DataStamp)
 $UnifiedChainContractMd = Join-Path $OutputDir ("validation/unified_chain_contract_{0}.md" -f $DataStamp)
@@ -80,7 +82,7 @@ $UnifiedChainContractOk = Invoke-Checked "Validate unified heap/exchange chain c
 $ReportFiles += $UnifiedChainContractJson
 $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $UnifiedChainContractMd
 # IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-END
-'''.strip("\n")
+""".strip("\n")
 
 
 def patch_launcher(text_lf: str) -> tuple[str, list[str]]:
@@ -110,7 +112,11 @@ def patch_launcher(text_lf: str) -> tuple[str, list[str]]:
         diagnostics = []
         for index, line in enumerate(lines):
             lowered = line.lower()
-            if "product" in lowered or "separation" in lowered or "patch_suggestion" in lowered:
+            if (
+                "product" in lowered
+                or "separation" in lowered
+                or "patch_suggestion" in lowered
+            ):
                 diagnostics.append(f"{index + 1}: {line}")
         preview = "\n".join(diagnostics[:40])
         raise RuntimeError(
@@ -125,6 +131,7 @@ def patch_launcher(text_lf: str) -> tuple[str, list[str]]:
     changes.append(f"insert_chain_contract_before_product_separation:{matched_term}")
     return "\n".join(new_lines) + "\n", changes
 
+
 def validate_policy(text_lf: str) -> list[str]:
     errors: list[str] = []
     required = [
@@ -138,7 +145,9 @@ def validate_policy(text_lf: str) -> list[str]:
     for token in required:
         if token not in text_lf:
             errors.append(f"missing required wiring token: {token}")
-    if text_lf.find("Validate unified heap/exchange chain contract") > text_lf.find("Validate patch suggestion product separation"):
+    if text_lf.find("Validate unified heap/exchange chain contract") > text_lf.find(
+        "Validate patch suggestion product separation"
+    ):
         errors.append("chain contract gate must run before product separation")
     if re.search(r"^\s*throw\s*$", text_lf, flags=re.MULTILINE):
         errors.append("naked throw remains in launcher")
@@ -148,13 +157,17 @@ def validate_policy(text_lf: str) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--target", default="Tools/workflow/run_unified_local_ai_refactor.ps1")
+    parser.add_argument(
+        "--target", default="Tools/workflow/run_unified_local_ai_refactor.ps1"
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
     target = (repo / args.target).resolve()
-    backup_dir = repo / "output" / "validation" / "unified_chain_contract_wiring_backups"
+    backup_dir = (
+        repo / "output" / "validation" / "unified_chain_contract_wiring_backups"
+    )
     backup_dir.mkdir(parents=True, exist_ok=True)
 
     parser_ok, parser_output = run_parser(target)
@@ -179,7 +192,9 @@ def main() -> int:
         print(f"line_count={len(original_lf.splitlines())}")
         return 0
 
-    backup = backup_dir / f"{target.name}.{datetime.now().strftime('%Y%m%d-%H%M%S')}.bak"
+    backup = (
+        backup_dir / f"{target.name}.{datetime.now().strftime('%Y%m%d-%H%M%S')}.bak"
+    )
     shutil.copy2(target, backup)
 
     if args.dry_run:

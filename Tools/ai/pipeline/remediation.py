@@ -1,4 +1,5 @@
 """Guardrail remediation helpers for the AI artifact pipeline."""
+
 from __future__ import annotations
 
 import json
@@ -44,7 +45,9 @@ def auto_safe_plan(out: Path) -> GuardrailPlan:
     return GuardrailPlan.from_queue(guardrail_queue(out).get("queue") or [])
 
 
-def normalize_guardrail_plan(plan: GuardrailPlan | list[Any] | tuple[Any, ...] | dict[str, Any]) -> GuardrailPlan:
+def normalize_guardrail_plan(
+    plan: GuardrailPlan | list[Any] | tuple[Any, ...] | dict[str, Any],
+) -> GuardrailPlan:
     """Normalize typed or legacy remediation plan payloads.
 
     This keeps older callers and smoke validators compatible after the internal
@@ -54,7 +57,9 @@ def normalize_guardrail_plan(plan: GuardrailPlan | list[Any] | tuple[Any, ...] |
         return plan
     if isinstance(plan, dict):
         raw_requests = plan.get("requests") or []
-        return GuardrailPlan.from_raw_requests(list(raw_requests) if isinstance(raw_requests, list) else [])
+        return GuardrailPlan.from_raw_requests(
+            list(raw_requests) if isinstance(raw_requests, list) else []
+        )
     if isinstance(plan, (list, tuple)):
         return GuardrailPlan.from_raw_requests(list(plan))
     return GuardrailPlan.from_raw_requests([])
@@ -134,7 +139,11 @@ def remedial_steps(
             )
         )
 
-    if todo and "npu_guardrail" in commands and all(step.name != "remediate_npu_guardrail_second_pass" for step in todo):
+    if (
+        todo
+        and "npu_guardrail" in commands
+        and all(step.name != "remediate_npu_guardrail_second_pass" for step in todo)
+    ):
         todo.append(
             pipeline_step(
                 "remediate_npu_guardrail_verify",
@@ -149,7 +158,9 @@ def remedial_steps(
     return todo
 
 
-def execute_remediation_loop(repo: Path, out: Path, args: Any, results: list[dict[str, Any]]) -> dict[str, Any]:
+def execute_remediation_loop(
+    repo: Path, out: Path, args: Any, results: list[dict[str, Any]]
+) -> dict[str, Any]:
     """Execute auto-safe remediation passes requested by the NPU guardrail."""
     if not args.guardrail_auto_remediate or not args.npu_guardrail:
         return {"enabled": False, "reason": "disabled", "passes": []}
@@ -160,16 +171,28 @@ def execute_remediation_loop(repo: Path, out: Path, args: Any, results: list[dic
         plan = auto_safe_plan(out)
         signature = plan.signature()
         if not plan.requests:
-            passes.append(GuardrailPassResult(pass_index, "no_auto_safe_requests", plan, []).to_dict())
+            passes.append(
+                GuardrailPassResult(
+                    pass_index, "no_auto_safe_requests", plan, []
+                ).to_dict()
+            )
             break
         if signature in seen_signatures:
-            passes.append(GuardrailPassResult(pass_index, "repeated_plan_stopped", plan, []).to_dict())
+            passes.append(
+                GuardrailPassResult(
+                    pass_index, "repeated_plan_stopped", plan, []
+                ).to_dict()
+            )
             break
         seen_signatures.add(signature)
 
         todo = remedial_steps(repo, out, args, plan, pass_index)
         if not todo:
-            passes.append(GuardrailPassResult(pass_index, "no_supported_remediation_commands", plan, []).to_dict())
+            passes.append(
+                GuardrailPassResult(
+                    pass_index, "no_supported_remediation_commands", plan, []
+                ).to_dict()
+            )
             break
 
         step_results = []
@@ -179,7 +202,12 @@ def execute_remediation_loop(repo: Path, out: Path, args: Any, results: list[dic
             results.append(res)
             if res["returncode"] and not args.continue_on_error:
                 break
-        passes.append(GuardrailPassResult(pass_index, "executed", plan, step_results).to_dict())
-        if any(item["returncode"] for item in step_results) and not args.continue_on_error:
+        passes.append(
+            GuardrailPassResult(pass_index, "executed", plan, step_results).to_dict()
+        )
+        if (
+            any(item["returncode"] for item in step_results)
+            and not args.continue_on_error
+        ):
             break
     return {"enabled": True, "max_passes": args.guardrail_max_passes, "passes": passes}

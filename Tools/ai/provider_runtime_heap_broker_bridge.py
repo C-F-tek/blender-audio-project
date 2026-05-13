@@ -3,8 +3,9 @@
 
 This adapter keeps provider lanes conversational through the shared heap while
 preserving the existing rule: tools are executed only by
-Tools/ai/agent_runtime_tool_broker.py.
+tools/ai/agent_runtime_tool_broker.py.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,16 +17,30 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict
-    from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from tools.ai.provider_mesh_runtime.python_runtime import (
+        command_env,
+        resolve_child_python,
+    )
+    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict
+    from tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict  # type: ignore
-    from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python  # type: ignore
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from tools.ai.provider_mesh_runtime.python_runtime import (  # type: ignore
+        command_env,
+        resolve_child_python,
+    )
+    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict  # type: ignore
+    from tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 DEFAULT_OUTPUT = "output/validation/provider_runtime_heap_broker_bridge_{stamp}.json"
 DEFAULT_MARKDOWN = "output/validation/provider_runtime_heap_broker_bridge_{stamp}.md"
@@ -37,7 +52,11 @@ def now_iso() -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -74,8 +93,13 @@ def event_to_tool_request(event: dict[str, Any], index: int) -> dict[str, Any]:
     }
 
 
-def build_request_packet(repo_root: Path, stamp: str, pending: list[dict[str, Any]], request_file: Path) -> dict[str, Any]:
-    tool_requests = [event_to_tool_request(event, index) for index, event in enumerate(pending, start=1)]
+def build_request_packet(
+    repo_root: Path, stamp: str, pending: list[dict[str, Any]], request_file: Path
+) -> dict[str, Any]:
+    tool_requests = [
+        event_to_tool_request(event, index)
+        for index, event in enumerate(pending, start=1)
+    ]
     packet = {
         "schema_version": 1,
         "kind": "agent_runtime_tool_requests",
@@ -93,7 +117,9 @@ def build_request_packet(repo_root: Path, stamp: str, pending: list[dict[str, An
         },
     }
     request_file.parent.mkdir(parents=True, exist_ok=True)
-    request_file.write_text(json.dumps(packet, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    request_file.write_text(
+        json.dumps(packet, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     return packet
 
 
@@ -110,7 +136,7 @@ def run_broker(
 ) -> tuple[int, str, str]:
     command = [
         resolve_child_python(repo_root),
-        "Tools/ai/agent_runtime_tool_broker.py",
+        "tools/ai/agent_runtime_tool_broker.py",
         "--repo-root",
         ".",
         "--request-file",
@@ -128,7 +154,14 @@ def run_broker(
     ]
     if dry_run:
         command.append("--dry-run")
-    completed = subprocess.run(command, cwd=repo_root, env=command_env(repo_root), text=True, capture_output=True, check=False)
+    completed = subprocess.run(
+        command,
+        cwd=repo_root,
+        env=command_env(repo_root),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
     return completed.returncode, completed.stdout[-12000:], completed.stderr[-12000:]
 
 
@@ -141,7 +174,15 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def broker_result_target_from_source(value: object) -> str:
     lane = str(value or "").strip().lower()
-    if lane in {"gpu1", "gpu0", "npu", "broker", "deterministic", "telemetry", "orchestrator"}:
+    if lane in {
+        "gpu1",
+        "gpu0",
+        "npu",
+        "broker",
+        "deterministic",
+        "telemetry",
+        "orchestrator",
+    }:
         return lane
     return "orchestrator"
 
@@ -160,7 +201,6 @@ def request_sources_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
     return mapping
 
 
-
 def request_requirements_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
     mapping: dict[str, str] = {}
     for request in broker_report.get("tool_requests", []):
@@ -171,6 +211,7 @@ def request_requirements_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
         if request_id and requirement:
             mapping[request_id] = requirement
     return mapping
+
 
 def request_correlations_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
     mapping: dict[str, str] = {}
@@ -185,7 +226,9 @@ def request_correlations_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
     return mapping
 
 
-def append_broker_results(heap: ProviderRuntimeHeap, broker_report: dict[str, Any]) -> list[dict[str, Any]]:
+def append_broker_results(
+    heap: ProviderRuntimeHeap, broker_report: dict[str, Any]
+) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     source_by_request_id = request_sources_by_id(broker_report)
     correlation_by_request_id = request_correlations_by_id(broker_report)
@@ -206,7 +249,8 @@ def append_broker_results(heap: ProviderRuntimeHeap, broker_report: dict[str, An
                 "normalized_request_id": result_id,
                 "target_lane": target_lane,
                 "tool": result.get("tool"),
-                "requirement": result.get("requirement") or requirement_by_request_id.get(result_id, ""),
+                "requirement": result.get("requirement")
+                or requirement_by_request_id.get(result_id, ""),
                 "executed": result.get("executed"),
                 "blocked": result.get("blocked"),
                 "returncode": result.get("returncode"),
@@ -222,12 +266,16 @@ def append_broker_results(heap: ProviderRuntimeHeap, broker_report: dict[str, An
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
-    heap = ProviderRuntimeHeap.from_args(repo_root, args.stamp, args.events, args.snapshot, args.heap_markdown)
+    heap = ProviderRuntimeHeap.from_args(
+        repo_root, args.stamp, args.events, args.snapshot, args.heap_markdown
+    )
     pending = heap.pending_broker_requests()
     if args.max_requests > 0:
         pending = pending[: args.max_requests]
 
-    bridge_dir = resolve_output_path(repo_root, args.bridge_dir.format(stamp=args.stamp))
+    bridge_dir = resolve_output_path(
+        repo_root, args.bridge_dir.format(stamp=args.stamp)
+    )
     request_file = bridge_dir / "broker_requests_from_heap.json"
     broker_output = bridge_dir / "agent_runtime_tool_broker.json"
     broker_markdown = bridge_dir / "agent_runtime_tool_broker.md"
@@ -286,13 +334,17 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "broker_stdout_tail": stdout_tail,
         "broker_stderr_tail": stderr_tail,
         "broker_passed": broker_report.get("passed"),
-        "tool_request_count": broker_report.get("tool_request_count", len(packet.get("tool_requests", []))),
+        "tool_request_count": broker_report.get(
+            "tool_request_count", len(packet.get("tool_requests", []))
+        ),
         "tool_execution_count": broker_report.get("tool_execution_count", 0),
         "blocked_tool_count": broker_report.get("blocked_tool_count", 0),
         "failed_tool_count": broker_report.get("failed_tool_count", 0),
         "heap_snapshot": {
             "event_count": snapshot.get("event_count"),
-            "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
+            "pending_broker_request_count": snapshot.get(
+                "pending_broker_request_count"
+            ),
             "event_log": snapshot.get("event_log"),
         },
         "guardrails": {
@@ -338,7 +390,9 @@ def main() -> int:
     parser.add_argument("--events", default="")
     parser.add_argument("--snapshot", default="")
     parser.add_argument("--heap-markdown", default="")
-    parser.add_argument("--bridge-dir", default="output/ai_runtime_heap/{stamp}/broker_bridge")
+    parser.add_argument(
+        "--bridge-dir", default="output/ai_runtime_heap/{stamp}/broker_bridge"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=240)
     parser.add_argument("--max-requests", type=int, default=0)
     parser.add_argument("--dry-run", action="store_true")
@@ -349,7 +403,9 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     report = build_report(args)
     output = resolve_output_path(repo_root, args.output.format(stamp=args.stamp))
-    markdown = resolve_output_path(repo_root, args.markdown_output.format(stamp=args.stamp))
+    markdown = resolve_output_path(
+        repo_root, args.markdown_output.format(stamp=args.stamp)
+    )
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown)
     print(json.dumps(report, indent=2, ensure_ascii=False))

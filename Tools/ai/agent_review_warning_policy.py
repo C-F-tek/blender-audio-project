@@ -16,6 +16,7 @@ Levels covered by the ledger:
 - memory
 - runtime
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,14 +28,14 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.code_patch_plan_common import read_json_object  # type: ignore
-    from Tools.validation.report_utils import write_json_report, write_text_report  # type: ignore
+    from tools.ai.code_patch_plan_common import read_json_object  # type: ignore
+    from tools.validation.report_utils import write_json_report, write_text_report  # type: ignore
 
 LEVELS = {
     "tool",
@@ -71,7 +72,11 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
@@ -83,7 +88,9 @@ def as_int(value: Any, default: int = 0) -> int:
         return default
 
 
-def load_report(repo_root: Path, value: str | Path, *, missing_is_error: bool = True) -> tuple[Path, dict[str, Any], list[str]]:
+def load_report(
+    repo_root: Path, value: str | Path, *, missing_is_error: bool = True
+) -> tuple[Path, dict[str, Any], list[str]]:
     path = resolve_path(repo_root, value)
     data, errors = read_json_object(path, missing_is_error=missing_is_error)
     return path, data, [f"{repo_rel(path, repo_root)}: {error}" for error in errors]
@@ -94,7 +101,12 @@ def infer_level(path: str, report: dict[str, Any]) -> str:
     normalized_path = path.lower().replace("\\", "/")
     if "workflow" in kind:
         return "workflow"
-    if "npu" in kind or "gpu" in kind or "provider" in kind or "parallel_gpu" in normalized_path:
+    if (
+        "npu" in kind
+        or "gpu" in kind
+        or "provider" in kind
+        or "parallel_gpu" in normalized_path
+    ):
         return "provider"
     if "broker" in kind or "runtime_tool" in kind:
         return "runtime"
@@ -150,7 +162,9 @@ def extract_next_layer(report: dict[str, Any]) -> str:
     return ""
 
 
-def extract_existing_warnings(path: str, report: dict[str, Any], level: str) -> list[dict[str, Any]]:
+def extract_existing_warnings(
+    path: str, report: dict[str, Any], level: str
+) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     raw_warnings = report.get("warnings")
     if isinstance(raw_warnings, list):
@@ -176,14 +190,18 @@ def extract_existing_warnings(path: str, report: dict[str, Any], level: str) -> 
                 "severity": "warning",
                 "classification": "reported_warning",
                 "recoverable": True,
-                "message": json.dumps(raw_warnings, sort_keys=True, ensure_ascii=False)[:500],
+                "message": json.dumps(raw_warnings, sort_keys=True, ensure_ascii=False)[
+                    :500
+                ],
                 "index": 0,
             }
         )
     return result
 
 
-def final_decision_recovered(decision_report: dict[str, Any], *, min_recommendations: int, min_patch_plans: int) -> bool:
+def final_decision_recovered(
+    decision_report: dict[str, Any], *, min_recommendations: int, min_patch_plans: int
+) -> bool:
     if not decision_report:
         return False
     if decision_report.get("passed") is not True:
@@ -203,7 +221,9 @@ def final_decision_recovered(decision_report: dict[str, Any], *, min_recommendat
     return True
 
 
-def is_final_authoritative(path: str, report: dict[str, Any], final_report_paths: set[str]) -> bool:
+def is_final_authoritative(
+    path: str, report: dict[str, Any], final_report_paths: set[str]
+) -> bool:
     if path in final_report_paths:
         return True
     return str(report.get("kind") or "") in FINAL_KINDS
@@ -217,7 +237,9 @@ def build_policy_report(args: argparse.Namespace) -> dict[str, Any]:
     input_nonfatal: list[dict[str, Any]] = []
     fatal_failures: list[dict[str, Any]] = []
 
-    decision_path, decision_report, decision_errors = load_report(repo_root, args.decision_report, missing_is_error=True)
+    decision_path, decision_report, decision_errors = load_report(
+        repo_root, args.decision_report, missing_is_error=True
+    )
     errors.extend(decision_errors)
     final_paths = {repo_rel(decision_path, repo_root)}
     for value in args.final_report:
@@ -242,7 +264,9 @@ def build_policy_report(args: argparse.Namespace) -> dict[str, Any]:
 
     seen_paths: set[str] = set()
     for value in report_values:
-        path, report, load_errors = load_report(repo_root, value, missing_is_error=False)
+        path, report, load_errors = load_report(
+            repo_root, value, missing_is_error=False
+        )
         rel_path = repo_rel(path, repo_root)
         if rel_path in seen_paths:
             continue
@@ -271,9 +295,22 @@ def build_policy_report(args: argparse.Namespace) -> dict[str, Any]:
                 "path": rel_path,
                 "kind": report.get("kind"),
                 "level": level,
-                "severity": "warning" if recovered and not is_final_authoritative(rel_path, report, final_paths) else "error",
-                "classification": "input_nonfatal" if recovered and not is_final_authoritative(rel_path, report, final_paths) else "fatal_report_failure",
-                "recoverable": bool(recovered and not is_final_authoritative(rel_path, report, final_paths)),
+                "severity": (
+                    "warning"
+                    if recovered
+                    and not is_final_authoritative(rel_path, report, final_paths)
+                    else "error"
+                ),
+                "classification": (
+                    "input_nonfatal"
+                    if recovered
+                    and not is_final_authoritative(rel_path, report, final_paths)
+                    else "fatal_report_failure"
+                ),
+                "recoverable": bool(
+                    recovered
+                    and not is_final_authoritative(rel_path, report, final_paths)
+                ),
                 "reason": extract_reason(report),
                 "recommended_next_layer": extract_next_layer(report),
                 "recovered_by": repo_rel(decision_path, repo_root) if recovered else "",
@@ -290,7 +327,10 @@ def build_policy_report(args: argparse.Namespace) -> dict[str, Any]:
             f"input_nonfatal_warnings present: {len(input_nonfatal)} diagnostic report(s) had passed=false but were recovered by the final decision layer"
         )
     if fatal_failures:
-        errors.extend(f"{item['path']}: {item['classification']}: {item.get('reason', '')}" for item in fatal_failures)
+        errors.extend(
+            f"{item['path']}: {item['classification']}: {item.get('reason', '')}"
+            for item in fatal_failures
+        )
 
     level_counts = Counter(str(item.get("level")) for item in ledger)
     classification_counts = Counter(str(item.get("classification")) for item in ledger)
@@ -341,8 +381,12 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Decision recovered: `{report['decision_recovered']}`")
     lines.append(f"- Warning count: `{report['warning_count']}`")
-    lines.append(f"- Input-nonfatal warning count: `{report['input_nonfatal_warning_count']}`")
-    lines.append(f"- Fatal report failure count: `{report['fatal_report_failure_count']}`")
+    lines.append(
+        f"- Input-nonfatal warning count: `{report['input_nonfatal_warning_count']}`"
+    )
+    lines.append(
+        f"- Fatal report failure count: `{report['fatal_report_failure_count']}`"
+    )
     lines.append(f"- Recommendation count: `{report.get('recommendation_count')}`")
     lines.append(f"- Patch plan count: `{report.get('patch_plan_count')}`")
     lines.append("")
@@ -356,13 +400,17 @@ def render_markdown(report: dict[str, Any]) -> str:
     if not report.get("input_nonfatal_warnings"):
         lines.append("- none")
     for item in report.get("input_nonfatal_warnings", []):
-        lines.append(f"- `{item.get('level')}` `{item.get('path')}`: {item.get('reason')}")
+        lines.append(
+            f"- `{item.get('level')}` `{item.get('path')}`: {item.get('reason')}"
+        )
     if report.get("fatal_report_failures"):
         lines.append("")
         lines.append("## Fatal report failures")
         lines.append("")
         for item in report.get("fatal_report_failures", []):
-            lines.append(f"- `{item.get('level')}` `{item.get('path')}`: {item.get('reason')}")
+            lines.append(
+                f"- `{item.get('level')}` `{item.get('path')}`: {item.get('reason')}"
+            )
     return "\n".join(lines) + "\n"
 
 

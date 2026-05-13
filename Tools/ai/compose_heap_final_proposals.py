@@ -7,6 +7,7 @@ workload/audit pieces, provider reports, debug/runtime status and startup
 preload manifest into a readable package. It also works on fallback heap reports
 so Documents export is available even after preload/heap failures.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -42,7 +43,11 @@ def read_text(path: Path, limit: int | None = None) -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -55,9 +60,18 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 
 EXECUTION_TRUE_PATTERNS = (
-    re.compile(r"\b(provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)\b\s*[:=]\s*true\b", re.IGNORECASE),
-    re.compile(r"[\"'](provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)[\"']\s*:\s*true\b", re.IGNORECASE),
-    re.compile(r"\b(NPU|GPU|provider|workload)[^\n]{0,120}\bperformed\s*[:=]\s*true\b", re.IGNORECASE),
+    re.compile(
+        r"\b(provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)\b\s*[:=]\s*true\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"[\"'](provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)[\"']\s*:\s*true\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(NPU|GPU|provider|workload)[^\n]{0,120}\bperformed\s*[:=]\s*true\b",
+        re.IGNORECASE,
+    ),
     re.compile(r"\bperformed\s*=\s*true\b", re.IGNORECASE),
 )
 EXECUTION_BOOL_KEYS = {
@@ -67,7 +81,12 @@ EXECUTION_BOOL_KEYS = {
     "npu_provider_execution_performed",
     "workload_performed",
 }
-WORKLOAD_CONTAINER_KEYS = {"npu_device_workload", "gpu_device_workload", "device_workload", "workload"}
+WORKLOAD_CONTAINER_KEYS = {
+    "npu_device_workload",
+    "gpu_device_workload",
+    "device_workload",
+    "workload",
+}
 
 
 def normalize_bool(value: Any) -> bool:
@@ -81,7 +100,11 @@ def mapping_has_execution_evidence(value: Any, parent_key: str = "") -> bool:
             key_lower = key_text.lower()
             if key_lower in EXECUTION_BOOL_KEYS and normalize_bool(item):
                 return True
-            if key_lower == "performed" and parent_key.lower() in WORKLOAD_CONTAINER_KEYS and normalize_bool(item):
+            if (
+                key_lower == "performed"
+                and parent_key.lower() in WORKLOAD_CONTAINER_KEYS
+                and normalize_bool(item)
+            ):
                 return True
             if mapping_has_execution_evidence(item, key_text):
                 return True
@@ -95,7 +118,9 @@ def text_has_execution_evidence(text: str) -> bool:
 
 
 def provider_report_execution_performed(data: dict[str, Any]) -> bool:
-    return mapping_has_execution_evidence(data) or text_has_execution_evidence(str(data.get("response_text") or ""))
+    return mapping_has_execution_evidence(data) or text_has_execution_evidence(
+        str(data.get("response_text") or "")
+    )
 
 
 def discover_run_dir(repo_root: Path, report_file: str, run_dir: str) -> Path:
@@ -107,7 +132,12 @@ def discover_run_dir(repo_root: Path, report_file: str, run_dir: str) -> Path:
             return report.parent
     validation = repo_root / "output" / "validation"
     candidates = sorted(
-        [path for path in validation.glob("*") if path.is_dir() and (path / "heap_runtime_completeness_gate_report.json").exists()],
+        [
+            path
+            for path in validation.glob("*")
+            if path.is_dir()
+            and (path / "heap_runtime_completeness_gate_report.json").exists()
+        ],
         key=lambda path: path.stat().st_mtime,
         reverse=True,
     )
@@ -122,7 +152,11 @@ def documents_root(custom_root: str, stamp: str) -> Path:
 
 
 def load_startup_manifest(run_dir: Path) -> dict[str, Any]:
-    return read_json(run_dir / "startup_context_memory_reload" / "heap_context_memory_reload_manifest.json")
+    return read_json(
+        run_dir
+        / "startup_context_memory_reload"
+        / "heap_context_memory_reload_manifest.json"
+    )
 
 
 def load_startup_reconciliation(run_dir: Path) -> dict[str, Any]:
@@ -137,15 +171,25 @@ def append_artifact_ref(refs: list[str], value: Any) -> None:
         refs.append(normalized)
 
 
-def startup_artifact_refs(startup_manifest: dict[str, Any], report: dict[str, Any]) -> list[str]:
+def startup_artifact_refs(
+    startup_manifest: dict[str, Any], report: dict[str, Any]
+) -> list[str]:
     refs: list[str] = []
-    artifacts = startup_manifest.get("artifacts") if isinstance(startup_manifest.get("artifacts"), dict) else {}
+    artifacts = (
+        startup_manifest.get("artifacts")
+        if isinstance(startup_manifest.get("artifacts"), dict)
+        else {}
+    )
     for value in artifacts.values():
         append_artifact_ref(refs, value)
     for execution in startup_manifest.get("tool_executions") or []:
         if not isinstance(execution, dict):
             continue
-        for key in ("useful_artifact_paths", "existing_artifact_paths", "artifact_paths"):
+        for key in (
+            "useful_artifact_paths",
+            "existing_artifact_paths",
+            "artifact_paths",
+        ):
             for value in execution.get(key) or []:
                 append_artifact_ref(refs, value)
         for summary in execution.get("artifact_summaries") or []:
@@ -156,7 +200,11 @@ def startup_artifact_refs(startup_manifest: dict[str, Any], report: dict[str, An
                 append_artifact_ref(refs, artifact.get("path"))
             else:
                 append_artifact_ref(refs, artifact)
-    output_contract = report.get("real_run_output_contract") if isinstance(report.get("real_run_output_contract"), dict) else {}
+    output_contract = (
+        report.get("real_run_output_contract")
+        if isinstance(report.get("real_run_output_contract"), dict)
+        else {}
+    )
     for value in output_contract.get("context_artifact_refs") or []:
         append_artifact_ref(refs, value)
     for value in report.get("context_artifact_refs") or []:
@@ -173,9 +221,19 @@ def compute_product_causality(
     provider_reports: list[dict[str, Any]],
 ) -> dict[str, Any]:
     metrics = report.get("metrics") if isinstance(report.get("metrics"), dict) else {}
-    output_contract = report.get("real_run_output_contract") if isinstance(report.get("real_run_output_contract"), dict) else {}
-    product_status = metrics.get("product_status") or output_contract.get("product_status")
-    startup_contract = startup_manifest.get("contract") if isinstance(startup_manifest.get("contract"), dict) else {}
+    output_contract = (
+        report.get("real_run_output_contract")
+        if isinstance(report.get("real_run_output_contract"), dict)
+        else {}
+    )
+    product_status = metrics.get("product_status") or output_contract.get(
+        "product_status"
+    )
+    startup_contract = (
+        startup_manifest.get("contract")
+        if isinstance(startup_manifest.get("contract"), dict)
+        else {}
+    )
     input_ready = bool(
         startup_manifest.get("input_ready_before_heap") is True
         or startup_contract.get("input_ready_before_heap") is True
@@ -187,12 +245,14 @@ def compute_product_causality(
         or output_contract.get("provider_execution_performed")
         or any(item.get("provider_execution_performed") for item in provider_reports)
     )
-    proposal_artifacts = report.get("proposal_iteration_artifacts") if isinstance(report.get("proposal_iteration_artifacts"), list) else []
+    proposal_artifacts = (
+        report.get("proposal_iteration_artifacts")
+        if isinstance(report.get("proposal_iteration_artifacts"), list)
+        else []
+    )
     proposal_count = len(proposals) or len(proposal_artifacts)
     reconciliation_passed = (
-        startup_reconciliation.get("passed") is True
-        if startup_reconciliation
-        else None
+        startup_reconciliation.get("passed") is True if startup_reconciliation else None
     )
 
     failed_reasons: list[str] = []
@@ -204,9 +264,13 @@ def compute_product_causality(
     if startup_manifest and not artifact_refs:
         failed_reasons.append("startup/context artifact refs are empty")
     if product_status == "ready" and not provider_execution:
-        failed_reasons.append("product_status=ready without provider execution evidence")
+        failed_reasons.append(
+            "product_status=ready without provider execution evidence"
+        )
     if product_status == "ready" and proposal_count == 0:
-        failed_reasons.append("product_status=ready without proposal iteration artifacts")
+        failed_reasons.append(
+            "product_status=ready without proposal iteration artifacts"
+        )
     if not startup_manifest:
         unknown_reasons.append("startup manifest missing")
     if not report:
@@ -253,8 +317,16 @@ def list_proposals(run_dir: Path) -> list[dict[str, Any]]:
     for json_path in sorted(proposal_dir.glob("heap_proposal_revision_*.json")):
         data = read_json(json_path)
         md_path = json_path.with_suffix(".md")
-        impl = data.get("implementation_quality") if isinstance(data.get("implementation_quality"), dict) else {}
-        progress = data.get("proposal_progress") if isinstance(data.get("proposal_progress"), dict) else {}
+        impl = (
+            data.get("implementation_quality")
+            if isinstance(data.get("implementation_quality"), dict)
+            else {}
+        )
+        progress = (
+            data.get("proposal_progress")
+            if isinstance(data.get("proposal_progress"), dict)
+            else {}
+        )
         quality_errors = []
         for source in (impl, progress):
             for error in source.get("errors") or []:
@@ -268,13 +340,23 @@ def list_proposals(run_dir: Path) -> list[dict[str, Any]]:
                 "source": data.get("source"),
                 "quality_passed": data.get("quality_passed"),
                 "accepted": data.get("quality_passed") is True,
-                "reject_reason": "; ".join(quality_errors) if quality_errors else ("quality_passed is not true" if data.get("quality_passed") is not True else ""),
+                "reject_reason": (
+                    "; ".join(quality_errors)
+                    if quality_errors
+                    else (
+                        "quality_passed is not true"
+                        if data.get("quality_passed") is not True
+                        else ""
+                    )
+                ),
                 "implementation_quality": impl,
                 "proposal_progress": progress,
                 "gpu0_review": data.get("gpu0_review", []),
                 "npu_micro_task_piece": data.get("npu_micro_task_piece", []),
                 "npu_workload_audit": data.get("npu_workload_audit", {}),
-                "anchored_source_candidates": data.get("anchored_source_candidates", []),
+                "anchored_source_candidates": data.get(
+                    "anchored_source_candidates", []
+                ),
                 "response_text": data.get("response_text", ""),
             }
         )
@@ -288,14 +370,22 @@ def list_provider_reports(run_dir: Path) -> list[dict[str, Any]]:
         return reports
     for path in sorted(provider_dir.glob("*.json")):
         data = read_json(path)
-        lane = data.get("lane") or data.get("role") or data.get("report_kind") or data.get("kind") or path.stem
+        lane = (
+            data.get("lane")
+            or data.get("role")
+            or data.get("report_kind")
+            or data.get("kind")
+            or path.stem
+        )
         reports.append(
             {
                 "path": path,
                 "kind": data.get("kind") or data.get("report_kind"),
                 "lane": lane,
                 "passed": data.get("passed"),
-                "provider_execution_performed": provider_report_execution_performed(data),
+                "provider_execution_performed": provider_report_execution_performed(
+                    data
+                ),
                 "response_text": data.get("response_text", ""),
                 "npu_device_workload": data.get("npu_device_workload"),
                 "warnings": data.get("warnings", []),
@@ -305,20 +395,44 @@ def list_provider_reports(run_dir: Path) -> list[dict[str, Any]]:
     return reports
 
 
-def flatten_quality_blockers(report: dict[str, Any], proposals: list[dict[str, Any]], startup_manifest: dict[str, Any]) -> list[str]:
+def flatten_quality_blockers(
+    report: dict[str, Any],
+    proposals: list[dict[str, Any]],
+    startup_manifest: dict[str, Any],
+) -> list[str]:
     blockers: list[str] = []
-    output_contract = report.get("real_run_output_contract") if isinstance(report.get("real_run_output_contract"), dict) else {}
+    output_contract = (
+        report.get("real_run_output_contract")
+        if isinstance(report.get("real_run_output_contract"), dict)
+        else {}
+    )
     metrics = report.get("metrics") if isinstance(report.get("metrics"), dict) else {}
-    quality = output_contract.get("quality_output_signals") if isinstance(output_contract.get("quality_output_signals"), dict) else {}
-    implementation = quality.get("implementation_quality") if isinstance(quality.get("implementation_quality"), dict) else {}
+    quality = (
+        output_contract.get("quality_output_signals")
+        if isinstance(output_contract.get("quality_output_signals"), dict)
+        else {}
+    )
+    implementation = (
+        quality.get("implementation_quality")
+        if isinstance(quality.get("implementation_quality"), dict)
+        else {}
+    )
 
     if startup_manifest and startup_manifest.get("input_ready_before_heap") is False:
         blockers.append("startup input_ready_before_heap=False")
     if startup_manifest.get("startup_reload_degraded"):
         blockers.append("startup_reload_degraded=True")
-    for item in startup_manifest.get("blocking_requirements", []) if isinstance(startup_manifest.get("blocking_requirements"), list) else []:
+    for item in (
+        startup_manifest.get("blocking_requirements", [])
+        if isinstance(startup_manifest.get("blocking_requirements"), list)
+        else []
+    ):
         blockers.append(f"startup blocking requirement: {item}")
-    for item in startup_manifest.get("degraded_requirements", []) if isinstance(startup_manifest.get("degraded_requirements"), list) else []:
+    for item in (
+        startup_manifest.get("degraded_requirements", [])
+        if isinstance(startup_manifest.get("degraded_requirements"), list)
+        else []
+    ):
         blockers.append(f"startup degraded requirement: {item}")
 
     if report.get("fallback_heap_report"):
@@ -332,8 +446,16 @@ def flatten_quality_blockers(report: dict[str, Any], proposals: list[dict[str, A
     for error in implementation.get("errors") or []:
         blockers.append(str(error))
     for proposal in proposals:
-        impl = proposal.get("implementation_quality") if isinstance(proposal.get("implementation_quality"), dict) else {}
-        progress = proposal.get("proposal_progress") if isinstance(proposal.get("proposal_progress"), dict) else {}
+        impl = (
+            proposal.get("implementation_quality")
+            if isinstance(proposal.get("implementation_quality"), dict)
+            else {}
+        )
+        progress = (
+            proposal.get("proposal_progress")
+            if isinstance(proposal.get("proposal_progress"), dict)
+            else {}
+        )
         for error in impl.get("errors") or []:
             blockers.append(f"{proposal.get('name')}: {error}")
         for error in progress.get("errors") or []:
@@ -351,7 +473,9 @@ def proposal_text_for_review(proposal: dict[str, Any], max_chars: int | None) ->
     return text
 
 
-def collect_gpu0_reviews(proposals: list[dict[str, Any]], provider_reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def collect_gpu0_reviews(
+    proposals: list[dict[str, Any]], provider_reports: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     reviews: list[dict[str, Any]] = []
     for proposal in proposals:
         review = proposal.get("gpu0_review")
@@ -363,9 +487,15 @@ def collect_gpu0_reviews(proposals: list[dict[str, Any]], provider_reports: list
         if "gpu0" in lane or "gpu0" in kind:
             reviews.append(
                 {
-                    "source": repo_rel(Path.cwd(), provider["path"]) if isinstance(provider.get("path"), Path) else str(provider.get("path") or ""),
+                    "source": (
+                        repo_rel(Path.cwd(), provider["path"])
+                        if isinstance(provider.get("path"), Path)
+                        else str(provider.get("path") or "")
+                    ),
                     "passed": provider.get("passed"),
-                    "provider_execution_performed": provider.get("provider_execution_performed"),
+                    "provider_execution_performed": provider.get(
+                        "provider_execution_performed"
+                    ),
                     "summary": str(provider.get("response_text") or "")[:1200],
                     "warnings": provider.get("warnings") or [],
                 }
@@ -373,13 +503,21 @@ def collect_gpu0_reviews(proposals: list[dict[str, Any]], provider_reports: list
     return reviews
 
 
-def collect_npu_audits(proposals: list[dict[str, Any]], provider_reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def collect_npu_audits(
+    proposals: list[dict[str, Any]], provider_reports: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     audits: list[dict[str, Any]] = []
     for proposal in proposals:
         piece = proposal.get("npu_micro_task_piece")
         workload = proposal.get("npu_workload_audit")
         if piece or workload:
-            audits.append({"source": proposal.get("name"), "micro_task_piece": piece, "workload_audit": workload})
+            audits.append(
+                {
+                    "source": proposal.get("name"),
+                    "micro_task_piece": piece,
+                    "workload_audit": workload,
+                }
+            )
     for provider in provider_reports:
         lane = str(provider.get("lane") or "").lower()
         kind = str(provider.get("kind") or "").lower()
@@ -388,7 +526,9 @@ def collect_npu_audits(proposals: list[dict[str, Any]], provider_reports: list[d
                 {
                     "source": str(provider.get("path") or ""),
                     "passed": provider.get("passed"),
-                    "provider_execution_performed": provider.get("provider_execution_performed"),
+                    "provider_execution_performed": provider.get(
+                        "provider_execution_performed"
+                    ),
                     "npu_device_workload": provider.get("npu_device_workload"),
                     "warnings": provider.get("warnings") or [],
                 }
@@ -396,28 +536,52 @@ def collect_npu_audits(proposals: list[dict[str, Any]], provider_reports: list[d
     return audits
 
 
-def build_action_list(blockers: list[str], proposals: list[dict[str, Any]], startup_manifest: dict[str, Any]) -> list[str]:
+def build_action_list(
+    blockers: list[str],
+    proposals: list[dict[str, Any]],
+    startup_manifest: dict[str, Any],
+) -> list[str]:
     actions: list[str] = []
     if startup_manifest.get("startup_reload_degraded"):
-        actions.append("Inspect startup_context_memory_reload/heap_context_memory_reload_manifest.json and fix degraded preload requirements before increasing provider budget.")
+        actions.append(
+            "Inspect startup_context_memory_reload/heap_context_memory_reload_manifest.json and fix degraded preload requirements before increasing provider budget."
+        )
     if any("ai_context_pack" in item for item in blockers):
-        actions.append("Keep build_ai_context_pack advisory unless strict mode is requested; use generated artifacts as degraded context when included files exist.")
+        actions.append(
+            "Keep build_ai_context_pack advisory unless strict mode is requested; use generated artifacts as degraded context when included files exist."
+        )
     if any("no verified source file references" in item for item in blockers):
-        actions.append("Require every proposal chunk to cite exact repo-relative target files before it can be accepted.")
+        actions.append(
+            "Require every proposal chunk to cite exact repo-relative target files before it can be accepted."
+        )
     if any("placeholder" in item.lower() or "bare_pass" in item for item in blockers):
-        actions.append("Reject chunks containing pass/TODO/comment-only stubs; ask GPU0 to refine them into concrete edits or explicit non-action.")
+        actions.append(
+            "Reject chunks containing pass/TODO/comment-only stubs; ask GPU0 to refine them into concrete edits or explicit non-action."
+        )
     if any("similarity=" in item for item in blockers):
-        actions.append("Feed previous proposal chunk and quality diagnosis back into GPU1/GPU0 before another revision to prevent repeated generic output.")
+        actions.append(
+            "Feed previous proposal chunk and quality diagnosis back into GPU1/GPU0 before another revision to prevent repeated generic output."
+        )
     if not proposals:
-        actions.append("Run heap again after preload package export; the fallback composer is currently preserving diagnostics but no proposal chunks exist.")
-    actions.append("Use the final TXT/JSON package as operator review input; do not apply patches automatically.")
+        actions.append(
+            "Run heap again after preload package export; the fallback composer is currently preserving diagnostics but no proposal chunks exist."
+        )
+    actions.append(
+        "Use the final TXT/JSON package as operator review input; do not apply patches automatically."
+    )
     return list(dict.fromkeys(actions))
 
 
-def render_startup_section(repo_root: Path, startup_manifest: dict[str, Any]) -> list[str]:
+def render_startup_section(
+    repo_root: Path, startup_manifest: dict[str, Any]
+) -> list[str]:
     if not startup_manifest:
         return ["## Startup preload manifest", "", "- No startup manifest found.", ""]
-    artifacts = startup_manifest.get("artifacts") if isinstance(startup_manifest.get("artifacts"), dict) else {}
+    artifacts = (
+        startup_manifest.get("artifacts")
+        if isinstance(startup_manifest.get("artifacts"), dict)
+        else {}
+    )
     lines = [
         "## Startup preload manifest",
         "",
@@ -454,7 +618,11 @@ def render_markdown(
     max_proposal_chars: int,
 ) -> str:
     metrics = report.get("metrics") if isinstance(report.get("metrics"), dict) else {}
-    output_contract = report.get("real_run_output_contract") if isinstance(report.get("real_run_output_contract"), dict) else {}
+    output_contract = (
+        report.get("real_run_output_contract")
+        if isinstance(report.get("real_run_output_contract"), dict)
+        else {}
+    )
     context_refs = output_contract.get("context_artifact_refs") or []
     accepted = [item for item in proposals if item.get("accepted")]
     rejected = [item for item in proposals if not item.get("accepted")]
@@ -480,18 +648,24 @@ def render_markdown(
         "## External heap product causality",
         "",
     ]
-    reasons = product_causality.get("causality_reasons") if isinstance(product_causality.get("causality_reasons"), list) else []
+    reasons = (
+        product_causality.get("causality_reasons")
+        if isinstance(product_causality.get("causality_reasons"), list)
+        else []
+    )
     if reasons:
         lines.extend(f"- {reason}" for reason in reasons)
     else:
         lines.append("- Causalita' esterna coerente con artifact/report disponibili.")
-    lines.extend([
-        "",
-        "## Context-limit escape protocol",
-        "",
-        "Il prodotto finale non dipende dalla sola finestra token di GPU1: ogni proposta viene salvata come chunk riusabile, GPU0/NPU producono review e audit separati, e questo composer assembla il risultato finale dai file persistenti.",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Context-limit escape protocol",
+            "",
+            "Il prodotto finale non dipende dalla sola finestra token di GPU1: ogni proposta viene salvata come chunk riusabile, GPU0/NPU producono review e audit separati, e questo composer assembla il risultato finale dai file persistenti.",
+            "",
+        ]
+    )
     lines.extend(render_startup_section(repo_root, startup_manifest))
 
     if blockers:
@@ -499,40 +673,75 @@ def render_markdown(
         lines.extend(f"- {item}" for item in blockers)
         lines.append("")
     else:
-        lines.extend(["## Blocking quality issues", "", "- Nessun blocco deterministico rilevato dal composer.", ""])
+        lines.extend(
+            [
+                "## Blocking quality issues",
+                "",
+                "- Nessun blocco deterministico rilevato dal composer.",
+                "",
+            ]
+        )
 
     lines.extend(["## Accepted proposal chunks", ""])
     if not accepted:
         lines.append("- Nessun chunk accettato dal quality gate.")
     for proposal in accepted:
-        lines.append(f"- `{proposal.get('name')}` revision=`{proposal.get('revision')}` source=`{proposal.get('source')}`")
+        lines.append(
+            f"- `{proposal.get('name')}` revision=`{proposal.get('revision')}` source=`{proposal.get('source')}`"
+        )
     lines.append("")
 
     lines.extend(["## Rejected proposal chunks", ""])
     if not rejected:
         lines.append("- Nessun chunk rifiutato.")
     for proposal in rejected:
-        lines.append(f"- `{proposal.get('name')}` revision=`{proposal.get('revision')}` reason=`{proposal.get('reject_reason')}`")
+        lines.append(
+            f"- `{proposal.get('name')}` revision=`{proposal.get('revision')}` reason=`{proposal.get('reject_reason')}`"
+        )
     lines.append("")
 
     lines.extend(["## GPU0 companion review/refine", ""])
     if not gpu0_reviews:
         lines.append("- Nessuna review GPU0 trovata nei proposal/provider report.")
     for review in gpu0_reviews:
-        lines.extend(["```json", json.dumps(review, indent=2, ensure_ascii=False, default=str)[:3000], "```", ""])
+        lines.extend(
+            [
+                "```json",
+                json.dumps(review, indent=2, ensure_ascii=False, default=str)[:3000],
+                "```",
+                "",
+            ]
+        )
     lines.append("")
 
     lines.extend(["## NPU workload/audit pieces", ""])
     if not npu_audits:
-        lines.append("- Nessun audit/workload NPU trovato nei proposal/provider report.")
+        lines.append(
+            "- Nessun audit/workload NPU trovato nei proposal/provider report."
+        )
     for audit in npu_audits:
-        lines.extend(["```json", json.dumps(audit, indent=2, ensure_ascii=False, default=str)[:3000], "```", ""])
+        lines.extend(
+            [
+                "```json",
+                json.dumps(audit, indent=2, ensure_ascii=False, default=str)[:3000],
+                "```",
+                "",
+            ]
+        )
     lines.append("")
 
     lines.extend(["## Provider reports", ""])
     for provider in provider_reports:
-        rel = repo_rel(repo_root, provider["path"]) if isinstance(provider.get("path"), Path) else ""
-        workload = provider.get("npu_device_workload") if isinstance(provider.get("npu_device_workload"), dict) else {}
+        rel = (
+            repo_rel(repo_root, provider["path"])
+            if isinstance(provider.get("path"), Path)
+            else ""
+        )
+        workload = (
+            provider.get("npu_device_workload")
+            if isinstance(provider.get("npu_device_workload"), dict)
+            else {}
+        )
         lines.extend(
             [
                 f"### {provider.get('lane') or 'provider'}",
@@ -577,7 +786,14 @@ def render_markdown(
             lines.extend(["Anchored source candidates:"])
             lines.extend(f"- `{item}`" for item in anchored[:20])
             lines.append("")
-        lines.extend(["```markdown", proposal_text_for_review(proposal, max_proposal_chars), "```", ""])
+        lines.extend(
+            [
+                "```markdown",
+                proposal_text_for_review(proposal, max_proposal_chars),
+                "```",
+                "",
+            ]
+        )
 
     lines.extend(["## Context artifacts", ""])
     if context_refs:
@@ -616,7 +832,10 @@ def write_documents_package(
     manifest_path = doc_dir / f"aicarmine_heap_final_proposals_{stamp}_DOWNLOADS.txt"
     md_path.write_text(markdown, encoding="utf-8")
     txt_path.write_text(markdown, encoding="utf-8")
-    json_path.write_text(json.dumps(json_data, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
+    json_path.write_text(
+        json.dumps(json_data, indent=2, ensure_ascii=False, default=str) + "\n",
+        encoding="utf-8",
+    )
     written.extend([str(md_path), str(txt_path), str(json_path)])
 
     chunk_dir = doc_dir / "proposal_chunks"
@@ -638,7 +857,9 @@ def write_documents_package(
             proposal_chunk_outputs.append(str(target))
         txt_name = f"{Path(str(proposal.get('name') or 'proposal')).stem}.txt"
         txt_target = chunk_txt_dir / txt_name
-        txt_target.write_text(proposal_text_for_review(proposal, None), encoding="utf-8")
+        txt_target.write_text(
+            proposal_text_for_review(proposal, None), encoding="utf-8"
+        )
         written.append(str(txt_target))
         proposal_txt_outputs.append(str(txt_target))
 
@@ -686,11 +907,20 @@ def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
     run_dir = discover_run_dir(repo_root, args.report_file, args.run_dir)
-    report_file = resolve_path(repo_root, args.report_file) if args.report_file else run_dir / "heap_runtime_completeness_gate_report.json"
+    report_file = (
+        resolve_path(repo_root, args.report_file)
+        if args.report_file
+        else run_dir / "heap_runtime_completeness_gate_report.json"
+    )
     report = read_json(report_file)
     startup_manifest = load_startup_manifest(run_dir)
     startup_reconciliation = load_startup_reconciliation(run_dir)
-    stamp = str(report.get("stamp") or startup_manifest.get("stamp") or (report.get("metrics") or {}).get("stamp") or now_stamp())
+    stamp = str(
+        report.get("stamp")
+        or startup_manifest.get("stamp")
+        or (report.get("metrics") or {}).get("stamp")
+        or now_stamp()
+    )
 
     proposals = list_proposals(run_dir)
     provider_reports = list_provider_reports(run_dir)
@@ -730,7 +960,9 @@ def main() -> int:
         "run_dir": repo_rel(repo_root, run_dir),
         "report_file": repo_rel(repo_root, report_file),
         "startup_manifest": startup_manifest,
-        "startup_reload_degraded": bool(startup_manifest.get("startup_reload_degraded")),
+        "startup_reload_degraded": bool(
+            startup_manifest.get("startup_reload_degraded")
+        ),
         "proposal_count": len(proposals),
         "accepted_proposal_count": len(accepted),
         "rejected_proposal_count": len(rejected),
@@ -740,8 +972,11 @@ def main() -> int:
         "blocking_issue_count": len(blockers),
         "blocking_issues": blockers,
         "action_list": action_list,
-        "product_status": (report.get("metrics") or {}).get("product_status") or (report.get("real_run_output_contract") or {}).get("product_status"),
-        "quality_output_passed": (report.get("metrics") or {}).get("quality_output_passed"),
+        "product_status": (report.get("metrics") or {}).get("product_status")
+        or (report.get("real_run_output_contract") or {}).get("product_status"),
+        "quality_output_passed": (report.get("metrics") or {}).get(
+            "quality_output_passed"
+        ),
         "product_causality": product_causality,
         "product_causality_status": product_causality.get("product_causality_status"),
         "product_causality_passed": product_causality.get("product_causality_passed"),
@@ -764,16 +999,25 @@ def main() -> int:
             for item in proposals
         ],
         "accepted_proposals": [item.get("name") for item in accepted],
-        "rejected_proposals": [{"name": item.get("name"), "reason": item.get("reject_reason")} for item in rejected],
+        "rejected_proposals": [
+            {"name": item.get("name"), "reason": item.get("reject_reason")}
+            for item in rejected
+        ],
         "gpu0_reviews": gpu0_reviews,
         "npu_audits": npu_audits,
         "provider_reports": [
             {
-                "path": repo_rel(repo_root, item["path"]) if isinstance(item.get("path"), Path) else "",
+                "path": (
+                    repo_rel(repo_root, item["path"])
+                    if isinstance(item.get("path"), Path)
+                    else ""
+                ),
                 "kind": item.get("kind"),
                 "lane": item.get("lane"),
                 "passed": item.get("passed"),
-                "provider_execution_performed": item.get("provider_execution_performed"),
+                "provider_execution_performed": item.get(
+                    "provider_execution_performed"
+                ),
                 "npu_device_workload": item.get("npu_device_workload"),
                 "errors": item.get("errors"),
                 "warnings": item.get("warnings"),
@@ -782,11 +1026,22 @@ def main() -> int:
         ],
     }
 
-    output = resolve_path(repo_root, args.output) if args.output else run_dir / "heap_final_proposal_composer.json"
-    markdown_output = resolve_path(repo_root, args.markdown_output) if args.markdown_output else run_dir / "heap_final_proposal_composer.md"
+    output = (
+        resolve_path(repo_root, args.output)
+        if args.output
+        else run_dir / "heap_final_proposal_composer.json"
+    )
+    markdown_output = (
+        resolve_path(repo_root, args.markdown_output)
+        if args.markdown_output
+        else run_dir / "heap_final_proposal_composer.md"
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(result, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(result, indent=2, ensure_ascii=False, default=str) + "\n",
+        encoding="utf-8",
+    )
     markdown_output.write_text(markdown, encoding="utf-8")
     result["output"] = repo_rel(repo_root, output)
     result["markdown_output"] = repo_rel(repo_root, markdown_output)
@@ -801,9 +1056,14 @@ def main() -> int:
             proposals=proposals,
         )
         result.update(document_package)
-        result["download_hint"] = f"Apri o copia il file TXT principale: {document_package['primary_txt']}"
+        result["download_hint"] = (
+            f"Apri o copia il file TXT principale: {document_package['primary_txt']}"
+        )
 
-    output.write_text(json.dumps(result, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(result, indent=2, ensure_ascii=False, default=str) + "\n",
+        encoding="utf-8",
+    )
     print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
     return 0 if not blockers else 2
 

@@ -1,4 +1,5 @@
 """Report writers for agent_runtime_debug_lab."""
+
 from __future__ import annotations
 
 import json
@@ -6,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_text_report
+    from tools.validation.report_utils import resolve_output_path, write_text_report
 except ImportError:
     from report_utils import resolve_output_path, write_text_report  # type: ignore
 
@@ -54,13 +55,31 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def write_reports(repo_root: Path, output: str, markdown_output: str, report: dict[str, Any], markdown: str) -> None:
+def write_reports(
+    repo_root: Path,
+    output: str,
+    markdown_output: str,
+    report: dict[str, Any],
+    markdown: str,
+) -> None:
     output_path = resolve_output_path(repo_root, output)
     markdown_path = resolve_output_path(repo_root, markdown_output)
-    if not output_path.resolve().relative_to(repo_root.resolve()).as_posix().startswith("output/validation/"):
+    if (
+        not output_path.resolve()
+        .relative_to(repo_root.resolve())
+        .as_posix()
+        .startswith("output/validation/")
+    ):
         raise ValueError("JSON output must be under output/validation/")
-    if not markdown_path.resolve().relative_to(repo_root.resolve()).as_posix().startswith("output/validation/"):
+    if (
+        not markdown_path.resolve()
+        .relative_to(repo_root.resolve())
+        .as_posix()
+        .startswith("output/validation/")
+    ):
         raise ValueError("Markdown output must be under output/validation/")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output_path.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     write_text_report(markdown, markdown_path)

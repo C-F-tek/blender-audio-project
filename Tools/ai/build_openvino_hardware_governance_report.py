@@ -4,6 +4,7 @@
 This report does not run inference. It only probes available OpenVINO devices
 and records the IA-Carmine routing policy used by the provider mesh.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,12 +26,18 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
@@ -57,11 +64,17 @@ def build_governance(repo_root: Path, args: argparse.Namespace) -> dict[str, Any
     if error:
         warnings.append(f"OpenVINO probe unavailable: {error}")
     if has_gpu1:
-        warnings.append("GPU.1 is visible to OpenVINO but reserved for Ollama/CUDA; do not route OpenVINO work there by default.")
+        warnings.append(
+            "GPU.1 is visible to OpenVINO but reserved for Ollama/CUDA; do not route OpenVINO work there by default."
+        )
     if mode == "startup":
-        warnings.append("NPU startup mode may contend with GPU0/GPU1 on short live provider runs; deferred is preferred for local workstation use.")
+        warnings.append(
+            "NPU startup mode may contend with GPU0/GPU1 on short live provider runs; deferred is preferred for local workstation use."
+        )
     if not gpu0_model_dir:
-        warnings.append("IA_CARMINE_GPU0_COMPANION_MODEL_DIR is not configured; GPU0 semantic peer mode will classify as unconfigured/fallback.")
+        warnings.append(
+            "IA_CARMINE_GPU0_COMPANION_MODEL_DIR is not configured; GPU0 semantic peer mode will classify as unconfigured/fallback."
+        )
 
     routing = {
         "gpu1_primary_advisory": {
@@ -95,7 +108,11 @@ def build_governance(repo_root: Path, args: argparse.Namespace) -> dict[str, Any
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
         "passed": True,
-        "classification": "openvino_probe_available" if not error else "openvino_probe_unavailable_advisory",
+        "classification": (
+            "openvino_probe_available"
+            if not error
+            else "openvino_probe_unavailable_advisory"
+        ),
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -155,9 +172,17 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--npu-micro-start-mode", default="deferred", choices=["startup", "deferred", "live-seed-only", "disabled"])
-    parser.add_argument("--output", default="output/validation/openvino_hardware_governance.json")
-    parser.add_argument("--markdown-output", default="output/validation/openvino_hardware_governance.md")
+    parser.add_argument(
+        "--npu-micro-start-mode",
+        default="deferred",
+        choices=["startup", "deferred", "live-seed-only", "disabled"],
+    )
+    parser.add_argument(
+        "--output", default="output/validation/openvino_hardware_governance.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/openvino_hardware_governance.md"
+    )
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
     report = build_governance(repo_root, args)

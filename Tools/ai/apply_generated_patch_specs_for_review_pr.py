@@ -1,17 +1,16 @@
-
 #!/usr/bin/env python3
 """Apply concrete generated patch specs and emit a review-PR-compatible report.
 
 The tool is a narrow bridge between generated patch specs and the existing
 patch-suggestion/review-PR product path. It reuses
-Tools.ai.patch_suggestion_bundle.operations.apply_operation for deterministic
+tools.ai.patch_suggestion_bundle.operations.apply_operation for deterministic
 writes and emits kind=patch_suggestion_bundle_apply so prepare_review_pr.py can
 consume the report with --auto-include-from-apply-report.
 """
+
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import shutil
 import subprocess
@@ -24,19 +23,26 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from Tools.ai.patch_suggestion_bundle.common import (
+from tools.ai.patch_suggestion_bundle.common import (
     PatchOperation,
     current_branch,
     git_status_short,
-    unsafe_git_status_short,
     load_json,
     repo_relative,
     split_values,
     unique_in_order,
+    unsafe_git_status_short,
 )
-from Tools.ai.patch_suggestion_bundle.git_branch import create_review_branch
-from Tools.ai.patch_suggestion_bundle.operations import apply_operation, normalize_operation
-from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+from tools.ai.patch_suggestion_bundle.git_branch import create_review_branch
+from tools.ai.patch_suggestion_bundle.operations import (
+    apply_operation,
+    normalize_operation,
+)
+from tools.validation.report_utils import (
+    resolve_output_path,
+    write_json_report,
+    write_text_report,
+)
 
 CONCRETE_OPERATION_NAMES = {
     "replace_once",
@@ -121,13 +127,17 @@ def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     return data, None
 
 
-def discover_latest_manifest(repo_root: Path, roots: list[str], max_files: int, manifest_stamp: str = "") -> str:
+def discover_latest_manifest(
+    repo_root: Path, roots: list[str], max_files: int, manifest_stamp: str = ""
+) -> str:
     candidates: list[Path] = []
     for raw_root in roots:
         root = (repo_root / raw_root).resolve()
         if not root.exists():
             continue
-        candidates.extend(path for path in root.rglob("*_manifest.json") if path.is_file())
+        candidates.extend(
+            path for path in root.rglob("*_manifest.json") if path.is_file()
+        )
     candidates = sorted(candidates, key=lambda item: item.stat().st_mtime, reverse=True)
     for path in candidates[:max_files]:
         relative = repo_relative(path, repo_root)
@@ -136,7 +146,10 @@ def discover_latest_manifest(repo_root: Path, roots: list[str], max_files: int, 
         data, error = read_json_object(path)
         if error or not data:
             continue
-        if data.get("kind") in {"proposal_patch_spec_manifest", "reviewed_patch_spec_manifest"}:
+        if data.get("kind") in {
+            "proposal_patch_spec_manifest",
+            "reviewed_patch_spec_manifest",
+        }:
             return relative
     return ""
 
@@ -161,7 +174,9 @@ def manifest_spec_paths(data: dict[str, Any]) -> list[str]:
     return unique_in_order(paths)
 
 
-def replacement_to_operation(path: str, replacement: dict[str, Any], source_id: str) -> PatchOperation | None:
+def replacement_to_operation(
+    path: str, replacement: dict[str, Any], source_id: str
+) -> PatchOperation | None:
     replacement_type = str(replacement.get("type") or "").strip().lower()
     if replacement_type == "exact":
         old = replacement.get("old")
@@ -205,36 +220,70 @@ def replacement_to_operation(path: str, replacement: dict[str, Any], source_id: 
     return None
 
 
-def operations_from_spec(data: dict[str, Any], spec_path: str) -> tuple[list[PatchOperation], list[dict[str, Any]]]:
+def operations_from_spec(
+    data: dict[str, Any], spec_path: str
+) -> tuple[list[PatchOperation], list[dict[str, Any]]]:
     operations: list[PatchOperation] = []
     manual: list[dict[str, Any]] = []
     raw_operations = data.get("operations")
     if not isinstance(raw_operations, list):
-        manual.append({"id": spec_path, "reason": "spec operations is not a list", "target_files": []})
+        manual.append(
+            {
+                "id": spec_path,
+                "reason": "spec operations is not a list",
+                "target_files": [],
+            }
+        )
         return operations, manual
 
     for index, raw in enumerate(raw_operations):
         if not isinstance(raw, dict):
-            manual.append({"id": f"{spec_path}#{index}", "reason": "operation is not an object", "target_files": []})
+            manual.append(
+                {
+                    "id": f"{spec_path}#{index}",
+                    "reason": "operation is not an object",
+                    "target_files": [],
+                }
+            )
             continue
 
-        source_id = str(raw.get("proposal_id") or raw.get("id") or f"{spec_path}#{index}")
-        raw_operation = str(raw.get("operation") or raw.get("op") or raw.get("action") or "").strip().lower().replace("-", "_")
-        raw_path = normalize_repo_path(str(raw.get("path") or raw.get("target_file") or raw.get("file") or ""))
+        source_id = str(
+            raw.get("proposal_id") or raw.get("id") or f"{spec_path}#{index}"
+        )
+        raw_operation = (
+            str(raw.get("operation") or raw.get("op") or raw.get("action") or "")
+            .strip()
+            .lower()
+            .replace("-", "_")
+        )
+        raw_path = normalize_repo_path(
+            str(raw.get("path") or raw.get("target_file") or raw.get("file") or "")
+        )
         denied = is_denied_target(raw_path)
         if denied:
-            manual.append({"id": source_id, "reason": denied, "target_files": [raw_path] if raw_path else []})
+            manual.append(
+                {
+                    "id": source_id,
+                    "reason": denied,
+                    "target_files": [raw_path] if raw_path else [],
+                }
+            )
             continue
 
-        if raw_operation in MANUAL_OR_DRAFT_OPERATIONS or raw.get("draft_status") == "needs_concrete_replacements":
+        if (
+            raw_operation in MANUAL_OR_DRAFT_OPERATIONS
+            or raw.get("draft_status") == "needs_concrete_replacements"
+        ):
             replacements = raw.get("replacements")
             if not replacements:
-                manual.append({
-                    "id": source_id,
-                    "reason": "metadata-only draft operation has no concrete replacements",
-                    "target_files": [raw_path] if raw_path else [],
-                    "draft_status": raw.get("draft_status"),
-                })
+                manual.append(
+                    {
+                        "id": source_id,
+                        "reason": "metadata-only draft operation has no concrete replacements",
+                        "target_files": [raw_path] if raw_path else [],
+                        "draft_status": raw.get("draft_status"),
+                    }
+                )
                 continue
 
         normalized = normalize_operation(raw)
@@ -248,19 +297,23 @@ def operations_from_spec(data: dict[str, Any], spec_path: str) -> tuple[list[Pat
             for repl_index, replacement in enumerate(replacements):
                 if not isinstance(replacement, dict):
                     continue
-                operation = replacement_to_operation(raw_path, replacement, f"{source_id}:{repl_index}")
+                operation = replacement_to_operation(
+                    raw_path, replacement, f"{source_id}:{repl_index}"
+                )
                 if operation:
                     operations.append(operation)
                     converted += 1
             if converted:
                 continue
 
-        manual.append({
-            "id": source_id,
-            "reason": "no allowlisted concrete deterministic operation found",
-            "target_files": [raw_path] if raw_path else [],
-            "operation": raw_operation,
-        })
+        manual.append(
+            {
+                "id": source_id,
+                "reason": "no allowlisted concrete deterministic operation found",
+                "target_files": [raw_path] if raw_path else [],
+                "operation": raw_operation,
+            }
+        )
 
     return operations, manual
 
@@ -269,21 +322,27 @@ def touched_python_files(repo_root: Path, results: list[dict[str, Any]]) -> list
     return [
         item["path"]
         for item in results
-        if item.get("changed") and str(item.get("path", "")).replace("\\", "/").endswith(".py")
+        if item.get("changed")
+        and str(item.get("path", "")).replace("\\", "/").endswith(".py")
         and (repo_root / str(item.get("path"))).exists()
     ]
 
 
-def touched_powershell_files(repo_root: Path, results: list[dict[str, Any]]) -> list[str]:
+def touched_powershell_files(
+    repo_root: Path, results: list[dict[str, Any]]
+) -> list[str]:
     return [
         item["path"]
         for item in results
-        if item.get("changed") and str(item.get("path", "")).replace("\\", "/").endswith(".ps1")
+        if item.get("changed")
+        and str(item.get("path", "")).replace("\\", "/").endswith(".ps1")
         and (repo_root / str(item.get("path"))).exists()
     ]
 
 
-def run_validators(repo_root: Path, results: list[dict[str, Any]], require_all: bool) -> tuple[list[dict[str, Any]], list[str], list[str]]:
+def run_validators(
+    repo_root: Path, results: list[dict[str, Any]], require_all: bool
+) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     validator_results: list[dict[str, Any]] = []
     errors: list[str] = []
     warnings: list[str] = []
@@ -306,13 +365,19 @@ def run_validators(repo_root: Path, results: list[dict[str, Any]], require_all: 
                     "if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_.Message }; exit 1}"
                 )
                 result = run([powershell, "-NoProfile", "-Command", command], repo_root)
-                validator_results.append({"name": "powershell_parser", "path": path, **result})
+                validator_results.append(
+                    {"name": "powershell_parser", "path": path, **result}
+                )
                 if not result["ok"]:
                     errors.append(f"PowerShell parser failed for {path}")
         elif require_all:
-            errors.append("PowerShell parser requested but powershell.exe/pwsh was not found")
+            errors.append(
+                "PowerShell parser requested but powershell.exe/pwsh was not found"
+            )
         else:
-            warnings.append("PowerShell parser skipped because powershell.exe/pwsh was not found")
+            warnings.append(
+                "PowerShell parser skipped because powershell.exe/pwsh was not found"
+            )
 
     diff_check = run(["git", "diff", "--check"], repo_root)
     validator_results.append({"name": "git_diff_check", **diff_check})
@@ -338,11 +403,15 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
     ]
     for item in report.get("results") or []:
-        lines.append(f"- `{item.get('path')}` op=`{item.get('operation')}` changed=`{item.get('changed')}` applied=`{item.get('applied')}` ok=`{item.get('ok')}`")
+        lines.append(
+            f"- `{item.get('path')}` op=`{item.get('operation')}` changed=`{item.get('changed')}` applied=`{item.get('applied')}` ok=`{item.get('ok')}`"
+        )
     if report.get("manual_review_items"):
         lines.extend(["", "## Manual review items", ""])
         for item in report["manual_review_items"][:50]:
-            lines.append(f"- `{item.get('id')}` {item.get('reason')} targets=`{item.get('target_files')}`")
+            lines.append(
+                f"- `{item.get('id')}` {item.get('reason')} targets=`{item.get('target_files')}`"
+            )
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {error}" for error in report["errors"])
@@ -357,17 +426,24 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--manifest", default="")
     parser.add_argument("--patch-spec", action="append", default=[])
-    parser.add_argument("--discover-root", action="append", default=["output/patch_specs"])
+    parser.add_argument(
+        "--discover-root", action="append", default=["output/patch_specs"]
+    )
     parser.add_argument("--discover-max-files", type=int, default=50)
     parser.add_argument("--manifest-stamp", default="")
-    parser.add_argument("--output", default="output/validation/generated_patch_specs_review_pr_apply.json")
+    parser.add_argument(
+        "--output",
+        default="output/validation/generated_patch_specs_review_pr_apply.json",
+    )
     parser.add_argument("--markdown-output", default="")
     parser.add_argument("--max-applied-patches", type=int, default=5)
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--allow-dirty", action="store_true")
     parser.add_argument("--create-review-branch", default="")
     parser.add_argument("--allow-dirty-branch", action="store_true")
-    parser.add_argument("--allowed-branch-prefix", action="append", default=["CARMINEai/", "codex/"])
+    parser.add_argument(
+        "--allowed-branch-prefix", action="append", default=["CARMINEai/", "codex/"]
+    )
     parser.add_argument("--require-all-validators", action="store_true")
     return parser.parse_args()
 
@@ -401,13 +477,21 @@ def main() -> int:
     status_before = git_status_short(repo_root)
     unsafe_status_before = unsafe_git_status_short(repo_root)
     if args.apply and unsafe_status_before and not args.allow_dirty:
-        errors.append("refusing --apply with source/doc dirty working tree; use --allow-dirty only for reviewed incremental fixes")
-    if args.apply and not any(branch.startswith(prefix) for prefix in args.allowed_branch_prefix):
-        errors.append(f"refusing --apply on branch {branch!r}; expected allowed branch prefix")
+        errors.append(
+            "refusing --apply with source/doc dirty working tree; use --allow-dirty only for reviewed incremental fixes"
+        )
+    if args.apply and not any(
+        branch.startswith(prefix) for prefix in args.allowed_branch_prefix
+    ):
+        errors.append(
+            f"refusing --apply on branch {branch!r}; expected allowed branch prefix"
+        )
 
     manifest_path = args.manifest.strip()
     discovered_manifest = ""
-    manifest_stamp = infer_manifest_stamp(args.manifest_stamp, args.output, args.create_review_branch)
+    manifest_stamp = infer_manifest_stamp(
+        args.manifest_stamp, args.output, args.create_review_branch
+    )
     if not manifest_path and not args.patch_spec:
         discovered_manifest = discover_latest_manifest(
             repo_root,
@@ -427,11 +511,13 @@ def main() -> int:
     if manifest_path:
         manifest_full = (repo_root / manifest_path).resolve()
         manifest_data, manifest_error = read_json_object(manifest_full)
-        manifest_info.update({
-            "exists": manifest_full.exists(),
-            "json_ok": manifest_error is None,
-            "error": manifest_error,
-        })
+        manifest_info.update(
+            {
+                "exists": manifest_full.exists(),
+                "json_ok": manifest_error is None,
+                "error": manifest_error,
+            }
+        )
         if manifest_error or not manifest_data:
             errors.append(f"{manifest_path}: {manifest_error}")
         else:
@@ -448,13 +534,15 @@ def main() -> int:
         for raw_path in spec_paths:
             spec_full = (repo_root / raw_path).resolve()
             data, error = read_json_object(spec_full)
-            loaded_specs.append({
-                "path": normalize_repo_path(raw_path),
-                "exists": spec_full.exists(),
-                "json_ok": error is None,
-                "kind": data.get("kind") if data else None,
-                "error": error,
-            })
+            loaded_specs.append(
+                {
+                    "path": normalize_repo_path(raw_path),
+                    "exists": spec_full.exists(),
+                    "json_ok": error is None,
+                    "kind": data.get("kind") if data else None,
+                    "error": error,
+                }
+            )
             if error or not data:
                 errors.append(f"{raw_path}: {error}")
                 continue
@@ -464,8 +552,14 @@ def main() -> int:
 
     operations = operations[: max(0, int(args.max_applied_patches))]
     if args.apply and not errors and not operations:
-        reasons = sorted({str(item.get("reason") or "unknown") for item in manual_review_items})
-        reason_text = "; ".join(reasons) if reasons else "no generated patch specs contained allowlisted concrete deterministic operations"
+        reasons = sorted(
+            {str(item.get("reason") or "unknown") for item in manual_review_items}
+        )
+        reason_text = (
+            "; ".join(reasons)
+            if reasons
+            else "no generated patch specs contained allowlisted concrete deterministic operations"
+        )
         errors.append(
             "generated patch specs did not produce a concrete review product: "
             f"{reason_text}"

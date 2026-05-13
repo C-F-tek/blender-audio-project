@@ -22,14 +22,21 @@ def build_telemetry_quality(loaded: dict[str, dict[str, Any]]) -> dict[str, Any]
     runtime_usage = safe_dict(loaded.get("runtime_usage"))
     capability = safe_dict(loaded.get("runtime_capability"))
     run_summary = safe_dict(loaded.get("full_toolbox_telemetry"))
-    provider_evidence = safe_dict(run_summary.get("provider_evidence") or runtime_usage.get("provider_evidence"))
-    npu_final_review = safe_dict(provider_evidence.get("npu_final_review") or safe_dict(safe_dict(run_summary.get("gpu_npu")).get("npu_final_review")))
+    provider_evidence = safe_dict(
+        run_summary.get("provider_evidence") or runtime_usage.get("provider_evidence")
+    )
+    npu_final_review = safe_dict(
+        provider_evidence.get("npu_final_review")
+        or safe_dict(safe_dict(run_summary.get("gpu_npu")).get("npu_final_review"))
+    )
     usage_summary = safe_dict(runtime_usage.get("summary"))
     tool_calls = safe_list(runtime_usage.get("tool_calls"))
     required = {
         "runtime_usage_seen": bool(runtime_usage),
         "runtime_capability_seen": bool(capability),
-        "tool_call_entries_seen": bool(tool_calls or usage_summary.get("tool_call_entry_count")),
+        "tool_call_entries_seen": bool(
+            tool_calls or usage_summary.get("tool_call_entry_count")
+        ),
         "provider_execution_observed": bool(
             provider_evidence.get("provider_execution_performed")
             or runtime_usage.get("provider_execution_performed")
@@ -41,7 +48,9 @@ def build_telemetry_quality(loaded: dict[str, dict[str, Any]]) -> dict[str, Any]
         ),
         "gpu0_companion_observed": bool(
             provider_evidence.get("gpu0_peer_support_provider_execution_performed")
-            or _bool_at(run_summary, "guardrails", "gpu0_peer_provider_execution_performed")
+            or _bool_at(
+                run_summary, "guardrails", "gpu0_peer_provider_execution_performed"
+            )
         ),
         "npu_micro_or_tool_observed": bool(
             provider_evidence.get("npu_provider_execution_performed")
@@ -60,7 +69,8 @@ def build_telemetry_quality(loaded: dict[str, dict[str, Any]]) -> dict[str, Any]
         "score": score,
         "required_signals": required,
         "missing_signals": missing,
-        "tool_call_entry_count": usage_summary.get("tool_call_entry_count") or len(tool_calls),
+        "tool_call_entry_count": usage_summary.get("tool_call_entry_count")
+        or len(tool_calls),
         "executed_count": usage_summary.get("executed_count"),
         "failed_count": usage_summary.get("failed_count"),
         "blocked_count": usage_summary.get("blocked_count"),
@@ -69,7 +79,9 @@ def build_telemetry_quality(loaded: dict[str, dict[str, Any]]) -> dict[str, Any]
     }
 
 
-def build_evidence_coverage(loaded: dict[str, dict[str, Any]], input_status: dict[str, str]) -> dict[str, Any]:
+def build_evidence_coverage(
+    loaded: dict[str, dict[str, Any]], input_status: dict[str, str]
+) -> dict[str, Any]:
     expected = [
         "patch_quality",
         "decision_loop",
@@ -91,7 +103,9 @@ def build_evidence_coverage(loaded: dict[str, dict[str, Any]], input_status: dic
     }
 
 
-def build_success_cases(report: dict[str, Any], loaded: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+def build_success_cases(
+    report: dict[str, Any], loaded: dict[str, dict[str, Any]]
+) -> list[dict[str, Any]]:
     telemetry = safe_dict(report.get("telemetry_quality"))
     coverage = safe_dict(report.get("evidence_coverage"))
     patch_summary = safe_dict(report.get("patch_plan_summary"))
@@ -125,21 +139,37 @@ def build_success_cases(report: dict[str, Any], loaded: dict[str, dict[str, Any]
             "case": "npu_final_review",
             "classification": npu_final_review.get("classification"),
             "npu_support_seen": npu_final_review.get("npu_support_seen"),
-            "final_review_on_performant_lane": npu_final_review.get("final_review_on_performant_lane"),
+            "final_review_on_performant_lane": npu_final_review.get(
+                "final_review_on_performant_lane"
+            ),
             "reviewers": safe_list(npu_final_review.get("reviewers")),
-            "deterministic_validator_acceptance_required": npu_final_review.get("deterministic_validator_acceptance_required"),
+            "deterministic_validator_acceptance_required": npu_final_review.get(
+                "deterministic_validator_acceptance_required"
+            ),
         },
     ]
 
 
-def build_fallback_cases(report: dict[str, Any], loaded: dict[str, dict[str, Any]], min_quality_score: float) -> list[dict[str, Any]]:
+def build_fallback_cases(
+    report: dict[str, Any], loaded: dict[str, dict[str, Any]], min_quality_score: float
+) -> list[dict[str, Any]]:
     cases: list[dict[str, Any]] = []
     runtime_usage = safe_dict(loaded.get("runtime_usage"))
-    provider = safe_dict(safe_dict(report.get("telemetry_quality")).get("provider_evidence"))
-    npu_final_review = safe_dict(safe_dict(report.get("telemetry_quality")).get("npu_final_review"))
-    evidence_paths = safe_dict(report.get("inputs")).get("paths") if isinstance(report.get("inputs"), dict) else {}
+    provider = safe_dict(
+        safe_dict(report.get("telemetry_quality")).get("provider_evidence")
+    )
+    npu_final_review = safe_dict(
+        safe_dict(report.get("telemetry_quality")).get("npu_final_review")
+    )
+    evidence_paths = (
+        safe_dict(report.get("inputs")).get("paths")
+        if isinstance(report.get("inputs"), dict)
+        else {}
+    )
 
-    if report.get("quality_score", 0) < min_quality_score or not report.get("quality_gate_passed"):
+    if report.get("quality_score", 0) < min_quality_score or not report.get(
+        "quality_gate_passed"
+    ):
         cases.append(
             {
                 "fallback_type": "patch_notes_quality_gate_fallback",
@@ -155,7 +185,9 @@ def build_fallback_cases(report: dict[str, Any], loaded: dict[str, dict[str, Any
         )
 
     npu_semantic = provider.get("npu_provider_execution_performed")
-    npu_tool = provider.get("npu_micro_support_performed") or provider.get("npu_micro_tool_lane_performed")
+    npu_tool = provider.get("npu_micro_support_performed") or provider.get(
+        "npu_micro_tool_lane_performed"
+    )
     if npu_semantic is False and npu_tool:
         cases.append(
             {
@@ -169,7 +201,9 @@ def build_fallback_cases(report: dict[str, Any], loaded: dict[str, dict[str, Any
                 "product_blocker": False,
                 "evidence_paths": {
                     "runtime_usage": safe_dict(evidence_paths).get("runtime_usage"),
-                    "full_toolbox_telemetry": safe_dict(evidence_paths).get("full_toolbox_telemetry"),
+                    "full_toolbox_telemetry": safe_dict(evidence_paths).get(
+                        "full_toolbox_telemetry"
+                    ),
                 },
             }
         )
@@ -183,10 +217,14 @@ def build_fallback_cases(report: dict[str, Any], loaded: dict[str, dict[str, Any
                 "fallback_lane": "deterministic_validator_acceptance",
                 "provider_requested": True,
                 "provider_performed": provider.get("npu_provider_execution_performed"),
-                "recovered": bool(npu_final_review.get("deterministic_validator_acceptance_required")),
+                "recovered": bool(
+                    npu_final_review.get("deterministic_validator_acceptance_required")
+                ),
                 "product_blocker": bool(npu_final_review.get("product_blocker")),
                 "evidence_paths": {
-                    "full_toolbox_telemetry": safe_dict(evidence_paths).get("full_toolbox_telemetry"),
+                    "full_toolbox_telemetry": safe_dict(evidence_paths).get(
+                        "full_toolbox_telemetry"
+                    ),
                 },
             }
         )
@@ -201,10 +239,14 @@ def build_fallback_cases(report: dict[str, Any], loaded: dict[str, dict[str, Any
                     "primary_lane": "gpu0_openvino_semantic_companion",
                     "fallback_lane": "gpu0_numeric_static_tool_peer",
                     "provider_requested": True,
-                    "provider_performed": provider.get("gpu0_peer_support_provider_execution_performed"),
+                    "provider_performed": provider.get(
+                        "gpu0_peer_support_provider_execution_performed"
+                    ),
                     "recovered": True,
                     "product_blocker": False,
-                    "evidence_paths": {"runtime_usage": safe_dict(evidence_paths).get("runtime_usage")},
+                    "evidence_paths": {
+                        "runtime_usage": safe_dict(evidence_paths).get("runtime_usage")
+                    },
                 }
             )
     return cases

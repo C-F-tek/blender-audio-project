@@ -3,15 +3,18 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 import subprocess
-import textwrap
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.npu.npu_runtime import DEFAULT_NPU_PYTHON, guardrail_runtime_summary, npu_preflight
+    from Tools.npu.npu_runtime import (
+        DEFAULT_NPU_PYTHON,
+        guardrail_runtime_summary,
+        npu_preflight,
+    )
 except ImportError:  # pragma: no cover
     DEFAULT_NPU_PYTHON = None  # type: ignore
     guardrail_runtime_summary = None  # type: ignore
@@ -29,7 +32,6 @@ def resolve_project_python(repo_root: Path, explicit_python: str = "") -> Path:
     return repo_root / ".venv" / "bin" / "python"
 
 
-
 def classify_request(text: str) -> str:
     normalized = " ".join(str(text or "").strip().lower().split())
     if not normalized:
@@ -37,14 +39,22 @@ def classify_request(text: str) -> str:
     greetings = {"ciao", "salve", "buongiorno", "buonasera", "hello", "hi", "hey"}
     if normalized in greetings:
         return "casual_greeting"
-    if any(token in normalized for token in ("errore", "traceback", "bug", "crash", "fallisce", "non funziona")):
+    if any(
+        token in normalized
+        for token in ("errore", "traceback", "bug", "crash", "fallisce", "non funziona")
+    ):
         return "debug_request"
-    if any(token in normalized for token in ("patch", "modifica", "codice", "script", "repo")):
+    if any(
+        token in normalized
+        for token in ("patch", "modifica", "codice", "script", "repo")
+    ):
         return "repo_work_request"
     return "general_request"
 
 
-def run_npu_micro_task(timeout_seconds: int, repo_root: Path | None = None, python_exe: str = "") -> dict[str, Any]:
+def run_npu_micro_task(
+    timeout_seconds: int, repo_root: Path | None = None, python_exe: str = ""
+) -> dict[str, Any]:
     if npu_preflight is None:
         return {
             "ready": False,
@@ -57,7 +67,9 @@ def run_npu_micro_task(timeout_seconds: int, repo_root: Path | None = None, pyth
             "warnings": [],
             "micro_task_performed": False,
         }
-    project_python = resolve_project_python(Path(repo_root or Path.cwd()).resolve(), python_exe)
+    project_python = resolve_project_python(
+        Path(repo_root or Path.cwd()).resolve(), python_exe
+    )
     report = npu_preflight(python_exe=project_python, timeout=float(timeout_seconds))
     summary = guardrail_runtime_summary(report) if guardrail_runtime_summary else {}
     return {
@@ -68,11 +80,14 @@ def run_npu_micro_task(timeout_seconds: int, repo_root: Path | None = None, pyth
         "openvino_genai_import": report.get("openvino_genai_import"),
         "openvino_available_devices": report.get("openvino_available_devices") or [],
         "npu_device_available": bool(report.get("npu_device_available")),
-        "micro_task_performed": bool(report.get("python_starts") or report.get("openvino_import") or report.get("openvino_available_devices")),
+        "micro_task_performed": bool(
+            report.get("python_starts")
+            or report.get("openvino_import")
+            or report.get("openvino_available_devices")
+        ),
         "errors": report.get("errors") or [],
         "warnings": report.get("warnings") or [],
     }
-
 
 
 def run_npu_device_workload(
@@ -94,7 +109,9 @@ def run_npu_device_workload(
             "warnings": [],
         }
 
-    runner = Path(python_exe).resolve() if python_exe else Path(sys.executable).resolve()
+    runner = (
+        Path(python_exe).resolve() if python_exe else Path(sys.executable).resolve()
+    )
     if not runner.is_file():
         return {
             "requested": True,
@@ -161,8 +178,12 @@ def run_npu_device_workload(
             "python_exe": str(runner),
             "errors": [f"NPU workload timed out after {timeout_seconds}s"],
             "warnings": [],
-            "stdout_tail": (exc.stdout or "")[-1000:] if isinstance(exc.stdout, str) else "",
-            "stderr_tail": (exc.stderr or "")[-1000:] if isinstance(exc.stderr, str) else "",
+            "stdout_tail": (
+                (exc.stdout or "")[-1000:] if isinstance(exc.stdout, str) else ""
+            ),
+            "stderr_tail": (
+                (exc.stderr or "")[-1000:] if isinstance(exc.stderr, str) else ""
+            ),
         }
 
     stdout = completed.stdout or ""
@@ -194,10 +215,15 @@ def run_npu_device_workload(
         parsed["performed"] = False
         parsed["mode"] = parsed.get("mode") or "npu_workload_failed"
         parsed.setdefault("errors", [])
-        parsed["errors"].append((stderr or stdout or f"returncode={completed.returncode}")[-2000:])
+        parsed["errors"].append(
+            (stderr or stdout or f"returncode={completed.returncode}")[-2000:]
+        )
     return parsed
 
-def build_npu_role_response(request_input: str, micro: dict[str, Any]) -> dict[str, Any]:
+
+def build_npu_role_response(
+    request_input: str, micro: dict[str, Any]
+) -> dict[str, Any]:
     classification = classify_request(request_input)
     performed = bool(micro.get("micro_task_performed"))
     devices = micro.get("openvino_available_devices") or []
@@ -241,13 +267,25 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--task-file", default="")
-    parser.add_argument("--request", default="", help="Optional heap request observed by NPU micro-task lane.")
+    parser.add_argument(
+        "--request",
+        default="",
+        help="Optional heap request observed by NPU micro-task lane.",
+    )
     parser.add_argument("--output", required=True)
     parser.add_argument("--markdown-output", required=True)
     parser.add_argument("--timeout-seconds", type=int, default=60)
-    parser.add_argument("--python-exe", default="", help="Project Python executable for NPU/OpenVINO checks. Defaults to repo .venv.")
+    parser.add_argument(
+        "--python-exe",
+        default="",
+        help="Project Python executable for NPU/OpenVINO checks. Defaults to repo .venv.",
+    )
     parser.add_argument("--max-context-chars", type=int, default=4000)
-    parser.add_argument("--run-device-workload", action="store_true", help="Run a bounded real OpenVINO workload on device NPU when available.")
+    parser.add_argument(
+        "--run-device-workload",
+        action="store_true",
+        help="Run a bounded real OpenVINO workload on device NPU when available.",
+    )
     parser.add_argument("--device-workload-seconds", type=float, default=0.25)
     parser.add_argument("--device-workload-iterations", type=int, default=8)
     args = parser.parse_args()
@@ -256,9 +294,13 @@ def main() -> int:
     task_path = repo_root / args.task_file if args.task_file else None
     task_preview = ""
     if task_path and task_path.is_file():
-        task_preview = task_path.read_text(encoding="utf-8", errors="replace")[: args.max_context_chars]
+        task_preview = task_path.read_text(encoding="utf-8", errors="replace")[
+            : args.max_context_chars
+        ]
     request_input = str(args.request or "").strip()
-    micro_task = run_npu_micro_task(args.timeout_seconds, repo_root=repo_root, python_exe=args.python_exe)
+    micro_task = run_npu_micro_task(
+        args.timeout_seconds, repo_root=repo_root, python_exe=args.python_exe
+    )
     device_workload = run_npu_device_workload(
         enabled=bool(args.run_device_workload),
         timeout_seconds=args.timeout_seconds,
@@ -297,7 +339,8 @@ def main() -> int:
         "npu_device_workload_performed": bool(device_workload.get("performed")),
         "npu_peer_activity_requested": True,
         "npu_peer_activity_performed": bool(micro_task.get("micro_task_performed")),
-        "npu_device_execution_performed": bool(device_workload.get("performed")) or bool(micro_task.get("npu_device_available")),
+        "npu_device_execution_performed": bool(device_workload.get("performed"))
+        or bool(micro_task.get("npu_device_available")),
         "npu_provider_execution_performed": bool(device_workload.get("performed")),
         "npu_activity_classification": role_response["role_decision"],
         "npu_activity_limit": "NPU lane executes a bounded OpenVINO/NPU preflight micro-task; model generation remains disabled unless explicitly introduced by a future provider contract.",
@@ -349,7 +392,12 @@ def main() -> int:
         report["recommendations"][0]["summary"],
     ]
     markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(json.dumps({"passed": True, "output": str(output), "markdown_output": str(markdown)}, indent=2))
+    print(
+        json.dumps(
+            {"passed": True, "output": str(output), "markdown_output": str(markdown)},
+            indent=2,
+        )
+    )
     return 0
 
 

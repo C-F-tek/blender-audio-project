@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Build a generic agent state packet from source files and memory JSONL."""
+
 from __future__ import annotations
 
 import argparse
@@ -11,8 +12,8 @@ from agent_state import (
     DEFAULT_MAX_RECORD_CHARS,
     MemoryRecord,
     build_agent_state_packet,
-    load_memory_jsonl,
     load_memory_db,
+    load_memory_jsonl,
     records_from_files,
     slugify,
     upsert_memory_db,
@@ -59,8 +60,12 @@ def main() -> int:
     parser.add_argument("--save-inputs-to-memory-db", action="store_true")
     parser.add_argument("--output-dir", default="output/ai_pipeline/agent_state")
     parser.add_argument("--packet-name")
-    parser.add_argument("--max-memory-chars", type=int, default=DEFAULT_MAX_MEMORY_CHARS)
-    parser.add_argument("--max-record-chars", type=int, default=DEFAULT_MAX_RECORD_CHARS)
+    parser.add_argument(
+        "--max-memory-chars", type=int, default=DEFAULT_MAX_MEMORY_CHARS
+    )
+    parser.add_argument(
+        "--max-record-chars", type=int, default=DEFAULT_MAX_RECORD_CHARS
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -71,7 +76,13 @@ def main() -> int:
 
     records: list[MemoryRecord] = []
     immediate_records: list[MemoryRecord] = []
-    immediate_records.extend(records_from_files(resolve_paths(repo_root, args.include_file), repo_root, args.max_record_chars))
+    immediate_records.extend(
+        records_from_files(
+            resolve_paths(repo_root, args.include_file),
+            repo_root,
+            args.max_record_chars,
+        )
+    )
     for memory_path in resolve_paths(repo_root, args.memory_jsonl):
         records.extend(load_memory_jsonl(memory_path))
     if args.memory_db:
@@ -101,8 +112,13 @@ def main() -> int:
     md_path = output_dir / f"{packet_name}.md"
     manifest_path = output_dir / f"{packet_name}_memory_manifest.json"
 
-    json_path.write_text(json.dumps(packet, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    manifest_path.write_text(json.dumps(packet["memory_manifest"], indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    json_path.write_text(
+        json.dumps(packet, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    manifest_path.write_text(
+        json.dumps(packet["memory_manifest"], indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
     write_agent_state_markdown(packet, md_path)
 
     print(

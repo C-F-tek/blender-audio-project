@@ -12,7 +12,11 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+from tools.validation.report_utils import (
+    resolve_output_path,
+    write_json_report,
+    write_text_report,
+)
 
 
 def now_iso() -> str:
@@ -21,7 +25,11 @@ def now_iso() -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -47,22 +55,37 @@ def compact_list(value: Any, limit: int = 8) -> list[Any]:
     return value[:limit] if isinstance(value, list) else []
 
 
-def npu_support_lane_summary(npu: dict[str, Any], npu_broker: dict[str, Any]) -> dict[str, Any]:
+def npu_support_lane_summary(
+    npu: dict[str, Any], npu_broker: dict[str, Any]
+) -> dict[str, Any]:
     # Summarize NPU as non-blocking tool-support, not heavy authority.
     auditor = npu.get("npu_auditor") if isinstance(npu.get("npu_auditor"), dict) else {}
-    classification = str(auditor.get("classification") or npu.get("classification") or "")
-    tool_request_count = safe_int(npu.get("tool_request_count") or auditor.get("tool_request_count"))
+    classification = str(
+        auditor.get("classification") or npu.get("classification") or ""
+    )
+    tool_request_count = safe_int(
+        npu.get("tool_request_count") or auditor.get("tool_request_count")
+    )
     broker_execution_count = safe_int(npu_broker.get("tool_execution_count"))
     provider_performed = bool(npu.get("provider_execution_performed"))
     provider_requested = bool(npu.get("provider_execution_requested"))
-    fallback_used = bool(npu.get("npu_deterministic_tool_fallback_used") or auditor.get("npu_deterministic_tool_fallback_used"))
+    fallback_used = bool(
+        npu.get("npu_deterministic_tool_fallback_used")
+        or auditor.get("npu_deterministic_tool_fallback_used")
+    )
     slow_or_degraded = bool(
         provider_requested
         and not provider_performed
         and (
             npu.get("provider_empty_response")
             or npu.get("dependency_missing")
-            or classification in {"provider_empty_response", "unusable_output", "dependency_missing_openvino_genai", "npu_python_missing"}
+            or classification
+            in {
+                "provider_empty_response",
+                "unusable_output",
+                "dependency_missing_openvino_genai",
+                "npu_python_missing",
+            }
         )
     )
     return {
@@ -70,7 +93,9 @@ def npu_support_lane_summary(npu: dict[str, Any], npu_broker: dict[str, Any]) ->
         "non_blocking": True,
         "blocking": False,
         "heavy_audit_authority": False,
-        "tool_supply_support": bool(tool_request_count or broker_execution_count or fallback_used),
+        "tool_supply_support": bool(
+            tool_request_count or broker_execution_count or fallback_used
+        ),
         "tool_request_count": tool_request_count,
         "broker_tool_execution_count": broker_execution_count,
         "provider_execution_requested": provider_requested,
@@ -102,7 +127,12 @@ def build_peer_mesh_visibility(
     return {
         "schema_version": 1,
         "kind": "ai_peer_mesh_visibility",
-        "all_lanes_visible": bool(primary and gpu0_seen and gpu0_broker_seen and (not npu_seen or npu_broker_seen)),
+        "all_lanes_visible": bool(
+            primary
+            and gpu0_seen
+            and gpu0_broker_seen
+            and (not npu_seen or npu_broker_seen)
+        ),
         "gpu1_sees_gpu0_response": gpu0_seen,
         "gpu1_sees_gpu0_broker_results": gpu0_broker_execution_count > 0,
         "gpu1_sees_npu_support_signal": npu_seen,
@@ -110,12 +140,18 @@ def build_peer_mesh_visibility(
         "gpu0_sees_gpu1_primary_advisory": bool(primary),
         "gpu0_sees_deterministic_reports": bool(sources),
         "gpu0_produces_tool_requests_for_gpu1": gpu0_tool_request_count > 0,
-        "gpu0_tool_requests_broker_consumed": bool(gpu0_tool_request_count and gpu0_broker_execution_count > 0),
+        "gpu0_tool_requests_broker_consumed": bool(
+            gpu0_tool_request_count and gpu0_broker_execution_count > 0
+        ),
         "npu_sees_gpu1_gpu0_broker_context": npu_seen,
         "npu_support_tool_requests_available": npu_tool_request_count > 0,
-        "npu_tool_requests_broker_consumed": bool(npu_tool_request_count and npu_broker_execution_count > 0),
+        "npu_tool_requests_broker_consumed": bool(
+            npu_tool_request_count and npu_broker_execution_count > 0
+        ),
         "deterministic_scripts_visible_to_gpu0": bool(sources),
-        "runtime_tool_broker_visible_to_all_lanes": bool(gpu0_broker_seen or npu_broker_seen),
+        "runtime_tool_broker_visible_to_all_lanes": bool(
+            gpu0_broker_seen or npu_broker_seen
+        ),
         "npu_non_blocking_support_lane": True,
     }
 
@@ -154,11 +190,16 @@ def build_peer_mesh_lane_state(
     if response:
         if response.get("provider_execution_performed") is True:
             add_unique(operational_lanes, "gpu0_openvino_peer_companion")
-        if response.get("openvino_gpu0_workload_passed") is True or response.get("provider_execution_performed") is True:
+        if (
+            response.get("openvino_gpu0_workload_passed") is True
+            or response.get("provider_execution_performed") is True
+        ):
             add_unique(support_lanes, "gpu0_openvino_numeric_tool_peer")
         if gpu0_tool_count or gpu0_broker_exec:
             add_unique(support_lanes, "gpu0_brokered_tool_supply")
-        if "gpu0_peer_semantic_model_unconfigured" in response.get("classifications", []):
+        if "gpu0_peer_semantic_model_unconfigured" in response.get(
+            "classifications", []
+        ):
             add_unique(degraded_lanes, "gpu0_semantic_companion_model_unconfigured")
     else:
         add_unique(product_blockers, "gpu0_peer_response_missing")
@@ -213,15 +254,60 @@ def build_provider_broker_loop(
     npu_requests = safe_int(npu.get("tool_request_count"))
     product_blockers = compact_list(peer_mesh_lane_state.get("product_blockers"), 20)
     loop_steps = [
-        {"id": "deterministic_baseline", "from": "input_md_and_static_scripts", "to": "gpu1_primary_advisory", "performed": bool(sources)},
-        {"id": "gpu1_primary_advisory", "from": "GPU1/Ollama/RTX5080", "to": "GPU0/OpenVINO peer task packet", "performed": bool(primary.get("passed"))},
-        {"id": "gpu0_peer_response", "from": "GPU0/OpenVINO", "to": "runtime broker", "performed": bool(response.get("provider_execution_performed") and (gpu0_requests or gpu0_exec))},
-        {"id": "gpu0_broker_execution", "from": "runtime broker", "to": "GPU1/GPU0 read-only context", "performed": gpu0_exec > 0},
-        {"id": "npu_nonblocking_support", "from": "NPU/OpenVINO micro support lane", "to": "runtime broker", "performed": bool(npu and (npu_requests or npu_exec)), "blocking": False},
-        {"id": "npu_broker_execution", "from": "runtime broker", "to": "final peer exchange context", "performed": npu_exec > 0, "blocking": False},
-        {"id": "contract_telemetry_bundle", "from": "deterministic validators", "to": "patch bundle/evidence handoff", "performed": True},
+        {
+            "id": "deterministic_baseline",
+            "from": "input_md_and_static_scripts",
+            "to": "gpu1_primary_advisory",
+            "performed": bool(sources),
+        },
+        {
+            "id": "gpu1_primary_advisory",
+            "from": "GPU1/Ollama/RTX5080",
+            "to": "GPU0/OpenVINO peer task packet",
+            "performed": bool(primary.get("passed")),
+        },
+        {
+            "id": "gpu0_peer_response",
+            "from": "GPU0/OpenVINO",
+            "to": "runtime broker",
+            "performed": bool(
+                response.get("provider_execution_performed")
+                and (gpu0_requests or gpu0_exec)
+            ),
+        },
+        {
+            "id": "gpu0_broker_execution",
+            "from": "runtime broker",
+            "to": "GPU1/GPU0 read-only context",
+            "performed": gpu0_exec > 0,
+        },
+        {
+            "id": "npu_nonblocking_support",
+            "from": "NPU/OpenVINO micro support lane",
+            "to": "runtime broker",
+            "performed": bool(npu and (npu_requests or npu_exec)),
+            "blocking": False,
+        },
+        {
+            "id": "npu_broker_execution",
+            "from": "runtime broker",
+            "to": "final peer exchange context",
+            "performed": npu_exec > 0,
+            "blocking": False,
+        },
+        {
+            "id": "contract_telemetry_bundle",
+            "from": "deterministic validators",
+            "to": "patch bundle/evidence handoff",
+            "performed": True,
+        },
     ]
-    active = bool(primary.get("passed") and response and gpu0_exec > 0 and peer_mesh_lane_state.get("all_required_product_lanes_present") is True)
+    active = bool(
+        primary.get("passed")
+        and response
+        and gpu0_exec > 0
+        and peer_mesh_lane_state.get("all_required_product_lanes_present") is True
+    )
     return {
         "schema_version": 1,
         "kind": "provider_broker_loop",
@@ -246,13 +332,21 @@ def build_provider_broker_loop(
         "loop_steps": loop_steps,
     }
 
-def primary_advisory(repo_root: Path, stamp: str, gpu_report_path: Path, gpu_markdown_path: Path) -> dict[str, Any]:
+
+def primary_advisory(
+    repo_root: Path, stamp: str, gpu_report_path: Path, gpu_markdown_path: Path
+) -> dict[str, Any]:
     gpu_report = read_json(gpu_report_path)
     round_count = safe_int(gpu_report.get("round_count"))
     provider_performed = bool(gpu_report.get("provider_execution_performed"))
     empty = bool(gpu_report.get("provider_empty_response"))
     classification = str(gpu_report.get("classification") or "")
-    proven = bool(provider_performed and round_count > 0 and not empty and classification != "required_provider_artifact_missing")
+    proven = bool(
+        provider_performed
+        and round_count > 0
+        and not empty
+        and classification != "required_provider_artifact_missing"
+    )
     classifications: list[str] = []
     if not proven:
         classifications.append("gpu1_primary_advisory_not_proven")
@@ -270,19 +364,35 @@ def primary_advisory(repo_root: Path, stamp: str, gpu_report_path: Path, gpu_mar
         "passed": proven,
         "provider_execution_performed": provider_performed,
         "gpu_report": repo_rel(repo_root, gpu_report_path),
-        "gpu_markdown": repo_rel(repo_root, gpu_markdown_path) if gpu_markdown_path.exists() else "",
+        "gpu_markdown": (
+            repo_rel(repo_root, gpu_markdown_path) if gpu_markdown_path.exists() else ""
+        ),
         "gpu_report_exists": gpu_report_path.exists(),
         "round_count": round_count,
         "recommendation_count": safe_int(gpu_report.get("recommendation_count")),
-        "runtime_tool_request_count": safe_int(gpu_report.get("runtime_tool_request_count")),
-        "runtime_tool_execution_count": safe_int(gpu_report.get("runtime_tool_execution_count")),
+        "runtime_tool_request_count": safe_int(
+            gpu_report.get("runtime_tool_request_count")
+        ),
+        "runtime_tool_execution_count": safe_int(
+            gpu_report.get("runtime_tool_execution_count")
+        ),
         "provider_empty_response": empty,
         "classification": classification,
         "classifications": classifications,
-        "errors": [] if proven else ["GPU1/Ollama primary advisory execution was not proven by the GPU report."],
+        "errors": (
+            []
+            if proven
+            else [
+                "GPU1/Ollama primary advisory execution was not proven by the GPU report."
+            ]
+        ),
         "warnings": [],
         "recommendations_preview": compact_list(gpu_report.get("recommendations")),
-        "decision": gpu_report.get("decision") if isinstance(gpu_report.get("decision"), dict) else {},
+        "decision": (
+            gpu_report.get("decision")
+            if isinstance(gpu_report.get("decision"), dict)
+            else {}
+        ),
         "guardrails": {
             "report_only": True,
             "gpu1_reserved_for_primary_ollama": True,
@@ -304,7 +414,11 @@ def source_summaries(repo_root: Path, paths: list[str]) -> list[dict[str, Any]]:
                 "exists": path.exists(),
                 "kind": data.get("kind"),
                 "passed": data.get("passed"),
-                "classifications": data.get("classifications", []) if isinstance(data.get("classifications"), list) else [],
+                "classifications": (
+                    data.get("classifications", [])
+                    if isinstance(data.get("classifications"), list)
+                    else []
+                ),
                 "errors": compact_list(data.get("errors"), 5),
                 "warnings": compact_list(data.get("warnings"), 5),
             }
@@ -312,7 +426,9 @@ def source_summaries(repo_root: Path, paths: list[str]) -> list[dict[str, Any]]:
     return summaries
 
 
-def build_tasks(primary: dict[str, Any], sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def build_tasks(
+    primary: dict[str, Any], sources: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     failed_sources = [item for item in sources if item.get("passed") is False]
     tasks = [
         {
@@ -355,7 +471,9 @@ def build_tasks(primary: dict[str, Any], sources: list[dict[str, Any]]) -> list[
     return tasks
 
 
-def tool_request_templates(source_paths: list[str], audit_source_paths: list[str]) -> list[dict[str, Any]]:
+def tool_request_templates(
+    source_paths: list[str], audit_source_paths: list[str]
+) -> list[dict[str, Any]]:
     joined_reports = ",".join(source_paths[:8])
     audit_reports = ",".join(audit_source_paths[:8])
     return [
@@ -363,7 +481,7 @@ def tool_request_templates(source_paths: list[str], audit_source_paths: list[str
             "id": "gpu0_peer_code_interpreter_context",
             "tool": "build_code_interpreter_report",
             "reason": "GPU0 peer worker needs current code-structure context through the broker allowlist.",
-            "args": {"input": "Tools/ai,Tools/validation,Tools/workflow,Tools/npu"},
+            "args": {"input": "tools/ai,tools/validation,tools/workflow,tools/npu"},
             "source": "gpu0_peer_companion",
         },
         {
@@ -377,7 +495,14 @@ def tool_request_templates(source_paths: list[str], audit_source_paths: list[str
             "id": "gpu0_peer_refactor_duplication_context",
             "tool": "build_refactor_duplication_audit",
             "reason": "GPU0 peer worker needs deterministic reuse/refactor overlap evidence.",
-            "args": {"root": "Tools/ai,Tools/validation,Tools/workflow,Tools/npu", "report": audit_reports} if audit_reports else {"root": "Tools/ai,Tools/validation,Tools/workflow,Tools/npu"},
+            "args": (
+                {
+                    "root": "tools/ai,tools/validation,tools/workflow,tools/npu",
+                    "report": audit_reports,
+                }
+                if audit_reports
+                else {"root": "tools/ai,tools/validation,tools/workflow,tools/npu"}
+            ),
             "source": "gpu0_peer_companion",
         },
     ]
@@ -385,18 +510,51 @@ def tool_request_templates(source_paths: list[str], audit_source_paths: list[str
 
 def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
-    primary_path = resolve_output_path(repo_root, args.primary_output.format(stamp=args.stamp))
-    task_path = resolve_output_path(repo_root, args.task_output.format(stamp=args.stamp))
-    response_path = resolve_output_path(repo_root, args.response_report.format(stamp=args.stamp)) if args.response_report else None
-    broker_path = resolve_output_path(repo_root, args.broker_report.format(stamp=args.stamp)) if args.broker_report else None
-    npu_path = resolve_output_path(repo_root, args.npu_report.format(stamp=args.stamp)) if args.npu_report else None
-    npu_broker_path = resolve_output_path(repo_root, args.npu_broker_report.format(stamp=args.stamp)) if args.npu_broker_report else None
-    contract_path = resolve_output_path(repo_root, args.contract_report.format(stamp=args.stamp)) if args.contract_report else None
-    primary = primary_advisory(repo_root, args.stamp, resolve_output_path(repo_root, args.gpu_report), resolve_output_path(repo_root, args.gpu_markdown or ""))
+    primary_path = resolve_output_path(
+        repo_root, args.primary_output.format(stamp=args.stamp)
+    )
+    task_path = resolve_output_path(
+        repo_root, args.task_output.format(stamp=args.stamp)
+    )
+    response_path = (
+        resolve_output_path(repo_root, args.response_report.format(stamp=args.stamp))
+        if args.response_report
+        else None
+    )
+    broker_path = (
+        resolve_output_path(repo_root, args.broker_report.format(stamp=args.stamp))
+        if args.broker_report
+        else None
+    )
+    npu_path = (
+        resolve_output_path(repo_root, args.npu_report.format(stamp=args.stamp))
+        if args.npu_report
+        else None
+    )
+    npu_broker_path = (
+        resolve_output_path(repo_root, args.npu_broker_report.format(stamp=args.stamp))
+        if args.npu_broker_report
+        else None
+    )
+    contract_path = (
+        resolve_output_path(repo_root, args.contract_report.format(stamp=args.stamp))
+        if args.contract_report
+        else None
+    )
+    primary = primary_advisory(
+        repo_root,
+        args.stamp,
+        resolve_output_path(repo_root, args.gpu_report),
+        resolve_output_path(repo_root, args.gpu_markdown or ""),
+    )
     sources = source_summaries(repo_root, args.source_report)
     tasks = build_tasks(primary, sources)
     existing_source_paths = [item["path"] for item in sources if item.get("exists")]
-    passed_source_paths = [item["path"] for item in sources if item.get("exists") and item.get("passed") is not False]
+    passed_source_paths = [
+        item["path"]
+        for item in sources
+        if item.get("exists") and item.get("passed") is not False
+    ]
     templates = tool_request_templates(existing_source_paths, passed_source_paths)
     task_packet = {
         "schema_version": 1,
@@ -439,7 +597,11 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
     classifications = list(primary.get("classifications") or [])
     warnings: list[str] = []
     if response_path and response_path.exists():
-        classifications.extend(str(item) for item in response.get("classifications", []) if item not in classifications)
+        classifications.extend(
+            str(item)
+            for item in response.get("classifications", [])
+            if item not in classifications
+        )
     else:
         classifications.append("gpu1_gpu0_roundtrip_missing")
     tool_count = safe_int(response.get("tool_request_count"))
@@ -465,7 +627,9 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         },
         "gpu0": {
             "role": "gpu0_companion_tool_request_producer",
-            "provider_execution_performed": bool(response.get("provider_execution_performed")),
+            "provider_execution_performed": bool(
+                response.get("provider_execution_performed")
+            ),
             "produces_tool_requests": tool_count > 0,
             "broker_tool_executions": broker_exec,
         },
@@ -473,8 +637,12 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
             "role": "npu_support_tool_micro_lane_non_blocking",
             "non_blocking": True,
             "report_seen": bool(npu),
-            "provider_execution_requested": bool(npu.get("provider_execution_requested")),
-            "provider_execution_performed": bool(npu.get("provider_execution_performed")),
+            "provider_execution_requested": bool(
+                npu.get("provider_execution_requested")
+            ),
+            "provider_execution_performed": bool(
+                npu.get("provider_execution_performed")
+            ),
             "tool_request_count": safe_int(npu.get("tool_request_count")),
             "broker_tool_executions": safe_int(npu_broker.get("tool_execution_count")),
         },
@@ -485,11 +653,15 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         "runtime_tool_broker": {
             "role": "controlled_tool_execution_for_gpu1_gpu0_npu_requests",
             "gpu0_tool_execution_count": broker_exec,
-            "npu_tool_execution_count": safe_int(npu_broker.get("tool_execution_count")),
+            "npu_tool_execution_count": safe_int(
+                npu_broker.get("tool_execution_count")
+            ),
         },
     }
     npu_support_lane = npu_support_lane_summary(npu, npu_broker)
-    peer_mesh_visibility = build_peer_mesh_visibility(primary, response, broker, npu, npu_broker, sources)
+    peer_mesh_visibility = build_peer_mesh_visibility(
+        primary, response, broker, npu, npu_broker, sources
+    )
     peer_mesh_lane_state = build_peer_mesh_lane_state(
         primary,
         response,
@@ -519,7 +691,11 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         "kind": "ai_peer_exchange",
         "generated_at": now_iso(),
         "stamp": args.stamp,
-        "passed": bool(primary.get("passed") and response.get("passed") is True and (not tool_count or broker_exec > 0)),
+        "passed": bool(
+            primary.get("passed")
+            and response.get("passed") is True
+            and (not tool_count or broker_exec > 0)
+        ),
         "primary_advisory": primary,
         "task_packet": task_packet,
         "gpu0_response": response,
@@ -532,7 +708,9 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         "peer_mesh_lane_state": peer_mesh_lane_state,
         "provider_broker_loop": provider_broker_loop,
         "provider_broker_loop_active": provider_broker_loop.get("active"),
-        "peer_mesh_operational_lanes": peer_mesh_lane_state.get("operational_lanes", []),
+        "peer_mesh_operational_lanes": peer_mesh_lane_state.get(
+            "operational_lanes", []
+        ),
         "peer_mesh_support_lanes": peer_mesh_lane_state.get("support_lanes", []),
         "peer_mesh_degraded_lanes": peer_mesh_lane_state.get("degraded_lanes", []),
         "peer_mesh_product_blockers": peer_mesh_lane_state.get("product_blockers", []),
@@ -540,16 +718,26 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
         "classifications": list(dict.fromkeys(classifications)),
         "errors": [],
         "warnings": warnings,
-        "provider_execution_performed": bool(primary.get("provider_execution_performed") or response.get("provider_execution_performed") or npu.get("provider_execution_performed")),
+        "provider_execution_performed": bool(
+            primary.get("provider_execution_performed")
+            or response.get("provider_execution_performed")
+            or npu.get("provider_execution_performed")
+        ),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "paths": {
             "primary_advisory": repo_rel(repo_root, primary_path),
             "task_packet": repo_rel(repo_root, task_path),
-            "gpu0_response": repo_rel(repo_root, response_path) if response_path else "",
-            "gpu0_runtime_tool_broker": repo_rel(repo_root, broker_path) if broker_path else "",
+            "gpu0_response": (
+                repo_rel(repo_root, response_path) if response_path else ""
+            ),
+            "gpu0_runtime_tool_broker": (
+                repo_rel(repo_root, broker_path) if broker_path else ""
+            ),
             "npu_micro_response": repo_rel(repo_root, npu_path) if npu_path else "",
-            "npu_runtime_tool_broker": repo_rel(repo_root, npu_broker_path) if npu_broker_path else "",
+            "npu_runtime_tool_broker": (
+                repo_rel(repo_root, npu_broker_path) if npu_broker_path else ""
+            ),
             "contract": repo_rel(repo_root, contract_path) if contract_path else "",
         },
         "guardrails": {
@@ -564,45 +752,49 @@ def build_exchange(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def render_primary(report: dict[str, Any]) -> str:
-    return "\n".join([
-        "# GPU1 Primary Advisory",
-        "",
-        f"- Passed: `{report.get('passed')}`",
-        f"- Provider execution performed: `{report.get('provider_execution_performed')}`",
-        f"- Round count: `{report.get('round_count')}`",
-        f"- Recommendation count: `{report.get('recommendation_count')}`",
-        f"- Classifications: `{report.get('classifications')}`",
-        "",
-    ])
+    return "\n".join(
+        [
+            "# GPU1 Primary Advisory",
+            "",
+            f"- Passed: `{report.get('passed')}`",
+            f"- Provider execution performed: `{report.get('provider_execution_performed')}`",
+            f"- Round count: `{report.get('round_count')}`",
+            f"- Recommendation count: `{report.get('recommendation_count')}`",
+            f"- Classifications: `{report.get('classifications')}`",
+            "",
+        ]
+    )
 
 
 def render_exchange(report: dict[str, Any]) -> str:
-    return "\n".join([
-        "# AI Peer Exchange",
-        "",
-        f"- Passed: `{report.get('passed')}`",
-        f"- Provider execution performed: `{report.get('provider_execution_performed')}`",
-        f"- Classifications: `{report.get('classifications')}`",
-        f"- Task count: `{report.get('task_packet', {}).get('task_count')}`",
-        f"- GPU0 response passed: `{report.get('gpu0_response', {}).get('passed')}`",
-        f"- Broker executions: `{report.get('runtime_tool_broker', {}).get('tool_execution_count')}`",
-        f"- NPU micro lane seen: `{bool(report.get('npu_micro_response'))}`",
-        f"- NPU broker executions: `{report.get('npu_runtime_tool_broker', {}).get('tool_execution_count')}`",
-        f"- Peer mesh all lanes visible: `{report.get('peer_mesh_visibility', {}).get('all_lanes_visible')}`",
-        f"- NPU support tool supply: `{report.get('npu_support_lane', {}).get('tool_supply_support')}`",
-        f"- NPU slow/degraded non-blocking: `{report.get('npu_support_lane', {}).get('provider_slow_or_degraded')}`",
-        f"- Peer mesh operational lanes: `{report.get('peer_mesh_operational_lanes')}`",
-        f"- Peer mesh support lanes: `{report.get('peer_mesh_support_lanes')}`",
-        f"- Peer mesh degraded lanes: `{report.get('peer_mesh_degraded_lanes')}`",
-        f"- Peer mesh product blockers: `{report.get('peer_mesh_product_blockers')}`",
-        f"- Provider-broker loop active: `{report.get('provider_broker_loop', {}).get('active')}`",
-        f"- Provider-broker controlled executor: `{report.get('provider_broker_loop', {}).get('controlled_executor')}`",
-        f"- Provider-broker direct tool execution allowed: `{report.get('provider_broker_loop', {}).get('direct_tool_execution_allowed')}`",
-        f"- Provider-broker topology: `{report.get('provider_broker_loop', {}).get('topology')}`",
-        f"- Provider-broker GPU0 executions: `{report.get('provider_broker_loop', {}).get('gpu0_broker_tool_execution_count')}`",
-        f"- Provider-broker NPU executions: `{report.get('provider_broker_loop', {}).get('npu_broker_tool_execution_count')}`",
-        "",
-    ])
+    return "\n".join(
+        [
+            "# AI Peer Exchange",
+            "",
+            f"- Passed: `{report.get('passed')}`",
+            f"- Provider execution performed: `{report.get('provider_execution_performed')}`",
+            f"- Classifications: `{report.get('classifications')}`",
+            f"- Task count: `{report.get('task_packet', {}).get('task_count')}`",
+            f"- GPU0 response passed: `{report.get('gpu0_response', {}).get('passed')}`",
+            f"- Broker executions: `{report.get('runtime_tool_broker', {}).get('tool_execution_count')}`",
+            f"- NPU micro lane seen: `{bool(report.get('npu_micro_response'))}`",
+            f"- NPU broker executions: `{report.get('npu_runtime_tool_broker', {}).get('tool_execution_count')}`",
+            f"- Peer mesh all lanes visible: `{report.get('peer_mesh_visibility', {}).get('all_lanes_visible')}`",
+            f"- NPU support tool supply: `{report.get('npu_support_lane', {}).get('tool_supply_support')}`",
+            f"- NPU slow/degraded non-blocking: `{report.get('npu_support_lane', {}).get('provider_slow_or_degraded')}`",
+            f"- Peer mesh operational lanes: `{report.get('peer_mesh_operational_lanes')}`",
+            f"- Peer mesh support lanes: `{report.get('peer_mesh_support_lanes')}`",
+            f"- Peer mesh degraded lanes: `{report.get('peer_mesh_degraded_lanes')}`",
+            f"- Peer mesh product blockers: `{report.get('peer_mesh_product_blockers')}`",
+            f"- Provider-broker loop active: `{report.get('provider_broker_loop', {}).get('active')}`",
+            f"- Provider-broker controlled executor: `{report.get('provider_broker_loop', {}).get('controlled_executor')}`",
+            f"- Provider-broker direct tool execution allowed: `{report.get('provider_broker_loop', {}).get('direct_tool_execution_allowed')}`",
+            f"- Provider-broker topology: `{report.get('provider_broker_loop', {}).get('topology')}`",
+            f"- Provider-broker GPU0 executions: `{report.get('provider_broker_loop', {}).get('gpu0_broker_tool_execution_count')}`",
+            f"- Provider-broker NPU executions: `{report.get('provider_broker_loop', {}).get('npu_broker_tool_execution_count')}`",
+            "",
+        ]
+    )
 
 
 def main() -> int:
@@ -617,19 +809,42 @@ def main() -> int:
     parser.add_argument("--npu-report", default="")
     parser.add_argument("--npu-broker-report", default="")
     parser.add_argument("--contract-report", default="")
-    parser.add_argument("--primary-output", default="output/validation/gpu1_primary_advisory_{stamp}.json")
-    parser.add_argument("--primary-markdown-output", default="output/validation/gpu1_primary_advisory_{stamp}.md")
-    parser.add_argument("--task-output", default="output/validation/gpu0_peer_task_packet_{stamp}.json")
-    parser.add_argument("--exchange-output", default="output/validation/ai_peer_exchange_{stamp}.json")
-    parser.add_argument("--exchange-markdown-output", default="output/validation/ai_peer_exchange_{stamp}.md")
+    parser.add_argument(
+        "--primary-output",
+        default="output/validation/gpu1_primary_advisory_{stamp}.json",
+    )
+    parser.add_argument(
+        "--primary-markdown-output",
+        default="output/validation/gpu1_primary_advisory_{stamp}.md",
+    )
+    parser.add_argument(
+        "--task-output", default="output/validation/gpu0_peer_task_packet_{stamp}.json"
+    )
+    parser.add_argument(
+        "--exchange-output", default="output/validation/ai_peer_exchange_{stamp}.json"
+    )
+    parser.add_argument(
+        "--exchange-markdown-output",
+        default="output/validation/ai_peer_exchange_{stamp}.md",
+    )
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
     built = build_exchange(args)
-    primary_path = resolve_output_path(repo_root, args.primary_output.format(stamp=args.stamp))
-    primary_md = resolve_output_path(repo_root, args.primary_markdown_output.format(stamp=args.stamp))
-    task_path = resolve_output_path(repo_root, args.task_output.format(stamp=args.stamp))
-    exchange_path = resolve_output_path(repo_root, args.exchange_output.format(stamp=args.stamp))
-    exchange_md = resolve_output_path(repo_root, args.exchange_markdown_output.format(stamp=args.stamp))
+    primary_path = resolve_output_path(
+        repo_root, args.primary_output.format(stamp=args.stamp)
+    )
+    primary_md = resolve_output_path(
+        repo_root, args.primary_markdown_output.format(stamp=args.stamp)
+    )
+    task_path = resolve_output_path(
+        repo_root, args.task_output.format(stamp=args.stamp)
+    )
+    exchange_path = resolve_output_path(
+        repo_root, args.exchange_output.format(stamp=args.stamp)
+    )
+    exchange_md = resolve_output_path(
+        repo_root, args.exchange_markdown_output.format(stamp=args.stamp)
+    )
     write_json_report(built["primary"], primary_path)
     write_text_report(render_primary(built["primary"]), primary_md)
     write_json_report(built["task_packet"], task_path)

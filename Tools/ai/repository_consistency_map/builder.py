@@ -8,10 +8,13 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.repository_consistency_map.constants import DOC_EXTENSIONS
-from Tools.ai.repository_consistency_map.findings import build_findings, build_provider_hints
-from Tools.ai.repository_consistency_map.markdown import extract_markdown_references
-from Tools.ai.repository_consistency_map.paths import (
+from tools.ai.repository_consistency_map.constants import DOC_EXTENSIONS
+from tools.ai.repository_consistency_map.findings import (
+    build_findings,
+    build_provider_hints,
+)
+from tools.ai.repository_consistency_map.markdown import extract_markdown_references
+from tools.ai.repository_consistency_map.paths import (
     bounded_worker_count,
     build_existing_path_index,
     build_repo_file_manifest,
@@ -20,7 +23,9 @@ from Tools.ai.repository_consistency_map.paths import (
     filter_manifest_by_extensions,
     now_iso,
 )
-from Tools.ai.repository_consistency_map.python_inventory import extract_python_inventory
+from tools.ai.repository_consistency_map.python_inventory import (
+    extract_python_inventory,
+)
 
 
 def build_report(
@@ -41,7 +46,9 @@ def build_report(
     markdown_files = filter_manifest_by_extensions(all_files, DOC_EXTENSIONS)
     python_files = filter_manifest_by_extensions(all_files, {".py"})
     file_records = build_repo_file_records(repo_root, all_files)
-    counted_file_records = [item for item in file_records if item.get("line_count_available")]
+    counted_file_records = [
+        item for item in file_records if item.get("line_count_available")
+    ]
     markdown_file_count = len(markdown_files)
     python_file_count = len(python_files)
     timings["file_discovery_seconds"] = elapsed_seconds(phase_started)
@@ -92,7 +99,9 @@ def build_report(
         "repository_file_count": len(all_files),
         "repository_file_metadata_count": len(file_records),
         "repository_line_count_available_count": len(counted_file_records),
-        "repository_text_line_count_total": sum(int(item.get("line_count") or 0) for item in counted_file_records),
+        "repository_text_line_count_total": sum(
+            int(item.get("line_count") or 0) for item in counted_file_records
+        ),
         "markdown_file_count": markdown_file_count,
         "python_file_count": python_file_count,
         "markdown_reference_count": len(md_refs),
@@ -106,12 +115,23 @@ def build_report(
         "max_auto_workers": max_auto_workers,
         "adaptive_worker_mode": workers <= 0,
         "cpu_count": os.cpu_count() or 1,
-        "cpu_process_worker_backend_enabled": worker_backend in {"process", "auto", "cpu", "multiprocessing"},
+        "cpu_process_worker_backend_enabled": worker_backend
+        in {"process", "auto", "cpu", "multiprocessing"},
         "repo_file_count": len(all_files),
         "single_file_discovery_manifest_enabled": True,
         "file_metadata_enabled": True,
-        "markdown_scan_workers": bounded_worker_count(workers, markdown_file_count, cpu_target=worker_cpu_target, max_auto_workers=max_auto_workers),
-        "python_scan_workers": bounded_worker_count(workers, python_file_count, cpu_target=worker_cpu_target, max_auto_workers=max_auto_workers),
+        "markdown_scan_workers": bounded_worker_count(
+            workers,
+            markdown_file_count,
+            cpu_target=worker_cpu_target,
+            max_auto_workers=max_auto_workers,
+        ),
+        "python_scan_workers": bounded_worker_count(
+            workers,
+            python_file_count,
+            cpu_target=worker_cpu_target,
+            max_auto_workers=max_auto_workers,
+        ),
         **timings,
     }
     performance["report_assembly_seconds"] = elapsed_seconds(phase_started)
@@ -140,10 +160,16 @@ def build_report(
         "finding_kind_counts": dict(sorted(kind_counts.items())),
         "markdown_reference_kind_counts": dict(sorted(references_by_kind.items())),
         "findings": findings,
-        "markdown_references": md_refs[:max_detail_items] if max_detail_items else md_refs,
-        "markdown_python_commands": md_commands[:max_detail_items] if max_detail_items else md_commands,
+        "markdown_references": (
+            md_refs[:max_detail_items] if max_detail_items else md_refs
+        ),
+        "markdown_python_commands": (
+            md_commands[:max_detail_items] if max_detail_items else md_commands
+        ),
         "python_inventory": py_inventory,
-        "repository_file_metadata": file_records[:max_detail_items] if max_detail_items else file_records,
+        "repository_file_metadata": (
+            file_records[:max_detail_items] if max_detail_items else file_records
+        ),
         "provider_hints_for_gpu_planner": provider_hints,
         "performance": performance,
         "guardrails": {

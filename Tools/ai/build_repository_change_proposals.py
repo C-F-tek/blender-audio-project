@@ -7,6 +7,7 @@ JSON/Markdown that a human or trusted agent can review.
 
 It never applies patches, never edits source files and never runs providers.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -100,10 +101,17 @@ def read_json_if_exists(path: Path) -> dict[str, Any]:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
         return {"exists": True, "path": str(path), "data": data, "error": ""}
     except Exception as exc:  # noqa: BLE001 - advisory report.
-        return {"exists": True, "path": str(path), "data": None, "error": f"{type(exc).__name__}: {exc}"}
+        return {
+            "exists": True,
+            "path": str(path),
+            "data": None,
+            "error": f"{type(exc).__name__}: {exc}",
+        }
 
 
-def with_source_metadata(report: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+def with_source_metadata(
+    report: dict[str, Any], data: dict[str, Any]
+) -> dict[str, Any]:
     copied = dict(data)
     copied.setdefault("_source_path", str(report.get("path") or ""))
     return copied
@@ -141,7 +149,9 @@ def infer_stamp_from_values(*values: str) -> str:
     return ""
 
 
-def value_contains_stamp(value: Any, stamp: str, *, depth: int = 0, max_depth: int = 6) -> bool:
+def value_contains_stamp(
+    value: Any, stamp: str, *, depth: int = 0, max_depth: int = 6
+) -> bool:
     if not stamp or depth > max_depth:
         return False
     if isinstance(value, str):
@@ -149,9 +159,15 @@ def value_contains_stamp(value: Any, stamp: str, *, depth: int = 0, max_depth: i
     if isinstance(value, (int, float, bool)) or value is None:
         return stamp in str(value)
     if isinstance(value, dict):
-        return any(value_contains_stamp(item, stamp, depth=depth + 1, max_depth=max_depth) for item in value.values())
+        return any(
+            value_contains_stamp(item, stamp, depth=depth + 1, max_depth=max_depth)
+            for item in value.values()
+        )
     if isinstance(value, list):
-        return any(value_contains_stamp(item, stamp, depth=depth + 1, max_depth=max_depth) for item in value)
+        return any(
+            value_contains_stamp(item, stamp, depth=depth + 1, max_depth=max_depth)
+            for item in value
+        )
     return False
 
 
@@ -170,7 +186,12 @@ def report_matches_stamp(path: Path, data: Any, stamp: str) -> bool:
 
 def report_time_key(report: dict[str, Any]) -> tuple[str, str]:
     return (
-        str(report.get("generated_at") or report.get("timestamp") or report.get("created_at") or ""),
+        str(
+            report.get("generated_at")
+            or report.get("timestamp")
+            or report.get("created_at")
+            or ""
+        ),
         str(report.get("_source_path") or ""),
     )
 
@@ -181,12 +202,16 @@ def latest_report(reports: list[dict[str, Any]]) -> dict[str, Any]:
     return sorted(reports, key=report_time_key)[-1]
 
 
-def discover_runtime_report_paths(repo_root: Path, stamp: str, max_files: int) -> list[str]:
+def discover_runtime_report_paths(
+    repo_root: Path, stamp: str, max_files: int
+) -> list[str]:
     candidates: list[Path] = []
     for pattern in RUNTIME_REPORT_PATTERNS:
         candidates.extend(path for path in repo_root.glob(pattern) if path.is_file())
     unique = {path.resolve(): path for path in candidates}
-    ordered = sorted(unique.values(), key=lambda item: item.stat().st_mtime, reverse=True)
+    ordered = sorted(
+        unique.values(), key=lambda item: item.stat().st_mtime, reverse=True
+    )
     selected: list[str] = []
     for path in ordered:
         if len(selected) >= max_files:
@@ -238,7 +263,11 @@ def all_provider_observability_green(by_kind: dict[str, dict[str, Any]]) -> bool
     provider_parsing = by_kind.get("provider_result_parsing")
     provider_probe = by_kind.get("local_provider_probe")
 
-    ready_lanes = set(resource_lanes.get("ready_lanes") or []) if isinstance(resource_lanes, dict) else set()
+    ready_lanes = (
+        set(resource_lanes.get("ready_lanes") or [])
+        if isinstance(resource_lanes, dict)
+        else set()
+    )
     return (
         report_passed(resource_lanes)
         and {"gpu", "npu", "ollama"}.issubset(ready_lanes)
@@ -272,13 +301,21 @@ def workload_quality_decision(by_kind: dict[str, dict[str, Any]]) -> dict[str, A
             "ollama_gpu_primary_advisory_allowed": False,
             "npu_excluded_from_primary_advisory": True,
         }
-    decision = report.get("decision") if isinstance(report.get("decision"), dict) else {}
+    decision = (
+        report.get("decision") if isinstance(report.get("decision"), dict) else {}
+    )
     return {
         "quality_report_present": True,
         "usable_lanes": report.get("usable_lanes") or [],
         "unusable_lanes": report.get("unusable_lanes") or [],
-        "ollama_gpu_primary_advisory_allowed": decision.get("ollama_gpu_primary_advisory_allowed") is True,
-        "npu_excluded_from_primary_advisory": decision.get("npu_excluded_from_primary_advisory") is not False,
+        "ollama_gpu_primary_advisory_allowed": decision.get(
+            "ollama_gpu_primary_advisory_allowed"
+        )
+        is True,
+        "npu_excluded_from_primary_advisory": decision.get(
+            "npu_excluded_from_primary_advisory"
+        )
+        is not False,
         "routing_policy": decision.get("routing_policy") or report.get("policy"),
     }
 
@@ -327,7 +364,11 @@ def proposal(
         "apply_mode": "manual_review_only",
         "patch_sketch": sketch,
         "evidence_summary": evidence_summary or {},
-        "suggestion_outputs": suggestion_outputs if suggestion_outputs is not None else build_suggestion_outputs(target_files),
+        "suggestion_outputs": (
+            suggestion_outputs
+            if suggestion_outputs is not None
+            else build_suggestion_outputs(target_files)
+        ),
         "validation_commands": validation,
         "stop_conditions": stop_conditions,
         "do_not_touch": do_not_touch
@@ -344,9 +385,13 @@ def proposal(
     return item
 
 
-def runtime_peer_evidence_summary(by_kind_multi: dict[str, list[dict[str, Any]]], reports: list[dict[str, Any]]) -> dict[str, Any]:
+def runtime_peer_evidence_summary(
+    by_kind_multi: dict[str, list[dict[str, Any]]], reports: list[dict[str, Any]]
+) -> dict[str, Any]:
     kinds = {kind: len(items) for kind, items in by_kind_multi.items()}
-    gpu0_reports = by_kind_multi.get("openvino_gpu0_workload", []) + by_kind_multi.get("openvino_gpu0_secondary_workload", [])
+    gpu0_reports = by_kind_multi.get("openvino_gpu0_workload", []) + by_kind_multi.get(
+        "openvino_gpu0_secondary_workload", []
+    )
     npu_reports = (
         by_kind_multi.get("npu_micro_peer", [])
         + by_kind_multi.get("npu_micro_task_companion_report", [])
@@ -359,21 +404,34 @@ def runtime_peer_evidence_summary(by_kind_multi: dict[str, list[dict[str, Any]]]
     lifecycle_reports = by_kind_multi.get("heap_exchange_runtime_lifecycle", [])
     chain_contract_reports = by_kind_multi.get("unified_chain_contract", [])
     correlation_reports = by_kind_multi.get("runtime_evidence_correlation", [])
-    apply_reports = by_kind_multi.get("patch_suggestion_bundle_apply", []) + by_kind_multi.get("generated_patch_specs_review_pr_apply", [])
+    apply_reports = by_kind_multi.get(
+        "patch_suggestion_bundle_apply", []
+    ) + by_kind_multi.get("generated_patch_specs_review_pr_apply", [])
 
     latest_apply = latest_report(apply_reports)
-    manual_items = latest_apply.get("manual_review_items") if isinstance(latest_apply, dict) else []
+    manual_items = (
+        latest_apply.get("manual_review_items")
+        if isinstance(latest_apply, dict)
+        else []
+    )
     if not isinstance(manual_items, list):
         manual_items = []
 
     metadata_only_count = sum(
         1
         for item in manual_items
-        if isinstance(item, dict)
-        and "metadata-only" in str(item.get("reason") or "")
+        if isinstance(item, dict) and "metadata-only" in str(item.get("reason") or "")
     )
-    operation_count = int(latest_apply.get("operation_count") or 0) if isinstance(latest_apply, dict) else 0
-    changed_count = int(latest_apply.get("changed_count") or 0) if isinstance(latest_apply, dict) else 0
+    operation_count = (
+        int(latest_apply.get("operation_count") or 0)
+        if isinstance(latest_apply, dict)
+        else 0
+    )
+    changed_count = (
+        int(latest_apply.get("changed_count") or 0)
+        if isinstance(latest_apply, dict)
+        else 0
+    )
 
     return {
         "report_kinds_seen": kinds,
@@ -389,10 +447,13 @@ def runtime_peer_evidence_summary(by_kind_multi: dict[str, list[dict[str, Any]]]
         "heap_exit_product_present": bool(exit_reports),
         "heap_lifecycle_present": bool(lifecycle_reports),
         "unified_chain_contract_present": bool(chain_contract_reports),
-        "latest_apply_report_path": latest_apply.get("_source_path") if isinstance(latest_apply, dict) else "",
+        "latest_apply_report_path": (
+            latest_apply.get("_source_path") if isinstance(latest_apply, dict) else ""
+        ),
         "gpu0_workload_present": bool(gpu0_reports),
         "gpu0_observable": any(
-            report.get("openvino_gpu0_observable_workload_passed") is True or report.get("passed") is True
+            report.get("openvino_gpu0_observable_workload_passed") is True
+            or report.get("passed") is True
             for report in gpu0_reports
         ),
         "npu_micro_peer_present": bool(npu_reports),
@@ -407,7 +468,8 @@ def runtime_peer_evidence_summary(by_kind_multi: dict[str, list[dict[str, Any]]]
         "patch_apply_operation_count": operation_count,
         "patch_apply_changed_count": changed_count,
         "metadata_only_manual_review_count": metadata_only_count,
-        "needs_concrete_generated_product": bool(apply_reports) and operation_count == 0,
+        "needs_concrete_generated_product": bool(apply_reports)
+        and operation_count == 0,
     }
 
 
@@ -482,7 +544,9 @@ def runtime_peer_evidence_proposal(summary: dict[str, Any]) -> dict[str, Any]:
     )
 
 
-def ai_workload_quality_remediation_proposal(by_kind: dict[str, dict[str, Any]]) -> dict[str, Any]:
+def ai_workload_quality_remediation_proposal(
+    by_kind: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
     quality_summary = workload_quality_decision(by_kind)
     usable = ", ".join(quality_summary.get("usable_lanes") or []) or "none"
     unusable = ", ".join(quality_summary.get("unusable_lanes") or []) or "none"
@@ -636,7 +700,9 @@ def default_npu_observability_proposal() -> dict[str, Any]:
             "python .\\Tools\\ai\\check_local_resource_lanes.py --repo-root . --parallel --output .\\output\\validation\\local_ai_resource_lanes.json --markdown-output .\\output\\validation\\local_ai_resource_lanes.md",
             "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_post_validation_ai_packet.ps1 -Profile npu -OutputDir output/ai_packets -Basename npu_after_tests -ReportFile output/validation/local_ai_resource_lanes.json -ReportFile output/validation/npu_runtime_output_manifest.json",
         ],
-        stop_conditions=["Any change requires modifying provider execution, prompt prose, Blender runtime or generated indexes manually."],
+        stop_conditions=[
+            "Any change requires modifying provider execution, prompt prose, Blender runtime or generated indexes manually."
+        ],
     )
 
 
@@ -651,11 +717,17 @@ def build_proposals(
     proposals: list[dict[str, Any]] = []
     runtime_summary = runtime_peer_evidence_summary(by_kind_multi, reports)
 
-    if runtime_peer_evidence_ready(runtime_summary) and runtime_summary.get("needs_concrete_generated_product"):
+    if runtime_peer_evidence_ready(runtime_summary) and runtime_summary.get(
+        "needs_concrete_generated_product"
+    ):
         proposals.append(runtime_peer_evidence_proposal(runtime_summary))
 
     execution_plan_status = by_kind.get("execution_plan_status")
-    if not proposals and execution_plan_status and execution_plan_status.get("passed") is False:
+    if (
+        not proposals
+        and execution_plan_status
+        and execution_plan_status.get("passed") is False
+    ):
         proposals.append(
             proposal(
                 proposal_id="P-EXEC-PLAN-STATUS",
@@ -663,7 +735,11 @@ def build_proposals(
                 area="execution_plans",
                 title="Fix execution-plan folder/status drift",
                 rationale="The execution-plan validator reports terminal-status plans in the wrong folder or invalid status markers.",
-                target_files=["docs/EXECUTION_PLANS/active/", "docs/EXECUTION_PLANS/completed/", "docs/EXECUTION_PLANS/abandoned/"],
+                target_files=[
+                    "docs/EXECUTION_PLANS/active/",
+                    "docs/EXECUTION_PLANS/completed/",
+                    "docs/EXECUTION_PLANS/abandoned/",
+                ],
                 change_type="docs_move_or_status_fix",
                 sketch=[
                     "Move plans with top-level `## Status` = `completed` from active/ to completed/.",
@@ -674,7 +750,9 @@ def build_proposals(
                     "python .\\Tools\\validation\\check_execution_plan_status.py --repo-root . --output .\\output\\validation\\execution_plan_status.json",
                     "python .\\Tools\\validation\\check_docs_links.py --repo-root . --output .\\output\\validation\\docs_links.json",
                 ],
-                stop_conditions=["Any moved plan has unclear status or contains active unfinished work."],
+                stop_conditions=[
+                    "Any moved plan has unclear status or contains active unfinished work."
+                ],
             )
         )
 
@@ -687,7 +765,11 @@ def build_proposals(
                 area="npu_observability",
                 title="Review blocked NPU runtime output paths",
                 rationale="The runtime-output manifest found paths outside the exact legacy output allowlist.",
-                target_files=["Tools/npu/build_runtime_output_manifest.py", "Tools/npu/pipeline/artifact_paths.py", "docs/JSON_SCHEMAS.md"],
+                target_files=[
+                    "Tools/npu/build_runtime_output_manifest.py",
+                    "Tools/npu/pipeline/artifact_paths.py",
+                    "docs/JSON_SCHEMAS.md",
+                ],
                 change_type="policy_review",
                 sketch=[
                     "Inspect each blocked output path in `output/validation/npu_runtime_output_manifest.json`.",
@@ -698,7 +780,9 @@ def build_proposals(
                     "python .\\Tools\\npu\\build_runtime_output_manifest.py --repo-root . --output .\\output\\validation\\npu_runtime_output_manifest.json",
                     "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_npu_pipeline_helper_validation.ps1",
                 ],
-                stop_conditions=["A blocked path points to source code, full analysis JSON or an unreviewed generated destination."],
+                stop_conditions=[
+                    "A blocked path points to source code, full analysis JSON or an unreviewed generated destination."
+                ],
             )
         )
 
@@ -714,7 +798,11 @@ def build_proposals(
                     area="local_ai_resources",
                     title="Stabilize local NPU/GPU/Ollama resource-lane readiness",
                     rationale="One or more local AI resource lanes are unavailable or not ready. Keeping this as observability improves future parallel pipeline work.",
-                    target_files=["Tools/ai/check_local_resource_lanes.py", "Tools/workflow/run_post_validation_ai_packet.ps1", "Tools/validation/README.md"],
+                    target_files=[
+                        "Tools/ai/check_local_resource_lanes.py",
+                        "Tools/workflow/run_post_validation_ai_packet.ps1",
+                        "Tools/validation/README.md",
+                    ],
                     change_type="preflight_hardening",
                     sketch=[
                         f"Ready lanes currently reported: {sorted(ready)}.",
@@ -726,12 +814,18 @@ def build_proposals(
                         "python .\\Tools\\ai\\check_local_resource_lanes.py --repo-root . --parallel --output .\\output\\validation\\local_ai_resource_lanes.json --markdown-output .\\output\\validation\\local_ai_resource_lanes.md",
                         "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_post_validation_ai_packet.ps1 -Profile npu -ReportFile output/validation/local_ai_resource_lanes.json",
                     ],
-                    stop_conditions=["A lane probe would need long generation, Blender execution, GPU render or provider behavior changes."],
+                    stop_conditions=[
+                        "A lane probe would need long generation, Blender execution, GPU render or provider behavior changes."
+                    ],
                 )
             )
 
     validation_contract = by_kind.get("validation_report_contract")
-    if not proposals and validation_contract and validation_contract.get("passed") is False:
+    if (
+        not proposals
+        and validation_contract
+        and validation_contract.get("passed") is False
+    ):
         proposals.append(
             proposal(
                 proposal_id="P-REPORT-CONTRACT-CONSISTENCY",
@@ -739,7 +833,11 @@ def build_proposals(
                 area="validation_contracts",
                 title="Normalize validation report root fields",
                 rationale="The validation-report contract checker found reports missing common fields or using inconsistent types.",
-                target_files=["Tools/validation/*.py", "Tools/npu/pipeline/reports.py", "docs/JSON_SCHEMAS.md"],
+                target_files=[
+                    "Tools/validation/*.py",
+                    "Tools/npu/pipeline/reports.py",
+                    "docs/JSON_SCHEMAS.md",
+                ],
                 change_type="contract_normalization",
                 sketch=[
                     "Add missing root fields additively: schema_version, kind, repo_root, passed, errors, warnings where applicable.",
@@ -750,7 +848,9 @@ def build_proposals(
                     "python .\\Tools\\validation\\check_validation_report_contract.py --repo-root . --output .\\output\\validation\\validation_report_contract.json",
                     "powershell.exe -ExecutionPolicy Bypass -File .\\Tools\\workflow\\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2",
                 ],
-                stop_conditions=["A proposed normalization would change the meaning of existing report fields."],
+                stop_conditions=[
+                    "A proposed normalization would change the meaning of existing report fields."
+                ],
             )
         )
 
@@ -792,7 +892,9 @@ def render_markdown(report: dict[str, Any]) -> str:
             lines.append("### Evidence summary")
             lines.append("")
             lines.append("```json")
-            lines.append(json.dumps(item["evidence_summary"], indent=2, ensure_ascii=False))
+            lines.append(
+                json.dumps(item["evidence_summary"], indent=2, ensure_ascii=False)
+            )
             lines.append("```")
             lines.append("")
         lines.append("### Target files")
@@ -826,7 +928,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("")
     lines.append("## Guardrail")
     lines.append("")
-    lines.append("These are proposals only. They must not be auto-applied without explicit review.")
+    lines.append(
+        "These are proposals only. They must not be auto-applied without explicit review."
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -849,13 +953,19 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     explicit_report_paths = split_path_values(list(args.report_file or []))
-    stamp = args.runtime_report_stamp or infer_stamp_from_values(args.basename, *explicit_report_paths)
+    stamp = args.runtime_report_stamp or infer_stamp_from_values(
+        args.basename, *explicit_report_paths
+    )
     runtime_report_paths: list[str] = []
     if not args.no_discover_runtime_reports:
-        runtime_report_paths = discover_runtime_report_paths(repo_root, stamp, args.runtime_report_max_files)
+        runtime_report_paths = discover_runtime_report_paths(
+            repo_root, stamp, args.runtime_report_max_files
+        )
 
     report_paths = list(DEFAULT_REPORTS) + explicit_report_paths + runtime_report_paths
-    loaded_reports = [read_json_if_exists(repo_root / path) for path in dict.fromkeys(report_paths)]
+    loaded_reports = [
+        read_json_if_exists(repo_root / path) for path in dict.fromkeys(report_paths)
+    ]
     proposals = build_proposals(
         loaded_reports,
         profile=args.profile,
@@ -902,16 +1012,23 @@ def main() -> int:
         "proposals": proposals,
     }
 
-    output_json.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output_json.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     output_md.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({
-        "passed": not errors,
-        "json": str(output_json),
-        "markdown": str(output_md),
-        "proposal_count": len(proposals),
-        "concrete_operation_count": concrete_operation_count,
-        "errors": errors,
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "passed": not errors,
+                "json": str(output_json),
+                "markdown": str(output_md),
+                "proposal_count": len(proposals),
+                "concrete_operation_count": concrete_operation_count,
+                "errors": errors,
+            },
+            indent=2,
+        )
+    )
     return 0 if not errors else 2
 
 

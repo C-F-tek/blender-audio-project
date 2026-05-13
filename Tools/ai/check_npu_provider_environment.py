@@ -9,6 +9,7 @@ Naming is intentional:
 - Python import module: openvino_genai
 - PyPI package name: openvino-genai
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,7 +23,17 @@ from typing import Any
 try:
     from Tools.npu.npu_runtime import DEFAULT_NPU_PYTHON
 except ImportError:
-    DEFAULT_NPU_PYTHON = Path(os.environ.get("SPAZIOTEMPO_NPU_PYTHON", Path.home() / "blender" / "venvs" / "blender-npu-ai" / "Scripts" / "python.exe"))
+    DEFAULT_NPU_PYTHON = Path(
+        os.environ.get(
+            "SPAZIOTEMPO_NPU_PYTHON",
+            Path.home()
+            / "blender"
+            / "venvs"
+            / "blender-npu-ai"
+            / "Scripts"
+            / "python.exe",
+        )
+    )
 
 DEFAULT_OUTPUT = "output/validation/npu_provider_environment.json"
 DEFAULT_MARKDOWN = "output/validation/npu_provider_environment.md"
@@ -41,15 +52,29 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def run_command(command: list[str], timeout_seconds: int) -> tuple[int, str, str, str]:
     try:
-        completed = subprocess.run(command, text=True, capture_output=True, timeout=timeout_seconds, check=False)
-        return completed.returncode, completed.stdout[-12000:], completed.stderr[-12000:], ""
+        completed = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=timeout_seconds,
+            check=False,
+        )
+        return (
+            completed.returncode,
+            completed.stdout[-12000:],
+            completed.stderr[-12000:],
+            "",
+        )
     except Exception as exc:  # noqa: BLE001 - diagnostic report only.
         return 1, "", "", f"{type(exc).__name__}: {exc}"
 
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
-    npu_python = Path(args.npu_python or os.environ.get("SPAZIOTEMPO_NPU_PYTHON", str(DEFAULT_NPU_PYTHON))).expanduser()
+    npu_python = Path(
+        args.npu_python
+        or os.environ.get("SPAZIOTEMPO_NPU_PYTHON", str(DEFAULT_NPU_PYTHON))
+    ).expanduser()
     code = """
 import json
 import sys
@@ -80,20 +105,31 @@ print(json.dumps(result))
         errors.append(f"NPU Python not found: {npu_python}")
         returncode = 1
     else:
-        returncode, stdout, stderr, error = run_command([str(npu_python), "-c", code], args.timeout_seconds)
+        returncode, stdout, stderr, error = run_command(
+            [str(npu_python), "-c", code], args.timeout_seconds
+        )
         if error:
             errors.append(error)
         try:
-            parsed = json.loads(stdout.strip().splitlines()[-1]) if stdout.strip() else {}
+            parsed = (
+                json.loads(stdout.strip().splitlines()[-1]) if stdout.strip() else {}
+            )
         except Exception as exc:  # noqa: BLE001
-            errors.append(f"unable to parse NPU Python probe JSON: {type(exc).__name__}: {exc}")
+            errors.append(
+                f"unable to parse NPU Python probe JSON: {type(exc).__name__}: {exc}"
+            )
     openvino_ok = bool(parsed.get("openvino_import"))
     genai_ok = bool(parsed.get("openvino_genai_import"))
     npu_available = bool(parsed.get("npu_available"))
     if npu_python.exists() and not openvino_ok:
         errors.append(str(parsed.get("openvino_error") or "openvino import failed"))
     if npu_python.exists() and not genai_ok:
-        errors.append(str(parsed.get("openvino_genai_error") or "openvino_genai import failed; install PyPI package openvino-genai"))
+        errors.append(
+            str(
+                parsed.get("openvino_genai_error")
+                or "openvino_genai import failed; install PyPI package openvino-genai"
+            )
+        )
     if npu_python.exists() and openvino_ok and not npu_available:
         warnings.append("OpenVINO imported but NPU was not listed in available devices")
     return {
@@ -139,7 +175,9 @@ print(json.dumps(result))
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -174,14 +212,20 @@ def main() -> int:
     write_json(output, report)
     markdown.parent.mkdir(parents=True, exist_ok=True)
     markdown.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({
-        "passed": report["passed"],
-        "output": str(output),
-        "markdown": str(markdown),
-        "npu_ready_for_auditor": report["decision"]["npu_ready_for_auditor"],
-        "provider_execution_performed": False,
-        "patch_application_performed": False,
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": report["passed"],
+                "output": str(output),
+                "markdown": str(markdown),
+                "npu_ready_for_auditor": report["decision"]["npu_ready_for_auditor"],
+                "provider_execution_performed": False,
+                "patch_application_performed": False,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

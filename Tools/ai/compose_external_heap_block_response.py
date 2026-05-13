@@ -15,6 +15,7 @@ When a composer JSON is provided, the adapter also attaches its outputs to the
 existing composer Documents package. It does not replace the old composer; it
 adds the long-response artifact to the same operator package.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,11 +26,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
 EXECUTION_TRUE_PATTERNS = (
-    re.compile(r"\b(provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)\b\s*[:=]\s*true\b", re.IGNORECASE),
-    re.compile(r"[\"'](provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)[\"']\s*:\s*true\b", re.IGNORECASE),
-    re.compile(r"\b(NPU|GPU|provider|workload)[^\n]{0,120}\bperformed\s*[:=]\s*true\b", re.IGNORECASE),
+    re.compile(
+        r"\b(provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)\b\s*[:=]\s*true\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"[\"'](provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)[\"']\s*:\s*true\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(NPU|GPU|provider|workload)[^\n]{0,120}\bperformed\s*[:=]\s*true\b",
+        re.IGNORECASE,
+    ),
     re.compile(r"\bperformed\s*=\s*true\b", re.IGNORECASE),
 )
 
@@ -51,7 +60,9 @@ def write_text(path: Path, text: str) -> None:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def compact(text: str, limit: int) -> str:
@@ -62,7 +73,8 @@ def compact(text: str, limit: int) -> str:
 
 def blocks(pointer: dict[str, Any], block_type: str) -> list[dict[str, Any]]:
     items = [
-        item for item in pointer.get("blocks") or []
+        item
+        for item in pointer.get("blocks") or []
         if isinstance(item, dict) and item.get("block_type") == block_type
     ]
     return sorted(items, key=lambda item: int(item.get("step_index") or 0))
@@ -74,7 +86,8 @@ def proposal_blocks(pointer: dict[str, Any]) -> list[dict[str, Any]]:
 
 def role_blocks(pointer: dict[str, Any], role: str) -> list[dict[str, Any]]:
     items = [
-        item for item in pointer.get("blocks") or []
+        item
+        for item in pointer.get("blocks") or []
         if isinstance(item, dict) and item.get("role") == role
     ]
     return sorted(items, key=lambda item: int(item.get("step_index") or 0))
@@ -180,16 +193,27 @@ def build_markdown(
         "",
     ]
     if pointer.get("max_blocks_applied"):
-        lines.extend([
-            "- Nota: il pointer manifest e' una finestra limitata da max_blocks; la risposta usa i blocchi esposti ma conserva i metadati source_* del grafo sorgente.",
-            "",
-        ])
+        lines.extend(
+            [
+                "- Nota: il pointer manifest e' una finestra limitata da max_blocks; la risposta usa i blocchi esposti ma conserva i metadati source_* del grafo sorgente.",
+                "",
+            ]
+        )
     if not rendered:
-        lines.extend(["- Nessun blocco accettato disponibile. Il prodotto resta bloccato; vedere storia e peer review.", ""])
+        lines.extend(
+            [
+                "- Nessun blocco accettato disponibile. Il prodotto resta bloccato; vedere storia e peer review.",
+                "",
+            ]
+        )
     for index, block in enumerate(rendered, start=1):
         lines.extend(block_section(f"Proposal block {index}", block, max_chars))
 
-    blocking = composer.get("blocking_issues") if isinstance(composer.get("blocking_issues"), list) else []
+    blocking = (
+        composer.get("blocking_issues")
+        if isinstance(composer.get("blocking_issues"), list)
+        else []
+    )
     if blocking:
         lines.extend(["## Blocking issues", ""])
         lines.extend(f"- {item}" for item in blocking)
@@ -214,7 +238,9 @@ def build_markdown(
         "source_block_count": pointer.get("source_block_count"),
         "pointer_block_count": pointer.get("block_count"),
         "pointer_max_blocks_applied": pointer.get("max_blocks_applied"),
-        "all_roles_present": pointer.get("all_roles_present", pointer.get("roles_present")),
+        "all_roles_present": pointer.get(
+            "all_roles_present", pointer.get("roles_present")
+        ),
     }
     return "\n".join(lines).rstrip() + "\n", stats
 
@@ -223,7 +249,9 @@ def append_download_manifest(manifest_path: Path, output_paths: list[Path]) -> N
     lines: list[str] = []
     if manifest_path.exists():
         try:
-            lines = manifest_path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+            lines = manifest_path.read_text(
+                encoding="utf-8-sig", errors="replace"
+            ).splitlines()
         except Exception:
             lines = []
     existing = set(lines)
@@ -234,7 +262,9 @@ def append_download_manifest(manifest_path: Path, output_paths: list[Path]) -> N
             additions.append(line)
     if len(additions) > 2:
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        manifest_path.write_text("\n".join(lines + additions).rstrip() + "\n", encoding="utf-8")
+        manifest_path.write_text(
+            "\n".join(lines + additions).rstrip() + "\n", encoding="utf-8"
+        )
 
 
 def attach_to_composer_documents(
@@ -243,7 +273,9 @@ def attach_to_composer_documents(
     json_path: Path,
     explicit_documents_dir: str,
 ) -> dict[str, str]:
-    documents_dir_value = explicit_documents_dir or str(composer.get("documents_dir") or "")
+    documents_dir_value = explicit_documents_dir or str(
+        composer.get("documents_dir") or ""
+    )
     if not documents_dir_value:
         return {}
     documents_dir = Path(documents_dir_value).expanduser().resolve()
@@ -254,7 +286,9 @@ def attach_to_composer_documents(
     shutil.copyfile(json_path, target_json)
     manifest_value = str(composer.get("download_manifest_txt") or "")
     if manifest_value:
-        append_download_manifest(Path(manifest_value).expanduser().resolve(), [target_md, target_json])
+        append_download_manifest(
+            Path(manifest_value).expanduser().resolve(), [target_md, target_json]
+        )
     return {
         "documents_dir": str(documents_dir),
         "documents_markdown": str(target_md),
@@ -283,8 +317,16 @@ def main() -> int:
         raise SystemExit(f"pointer manifest unreadable: {pointer_path}")
     composer = read_json(args.composer_json)
     causality = read_json(args.causality_json)
-    output = Path(args.output).resolve() if args.output else pointer_path.with_name("external_heap_primary_long_response.md")
-    json_output = Path(args.json_output).resolve() if args.json_output else output.with_suffix(".json")
+    output = (
+        Path(args.output).resolve()
+        if args.output
+        else pointer_path.with_name("external_heap_primary_long_response.md")
+    )
+    json_output = (
+        Path(args.json_output).resolve()
+        if args.json_output
+        else output.with_suffix(".json")
+    )
     markdown, stats = build_markdown(
         pointer,
         composer,
@@ -301,16 +343,25 @@ def main() -> int:
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "passed": True,
         "pointer_manifest": str(pointer_path),
-        "composer_json": str(Path(args.composer_json).resolve()) if args.composer_json else "",
-        "causality_json": str(Path(args.causality_json).resolve()) if args.causality_json else "",
+        "composer_json": (
+            str(Path(args.composer_json).resolve()) if args.composer_json else ""
+        ),
+        "causality_json": (
+            str(Path(args.causality_json).resolve()) if args.causality_json else ""
+        ),
         "output": str(output),
         "documents_copy_performed": False,
         "documents_outputs": {},
         "pointer_product_contract": contract,
-        "pointer_contract_role": pointer.get("pointer_contract_role") or "product_graph_decision_recovery_and_long_response_composition",
-        "provider_execution_semantics": pointer.get("provider_execution_semantics") or "separate_guardrail_true_only_with_explicit_provider_or_workload_evidence",
+        "pointer_contract_role": pointer.get("pointer_contract_role")
+        or "product_graph_decision_recovery_and_long_response_composition",
+        "provider_execution_semantics": pointer.get("provider_execution_semantics")
+        or "separate_guardrail_true_only_with_explicit_provider_or_workload_evidence",
         "stats": stats,
-        "provider_execution_performed": normalize_bool(pointer.get("provider_execution_performed")) or any(
+        "provider_execution_performed": normalize_bool(
+            pointer.get("provider_execution_performed")
+        )
+        or any(
             block_provider_execution_performed(block)
             for block in (pointer.get("blocks") or [])
             if isinstance(block, dict)
@@ -318,22 +369,32 @@ def main() -> int:
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": [],
-        "warnings": [
-            "pointer manifest was limited by max_blocks; long response is based on exposed blocks only"
-        ] if pointer.get("max_blocks_applied") else [],
+        "warnings": (
+            [
+                "pointer manifest was limited by max_blocks; long response is based on exposed blocks only"
+            ]
+            if pointer.get("max_blocks_applied")
+            else []
+        ),
     }
     write_json(json_output, report)
     if not args.no_documents_copy:
-        documents_outputs = attach_to_composer_documents(composer, output, json_output, args.documents_dir)
+        documents_outputs = attach_to_composer_documents(
+            composer, output, json_output, args.documents_dir
+        )
         if documents_outputs:
             report["documents_copy_performed"] = True
             report["documents_outputs"] = documents_outputs
             write_json(json_output, report)
             documents_json = documents_outputs.get("documents_json")
             if documents_json:
-                shutil.copyfile(json_output, Path(documents_json).expanduser().resolve())
+                shutil.copyfile(
+                    json_output, Path(documents_json).expanduser().resolve()
+                )
         else:
-            report["warnings"].append("composer documents_dir not found; long response kept in run dir only")
+            report["warnings"].append(
+                "composer documents_dir not found; long response kept in run dir only"
+            )
             write_json(json_output, report)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0

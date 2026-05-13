@@ -19,6 +19,7 @@ Important runtime semantics:
   `priority_next_action=rewrite_non_concrete_candidates`;
 - symbol propagation is disabled for non-concrete candidate proposals.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -28,7 +29,6 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
 
 REVISION_TASK_PREVIEW_CHARS = 1600
 REJECTION_MARKER_PATTERNS = (
@@ -50,7 +50,10 @@ CANDIDATE_APPLICABILITY_PATTERNS = (
     ),
     ("unresolved_pointer_placeholder", re.compile(r"<id-or-empty>", re.IGNORECASE)),
     ("generic_patch_sketch", re.compile(r"\bCODE_OR_PATCH_SKETCH\b", re.IGNORECASE)),
-    ("generic_missing_functionality", re.compile(r"implementa(?:re|zione)\s+(?:le\s+)?funzionalit", re.IGNORECASE)),
+    (
+        "generic_missing_functionality",
+        re.compile(r"implementa(?:re|zione)\s+(?:le\s+)?funzionalit", re.IGNORECASE),
+    ),
     (
         "synthetic_stub_function",
         re.compile(
@@ -59,16 +62,39 @@ CANDIDATE_APPLICABILITY_PATTERNS = (
             re.IGNORECASE,
         ),
     ),
-    ("comment_only_implementation", re.compile(r"^\s*#\s*Implementazione\b", re.IGNORECASE | re.MULTILINE)),
+    (
+        "comment_only_implementation",
+        re.compile(r"^\s*#\s*Implementazione\b", re.IGNORECASE | re.MULTILINE),
+    ),
     (
         "unverified_unit_test_path",
-        re.compile(r"\bpytest\s+(?:\.\\)?Tests[/\\]unit[/\\]test_[A-Za-z0-9_./\\-]+\.py\b", re.IGNORECASE),
+        re.compile(
+            r"\bpytest\s+(?:\.\\)?Tests[/\\]unit[/\\]test_[A-Za-z0-9_./\\-]+\.py\b",
+            re.IGNORECASE,
+        ),
     ),
-    ("run_script_as_validation_only", re.compile(r"\bpython\s+Tools[/\\]ai[/\\][A-Za-z0-9_./\\-]+\.py\b", re.IGNORECASE)),
+    (
+        "run_script_as_validation_only",
+        re.compile(
+            r"\bpython\s+Tools[/\\]ai[/\\][A-Za-z0-9_./\\-]+\.py\b", re.IGNORECASE
+        ),
+    ),
     ("bare_pass", re.compile(r"(^|[^A-Za-z0-9_])pass([^A-Za-z0-9_]|$)", re.IGNORECASE)),
-    ("comment_only_function_stub", re.compile(r"comment_only_function_stub|def\s+[A-Za-z_][A-Za-z0-9_]*\([^)]*\):\s*(?:#.*\n\s*)*pass\b", re.IGNORECASE)),
-    ("unresolved_angle_bracket_token", re.compile(r"<(?:id-or-empty|[^>\n]*placeholder[^>\n]*)>", re.IGNORECASE)),
-    ("invalid_ps1_py_compile_validation", re.compile(r"py_compile\s+[^\n`]*\.ps1\b", re.IGNORECASE)),
+    (
+        "comment_only_function_stub",
+        re.compile(
+            r"comment_only_function_stub|def\s+[A-Za-z_][A-Za-z0-9_]*\([^)]*\):\s*(?:#.*\n\s*)*pass\b",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "unresolved_angle_bracket_token",
+        re.compile(r"<(?:id-or-empty|[^>\n]*placeholder[^>\n]*)>", re.IGNORECASE),
+    ),
+    (
+        "invalid_ps1_py_compile_validation",
+        re.compile(r"py_compile\s+[^\n`]*\.ps1\b", re.IGNORECASE),
+    ),
     (
         "generic_diff_without_file_context",
         re.compile(
@@ -91,7 +117,9 @@ def read_json(path_value: str) -> dict[str, Any]:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def write_text(path: Path, text: str) -> None:
@@ -132,7 +160,12 @@ def no_patchable_target_text(text: str) -> bool:
 
 
 def block_is_terminal_no_patchable_target(block: dict[str, Any]) -> bool:
-    for key in ("candidate_response_preview", "source_preview", "preview", "response_text"):
+    for key in (
+        "candidate_response_preview",
+        "source_preview",
+        "preview",
+        "response_text",
+    ):
         if no_patchable_target_text(str(block.get(key) or "")):
             return True
 
@@ -154,7 +187,9 @@ def block_is_terminal_no_patchable_target(block: dict[str, Any]) -> bool:
         "none_verified",
     )
 
-    has_no_verified_target_signal = any(signal in lowered for signal in no_verified_target_signals)
+    has_no_verified_target_signal = any(
+        signal in lowered for signal in no_verified_target_signals
+    )
     has_terminal_blocker = any(
         flag in flags
         for flag in (
@@ -167,7 +202,9 @@ def block_is_terminal_no_patchable_target(block: dict[str, Any]) -> bool:
     return has_terminal_blocker and has_no_verified_target_signal
 
 
-def terminal_no_patchable_target_summary(proposals: list[dict[str, Any]]) -> dict[str, Any]:
+def terminal_no_patchable_target_summary(
+    proposals: list[dict[str, Any]],
+) -> dict[str, Any]:
     terminal_ids = [
         str(block.get("block_id") or "")
         for block in proposals
@@ -201,7 +238,12 @@ def candidate_text_from_block(block: dict[str, Any]) -> str:
         value = block.get(key)
         if value:
             parts.append(str(value))
-    for key in ("rejection_reasons", "errors", "warnings", "candidate_applicability_flags"):
+    for key in (
+        "rejection_reasons",
+        "errors",
+        "warnings",
+        "candidate_applicability_flags",
+    ):
         for value in as_list(block.get(key)):
             parts.append(str(value))
     for key in ("implementation_quality", "proposal_progress", "cross_lane_veto"):
@@ -209,6 +251,7 @@ def candidate_text_from_block(block: dict[str, Any]) -> str:
         if isinstance(value, dict):
             parts.append(json.dumps(value, ensure_ascii=False, sort_keys=True))
     return "\n".join(parts)
+
 
 def candidate_symbol_text_from_block(block: dict[str, Any]) -> str:
     """Return candidate-only text used for symbol propagation.
@@ -219,7 +262,12 @@ def candidate_symbol_text_from_block(block: dict[str, Any]) -> str:
     back-propagation lane.
     """
     parts: list[str] = []
-    for key in ("candidate_response_preview", "source_preview", "preview", "response_text"):
+    for key in (
+        "candidate_response_preview",
+        "source_preview",
+        "preview",
+        "response_text",
+    ):
         value = block.get(key)
         if value:
             parts.append(str(value))
@@ -247,7 +295,8 @@ def candidate_block_concrete_enough(block: dict[str, Any]) -> bool:
 
 def proposal_blocks(pointer: dict[str, Any]) -> list[dict[str, Any]]:
     blocks = [
-        block for block in as_list(pointer.get("blocks"))
+        block
+        for block in as_list(pointer.get("blocks"))
         if isinstance(block, dict) and block.get("block_type") == "proposal_chunk"
     ]
     return sorted(blocks, key=lambda block: int(block.get("step_index") or 0))
@@ -255,7 +304,8 @@ def proposal_blocks(pointer: dict[str, Any]) -> list[dict[str, Any]]:
 
 def peer_blocks(pointer: dict[str, Any], role: str) -> list[dict[str, Any]]:
     blocks = [
-        block for block in as_list(pointer.get("blocks"))
+        block
+        for block in as_list(pointer.get("blocks"))
         if isinstance(block, dict) and block.get("role") == role
     ]
     return sorted(blocks, key=lambda block: int(block.get("step_index") or 0))
@@ -291,8 +341,12 @@ def extract_symbols(text: str) -> dict[str, list[str]]:
         class_match = re.match(r"^\s*class\s+([A-Za-z_][A-Za-z0-9_]*)\s*[:(]", line)
         if class_match:
             classes.add(class_match.group(1))
-        assignment_match = re.match(r"^\s*([A-Z][A-Z0-9_]{2,}|[a-z_][a-z0-9_]{3,})\s*=", line)
-        if assignment_match and not stripped.startswith(("return ", "if ", "for ", "while ")):
+        assignment_match = re.match(
+            r"^\s*([A-Z][A-Z0-9_]{2,}|[a-z_][a-z0-9_]{3,})\s*=", line
+        )
+        if assignment_match and not stripped.startswith(
+            ("return ", "if ", "for ", "while ")
+        ):
             assignments.add(assignment_match.group(1))
     return {
         "imports": sorted(imports),
@@ -341,10 +395,14 @@ def sanitize_revision_context_text(text: str) -> str:
     return cleaned
 
 
-def no_patchable_target_preview(block: dict[str, Any], flags: list[str], preview_limit: int) -> str:
+def no_patchable_target_preview(
+    block: dict[str, Any], flags: list[str], preview_limit: int
+) -> str:
     previous_block_id = str(block.get("previous_block_id") or "")
     refines_block_id = str(block.get("refines_block_id") or "")
-    resume_from_block_id = str(block.get("resume_from_block_id") or previous_block_id or "")
+    resume_from_block_id = str(
+        block.get("resume_from_block_id") or previous_block_id or ""
+    )
     reason = ", ".join(flags) if flags else "candidate_not_concrete_enough"
     text = (
         "# HEAP_DELTA_PROPOSAL\n"
@@ -368,17 +426,25 @@ def no_patchable_target_preview(block: dict[str, Any], flags: list[str], preview
     return compact_text(text, preview_limit)
 
 
-def task_block_context(block: dict[str, Any], preview_limit: int = REVISION_TASK_PREVIEW_CHARS) -> dict[str, Any]:
+def task_block_context(
+    block: dict[str, Any], preview_limit: int = REVISION_TASK_PREVIEW_CHARS
+) -> dict[str, Any]:
     candidate_flags = candidate_applicability_flags_from_block(block)
-    raw_diagnostic_preview = compact_text(block.get("diagnostic_preview"), preview_limit)
+    raw_diagnostic_preview = compact_text(
+        block.get("diagnostic_preview"), preview_limit
+    )
 
     if candidate_flags:
-        source_preview = no_patchable_target_preview(block, candidate_flags, preview_limit)
+        source_preview = no_patchable_target_preview(
+            block, candidate_flags, preview_limit
+        )
         candidate_preview = source_preview
         diagnostic_preview = sanitize_revision_context_text(raw_diagnostic_preview)
     else:
         source_preview = compact_text(block.get("preview"), preview_limit)
-        candidate_preview = compact_text(block.get("candidate_response_preview"), preview_limit)
+        candidate_preview = compact_text(
+            block.get("candidate_response_preview"), preview_limit
+        )
         diagnostic_preview = raw_diagnostic_preview
 
     return {
@@ -394,7 +460,9 @@ def task_block_context(block: dict[str, Any], preview_limit: int = REVISION_TASK
         "candidate_response_preview": candidate_preview,
         "diagnostic_preview": diagnostic_preview,
         "rejected_candidate_preview_omitted": bool(candidate_flags),
-        "rejected_candidate_preview_reason": "candidate_not_concrete_enough" if candidate_flags else "",
+        "rejected_candidate_preview_reason": (
+            "candidate_not_concrete_enough" if candidate_flags else ""
+        ),
         "candidate_response_available": bool(candidate_preview.strip()),
         "diagnostic_preview_available": bool(diagnostic_preview.strip()),
         "candidate_applicability_flags": candidate_flags,
@@ -402,19 +470,32 @@ def task_block_context(block: dict[str, Any], preview_limit: int = REVISION_TASK
     }
 
 
-def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) -> list[dict[str, Any]]:
+def build_gpu1_tasks(
+    proposals: list[dict[str, Any]], composer: dict[str, Any]
+) -> list[dict[str, Any]]:
     tasks: list[dict[str, Any]] = []
-    previous_symbols: dict[str, set[str]] = {"imports": set(), "defs": set(), "classes": set(), "assignments": set()}
+    previous_symbols: dict[str, set[str]] = {
+        "imports": set(),
+        "defs": set(),
+        "classes": set(),
+        "assignments": set(),
+    }
     for block in proposals:
         block_id = str(block.get("block_id") or "")
         if block_is_terminal_no_patchable_target(block):
             continue
         symbol_text = candidate_symbol_text_from_block(block)
         concrete_candidate = candidate_block_concrete_enough(block)
-        symbols = extract_symbols(symbol_text) if concrete_candidate else {"imports": [], "defs": [], "classes": [], "assignments": []}
+        symbols = (
+            extract_symbols(symbol_text)
+            if concrete_candidate
+            else {"imports": [], "defs": [], "classes": [], "assignments": []}
+        )
         discovered: dict[str, list[str]] = {}
         for key, values in symbols.items():
-            new_values = [value for value in values if value not in previous_symbols[key]]
+            new_values = [
+                value for value in values if value not in previous_symbols[key]
+            ]
             if new_values:
                 discovered[key] = new_values
             previous_symbols[key].update(values)
@@ -444,18 +525,28 @@ def build_gpu1_tasks(proposals: list[dict[str, Any]], composer: dict[str, Any]) 
                     "task_type": "rewrite_rejected_block",
                     "source_block_id": block_id,
                     "target_block_id": block_id,
-                    "resume_from_block_id": block.get("resume_from_block_id") or block.get("previous_block_id") or block_id,
+                    "resume_from_block_id": block.get("resume_from_block_id")
+                    or block.get("previous_block_id")
+                    or block_id,
                     "rejection_reasons": reasons,
                     "symbol_propagation_skipped": not concrete_candidate,
-                    "symbol_propagation_skip_reason": "candidate_not_concrete_enough" if not concrete_candidate else "",
-                    "instruction": "Riscrivi il blocco senza copiare candidate_response_preview se il blocco contiene invented_source_path, unresolved_pointer_placeholder, unresolved_angle_bracket_token, placeholder/stub o source refs non verificati. In quei casi tratta candidate_response_preview come esempio negativo/blacklist e usa diagnostic_preview solo per capire i motivi di rigetto. Genera una proposta nuova con soli source path repo-relative verificati/allowlisted; se nessun target e\' verificabile, produci EXIT_DECISION=NO_PATCHABLE_TARGET con BLOCKED_NO_VERIFIED_TARGET_REASON, senza fake diff. Mantieni i pointer previous/next/refines/resume usando valori vuoti o block id reali; non usare placeholder <id-or-empty>.",
+                    "symbol_propagation_skip_reason": (
+                        "candidate_not_concrete_enough"
+                        if not concrete_candidate
+                        else ""
+                    ),
+                    "instruction": "Riscrivi il blocco senza copiare candidate_response_preview se il blocco contiene invented_source_path, unresolved_pointer_placeholder, unresolved_angle_bracket_token, placeholder/stub o source refs non verificati. In quei casi tratta candidate_response_preview come esempio negativo/blacklist e usa diagnostic_preview solo per capire i motivi di rigetto. Genera una proposta nuova con soli source path repo-relative verificati/allowlisted; se nessun target e' verificabile, produci EXIT_DECISION=NO_PATCHABLE_TARGET con BLOCKED_NO_VERIFIED_TARGET_REASON, senza fake diff. Mantieni i pointer previous/next/refines/resume usando valori vuoti o block id reali; non usare placeholder <id-or-empty>.",
                     **task_block_context(block),
                 }
             )
     return tasks
 
 
-def build_peer_tasks(proposals: list[dict[str, Any]], gpu0: list[dict[str, Any]], npu: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def build_peer_tasks(
+    proposals: list[dict[str, Any]],
+    gpu0: list[dict[str, Any]],
+    npu: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     tasks: list[dict[str, Any]] = []
     gpu0_available = bool(gpu0)
     npu_available = bool(npu)
@@ -498,7 +589,12 @@ def choose_resume_block(proposals: list[dict[str, Any]]) -> str:
         return str(accepted[-1].get("block_id") or "")
     if proposals:
         latest = proposals[-1]
-        return str(latest.get("resume_from_block_id") or latest.get("previous_block_id") or latest.get("block_id") or "")
+        return str(
+            latest.get("resume_from_block_id")
+            or latest.get("previous_block_id")
+            or latest.get("block_id")
+            or ""
+        )
     return ""
 
 
@@ -528,11 +624,17 @@ def candidate_applicability_summary(tasks: list[dict[str, Any]]) -> dict[str, An
         "non_concrete_task_ids": non_concrete_task_ids,
         "symbol_propagation_skipped_task_ids": symbol_skipped_task_ids,
         "requires_concrete_rewrite": bool(non_concrete_task_ids),
-        "priority_next_action": "rewrite_non_concrete_candidates" if non_concrete_task_ids else "review_or_continue",
+        "priority_next_action": (
+            "rewrite_non_concrete_candidates"
+            if non_concrete_task_ids
+            else "review_or_continue"
+        ),
     }
 
 
-def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: dict[str, Any]) -> dict[str, Any]:
+def build_report(
+    pointer: dict[str, Any], composer: dict[str, Any], causality: dict[str, Any]
+) -> dict[str, Any]:
     proposals = proposal_blocks(pointer)
     gpu0 = peer_blocks(pointer, "gpu0_reviewer_refiner")
     npu = peer_blocks(pointer, "npu_auditor")
@@ -547,7 +649,11 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
         candidate_summary["priority_next_action"] = "blocked_no_verified_target"
     latest = latest_block(proposals)
     pointer_limited = bool(pointer.get("max_blocks_applied"))
-    source_run_was_fallback = bool(composer.get("fallback_heap_report_used")) or str(composer.get("product_status") or "") == "blocked_with_reason" and not proposals
+    source_run_was_fallback = (
+        bool(composer.get("fallback_heap_report_used"))
+        or str(composer.get("product_status") or "") == "blocked_with_reason"
+        and not proposals
+    )
     operational_revision_context = bool(
         proposals
         and normalize_bool(pointer.get("provider_execution_performed"))
@@ -555,11 +661,17 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
     )
     warnings: list[str] = []
     if pointer_limited:
-        warnings.append("pointer manifest was limited by max_blocks; revision tasks are based on exposed blocks only")
+        warnings.append(
+            "pointer manifest was limited by max_blocks; revision tasks are based on exposed blocks only"
+        )
     if candidate_summary.get("requires_concrete_rewrite"):
-        warnings.append("non-concrete candidate proposals require rewrite before symbol propagation or product acceptance")
+        warnings.append(
+            "non-concrete candidate proposals require rewrite before symbol propagation or product acceptance"
+        )
     if not operational_revision_context:
-        warnings.append("revision context is non-operational: source run had no resumable provider/pointer blocks")
+        warnings.append(
+            "revision context is non-operational: source run had no resumable provider/pointer blocks"
+        )
     return {
         "schema_version": 1,
         "kind": "external_heap_revision_context",
@@ -582,19 +694,29 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
         "pointer_block_count": pointer.get("block_count"),
         "pointer_max_blocks_applied": pointer_limited,
         "roles_present": pointer.get("roles_present"),
-        "all_roles_present": pointer.get("all_roles_present", pointer.get("roles_present")),
+        "all_roles_present": pointer.get(
+            "all_roles_present", pointer.get("roles_present")
+        ),
         "gpu0_block_count": len(gpu0),
         "npu_block_count": len(npu),
         "resume_from_block_id": choose_resume_block(proposals),
         "latest_block_id": latest.get("block_id", ""),
         "parallel_task_count": len(all_tasks),
         "gpu1_task_count": len(gpu1_tasks),
-        "gpu0_task_count": len([task for task in peer_tasks if task.get("role") == "gpu0_reviewer_refiner"]),
-        "npu_task_count": len([task for task in peer_tasks if task.get("role") == "npu_auditor"]),
+        "gpu0_task_count": len(
+            [task for task in peer_tasks if task.get("role") == "gpu0_reviewer_refiner"]
+        ),
+        "npu_task_count": len(
+            [task for task in peer_tasks if task.get("role") == "npu_auditor"]
+        ),
         "candidate_applicability_summary": candidate_summary,
-        "terminal_no_patchable_target": terminal_no_patchable.get("all_proposals_terminal_no_patchable_target"),
+        "terminal_no_patchable_target": terminal_no_patchable.get(
+            "all_proposals_terminal_no_patchable_target"
+        ),
         "terminal_no_patchable_target_count": terminal_no_patchable.get("count"),
-        "terminal_no_patchable_target_block_ids": terminal_no_patchable.get("block_ids"),
+        "terminal_no_patchable_target_block_ids": terminal_no_patchable.get(
+            "block_ids"
+        ),
         "requires_concrete_rewrite": candidate_summary.get("requires_concrete_rewrite"),
         "priority_next_action": candidate_summary.get("priority_next_action"),
         "tasks": all_tasks,
@@ -606,7 +728,9 @@ def build_report(pointer: dict[str, Any], composer: dict[str, Any], causality: d
             "La riscrittura deve usare solo source path repo-relative verificati/allowlisted; se il target non e' verificabile, "
             "deve produrre EXIT_DECISION=NO_PATCHABLE_TARGET invece di inventare path. Non usare placeholder <id-or-empty>."
         ),
-        "provider_execution_performed": normalize_bool(pointer.get("provider_execution_performed")),
+        "provider_execution_performed": normalize_bool(
+            pointer.get("provider_execution_performed")
+        ),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": [],
@@ -670,7 +794,9 @@ def append_download_manifest(manifest_path: Path, output_paths: list[Path]) -> N
     lines: list[str] = []
     if manifest_path.exists():
         try:
-            lines = manifest_path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+            lines = manifest_path.read_text(
+                encoding="utf-8-sig", errors="replace"
+            ).splitlines()
         except Exception:
             lines = []
     existing = set(lines)
@@ -681,11 +807,20 @@ def append_download_manifest(manifest_path: Path, output_paths: list[Path]) -> N
             additions.append(line)
     if len(additions) > 2:
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        manifest_path.write_text("\n".join(lines + additions).rstrip() + "\n", encoding="utf-8")
+        manifest_path.write_text(
+            "\n".join(lines + additions).rstrip() + "\n", encoding="utf-8"
+        )
 
 
-def attach_to_composer_documents(composer: dict[str, Any], json_path: Path, markdown_path: Path, explicit_documents_dir: str) -> dict[str, str]:
-    documents_dir_value = explicit_documents_dir or str(composer.get("documents_dir") or "")
+def attach_to_composer_documents(
+    composer: dict[str, Any],
+    json_path: Path,
+    markdown_path: Path,
+    explicit_documents_dir: str,
+) -> dict[str, str]:
+    documents_dir_value = explicit_documents_dir or str(
+        composer.get("documents_dir") or ""
+    )
     if not documents_dir_value:
         return {}
     documents_dir = Path(documents_dir_value).expanduser().resolve()
@@ -696,7 +831,9 @@ def attach_to_composer_documents(composer: dict[str, Any], json_path: Path, mark
     shutil.copyfile(markdown_path, target_md)
     manifest_value = str(composer.get("download_manifest_txt") or "")
     if manifest_value:
-        append_download_manifest(Path(manifest_value).expanduser().resolve(), [target_md, target_json])
+        append_download_manifest(
+            Path(manifest_value).expanduser().resolve(), [target_md, target_json]
+        )
     return {
         "documents_dir": str(documents_dir),
         "documents_json": str(target_json),
@@ -722,15 +859,25 @@ def main() -> int:
         raise SystemExit(f"pointer manifest unreadable: {pointer_path}")
     composer = read_json(args.composer_json)
     causality = read_json(args.causality_json)
-    output = Path(args.output).resolve() if args.output else pointer_path.with_name("external_heap_revision_context.json")
-    markdown = Path(args.markdown_output).resolve() if args.markdown_output else output.with_suffix(".md")
+    output = (
+        Path(args.output).resolve()
+        if args.output
+        else pointer_path.with_name("external_heap_revision_context.json")
+    )
+    markdown = (
+        Path(args.markdown_output).resolve()
+        if args.markdown_output
+        else output.with_suffix(".md")
+    )
     report = build_report(pointer, composer, causality)
     report["documents_copy_performed"] = False
     report["documents_outputs"] = {}
     write_json(output, report)
     write_text(markdown, render_markdown(report))
     if not args.no_documents_copy:
-        documents_outputs = attach_to_composer_documents(composer, output, markdown, args.documents_dir)
+        documents_outputs = attach_to_composer_documents(
+            composer, output, markdown, args.documents_dir
+        )
         if documents_outputs:
             report["documents_copy_performed"] = True
             report["documents_outputs"] = documents_outputs
@@ -739,7 +886,9 @@ def main() -> int:
             if documents_json:
                 shutil.copyfile(output, Path(documents_json).expanduser().resolve())
         else:
-            report["warnings"].append("composer documents_dir not found; revision context kept in run dir only")
+            report["warnings"].append(
+                "composer documents_dir not found; revision context kept in run dir only"
+            )
             write_json(output, report)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0
@@ -747,4 +896,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

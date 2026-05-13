@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from Tools.ai.patch_plan_quality_product.scoring import list_plans
+from tools.ai.patch_plan_quality_product.scoring import list_plans
 
 
 def safe_dict(value: Any) -> dict[str, Any]:
@@ -29,7 +29,9 @@ def _unique_strings(items: list[Any], limit: int = 16) -> list[str]:
     return out
 
 
-def patch_plan_summary(patch_plan: dict[str, Any], patch_quality: dict[str, Any]) -> dict[str, Any]:
+def patch_plan_summary(
+    patch_plan: dict[str, Any], patch_quality: dict[str, Any]
+) -> dict[str, Any]:
     plans = list_plans(patch_plan)
     targets: list[Any] = []
     validations: list[Any] = []
@@ -65,7 +67,9 @@ def _canonical_note_area(area: Any) -> str:
     return aliases.get(value, value)
 
 
-def _area_diverse_plans(plans: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+def _area_diverse_plans(
+    plans: list[dict[str, Any]], limit: int
+) -> list[dict[str, Any]]:
     preferred_areas = [
         "python_python",
         "doc_python",
@@ -104,13 +108,17 @@ def _area_diverse_plans(plans: list[dict[str, Any]], limit: int) -> list[dict[st
     return selected
 
 
-def build_patch_notes(patch_plan: dict[str, Any], patch_quality: dict[str, Any], limit: int = 20) -> list[dict[str, Any]]:
+def build_patch_notes(
+    patch_plan: dict[str, Any], patch_quality: dict[str, Any], limit: int = 20
+) -> list[dict[str, Any]]:
     quality_scores = {}
     for item in safe_list(safe_dict(patch_quality.get("quality")).get("plan_scores")):
         if isinstance(item, dict):
             quality_scores[str(item.get("id") or "")] = item
     notes: list[dict[str, Any]] = []
-    selected_plans = _area_diverse_plans([plan for plan in list_plans(patch_plan) if isinstance(plan, dict)], limit)
+    selected_plans = _area_diverse_plans(
+        [plan for plan in list_plans(patch_plan) if isinstance(plan, dict)], limit
+    )
     for index, plan in enumerate(selected_plans, 1):
         plan_id = str(plan.get("id") or plan.get("title") or f"plan_{index:03d}")
         score = quality_scores.get(plan_id, {})
@@ -119,13 +127,21 @@ def build_patch_notes(patch_plan: dict[str, Any], patch_quality: dict[str, Any],
                 "id": plan_id,
                 "area": _canonical_note_area(plan.get("area")),
                 "status": plan.get("status"),
-                "target_files": _unique_strings(safe_list(plan.get("target_files")), limit=12),
-                "summary": _text(plan.get("rationale") or plan.get("edit_strategy"), 700),
+                "target_files": _unique_strings(
+                    safe_list(plan.get("target_files")), limit=12
+                ),
+                "summary": _text(
+                    plan.get("rationale") or plan.get("edit_strategy"), 700
+                ),
                 "edit_strategy": _text(plan.get("edit_strategy"), 700),
                 "quality_score": score.get("score"),
                 "quality_notes": safe_list(score.get("notes"))[:8],
-                "validation_commands": _unique_strings(safe_list(plan.get("validation_commands")), limit=8),
-                "stop_conditions": _unique_strings(safe_list(plan.get("stop_conditions")), limit=8),
+                "validation_commands": _unique_strings(
+                    safe_list(plan.get("validation_commands")), limit=8
+                ),
+                "stop_conditions": _unique_strings(
+                    safe_list(plan.get("stop_conditions")), limit=8
+                ),
                 "manual_review_required": plan.get("manual_review_required") is True,
                 "evidence_basis": safe_dict(plan.get("source_evidence")),
             }
@@ -185,18 +201,33 @@ def patch_notes_applicability(notes: Any) -> dict[str, Any]:
     }
 
 
-def score_product(report: dict[str, Any]) -> tuple[float, list[dict[str, Any]], list[dict[str, Any]]]:
-    applicability = safe_dict(report.get("patch_notes_applicability")) or patch_notes_applicability(report.get("patch_notes"))
+def score_product(
+    report: dict[str, Any],
+) -> tuple[float, list[dict[str, Any]], list[dict[str, Any]]]:
+    applicability = safe_dict(
+        report.get("patch_notes_applicability")
+    ) or patch_notes_applicability(report.get("patch_notes"))
     checks = {
         "request_summary": bool(safe_dict(report.get("request_summary")).get("title")),
-        "normalized_objective": len(str(report.get("normalized_objective") or "")) >= 24,
-        "patch_plan_summary": safe_dict(report.get("patch_plan_summary")).get("patch_plan_count", 0) > 0,
+        "normalized_objective": len(str(report.get("normalized_objective") or ""))
+        >= 24,
+        "patch_plan_summary": safe_dict(report.get("patch_plan_summary")).get(
+            "patch_plan_count", 0
+        )
+        > 0,
         "patch_notes_concrete": bool(report.get("patch_notes")),
         "patch_notes_applicable": applicability.get("all_applicable") is True,
-        "evidence_coverage": safe_dict(report.get("evidence_coverage")).get("score", 0) >= 60,
-        "telemetry_quality": safe_dict(report.get("telemetry_quality")).get("score", 0) >= 50,
-        "validation_commands": bool(safe_dict(report.get("patch_plan_summary")).get("validation_commands")),
-        "stop_conditions_guardrails": bool(safe_dict(report.get("patch_plan_summary")).get("stop_conditions")) and safe_dict(report.get("guardrails")).get("report_only") is True,
+        "evidence_coverage": safe_dict(report.get("evidence_coverage")).get("score", 0)
+        >= 60,
+        "telemetry_quality": safe_dict(report.get("telemetry_quality")).get("score", 0)
+        >= 50,
+        "validation_commands": bool(
+            safe_dict(report.get("patch_plan_summary")).get("validation_commands")
+        ),
+        "stop_conditions_guardrails": bool(
+            safe_dict(report.get("patch_plan_summary")).get("stop_conditions")
+        )
+        and safe_dict(report.get("guardrails")).get("report_only") is True,
     }
     weights = {
         "request_summary": 8,
@@ -210,8 +241,19 @@ def score_product(report: dict[str, Any]) -> tuple[float, list[dict[str, Any]], 
         "stop_conditions_guardrails": 8,
     }
     score = float(sum(weights[key] for key, ok in checks.items() if ok))
-    findings = [{"severity": "medium", "reason": f"missing_or_weak:{key}"} for key, ok in checks.items() if not ok]
-    fallback = [{"reason": f"patch_notes_quality_missing:{key}", "recommended_followup": "rerun the heap-runtime workflow with patch specs, telemetry, capability manifest and evidence bundle enabled"} for key, ok in checks.items() if not ok]
+    findings = [
+        {"severity": "medium", "reason": f"missing_or_weak:{key}"}
+        for key, ok in checks.items()
+        if not ok
+    ]
+    fallback = [
+        {
+            "reason": f"patch_notes_quality_missing:{key}",
+            "recommended_followup": "rerun the heap-runtime workflow with patch specs, telemetry, capability manifest and evidence bundle enabled",
+        }
+        for key, ok in checks.items()
+        if not ok
+    ]
     return score, findings, fallback
 
 
@@ -223,6 +265,7 @@ def classify(errors: list[str], quality_gate_passed: bool, score: float) -> str:
     if score < 50:
         return "completed_with_low_confidence_patch_notes"
     return "completed_with_patch_notes_fallback"
+
 
 PRODUCT_AREA_ALIASES = {
     "md_md": "doc_doc",
@@ -256,9 +299,11 @@ REPOSITORY_KIND_TO_PRODUCT_AREA = {
     "python_import_symbol_missing": "python_python",
 }
 
+
 def canonical_product_area(area: Any) -> str:
     value = str(area or "").strip()
     return PRODUCT_AREA_ALIASES.get(value, value)
+
 
 def _task_text(task: dict[str, Any]) -> str:
     parts: list[str] = []
@@ -272,14 +317,21 @@ def _task_text(task: dict[str, Any]) -> str:
             parts.extend(str(item) for item in values)
     return "\n".join(parts)
 
+
 def detect_product_mode(task: dict[str, Any]) -> dict[str, Any]:
     text = _task_text(task)
     lowered = text.lower()
-    all_all = "all_all" in lowered or "all-all" in lowered or "whole repository" in lowered
+    all_all = (
+        "all_all" in lowered or "all-all" in lowered or "whole repository" in lowered
+    )
     requested = [area for area in ALL_ALL_REQUIRED_AREAS if area.lower() in lowered]
     if all_all and not requested:
         requested = list(ALL_ALL_REQUIRED_AREAS)
-    return {"mode": "ALL_ALL" if all_all or requested else "standard", "requested_areas": requested}
+    return {
+        "mode": "ALL_ALL" if all_all or requested else "standard",
+        "requested_areas": requested,
+    }
+
 
 def _workflow_summary(loaded: dict[str, dict[str, Any]]) -> dict[str, Any]:
     telemetry = safe_dict(loaded.get("full_toolbox_telemetry"))
@@ -293,14 +345,18 @@ def _workflow_summary(loaded: dict[str, dict[str, Any]]) -> dict[str, Any]:
         "patch_plan_count": decision.get("patch_plan_count"),
     }
 
+
 def _bump_area(counts: dict[str, int], area: Any, amount: int = 1) -> None:
     canonical = canonical_product_area(area)
     if canonical:
         counts[canonical] = counts.get(canonical, 0) + amount
 
+
 def _repository_area_counts(repository_consistency: dict[str, Any]) -> dict[str, int]:
     counts: dict[str, int] = {}
-    for kind, count in safe_dict(repository_consistency.get("finding_kind_counts")).items():
+    for kind, count in safe_dict(
+        repository_consistency.get("finding_kind_counts")
+    ).items():
         area = REPOSITORY_KIND_TO_PRODUCT_AREA.get(str(kind))
         if area:
             counts[area] = counts.get(area, 0) + int(count or 0)
@@ -333,7 +389,9 @@ def _is_unpatchable_generated_path(path: str) -> bool:
     lowered = normalized.lower()
     if lowered.endswith((".db", ".sqlite")):
         return True
-    return any(normalized.startswith(prefix) for prefix in UNPATCHABLE_REPOSITORY_PREFIXES)
+    return any(
+        normalized.startswith(prefix) for prefix in UNPATCHABLE_REPOSITORY_PREFIXES
+    )
 
 
 def _finding_patch_target(finding: dict[str, Any]) -> str:
@@ -348,7 +406,9 @@ def _finding_patch_target(finding: dict[str, Any]) -> str:
     return source or target
 
 
-def _repository_patchable_area_counts(repository_consistency: dict[str, Any]) -> dict[str, int]:
+def _repository_patchable_area_counts(
+    repository_consistency: dict[str, Any],
+) -> dict[str, int]:
     counts: dict[str, int] = {}
     raw_findings = safe_list(repository_consistency.get("findings"))
     for item in raw_findings:
@@ -368,13 +428,17 @@ def _repository_patchable_area_counts(repository_consistency: dict[str, Any]) ->
     return counts
 
 
-def _subtract_counts(raw_counts: dict[str, int], patchable_counts: dict[str, int]) -> dict[str, int]:
+def _subtract_counts(
+    raw_counts: dict[str, int], patchable_counts: dict[str, int]
+) -> dict[str, int]:
     result: dict[str, int] = {}
     for area, raw_count in raw_counts.items():
         filtered = int(raw_count or 0) - int(patchable_counts.get(area, 0) or 0)
         if filtered > 0:
             result[area] = filtered
     return result
+
+
 def _proposal_area_counts(loaded: dict[str, dict[str, Any]]) -> dict[str, int]:
     counts: dict[str, int] = {}
     telemetry = safe_dict(loaded.get("full_toolbox_telemetry"))
@@ -389,12 +453,14 @@ def _proposal_area_counts(loaded: dict[str, dict[str, Any]]) -> dict[str, int]:
                 _bump_area(counts, item.get("area"))
     return counts
 
+
 def _merge_counts(*items: dict[str, int]) -> dict[str, int]:
     merged: dict[str, int] = {}
     for item in items:
         for key, value in item.items():
             merged[key] = merged.get(key, 0) + int(value or 0)
     return merged
+
 
 def build_product_sufficiency(
     report: dict[str, Any],
@@ -405,29 +471,51 @@ def build_product_sufficiency(
     requested_min_patch_notes: int = 0,
 ) -> dict[str, Any]:
     mode = detect_product_mode(task)
-    notes = [item for item in safe_list(report.get("patch_notes")) if isinstance(item, dict)]
+    notes = [
+        item for item in safe_list(report.get("patch_notes")) if isinstance(item, dict)
+    ]
     actual_area_counts: dict[str, int] = {}
     for note in notes:
         _bump_area(actual_area_counts, note.get("area"))
     actual_areas = sorted(actual_area_counts)
-    raw_repository_area_counts = _repository_area_counts(safe_dict(loaded.get("repository_consistency")))
-    repository_area_counts = _repository_patchable_area_counts(safe_dict(loaded.get("repository_consistency")))
-    unpatchable_repository_area_counts = _subtract_counts(raw_repository_area_counts, repository_area_counts)
+    raw_repository_area_counts = _repository_area_counts(
+        safe_dict(loaded.get("repository_consistency"))
+    )
+    repository_area_counts = _repository_patchable_area_counts(
+        safe_dict(loaded.get("repository_consistency"))
+    )
+    unpatchable_repository_area_counts = _subtract_counts(
+        raw_repository_area_counts, repository_area_counts
+    )
     proposal_area_counts = _proposal_area_counts(loaded)
-    available_area_counts = _merge_counts(repository_area_counts, proposal_area_counts, actual_area_counts)
+    available_area_counts = _merge_counts(
+        repository_area_counts, proposal_area_counts, actual_area_counts
+    )
     requested_areas = list(mode["requested_areas"])
-    available_requested_areas = [area for area in requested_areas if available_area_counts.get(area, 0) > 0]
-    unavailable_requested_areas = [area for area in requested_areas if area not in available_requested_areas]
-    missing_available_areas = [area for area in available_requested_areas if area not in actual_areas]
+    available_requested_areas = [
+        area for area in requested_areas if available_area_counts.get(area, 0) > 0
+    ]
+    unavailable_requested_areas = [
+        area for area in requested_areas if area not in available_requested_areas
+    ]
+    missing_available_areas = [
+        area for area in available_requested_areas if area not in actual_areas
+    ]
     requested_min_patch_notes = int(requested_min_patch_notes or 0)
     if requested_min_patch_notes <= 0:
         requested_min_patch_notes = 1
         if mode["mode"] == "ALL_ALL":
-            requested_min_patch_notes = max(5, min(40, max(1, len(available_requested_areas)) * 5))
+            requested_min_patch_notes = max(
+                5, min(40, max(1, len(available_requested_areas)) * 5)
+            )
     patch_note_limit = max(1, int(patch_note_limit or 20))
     workflow = _workflow_summary(loaded)
     recommendation_count = int(workflow.get("recommendation_count") or 0)
-    patch_plan_count = int(workflow.get("patch_plan_count") or safe_dict(report.get("patch_plan_summary")).get("patch_plan_count") or 0)
+    patch_plan_count = int(
+        workflow.get("patch_plan_count")
+        or safe_dict(report.get("patch_plan_summary")).get("patch_plan_count")
+        or 0
+    )
     reasons: list[str] = []
     if len(notes) < requested_min_patch_notes:
         reasons.append("patch_note_count_below_requested_minimum")
@@ -439,7 +527,11 @@ def build_product_sufficiency(
         reasons.append("workflow_summary_not_passed")
     if mode["mode"] == "ALL_ALL" and patch_plan_count < requested_min_patch_notes:
         reasons.append("patch_plan_count_below_availability_aware_minimum")
-    if mode["mode"] == "ALL_ALL" and recommendation_count and recommendation_count < requested_min_patch_notes:
+    if (
+        mode["mode"] == "ALL_ALL"
+        and recommendation_count
+        and recommendation_count < requested_min_patch_notes
+    ):
         reasons.append("recommendation_count_below_availability_aware_minimum")
     return {
         "mode": mode["mode"],

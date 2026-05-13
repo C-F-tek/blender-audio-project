@@ -13,6 +13,7 @@ The operational database is a doctor's working tray: useful during diagnosis,
 safe to empty, and never meant to be committed. Persistent memory is protected:
 this tool does not write, promote, delete or migrate it.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,7 +23,6 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-
 
 DEFAULT_OPERATIONAL_DB = "output/ai_runtime_memory/operational_context.sqlite"
 DEFAULT_PERSISTENT_DB = "indexAI/agent_memory/agent_memory.sqlite"
@@ -53,7 +53,11 @@ def read_arg_file(repo_root: Path, value: str) -> str:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -85,8 +89,7 @@ def ensure_operational_db(db_path: Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(db_path) as conn:
         conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS operational_memory_records (
                 record_id TEXT PRIMARY KEY,
                 created_at TEXT NOT NULL,
@@ -99,28 +102,37 @@ def ensure_operational_db(db_path: Path) -> None:
                 tags_json TEXT NOT NULL,
                 metadata_json TEXT NOT NULL
             )
-            """
-        )
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_operational_memory_kind ON operational_memory_records(kind)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_operational_memory_scope ON operational_memory_records(scope)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_operational_memory_role ON operational_memory_records(role)")
+            """)
         conn.execute(
-            """
+            "CREATE INDEX IF NOT EXISTS idx_operational_memory_kind ON operational_memory_records(kind)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_operational_memory_scope ON operational_memory_records(scope)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_operational_memory_role ON operational_memory_records(role)"
+        )
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS operational_memory_meta (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             )
-            """
+            """)
+        conn.execute(
+            "INSERT OR REPLACE INTO operational_memory_meta(key, value) VALUES('schema_version', '1')"
         )
-        conn.execute("INSERT OR REPLACE INTO operational_memory_meta(key, value) VALUES('schema_version', '1')")
-        conn.execute("INSERT OR REPLACE INTO operational_memory_meta(key, value) VALUES('memory_class', 'operational_context')")
+        conn.execute(
+            "INSERT OR REPLACE INTO operational_memory_meta(key, value) VALUES('memory_class', 'operational_context')"
+        )
 
 
 def operational_status(db_path: Path) -> dict[str, Any]:
     ensure_operational_db(db_path)
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        row_count = conn.execute("SELECT count(*) FROM operational_memory_records").fetchone()[0]
+        row_count = conn.execute(
+            "SELECT count(*) FROM operational_memory_records"
+        ).fetchone()[0]
         kind_rows = conn.execute(
             "SELECT kind, count(*) AS count FROM operational_memory_records GROUP BY kind ORDER BY count DESC, kind"
         ).fetchall()
@@ -136,31 +148,46 @@ def operational_status(db_path: Path) -> dict[str, Any]:
 
 def persistent_status(db_path: Path) -> dict[str, Any]:
     if not db_path.exists():
-        return {"exists": False, "opened_read_only": False, "record_count": 0, "tables": []}
+        return {
+            "exists": False,
+            "opened_read_only": False,
+            "record_count": 0,
+            "tables": [],
+        }
     tables: list[dict[str, Any]] = []
     record_count = 0
     uri = f"file:{db_path.as_posix()}?mode=ro"
     with sqlite3.connect(uri, uri=True) as conn:
         conn.row_factory = sqlite3.Row
-        table_rows = conn.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall()
+        table_rows = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        ).fetchall()
         for row in table_rows:
             table_name = str(row["name"])
             try:
-                count = conn.execute(f'SELECT count(*) FROM "{table_name.replace(chr(34), chr(34) + chr(34))}"').fetchone()[0]
+                count = conn.execute(
+                    f'SELECT count(*) FROM "{table_name.replace(chr(34), chr(34) + chr(34))}"'
+                ).fetchone()[0]
             except Exception:
                 count = None
             tables.append({"name": table_name, "row_count": count})
         if any(item["name"] == "memory_records" for item in tables):
-            record_count = conn.execute("SELECT count(*) FROM memory_records").fetchone()[0]
-    return {"exists": True, "opened_read_only": True, "record_count": record_count, "tables": tables}
+            record_count = conn.execute(
+                "SELECT count(*) FROM memory_records"
+            ).fetchone()[0]
+    return {
+        "exists": True,
+        "opened_read_only": True,
+        "record_count": record_count,
+        "tables": tables,
+    }
 
 
 def ensure_persistent_db(db_path: Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(db_path) as conn:
         conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS memory_records (
                 record_id TEXT PRIMARY KEY,
                 created_at TEXT NOT NULL,
@@ -173,14 +200,27 @@ def ensure_persistent_db(db_path: Path) -> None:
                 tags_json TEXT NOT NULL,
                 metadata_json TEXT NOT NULL
             )
-            """
+            """)
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_memory_records_kind ON memory_records(kind)"
         )
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_records_kind ON memory_records(kind)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_records_scope ON memory_records(scope)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_records_source ON memory_records(source)")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_memory_records_scope ON memory_records(scope)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_memory_records_source ON memory_records(source)"
+        )
 
 
-def remember_operational(db_path: Path, *, summary: str, content: str, role: str, tags: list[str], metadata: dict[str, Any]) -> dict[str, Any]:
+def remember_operational(
+    db_path: Path,
+    *,
+    summary: str,
+    content: str,
+    role: str,
+    tags: list[str],
+    metadata: dict[str, Any],
+) -> dict[str, Any]:
     ensure_operational_db(db_path)
     timestamp = now_iso()
     identity = f"{timestamp}:{role}:{summary}:{content}"
@@ -211,7 +251,15 @@ def remember_operational(db_path: Path, *, summary: str, content: str, role: str
     return {"record_id": record_id, "created_at": timestamp}
 
 
-def remember_persistent(db_path: Path, *, summary: str, content: str, source: str, tags: list[str], metadata: dict[str, Any]) -> dict[str, Any]:
+def remember_persistent(
+    db_path: Path,
+    *,
+    summary: str,
+    content: str,
+    source: str,
+    tags: list[str],
+    metadata: dict[str, Any],
+) -> dict[str, Any]:
     ensure_persistent_db(db_path)
     timestamp = now_iso()
     identity = f"{timestamp}:{source}:{summary}:{content}"
@@ -239,7 +287,11 @@ def remember_persistent(db_path: Path, *, summary: str, content: str, source: st
                 json.dumps(metadata, ensure_ascii=False),
             ),
         )
-    return {"record_id": record_id, "created_at": timestamp, "persistent_database_written": True}
+    return {
+        "record_id": record_id,
+        "created_at": timestamp,
+        "persistent_database_written": True,
+    }
 
 
 def search_operational(db_path: Path, query: str, limit: int) -> list[dict[str, Any]]:
@@ -373,7 +425,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     else:
         try:
             if operation == "status":
-                result = operational_status(operational_db) if memory_scope == "operational" else persistent_status(persistent_db)
+                result = (
+                    operational_status(operational_db)
+                    if memory_scope == "operational"
+                    else persistent_status(persistent_db)
+                )
             elif operation == "remember":
                 if memory_scope == "operational":
                     result = remember_operational(
@@ -382,33 +438,51 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                         content=content_text,
                         role=args.role,
                         tags=parse_tags(args.tag),
-                        metadata={"tool": "agent_runtime_sqlite_memory", "request_id": args.request_id},
+                        metadata={
+                            "tool": "agent_runtime_sqlite_memory",
+                            "request_id": args.request_id,
+                        },
                     )
                     operational_write = True
                 elif memory_scope == "persistent":
-                    if not args.allow_persistent_write or args.confirm != "persistent_write":
-                        raise ValueError("persistent remember requires --allow-persistent-write and --confirm persistent_write")
+                    if (
+                        not args.allow_persistent_write
+                        or args.confirm != "persistent_write"
+                    ):
+                        raise ValueError(
+                            "persistent remember requires --allow-persistent-write and --confirm persistent_write"
+                        )
                     result = remember_persistent(
                         persistent_db,
                         summary=args.summary,
                         content=content_text,
                         source=args.role,
                         tags=parse_tags(args.tag),
-                        metadata={"tool": "agent_runtime_sqlite_memory", "request_id": args.request_id, "explicit_confirm": args.confirm},
+                        metadata={
+                            "tool": "agent_runtime_sqlite_memory",
+                            "request_id": args.request_id,
+                            "explicit_confirm": args.confirm,
+                        },
                     )
                     persistent_write = True
                 else:
-                    raise ValueError(f"unsupported memory scope for remember: {memory_scope}")
+                    raise ValueError(
+                        f"unsupported memory scope for remember: {memory_scope}"
+                    )
             elif operation == "search":
                 result = {
                     "query": args.query,
-                    "records": search_operational(operational_db, args.query, args.limit)
-                    if memory_scope == "operational"
-                    else search_persistent(persistent_db, args.query, args.limit),
+                    "records": (
+                        search_operational(operational_db, args.query, args.limit)
+                        if memory_scope == "operational"
+                        else search_persistent(persistent_db, args.query, args.limit)
+                    ),
                 }
             elif operation == "clear_operational":
                 if memory_scope != "operational":
-                    raise ValueError("clear_operational is allowed only for operational memory")
+                    raise ValueError(
+                        "clear_operational is allowed only for operational memory"
+                    )
                 result = clear_operational(operational_db, args.confirm)
                 operational_write = True
                 operational_clear = True
@@ -444,7 +518,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "persistent_memory_read_only": True,
             "persistent_memory_write_performed": persistent_write,
             "persistent_memory_promotion_performed": False,
-            "persistent_memory_write_authorized": bool(args.allow_persistent_write and args.confirm == "persistent_write"),
+            "persistent_memory_write_authorized": bool(
+                args.allow_persistent_write and args.confirm == "persistent_write"
+            ),
             "sqlite_write_performed": persistent_write,
             "operational_sqlite_write_performed": operational_write,
             "operational_memory_clear_performed": operational_clear,
@@ -491,14 +567,24 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--action", choices=("status", "remember", "search", "clear_operational"), default="status")
-    parser.add_argument("--scope", choices=("operational", "persistent"), default="operational")
+    parser.add_argument(
+        "--action",
+        choices=("status", "remember", "search", "clear_operational"),
+        default="status",
+    )
+    parser.add_argument(
+        "--scope", choices=("operational", "persistent"), default="operational"
+    )
     parser.add_argument("--database", default=DEFAULT_OPERATIONAL_DB)
     parser.add_argument("--persistent-database", default=DEFAULT_PERSISTENT_DB)
     parser.add_argument("--request-id", default="runtime_sqlite_memory")
     parser.add_argument("--summary", default="")
     parser.add_argument("--content", default="")
-    parser.add_argument("--content-file", default="", help="Read remember content from file to avoid long Windows command lines.")
+    parser.add_argument(
+        "--content-file",
+        default="",
+        help="Read remember content from file to avoid long Windows command lines.",
+    )
     parser.add_argument("--role", default="doctor_tool")
     parser.add_argument("--tag", action="append", default=[])
     parser.add_argument("--query", default="")
@@ -515,7 +601,9 @@ def main() -> int:
     markdown = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     markdown.write_text(render_markdown(report), encoding="utf-8")
     print(
         json.dumps(
@@ -526,9 +614,15 @@ def main() -> int:
                 "action": report["action"],
                 "scope": report["scope"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
-                "persistent_memory_write_performed": report["persistent_memory_write_performed"],
-                "operational_sqlite_write_performed": report["operational_sqlite_write_performed"],
-                "operational_memory_clear_performed": report["operational_memory_clear_performed"],
+                "persistent_memory_write_performed": report[
+                    "persistent_memory_write_performed"
+                ],
+                "operational_sqlite_write_performed": report[
+                    "operational_sqlite_write_performed"
+                ],
+                "operational_memory_clear_performed": report[
+                    "operational_memory_clear_performed"
+                ],
                 "patch_application_performed": report["patch_application_performed"],
             },
             indent=2,
@@ -540,4 +634,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

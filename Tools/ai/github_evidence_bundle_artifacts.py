@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Artifact manifest, discovery and bounded content helpers for evidence bundles."""
+
 from __future__ import annotations
 
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.github_evidence_bundle_io import (
+from tools.ai.github_evidence_bundle_io import (
     CONTENT_EXTENSION_ALLOWLIST,
     MAX_ARTIFACT_PREVIEW_CHARS,
     line_count,
@@ -55,7 +56,9 @@ def path_matches_any_glob(rel_path: str, patterns: tuple[str, ...] | list[str]) 
     return any(fnmatch(normalized, pattern.replace("\\", "/")) for pattern in patterns)
 
 
-def text_line_chunks(rel_path: str, text: str, *, max_lines: int) -> list[dict[str, Any]]:
+def text_line_chunks(
+    rel_path: str, text: str, *, max_lines: int
+) -> list[dict[str, Any]]:
     """Build pointer-linked chunk metadata for a large text artifact."""
     if max_lines <= 0:
         return []
@@ -63,7 +66,7 @@ def text_line_chunks(rel_path: str, text: str, *, max_lines: int) -> list[dict[s
     if len(lines) <= max_lines:
         return []
     chunks: list[dict[str, Any]] = []
-    chunk_count = (len(lines) + max_lines - 1) // max_lines
+    chunk_count = (len(lines) + max_lines - 1) / max_lines
     for index in range(chunk_count):
         start = index * max_lines + 1
         end = min((index + 1) * max_lines, len(lines))
@@ -93,7 +96,9 @@ def text_line_chunks(rel_path: str, text: str, *, max_lines: int) -> list[dict[s
     return chunks
 
 
-def chunk_index_entry(path: Path, repo_root: Path, *, max_lines: int) -> dict[str, Any] | None:
+def chunk_index_entry(
+    path: Path, repo_root: Path, *, max_lines: int
+) -> dict[str, Any] | None:
     """Return one chunk index entry for JSON/Markdown files above the line threshold."""
     if max_lines <= 0 or path.suffix.lower() not in {".json", ".md"}:
         return None
@@ -149,7 +154,10 @@ def summarize_artifact(path: Path, repo_root: Path) -> dict[str, Any]:
         return item
 
     rel = str(item["path"])
-    if path.suffix.lower() in CONTENT_EXTENSION_ALLOWLIST and raw_artifact_content_allowed(rel):
+    if (
+        path.suffix.lower() in CONTENT_EXTENSION_ALLOWLIST
+        and raw_artifact_content_allowed(rel)
+    ):
         text, error = read_text(path)
         if error:
             item["read_error"] = error
@@ -205,7 +213,9 @@ def build_included_artifact(
     return item
 
 
-def append_declared_artifacts(discovered: list[Path], repo_root: Path, data: dict[str, Any]) -> None:
+def append_declared_artifacts(
+    discovered: list[Path], repo_root: Path, data: dict[str, Any]
+) -> None:
     """Append report-declared related artifacts to a discovered path list."""
     for key in ("markdown_output", "markdown_report", "csv_written"):
         value = data.get(key)
@@ -234,7 +244,10 @@ def discover_related_artifacts(repo_root: Path, report_paths: list[Path]) -> lis
     for path in discovered:
         key = path.resolve().as_posix() if path.exists() else path.as_posix()
         unique[key] = path
-    return sorted(unique.values(), key=lambda item: normalize_manifest_path(item, repo_root).lower())
+    return sorted(
+        unique.values(),
+        key=lambda item: normalize_manifest_path(item, repo_root).lower(),
+    )
 
 
 def discover_recursive_artifacts(
@@ -259,23 +272,42 @@ def discover_recursive_artifacts(
             skipped.append({"path": root_rel, "reason": "recursive root missing"})
             continue
         if not root_path.is_dir():
-            skipped.append({"path": root_rel, "reason": "recursive root is not a directory"})
+            skipped.append(
+                {"path": root_rel, "reason": "recursive root is not a directory"}
+            )
             continue
-        for path in sorted(root_path.rglob("*"), key=lambda item: normalize_manifest_path(item, repo_root).lower()):
+        for path in sorted(
+            root_path.rglob("*"),
+            key=lambda item: normalize_manifest_path(item, repo_root).lower(),
+        ):
             if len(discovered) >= max_files:
-                skipped.append({"path": root_rel, "reason": f"recursive max files reached: {max_files}"})
+                skipped.append(
+                    {
+                        "path": root_rel,
+                        "reason": f"recursive max files reached: {max_files}",
+                    }
+                )
                 return discovered, skipped
             if not path.is_file() or path.suffix.lower() not in normalized_suffixes:
                 continue
             rel = normalize_manifest_path(path, repo_root)
             if path_matches_any_glob(rel, exclude_globs):
-                skipped.append({"path": rel, "reason": "excluded by recursive guardrail"})
+                skipped.append(
+                    {"path": rel, "reason": "excluded by recursive guardrail"}
+                )
                 continue
             if not raw_artifact_content_allowed(rel):
-                skipped.append({"path": rel, "reason": "content denied by shared evidence-bundle policy"})
+                skipped.append(
+                    {
+                        "path": rel,
+                        "reason": "content denied by shared evidence-bundle policy",
+                    }
+                )
                 continue
             if stamp and not include_unstamped and stamp not in rel:
-                skipped.append({"path": rel, "reason": "stamp not present in file name/path"})
+                skipped.append(
+                    {"path": rel, "reason": "stamp not present in file name/path"}
+                )
                 continue
             key = path.resolve().as_posix()
             if key in seen:
@@ -297,10 +329,21 @@ def build_included_artifacts(
     max_lines_per_chunk: int = 0,
 ) -> list[dict[str, Any]]:
     """Build deduplicated bounded included-artifact entries."""
-    auto_artifacts = discover_related_artifacts(repo_root, report_paths) if auto_include_related else []
-    included_candidates: list[tuple[Path, str]] = [(path, "explicit_artifact") for path in artifact_paths]
-    included_candidates.extend((path, "recursive_default_artifact") for path in (recursive_artifact_paths or []))
-    included_candidates.extend((path, "auto_related_artifact") for path in auto_artifacts)
+    auto_artifacts = (
+        discover_related_artifacts(repo_root, report_paths)
+        if auto_include_related
+        else []
+    )
+    included_candidates: list[tuple[Path, str]] = [
+        (path, "explicit_artifact") for path in artifact_paths
+    ]
+    included_candidates.extend(
+        (path, "recursive_default_artifact")
+        for path in (recursive_artifact_paths or [])
+    )
+    included_candidates.extend(
+        (path, "auto_related_artifact") for path in auto_artifacts
+    )
     deduped: dict[str, tuple[Path, str]] = {}
     for path, role in included_candidates:
         key = path.resolve().as_posix() if path.exists() else path.as_posix()

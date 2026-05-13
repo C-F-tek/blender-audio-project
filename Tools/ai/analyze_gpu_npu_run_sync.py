@@ -6,6 +6,7 @@ sync diagnostics, performance timing summaries, operational opinions and
 balanced-run parameter suggestions. It does not run providers, apply patches,
 write source files, execute Blender, write SQLite databases or change Git state.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -17,14 +18,14 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 
 GPU_ROUND_ELAPSED_SOURCE = "gpu_round_elapsed_seconds"
 GPU_ROUND_ALIAS_SOURCE = "gpu_round_duration_fields"
@@ -46,7 +47,11 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -57,7 +62,11 @@ def nested_dict(data: dict[str, Any], key: str) -> dict[str, Any]:
 
 
 def list_of_dicts(value: Any) -> list[dict[str, Any]]:
-    return [item for item in value if isinstance(item, dict)] if isinstance(value, list) else []
+    return (
+        [item for item in value if isinstance(item, dict)]
+        if isinstance(value, list)
+        else []
+    )
 
 
 def safe_float(value: Any, default: float = 0.0) -> float:
@@ -126,7 +135,9 @@ def numeric_round_field(round_item: dict[str, Any], key: str) -> float:
     return value if value > 0 else 0.0
 
 
-def collect_round_field_durations(rounds: list[dict[str, Any]], key: str) -> list[float]:
+def collect_round_field_durations(
+    rounds: list[dict[str, Any]], key: str
+) -> list[float]:
     durations: list[float] = []
     for item in rounds:
         value = numeric_round_field(item, key)
@@ -136,11 +147,17 @@ def collect_round_field_durations(rounds: list[dict[str, Any]], key: str) -> lis
 
 
 def extract_round_duration_alias(round_item: dict[str, Any]) -> float:
-    for key in ("round_elapsed_seconds", "duration_seconds", "provider_elapsed_seconds"):
+    for key in (
+        "round_elapsed_seconds",
+        "duration_seconds",
+        "provider_elapsed_seconds",
+    ):
         value = numeric_round_field(round_item, key)
         if value > 0:
             return value
-    return duration_from_timestamps(round_item.get("started_at"), round_item.get("finished_at"))
+    return duration_from_timestamps(
+        round_item.get("started_at"), round_item.get("finished_at")
+    )
 
 
 def extract_gpu_round_durations(
@@ -209,26 +226,41 @@ def summarize_gpu_timing(
         or safe_float(gpu_summary.get("elapsed_seconds"))
         or safe_float(report.get("elapsed_seconds"))
     )
-    round_durations, source = extract_gpu_round_durations(report, rounds, round_count, gpu_elapsed)
+    round_durations, source = extract_gpu_round_durations(
+        report, rounds, round_count, gpu_elapsed
+    )
     return {
         "elapsed_seconds": round(gpu_elapsed, 3),
         "round_count": round_count,
         "round_duration_source": source,
         "round_duration_sample_count": len(round_durations),
-        "avg_round_seconds": round(sum(round_durations) / len(round_durations), 3) if round_durations else 0.0,
+        "avg_round_seconds": (
+            round(sum(round_durations) / len(round_durations), 3)
+            if round_durations
+            else 0.0
+        ),
         "p50_round_seconds": round(percentile(round_durations, 50), 3),
         "p90_round_seconds": round(percentile(round_durations, 90), 3),
         "max_round_seconds": round(max(round_durations), 3) if round_durations else 0.0,
         "round_durations_total_seconds": rounded_sum(round_durations),
-        "provider_empty_response_count": safe_int(report.get("provider_empty_response_count")),
-        "schema_repair_retry_attempt_count": safe_int(report.get("schema_repair_retry_attempt_count")),
-        "schema_repair_retry_accept_count": safe_int(report.get("schema_repair_retry_accept_count")),
+        "provider_empty_response_count": safe_int(
+            report.get("provider_empty_response_count")
+        ),
+        "schema_repair_retry_attempt_count": safe_int(
+            report.get("schema_repair_retry_attempt_count")
+        ),
+        "schema_repair_retry_accept_count": safe_int(
+            report.get("schema_repair_retry_accept_count")
+        ),
         "runtime_tool_counters": runtime_tool_counters(report),
-        "embedded_performance": compact_performance_source(gpu_summary) or compact_performance_source(report),
+        "embedded_performance": compact_performance_source(gpu_summary)
+        or compact_performance_source(report),
     }
 
 
-def summarize_npu_timing(report: dict[str, Any], npu_audits: list[dict[str, Any]]) -> dict[str, Any]:
+def summarize_npu_timing(
+    report: dict[str, Any], npu_audits: list[dict[str, Any]]
+) -> dict[str, Any]:
     durations = [audit_duration_seconds(item) for item in npu_audits]
     durations = [value for value in durations if value > 0]
     status_counts: dict[str, int] = {}
@@ -237,14 +269,20 @@ def summarize_npu_timing(report: dict[str, Any], npu_audits: list[dict[str, Any]
         status = str(item.get("status") or "unknown")
         classification = str(item.get("classification") or "unknown")
         status_counts[status] = status_counts.get(status, 0) + 1
-        classification_counts[classification] = classification_counts.get(classification, 0) + 1
+        classification_counts[classification] = (
+            classification_counts.get(classification, 0) + 1
+        )
 
     return {
         "audit_count": len(npu_audits),
-        "audit_requested_count": safe_int(report.get("npu_audit_requested_count")) + safe_int(report.get("npu_micro_support_count")),
-        "audit_success_count": safe_int(report.get("npu_audit_success_count")) + safe_int(report.get("npu_micro_support_success_count")),
+        "audit_requested_count": safe_int(report.get("npu_audit_requested_count"))
+        + safe_int(report.get("npu_micro_support_count")),
+        "audit_success_count": safe_int(report.get("npu_audit_success_count"))
+        + safe_int(report.get("npu_micro_support_success_count")),
         "duration_sample_count": len(durations),
-        "avg_audit_seconds": round(sum(durations) / len(durations), 3) if durations else 0.0,
+        "avg_audit_seconds": (
+            round(sum(durations) / len(durations), 3) if durations else 0.0
+        ),
         "p50_audit_seconds": round(percentile(durations, 50), 3),
         "p90_audit_seconds": round(percentile(durations, 90), 3),
         "max_audit_seconds": round(max(durations), 3) if durations else 0.0,
@@ -289,24 +327,46 @@ def build_performance_summary(
     }
 
 
-def build_suggestions(report: dict[str, Any], metrics: dict[str, Any]) -> dict[str, Any]:
+def build_suggestions(
+    report: dict[str, Any], metrics: dict[str, Any]
+) -> dict[str, Any]:
     avg_gpu = metrics["avg_gpu_round_seconds"]
     avg_npu = metrics["avg_npu_audit_seconds"]
-    suggested_every = max(2, min(8, round(avg_npu / avg_gpu))) if avg_gpu > 0 and avg_npu > 0 else 4
+    suggested_every = (
+        max(2, min(8, round(avg_npu / avg_gpu))) if avg_gpu > 0 and avg_npu > 0 else 4
+    )
     reasoning: list[str] = []
 
     if metrics["npu_audit_count"] == 0:
-        reasoning.append("No NPU audits were observed; first verify provider availability before tuning cadence.")
+        reasoning.append(
+            "No NPU audits were observed; first verify provider availability before tuning cadence."
+        )
     if metrics["npu_audit_round_coverage"] < 0.35 and metrics["gpu_round_count"] >= 12:
-        reasoning.append("NPU audit coverage is low compared with GPU round count; keep checkpoint auditing sampled, not per-round.")
+        reasoning.append(
+            "NPU audit coverage is low compared with GPU round count; keep checkpoint auditing sampled, not per-round."
+        )
     if metrics["gpu_metrics_source"] == GPU_ELAPSED_FALLBACK_SOURCE:
-        reasoning.append("GPU per-round elapsed_seconds was unavailable; using total GPU elapsed divided by round count as estimate.")
+        reasoning.append(
+            "GPU per-round elapsed_seconds was unavailable; using total GPU elapsed divided by round count as estimate."
+        )
     if metrics["npu_to_gpu_avg_duration_ratio"] > 2.0:
-        reasoning.append("Average NPU audit duration is much slower than one GPU round; reduce NPU prompt/context/tokens and audit every several rounds.")
-    if metrics["npu_audit_success_count"] == metrics["npu_audit_count"] and metrics["npu_audit_count"] > 0:
-        reasoning.append("NPU audits are usable; tune cadence rather than disabling the lane.")
-    if report.get("gpu_empty_recommendations_reason") == "repair_attempt_failed" or report.get("empty_recommendations_reason") == "repair_attempt_failed":
-        reasoning.append("GPU JSON contract hardening should be tested before increasing GPU token budget further.")
+        reasoning.append(
+            "Average NPU audit duration is much slower than one GPU round; reduce NPU prompt/context/tokens and audit every several rounds."
+        )
+    if (
+        metrics["npu_audit_success_count"] == metrics["npu_audit_count"]
+        and metrics["npu_audit_count"] > 0
+    ):
+        reasoning.append(
+            "NPU audits are usable; tune cadence rather than disabling the lane."
+        )
+    if (
+        report.get("gpu_empty_recommendations_reason") == "repair_attempt_failed"
+        or report.get("empty_recommendations_reason") == "repair_attempt_failed"
+    ):
+        reasoning.append(
+            "GPU JSON contract hardening should be tested before increasing GPU token budget further."
+        )
 
     return {
         "recommended_profile": "gpu_npu_balanced_advisory",
@@ -337,7 +397,9 @@ def has_real_gpu_round_timing(metrics: dict[str, Any]) -> bool:
     return metrics.get("gpu_metrics_source") == GPU_ROUND_ELAPSED_SOURCE
 
 
-def build_operational_opinions(metrics: dict[str, Any], performance: dict[str, Any]) -> list[str]:
+def build_operational_opinions(
+    metrics: dict[str, Any], performance: dict[str, Any]
+) -> list[str]:
     opinions: list[str] = []
     ratio = safe_float(metrics.get("npu_to_gpu_avg_duration_ratio"))
     coverage = safe_float(metrics.get("npu_audit_round_coverage"))
@@ -346,21 +408,35 @@ def build_operational_opinions(metrics: dict[str, Any], performance: dict[str, A
     runtime_blocked = safe_int(runtime.get("runtime_tool_blocked_count"))
 
     if ratio > 2.0:
-        opinions.append("NPU should remain an advisory sampled auditor, not a lockstep reviewer for every GPU round.")
+        opinions.append(
+            "NPU should remain an advisory sampled auditor, not a lockstep reviewer for every GPU round."
+        )
     elif ratio > 0:
-        opinions.append("GPU/NPU cadence is measurable; tune audit frequency from timing evidence rather than intuition.")
+        opinions.append(
+            "GPU/NPU cadence is measurable; tune audit frequency from timing evidence rather than intuition."
+        )
     if coverage < 0.5:
-        opinions.append("Audit coverage is intentionally sparse; this is acceptable only if findings are high-signal and evidence-backed.")
+        opinions.append(
+            "Audit coverage is intentionally sparse; this is acceptable only if findings are high-signal and evidence-backed."
+        )
     if not has_real_gpu_round_timing(metrics):
-        opinions.append("GPU round timing is not sourced from rounds[*].elapsed_seconds; keep diagnostics degraded until real samples are present.")
+        opinions.append(
+            "GPU round timing is not sourced from rounds[*].elapsed_seconds; keep diagnostics degraded until real samples are present."
+        )
     if runtime_failed or runtime_blocked:
-        opinions.append("Runtime tool execution had failed or blocked requests; recommendations should reference broker evidence before proposing patches.")
+        opinions.append(
+            "Runtime tool execution had failed or blocked requests; recommendations should reference broker evidence before proposing patches."
+        )
     if not opinions:
-        opinions.append("GPU/NPU timing is healthy enough for the current advisory workflow; keep the lane report-only.")
+        opinions.append(
+            "GPU/NPU timing is healthy enough for the current advisory workflow; keep the lane report-only."
+        )
     return opinions
 
 
-def build_refactoring_suggestions(metrics: dict[str, Any], performance: dict[str, Any]) -> list[dict[str, Any]]:
+def build_refactoring_suggestions(
+    metrics: dict[str, Any], performance: dict[str, Any]
+) -> list[dict[str, Any]]:
     suggestions: list[dict[str, Any]] = []
     runtime = nested_dict(nested_dict(performance, "gpu"), "runtime_tool_counters")
     runtime_failed = safe_int(runtime.get("runtime_tool_failed_count"))
@@ -376,7 +452,10 @@ def build_refactoring_suggestions(metrics: dict[str, Any], performance: dict[str
                 "guardrail": "report_only_no_provider_setting_change",
             }
         )
-    if safe_int(nested_dict(performance, "npu").get("duration_sample_count")) == 0 and safe_int(metrics.get("npu_audit_count")) > 0:
+    if (
+        safe_int(nested_dict(performance, "npu").get("duration_sample_count")) == 0
+        and safe_int(metrics.get("npu_audit_count")) > 0
+    ):
         suggestions.append(
             {
                 "priority": "high",
@@ -430,14 +509,33 @@ def analyze(repo_root: Path, orchestrator_path: Path) -> dict[str, Any]:
     legacy_npu_audits = list_of_dicts(report.get("npu_audits"))
     npu_micro_supports = list_of_dicts(report.get("npu_micro_supports"))
     npu_audits = legacy_npu_audits + npu_micro_supports
-    round_count = first_int(len(rounds), report.get("round_count"), gpu_summary.get("round_count"))
-    audit_count = len(npu_audits) if npu_audits else safe_int(report.get("npu_audit_count")) + safe_int(report.get("npu_micro_support_count"))
-    success_count = safe_int(report.get("npu_audit_success_count")) + safe_int(report.get("npu_micro_support_success_count"))
-    gpu_elapsed = safe_float(report.get("gpu_elapsed_seconds")) or safe_float(gpu_summary.get("elapsed_seconds")) or safe_float(report.get("elapsed_seconds"))
-    gpu_round_durations, gpu_metrics_source = extract_gpu_round_durations(report, rounds, round_count, gpu_elapsed)
+    round_count = first_int(
+        len(rounds), report.get("round_count"), gpu_summary.get("round_count")
+    )
+    audit_count = (
+        len(npu_audits)
+        if npu_audits
+        else safe_int(report.get("npu_audit_count"))
+        + safe_int(report.get("npu_micro_support_count"))
+    )
+    success_count = safe_int(report.get("npu_audit_success_count")) + safe_int(
+        report.get("npu_micro_support_success_count")
+    )
+    gpu_elapsed = (
+        safe_float(report.get("gpu_elapsed_seconds"))
+        or safe_float(gpu_summary.get("elapsed_seconds"))
+        or safe_float(report.get("elapsed_seconds"))
+    )
+    gpu_round_durations, gpu_metrics_source = extract_gpu_round_durations(
+        report, rounds, round_count, gpu_elapsed
+    )
     npu_durations = [audit_duration_seconds(item) for item in npu_audits]
     npu_durations = [value for value in npu_durations if value > 0]
-    avg_gpu = sum(gpu_round_durations) / len(gpu_round_durations) if gpu_round_durations else 0.0
+    avg_gpu = (
+        sum(gpu_round_durations) / len(gpu_round_durations)
+        if gpu_round_durations
+        else 0.0
+    )
     avg_npu = sum(npu_durations) / len(npu_durations) if npu_durations else 0.0
 
     metrics = {
@@ -445,20 +543,30 @@ def analyze(repo_root: Path, orchestrator_path: Path) -> dict[str, Any]:
         "npu_audit_count": audit_count,
         "legacy_npu_audit_count": len(legacy_npu_audits),
         "npu_micro_support_count": len(npu_micro_supports),
-        "npu_micro_support_overlap_count": safe_int(report.get("npu_micro_support_overlap_count")),
+        "npu_micro_support_overlap_count": safe_int(
+            report.get("npu_micro_support_overlap_count")
+        ),
         "gpu0_peer_support_count": safe_int(report.get("gpu0_peer_support_count")),
-        "gpu0_peer_support_overlap_count": safe_int(report.get("gpu0_peer_support_overlap_count")),
+        "gpu0_peer_support_overlap_count": safe_int(
+            report.get("gpu0_peer_support_overlap_count")
+        ),
         "npu_audit_success_count": success_count,
-        "npu_audit_round_coverage": round(audit_count / round_count, 3) if round_count else 0.0,
+        "npu_audit_round_coverage": (
+            round(audit_count / round_count, 3) if round_count else 0.0
+        ),
         "avg_gpu_round_seconds": round(avg_gpu, 3),
         "p50_gpu_round_seconds": round(percentile(gpu_round_durations, 50), 3),
         "p90_gpu_round_seconds": round(percentile(gpu_round_durations, 90), 3),
         "avg_npu_audit_seconds": round(avg_npu, 3),
         "p50_npu_audit_seconds": round(percentile(npu_durations, 50), 3),
         "p90_npu_audit_seconds": round(percentile(npu_durations, 90), 3),
-        "npu_to_gpu_avg_duration_ratio": round(avg_npu / avg_gpu, 3) if avg_gpu else 0.0,
+        "npu_to_gpu_avg_duration_ratio": (
+            round(avg_npu / avg_gpu, 3) if avg_gpu else 0.0
+        ),
         "gpu_elapsed_seconds": round(gpu_elapsed, 3),
-        "provider_execution_performed": bool(report.get("provider_execution_performed")),
+        "provider_execution_performed": bool(
+            report.get("provider_execution_performed")
+        ),
         "patch_application_performed": bool(report.get("patch_application_performed")),
         "source_writes_performed": bool(report.get("source_writes_performed")),
         "gpu_metrics_source": gpu_metrics_source,
@@ -493,7 +601,10 @@ def analyze(repo_root: Path, orchestrator_path: Path) -> dict[str, Any]:
         "operational_opinions": build_operational_opinions(metrics, performance),
         "refactoring_suggestions": build_refactoring_suggestions(metrics, performance),
         "decision": {
-            "npu_too_slow_for_per_round_lockstep": metrics["npu_to_gpu_avg_duration_ratio"] > 1.5,
+            "npu_too_slow_for_per_round_lockstep": metrics[
+                "npu_to_gpu_avg_duration_ratio"
+            ]
+            > 1.5,
             "recommended_next_layer": "feed timing-backed GPU/NPU suggestions into decision-loop patch planning",
             "manual_review_required": True,
         },
@@ -503,8 +614,12 @@ def analyze(repo_root: Path, orchestrator_path: Path) -> dict[str, Any]:
 def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# GPU/NPU Run Sync Analysis", ""]
     lines.append(f"- Passed: `{report['passed']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{report['provider_execution_performed']}`"
+    )
+    lines.append(
+        f"- Patch application performed: `{report['patch_application_performed']}`"
+    )
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
     lines.append("")
     lines.append("## Metrics")
@@ -537,7 +652,9 @@ def render_markdown(report: dict[str, Any]) -> str:
 
     lines.extend(["", "## Refactoring suggestions", ""])
     for item in report.get("refactoring_suggestions", []):
-        lines.append(f"- `{item.get('priority')}` `{item.get('area')}`: {item.get('recommendation')} Evidence: {item.get('evidence')}")
+        lines.append(
+            f"- `{item.get('priority')}` `{item.get('area')}`: {item.get('recommendation')} Evidence: {item.get('evidence')}"
+        )
 
     lines.extend(["", "## Suggested balanced profile", ""])
     for key, value in report["suggestions"]["parameters"].items():
@@ -570,8 +687,12 @@ def main() -> int:
                 "passed": report["passed"],
                 "output": str(output),
                 "markdown": str(markdown_output),
-                "npu_to_gpu_avg_duration_ratio": report["metrics"]["npu_to_gpu_avg_duration_ratio"],
-                "npu_too_slow_for_per_round_lockstep": report["decision"]["npu_too_slow_for_per_round_lockstep"],
+                "npu_to_gpu_avg_duration_ratio": report["metrics"][
+                    "npu_to_gpu_avg_duration_ratio"
+                ],
+                "npu_too_slow_for_per_round_lockstep": report["decision"][
+                    "npu_too_slow_for_per_round_lockstep"
+                ],
                 "performance": report["performance"],
                 "refactoring_suggestion_count": len(report["refactoring_suggestions"]),
                 "patch_application_performed": report["patch_application_performed"],

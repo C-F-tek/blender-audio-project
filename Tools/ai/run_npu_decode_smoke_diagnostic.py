@@ -6,6 +6,7 @@ performed only when ``--run-npu`` is explicitly passed. Outputs are validation
 reports and optional packet files only; no Blender runtime, legacy output or full
 analysis JSON is touched.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -17,8 +18,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
-DEFAULT_MODEL_DIR = Path.home() / "blender" / "npu-models" / "Phi-3.5-mini-instruct-int4-cw-ov"
+DEFAULT_MODEL_DIR = (
+    Path.home() / "blender" / "npu-models" / "Phi-3.5-mini-instruct-int4-cw-ov"
+)
 DEFAULT_PROMPT = (
     "Return exactly this Markdown sentence and nothing else:\n"
     "## NPU Decode Smoke\n"
@@ -54,7 +56,11 @@ def text_metrics(text: str) -> dict[str, Any]:
     spaces = sum(1 for char in text if char.isspace())
     printable = sum(1 for char in text if char in PRINTABLE or char.isprintable())
     hexish = sum(1 for char in text if char in HEXISH_CHARS)
-    words = [word for word in text.replace("`", " ").replace("#", " ").split() if any(ch.isalpha() for ch in word)]
+    words = [
+        word
+        for word in text.replace("`", " ").replace("#", " ").split()
+        if any(ch.isalpha() for ch in word)
+    ]
     return {
         "chars": total,
         "alpha_chars": alpha,
@@ -86,7 +92,12 @@ def classify_text(text: str) -> tuple[str, list[str], list[str], dict[str, Any]]
         errors.append("output contains too many non-printable characters")
     if "NPU Decode Smoke" not in text:
         warnings.append("expected smoke heading was not found")
-    return ("usable_text" if not errors else "unusable_output", errors, warnings, metrics)
+    return (
+        "usable_text" if not errors else "unusable_output",
+        errors,
+        warnings,
+        metrics,
+    )
 
 
 def run_openvino_npu_smoke(
@@ -102,7 +113,7 @@ def run_openvino_npu_smoke(
 ) -> tuple[str, str | None, int | None]:
     """Run NPU smoke in the dedicated NPU Python environment."""
 
-    code = r'''
+    code = r"""
 import json
 import sys
 
@@ -124,7 +135,7 @@ try:
 except Exception as exc:
     print(json.dumps({"ok": False, "error": f"{type(exc).__name__}: {exc}"}, ensure_ascii=False))
     raise
-'''
+"""
     payload = {
         "model_dir": str(model_dir),
         "device": device,
@@ -157,10 +168,25 @@ except Exception as exc:
             parsed = candidate
             break
     if result.returncode != 0:
-        return "", str(parsed.get("error") or stderr or stdout or f"exit code {result.returncode}"), result.returncode
+        return (
+            "",
+            str(
+                parsed.get("error")
+                or stderr
+                or stdout
+                or f"exit code {result.returncode}"
+            ),
+            result.returncode,
+        )
     if parsed.get("ok") is True:
         return str(parsed.get("text") or ""), None, result.returncode
-    return "", str(parsed.get("error") or stderr or stdout or "unknown NPU decode smoke error"), result.returncode
+    return (
+        "",
+        str(
+            parsed.get("error") or stderr or stdout or "unknown NPU decode smoke error"
+        ),
+        result.returncode,
+    )
 
 
 def build_provider_envelope(
@@ -178,7 +204,9 @@ def build_provider_envelope(
     from Tools.npu.pipeline.providers import parse_provider_result  # noqa: PLC0415
 
     raw_result: dict[str, Any] = {"response": text, "error": error, "usage": metadata}
-    parsed = parse_provider_result(raw_result, provider=provider, model=model, executed=executed, allow_json=False)
+    parsed = parse_provider_result(
+        raw_result, provider=provider, model=model, executed=executed, allow_json=False
+    )
     return parsed.to_dict()
 
 
@@ -187,7 +215,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     _ensure_repo_imports(repo_root)
     model_dir = Path(args.model_dir).expanduser()
     prompt = args.prompt if args.prompt is not None else DEFAULT_PROMPT
-    python_exe = Path(args.python_exe).expanduser() if args.python_exe else _default_npu_python(repo_root)
+    python_exe = (
+        Path(args.python_exe).expanduser()
+        if args.python_exe
+        else _default_npu_python(repo_root)
+    )
 
     provider_execution_performed = False
     text = ""
@@ -222,7 +254,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         classification, quality_errors, quality_warnings, metrics = (
             "planned_only",
             [],
-            ["NPU execution was not requested; run with --run-npu for a real decode smoke."],
+            [
+                "NPU execution was not requested; run with --run-npu for a real decode smoke."
+            ],
             text_metrics(text),
         )
     errors = list(quality_errors)
@@ -271,7 +305,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "prompt_chars": len(prompt),
             "output_chars": len(text),
             "provider_envelope": provider_envelope,
-            "raw_text_output_path": str(Path(args.text_output)) if args.text_output else None,
+            "raw_text_output_path": (
+                str(Path(args.text_output)) if args.text_output else None
+            ),
             "raw_text_preview": text[:500],
             "promotion_gate": "classification == usable_text and provider_execution_performed == true",
         },
@@ -283,28 +319,45 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--model-dir", default=str(DEFAULT_MODEL_DIR))
-    parser.add_argument("--python-exe", default="", help="Optional dedicated NPU Python executable. Defaults to Tools.npu.npu_runtime.DEFAULT_NPU_PYTHON.")
+    parser.add_argument(
+        "--python-exe",
+        default="",
+        help="Optional dedicated NPU Python executable. Defaults to Tools.npu.npu_runtime.DEFAULT_NPU_PYTHON.",
+    )
     parser.add_argument("--device", default="NPU")
     parser.add_argument("--prompt", default=None)
-    parser.add_argument("--run-npu", action="store_true", help="Explicitly execute OpenVINO GenAI on NPU.")
+    parser.add_argument(
+        "--run-npu",
+        action="store_true",
+        help="Explicitly execute OpenVINO GenAI on NPU.",
+    )
     parser.add_argument("--max-new-tokens", type=int, default=96)
     parser.add_argument("--max-prompt-len", type=int, default=1024)
     parser.add_argument("--min-response-len", type=int, default=16)
     parser.add_argument("--timeout", type=float, default=90.0)
-    parser.add_argument("--output", default="output/validation/npu_decode_smoke_diagnostic.json")
-    parser.add_argument("--text-output", default="output/ai_packets/npu_decode_smoke_output.md")
+    parser.add_argument(
+        "--output", default="output/validation/npu_decode_smoke_diagnostic.json"
+    )
+    parser.add_argument(
+        "--text-output", default="output/ai_packets/npu_decode_smoke_output.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     _ensure_repo_imports(repo_root)
-    from Tools.validation.report_utils import resolve_output_path, write_json_report  # noqa: PLC0415
+    from tools.validation.report_utils import (  # noqa: PLC0415
+        resolve_output_path,
+        write_json_report,
+    )
 
     report = build_report(args)
     output = resolve_output_path(repo_root, args.output) if args.output else None
     if args.text_output and report["provider_execution_performed"]:
         text_output = resolve_output_path(repo_root, args.text_output)
         text_output.parent.mkdir(parents=True, exist_ok=True)
-        text_output.write_text(str(report.get("raw_text") or "") + "\n", encoding="utf-8")
+        text_output.write_text(
+            str(report.get("raw_text") or "") + "\n", encoding="utf-8"
+        )
     rendered = write_json_report(report, output)
     print(rendered, end="")
     return 0 if report["passed"] else 2

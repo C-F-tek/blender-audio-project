@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """PowerShell-specific patchkit helpers."""
+
 from __future__ import annotations
 
 import re
@@ -15,7 +16,12 @@ def run_parser(path: Path) -> tuple[bool, str]:
         f"$null=[System.Management.Automation.Language.Parser]::ParseFile('{ps_path}',[ref]$tokens,[ref]$errors);"
         "if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_.Message };exit 1}else{exit 0}"
     )
-    result = subprocess.run(["powershell.exe", "-NoProfile", "-Command", command], capture_output=True, text=True, check=False)
+    result = subprocess.run(
+        ["powershell.exe", "-NoProfile", "-Command", command],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
     return result.returncode == 0, result.stdout + result.stderr
 
 
@@ -42,14 +48,20 @@ def find_invoke_checked_block_end(lines: list[str], label: str) -> int | None:
     return None
 
 
-def insert_after_invoke_checked(text: str, label: str, content: str, *, idempotency_marker: str = "") -> tuple[bool, str, str]:
+def insert_after_invoke_checked(
+    text: str, label: str, content: str, *, idempotency_marker: str = ""
+) -> tuple[bool, str, str]:
     if idempotency_marker and idempotency_marker in text:
         return False, text, "idempotency marker already present"
     lines = text.splitlines()
     end = find_invoke_checked_block_end(lines, label)
     if end is None:
         raise ValueError(f"Invoke-Checked block not found or unterminated: {label}")
-    new_lines = lines[: end + 1] + ["", *content.strip("\n").splitlines(), ""] + lines[end + 1 :]
+    new_lines = (
+        lines[: end + 1]
+        + ["", *content.strip("\n").splitlines(), ""]
+        + lines[end + 1 :]
+    )
     return True, "\n".join(new_lines) + "\n", "insert_after_invoke_checked"
 
 

@@ -36,8 +36,10 @@ def forbidden_reason(rel_path: str, *, allow_output: bool = False) -> str | None
     """Return why a repository path is unsafe for the review ZIP."""
     rel = rel_path.replace("\\", "/").lstrip("./")
     lower = rel.lower()
-    prefixes = FORBIDDEN_PREFIXES if not allow_output else tuple(
-        prefix for prefix in FORBIDDEN_PREFIXES if prefix != "output/"
+    prefixes = (
+        FORBIDDEN_PREFIXES
+        if not allow_output
+        else tuple(prefix for prefix in FORBIDDEN_PREFIXES if prefix != "output/")
     )
     for prefix in prefixes:
         if lower.startswith(prefix.lower()):

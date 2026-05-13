@@ -5,6 +5,7 @@ This is the non-legacy successor of the useful provider invocation/bridge
 semantics: workload report contract, telemetry contract, NPU audit hooks,
 provider command plan, and real-run gate. It does not execute providers.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -15,14 +16,30 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.heap_provider_budget_governor import SAFETY_FLAGS, build_heap_provider_budget_governor, config_from_namespace
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from tools.ai.heap_provider_budget_governor import (
+        SAFETY_FLAGS,
+        build_heap_provider_budget_governor,
+        config_from_namespace,
+    )
+    from tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.heap_provider_budget_governor import SAFETY_FLAGS, build_heap_provider_budget_governor, config_from_namespace  # type: ignore
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from tools.ai.heap_provider_budget_governor import (  # type: ignore
+        SAFETY_FLAGS,
+        build_heap_provider_budget_governor,
+        config_from_namespace,
+    )
+    from tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 PRIMARY_PROVIDER_LANE = "gpu1_planner"
 AUDITOR_LANE = "npu_critic"
@@ -141,23 +158,59 @@ def build_npu_audit_hooks(governor: dict[str, Any]) -> dict[str, Any]:
         ],
         "sample_count": npu_lane.get("max_samples", 3),
         "promotion_allowed": False,
-        "model_load_required_for_contract": bool(npu_lane.get("model_load_required", False)),
+        "model_load_required_for_contract": bool(
+            npu_lane.get("model_load_required", False)
+        ),
     }
     hooks.update(SAFETY_FLAGS)
     return hooks
 
 
-def build_real_run_gate(governor: dict[str, Any], workload_contract: dict[str, Any], telemetry_contract: dict[str, Any], npu_hooks: dict[str, Any], *, allow_provider_generation: bool, operator_intent: bool) -> dict[str, Any]:
+def build_real_run_gate(
+    governor: dict[str, Any],
+    workload_contract: dict[str, Any],
+    telemetry_contract: dict[str, Any],
+    npu_hooks: dict[str, Any],
+    *,
+    allow_provider_generation: bool,
+    operator_intent: bool,
+) -> dict[str, Any]:
     permit = safe_dict(governor.get("permit"))
     permit_allowed = bool(permit.get("permit_allowed"))
     requirements = [
-        requirement("operator_intent", operator_intent, "explicit operator intent required"),
-        requirement("allow_provider_generation", allow_provider_generation, "real generation flag required"),
-        requirement("permit_allowed", permit_allowed, "provider run permit must allow generation"),
-        requirement("workload_contract_ready", bool(workload_contract.get("passed")), "workload report contract must pass"),
-        requirement("telemetry_contract_ready", bool(telemetry_contract.get("passed")), "telemetry contract must pass"),
-        requirement("npu_audit_hooks_ready", bool(npu_hooks.get("passed")), "NPU audit hooks must pass"),
-        requirement("heap_product_signal_required", True, "ready/blocked product signal is mandatory"),
+        requirement(
+            "operator_intent", operator_intent, "explicit operator intent required"
+        ),
+        requirement(
+            "allow_provider_generation",
+            allow_provider_generation,
+            "real generation flag required",
+        ),
+        requirement(
+            "permit_allowed",
+            permit_allowed,
+            "provider run permit must allow generation",
+        ),
+        requirement(
+            "workload_contract_ready",
+            bool(workload_contract.get("passed")),
+            "workload report contract must pass",
+        ),
+        requirement(
+            "telemetry_contract_ready",
+            bool(telemetry_contract.get("passed")),
+            "telemetry contract must pass",
+        ),
+        requirement(
+            "npu_audit_hooks_ready",
+            bool(npu_hooks.get("passed")),
+            "NPU audit hooks must pass",
+        ),
+        requirement(
+            "heap_product_signal_required",
+            True,
+            "ready/blocked product signal is mandatory",
+        ),
     ]
     allowed = all(item["passed"] for item in requirements)
     gate = {
@@ -170,13 +223,21 @@ def build_real_run_gate(governor: dict[str, Any], workload_contract: dict[str, A
         "decision": "allow_future_real_run" if allowed else "block_real_run",
         "deny_is_failure": False,
         "errors": [],
-        "warnings": [] if allowed else ["real provider run blocked by heap invocation gate"],
+        "warnings": (
+            [] if allowed else ["real provider run blocked by heap invocation gate"]
+        ),
     }
     gate.update(SAFETY_FLAGS)
     return gate
 
 
-def build_command_plan(governor: dict[str, Any], gate: dict[str, Any], workload_contract: dict[str, Any], telemetry_contract: dict[str, Any], npu_hooks: dict[str, Any]) -> dict[str, Any]:
+def build_command_plan(
+    governor: dict[str, Any],
+    gate: dict[str, Any],
+    workload_contract: dict[str, Any],
+    telemetry_contract: dict[str, Any],
+    npu_hooks: dict[str, Any],
+) -> dict[str, Any]:
     command_plan = {
         "kind": "heap_provider_command_plan",
         "passed": True,
@@ -188,7 +249,9 @@ def build_command_plan(governor: dict[str, Any], gate: dict[str, Any], workload_
                 "would_execute": False,
                 "requires_gate_allowed": True,
                 "budget": telemetry_contract.get("budget"),
-                "expected_outputs": workload_contract.get("reports_required_after_real_run", []),
+                "expected_outputs": workload_contract.get(
+                    "reports_required_after_real_run", []
+                ),
             },
             {
                 "name": "npu_after_run_audit",
@@ -212,7 +275,12 @@ def build_command_plan(governor: dict[str, Any], gate: dict[str, Any], workload_
     return command_plan
 
 
-def build_heap_provider_invocation_contract(governor: dict[str, Any], *, allow_provider_generation: bool = False, operator_intent: bool = False) -> dict[str, Any]:
+def build_heap_provider_invocation_contract(
+    governor: dict[str, Any],
+    *,
+    allow_provider_generation: bool = False,
+    operator_intent: bool = False,
+) -> dict[str, Any]:
     workload_contract = build_workload_report_contract(governor)
     telemetry_contract = build_expected_telemetry_contract(governor)
     npu_hooks = build_npu_audit_hooks(governor)
@@ -224,7 +292,9 @@ def build_heap_provider_invocation_contract(governor: dict[str, Any], *, allow_p
         allow_provider_generation=allow_provider_generation,
         operator_intent=operator_intent,
     )
-    command_plan = build_command_plan(governor, gate, workload_contract, telemetry_contract, npu_hooks)
+    command_plan = build_command_plan(
+        governor, gate, workload_contract, telemetry_contract, npu_hooks
+    )
     errors: list[str] = []
     contract = {
         "schema_version": 1,
@@ -257,7 +327,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Provider lane: `{report.get('provider_lane')}`")
     lines.append(f"- Permit decision: `{report.get('permit_decision')}`")
     lines.append(f"- Real run decision: `{gate.get('decision')}`")
-    lines.append(f"- Provider execution performed: `{report.get('provider_execution_performed')}`")
+    lines.append(
+        f"- Provider execution performed: `{report.get('provider_execution_performed')}`"
+    )
     lines.extend(["", "## Required heap events", ""])
     for item in telemetry.get("events_required", []):
         lines.append(f"- `{item}`")
@@ -273,7 +345,10 @@ def render_markdown(report: dict[str, Any]) -> str:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--objective", default="prove heap-driven provider invocation contract before provider/LLM integration")
+    parser.add_argument(
+        "--objective",
+        default="prove heap-driven provider invocation contract before provider/LLM integration",
+    )
     parser.add_argument("--budget-minutes", type=int, default=5)
     parser.add_argument("--max-rounds", type=int, default=4)
     parser.add_argument("--files-per-round", type=int, default=4)
@@ -290,8 +365,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allow-provider-generation", action="store_true")
     parser.add_argument("--operator-intent", action="store_true")
     parser.add_argument("--requested-max-iterations", type=int, default=0)
-    parser.add_argument("--output", default="output/validation/heap_provider_invocation_contract.json")
-    parser.add_argument("--markdown-output", default="output/validation/heap_provider_invocation_contract.md")
+    parser.add_argument(
+        "--output", default="output/validation/heap_provider_invocation_contract.json"
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/validation/heap_provider_invocation_contract.md",
+    )
     return parser.parse_args()
 
 

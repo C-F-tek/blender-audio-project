@@ -8,6 +8,7 @@ automatically fatal when useful artifacts were produced; the manifest records th
 degradation and the heap task file carries that fact into the shared runtime
 state before provider lanes start.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,7 +19,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
 
 CANONICAL_CONTEXT_FILES = (
     "AGENTS.md",
@@ -86,7 +86,11 @@ def read_request_file(repo_root: Path, value: str) -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -111,7 +115,9 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def write_markdown(path: Path, text: str) -> None:
@@ -217,7 +223,6 @@ def run_tool(
     }
 
 
-
 def is_repo_scan_excluded(rel_path: str) -> bool:
     normalized = rel_path.replace("\\", "/").strip("/")
     parts = normalized.split("/")
@@ -233,7 +238,9 @@ def is_repo_scan_excluded(rel_path: str) -> bool:
     return False
 
 
-def repo_scan_files(repo_root: Path, *, max_files: int, suffixes: set[str] | None = None) -> list[Path]:
+def repo_scan_files(
+    repo_root: Path, *, max_files: int, suffixes: set[str] | None = None
+) -> list[Path]:
     suffix_filter = suffixes or REPO_SCAN_TEXT_SUFFIXES
     files: list[Path] = []
     for root, dirs, names in __import__("os").walk(repo_root):
@@ -287,7 +294,9 @@ def existing_context_files(repo_root: Path, max_files: int = 240) -> list[str]:
     return repo_scan_context_files(repo_root, max_files=max_files)
 
 
-def build_repo_docs_map(repo_root: Path, context_files: list[str], output_dir: Path) -> dict[str, str]:
+def build_repo_docs_map(
+    repo_root: Path, context_files: list[str], output_dir: Path
+) -> dict[str, str]:
     docs = []
     for rel_path in context_files:
         full = repo_root / rel_path
@@ -296,7 +305,11 @@ def build_repo_docs_map(repo_root: Path, context_files: list[str], output_dir: P
             {
                 "path": rel_path,
                 "size_bytes": full.stat().st_size if full.exists() else 0,
-                "sha256": hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest() if text else "",
+                "sha256": (
+                    hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()
+                    if text
+                    else ""
+                ),
                 "preview": text,
             }
         )
@@ -317,18 +330,40 @@ def build_repo_docs_map(repo_root: Path, context_files: list[str], output_dir: P
     for item in docs:
         lines.append(f"- `{item['path']}` size=`{item['size_bytes']}`")
     write_markdown(md_path, "\n".join(lines) + "\n")
-    return {"repo_docs_map_json": repo_rel(repo_root, json_path), "repo_docs_map_markdown": repo_rel(repo_root, md_path)}
+    return {
+        "repo_docs_map_json": repo_rel(repo_root, json_path),
+        "repo_docs_map_markdown": repo_rel(repo_root, md_path),
+    }
 
 
-def collect_semantic_code_chunks(repo_root: Path, output_dir: Path, request: str, limit: int = 48) -> dict[str, str]:
-    keywords = [part.lower() for part in request.replace("_", " ").replace("-", " ").split() if len(part) >= 4]
-    candidates: list[Path] = repo_scan_semantic_candidates(repo_root, max_files=max(1000, limit * 80))
+def collect_semantic_code_chunks(
+    repo_root: Path, output_dir: Path, request: str, limit: int = 48
+) -> dict[str, str]:
+    keywords = [
+        part.lower()
+        for part in request.replace("_", " ").replace("-", " ").split()
+        if len(part) >= 4
+    ]
+    candidates: list[Path] = repo_scan_semantic_candidates(
+        repo_root, max_files=max(1000, limit * 80)
+    )
     ranked: list[tuple[int, Path]] = []
     for path in candidates:
         rel = repo_rel(repo_root, path)
         rel_lower = rel.lower()
         score = sum(3 for key in keywords if key in rel_lower)
-        if any(token in rel_lower for token in ("heap", "context", "memory", "provider", "gpu", "npu", "composer")):
+        if any(
+            token in rel_lower
+            for token in (
+                "heap",
+                "context",
+                "memory",
+                "provider",
+                "gpu",
+                "npu",
+                "composer",
+            )
+        ):
             score += 8
         if path.name in {
             "run_heap_runtime_context_closure.py",
@@ -351,7 +386,11 @@ def collect_semantic_code_chunks(repo_root: Path, output_dir: Path, request: str
                 "score": score,
                 "size_bytes": path.stat().st_size if path.exists() else 0,
                 "preview": text,
-                "sha256": hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest() if text else "",
+                "sha256": (
+                    hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()
+                    if text
+                    else ""
+                ),
             }
         )
     data = {
@@ -370,7 +409,18 @@ def collect_semantic_code_chunks(repo_root: Path, output_dir: Path, request: str
     write_json(json_path, data)
     lines = ["# Heap Startup Semantic Code Chunks", ""]
     for item in chunks:
-        lines.extend([f"## `{item['path']}`", "", f"- Score: `{item['score']}`", "", "```text", item["preview"], "```", ""])
+        lines.extend(
+            [
+                f"## `{item['path']}`",
+                "",
+                f"- Score: `{item['score']}`",
+                "",
+                "```text",
+                item["preview"],
+                "```",
+                "",
+            ]
+        )
     write_markdown(md_path, "\n".join(lines))
     return {
         "semantic_code_chunks_json": repo_rel(repo_root, json_path),
@@ -378,7 +428,9 @@ def collect_semantic_code_chunks(repo_root: Path, output_dir: Path, request: str
     }
 
 
-def write_semantic_evidence(commands: list[dict[str, Any]], repo_root: Path, output_dir: Path) -> dict[str, str]:
+def write_semantic_evidence(
+    commands: list[dict[str, Any]], repo_root: Path, output_dir: Path
+) -> dict[str, str]:
     evidence_items = []
     for command in commands:
         evidence_items.append(
@@ -395,7 +447,11 @@ def write_semantic_evidence(commands: list[dict[str, Any]], repo_root: Path, out
     data = {
         "schema_version": 1,
         "kind": "heap_startup_semantic_evidence_chunks",
-        "passed": all(bool(item.get("effective_passed")) for item in commands if item.get("required")),
+        "passed": all(
+            bool(item.get("effective_passed"))
+            for item in commands
+            if item.get("required")
+        ),
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -515,8 +571,6 @@ def build_task_markdown(
     return "\n".join(lines)
 
 
-
-
 def append_artifact_ref(refs: list[str], value: Any) -> None:
     if not isinstance(value, str) or not value.strip():
         return
@@ -525,14 +579,20 @@ def append_artifact_ref(refs: list[str], value: Any) -> None:
         refs.append(normalized)
 
 
-def collect_startup_artifact_refs(artifacts: dict[str, str], commands: list[dict[str, Any]]) -> list[str]:
+def collect_startup_artifact_refs(
+    artifacts: dict[str, str], commands: list[dict[str, Any]]
+) -> list[str]:
     refs: list[str] = []
     for value in artifacts.values():
         append_artifact_ref(refs, value)
     for execution in commands:
         if not isinstance(execution, dict):
             continue
-        for key in ("useful_artifact_paths", "existing_artifact_paths", "artifact_paths"):
+        for key in (
+            "useful_artifact_paths",
+            "existing_artifact_paths",
+            "artifact_paths",
+        ):
             for value in execution.get(key) or []:
                 append_artifact_ref(refs, value)
         for summary in execution.get("artifact_summaries") or []:
@@ -580,11 +640,16 @@ def build_operational_memory_write_content(
     }
     return json.dumps(payload, indent=2, ensure_ascii=False)
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--request", default="")
-    parser.add_argument("--request-file", default="", help="Read startup request text from file to avoid long Windows command lines.")
+    parser.add_argument(
+        "--request-file",
+        default="",
+        help="Read startup request text from file to avoid long Windows command lines.",
+    )
     parser.add_argument("--stamp", default="")
     parser.add_argument("--python-exe", default="")
     parser.add_argument("--output-dir", required=True)
@@ -612,7 +677,11 @@ def main() -> int:
     project_python = resolve_project_python(repo_root, args.python_exe)
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
-    request_text = read_request_file(repo_root, args.request_file) if args.request_file else (args.request or "")
+    request_text = (
+        read_request_file(repo_root, args.request_file)
+        if args.request_file
+        else (args.request or "")
+    )
 
     artifacts: dict[str, str] = {}
     commands: list[dict[str, Any]] = []
@@ -643,13 +712,26 @@ def main() -> int:
             artifact_paths=[required_context_json, required_context_md],
         )
     )
-    artifacts["required_context_files_json"] = repo_rel(repo_root, required_context_json)
-    artifacts["required_context_files_markdown"] = repo_rel(repo_root, required_context_md)
+    artifacts["required_context_files_json"] = repo_rel(
+        repo_root, required_context_json
+    )
+    artifacts["required_context_files_markdown"] = repo_rel(
+        repo_root, required_context_md
+    )
 
-    context_files = existing_context_files(repo_root, max_files=args.startup_scan_context_files)
+    context_files = existing_context_files(
+        repo_root, max_files=args.startup_scan_context_files
+    )
 
     artifacts.update(build_repo_docs_map(repo_root, context_files, output_dir))
-    artifacts.update(collect_semantic_code_chunks(repo_root, output_dir, request_text, limit=max(12, min(args.max_context_files, 64))))
+    artifacts.update(
+        collect_semantic_code_chunks(
+            repo_root,
+            output_dir,
+            request_text,
+            limit=max(12, min(args.max_context_files, 64)),
+        )
+    )
 
     tool_catalog_json = output_dir / "startup_tool_catalog.json"
     tool_catalog_md = output_dir / "startup_tool_catalog.md"
@@ -728,8 +810,12 @@ def main() -> int:
             artifact_paths=[operational_status_json, operational_status_md],
         )
     )
-    artifacts["operational_memory_status_json"] = repo_rel(repo_root, operational_status_json)
-    artifacts["operational_memory_status_markdown"] = repo_rel(repo_root, operational_status_md)
+    artifacts["operational_memory_status_json"] = repo_rel(
+        repo_root, operational_status_json
+    )
+    artifacts["operational_memory_status_markdown"] = repo_rel(
+        repo_root, operational_status_md
+    )
 
     operational_search_json = output_dir / "startup_operational_memory_search.json"
     operational_search_md = output_dir / "startup_operational_memory_search.md"
@@ -760,14 +846,22 @@ def main() -> int:
             artifact_paths=[operational_search_json, operational_search_md],
         )
     )
-    artifacts["operational_memory_search_json"] = repo_rel(repo_root, operational_search_json)
-    artifacts["operational_memory_search_markdown"] = repo_rel(repo_root, operational_search_md)
+    artifacts["operational_memory_search_json"] = repo_rel(
+        repo_root, operational_search_json
+    )
+    artifacts["operational_memory_search_markdown"] = repo_rel(
+        repo_root, operational_search_md
+    )
 
     startup_request_file = output_dir / "heap_startup_request.md"
-    startup_request_file.write_text(request_text or "heap startup request", encoding="utf-8")
+    startup_request_file.write_text(
+        request_text or "heap startup request", encoding="utf-8"
+    )
     startup_raw_file_list = output_dir / "startup_context_raw_files.txt"
     startup_raw_file_list.write_text("\n".join(context_files) + "\n", encoding="utf-8")
-    artifacts["startup_context_raw_file_list"] = repo_rel(repo_root, startup_raw_file_list)
+    artifacts["startup_context_raw_file_list"] = repo_rel(
+        repo_root, startup_raw_file_list
+    )
 
     transient_json = output_dir / "startup_transient_request_context.json"
     transient_md = output_dir / "startup_transient_request_context.md"
@@ -817,7 +911,9 @@ def main() -> int:
     context_basename = f"heap_startup_context_pack_{stamp}"
     context_pack_json = context_pack_dir / f"{context_basename}.json"
     context_pack_md = context_pack_dir / f"{context_basename}.md"
-    context_pack_evidence_json = context_evidence_dir / f"{context_basename}_evidence.json"
+    context_pack_evidence_json = (
+        context_evidence_dir / f"{context_basename}_evidence.json"
+    )
     context_pack_evidence_md = context_evidence_dir / f"{context_basename}_evidence.md"
     context_pack_result = run_tool(
         [
@@ -850,13 +946,25 @@ def main() -> int:
     commands.append(context_pack_result)
     artifacts["ai_context_pack_json"] = repo_rel(repo_root, context_pack_json)
     artifacts["ai_context_pack_markdown"] = repo_rel(repo_root, context_pack_md)
-    artifacts["ai_context_pack_evidence_json"] = repo_rel(repo_root, context_pack_evidence_json)
-    artifacts["ai_context_pack_evidence_markdown"] = repo_rel(repo_root, context_pack_evidence_md)
+    artifacts["ai_context_pack_evidence_json"] = repo_rel(
+        repo_root, context_pack_evidence_json
+    )
+    artifacts["ai_context_pack_evidence_markdown"] = repo_rel(
+        repo_root, context_pack_evidence_md
+    )
 
     if context_pack_result["degraded"]:
         pack_payload = read_json(context_pack_json)
-        pack_errors = pack_payload.get("errors") if isinstance(pack_payload.get("errors"), list) else []
-        pack_warnings = pack_payload.get("warnings") if isinstance(pack_payload.get("warnings"), list) else []
+        pack_errors = (
+            pack_payload.get("errors")
+            if isinstance(pack_payload.get("errors"), list)
+            else []
+        )
+        pack_warnings = (
+            pack_payload.get("warnings")
+            if isinstance(pack_payload.get("warnings"), list)
+            else []
+        )
         warning = (
             "ai_context_pack_reload returned non-zero "
             + f"rc={context_pack_result['returncode']} but useful artifacts exist"
@@ -874,19 +982,25 @@ def main() -> int:
     artifacts["startup_request_file"] = repo_rel(repo_root, startup_request_file)
 
     preliminary_required_commands = [item for item in commands if item.get("required")]
-    preliminary_optional_commands = [item for item in commands if not item.get("required")]
+    preliminary_optional_commands = [
+        item for item in commands if not item.get("required")
+    ]
     blocking_requirements = [
         str(item.get("requirement"))
         for item in preliminary_required_commands
         if not item.get("effective_passed")
     ]
-    degraded_requirements = [str(item.get("requirement")) for item in commands if item.get("degraded")]
+    degraded_requirements = [
+        str(item.get("requirement")) for item in commands if item.get("degraded")
+    ]
     optional_failed_requirements = [
         str(item.get("requirement"))
         for item in preliminary_optional_commands
         if not item.get("effective_passed")
     ]
-    startup_reload_degraded = bool(degraded_requirements or optional_failed_requirements)
+    startup_reload_degraded = bool(
+        degraded_requirements or optional_failed_requirements
+    )
 
     operational_write_json = output_dir / "startup_operational_memory_write.json"
     operational_write_md = output_dir / "startup_operational_memory_write.md"
@@ -904,7 +1018,9 @@ def main() -> int:
         ),
         encoding="utf-8",
     )
-    artifacts["operational_memory_content_file"] = repo_rel(repo_root, operational_write_content)
+    artifacts["operational_memory_content_file"] = repo_rel(
+        repo_root, operational_write_content
+    )
     commands.append(
         run_tool(
             [
@@ -940,17 +1056,35 @@ def main() -> int:
             artifact_paths=[operational_write_json, operational_write_md],
         )
     )
-    artifacts["operational_memory_write_json"] = repo_rel(repo_root, operational_write_json)
-    artifacts["operational_memory_write_markdown"] = repo_rel(repo_root, operational_write_md)
+    artifacts["operational_memory_write_json"] = repo_rel(
+        repo_root, operational_write_json
+    )
+    artifacts["operational_memory_write_markdown"] = repo_rel(
+        repo_root, operational_write_md
+    )
 
     required_commands = [item for item in commands if item.get("required")]
     optional_commands = [item for item in commands if not item.get("required")]
-    blocking_requirements = [str(item.get("requirement")) for item in required_commands if not item.get("effective_passed")]
-    degraded_requirements = [str(item.get("requirement")) for item in commands if item.get("degraded")]
-    optional_failed_requirements = [str(item.get("requirement")) for item in optional_commands if not item.get("effective_passed")]
-    startup_reload_degraded = bool(degraded_requirements or optional_failed_requirements)
+    blocking_requirements = [
+        str(item.get("requirement"))
+        for item in required_commands
+        if not item.get("effective_passed")
+    ]
+    degraded_requirements = [
+        str(item.get("requirement")) for item in commands if item.get("degraded")
+    ]
+    optional_failed_requirements = [
+        str(item.get("requirement"))
+        for item in optional_commands
+        if not item.get("effective_passed")
+    ]
+    startup_reload_degraded = bool(
+        degraded_requirements or optional_failed_requirements
+    )
     required_passed = not blocking_requirements
-    optional_passed = all(bool(item.get("effective_passed")) for item in optional_commands)
+    optional_passed = all(
+        bool(item.get("effective_passed")) for item in optional_commands
+    )
     input_ready_before_heap = required_passed and bool(context_files)
 
     task_markdown = build_task_markdown(
@@ -968,7 +1102,9 @@ def main() -> int:
     task_file.write_text(task_markdown, encoding="utf-8")
 
     strict_startup = bool(args.strict_startup_reload or args.strict_ai_context_pack)
-    passed = bool(input_ready_before_heap and (not strict_startup or not startup_reload_degraded))
+    passed = bool(
+        input_ready_before_heap and (not strict_startup or not startup_reload_degraded)
+    )
     manifest = {
         "schema_version": 1,
         "kind": "heap_context_memory_reload_manifest",
@@ -977,7 +1113,11 @@ def main() -> int:
         "project_python": project_python,
         "request_file": artifacts.get("startup_request_file", ""),
         "request_chars": len(request_text),
-        "request_sha256": hashlib.sha256(request_text.encode("utf-8", errors="replace")).hexdigest() if request_text else "",
+        "request_sha256": (
+            hashlib.sha256(request_text.encode("utf-8", errors="replace")).hexdigest()
+            if request_text
+            else ""
+        ),
         "request_preview": request_text[:4000],
         "passed": passed,
         "input_ready_before_heap": input_ready_before_heap,
@@ -1005,12 +1145,21 @@ def main() -> int:
             "load_context_into_heap": True,
             "tool_catalog_loaded": bool(artifacts.get("tool_catalog_json")),
             "shared_memory_loaded": bool(artifacts.get("shared_memory_json")),
-            "operational_memory_loaded": bool(artifacts.get("operational_memory_status_json")),
-            "operational_memory_write_recorded": bool(artifacts.get("operational_memory_write_json")),
+            "operational_memory_loaded": bool(
+                artifacts.get("operational_memory_status_json")
+            ),
+            "operational_memory_write_recorded": bool(
+                artifacts.get("operational_memory_write_json")
+            ),
             "repo_docs_loaded": bool(artifacts.get("repo_docs_map_json")),
-            "semantic_code_chunks_loaded": bool(artifacts.get("semantic_code_chunks_json")),
-            "ai_context_pack_loaded": bool(artifacts.get("ai_context_pack_json")) and context_pack_result.get("artifact_useful"),
-            "semantic_evidence_chunks_loaded": bool(artifacts.get("semantic_evidence_chunks_json")),
+            "semantic_code_chunks_loaded": bool(
+                artifacts.get("semantic_code_chunks_json")
+            ),
+            "ai_context_pack_loaded": bool(artifacts.get("ai_context_pack_json"))
+            and context_pack_result.get("artifact_useful"),
+            "semantic_evidence_chunks_loaded": bool(
+                artifacts.get("semantic_evidence_chunks_json")
+            ),
             "heap_task_file_written": task_file.exists(),
             "advisory_context_pack_non_blocking": not bool(args.strict_ai_context_pack),
             "final_composer_required": True,
@@ -1038,7 +1187,9 @@ def main() -> int:
         "tool_execution_count": len(manifest.get("tool_executions", [])),
         "blocking_requirements": manifest.get("blocking_requirements", []),
         "degraded_requirements": manifest.get("degraded_requirements", []),
-        "optional_failed_requirements": manifest.get("optional_failed_requirements", []),
+        "optional_failed_requirements": manifest.get(
+            "optional_failed_requirements", []
+        ),
         "manifest": repo_rel(repo_root, manifest_path),
         "markdown": repo_rel(repo_root, manifest_md),
         "heap_task_file": manifest.get("heap_task_file", ""),

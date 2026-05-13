@@ -4,6 +4,7 @@
 This script is source-only and report-only. It does not run providers, broker
 tools, Blender, FFmpeg, Git writes or patch application.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -13,15 +14,17 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap
+    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap  # type: ignore
+    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap  # type: ignore
 
 
-def append_gpu_peer_smoke(heap: ProviderRuntimeHeap, *, round_id: int) -> list[dict[str, Any]]:
+def append_gpu_peer_smoke(
+    heap: ProviderRuntimeHeap, *, round_id: int
+) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     correlation_id = "gpu-peer-evidence-001"
     events.append(
@@ -55,7 +58,9 @@ def append_gpu_peer_smoke(heap: ProviderRuntimeHeap, *, round_id: int) -> list[d
                 "recommended_broker_requests": [
                     {
                         "tool": "build_code_interpreter_report",
-                        "args": {"input": "Tools/ai,Tools/validation,Tools/workflow,Tools/npu"},
+                        "args": {
+                            "input": "tools/ai,tools/validation,tools/workflow,tools/npu"
+                        },
                     },
                     {
                         "tool": "check_validation_report_contract",
@@ -81,7 +86,9 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    heap = ProviderRuntimeHeap.from_args(repo_root, args.stamp, args.events, args.snapshot, args.markdown_output)
+    heap = ProviderRuntimeHeap.from_args(
+        repo_root, args.stamp, args.events, args.snapshot, args.markdown_output
+    )
     events = append_gpu_peer_smoke(heap, round_id=args.round)
     snapshot = heap.write_snapshot()
     result = {
@@ -93,7 +100,9 @@ def main() -> int:
         "events": events,
         "heap_snapshot": {
             "event_count": snapshot.get("event_count"),
-            "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
+            "pending_broker_request_count": snapshot.get(
+                "pending_broker_request_count"
+            ),
             "event_log": snapshot.get("event_log"),
         },
         "guardrails": {

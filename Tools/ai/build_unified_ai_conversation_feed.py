@@ -6,15 +6,27 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-
-PATTERNS = ("proposal", "recommend", "patch", "plan", "peer", "broker", "decision", "warning", "quality", "runtime")
+PATTERNS = (
+    "proposal",
+    "recommend",
+    "patch",
+    "plan",
+    "peer",
+    "broker",
+    "decision",
+    "warning",
+    "quality",
+    "runtime",
+)
 
 
 def read_jsonl(path: Path, limit: int) -> list[dict]:
     if not path.is_file():
         return []
     rows: list[dict] = []
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]:
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[
+        -limit:
+    ]:
         try:
             rows.append(json.loads(line))
         except json.JSONDecodeError:
@@ -36,9 +48,30 @@ def summarize_json(path: Path) -> dict:
         "kind": data.get("kind", ""),
         "passed": data.get("passed", None),
         "summary": data.get("summary", data.get("title", "")),
-        "recommendation_count": data.get("recommendation_count", len(data.get("recommendations", [])) if isinstance(data.get("recommendations"), list) else None),
-        "patch_plan_count": data.get("patch_plan_count", len(data.get("patch_plans", [])) if isinstance(data.get("patch_plans"), list) else None),
-        "warning_count": data.get("warning_count", len(data.get("warnings", [])) if isinstance(data.get("warnings"), list) else None),
+        "recommendation_count": data.get(
+            "recommendation_count",
+            (
+                len(data.get("recommendations", []))
+                if isinstance(data.get("recommendations"), list)
+                else None
+            ),
+        ),
+        "patch_plan_count": data.get(
+            "patch_plan_count",
+            (
+                len(data.get("patch_plans", []))
+                if isinstance(data.get("patch_plans"), list)
+                else None
+            ),
+        ),
+        "warning_count": data.get(
+            "warning_count",
+            (
+                len(data.get("warnings", []))
+                if isinstance(data.get("warnings"), list)
+                else None
+            ),
+        ),
         "failed_count": data.get("failed_count", None),
         "provider_execution_performed": data.get("provider_execution_performed", None),
         "read_error": data.get("read_error", ""),
@@ -81,7 +114,12 @@ def main() -> int:
     progress = read_jsonl(observer_dir / "progress.jsonl", min(args.limit, 20))
     surfaces = []
     for path in candidate_files(repo_root, args.limit):
-        item = {"path": str(path), "mtime": datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds")}
+        item = {
+            "path": str(path),
+            "mtime": datetime.fromtimestamp(path.stat().st_mtime).isoformat(
+                timespec="seconds"
+            ),
+        }
         if path.suffix.lower() == ".json":
             item.update(summarize_json(path))
         surfaces.append(item)
@@ -117,12 +155,21 @@ def main() -> int:
         "## AI public events",
     ]
     for event in events[-20:]:
-        lines.append(f"- `{event.get('speaker','')}` `{event.get('event_type','')}` {event.get('summary', event.get('message',''))}")
+        lines.append(
+            f"- `{event.get('speaker','')}` `{event.get('event_type','')}` {event.get('summary', event.get('message',''))}"
+        )
     lines.extend(["", "## Public report surfaces"])
     for item in surfaces[:20]:
-        lines.append(f"- `{item.get('kind','')}` passed=`{item.get('passed','')}` `{item.get('path','')}`")
+        lines.append(
+            f"- `{item.get('kind','')}` passed=`{item.get('passed','')}` `{item.get('path','')}`"
+        )
     markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(json.dumps({"passed": True, "output": str(output), "markdown_output": str(markdown)}, indent=2))
+    print(
+        json.dumps(
+            {"passed": True, "output": str(output), "markdown_output": str(markdown)},
+            indent=2,
+        )
+    )
     return 0
 
 

@@ -4,7 +4,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.patch_notes_quality_product.scoring import (
+from tools.ai.patch_notes_quality_product.scoring import (
     build_patch_notes,
     build_product_sufficiency,
     classify,
@@ -12,16 +12,28 @@ from Tools.ai.patch_notes_quality_product.scoring import (
     patch_plan_summary,
     score_product,
 )
-from Tools.ai.patch_notes_quality_product.task_md import build_request_summary, load_task_markdown
-from Tools.ai.patch_notes_quality_product.telemetry_quality import (
+from tools.ai.patch_notes_quality_product.task_md import (
+    build_request_summary,
+    load_task_markdown,
+)
+from tools.ai.patch_notes_quality_product.telemetry_quality import (
     build_evidence_coverage,
     build_fallback_cases,
     build_success_cases,
     build_telemetry_quality,
 )
-from Tools.ai.patch_plan_quality_product.io_utils import flatten_json, now_iso, read_json, repo_rel, resolve
-from Tools.ai.patch_plan_quality_product.token_search import build_search_index, safe_tokens, search_docs
-
+from tools.ai.patch_plan_quality_product.io_utils import (
+    flatten_json,
+    now_iso,
+    read_json,
+    repo_rel,
+    resolve,
+)
+from tools.ai.patch_plan_quality_product.token_search import (
+    build_search_index,
+    safe_tokens,
+    search_docs,
+)
 
 OPTIONAL_INPUTS = {
     "patch_quality": "patch_quality",
@@ -44,7 +56,9 @@ def input_paths_from_args(args: Any, repo_root: Path) -> dict[str, Path]:
     return paths
 
 
-def load_json_inputs(input_paths: dict[str, Path]) -> tuple[dict[str, dict[str, Any]], dict[str, str], list[str], list[str]]:
+def load_json_inputs(
+    input_paths: dict[str, Path],
+) -> tuple[dict[str, dict[str, Any]], dict[str, str], list[str], list[str]]:
     loaded: dict[str, dict[str, Any]] = {}
     status: dict[str, str] = {}
     errors: list[str] = []
@@ -60,15 +74,29 @@ def load_json_inputs(input_paths: dict[str, Path]) -> tuple[dict[str, dict[str, 
     return loaded, status, errors, warnings
 
 
-def build_search_quality(repo_root: Path, db_path: Path, input_paths: dict[str, Path], loaded: dict[str, dict[str, Any]], request: str, extra_context: list[str]) -> dict[str, Any]:
+def build_search_quality(
+    repo_root: Path,
+    db_path: Path,
+    input_paths: dict[str, Path],
+    loaded: dict[str, dict[str, Any]],
+    request: str,
+    extra_context: list[str],
+) -> dict[str, Any]:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(db_path) as conn:
-        fts_enabled, indexed = build_search_index(conn, repo_root, input_paths, loaded, request, extra_context)
+        fts_enabled, indexed = build_search_index(
+            conn, repo_root, input_paths, loaded, request, extra_context
+        )
         query_results = []
-        terms = safe_tokens(request + " " + flatten_json(loaded.get("patch_plan", {}), limit=120_000), max_terms=14)
+        terms = safe_tokens(
+            request + " " + flatten_json(loaded.get("patch_plan", {}), limit=120_000),
+            max_terms=14,
+        )
         for term in terms[:8]:
             hits = search_docs(conn, fts_enabled, term, 6)
-            query_results.append({"query": term, "hit_count": len(hits), "hits": hits[:3]})
+            query_results.append(
+                {"query": term, "hit_count": len(hits), "hits": hits[:3]}
+            )
     return {
         "sqlite_fts5_enabled": fts_enabled,
         "sqlite_fts_db": repo_rel(db_path, repo_root),
@@ -89,13 +117,19 @@ def build_report(args: Any) -> dict[str, Any]:
         errors.append(task_warnings[0])
     request_summary = build_request_summary(task, args.branch, args.commit, args.issue)
     normalized_objective = str(task.get("objective_hint") or args.request or "").strip()
-    patch_summary = patch_plan_summary(loaded.get("patch_plan", {}), loaded.get("patch_quality", {}))
+    patch_summary = patch_plan_summary(
+        loaded.get("patch_plan", {}), loaded.get("patch_quality", {})
+    )
     patch_note_limit = max(1, int(getattr(args, "max_patch_notes", 20) or 20))
     requested_min_patch_notes = max(0, int(getattr(args, "min_patch_notes", 0) or 0))
-    patch_notes = build_patch_notes(loaded.get("patch_plan", {}), loaded.get("patch_quality", {}), limit=patch_note_limit)
+    patch_notes = build_patch_notes(
+        loaded.get("patch_plan", {}),
+        loaded.get("patch_quality", {}),
+        limit=patch_note_limit,
+    )
     validation_commands = patch_summary.get("validation_commands") or [
-        "python -m py_compile Tools/ai/build_patch_notes_quality_product.py",
-        "python Tools/validation/run_patch_notes_quality_product_smoke.py --repo-root .",
+        "python -m py_compile tools/ai/build_patch_notes_quality_product.py",
+        "python tools/validation/run_patch_notes_quality_product_smoke.py --repo-root .",
         "git diff --check",
     ]
     report: dict[str, Any] = {
@@ -128,7 +162,12 @@ def build_report(args: Any) -> dict[str, Any]:
         "evidence_coverage": build_evidence_coverage(loaded, status),
         "missing_evidence": [],
         "validation_commands": validation_commands,
-        "stop_conditions": patch_summary.get("stop_conditions") or ["manual review rejects patch plan evidence", "quality_gate_passed=false under strict operator policy", "guardrail reports source writes or patch application"],
+        "stop_conditions": patch_summary.get("stop_conditions")
+        or [
+            "manual review rejects patch plan evidence",
+            "quality_gate_passed=false under strict operator policy",
+            "guardrail reports source writes or patch application",
+        ],
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -136,7 +175,12 @@ def build_report(args: Any) -> dict[str, Any]:
         "persistent_memory_write_performed": False,
         "operational_sqlite_fts_write_performed": True,
         "manual_review_required": True,
-        "inputs": {"paths": {key: repo_rel(path, repo_root) for key, path in input_paths.items()}, "status": status},
+        "inputs": {
+            "paths": {
+                key: repo_rel(path, repo_root) for key, path in input_paths.items()
+            },
+            "status": status,
+        },
         "guardrails": {
             "report_only": True,
             "manual_review_required": True,
@@ -156,19 +200,57 @@ def build_report(args: Any) -> dict[str, Any]:
         patch_note_limit=patch_note_limit,
         requested_min_patch_notes=requested_min_patch_notes,
     )
-    report["fts_evidence_search"] = build_search_quality(repo_root, resolve(repo_root, args.sqlite_fts_db), input_paths, loaded, normalized_objective, [args.task_markdown, *args.extra_context])
+    report["fts_evidence_search"] = build_search_quality(
+        repo_root,
+        resolve(repo_root, args.sqlite_fts_db),
+        input_paths,
+        loaded,
+        normalized_objective,
+        [args.task_markdown, *args.extra_context],
+    )
     score, findings, fallback = score_product(report)
     report["quality_score"] = score
     report["quality_findings"] = findings
     report["fallback_path_notes"] = fallback
     if score < args.min_quality_score:
-        report["fallback_path_notes"].append({"reason": "patch_notes_quality_score_below_threshold", "quality_score": score, "min_quality_score": args.min_quality_score, "recommended_followup": "strengthen request summary, evidence coverage, telemetry signals, validation commands and concrete/applicable patch notes"})
+        report["fallback_path_notes"].append(
+            {
+                "reason": "patch_notes_quality_score_below_threshold",
+                "quality_score": score,
+                "min_quality_score": args.min_quality_score,
+                "recommended_followup": "strengthen request summary, evidence coverage, telemetry signals, validation commands and concrete/applicable patch notes",
+            }
+        )
     if not report["patch_notes_applicability"].get("all_applicable"):
-        report["fallback_path_notes"].append({"reason": "patch_notes_not_fully_applicable", "invalid_note_count": report["patch_notes_applicability"].get("invalid_note_count"), "recommended_followup": "fix patch notes so every item has targets, summary, edit strategy, validations, stop conditions and manual review flag"})
+        report["fallback_path_notes"].append(
+            {
+                "reason": "patch_notes_not_fully_applicable",
+                "invalid_note_count": report["patch_notes_applicability"].get(
+                    "invalid_note_count"
+                ),
+                "recommended_followup": "fix patch notes so every item has targets, summary, edit strategy, validations, stop conditions and manual review flag",
+            }
+        )
     if report["product_sufficiency"].get("sufficient") is False:
-        report["fallback_path_notes"].append({"reason": "patch_notes_product_insufficient", "insufficiency_reasons": report["product_sufficiency"].get("insufficiency_reasons"), "missing_available_areas": report["product_sufficiency"].get("missing_available_areas"), "recommended_followup": "generate a broader availability-aware backlog from repository consistency findings or lower the requested task scope"})
+        report["fallback_path_notes"].append(
+            {
+                "reason": "patch_notes_product_insufficient",
+                "insufficiency_reasons": report["product_sufficiency"].get(
+                    "insufficiency_reasons"
+                ),
+                "missing_available_areas": report["product_sufficiency"].get(
+                    "missing_available_areas"
+                ),
+                "recommended_followup": "generate a broader availability-aware backlog from repository consistency findings or lower the requested task scope",
+            }
+        )
     if report["fts_evidence_search"]["fts_total_hit_count"] <= 0:
-        report["fallback_path_notes"].append({"reason": "patch_notes_evidence_search_found_no_hits", "recommended_followup": "verify task MD and evidence artifacts contain shared concrete terms"})
+        report["fallback_path_notes"].append(
+            {
+                "reason": "patch_notes_evidence_search_found_no_hits",
+                "recommended_followup": "verify task MD and evidence artifacts contain shared concrete terms",
+            }
+        )
     report["quality_gate_passed"] = (
         not errors
         and bool(report["patch_notes"])
@@ -184,5 +266,7 @@ def build_report(args: Any) -> dict[str, Any]:
     if report["product_sufficiency"].get("sufficient") is False and not errors:
         report["classification"] = "completed_with_insufficient_all_all_patch_notes"
     report["success_cases"] = build_success_cases(report, loaded)
-    report["fallback_cases"] = build_fallback_cases(report, loaded, args.min_quality_score)
+    report["fallback_cases"] = build_fallback_cases(
+        report, loaded, args.min_quality_score
+    )
     return report

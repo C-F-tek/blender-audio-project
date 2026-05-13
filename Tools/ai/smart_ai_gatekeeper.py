@@ -5,6 +5,7 @@ Reads AI artifacts and reports, then decides whether the current output should b
 promoted, repaired, or blocked. When repair is needed it writes a targeted repair
 packet for the central AI instead of asking it to regenerate the whole context.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -44,7 +45,14 @@ def file_meta(path: Path) -> dict[str, Any]:
     item: dict[str, Any] = {"path": str(path), "exists": path.exists()}
     if path.exists() and path.is_file():
         st = path.stat()
-        item.update({"size_bytes": st.st_size, "modified_at": datetime.fromtimestamp(st.st_mtime, timezone.utc).isoformat()})
+        item.update(
+            {
+                "size_bytes": st.st_size,
+                "modified_at": datetime.fromtimestamp(
+                    st.st_mtime, timezone.utc
+                ).isoformat(),
+            }
+        )
     return item
 
 
@@ -64,15 +72,24 @@ def scan_artifact(path: Path) -> dict[str, Any]:
             else:
                 warnings.append(f"script_required_pattern_missing:{pattern}")
         if len(text) < 8000:
-            warnings.append("script_size_low: generated scene script may be fallback-like")
+            warnings.append(
+                "script_size_low: generated scene script may be fallback-like"
+            )
     if "analysis_blender_keyframes" in lowered or "keyframe" in lowered:
         positives.append("keyframe_context_present")
     else:
         warnings.append("keyframe_context_missing")
-    return {"file": file_meta(path), "warnings": warnings, "blockers": blockers, "positives": positives}
+    return {
+        "file": file_meta(path),
+        "warnings": warnings,
+        "blockers": blockers,
+        "positives": positives,
+    }
 
 
-def collect_report_issues(report: Any, label: str) -> tuple[list[str], list[str], list[str]]:
+def collect_report_issues(
+    report: Any, label: str
+) -> tuple[list[str], list[str], list[str]]:
     warnings: list[str] = []
     blockers: list[str] = []
     positives: list[str] = []
@@ -122,14 +139,23 @@ def find_candidate_artifacts(artifact_dir: Path) -> list[Path]:
     return results
 
 
-def gatekeep(artifact_dir: Path, target_files: list[Path], max_repair_attempts: int, current_attempt: int) -> dict[str, Any]:
+def gatekeep(
+    artifact_dir: Path,
+    target_files: list[Path],
+    max_repair_attempts: int,
+    current_attempt: int,
+) -> dict[str, Any]:
     validation = read_json(artifact_dir / "ai_validation_report.json")
     guardrail = read_json(artifact_dir / "npu_guardrail_report.json")
     npu_review = read_json(artifact_dir / "npu_artifact_review.json")
     warnings: list[str] = []
     blockers: list[str] = []
     positives: list[str] = []
-    for label, report in [("validation", validation), ("npu_guardrail", guardrail), ("npu_review", npu_review)]:
+    for label, report in [
+        ("validation", validation),
+        ("npu_guardrail", guardrail),
+        ("npu_review", npu_review),
+    ]:
         w, b, p = collect_report_issues(report, label)
         warnings.extend(w)
         blockers.extend(b)
@@ -142,7 +168,11 @@ def gatekeep(artifact_dir: Path, target_files: list[Path], max_repair_attempts: 
     if blockers:
         decision = "repair" if current_attempt < max_repair_attempts else "block"
     elif len(warnings) >= 8:
-        decision = "repair" if current_attempt < max_repair_attempts else "promote_with_warnings"
+        decision = (
+            "repair"
+            if current_attempt < max_repair_attempts
+            else "promote_with_warnings"
+        )
     else:
         decision = "promote"
     return {
@@ -153,7 +183,12 @@ def gatekeep(artifact_dir: Path, target_files: list[Path], max_repair_attempts: 
         "decision": decision,
         "current_attempt": current_attempt,
         "max_repair_attempts": max_repair_attempts,
-        "summary": {"warning_count": len(warnings), "blocker_count": len(blockers), "positive_count": len(positives), "scanned_files": len(scans)},
+        "summary": {
+            "warning_count": len(warnings),
+            "blocker_count": len(blockers),
+            "positive_count": len(positives),
+            "scanned_files": len(scans),
+        },
         "warnings": warnings[:140],
         "blockers": blockers[:100],
         "positives": positives[:140],
@@ -161,13 +196,23 @@ def gatekeep(artifact_dir: Path, target_files: list[Path], max_repair_attempts: 
     }
 
 
-def build_repair_packet(decision: dict[str, Any], artifact_dir: Path, context_packet: Path | None) -> dict[str, Any]:
+def build_repair_packet(
+    decision: dict[str, Any], artifact_dir: Path, context_packet: Path | None
+) -> dict[str, Any]:
     context = read_json(context_packet) if context_packet else None
     selected_capsules = []
     if isinstance(context, dict):
         for capsule in context.get("selected_capsules") or []:
             if isinstance(capsule, dict):
-                selected_capsules.append({"capsule_id": capsule.get("capsule_id"), "path": capsule.get("path"), "title": capsule.get("title"), "summary": capsule.get("summary"), "keywords": capsule.get("keywords")})
+                selected_capsules.append(
+                    {
+                        "capsule_id": capsule.get("capsule_id"),
+                        "path": capsule.get("path"),
+                        "title": capsule.get("title"),
+                        "summary": capsule.get("summary"),
+                        "keywords": capsule.get("keywords"),
+                    }
+                )
     return {
         "schema_version": 1,
         "kind": "smart_ai_repair_packet",
@@ -189,7 +234,16 @@ def build_repair_packet(decision: dict[str, Any], artifact_dir: Path, context_pa
 
 
 def write_markdown(decision: dict[str, Any], path: Path) -> None:
-    lines = ["# Smart AI Gatekeeper Decision", "", f"Generated: `{decision.get('generated_at')}`", f"Decision: `{decision.get('decision')}`", f"Warnings: `{decision.get('summary', {}).get('warning_count')}`", f"Blockers: `{decision.get('summary', {}).get('blocker_count')}`", "", "## Blockers"]
+    lines = [
+        "# Smart AI Gatekeeper Decision",
+        "",
+        f"Generated: `{decision.get('generated_at')}`",
+        f"Decision: `{decision.get('decision')}`",
+        f"Warnings: `{decision.get('summary', {}).get('warning_count')}`",
+        f"Blockers: `{decision.get('summary', {}).get('blocker_count')}`",
+        "",
+        "## Blockers",
+    ]
     for item in decision.get("blockers", [])[:100]:
         lines.append(f"- {item}")
     lines.append("\n## Warnings")
@@ -206,8 +260,12 @@ def main() -> int:
     ap.add_argument("--artifact-dir", default="output/ai_pipeline")
     ap.add_argument("--target-file", action="append", default=[])
     ap.add_argument("--context-packet")
-    ap.add_argument("--output", default="output/ai_pipeline/smart_gatekeeper_decision.json")
-    ap.add_argument("--repair-output", default="output/ai_pipeline/smart_repair_packet.json")
+    ap.add_argument(
+        "--output", default="output/ai_pipeline/smart_gatekeeper_decision.json"
+    )
+    ap.add_argument(
+        "--repair-output", default="output/ai_pipeline/smart_repair_packet.json"
+    )
     ap.add_argument("--max-repair-attempts", type=int, default=2)
     ap.add_argument("--current-attempt", type=int, default=0)
     args = ap.parse_args()
@@ -215,15 +273,26 @@ def main() -> int:
     targets = [Path(item).resolve() for item in args.target_file]
     if not targets:
         targets = find_candidate_artifacts(artifact_dir)
-    decision = gatekeep(artifact_dir, targets, args.max_repair_attempts, args.current_attempt)
+    decision = gatekeep(
+        artifact_dir, targets, args.max_repair_attempts, args.current_attempt
+    )
     out = Path(args.output).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(decision, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    out.write_text(
+        json.dumps(decision, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     write_markdown(decision, out.with_suffix(".md"))
     if decision["decision"] in {"repair", "block"}:
-        repair_packet = build_repair_packet(decision, artifact_dir, Path(args.context_packet).resolve() if args.context_packet else None)
+        repair_packet = build_repair_packet(
+            decision,
+            artifact_dir,
+            Path(args.context_packet).resolve() if args.context_packet else None,
+        )
         repair_out = Path(args.repair_output).resolve()
-        repair_out.write_text(json.dumps(repair_packet, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        repair_out.write_text(
+            json.dumps(repair_packet, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
     print(json.dumps(decision, indent=2, ensure_ascii=False))
     return 0 if decision["decision"] in {"promote", "promote_with_warnings"} else 2
 

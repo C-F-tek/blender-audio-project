@@ -5,8 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.patch_plan_quality_product.io_utils import read_text, repo_rel, resolve
-
+from tools.ai.patch_plan_quality_product.io_utils import read_text, repo_rel, resolve
 
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 
@@ -47,19 +46,37 @@ def _objective_hint(text: str) -> str:
     lines = text.splitlines()
     for index, raw in enumerate(lines):
         if any(key in raw.lower() for key in lower_keys):
-            window = " ".join(item.strip() for item in lines[index : index + 6] if item.strip())
+            window = " ".join(
+                item.strip() for item in lines[index : index + 6] if item.strip()
+            )
             return window[:700]
     return " ".join(_compact_lines(text, limit=5))[:700]
 
 
-def load_task_markdown(repo_root: Path, task_markdown: str) -> tuple[dict[str, Any], list[str]]:
+def load_task_markdown(
+    repo_root: Path, task_markdown: str
+) -> tuple[dict[str, Any], list[str]]:
     warnings: list[str] = []
     path = resolve(repo_root, task_markdown) if task_markdown else Path("")
     text = read_text(path) if task_markdown else ""
     if not task_markdown:
-        return {"provided": False, "path": "", "task_digest": "", "title": "", "headings": [], "excerpt": []}, ["task_markdown_not_provided"]
+        return {
+            "provided": False,
+            "path": "",
+            "task_digest": "",
+            "title": "",
+            "headings": [],
+            "excerpt": [],
+        }, ["task_markdown_not_provided"]
     if not text:
-        return {"provided": True, "path": repo_rel(path, repo_root), "task_digest": "", "title": "", "headings": [], "excerpt": []}, [f"task_markdown_missing_or_empty: {repo_rel(path, repo_root)}"]
+        return {
+            "provided": True,
+            "path": repo_rel(path, repo_root),
+            "task_digest": "",
+            "title": "",
+            "headings": [],
+            "excerpt": [],
+        }, [f"task_markdown_missing_or_empty: {repo_rel(path, repo_root)}"]
     digest = hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()
     return {
         "provided": True,
@@ -74,7 +91,9 @@ def load_task_markdown(repo_root: Path, task_markdown: str) -> tuple[dict[str, A
     }, warnings
 
 
-def build_request_summary(task: dict[str, Any], branch: str, commit: str, issue: str) -> dict[str, Any]:
+def build_request_summary(
+    task: dict[str, Any], branch: str, commit: str, issue: str
+) -> dict[str, Any]:
     return {
         "title": task.get("title") or "Untitled local AI task",
         "input_md_path": task.get("path") or "",

@@ -3,7 +3,7 @@
 
 The NPU lane is intentionally a smoke/audit guardrail, not primary advisory.
 This tool prepares a compact context from the GPU/Ollama deep-planning report
-and optionally invokes Tools/npu/run_npu_review.py with OpenVINO/NPU. Any NPU
+and optionally invokes tools/npu/run_npu_review.py with OpenVINO/NPU. Any NPU
 failure or unusable output is captured as a warning and never blocks the GPU
 review or patch-planning flow.
 
@@ -20,6 +20,7 @@ Naming note:
 - Python import module: openvino_genai
 - PyPI package name: openvino-genai
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,7 +33,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.runtime_tool_guidance import (
+    from tools.ai.runtime_tool_guidance import (
         ALLOWED_RUNTIME_TOOLS,
         build_provider_tool_guidance_payload,
         deterministic_fallback_tool_requests,
@@ -45,14 +46,24 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.runtime_tool_guidance import (  # type: ignore
+    from tools.ai.runtime_tool_guidance import (  # type: ignore
         ALLOWED_RUNTIME_TOOLS,
         build_provider_tool_guidance_payload,
         deterministic_fallback_tool_requests,
         validate_runtime_tool_request_object,
     )
 
-    DEFAULT_NPU_PYTHON = Path(os.environ.get("SPAZIOTEMPO_NPU_PYTHON", Path.home() / "blender" / "venvs" / "blender-npu-ai" / "Scripts" / "python.exe"))
+    DEFAULT_NPU_PYTHON = Path(
+        os.environ.get(
+            "SPAZIOTEMPO_NPU_PYTHON",
+            Path.home()
+            / "blender"
+            / "venvs"
+            / "blender-npu-ai"
+            / "Scripts"
+            / "python.exe",
+        )
+    )
 
 DEFAULT_GPU_REVIEW = "output/ai_pipeline/agent_gpu_deep_planning_review.json"
 DEFAULT_CONTEXT = "output/ai_pipeline/npu_gpu_deep_review_audit_context.md"
@@ -77,7 +88,11 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -88,7 +103,9 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def compact_json(data: Any, max_chars: int) -> str:
@@ -98,8 +115,9 @@ def compact_json(data: Any, max_chars: int) -> str:
     return text
 
 
-
-def summarize_runtime_tool_context_report(path: Path, repo_root: Path, max_chars: int) -> dict[str, Any]:
+def summarize_runtime_tool_context_report(
+    path: Path, repo_root: Path, max_chars: int
+) -> dict[str, Any]:
     item: dict[str, Any] = {
         "path": repo_rel(path, repo_root),
         "exists": path.exists(),
@@ -113,7 +131,9 @@ def summarize_runtime_tool_context_report(path: Path, repo_root: Path, max_chars
         item["read_error"] = f"{type(exc).__name__}: {exc}"
         return item
     item["json_ok"] = True
-    tool_results = data.get("tool_results") if isinstance(data.get("tool_results"), list) else []
+    tool_results = (
+        data.get("tool_results") if isinstance(data.get("tool_results"), list) else []
+    )
     item.update(
         {
             "kind": data.get("kind"),
@@ -125,8 +145,12 @@ def summarize_runtime_tool_context_report(path: Path, repo_root: Path, max_chars
             "provider_execution_performed": data.get("provider_execution_performed"),
             "patch_application_performed": data.get("patch_application_performed"),
             "sqlite_write_performed": data.get("sqlite_write_performed"),
-            "persistent_memory_write_performed": data.get("persistent_memory_write_performed"),
-            "operational_sqlite_write_performed": data.get("operational_sqlite_write_performed"),
+            "persistent_memory_write_performed": data.get(
+                "persistent_memory_write_performed"
+            ),
+            "operational_sqlite_write_performed": data.get(
+                "operational_sqlite_write_performed"
+            ),
             "guardrails": data.get("guardrails", {}),
             "tool_results": [
                 {
@@ -149,7 +173,9 @@ def summarize_runtime_tool_context_report(path: Path, repo_root: Path, max_chars
     return item
 
 
-def load_runtime_tool_context_reports(repo_root: Path, values: list[str], max_chars: int) -> list[dict[str, Any]]:
+def load_runtime_tool_context_reports(
+    repo_root: Path, values: list[str], max_chars: int
+) -> list[dict[str, Any]]:
     reports: list[dict[str, Any]] = []
     seen: set[str] = set()
     for value in values:
@@ -158,7 +184,9 @@ def load_runtime_tool_context_reports(repo_root: Path, values: list[str], max_ch
         if key in seen:
             continue
         seen.add(key)
-        reports.append(summarize_runtime_tool_context_report(path, repo_root, max_chars))
+        reports.append(
+            summarize_runtime_tool_context_report(path, repo_root, max_chars)
+        )
     return reports
 
 
@@ -197,13 +225,15 @@ def _raw_tool_requests_from_payload(payload: Any) -> list[Any]:
     return []
 
 
-def extract_npu_tool_requests_from_text(text: str, max_requests: int = 8) -> tuple[list[dict[str, Any]], list[str]]:
+def extract_npu_tool_requests_from_text(
+    text: str, max_requests: int = 8
+) -> tuple[list[dict[str, Any]], list[str]]:
     valid: list[dict[str, Any]] = []
     errors: list[str] = []
     raw_requests: list[Any] = []
     for payload in _candidate_json_payloads(text):
         raw_requests.extend(_raw_tool_requests_from_payload(payload))
-    for index, item in enumerate(raw_requests[:max(0, max_requests)], start=1):
+    for index, item in enumerate(raw_requests[: max(0, max_requests)], start=1):
         if not isinstance(item, dict):
             errors.append(_tool_request_error(index, "request must be an object"))
             continue
@@ -217,14 +247,20 @@ def extract_npu_tool_requests_from_text(text: str, max_requests: int = 8) -> tup
             {
                 "id": str(item.get("id") or f"npu_tool_{index:03d}"),
                 "tool": tool,
-                "reason": str(item.get("reason") or "NPU auditor requested additional report-only tool evidence."),
+                "reason": str(
+                    item.get("reason")
+                    or "NPU auditor requested additional report-only tool evidence."
+                ),
                 "args": args,
                 "source": "npu_auditor",
             }
         )
     if len(raw_requests) > max_requests:
-        errors.append(f"tool_requests truncated: {len(raw_requests)} requested, max {max_requests}")
+        errors.append(
+            f"tool_requests truncated: {len(raw_requests)} requested, max {max_requests}"
+        )
     return valid, errors
+
 
 def should_use_npu_deterministic_tool_fallback(
     *,
@@ -282,10 +318,15 @@ def build_npu_deterministic_tool_fallback_requests(
 def npu_python_path(value: str | None) -> Path:
     if value:
         return Path(value).expanduser()
-    return Path(os.environ.get("SPAZIOTEMPO_NPU_PYTHON", str(DEFAULT_NPU_PYTHON))).expanduser()
+    return Path(
+        os.environ.get("SPAZIOTEMPO_NPU_PYTHON", str(DEFAULT_NPU_PYTHON))
+    ).expanduser()
 
 
-def build_context(gpu_review: dict[str, Any], runtime_tool_context_reports: list[dict[str, Any]] | None = None) -> str:
+def build_context(
+    gpu_review: dict[str, Any],
+    runtime_tool_context_reports: list[dict[str, Any]] | None = None,
+) -> str:
     runtime_tool_context_reports = runtime_tool_context_reports or []
     recommendations = gpu_review.get("recommendations", [])
     decision = gpu_review.get("decision", {})
@@ -313,8 +354,12 @@ def build_context(gpu_review: dict[str, Any], runtime_tool_context_reports: list
         "gpu_review_summary": {
             "kind": gpu_review.get("kind"),
             "passed": gpu_review.get("passed"),
-            "provider_execution_performed": gpu_review.get("provider_execution_performed"),
-            "patch_application_performed": gpu_review.get("patch_application_performed"),
+            "provider_execution_performed": gpu_review.get(
+                "provider_execution_performed"
+            ),
+            "patch_application_performed": gpu_review.get(
+                "patch_application_performed"
+            ),
             "model_used": gpu_review.get("model_used"),
             "round_count": gpu_review.get("round_count"),
             "recommendation_count": gpu_review.get("recommendation_count"),
@@ -332,12 +377,16 @@ def build_context(gpu_review: dict[str, Any], runtime_tool_context_reports: list
                 "If additional evidence is needed, include optional JSON tool_requests using the shared broker schema; do not execute tools directly.",
                 "When useful, include a fenced ```json object with top-level tool_requests so the broker can parse it.",
             ],
-            "provider_tool_guidance": build_provider_tool_guidance_payload("npu_openvino"),
+            "provider_tool_guidance": build_provider_tool_guidance_payload(
+                "npu_openvino"
+            ),
         },
         "recommendations": recommendations,
         "rounds": compact_rounds,
     }
-    return "# NPU GPU Deep Review Audit Context\n\n" + compact_json(payload, 42000) + "\n"
+    return (
+        "# NPU GPU Deep Review Audit Context\n\n" + compact_json(payload, 42000) + "\n"
+    )
 
 
 def text_metrics(text: str) -> dict[str, Any]:
@@ -352,7 +401,8 @@ def text_metrics(text: str) -> dict[str, Any]:
         "word_count": len(words),
         "alpha_ratio": round(alpha / chars, 4) if chars else 0,
         "digit_ratio": round(digit / chars, 4) if chars else 0,
-        "markdown_heading_count": text.count("\n#") + (1 if text.startswith("#") else 0),
+        "markdown_heading_count": text.count("\n#")
+        + (1 if text.startswith("#") else 0),
     }
 
 
@@ -380,7 +430,9 @@ def classify_npu_output(
     if error:
         warnings.append(error)
     if dependency_missing(stdout, stderr, error):
-        warnings.append("NPU auditor dependency missing: Python module openvino_genai is not importable; install PyPI package openvino-genai in the active NPU Python environment")
+        warnings.append(
+            "NPU auditor dependency missing: Python module openvino_genai is not importable; install PyPI package openvino-genai in the active NPU Python environment"
+        )
         return "dependency_missing_openvino_genai", warnings
     if returncode != 0:
         warnings.append(f"NPU auditor command returned {returncode}")
@@ -388,13 +440,19 @@ def classify_npu_output(
         warnings.append("NPU provider returned an empty response")
         return "provider_empty_response", warnings
     metrics = text_metrics(text)
-    if metrics["word_count"] < 20 or metrics["alpha_ratio"] < 0.25 or metrics["digit_ratio"] > 0.65:
+    if (
+        metrics["word_count"] < 20
+        or metrics["alpha_ratio"] < 0.25
+        or metrics["digit_ratio"] > 0.65
+    ):
         warnings.append("NPU auditor output appears unusable or non-linguistic")
         return "unusable_output", warnings
     return "usable_audit_text", warnings
 
 
-def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str | None]:
+def run_command(
+    command: list[str], repo_root: Path, timeout_seconds: int
+) -> tuple[int, str, str, str | None]:
     try:
         completed = subprocess.run(
             command,
@@ -405,9 +463,19 @@ def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tu
             check=False,
             env={**os.environ, "PYTHONIOENCODING": "utf-8"},
         )
-        return completed.returncode, completed.stdout[-12000:], completed.stderr[-12000:], None
+        return (
+            completed.returncode,
+            completed.stdout[-12000:],
+            completed.stderr[-12000:],
+            None,
+        )
     except subprocess.TimeoutExpired as exc:
-        return 124, exc.stdout or "", exc.stderr or "", f"TimeoutExpired: {timeout_seconds}s"
+        return (
+            124,
+            exc.stdout or "",
+            exc.stderr or "",
+            f"TimeoutExpired: {timeout_seconds}s",
+        )
     except Exception as exc:  # noqa: BLE001 - non-blocking auditor.
         return 1, "", "", f"{type(exc).__name__}: {exc}"
 
@@ -427,11 +495,13 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
         args.max_runtime_tool_context_chars,
     )
     context_path.parent.mkdir(parents=True, exist_ok=True)
-    context_path.write_text(build_context(gpu_review, runtime_tool_context_reports), encoding="utf-8")
+    context_path.write_text(
+        build_context(gpu_review, runtime_tool_context_reports), encoding="utf-8"
+    )
 
     command = [
         str(npu_python),
-        "Tools/npu/run_npu_review.py",
+        "tools/npu/run_npu_review.py",
         "--engine",
         "npu",
         "--mode",
@@ -468,7 +538,9 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             returncode = 1
             error = f"NPU Python not found: {npu_python}"
         else:
-            returncode, stdout, stderr, error = run_command(command, repo_root, args.timeout_seconds)
+            returncode, stdout, stderr, error = run_command(
+                command, repo_root, args.timeout_seconds
+            )
         load_attempted = provider_load_attempted(stdout, stderr)
         generated_output_written = npu_out.exists() and not args.metadata_only
         if npu_out.exists():
@@ -477,10 +549,16 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             except OSError as exc:
                 error = f"{type(exc).__name__}: {exc}"
     else:
-        stdout = "NPU auditor skipped by default. Pass --run-npu to execute OpenVINO/NPU."
+        stdout = (
+            "NPU auditor skipped by default. Pass --run-npu to execute OpenVINO/NPU."
+        )
 
-    classification, warnings = classify_npu_output(npu_text, int(returncode or 0), error, stdout, stderr, args.metadata_only)
-    tool_requests, tool_request_errors = extract_npu_tool_requests_from_text(npu_text, args.max_npu_tool_requests)
+    classification, warnings = classify_npu_output(
+        npu_text, int(returncode or 0), error, stdout, stderr, args.metadata_only
+    )
+    tool_requests, tool_request_errors = extract_npu_tool_requests_from_text(
+        npu_text, args.max_npu_tool_requests
+    )
     npu_deterministic_tool_fallback_used = False
     npu_deterministic_tool_fallback_reason = ""
     if should_use_npu_deterministic_tool_fallback(
@@ -510,7 +588,13 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
 
     dep_missing = dependency_missing(stdout, stderr, error)
     provider_empty_response = classification == "provider_empty_response"
-    provider_succeeded = bool(args.run_npu and not args.metadata_only and returncode == 0 and generated_output_written and classification == "usable_audit_text")
+    provider_succeeded = bool(
+        args.run_npu
+        and not args.metadata_only
+        and returncode == 0
+        and generated_output_written
+        and classification == "usable_audit_text"
+    )
     report = {
         "schema_version": 1,
         "kind": "npu_gpu_deep_review_audit",
@@ -539,7 +623,9 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
         "invalid_tool_request_errors": tool_request_errors,
         "npu_deterministic_tool_fallback_used": npu_deterministic_tool_fallback_used,
         "npu_deterministic_tool_fallback_reason": npu_deterministic_tool_fallback_reason,
-        "npu_deterministic_tool_fallback_count": len(tool_requests) if npu_deterministic_tool_fallback_used else 0,
+        "npu_deterministic_tool_fallback_count": (
+            len(tool_requests) if npu_deterministic_tool_fallback_used else 0
+        ),
         "apply_mode": "report_only_non_blocking_npu_audit",
         "non_blocking": True,
         "blocking": False,
@@ -569,7 +655,9 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             "valid_tool_request_count": len(tool_requests),
             "invalid_tool_request_count": len(tool_request_errors),
             "npu_deterministic_tool_fallback_used": npu_deterministic_tool_fallback_used,
-            "npu_deterministic_tool_fallback_count": len(tool_requests) if npu_deterministic_tool_fallback_used else 0,
+            "npu_deterministic_tool_fallback_count": (
+                len(tool_requests) if npu_deterministic_tool_fallback_used else 0
+            ),
         },
         "decision": {
             "gpu_review_blocked": False,
@@ -605,15 +693,27 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Non-blocking: `{report['non_blocking']}`")
     lines.append(f"- NPU Python: `{report['npu_python']}`")
     lines.append(f"- NPU Python exists: `{report['npu_python_exists']}`")
-    lines.append(f"- Provider execution requested: `{report['provider_execution_requested']}`")
+    lines.append(
+        f"- Provider execution requested: `{report['provider_execution_requested']}`"
+    )
     lines.append(f"- Provider load attempted: `{report['provider_load_attempted']}`")
-    lines.append(f"- Provider execution succeeded: `{report['provider_execution_succeeded']}`")
-    lines.append(f"- Provider empty response: `{report.get('provider_empty_response')}`")
+    lines.append(
+        f"- Provider execution succeeded: `{report['provider_execution_succeeded']}`"
+    )
+    lines.append(
+        f"- Provider empty response: `{report.get('provider_empty_response')}`"
+    )
     lines.append(f"- Dependency missing: `{report['dependency_missing']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
+    lines.append(
+        f"- Patch application performed: `{report['patch_application_performed']}`"
+    )
     lines.append(f"- Classification: `{report['npu_auditor']['classification']}`")
-    lines.append(f"- Runtime tool context seen: `{report.get('runtime_tool_context_seen')}`")
-    lines.append(f"- Runtime tool context report count: `{report.get('runtime_tool_context_report_count')}`")
+    lines.append(
+        f"- Runtime tool context seen: `{report.get('runtime_tool_context_seen')}`"
+    )
+    lines.append(
+        f"- Runtime tool context report count: `{report.get('runtime_tool_context_report_count')}`"
+    )
     lines.append(f"- Tool request count: `{report.get('tool_request_count')}`")
     lines.append(f"- GPU review blocked: `{report['decision']['gpu_review_blocked']}`")
     lines.append("")
@@ -632,17 +732,38 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--gpu-review", default=DEFAULT_GPU_REVIEW)
-    parser.add_argument("--run-npu", action="store_true", help="Explicitly execute OpenVINO/NPU auditor. Without this, only context is prepared.")
-    parser.add_argument("--metadata-only", action="store_true", help="Ask run_npu_review.py to write metadata only without loading provider.")
-    parser.add_argument("--npu-python", default=None, help="Python executable for the NPU/OpenVINO GenAI environment. Defaults to SPAZIOTEMPO_NPU_PYTHON or Tools.npu.npu_runtime.DEFAULT_NPU_PYTHON.")
+    parser.add_argument(
+        "--run-npu",
+        action="store_true",
+        help="Explicitly execute OpenVINO/NPU auditor. Without this, only context is prepared.",
+    )
+    parser.add_argument(
+        "--metadata-only",
+        action="store_true",
+        help="Ask run_npu_review.py to write metadata only without loading provider.",
+    )
+    parser.add_argument(
+        "--npu-python",
+        default=None,
+        help="Python executable for the NPU/OpenVINO GenAI environment. Defaults to SPAZIOTEMPO_NPU_PYTHON or Tools.npu.npu_runtime.DEFAULT_NPU_PYTHON.",
+    )
     parser.add_argument("--timeout-seconds", type=int, default=900)
     parser.add_argument("--max-context-chars", type=int, default=42000)
     parser.add_argument("--max-prompt-chars", type=int, default=15000)
     parser.add_argument("--max-new-tokens", type=int, default=900)
-    parser.add_argument("--runtime-tool-context-report", action="append", default=[], help="Broker/toolbox JSON report to include as read-only NPU audit context.")
+    parser.add_argument(
+        "--runtime-tool-context-report",
+        action="append",
+        default=[],
+        help="Broker/toolbox JSON report to include as read-only NPU audit context.",
+    )
     parser.add_argument("--max-runtime-tool-context-chars", type=int, default=6000)
     parser.add_argument("--max-npu-tool-requests", type=int, default=8)
-    parser.add_argument("--disable-npu-tool-fallback", action="store_true", help="Disable deterministic NPU fallback tool_requests when NPU emits none despite runtime context.")
+    parser.add_argument(
+        "--disable-npu-tool-fallback",
+        action="store_true",
+        help="Disable deterministic NPU fallback tool_requests when NPU emits none despite runtime context.",
+    )
     parser.add_argument("--context-output", default=DEFAULT_CONTEXT)
     parser.add_argument("--npu-output", default=DEFAULT_NPU_OUT)
     parser.add_argument("--npu-notes-output", default=DEFAULT_NPU_NOTES)
@@ -675,12 +796,18 @@ def main() -> int:
                 "non_blocking": report["non_blocking"],
                 "classification": report["npu_auditor"]["classification"],
                 "runtime_tool_context_seen": report.get("runtime_tool_context_seen"),
-                "runtime_tool_context_report_count": report.get("runtime_tool_context_report_count"),
+                "runtime_tool_context_report_count": report.get(
+                    "runtime_tool_context_report_count"
+                ),
                 "tool_request_count": report.get("tool_request_count"),
                 "valid_tool_request_count": report.get("valid_tool_request_count"),
                 "invalid_tool_request_count": report.get("invalid_tool_request_count"),
-                "npu_deterministic_tool_fallback_used": report.get("npu_deterministic_tool_fallback_used"),
-                "npu_deterministic_tool_fallback_count": report.get("npu_deterministic_tool_fallback_count"),
+                "npu_deterministic_tool_fallback_used": report.get(
+                    "npu_deterministic_tool_fallback_used"
+                ),
+                "npu_deterministic_tool_fallback_count": report.get(
+                    "npu_deterministic_tool_fallback_count"
+                ),
                 "gpu_review_blocked": report["decision"]["gpu_review_blocked"],
             },
             indent=2,

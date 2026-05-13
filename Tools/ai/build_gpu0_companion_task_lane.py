@@ -24,7 +24,11 @@ def resolve(repo_root: Path, value: str) -> Path:
 
 def rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -99,7 +103,9 @@ def tool_requests(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ]
 
 
-def run_gpu0_workload(repo_root: Path, stamp: str, out_dir: Path, iterations: int, min_seconds: float) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+def run_gpu0_workload(
+    repo_root: Path, stamp: str, out_dir: Path, iterations: int, min_seconds: float
+) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     workload_json = out_dir / f"gpu0_companion_worker_workload_{stamp}.json"
     workload_md = out_dir / f"gpu0_companion_worker_workload_{stamp}.md"
     cmd = [
@@ -120,7 +126,14 @@ def run_gpu0_workload(repo_root: Path, stamp: str, out_dir: Path, iterations: in
         "companion_worker",
         "--production-support",
     ]
-    p = subprocess.run(cmd, cwd=repo_root, text=True, capture_output=True, check=False, env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+    p = subprocess.run(
+        cmd,
+        cwd=repo_root,
+        text=True,
+        capture_output=True,
+        check=False,
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+    )
     return load_json(workload_json), {
         "command": cmd,
         "returncode": p.returncode,
@@ -145,7 +158,9 @@ def render_md(report: dict[str, Any]) -> str:
         "",
         "## Tasks",
     ]
-    lines += [f"- `{task['id']}`: {task['objective']}" for task in report["companion_tasks"]]
+    lines += [
+        f"- `{task['id']}`: {task['objective']}" for task in report["companion_tasks"]
+    ]
     return "\n".join(lines) + "\n"
 
 
@@ -167,10 +182,15 @@ def main() -> int:
     tool_req_out = resolve(repo_root, args.tool_requests_output)
     output.parent.mkdir(parents=True, exist_ok=True)
 
-    sources = [summarize_source(repo_root, resolve(repo_root, item)) for item in args.source_report]
+    sources = [
+        summarize_source(repo_root, resolve(repo_root, item))
+        for item in args.source_report
+    ]
     companion_tasks = tasks_from_sources(sources)
     requests = tool_requests(companion_tasks)
-    workload, workload_meta = run_gpu0_workload(repo_root, args.stamp, output.parent, args.iterations, args.min_seconds)
+    workload, workload_meta = run_gpu0_workload(
+        repo_root, args.stamp, output.parent, args.iterations, args.min_seconds
+    )
 
     model_dir = os.environ.get("IA_CARMINE_GPU0_COMPANION_MODEL_DIR", "").strip()
     warnings: list[str] = []
@@ -183,7 +203,9 @@ def main() -> int:
         classifications.append("gpu0_companion_workload_failed")
         errors.append("GPU0 companion workload failed")
     if not model_dir:
-        warnings.append("IA_CARMINE_GPU0_COMPANION_MODEL_DIR not set; semantic LLM subtasks unavailable, numeric/tool companion active.")
+        warnings.append(
+            "IA_CARMINE_GPU0_COMPANION_MODEL_DIR not set; semantic LLM subtasks unavailable, numeric/tool companion active."
+        )
 
     report = {
         "schema_version": 1,
@@ -194,8 +216,14 @@ def main() -> int:
         "passed": not errors,
         "production_role": "companion_worker",
         "production_support": True,
-        "provider_execution_performed": bool(workload and workload.get("provider_execution_performed") is True),
-        "semantic_execution_mode": "model_configured_report_only" if model_dir else "model_unconfigured_numeric_tool_companion",
+        "provider_execution_performed": bool(
+            workload and workload.get("provider_execution_performed") is True
+        ),
+        "semantic_execution_mode": (
+            "model_configured_report_only"
+            if model_dir
+            else "model_unconfigured_numeric_tool_companion"
+        ),
         "gpu0_model_dir_configured": bool(model_dir),
         "gpu0_model_dir": model_dir,
         "companion_task_count": len(companion_tasks),
@@ -217,10 +245,37 @@ def main() -> int:
             "source_writes_performed": False,
         },
     }
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     markdown.write_text(render_md(report), encoding="utf-8")
-    tool_req_out.write_text(json.dumps({"schema_version": 1, "kind": "gpu0_companion_tool_requests", "stamp": args.stamp, "tool_requests": requests}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({"passed": report["passed"], "output": str(output), "markdown": str(markdown), "tool_requests": str(tool_req_out), "companion_task_count": len(companion_tasks)}, indent=2, ensure_ascii=False))
+    tool_req_out.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "kind": "gpu0_companion_tool_requests",
+                "stamp": args.stamp,
+                "tool_requests": requests,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    print(
+        json.dumps(
+            {
+                "passed": report["passed"],
+                "output": str(output),
+                "markdown": str(markdown),
+                "tool_requests": str(tool_req_out),
+                "companion_task_count": len(companion_tasks),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

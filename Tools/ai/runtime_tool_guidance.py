@@ -9,6 +9,7 @@ It is intentionally report-only: helpers build request payloads and guidance,
 but never execute providers, apply patches, run Blender, write SQLite databases
 or change Git state.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -133,7 +134,9 @@ def validate_runtime_tool_request_object(value: Any, index: int = 0) -> list[str
     return errors
 
 
-def deterministic_fallback_tool_requests(reason: str, *, max_requests: int = 3) -> list[dict[str, Any]]:
+def deterministic_fallback_tool_requests(
+    reason: str, *, max_requests: int = 3
+) -> list[dict[str, Any]]:
     """Build safe fallback requests when a provider fails to emit live tool calls.
 
     These requests are deliberately marked as deterministic fallback, not provider

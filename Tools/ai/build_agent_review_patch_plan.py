@@ -9,6 +9,7 @@ it builds a deterministic fallback plan from that evidence instead.
 It never applies patches, never creates GitHub PRs, never writes SQLite, and
 never promotes persistent memory.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,18 +19,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
 try:
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 
-DEFAULT_ORCHESTRATOR = "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"
+DEFAULT_ORCHESTRATOR = (
+    "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"
+)
 DEFAULT_EVIDENCE = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
 DEFAULT_OUTPUT = "output/patch_specs/agent_review_patch_plan.json"
 DEFAULT_MARKDOWN = "output/patch_specs/agent_review_patch_plan.md"
@@ -38,8 +40,8 @@ PLAN_KIND = "agent_review_patch_plan"
 APPLY_MODE = "report_only_manual_review_patch_plan"
 
 DEFAULT_VALIDATION_COMMANDS = [
-    "python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json",
-    "python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json",
+    "python tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json",
+    "python tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json",
     "git diff --check",
     "git status --short",
 ]
@@ -71,7 +73,11 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -81,8 +87,6 @@ def load_json_object(path: Path) -> dict[str, Any]:
     if errors:
         raise ValueError(f"{path}: {'; '.join(errors)}")
     return data
-
-
 
 
 def normalize_repo_path(value: Any) -> str:
@@ -114,7 +118,9 @@ def target_path_error(path_value: str, repo_root: Path) -> str | None:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_TARGET_PREFIXES):
         return f"forbidden generated/runtime target prefix: {normalized}"
     lower = normalized.lower()
-    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(".json"):
+    if any(
+        fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS
+    ) and lower.endswith(".json"):
         return f"forbidden full-analysis JSON target: {normalized}"
     if "*" in normalized or normalized.endswith("/"):
         return "target is a glob or directory, not a concrete file"
@@ -127,7 +133,11 @@ def target_path_error(path_value: str, repo_root: Path) -> str | None:
 
 def compact_evidence_files(item: dict[str, Any]) -> list[dict[str, Any]]:
     compact: list[dict[str, Any]] = []
-    for evidence_file in item.get("evidence_files", []) if isinstance(item.get("evidence_files"), list) else []:
+    for evidence_file in (
+        item.get("evidence_files", [])
+        if isinstance(item.get("evidence_files"), list)
+        else []
+    ):
         if not isinstance(evidence_file, dict):
             continue
         compact.append(
@@ -163,7 +173,9 @@ def has_substantive_consistency_evidence(rec: dict[str, Any]) -> bool:
     if isinstance(rec.get("repository_consistency_finding"), dict):
         return True
     evidence = rec.get("source_evidence")
-    return isinstance(evidence, dict) and isinstance(evidence.get("repository_consistency_finding"), dict)
+    return isinstance(evidence, dict) and isinstance(
+        evidence.get("repository_consistency_finding"), dict
+    )
 
 
 def is_cosmetic_recommendation(rec: dict[str, Any]) -> bool:
@@ -172,24 +184,35 @@ def is_cosmetic_recommendation(rec: dict[str, Any]) -> bool:
     text = recommendation_text_blob(rec)
     return any(keyword in text for keyword in COSMETIC_PATCH_KEYWORDS)
 
-def load_gpu_report(repo_root: Path, orchestrator: dict[str, Any], warnings: list[str]) -> dict[str, Any]:
+
+def load_gpu_report(
+    repo_root: Path, orchestrator: dict[str, Any], warnings: list[str]
+) -> dict[str, Any]:
     gpu_output = orchestrator.get("gpu_output")
     if not gpu_output:
         return {}
     path = resolve_path(repo_root, str(gpu_output))
     if not path.exists():
-        warnings.append(f"GPU report referenced by orchestrator is missing: {repo_rel(path, repo_root)}")
+        warnings.append(
+            f"GPU report referenced by orchestrator is missing: {repo_rel(path, repo_root)}"
+        )
         return {}
     try:
         return load_json_object(path)
     except Exception as exc:  # noqa: BLE001 - report-only diagnostic.
-        warnings.append(f"Unable to read GPU report {repo_rel(path, repo_root)}: {type(exc).__name__}: {exc}")
+        warnings.append(
+            f"Unable to read GPU report {repo_rel(path, repo_root)}: {type(exc).__name__}: {exc}"
+        )
         return {}
 
 
 def npu_audit_refs(orchestrator: dict[str, Any]) -> list[dict[str, Any]]:
     refs: list[dict[str, Any]] = []
-    for audit in orchestrator.get("npu_audits", []) if isinstance(orchestrator.get("npu_audits"), list) else []:
+    for audit in (
+        orchestrator.get("npu_audits", [])
+        if isinstance(orchestrator.get("npu_audits"), list)
+        else []
+    ):
         if not isinstance(audit, dict):
             continue
         refs.append(
@@ -197,10 +220,16 @@ def npu_audit_refs(orchestrator: dict[str, Any]) -> list[dict[str, Any]]:
                 "round": audit.get("round"),
                 "status": audit.get("status"),
                 "classification": audit.get("classification"),
-                "provider_execution_requested": audit.get("provider_execution_requested"),
+                "provider_execution_requested": audit.get(
+                    "provider_execution_requested"
+                ),
                 "provider_load_attempted": audit.get("provider_load_attempted"),
-                "provider_execution_succeeded": audit.get("provider_execution_succeeded"),
-                "provider_execution_performed": audit.get("provider_execution_performed"),
+                "provider_execution_succeeded": audit.get(
+                    "provider_execution_succeeded"
+                ),
+                "provider_execution_performed": audit.get(
+                    "provider_execution_performed"
+                ),
                 "dependency_missing": audit.get("dependency_missing"),
                 "gpu_review_blocked": audit.get("gpu_review_blocked"),
                 "audit_output": audit.get("audit_output"),
@@ -217,13 +246,28 @@ def normalize_gpu_recommendation(
     audit_refs: list[dict[str, Any]],
 ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
     if is_cosmetic_recommendation(rec):
-        return None, {"id": str(rec.get("id") or f"gpu_{index:03d}"), "reason": "cosmetic/formatting-only recommendation suppressed"}
-    target_files = unique_strings(rec.get("target_files", []) if isinstance(rec.get("target_files"), list) else [])
+        return None, {
+            "id": str(rec.get("id") or f"gpu_{index:03d}"),
+            "reason": "cosmetic/formatting-only recommendation suppressed",
+        }
+    target_files = unique_strings(
+        rec.get("target_files", []) if isinstance(rec.get("target_files"), list) else []
+    )
     if not target_files:
-        return None, {"id": str(rec.get("id") or f"gpu_{index:03d}"), "reason": "GPU recommendation has no concrete target_files"}
-    errors = [f"{path}: {target_path_error(path, repo_root)}" for path in target_files if target_path_error(path, repo_root)]
+        return None, {
+            "id": str(rec.get("id") or f"gpu_{index:03d}"),
+            "reason": "GPU recommendation has no concrete target_files",
+        }
+    errors = [
+        f"{path}: {target_path_error(path, repo_root)}"
+        for path in target_files
+        if target_path_error(path, repo_root)
+    ]
     if errors:
-        return None, {"id": str(rec.get("id") or f"gpu_{index:03d}"), "reason": "; ".join(errors)}
+        return None, {
+            "id": str(rec.get("id") or f"gpu_{index:03d}"),
+            "reason": "; ".join(errors),
+        }
     return (
         {
             "id": str(rec.get("id") or f"gpu_{index:03d}"),
@@ -231,10 +275,13 @@ def normalize_gpu_recommendation(
             "area": rec.get("area") or "other",
             "status": "ready_for_manual_review",
             "target_files": target_files,
-            "rationale": rec.get("rationale") or "GPU planner recommendation normalized for manual-review patch planning.",
-            "edit_strategy": rec.get("proposed_strategy") or "Apply only a small, reviewable patch supported by the cited evidence.",
+            "rationale": rec.get("rationale")
+            or "GPU planner recommendation normalized for manual-review patch planning.",
+            "edit_strategy": rec.get("proposed_strategy")
+            or "Apply only a small, reviewable patch supported by the cited evidence.",
             "risk": rec.get("risk") or "medium",
-            "validation_commands": rec.get("validation_commands") or DEFAULT_VALIDATION_COMMANDS,
+            "validation_commands": rec.get("validation_commands")
+            or DEFAULT_VALIDATION_COMMANDS,
             "stop_conditions": rec.get("stop_conditions")
             or [
                 "Stop if target files changed since the review artifact was generated.",
@@ -243,7 +290,9 @@ def normalize_gpu_recommendation(
             ],
             "source_evidence": {
                 "gpu_recommendation": rec,
-                "repository_consistency_finding": rec.get("repository_consistency_finding"),
+                "repository_consistency_finding": rec.get(
+                    "repository_consistency_finding"
+                ),
                 "npu_audit_refs": audit_refs,
             },
             "manual_review_required": True,
@@ -266,21 +315,35 @@ def plan_from_doc_code_item(
 ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
     doc = normalize_repo_path(item.get("doc"))
     if not doc:
-        return None, {"id": f"fallback_doc_code_{index:03d}", "reason": "doc_code item has no source doc"}
+        return None, {
+            "id": f"fallback_doc_code_{index:03d}",
+            "reason": "doc_code item has no source doc",
+        }
     error = target_path_error(doc, repo_root)
     if error:
-        return None, {"id": f"fallback_doc_code_{index:03d}", "reason": f"{doc}: {error}"}
+        return None, {
+            "id": f"fallback_doc_code_{index:03d}",
+            "reason": f"{doc}: {error}",
+        }
     reference = normalize_repo_path(item.get("reference"))
     existing_candidate = normalize_repo_path(item.get("existing_candidate"))
-    candidates = unique_strings(item.get("candidate_references", []) if isinstance(item.get("candidate_references"), list) else [])
+    candidates = unique_strings(
+        item.get("candidate_references", [])
+        if isinstance(item.get("candidate_references"), list)
+        else []
+    )
     strategy_bits = [
         "Patch the source Markdown only; do not create missing code/runtime files from this fallback.",
         f"Review the referenced path `{reference}` and decide whether it is stale, intentionally future-facing, or should point to an existing artifact.",
     ]
     if existing_candidate:
-        strategy_bits.append(f"Existing candidate `{existing_candidate}` was detected; prefer link normalization over new content.")
+        strategy_bits.append(
+            f"Existing candidate `{existing_candidate}` was detected; prefer link normalization over new content."
+        )
     if candidates:
-        strategy_bits.append(f"Candidate references observed: {', '.join(f'`{candidate}`' for candidate in candidates[:8])}.")
+        strategy_bits.append(
+            f"Candidate references observed: {', '.join(f'`{candidate}`' for candidate in candidates[:8])}."
+        )
     return (
         {
             "id": f"fallback_doc_code_{index:03d}",
@@ -288,7 +351,8 @@ def plan_from_doc_code_item(
             "area": "doc_code",
             "status": "ready_for_manual_review",
             "target_files": [doc],
-            "rationale": item.get("reason") or "Evidence report marks this doc/code reference as sufficient for manual patch planning.",
+            "rationale": item.get("reason")
+            or "Evidence report marks this doc/code reference as sufficient for manual patch planning.",
             "edit_strategy": " ".join(strategy_bits),
             "risk": "low",
             "validation_commands": DEFAULT_VALIDATION_COMMANDS,
@@ -321,12 +385,25 @@ def plan_from_doc_doc_item(
 ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
     path = normalize_repo_path(item.get("path"))
     if not path:
-        return None, {"id": f"fallback_doc_doc_{index:03d}", "reason": "doc_doc item has no target path"}
+        return None, {
+            "id": f"fallback_doc_doc_{index:03d}",
+            "reason": "doc_doc item has no target path",
+        }
     error = target_path_error(path, repo_root)
     if error:
-        return None, {"id": f"fallback_doc_doc_{index:03d}", "reason": f"{path}: {error}"}
-    missing_terms = [str(term) for term in item.get("missing_terms", []) if str(term).strip()] if isinstance(item.get("missing_terms"), list) else []
-    terms_text = ", ".join(f"`{term}`" for term in missing_terms[:12]) or "the missing explicit terms"
+        return None, {
+            "id": f"fallback_doc_doc_{index:03d}",
+            "reason": f"{path}: {error}",
+        }
+    missing_terms = (
+        [str(term) for term in item.get("missing_terms", []) if str(term).strip()]
+        if isinstance(item.get("missing_terms"), list)
+        else []
+    )
+    terms_text = (
+        ", ".join(f"`{term}`" for term in missing_terms[:12])
+        or "the missing explicit terms"
+    )
     return (
         {
             "id": f"fallback_doc_doc_{index:03d}",
@@ -334,7 +411,8 @@ def plan_from_doc_doc_item(
             "area": "doc_doc",
             "status": "ready_for_manual_review",
             "target_files": [path],
-            "rationale": item.get("reason") or "Evidence report marks this documentation cross-reference as sufficient.",
+            "rationale": item.get("reason")
+            or "Evidence report marks this documentation cross-reference as sufficient.",
             "edit_strategy": (
                 f"Add a small targeted cross-reference for {terms_text}. "
                 "Do not duplicate large contract sections; link or summarize the canonical location instead."
@@ -369,21 +447,33 @@ def fallback_plans_from_evidence(
     skipped: list[dict[str, str]] = []
     areas = evidence.get("areas", {}) if isinstance(evidence.get("areas"), dict) else {}
 
-    doc_code = areas.get("doc_code", {}) if isinstance(areas.get("doc_code"), dict) else {}
-    for index, item in enumerate(doc_code.get("items", []) if isinstance(doc_code.get("items"), list) else [], start=1):
+    doc_code = (
+        areas.get("doc_code", {}) if isinstance(areas.get("doc_code"), dict) else {}
+    )
+    for index, item in enumerate(
+        doc_code.get("items", []) if isinstance(doc_code.get("items"), list) else [],
+        start=1,
+    ):
         if not isinstance(item, dict) or not item.get("evidence_sufficient"):
             continue
-        plan, skip = plan_from_doc_code_item(item=item, index=index, repo_root=repo_root, audit_refs=audit_refs)
+        plan, skip = plan_from_doc_code_item(
+            item=item, index=index, repo_root=repo_root, audit_refs=audit_refs
+        )
         if plan:
             plans.append(plan)
         if skip:
             skipped.append(skip)
 
     doc_doc = areas.get("doc_doc", {}) if isinstance(areas.get("doc_doc"), dict) else {}
-    for index, item in enumerate(doc_doc.get("items", []) if isinstance(doc_doc.get("items"), list) else [], start=1):
+    for index, item in enumerate(
+        doc_doc.get("items", []) if isinstance(doc_doc.get("items"), list) else [],
+        start=1,
+    ):
         if not isinstance(item, dict) or not item.get("evidence_sufficient"):
             continue
-        plan, skip = plan_from_doc_doc_item(item=item, index=index, repo_root=repo_root, audit_refs=audit_refs)
+        plan, skip = plan_from_doc_doc_item(
+            item=item, index=index, repo_root=repo_root, audit_refs=audit_refs
+        )
         if plan:
             plans.append(plan)
         if skip:
@@ -402,14 +492,20 @@ def gpu_plans_from_report(
     skipped: list[dict[str, str]] = []
     recommendations = gpu_report.get("recommendations", [])
     if not isinstance(recommendations, list):
-        return plans, [{"id": "gpu_report", "reason": "GPU report recommendations is not a list"}]
+        return plans, [
+            {"id": "gpu_report", "reason": "GPU report recommendations is not a list"}
+        ]
     for index, rec in enumerate(recommendations, start=1):
         if not isinstance(rec, dict):
-            skipped.append({"id": f"gpu_{index:03d}", "reason": "recommendation is not an object"})
+            skipped.append(
+                {"id": f"gpu_{index:03d}", "reason": "recommendation is not an object"}
+            )
             continue
         if rec.get("status") != "ready_for_patch_plan":
             continue
-        plan, skip = normalize_gpu_recommendation(rec=rec, index=index, repo_root=repo_root, audit_refs=audit_refs)
+        plan, skip = normalize_gpu_recommendation(
+            rec=rec, index=index, repo_root=repo_root, audit_refs=audit_refs
+        )
         if plan:
             plans.append(plan)
         if skip:
@@ -425,8 +521,16 @@ def build_decision(
     evidence: dict[str, Any],
     fallback_used: bool,
 ) -> dict[str, Any]:
-    evidence_decision = evidence.get("decision", {}) if isinstance(evidence.get("decision"), dict) else {}
-    gpu_decision = gpu_report.get("decision", {}) if isinstance(gpu_report.get("decision"), dict) else {}
+    evidence_decision = (
+        evidence.get("decision", {})
+        if isinstance(evidence.get("decision"), dict)
+        else {}
+    )
+    gpu_decision = (
+        gpu_report.get("decision", {})
+        if isinstance(gpu_report.get("decision"), dict)
+        else {}
+    )
     return {
         "ready_for_manual_review": bool(plans),
         "patch_plan_count": len(plans),
@@ -434,9 +538,15 @@ def build_decision(
         "gpu_recommendation_count": gpu_report.get("recommendation_count", 0),
         "gpu_ready_count": gpu_decision.get("ready_count", 0),
         "fallback_used": fallback_used,
-        "evidence_ready_for_manual_patch_count": evidence_decision.get("ready_for_manual_patch_count"),
-        "evidence_sufficient_for_real_pr": evidence_decision.get("sufficient_for_real_pr"),
-        "recommended_next_layer": "manual_review_then_targeted_patch" if plans else "collect_more_evidence",
+        "evidence_ready_for_manual_patch_count": evidence_decision.get(
+            "ready_for_manual_patch_count"
+        ),
+        "evidence_sufficient_for_real_pr": evidence_decision.get(
+            "sufficient_for_real_pr"
+        ),
+        "recommended_next_layer": (
+            "manual_review_then_targeted_patch" if plans else "collect_more_evidence"
+        ),
         "manual_review_required": True,
         "cosmetic_patch_suppression_enabled": True,
     }
@@ -446,11 +556,17 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Agent Review Patch Plan", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Apply mode: `{report['apply_mode']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{report['provider_execution_performed']}`"
+    )
+    lines.append(
+        f"- Patch application performed: `{report['patch_application_performed']}`"
+    )
     lines.append(f"- Patch plan count: `{report['decision']['patch_plan_count']}`")
     lines.append(f"- Fallback used: `{report['decision']['fallback_used']}`")
-    lines.append(f"- Manual review required: `{report['decision']['manual_review_required']}`")
+    lines.append(
+        f"- Manual review required: `{report['decision']['manual_review_required']}`"
+    )
     lines.append("")
     lines.append("## Inputs")
     lines.append("")
@@ -477,7 +593,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("")
     lines.append("## Guardrail")
     lines.append("")
-    lines.append("This artifact is a plan only. It contains no replacements and must not be treated as an apply queue.")
+    lines.append(
+        "This artifact is a plan only. It contains no replacements and must not be treated as an apply queue."
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -495,21 +613,35 @@ def build_patch_plan(args: argparse.Namespace) -> dict[str, Any]:
         try:
             orchestrator = load_json_object(orchestrator_path)
         except Exception as exc:  # noqa: BLE001
-            warnings.append(f"Unable to read orchestrator report: {type(exc).__name__}: {exc}")
+            warnings.append(
+                f"Unable to read orchestrator report: {type(exc).__name__}: {exc}"
+            )
     else:
-        warnings.append(f"orchestrator report missing: {repo_rel(orchestrator_path, repo_root)}")
+        warnings.append(
+            f"orchestrator report missing: {repo_rel(orchestrator_path, repo_root)}"
+        )
 
     if evidence_path.exists():
         try:
             evidence = load_json_object(evidence_path)
         except Exception as exc:  # noqa: BLE001
-            errors.append(f"Unable to read evidence report: {type(exc).__name__}: {exc}")
+            errors.append(
+                f"Unable to read evidence report: {type(exc).__name__}: {exc}"
+            )
     else:
         errors.append(f"evidence report missing: {repo_rel(evidence_path, repo_root)}")
 
     audit_refs = npu_audit_refs(orchestrator)
-    gpu_report = load_gpu_report(repo_root, orchestrator, warnings) if orchestrator else {}
-    plans, skipped = gpu_plans_from_report(gpu_report=gpu_report, repo_root=repo_root, audit_refs=audit_refs) if gpu_report else ([], [])
+    gpu_report = (
+        load_gpu_report(repo_root, orchestrator, warnings) if orchestrator else {}
+    )
+    plans, skipped = (
+        gpu_plans_from_report(
+            gpu_report=gpu_report, repo_root=repo_root, audit_refs=audit_refs
+        )
+        if gpu_report
+        else ([], [])
+    )
 
     fallback_used = False
     if not plans and evidence:
@@ -523,7 +655,9 @@ def build_patch_plan(args: argparse.Namespace) -> dict[str, Any]:
         skipped.extend(fallback_skipped)
 
     if not plans and not errors:
-        warnings.append("no patch plans were produced from GPU recommendations or evidence fallback")
+        warnings.append(
+            "no patch plans were produced from GPU recommendations or evidence fallback"
+        )
 
     available_patch_plan_count = len(plans)
     requested_max_patch_plans = int(getattr(args, "max_patch_plans", 0) or 0)
@@ -591,7 +725,12 @@ def main() -> int:
     parser.add_argument("--evidence", default=DEFAULT_EVIDENCE)
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
-    parser.add_argument("--max-patch-plans", type=int, default=0, help="Compatibility/telemetry only; does not truncate valid patch plans.")
+    parser.add_argument(
+        "--max-patch-plans",
+        type=int,
+        default=0,
+        help="Compatibility/telemetry only; does not truncate valid patch plans.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()

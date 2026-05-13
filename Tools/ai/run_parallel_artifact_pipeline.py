@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Thin CLI entrypoint for the AI artifact pipeline.
 
-Implementation details live under ``Tools/ai/pipeline/`` so the pipeline can be
+Implementation details live under ``tools/ai/pipeline/`` so the pipeline can be
 validated, refactored and dry-run tested in focused modules.
 """
+
 from __future__ import annotations
 
 import json
@@ -15,16 +16,32 @@ try:
     from pipeline.preflight import preflight
     from pipeline.remediation import execute_remediation_loop
     from pipeline.scheduler import build_schedule, execute_schedule
-    from pipeline.schema_report import build_report, empty_failed_report, write_report_if_requested
-    from pipeline.steps import build_parallel_steps, build_serial_steps, build_step_commands
+    from pipeline.schema_report import (
+        build_report,
+        empty_failed_report,
+        write_report_if_requested,
+    )
+    from pipeline.steps import (
+        build_parallel_steps,
+        build_serial_steps,
+        build_step_commands,
+    )
 except ImportError:  # Allows package-style imports during external checks.
-    from Tools.ai.pipeline.artifact_contracts import slugify  # type: ignore
-    from Tools.ai.pipeline.cli import build_parser  # type: ignore
-    from Tools.ai.pipeline.preflight import preflight  # type: ignore
-    from Tools.ai.pipeline.remediation import execute_remediation_loop  # type: ignore
-    from Tools.ai.pipeline.scheduler import build_schedule, execute_schedule  # type: ignore
-    from Tools.ai.pipeline.schema_report import build_report, empty_failed_report, write_report_if_requested  # type: ignore
-    from Tools.ai.pipeline.steps import build_parallel_steps, build_serial_steps, build_step_commands  # type: ignore
+    from tools.ai.pipeline.artifact_contracts import slugify  # type: ignore
+    from tools.ai.pipeline.cli import build_parser  # type: ignore
+    from tools.ai.pipeline.preflight import preflight  # type: ignore
+    from tools.ai.pipeline.remediation import execute_remediation_loop  # type: ignore
+    from tools.ai.pipeline.scheduler import build_schedule, execute_schedule  # type: ignore
+    from tools.ai.pipeline.schema_report import (  # type: ignore
+        build_report,
+        empty_failed_report,
+        write_report_if_requested,
+    )
+    from tools.ai.pipeline.steps import (  # type: ignore
+        build_parallel_steps,
+        build_serial_steps,
+        build_step_commands,
+    )
 
 
 def main() -> int:
@@ -55,7 +72,9 @@ def main() -> int:
         continue_on_error=args.continue_on_error,
     )
     remediation_loop = execute_remediation_loop(repo, out, args, results)
-    report = build_report(repo, out, args, pf, results, remediation_loop, schedule=schedule.to_dict())
+    report = build_report(
+        repo, out, args, pf, results, remediation_loop, schedule=schedule.to_dict()
+    )
     write_report_if_requested(out, args, report)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2

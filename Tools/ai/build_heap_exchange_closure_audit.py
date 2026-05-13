@@ -6,6 +6,7 @@ heap/exchange loop. This report represents the deterministic/script audit lane
 that can be reused before declaring the heap/exchange closed and before the
 final reviewable PR product is accepted.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -15,9 +16,17 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:  # pragma: no cover
-    from report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def repo_path(repo_root: Path, raw: str) -> Path | None:
@@ -57,7 +66,9 @@ def load_jsonl(path: Path | None) -> tuple[list[dict[str, Any]], str | None]:
         return [], "missing"
     rows: list[dict[str, Any]] = []
     errors: list[str] = []
-    for index, line in enumerate(path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1):
+    for index, line in enumerate(
+        path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1
+    ):
         stripped = line.strip()
         if not stripped:
             continue
@@ -77,7 +88,9 @@ def append_jsonl(path: Path | None, event: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = dict(event)
     payload.setdefault("timestamp", datetime.now().isoformat(timespec="seconds"))
-    path.open("a", encoding="utf-8", newline="\n").write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
+    path.open("a", encoding="utf-8", newline="\n").write(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n"
+    )
 
 
 def peer_ids(peer_manifest: dict[str, Any] | None) -> set[str]:
@@ -91,7 +104,9 @@ def peer_ids(peer_manifest: dict[str, Any] | None) -> set[str]:
     return peers
 
 
-def has_audit_lane(peer_manifest: dict[str, Any] | None, events: list[dict[str, Any]]) -> bool:
+def has_audit_lane(
+    peer_manifest: dict[str, Any] | None, events: list[dict[str, Any]]
+) -> bool:
     manifest_text = json.dumps(peer_manifest or {}, ensure_ascii=False).lower()
     events_text = json.dumps(events, ensure_ascii=False).lower()
     text = manifest_text + "\n" + events_text
@@ -140,8 +155,20 @@ def main() -> int:
     peer_path = repo_path(repo_root, args.heap_peer_runtime)
     runtime_state_path = repo_path(repo_root, args.runtime_state)
     observer_dir = repo_path(repo_root, args.observer_dir)
-    output = repo_path(repo_root, args.output) or repo_root / "output/ai_packets" / args.stamp / "heap_exchange_closure_audit.json"
-    markdown_output = repo_path(repo_root, args.markdown_output) or repo_root / "output/ai_packets" / args.stamp / "heap_exchange_closure_audit.md"
+    output = (
+        repo_path(repo_root, args.output)
+        or repo_root
+        / "output/ai_packets"
+        / args.stamp
+        / "heap_exchange_closure_audit.json"
+    )
+    markdown_output = (
+        repo_path(repo_root, args.markdown_output)
+        or repo_root
+        / "output/ai_packets"
+        / args.stamp
+        / "heap_exchange_closure_audit.md"
+    )
 
     peer_manifest, peer_error = load_json(peer_path)
     events, events_error = load_jsonl(runtime_state_path)
@@ -160,7 +187,9 @@ def main() -> int:
     if missing_peers:
         errors.append(f"missing dynamic peers before closure: {missing_peers}")
     if not audit_available:
-        errors.append("deterministic/script audit lane not available before heap/exchange closure")
+        errors.append(
+            "deterministic/script audit lane not available before heap/exchange closure"
+        )
 
     report = {
         "schema_version": 1,
@@ -187,7 +216,10 @@ def main() -> int:
     }
 
     write_json_report(report, resolve_output_path(repo_root, output.as_posix()))
-    write_text_report(render_markdown(report), resolve_output_path(repo_root, markdown_output.as_posix()))
+    write_text_report(
+        render_markdown(report),
+        resolve_output_path(repo_root, markdown_output.as_posix()),
+    )
 
     append_jsonl(
         runtime_state_path,

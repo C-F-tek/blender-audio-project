@@ -6,6 +6,7 @@ This helper summarizes those local reports into a Git-trackable evidence bundle
 under ``docs/LOCAL_VALIDATION_EVIDENCE/``. It does not execute providers, apply
 patches, run Blender, run FFmpeg or start GPU/NPU workloads.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -60,9 +61,14 @@ def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
 def compact(value: Any, *, max_string: int = 240, max_items: int = 20) -> Any:
     """Return a JSON-safe compact copy of value."""
     if isinstance(value, str):
-        return value if len(value) <= max_string else value[:max_string] + "...[truncated]"
+        return (
+            value if len(value) <= max_string else value[:max_string] + "...[truncated]"
+        )
     if isinstance(value, list):
-        return [compact(item, max_string=max_string, max_items=max_items) for item in value[:max_items]]
+        return [
+            compact(item, max_string=max_string, max_items=max_items)
+            for item in value[:max_items]
+        ]
     if isinstance(value, dict):
         return {
             str(key): compact(item, max_string=max_string, max_items=max_items)
@@ -109,7 +115,9 @@ def _case_report_path(repo_root: Path, value: Any) -> Path | None:
     return path.resolve()
 
 
-def summarize_case_result(repo_root: Path, item: dict[str, Any], index: int) -> dict[str, Any]:
+def summarize_case_result(
+    repo_root: Path, item: dict[str, Any], index: int
+) -> dict[str, Any]:
     """Summarize one matrix result and its per-case dry-run report when present."""
     report_path = _case_report_path(repo_root, item.get("report_path"))
     case_report: dict[str, Any] | None = None
@@ -120,7 +128,11 @@ def summarize_case_result(repo_root: Path, item: dict[str, Any], index: int) -> 
     steps = case_report.get("steps") if isinstance(case_report, dict) else None
     step_count = len(steps) if isinstance(steps, list) else item.get("step_count")
     planned_only_count = (
-        sum(1 for step in steps if isinstance(step, dict) and step.get("planned_only") is True)
+        sum(
+            1
+            for step in steps
+            if isinstance(step, dict) and step.get("planned_only") is True
+        )
         if isinstance(steps, list)
         else None
     )
@@ -141,13 +153,13 @@ def summarize_case_result(repo_root: Path, item: dict[str, Any], index: int) -> 
         "report_json_ok": case_report is not None,
         "report_parse_error": parse_error,
         "report_passed": item.get("report_passed"),
-        "dry_run": case_report.get("dry_run") if isinstance(case_report, dict) else None,
+        "dry_run": (
+            case_report.get("dry_run") if isinstance(case_report, dict) else None
+        ),
         "step_count": step_count,
         "planned_only_count": planned_only_count,
         "all_steps_planned_only": (
-            planned_only_count == len(steps)
-            if isinstance(steps, list)
-            else None
+            planned_only_count == len(steps) if isinstance(steps, list) else None
         ),
         "has_validation": "--validate" in command_text,
         "has_chunks": "--build-chunks" in command_text,
@@ -159,7 +171,9 @@ def summarize_case_result(repo_root: Path, item: dict[str, Any], index: int) -> 
     }
 
 
-def summarize_matrix_report(repo_root: Path, matrix_report: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[str]]:
+def summarize_matrix_report(
+    repo_root: Path, matrix_report: Path
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[str]]:
     """Summarize matrix and per-case reports."""
     errors: list[str] = []
     data, error = read_json_object(matrix_report)
@@ -188,12 +202,12 @@ def summarize_matrix_report(repo_root: Path, matrix_report: Path) -> tuple[dict[
     failed_cases = [
         item["name"]
         for item in cases
-        if item.get("returncode") != 0 or item.get("report_passed") is not True or item.get("dry_run") is not True
+        if item.get("returncode") != 0
+        or item.get("report_passed") is not True
+        or item.get("dry_run") is not True
     ]
     non_planned_cases = [
-        item["name"]
-        for item in cases
-        if item.get("all_steps_planned_only") is not True
+        item["name"] for item in cases if item.get("all_steps_planned_only") is not True
     ]
     matrix = {
         "path": repo_relative(matrix_report, repo_root),
@@ -230,7 +244,9 @@ def build_evidence(
 ) -> dict[str, Any]:
     """Build and write the compact evidence bundle."""
     matrix, cases, errors = summarize_matrix_report(repo_root, matrix_report)
-    validations = [summarize_validation_report(path, repo_root) for path in validation_reports]
+    validations = [
+        summarize_validation_report(path, repo_root) for path in validation_reports
+    ]
     errors.extend(
         f"{item['path']}: validation report did not pass"
         for item in validations
@@ -240,12 +256,22 @@ def build_evidence(
     case_count = len(cases)
     report_count = sum(1 for item in cases if item.get("report_exists") is True)
     dry_run_count = sum(1 for item in cases if item.get("dry_run") is True)
-    planned_only_count = sum(1 for item in cases if item.get("all_steps_planned_only") is True)
-    validation_case_count = sum(1 for item in cases if item.get("has_validation") is True)
+    planned_only_count = sum(
+        1 for item in cases if item.get("all_steps_planned_only") is True
+    )
+    validation_case_count = sum(
+        1 for item in cases if item.get("has_validation") is True
+    )
     chunk_case_count = sum(1 for item in cases if item.get("has_chunks") is True)
-    music_summary_case_count = sum(1 for item in cases if item.get("has_music_summary") is True)
-    npu_planning_case_count = sum(1 for item in cases if item.get("has_npu_planning") is True)
-    gpu_planning_case_count = sum(1 for item in cases if item.get("has_gpu_planning") is True)
+    music_summary_case_count = sum(
+        1 for item in cases if item.get("has_music_summary") is True
+    )
+    npu_planning_case_count = sum(
+        1 for item in cases if item.get("has_npu_planning") is True
+    )
+    gpu_planning_case_count = sum(
+        1 for item in cases if item.get("has_gpu_planning") is True
+    )
 
     evidence = {
         "schema_version": 1,
@@ -274,14 +300,19 @@ def build_evidence(
         "cases": cases,
         "decision": {
             "matrix_passed": matrix.get("passed") is True,
-            "all_validation_reports_passed": all(item.get("passed") is True for item in validations),
+            "all_validation_reports_passed": all(
+                item.get("passed") is True for item in validations
+            ),
             "all_case_reports_present": case_count > 0 and report_count == case_count,
             "all_cases_dry_run": case_count > 0 and dry_run_count == case_count,
-            "all_steps_planned_only": case_count > 0 and planned_only_count == case_count,
+            "all_steps_planned_only": case_count > 0
+            and planned_only_count == case_count,
             "provider_execution_seen": False,
             "gpu_npu_workloads_executed": False,
-            "parallel_execution_seen": isinstance(matrix.get("matrix_workers"), int) and matrix.get("matrix_workers", 0) > 1,
-            "repeat_cases_seen": isinstance(matrix.get("repeat_cases"), int) and matrix.get("repeat_cases", 0) > 1,
+            "parallel_execution_seen": isinstance(matrix.get("matrix_workers"), int)
+            and matrix.get("matrix_workers", 0) > 1,
+            "repeat_cases_seen": isinstance(matrix.get("repeat_cases"), int)
+            and matrix.get("repeat_cases", 0) > 1,
         },
     }
 
@@ -290,7 +321,9 @@ def build_evidence(
     md_path = output_dir / f"{basename}.md"
     evidence["evidence_json"] = repo_relative(json_path, repo_root)
     evidence["evidence_markdown"] = repo_relative(md_path, repo_root)
-    json_path.write_text(json.dumps(evidence, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    json_path.write_text(
+        json.dumps(evidence, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     md_path.write_text(render_markdown(evidence), encoding="utf-8")
     return evidence
 
@@ -298,13 +331,21 @@ def build_evidence(
 def render_markdown(evidence: dict[str, Any]) -> str:
     """Render a compact Markdown companion for the evidence bundle."""
     matrix = evidence.get("matrix") if isinstance(evidence.get("matrix"), dict) else {}
-    decision = evidence.get("decision") if isinstance(evidence.get("decision"), dict) else {}
-    summary = evidence.get("case_summary") if isinstance(evidence.get("case_summary"), dict) else {}
+    decision = (
+        evidence.get("decision") if isinstance(evidence.get("decision"), dict) else {}
+    )
+    summary = (
+        evidence.get("case_summary")
+        if isinstance(evidence.get("case_summary"), dict)
+        else {}
+    )
     lines = ["# AI Pipeline Dry-Run Matrix Evidence", ""]
     lines.append(f"- Generated at: `{evidence['generated_at']}`")
     lines.append(f"- Kind: `{evidence['kind']}`")
     lines.append(f"- Passed: `{evidence['passed']}`")
-    lines.append(f"- Provider execution performed: `{evidence['provider_execution_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{evidence['provider_execution_performed']}`"
+    )
     lines.append(f"- Matrix report: `{evidence['source_matrix_report']}`")
     lines.append(f"- Matrix workers: `{matrix.get('matrix_workers')}`")
     lines.append(f"- Repeat cases: `{matrix.get('repeat_cases')}`")
@@ -323,14 +364,18 @@ def render_markdown(evidence: dict[str, Any]) -> str:
     lines.append("## Validation Reports")
     lines.append("")
     for item in evidence.get("validation_reports", []):
-        lines.append(f"- `{item.get('path')}`: passed `{item.get('passed')}`, kind `{item.get('kind')}`")
+        lines.append(
+            f"- `{item.get('path')}`: passed `{item.get('passed')}`, kind `{item.get('kind')}`"
+        )
     lines.append("")
     lines.append("## Failed Cases")
     lines.append("")
     failed = [
         item.get("name")
         for item in evidence.get("cases", [])
-        if item.get("returncode") != 0 or item.get("report_passed") is not True or item.get("dry_run") is not True
+        if item.get("returncode") != 0
+        or item.get("report_passed") is not True
+        or item.get("dry_run") is not True
     ]
     if failed:
         for name in failed:
@@ -338,7 +383,9 @@ def render_markdown(evidence: dict[str, Any]) -> str:
     else:
         lines.append("None.")
     lines.append("")
-    lines.append("This evidence summarizes dry-run planning only. It is not provider execution proof.")
+    lines.append(
+        "This evidence summarizes dry-run planning only. It is not provider execution proof."
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -364,8 +411,12 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     matrix_report = resolve_repo_path(repo_root, args.matrix_report)
-    validation_values = split_path_values(args.validation_report) or list(DEFAULT_VALIDATION_REPORTS)
-    validation_reports = [resolve_repo_path(repo_root, item) for item in validation_values]
+    validation_values = split_path_values(args.validation_report) or list(
+        DEFAULT_VALIDATION_REPORTS
+    )
+    validation_reports = [
+        resolve_repo_path(repo_root, item) for item in validation_values
+    ]
     output_dir = resolve_repo_path(repo_root, args.output_dir)
 
     evidence = build_evidence(

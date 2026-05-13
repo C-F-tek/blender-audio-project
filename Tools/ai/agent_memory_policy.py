@@ -5,19 +5,34 @@ The policy is intentionally local and deterministic. It never deletes memory
 records or promotes them into documentation by itself; it only produces review
 reports and promotion candidates for humans or higher-level app workflows.
 """
+
 from __future__ import annotations
 
-import json
 import re
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 try:  # Support both direct script execution and namespace-package imports.
-    from .agent_state import MemoryRecord, compact_text, load_memory_db, load_memory_jsonl, sha256_text, utc_now_iso
+    from .agent_state import (
+        MemoryRecord,
+        compact_text,
+        load_memory_db,
+        load_memory_jsonl,
+        sha256_text,
+        utc_now_iso,
+    )
 except ImportError:  # pragma: no cover - direct execution fallback.
-    from agent_state import MemoryRecord, compact_text, load_memory_db, load_memory_jsonl, sha256_text, utc_now_iso
+    from agent_state import (
+        MemoryRecord,
+        compact_text,
+        load_memory_db,
+        load_memory_jsonl,
+        sha256_text,
+        utc_now_iso,
+    )
 
 
 POLICY_SCHEMA_VERSION = 1
@@ -146,7 +161,11 @@ def promotion_reason(record: MemoryRecord, policy: dict[str, Any]) -> str | None
     return None
 
 
-def review_record(record: MemoryRecord, now: datetime, policy: dict[str, Any] | None = None) -> MemoryReview:
+def review_record(
+    record: MemoryRecord,
+    now: datetime,
+    policy: dict[str, Any] | None = None,
+) -> MemoryReview:
     """Evaluate one memory record against retention and promotion policy."""
     active_policy = dict(DEFAULT_RETENTION_POLICY)
     if policy:
@@ -159,7 +178,9 @@ def review_record(record: MemoryRecord, now: datetime, policy: dict[str, Any] | 
     expires_at = parse_datetime(record.expires_at)
     review_after = kind_threshold(active_policy, "review_after_days", record.kind)
     expire_after = kind_threshold(active_policy, "expire_after_days", record.kind)
-    protected = bool(tag_set & {str(tag).lower() for tag in active_policy.get("protected_tags", [])})
+    protected = bool(
+        tag_set & {str(tag).lower() for tag in active_policy.get("protected_tags", [])}
+    )
 
     if record.confidence < 0.5:
         issues.append("low_confidence")
@@ -178,7 +199,16 @@ def review_record(record: MemoryRecord, now: datetime, policy: dict[str, Any] | 
         issues.append("review_due")
 
     reason = promotion_reason(record, active_policy)
-    has_blocker = any(issue in {"blocked_secret_pattern", "empty_content", "explicitly_expired", "stale_by_age"} for issue in issues)
+    has_blocker = any(
+        issue
+        in {
+            "blocked_secret_pattern",
+            "empty_content",
+            "explicitly_expired",
+            "stale_by_age",
+        }
+        for issue in issues
+    )
     candidate = bool(reason and not has_blocker and record.confidence >= 0.75)
 
     if "blocked_secret_pattern" in issues:
@@ -211,7 +241,9 @@ def review_record(record: MemoryRecord, now: datetime, policy: dict[str, Any] | 
     )
 
 
-def load_records(memory_jsonl: Iterable[Path] = (), memory_db: Path | None = None, limit: int = 1000) -> list[MemoryRecord]:
+def load_records(
+    memory_jsonl: Iterable[Path] = (), memory_db: Path | None = None, limit: int = 1000
+) -> list[MemoryRecord]:
     """Load memory records from JSONL files and an optional SQLite DB."""
     records: list[MemoryRecord] = []
     for path in memory_jsonl:
@@ -232,7 +264,9 @@ def evaluate_memory_records(
     reviews = [review_record(record, active_now, policy) for record in records]
     duplicates: dict[str, list[str]] = {}
     for record in records:
-        key = sha256_text(f"{record.kind}:{record.scope}:{record.source}:{record.content}")[:20]
+        key = sha256_text(
+            f"{record.kind}:{record.scope}:{record.source}:{record.content}"
+        )[:20]
         duplicates.setdefault(key, []).append(record.record_id)
     duplicate_groups = [ids for ids in duplicates.values() if len(set(ids)) > 1]
     action_counts: dict[str, int] = {}
@@ -245,19 +279,29 @@ def evaluate_memory_records(
         "generated_at": utc_now_iso(),
         "passed": risk_count == 0,
         "record_count": len(reviews),
-        "promotion_candidate_count": sum(1 for review in reviews if review.promotion_candidate),
-        "review_count": sum(1 for review in reviews if review.action in {"human_review", "trim_review", "expire_review"}),
+        "promotion_candidate_count": sum(
+            1 for review in reviews if review.promotion_candidate
+        ),
+        "review_count": sum(
+            1
+            for review in reviews
+            if review.action in {"human_review", "trim_review", "expire_review"}
+        ),
         "risk_count": risk_count,
         "duplicate_group_count": len(duplicate_groups),
         "action_counts": action_counts,
         "policy": policy or DEFAULT_RETENTION_POLICY,
         "duplicate_groups": duplicate_groups,
         "reviews": [review.to_dict() for review in reviews],
-        "promotion_candidates": [review.to_dict() for review in reviews if review.promotion_candidate],
+        "promotion_candidates": [
+            review.to_dict() for review in reviews if review.promotion_candidate
+        ],
         "notes": [
             "This report is non-destructive and never deletes or promotes records by itself.",
-            "Promotion means a human or app workflow may distill a record into stable docs or a reviewed JSONL store.",
-            "Quarantine means a record should not be selected into agent context until manually inspected.",
+            "Promotion means a human or app workflow may distill a record into stable docs "
+    "or a reviewed JSONL store.",
+            "Quarantine means a record should not be selected into agent context \
+    until manually inspected.",
         ],
     }
     return report
@@ -298,10 +342,17 @@ def write_memory_policy_markdown(report: dict[str, Any], path: Path) -> None:
             ]
         )
     lines.extend(["", "## Risks", ""])
-    risks = [item for item in report.get("reviews", []) if item.get("action") == "quarantine"]
+    risks = [
+        item for item in report.get("reviews", []) if item.get("action") == "quarantine"
+    ]
     if not risks:
         lines.append("None.")
     for item in risks:
-        lines.append(f"- `{item.get('record_id')}` from `{item.get('source')}`: {', '.join(item.get('issues') or [])}")
+        lines.append(
+            (
+                f"- `{item.get('record_id')}` from `{item.get('source')}`: "
+                f"{', '.join(item.get('issues') or [])}"
+            )
+        )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

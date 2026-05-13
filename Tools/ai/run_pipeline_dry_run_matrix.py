@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 """Run a matrix of safe dry-run checks for the AI artifact pipeline.
 
-The matrix invokes ``Tools/ai/run_parallel_artifact_pipeline.py`` with several
+The matrix invokes ``tools/ai/run_parallel_artifact_pipeline.py`` with several
 non-invasive configurations and writes compact JSON and Markdown summaries.
 It does not run NPU/GPU/Blender workloads because every invocation includes
 ``--dry-run``.
 """
+
 from __future__ import annotations
 
 import argparse
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import os
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -22,7 +23,7 @@ from typing import Any
 try:
     from pipeline.markdown_report import write_dry_run_matrix_markdown
 except ImportError:  # Allows package-style imports during external checks.
-    from Tools.ai.pipeline.markdown_report import write_dry_run_matrix_markdown  # type: ignore
+    from tools.ai.pipeline.markdown_report import write_dry_run_matrix_markdown  # type: ignore
 
 
 @dataclass(frozen=True)
@@ -50,7 +51,13 @@ def _planned_gpu_placeholder_command() -> str:
 
 def ensure_sample_analysis_json(repo_root: Path) -> Path:
     """Create a tiny deterministic analysis JSON so music-summary dry-runs pass preflight."""
-    sample = repo_root / "output" / "ai_pipeline" / "dry_run_matrix_inputs" / "sample_analysis.json"
+    sample = (
+        repo_root
+        / "output"
+        / "ai_pipeline"
+        / "dry_run_matrix_inputs"
+        / "sample_analysis.json"
+    )
     sample.parent.mkdir(parents=True, exist_ok=True)
     if not sample.exists():
         payload = {
@@ -72,11 +79,15 @@ def ensure_sample_analysis_json(repo_root: Path) -> Path:
                 "Do not treat this as real audio analysis output.",
             ],
         }
-        sample.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        sample.write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
     return sample
 
 
-def repeat_cases(cases: tuple[MatrixCase, ...], repeat_count: int) -> tuple[MatrixCase, ...]:
+def repeat_cases(
+    cases: tuple[MatrixCase, ...], repeat_count: int
+) -> tuple[MatrixCase, ...]:
     """Repeat matrix cases for stress testing while keeping output directories unique."""
     repeat_count = max(1, repeat_count)
     if repeat_count == 1:
@@ -97,9 +108,17 @@ def repeat_cases(cases: tuple[MatrixCase, ...], repeat_count: int) -> tuple[Matr
 
 def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
     agent_state_packet = None
-    sample_analysis_json = Path("output/ai_pipeline/dry_run_matrix_inputs/sample_analysis.json")
+    sample_analysis_json = Path(
+        "output/ai_pipeline/dry_run_matrix_inputs/sample_analysis.json"
+    )
     if repo_root is not None:
-        candidate = repo_root / "output" / "ai_pipeline" / "agent_state" / "validate_agent_state_memory_integration_plan.json"
+        candidate = (
+            repo_root
+            / "output"
+            / "ai_pipeline"
+            / "agent_state"
+            / "validate_agent_state_memory_integration_plan.json"
+        )
         if candidate.exists():
             agent_state_packet = candidate
         sample_analysis_json = ensure_sample_analysis_json(repo_root)
@@ -112,7 +131,11 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
         ),
         MatrixCase(
             name="no_auto_remediation",
-            args=("--dry-run", "--write-dry-run-report", "--no-guardrail-auto-remediate"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--no-guardrail-auto-remediate",
+            ),
             purpose="Verify pipeline without automatic guardrail remediation passes.",
         ),
         MatrixCase(
@@ -127,7 +150,11 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
         ),
         MatrixCase(
             name="no_wave_review",
-            args=("--dry-run", "--write-dry-run-report", "--no-review-wave-entrypoints"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--no-review-wave-entrypoints",
+            ),
             purpose="Verify planning when first-wave WAV entrypoint review is disabled.",
         ),
         MatrixCase(
@@ -148,7 +175,12 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
         ),
         MatrixCase(
             name="validation_no_guardrail",
-            args=("--dry-run", "--write-dry-run-report", "--validate", "--no-npu-guardrail"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--validate",
+                "--no-npu-guardrail",
+            ),
             purpose="Verify validation planning when NPU guardrail is disabled.",
         ),
         MatrixCase(
@@ -158,7 +190,12 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
         ),
         MatrixCase(
             name="chunks_no_smart_context",
-            args=("--dry-run", "--write-dry-run-report", "--build-chunks", "--no-smart-context"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--build-chunks",
+                "--no-smart-context",
+            ),
             purpose="Verify chunk planning without smart context.",
         ),
         MatrixCase(
@@ -222,22 +259,42 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
         ),
         MatrixCase(
             name="custom_track_stem_ascii",
-            args=("--dry-run", "--write-dry-run-report", "--track-stem", "dry_run_track_120bpm"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--track-stem",
+                "dry_run_track_120bpm",
+            ),
             purpose="Verify planning with a custom ASCII track stem.",
         ),
         MatrixCase(
             name="custom_track_stem_spaces",
-            args=("--dry-run", "--write-dry-run-report", "--track-stem", "Dry Run Track With Spaces"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--track-stem",
+                "Dry Run Track With Spaces",
+            ),
             purpose="Verify slug/path planning with spaces in track stem.",
         ),
         MatrixCase(
             name="custom_track_stem_symbols",
-            args=("--dry-run", "--write-dry-run-report", "--track-stem", "Dry_Run-Track_120 BPM!"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--track-stem",
+                "Dry_Run-Track_120 BPM!",
+            ),
             purpose="Verify slug/path planning with punctuation in track stem.",
         ),
         MatrixCase(
             name="custom_smart_task_short",
-            args=("--dry-run", "--write-dry-run-report", "--smart-task", "dry-run short planning task"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--smart-task",
+                "dry-run short planning task",
+            ),
             purpose="Verify planning with a short custom smart-context task.",
         ),
         MatrixCase(
@@ -278,52 +335,106 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
         ),
         MatrixCase(
             name="with_npu_review_workers_1",
-            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--npu-workers", "1"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--use-npu",
+                "--npu-workers",
+                "1",
+            ),
             purpose="Verify optional NPU artifact review stage planning with one worker and no NPU execution.",
         ),
         MatrixCase(
             name="with_npu_review_workers_4",
-            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--npu-workers", "4"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--use-npu",
+                "--npu-workers",
+                "4",
+            ),
             purpose="Verify optional NPU artifact review stage planning with the recommended local worker cap.",
         ),
         MatrixCase(
             name="with_npu_review_workers_8_warning",
-            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--npu-workers", "8"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--use-npu",
+                "--npu-workers",
+                "8",
+            ),
             purpose="Verify high NPU worker planning emits warnings without executing NPU workloads.",
         ),
         MatrixCase(
             name="with_npu_review_workers_16_warning",
-            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--npu-workers", "16"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--use-npu",
+                "--npu-workers",
+                "16",
+            ),
             purpose="Verify very high NPU worker planning emits warnings without executing NPU workloads.",
         ),
         MatrixCase(
             name="npu_review_without_guardrail",
-            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--no-npu-guardrail"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--use-npu",
+                "--no-npu-guardrail",
+            ),
             purpose="Verify NPU review planning when NPU guardrail is disabled.",
         ),
         MatrixCase(
             name="npu_review_no_smart_context",
-            args=("--dry-run", "--write-dry-run-report", "--use-npu", "--no-smart-context"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--use-npu",
+                "--no-smart-context",
+            ),
             purpose="Verify NPU review planning with smart context disabled.",
         ),
         MatrixCase(
             name="with_gpu_command_planned",
-            args=("--dry-run", "--write-dry-run-report", "--gpu-command", _planned_gpu_command()),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--gpu-command",
+                _planned_gpu_command(),
+            ),
             purpose="Verify optional GPU command planning without executing GPU workloads.",
         ),
         MatrixCase(
             name="with_gpu_placeholder_command_planned",
-            args=("--dry-run", "--write-dry-run-report", "--gpu-command", _planned_gpu_placeholder_command()),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--gpu-command",
+                _planned_gpu_placeholder_command(),
+            ),
             purpose="Verify GPU command placeholder formatting for {brief} and {output} without executing GPU workloads.",
         ),
         MatrixCase(
             name="gpu_command_missing_output_warning",
-            args=("--dry-run", "--write-dry-run-report", "--gpu-command", "python -c \"print('gpu dry run without output placeholder')\" {brief}"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--gpu-command",
+                "python -c \"print('gpu dry run without output placeholder')\" {brief}",
+            ),
             purpose="Verify GPU command warning when {output} placeholder is missing without executing GPU workloads.",
         ),
         MatrixCase(
             name="gpu_command_missing_brief_warning",
-            args=("--dry-run", "--write-dry-run-report", "--gpu-command", "python -c \"print('gpu dry run without brief placeholder')\" {output}"),
+            args=(
+                "--dry-run",
+                "--write-dry-run-report",
+                "--gpu-command",
+                "python -c \"print('gpu dry run without brief placeholder')\" {output}",
+            ),
             purpose="Verify GPU command warning when {brief} placeholder is missing without executing GPU workloads.",
         ),
         MatrixCase(
@@ -413,7 +524,12 @@ def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
         cases.append(
             MatrixCase(
                 name="with_agent_state_packet",
-                args=("--dry-run", "--write-dry-run-report", "--agent-state-packet", str(agent_state_packet)),
+                args=(
+                    "--dry-run",
+                    "--write-dry-run-report",
+                    "--agent-state-packet",
+                    str(agent_state_packet),
+                ),
                 purpose="Verify optional agent state packet metadata without changing planned steps.",
             )
         )
@@ -462,16 +578,38 @@ def run_case(repo_root: Path, output_dir: Path, case: MatrixCase) -> dict[str, A
         "stderr_tail": completed.stderr[-6000:],
         "report_path": str(report_path),
         "report_exists": report_path.exists(),
-        "report_passed": report_payload.get("passed") if isinstance(report_payload, dict) else None,
-        "step_count": report_payload.get("step_count") if isinstance(report_payload, dict) else None,
-        "lanes": report_payload.get("lanes") if isinstance(report_payload, dict) else None,
-        "summary": report_payload.get("summary") if isinstance(report_payload, dict) else None,
-        "schedule": report_payload.get("schedule") if isinstance(report_payload, dict) else None,
-        "agent_state_packet": report_payload.get("agent_state_packet") if isinstance(report_payload, dict) else None,
+        "report_passed": (
+            report_payload.get("passed") if isinstance(report_payload, dict) else None
+        ),
+        "step_count": (
+            report_payload.get("step_count")
+            if isinstance(report_payload, dict)
+            else None
+        ),
+        "lanes": (
+            report_payload.get("lanes") if isinstance(report_payload, dict) else None
+        ),
+        "summary": (
+            report_payload.get("summary") if isinstance(report_payload, dict) else None
+        ),
+        "schedule": (
+            report_payload.get("schedule") if isinstance(report_payload, dict) else None
+        ),
+        "agent_state_packet": (
+            report_payload.get("agent_state_packet")
+            if isinstance(report_payload, dict)
+            else None
+        ),
     }
 
 
-def run_cases(repo_root: Path, output_dir: Path, cases: tuple[MatrixCase, ...], matrix_workers: int, continue_on_error: bool) -> list[dict[str, Any]]:
+def run_cases(
+    repo_root: Path,
+    output_dir: Path,
+    cases: tuple[MatrixCase, ...],
+    matrix_workers: int,
+    continue_on_error: bool,
+) -> list[dict[str, Any]]:
     """Run matrix cases, preserving deterministic report order."""
     if matrix_workers <= 1:
         results: list[dict[str, Any]] = []
@@ -519,8 +657,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output-dir", default="output/ai_pipeline/dry_run_matrix")
-    parser.add_argument("--output", default="output/ai_pipeline/dry_run_matrix_report.json")
-    parser.add_argument("--markdown-output", default="output/ai_pipeline/dry_run_matrix_report.md")
+    parser.add_argument(
+        "--output", default="output/ai_pipeline/dry_run_matrix_report.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/ai_pipeline/dry_run_matrix_report.md"
+    )
     parser.add_argument("--continue-on-error", action="store_true")
     parser.add_argument(
         "--matrix-workers",
@@ -543,9 +685,14 @@ def main() -> int:
     repeat_count = max(1, args.repeat_cases)
     base_cases = default_cases(repo_root)
     cases = repeat_cases(base_cases, repeat_count)
-    results = run_cases(repo_root, output_dir, cases, matrix_workers, args.continue_on_error)
+    results = run_cases(
+        repo_root, output_dir, cases, matrix_workers, args.continue_on_error
+    )
 
-    passed = all(item["returncode"] == 0 and item.get("report_passed") is True for item in results)
+    passed = all(
+        item["returncode"] == 0 and item.get("report_passed") is True
+        for item in results
+    )
     report = {
         "schema_version": 1,
         "repo_root": str(repo_root),
@@ -561,10 +708,14 @@ def main() -> int:
 
     output = Path(args.output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     markdown_output = write_dry_run_matrix_markdown(args.markdown_output, report)
     report["markdown_output"] = str(markdown_output)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if passed else 2
 

@@ -43,9 +43,13 @@ def nvidia_available(nvidia: dict[str, Any]) -> bool:
     return bool(nvidia.get("available"))
 
 
-def build_hardware_runtime_policy(openvino: dict[str, Any], nvidia: dict[str, Any]) -> dict[str, Any]:
+def build_hardware_runtime_policy(
+    openvino: dict[str, Any], nvidia: dict[str, Any]
+) -> dict[str, Any]:
     """Return the canonical runtime lane policy for IA-Carmine."""
-    gpu0_visible = openvino_device_visible(openvino, "GPU.0") or openvino_device_visible(openvino, "GPU")
+    gpu0_visible = openvino_device_visible(
+        openvino, "GPU.0"
+    ) or openvino_device_visible(openvino, "GPU")
     gpu1_visible = openvino_device_visible(openvino, "GPU.1")
     npu_visible = openvino_device_visible(openvino, "NPU")
 
@@ -76,7 +80,13 @@ def build_hardware_runtime_policy(openvino: dict[str, Any], nvidia: dict[str, An
             "role": "secondary_accelerator",
             "visible": gpu0_visible,
             "openvino_workload_allowed": gpu0_visible,
-            "allowed_workloads": ["probe", "small_inference", "light_scoring", "fallback", "tensor_test"],
+            "allowed_workloads": [
+                "probe",
+                "small_inference",
+                "light_scoring",
+                "fallback",
+                "tensor_test",
+            ],
             "not_primary_advisory": True,
             "optimization_capabilities": _capabilities(openvino, "GPU.0"),
         },
@@ -93,7 +103,9 @@ def build_hardware_runtime_policy(openvino: dict[str, Any], nvidia: dict[str, An
         },
         "openvino_gpu1_reserved": {
             "device": "GPU.1",
-            "full_device_name": _full_name(openvino, "GPU.1", OPENVINO_GPU1_RESERVED_DEVICE),
+            "full_device_name": _full_name(
+                openvino, "GPU.1", OPENVINO_GPU1_RESERVED_DEVICE
+            ),
             "owner": "OpenVINO visibility only",
             "role": "reserved_for_cuda_ollama",
             "visible": gpu1_visible,
@@ -108,11 +120,15 @@ def build_hardware_runtime_policy(openvino: dict[str, Any], nvidia: dict[str, An
 def policy_warnings(policy: dict[str, Any]) -> list[str]:
     warnings: list[str] = []
     if not policy.get("cuda_gpu_primary", {}).get("visible"):
-        warnings.append("CUDA/Ollama primary GPU is not visible through nvidia-smi diagnostics.")
+        warnings.append(
+            "CUDA/Ollama primary GPU is not visible through nvidia-smi diagnostics."
+        )
     if not policy.get("openvino_gpu0", {}).get("visible"):
         warnings.append("OpenVINO GPU.0 secondary lane is not visible.")
     if not policy.get("openvino_npu", {}).get("visible"):
         warnings.append("OpenVINO NPU auditor lane is not visible.")
     if policy.get("openvino_gpu1_reserved", {}).get("visible"):
-        warnings.append("OpenVINO GPU.1 is visible but intentionally reserved for CUDA/Ollama; OpenVINO workloads are blocked by policy.")
+        warnings.append(
+            "OpenVINO GPU.1 is visible but intentionally reserved for CUDA/Ollama; OpenVINO workloads are blocked by policy."
+        )
     return warnings

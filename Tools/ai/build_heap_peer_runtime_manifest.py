@@ -7,6 +7,7 @@ heap/exchange runtime state so the final chain contract can verify that GPU1,
 GPU0, NPU, shared memory and deterministic audit lanes are visible before the
 reviewable PR product is declared complete.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,9 +17,17 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:  # pragma: no cover
-    from report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 PEER_CONTRACT = [
@@ -92,7 +101,9 @@ def load_jsonl(path: Path | None) -> tuple[list[dict[str, Any]], str | None]:
         return [], "missing"
     events: list[dict[str, Any]] = []
     errors: list[str] = []
-    for index, line in enumerate(path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1):
+    for index, line in enumerate(
+        path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1
+    ):
         stripped = line.strip()
         if not stripped:
             continue
@@ -112,7 +123,9 @@ def append_jsonl(path: Path | None, event: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = dict(event)
     payload.setdefault("timestamp", datetime.now().isoformat(timespec="seconds"))
-    path.open("a", encoding="utf-8", newline="\n").write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
+    path.open("a", encoding="utf-8", newline="\n").write(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n"
+    )
 
 
 def lane_by_name(entry: dict[str, Any] | None) -> dict[str, dict[str, Any]]:
@@ -123,7 +136,9 @@ def lane_by_name(entry: dict[str, Any] | None) -> dict[str, dict[str, Any]]:
     return lanes
 
 
-def peer_from_lane(peer: dict[str, Any], lanes: dict[str, dict[str, Any]], text: str) -> dict[str, Any]:
+def peer_from_lane(
+    peer: dict[str, Any], lanes: dict[str, dict[str, Any]], text: str
+) -> dict[str, Any]:
     peer_id = peer["id"]
     lane = lanes.get(peer_id, {})
     evidence_present = peer_id in text.lower()
@@ -155,7 +170,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "|---|---|---:|---:|",
     ]
     for peer in report.get("dynamic_peers") or []:
-        lines.append(f"| `{peer.get('id')}` | {peer.get('role')} | `{peer.get('available')}` | `{peer.get('evidence_present')}` |")
+        lines.append(
+            f"| `{peer.get('id')}` | {peer.get('role')} | `{peer.get('available')}` | `{peer.get('evidence_present')}` |"
+        )
     audit = report.get("audit_lane") or {}
     lines.extend(
         [
@@ -195,18 +212,38 @@ def main() -> int:
     runtime_entry_path = repo_path(repo_root, args.runtime_entry)
     runtime_state_path = repo_path(repo_root, args.runtime_state)
     observer_dir = repo_path(repo_root, args.observer_dir)
-    output = repo_path(repo_root, args.output) or repo_root / "output/ai_packets" / args.stamp / "heap_peer_runtime_manifest.json"
-    markdown_output = repo_path(repo_root, args.markdown_output) or repo_root / "output/ai_packets" / args.stamp / "heap_peer_runtime_manifest.md"
+    output = (
+        repo_path(repo_root, args.output)
+        or repo_root
+        / "output/ai_packets"
+        / args.stamp
+        / "heap_peer_runtime_manifest.json"
+    )
+    markdown_output = (
+        repo_path(repo_root, args.markdown_output)
+        or repo_root
+        / "output/ai_packets"
+        / args.stamp
+        / "heap_peer_runtime_manifest.md"
+    )
 
     entry, entry_error = load_json(runtime_entry_path)
     events, events_error = load_jsonl(runtime_state_path)
-    text = json.dumps(entry or {}, ensure_ascii=False).lower() + "\n" + json.dumps(events, ensure_ascii=False).lower()
+    text = (
+        json.dumps(entry or {}, ensure_ascii=False).lower()
+        + "\n"
+        + json.dumps(events, ensure_ascii=False).lower()
+    )
     lanes = lane_by_name(entry)
 
     dynamic_peers = [peer_from_lane(peer, lanes, text) for peer in PEER_CONTRACT]
     audit_lane = dict(AUDIT_LANE)
     audit_lane["available"] = True
-    audit_lane["evidence_present"] = "deterministic" in text or "audit" in text or bool(lanes.get("deterministic_audit"))
+    audit_lane["evidence_present"] = (
+        "deterministic" in text
+        or "audit" in text
+        or bool(lanes.get("deterministic_audit"))
+    )
 
     warnings: list[str] = []
     if entry_error:
@@ -241,7 +278,10 @@ def main() -> int:
     }
 
     write_json_report(report, resolve_output_path(repo_root, output.as_posix()))
-    write_text_report(render_markdown(report), resolve_output_path(repo_root, markdown_output.as_posix()))
+    write_text_report(
+        render_markdown(report),
+        resolve_output_path(repo_root, markdown_output.as_posix()),
+    )
 
     append_jsonl(
         runtime_state_path,

@@ -11,6 +11,7 @@ Memory model:
   clearable by the broker;
 - promotion: never automatic, only proposal after validation evidence.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,18 +22,21 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import write_json_report
+    from tools.validation.report_utils import write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     import sys
+
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation.report_utils import write_json_report
+    from tools.validation.report_utils import write_json_report
 
 
 DEFAULT_OUTPUT = "output/validation/agent_memory_routing_policy.json"
 DEFAULT_MARKDOWN = "output/validation/agent_memory_routing_policy.md"
-DEFAULT_BROKER_REQUEST = "output/ai_runtime_tools/agent_memory_routing_policy_tool_requests.json"
+DEFAULT_BROKER_REQUEST = (
+    "output/ai_runtime_tools/agent_memory_routing_policy_tool_requests.json"
+)
 SAFE_ID_RE = re.compile(r"[^A-Za-z0-9_.-]+")
 
 
@@ -49,7 +53,11 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -77,7 +85,10 @@ def default_persistent_queries(objective: str) -> list[dict[str, str]]:
             "reason": "Need durable project constraints before planning tool use.",
         }
     ]
-    if any(token in objective_lower for token in ("refactor", "codice", "code", "tool", "broker")):
+    if any(
+        token in objective_lower
+        for token in ("refactor", "codice", "code", "tool", "broker")
+    ):
         queries.append(
             {
                 "query": "IA-Carmine refactor workflow tool broker memory guardrails",
@@ -123,8 +134,12 @@ def tool_request(
 
 
 def build_memory_tool_requests(args: argparse.Namespace) -> list[dict[str, Any]]:
-    persistent_queries = split_values(args.persistent_query) or [item["query"] for item in default_persistent_queries(args.objective)]
-    operational_queries = split_values(args.operational_query) or [item["query"] for item in default_operational_queries(args.objective)]
+    persistent_queries = split_values(args.persistent_query) or [
+        item["query"] for item in default_persistent_queries(args.objective)
+    ]
+    operational_queries = split_values(args.operational_query) or [
+        item["query"] for item in default_operational_queries(args.objective)
+    ]
     remember_notes = split_values(args.remember_note)
 
     requests: list[dict[str, Any]] = [
@@ -148,7 +163,11 @@ def build_memory_tool_requests(args: argparse.Namespace) -> list[dict[str, Any]]
                 request_id="operational_memory_clear",
                 tool="runtime_sqlite_memory",
                 reason="Clear scratch operational context because the user requested a fresh working tray.",
-                args={"action": "clear_operational", "scope": "operational", "confirm": "clear_operational"},
+                args={
+                    "action": "clear_operational",
+                    "scope": "operational",
+                    "confirm": "clear_operational",
+                },
             )
         )
 
@@ -158,7 +177,12 @@ def build_memory_tool_requests(args: argparse.Namespace) -> list[dict[str, Any]]
                 request_id=f"persistent_memory_search_{index:02d}",
                 tool="runtime_sqlite_memory",
                 reason="Search durable memory read-only for stable project facts and validated lessons.",
-                args={"action": "search", "scope": "persistent", "query": query, "limit": args.memory_search_limit},
+                args={
+                    "action": "search",
+                    "scope": "persistent",
+                    "query": query,
+                    "limit": args.memory_search_limit,
+                },
             )
         )
 
@@ -168,7 +192,12 @@ def build_memory_tool_requests(args: argparse.Namespace) -> list[dict[str, Any]]
                 request_id=f"operational_memory_search_{index:02d}",
                 tool="runtime_sqlite_memory",
                 reason="Search scratch operational memory for current-cycle state and recent tool results.",
-                args={"action": "search", "scope": "operational", "query": query, "limit": args.memory_search_limit},
+                args={
+                    "action": "search",
+                    "scope": "operational",
+                    "query": query,
+                    "limit": args.memory_search_limit,
+                },
             )
         )
 
@@ -204,7 +233,9 @@ def build_discovery_tool_requests(args: argparse.Namespace) -> list[dict[str, An
             request_id="agnostic_tool_inventory",
             tool="build_agent_agnostic_tool_inventory",
             reason="Discover existing reusable tools/helpers before proposing new code or refactors.",
-            args={"root": ["Tools/ai", "Tools/validation", "Tools/workflow", "Tools/npu"]},
+            args={
+                "root": ["tools/ai", "tools/validation", "tools/workflow", "tools/npu"]
+            },
         ),
         tool_request(
             request_id="transient_request_context",
@@ -234,14 +265,27 @@ def build_discovery_tool_requests(args: argparse.Namespace) -> list[dict[str, An
                     request_id="code_interpreter_report",
                     tool="build_code_interpreter_report",
                     reason="Build static code report over existing tool roots before proposing refactor seams.",
-                    args={"input": ["Tools/ai", "Tools/validation", "Tools/workflow", "Tools/npu"]},
+                    args={
+                        "input": [
+                            "tools/ai",
+                            "tools/validation",
+                            "tools/workflow",
+                            "tools/npu",
+                        ]
+                    },
                 ),
-
                 tool_request(
                     request_id="refactor_duplication_audit",
                     tool="build_refactor_duplication_audit",
                     reason="Audit duplicated helper/function patterns and verify refactor layering before proposing implementation patches.",
-                    args={"root": ["Tools/ai", "Tools/validation", "Tools/workflow", "Tools/npu"]},
+                    args={
+                        "root": [
+                            "tools/ai",
+                            "tools/validation",
+                            "tools/workflow",
+                            "tools/npu",
+                        ]
+                    },
                 ),
                 tool_request(
                     request_id="python_syntax_check",
@@ -312,8 +356,18 @@ def build_policy(args: argparse.Namespace) -> dict[str, Any]:
     broker_request_path.parent.mkdir(parents=True, exist_ok=True)
     write_json_report(broker_request, broker_request_path)
 
-    persistent_count = sum(1 for item in tool_requests if item.get("tool") == "runtime_sqlite_memory" and item.get("args", {}).get("scope") == "persistent")
-    operational_count = sum(1 for item in tool_requests if item.get("tool") == "runtime_sqlite_memory" and item.get("args", {}).get("scope") == "operational")
+    persistent_count = sum(
+        1
+        for item in tool_requests
+        if item.get("tool") == "runtime_sqlite_memory"
+        and item.get("args", {}).get("scope") == "persistent"
+    )
+    operational_count = sum(
+        1
+        for item in tool_requests
+        if item.get("tool") == "runtime_sqlite_memory"
+        and item.get("args", {}).get("scope") == "operational"
+    )
     operational_write_count = sum(
         1
         for item in tool_requests
@@ -411,7 +465,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append("## Tool requests")
     lines.append("")
     for item in plan.get("tool_requests", []):
-        lines.append(f"- `{item.get('id')}` -> `{item.get('tool')}`: {item.get('reason')}")
+        lines.append(
+            f"- `{item.get('id')}` -> `{item.get('tool')}`: {item.get('reason')}"
+        )
     lines.append("")
     lines.append("## Guardrails")
     lines.append("")
@@ -424,7 +480,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--objective", required=True)
-    parser.add_argument("--profile", choices=("basic", "refactor", "full_refactor"), default="basic")
+    parser.add_argument(
+        "--profile", choices=("basic", "refactor", "full_refactor"), default="basic"
+    )
     parser.add_argument("--persistent-query", action="append", default=[])
     parser.add_argument("--operational-query", action="append", default=[])
     parser.add_argument("--remember-note", action="append", default=[])
@@ -452,12 +510,18 @@ def main() -> int:
                 "markdown": str(markdown),
                 "broker_request": report["broker_request_written"],
                 "tool_request_count": report["memory_plan"]["tool_request_count"],
-                "persistent_query_count": report["memory_plan"]["persistent_query_count"],
-                "operational_query_or_write_count": report["memory_plan"]["operational_query_or_write_count"],
+                "persistent_query_count": report["memory_plan"][
+                    "persistent_query_count"
+                ],
+                "operational_query_or_write_count": report["memory_plan"][
+                    "operational_query_or_write_count"
+                ],
                 "provider_execution_performed": report["provider_execution_performed"],
                 "patch_application_performed": report["patch_application_performed"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
-                "persistent_memory_write_performed": report["persistent_memory_write_performed"],
+                "persistent_memory_write_performed": report[
+                    "persistent_memory_write_performed"
+                ],
             },
             indent=2,
             ensure_ascii=False,
@@ -468,4 +532,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

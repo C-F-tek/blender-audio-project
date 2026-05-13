@@ -1,4 +1,5 @@
 """Dataclasses for reusable AI artifact pipeline orchestration."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
@@ -51,7 +52,7 @@ class PipelineStep:
         pass_index: int = 0,
         allow_failure: bool = False,
         metadata: dict[str, Any] | None = None,
-    ) -> "PipelineStep":
+    ) -> PipelineStep:
         """Build a step from a list-like command."""
         return cls(
             name=name,

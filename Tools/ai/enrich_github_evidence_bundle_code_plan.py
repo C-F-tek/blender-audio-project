@@ -8,6 +8,7 @@ and rewrites bounded JSON/Markdown evidence with code patch-plan metadata.
 
 It does not execute providers, run Blender, apply patches or write source files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,12 +21,12 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from Tools.ai.build_github_evidence_bundle import (  # noqa: E402
+from tools.ai.build_github_evidence_bundle import (  # noqa: E402
     compact_patch_plan,
     read_json,
     render_markdown,
 )
-from Tools.ai.code_patch_plan_common import (  # noqa: E402
+from tools.ai.code_patch_plan_common import (  # noqa: E402
     now_iso,
     report_only_guardrails,
     resolve_output_path,
@@ -46,14 +47,19 @@ def summarize_code_patch_plan(data: dict[str, Any]) -> dict[str, Any] | None:
     if data.get("kind") != SUPPORTED_PLAN_KIND:
         return None
     decision = data.get("decision") if isinstance(data.get("decision"), dict) else {}
-    plans = data.get("code_patch_plans") if isinstance(data.get("code_patch_plans"), list) else []
+    plans = (
+        data.get("code_patch_plans")
+        if isinstance(data.get("code_patch_plans"), list)
+        else []
+    )
     static_count = data.get("static_code_patch_plan_count")
     contract_count = data.get("code_contract_patch_plan_count")
     return {
         "patch_plan_count": data.get("patch_plan_count", len(plans)),
         "code_contract_patch_plan_count": contract_count,
         "static_code_patch_plan_count": static_count,
-        "manual_review_required": data.get("manual_review_required") or decision.get("manual_review_required"),
+        "manual_review_required": data.get("manual_review_required")
+        or decision.get("manual_review_required"),
         "ready_for_manual_review": decision.get("ready_for_manual_review"),
         "recommended_next_layer": decision.get("recommended_next_layer"),
         "provider_execution_performed": data.get("provider_execution_performed"),
@@ -92,7 +98,9 @@ def patch_plan_summary_fields(summary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def report_entry_for_code_patch_plan(raw: str, data: dict[str, Any], summary: dict[str, Any]) -> dict[str, Any]:
+def report_entry_for_code_patch_plan(
+    raw: str, data: dict[str, Any], summary: dict[str, Any]
+) -> dict[str, Any]:
     """Build a bundle report entry for a discovered code patch-plan report."""
     return {
         "path": raw,
@@ -114,7 +122,9 @@ def report_entry_for_code_patch_plan(raw: str, data: dict[str, Any], summary: di
     }
 
 
-def attach_summary_to_report(bundle: dict[str, Any], path_value: str, summary: dict[str, Any]) -> bool:
+def attach_summary_to_report(
+    bundle: dict[str, Any], path_value: str, summary: dict[str, Any]
+) -> bool:
     """Attach a code patch-plan summary to an existing report entry if present."""
     for item in bundle.get("reports", []):
         if not isinstance(item, dict) or item.get("path") != path_value:
@@ -126,7 +136,9 @@ def attach_summary_to_report(bundle: dict[str, Any], path_value: str, summary: d
     return False
 
 
-def discover_and_apply(repo_root: Path, bundle: dict[str, Any]) -> tuple[int, list[str]]:
+def discover_and_apply(
+    repo_root: Path, bundle: dict[str, Any]
+) -> tuple[int, list[str]]:
     """Discover code patch-plan reports referenced by the bundle and enrich it."""
     enriched = 0
     warnings: list[str] = []
@@ -147,14 +159,21 @@ def discover_and_apply(repo_root: Path, bundle: dict[str, Any]) -> tuple[int, li
             continue
         attached = attach_summary_to_report(bundle, raw, summary)
         if not attached:
-            bundle.setdefault("reports", []).append(report_entry_for_code_patch_plan(raw, data, summary))
+            bundle.setdefault("reports", []).append(
+                report_entry_for_code_patch_plan(raw, data, summary)
+            )
         enriched += 1
     if enriched == 0:
         warnings.append("no agent_review_code_patch_plan report found for enrichment")
     return enriched, warnings
 
 
-def enrich_bundle(repo_root: Path, bundle_path: Path, output_path: Path | None, markdown_output: Path | None) -> dict[str, Any]:
+def enrich_bundle(
+    repo_root: Path,
+    bundle_path: Path,
+    output_path: Path | None,
+    markdown_output: Path | None,
+) -> dict[str, Any]:
     """Enrich one existing evidence bundle and write JSON/Markdown outputs."""
     bundle = read_json(bundle_path)
     errors: list[str] = []
@@ -171,7 +190,9 @@ def enrich_bundle(repo_root: Path, bundle_path: Path, output_path: Path | None, 
         }
     enriched_count, enrich_warnings = discover_and_apply(repo_root, bundle)
     warnings.extend(enrich_warnings)
-    decision = bundle.get("decision") if isinstance(bundle.get("decision"), dict) else {}
+    decision = (
+        bundle.get("decision") if isinstance(bundle.get("decision"), dict) else {}
+    )
     decision["patch_plan_summary_seen"] = any(
         bool((item.get("summary") or {}).get("patch_plan_summary"))
         for item in bundle.get("reports", [])
@@ -202,7 +223,9 @@ def enrich_bundle(repo_root: Path, bundle_path: Path, output_path: Path | None, 
     target_md = markdown_output or bundle_path.with_suffix(".md")
     target_json.parent.mkdir(parents=True, exist_ok=True)
     target_md.parent.mkdir(parents=True, exist_ok=True)
-    target_json.write_text(json.dumps(bundle, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    target_json.write_text(
+        json.dumps(bundle, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     target_md.write_text(render_markdown(bundle), encoding="utf-8")
     return bundle
 
@@ -211,8 +234,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--bundle", required=True)
-    parser.add_argument("--output", help="Optional enriched JSON output path. Defaults to overwrite bundle.")
-    parser.add_argument("--markdown-output", help="Optional enriched Markdown output path. Defaults to bundle .md.")
+    parser.add_argument(
+        "--output",
+        help="Optional enriched JSON output path. Defaults to overwrite bundle.",
+    )
+    parser.add_argument(
+        "--markdown-output",
+        help="Optional enriched Markdown output path. Defaults to bundle .md.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -220,10 +249,27 @@ def main() -> int:
         repo_root,
         resolve_output_path(repo_root, args.bundle),
         resolve_output_path(repo_root, args.output) if args.output else None,
-        resolve_output_path(repo_root, args.markdown_output) if args.markdown_output else None,
+        (
+            resolve_output_path(repo_root, args.markdown_output)
+            if args.markdown_output
+            else None
+        ),
     )
-    enrichment = bundle.get("code_patch_plan_enrichment") if isinstance(bundle.get("code_patch_plan_enrichment"), dict) else {}
-    print(json.dumps({"passed": enrichment.get("passed", False), "enriched_count": enrichment.get("enriched_count", 0), "decision": bundle.get("decision", {})}, indent=2))
+    enrichment = (
+        bundle.get("code_patch_plan_enrichment")
+        if isinstance(bundle.get("code_patch_plan_enrichment"), dict)
+        else {}
+    )
+    print(
+        json.dumps(
+            {
+                "passed": enrichment.get("passed", False),
+                "enriched_count": enrichment.get("enriched_count", 0),
+                "decision": bundle.get("decision", {}),
+            },
+            indent=2,
+        )
+    )
     return 0 if enrichment.get("passed") else 2
 
 

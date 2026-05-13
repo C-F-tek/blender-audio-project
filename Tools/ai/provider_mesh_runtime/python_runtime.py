@@ -5,6 +5,7 @@ when a project virtual environment is available. These helpers centralize that
 selection rule so GPU1/Ollama, GPU0/OpenVINO, NPU and broker subprocesses share
 the same interpreter policy.
 """
+
 from __future__ import annotations
 
 import os
@@ -71,5 +72,7 @@ def command_env(repo_root: Path) -> dict[str, str]:
 
     python_path = Path(child_python)
     if python_path.is_file():
-        env["PATH"] = str(python_path.resolve().parent) + os.pathsep + env.get("PATH", "")
+        env["PATH"] = (
+            str(python_path.resolve().parent) + os.pathsep + env.get("PATH", "")
+        )
     return env

@@ -1,4 +1,5 @@
 """Lane-aware scheduler policy for the AI artifact pipeline."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -40,7 +41,9 @@ class PipelineSchedule:
         }
 
 
-def build_schedule(serial: list[PipelineStep], parallel: list[PipelineStep]) -> PipelineSchedule:
+def build_schedule(
+    serial: list[PipelineStep], parallel: list[PipelineStep]
+) -> PipelineSchedule:
     """Build an immutable schedule from step lists."""
     return PipelineSchedule(serial=tuple(serial), parallel=tuple(parallel))
 

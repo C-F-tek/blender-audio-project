@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """Report and selected-chunks summarizers for GitHub evidence bundles."""
+
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.github_evidence_bundle_io import (
+from tools.ai.github_evidence_bundle_io import (
     DEFAULT_SELECTED_CHUNKS_EVIDENCE,
     MAX_PATCH_PLAN_TEXT_CHARS,
     compact_value,
-    repo_relative,
     read_json,
+    repo_relative,
     resolve_repo_path,
     split_path_values,
 )
@@ -84,17 +85,29 @@ def compact_patch_plan(plan: dict[str, Any]) -> dict[str, Any]:
         "risk": plan.get("risk"),
         "status": plan.get("status"),
         "target_files": compact_value(plan.get("target_files") or [], max_string=300),
-        "rationale": compact_value(plan.get("rationale") or "", max_string=MAX_PATCH_PLAN_TEXT_CHARS),
-        "edit_strategy": compact_value(plan.get("edit_strategy") or "", max_string=MAX_PATCH_PLAN_TEXT_CHARS),
-        "validation_commands": compact_value(plan.get("validation_commands") or [], max_string=500),
-        "stop_conditions": compact_value(plan.get("stop_conditions") or [], max_string=500),
+        "rationale": compact_value(
+            plan.get("rationale") or "", max_string=MAX_PATCH_PLAN_TEXT_CHARS
+        ),
+        "edit_strategy": compact_value(
+            plan.get("edit_strategy") or "", max_string=MAX_PATCH_PLAN_TEXT_CHARS
+        ),
+        "validation_commands": compact_value(
+            plan.get("validation_commands") or [], max_string=500
+        ),
+        "stop_conditions": compact_value(
+            plan.get("stop_conditions") or [], max_string=500
+        ),
         "manual_review_required": plan.get("manual_review_required"),
     }
 
 
 def compact_patch_note(note: dict[str, Any]) -> dict[str, Any]:
     """Return one compact patch-note proposal for AI-to-AI bundle handoff."""
-    return {field: compact_value(note.get(field), max_string=1200) for field in PATCH_NOTE_CORE_FIELDS if field in note}
+    return {
+        field: compact_value(note.get(field), max_string=1200)
+        for field in PATCH_NOTE_CORE_FIELDS
+        if field in note
+    }
 
 
 def patch_note_area_counts(patch_notes: list[dict[str, Any]]) -> dict[str, int]:
@@ -112,7 +125,9 @@ def summarize_patch_plan_report(data: dict[str, Any]) -> dict[str, Any] | None:
         return None
 
     decision = data.get("decision") if isinstance(data.get("decision"), dict) else {}
-    patch_plans = data.get("patch_plans") if isinstance(data.get("patch_plans"), list) else []
+    patch_plans = (
+        data.get("patch_plans") if isinstance(data.get("patch_plans"), list) else []
+    )
 
     return {
         "patch_plan_count": data.get("patch_plan_count", len(patch_plans)),
@@ -121,11 +136,15 @@ def summarize_patch_plan_report(data: dict[str, Any]) -> dict[str, Any] | None:
         "provider_execution_performed": data.get("provider_execution_performed"),
         "patch_application_performed": data.get("patch_application_performed"),
         "source_writes_performed": data.get("source_writes_performed"),
-        "plans": [compact_patch_plan(plan) for plan in patch_plans if isinstance(plan, dict)],
+        "plans": [
+            compact_patch_plan(plan) for plan in patch_plans if isinstance(plan, dict)
+        ],
     }
 
 
-def summarize_patch_notes_quality_product_report(data: dict[str, Any]) -> dict[str, Any] | None:
+def summarize_patch_notes_quality_product_report(
+    data: dict[str, Any],
+) -> dict[str, Any] | None:
     """Return the complete compact proposal core for patch-notes quality products.
 
     This is intentionally not limited to the first 20 items: the patch-notes
@@ -133,25 +152,46 @@ def summarize_patch_notes_quality_product_report(data: dict[str, Any]) -> dict[s
     concrete patch waves. Each note is compacted field-by-field so the GitHub
     evidence bundle can carry all proposals without embedding full raw reports.
     """
-    patch_notes = data.get("patch_notes") if isinstance(data.get("patch_notes"), list) else []
-    if "patch_notes_quality_product" not in str(data.get("kind") or "") and not patch_notes:
+    patch_notes = (
+        data.get("patch_notes") if isinstance(data.get("patch_notes"), list) else []
+    )
+    if (
+        "patch_notes_quality_product" not in str(data.get("kind") or "")
+        and not patch_notes
+    ):
         return None
 
-    compact_notes = [compact_patch_note(note) for note in patch_notes if isinstance(note, dict)]
-    product_sufficiency = data.get("product_sufficiency") if isinstance(data.get("product_sufficiency"), dict) else {}
-    applicability = data.get("patch_notes_applicability") if isinstance(data.get("patch_notes_applicability"), dict) else {}
+    compact_notes = [
+        compact_patch_note(note) for note in patch_notes if isinstance(note, dict)
+    ]
+    product_sufficiency = (
+        data.get("product_sufficiency")
+        if isinstance(data.get("product_sufficiency"), dict)
+        else {}
+    )
+    applicability = (
+        data.get("patch_notes_applicability")
+        if isinstance(data.get("patch_notes_applicability"), dict)
+        else {}
+    )
 
     return {
         "purpose": "durable_core_proposal_ledger_for_followup_patch_waves",
         "patch_note_count": len(compact_notes),
-        "area_counts": patch_note_area_counts([note for note in patch_notes if isinstance(note, dict)]),
+        "area_counts": patch_note_area_counts(
+            [note for note in patch_notes if isinstance(note, dict)]
+        ),
         "quality_gate_passed": data.get("quality_gate_passed"),
         "classification": data.get("classification"),
         "quality_score": data.get("quality_score"),
         "requested_areas": product_sufficiency.get("requested_areas"),
-        "available_requested_areas": product_sufficiency.get("available_requested_areas"),
+        "available_requested_areas": product_sufficiency.get(
+            "available_requested_areas"
+        ),
         "missing_available_areas": product_sufficiency.get("missing_available_areas"),
-        "requested_min_patch_notes": product_sufficiency.get("requested_min_patch_notes"),
+        "requested_min_patch_notes": product_sufficiency.get(
+            "requested_min_patch_notes"
+        ),
         "patch_note_limit": product_sufficiency.get("patch_note_limit"),
         "sufficient": product_sufficiency.get("sufficient"),
         "insufficiency_reasons": product_sufficiency.get("insufficiency_reasons"),
@@ -172,7 +212,10 @@ def add_nested_summary_fields(summary: dict[str, Any], data: dict[str, Any]) -> 
     """Add compact nested report fields to a summary."""
     checks = data.get("checks") if isinstance(data.get("checks"), dict) else {}
     if checks:
-        summary["checks"] = compact_value({key: checks.get(key) for key in CHECK_SUMMARY_KEYS if key in checks}, max_string=350)
+        summary["checks"] = compact_value(
+            {key: checks.get(key) for key in CHECK_SUMMARY_KEYS if key in checks},
+            max_string=350,
+        )
     routing = data.get("routing") if isinstance(data.get("routing"), dict) else {}
     if routing:
         summary["routing"] = compact_value(
@@ -198,7 +241,12 @@ def add_nested_summary_fields(summary: dict[str, Any], data: dict[str, Any]) -> 
     ollama = data.get("ollama") if isinstance(data.get("ollama"), dict) else {}
     if ollama:
         summary["ollama"] = compact_value(
-            {"used": ollama.get("used"), "model": ollama.get("model"), "error": ollama.get("error"), "text_preview": (ollama.get("text") or "")[:500]},
+            {
+                "used": ollama.get("used"),
+                "model": ollama.get("model"),
+                "error": ollama.get("error"),
+                "text_preview": (ollama.get("text") or "")[:500],
+            },
             max_string=500,
         )
 
@@ -213,13 +261,27 @@ def add_nested_summary_fields(summary: dict[str, Any], data: dict[str, Any]) -> 
             summary[key] = compact_value(value, max_string=900)
 
 
-def promote_peer_mesh_lane_fields(summary: dict[str, Any], data: dict[str, Any]) -> None:
+def promote_peer_mesh_lane_fields(
+    summary: dict[str, Any], data: dict[str, Any]
+) -> None:
     """Promote peer-mesh lane fields from nested product reports into compact summaries."""
 
-    lane_state = data.get("peer_mesh_lane_state") if isinstance(data.get("peer_mesh_lane_state"), dict) else {}
+    lane_state = (
+        data.get("peer_mesh_lane_state")
+        if isinstance(data.get("peer_mesh_lane_state"), dict)
+        else {}
+    )
     if not lane_state:
-        collaboration = data.get("collaboration_round") if isinstance(data.get("collaboration_round"), dict) else {}
-        lane_state = collaboration.get("peer_mesh_lane_state") if isinstance(collaboration.get("peer_mesh_lane_state"), dict) else {}
+        collaboration = (
+            data.get("collaboration_round")
+            if isinstance(data.get("collaboration_round"), dict)
+            else {}
+        )
+        lane_state = (
+            collaboration.get("peer_mesh_lane_state")
+            if isinstance(collaboration.get("peer_mesh_lane_state"), dict)
+            else {}
+        )
     if lane_state:
         mapping = {
             "peer_mesh_operational_lanes": "operational_lanes",
@@ -228,7 +290,10 @@ def promote_peer_mesh_lane_fields(summary: dict[str, Any], data: dict[str, Any])
             "peer_mesh_product_blockers": "product_blockers",
         }
         for summary_key, state_key in mapping.items():
-            if summary.get(summary_key) is None and lane_state.get(state_key) is not None:
+            if (
+                summary.get(summary_key) is None
+                and lane_state.get(state_key) is not None
+            ):
                 summary[summary_key] = compact_value(lane_state.get(state_key))
         summary["peer_mesh_lane_state"] = compact_value(lane_state, max_string=900)
 
@@ -252,7 +317,14 @@ def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
     rel = repo_relative(path, repo_root)
     data = read_json(path)
     if data is None:
-        return {"path": rel, "exists": path.exists(), "json_ok": False, "kind": None, "passed": None, "summary": {}}
+        return {
+            "path": rel,
+            "exists": path.exists(),
+            "json_ok": False,
+            "kind": None,
+            "passed": None,
+            "summary": {},
+        }
 
     summary = base_report_summary(data)
     add_core_summary_fields(summary, data)
@@ -267,7 +339,14 @@ def summarize_report(path: Path, repo_root: Path) -> dict[str, Any]:
     if patch_notes_core:
         summary["proposal_core"] = patch_notes_core
 
-    return {"path": rel, "exists": True, "json_ok": True, "kind": data.get("kind"), "passed": data.get("passed"), "summary": summary}
+    return {
+        "path": rel,
+        "exists": True,
+        "json_ok": True,
+        "kind": data.get("kind"),
+        "passed": data.get("passed"),
+        "summary": summary,
+    }
 
 
 def summarize_selected_chunks_evidence(path: Path, repo_root: Path) -> dict[str, Any]:
@@ -275,7 +354,14 @@ def summarize_selected_chunks_evidence(path: Path, repo_root: Path) -> dict[str,
     rel = repo_relative(path, repo_root)
     data = read_json(path)
     if data is None:
-        return {"path": rel, "exists": path.exists(), "json_ok": False, "kind": None, "passed": None, "summary": {}}
+        return {
+            "path": rel,
+            "exists": path.exists(),
+            "json_ok": False,
+            "kind": None,
+            "passed": None,
+            "summary": {},
+        }
 
     summary: dict[str, Any] = {
         "schema_version": data.get("schema_version"),
@@ -293,10 +379,19 @@ def summarize_selected_chunks_evidence(path: Path, repo_root: Path) -> dict[str,
         "errors": compact_value(data.get("errors") or []),
         "warnings": compact_value(data.get("warnings") or []),
     }
-    return {"path": rel, "exists": True, "json_ok": True, "kind": data.get("kind"), "passed": data.get("passed"), "summary": summary}
+    return {
+        "path": rel,
+        "exists": True,
+        "json_ok": True,
+        "kind": data.get("kind"),
+        "passed": data.get("passed"),
+        "summary": summary,
+    }
 
 
-def discover_selected_chunks_evidence(repo_root: Path, explicit_paths: list[str], *, auto_discover: bool = True) -> list[Path]:
+def discover_selected_chunks_evidence(
+    repo_root: Path, explicit_paths: list[str], *, auto_discover: bool = True
+) -> list[Path]:
     """Discover compact selected-chunks evidence files under docs evidence."""
     candidates = split_path_values(explicit_paths)
     if auto_discover and not candidates:
@@ -320,4 +415,8 @@ def discover_selected_chunks_evidence(repo_root: Path, explicit_paths: list[str]
 
 def report_summaries(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return summary dicts from report entries."""
-    return [item.get("summary", {}) for item in reports if isinstance(item.get("summary"), dict)]
+    return [
+        item.get("summary", {})
+        for item in reports
+        if isinstance(item.get("summary"), dict)
+    ]

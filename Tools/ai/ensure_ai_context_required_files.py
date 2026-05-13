@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Ensure required AI context files exist before heap/context reload.
 
-This tool reads required files from Tools.ai.build_ai_context_pack and creates
+This tool reads required files from tools.ai.build_ai_context_pack and creates
 only known compact Markdown routing documents when a required path is truly
 missing. Directory-form Markdown docs such as docs/PROJECT_STATUS_POINT.md/
 are treated as existing when they contain README.md or part-*.md, matching
 build_ai_context_pack split Markdown support.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -65,7 +66,7 @@ LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 | Patch-spec workflow | `PATCH_SPEC_WORKFLOW.md` |
 | Project status | `PROJECT_STATUS_POINT.md` |
 | AI docs entrypoint | `AI_DOCS_ENTRYPOINT.md` |
-| Tooling index | `../Tools/ai/README.md`, `../Tools/workflow/README.md`, `../Tools/validation/README.md` |
+| Tooling index | `../tools/ai/README.md`, `../tools/workflow/README.md`, `../tools/validation/README.md` |
 
 ## Policy
 
@@ -88,8 +89,8 @@ Current controlled source-write mechanisms:
 patch_specs/<bundle>/bundle.json
 patch_specs/<bundle>/fragments/*.py
 patch_specs/<bundle>/fragments/*.ps1
-Tools/ai/patchkit/apply_patch_bundle.py
-Tools/ai/apply_generated_patch_specs_for_review_pr.py
+tools/ai/patchkit/apply_patch_bundle.py
+tools/ai/apply_generated_patch_specs_for_review_pr.py
 ```
 
 Patch notes, proposal ledgers and generated summaries are review inputs only.
@@ -133,7 +134,7 @@ AI_DOCS_ENTRYPOINT.md
 LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md
 LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 ../patch_specs/README.md
-../Tools/ai/patchkit/apply_patch_bundle.py
+../tools/ai/patchkit/apply_patch_bundle.py
 ```
 """,
     "docs/PROJECT_STATUS_POINT.md": """# Project Status Point
@@ -199,13 +200,13 @@ Compact workflow contract for local AI runs.
 ## Canonical product path
 
 ```text
-Tools/workflow/run_unified_real_product_pr.ps1
+tools/workflow/run_unified_real_product_pr.ps1
 ```
 
 ## Heap/context closure path
 
 ```text
-Tools/ai/run_heap_runtime_context_closure.py
+tools/ai/run_heap_runtime_context_closure.py
 ```
 
 The heap closure path must perform:
@@ -275,7 +276,11 @@ requirement and the artifact usefulness explicitly.
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return path.as_posix()
 
@@ -299,7 +304,9 @@ def required_path_exists(path: Path) -> bool:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -332,7 +339,7 @@ def render_markdown(report: dict[str, Any]) -> str:
 def load_profiles(repo_root: Path) -> dict[str, Any]:
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    module = importlib.import_module("Tools.ai.build_ai_context_pack")
+    module = importlib.import_module("tools.ai.build_ai_context_pack")
     profiles = getattr(module, "PROFILES", {})
     return profiles if isinstance(profiles, dict) else {}
 
@@ -341,8 +348,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--profile", default="project_self_improvement")
-    parser.add_argument("--output", default="output/validation/required_ai_context_files.json")
-    parser.add_argument("--markdown-output", default="output/validation/required_ai_context_files.md")
+    parser.add_argument(
+        "--output", default="output/validation/required_ai_context_files.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/required_ai_context_files.md"
+    )
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
 
@@ -356,7 +367,8 @@ def main() -> int:
         profile = {}
 
     required_items = [
-        item for item in profile.get("required_files", [])
+        item
+        for item in profile.get("required_files", [])
         if isinstance(item, dict) and str(item.get("path") or "").strip()
     ]
     required_reports: list[dict[str, Any]] = []
@@ -387,7 +399,9 @@ def main() -> int:
                     created = True
                     created_files.append(rel_path)
                 else:
-                    warnings.append(f"would initialize missing required context file: {rel_path}")
+                    warnings.append(
+                        f"would initialize missing required context file: {rel_path}"
+                    )
             elif initializable and target.exists() and target.is_dir():
                 # A directory exists but is not a valid split Markdown doc. Do not overwrite it.
                 missing_unhandled.append(rel_path)
@@ -408,7 +422,10 @@ def main() -> int:
         )
 
     if missing_unhandled:
-        errors.append("missing required context files without safe initializer: " + ", ".join(missing_unhandled))
+        errors.append(
+            "missing required context files without safe initializer: "
+            + ", ".join(missing_unhandled)
+        )
 
     report = {
         "schema_version": 1,
@@ -434,7 +451,17 @@ def main() -> int:
     write_json(output, report)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({**report, "output": repo_rel(repo_root, output), "markdown_output": repo_rel(repo_root, markdown_output)}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                **report,
+                "output": repo_rel(repo_root, output),
+                "markdown_output": repo_rel(repo_root, markdown_output),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

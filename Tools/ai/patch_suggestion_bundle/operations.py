@@ -1,10 +1,11 @@
 """Patch operation normalization and deterministic application."""
+
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.patch_suggestion_bundle.common import (
+from tools.ai.patch_suggestion_bundle.common import (
     DENY_FRAGMENTS,
     DENY_PREFIXES,
     PROPOSAL_ONLY_OPERATIONS,
@@ -39,7 +40,9 @@ def resolve_target(repo_root: Path, rel_path: str) -> Path:
 
 def normalize_operation(raw: dict[str, Any]) -> PatchOperation | None:
     """Convert a raw suggestion dict into a supported PatchOperation."""
-    op = first_string(raw, ("operation", "op", "action", "patch_operation", "edit_operation"))
+    op = first_string(
+        raw, ("operation", "op", "action", "patch_operation", "edit_operation")
+    )
     if not op:
         return None
     op = op.strip().lower().replace("-", "_")
@@ -102,11 +105,19 @@ def is_manual_candidate(raw: dict[str, Any]) -> bool:
     if not isinstance(raw, dict) or is_report_container(raw):
         return False
 
-    operation = first_string(raw, ("operation", "op", "action", "patch_operation", "edit_operation"))
-    if operation and operation.strip().lower().replace("-", "_") in PROPOSAL_ONLY_OPERATIONS:
+    operation = first_string(
+        raw, ("operation", "op", "action", "patch_operation", "edit_operation")
+    )
+    if (
+        operation
+        and operation.strip().lower().replace("-", "_") in PROPOSAL_ONLY_OPERATIONS
+    ):
         return True
 
-    if raw.get("write_policy") == "manual_review_only" or raw.get("content_status") == "proposal_only":
+    if (
+        raw.get("write_policy") == "manual_review_only"
+        or raw.get("content_status") == "proposal_only"
+    ):
         return True
 
     proposal_keys = {
@@ -126,13 +137,20 @@ def is_manual_candidate(raw: dict[str, Any]) -> bool:
         "details",
     }
     if proposal_keys.intersection(raw.keys()):
-        return bool(first_string(raw, ("title", "rationale", "description", "details", "proposal_id", "id")))
+        return bool(
+            first_string(
+                raw,
+                ("title", "rationale", "description", "details", "proposal_id", "id"),
+            )
+        )
     return False
 
 
 def manual_item(raw: dict[str, Any]) -> dict[str, Any]:
     """Build a compact manual-review item from a suggestion/proposal node."""
-    operation = first_string(raw, ("operation", "op", "action", "patch_operation", "edit_operation"))
+    operation = first_string(
+        raw, ("operation", "op", "action", "patch_operation", "edit_operation")
+    )
     target = first_string(raw, ("path", "target", "target_file", "file", "file_path"))
     target_files = as_string_list(raw.get("target_files"))
     if target and target not in target_files:
@@ -143,7 +161,9 @@ def manual_item(raw: dict[str, Any]) -> dict[str, Any]:
         "family": first_string(raw, ("family", "suggestion_family", "area", "kind")),
         "title": first_string(raw, ("title", "description", "rationale", "details")),
         "operation": operation,
-        "apply_mode": first_string(raw, ("apply_mode", "write_policy", "content_status")),
+        "apply_mode": first_string(
+            raw, ("apply_mode", "write_policy", "content_status")
+        ),
         "target": target,
         "target_files": target_files,
         "change_type": first_string(raw, ("change_type", "artifact_kind")),
@@ -164,7 +184,13 @@ def discover_operations(data: Any) -> tuple[list[PatchOperation], list[dict[str,
     for raw in iter_dicts(data):
         operation = normalize_operation(raw)
         if operation:
-            key = (operation.operation, operation.path, operation.find, operation.replace, operation.content)
+            key = (
+                operation.operation,
+                operation.path,
+                operation.find,
+                operation.replace,
+                operation.content,
+            )
             if key not in seen_operations:
                 seen_operations.add(key)
                 operations.append(operation)
@@ -196,7 +222,9 @@ def line_count(text: str) -> int:
     return len(text.splitlines())
 
 
-def apply_operation(repo_root: Path, operation: PatchOperation, apply: bool) -> dict[str, Any]:
+def apply_operation(
+    repo_root: Path, operation: PatchOperation, apply: bool
+) -> dict[str, Any]:
     """Apply or dry-run a single deterministic operation."""
     safe, reason = is_safe_target(operation.path)
     result: dict[str, Any] = {
@@ -241,7 +269,13 @@ def apply_operation(repo_root: Path, operation: PatchOperation, apply: bool) -> 
                 raise ValueError("append_once requires content")
             marker = operation.marker or operation.content
             if marker in old_text:
-                result.update({"skipped": True, "ok": True, "line_count_after": line_count(old_text)})
+                result.update(
+                    {
+                        "skipped": True,
+                        "ok": True,
+                        "line_count_after": line_count(old_text),
+                    }
+                )
                 return result
             separator = "" if not old_text or old_text.endswith("\n") else "\n"
             new_text = old_text + separator + operation.content
@@ -252,13 +286,21 @@ def apply_operation(repo_root: Path, operation: PatchOperation, apply: bool) -> 
                 raise ValueError(f"{operation.operation} requires find and content")
             marker = operation.marker or operation.content
             if marker in old_text:
-                result.update({"skipped": True, "ok": True, "line_count_after": line_count(old_text)})
+                result.update(
+                    {
+                        "skipped": True,
+                        "ok": True,
+                        "line_count_after": line_count(old_text),
+                    }
+                )
                 return result
             count = old_text.count(operation.find)
             if count == 0:
                 raise ValueError(f"{operation.operation} anchor not found")
             if count > 1:
-                raise ValueError(f"{operation.operation} expected 1 match, found {count}")
+                raise ValueError(
+                    f"{operation.operation} expected 1 match, found {count}"
+                )
             insert = operation.find + operation.content
             if operation.operation == "insert_before_once":
                 insert = operation.content + operation.find
@@ -267,7 +309,13 @@ def apply_operation(repo_root: Path, operation: PatchOperation, apply: bool) -> 
             if operation.content is None:
                 raise ValueError("write_file requires content")
             if exists and old_text == operation.content:
-                result.update({"skipped": True, "ok": True, "line_count_after": line_count(old_text)})
+                result.update(
+                    {
+                        "skipped": True,
+                        "ok": True,
+                        "line_count_after": line_count(old_text),
+                    }
+                )
                 return result
             new_text = operation.content
         else:  # pragma: no cover - guarded by normalize_operation

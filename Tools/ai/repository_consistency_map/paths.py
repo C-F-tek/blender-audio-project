@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from Tools.ai.repository_consistency_map.constants import (
+from tools.ai.repository_consistency_map.constants import (
     EXCLUDE_DIRS,
     GENERATED_EVIDENCE_CHUNK_RE,
     TEXT_EXTENSIONS,
@@ -31,7 +31,11 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
@@ -51,12 +55,16 @@ def is_generated_evidence_chunk_path(rel_posix: str) -> bool:
 
 def should_skip(path: Path, repo_root: Path) -> bool:
     try:
-        rel_path = path.resolve(strict=False).relative_to(repo_root.resolve(strict=False))
+        rel_path = path.resolve(strict=False).relative_to(
+            repo_root.resolve(strict=False)
+        )
     except ValueError:
         return True
     rel_parts = rel_path.parts
     rel_posix = rel_path.as_posix()
-    return any(part in EXCLUDE_DIRS for part in rel_parts) or is_generated_evidence_chunk_path(rel_posix)
+    return any(
+        part in EXCLUDE_DIRS for part in rel_parts
+    ) or is_generated_evidence_chunk_path(rel_posix)
 
 
 def build_repo_file_manifest(repo_root: Path) -> list[Path]:
@@ -72,14 +80,20 @@ def build_repo_file_manifest(repo_root: Path) -> list[Path]:
     return sorted(files, key=lambda item: repo_rel(item, repo_root))
 
 
-def filter_manifest_by_extensions(files: list[Path], extensions: set[str]) -> list[Path]:
+def filter_manifest_by_extensions(
+    files: list[Path], extensions: set[str]
+) -> list[Path]:
     return [path for path in files if path.suffix.lower() in extensions]
 
 
-def iter_files(repo_root: Path, extensions: set[str], *, files: list[Path] | None = None) -> list[Path]:
+def iter_files(
+    repo_root: Path, extensions: set[str], *, files: list[Path] | None = None
+) -> list[Path]:
     if files is not None:
         return filter_manifest_by_extensions(files, extensions)
-    return filter_manifest_by_extensions(build_repo_file_manifest(repo_root), extensions)
+    return filter_manifest_by_extensions(
+        build_repo_file_manifest(repo_root), extensions
+    )
 
 
 LINE_COUNT_EXTENSIONS = TEXT_EXTENSIONS | {
@@ -113,32 +127,38 @@ def file_modified_at(path: Path) -> str:
     return datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds")
 
 
-def build_repo_file_records(repo_root: Path, files: list[Path] | None = None) -> list[dict[str, object]]:
+def build_repo_file_records(
+    repo_root: Path, files: list[Path] | None = None
+) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
     for path in files if files is not None else build_repo_file_manifest(repo_root):
         try:
             stat = path.stat()
         except OSError as exc:
-            records.append({
-                "path": repo_rel(path, repo_root),
-                "suffix": path.suffix.lower(),
-                "size_bytes": None,
-                "modified_at": "",
-                "line_count": None,
-                "line_count_available": False,
-                "metadata_error": f"{type(exc).__name__}: {exc}",
-            })
+            records.append(
+                {
+                    "path": repo_rel(path, repo_root),
+                    "suffix": path.suffix.lower(),
+                    "size_bytes": None,
+                    "modified_at": "",
+                    "line_count": None,
+                    "line_count_available": False,
+                    "metadata_error": f"{type(exc).__name__}: {exc}",
+                }
+            )
             continue
         line_count = count_text_file_lines(path)
-        records.append({
-            "path": repo_rel(path, repo_root),
-            "suffix": path.suffix.lower(),
-            "size_bytes": stat.st_size,
-            "modified_at": file_modified_at(path),
-            "line_count": line_count,
-            "line_count_available": line_count is not None,
-            "metadata_error": "",
-        })
+        records.append(
+            {
+                "path": repo_rel(path, repo_root),
+                "suffix": path.suffix.lower(),
+                "size_bytes": stat.st_size,
+                "modified_at": file_modified_at(path),
+                "line_count": line_count,
+                "line_count_available": line_count is not None,
+                "metadata_error": "",
+            }
+        )
     return records
 
 
@@ -163,7 +183,9 @@ def snippet_for_line(text: str, line_no: int, *, max_chars: int) -> str:
     return snippet
 
 
-def build_existing_path_index(repo_root: Path, *, files: list[Path] | None = None) -> dict[str, str]:
+def build_existing_path_index(
+    repo_root: Path, *, files: list[Path] | None = None
+) -> dict[str, str]:
     index: dict[str, str] = {}
     for path in iter_files(repo_root, TEXT_EXTENSIONS | {".json", ".csv"}, files=files):
         rel = repo_rel(path, repo_root)
@@ -172,9 +194,11 @@ def build_existing_path_index(repo_root: Path, *, files: list[Path] | None = Non
     return index
 
 
-def resolve_repo_reference(repo_root: Path, source: str, raw_ref: str, path_index: dict[str, str]) -> tuple[str, bool, str]:
+def resolve_repo_reference(
+    repo_root: Path, source: str, raw_ref: str, path_index: dict[str, str]
+) -> tuple[str, bool, str]:
     ref = normalize_ref(raw_ref)
-    if not ref or ref.startswith(("http://", "https://", "mailto:")):
+    if not ref or ref.startswith(("http:/", "https:/", "mailto:")):
         return ref, True, "external_or_empty"
     direct = (repo_root / ref).resolve(strict=False)
     if direct.exists():

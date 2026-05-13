@@ -9,6 +9,7 @@ summaries, context echo or schema-mismatched prose.
 Pure/report-only module: no provider execution, no patch application, no
 Blender runtime, no Git writes and no SQLite writes.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -96,7 +97,9 @@ def collect_recent_runtime_tool_evidence(
         tool_results = item.get("tool_results", [])
         if not isinstance(tool_results, list):
             tool_results = []
-        summary = item.get("summary", {}) if isinstance(item.get("summary"), dict) else {}
+        summary = (
+            item.get("summary", {}) if isinstance(item.get("summary"), dict) else {}
+        )
         evidence.append(
             {
                 "kind": kind,
@@ -124,7 +127,9 @@ def collect_recent_runtime_tool_evidence(
     return list(reversed(evidence))
 
 
-def summarize_round_schema_failures(rounds: list[dict[str, Any]], *, max_rounds: int = 10) -> dict[str, Any]:
+def summarize_round_schema_failures(
+    rounds: list[dict[str, Any]], *, max_rounds: int = 10
+) -> dict[str, Any]:
     """Summarize provider contract failures from previous rounds."""
 
     recent = rounds[-max_rounds:]
@@ -147,9 +152,21 @@ def summarize_round_schema_failures(rounds: list[dict[str, Any]], *, max_rounds:
     return {
         "round_count_seen": len(rounds),
         "recent_round_count": len(recent),
-        "json_parse_error_count": sum(1 for item in recent if isinstance(item, dict) and not item.get("json_ok", True)),
-        "schema_mismatch_count": sum(1 for item in recent if isinstance(item, dict) and item.get("model_output_schema_mismatch")),
-        "context_echo_count": sum(1 for item in recent if isinstance(item, dict) and item.get("context_echo_detected")),
+        "json_parse_error_count": sum(
+            1
+            for item in recent
+            if isinstance(item, dict) and not item.get("json_ok", True)
+        ),
+        "schema_mismatch_count": sum(
+            1
+            for item in recent
+            if isinstance(item, dict) and item.get("model_output_schema_mismatch")
+        ),
+        "context_echo_count": sum(
+            1
+            for item in recent
+            if isinstance(item, dict) and item.get("context_echo_detected")
+        ),
         "reason_counts": reason_counts,
         "schema_error_examples": schema_error_examples,
     }
@@ -173,7 +190,9 @@ def should_emit_schema_repair_context(
         reason = str(item.get("empty_recommendations_reason") or "")
         if reason in SCHEMA_REPAIR_TRIGGER_REASONS:
             return True
-        if item.get("model_output_schema_mismatch") or item.get("context_echo_detected"):
+        if item.get("model_output_schema_mismatch") or item.get(
+            "context_echo_detected"
+        ):
             return True
     return False
 
@@ -265,7 +284,9 @@ def build_schema_repair_context_stack(
     clean = [
         item
         for item in base_context_reports
-        if not (isinstance(item, dict) and item.get("kind") == SCHEMA_REPAIR_CONTEXT_KIND)
+        if not (
+            isinstance(item, dict) and item.get("kind") == SCHEMA_REPAIR_CONTEXT_KIND
+        )
     ]
     if not should_emit_schema_repair_context(
         rounds=rounds,
@@ -282,6 +303,8 @@ def build_schema_repair_context_stack(
         )
     )
     return clean
+
+
 def should_attempt_schema_repair_retry(
     *,
     parsed_response: dict[str, Any],
@@ -303,9 +326,15 @@ def should_attempt_schema_repair_retry(
         return True
     if not parse_diagnostics.get("json_ok", True):
         return True
-    if parse_diagnostics.get("model_output_schema_mismatch") or not parse_diagnostics.get("schema_ok", False):
+    if parse_diagnostics.get(
+        "model_output_schema_mismatch"
+    ) or not parse_diagnostics.get("schema_ok", False):
         return True
-    reason = str(parse_diagnostics.get("empty_recommendations_reason") or parse_diagnostics.get("contract_empty_recommendations_reason") or "")
+    reason = str(
+        parse_diagnostics.get("empty_recommendations_reason")
+        or parse_diagnostics.get("contract_empty_recommendations_reason")
+        or ""
+    )
     if reason in SCHEMA_REPAIR_TRIGGER_REASONS:
         return True
     return evidence_ready_for_manual_patch_count > 0
@@ -325,7 +354,9 @@ def build_schema_repair_retry_prompt(
 ) -> str:
     """Build a strict repair-only prompt for a schema-mismatched provider reply."""
 
-    runtime_evidence = collect_recent_runtime_tool_evidence(context_reports, max_reports=8, max_results_per_report=6)
+    runtime_evidence = collect_recent_runtime_tool_evidence(
+        context_reports, max_reports=8, max_results_per_report=6
+    )
     round_failures = summarize_round_schema_failures(rounds)
     payload = {
         "kind": "schema_repair_retry_prompt",
@@ -367,14 +398,23 @@ def build_schema_repair_retry_prompt(
             "schema_ok": parse_diagnostics.get("schema_ok"),
             "schema_errors": parse_diagnostics.get("schema_errors", []),
             "context_echo_detected": parse_diagnostics.get("context_echo_detected"),
-            "model_output_schema_mismatch": parse_diagnostics.get("model_output_schema_mismatch"),
-            "empty_recommendations_reason": parse_diagnostics.get("empty_recommendations_reason") or parse_diagnostics.get("contract_empty_recommendations_reason"),
+            "model_output_schema_mismatch": parse_diagnostics.get(
+                "model_output_schema_mismatch"
+            ),
+            "empty_recommendations_reason": parse_diagnostics.get(
+                "empty_recommendations_reason"
+            )
+            or parse_diagnostics.get("contract_empty_recommendations_reason"),
         },
         "round_failures": round_failures,
         "runtime_tool_evidence": runtime_evidence,
         "bad_response": {
             "raw_preview": raw_response[:4000],
-            "parsed_keys": sorted(parsed_response.keys()) if isinstance(parsed_response, dict) else [],
+            "parsed_keys": (
+                sorted(parsed_response.keys())
+                if isinstance(parsed_response, dict)
+                else []
+            ),
             "parsed_response": parsed_response,
         },
         "output_contract": {
@@ -405,7 +445,13 @@ def summarize_schema_repair_retry(attempt: dict[str, Any]) -> dict[str, Any]:
         "reason": attempt.get("reason", ""),
         "json_ok": attempt.get("parse_diagnostics", {}).get("json_ok"),
         "schema_ok": attempt.get("parse_diagnostics", {}).get("schema_ok"),
-        "recommendation_count": attempt.get("recommendation_diagnostics", {}).get("recommendation_count", 0),
-        "valid_tool_request_count": attempt.get("parse_diagnostics", {}).get("valid_tool_request_count", 0),
-        "empty_recommendations_reason": attempt.get("recommendation_diagnostics", {}).get("empty_recommendations_reason", ""),
+        "recommendation_count": attempt.get("recommendation_diagnostics", {}).get(
+            "recommendation_count", 0
+        ),
+        "valid_tool_request_count": attempt.get("parse_diagnostics", {}).get(
+            "valid_tool_request_count", 0
+        ),
+        "empty_recommendations_reason": attempt.get(
+            "recommendation_diagnostics", {}
+        ).get("empty_recommendations_reason", ""),
     }

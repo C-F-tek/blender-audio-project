@@ -6,28 +6,37 @@ VizTracer, pyinstrument, Nsight or OpenTelemetry exports can remain under
 output/** and be summarized into the compact JSON/MD/MMD artifacts produced by
 this tool.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:
     import sys
 
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 DEFAULT_OUTPUT_DIR = "docs/LOCAL_VALIDATION_EVIDENCE"
-DEFAULT_ENTRYPOINT = "Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py"
+DEFAULT_ENTRYPOINT = "tools/ai/run_agent_gpu_npu_parallel_orchestrator.py"
 STAMP_RE = re.compile(r"\d{8}-\d{6}")
 
 CANONICAL_COMPONENTS = {
@@ -46,12 +55,20 @@ CANONICAL_COMPONENTS = {
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
+    )
 
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -96,7 +113,9 @@ def read_json(path: Path) -> tuple[dict[str, Any], str]:
         return {}, "missing"
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except Exception as exc:  # noqa: BLE001 - evidence summary should capture parse failures.
+    except (
+        Exception
+    ) as exc:  # noqa: BLE001 - evidence summary should capture parse failures.
         return {}, f"{type(exc).__name__}: {exc}"
     if not isinstance(data, dict):
         return {}, "json root is not an object"
@@ -106,11 +125,19 @@ def read_json(path: Path) -> tuple[dict[str, Any], str]:
 def component_from_report(path: str, data: dict[str, Any]) -> str:
     lower_path = path.lower().replace("\\", "/")
     kind = str(data.get("kind") or "").lower()
-    if "runtime_heap" in kind or "ai_runtime_heap" in lower_path or "heap" in lower_path:
+    if (
+        "runtime_heap" in kind
+        or "ai_runtime_heap" in lower_path
+        or "heap" in lower_path
+    ):
         return "heap"
     if "orchestrator" in kind or "orchestrator" in lower_path:
         return "orchestrator"
-    if "parallel_gpu" in lower_path or "gpu_deep" in lower_path or "gpu_planner" in lower_path:
+    if (
+        "parallel_gpu" in lower_path
+        or "gpu_deep" in lower_path
+        or "gpu_planner" in lower_path
+    ):
         return "gpu_planner"
     if "gpu0" in lower_path or "openvino_gpu0" in kind:
         return "gpu0_peer"
@@ -120,9 +147,18 @@ def component_from_report(path: str, data: dict[str, Any]) -> str:
         return "broker"
     if "decision" in kind or "decision_loop" in lower_path:
         return "decision_loop"
-    if "patch_plan" in kind or "patch_plan" in lower_path or "patch_specs" in lower_path:
+    if (
+        "patch_plan" in kind
+        or "patch_plan" in lower_path
+        or "patch_specs" in lower_path
+    ):
         return "patch_plan"
-    if "recommend" in kind or "proposal" in kind or "recommend" in lower_path or "proposal" in lower_path:
+    if (
+        "recommend" in kind
+        or "proposal" in kind
+        or "recommend" in lower_path
+        or "proposal" in lower_path
+    ):
         return "recommendations"
     if "bundle" in kind or "evidence_bundle" in lower_path:
         return "evidence_bundle"
@@ -131,21 +167,49 @@ def component_from_report(path: str, data: dict[str, Any]) -> str:
     return "validation"
 
 
-def add_node(nodes: dict[str, dict[str, Any]], node_id: str, node_type: str, label: str, **extra: Any) -> None:
-    item = nodes.setdefault("node:" + node_id, {"id": node_id, "type": node_type, "label": label})
-    item.update({key: value for key, value in extra.items() if value not in (None, "", [])})
+def add_node(
+    nodes: dict[str, dict[str, Any]],
+    node_id: str,
+    node_type: str,
+    label: str,
+    **extra: Any,
+) -> None:
+    item = nodes.setdefault(
+        "node:" + node_id, {"id": node_id, "type": node_type, "label": label}
+    )
+    item.update(
+        {key: value for key, value in extra.items() if value not in (None, "", [])}
+    )
 
 
-def add_edge(edges: dict[tuple[str, str, str], dict[str, Any]], source: str, target: str, kind: str, count: int = 1, **extra: Any) -> None:
+def add_edge(
+    edges: dict[tuple[str, str, str], dict[str, Any]],
+    source: str,
+    target: str,
+    kind: str,
+    count: int = 1,
+    **extra: Any,
+) -> None:
     key = (source, target, kind)
-    item = edges.setdefault(key, {"from": source, "to": target, "kind": kind, "count": 0})
+    item = edges.setdefault(
+        key, {"from": source, "to": target, "kind": kind, "count": 0}
+    )
     item["count"] = safe_int(item.get("count")) + max(1, count)
     for extra_key, value in extra.items():
         if value not in (None, "", []):
             item[extra_key] = value
 
 
-def append_event(events: list[dict[str, Any]], *, component: str, action: str, status: str = "observed", span: str = "", duration_ms: int | None = None, **extra: Any) -> None:
+def append_event(
+    events: list[dict[str, Any]],
+    *,
+    component: str,
+    action: str,
+    status: str = "observed",
+    span: str = "",
+    duration_ms: int | None = None,
+    **extra: Any,
+) -> None:
     event: dict[str, Any] = {
         "ts": now_iso(),
         "span": span,
@@ -155,11 +219,15 @@ def append_event(events: list[dict[str, Any]], *, component: str, action: str, s
     }
     if duration_ms is not None:
         event["duration_ms"] = duration_ms
-    event.update({key: value for key, value in extra.items() if value not in (None, "", [])})
+    event.update(
+        {key: value for key, value in extra.items() if value not in (None, "", [])}
+    )
     events.append(event)
 
 
-def compact_report_summary(path: str, data: dict[str, Any], parse_error: str) -> dict[str, Any]:
+def compact_report_summary(
+    path: str, data: dict[str, Any], parse_error: str
+) -> dict[str, Any]:
     return {
         "path": path,
         "exists": parse_error != "missing",
@@ -191,7 +259,15 @@ def process_report(
     report_node = f"report:{rel}"
     add_node(nodes, report_node, "report", rel, path=rel, kind=data.get("kind"))
     add_edge(edges, component, report_node, "emits_report", 1)
-    append_event(events, component=component, action="report_observed", status="error" if parse_error else "ok", span=rel, report_path=rel, kind=data.get("kind"))
+    append_event(
+        events,
+        component=component,
+        action="report_observed",
+        status="error" if parse_error else "ok",
+        span=rel,
+        report_path=rel,
+        kind=data.get("kind"),
+    )
 
     if parse_error:
         counters["parse_error_count"] += 1
@@ -201,37 +277,79 @@ def process_report(
     if data.get("passed") is False:
         counters["failed_report_count"] += 1
 
-    round_count = safe_int(data.get("round_count") or data.get("gpu_round_count") or len(as_list(data.get("rounds"))))
+    round_count = safe_int(
+        data.get("round_count")
+        or data.get("gpu_round_count")
+        or len(as_list(data.get("rounds")))
+    )
     if round_count:
         counters["round_count"] = max(counters["round_count"], round_count)
         add_edge(edges, "orchestrator", "gpu_planner", "round_loop", round_count)
 
-    recommendation_count = safe_int(data.get("recommendation_count") or data.get("gpu_recommendation_count") or data.get("proposal_count"))
+    recommendation_count = safe_int(
+        data.get("recommendation_count")
+        or data.get("gpu_recommendation_count")
+        or data.get("proposal_count")
+    )
     if recommendation_count:
         counters["recommendation_count"] += recommendation_count
         add_edge(edges, component, "recommendations", "produces", recommendation_count)
-        append_event(events, component=component, action="recommendation", status="observed", span=rel, count=recommendation_count)
+        append_event(
+            events,
+            component=component,
+            action="recommendation",
+            status="observed",
+            span=rel,
+            count=recommendation_count,
+        )
 
-    patch_plan_count = safe_int(data.get("patch_plan_count") or len(as_list(data.get("patch_plans"))))
+    patch_plan_count = safe_int(
+        data.get("patch_plan_count") or len(as_list(data.get("patch_plans")))
+    )
     if patch_plan_count:
         counters["patch_plan_count"] += patch_plan_count
         add_edge(edges, component, "patch_plan", "produces", patch_plan_count)
-        append_event(events, component=component, action="patch_plan", status="observed", span=rel, count=patch_plan_count)
+        append_event(
+            events,
+            component=component,
+            action="patch_plan",
+            status="observed",
+            span=rel,
+            count=patch_plan_count,
+        )
 
-    tool_request_count = safe_int(data.get("tool_request_count") or data.get("requested_tool_count"))
+    tool_request_count = safe_int(
+        data.get("tool_request_count") or data.get("requested_tool_count")
+    )
     tool_execution_count = safe_int(data.get("tool_execution_count"))
     if tool_request_count:
         counters["tool_request_count"] += tool_request_count
         add_edge(edges, component, "broker", "tool_request", tool_request_count)
-        append_event(events, component=component, action="tool_request", status="observed", span=rel, count=tool_request_count)
+        append_event(
+            events,
+            component=component,
+            action="tool_request",
+            status="observed",
+            span=rel,
+            count=tool_request_count,
+        )
     if tool_execution_count:
         counters["tool_execution_count"] += tool_execution_count
         add_edge(edges, "broker", component, "tool_result", tool_execution_count)
-        append_event(events, component="broker", action="tool_execution", status="observed", span=rel, count=tool_execution_count)
+        append_event(
+            events,
+            component="broker",
+            action="tool_execution",
+            status="observed",
+            span=rel,
+            count=tool_execution_count,
+        )
 
     if data.get("provider_execution_performed") is True:
         counters["provider_call_count"] += 1
-        append_event(events, component=component, action="provider_call", status="ok", span=rel)
+        append_event(
+            events, component=component, action="provider_call", status="ok", span=rel
+        )
 
     heap_event_count = safe_int(data.get("event_count"))
     by_lane = as_dict(data.get("by_lane"))
@@ -249,7 +367,14 @@ def process_report(
             event_count = safe_int(as_dict(lane_data).get("event_count"), 1)
             add_edge(edges, lane_component, "heap", "heap_write", event_count)
             counters["heap_write_count"] += event_count
-        append_event(events, component="heap", action="heap_snapshot", status="observed", span=rel, count=heap_event_count)
+        append_event(
+            events,
+            component="heap",
+            action="heap_snapshot",
+            status="observed",
+            span=rel,
+            count=heap_event_count,
+        )
 
     for round_item in as_list(data.get("rounds"))[:200]:
         if not isinstance(round_item, dict):
@@ -258,7 +383,9 @@ def process_report(
         span = f"round_{round_id:03d}" if round_id >= 0 else rel
         json_ok = round_item.get("json_ok")
         status = "ok" if json_ok is True or json_ok is None else "error"
-        append_event(events, component=component, action="round", status=status, span=span)
+        append_event(
+            events, component=component, action="round", status=status, span=span
+        )
 
     return compact_report_summary(rel, data, parse_error)
 
@@ -283,7 +410,9 @@ def build_markdown(flow: dict[str, Any]) -> str:
     lines.append("|---|---|---|")
     for node in as_list(flow.get("nodes")):
         if isinstance(node, dict):
-            lines.append(f"| `{node.get('id')}` | `{node.get('type')}` | {node.get('label') or ''} |")
+            lines.append(
+                f"| `{node.get('id')}` | `{node.get('type')}` | {node.get('label') or ''} |"
+            )
     lines.append("")
     lines.append("## Edges")
     lines.append("")
@@ -291,13 +420,17 @@ def build_markdown(flow: dict[str, Any]) -> str:
     lines.append("|---|---|---|---:|")
     for edge in as_list(flow.get("edges")):
         if isinstance(edge, dict):
-            lines.append(f"| `{edge.get('from')}` | `{edge.get('to')}` | `{edge.get('kind')}` | {edge.get('count') or 0} |")
+            lines.append(
+                f"| `{edge.get('from')}` | `{edge.get('to')}` | `{edge.get('kind')}` | {edge.get('count') or 0} |"
+            )
     lines.append("")
     lines.append("## Reports")
     lines.append("")
     for report in as_list(flow.get("reports")):
         if isinstance(report, dict):
-            lines.append(f"- `{report.get('path')}` kind=`{report.get('kind')}` passed=`{report.get('passed')}` json_ok=`{report.get('json_ok')}`")
+            lines.append(
+                f"- `{report.get('path')}` kind=`{report.get('kind')}` passed=`{report.get('passed')}` json_ok=`{report.get('json_ok')}`"
+            )
     lines.append("")
     return "\n".join(lines)
 
@@ -313,7 +446,7 @@ def build_mermaid(flow: dict[str, Any]) -> str:
             continue
         node_id = str(node.get("id") or "node")
         label = str(node.get("label") or node_id).replace('"', "'")
-        lines.append(f"  {mermaid_id(node_id)}[\"{label}\"]")
+        lines.append(f'  {mermaid_id(node_id)}["{label}"]')
     for edge in as_list(flow.get("edges")):
         if not isinstance(edge, dict):
             continue
@@ -381,7 +514,9 @@ def build_flow(args: argparse.Namespace) -> dict[str, Any]:
         "heap_event_count": counters["heap_event_count"],
         "heap_read_count": counters["heap_read_count"],
         "heap_write_count": counters["heap_write_count"],
-        "decision_count": sum(1 for event in events if event.get("action") == "decision"),
+        "decision_count": sum(
+            1 for event in events if event.get("action") == "decision"
+        ),
         "recommendation_count": counters["recommendation_count"],
         "patch_plan_count": counters["patch_plan_count"],
     }
@@ -393,7 +528,14 @@ def build_flow(args: argparse.Namespace) -> dict[str, Any]:
         "stamp": stamp,
         "entrypoint": args.entrypoint,
         "nodes": sorted(nodes.values(), key=lambda item: str(item.get("id"))),
-        "edges": sorted(edges.values(), key=lambda item: (str(item.get("from")), str(item.get("to")), str(item.get("kind")))),
+        "edges": sorted(
+            edges.values(),
+            key=lambda item: (
+                str(item.get("from")),
+                str(item.get("to")),
+                str(item.get("kind")),
+            ),
+        ),
         "events": events,
         "reports": reports,
         "summary": summary,
@@ -428,10 +570,26 @@ def main() -> int:
     stamp = str(flow["stamp"])
     basename = args.basename or f"runtime_flow_{stamp}"
     output_dir = resolve_output_path(repo_root, args.output_dir)
-    json_output = resolve_output_path(repo_root, args.output) if args.output else output_dir / f"{basename}.json"
-    jsonl_output = resolve_output_path(repo_root, args.jsonl_output) if args.jsonl_output else output_dir / f"{basename}.jsonl"
-    md_output = resolve_output_path(repo_root, args.markdown_output) if args.markdown_output else output_dir / f"{basename}.md"
-    mmd_output = resolve_output_path(repo_root, args.mermaid_output) if args.mermaid_output else output_dir / f"{basename}.mmd"
+    json_output = (
+        resolve_output_path(repo_root, args.output)
+        if args.output
+        else output_dir / f"{basename}.json"
+    )
+    jsonl_output = (
+        resolve_output_path(repo_root, args.jsonl_output)
+        if args.jsonl_output
+        else output_dir / f"{basename}.jsonl"
+    )
+    md_output = (
+        resolve_output_path(repo_root, args.markdown_output)
+        if args.markdown_output
+        else output_dir / f"{basename}.md"
+    )
+    mmd_output = (
+        resolve_output_path(repo_root, args.mermaid_output)
+        if args.mermaid_output
+        else output_dir / f"{basename}.mmd"
+    )
 
     write_json_report(flow, json_output)
     write_jsonl(jsonl_output, as_list(flow.get("events")))

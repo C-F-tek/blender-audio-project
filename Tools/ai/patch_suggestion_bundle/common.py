@@ -1,14 +1,15 @@
 """Shared model, constants and small utilities for patch suggestion apply."""
+
 from __future__ import annotations
 
 import hashlib
 import json
 import re
 import subprocess
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
-
+from typing import Any
 
 DENY_PREFIXES = (
     ".git/",
@@ -106,9 +107,7 @@ def current_branch(repo_root: Path) -> str:
     return run_git(repo_root, "branch", "--show-current") or "unknown"
 
 
-SAFE_GENERATED_STATUS_PREFIXES = (
-    "?? output/",
-)
+SAFE_GENERATED_STATUS_PREFIXES = ("?? output/",)
 
 
 def git_status_short(repo_root: Path) -> str:
@@ -124,12 +123,18 @@ def git_status_lines(repo_root: Path) -> list[str]:
 def is_safe_generated_status_line(line: str) -> bool:
     """Return true for expected generated runtime artifacts that must not block apply gates."""
     normalized = str(line or "").replace("\\", "/").strip()
-    return any(normalized.startswith(prefix) for prefix in SAFE_GENERATED_STATUS_PREFIXES)
+    return any(
+        normalized.startswith(prefix) for prefix in SAFE_GENERATED_STATUS_PREFIXES
+    )
 
 
 def unsafe_git_status_lines(repo_root: Path) -> list[str]:
     """Return status lines that represent source/doc/index dirtiness, excluding safe output artifacts."""
-    return [line for line in git_status_lines(repo_root) if not is_safe_generated_status_line(line)]
+    return [
+        line
+        for line in git_status_lines(repo_root)
+        if not is_safe_generated_status_line(line)
+    ]
 
 
 def unsafe_git_status_short(repo_root: Path) -> str:
@@ -174,7 +179,11 @@ class RepoPathNormalizer:
         path = Path(raw)
         candidate = path if path.is_absolute() else self.repo_root / path
         try:
-            return candidate.resolve(strict=False).relative_to(self.repo_root.resolve()).as_posix()
+            return (
+                candidate.resolve(strict=False)
+                .relative_to(self.repo_root.resolve())
+                .as_posix()
+            )
         except ValueError:
             return raw.lstrip("./")
 

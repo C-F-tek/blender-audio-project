@@ -14,30 +14,33 @@ The tool is report-only:
 - no SQLite writes;
 - no persistent memory promotion.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import sys
-import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
 try:
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 
-DEFAULT_REFINED_REVIEW = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.json"
-DEFAULT_REFINED_PROPOSALS = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_proposals.json"
+DEFAULT_REFINED_REVIEW = (
+    "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.json"
+)
+DEFAULT_REFINED_PROPOSALS = (
+    "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_proposals.json"
+)
 DEFAULT_OUTPUT = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
 DEFAULT_MARKDOWN = "output/ai_pipeline/agent_review_evidence_sufficiency.md"
 MAX_SNIPPET_CHARS = 1600
@@ -69,10 +72,13 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
-
 
 
 def read_text(path: Path) -> str:
@@ -86,21 +92,33 @@ def load_json_object(path: Path) -> dict[str, Any]:
     return data
 
 
-def compact_snippet(text: str, terms: list[str], *, max_chars: int = MAX_SNIPPET_CHARS) -> str:
+def compact_snippet(
+    text: str, terms: list[str], *, max_chars: int = MAX_SNIPPET_CHARS
+) -> str:
     """Return a compact snippet around the first matching term."""
     if not text:
         return ""
     lower = text.lower()
-    positions = [lower.find(term.lower()) for term in terms if term and lower.find(term.lower()) >= 0]
+    positions = [
+        lower.find(term.lower())
+        for term in terms
+        if term and lower.find(term.lower()) >= 0
+    ]
     if positions:
-        start = max(0, min(positions) - max_chars // 3)
+        start = max(0, min(positions) - max_chars / 3)
     else:
         start = 0
     snippet = text[start : start + max_chars]
     return snippet.replace("\r\n", "\n")
 
 
-def inspect_file(repo_root: Path, value: str, *, terms: list[str] | None = None, kind: str = "evidence") -> EvidenceFile:
+def inspect_file(
+    repo_root: Path,
+    value: str,
+    *,
+    terms: list[str] | None = None,
+    kind: str = "evidence",
+) -> EvidenceFile:
     terms = terms or []
     path = resolve_path(repo_root, value)
     if not path.exists() or not path.is_file():
@@ -132,7 +150,13 @@ def evidence_to_dict(item: EvidenceFile) -> dict[str, Any]:
 
 def load_optional_report(repo_root: Path, value: str) -> dict[str, Any]:
     path = resolve_path(repo_root, value)
-    out: dict[str, Any] = {"path": repo_rel(path, repo_root), "exists": path.exists(), "kind": None, "passed": None, "error": ""}
+    out: dict[str, Any] = {
+        "path": repo_rel(path, repo_root),
+        "exists": path.exists(),
+        "kind": None,
+        "passed": None,
+        "error": "",
+    }
     if not path.exists():
         out["error"] = "missing"
         return out
@@ -142,27 +166,36 @@ def load_optional_report(repo_root: Path, value: str) -> dict[str, Any]:
         return out
     out["kind"] = data.get("kind")
     out["passed"] = data.get("passed")
-    out["summary"] = data.get("summary") if isinstance(data.get("summary"), dict) else {}
+    out["summary"] = (
+        data.get("summary") if isinstance(data.get("summary"), dict) else {}
+    )
     return out
 
 
 def extract_doc_code_targets(refined: dict[str, Any]) -> list[dict[str, Any]]:
-    targets = refined.get("refinement", {}).get("doc_code", {}).get("actionable_refs", []) or []
+    targets = (
+        refined.get("refinement", {}).get("doc_code", {}).get("actionable_refs", [])
+        or []
+    )
     return [item for item in targets if isinstance(item, dict)]
 
 
 def extract_doc_doc_targets(refined: dict[str, Any]) -> list[dict[str, Any]]:
-    targets = refined.get("refinement", {}).get("doc_doc", {}).get("actionable", []) or []
+    targets = (
+        refined.get("refinement", {}).get("doc_doc", {}).get("actionable", []) or []
+    )
     return [item for item in targets if isinstance(item, dict)]
 
 
 def normalize_candidate(candidate: Any) -> str:
     if candidate is None:
         return ""
-    return str(candidate).replace("\\", "/").strip().strip("`.,:)];\"").lstrip("/")
+    return str(candidate).replace("\\", "/").strip().strip('`.,:)];"').lstrip("/")
 
 
-def candidate_exists(repo_root: Path, candidates: list[Any]) -> tuple[str | None, list[str]]:
+def candidate_exists(
+    repo_root: Path, candidates: list[Any]
+) -> tuple[str | None, list[str]]:
     normalized = [normalize_candidate(item) for item in candidates]
     for item in normalized:
         if item and (repo_root / item).exists():
@@ -176,13 +209,30 @@ def analyze_doc_code(refined: dict[str, Any], repo_root: Path) -> dict[str, Any]
     needs_context = 0
     for target in extract_doc_code_targets(refined):
         doc = str(target.get("doc") or "")
-        normalized_ref = normalize_candidate(target.get("normalized_reference") or target.get("reference"))
+        normalized_ref = normalize_candidate(
+            target.get("normalized_reference") or target.get("reference")
+        )
         candidates = target.get("candidate_references") or [normalized_ref]
         existing, normalized_candidates = candidate_exists(repo_root, candidates)
-        doc_evidence = inspect_file(repo_root, doc, terms=[normalized_ref, *normalized_candidates], kind="source_markdown")
-        target_evidence = inspect_file(repo_root, existing or normalized_ref, terms=[], kind="target_path") if existing else inspect_file(repo_root, normalized_ref, kind="target_path")
+        doc_evidence = inspect_file(
+            repo_root,
+            doc,
+            terms=[normalized_ref, *normalized_candidates],
+            kind="source_markdown",
+        )
+        target_evidence = (
+            inspect_file(
+                repo_root, existing or normalized_ref, terms=[], kind="target_path"
+            )
+            if existing
+            else inspect_file(repo_root, normalized_ref, kind="target_path")
+        )
         sufficient = doc_evidence.exists and normalized_ref and existing is None
-        recommendation = "manual_doc_reference_patch_candidate" if sufficient else "needs_more_context"
+        recommendation = (
+            "manual_doc_reference_patch_candidate"
+            if sufficient
+            else "needs_more_context"
+        )
         if sufficient:
             ready += 1
         else:
@@ -196,8 +246,15 @@ def analyze_doc_code(refined: dict[str, Any], repo_root: Path) -> dict[str, Any]
                 "evidence_sufficient": sufficient,
                 "recommendation": recommendation,
                 "confidence": "medium" if sufficient else "low",
-                "reason": "source doc exists and target path remains missing" if sufficient else "source doc missing or target resolved",
-                "evidence_files": [evidence_to_dict(doc_evidence), evidence_to_dict(target_evidence)],
+                "reason": (
+                    "source doc exists and target path remains missing"
+                    if sufficient
+                    else "source doc missing or target resolved"
+                ),
+                "evidence_files": [
+                    evidence_to_dict(doc_evidence),
+                    evidence_to_dict(target_evidence),
+                ],
             }
         )
     return {
@@ -224,9 +281,17 @@ def analyze_doc_doc(refined: dict[str, Any], repo_root: Path) -> dict[str, Any]:
                 "path": path,
                 "missing_terms": terms,
                 "evidence_sufficient": sufficient,
-                "recommendation": "manual_cross_reference_patch_candidate" if sufficient else "needs_more_context",
+                "recommendation": (
+                    "manual_cross_reference_patch_candidate"
+                    if sufficient
+                    else "needs_more_context"
+                ),
                 "confidence": "medium" if sufficient else "low",
-                "reason": "contract doc exists and missing terms are explicit" if sufficient else "contract doc missing or no explicit terms",
+                "reason": (
+                    "contract doc exists and missing terms are explicit"
+                    if sufficient
+                    else "contract doc missing or no explicit terms"
+                ),
                 "evidence_files": [evidence_to_dict(evidence)],
             }
         )
@@ -240,12 +305,19 @@ def analyze_doc_doc(refined: dict[str, Any], repo_root: Path) -> dict[str, Any]:
 
 
 def analyze_code_code(refined: dict[str, Any], repo_root: Path) -> dict[str, Any]:
-    targets = refined.get("refinement", {}).get("code_code", {}).get("actionable", []) or []
+    targets = (
+        refined.get("refinement", {}).get("code_code", {}).get("actionable", []) or []
+    )
     items = []
     for target in targets:
         symbol = str(target.get("symbol") or "")
         paths = [str(path) for path in target.get("paths", [])]
-        evidence_files = [evidence_to_dict(inspect_file(repo_root, path, terms=[symbol], kind="symbol_file")) for path in paths[:8]]
+        evidence_files = [
+            evidence_to_dict(
+                inspect_file(repo_root, path, terms=[symbol], kind="symbol_file")
+            )
+            for path in paths[:8]
+        ]
         items.append(
             {
                 "symbol": symbol,
@@ -266,20 +338,38 @@ def analyze_code_code(refined: dict[str, Any], repo_root: Path) -> dict[str, Any
     }
 
 
-def build_decision(doc_code: dict[str, Any], doc_doc: dict[str, Any], code_code: dict[str, Any]) -> dict[str, Any]:
-    ready = doc_code["ready_for_manual_patch_count"] + doc_doc["ready_for_manual_patch_count"] + code_code["ready_for_manual_patch_count"]
-    needs_context = doc_code["needs_more_context_count"] + doc_doc["needs_more_context_count"] + code_code["needs_more_context_count"]
+def build_decision(
+    doc_code: dict[str, Any], doc_doc: dict[str, Any], code_code: dict[str, Any]
+) -> dict[str, Any]:
+    ready = (
+        doc_code["ready_for_manual_patch_count"]
+        + doc_doc["ready_for_manual_patch_count"]
+        + code_code["ready_for_manual_patch_count"]
+    )
+    needs_context = (
+        doc_code["needs_more_context_count"]
+        + doc_doc["needs_more_context_count"]
+        + code_code["needs_more_context_count"]
+    )
     next_steps = []
     if doc_code["ready_for_manual_patch_count"]:
-        next_steps.append("Review doc_code items and patch only source Markdown references with missing targets or intentional placeholders.")
+        next_steps.append(
+            "Review doc_code items and patch only source Markdown references with missing targets or intentional placeholders."
+        )
     if doc_doc["ready_for_manual_patch_count"]:
-        next_steps.append("Add targeted cross-references to dedicated contract docs instead of duplicating full contracts everywhere.")
+        next_steps.append(
+            "Add targeted cross-references to dedicated contract docs instead of duplicating full contracts everywhere."
+        )
     if code_code["item_count"]:
-        next_steps.append("Keep code_code findings advisory-only until semantic equivalence is established.")
+        next_steps.append(
+            "Keep code_code findings advisory-only until semantic equivalence is established."
+        )
     return {
         "ready_for_manual_patch_count": ready,
         "needs_more_context_count": needs_context,
-        "recommended_mode": "manual_review_only_patch_candidates" if ready else "no_patch_recommended",
+        "recommended_mode": (
+            "manual_review_only_patch_candidates" if ready else "no_patch_recommended"
+        ),
         "sufficient_for_real_pr": ready > 0,
         "next_steps": next_steps,
     }
@@ -312,19 +402,41 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                 "refined_proposals": repo_rel(proposals_path, repo_root),
                 "refined_proposals_exists": not proposal_missing,
                 "refined_proposal_count": None,
-                "context_reports": [load_optional_report(repo_root, value) for value in args.report_file],
+                "context_reports": [
+                    load_optional_report(repo_root, value) for value in args.report_file
+                ],
             },
             "areas": {
-                "doc_code": {"area": "doc_code", "item_count": 0, "ready_for_manual_patch_count": 0, "needs_more_context_count": 0, "items": []},
-                "doc_doc": {"area": "doc_doc", "item_count": 0, "ready_for_manual_patch_count": 0, "needs_more_context_count": 0, "items": []},
-                "code_code": {"area": "code_code", "item_count": 0, "ready_for_manual_patch_count": 0, "needs_more_context_count": 0, "items": []},
+                "doc_code": {
+                    "area": "doc_code",
+                    "item_count": 0,
+                    "ready_for_manual_patch_count": 0,
+                    "needs_more_context_count": 0,
+                    "items": [],
+                },
+                "doc_doc": {
+                    "area": "doc_doc",
+                    "item_count": 0,
+                    "ready_for_manual_patch_count": 0,
+                    "needs_more_context_count": 0,
+                    "items": [],
+                },
+                "code_code": {
+                    "area": "code_code",
+                    "item_count": 0,
+                    "ready_for_manual_patch_count": 0,
+                    "needs_more_context_count": 0,
+                    "items": [],
+                },
             },
             "decision": {
                 "ready_for_manual_patch_count": 0,
                 "needs_more_context_count": 0,
                 "recommended_mode": "blocked_missing_refined_review_input",
                 "sufficient_for_real_pr": False,
-                "next_steps": ["Generate refined review/proposals or rewire this lane to current-run reports before acceptance."],
+                "next_steps": [
+                    "Generate refined review/proposals or rewire this lane to current-run reports before acceptance."
+                ],
             },
             "guardrails": {
                 "report_only": True,
@@ -342,8 +454,14 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     doc_doc = analyze_doc_doc(refined, repo_root)
     code_code = analyze_code_code(refined, repo_root)
     decision = build_decision(doc_code, doc_doc, code_code)
-    context_reports = [load_optional_report(repo_root, value) for value in args.report_file]
-    warnings = [f"context report missing/unreadable: {item['path']} ({item['error']})" for item in context_reports if item.get("error")]
+    context_reports = [
+        load_optional_report(repo_root, value) for value in args.report_file
+    ]
+    warnings = [
+        f"context report missing/unreadable: {item['path']} ({item['error']})"
+        for item in context_reports
+        if item.get("error")
+    ]
     return {
         "schema_version": 1,
         "kind": "agent_review_evidence_sufficiency",
@@ -383,12 +501,22 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Agent Review Evidence Sufficiency", ""]
     lines.append(f"- Passed: `{report['passed']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{report['provider_execution_performed']}`"
+    )
+    lines.append(
+        f"- Patch application performed: `{report['patch_application_performed']}`"
+    )
     lines.append(f"- Recommended mode: `{report['decision']['recommended_mode']}`")
-    lines.append(f"- Sufficient for real PR: `{report['decision']['sufficient_for_real_pr']}`")
-    lines.append(f"- Ready patch candidates: `{report['decision']['ready_for_manual_patch_count']}`")
-    lines.append(f"- Needs more context: `{report['decision']['needs_more_context_count']}`")
+    lines.append(
+        f"- Sufficient for real PR: `{report['decision']['sufficient_for_real_pr']}`"
+    )
+    lines.append(
+        f"- Ready patch candidates: `{report['decision']['ready_for_manual_patch_count']}`"
+    )
+    lines.append(
+        f"- Needs more context: `{report['decision']['needs_more_context_count']}`"
+    )
     lines.append("")
     for step in report["decision"].get("next_steps", []):
         lines.append(f"- {step}")
@@ -437,8 +565,12 @@ def main() -> int:
                 "passed": report["passed"],
                 "output": str(output),
                 "markdown": str(markdown_output),
-                "ready_for_manual_patch_count": report["decision"]["ready_for_manual_patch_count"],
-                "needs_more_context_count": report["decision"]["needs_more_context_count"],
+                "ready_for_manual_patch_count": report["decision"][
+                    "ready_for_manual_patch_count"
+                ],
+                "needs_more_context_count": report["decision"][
+                    "needs_more_context_count"
+                ],
                 "sufficient_for_real_pr": report["decision"]["sufficient_for_real_pr"],
                 "provider_execution_performed": False,
                 "patch_application_performed": False,

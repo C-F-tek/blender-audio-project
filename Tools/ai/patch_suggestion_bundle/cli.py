@@ -1,11 +1,12 @@
 """CLI for deterministic patch suggestion final-phase application."""
+
 from __future__ import annotations
 
 import argparse
 from datetime import datetime
 from pathlib import Path
 
-from Tools.ai.patch_suggestion_bundle.common import (
+from tools.ai.patch_suggestion_bundle.common import (
     DEFAULT_DISCOVER_SUGGESTION_ROOTS,
     DEFAULT_DISCOVER_SUGGESTION_TOKENS,
     ReportPathNormalizer,
@@ -16,14 +17,20 @@ from Tools.ai.patch_suggestion_bundle.common import (
     split_values,
     unique_in_order,
 )
-from Tools.ai.patch_suggestion_bundle.discovery import (
+from tools.ai.patch_suggestion_bundle.discovery import (
     discover_current_suggestion_reports,
     discover_suggestion_reports,
 )
-from Tools.ai.patch_suggestion_bundle.git_branch import create_review_branch, push_review_branch
-from Tools.ai.patch_suggestion_bundle.operations import apply_operation, discover_operations
-from Tools.ai.patch_suggestion_bundle.product import build_manual_review_product
-from Tools.validation.report_utils import resolve_output_path, write_json_report
+from tools.ai.patch_suggestion_bundle.git_branch import (
+    create_review_branch,
+    push_review_branch,
+)
+from tools.ai.patch_suggestion_bundle.operations import (
+    apply_operation,
+    discover_operations,
+)
+from tools.ai.patch_suggestion_bundle.product import build_manual_review_product
+from tools.validation.report_utils import resolve_output_path, write_json_report
 
 
 def parse_args() -> argparse.Namespace:
@@ -36,7 +43,11 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Full-toolbox run stamp. This matches the Python workflow engine parameter.",
     )
-    parser.add_argument("--suggestion-stamp", default=None, help="Backward-compatible alias for --Stamp.")
+    parser.add_argument(
+        "--suggestion-stamp",
+        default=None,
+        help="Backward-compatible alias for --Stamp.",
+    )
     parser.add_argument("--discover-suggestion-root", action="append", default=[])
     parser.add_argument("--discover-suggestion-token", action="append", default=[])
     parser.add_argument("--discover-max-files", type=int, default=50)
@@ -45,9 +56,17 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Do not include current non-stamped repository suggestion/proposal reports.",
     )
-    parser.add_argument("--output", default="output/validation/patch_suggestion_bundle_apply.json")
-    parser.add_argument("--apply", action="store_true", help="Actually write source/doc files.")
-    parser.add_argument("--allow-dirty", action="store_true", help="Allow applying with dirty git status.")
+    parser.add_argument(
+        "--output", default="output/validation/patch_suggestion_bundle_apply.json"
+    )
+    parser.add_argument(
+        "--apply", action="store_true", help="Actually write source/doc files."
+    )
+    parser.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        help="Allow applying with dirty git status.",
+    )
     parser.add_argument(
         "--create-review-branch",
         default="",
@@ -73,7 +92,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_reports(repo_root: Path, report_paths: list[str], current_reports: list[str]) -> tuple[
+def load_reports(
+    repo_root: Path, report_paths: list[str], current_reports: list[str]
+) -> tuple[
     list[dict[str, object]],
     list[object],
     list[dict[str, object]],
@@ -124,15 +145,23 @@ def main() -> int:
     errors.extend(branch_prepare.get("errors") or [])
     warnings.extend(branch_prepare.get("warnings") or [])
 
-    if args.apply and not any(branch.startswith(prefix) for prefix in args.allowed_branch_prefix):
+    if args.apply and not any(
+        branch.startswith(prefix) for prefix in args.allowed_branch_prefix
+    ):
         errors.append(f"refusing --apply on branch {branch!r}; expected allowed prefix")
     if args.apply and status_before and not args.allow_dirty:
-        errors.append("refusing --apply with dirty working tree; use --allow-dirty only for reviewed incremental fixes")
+        errors.append(
+            "refusing --apply with dirty working tree; use --allow-dirty only for reviewed incremental fixes"
+        )
 
     raw_stamp = args.Stamp or args.suggestion_stamp or ""
     artifact_stamp = compact_artifact_stamp(raw_stamp) if raw_stamp else ""
-    discover_roots = split_values(args.discover_suggestion_root) or list(DEFAULT_DISCOVER_SUGGESTION_ROOTS)
-    discover_tokens = split_values(args.discover_suggestion_token) or list(DEFAULT_DISCOVER_SUGGESTION_TOKENS)
+    discover_roots = split_values(args.discover_suggestion_root) or list(
+        DEFAULT_DISCOVER_SUGGESTION_ROOTS
+    )
+    discover_tokens = split_values(args.discover_suggestion_token) or list(
+        DEFAULT_DISCOVER_SUGGESTION_TOKENS
+    )
     discovered_reports, discovery_scan = discover_suggestion_reports(
         repo_root,
         artifact_stamp,
@@ -145,7 +174,11 @@ def main() -> int:
         enabled=not bool(args.no_current_suggestions),
     )
     report_paths = ReportPathNormalizer(repo_root).unique(
-        unique_in_order(split_values(args.suggestion_report) + discovered_reports + current_suggestion_reports)
+        unique_in_order(
+            split_values(args.suggestion_report)
+            + discovered_reports
+            + current_suggestion_reports
+        )
     )
 
     if raw_stamp and not report_paths:
@@ -177,7 +210,9 @@ def main() -> int:
         failed_count=len(failed),
     )
     if not product["ready_for_patch_suggestion_review"] and not failed:
-        warnings.append("no deterministic operations or product-facing manual patch suggestions found")
+        warnings.append(
+            "no deterministic operations or product-facing manual patch suggestions found"
+        )
 
     push_result = {"requested": False, "pushed": False, "errors": [], "warnings": []}
     if args.push_review_branch:
@@ -224,9 +259,15 @@ def main() -> int:
         "manual_review_items": manual_review[:200],
         "manual_review_product": product,
         "patch_product_status": product["patch_product_status"],
-        "ready_for_patch_suggestion_review": product["ready_for_patch_suggestion_review"],
-        "essential_patch_suggestion_items": product["product_facing_manual_review_items"],
-        "supplemental_telemetry_debug_items": product["supplemental_manual_review_items"],
+        "ready_for_patch_suggestion_review": product[
+            "ready_for_patch_suggestion_review"
+        ],
+        "essential_patch_suggestion_items": product[
+            "product_facing_manual_review_items"
+        ],
+        "supplemental_telemetry_debug_items": product[
+            "supplemental_manual_review_items"
+        ],
         "results": results,
         "git_status_before": status_before,
         "git_status_after": git_status_short(repo_root),

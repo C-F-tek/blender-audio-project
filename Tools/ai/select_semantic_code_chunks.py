@@ -5,6 +5,7 @@ This tool is report-only. It reads the generated semantic chunk index,
 selects chunks using deterministic keyword scoring, optionally extracts bounded
 source excerpts, and writes JSON/Markdown context bundles.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -56,7 +57,9 @@ def chunk_haystack(chunk: dict[str, Any]) -> str:
     return " ".join(as_text(item) for item in fields).lower()
 
 
-def score_chunk(chunk: dict[str, Any], query_tokens: list[str], path_boosts: list[str]) -> tuple[int, list[str]]:
+def score_chunk(
+    chunk: dict[str, Any], query_tokens: list[str], path_boosts: list[str]
+) -> tuple[int, list[str]]:
     hay = chunk_haystack(chunk)
     path = str(chunk.get("path") or "").lower()
     symbol = str(chunk.get("symbol") or "").lower()
@@ -90,7 +93,9 @@ def score_chunk(chunk: dict[str, Any], query_tokens: list[str], path_boosts: lis
     return score, sorted(set(matched))
 
 
-def source_excerpt(repo_root: Path, chunk: dict[str, Any], max_chars: int) -> tuple[str, bool]:
+def source_excerpt(
+    repo_root: Path, chunk: dict[str, Any], max_chars: int
+) -> tuple[str, bool]:
     path = repo_root / str(chunk.get("path") or "")
     if not path.exists() or not path.is_file():
         return "", False
@@ -171,7 +176,13 @@ def build_selection(
         item["matched_terms"] = matched
         scored.append(item)
 
-    scored.sort(key=lambda item: (-int(item.get("score") or 0), str(item.get("path") or ""), int(item.get("line_start") or 0)))
+    scored.sort(
+        key=lambda item: (
+            -int(item.get("score") or 0),
+            str(item.get("path") or ""),
+            int(item.get("line_start") or 0),
+        )
+    )
 
     selected: list[dict[str, Any]] = []
     total_chars = 0
@@ -217,7 +228,11 @@ def build_selection(
         "kind": "semantic_code_chunk_selection",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "query": query,
-        "source_chunks": chunks_path.relative_to(repo_root).as_posix() if chunks_path.is_relative_to(repo_root) else str(chunks_path),
+        "source_chunks": (
+            chunks_path.relative_to(repo_root).as_posix()
+            if chunks_path.is_relative_to(repo_root)
+            else str(chunks_path)
+        ),
         "max_chunks": max_chunks,
         "max_total_chars": max_total_chars,
         "max_excerpt_chars": max_excerpt_chars,
@@ -272,18 +287,26 @@ def main() -> int:
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     markdown_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output_path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     markdown_path.write_text(render_markdown(payload), encoding="utf-8")
 
-    print(json.dumps({
-        "passed": payload["passed"],
-        "kind": payload["kind"],
-        "selected_count": payload["selected_count"],
-        "total_selected_chars": payload["total_selected_chars"],
-        "output": str(output_path),
-        "markdown_output": str(markdown_path),
-        "warnings": payload["warnings"],
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": payload["passed"],
+                "kind": payload["kind"],
+                "selected_count": payload["selected_count"],
+                "total_selected_chars": payload["total_selected_chars"],
+                "output": str(output_path),
+                "markdown_output": str(markdown_path),
+                "warnings": payload["warnings"],
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 

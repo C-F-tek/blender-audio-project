@@ -7,26 +7,26 @@ step can decide whether to create a real PR.
 
 It supports both raw megalithic review artifacts and signal-refined artifacts.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
-import sys
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
 try:
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 
 DEFAULT_REVIEW = "output/ai_pipeline/megalithic_repo_review.json"
 DEFAULT_PROPOSALS = "output/ai_pipeline/megalithic_repo_review_proposals.json"
@@ -36,7 +36,6 @@ DEFAULT_MARKDOWN = "output/ai_pipeline/megalithic_repo_review_pr_draft.md"
 
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
-
 
 
 def slugify(value: str) -> str:
@@ -76,7 +75,9 @@ def proposal_titles(proposals: dict[str, Any]) -> list[str]:
     titles = []
     for item in items:
         if isinstance(item, dict):
-            title = str(item.get("title") or item.get("id") or "review proposal").strip()
+            title = str(
+                item.get("title") or item.get("id") or "review proposal"
+            ).strip()
             if title:
                 titles.append(title)
     return titles
@@ -92,7 +93,9 @@ def top_findings(review: dict[str, Any], *, limit: int = 12) -> list[str]:
     return out
 
 
-def build_pr_body(review: dict[str, Any], proposals: dict[str, Any], *, branch_name: str) -> str:
+def build_pr_body(
+    review: dict[str, Any], proposals: dict[str, Any], *, branch_name: str
+) -> str:
     summary = review_summary(review)
     proposal_count = int(proposals.get("proposal_count") or 0)
     provider_execution = bool(review.get("provider_execution_performed"))
@@ -162,7 +165,13 @@ def build_pr_body(review: dict[str, Any], proposals: dict[str, Any], *, branch_n
     return "\n".join(lines) + "\n"
 
 
-def build_pr_draft(review: dict[str, Any], proposals: dict[str, Any], *, base_branch: str, title_prefix: str) -> dict[str, Any]:
+def build_pr_draft(
+    review: dict[str, Any],
+    proposals: dict[str, Any],
+    *,
+    base_branch: str,
+    title_prefix: str,
+) -> dict[str, Any]:
     proposal_count = int(proposals.get("proposal_count") or 0)
     first_title = proposal_titles(proposals)[:1]
     title_suffix = first_title[0] if first_title else "megalithic review follow-up"
@@ -177,7 +186,9 @@ def build_pr_draft(review: dict[str, Any], proposals: dict[str, Any], *, base_br
         "passed": True,
         "errors": [],
         "warnings": [],
-        "provider_execution_performed": bool(review.get("provider_execution_performed")),
+        "provider_execution_performed": bool(
+            review.get("provider_execution_performed")
+        ),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "apply_mode": "manual_review_only_pr_draft",
@@ -237,21 +248,28 @@ def main() -> int:
 
     review = load_json_object(Path(args.review))
     proposals = load_json_object(Path(args.proposals))
-    draft = build_pr_draft(review, proposals, base_branch=args.base_branch, title_prefix=args.title_prefix)
+    draft = build_pr_draft(
+        review, proposals, base_branch=args.base_branch, title_prefix=args.title_prefix
+    )
 
     output = Path(args.output)
     markdown_output = Path(args.markdown_output)
     write_json_report(draft, output)
     write_text_report(render_markdown(draft), markdown_output)
 
-    print(json.dumps({
-        "passed": draft["passed"],
-        "needs_real_pr": draft["needs_real_pr"],
-        "proposal_count": draft["proposal_count"],
-        "output": args.output,
-        "markdown": args.markdown_output,
-        "real_github_pr_created": False,
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "passed": draft["passed"],
+                "needs_real_pr": draft["needs_real_pr"],
+                "proposal_count": draft["proposal_count"],
+                "output": args.output,
+                "markdown": args.markdown_output,
+                "real_github_pr_created": False,
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

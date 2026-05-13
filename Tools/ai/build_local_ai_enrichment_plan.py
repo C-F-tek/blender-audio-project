@@ -7,6 +7,7 @@ scheduling decisions. For complex tasks the plan can require Ollama/GPU advisory
 first and delay NPU knowledge-broker work until after the GPU output is ready,
 so the NPU lane does not block the rest of the run.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -66,7 +67,11 @@ def normalize_path(value: Any) -> str:
 
 
 def objective_terms(text: str) -> set[str]:
-    return {term.strip(".,:;()[]{}'\"").lower() for term in text.replace("/", " ").replace("_", " ").split() if len(term.strip(".,:;()[]{}'\"")) >= 3}
+    return {
+        term.strip(".,:;()[]{}'\"").lower()
+        for term in text.replace("/", " ").replace("_", " ").split()
+        if len(term.strip(".,:;()[]{}'\"")) >= 3
+    }
 
 
 def estimate_complexity(objective: str, task_text: str, profile: str) -> dict[str, Any]:
@@ -120,7 +125,9 @@ def make_step(
     }
 
 
-def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list[dict[str, Any]]:
+def build_steps(
+    profile: str, complexity: dict[str, Any], basename: str
+) -> list[dict[str, Any]]:
     high_or_medium = complexity["level"] in {"medium", "high"}
     steps: list[dict[str, Any]] = [
         make_step(
@@ -138,7 +145,10 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
             "after_step:read_contracts",
             "cpu_indexing",
             depends_on=["read_contracts"],
-            outputs=["indexAI/code_chunks/semantic_code_chunks.json", "indexAI/code_chunks/semantic_code_chunks_manifest.json"],
+            outputs=[
+                "indexAI/code_chunks/semantic_code_chunks.json",
+                "indexAI/code_chunks/semantic_code_chunks_manifest.json",
+            ],
         ),
         make_step(
             "select_semantic_chunks",
@@ -147,7 +157,10 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
             "after_step:build_semantic_chunks",
             "cpu_selection",
             depends_on=["build_semantic_chunks"],
-            outputs=[f"output/ai_context_packs/{basename}_selected_chunks.json", f"output/ai_context_packs/{basename}_selected_chunks.md"],
+            outputs=[
+                f"output/ai_context_packs/{basename}_selected_chunks.json",
+                f"output/ai_context_packs/{basename}_selected_chunks.md",
+            ],
         ),
         make_step(
             "validate_selected_chunks",
@@ -165,7 +178,10 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
             "after_step:validate_selected_chunks",
             "cpu_context",
             depends_on=["validate_selected_chunks"],
-            outputs=[f"output/ai_context_packs/{basename}_context_pack.json", f"output/ai_context_packs/{basename}_context_pack.md"],
+            outputs=[
+                f"output/ai_context_packs/{basename}_context_pack.json",
+                f"output/ai_context_packs/{basename}_context_pack.md",
+            ],
         ),
         make_step(
             "build_agent_state",
@@ -174,7 +190,9 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
             "after_step:build_context_pack",
             "cpu_memory_packet",
             depends_on=["build_context_pack"],
-            outputs=[f"output/local_ai_runs/<run>/pipeline/agent_state/{basename}_agent_state.json"],
+            outputs=[
+                f"output/local_ai_runs/<run>/pipeline/agent_state/{basename}_agent_state.json"
+            ],
         ),
     ]
 
@@ -187,7 +205,9 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
                 "after_step:build_agent_state",
                 "ollama_gpu_primary_advisory",
                 depends_on=["build_agent_state"],
-                outputs=[f"output/local_ai_runs/<run>/pipeline/{basename}_multistep_proposals.json"],
+                outputs=[
+                    f"output/local_ai_runs/<run>/pipeline/{basename}_multistep_proposals.json"
+                ],
                 provider_execution_required=True,
             )
         )
@@ -199,7 +219,9 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
                 "after_step:ollama_gpu_advisory_first",
                 "npu_context_broker",
                 depends_on=["ollama_gpu_advisory_first", "validate_selected_chunks"],
-                outputs=[f"output/ai_pipeline/{basename}_npu_knowledge_broker_packet.json"],
+                outputs=[
+                    f"output/ai_pipeline/{basename}_npu_knowledge_broker_packet.json"
+                ],
             )
         )
     else:
@@ -211,7 +233,9 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
                 "after_step:validate_selected_chunks",
                 "npu_context_broker",
                 depends_on=["validate_selected_chunks"],
-                outputs=[f"output/ai_pipeline/{basename}_npu_knowledge_broker_packet.json"],
+                outputs=[
+                    f"output/ai_pipeline/{basename}_npu_knowledge_broker_packet.json"
+                ],
             )
         )
         steps.append(
@@ -222,7 +246,9 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
                 "explicit_only",
                 "ollama_gpu_primary_advisory",
                 depends_on=["build_agent_state", "npu_knowledge_broker_parallel"],
-                outputs=[f"output/local_ai_runs/<run>/pipeline/{basename}_multistep_proposals.json"],
+                outputs=[
+                    f"output/local_ai_runs/<run>/pipeline/{basename}_multistep_proposals.json"
+                ],
                 provider_execution_required=False,
             )
         )
@@ -236,16 +262,30 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
                 "after_step:build_agent_state",
                 "validation",
                 depends_on=["build_agent_state"],
-                outputs=[f"output/validation/{basename}_adapter_manifest_contract.json"],
+                outputs=[
+                    f"output/validation/{basename}_adapter_manifest_contract.json"
+                ],
             ),
             make_step(
                 "validate_npu_broker_packet",
                 "Validate NPU knowledge-broker packet contract",
                 "Tools/validation/check_npu_knowledge_broker_packet.py",
-                "after_step:npu_knowledge_broker_after_gpu" if high_or_medium else "after_step:npu_knowledge_broker_parallel",
+                (
+                    "after_step:npu_knowledge_broker_after_gpu"
+                    if high_or_medium
+                    else "after_step:npu_knowledge_broker_parallel"
+                ),
                 "validation",
-                depends_on=["npu_knowledge_broker_after_gpu" if high_or_medium else "npu_knowledge_broker_parallel"],
-                outputs=[f"output/validation/{basename}_npu_knowledge_broker_packet_contract.json"],
+                depends_on=[
+                    (
+                        "npu_knowledge_broker_after_gpu"
+                        if high_or_medium
+                        else "npu_knowledge_broker_parallel"
+                    )
+                ],
+                outputs=[
+                    f"output/validation/{basename}_npu_knowledge_broker_packet_contract.json"
+                ],
             ),
             make_step(
                 "generate_manual_review_proposals",
@@ -261,7 +301,9 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
     return steps
 
 
-def build_plan(repo_root: Path, objective: str, task_file: str, profile: str, basename: str) -> dict[str, Any]:
+def build_plan(
+    repo_root: Path, objective: str, task_file: str, profile: str, basename: str
+) -> dict[str, Any]:
     task_path = resolve_repo_path(repo_root, task_file) if task_file else None
     task_text = read_text_if_present(task_path) if task_path else ""
     complexity = estimate_complexity(objective, task_text, profile)
@@ -330,26 +372,40 @@ def main() -> int:
     parser.add_argument("--task-file", default="")
     parser.add_argument("--profile", choices=("docs", "core", "npu"), default="docs")
     parser.add_argument("--basename", default="local_ai_enrichment_plan")
-    parser.add_argument("--output", default="output/ai_pipeline/local_ai_enrichment_plan.json")
-    parser.add_argument("--markdown-output", default="output/ai_pipeline/local_ai_enrichment_plan.md")
+    parser.add_argument(
+        "--output", default="output/ai_pipeline/local_ai_enrichment_plan.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/ai_pipeline/local_ai_enrichment_plan.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    plan = build_plan(repo_root, args.objective, args.task_file, args.profile, args.basename)
+    plan = build_plan(
+        repo_root, args.objective, args.task_file, args.profile, args.basename
+    )
     output = resolve_repo_path(repo_root, args.output)
     markdown_output = resolve_repo_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     markdown_output.write_text(render_markdown(plan), encoding="utf-8")
-    print(json.dumps({
-        "passed": True,
-        "kind": PLAN_KIND,
-        "complexity": plan["complexity"],
-        "step_count": plan["step_count"],
-        "output": repo_relative(output, repo_root),
-        "markdown_output": repo_relative(markdown_output, repo_root),
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": True,
+                "kind": PLAN_KIND,
+                "complexity": plan["complexity"],
+                "step_count": plan["step_count"],
+                "output": repo_relative(output, repo_root),
+                "markdown_output": repo_relative(markdown_output, repo_root),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 

@@ -6,6 +6,7 @@ GPU/OpenVINO visibility and Ollama availability, optionally in parallel. It does
 not execute Blender, does not generate scene code, does not call long model
 prompts by default, and does not mutate source files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -13,9 +14,10 @@ import concurrent.futures
 import json
 import sys
 import time
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 
 def ensure_repo_imports(repo_root: Path) -> None:
@@ -29,7 +31,9 @@ def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
-def unavailable_lane(name: str, kind: str, message: str, *, elapsed_sec: float = 0.0) -> dict[str, Any]:
+def unavailable_lane(
+    name: str, kind: str, message: str, *, elapsed_sec: float = 0.0
+) -> dict[str, Any]:
     return {
         "lane": name,
         "kind": kind,
@@ -46,7 +50,11 @@ def check_npu_lane(repo_root: Path, timeout: float) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     started = time.perf_counter()
     try:
-        from Tools.npu.npu_runtime import DEFAULT_MODEL_DIR, DEFAULT_NPU_PYTHON, npu_preflight  # noqa: PLC0415
+        from Tools.npu.npu_runtime import (  # noqa: PLC0415
+            DEFAULT_MODEL_DIR,
+            DEFAULT_NPU_PYTHON,
+            npu_preflight,
+        )
     except Exception as exc:  # noqa: BLE001 - report-only check.
         return unavailable_lane(
             "npu",
@@ -87,7 +95,11 @@ def check_gpu_lane(repo_root: Path, timeout: float) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     started = time.perf_counter()
     try:
-        from Tools.npu.npu_runtime import DEFAULT_NPU_PYTHON, _parse_last_json_line, _run_python  # noqa: PLC0415
+        from Tools.npu.npu_runtime import (  # noqa: PLC0415
+            DEFAULT_NPU_PYTHON,
+            _parse_last_json_line,
+            _run_python,
+        )
     except Exception as exc:  # noqa: BLE001 - report-only check.
         return unavailable_lane(
             "gpu",
@@ -120,12 +132,20 @@ def check_gpu_lane(repo_root: Path, timeout: float) -> dict[str, Any]:
             "openvino_available_devices": devices,
             "gpu_devices": gpu_devices,
             "errors": [] if ok else [text],
-            "warnings": [] if gpu_devices else ["No OpenVINO GPU device visible from the configured NPU Python environment."],
+            "warnings": (
+                []
+                if gpu_devices
+                else [
+                    "No OpenVINO GPU device visible from the configured NPU Python environment."
+                ]
+            ),
         },
     }
 
 
-def check_ollama_lane(repo_root: Path, model: str | None, *, probe_generate: bool) -> dict[str, Any]:
+def check_ollama_lane(
+    repo_root: Path, model: str | None, *, probe_generate: bool
+) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     started = time.perf_counter()
     try:
@@ -153,16 +173,20 @@ def check_ollama_lane(repo_root: Path, model: str | None, *, probe_generate: boo
     generated_probe = ""
 
     try:
-        models = list_models(DEFAULT_BASE_URL) if server_ready else list_models_from_disk()
+        models = (
+            list_models(DEFAULT_BASE_URL) if server_ready else list_models_from_disk()
+        )
         selected_model = choose_model(model, models)
     except Exception as exc:  # noqa: BLE001 - report-only check.
         errors.append(f"{type(exc).__name__}: {exc}")
 
     if probe_generate and selected_model:
         try:
-            with OllamaSession(model=selected_model, shutdown_server=False, unload_model=True) as session:
+            with OllamaSession(
+                model=selected_model, shutdown_server=False, unload_model=True
+            ) as session:
                 generated_probe = session.generate(
-                    "Return exactly this JSON object and no prose: {\"ok\": true}",
+                    'Return exactly this JSON object and no prose: {"ok": true}',
                     max_new_tokens=32,
                     temperature=0.0,
                 )
@@ -170,7 +194,9 @@ def check_ollama_lane(repo_root: Path, model: str | None, *, probe_generate: boo
             errors.append(f"probe_generate {type(exc).__name__}: {exc}")
 
     if not server_ready:
-        warnings.append("Ollama server is not currently reachable; disk manifests may still list models.")
+        warnings.append(
+            "Ollama server is not currently reachable; disk manifests may still list models."
+        )
     if not models:
         warnings.append("No Ollama models discovered.")
 
@@ -202,7 +228,14 @@ def run_checks(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     if not args.skip_gpu:
         tasks.append(("gpu", lambda: check_gpu_lane(repo_root, args.timeout)))
     if not args.skip_ollama:
-        tasks.append(("ollama", lambda: check_ollama_lane(repo_root, args.model, probe_generate=args.probe_ollama_generate)))
+        tasks.append(
+            (
+                "ollama",
+                lambda: check_ollama_lane(
+                    repo_root, args.model, probe_generate=args.probe_ollama_generate
+                ),
+            )
+        )
 
     started = time.perf_counter()
     lane_reports: list[dict[str, Any]] = []
@@ -223,7 +256,10 @@ def run_checks(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
                             "available": False,
                             "provider_execution_performed": False,
                             "elapsed_sec": 0,
-                            "report": {"errors": [f"{type(exc).__name__}: {exc}"], "warnings": []},
+                            "report": {
+                                "errors": [f"{type(exc).__name__}: {exc}"],
+                                "warnings": [],
+                            },
                         }
                     )
     else:
@@ -240,7 +276,10 @@ def run_checks(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
                         "available": False,
                         "provider_execution_performed": False,
                         "elapsed_sec": 0,
-                        "report": {"errors": [f"{type(exc).__name__}: {exc}"], "warnings": []},
+                        "report": {
+                            "errors": [f"{type(exc).__name__}: {exc}"],
+                            "warnings": [],
+                        },
                     }
                 )
 
@@ -250,7 +289,9 @@ def run_checks(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     warnings: list[str] = []
     for lane in lane_reports:
         report = lane.get("report") or {}
-        warnings.extend(f"{lane['lane']}: {item}" for item in report.get("warnings", [])[:5])
+        warnings.extend(
+            f"{lane['lane']}: {item}" for item in report.get("warnings", [])[:5]
+        )
         if lane["lane"] in required and not lane.get("ready"):
             errors.append(f"required lane is not ready: {lane['lane']}")
 
@@ -263,10 +304,14 @@ def run_checks(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         "errors": errors,
         "warnings": warnings,
         "parallel": bool(args.parallel),
-        "provider_execution_performed": any(item.get("provider_execution_performed") for item in lane_reports),
+        "provider_execution_performed": any(
+            item.get("provider_execution_performed") for item in lane_reports
+        ),
         "lane_count": len(lane_reports),
         "ready_lanes": [item["lane"] for item in lane_reports if item.get("ready")],
-        "available_lanes": [item["lane"] for item in lane_reports if item.get("available")],
+        "available_lanes": [
+            item["lane"] for item in lane_reports if item.get("available")
+        ],
         "elapsed_sec": round(time.perf_counter() - started, 4),
         "lanes": lane_reports,
     }
@@ -276,7 +321,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Local AI Resource Lanes", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Parallel: `{report['parallel']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{report['provider_execution_performed']}`"
+    )
     lines.append(f"- Ready lanes: `{', '.join(report['ready_lanes'])}`")
     lines.append(f"- Available lanes: `{', '.join(report['available_lanes'])}`")
     lines.append("")
@@ -302,13 +349,25 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/local_ai_resource_lanes.json")
-    parser.add_argument("--markdown-output", default="output/validation/local_ai_resource_lanes.md")
+    parser.add_argument(
+        "--output", default="output/validation/local_ai_resource_lanes.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/local_ai_resource_lanes.md"
+    )
     parser.add_argument("--model", help="Preferred Ollama model for selection/probe.")
     parser.add_argument("--timeout", type=float, default=30.0)
-    parser.add_argument("--parallel", action="store_true", help="Run lane checks concurrently.")
-    parser.add_argument("--probe-ollama-generate", action="store_true", help="Run a tiny Ollama generation probe.")
-    parser.add_argument("--require-lane", action="append", choices=("npu", "gpu", "ollama"), default=[])
+    parser.add_argument(
+        "--parallel", action="store_true", help="Run lane checks concurrently."
+    )
+    parser.add_argument(
+        "--probe-ollama-generate",
+        action="store_true",
+        help="Run a tiny Ollama generation probe.",
+    )
+    parser.add_argument(
+        "--require-lane", action="append", choices=("npu", "gpu", "ollama"), default=[]
+    )
     parser.add_argument("--skip-npu", action="store_true")
     parser.add_argument("--skip-gpu", action="store_true")
     parser.add_argument("--skip-ollama", action="store_true")
@@ -325,9 +384,21 @@ def main() -> int:
         md_output = repo_root / md_output
     output.parent.mkdir(parents=True, exist_ok=True)
     md_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     md_output.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({"passed": report["passed"], "output": str(output), "markdown": str(md_output), "ready_lanes": report["ready_lanes"]}, indent=2))
+    print(
+        json.dumps(
+            {
+                "passed": report["passed"],
+                "output": str(output),
+                "markdown": str(md_output),
+                "ready_lanes": report["ready_lanes"],
+            },
+            indent=2,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

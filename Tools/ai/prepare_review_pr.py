@@ -1,14 +1,25 @@
 #!/usr/bin/env python3
 """Prepare a GitHub review PR from an explicit/full-run staging allowlist."""
+
 from __future__ import annotations
+
 import argparse
 import json
 import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from Tools.ai.patch_suggestion_bundle.git_branch import create_review_branch, validate_branch_name
-from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+
+from tools.ai.patch_suggestion_bundle.git_branch import (
+    create_review_branch,
+    validate_branch_name,
+)
+from tools.validation.report_utils import (
+    resolve_output_path,
+    write_json_report,
+    write_text_report,
+)
+
 FORBIDDEN_PREFIXES = (
     "output/",
     "indexAI/code_chunks/",
@@ -17,15 +28,26 @@ FORBIDDEN_PREFIXES = (
     "renders/",
 )
 FORBIDDEN_SUFFIXES = (".db", ".sqlite", ".sqlite3")
-AUTO_TARGET_KEYS = ("path", "target", "target_file", "file", "file_path", "written_path")
+AUTO_TARGET_KEYS = (
+    "path",
+    "target",
+    "target_file",
+    "file",
+    "file_path",
+    "written_path",
+)
 AUTO_TARGET_LIST_KEYS = ("target_files", "paths", "files", "written_paths")
 AUTO_PRODUCT_SECTIONS = (
     "manual_review_product",
     "essential_patch_suggestion_items",
     "product_facing_manual_review_items",
 )
+
+
 def run_command(repo_root: Path, command: list[str]) -> dict[str, Any]:
-    result = subprocess.run(command, cwd=repo_root, check=False, capture_output=True, text=True)
+    result = subprocess.run(
+        command, cwd=repo_root, check=False, capture_output=True, text=True
+    )
     return {
         "command": command,
         "returncode": result.returncode,
@@ -33,8 +55,12 @@ def run_command(repo_root: Path, command: list[str]) -> dict[str, Any]:
         "stderr": result.stderr.strip()[:4000],
         "ok": result.returncode == 0,
     }
+
+
 def git(repo_root: Path, args: list[str]) -> dict[str, Any]:
     return run_command(repo_root, ["git", *args])
+
+
 def normalize_repo_path(repo_root: Path, raw: str) -> tuple[str, str | None]:
     if not raw.strip():
         return "", "empty include path"
@@ -57,7 +83,11 @@ def normalize_repo_path(repo_root: Path, raw: str) -> tuple[str, str | None]:
     if not resolved.exists():
         return "", f"include path does not exist: {normalized}"
     return normalized, None
-def normalize_include_paths(repo_root: Path, raw_paths: list[str]) -> tuple[list[str], list[str]]:
+
+
+def normalize_include_paths(
+    repo_root: Path, raw_paths: list[str]
+) -> tuple[list[str], list[str]]:
     paths: list[str] = []
     errors: list[str] = []
     for raw in raw_paths:
@@ -67,14 +97,23 @@ def normalize_include_paths(repo_root: Path, raw_paths: list[str]) -> tuple[list
         elif path not in paths:
             paths.append(path)
     return paths, errors
-def load_report(repo_root: Path, raw: str) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+
+
+def load_report(
+    repo_root: Path, raw: str
+) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     candidate = Path(raw)
     full = candidate if candidate.is_absolute() else repo_root / candidate
     try:
         path = full.resolve()
         rel = path.relative_to(repo_root.resolve()).as_posix()
     except ValueError:
-        return None, {"path": raw, "exists": False, "json_ok": False, "error": "outside repository"}
+        return None, {
+            "path": raw,
+            "exists": False,
+            "json_ok": False,
+            "error": "outside repository",
+        }
     info: dict[str, Any] = {"path": rel, "exists": path.exists(), "json_ok": False}
     if not path.is_file():
         info["error"] = "report does not exist or is not a file"
@@ -98,6 +137,8 @@ def load_report(repo_root: Path, raw: str) -> tuple[dict[str, Any] | None, dict[
         }
     )
     return data, info
+
+
 def path_values(value: Any) -> list[str]:
     if isinstance(value, str):
         return [value]
@@ -112,7 +153,11 @@ def path_values(value: Any) -> list[str]:
                 found.extend(path_values(nested))
         return found
     return []
-def discover_auto_include_paths(repo_root: Path, reports: list[str]) -> tuple[list[str], list[dict[str, Any]], list[str], list[str]]:
+
+
+def discover_auto_include_paths(
+    repo_root: Path, reports: list[str]
+) -> tuple[list[str], list[dict[str, Any]], list[str], list[str]]:
     paths: list[str] = []
     infos: list[dict[str, Any]] = []
     errors: list[str] = []
@@ -124,9 +169,15 @@ def discover_auto_include_paths(repo_root: Path, reports: list[str]) -> tuple[li
             errors.append(f"{raw}: {info.get('error')}")
             continue
         if data.get("kind") != "patch_suggestion_bundle_apply":
-            warnings.append(f"{info.get('path')}: unexpected report kind {data.get('kind')!r}")
+            warnings.append(
+                f"{info.get('path')}: unexpected report kind {data.get('kind')!r}"
+            )
         for item in data.get("results") or []:
-            if isinstance(item, dict) and item.get("ok") is not False and (item.get("changed") or item.get("applied")):
+            if (
+                isinstance(item, dict)
+                and item.get("ok") is not False
+                and (item.get("changed") or item.get("applied"))
+            ):
                 paths.extend(path_values(item.get("path")))
         for key in AUTO_PRODUCT_SECTIONS:
             paths.extend(path_values(data.get(key)))
@@ -136,6 +187,8 @@ def discover_auto_include_paths(repo_root: Path, reports: list[str]) -> tuple[li
         if not error and path not in include_paths:
             include_paths.append(path)
     return include_paths, infos, errors, warnings
+
+
 def remote_repo_name(repo_root: Path, remote: str) -> str:
     result = git(repo_root, ["remote", "get-url", remote])
     if not result["ok"]:
@@ -149,21 +202,39 @@ def remote_repo_name(repo_root: Path, remote: str) -> str:
     if marker in url:
         return url.split(marker, 1)[1]
     return ""
+
+
 def staged_files(repo_root: Path) -> list[str]:
     result = git(repo_root, ["diff", "--cached", "--name-only"])
     if not result["ok"]:
         return []
-    return [line.strip().replace("\\", "/") for line in str(result["stdout"]).splitlines() if line.strip()]
+    return [
+        line.strip().replace("\\", "/")
+        for line in str(result["stdout"]).splitlines()
+        if line.strip()
+    ]
+
+
 def stage_paths(repo_root: Path, paths: list[str]) -> dict[str, Any]:
     if not paths:
         return {"requested": False, "ok": True, "commands": [], "staged_files": []}
     result = git(repo_root, ["add", "--", *paths])
-    return {"requested": True, "ok": bool(result["ok"]), "commands": [result], "staged_files": staged_files(repo_root)}
+    return {
+        "requested": True,
+        "ok": bool(result["ok"]),
+        "commands": [result],
+        "staged_files": staged_files(repo_root),
+    }
+
+
 def reject_forbidden_staged(paths: list[str], include_paths: list[str]) -> list[str]:
     errors: list[str] = []
     for path in paths:
         normalized = path.replace("\\", "/")
-        allowed = any(normalized == item or normalized.startswith(item.rstrip("/") + "/") for item in include_paths)
+        allowed = any(
+            normalized == item or normalized.startswith(item.rstrip("/") + "/")
+            for item in include_paths
+        )
         if not allowed:
             errors.append(f"staged path outside allowlist: {normalized}")
         if any(normalized.startswith(prefix) for prefix in FORBIDDEN_PREFIXES):
@@ -171,12 +242,21 @@ def reject_forbidden_staged(paths: list[str], include_paths: list[str]) -> list[
         if normalized.lower().endswith(FORBIDDEN_SUFFIXES):
             errors.append(f"forbidden staged database artifact: {normalized}")
     return errors
+
+
 def create_commit(repo_root: Path, message: str) -> dict[str, Any]:
     if not staged_files(repo_root):
         return {"requested": False, "committed": False, "head": "", "commands": []}
     commit = git(repo_root, ["commit", "-m", message])
     head = git(repo_root, ["rev-parse", "HEAD"]) if commit["ok"] else {"stdout": ""}
-    return {"requested": True, "committed": bool(commit["ok"]), "head": str(head.get("stdout") or "").strip(), "commands": [commit, head]}
+    return {
+        "requested": True,
+        "committed": bool(commit["ok"]),
+        "head": str(head.get("stdout") or "").strip(),
+        "commands": [commit, head],
+    }
+
+
 def default_pr_body(args: argparse.Namespace, report_path: str) -> str:
     return (
         "## Full Run Review PR\n\n"
@@ -185,9 +265,12 @@ def default_pr_body(args: argparse.Namespace, report_path: str) -> str:
         f"- Product: patch suggestion final phase + review evidence\n- Evidence report: `{report_path}`\n\n"
         "Guardrails: no merge to master, no force-push, no output/** commit, no DB/render commit.\n"
     )
+
+
 def write_markdown(report: dict[str, Any], output: Path) -> str:
     lines = [
-        "# Review PR Preparation", "",
+        "# Review PR Preparation",
+        "",
         f"- Passed: {report.get('passed')}",
         f"- Branch: `{report.get('branch')}`",
         f"- Base: `{report.get('base_branch')}`",
@@ -197,14 +280,20 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
         f"- PR draft requested: {report.get('github_pr_draft_requested')}",
         f"- PR URL: {report.get('github_pr_url') or ''}",
         f"- Product commit: `{report.get('product_commit') or ''}`",
-        f"- Auto include from apply report: {report.get('auto_include_from_apply_report')}", "",
-        "## Staged Product Paths", "",
+        f"- Auto include from apply report: {report.get('auto_include_from_apply_report')}",
+        "",
+        "## Staged Product Paths",
+        "",
     ]
     lines.extend(f"- `{path}`" for path in (report.get("include_paths") or []))
     for title, key in (("Errors", "errors"), ("Warnings", "warnings")):
         if report.get(key):
-            lines.extend(["", f"## {title}", "", *[f"- {item}" for item in report[key]]])
+            lines.extend(
+                ["", f"## {title}", "", *[f"- {item}" for item in report[key]]]
+            )
     return write_text_report("\n".join(lines) + "\n", output)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
@@ -224,26 +313,47 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--markdown-output", default="")
     parser.add_argument("--evidence-output", default="")
     parser.add_argument("--evidence-markdown-output", default="")
-    parser.add_argument("--allowed-branch-prefix", action="append", default=["CARMINEai/", "codex/"])
+    parser.add_argument(
+        "--allowed-branch-prefix", action="append", default=["CARMINEai/", "codex/"]
+    )
     parser.add_argument("--push", action="store_true")
     parser.add_argument("--create-pr", action="store_true")
     parser.add_argument("--draft-pr", action="store_true")
     parser.add_argument("--allow-dirty-branch", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
+
+
 def validate_pr_flags(args: argparse.Namespace) -> list[str]:
     errors: list[str] = []
     if args.create_pr and not args.push:
-        errors.append("--create-pr requires --push so the requested branch exists on the remote")
+        errors.append(
+            "--create-pr requires --push so the requested branch exists on the remote"
+        )
     if args.draft_pr and not args.create_pr:
         errors.append("--draft-pr requires --create-pr")
     return errors
-def create_github_pr(repo_root: Path, args: argparse.Namespace, body: str, body_file: Path) -> dict[str, Any]:
+
+
+def create_github_pr(
+    repo_root: Path, args: argparse.Namespace, body: str, body_file: Path
+) -> dict[str, Any]:
     body_file.parent.mkdir(parents=True, exist_ok=True)
     body_file.write_text(body, encoding="utf-8")
     command = [
-        "gh", "pr", "create", "--repo", remote_repo_name(repo_root, args.remote), "--base", args.base,
-        "--head", args.branch, "--title", args.title, "--body-file", str(body_file),
+        "gh",
+        "pr",
+        "create",
+        "--repo",
+        remote_repo_name(repo_root, args.remote),
+        "--base",
+        args.base,
+        "--head",
+        args.branch,
+        "--title",
+        args.title,
+        "--body-file",
+        str(body_file),
     ]
     if args.draft_pr:
         command.append("--draft")
@@ -251,13 +361,27 @@ def create_github_pr(repo_root: Path, args: argparse.Namespace, body: str, body_
     if result["ok"]:
         result["url"] = str(result["stdout"]).splitlines()[-1].strip()
     return result
+
+
 def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
     output = resolve_output_path(repo_root, args.output)
-    md_output = resolve_output_path(repo_root, args.markdown_output) if args.markdown_output else None
-    evidence_output = resolve_output_path(repo_root, args.evidence_output) if args.evidence_output else None
-    evidence_md = resolve_output_path(repo_root, args.evidence_markdown_output) if args.evidence_markdown_output else None
+    md_output = (
+        resolve_output_path(repo_root, args.markdown_output)
+        if args.markdown_output
+        else None
+    )
+    evidence_output = (
+        resolve_output_path(repo_root, args.evidence_output)
+        if args.evidence_output
+        else None
+    )
+    evidence_md = (
+        resolve_output_path(repo_root, args.evidence_markdown_output)
+        if args.evidence_markdown_output
+        else None
+    )
     errors: list[str] = validate_pr_flags(args)
     warnings: list[str] = []
     commands: list[dict[str, Any]] = []
@@ -270,14 +394,20 @@ def main() -> int:
     apply_report_infos: list[dict[str, Any]] = []
     if args.auto_include_from_apply_report:
         if not args.apply_report:
-            errors.append("--auto-include-from-apply-report requires at least one --apply-report")
+            errors.append(
+                "--auto-include-from-apply-report requires at least one --apply-report"
+            )
         else:
-            auto_include_paths, apply_report_infos, auto_errors, auto_warnings = discover_auto_include_paths(repo_root, args.apply_report)
+            auto_include_paths, apply_report_infos, auto_errors, auto_warnings = (
+                discover_auto_include_paths(repo_root, args.apply_report)
+            )
             errors.extend(auto_errors)
             warnings.extend(auto_warnings)
             source_write_reports = [
-                info for info in apply_report_infos
-                if info.get("source_writes_performed") is True or info.get("patch_application_performed") is True
+                info
+                for info in apply_report_infos
+                if info.get("source_writes_performed") is True
+                or info.get("patch_application_performed") is True
             ]
             if not source_write_reports and not args.include_path:
                 errors.append(
@@ -286,21 +416,45 @@ def main() -> int:
                     "run deterministic suggestions with apply enabled before prepare_review_pr.py"
                 )
             if not auto_include_paths and not args.include_path:
-                errors.append("no safe product include paths discovered from apply reports")
+                errors.append(
+                    "no safe product include paths discovered from apply reports"
+                )
             elif not auto_include_paths:
-                warnings.append("no product include paths discovered from apply reports; using explicit include paths only")
-    include_paths, include_errors = normalize_include_paths(repo_root, args.include_path + auto_include_paths)
+                warnings.append(
+                    "no product include paths discovered from apply reports; using explicit include paths only"
+                )
+    include_paths, include_errors = normalize_include_paths(
+        repo_root, args.include_path + auto_include_paths
+    )
     errors.extend(include_errors)
     if args.dry_run:
-        branch_prepare = {"requested": bool(args.branch), "branch": args.branch, "created": False, "switched": False, "dry_run": True, "errors": [], "warnings": []}
+        branch_prepare = {
+            "requested": bool(args.branch),
+            "branch": args.branch,
+            "created": False,
+            "switched": False,
+            "dry_run": True,
+            "errors": [],
+            "warnings": [],
+        }
     else:
-        branch_prepare = create_review_branch(repo_root, args.branch, allowed_prefixes=list(args.allowed_branch_prefix), allow_dirty=bool(args.allow_dirty_branch))
+        branch_prepare = create_review_branch(
+            repo_root,
+            args.branch,
+            allowed_prefixes=list(args.allowed_branch_prefix),
+            allow_dirty=bool(args.allow_dirty_branch),
+        )
     errors.extend(branch_prepare.get("errors") or [])
     warnings.extend(branch_prepare.get("warnings") or [])
     stage_result: dict[str, Any] = {"requested": False, "ok": False, "staged_files": []}
     product_commit: dict[str, Any] = {"committed": False, "head": ""}
     push_result: dict[str, Any] = {"requested": False, "ok": False}
-    pr_result: dict[str, Any] = {"requested": bool(args.create_pr), "ok": False, "url": "", "draft_requested": bool(args.draft_pr)}
+    pr_result: dict[str, Any] = {
+        "requested": bool(args.create_pr),
+        "ok": False,
+        "url": "",
+        "draft_requested": bool(args.draft_pr),
+    }
     evidence_commit: dict[str, Any] = {"committed": False, "head": ""}
     if not errors and not args.dry_run:
         stage_result = stage_paths(repo_root, include_paths)
@@ -327,23 +481,47 @@ def main() -> int:
                 body = Path(args.body_file).read_text(encoding="utf-8")
             if not body:
                 body = default_pr_body(args, str(evidence_output or output))
-            pr_result = create_github_pr(repo_root, args, body, output.with_suffix(".body.md"))
+            pr_result = create_github_pr(
+                repo_root, args, body, output.with_suffix(".body.md")
+            )
             commands.append(pr_result)
             if not pr_result["ok"]:
                 errors.append("gh pr create failed")
     report = {
-        "schema_version": 1, "kind": "review_pr_prepare", "generated_at": datetime.now().isoformat(timespec="seconds"),
-        "repo_root": repo_root.as_posix(), "Stamp": args.Stamp, "task_file": args.task_file.replace("\\", "/"),
-        "branch": args.branch, "base_branch": args.base, "include_paths": include_paths, "manual_include_paths": args.include_path,
-        "auto_include_from_apply_report": bool(args.auto_include_from_apply_report), "auto_include_paths": auto_include_paths,
-        "apply_reports": apply_report_infos, "provider_execution_performed": False, "blender_execution_performed": False,
-        "ffmpeg_execution_performed": False, "patch_application_performed": False, "source_writes_performed": False,
-        "git_branch_created": bool(branch_prepare.get("created")), "git_commit_performed": bool(product_commit.get("committed")),
-        "git_push_performed": bool(push_result.get("ok")), "github_pr_created": bool(pr_result.get("ok")),
-        "github_pr_draft_requested": bool(args.draft_pr), "github_pr_url": pr_result.get("url") or "",
-        "product_commit": product_commit.get("head") or "", "evidence_commit": "", "branch_prepare": branch_prepare,
-        "stage_result": stage_result, "push_result": push_result, "pr_result": pr_result, "commands": commands,
-        "passed": not errors, "errors": errors, "warnings": warnings,
+        "schema_version": 1,
+        "kind": "review_pr_prepare",
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "repo_root": repo_root.as_posix(),
+        "Stamp": args.Stamp,
+        "task_file": args.task_file.replace("\\", "/"),
+        "branch": args.branch,
+        "base_branch": args.base,
+        "include_paths": include_paths,
+        "manual_include_paths": args.include_path,
+        "auto_include_from_apply_report": bool(args.auto_include_from_apply_report),
+        "auto_include_paths": auto_include_paths,
+        "apply_reports": apply_report_infos,
+        "provider_execution_performed": False,
+        "blender_execution_performed": False,
+        "ffmpeg_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+        "git_branch_created": bool(branch_prepare.get("created")),
+        "git_commit_performed": bool(product_commit.get("committed")),
+        "git_push_performed": bool(push_result.get("ok")),
+        "github_pr_created": bool(pr_result.get("ok")),
+        "github_pr_draft_requested": bool(args.draft_pr),
+        "github_pr_url": pr_result.get("url") or "",
+        "product_commit": product_commit.get("head") or "",
+        "evidence_commit": "",
+        "branch_prepare": branch_prepare,
+        "stage_result": stage_result,
+        "push_result": push_result,
+        "pr_result": pr_result,
+        "commands": commands,
+        "passed": not errors,
+        "errors": errors,
+        "warnings": warnings,
     }
     if evidence_output and not args.dry_run and not errors:
         write_json_report(report, evidence_output)
@@ -356,7 +534,9 @@ def main() -> int:
         report["evidence_stage_result"] = evidence_stage
         if not evidence_stage.get("ok"):
             report.setdefault("errors", []).append("review PR evidence stage failed")
-        evidence_commit = create_commit(repo_root, f"docs(ai): add review PR evidence {args.Stamp}".strip())
+        evidence_commit = create_commit(
+            repo_root, f"docs(ai): add review PR evidence {args.Stamp}".strip()
+        )
         report["evidence_commit"] = evidence_commit.get("head") or ""
         report["git_evidence_commit_performed"] = bool(evidence_commit.get("committed"))
         if not evidence_commit.get("committed"):
@@ -373,5 +553,7 @@ def main() -> int:
         write_markdown(report, md_output)
     print(write_json_report(report), end="")
     return 0 if report["passed"] else 2
+
+
 if __name__ == "__main__":
     raise SystemExit(main())

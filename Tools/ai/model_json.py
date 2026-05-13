@@ -3,6 +3,7 @@
 This module is intentionally scoped to AI/model output. It is not a replacement
 for strict project-file JSON helpers such as ``Scripting/shared/json_io.py``.
 """
+
 from __future__ import annotations
 
 import json
@@ -119,7 +120,9 @@ def parse_model_json(text: str, *, allow_repair: bool = True) -> Any:
         try:
             return json.loads(repaired)
         except json.JSONDecodeError as second_error:
-            raise ModelJsonParseError(f"Unable to parse model JSON: {second_error}") from second_error
+            raise ModelJsonParseError(
+                f"Unable to parse model JSON: {second_error}"
+            ) from second_error
 
 
 def parse_model_json_object(text: str, *, allow_repair: bool = True) -> dict[str, Any]:

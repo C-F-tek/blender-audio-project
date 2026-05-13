@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Publish deterministic validation reports into the provider runtime heap."""
+
 from __future__ import annotations
 
 import argparse
@@ -11,17 +12,29 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap
+    from tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap  # type: ignore
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap  # type: ignore
+    from tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
-DEFAULT_OUTPUT = "output/validation/provider_runtime_heap_validation_bridge_{stamp}.json"
-DEFAULT_MARKDOWN = "output/validation/provider_runtime_heap_validation_bridge_{stamp}.md"
+DEFAULT_OUTPUT = (
+    "output/validation/provider_runtime_heap_validation_bridge_{stamp}.json"
+)
+DEFAULT_MARKDOWN = (
+    "output/validation/provider_runtime_heap_validation_bridge_{stamp}.md"
+)
 
 
 def now_iso() -> str:
@@ -30,7 +43,11 @@ def now_iso() -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -38,12 +55,16 @@ def repo_rel(repo_root: Path, path: Path) -> str:
 def read_report(path: Path) -> tuple[dict[str, Any], str]:
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except Exception as exc:  # noqa: BLE001 - validation bridge must report unreadable inputs.
+    except (
+        Exception
+    ) as exc:  # noqa: BLE001 - validation bridge must report unreadable inputs.
         return {}, f"{type(exc).__name__}: {exc}"
     return (data if isinstance(data, dict) else {}), ""
 
 
-def expand_report_files(repo_root: Path, values: list[str], globs: list[str], stamp: str) -> list[Path]:
+def expand_report_files(
+    repo_root: Path, values: list[str], globs: list[str], stamp: str
+) -> list[Path]:
     paths: list[Path] = []
     for value in values:
         path = resolve_output_path(repo_root, value)
@@ -59,25 +80,42 @@ def expand_report_files(repo_root: Path, values: list[str], globs: list[str], st
     return paths
 
 
-def report_payload(repo_root: Path, path: Path, data: dict[str, Any], read_error: str) -> dict[str, Any]:
-    guardrails = data.get("guardrails") if isinstance(data.get("guardrails"), dict) else {}
+def report_payload(
+    repo_root: Path, path: Path, data: dict[str, Any], read_error: str
+) -> dict[str, Any]:
+    guardrails = (
+        data.get("guardrails") if isinstance(data.get("guardrails"), dict) else {}
+    )
     return {
         "source_report": repo_rel(repo_root, path),
         "kind": data.get("kind"),
         "passed": data.get("passed"),
         "errors": data.get("errors", [read_error] if read_error else []),
         "warnings": data.get("warnings", []),
-        "provider_execution_performed": bool(data.get("provider_execution_performed") or guardrails.get("provider_execution_performed")),
-        "patch_application_performed": bool(data.get("patch_application_performed") or guardrails.get("patch_application_performed")),
-        "source_writes_performed": bool(data.get("source_writes_performed") or guardrails.get("source_writes_performed")),
+        "provider_execution_performed": bool(
+            data.get("provider_execution_performed")
+            or guardrails.get("provider_execution_performed")
+        ),
+        "patch_application_performed": bool(
+            data.get("patch_application_performed")
+            or guardrails.get("patch_application_performed")
+        ),
+        "source_writes_performed": bool(
+            data.get("source_writes_performed")
+            or guardrails.get("source_writes_performed")
+        ),
         "validator_authority": "deterministic_cpu_validation_lane",
     }
 
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
-    heap = ProviderRuntimeHeap.from_args(repo_root, args.stamp, args.events, args.snapshot, args.heap_markdown)
-    report_paths = expand_report_files(repo_root, args.report_file, args.report_glob, args.stamp)
+    heap = ProviderRuntimeHeap.from_args(
+        repo_root, args.stamp, args.events, args.snapshot, args.heap_markdown
+    )
+    report_paths = expand_report_files(
+        repo_root, args.report_file, args.report_glob, args.stamp
+    )
 
     events: list[dict[str, Any]] = []
     errors: list[str] = []
@@ -117,7 +155,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "failed_report_count": failed_reports,
         "heap_snapshot": {
             "event_count": snapshot.get("event_count"),
-            "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
+            "pending_broker_request_count": snapshot.get(
+                "pending_broker_request_count"
+            ),
             "event_log": snapshot.get("event_log"),
         },
         "reports": [repo_rel(repo_root, path) for path in report_paths],
@@ -133,7 +173,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 
 def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Provider Runtime Heap Validation Bridge", ""]
-    for key in ("passed", "stamp", "report_count", "validation_signal_event_count", "failed_report_count"):
+    for key in (
+        "passed",
+        "stamp",
+        "report_count",
+        "validation_signal_event_count",
+        "failed_report_count",
+    ):
         lines.append(f"- {key}: `{report.get(key)}`")
     lines.append("")
     lines.append("## Reports")
@@ -164,7 +210,9 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     report = build_report(args)
     output = resolve_output_path(repo_root, args.output.format(stamp=args.stamp))
-    markdown = resolve_output_path(repo_root, args.markdown_output.format(stamp=args.stamp))
+    markdown = resolve_output_path(
+        repo_root, args.markdown_output.format(stamp=args.stamp)
+    )
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown)
     print(json.dumps(report, indent=2, ensure_ascii=False))

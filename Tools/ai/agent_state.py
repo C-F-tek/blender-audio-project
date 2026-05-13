@@ -5,17 +5,18 @@ This module is intentionally pure Python and non-invasive. It does not launch
 models, Blender, FFmpeg, NPU or GPU work. It creates structured packets that an
 app, agent, or later pipeline stage can consume.
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
 import re
 import sqlite3
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
-
+from typing import Any
 
 SCHEMA_VERSION = 1
 DEFAULT_MAX_MEMORY_CHARS = 24000
@@ -108,7 +109,11 @@ def read_text(path: Path, limit: int = 240000) -> str:
 def relative_path(path: Path, repo_root: Path) -> str:
     """Return a stable repository-relative path where possible."""
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -142,7 +147,7 @@ class MemoryRecord:
         confidence: float = 1.0,
         max_record_chars: int = DEFAULT_MAX_RECORD_CHARS,
         metadata: dict[str, Any] | None = None,
-    ) -> "MemoryRecord":
+    ) -> MemoryRecord:
         """Create a memory record from raw text."""
         content = text[:max_record_chars].rstrip()
         identity = f"{kind}:{scope}:{source}:{sha256_text(content)[:16]}"
@@ -159,7 +164,7 @@ class MemoryRecord:
         )
 
     @classmethod
-    def from_mapping(cls, payload: Any) -> "MemoryRecord | None":
+    def from_mapping(cls, payload: Any) -> MemoryRecord | None:
         """Load a memory record from a mapping, tolerating older shapes."""
         if not isinstance(payload, dict):
             return None
@@ -168,7 +173,10 @@ class MemoryRecord:
         kind = str(payload.get("kind") or "memory")
         scope = str(payload.get("scope") or "project")
         tags = payload.get("tags") if isinstance(payload.get("tags"), list) else []
-        record_id = str(payload.get("record_id") or sha256_text(f"{kind}:{scope}:{source}:{content}")[:20])
+        record_id = str(
+            payload.get("record_id")
+            or sha256_text(f"{kind}:{scope}:{source}:{content}")[:20]
+        )
         return cls(
             record_id=record_id,
             kind=kind,
@@ -245,8 +253,7 @@ def ensure_memory_db(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(path) as conn:
         conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS memory_records (
                 record_id TEXT PRIMARY KEY,
                 kind TEXT NOT NULL,
@@ -261,19 +268,22 @@ def ensure_memory_db(path: Path) -> None:
                 expires_at TEXT,
                 metadata_json TEXT NOT NULL
             )
-            """
-        )
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_kind ON memory_records(kind)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_scope ON memory_records(scope)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_source ON memory_records(source)")
+            """)
         conn.execute(
-            """
+            "CREATE INDEX IF NOT EXISTS idx_memory_kind ON memory_records(kind)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_memory_scope ON memory_records(scope)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_memory_source ON memory_records(source)"
+        )
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS memory_meta (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             )
-            """
-        )
+            """)
         conn.execute(
             "INSERT OR REPLACE INTO memory_meta(key, value) VALUES('schema_version', ?)",
             (str(MEMORY_DB_SCHEMA_VERSION),),
@@ -350,7 +360,9 @@ def load_memory_db(path: Path, *, limit: int = 1000) -> list[MemoryRecord]:
     return records
 
 
-def records_from_files(paths: Iterable[Path], repo_root: Path, max_record_chars: int) -> list[MemoryRecord]:
+def records_from_files(
+    paths: Iterable[Path], repo_root: Path, max_record_chars: int
+) -> list[MemoryRecord]:
     """Create file-backed memory records for included source files."""
     records: list[MemoryRecord] = []
     for path in paths:
@@ -380,15 +392,25 @@ def records_from_files(paths: Iterable[Path], repo_root: Path, max_record_chars:
 def score_record(record: MemoryRecord, objective: str) -> float:
     """Score a memory record against the current objective."""
     objective_terms = set(keywords(objective, 80))
-    record_terms = set(record.tags) | set(keywords(record.summary + " " + record.source, 80))
+    record_terms = set(record.tags) | set(
+        keywords(record.summary + " " + record.source, 80)
+    )
     overlap = len(objective_terms & record_terms)
-    tag_bonus = 0.7 if {"guardrail", "memory", "pipeline", "blender", "audio"} & set(record.tags) else 0.0
+    tag_bonus = (
+        0.7
+        if {"guardrail", "memory", "pipeline", "blender", "audio"} & set(record.tags)
+        else 0.0
+    )
     return round(overlap * 4.0 + record.confidence * 2.0 + tag_bonus, 4)
 
 
-def select_memory(records: Iterable[MemoryRecord], objective: str, max_chars: int) -> list[dict[str, Any]]:
+def select_memory(
+    records: Iterable[MemoryRecord], objective: str, max_chars: int
+) -> list[dict[str, Any]]:
     """Rank and select memory records under a character budget."""
-    ranked = sorted(records, key=lambda item: score_record(item, objective), reverse=True)
+    ranked = sorted(
+        records, key=lambda item: score_record(item, objective), reverse=True
+    )
     selected: list[dict[str, Any]] = []
     used = 0
     for record in ranked:
@@ -404,9 +426,13 @@ def select_memory(records: Iterable[MemoryRecord], objective: str, max_chars: in
     return selected
 
 
-def default_microtasks(objective: str, selected_memory: list[dict[str, Any]]) -> list[AgentMicroTask]:
+def default_microtasks(
+    objective: str, selected_memory: list[dict[str, Any]]
+) -> list[AgentMicroTask]:
     """Create a generic first-pass microtask graph."""
-    source_paths = tuple(str(item.get("source")) for item in selected_memory if item.get("source"))
+    source_paths = tuple(
+        str(item.get("source")) for item in selected_memory if item.get("source")
+    )
     objective_slug = slugify(objective, "objective")[:48]
     return [
         AgentMicroTask(
@@ -427,7 +453,10 @@ def default_microtasks(objective: str, selected_memory: list[dict[str, Any]]) ->
             priority=8,
             blocking=False,
             inputs=("agent_state_packet.json",),
-            expected_outputs=("agent_guardrail_report.json", "agent_guardrail_action_queue.json"),
+            expected_outputs=(
+                "agent_guardrail_report.json",
+                "agent_guardrail_action_queue.json",
+            ),
             depends_on=(f"{objective_slug}_context_read",),
             metadata={"soft_fail": True, "recommended_workers_max": 4},
         ),
@@ -498,10 +527,14 @@ def build_agent_state_packet(
         },
         "budgets": {
             "max_memory_chars": max_memory_chars,
-            "selected_memory_chars": sum(len(str(item.get("content") or "")) for item in selected),
+            "selected_memory_chars": sum(
+                len(str(item.get("content") or "")) for item in selected
+            ),
         },
         "selected_memory": selected,
-        "memory_manifest": sorted(manifest, key=lambda item: item["rank_score"], reverse=True),
+        "memory_manifest": sorted(
+            manifest, key=lambda item: item["rank_score"], reverse=True
+        ),
         "microtasks": [item.to_dict() for item in microtasks],
         "assumptions": [
             "Operational self-awareness means structured state, constraints, memory and validation status.",

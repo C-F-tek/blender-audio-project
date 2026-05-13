@@ -5,6 +5,7 @@ This is a deterministic AI-helper review layer. It does not modify source files.
 It emits notes, attention flags, and suggested future checks for the guardrail
 and orchestration pipeline.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -55,12 +56,16 @@ def functions(tree: ast.AST | None) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            out.append({
-                "name": node.name,
-                "line_start": int(getattr(node, "lineno", 0)),
-                "line_end": int(getattr(node, "end_lineno", getattr(node, "lineno", 0))),
-                "has_docstring": bool(ast.get_docstring(node)),
-            })
+            out.append(
+                {
+                    "name": node.name,
+                    "line_start": int(getattr(node, "lineno", 0)),
+                    "line_end": int(
+                        getattr(node, "end_lineno", getattr(node, "lineno", 0))
+                    ),
+                    "has_docstring": bool(ast.get_docstring(node)),
+                }
+            )
     return sorted(out, key=lambda item: item["line_start"])
 
 
@@ -81,7 +86,9 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
             "attention_flags": ["entrypoint_missing"],
             "notes": [],
             "future_guardrail_hints": [],
-            "suggested_actions": ["Restore or locate the expected WAV-analysis entrypoint."],
+            "suggested_actions": [
+                "Restore or locate the expected WAV-analysis entrypoint."
+            ],
         }
 
     text = read_text(path)
@@ -96,7 +103,9 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
 
     if syntax_error:
         attention.append("syntax_error")
-        suggested.append("Fix Python syntax before using this script in the artifact pipeline.")
+        suggested.append(
+            "Fix Python syntax before using this script in the artifact pipeline."
+        )
     else:
         positives.append("python_ast_parse_ok")
 
@@ -104,24 +113,34 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
         positives.append("cli_arguments_present")
     else:
         attention.append("cli_arguments_missing")
-        suggested.append("Expose input/output/runtime options through argparse for reproducible runs.")
+        suggested.append(
+            "Expose input/output/runtime options through argparse for reproducible runs."
+        )
 
     if "json.dump" in text:
         positives.append("json_output_present")
     else:
         attention.append("json_output_not_detected")
-        suggested.append("Confirm that the script emits machine-readable JSON artifacts.")
+        suggested.append(
+            "Confirm that the script emits machine-readable JSON artifacts."
+        )
 
     if "schema_version" not in text:
         attention.append("schema_version_not_written")
-        hints.append("future_check: require schema_version in first-wave JSON artifacts or add a wrapper-side metadata manifest.")
-        suggested.append("Add schema_version to generated summaries or companion manifests without rewriting full analysis data semantics.")
+        hints.append(
+            "future_check: require schema_version in first-wave JSON artifacts or add a wrapper-side metadata manifest."
+        )
+        suggested.append(
+            "Add schema_version to generated summaries or companion manifests without rewriting full analysis data semantics."
+        )
 
     if "source_analysis_json" in text or "input_wav" in text:
         positives.append("source_provenance_present")
     else:
         attention.append("source_provenance_weak")
-        hints.append("future_check: require source path/provenance metadata for downstream AI traceability.")
+        hints.append(
+            "future_check: require source path/provenance metadata for downstream AI traceability."
+        )
 
     if "estimated_tempo_bpm" in text or "tempo" in text:
         positives.append("tempo_metadata_present")
@@ -129,7 +148,13 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
         attention.append("tempo_metadata_not_detected")
 
     if path.name == "analyze_wav.py":
-        required_tokens = ["librosa.load", "frames", "beats", "analysis_blender_keyframes", "plt.savefig"]
+        required_tokens = [
+            "librosa.load",
+            "frames",
+            "beats",
+            "analysis_blender_keyframes",
+            "plt.savefig",
+        ]
         for token in required_tokens:
             if token in text:
                 positives.append(f"required_token_present:{token}")
@@ -138,12 +163,22 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
         if "--skip-music-context" in text:
             positives.append("skip_music_context_flag_present")
         else:
-            hints.append("future_check: add or preserve --skip-music-context to keep raw analysis separable from AI context generation.")
+            hints.append(
+                "future_check: add or preserve --skip-music-context to keep raw analysis separable from AI context generation."
+            )
         if "--run-ollama-agent" in text:
             positives.append("optional_ai_agent_flag_present")
-            notes.append("Optional AI call is behind a flag, which is good for deterministic WAV analysis.")
+            notes.append(
+                "Optional AI call is behind a flag, which is good for deterministic WAV analysis."
+            )
     elif path.name == "build_track_summary.py":
-        required_tokens = ["energy_profile", "source_analysis_json", "duration_sec", "estimated_tempo_bpm", "build_summary"]
+        required_tokens = [
+            "energy_profile",
+            "source_analysis_json",
+            "duration_sec",
+            "estimated_tempo_bpm",
+            "build_summary",
+        ]
         for token in required_tokens:
             if token in text:
                 positives.append(f"required_token_present:{token}")
@@ -151,15 +186,21 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
                 attention.append(f"required_token_missing:{token}")
         if "ROOT = Path.home()" in text:
             attention.append("hardcoded_default_project_root")
-            suggested.append("Keep defaults for local convenience but prefer CLI paths in automated runs; guardrail should flag hardcoded defaults if reused in generated packages.")
+            suggested.append(
+                "Keep defaults for local convenience but prefer CLI paths in automated runs; guardrail should flag hardcoded defaults if reused in generated packages."
+            )
 
     if "except Exception" in text:
         attention.append("broad_exception_handler_present")
-        hints.append("future_check: ensure broad exceptions print useful warnings and do not hide failed artifact generation.")
+        hints.append(
+            "future_check: ensure broad exceptions print useful warnings and do not hide failed artifact generation."
+        )
 
     if "Path.home()" in text or "C:\\" in text:
         attention.append("local_path_default_present")
-        hints.append("future_check: allow CLI override for every local path used by first-wave artifact builders.")
+        hints.append(
+            "future_check: allow CLI override for every local path used by first-wave artifact builders."
+        )
 
     score = 1.0
     score -= 0.25 if syntax_error else 0.0
@@ -168,7 +209,11 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
     score = max(0.0, min(1.0, round(score, 4)))
 
     return {
-        "path": path.relative_to(repo).as_posix() if path.is_relative_to(repo) else str(path),
+        "path": (
+            path.relative_to(repo).as_posix()
+            if path.is_relative_to(repo)
+            else str(path)
+        ),
         "exists": True,
         "sha256": sha256_text(text),
         "line_count": len(text.splitlines()),
@@ -185,21 +230,31 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
 
 def aggregate(reviews: list[dict[str, Any]]) -> dict[str, Any]:
     flags = [flag for item in reviews for flag in item.get("attention_flags", [])]
-    hints = [hint for item in reviews for hint in item.get("future_guardrail_hints", [])]
-    suggested = [action for item in reviews for action in item.get("suggested_actions", [])]
-    avg = round(sum(float(item.get("score", 0.0)) for item in reviews) / len(reviews), 4) if reviews else 0.0
+    hints = [
+        hint for item in reviews for hint in item.get("future_guardrail_hints", [])
+    ]
+    suggested = [
+        action for item in reviews for action in item.get("suggested_actions", [])
+    ]
+    avg = (
+        round(sum(float(item.get("score", 0.0)) for item in reviews) / len(reviews), 4)
+        if reviews
+        else 0.0
+    )
     remediation_requests = []
     for item in reviews:
         for action in item.get("suggested_actions", []):
-            remediation_requests.append({
-                "action_type": "review_wave_entrypoint",
-                "priority": "medium" if item.get("score", 1.0) >= 0.65 else "high",
-                "target": item.get("path"),
-                "reason": "First-wave WAV artifact entrypoint review produced an attention flag.",
-                "instruction": action,
-                "suggested_stage": "wave_entrypoint_review",
-                "auto_safe": False,
-            })
+            remediation_requests.append(
+                {
+                    "action_type": "review_wave_entrypoint",
+                    "priority": "medium" if item.get("score", 1.0) >= 0.65 else "high",
+                    "target": item.get("path"),
+                    "reason": "First-wave WAV artifact entrypoint review produced an attention flag.",
+                    "instruction": action,
+                    "suggested_stage": "wave_entrypoint_review",
+                    "auto_safe": False,
+                }
+            )
     return {
         "average_score": avg,
         "attention_flag_count": len(flags),
@@ -211,10 +266,18 @@ def aggregate(reviews: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Review first-wave WAV artifact generation scripts.")
+    parser = argparse.ArgumentParser(
+        description="Review first-wave WAV artifact generation scripts."
+    )
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--target", action="append", help="Relative path to a WAV entrypoint script. Can be repeated.")
-    parser.add_argument("--output", default="output/ai_pipeline/wave_entrypoint_review.json")
+    parser.add_argument(
+        "--target",
+        action="append",
+        help="Relative path to a WAV entrypoint script. Can be repeated.",
+    )
+    parser.add_argument(
+        "--output", default="output/ai_pipeline/wave_entrypoint_review.json"
+    )
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
@@ -231,7 +294,9 @@ def main() -> int:
 
     out = Path(args.output).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    out.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["summary"]["average_score"] >= 0.5 else 2
 

@@ -1,11 +1,12 @@
 """Reusable command runners for AI artifact pipeline steps."""
+
 from __future__ import annotations
 
 import subprocess
 import time
+from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Iterable
 
 from .models import PipelineResult, PipelineStep
 
@@ -93,7 +94,10 @@ def run_parallel(
 
     workers = max_workers or len(pending)
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(run_step, step, cwd=cwd, dry_run=dry_run): step for step in pending}
+        futures = {
+            pool.submit(run_step, step, cwd=cwd, dry_run=dry_run): step
+            for step in pending
+        }
         return [future.result() for future in as_completed(futures)]
 
 

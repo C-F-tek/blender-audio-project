@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate AI pipeline artifacts without touching runtime packages."""
+
 from __future__ import annotations
 
 import argparse
@@ -44,8 +45,12 @@ def load_patterns(capsules: Path) -> tuple[list[dict[str, Any]], list[dict[str, 
                 data = load_json(path)
             except Exception:
                 continue
-            blocked += data.get("blocked_patterns", []) if isinstance(data, dict) else []
-            warnings += data.get("warning_patterns", []) if isinstance(data, dict) else []
+            blocked += (
+                data.get("blocked_patterns", []) if isinstance(data, dict) else []
+            )
+            warnings += (
+                data.get("warning_patterns", []) if isinstance(data, dict) else []
+            )
     return blocked, warnings
 
 
@@ -55,7 +60,16 @@ def is_guardrail_reference(path: Path, text: str, pattern: str) -> bool:
         return False
     lower = text.lower()
     pattern_lower = pattern.lower()
-    guardrail_terms = ("avoid", "blocked", "guardrail", "do not use", "non usare", "vietato", "replacement", "preferred")
+    guardrail_terms = (
+        "avoid",
+        "blocked",
+        "guardrail",
+        "do not use",
+        "non usare",
+        "vietato",
+        "replacement",
+        "preferred",
+    )
     return pattern_lower in lower and any(term in lower for term in guardrail_terms)
 
 
@@ -70,20 +84,30 @@ def scan(path: Path, blocked, warn_patterns, errors, warnings, positives) -> Non
         if not pattern or pattern not in text:
             continue
         if is_guardrail_reference(path, text, pattern):
-            positives.append(f"{path.name}: guardrail reference for `{pattern}` present.")
+            positives.append(
+                f"{path.name}: guardrail reference for `{pattern}` present."
+            )
             continue
-        errors.append(f"{path}: blocked pattern `{pattern}`: {item.get('reason', 'blocked')}")
+        errors.append(
+            f"{path}: blocked pattern `{pattern}`: {item.get('reason', 'blocked')}"
+        )
     for item in warn_patterns:
         pattern = item.get("pattern")
         if not pattern or pattern not in text:
             continue
         if pattern.startswith("C:") and should_ignore_local_path_warning(path):
-            positives.append(f"{path.name}: local path metadata accepted as pipeline context.")
+            positives.append(
+                f"{path.name}: local path metadata accepted as pipeline context."
+            )
             continue
-        warnings.append(f"{path}: warning pattern `{pattern}`: {item.get('reason', 'warning')}")
+        warnings.append(
+            f"{path}: warning pattern `{pattern}`: {item.get('reason', 'warning')}"
+        )
 
 
-def validate_semantics(path: Path, data: Any, errors: list[str], warnings: list[str], positives: list[str]) -> None:
+def validate_semantics(
+    path: Path, data: Any, errors: list[str], warnings: list[str], positives: list[str]
+) -> None:
     if not isinstance(data, dict):
         return
     if path.name == "track_summary.json":
@@ -92,11 +116,15 @@ def validate_semantics(path: Path, data: Any, errors: list[str], warnings: list[
         if isinstance(score, (int, float)):
             positives.append(f"track_summary ai_readiness score={score}")
             if score < 0.5:
-                warnings.append("track_summary ai_readiness score is low; generated scene planning may need manual context.")
+                warnings.append(
+                    "track_summary ai_readiness score is low; generated scene planning may need manual context."
+                )
         else:
             warnings.append("track_summary missing ai_readiness score.")
         if not data.get("primary_series"):
-            warnings.append("track_summary has no primary_series; peak mapping may be weak.")
+            warnings.append(
+                "track_summary has no primary_series; peak mapping may be weak."
+            )
     elif path.name == "music_segments.json":
         segments = data.get("segments") or []
         if not segments:
@@ -109,7 +137,9 @@ def validate_semantics(path: Path, data: Any, errors: list[str], warnings: list[
     elif path.name == "ai_mapping_candidates.json":
         candidates = data.get("candidates") or []
         if len(candidates) < 2:
-            warnings.append("ai_mapping_candidates contains fewer than 2 candidates; creative selection is weak.")
+            warnings.append(
+                "ai_mapping_candidates contains fewer than 2 candidates; creative selection is weak."
+            )
         else:
             positives.append(f"ai_mapping_candidates candidate_count={len(candidates)}")
     elif path.name == "ai_scene_brief.json":
@@ -117,9 +147,13 @@ def validate_semantics(path: Path, data: Any, errors: list[str], warnings: list[
             warnings.append("ai_scene_brief missing recommended_visual_progression.")
         constraints = data.get("constraints") or []
         if any("ShaderNodeTexMusgrave" in str(item) for item in constraints):
-            positives.append("ai_scene_brief includes Blender 5.x ShaderNodeTexMusgrave guardrail.")
+            positives.append(
+                "ai_scene_brief includes Blender 5.x ShaderNodeTexMusgrave guardrail."
+            )
         else:
-            warnings.append("ai_scene_brief does not mention Blender 5.x ShaderNodeTexMusgrave guardrail.")
+            warnings.append(
+                "ai_scene_brief does not mention Blender 5.x ShaderNodeTexMusgrave guardrail."
+            )
 
 
 def main() -> int:
@@ -155,7 +189,9 @@ def main() -> int:
 
     assumptions = artifact_dir / "ai_assumptions.md"
     if artifact_dir.exists() and not assumptions.exists():
-        warnings.append("ai_assumptions.md not found; downstream AI should receive explicit assumptions.")
+        warnings.append(
+            "ai_assumptions.md not found; downstream AI should receive explicit assumptions."
+        )
     elif assumptions.exists():
         positives.append("ai_assumptions.md present.")
 
@@ -170,10 +206,21 @@ def main() -> int:
                 errors.append("Generated package missing README.md")
             files += list(pkg.rglob("*"))
     for path in files:
-        if path.is_file() and path.suffix in {".py", ".md", ".json", ".ps1", ".bat", ".cmd", ".sh"}:
+        if path.is_file() and path.suffix in {
+            ".py",
+            ".md",
+            ".json",
+            ".ps1",
+            ".bat",
+            ".cmd",
+            ".sh",
+        }:
             scan(path, blocked, warn_patterns, errors, warnings, positives)
 
-    score = max(0.0, round(1.0 - min(0.7, len(errors) * 0.2) - min(0.3, len(warnings) * 0.04), 4))
+    score = max(
+        0.0,
+        round(1.0 - min(0.7, len(errors) * 0.2) - min(0.3, len(warnings) * 0.04), 4),
+    )
     report = {
         "schema_version": 3,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -191,7 +238,9 @@ def main() -> int:
     }
     out = Path(args.output).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    out.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] or args.allow_errors else 2
 

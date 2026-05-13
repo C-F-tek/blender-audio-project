@@ -1,18 +1,24 @@
 """Explicit branch/push helpers for the patch suggestion final phase."""
+
 from __future__ import annotations
 
 import subprocess
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.patch_suggestion_bundle.common import current_branch, git_status_short, unsafe_git_status_short
-
+from tools.ai.patch_suggestion_bundle.common import (
+    current_branch,
+    git_status_short,
+    unsafe_git_status_short,
+)
 
 PROTECTED_BRANCHES = {"main", "master"}
 INVALID_REF_CHARS = set(" ~^:?*[\\")
 
 
-def validate_branch_name(branch: str, allowed_prefixes: list[str]) -> tuple[bool, str | None]:
+def validate_branch_name(
+    branch: str, allowed_prefixes: list[str]
+) -> tuple[bool, str | None]:
     """Validate a branch name for explicit review-branch preparation."""
     if not branch:
         return False, "empty branch name"
@@ -22,7 +28,7 @@ def validate_branch_name(branch: str, allowed_prefixes: list[str]) -> tuple[bool
         return False, "branch does not match allowed prefix"
     if branch.startswith(("/", ".")) or branch.endswith(("/", ".", ".lock")):
         return False, "invalid branch edge characters"
-    if ".." in branch or "@{" in branch or "//" in branch:
+    if ".." in branch or "@{" in branch or "/" in branch:
         return False, "invalid branch sequence"
     if any(char in INVALID_REF_CHARS for char in branch):
         return False, "invalid branch character"
@@ -49,13 +55,17 @@ def git_result(repo_root: Path, args: list[str]) -> dict[str, Any]:
 
 def remote_branch_exists(repo_root: Path, remote: str, branch: str) -> bool:
     """Return true when a remote branch already exists."""
-    result = git_result(repo_root, ["ls-remote", "--exit-code", "--heads", remote, branch])
+    result = git_result(
+        repo_root, ["ls-remote", "--exit-code", "--heads", remote, branch]
+    )
     return bool(result["ok"])
 
 
 def local_branch_exists(repo_root: Path, branch: str) -> bool:
     """Return true when a local branch already exists."""
-    result = git_result(repo_root, ["show-ref", "--verify", "--quiet", f"refs/heads/{branch}"])
+    result = git_result(
+        repo_root, ["show-ref", "--verify", "--quiet", f"refs/heads/{branch}"]
+    )
     return bool(result["ok"])
 
 
@@ -88,7 +98,9 @@ def create_review_branch(
         out["errors"].append(str(reason))
         return out
     if unsafe_status_before and not allow_dirty:
-        out["errors"].append("refusing branch creation with source/doc dirty tree; use --allow-dirty-branch")
+        out["errors"].append(
+            "refusing branch creation with source/doc dirty tree; use --allow-dirty-branch"
+        )
         return out
     current = current_branch(repo_root)
     if current == branch:
@@ -101,7 +113,9 @@ def create_review_branch(
             out["switched"] = True
             out["warnings"].append(f"reused existing local branch: {branch}")
         else:
-            out["errors"].append(result["stderr"] or f"git switch failed for existing branch: {branch}")
+            out["errors"].append(
+                result["stderr"] or f"git switch failed for existing branch: {branch}"
+            )
         out["status_after"] = git_status_short(repo_root)
         return out
     if remote_branch_exists(repo_root, "origin", branch):
@@ -111,7 +125,10 @@ def create_review_branch(
             out["switched"] = True
             out["warnings"].append(f"reused existing remote branch: origin/{branch}")
         else:
-            out["errors"].append(result["stderr"] or f"git switch --track failed for remote branch: {branch}")
+            out["errors"].append(
+                result["stderr"]
+                or f"git switch --track failed for remote branch: {branch}"
+            )
         out["status_after"] = git_status_short(repo_root)
         return out
     result = git_result(repo_root, ["switch", "-c", branch])
@@ -155,7 +172,9 @@ def push_review_branch(
         out["errors"].append("empty remote is not allowed")
         return out
     if status_before:
-        out["warnings"].append("working tree has uncommitted changes; push only publishes current HEAD")
+        out["warnings"].append(
+            "working tree has uncommitted changes; push only publishes current HEAD"
+        )
     result = git_result(repo_root, ["push", "-u", remote, target_branch])
     out["commands"].append(result)
     if result["ok"]:

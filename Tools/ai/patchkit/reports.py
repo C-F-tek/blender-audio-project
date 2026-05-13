@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Report helpers for controlled patch bundles."""
+
 from __future__ import annotations
 
 import json
@@ -12,7 +13,9 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = dict(data)
     payload.setdefault("generated_at", datetime.now().isoformat(timespec="seconds"))
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -30,7 +33,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "|---|---|---:|---|",
     ]
     for item in report.get("results") or []:
-        lines.append(f"| `{item.get('operation')}` | `{item.get('target')}` | `{item.get('changed')}` | {str(item.get('reason', '')).replace('|', '/')} |")
+        lines.append(
+            f"| `{item.get('operation')}` | `{item.get('target')}` | `{item.get('changed')}` | {str(item.get('reason', '')).replace('|', '/')} |"
+        )
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {error}" for error in report["errors"])

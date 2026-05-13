@@ -8,6 +8,7 @@ into the existing GitHub evidence bundle builder as a normal compact report.
 It does not apply code patches, edit documentation, execute providers, run
 Blender or write outside the requested report outputs.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -19,7 +20,7 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from Tools.ai.code_patch_plan_common import (  # noqa: E402
+from tools.ai.code_patch_plan_common import (  # noqa: E402
     compact_list,
     compact_text,
     now_iso,
@@ -30,7 +31,6 @@ from Tools.ai.code_patch_plan_common import (  # noqa: E402
     resolve_output_path,
     write_json_and_markdown,
 )
-
 
 REPORT_KIND = "code_patch_artifact_pack"
 DEFAULT_CODE_PATCH_PLAN = "output/patch_specs/agent_review_code_patch_plan_macro.json"
@@ -45,7 +45,9 @@ def nested_value(data: dict[str, Any], key: str) -> Any:
     return source.get(key) if isinstance(source, dict) else None
 
 
-def list_field_or_error(data: dict[str, Any], field: str, label: str, errors: list[str]) -> list[Any]:
+def list_field_or_error(
+    data: dict[str, Any], field: str, label: str, errors: list[str]
+) -> list[Any]:
     """Return a list field, appending the existing error wording when invalid."""
     value = data.get(field, [])
     if not isinstance(value, list):
@@ -54,10 +56,18 @@ def list_field_or_error(data: dict[str, Any], field: str, label: str, errors: li
     return value
 
 
-def validate_count_matches(data: dict[str, Any], count_field: str, items: list[Any], label: str, errors: list[str]) -> None:
+def validate_count_matches(
+    data: dict[str, Any],
+    count_field: str,
+    items: list[Any],
+    label: str,
+    errors: list[str],
+) -> None:
     """Append an error when a reported count does not match the list length."""
     if data.get(count_field) != len(items):
-        errors.append(f"{label} {count_field} must match len({items_label_for_count(count_field)})")
+        errors.append(
+            f"{label} {count_field} must match len({items_label_for_count(count_field)})"
+        )
 
 
 def items_label_for_count(count_field: str) -> str:
@@ -78,7 +88,9 @@ def summarize_code_plan(plan: dict[str, Any]) -> dict[str, Any]:
         "target_files": compact_list(plan.get("target_files"), text_limit=250),
         "rationale": compact_text(plan.get("rationale")),
         "edit_strategy": compact_text(plan.get("edit_strategy")),
-        "validation_commands": compact_list(plan.get("validation_commands"), text_limit=500),
+        "validation_commands": compact_list(
+            plan.get("validation_commands"), text_limit=500
+        ),
         "stop_conditions": compact_list(plan.get("stop_conditions"), text_limit=500),
         "manual_review_required": plan.get("manual_review_required"),
         "source_evidence": {
@@ -97,54 +109,82 @@ def summarize_docs_followup(item: dict[str, Any]) -> dict[str, Any]:
         "risk": item.get("risk"),
         "status": item.get("status"),
         "target_files": compact_list(item.get("target_files"), text_limit=250),
-        "missing_candidate_docs": compact_list(item.get("missing_candidate_docs"), text_limit=250),
+        "missing_candidate_docs": compact_list(
+            item.get("missing_candidate_docs"), text_limit=250
+        ),
         "rationale": compact_text(item.get("rationale")),
         "edit_strategy": compact_text(item.get("edit_strategy")),
-        "validation_commands": compact_list(item.get("validation_commands"), text_limit=500),
+        "validation_commands": compact_list(
+            item.get("validation_commands"), text_limit=500
+        ),
         "stop_conditions": compact_list(item.get("stop_conditions"), text_limit=500),
         "manual_review_required": item.get("manual_review_required"),
     }
 
 
-def summarize_code_plan_report(code_plan: dict[str, Any], errors: list[str]) -> list[dict[str, Any]]:
+def summarize_code_plan_report(
+    code_plan: dict[str, Any], errors: list[str]
+) -> list[dict[str, Any]]:
     """Validate and summarize an agent_review_code_patch_plan report."""
     if code_plan.get("kind") != "agent_review_code_patch_plan":
         errors.append("code patch plan kind must be agent_review_code_patch_plan")
     errors.extend(report_guardrail_errors(code_plan, "code patch plan"))
-    raw_plans = list_field_or_error(code_plan, "code_patch_plans", "code patch plan", errors)
+    raw_plans = list_field_or_error(
+        code_plan, "code_patch_plans", "code patch plan", errors
+    )
     if not raw_plans:
         return []
-    validate_count_matches(code_plan, "patch_plan_count", raw_plans, "code patch plan", errors)
+    validate_count_matches(
+        code_plan, "patch_plan_count", raw_plans, "code patch plan", errors
+    )
     return [summarize_code_plan(plan) for plan in raw_plans if isinstance(plan, dict)]
 
 
-def summarize_docs_followup_report(docs_followup: dict[str, Any], errors: list[str]) -> list[dict[str, Any]]:
+def summarize_docs_followup_report(
+    docs_followup: dict[str, Any], errors: list[str]
+) -> list[dict[str, Any]]:
     """Validate and summarize an agent_review_code_docs_followup report."""
     if docs_followup.get("kind") != "agent_review_code_docs_followup":
         errors.append("docs follow-up kind must be agent_review_code_docs_followup")
     errors.extend(report_guardrail_errors(docs_followup, "docs follow-up"))
-    raw_suggestions = list_field_or_error(docs_followup, "docs_followup_suggestions", "docs follow-up", errors)
+    raw_suggestions = list_field_or_error(
+        docs_followup, "docs_followup_suggestions", "docs follow-up", errors
+    )
     if not raw_suggestions:
         return []
-    validate_count_matches(docs_followup, "docs_followup_count", raw_suggestions, "docs follow-up", errors)
-    return [summarize_docs_followup(item) for item in raw_suggestions if isinstance(item, dict)]
+    validate_count_matches(
+        docs_followup, "docs_followup_count", raw_suggestions, "docs follow-up", errors
+    )
+    return [
+        summarize_docs_followup(item)
+        for item in raw_suggestions
+        if isinstance(item, dict)
+    ]
 
 
-def warn_unlinked_docs_followups(code_plan: dict[str, Any], docs_followup: dict[str, Any]) -> list[str]:
+def warn_unlinked_docs_followups(
+    code_plan: dict[str, Any], docs_followup: dict[str, Any]
+) -> list[str]:
     """Warn when code plans have no matching docs-follow-up entry."""
     code_items = code_plan.get("code_patch_plans", [])
     docs_items = docs_followup.get("docs_followup_suggestions", [])
     if not isinstance(code_items, list) or not isinstance(docs_items, list):
         return []
     code_ids = {str(item.get("id")) for item in code_items if isinstance(item, dict)}
-    docs_source_ids = {str(item.get("source_code_patch_plan_id")) for item in docs_items if isinstance(item, dict)}
+    docs_source_ids = {
+        str(item.get("source_code_patch_plan_id"))
+        for item in docs_items
+        if isinstance(item, dict)
+    }
     missing_docs = sorted(code_ids - docs_source_ids)
     if not missing_docs:
         return []
     return ["code plans without docs follow-up suggestions: " + ", ".join(missing_docs)]
 
 
-def build_pack(repo_root: Path, code_plan_path: Path, docs_followup_path: Path) -> dict[str, Any]:
+def build_pack(
+    repo_root: Path, code_plan_path: Path, docs_followup_path: Path
+) -> dict[str, Any]:
     """Build the compact artifact pack report."""
     errors: list[str] = []
     warnings: list[str] = []
@@ -154,7 +194,9 @@ def build_pack(repo_root: Path, code_plan_path: Path, docs_followup_path: Path) 
     errors.extend(f"docs follow-up: {error}" for error in docs_errors)
 
     code_plan_items = summarize_code_plan_report(code_plan, errors) if code_plan else []
-    docs_followup_items = summarize_docs_followup_report(docs_followup, errors) if docs_followup else []
+    docs_followup_items = (
+        summarize_docs_followup_report(docs_followup, errors) if docs_followup else []
+    )
     if code_plan and docs_followup:
         warnings.extend(warn_unlinked_docs_followups(code_plan, docs_followup))
 
@@ -187,7 +229,11 @@ def build_pack(repo_root: Path, code_plan_path: Path, docs_followup_path: Path) 
             "ready_for_manual_code_review": bool(code_plan_items) and not errors,
             "ready_for_manual_docs_review": bool(docs_followup_items) and not errors,
             "manual_review_required": True,
-            "recommended_next_layer": "review_code_and_docs_queues_together" if code_plan_items and docs_followup_items and not errors else "fix_or_collect_patch_plan_artifacts",
+            "recommended_next_layer": (
+                "review_code_and_docs_queues_together"
+                if code_plan_items and docs_followup_items and not errors
+                else "fix_or_collect_patch_plan_artifacts"
+            ),
         },
         "guardrails": report_only_guardrails(
             docs_written=False,
@@ -202,14 +248,32 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Apply mode: `{report['apply_mode']}`")
     lines.append(f"- Manual review required: `{report['manual_review_required']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{report['provider_execution_performed']}`"
+    )
+    lines.append(
+        f"- Patch application performed: `{report['patch_application_performed']}`"
+    )
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
-    lines.append(f"- Code patch plan count: `{report['summary']['code_patch_plan_count']}`")
-    lines.append(f"- Docs follow-up count: `{report['summary']['docs_followup_count']}`")
+    lines.append(
+        f"- Code patch plan count: `{report['summary']['code_patch_plan_count']}`"
+    )
+    lines.append(
+        f"- Docs follow-up count: `{report['summary']['docs_followup_count']}`"
+    )
     lines.append("")
-    lines.extend(render_item_section("Code patch plans", report.get("code_patch_plans", []), "target_files"))
-    lines.extend(render_item_section("Docs follow-up suggestions", report.get("docs_followup_suggestions", []), "target_files"))
+    lines.extend(
+        render_item_section(
+            "Code patch plans", report.get("code_patch_plans", []), "target_files"
+        )
+    )
+    lines.extend(
+        render_item_section(
+            "Docs follow-up suggestions",
+            report.get("docs_followup_suggestions", []),
+            "target_files",
+        )
+    )
     lines.append("## Guardrail")
     lines.append("")
     lines.append("This pack is compact evidence only. It is not a patch apply queue.")
@@ -224,7 +288,9 @@ def render_item_section(title: str, items: Any, target_key: str) -> list[str]:
     for item in items:
         lines.append(f"### `{item.get('id')}`")
         if item.get("source_code_patch_plan_id"):
-            lines.append(f"- Source code plan: `{item.get('source_code_patch_plan_id')}`")
+            lines.append(
+                f"- Source code plan: `{item.get('source_code_patch_plan_id')}`"
+            )
         if item.get("area"):
             lines.append(f"- Area: `{item.get('area')}`")
         if item.get("risk"):
@@ -250,7 +316,16 @@ def main() -> int:
     code_plan_path = resolve_output_path(repo_root, args.code_patch_plan)
     docs_followup_path = resolve_output_path(repo_root, args.docs_followup)
     report = build_pack(repo_root, code_plan_path, docs_followup_path)
-    print(write_json_and_markdown(repo_root, report, args.output, args.markdown_output, render_markdown(report)), end="")
+    print(
+        write_json_and_markdown(
+            repo_root,
+            report,
+            args.output,
+            args.markdown_output,
+            render_markdown(report),
+        ),
+        end="",
+    )
     return 0 if report["passed"] else 2
 
 

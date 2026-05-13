@@ -6,6 +6,7 @@ prints/writes a command that an operator can review, and preserves non-CLI
 profile metadata for external heap-universe adapters such as block pointer
 manifests and revision-context propagation.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -13,7 +14,6 @@ import json
 import sys
 from pathlib import Path
 from typing import Any
-
 
 DEFAULT_PROFILE_FILE = "Tools/ai/heap_runtime_launcher_profiles.json"
 REQUIRED_COMPOSER_JSON = "heap_final_proposal_composer.json"
@@ -96,15 +96,21 @@ def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
 
 def ps_quote(value: Any) -> str:
     text = str(value)
-    return '"' + text.replace('`', '``').replace('"', '`"') + '"'
+    return '"' + text.replace("`", "``").replace('"', '`"') + '"'
 
 
 def choose_profile(profile_doc: dict[str, Any], profile_name: str) -> dict[str, Any]:
-    profiles = profile_doc.get("profiles") if isinstance(profile_doc.get("profiles"), dict) else {}
+    profiles = (
+        profile_doc.get("profiles")
+        if isinstance(profile_doc.get("profiles"), dict)
+        else {}
+    )
     selected = profile_name or str(profile_doc.get("default_profile") or "")
     profile = profiles.get(selected)
     if not isinstance(profile, dict):
-        raise SystemExit(f"unknown profile '{selected}'. Available: {', '.join(sorted(profiles))}")
+        raise SystemExit(
+            f"unknown profile '{selected}'. Available: {', '.join(sorted(profiles))}"
+        )
     result = dict(profile)
     result["profile_name"] = selected
     return result
@@ -146,7 +152,11 @@ def profile_external_metadata(profile: dict[str, Any]) -> dict[str, Any]:
 
 
 def is_complete_heap_run_dir(path: Path) -> bool:
-    return path.is_dir() and path.name.startswith("heap_context_closure_") and (path / REQUIRED_COMPOSER_JSON).exists()
+    return (
+        path.is_dir()
+        and path.name.startswith("heap_context_closure_")
+        and (path / REQUIRED_COMPOSER_JSON).exists()
+    )
 
 
 def latest_revision_context(repo_root: Path) -> tuple[Path | None, dict[str, Any]]:
@@ -154,7 +164,12 @@ def latest_revision_context(repo_root: Path) -> tuple[Path | None, dict[str, Any
     if not validation_dir.exists():
         return None, {}
     candidates = sorted(
-        [path / "external_heap_revision_context.json" for path in validation_dir.iterdir() if is_complete_heap_run_dir(path) and (path / "external_heap_revision_context.json").exists()],
+        [
+            path / "external_heap_revision_context.json"
+            for path in validation_dir.iterdir()
+            if is_complete_heap_run_dir(path)
+            and (path / "external_heap_revision_context.json").exists()
+        ],
         key=lambda path: path.stat().st_mtime if path.exists() else 0,
         reverse=True,
     )
@@ -164,7 +179,9 @@ def latest_revision_context(repo_root: Path) -> tuple[Path | None, dict[str, Any
     return path, read_optional_json(path)
 
 
-def revision_context_from_profile(repo_root: Path, profile: dict[str, Any], explicit_path: str) -> tuple[Path | None, dict[str, Any]]:
+def revision_context_from_profile(
+    repo_root: Path, profile: dict[str, Any], explicit_path: str
+) -> tuple[Path | None, dict[str, Any]]:
     mode = str(profile.get("revision_context_mode") or "off")
     if mode == "off":
         return None, {}
@@ -179,13 +196,19 @@ def revision_context_from_profile(repo_root: Path, profile: dict[str, Any], expl
     return None, {}
 
 
-def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_tasks: int) -> str:
+def revision_context_prompt(
+    payload: dict[str, Any], path: Path | None, max_tasks: int
+) -> str:
     if not payload:
         return ""
     tasks = payload.get("tasks") if isinstance(payload.get("tasks"), list) else []
     limit = max(0, max_tasks)
     selected = tasks[:limit]
-    candidate_summary = payload.get("candidate_applicability_summary") if isinstance(payload.get("candidate_applicability_summary"), dict) else {}
+    candidate_summary = (
+        payload.get("candidate_applicability_summary")
+        if isinstance(payload.get("candidate_applicability_summary"), dict)
+        else {}
+    )
     lines = [
         "",
         "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN:",
@@ -213,17 +236,27 @@ def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_task
             f"{idx}. {task.get('task_id')} role={task.get('role')} type={task.get('task_type')} target={task.get('target_block_id')} resume={task.get('resume_from_block_id')}"
         )
         if task.get("candidate_applicability_flags"):
-            lines.append(f"   candidate_applicability_flags={json.dumps(task.get('candidate_applicability_flags'), ensure_ascii=False)}")
+            lines.append(
+                f"   candidate_applicability_flags={json.dumps(task.get('candidate_applicability_flags'), ensure_ascii=False)}"
+            )
         if task.get("symbol_propagation_skipped"):
-            lines.append(f"   symbol_propagation_skipped={task.get('symbol_propagation_skipped')} reason={task.get('symbol_propagation_skip_reason')}")
+            lines.append(
+                f"   symbol_propagation_skipped={task.get('symbol_propagation_skipped')} reason={task.get('symbol_propagation_skip_reason')}"
+            )
         if task.get("discovered_symbols"):
-            lines.append(f"   discovered_symbols={json.dumps(task.get('discovered_symbols'), ensure_ascii=False)}")
+            lines.append(
+                f"   discovered_symbols={json.dumps(task.get('discovered_symbols'), ensure_ascii=False)}"
+            )
         if task.get("rejection_reasons"):
-            lines.append(f"   rejection_reasons={json.dumps(task.get('rejection_reasons'), ensure_ascii=False)}")
+            lines.append(
+                f"   rejection_reasons={json.dumps(task.get('rejection_reasons'), ensure_ascii=False)}"
+            )
         if task.get("instruction"):
             lines.append(f"   instruction={task.get('instruction')}")
     if len(tasks) > len(selected):
-        lines.append(f"- omitted_tasks={len(tasks) - len(selected)}; read full revision context artifact for remaining tasks.")
+        lines.append(
+            f"- omitted_tasks={len(tasks) - len(selected)}; read full revision context artifact for remaining tasks."
+        )
     return "\n".join(lines)
 
 
@@ -264,15 +297,19 @@ def render_command(
 def latest_run_dir_snippet() -> str:
     return (
         "$RunDir = Get-ChildItem .\\output\\validation -Directory | `\n"
-        "  Where-Object { $_.Name -like \"heap_context_closure_*\" -and (Test-Path (Join-Path $_.FullName \"heap_final_proposal_composer.json\")) } | `\n"
+        '  Where-Object { $_.Name -like "heap_context_closure_*" -and (Test-Path (Join-Path $_.FullName "heap_final_proposal_composer.json")) } | `\n'
         "  Sort-Object LastWriteTime -Descending | `\n"
         "  Select-Object -First 1\n"
     )
 
 
-def render_block_pointer_command(repo_root: Path, project_python: str, profile: dict[str, Any]) -> str:
+def render_block_pointer_command(
+    repo_root: Path, project_python: str, profile: dict[str, Any]
+) -> str:
     max_block_chars = profile.get("max_block_chars", 9000)
-    max_blocks = int(profile.get("max_blocks_per_step", 0) or 0) * int(profile.get("universe_max_steps", 0) or 0)
+    max_blocks = int(profile.get("max_blocks_per_step", 0) or 0) * int(
+        profile.get("universe_max_steps", 0) or 0
+    )
     return (
         latest_run_dir_snippet()
         + "\n& "
@@ -291,9 +328,9 @@ def render_block_pointer_command(repo_root: Path, project_python: str, profile: 
 def render_revision_context_command(repo_root: Path, project_python: str) -> str:
     return (
         latest_run_dir_snippet()
-        + "\n$PointerPath = Join-Path $RunDir.FullName \"external_heap_block_pointer_manifest.json\"\n"
-        + "$ComposerPath = Join-Path $RunDir.FullName \"heap_final_proposal_composer.json\"\n"
-        + "$CausalityPath = Join-Path $RunDir.FullName \"heap_final_causality_normalized.json\"\n\n"
+        + '\n$PointerPath = Join-Path $RunDir.FullName "external_heap_block_pointer_manifest.json"\n'
+        + '$ComposerPath = Join-Path $RunDir.FullName "heap_final_proposal_composer.json"\n'
+        + '$CausalityPath = Join-Path $RunDir.FullName "heap_final_causality_normalized.json"\n\n'
         + "& "
         + ps_quote(project_python)
         + " "
@@ -301,7 +338,7 @@ def render_revision_context_command(repo_root: Path, project_python: str) -> str
         + " `\n  --pointer-manifest $PointerPath"
         + " `\n  --composer-json $ComposerPath"
         + " `\n  --causality-json $CausalityPath"
-        + " `\n  --output (Join-Path $RunDir.FullName \"external_heap_revision_context.json\")\n"
+        + ' `\n  --output (Join-Path $RunDir.FullName "external_heap_revision_context.json")\n'
     )
 
 
@@ -318,7 +355,11 @@ def render_postrun_package_command(repo_root: Path, project_python: str) -> str:
 
 
 def list_profiles(profile_doc: dict[str, Any]) -> dict[str, Any]:
-    profiles = profile_doc.get("profiles") if isinstance(profile_doc.get("profiles"), dict) else {}
+    profiles = (
+        profile_doc.get("profiles")
+        if isinstance(profile_doc.get("profiles"), dict)
+        else {}
+    )
     return {
         "schema_version": 1,
         "kind": "heap_runtime_launcher_profile_list",
@@ -327,11 +368,27 @@ def list_profiles(profile_doc: dict[str, Any]) -> dict[str, Any]:
         "profiles": [
             {
                 "name": name,
-                "description": value.get("description", "") if isinstance(value, dict) else "",
-                "universe_enabled": value.get("universe_enabled") if isinstance(value, dict) else None,
-                "revision_context_mode": value.get("revision_context_mode") if isinstance(value, dict) else None,
-                "context_document_count": value.get("context_document_count") if isinstance(value, dict) else None,
-                "semantic_code_chunk_limit": value.get("semantic_code_chunk_limit") if isinstance(value, dict) else None,
+                "description": (
+                    value.get("description", "") if isinstance(value, dict) else ""
+                ),
+                "universe_enabled": (
+                    value.get("universe_enabled") if isinstance(value, dict) else None
+                ),
+                "revision_context_mode": (
+                    value.get("revision_context_mode")
+                    if isinstance(value, dict)
+                    else None
+                ),
+                "context_document_count": (
+                    value.get("context_document_count")
+                    if isinstance(value, dict)
+                    else None
+                ),
+                "semantic_code_chunk_limit": (
+                    value.get("semantic_code_chunk_limit")
+                    if isinstance(value, dict)
+                    else None
+                ),
             }
             for name, value in sorted(profiles.items())
         ],
@@ -366,12 +423,31 @@ def main() -> int:
         return 0
 
     profile = apply_overrides(choose_profile(profile_doc, args.profile), args.set)
-    revision_context_path, revision_context_payload = revision_context_from_profile(repo_root, profile, args.revision_context)
-    command = render_command(repo_root, project_python, profile, args.request, revision_context_path, revision_context_payload)
-    block_pointer_command = render_block_pointer_command(repo_root, project_python, profile)
-    revision_context_command = render_revision_context_command(repo_root, project_python)
+    revision_context_path, revision_context_payload = revision_context_from_profile(
+        repo_root, profile, args.revision_context
+    )
+    command = render_command(
+        repo_root,
+        project_python,
+        profile,
+        args.request,
+        revision_context_path,
+        revision_context_payload,
+    )
+    block_pointer_command = render_block_pointer_command(
+        repo_root, project_python, profile
+    )
+    revision_context_command = render_revision_context_command(
+        repo_root, project_python
+    )
     postrun_package_command = render_postrun_package_command(repo_root, project_python)
-    candidate_summary = revision_context_payload.get("candidate_applicability_summary") if isinstance(revision_context_payload.get("candidate_applicability_summary"), dict) else {}
+    candidate_summary = (
+        revision_context_payload.get("candidate_applicability_summary")
+        if isinstance(
+            revision_context_payload.get("candidate_applicability_summary"), dict
+        )
+        else {}
+    )
     report = {
         "schema_version": 6,
         "kind": "heap_runtime_launcher_command",
@@ -379,12 +455,27 @@ def main() -> int:
         "profiles_file": str(profiles_path),
         "profile_name": profile.get("profile_name"),
         "profile": profile,
-        "revision_context_selection_policy": "latest_complete_heap_context_closure_with_composer_json" if profile.get("revision_context_mode") == "auto_latest" and not args.revision_context else ("explicit_revision_context" if args.revision_context else "off"),
-        "revision_context_path": str(revision_context_path) if revision_context_path else "",
+        "revision_context_selection_policy": (
+            "latest_complete_heap_context_closure_with_composer_json"
+            if profile.get("revision_context_mode") == "auto_latest"
+            and not args.revision_context
+            else ("explicit_revision_context" if args.revision_context else "off")
+        ),
+        "revision_context_path": (
+            str(revision_context_path) if revision_context_path else ""
+        ),
         "revision_context_loaded": bool(revision_context_payload),
-        "revision_context_task_count": len(revision_context_payload.get("tasks", [])) if isinstance(revision_context_payload.get("tasks"), list) else 0,
-        "revision_context_requires_concrete_rewrite": revision_context_payload.get("requires_concrete_rewrite"),
-        "revision_context_priority_next_action": revision_context_payload.get("priority_next_action"),
+        "revision_context_task_count": (
+            len(revision_context_payload.get("tasks", []))
+            if isinstance(revision_context_payload.get("tasks"), list)
+            else 0
+        ),
+        "revision_context_requires_concrete_rewrite": revision_context_payload.get(
+            "requires_concrete_rewrite"
+        ),
+        "revision_context_priority_next_action": revision_context_payload.get(
+            "priority_next_action"
+        ),
         "revision_context_candidate_applicability_summary": candidate_summary,
         "cli_bound_profile_keys": profile_cli_keys(profile),
         "external_metadata": profile_external_metadata(profile),
@@ -406,7 +497,9 @@ def main() -> int:
         if not output.is_absolute():
             output = repo_root / output
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        output.write_text(
+            json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
     print(command)
     if args.include_block_pointer_command:
         print("\n# External heap block-pointer manifest command")

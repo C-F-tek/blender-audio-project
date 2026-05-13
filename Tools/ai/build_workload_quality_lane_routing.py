@@ -9,6 +9,7 @@ workload lanes.
 
 It never executes providers and never modifies Blender/runtime/legacy outputs.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -40,7 +41,11 @@ def _default_context_files(report: dict[str, Any] | None) -> list[str]:
     results = checks.get("results") if isinstance(checks, dict) else []
     if not isinstance(results, list):
         return []
-    return [str(item.get("path")) for item in results if isinstance(item, dict) and item.get("path")]
+    return [
+        str(item.get("path"))
+        for item in results
+        if isinstance(item, dict) and item.get("path")
+    ]
 
 
 def _primary_advisory_provider(advisory_lanes: list[str]) -> dict[str, Any]:
@@ -70,10 +75,16 @@ def _render_markdown(report: dict[str, Any]) -> str:
     provider = report.get("primary_advisory_provider", {})
     lines = ["# AI Workload Quality Lane Routing", ""]
     lines.append(f"- Mode: `{report['mode']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{report['provider_execution_performed']}`"
+    )
     lines.append(f"- Quality report present: `{routing['quality_report_present']}`")
-    lines.append(f"- Advisory lanes: `{', '.join(routing['advisory_lanes']) or 'none'}`")
-    lines.append(f"- Excluded advisory lanes: `{', '.join(routing['excluded_advisory_lanes']) or 'none'}`")
+    lines.append(
+        f"- Advisory lanes: `{', '.join(routing['advisory_lanes']) or 'none'}`"
+    )
+    lines.append(
+        f"- Excluded advisory lanes: `{', '.join(routing['excluded_advisory_lanes']) or 'none'}`"
+    )
     lines.append(f"- Primary advisory provider: `{provider.get('provider') or 'none'}`")
     lines.append(f"- Primary compute lane: `{provider.get('compute_lane') or 'none'}`")
     lines.append("")
@@ -83,7 +94,9 @@ def _render_markdown(report: dict[str, Any]) -> str:
     if trusted:
         for item in trusted:
             lane = item.get("lane") or "untracked"
-            lines.append(f"- `{item['path']}` — lane `{lane}`, reason `{item['reason']}`")
+            lines.append(
+                f"- `{item['path']}` — lane `{lane}`, reason `{item['reason']}`"
+            )
     else:
         lines.append("- none")
     lines.append("")
@@ -93,7 +106,9 @@ def _render_markdown(report: dict[str, Any]) -> str:
     if excluded:
         for item in excluded:
             lane = item.get("lane") or "unknown"
-            lines.append(f"- `{item['path']}` — lane `{lane}`, reason `{item['reason']}`")
+            lines.append(
+                f"- `{item['path']}` — lane `{lane}`, reason `{item['reason']}`"
+            )
     else:
         lines.append("- none")
     lines.append("")
@@ -104,8 +119,10 @@ def _render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def build_lane_routing_report(repo_root: Path, quality_report_path: Path, context_files: list[str]) -> dict[str, Any]:
-    from Tools.ai.workload_quality import (  # noqa: PLC0415
+def build_lane_routing_report(
+    repo_root: Path, quality_report_path: Path, context_files: list[str]
+) -> dict[str, Any]:
+    from tools.ai.workload_quality import (  # noqa: PLC0415
         build_quality_routing_summary,
         load_workload_quality_report,
         route_context_files_by_quality,
@@ -115,14 +132,18 @@ def build_lane_routing_report(repo_root: Path, quality_report_path: Path, contex
     candidates = context_files or _default_context_files(quality_report)
     routing = route_context_files_by_quality(candidates, quality_report)
     summary = build_quality_routing_summary(quality_report)
-    primary_provider = _primary_advisory_provider(list(summary.get("advisory_lanes") or []))
+    primary_provider = _primary_advisory_provider(
+        list(summary.get("advisory_lanes") or [])
+    )
     routing["primary_advisory_provider"] = primary_provider
     summary["primary_advisory_provider"] = primary_provider
 
     errors: list[str] = []
     warnings: list[str] = []
     if not summary["quality_report_present"]:
-        warnings.append("quality report is missing; no workload-specific context was excluded")
+        warnings.append(
+            "quality report is missing; no workload-specific context was excluded"
+        )
     if not summary["advisory_lanes"]:
         warnings.append("no usable workload lanes are available for advisory context")
 
@@ -153,15 +174,27 @@ def build_lane_routing_report(repo_root: Path, quality_report_path: Path, contex
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--quality-report", default="output/validation/ai_workload_report_quality.json")
-    parser.add_argument("--context-file", action="append", default=[], help="Candidate context file. Repeatable or comma-separated.")
-    parser.add_argument("--output", default="output/validation/ai_workload_quality_lane_routing.json")
+    parser.add_argument(
+        "--quality-report", default="output/validation/ai_workload_report_quality.json"
+    )
+    parser.add_argument(
+        "--context-file",
+        action="append",
+        default=[],
+        help="Candidate context file. Repeatable or comma-separated.",
+    )
+    parser.add_argument(
+        "--output", default="output/validation/ai_workload_quality_lane_routing.json"
+    )
     parser.add_argument("--markdown-output", default="")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     _ensure_repo_imports(repo_root)
-    from Tools.validation.report_utils import resolve_output_path, write_json_report  # noqa: PLC0415
+    from tools.validation.report_utils import (  # noqa: PLC0415
+        resolve_output_path,
+        write_json_report,
+    )
 
     quality_report_path = Path(args.quality_report)
     if not quality_report_path.is_absolute():

@@ -15,6 +15,7 @@ reported, but must not prevent later adapters from producing pointer/revision
 artifacts when their input files exist. A blocked product still needs a complete
 operator package and next-run revision context.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,7 +26,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
 REQUIRED_COMPOSER_JSON = "heap_final_proposal_composer.json"
 
 
@@ -34,7 +34,11 @@ def resolve_repo_root(value: str) -> Path:
 
 
 def is_complete_heap_run_dir(path: Path) -> bool:
-    return path.is_dir() and path.name.startswith("heap_context_closure_") and (path / REQUIRED_COMPOSER_JSON).exists()
+    return (
+        path.is_dir()
+        and path.name.startswith("heap_context_closure_")
+        and (path / REQUIRED_COMPOSER_JSON).exists()
+    )
 
 
 def latest_run_dir(repo_root: Path) -> Path | None:
@@ -57,7 +61,9 @@ def resolve_run_dir(repo_root: Path, value: str) -> Path:
         return path.resolve()
     latest = latest_run_dir(repo_root)
     if latest is None:
-        raise SystemExit("no complete heap_context_closure_* run directory with heap_final_proposal_composer.json found under output/validation")
+        raise SystemExit(
+            "no complete heap_context_closure_* run directory with heap_final_proposal_composer.json found under output/validation"
+        )
     return latest
 
 
@@ -93,7 +99,9 @@ def run_command(command: list[str], repo_root: Path) -> dict[str, Any]:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def required_file(path: Path, label: str) -> None:
@@ -124,14 +132,22 @@ def explicit_provider_execution_from_reports(*reports: dict[str, Any]) -> bool:
     preserves boolean evidence already computed by the normalizer, pointer
     manifest, long-response composer, or revision context.
     """
-    return any(report.get("provider_execution_performed") is True for report in reports if isinstance(report, dict))
+    return any(
+        report.get("provider_execution_performed") is True
+        for report in reports
+        if isinstance(report, dict)
+    )
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--python-exe", default="")
-    parser.add_argument("--run-dir", default="", help="Defaults to latest complete output/validation/heap_context_closure_* directory.")
+    parser.add_argument(
+        "--run-dir",
+        default="",
+        help="Defaults to latest complete output/validation/heap_context_closure_* directory.",
+    )
     parser.add_argument("--max-block-chars", type=int, default=9000)
     parser.add_argument("--max-blocks", type=int, default=0)
     parser.add_argument("--include-rejected-history", action="store_true")
@@ -235,11 +251,15 @@ def main() -> int:
         if not result["passed"]:
             if name == "normalize_causality" and causality_json.exists():
                 result["degraded_continuation"] = True
-                result["degraded_reason"] = "causality normalization wrote a blocked/failed product report; continuing packaging"
+                result["degraded_reason"] = (
+                    "causality normalization wrote a blocked/failed product report; continuing packaging"
+                )
                 continue
             if name == "build_pointer_manifest" and pointer_json.exists():
                 result["degraded_continuation"] = True
-                result["degraded_reason"] = "pointer manifest exists despite non-zero returncode; continuing packaging"
+                result["degraded_reason"] = (
+                    "pointer manifest exists despite non-zero returncode; continuing packaging"
+                )
                 continue
             hard_failure = True
             break
@@ -250,11 +270,16 @@ def main() -> int:
     revision_report = read_json_object(revision_json)
 
     causality_passed = json_file_bool(causality_json, "causal_chain_passed")
-    product_acceptance_passed = json_file_bool(causality_json, "product_acceptance_passed")
+    product_acceptance_passed = json_file_bool(
+        causality_json, "product_acceptance_passed"
+    )
     pointer_passed = json_file_bool(pointer_json, "passed")
     long_response_passed = json_file_bool(long_response_json, "passed")
     revision_passed = json_file_bool(revision_json, "passed")
-    packaging_complete = all(path.exists() for path in (causality_json, pointer_json, long_response_md, revision_json))
+    packaging_complete = all(
+        path.exists()
+        for path in (causality_json, pointer_json, long_response_md, revision_json)
+    )
     command_failures = [result for result in results if not result.get("passed")]
 
     report = {
@@ -263,7 +288,11 @@ def main() -> int:
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": repo_root.as_posix(),
         "run_dir": str(run_dir),
-        "run_dir_selection_policy": "latest_complete_heap_context_closure_with_composer_json" if not args.run_dir else "explicit_run_dir",
+        "run_dir_selection_policy": (
+            "latest_complete_heap_context_closure_with_composer_json"
+            if not args.run_dir
+            else "explicit_run_dir"
+        ),
         "passed": packaging_complete and not hard_failure,
         "product_acceptance_passed": product_acceptance_passed,
         "packaging_complete": packaging_complete,
@@ -285,14 +314,22 @@ def main() -> int:
         "patch_application_performed": False,
         "source_writes_performed": False,
         "results": results,
-        "errors": [result["stderr_tail"] for result in command_failures if result.get("stderr_tail") and not result.get("degraded_continuation")],
+        "errors": [
+            result["stderr_tail"]
+            for result in command_failures
+            if result.get("stderr_tail") and not result.get("degraded_continuation")
+        ],
         "warnings": [
             f"degraded postrun step: {result.get('name')} returncode={result.get('returncode')}"
             for result in command_failures
             if result.get("degraded_continuation")
         ],
     }
-    output = Path(args.output).resolve() if args.output else run_dir / "external_heap_postrun_package.json"
+    output = (
+        Path(args.output).resolve()
+        if args.output
+        else run_dir / "external_heap_postrun_package.json"
+    )
     write_json(output, report)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2

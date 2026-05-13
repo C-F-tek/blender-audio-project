@@ -6,6 +6,7 @@ extracts the useful semantics from the old provider governor layer into a small,
 provider-free contract that can be written to the heap before any GPU/NPU/LLM
 execution is allowed.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -17,12 +18,20 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 SAFETY_FLAGS = {
     "provider_execution_performed": False,
@@ -106,14 +115,20 @@ def normalized_npu_micro_start_mode(value: str) -> str:
     return aliases.get(raw, raw)
 
 
-def clamp_loop_iterations(config: ProviderBudgetConfig, requested_max_iterations: int) -> int:
+def clamp_loop_iterations(
+    config: ProviderBudgetConfig, requested_max_iterations: int
+) -> int:
     max_rounds = positive_int(config.max_rounds, 1)
     requested = positive_int(requested_max_iterations, max_rounds)
     return max(1, min(requested, max_rounds))
 
 
-def build_budget_plan(config: ProviderBudgetConfig, requested_max_iterations: int | None = None) -> dict[str, Any]:
-    max_iterations = clamp_loop_iterations(config, requested_max_iterations or config.max_rounds)
+def build_budget_plan(
+    config: ProviderBudgetConfig, requested_max_iterations: int | None = None
+) -> dict[str, Any]:
+    max_iterations = clamp_loop_iterations(
+        config, requested_max_iterations or config.max_rounds
+    )
     return {
         "kind": "heap_provider_budget_plan",
         "objective": config.objective,
@@ -131,9 +146,13 @@ def build_budget_plan(config: ProviderBudgetConfig, requested_max_iterations: in
             **DEFAULT_LANES,
             "npu_critic": {
                 **DEFAULT_LANES["npu_critic"],
-                "start_mode": normalized_npu_micro_start_mode(config.npu_micro_start_mode),
+                "start_mode": normalized_npu_micro_start_mode(
+                    config.npu_micro_start_mode
+                ),
                 "timeout_seconds": positive_int(config.npu_micro_timeout_seconds, 1),
-                "final_wait_seconds": positive_int(config.npu_final_wait_seconds, 0, minimum=0),
+                "final_wait_seconds": positive_int(
+                    config.npu_final_wait_seconds, 0, minimum=0
+                ),
                 "max_context_chars": positive_int(config.npu_max_context_chars, 1),
                 "max_prompt_chars": positive_int(config.npu_max_prompt_chars, 1),
                 "max_new_tokens": positive_int(config.npu_max_new_tokens, 1),
@@ -158,12 +177,17 @@ def build_budget_plan(config: ProviderBudgetConfig, requested_max_iterations: in
     }
 
 
-def build_requirements(config: ProviderBudgetConfig, budget: dict[str, Any]) -> list[dict[str, Any]]:
-    loop_budget = budget.get("loop_budget") if isinstance(budget.get("loop_budget"), dict) else {}
+def build_requirements(
+    config: ProviderBudgetConfig, budget: dict[str, Any]
+) -> list[dict[str, Any]]:
+    loop_budget = (
+        budget.get("loop_budget") if isinstance(budget.get("loop_budget"), dict) else {}
+    )
     return [
         {
             "requirement": "operator_intent_for_provider_generation",
-            "passed": bool(config.operator_intent) or not bool(config.allow_provider_generation),
+            "passed": bool(config.operator_intent)
+            or not bool(config.allow_provider_generation),
             "reason": "provider generation requires explicit operator intent; deterministic heap lab can run without it",
         },
         {
@@ -178,25 +202,37 @@ def build_requirements(config: ProviderBudgetConfig, budget: dict[str, Any]) -> 
         },
         {
             "requirement": "generation_blocked_by_default",
-            "passed": all(not lane.get("generation_allowed") for lane in budget.get("provider_lanes", {}).values()),
+            "passed": all(
+                not lane.get("generation_allowed")
+                for lane in budget.get("provider_lanes", {}).values()
+            ),
             "reason": "all lanes must remain non-generative until a future permit explicitly unlocks providers",
         },
         {
             "requirement": "product_status_required",
-            "passed": budget.get("global_limits", {}).get("product_status_required") is True,
+            "passed": budget.get("global_limits", {}).get("product_status_required")
+            is True,
             "reason": "heap loop must exit with ready or blocked_with_reason",
         },
     ]
 
 
-def build_run_permit(config: ProviderBudgetConfig, requirements: list[dict[str, Any]]) -> dict[str, Any]:
+def build_run_permit(
+    config: ProviderBudgetConfig, requirements: list[dict[str, Any]]
+) -> dict[str, Any]:
     failed = [item for item in requirements if item.get("passed") is not True]
-    permit_allowed = bool(config.allow_provider_generation and config.operator_intent and not failed)
+    permit_allowed = bool(
+        config.allow_provider_generation and config.operator_intent and not failed
+    )
     permit = {
         "kind": "heap_provider_run_permit",
         "passed": True,
         "permit_allowed": permit_allowed,
-        "decision": "allow_provider_generation" if permit_allowed else "deny_provider_generation",
+        "decision": (
+            "allow_provider_generation"
+            if permit_allowed
+            else "deny_provider_generation"
+        ),
         "allow_provider_generation_requested": bool(config.allow_provider_generation),
         "operator_intent": bool(config.operator_intent),
         "failed_requirements": failed,
@@ -207,15 +243,25 @@ def build_run_permit(config: ProviderBudgetConfig, requirements: list[dict[str, 
             "provider_generation_must_write_heap_events": True,
             "provider_generation_must_write_tool_telemetry": True,
         },
-        "warnings": [] if permit_allowed else ["provider generation denied; deterministic heap/tool loop remains valid"],
+        "warnings": (
+            []
+            if permit_allowed
+            else [
+                "provider generation denied; deterministic heap/tool loop remains valid"
+            ]
+        ),
         "errors": [],
     }
     permit.update(SAFETY_FLAGS)
     return permit
 
 
-def build_heap_provider_budget_governor(config: ProviderBudgetConfig, requested_max_iterations: int | None = None) -> dict[str, Any]:
-    budget = build_budget_plan(config, requested_max_iterations=requested_max_iterations)
+def build_heap_provider_budget_governor(
+    config: ProviderBudgetConfig, requested_max_iterations: int | None = None
+) -> dict[str, Any]:
+    budget = build_budget_plan(
+        config, requested_max_iterations=requested_max_iterations
+    )
     requirements = build_requirements(config, budget)
     permit = build_run_permit(config, requirements)
     governor = {
@@ -264,15 +310,32 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Passed: `{report.get('passed')}`")
     lines.append(f"- Decision: `{report.get('decision')}`")
     lines.append(f"- Permit allowed: `{report.get('permit_allowed')}`")
-    loop_budget = report.get("loop_budget") if isinstance(report.get("loop_budget"), dict) else {}
+    loop_budget = (
+        report.get("loop_budget") if isinstance(report.get("loop_budget"), dict) else {}
+    )
     lines.extend(["", "## Loop budget", ""])
-    for key in ("budget_minutes", "max_rounds", "max_iterations", "files_per_round", "max_context_files", "max_chars_per_file", "max_new_tokens", "keep_alive"):
+    for key in (
+        "budget_minutes",
+        "max_rounds",
+        "max_iterations",
+        "files_per_round",
+        "max_context_files",
+        "max_chars_per_file",
+        "max_new_tokens",
+        "keep_alive",
+    ):
         lines.append(f"- {key}: `{loop_budget.get(key)}`")
     lines.extend(["", "## Provider lanes", ""])
-    lanes = report.get("provider_lanes") if isinstance(report.get("provider_lanes"), dict) else {}
+    lanes = (
+        report.get("provider_lanes")
+        if isinstance(report.get("provider_lanes"), dict)
+        else {}
+    )
     for lane, value in lanes.items():
         if isinstance(value, dict):
-            lines.append(f"- `{lane}` role=`{value.get('role')}` provider=`{value.get('provider_kind')}` generation_allowed=`{value.get('generation_allowed')}`")
+            lines.append(
+                f"- `{lane}` role=`{value.get('role')}` provider=`{value.get('provider_kind')}` generation_allowed=`{value.get('generation_allowed')}`"
+            )
     if report.get("warnings"):
         lines.extend(["", "## Warnings", ""])
         lines.extend(f"- {item}" for item in report.get("warnings", []))
@@ -282,7 +345,9 @@ def render_markdown(report: dict[str, Any]) -> str:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--objective", default="prove heap-driven provider budget before runtime loop")
+    parser.add_argument(
+        "--objective", default="prove heap-driven provider budget before runtime loop"
+    )
     parser.add_argument("--budget-minutes", type=int, default=5)
     parser.add_argument("--max-rounds", type=int, default=4)
     parser.add_argument("--files-per-round", type=int, default=4)
@@ -299,8 +364,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allow-provider-generation", action="store_true")
     parser.add_argument("--operator-intent", action="store_true")
     parser.add_argument("--requested-max-iterations", type=int, default=0)
-    parser.add_argument("--output", default="output/validation/heap_provider_budget_governor.json")
-    parser.add_argument("--markdown-output", default="output/validation/heap_provider_budget_governor.md")
+    parser.add_argument(
+        "--output", default="output/validation/heap_provider_budget_governor.json"
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/validation/heap_provider_budget_governor.md",
+    )
     return parser.parse_args()
 
 

@@ -5,12 +5,13 @@ This module contains pure path/command/scheduling helpers extracted from the
 provider mesh orchestrator. Launching, harvesting and telemetry remain in the
 orchestrator for this phase.
 """
+
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
-from Tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
+from tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
 
 
 def resolve_path(repo_root: Path, value: str | Path) -> Path:
@@ -20,16 +21,20 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
     return path.resolve()
 
 
-def gpu0_peer_support_output_path(args: argparse.Namespace, repo_root: Path, round_id: int) -> Path:
+def gpu0_peer_support_output_path(
+    args: argparse.Namespace, repo_root: Path, round_id: int
+) -> Path:
     support_dir = resolve_path(repo_root, args.gpu0_peer_support_dir)
     support_dir.mkdir(parents=True, exist_ok=True)
     return support_dir / f"round_{round_id:03d}_gpu0_peer_support.json"
 
 
-def build_gpu0_peer_support_command(args: argparse.Namespace, support_json: Path, round_id: int) -> list[str]:
+def build_gpu0_peer_support_command(
+    args: argparse.Namespace, support_json: Path, round_id: int
+) -> list[str]:
     return [
         resolve_child_python(),
-        "Tools/ai/build_openvino_gpu0_workload_report.py",
+        "tools/ai/build_openvino_gpu0_workload_report.py",
         "--repo-root",
         ".",
         "--output",

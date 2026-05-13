@@ -5,12 +5,13 @@ This phase extracts the NPU micro lane path, context and command builders while
 leaving orchestration, deferral policy, broker execution and final harvesting in
 run_agent_gpu_npu_parallel_orchestrator.py.
 """
+
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
-from Tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
+from tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
 
 
 def resolve_path(repo_root: Path, value: str | Path) -> Path:
@@ -20,13 +21,17 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
     return path.resolve()
 
 
-def collect_runtime_tool_context_reports(args: argparse.Namespace, repo_root: Path, round_id: int) -> list[Path]:
+def collect_runtime_tool_context_reports(
+    args: argparse.Namespace, repo_root: Path, round_id: int
+) -> list[Path]:
     if not getattr(args, "enable_runtime_tool_broker", False):
         return []
     base = resolve_path(repo_root, args.runtime_tool_output_dir)
     candidates = [
         base / "round_000" / "round_000_runtime_tool_broker.json",
-        base / f"round_{round_id:03d}" / f"round_{round_id:03d}_runtime_tool_broker.json",
+        base
+        / f"round_{round_id:03d}"
+        / f"round_{round_id:03d}_runtime_tool_broker.json",
     ]
     reports: list[Path] = []
     seen: set[str] = set()
@@ -39,13 +44,17 @@ def collect_runtime_tool_context_reports(args: argparse.Namespace, repo_root: Pa
     return reports
 
 
-def npu_micro_support_output_path(args: argparse.Namespace, repo_root: Path, round_id: int) -> Path:
+def npu_micro_support_output_path(
+    args: argparse.Namespace, repo_root: Path, round_id: int
+) -> Path:
     support_dir = resolve_path(repo_root, args.npu_micro_support_dir)
     support_dir.mkdir(parents=True, exist_ok=True)
     return support_dir / f"round_{round_id:03d}_npu_micro_support.json"
 
 
-def npu_micro_context_reports(args: argparse.Namespace, repo_root: Path, round_id: int) -> list[Path]:
+def npu_micro_context_reports(
+    args: argparse.Namespace, repo_root: Path, round_id: int
+) -> list[Path]:
     reports = collect_runtime_tool_context_reports(args, repo_root, round_id)
     snapshot_value = str(getattr(args, "runtime_heap_snapshot", "") or "")
     if snapshot_value:
@@ -72,7 +81,7 @@ def build_npu_micro_support_command(
 ) -> list[str]:
     command = [
         resolve_child_python(),
-        "Tools/ai/run_npu_gpu_deep_review_auditor.py",
+        "tools/ai/run_npu_gpu_deep_review_auditor.py",
         "--repo-root",
         ".",
         "--gpu-review",

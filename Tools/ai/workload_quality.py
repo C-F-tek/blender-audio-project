@@ -8,13 +8,14 @@ workload lanes may be used as advisory context by packet/proposal builders.
 They do not execute providers, do not call Ollama/OpenVINO/NPU/GPU and do not
 modify legacy runtime outputs.
 """
+
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
-
+from typing import Any
 
 DEFAULT_QUALITY_REPORT = "output/validation/ai_workload_report_quality.json"
 TRACKED_WORKLOAD_PATH_SUFFIXES = (
@@ -73,12 +74,16 @@ def read_json_if_exists(path: Path) -> dict[str, Any] | None:
         return None
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except Exception:  # noqa: BLE001 - caller turns missing/unreadable into disabled routing.
+    except (
+        Exception
+    ):  # noqa: BLE001 - caller turns missing/unreadable into disabled routing.
         return None
     return data if isinstance(data, dict) else None
 
 
-def load_workload_quality_report(repo_root: Path, report_path: str | Path = DEFAULT_QUALITY_REPORT) -> dict[str, Any] | None:
+def load_workload_quality_report(
+    repo_root: Path, report_path: str | Path = DEFAULT_QUALITY_REPORT
+) -> dict[str, Any] | None:
     """Load the workload quality report, returning ``None`` when unavailable."""
 
     return read_json_if_exists(_resolve_repo_path(repo_root, report_path))
@@ -150,7 +155,9 @@ def lane_for_context_path(path: str | Path, report: dict[str, Any] | None) -> st
     return tracked_workload_lane_for_path(normalized)
 
 
-def classify_context_path(path: str | Path, report: dict[str, Any] | None) -> AdvisoryContextDecision:
+def classify_context_path(
+    path: str | Path, report: dict[str, Any] | None
+) -> AdvisoryContextDecision:
     """Classify one context file against the quality report.
 
     Unknown paths remain trusted because the gate only applies to known generated
@@ -161,7 +168,12 @@ def classify_context_path(path: str | Path, report: dict[str, Any] | None) -> Ad
     normalized = _normalize_path(path)
     lane = lane_for_context_path(normalized, report)
     if not lane:
-        return AdvisoryContextDecision(path=normalized, lane="", trusted=True, reason="not_a_tracked_workload_report")
+        return AdvisoryContextDecision(
+            path=normalized,
+            lane="",
+            trusted=True,
+            reason="not_a_tracked_workload_report",
+        )
 
     if not is_quality_report(report):
         return AdvisoryContextDecision(
@@ -175,8 +187,14 @@ def classify_context_path(path: str | Path, report: dict[str, Any] | None) -> Ad
     by_lane = results_by_lane(report)
     item = by_lane.get(lane, {})
     classification = str(item.get("classification") or "")
-    advisory_use = item.get("advisory_use") if isinstance(item.get("advisory_use"), dict) else {}
-    if lane in usable_lanes(report) and item.get("usable") is True and advisory_use.get("allowed_as_advisory_context") is not False:
+    advisory_use = (
+        item.get("advisory_use") if isinstance(item.get("advisory_use"), dict) else {}
+    )
+    if (
+        lane in usable_lanes(report)
+        and item.get("usable") is True
+        and advisory_use.get("allowed_as_advisory_context") is not False
+    ):
         return AdvisoryContextDecision(
             path=normalized,
             lane=lane,
@@ -188,12 +206,16 @@ def classify_context_path(path: str | Path, report: dict[str, Any] | None) -> Ad
         path=normalized,
         lane=lane,
         trusted=False,
-        reason=classification or advisory_use.get("reason") or "unusable_workload_report",
+        reason=classification
+        or advisory_use.get("reason")
+        or "unusable_workload_report",
         classification=classification,
     )
 
 
-def route_context_files_by_quality(context_files: Iterable[str], report: dict[str, Any] | None) -> dict[str, Any]:
+def route_context_files_by_quality(
+    context_files: Iterable[str], report: dict[str, Any] | None
+) -> dict[str, Any]:
     """Return trusted/excluded context-file routing for workload reports."""
 
     decisions = [classify_context_path(path, report) for path in context_files]
@@ -209,8 +231,15 @@ def route_context_files_by_quality(context_files: Iterable[str], report: dict[st
     }
 
 
-def trusted_context_file_paths(context_files: Iterable[str], report: dict[str, Any] | None) -> list[str]:
-    return [item["path"] for item in route_context_files_by_quality(context_files, report)["trusted_context_files"]]
+def trusted_context_file_paths(
+    context_files: Iterable[str], report: dict[str, Any] | None
+) -> list[str]:
+    return [
+        item["path"]
+        for item in route_context_files_by_quality(context_files, report)[
+            "trusted_context_files"
+        ]
+    ]
 
 
 def build_quality_routing_summary(report: dict[str, Any] | None) -> dict[str, Any]:

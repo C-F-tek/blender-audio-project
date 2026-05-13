@@ -13,9 +13,13 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from Tools.ai.runtime_hardware_capability.workloads import run_openvino_gpu0_tensor_test
-from Tools.ai.provider_runtime_heap import ProviderRuntimeHeap
-from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+from tools.ai.provider_runtime_heap import ProviderRuntimeHeap, record_lane_diagnostic
+from tools.ai.runtime_hardware_capability.workloads import run_openvino_gpu0_tensor_test
+from tools.validation.report_utils import (
+    resolve_output_path,
+    write_json_report,
+    write_text_report,
+)
 
 
 def now_iso() -> str:
@@ -24,7 +28,11 @@ def now_iso() -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -63,7 +71,9 @@ def classify_primary(primary: dict[str, Any]) -> list[str]:
     return classifications
 
 
-def response_items(task_packet: dict[str, Any], primary: dict[str, Any], workload: dict[str, Any]) -> list[dict[str, Any]]:
+def response_items(
+    task_packet: dict[str, Any], primary: dict[str, Any], workload: dict[str, Any]
+) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     for task in safe_list(task_packet.get("tasks")):
         if not isinstance(task, dict):
@@ -74,12 +84,16 @@ def response_items(task_packet: dict[str, Any], primary: dict[str, Any], workloa
         findings: list[str] = []
         if "primary_advisory" in task_id and not primary.get("passed"):
             status = "blocked"
-            findings.append("GPU1 primary advisory is not proven; heap runtime must classify degradation.")
+            findings.append(
+                "GPU1 primary advisory is not proven; heap runtime must classify degradation."
+            )
         if workload.get("passed") is not True:
             status = "blocked"
             findings.append("GPU0 OpenVINO peer workload failed or was unavailable.")
         if not findings:
-            findings.append("Task can be handled with deterministic/broker evidence in this peer cycle.")
+            findings.append(
+                "Task can be handled with deterministic/broker evidence in this peer cycle."
+            )
         items.append(
             {
                 "task_id": task_id,
@@ -87,20 +101,34 @@ def response_items(task_packet: dict[str, Any], primary: dict[str, Any], workloa
                 "status": status,
                 "findings": findings,
                 "requires_gpu1_followup": not primary.get("passed"),
-                "requires_broker_context": "runtime_tool" in task_id or "patch_spec" in task_id,
+                "requires_broker_context": "runtime_tool" in task_id
+                or "patch_spec" in task_id,
             }
         )
     return items
 
 
-def tool_requests(task_packet: dict[str, Any], response: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    templates = [item for item in safe_list(task_packet.get("tool_request_templates")) if isinstance(item, dict)]
-    task_ids = {str(item.get("task_id")) for item in response if item.get("requires_broker_context")}
+def tool_requests(
+    task_packet: dict[str, Any], response: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    templates = [
+        item
+        for item in safe_list(task_packet.get("tool_request_templates"))
+        if isinstance(item, dict)
+    ]
+    task_ids = {
+        str(item.get("task_id"))
+        for item in response
+        if item.get("requires_broker_context")
+    }
     requests: list[dict[str, Any]] = []
     for index, template in enumerate(templates, start=1):
         request = dict(template)
         request.setdefault("id", f"gpu0_peer_tool_request_{index:03d}")
-        request.setdefault("reason", "GPU0 peer worker requested broker-controlled deterministic evidence.")
+        request.setdefault(
+            "reason",
+            "GPU0 peer worker requested broker-controlled deterministic evidence.",
+        )
         request["source"] = "gpu0_peer_companion"
         if task_ids:
             request["related_task_ids"] = sorted(task_ids)
@@ -127,10 +155,14 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], dict[str, An
     errors: list[str] = []
     if not model_dir:
         classifications.append("gpu0_peer_semantic_model_unconfigured")
-        warnings.append("IA_CARMINE_GPU0_COMPANION_MODEL_DIR not set; GPU0 peer emits numeric/tool evidence only.")
+        warnings.append(
+            "IA_CARMINE_GPU0_COMPANION_MODEL_DIR not set; GPU0 peer emits numeric/tool evidence only."
+        )
     else:
         semantic_mode = "semantic_model_configured_not_invoked_by_this_worker"
-        warnings.append("Semantic GPU0 model directory is configured; this worker currently keeps provider semantics in report-only numeric/tool mode.")
+        warnings.append(
+            "Semantic GPU0 model directory is configured; this worker currently keeps provider semantics in report-only numeric/tool mode."
+        )
     if not task_packet:
         classifications.append("gpu0_peer_task_packet_missing")
         errors.append("GPU0 peer task packet missing or invalid.")
@@ -152,7 +184,9 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], dict[str, An
         "role": "companion_peer_worker",
         "lane": "GPU0/OpenVINO",
         "production_role": "tool_request_producing_companion",
-        "provider_execution_performed": bool(workload.get("provider_execution_performed")),
+        "provider_execution_performed": bool(
+            workload.get("provider_execution_performed")
+        ),
         "semantic_execution_mode": semantic_mode,
         "gpu0_model_dir_configured": bool(model_dir),
         "task_packet": repo_rel(repo_root, task_path),
@@ -199,7 +233,6 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], dict[str, An
     return report, request_packet
 
 
-
 def append_runtime_heap_events(
     args: argparse.Namespace,
     repo_root: Path,
@@ -218,6 +251,24 @@ def append_runtime_heap_events(
     events: list[dict[str, Any]] = []
     correlation_id = f"{args.runtime_heap_stamp}:gpu1-gpu0-live-evidence"
     events.append(
+        record_lane_diagnostic(
+            heap,
+            "gpu0",
+            "ready" if report.get("passed") else "degraded",
+            "GPU0 peer companion worker completed.",
+            {
+                "passed": report.get("passed"),
+                "provider_execution_performed": report.get(
+                    "provider_execution_performed"
+                ),
+                "classifications": report.get("classifications", []),
+                "errors": report.get("errors", []),
+                "warnings": report.get("warnings", []),
+            },
+            correlation_id=f"{args.runtime_heap_stamp}:gpu0-peer-companion-diagnostic",
+        )
+    )
+    events.append(
         heap.append_event(
             source="gpu0",
             target="gpu1",
@@ -228,7 +279,9 @@ def append_runtime_heap_events(
                 "summary": "GPU0 coworker produced live response for GPU1 through runtime heap.",
                 "gpu0_report": report.get("stamp"),
                 "passed": report.get("passed"),
-                "provider_execution_performed": report.get("provider_execution_performed"),
+                "provider_execution_performed": report.get(
+                    "provider_execution_performed"
+                ),
                 "response_count": report.get("response_count"),
                 "tool_request_count": report.get("tool_request_count"),
                 "classifications": report.get("classifications", []),
@@ -265,7 +318,6 @@ def append_runtime_heap_events(
     return events
 
 
-
 def render_markdown(report: dict[str, Any]) -> str:
     lines = [
         "# GPU0 Peer Companion Response",
@@ -282,7 +334,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
     ]
     for item in safe_list(report.get("response_items")):
-        lines.append(f"- `{item.get('task_id')}` status=`{item.get('status')}` findings=`{item.get('findings')}`")
+        lines.append(
+            f"- `{item.get('task_id')}` status=`{item.get('status')}` findings=`{item.get('findings')}`"
+        )
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {item}" for item in safe_list(report.get("errors")))
@@ -299,9 +353,16 @@ def main() -> int:
     parser.add_argument("--stamp", required=True)
     parser.add_argument("--task-packet", required=True)
     parser.add_argument("--primary-advisory", required=True)
-    parser.add_argument("--output", default="output/validation/gpu0_peer_response_{stamp}.json")
-    parser.add_argument("--markdown-output", default="output/validation/gpu0_peer_response_{stamp}.md")
-    parser.add_argument("--tool-requests-output", default="output/validation/gpu0_tool_requests_{stamp}.json")
+    parser.add_argument(
+        "--output", default="output/validation/gpu0_peer_response_{stamp}.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/gpu0_peer_response_{stamp}.md"
+    )
+    parser.add_argument(
+        "--tool-requests-output",
+        default="output/validation/gpu0_tool_requests_{stamp}.json",
+    )
     parser.add_argument("--iterations", type=int, default=24)
     parser.add_argument("--min-seconds", type=float, default=1.0)
     parser.add_argument("--allow-degraded", action="store_true")
@@ -314,8 +375,12 @@ def main() -> int:
     report, requests = build_report(args)
     append_runtime_heap_events(args, repo_root, report, requests)
     output = resolve_output_path(repo_root, args.output.format(stamp=args.stamp))
-    markdown = resolve_output_path(repo_root, args.markdown_output.format(stamp=args.stamp))
-    request_output = resolve_output_path(repo_root, args.tool_requests_output.format(stamp=args.stamp))
+    markdown = resolve_output_path(
+        repo_root, args.markdown_output.format(stamp=args.stamp)
+    )
+    request_output = resolve_output_path(
+        repo_root, args.tool_requests_output.format(stamp=args.stamp)
+    )
     print(write_json_report(report, output), end="")
     write_text_report(render_markdown(report), markdown)
     write_json_report(requests, request_output)

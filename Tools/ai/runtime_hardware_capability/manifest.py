@@ -4,11 +4,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.runtime_hardware_capability.policy import (
+from tools.ai.runtime_hardware_capability.policy import (
     build_hardware_runtime_policy,
     policy_warnings,
 )
-from Tools.ai.runtime_hardware_capability.probes import (
+from tools.ai.runtime_hardware_capability.probes import (
     cpu_diagnostics,
     detect_openvino_devices,
     nvidia_smi_diagnostics,
@@ -67,7 +67,9 @@ def build_manifest(repo_root: Path) -> dict[str, Any]:
             name="cuda_gpu_primary_ollama_exclusive",
             resource="GPU 1 / NVIDIA RTX 5080",
             role="primary_advisory_provider",
-            status="available" if policy["cuda_gpu_primary"]["visible"] else "unavailable",
+            status=(
+                "available" if policy["cuda_gpu_primary"]["visible"] else "unavailable"
+            ),
             provider="ollama_or_cuda_runtime",
             diagnostics={"nvidia_smi": nvidia, "policy": policy["cuda_gpu_primary"]},
             workload_allowed=True,
@@ -97,9 +99,16 @@ def build_manifest(repo_root: Path) -> dict[str, Any]:
             name="openvino_gpu1_reserved_for_cuda_ollama",
             resource="GPU.1",
             role="reserved_for_cuda_ollama",
-            status="reserved" if policy["openvino_gpu1_reserved"]["visible"] else "unavailable",
+            status=(
+                "reserved"
+                if policy["openvino_gpu1_reserved"]["visible"]
+                else "unavailable"
+            ),
             provider="openvino_visibility_only",
-            diagnostics={"openvino": openvino, "policy": policy["openvino_gpu1_reserved"]},
+            diagnostics={
+                "openvino": openvino,
+                "policy": policy["openvino_gpu1_reserved"],
+            },
             workload_allowed=False,
             exclusive=True,
         ),
@@ -107,9 +116,13 @@ def build_manifest(repo_root: Path) -> dict[str, Any]:
 
     warnings: list[str] = []
     if not openvino.get("available"):
-        warnings.append("OpenVINO import/device detection unavailable; GPU.0/NPU are reported unavailable.")
+        warnings.append(
+            "OpenVINO import/device detection unavailable; GPU.0/NPU are reported unavailable."
+        )
     if not nvidia.get("available"):
-        warnings.append("nvidia-smi unavailable or failed; NVIDIA GPU advisory visibility is degraded.")
+        warnings.append(
+            "nvidia-smi unavailable or failed; NVIDIA GPU advisory visibility is degraded."
+        )
     warnings.extend(policy_warnings(policy))
 
     return {
@@ -131,7 +144,9 @@ def build_manifest(repo_root: Path) -> dict[str, Any]:
             "CUDA_GPU_PRIMARY": bool(policy["cuda_gpu_primary"]["visible"]),
             "GPU.0": bool(policy["openvino_gpu0"]["visible"]),
             "NPU": bool(policy["openvino_npu"]["visible"]),
-            "GPU.1_OPENVINO_VISIBLE_RESERVED": bool(policy["openvino_gpu1_reserved"]["visible"]),
+            "GPU.1_OPENVINO_VISIBLE_RESERVED": bool(
+                policy["openvino_gpu1_reserved"]["visible"]
+            ),
         },
         "errors": [],
         "warnings": warnings,

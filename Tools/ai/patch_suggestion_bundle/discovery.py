@@ -1,10 +1,11 @@
 """Suggestion report discovery for the final patch phase."""
+
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.patch_suggestion_bundle.common import (
+from tools.ai.patch_suggestion_bundle.common import (
     DEFAULT_CURRENT_SUGGESTION_REPORTS,
     repo_relative,
 )
@@ -53,7 +54,9 @@ def discover_suggestion_reports(
             lower_rel = rel.lower()
             if stamp.lower() not in lower_rel:
                 continue
-            if normalized_tokens and not any(token in lower_rel for token in normalized_tokens):
+            if normalized_tokens and not any(
+                token in lower_rel for token in normalized_tokens
+            ):
                 continue
             discovered.append((path.stat().st_mtime, rel))
             scan_item["matched"] += 1

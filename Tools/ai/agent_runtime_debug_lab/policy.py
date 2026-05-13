@@ -1,4 +1,5 @@
 """Policy and request validation for agent_runtime_debug_lab."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -85,7 +86,9 @@ def normalize_repo_path(repo_root: Path, raw_path: Any) -> tuple[str, str | None
     path = Path(raw)
     candidate = path if path.is_absolute() else repo_root / path
     try:
-        relative = candidate.resolve(strict=False).relative_to(repo_root.resolve()).as_posix()
+        relative = (
+            candidate.resolve(strict=False).relative_to(repo_root.resolve()).as_posix()
+        )
     except ValueError:
         return raw, "path escapes repository root"
     if not relative:
@@ -106,7 +109,9 @@ def is_forbidden_path(path: str) -> str | None:
     return None
 
 
-def validate_source_path(repo_root: Path, raw_path: Any, *, suffix: str | None = None) -> tuple[str, str | None]:
+def validate_source_path(
+    repo_root: Path, raw_path: Any, *, suffix: str | None = None
+) -> tuple[str, str | None]:
     path, error = normalize_repo_path(repo_root, raw_path)
     if error:
         return path, error
@@ -134,7 +139,9 @@ def validate_python_script(repo_root: Path, raw_path: Any) -> tuple[str, str | N
     return path, None
 
 
-def validate_output_path(repo_root: Path, raw_path: Any, *, required_suffix: str | None = None) -> tuple[str, str | None]:
+def validate_output_path(
+    repo_root: Path, raw_path: Any, *, required_suffix: str | None = None
+) -> tuple[str, str | None]:
     path, error = normalize_repo_path(repo_root, raw_path)
     if error:
         return path, error
@@ -155,7 +162,17 @@ def validate_string_args(args: Any) -> tuple[list[str], str | None]:
         if not isinstance(item, str):
             return [], "args must contain only strings"
         lowered = item.lower()
-        if any(token in lowered for token in ("git push", "git merge", "pip install", "ffmpeg", "blender", "ollama")):
+        if any(
+            token in lowered
+            for token in (
+                "git push",
+                "git merge",
+                "pip install",
+                "ffmpeg",
+                "blender",
+                "ollama",
+            )
+        ):
             return [], f"argument contains forbidden runtime/write token: {item}"
         out.append(item)
     return out, None

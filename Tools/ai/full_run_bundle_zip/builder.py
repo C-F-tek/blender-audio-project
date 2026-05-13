@@ -1,19 +1,19 @@
 from __future__ import annotations
 
+import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-import zipfile
 
-from Tools.ai.full_run_bundle_zip.discovery import (
+from tools.ai.full_run_bundle_zip.discovery import (
     candidate_entry,
     collect_candidates,
     discover_recursive_dir_files,
 )
-from Tools.ai.full_run_bundle_zip.git_status import run_git_status
-from Tools.ai.full_run_bundle_zip.paths import repo_relative
-from Tools.ai.full_run_bundle_zip.policy import default_required_recursive_roots
-from Tools.ai.full_run_bundle_zip.reports import render_markdown_report, write_json
+from tools.ai.full_run_bundle_zip.git_status import run_git_status
+from tools.ai.full_run_bundle_zip.paths import repo_relative
+from tools.ai.full_run_bundle_zip.policy import default_required_recursive_roots
+from tools.ai.full_run_bundle_zip.reports import render_markdown_report, write_json
 
 
 def add_sidecar_paths(
@@ -25,7 +25,12 @@ def add_sidecar_paths(
     completeness_md: Path,
 ) -> None:
     """Add sidecar report files to the ZIP member map."""
-    for path in (artifact_list_json, artifact_list_txt, completeness_json, completeness_md):
+    for path in (
+        artifact_list_json,
+        artifact_list_txt,
+        completeness_json,
+        completeness_md,
+    ):
         deduped_members[repo_relative(path, repo_root)] = path
 
 
@@ -89,7 +94,9 @@ def build_full_run_bundle(
             entry["included_in_zip"] = True
             entry["zip_member_count"] = 1
         elif candidate.path.is_dir():
-            files, skipped = discover_recursive_dir_files(candidate.path, repo_root, allow_output=allow_output)
+            files, skipped = discover_recursive_dir_files(
+                candidate.path, repo_root, allow_output=allow_output
+            )
             skipped_recursive.extend(skipped)
             for file_path in files:
                 member_paths.append((file_path, repo_relative(file_path, repo_root)))
@@ -111,7 +118,9 @@ def build_full_run_bundle(
         if status_error:
             warnings.append(f"git status unavailable: {status_error}")
         git_status_path.write_text(git_status, encoding="utf-8")
-        member_paths.append((git_status_path, repo_relative(git_status_path, repo_root)))
+        member_paths.append(
+            (git_status_path, repo_relative(git_status_path, repo_root))
+        )
 
     deduped_members: dict[str, Path] = {}
     for path, rel in member_paths:
@@ -120,7 +129,9 @@ def build_full_run_bundle(
 
     artifact_list = sorted(deduped_members)
     write_json(artifact_list_json, artifact_list)
-    artifact_list_txt.write_text("\n".join(artifact_list) + ("\n" if artifact_list else ""), encoding="utf-8")
+    artifact_list_txt.write_text(
+        "\n".join(artifact_list) + ("\n" if artifact_list else ""), encoding="utf-8"
+    )
 
     report: dict[str, Any] = {
         "schema_version": 1,
@@ -132,7 +143,9 @@ def build_full_run_bundle(
         "zip_path": repo_relative(zip_path, repo_root),
         "artifact_list_json": repo_relative(artifact_list_json, repo_root),
         "artifact_list_txt": repo_relative(artifact_list_txt, repo_root),
-        "git_status_after_run": repo_relative(git_status_path, repo_root) if include_git_status else None,
+        "git_status_after_run": (
+            repo_relative(git_status_path, repo_root) if include_git_status else None
+        ),
         "allow_output": allow_output,
         "include_default_recursive_roots": include_default_recursive_roots,
         "include_default_stamp_files": include_default_stamp_files,
@@ -150,12 +163,21 @@ def build_full_run_bundle(
         "passed": not errors,
     }
 
-    report["bundle_completeness_report_json"] = repo_relative(completeness_json, repo_root)
+    report["bundle_completeness_report_json"] = repo_relative(
+        completeness_json, repo_root
+    )
     report["bundle_completeness_report_md"] = repo_relative(completeness_md, repo_root)
     write_json(completeness_json, report)
     completeness_md.write_text(render_markdown_report(report), encoding="utf-8")
 
-    add_sidecar_paths(repo_root, deduped_members, artifact_list_json, artifact_list_txt, completeness_json, completeness_md)
+    add_sidecar_paths(
+        repo_root,
+        deduped_members,
+        artifact_list_json,
+        artifact_list_txt,
+        completeness_json,
+        completeness_md,
+    )
 
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for rel, path in sorted(deduped_members.items()):

@@ -35,4 +35,14 @@ RISK_CALLS = {
     "shutil.rmtree": "destructive_file_operation",
 }
 TODO_PATTERN = re.compile(r"\b(TODO|FIXME|HACK|XXX)\b", re.IGNORECASE)
-BRANCH_NODES = (ast.If, ast.For, ast.AsyncFor, ast.While, ast.Try, ast.ExceptHandler, ast.BoolOp, ast.IfExp, ast.Match)
+BRANCH_NODES = (
+    ast.If,
+    ast.For,
+    ast.AsyncFor,
+    ast.While,
+    ast.Try,
+    ast.ExceptHandler,
+    ast.BoolOp,
+    ast.IfExp,
+    ast.Match,
+)

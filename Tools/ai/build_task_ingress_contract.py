@@ -5,6 +5,7 @@ The task Markdown is the external request entering the system. This report binds
 that request to the heap/exchange runtime so downstream evidence, peer runtime,
 closure audit and final review PR product can prove where the work originated.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -15,9 +16,17 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:  # pragma: no cover
-    from report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def repo_path(repo_root: Path, raw: str) -> Path:
@@ -50,16 +59,42 @@ def extract_headings(text: str, limit: int = 30) -> list[str]:
 def classify_intent(text: str) -> dict[str, Any]:
     lower = text.lower()
     signals = {
-        "requests_code_change": any(token in lower for token in ("patch", "modifica", "codice", "script", "fix", "refactor", "implement")),
-        "requests_review_pr_product": any(token in lower for token in ("pr", "pull request", "review", "merge")),
-        "mentions_heap_exchange": any(token in lower for token in ("heap", "exchange", "heep", "escange")),
-        "mentions_provider_peers": any(token in lower for token in ("gpu0", "gpu1", "npu", "provider")),
-        "mentions_shared_memory": any(token in lower for token in ("memoria", "memory", "shared", "ai-to-ai", "bundle")),
+        "requests_code_change": any(
+            token in lower
+            for token in (
+                "patch",
+                "modifica",
+                "codice",
+                "script",
+                "fix",
+                "refactor",
+                "implement",
+            )
+        ),
+        "requests_review_pr_product": any(
+            token in lower for token in ("pr", "pull request", "review", "merge")
+        ),
+        "mentions_heap_exchange": any(
+            token in lower for token in ("heap", "exchange", "heep", "escange")
+        ),
+        "mentions_provider_peers": any(
+            token in lower for token in ("gpu0", "gpu1", "npu", "provider")
+        ),
+        "mentions_shared_memory": any(
+            token in lower
+            for token in ("memoria", "memory", "shared", "ai-to-ai", "bundle")
+        ),
     }
     return {
         "signals": signals,
-        "requires_reviewable_product": bool(signals["requests_code_change"] or signals["requests_review_pr_product"]),
-        "requires_heap_exchange": bool(signals["mentions_heap_exchange"] or signals["mentions_provider_peers"] or signals["mentions_shared_memory"]),
+        "requires_reviewable_product": bool(
+            signals["requests_code_change"] or signals["requests_review_pr_product"]
+        ),
+        "requires_heap_exchange": bool(
+            signals["mentions_heap_exchange"]
+            or signals["mentions_provider_peers"]
+            or signals["mentions_shared_memory"]
+        ),
     }
 
 
@@ -69,7 +104,9 @@ def append_jsonl(path: Path | None, event: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = dict(event)
     payload.setdefault("timestamp", datetime.now().isoformat(timespec="seconds"))
-    path.open("a", encoding="utf-8", newline="\n").write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
+    path.open("a", encoding="utf-8", newline="\n").write(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n"
+    )
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -125,8 +162,12 @@ def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
     task_path = repo_path(repo_root, args.task_file)
-    runtime_state = repo_path(repo_root, args.runtime_state) if args.runtime_state else None
-    observer_dir = repo_path(repo_root, args.observer_dir) if args.observer_dir else None
+    runtime_state = (
+        repo_path(repo_root, args.runtime_state) if args.runtime_state else None
+    )
+    observer_dir = (
+        repo_path(repo_root, args.observer_dir) if args.observer_dir else None
+    )
 
     errors: list[str] = []
     warnings: list[str] = []

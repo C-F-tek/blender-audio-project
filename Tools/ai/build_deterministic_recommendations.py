@@ -9,6 +9,7 @@ failures.
 It never executes providers, never applies patches, never writes SQLite memory,
 never runs Blender and never creates GitHub PRs.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -19,26 +20,31 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.code_patch_plan_common import normalize_repo_path, read_json_object
-    from Tools.ai.gpu_planner_json_contract import validate_recommendation_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import normalize_repo_path, read_json_object
+    from tools.ai.gpu_planner_json_contract import validate_recommendation_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.code_patch_plan_common import normalize_repo_path, read_json_object  # type: ignore
-    from Tools.ai.gpu_planner_json_contract import validate_recommendation_object  # type: ignore
-    from Tools.validation.report_utils import write_json_report, write_text_report  # type: ignore
+    from tools.ai.code_patch_plan_common import (  # type: ignore
+        normalize_repo_path,
+        read_json_object,
+    )
+    from tools.ai.gpu_planner_json_contract import validate_recommendation_object  # type: ignore
+    from tools.validation.report_utils import write_json_report, write_text_report  # type: ignore
 
 DEFAULT_EVIDENCE = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
-DEFAULT_ORCHESTRATOR = "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"
+DEFAULT_ORCHESTRATOR = (
+    "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"
+)
 DEFAULT_OUTPUT = "output/ai_pipeline/deterministic_recommendations.json"
 DEFAULT_MARKDOWN = "output/ai_pipeline/deterministic_recommendations.md"
 
 REPORT_KIND = "deterministic_recommendation_synthesizer"
 DEFAULT_VALIDATION_COMMANDS = [
-    "python Tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json",
-    "python Tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json",
+    "python tools/validation/check_python_syntax.py --repo-root . --output output/validation/python_syntax.json",
+    "python tools/validation/check_validation_report_contract.py --repo-root . --output output/validation/validation_report_contract.json",
     "git diff --check",
     "git status --short",
 ]
@@ -69,17 +75,25 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
 
-def load_report(path: Path, *, missing_is_error: bool = True) -> tuple[dict[str, Any], list[str]]:
+def load_report(
+    path: Path, *, missing_is_error: bool = True
+) -> tuple[dict[str, Any], list[str]]:
     data, errors = read_json_object(path, missing_is_error=missing_is_error)
     return data, [f"{repo_rel(path, path.parents[0])}: {error}" for error in errors]
 
 
-def load_report_at(repo_root: Path, value: str | Path, *, missing_is_error: bool = True) -> tuple[dict[str, Any], list[str]]:
+def load_report_at(
+    repo_root: Path, value: str | Path, *, missing_is_error: bool = True
+) -> tuple[dict[str, Any], list[str]]:
     path = resolve_path(repo_root, value)
     data, errors = read_json_object(path, missing_is_error=missing_is_error)
     return data, [f"{repo_rel(path, repo_root)}: {error}" for error in errors]
@@ -112,7 +126,9 @@ def target_path_error(path_value: str, repo_root: Path) -> str | None:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_TARGET_PREFIXES):
         return f"forbidden generated/runtime target prefix: {normalized}"
     lower = normalized.lower()
-    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(".json"):
+    if any(
+        fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS
+    ) and lower.endswith(".json"):
         return f"forbidden full-analysis JSON target: {normalized}"
     if "*" in normalized or normalized.endswith("/"):
         return "target is a glob or directory, not a concrete file"
@@ -137,11 +153,17 @@ def evidence_ready_for_manual_patch_count(evidence: dict[str, Any]) -> int:
             if value.get("evidence_sufficient") is True:
                 ready_items += 1
             status = value.get("status") or value.get("classification")
-            if isinstance(status, str) and status in {"ready_for_manual_patch", "ready_for_patch_plan"}:
+            if isinstance(status, str) and status in {
+                "ready_for_manual_patch",
+                "ready_for_patch_plan",
+            }:
                 ready_items += 1
             decision = value.get("decision")
             if isinstance(decision, dict):
-                if decision.get("ready_for_manual_patch") is True or decision.get("ready_for_patch_plan") is True:
+                if (
+                    decision.get("ready_for_manual_patch") is True
+                    or decision.get("ready_for_patch_plan") is True
+                ):
                     ready_items += 1
         elif isinstance(value, list):
             for child in value:
@@ -182,35 +204,53 @@ def npu_audit_refs(orchestrator: dict[str, Any]) -> list[dict[str, Any]]:
                 "classification": audit.get("classification"),
                 "runtime_tool_context_seen": audit.get("runtime_tool_context_seen"),
                 "npu_tool_request_count": audit.get("npu_tool_request_count"),
-                "npu_runtime_tool_execution_count": audit.get("npu_runtime_tool_execution_count"),
-                "npu_runtime_tool_failed_count": audit.get("npu_runtime_tool_failed_count"),
-                "npu_runtime_tool_blocked_count": audit.get("npu_runtime_tool_blocked_count"),
+                "npu_runtime_tool_execution_count": audit.get(
+                    "npu_runtime_tool_execution_count"
+                ),
+                "npu_runtime_tool_failed_count": audit.get(
+                    "npu_runtime_tool_failed_count"
+                ),
+                "npu_runtime_tool_blocked_count": audit.get(
+                    "npu_runtime_tool_blocked_count"
+                ),
             }
         )
     return refs
 
 
-def summarize_tool_report(path: Path, repo_root: Path, data: dict[str, Any]) -> dict[str, Any]:
+def summarize_tool_report(
+    path: Path, repo_root: Path, data: dict[str, Any]
+) -> dict[str, Any]:
     summary = data.get("summary") if isinstance(data.get("summary"), dict) else {}
     return {
         "path": repo_rel(path, repo_root),
         "kind": data.get("kind"),
         "passed": data.get("passed"),
-        "tool_request_count": data.get("tool_request_count") or summary.get("tool_request_count"),
-        "tool_execution_count": data.get("tool_execution_count") or summary.get("tool_execution_count"),
-        "failed_tool_count": data.get("failed_tool_count") or summary.get("failed_tool_count"),
-        "blocked_tool_count": data.get("blocked_tool_count") or summary.get("blocked_tool_count"),
+        "tool_request_count": data.get("tool_request_count")
+        or summary.get("tool_request_count"),
+        "tool_execution_count": data.get("tool_execution_count")
+        or summary.get("tool_execution_count"),
+        "failed_tool_count": data.get("failed_tool_count")
+        or summary.get("failed_tool_count"),
+        "blocked_tool_count": data.get("blocked_tool_count")
+        or summary.get("blocked_tool_count"),
         "provider_execution_performed": data.get("provider_execution_performed"),
         "patch_application_performed": data.get("patch_application_performed"),
     }
 
 
-def recommendation_schema_errors(rec: dict[str, Any], index: int, repo_root: Path) -> list[str]:
+def recommendation_schema_errors(
+    rec: dict[str, Any], index: int, repo_root: Path
+) -> list[str]:
     errors = validate_recommendation_object(rec, index)
-    for target in rec.get("target_files", []) if isinstance(rec.get("target_files"), list) else []:
+    for target in (
+        rec.get("target_files", []) if isinstance(rec.get("target_files"), list) else []
+    ):
         target_error = target_path_error(str(target), repo_root)
         if target_error:
-            errors.append(f"recommendations[{index}].target_files {target!r}: {target_error}")
+            errors.append(
+                f"recommendations[{index}].target_files {target!r}: {target_error}"
+            )
     return errors
 
 
@@ -227,7 +267,9 @@ def recommendation_key(rec: dict[str, Any]) -> str:
     )
 
 
-def provider_recommendations(gpu_report: dict[str, Any], repo_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+def provider_recommendations(
+    gpu_report: dict[str, Any], repo_root: Path
+) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
     recommendations: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
     raw = gpu_report.get("recommendations")
@@ -235,7 +277,12 @@ def provider_recommendations(gpu_report: dict[str, Any], repo_root: Path) -> tup
         return recommendations, skipped
     for index, item in enumerate(raw, start=1):
         if not isinstance(item, dict):
-            skipped.append({"id": f"provider_{index:03d}", "reason": "recommendation is not an object"})
+            skipped.append(
+                {
+                    "id": f"provider_{index:03d}",
+                    "reason": "recommendation is not an object",
+                }
+            )
             continue
         if item.get("status") != "ready_for_patch_plan":
             continue
@@ -243,7 +290,12 @@ def provider_recommendations(gpu_report: dict[str, Any], repo_root: Path) -> tup
         rec.setdefault("source", "gpu_provider")
         errors = recommendation_schema_errors(rec, len(recommendations), repo_root)
         if errors:
-            skipped.append({"id": str(item.get("id") or f"provider_{index:03d}"), "reason": "; ".join(errors)})
+            skipped.append(
+                {
+                    "id": str(item.get("id") or f"provider_{index:03d}"),
+                    "reason": "; ".join(errors),
+                }
+            )
             continue
         recommendations.append(rec)
     return recommendations, skipped
@@ -259,7 +311,10 @@ def doc_code_recommendation(
 ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
     doc = normalize_repo_path(item.get("doc"))
     if not doc:
-        return None, {"id": f"det_doc_code_{index:03d}", "reason": "doc_code item has no doc target"}
+        return None, {
+            "id": f"det_doc_code_{index:03d}",
+            "reason": "doc_code item has no doc target",
+        }
     error = target_path_error(doc, repo_root)
     if error:
         return None, {"id": f"det_doc_code_{index:03d}", "reason": f"{doc}: {error}"}
@@ -273,9 +328,13 @@ def doc_code_recommendation(
         f"Inspect `{reference}` and update `{doc}` only if the reference is stale or should point at an existing artifact.",
     ]
     if existing_candidate:
-        strategy_parts.append(f"Prefer existing candidate `{existing_candidate}` over inventing a new runtime artifact.")
+        strategy_parts.append(
+            f"Prefer existing candidate `{existing_candidate}` over inventing a new runtime artifact."
+        )
     if candidates:
-        strategy_parts.append(f"Candidate references observed: {', '.join(f'`{candidate}`' for candidate in candidates[:6])}.")
+        strategy_parts.append(
+            f"Candidate references observed: {', '.join(f'`{candidate}`' for candidate in candidates[:6])}."
+        )
 
     return (
         {
@@ -316,12 +375,22 @@ def doc_doc_recommendation(
 ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
     path = normalize_repo_path(item.get("path"))
     if not path:
-        return None, {"id": f"det_doc_doc_{index:03d}", "reason": "doc_doc item has no path target"}
+        return None, {
+            "id": f"det_doc_doc_{index:03d}",
+            "reason": "doc_doc item has no path target",
+        }
     error = target_path_error(path, repo_root)
     if error:
         return None, {"id": f"det_doc_doc_{index:03d}", "reason": f"{path}: {error}"}
-    missing_terms = [str(term) for term in item.get("missing_terms", []) if str(term).strip()] if isinstance(item.get("missing_terms"), list) else []
-    terms_text = ", ".join(f"`{term}`" for term in missing_terms[:10]) or "the missing cross-reference terms"
+    missing_terms = (
+        [str(term) for term in item.get("missing_terms", []) if str(term).strip()]
+        if isinstance(item.get("missing_terms"), list)
+        else []
+    )
+    terms_text = (
+        ", ".join(f"`{term}`" for term in missing_terms[:10])
+        or "the missing cross-reference terms"
+    )
     return (
         {
             "id": f"det_doc_doc_{index:03d}",
@@ -367,7 +436,10 @@ def synthesize_from_evidence(
     areas = evidence.get("areas") if isinstance(evidence.get("areas"), dict) else {}
 
     doc_code = areas.get("doc_code") if isinstance(areas.get("doc_code"), dict) else {}
-    for index, item in enumerate(doc_code.get("items", []) if isinstance(doc_code.get("items"), list) else [], start=1):
+    for index, item in enumerate(
+        doc_code.get("items", []) if isinstance(doc_code.get("items"), list) else [],
+        start=1,
+    ):
         if len(recommendations) >= max_recommendations:
             break
         if not isinstance(item, dict) or item.get("evidence_sufficient") is not True:
@@ -385,7 +457,10 @@ def synthesize_from_evidence(
             skipped.append(skip)
 
     doc_doc = areas.get("doc_doc") if isinstance(areas.get("doc_doc"), dict) else {}
-    for index, item in enumerate(doc_doc.get("items", []) if isinstance(doc_doc.get("items"), list) else [], start=1):
+    for index, item in enumerate(
+        doc_doc.get("items", []) if isinstance(doc_doc.get("items"), list) else [],
+        start=1,
+    ):
         if len(recommendations) >= max_recommendations:
             break
         if not isinstance(item, dict) or item.get("evidence_sufficient") is not True:
@@ -450,9 +525,18 @@ def finding_priority(finding: dict[str, Any]) -> tuple[int, int, str, int]:
 def is_cosmetic_consistency_finding(finding: dict[str, Any]) -> bool:
     text = " ".join(
         str(finding.get(key) or "")
-        for key in ("kind", "severity", "source", "target", "flag", "evidence", "recommendation")
+        for key in (
+            "kind",
+            "severity",
+            "source",
+            "target",
+            "flag",
+            "evidence",
+            "recommendation",
+        )
     ).lower()
     return any(keyword in text for keyword in COSMETIC_FINDING_KEYWORDS)
+
 
 def finding_source_path(finding: dict[str, Any]) -> str:
     return normalize_repo_path(finding.get("source") or finding.get("source_path"))
@@ -478,7 +562,9 @@ def is_patchable_consistency_finding(finding: dict[str, Any], repo_root: Path) -
     return bool(path) and target_path_error(path, repo_root) is None
 
 
-def consistency_target_file(finding: dict[str, Any], repo_root: Path) -> tuple[str, str | None]:
+def consistency_target_file(
+    finding: dict[str, Any], repo_root: Path
+) -> tuple[str, str | None]:
     patch_target = finding_patch_target_file(finding)
     if patch_target:
         patch_error = target_path_error(patch_target, repo_root)
@@ -528,9 +614,15 @@ def repository_consistency_recommendation(
 ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
     kind = str(finding.get("kind") or "")
     if kind not in SUBSTANTIVE_CONSISTENCY_FINDING_PRIORITIES:
-        return None, {"id": f"consistency_{index:03d}", "reason": f"unsupported finding kind: {kind}"}
+        return None, {
+            "id": f"consistency_{index:03d}",
+            "reason": f"unsupported finding kind: {kind}",
+        }
     if is_cosmetic_consistency_finding(finding):
-        return None, {"id": f"consistency_{index:03d}", "reason": "cosmetic/whitespace-only finding skipped"}
+        return None, {
+            "id": f"consistency_{index:03d}",
+            "reason": "cosmetic/whitespace-only finding skipped",
+        }
     target_file, target_error = consistency_target_file(finding, repo_root)
     if target_error:
         return None, {"id": f"consistency_{index:03d}", "reason": target_error}
@@ -541,7 +633,10 @@ def repository_consistency_recommendation(
     line = int(finding.get("line") or 0)
     severity = str(finding.get("severity") or "medium")
     evidence = str(finding.get("evidence") or "")
-    recommendation = str(finding.get("recommendation") or "Resolve the repository consistency finding with the narrowest safe patch.")
+    recommendation = str(
+        finding.get("recommendation")
+        or "Resolve the repository consistency finding with the narrowest safe patch."
+    )
     area = consistency_area(kind)
     risk = "medium" if severity == "high" else "low"
     evidence_label = f"{source}:{line}" if line else source or target_file
@@ -621,7 +716,9 @@ def area_diverse_findings(findings: list[dict[str, Any]]) -> list[dict[str, Any]
     return ordered
 
 
-def area_diverse_items(items: list[dict[str, Any]], *, limit: int) -> list[dict[str, Any]]:
+def area_diverse_items(
+    items: list[dict[str, Any]], *, limit: int
+) -> list[dict[str, Any]]:
     """Round-robin items by product area while preserving relative order within each area."""
     preferred_areas = [
         "python_python",
@@ -672,7 +769,11 @@ def synthesize_from_repository_consistency_maps(
                 findings.append(item)
     skipped: list[dict[str, str]] = []
     raw_finding_count = len(findings)
-    patchable_findings = [finding for finding in findings if is_patchable_consistency_finding(finding, repo_root)]
+    patchable_findings = [
+        finding
+        for finding in findings
+        if is_patchable_consistency_finding(finding, repo_root)
+    ]
     skipped_unpatchable_count = raw_finding_count - len(patchable_findings)
     if skipped_unpatchable_count:
         skipped.append(
@@ -699,7 +800,11 @@ def synthesize_from_repository_consistency_maps(
             skipped.append(skip)
         if not rec:
             continue
-        dedupe_key = (str(rec.get("area")), str(rec.get("target_files")), str(rec.get("rationale")))
+        dedupe_key = (
+            str(rec.get("area")),
+            str(rec.get("target_files")),
+            str(rec.get("rationale")),
+        )
         if dedupe_key in seen_targets:
             continue
         errors = recommendation_schema_errors(rec, len(recommendations), repo_root)
@@ -710,10 +815,15 @@ def synthesize_from_repository_consistency_maps(
         recommendations.append(rec)
     return recommendations, skipped
 
-def load_gpu_report(repo_root: Path, orchestrator: dict[str, Any], explicit_gpu_report: str) -> tuple[dict[str, Any], list[str]]:
+
+def load_gpu_report(
+    repo_root: Path, orchestrator: dict[str, Any], explicit_gpu_report: str
+) -> tuple[dict[str, Any], list[str]]:
     warnings: list[str] = []
     if explicit_gpu_report:
-        data, errors = load_report_at(repo_root, explicit_gpu_report, missing_is_error=True)
+        data, errors = load_report_at(
+            repo_root, explicit_gpu_report, missing_is_error=True
+        )
         return data, errors
 
     gpu_output = normalize_repo_path(orchestrator.get("gpu_output"))
@@ -722,7 +832,9 @@ def load_gpu_report(repo_root: Path, orchestrator: dict[str, Any], explicit_gpu_
         warnings.extend(errors)
         return data, warnings
 
-    default_path = resolve_path(repo_root, "output/ai_pipeline/agent_gpu_deep_planning_supervised.json")
+    default_path = resolve_path(
+        repo_root, "output/ai_pipeline/agent_gpu_deep_planning_supervised.json"
+    )
     if default_path.exists():
         data, errors = load_report_at(repo_root, default_path, missing_is_error=False)
         warnings.extend(errors)
@@ -735,17 +847,23 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
 
-    evidence, evidence_errors = load_report_at(repo_root, args.evidence, missing_is_error=True)
+    evidence, evidence_errors = load_report_at(
+        repo_root, args.evidence, missing_is_error=True
+    )
     errors.extend(evidence_errors)
 
     orchestrator: dict[str, Any] = {}
     if args.orchestrator:
         orchestrator_path = resolve_path(repo_root, args.orchestrator)
         if orchestrator_path.exists():
-            orchestrator, orchestrator_errors = load_report_at(repo_root, args.orchestrator, missing_is_error=False)
+            orchestrator, orchestrator_errors = load_report_at(
+                repo_root, args.orchestrator, missing_is_error=False
+            )
             warnings.extend(orchestrator_errors)
         else:
-            warnings.append(f"orchestrator report missing: {repo_rel(orchestrator_path, repo_root)}")
+            warnings.append(
+                f"orchestrator report missing: {repo_rel(orchestrator_path, repo_root)}"
+            )
 
     gpu_report, gpu_warnings = load_gpu_report(repo_root, orchestrator, args.gpu_report)
     warnings.extend(gpu_warnings)
@@ -776,12 +894,14 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
     deterministic_used = False
     consistency_recommendation_count = 0
     if repository_consistency_maps:
-        consistency_synthesized, consistency_skipped = synthesize_from_repository_consistency_maps(
-            repository_maps=repository_consistency_maps,
-            repo_root=repo_root,
-            npu_refs=npu_refs,
-            tool_refs=tool_refs,
-            max_recommendations=args.max_recommendations,
+        consistency_synthesized, consistency_skipped = (
+            synthesize_from_repository_consistency_maps(
+                repository_maps=repository_consistency_maps,
+                repo_root=repo_root,
+                npu_refs=npu_refs,
+                tool_refs=tool_refs,
+                max_recommendations=args.max_recommendations,
+            )
         )
         skipped.extend(consistency_skipped)
         consistency_recommendation_count = len(consistency_synthesized)
@@ -795,7 +915,9 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
                     continue
                 combined_seen.add(key)
                 combined.append(rec)
-            recommendations = area_diverse_items(combined, limit=args.max_recommendations)
+            recommendations = area_diverse_items(
+                combined, limit=args.max_recommendations
+            )
             seen = {recommendation_key(rec) for rec in recommendations}
 
     if not recommendations and evidence:
@@ -837,8 +959,16 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
         "manual_review_required": True,
         "recommendation_count": len(recommendations),
         "recommendations": recommendations,
-        "missing_evidence": [] if recommendations else ["no evidence-sufficient items with safe existing targets"],
-        "next_best_action": "build_agent_review_patch_plan.py" if recommendations else "collect_more_evidence",
+        "missing_evidence": (
+            []
+            if recommendations
+            else ["no evidence-sufficient items with safe existing targets"]
+        ),
+        "next_best_action": (
+            "build_agent_review_patch_plan.py"
+            if recommendations
+            else "collect_more_evidence"
+        ),
         "skipped_candidate_count": len(skipped),
         "skipped_candidates": skipped,
         "decision": {
@@ -851,13 +981,18 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
             "repository_consistency_map_count": len(repository_consistency_maps),
             "substantive_consistency_recommendation_count": consistency_recommendation_count,
             "cosmetic_patch_suppression_enabled": True,
-            "recommended_next_layer": "build_agent_review_patch_plan.py" if recommendations else "collect_more_evidence",
+            "recommended_next_layer": (
+                "build_agent_review_patch_plan.py"
+                if recommendations
+                else "collect_more_evidence"
+            ),
             "manual_review_required": True,
         },
         "inputs": {
             "evidence": normalize_repo_path(args.evidence),
             "orchestrator": normalize_repo_path(args.orchestrator),
-            "gpu_report": normalize_repo_path(args.gpu_report) or normalize_repo_path(orchestrator.get("gpu_output")),
+            "gpu_report": normalize_repo_path(args.gpu_report)
+            or normalize_repo_path(orchestrator.get("gpu_output")),
             "tool_report_count": len(args.tool_report),
             "repository_consistency_map_count": len(repository_consistency_maps),
             "evidence_kind": evidence.get("kind"),
@@ -887,7 +1022,9 @@ def build_patch_plan_bridge_orchestrator(
     recommendation_output: Path,
     source_orchestrator: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    source_orchestrator = source_orchestrator if isinstance(source_orchestrator, dict) else {}
+    source_orchestrator = (
+        source_orchestrator if isinstance(source_orchestrator, dict) else {}
+    )
     return {
         "schema_version": 1,
         "kind": "deterministic_recommendation_patch_plan_bridge_orchestrator",
@@ -900,7 +1037,9 @@ def build_patch_plan_bridge_orchestrator(
         "patch_application_performed": False,
         "source_writes_performed": False,
         "gpu_output": repo_rel(recommendation_output, repo_root),
-        "gpu_recommendation_count": recommendation_report.get("recommendation_count", 0),
+        "gpu_recommendation_count": recommendation_report.get(
+            "recommendation_count", 0
+        ),
         "gpu_empty_recommendations_reason": "",
         "gpu_recommended_next_layer": "build_agent_review_patch_plan.py",
         "npu_audits": source_orchestrator.get("npu_audits", []),
@@ -927,11 +1066,19 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Deterministic Recommendation Synthesizer", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Recommendation count: `{report['recommendation_count']}`")
-    lines.append(f"- Deterministic synthesizer used: `{report['decision']['deterministic_synthesizer_used']}`")
-    lines.append(f"- GPU empty recommendations reason: `{report['decision']['gpu_empty_recommendations_reason']}`")
-    lines.append(f"- Evidence ready for manual patch count: `{report['decision']['evidence_ready_for_manual_patch_count']}`")
+    lines.append(
+        f"- Deterministic synthesizer used: `{report['decision']['deterministic_synthesizer_used']}`"
+    )
+    lines.append(
+        f"- GPU empty recommendations reason: `{report['decision']['gpu_empty_recommendations_reason']}`"
+    )
+    lines.append(
+        f"- Evidence ready for manual patch count: `{report['decision']['evidence_ready_for_manual_patch_count']}`"
+    )
     lines.append(f"- Next best action: `{report['next_best_action']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
+    lines.append(
+        f"- Patch application performed: `{report['patch_application_performed']}`"
+    )
     lines.append("")
     lines.append("## Recommendations")
     lines.append("")
@@ -954,7 +1101,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("")
     lines.append("## Guardrails")
     lines.append("")
-    lines.append("This report is deterministic and report-only. It is not a patch queue.")
+    lines.append(
+        "This report is deterministic and report-only. It is not a patch queue."
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -980,7 +1129,9 @@ def main() -> int:
 
     bridge_output_text = ""
     if args.patch_plan_orchestrator_output:
-        source_orchestrator, _bridge_warnings = load_report_at(repo_root, args.orchestrator, missing_is_error=False)
+        source_orchestrator, _bridge_warnings = load_report_at(
+            repo_root, args.orchestrator, missing_is_error=False
+        )
         bridge_output = resolve_path(repo_root, args.patch_plan_orchestrator_output)
         bridge = build_patch_plan_bridge_orchestrator(
             repo_root=repo_root,
@@ -999,7 +1150,9 @@ def main() -> int:
                 "markdown": str(markdown_output),
                 "patch_plan_orchestrator_output": bridge_output_text,
                 "recommendation_count": report["recommendation_count"],
-                "deterministic_synthesizer_used": report["decision"]["deterministic_synthesizer_used"],
+                "deterministic_synthesizer_used": report["decision"][
+                    "deterministic_synthesizer_used"
+                ],
                 "next_best_action": report["next_best_action"],
                 "provider_execution_performed": report["provider_execution_performed"],
                 "patch_application_performed": report["patch_application_performed"],

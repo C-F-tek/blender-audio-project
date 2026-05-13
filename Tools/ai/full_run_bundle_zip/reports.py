@@ -41,4 +41,6 @@ def render_markdown_report(report: dict[str, Any]) -> str:
 def write_json(path: Path, data: dict[str, Any] | list[Any]) -> None:
     """Write JSON with repository-standard formatting."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )

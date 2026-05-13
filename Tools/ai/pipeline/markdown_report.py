@@ -1,4 +1,5 @@
 """Markdown report helpers for AI artifact pipeline dry-run outputs."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -26,12 +27,17 @@ def lane_counts(lanes: Any) -> dict[str, int]:
     """Return counts by lane from a matrix case lane payload."""
     if not isinstance(lanes, dict):
         return {}
-    return {str(lane): len(steps) if isinstance(steps, list) else 0 for lane, steps in lanes.items()}
+    return {
+        str(lane): len(steps) if isinstance(steps, list) else 0
+        for lane, steps in lanes.items()
+    }
 
 
 def case_status(result: dict[str, Any]) -> str:
     """Return a human-readable status for one matrix case."""
-    return bool_icon(result.get("returncode") == 0 and result.get("report_passed") is True)
+    return bool_icon(
+        result.get("returncode") == 0 and result.get("report_passed") is True
+    )
 
 
 def render_dry_run_matrix_markdown(report: dict[str, Any]) -> str:
@@ -47,7 +53,9 @@ def render_dry_run_matrix_markdown(report: dict[str, Any]) -> str:
     lines.append("\n")
 
     lines.append("## Cases\n")
-    lines.append("| Case | Status | Return code | Report passed | Steps | CPU | NPU | GPU | Duration sec |\n")
+    lines.append(
+        "| Case | Status | Return code | Report passed | Steps | CPU | NPU | GPU | Duration sec |\n"
+    )
     lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|\n")
     for result in results:
         counts = lane_counts(result.get("lanes"))
@@ -70,7 +78,11 @@ def render_dry_run_matrix_markdown(report: dict[str, Any]) -> str:
         )
     lines.append("\n")
 
-    failed = [item for item in results if item.get("returncode") != 0 or item.get("report_passed") is not True]
+    failed = [
+        item
+        for item in results
+        if item.get("returncode") != 0 or item.get("report_passed") is not True
+    ]
     lines.append("## Failed or incomplete cases\n")
     if not failed:
         lines.append("No failed cases reported.\n\n")
@@ -94,8 +106,12 @@ def render_dry_run_matrix_markdown(report: dict[str, Any]) -> str:
 
     lines.append("## Notes\n")
     lines.append("- This report is generated from dry-run invocations only.\n")
-    lines.append("- NPU, GPU, Blender and FFmpeg workloads are not executed by the matrix.\n")
-    lines.append("- Inspect individual JSON reports for `summary`, `schedule`, `lanes` and `guardrail_remediation_loop`.\n")
+    lines.append(
+        "- NPU, GPU, Blender and FFmpeg workloads are not executed by the matrix.\n"
+    )
+    lines.append(
+        "- Inspect individual JSON reports for `summary`, `schedule`, `lanes` and `guardrail_remediation_loop`.\n"
+    )
     return "".join(lines)
 
 

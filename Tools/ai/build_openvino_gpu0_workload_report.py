@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.runtime_hardware_capability.workloads import run_openvino_gpu0_tensor_test
+from tools.ai.runtime_hardware_capability.workloads import run_openvino_gpu0_tensor_test
 
 
 def resolve_path(repo_root: Path, value: str) -> Path:
@@ -69,9 +69,15 @@ def classify_request(text: str) -> str:
     greetings = {"ciao", "salve", "buongiorno", "buonasera", "hello", "hi", "hey"}
     if normalized in greetings:
         return "casual_greeting"
-    if any(token in normalized for token in ("errore", "traceback", "bug", "crash", "fallisce", "non funziona")):
+    if any(
+        token in normalized
+        for token in ("errore", "traceback", "bug", "crash", "fallisce", "non funziona")
+    ):
         return "debug_request"
-    if any(token in normalized for token in ("patch", "modifica", "codice", "script", "repo")):
+    if any(
+        token in normalized
+        for token in ("patch", "modifica", "codice", "script", "repo")
+    ):
         return "repo_work_request"
     return "general_request"
 
@@ -79,13 +85,18 @@ def classify_request(text: str) -> str:
 def build_gpu0_peer_response(report: dict[str, Any]) -> dict[str, Any]:
     request = str(report.get("request_input") or "").strip()
     classification = classify_request(request)
-    workload_ok = bool(report.get("openvino_gpu0_observable_workload_passed") or report.get("openvino_gpu0_workload_passed"))
+    workload_ok = bool(
+        report.get("openvino_gpu0_observable_workload_passed")
+        or report.get("openvino_gpu0_workload_passed")
+    )
     device = str(report.get("selected_device") or "GPU.0")
     iterations = int(report.get("openvino_gpu0_sustained_iterations_performed") or 0)
     infer_s = float(report.get("inference_seconds") or 0.0)
     preview = str(report.get("output_preview") or "").strip()
     errors = report.get("errors") if isinstance(report.get("errors"), list) else []
-    warnings = report.get("warnings") if isinstance(report.get("warnings"), list) else []
+    warnings = (
+        report.get("warnings") if isinstance(report.get("warnings"), list) else []
+    )
 
     if not workload_ok:
         decision = "blocked_peer_evidence"
@@ -124,12 +135,20 @@ def build_gpu0_peer_response(report: dict[str, Any]) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/openvino_gpu0_workload.json")
-    parser.add_argument("--markdown-output", default="output/validation/openvino_gpu0_workload.md")
+    parser.add_argument(
+        "--output", default="output/validation/openvino_gpu0_workload.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/openvino_gpu0_workload.md"
+    )
     parser.add_argument("--iterations", type=int, default=180)
     parser.add_argument("--min-seconds", type=float, default=6.0)
     parser.add_argument("--role", default="observable_secondary_accelerator")
-    parser.add_argument("--request", default="", help="Optional heap request observed by GPU.0 peer lane.")
+    parser.add_argument(
+        "--request",
+        default="",
+        help="Optional heap request observed by GPU.0 peer lane.",
+    )
     parser.add_argument("--production-support", action="store_true", default=True)
     parser.add_argument("--allow-non-observable", action="store_true")
     args = parser.parse_args()
@@ -146,18 +165,27 @@ def main() -> int:
     report["min_seconds"] = float(args.min_seconds)
     report["requested_role"] = str(args.role)
     report["request_input"] = str(args.request or "").strip()
-    report["openvino_gpu0_observable_workload_required"] = not bool(args.allow_non_observable)
+    report["openvino_gpu0_observable_workload_required"] = not bool(
+        args.allow_non_observable
+    )
     report["openvino_gpu0_observable_workload_passed"] = bool(
         report.get("openvino_gpu0_workload_performed")
         and report.get("openvino_gpu0_sustained_workload_performed")
-        and int(report.get("openvino_gpu0_sustained_iterations_performed") or 0) >= int(args.iterations)
-        and float(report.get("inference_seconds") or 0.0) >= min(0.05, float(args.min_seconds))
+        and int(report.get("openvino_gpu0_sustained_iterations_performed") or 0)
+        >= int(args.iterations)
+        and float(report.get("inference_seconds") or 0.0)
+        >= min(0.05, float(args.min_seconds))
     )
     if args.production_support:
         report["openvino_gpu0_role"] = str(args.role)
         report["openvino_gpu0_not_primary_advisory"] = False
-    if report["openvino_gpu0_observable_workload_required"] and not report["openvino_gpu0_observable_workload_passed"]:
-        report.setdefault("errors", []).append("GPU.0 workload was not observable enough for real product peer evidence.")
+    if (
+        report["openvino_gpu0_observable_workload_required"]
+        and not report["openvino_gpu0_observable_workload_passed"]
+    ):
+        report.setdefault("errors", []).append(
+            "GPU.0 workload was not observable enough for real product peer evidence."
+        )
         report["passed"] = False
     report.update(build_gpu0_peer_response(report))
     report["repo_root"] = str(repo_root)
@@ -166,9 +194,20 @@ def main() -> int:
     markdown = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     markdown.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({"passed": report.get("passed"), "output": str(output), "markdown": str(markdown)}, indent=2))
+    print(
+        json.dumps(
+            {
+                "passed": report.get("passed"),
+                "output": str(output),
+                "markdown": str(markdown),
+            },
+            indent=2,
+        )
+    )
     return 0 if report.get("passed") else 2
 
 

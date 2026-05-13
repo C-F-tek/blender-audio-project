@@ -6,7 +6,7 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.repository_consistency_map.constants import (
+from tools.ai.repository_consistency_map.constants import (
     BACKTICK_RE,
     DOC_EXTENSIONS,
     FLAG_RE,
@@ -15,7 +15,7 @@ from Tools.ai.repository_consistency_map.constants import (
     PY_COMMAND_RE,
     TEXT_EXTENSIONS,
 )
-from Tools.ai.repository_consistency_map.paths import (
+from tools.ai.repository_consistency_map.paths import (
     bounded_worker_count,
     iter_files,
     line_for_offset,
@@ -37,10 +37,14 @@ def resolve_scan_worker_backend(worker_backend: str, worker_count: int) -> str:
         return "thread"
     if normalized == "auto":
         return "process"
-    raise ValueError(f"Unsupported repository consistency worker backend: {worker_backend}")
+    raise ValueError(
+        f"Unsupported repository consistency worker backend: {worker_backend}"
+    )
 
 
-def scan_markdown_file_task(task: tuple[str, str, dict[str, str], int]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
+def scan_markdown_file_task(
+    task: tuple[str, str, dict[str, str], int],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
     repo_root_raw, path_raw, path_index, max_snippet_chars = task
     repo_root = Path(repo_root_raw)
     path = Path(path_raw)
@@ -70,9 +74,19 @@ def scan_markdown_file_task(task: tuple[str, str, dict[str, str], int]) -> tuple
         if key in seen_refs:
             continue
         seen_refs.add(key)
-        resolved, exists, mode = resolve_repo_reference(repo_root, rel, raw_ref, path_index)
+        resolved, exists, mode = resolve_repo_reference(
+            repo_root, rel, raw_ref, path_index
+        )
         ext = Path(normalize_ref(raw_ref)).suffix.lower()
-        kind = "python" if ext == ".py" else "powershell" if ext == ".ps1" else "markdown" if ext in DOC_EXTENSIONS else "artifact"
+        kind = (
+            "python"
+            if ext == ".py"
+            else (
+                "powershell"
+                if ext == ".ps1"
+                else "markdown" if ext in DOC_EXTENSIONS else "artifact"
+            )
+        )
         file_references.append(
             {
                 "source": rel,
@@ -88,7 +102,9 @@ def scan_markdown_file_task(task: tuple[str, str, dict[str, str], int]) -> tuple
     for match in PY_COMMAND_RE.finditer(text):
         line_no = line_for_offset(text, match.start())
         script_raw = normalize_ref(match.group("script"))
-        resolved, exists, mode = resolve_repo_reference(repo_root, rel, script_raw, path_index)
+        resolved, exists, mode = resolve_repo_reference(
+            repo_root, rel, script_raw, path_index
+        )
         args_text = match.group("args") or ""
         flags = sorted(set(FLAG_RE.findall(args_text)))
         file_commands.append(
@@ -120,7 +136,11 @@ def extract_markdown_references(
     references: list[dict[str, Any]] = []
     commands: list[dict[str, Any]] = []
     warnings: list[str] = []
-    markdown_files = markdown_files if markdown_files is not None else iter_files(repo_root, DOC_EXTENSIONS)
+    markdown_files = (
+        markdown_files
+        if markdown_files is not None
+        else iter_files(repo_root, DOC_EXTENSIONS)
+    )
     worker_count = bounded_worker_count(
         workers,
         len(markdown_files),
@@ -128,18 +148,27 @@ def extract_markdown_references(
         max_auto_workers=max_auto_workers,
     )
     actual_backend = resolve_scan_worker_backend(worker_backend, worker_count)
-    tasks = [(str(repo_root), str(path), path_index, max_snippet_chars) for path in markdown_files]
+    tasks = [
+        (str(repo_root), str(path), path_index, max_snippet_chars)
+        for path in markdown_files
+    ]
 
     if actual_backend in {"process", "thread"}:
-        executor_class = ProcessPoolExecutor if actual_backend == "process" else ThreadPoolExecutor
+        executor_class = (
+            ProcessPoolExecutor if actual_backend == "process" else ThreadPoolExecutor
+        )
         with executor_class(max_workers=worker_count) as executor:
-            for file_references, file_commands, file_warnings in executor.map(scan_markdown_file_task, tasks):
+            for file_references, file_commands, file_warnings in executor.map(
+                scan_markdown_file_task, tasks
+            ):
                 references.extend(file_references)
                 commands.extend(file_commands)
                 warnings.extend(file_warnings)
     else:
         for task in tasks:
-            file_references, file_commands, file_warnings = scan_markdown_file_task(task)
+            file_references, file_commands, file_warnings = scan_markdown_file_task(
+                task
+            )
             references.extend(file_references)
             commands.extend(file_commands)
             warnings.extend(file_warnings)

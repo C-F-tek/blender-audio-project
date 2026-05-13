@@ -3,6 +3,7 @@
 This package is intentionally additive. Existing pipeline scripts can import it
 progressively after the primitives are validated locally.
 """
+
 from __future__ import annotations
 
 from .models import PipelineLane, PipelineReport, PipelineResult, PipelineStep

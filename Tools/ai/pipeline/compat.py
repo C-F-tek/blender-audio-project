@@ -1,4 +1,5 @@
 """Compatibility adapters between legacy pipeline reports and reusable models."""
+
 from __future__ import annotations
 
 from pathlib import Path

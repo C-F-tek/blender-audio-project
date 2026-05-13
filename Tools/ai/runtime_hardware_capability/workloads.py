@@ -58,9 +58,13 @@ def run_openvino_gpu0_tensor_test(
     report = _base_report()
     report["openvino_gpu0_role"] = role
     report["openvino_gpu0_support_lane"] = bool(production_support)
-    report["openvino_gpu0_sustained_workload_requested"] = iterations > 1 or min_seconds > 0
+    report["openvino_gpu0_sustained_workload_requested"] = (
+        iterations > 1 or min_seconds > 0
+    )
     report["openvino_gpu0_sustained_iterations_requested"] = max(1, int(iterations))
-    report["openvino_gpu0_sustained_min_seconds_requested"] = max(0.0, float(min_seconds))
+    report["openvino_gpu0_sustained_min_seconds_requested"] = max(
+        0.0, float(min_seconds)
+    )
     started = time.perf_counter()
     try:
         import numpy as np
@@ -89,9 +93,13 @@ def run_openvino_gpu0_tensor_test(
         report["openvino_gpu0_visible"] = "GPU.0" in devices
         report["openvino_gpu1_reserved_visible"] = "GPU.1" in devices
         if "GPU.1" in devices:
-            report["warnings"].append("OpenVINO GPU.1 is visible but reserved; no workload was executed on GPU.1.")
+            report["warnings"].append(
+                "OpenVINO GPU.1 is visible but reserved; no workload was executed on GPU.1."
+            )
         if "GPU.0" not in devices:
-            report["errors"].append("OpenVINO GPU.0 secondary lane is not visible; workload not executed.")
+            report["errors"].append(
+                "OpenVINO GPU.0 secondary lane is not visible; workload not executed."
+            )
             report["elapsed_seconds"] = round(time.perf_counter() - started, 6)
             return report
 
@@ -117,15 +125,22 @@ def run_openvino_gpu0_tensor_test(
             for item in result.values():
                 values = np.asarray(item).reshape(-1)[:4].tolist()
                 break
-            if performed >= minimum_iterations and (time.perf_counter() - inference_started) >= minimum_seconds:
+            if (
+                performed >= minimum_iterations
+                and (time.perf_counter() - inference_started) >= minimum_seconds
+            ):
                 break
         inference_elapsed = time.perf_counter() - inference_started
         report["inference_seconds"] = round(inference_elapsed, 6)
         report["openvino_gpu0_sustained_iterations_performed"] = performed
-        report["openvino_gpu0_sustained_workload_performed"] = bool(performed > 1 or minimum_seconds > 0)
+        report["openvino_gpu0_sustained_workload_performed"] = bool(
+            performed > 1 or minimum_seconds > 0
+        )
 
         expected = [1.0, 1.0, 1.0, 1.0]
-        passed = len(values) == 4 and all(abs(float(a) - b) < 0.0001 for a, b in zip(values, expected))
+        passed = len(values) == 4 and all(
+            abs(float(a) - b) < 0.0001 for a, b in zip(values, expected)
+        )
         report["selected_device"] = "GPU.0"
         report["output_preview"] = str(values[:4])
         report["openvino_gpu0_workload_performed"] = True
@@ -136,7 +151,9 @@ def run_openvino_gpu0_tensor_test(
         if not passed:
             report["errors"].append(f"unexpected GPU.0 tensor output: {values}")
     except Exception as exc:
-        report["errors"].append(f"OpenVINO GPU.0 workload failed: {type(exc).__name__}: {exc}")
+        report["errors"].append(
+            f"OpenVINO GPU.0 workload failed: {type(exc).__name__}: {exc}"
+        )
     finally:
         report["elapsed_seconds"] = round(time.perf_counter() - started, 6)
     return report

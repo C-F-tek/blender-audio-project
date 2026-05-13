@@ -11,6 +11,7 @@ The bundle is intentionally conservative:
 - never applies patches itself, never runs providers, never writes SQLite and never
   runs Blender.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -24,14 +25,14 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.code_patch_plan_common import read_json_object
-    from Tools.validation.report_utils import write_json_report, write_text_report
+    from tools.ai.code_patch_plan_common import read_json_object
+    from tools.validation.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.code_patch_plan_common import read_json_object  # type: ignore
-    from Tools.validation.report_utils import write_json_report, write_text_report  # type: ignore
+    from tools.ai.code_patch_plan_common import read_json_object  # type: ignore
+    from tools.validation.report_utils import write_json_report, write_text_report  # type: ignore
 
 DEFAULT_PATCH_PLAN = "output/patch_specs/agent_review_patch_plan.json"
 DEFAULT_OUTPUT_DIR = "output/validation/patch_bundles"
@@ -72,7 +73,11 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
@@ -136,9 +141,19 @@ def build_managed_block(plan: dict[str, Any], target: str) -> str:
     source = str(plan.get("source") or "unknown")
     risk = str(plan.get("risk") or "unknown")
     rationale = str(plan.get("rationale") or "").strip()
-    strategy = str(plan.get("edit_strategy") or plan.get("proposed_strategy") or "").strip()
-    validation_commands = plan.get("validation_commands") if isinstance(plan.get("validation_commands"), list) else []
-    stop_conditions = plan.get("stop_conditions") if isinstance(plan.get("stop_conditions"), list) else []
+    strategy = str(
+        plan.get("edit_strategy") or plan.get("proposed_strategy") or ""
+    ).strip()
+    validation_commands = (
+        plan.get("validation_commands")
+        if isinstance(plan.get("validation_commands"), list)
+        else []
+    )
+    stop_conditions = (
+        plan.get("stop_conditions")
+        if isinstance(plan.get("stop_conditions"), list)
+        else []
+    )
     block_id = f"{plan_id}:{stable_id(target)}"
     lines = [
         "",
@@ -170,13 +185,19 @@ def build_managed_block(plan: dict[str, Any], target: str) -> str:
     return "\n".join(lines)
 
 
-def collect_operations(patch_plan: dict[str, Any], repo_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+def collect_operations(
+    patch_plan: dict[str, Any], repo_root: Path
+) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
     operations: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
     seen: set[str] = set()
     for plan in plan_items(patch_plan):
         plan_id = str(plan.get("id") or "unknown")
-        targets = plan.get("target_files") if isinstance(plan.get("target_files"), list) else []
+        targets = (
+            plan.get("target_files")
+            if isinstance(plan.get("target_files"), list)
+            else []
+        )
         if not targets:
             skipped.append({"id": plan_id, "reason": "plan has no target_files"})
             continue
@@ -191,13 +212,25 @@ def collect_operations(patch_plan: dict[str, Any], repo_root: Path) -> tuple[lis
                 skipped.append({"id": plan_id, "target": target, "reason": error})
                 continue
             if not is_markdown(target):
-                skipped.append({"id": plan_id, "target": target, "reason": "non-Markdown targets are manual-review-only in this bundle"})
+                skipped.append(
+                    {
+                        "id": plan_id,
+                        "target": target,
+                        "reason": "non-Markdown targets are manual-review-only in this bundle",
+                    }
+                )
                 continue
             full = resolve_path(repo_root, target)
             try:
                 original = full.read_text(encoding="utf-8")
             except UnicodeDecodeError:
-                skipped.append({"id": plan_id, "target": target, "reason": "target is not UTF-8 text"})
+                skipped.append(
+                    {
+                        "id": plan_id,
+                        "target": target,
+                        "reason": "target is not UTF-8 text",
+                    }
+                )
                 continue
             block = build_managed_block(plan, target)
             block_hash = hashlib.sha256(block.encode("utf-8")).hexdigest()
@@ -211,7 +244,9 @@ def collect_operations(patch_plan: dict[str, Any], repo_root: Path) -> tuple[lis
                     "managed_begin_prefix": MANAGED_BEGIN_PREFIX,
                     "managed_end_prefix": MANAGED_END_PREFIX,
                     "block_hash_sha256": block_hash,
-                    "original_sha256": hashlib.sha256(original.encode("utf-8")).hexdigest(),
+                    "original_sha256": hashlib.sha256(
+                        original.encode("utf-8")
+                    ).hexdigest(),
                     "block": block,
                     "manual_review_required": True,
                 }
@@ -385,7 +420,7 @@ if __name__ == "__main__":
 
 
 def validation_script_source() -> str:
-    return r'''param(
+    return r"""param(
     [string]$RepoRoot = "."
 )
 
@@ -395,7 +430,7 @@ python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output
 python .\Tools\validation\check_validation_report_contract.py --repo-root . --report-file .\output\validation\python_syntax_after_patch_bundle.json --output .\output\validation\validation_report_contract_after_patch_bundle.json
 git diff --check
 git status --short
-'''
+"""
 
 
 def readme_source(bundle_name: str, operation_count: int, skipped_count: int) -> str:
@@ -453,7 +488,9 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
             warnings.append(f"unexpected patch plan kind: {patch_plan.get('kind')}")
         operations, skipped = collect_operations(patch_plan, repo_root)
     if not operations and not errors:
-        errors.append("no supported Markdown operations were produced from the patch plan")
+        errors.append(
+            "no supported Markdown operations were produced from the patch plan"
+        )
 
     bundle_stamp = args.stamp or stamp()
     bundle_name = f"{args.basename}_{bundle_stamp}"
@@ -485,10 +522,20 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
                 "persistent_memory_write_performed": False,
             },
         }
-        (patches_dir / "manifest.json").write_text(safe_json(manifest) + "\n", encoding="utf-8")
-        (bundle_root / "run_patch_bundle.py").write_text(bundle_runner_source(), encoding="utf-8", newline="\n")
-        (scripts_dir / "validate_after_patch.ps1").write_text(validation_script_source(), encoding="utf-8", newline="\n")
-        (bundle_root / "README.md").write_text(readme_source(bundle_name, len(operations), len(skipped)), encoding="utf-8", newline="\n")
+        (patches_dir / "manifest.json").write_text(
+            safe_json(manifest) + "\n", encoding="utf-8"
+        )
+        (bundle_root / "run_patch_bundle.py").write_text(
+            bundle_runner_source(), encoding="utf-8", newline="\n"
+        )
+        (scripts_dir / "validate_after_patch.ps1").write_text(
+            validation_script_source(), encoding="utf-8", newline="\n"
+        )
+        (bundle_root / "README.md").write_text(
+            readme_source(bundle_name, len(operations), len(skipped)),
+            encoding="utf-8",
+            newline="\n",
+        )
         with zipfile.ZipFile(bundle_zip, "w", compression=zipfile.ZIP_DEFLATED) as zf:
             for path in sorted(bundle_root.rglob("*")):
                 if path.is_file():
@@ -541,7 +588,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Bundle ZIP: `{report.get('bundle_zip')}`")
     lines.append(f"- Operation count: `{report['operation_count']}`")
     lines.append(f"- Skipped candidates: `{report['skipped_candidate_count']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
+    lines.append(
+        f"- Patch application performed: `{report['patch_application_performed']}`"
+    )
     lines.append(f"- SQLite write performed: `{report['sqlite_write_performed']}`")
     if report.get("errors"):
         lines.append("")
@@ -561,7 +610,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("")
         lines.append("## Skipped candidates")
         for item in report["skipped_candidates"]:
-            lines.append(f"- `{item.get('id')}` `{item.get('target', '')}`: {item.get('reason')}")
+            lines.append(
+                f"- `{item.get('id')}` `{item.get('target', '')}`: {item.get('reason')}"
+            )
     return "\n".join(lines) + "\n"
 
 

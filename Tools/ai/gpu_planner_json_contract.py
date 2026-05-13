@@ -6,6 +6,7 @@ responses and parsed recommendation objects without running providers, applying
 patches, writing source files, executing Blender, writing SQLite databases or
 changing Git state.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -14,10 +15,18 @@ from dataclasses import dataclass
 from typing import Any
 
 try:
-    from Tools.ai.model_json import ModelJsonParseError, parse_model_json_object, strip_markdown_json_fence
-    from Tools.ai.runtime_tool_guidance import ALLOWED_RUNTIME_TOOLS
-except ImportError:  # Script-style execution from Tools/ai.
-    from model_json import ModelJsonParseError, parse_model_json_object, strip_markdown_json_fence  # type: ignore
+    from tools.ai.model_json import (
+        ModelJsonParseError,
+        parse_model_json_object,
+        strip_markdown_json_fence,
+    )
+    from tools.ai.runtime_tool_guidance import ALLOWED_RUNTIME_TOOLS
+except ImportError:  # Script-style execution from tools/ai.
+    from model_json import (  # type: ignore
+        ModelJsonParseError,
+        parse_model_json_object,
+        strip_markdown_json_fence,
+    )
     from runtime_tool_guidance import ALLOWED_RUNTIME_TOOLS  # type: ignore
 
 
@@ -34,12 +43,24 @@ REQUIRED_RECOMMENDATION_KEYS = {
     "validation_commands",
     "stop_conditions",
 }
-# ALLOWED_RUNTIME_TOOLS is imported from Tools.ai.runtime_tool_guidance so GPU,
+# ALLOWED_RUNTIME_TOOLS is imported from tools.ai.runtime_tool_guidance so GPU,
 # NPU and live provider loops share the same broker allowlist.
 REQUIRED_TOOL_REQUEST_KEYS = {"id", "tool", "reason", "args"}
-CONTEXT_ECHO_TOP_LEVEL_KEYS = {"files", "context_files", "repository_files", "file_previews"}
+CONTEXT_ECHO_TOP_LEVEL_KEYS = {
+    "files",
+    "context_files",
+    "repository_files",
+    "file_previews",
+}
 CONTEXT_ECHO_NESTED_KEYS = {"content_preview", "preview", "raw_response_preview"}
-EXPECTED_TOP_LEVEL_KEYS = {"summary", "confidence", "recommendations", "tool_requests", "missing_evidence", "next_best_action"}
+EXPECTED_TOP_LEVEL_KEYS = {
+    "summary",
+    "confidence",
+    "recommendations",
+    "tool_requests",
+    "missing_evidence",
+    "next_best_action",
+}
 OPEN_TO_CLOSE = {"{": "}", "[": "]"}
 
 
@@ -119,9 +140,15 @@ def _contains_nested_context_echo(value: Any, *, depth: int = 0) -> bool:
     if isinstance(value, dict):
         if any(key in value for key in CONTEXT_ECHO_NESTED_KEYS):
             return True
-        return any(_contains_nested_context_echo(child, depth=depth + 1) for child in value.values())
+        return any(
+            _contains_nested_context_echo(child, depth=depth + 1)
+            for child in value.values()
+        )
     if isinstance(value, list):
-        return any(_contains_nested_context_echo(child, depth=depth + 1) for child in value[:20])
+        return any(
+            _contains_nested_context_echo(child, depth=depth + 1)
+            for child in value[:20]
+        )
     return False
 
 
@@ -156,15 +183,25 @@ def validate_recommendation_object(value: Any, index: int) -> list[str]:
         errors.append(f"recommendations[{index}].risk invalid: {risk!r}")
 
     target_files = value.get("target_files")
-    if not isinstance(target_files, list) or not all(isinstance(item, str) and item for item in target_files):
-        errors.append(f"recommendations[{index}].target_files must be a non-empty string list")
+    if not isinstance(target_files, list) or not all(
+        isinstance(item, str) and item for item in target_files
+    ):
+        errors.append(
+            f"recommendations[{index}].target_files must be a non-empty string list"
+        )
 
     validation_commands = value.get("validation_commands")
-    if not isinstance(validation_commands, list) or not all(isinstance(item, str) for item in validation_commands):
-        errors.append(f"recommendations[{index}].validation_commands must be a string list")
+    if not isinstance(validation_commands, list) or not all(
+        isinstance(item, str) for item in validation_commands
+    ):
+        errors.append(
+            f"recommendations[{index}].validation_commands must be a string list"
+        )
 
     stop_conditions = value.get("stop_conditions")
-    if not isinstance(stop_conditions, list) or not all(isinstance(item, str) for item in stop_conditions):
+    if not isinstance(stop_conditions, list) or not all(
+        isinstance(item, str) for item in stop_conditions
+    ):
         errors.append(f"recommendations[{index}].stop_conditions must be a string list")
 
     if _contains_nested_context_echo(value):
@@ -309,14 +346,22 @@ def validate_model_response_contract(
         context_echo = detect_context_echo(parsed)
         missing_top_level = sorted({"recommendations"} - set(parsed))
         if missing_top_level:
-            schema_errors.append(f"missing top-level keys: {', '.join(missing_top_level)}")
+            schema_errors.append(
+                f"missing top-level keys: {', '.join(missing_top_level)}"
+            )
         unexpected_context_keys = sorted(set(parsed) & CONTEXT_ECHO_TOP_LEVEL_KEYS)
         if unexpected_context_keys:
-            schema_errors.append(f"context echo top-level keys: {', '.join(unexpected_context_keys)}")
+            schema_errors.append(
+                f"context echo top-level keys: {', '.join(unexpected_context_keys)}"
+            )
         if "recommendations" in parsed:
-            valid_count, invalid_count, recommendation_errors = validate_recommendations(parsed)
+            valid_count, invalid_count, recommendation_errors = (
+                validate_recommendations(parsed)
+            )
             schema_errors.extend(recommendation_errors)
-        valid_tool_count, invalid_tool_count, tool_errors = validate_tool_requests(parsed)
+        valid_tool_count, invalid_tool_count, tool_errors = validate_tool_requests(
+            parsed
+        )
         schema_errors.extend(tool_errors)
 
     schema_ok = json_ok and not schema_errors and not context_echo
@@ -349,7 +394,9 @@ def validate_model_response_contract(
     )
 
 
-def result_to_dict(result: ModelJsonContractResult, *, include_parsed: bool = False) -> dict[str, Any]:
+def result_to_dict(
+    result: ModelJsonContractResult, *, include_parsed: bool = False
+) -> dict[str, Any]:
     """Serialize a contract result for reports."""
 
     data: dict[str, Any] = {

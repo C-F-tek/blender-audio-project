@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Apply controlled patch bundles."""
+
 from __future__ import annotations
 
 import argparse
@@ -9,10 +10,26 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.patchkit.anchors import append_once, insert_after_marker, insert_before_marker, replace_once
-from Tools.ai.patchkit.filesystem import LoadedText, backup_file, load_text, rel, repo_path, write_text_preserved
-from Tools.ai.patchkit.powershell import assert_no_naked_throw, insert_after_invoke_checked, run_parser
-from Tools.ai.patchkit.reports import write_json, write_markdown
+from tools.ai.patchkit.anchors import (
+    append_once,
+    insert_after_marker,
+    insert_before_marker,
+    replace_once,
+)
+from tools.ai.patchkit.filesystem import (
+    LoadedText,
+    backup_file,
+    load_text,
+    rel,
+    repo_path,
+    write_text_preserved,
+)
+from tools.ai.patchkit.powershell import (
+    assert_no_naked_throw,
+    insert_after_invoke_checked,
+    run_parser,
+)
+from tools.ai.patchkit.reports import write_json, write_markdown
 
 DENIED_DELETE_PREFIXES = (
     "output/",
@@ -46,24 +63,43 @@ def read_fragment(bundle_dir: Path, op: dict[str, Any]) -> str:
     return path.read_text(encoding="utf-8-sig")
 
 
-def apply_operation(text: str, op: dict[str, Any], bundle_dir: Path) -> tuple[bool, str, str]:
+def apply_operation(
+    text: str, op: dict[str, Any], bundle_dir: Path
+) -> tuple[bool, str, str]:
     operation = str(op.get("operation") or "")
     marker = str(op.get("marker") or "")
     idempotency_marker = str(op.get("idempotency_marker") or marker or "")
 
     if operation == "insert_after_invoke_checked":
-        return insert_after_invoke_checked(text, str(op["label"]), read_fragment(bundle_dir, op), idempotency_marker=idempotency_marker)
+        return insert_after_invoke_checked(
+            text,
+            str(op["label"]),
+            read_fragment(bundle_dir, op),
+            idempotency_marker=idempotency_marker,
+        )
     if operation == "insert_before_marker":
-        change = insert_before_marker(text, str(op["target_marker"]), read_fragment(bundle_dir, op), idempotency_marker=idempotency_marker)
+        change = insert_before_marker(
+            text,
+            str(op["target_marker"]),
+            read_fragment(bundle_dir, op),
+            idempotency_marker=idempotency_marker,
+        )
         return change.changed, change.text, change.reason
     if operation == "insert_after_marker":
-        change = insert_after_marker(text, str(op["target_marker"]), read_fragment(bundle_dir, op), idempotency_marker=idempotency_marker)
+        change = insert_after_marker(
+            text,
+            str(op["target_marker"]),
+            read_fragment(bundle_dir, op),
+            idempotency_marker=idempotency_marker,
+        )
         return change.changed, change.text, change.reason
     if operation == "replace_once":
         change = replace_once(text, str(op["old"]), str(op["new"]))
         return change.changed, change.text, change.reason
     if operation == "append_once":
-        change = append_once(text, read_fragment(bundle_dir, op), idempotency_marker=idempotency_marker)
+        change = append_once(
+            text, read_fragment(bundle_dir, op), idempotency_marker=idempotency_marker
+        )
         return change.changed, change.text, change.reason
     if operation == "assert_marker":
         required = str(op["required_marker"])
@@ -76,7 +112,9 @@ def apply_operation(text: str, op: dict[str, Any], bundle_dir: Path) -> tuple[bo
     raise ValueError(f"unsupported operation: {operation}")
 
 
-def validate_delete_operation(repo_root: Path, target: Path, target_raw: str, op: dict[str, Any]) -> str:
+def validate_delete_operation(
+    repo_root: Path, target: Path, target_raw: str, op: dict[str, Any]
+) -> str:
     normalized = target_raw.replace("\\", "/").lstrip("./")
     if not bool(op.get("allow_delete")):
         raise ValueError("delete_file requires allow_delete=true")
@@ -94,7 +132,9 @@ def validate_delete_operation(repo_root: Path, target: Path, target_raw: str, op
     if required_marker:
         text = target.read_text(encoding="utf-8-sig", errors="replace")
         if required_marker not in text:
-            raise ValueError(f"delete_file required marker missing in {target_raw}: {required_marker}")
+            raise ValueError(
+                f"delete_file required marker missing in {target_raw}: {required_marker}"
+            )
     return "delete_file accepted"
 
 
@@ -102,15 +142,34 @@ def run_python_compile(repo_root: Path, files: list[str]) -> tuple[bool, str]:
     if not files:
         return True, ""
     command = [sys.executable, "-m", "py_compile", *files]
-    result = subprocess.run(command, cwd=repo_root, capture_output=True, text=True, check=False)
+    result = subprocess.run(
+        command, cwd=repo_root, capture_output=True, text=True, check=False
+    )
     return result.returncode == 0, result.stdout + result.stderr
 
 
 def run_git_diff_check(repo_root: Path) -> tuple[bool, str]:
-    inside = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], cwd=repo_root, capture_output=True, text=True, check=False)
+    inside = subprocess.run(
+        ["git", "rev-parse", "--is-inside-work-tree"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
     if inside.returncode != 0:
-        return False, "repo-root is not a Git worktree; cannot run git diff --check\n" + inside.stdout + inside.stderr
-    result = subprocess.run(["git", "diff", "--check"], cwd=repo_root, capture_output=True, text=True, check=False)
+        return (
+            False,
+            "repo-root is not a Git worktree; cannot run git diff --check\n"
+            + inside.stdout
+            + inside.stderr,
+        )
+    result = subprocess.run(
+        ["git", "diff", "--check"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
     return result.returncode == 0, result.stdout + result.stderr
 
 
@@ -118,7 +177,9 @@ def line_count(path: Path) -> int:
     return len(path.read_text(encoding="utf-8-sig").splitlines())
 
 
-def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[str, Any]:
+def apply_bundle(
+    repo_root: Path, bundle_path: Path, *, dry_run: bool
+) -> dict[str, Any]:
     bundle = load_bundle(bundle_path)
     bundle_dir = bundle_path.parent
     results: list[dict[str, Any]] = []
@@ -146,7 +207,15 @@ def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[s
                 if changed:
                     changed_count += 1
                     deleted.add(target)
-                results.append({"index": index, "operation": operation, "target": target_raw, "changed": changed, "reason": reason})
+                results.append(
+                    {
+                        "index": index,
+                        "operation": operation,
+                        "target": target_raw,
+                        "changed": changed,
+                        "reason": reason,
+                    }
+                )
                 continue
             if not target.exists():
                 errors.append(f"operation {index}: target missing: {target_raw}")
@@ -155,12 +224,22 @@ def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[s
                 loaded = load_text(target)
                 loaded_by_target[target] = loaded
                 text_by_target[target] = loaded.text_lf
-            changed, patched, reason = apply_operation(text_by_target[target], op, bundle_dir)
+            changed, patched, reason = apply_operation(
+                text_by_target[target], op, bundle_dir
+            )
             if changed:
                 changed_count += 1
                 touched.add(target)
                 text_by_target[target] = patched
-            results.append({"index": index, "operation": operation, "target": target_raw, "changed": changed, "reason": reason})
+            results.append(
+                {
+                    "index": index,
+                    "operation": operation,
+                    "target": target_raw,
+                    "changed": changed,
+                    "reason": reason,
+                }
+            )
         except Exception as exc:  # noqa: BLE001
             errors.append(f"operation {index} failed: {type(exc).__name__}: {exc}")
 
@@ -183,24 +262,54 @@ def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[s
                 for target in sorted(touched):
                     if target.suffix.lower() == ".ps1":
                         ok, output = run_parser(target)
-                        validator_results.append({"validator": validator, "target": rel(repo_root, target), "passed": ok, "output_tail": output[-4000:]})
+                        validator_results.append(
+                            {
+                                "validator": validator,
+                                "target": rel(repo_root, target),
+                                "passed": ok,
+                                "output_tail": output[-4000:],
+                            }
+                        )
                         if not ok:
-                            errors.append(f"PowerShell parser failed for {rel(repo_root, target)}")
+                            errors.append(
+                                f"PowerShell parser failed for {rel(repo_root, target)}"
+                            )
             elif validator == "python_compile":
-                files = [rel(repo_root, path) for path in sorted(touched) if path.suffix.lower() == ".py"]
+                files = [
+                    rel(repo_root, path)
+                    for path in sorted(touched)
+                    if path.suffix.lower() == ".py"
+                ]
                 ok, output = run_python_compile(repo_root, files)
-                validator_results.append({"validator": validator, "passed": ok, "files": files, "output_tail": output[-4000:]})
+                validator_results.append(
+                    {
+                        "validator": validator,
+                        "passed": ok,
+                        "files": files,
+                        "output_tail": output[-4000:],
+                    }
+                )
                 if not ok:
                     errors.append("python compile failed")
             elif validator == "git_diff_check":
                 ok, output = run_git_diff_check(repo_root)
-                validator_results.append({"validator": validator, "passed": ok, "output_tail": output[-4000:]})
+                validator_results.append(
+                    {
+                        "validator": validator,
+                        "passed": ok,
+                        "output_tail": output[-4000:],
+                    }
+                )
                 if not ok:
                     errors.append("git diff --check failed")
             else:
                 warnings.append(f"unknown validator ignored: {validator}")
 
-    line_counts = {rel(repo_root, path): line_count(path) for path in sorted(touched) if path.exists() and not dry_run}
+    line_counts = {
+        rel(repo_root, path): line_count(path)
+        for path in sorted(touched)
+        if path.exists() and not dry_run
+    }
     report = {
         "schema_version": 1,
         "kind": "patchkit_apply_report",
@@ -227,8 +336,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--bundle", required=True)
-    parser.add_argument("--output", default="output/validation/patchkit_apply_report.json")
-    parser.add_argument("--markdown-output", default="output/validation/patchkit_apply_report.md")
+    parser.add_argument(
+        "--output", default="output/validation/patchkit_apply_report.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/patchkit_apply_report.md"
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 

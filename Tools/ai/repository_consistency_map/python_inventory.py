@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
-from Tools.ai.repository_consistency_map.paths import bounded_worker_count, iter_files, read_text, repo_rel
+from tools.ai.repository_consistency_map.paths import (
+    bounded_worker_count,
+    iter_files,
+    read_text,
+    repo_rel,
+)
 
 
 def resolve_scan_worker_backend(worker_backend: str, worker_count: int) -> str:
@@ -20,7 +26,9 @@ def resolve_scan_worker_backend(worker_backend: str, worker_count: int) -> str:
         return "thread"
     if normalized == "auto":
         return "process"
-    raise ValueError(f"Unsupported repository consistency worker backend: {worker_backend}")
+    raise ValueError(
+        f"Unsupported repository consistency worker backend: {worker_backend}"
+    )
 
 
 def literal_string(node: ast.AST) -> str | None:
@@ -114,15 +122,26 @@ def local_module_symbol_exists(module: str, symbol: str, repo_root: Path) -> boo
     return False
 
 
-def extract_local_import_findings(tree: ast.AST, source: str, repo_root: Path) -> list[dict[str, Any]]:
+def extract_local_import_findings(
+    tree: ast.AST, source: str, repo_root: Path
+) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
     local_prefixes = ("Tools", "Scripting", "indexAI")
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 root = alias.name.split(".", 1)[0]
-                if root in local_prefixes and not local_module_exists(alias.name, repo_root):
-                    findings.append({"source": source, "line": getattr(node, "lineno", 0), "module": alias.name, "kind": "python_import_missing"})
+                if root in local_prefixes and not local_module_exists(
+                    alias.name, repo_root
+                ):
+                    findings.append(
+                        {
+                            "source": source,
+                            "line": getattr(node, "lineno", 0),
+                            "module": alias.name,
+                            "kind": "python_import_missing",
+                        }
+                    )
         elif isinstance(node, ast.ImportFrom):
             if node.level:
                 continue
@@ -131,7 +150,14 @@ def extract_local_import_findings(tree: ast.AST, source: str, repo_root: Path) -
             if root not in local_prefixes:
                 continue
             if not local_module_exists(module, repo_root):
-                findings.append({"source": source, "line": getattr(node, "lineno", 0), "module": module, "kind": "python_import_missing"})
+                findings.append(
+                    {
+                        "source": source,
+                        "line": getattr(node, "lineno", 0),
+                        "module": module,
+                        "kind": "python_import_missing",
+                    }
+                )
                 continue
             for alias in node.names:
                 symbol = alias.name
@@ -150,7 +176,9 @@ def extract_local_import_findings(tree: ast.AST, source: str, repo_root: Path) -
     return findings
 
 
-def scan_python_file_task(task: tuple[str, str]) -> tuple[str, dict[str, Any], list[dict[str, Any]], list[str]]:
+def scan_python_file_task(
+    task: tuple[str, str],
+) -> tuple[str, dict[str, Any], list[dict[str, Any]], list[str]]:
     repo_root_raw, path_raw = task
     repo_root = Path(repo_root_raw)
     path = Path(path_raw)
@@ -159,12 +187,32 @@ def scan_python_file_task(task: tuple[str, str]) -> tuple[str, dict[str, Any], l
     file_warnings: list[str] = []
     if error:
         file_warnings.append(f"{rel}: {error}")
-        return rel, {"argparse_flags": [], "functions": [], "classes": [], "syntax_error": error}, [], file_warnings
+        return (
+            rel,
+            {
+                "argparse_flags": [],
+                "functions": [],
+                "classes": [],
+                "syntax_error": error,
+            },
+            [],
+            file_warnings,
+        )
     try:
         tree = ast.parse(text, filename=rel)
     except SyntaxError as exc:
         file_warnings.append(f"{rel}: SyntaxError line {exc.lineno}: {exc.msg}")
-        return rel, {"argparse_flags": [], "functions": [], "classes": [], "syntax_error": str(exc)}, [], file_warnings
+        return (
+            rel,
+            {
+                "argparse_flags": [],
+                "functions": [],
+                "classes": [],
+                "syntax_error": str(exc),
+            },
+            [],
+            file_warnings,
+        )
     symbols = extract_python_symbols(tree)
     item = {
         "argparse_flags": extract_argparse_flags(tree),
@@ -187,7 +235,9 @@ def extract_python_inventory(
     inventory: dict[str, dict[str, Any]] = {}
     import_findings: list[dict[str, Any]] = []
     warnings: list[str] = []
-    python_files = python_files if python_files is not None else iter_files(repo_root, {".py"})
+    python_files = (
+        python_files if python_files is not None else iter_files(repo_root, {".py"})
+    )
     worker_count = bounded_worker_count(
         workers,
         len(python_files),
@@ -198,9 +248,13 @@ def extract_python_inventory(
     tasks = [(str(repo_root), str(path)) for path in python_files]
 
     if actual_backend in {"process", "thread"}:
-        executor_class = ProcessPoolExecutor if actual_backend == "process" else ThreadPoolExecutor
+        executor_class = (
+            ProcessPoolExecutor if actual_backend == "process" else ThreadPoolExecutor
+        )
         with executor_class(max_workers=worker_count) as executor:
-            for rel, item, file_import_findings, file_warnings in executor.map(scan_python_file_task, tasks):
+            for rel, item, file_import_findings, file_warnings in executor.map(
+                scan_python_file_task, tasks
+            ):
                 inventory[rel] = item
                 import_findings.extend(file_import_findings)
                 warnings.extend(file_warnings)
@@ -213,13 +267,19 @@ def extract_python_inventory(
     return inventory, import_findings, warnings
 
 
-def smoke_candidates_for_script(script: str, all_python_files: Iterable[str]) -> list[str]:
+def smoke_candidates_for_script(
+    script: str, all_python_files: Iterable[str]
+) -> list[str]:
     stem = Path(script).stem.lower()
     candidates: list[str] = []
     for path in all_python_files:
         lowered = path.lower()
-        if "/validation/" not in lowered and not lowered.startswith("tools/validation/"):
+        if "/validation/" not in lowered and not lowered.startswith(
+            "tools/validation/"
+        ):
             continue
-        if stem in lowered and ("smoke" in lowered or "check" in lowered or "test" in lowered):
+        if stem in lowered and (
+            "smoke" in lowered or "check" in lowered or "test" in lowered
+        ):
             candidates.append(path)
     return sorted(candidates)

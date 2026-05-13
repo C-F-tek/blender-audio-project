@@ -14,23 +14,38 @@ Guardrails:
 - no Git writes;
 - no writes outside the configured heap event/snapshot paths.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from tools.ai.provider_runtime_state import RuntimeState, degraded_lanes, normalize_status
+    from tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from tools.ai.provider_runtime_state import (  # type: ignore
+        RuntimeState,
+        degraded_lanes,
+        normalize_status,
+    )
+    from tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 LANES = (
     "gpu1",
@@ -52,13 +67,17 @@ EVENT_TYPES = (
     "tool_catalog_response",
     "evidence_request",
     "evidence_response",
+    "lane_evidence",
     "broker_request",
     "broker_result",
     "claim",
     "validation_signal",
     "decision",
+    "recommendation",
     "candidate_operation",
+    "patch_plan",
     "patch_plan_signal",
+    "validation",
     "product_signal",
     "telemetry_signal",
     "startup_task_file_context",
@@ -91,7 +110,11 @@ def safe_int(value: Any, default: int = 0) -> int:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -106,7 +129,9 @@ def normalize_lane(value: str) -> str:
 def normalize_event_type(value: str) -> str:
     event_type = str(value or "").strip().lower()
     if event_type not in EVENT_TYPES:
-        raise ValueError(f"unsupported runtime heap event type: {value!r}; allowed={list(EVENT_TYPES)}")
+        raise ValueError(
+            f"unsupported runtime heap event type: {value!r}; allowed={list(EVENT_TYPES)}"
+        )
     return event_type
 
 
@@ -124,12 +149,16 @@ def compact_payload(value: Any, max_chars: int = 8000) -> Any:
 def load_tool_specs() -> dict[str, Any]:
     """Load the existing broker allowlist lazily to avoid import cycles."""
     try:
-        from Tools.ai.agent_runtime_tool_broker import TOOL_SPECS  # pylint: disable=import-outside-toplevel
+        from tools.ai.agent_runtime_tool_broker import (
+            TOOL_SPECS,  # pylint: disable=import-outside-toplevel
+        )
     except ImportError:
         repo_root_for_import = Path(__file__).resolve().parents[2]
         if str(repo_root_for_import) not in sys.path:
             sys.path.insert(0, str(repo_root_for_import))
-        from Tools.ai.agent_runtime_tool_broker import TOOL_SPECS  # type: ignore  # pylint: disable=import-outside-toplevel
+        from tools.ai.agent_runtime_tool_broker import (
+            TOOL_SPECS,  # type: ignore  # pylint: disable=import-outside-toplevel
+        )
     return TOOL_SPECS
 
 
@@ -173,6 +202,7 @@ class ProviderRuntimeHeap:
     repo_root: Path
     stamp: str
     paths: RuntimeHeapPaths
+    runtime_state: RuntimeState = field(default_factory=RuntimeState)
 
     @classmethod
     def from_args(
@@ -182,16 +212,22 @@ class ProviderRuntimeHeap:
         events_path: str = "",
         snapshot_path: str = "",
         markdown_path: str = "",
-    ) -> "ProviderRuntimeHeap":
+    ) -> ProviderRuntimeHeap:
         event_template = events_path or DEFAULT_EVENTS
         snapshot_template = snapshot_path or DEFAULT_SNAPSHOT
         markdown_template = markdown_path or DEFAULT_MARKDOWN
         paths = RuntimeHeapPaths(
             events=resolve_output_path(repo_root, event_template.format(stamp=stamp)),
-            snapshot=resolve_output_path(repo_root, snapshot_template.format(stamp=stamp)),
-            markdown=resolve_output_path(repo_root, markdown_template.format(stamp=stamp)),
+            snapshot=resolve_output_path(
+                repo_root, snapshot_template.format(stamp=stamp)
+            ),
+            markdown=resolve_output_path(
+                repo_root, markdown_template.format(stamp=stamp)
+            ),
         )
-        return cls(repo_root=repo_root, stamp=stamp, paths=paths)
+        # Initialise shared runtime state for lane diagnostics and evidence collection
+        runtime_state = RuntimeState()
+        return cls(repo_root=repo_root, stamp=stamp, paths=paths, runtime_state=runtime_state)
 
     def append_event(
         self,
@@ -228,7 +264,28 @@ class ProviderRuntimeHeap:
         self.paths.events.parent.mkdir(parents=True, exist_ok=True)
         with self.paths.events.open("a", encoding="utf-8", newline="\n") as handle:
             handle.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
+        self.runtime_state.apply_event(event)
         return event
+
+    def add_event(
+        self,
+        event_type: str,
+        payload: dict[str, Any] | None = None,
+        lane: str = "orchestrator",
+        *,
+        round_id: int | None = None,
+        target: str | None = None,
+        correlation_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Append an event using the lane-first API expected by lane modules."""
+        return self.append_event(
+            source=lane,
+            target=target,
+            event_type=event_type,
+            round_id=round_id,
+            correlation_id=correlation_id,
+            payload=payload or {},
+        )
 
     def read_events(self) -> list[dict[str, Any]]:
         if not self.paths.events.exists():
@@ -267,7 +324,11 @@ class ProviderRuntimeHeap:
     def pending_broker_requests(self) -> list[dict[str, Any]]:
         events = self.read_events()
         result_ids = {
-            str(event.get("correlation_id") or safe_dict(event.get("payload")).get("request_id") or "")
+            str(
+                event.get("correlation_id")
+                or safe_dict(event.get("payload")).get("request_id")
+                or ""
+            )
             for event in events
             if event.get("event_type") == "broker_result"
         }
@@ -275,7 +336,11 @@ class ProviderRuntimeHeap:
         for event in events:
             if event.get("event_type") != "broker_request":
                 continue
-            request_id = str(event.get("correlation_id") or safe_dict(event.get("payload")).get("request_id") or "")
+            request_id = str(
+                event.get("correlation_id")
+                or safe_dict(event.get("payload")).get("request_id")
+                or ""
+            )
             if request_id and request_id in result_ids:
                 continue
             pending.append(event)
@@ -283,6 +348,8 @@ class ProviderRuntimeHeap:
 
     def provider_state_snapshot(self) -> dict[str, Any]:
         events = self.read_events()
+        runtime_state = RuntimeState.from_events(events)
+        self.runtime_state = runtime_state
         by_lane: dict[str, dict[str, Any]] = {}
         by_type: dict[str, int] = {}
         for event in events:
@@ -290,10 +357,16 @@ class ProviderRuntimeHeap:
                 continue
             lane = str(event.get("source") or "unknown")
             event_type = str(event.get("event_type") or "unknown")
-            lane_state = by_lane.setdefault(lane, {"event_count": 0, "latest_event_at": "", "event_types": {}})
+            lane_state = by_lane.setdefault(
+                lane, {"event_count": 0, "latest_event_at": "", "event_types": {}}
+            )
             lane_state["event_count"] += 1
-            lane_state["latest_event_at"] = str(event.get("created_at") or lane_state["latest_event_at"])
-            lane_state["event_types"][event_type] = safe_int(lane_state["event_types"].get(event_type)) + 1
+            lane_state["latest_event_at"] = str(
+                event.get("created_at") or lane_state["latest_event_at"]
+            )
+            lane_state["event_types"][event_type] = (
+                safe_int(lane_state["event_types"].get(event_type)) + 1
+            )
             by_type[event_type] = safe_int(by_type.get(event_type)) + 1
         return {
             "schema_version": 1,
@@ -301,12 +374,25 @@ class ProviderRuntimeHeap:
             "generated_at": now_iso(),
             "stamp": self.stamp,
             "event_log": repo_rel(self.repo_root, self.paths.events),
-            "event_count": len([item for item in events if item.get("kind") == "provider_runtime_event"]),
-            "parse_error_count": len([item for item in events if item.get("kind") == "provider_runtime_event_parse_error"]),
+            "event_count": len(
+                [
+                    item
+                    for item in events
+                    if item.get("kind") == "provider_runtime_event"
+                ]
+            ),
+            "parse_error_count": len(
+                [
+                    item
+                    for item in events
+                    if item.get("kind") == "provider_runtime_event_parse_error"
+                ]
+            ),
             "by_lane": by_lane,
             "by_event_type": by_type,
             "pending_broker_request_count": len(self.pending_broker_requests()),
             "pending_broker_requests": self.pending_broker_requests()[:20],
+            "runtime_state": runtime_state.as_dict(),
             "tool_catalog": tool_catalog_snapshot(),
             "architecture": {
                 "gpu1": "primary_advisory_planner",
@@ -335,13 +421,52 @@ class ProviderRuntimeHeap:
         return snapshot
 
 
+def record_lane_diagnostic(
+    heap: ProviderRuntimeHeap,
+    lane: str,
+    status: str,
+    message: str,
+    details: dict[str, Any] | None = None,
+    *,
+    round_id: int | None = None,
+    target: str | None = "orchestrator",
+    correlation_id: str | None = None,
+) -> dict[str, Any]:
+    """Record one standardized lane diagnostic in the shared runtime heap."""
+    normalized_lane = normalize_lane(lane)
+    normalized_status = normalize_status(status) or "unknown"
+    payload = {
+        "lane": normalized_lane,
+        "status": normalized_status,
+        "message": str(message or ""),
+        "details": safe_dict(details or {}),
+    }
+    return heap.add_event(
+        "provider_state",
+        payload,
+        normalized_lane,
+        round_id=round_id,
+        target=target,
+        correlation_id=correlation_id,
+    )
+
+
 def render_markdown(snapshot: dict[str, Any]) -> str:
     lines = ["# Provider Runtime Heap Snapshot", ""]
     lines.append(f"- Stamp: `{snapshot.get('stamp')}`")
     lines.append(f"- Event count: `{snapshot.get('event_count')}`")
     lines.append(f"- Parse error count: `{snapshot.get('parse_error_count')}`")
-    lines.append(f"- Pending broker requests: `{snapshot.get('pending_broker_request_count')}`")
+    lines.append(
+        f"- Pending broker requests: `{snapshot.get('pending_broker_request_count')}`"
+    )
     lines.append(f"- Event log: `{snapshot.get('event_log')}`")
+    lines.append("")
+    runtime_state = safe_dict(snapshot.get("runtime_state"))
+    lines.append("## Runtime state")
+    lines.append("")
+    lines.append(f"- Lane status: `{runtime_state.get('lane_status')}`")
+    lines.append(f"- Degraded lanes: `{runtime_state.get('degraded_lanes')}`")
+    lines.append(f"- Evidence count: `{runtime_state.get('evidence_count')}`")
     lines.append("")
     lines.append("## Runtime architecture")
     lines.append("")
@@ -371,7 +496,9 @@ def parse_payload(raw: str = "", payload_file: str = "") -> dict[str, Any]:
         try:
             raw = path.read_text(encoding="utf-8-sig")
         except OSError as exc:
-            raise ValueError(f"payload file unreadable: {path}; error={type(exc).__name__}: {exc}") from exc
+            raise ValueError(
+                f"payload file unreadable: {path}; error={type(exc).__name__}: {exc}"
+            ) from exc
 
     if not raw:
         return {}
@@ -422,13 +549,19 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
-    heap = ProviderRuntimeHeap.from_args(repo_root, args.stamp, args.events, args.snapshot, args.markdown_output)
+    heap = ProviderRuntimeHeap.from_args(
+        repo_root, args.stamp, args.events, args.snapshot, args.markdown_output
+    )
 
     if args.command == "init":
         heap.append_event(
             source=args.source,
             event_type="provider_state",
-            payload={"state": "heap_initialized", "lanes": list(LANES), "event_types": list(EVENT_TYPES)},
+            payload={
+                "state": "heap_initialized",
+                "lanes": list(LANES),
+                "event_types": list(EVENT_TYPES),
+            },
         )
         result = heap.write_snapshot()
     elif args.command == "append-event":
@@ -444,7 +577,10 @@ def main() -> int:
     elif args.command == "tool-catalog":
         result = tool_catalog_snapshot()
     elif args.command == "pending-broker-requests":
-        result = {"passed": True, "pending_broker_requests": heap.pending_broker_requests()}
+        result = {
+            "passed": True,
+            "pending_broker_requests": heap.pending_broker_requests(),
+        }
     else:
         result = heap.write_snapshot()
 

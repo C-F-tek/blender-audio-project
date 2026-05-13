@@ -1,4 +1,5 @@
 """Typed models for artifact-pipeline remediation queue handling."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -15,7 +16,7 @@ class GuardrailRequest:
     raw: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_mapping(cls, payload: Any) -> "GuardrailRequest | None":
+    def from_mapping(cls, payload: Any) -> GuardrailRequest | None:
         if not isinstance(payload, dict):
             return None
         return cls(
@@ -55,15 +56,17 @@ class GuardrailPlan:
         return {item.suggested_stage for item in self.requests}
 
     @classmethod
-    def from_raw_requests(cls, raw_requests: list[Any]) -> "GuardrailPlan":
+    def from_raw_requests(cls, raw_requests: list[Any]) -> GuardrailPlan:
         normalized = [GuardrailRequest.from_mapping(item) for item in raw_requests]
         return cls(tuple(item for item in normalized if item is not None))
 
     @classmethod
-    def from_queue(cls, raw_queue: Any) -> "GuardrailPlan":
+    def from_queue(cls, raw_queue: Any) -> GuardrailPlan:
         items = raw_queue if isinstance(raw_queue, list) else []
         normalized = [GuardrailRequest.from_mapping(item) for item in items]
-        return cls(tuple(item for item in normalized if item is not None and item.auto_safe))
+        return cls(
+            tuple(item for item in normalized if item is not None and item.auto_safe)
+        )
 
     def signature(self) -> str:
         import json

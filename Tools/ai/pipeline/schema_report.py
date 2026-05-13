@@ -1,4 +1,5 @@
 """Schema-v6 report builders for the AI artifact pipeline."""
+
 from __future__ import annotations
 
 import argparse
@@ -47,7 +48,9 @@ def empty_failed_report(repo: Path, out: Path, dry_run: bool, pf: dict) -> dict:
     }
 
 
-def agent_state_packet_report(repo: Path, args: argparse.Namespace, pf: dict) -> dict[str, Any]:
+def agent_state_packet_report(
+    repo: Path, args: argparse.Namespace, pf: dict
+) -> dict[str, Any]:
     """Return report metadata for the optional agent state packet touchpoint."""
     raw = getattr(args, "agent_state_packet", None)
     meta = dict(pf.get("agent_state_packet") or {})
@@ -58,7 +61,9 @@ def agent_state_packet_report(repo: Path, args: argparse.Namespace, pf: dict) ->
     meta.setdefault("exists", Path(raw).resolve().exists())
     meta["source"] = "cli"
     try:
-        meta["repo_relative_path"] = Path(raw).resolve().relative_to(repo.resolve()).as_posix()
+        meta["repo_relative_path"] = (
+            Path(raw).resolve().relative_to(repo.resolve()).as_posix()
+        )
     except ValueError:
         meta["repo_relative_path"] = str(Path(raw).resolve())
     return meta
@@ -93,12 +98,20 @@ def build_report(
         },
         "wave_entrypoint_review": {
             "enabled": args.review_wave_entrypoints,
-            "report": str(out / "wave_entrypoint_review.json") if args.review_wave_entrypoints else None,
+            "report": (
+                str(out / "wave_entrypoint_review.json")
+                if args.review_wave_entrypoints
+                else None
+            ),
         },
         "smart_context": {
             "enabled": args.smart_context,
             "task": args.smart_task,
-            "packet": str(out / "smart_context" / f"{track_slug}_smart_context_packet.json") if args.smart_context else None,
+            "packet": (
+                str(out / "smart_context" / f"{track_slug}_smart_context_packet.json")
+                if args.smart_context
+                else None
+            ),
         },
         "agent_state_packet": agent_state_packet_report(repo, args, pf),
         "guardrail_remediation_loop": remediation_loop,
@@ -107,7 +120,9 @@ def build_report(
     }
 
 
-def write_report_if_requested(out: Path, args: argparse.Namespace, report: dict) -> None:
+def write_report_if_requested(
+    out: Path, args: argparse.Namespace, report: dict
+) -> None:
     """Write final or dry-run report when requested by the invocation mode."""
     if not args.dry_run:
         target = out / RUN_REPORT_NAME
@@ -115,4 +130,6 @@ def write_report_if_requested(out: Path, args: argparse.Namespace, report: dict)
         target = out / DRY_RUN_REPORT_NAME
     else:
         return
-    target.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    target.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )

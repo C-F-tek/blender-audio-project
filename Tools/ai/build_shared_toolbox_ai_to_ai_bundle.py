@@ -8,6 +8,7 @@ bundle builder, and optionally validates the resulting bundle.
 The tool itself does not execute providers, apply patches, run Blender, or write
 SQLite/persistent memory.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,22 +19,44 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.agent_runtime_tool_broker import TOOL_SPECS
-    from Tools.ai.build_github_evidence_bundle import build_bundle
-    from Tools.ai.github_evidence_bundle_artifacts import DEFAULT_CHUNK_LINES, DEFAULT_RECURSIVE_MAX_FILES
-    from Tools.ai.github_evidence_bundle_io import read_json, read_text, repo_relative, resolve_repo_path, split_path_values
-    from Tools.validation.check_github_evidence_bundle import validate_github_evidence_bundles
-    from Tools.validation.report_utils import resolve_output_path, write_json_report
+    from tools.ai.agent_runtime_tool_broker import TOOL_SPECS
+    from tools.ai.build_github_evidence_bundle import build_bundle
+    from tools.ai.github_evidence_bundle_artifacts import (
+        DEFAULT_CHUNK_LINES,
+        DEFAULT_RECURSIVE_MAX_FILES,
+    )
+    from tools.ai.github_evidence_bundle_io import (
+        read_json,
+        read_text,
+        repo_relative,
+        resolve_repo_path,
+        split_path_values,
+    )
+    from tools.validation.check_github_evidence_bundle import (
+        validate_github_evidence_bundles,
+    )
+    from tools.validation.report_utils import resolve_output_path, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.agent_runtime_tool_broker import TOOL_SPECS
-    from Tools.ai.build_github_evidence_bundle import build_bundle
-    from Tools.ai.github_evidence_bundle_artifacts import DEFAULT_CHUNK_LINES, DEFAULT_RECURSIVE_MAX_FILES
-    from Tools.ai.github_evidence_bundle_io import read_json, read_text, repo_relative, resolve_repo_path, split_path_values
-    from Tools.validation.check_github_evidence_bundle import validate_github_evidence_bundles
-    from Tools.validation.report_utils import resolve_output_path, write_json_report
+    from tools.ai.agent_runtime_tool_broker import TOOL_SPECS
+    from tools.ai.build_github_evidence_bundle import build_bundle
+    from tools.ai.github_evidence_bundle_artifacts import (
+        DEFAULT_CHUNK_LINES,
+        DEFAULT_RECURSIVE_MAX_FILES,
+    )
+    from tools.ai.github_evidence_bundle_io import (
+        read_json,
+        read_text,
+        repo_relative,
+        resolve_repo_path,
+        split_path_values,
+    )
+    from tools.validation.check_github_evidence_bundle import (
+        validate_github_evidence_bundles,
+    )
+    from tools.validation.report_utils import resolve_output_path, write_json_report
 
 
 DEFAULT_STAMP_FORMAT = "%Y%m%d-%H%M%S"
@@ -165,7 +188,11 @@ def runtime_tool_capabilities() -> list[dict[str, Any]]:
             {
                 "tool_name": spec.name,
                 "category": classify_tool_category(spec.name),
-                "safe_default_mode": "report-only" if spec.name != "runtime_sqlite_memory" else "controlled read-only/status by default",
+                "safe_default_mode": (
+                    "report-only"
+                    if spec.name != "runtime_sqlite_memory"
+                    else "controlled read-only/status by default"
+                ),
                 "what_it_can_do": [spec.description],
                 "what_it_must_not_do": tool_must_not_do(spec.name),
                 "recommended_next_use": recommended_tool_use(spec.name),
@@ -190,9 +217,16 @@ def classify_tool_category(tool_name: str) -> str:
 
 
 def tool_must_not_do(tool_name: str) -> list[str]:
-    base = ["execute arbitrary shell commands", "apply patches", "run Blender runtime", "commit output artifacts"]
+    base = [
+        "execute arbitrary shell commands",
+        "apply patches",
+        "run Blender runtime",
+        "commit output artifacts",
+    ]
     if tool_name == "runtime_sqlite_memory":
-        base.append("write persistent memory without explicit confirmation and authorization")
+        base.append(
+            "write persistent memory without explicit confirmation and authorization"
+        )
     else:
         base.append("write SQLite or persistent memory")
     return base
@@ -210,7 +244,10 @@ def recommended_tool_use(tool_name: str) -> str:
         "build_code_interpreter_report": "Build static analysis/refactor evidence.",
         "runtime_sqlite_memory": "Read memory status/search through broker-controlled actions.",
     }
-    return mapping.get(tool_name, "Use through the runtime tool broker when a report-only request requires it.")
+    return mapping.get(
+        tool_name,
+        "Use through the runtime tool broker when a report-only request requires it.",
+    )
 
 
 def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
@@ -232,7 +269,9 @@ def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     return parsed, None
 
 
-def existing_paths(repo_root: Path, raw_paths: list[str], *, label: str, include_missing_optional: bool) -> tuple[list[str], list[dict[str, Any]]]:
+def existing_paths(
+    repo_root: Path, raw_paths: list[str], *, label: str, include_missing_optional: bool
+) -> tuple[list[str], list[dict[str, Any]]]:
     present: list[str] = []
     missing: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -298,12 +337,28 @@ def collect_report_facts(repo_root: Path, report_paths: list[str]) -> dict[str, 
             entry["parse_error"] = parse_error
             warnings.append(f"{entry['path']}: {parse_error}")
         if data:
-            provider_execution_performed = provider_execution_performed or data.get("provider_execution_performed") is True
-            patch_application_performed = patch_application_performed or data.get("patch_application_performed") is True
-            source_writes_performed = source_writes_performed or data.get("source_writes_performed") is True
-            sqlite_write_performed = sqlite_write_performed or data.get("sqlite_write_performed") is True
-            persistent_memory_write_performed = persistent_memory_write_performed or data.get("persistent_memory_write_performed") is True
-            blender_runtime_execution_performed = blender_runtime_execution_performed or data.get("blender_runtime_execution_performed") is True
+            provider_execution_performed = (
+                provider_execution_performed
+                or data.get("provider_execution_performed") is True
+            )
+            patch_application_performed = (
+                patch_application_performed
+                or data.get("patch_application_performed") is True
+            )
+            source_writes_performed = (
+                source_writes_performed or data.get("source_writes_performed") is True
+            )
+            sqlite_write_performed = (
+                sqlite_write_performed or data.get("sqlite_write_performed") is True
+            )
+            persistent_memory_write_performed = (
+                persistent_memory_write_performed
+                or data.get("persistent_memory_write_performed") is True
+            )
+            blender_runtime_execution_performed = (
+                blender_runtime_execution_performed
+                or data.get("blender_runtime_execution_performed") is True
+            )
             if isinstance(data.get("errors"), list):
                 errors.extend(str(item) for item in data.get("errors", []) if item)
             if isinstance(data.get("warnings"), list):
@@ -319,7 +374,11 @@ def collect_report_facts(repo_root: Path, report_paths: list[str]) -> dict[str, 
                                     "id": request.get("id"),
                                     "tool": request.get("tool"),
                                     "reason": request.get("reason"),
-                                    "args": request.get("args") if isinstance(request.get("args"), dict) else {},
+                                    "args": (
+                                        request.get("args")
+                                        if isinstance(request.get("args"), dict)
+                                        else {}
+                                    ),
                                 }
                             )
         reports_generated.append(entry)
@@ -370,7 +429,12 @@ def default_tool_requests() -> list[dict[str, Any]]:
             "status": "proposed_or_reported",
         }
         for name in sorted(TOOL_SPECS)
-        if name in {"check_python_syntax", "check_validation_report_contract", "build_code_interpreter_report"}
+        if name
+        in {
+            "check_python_syntax",
+            "check_validation_report_contract",
+            "build_code_interpreter_report",
+        }
     ]
 
 
@@ -382,7 +446,9 @@ def build_remaining_gaps(
     gaps: list[dict[str, Any]] = []
     gaps.extend(missing_reports)
     gaps.extend(missing_artifacts)
-    if not any(item.get("tool") for item in facts.get("tool_requests_executed_or_proposed", [])):
+    if not any(
+        item.get("tool") for item in facts.get("tool_requests_executed_or_proposed", [])
+    ):
         gaps.append(
             {
                 "gap": "runtime tool requests not proven in provider-backed run",
@@ -390,13 +456,27 @@ def build_remaining_gaps(
             }
         )
     if facts.get("patch_application_performed"):
-        gaps.append({"gap": "patch application detected", "detail": "Expected report-only execution."})
-    if facts.get("sqlite_write_performed") or facts.get("persistent_memory_write_performed"):
-        gaps.append({"gap": "SQLite or persistent memory write detected", "detail": "Expected read-only/report-only behavior."})
+        gaps.append(
+            {
+                "gap": "patch application detected",
+                "detail": "Expected report-only execution.",
+            }
+        )
+    if facts.get("sqlite_write_performed") or facts.get(
+        "persistent_memory_write_performed"
+    ):
+        gaps.append(
+            {
+                "gap": "SQLite or persistent memory write detected",
+                "detail": "Expected read-only/report-only behavior.",
+            }
+        )
     return gaps
 
 
-def extract_full_run_patch_plan_summary(repo_root: Path, report_paths: list[str]) -> dict[str, Any]:
+def extract_full_run_patch_plan_summary(
+    repo_root: Path, report_paths: list[str]
+) -> dict[str, Any]:
     # Promote full-run patch-plan summary into the production bundle final summary.
     for rel in report_paths:
         path = resolve_repo_path(repo_root, rel)
@@ -419,8 +499,12 @@ def extract_full_run_patch_plan_summary(repo_root: Path, report_paths: list[str]
             "source_writes_performed": data.get("source_writes_performed"),
             "summary_count": len(summary_items),
             "top_items": summary_items[:20],
-            "warnings": data.get("warnings") if isinstance(data.get("warnings"), list) else [],
-            "errors": data.get("errors") if isinstance(data.get("errors"), list) else [],
+            "warnings": (
+                data.get("warnings") if isinstance(data.get("warnings"), list) else []
+            ),
+            "errors": (
+                data.get("errors") if isinstance(data.get("errors"), list) else []
+            ),
         }
     return {
         "seen": False,
@@ -433,7 +517,9 @@ def extract_full_run_patch_plan_summary(repo_root: Path, report_paths: list[str]
     }
 
 
-def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str]) -> dict[str, Any]:
+def extract_provider_diagnostics_summary(
+    repo_root: Path, report_paths: list[str]
+) -> dict[str, Any]:
     # Summarize provider/GPU/NPU diagnostics without hiding recovered failures.
     diagnostics: list[dict[str, Any]] = []
     provider_execution_seen = False
@@ -448,7 +534,9 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
 
         kind = str(data.get("kind") or "")
         passed = data.get("passed")
-        provider_execution_seen = provider_execution_seen or data.get("provider_execution_performed") is True
+        provider_execution_seen = (
+            provider_execution_seen or data.get("provider_execution_performed") is True
+        )
 
         if kind in {
             "agent_gpu_npu_parallel_orchestrator",
@@ -466,16 +554,26 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
             "provider_runtime_heap_telemetry",
         }:
             errors = data.get("errors") if isinstance(data.get("errors"), list) else []
-            warnings = data.get("warnings") if isinstance(data.get("warnings"), list) else []
+            warnings = (
+                data.get("warnings") if isinstance(data.get("warnings"), list) else []
+            )
             diagnostics.append(
                 {
                     "path": repo_relative(path, repo_root),
                     "kind": kind,
                     "passed": passed,
-                    "provider_execution_requested": data.get("provider_execution_requested"),
-                    "provider_execution_performed": data.get("provider_execution_performed"),
+                    "provider_execution_requested": data.get(
+                        "provider_execution_requested"
+                    ),
+                    "provider_execution_performed": data.get(
+                        "provider_execution_performed"
+                    ),
                     "classification": data.get("classification"),
-                    "classifications": data.get("classifications") if isinstance(data.get("classifications"), list) else [],
+                    "classifications": (
+                        data.get("classifications")
+                        if isinstance(data.get("classifications"), list)
+                        else []
+                    ),
                     "role": data.get("role"),
                     "source": data.get("source"),
                     "source_classification": data.get("source_classification"),
@@ -484,30 +582,51 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
                     "peer_mesh_visibility": data.get("peer_mesh_visibility"),
                     "npu_support_lane": data.get("npu_support_lane"),
                     "provider_broker_loop": data.get("provider_broker_loop"),
-                    "collaboration_visibility": (data.get("collaboration_round") or {}).get("synchronized_visibility") if isinstance(data.get("collaboration_round"), dict) else None,
+                    "collaboration_visibility": (
+                        (data.get("collaboration_round") or {}).get(
+                            "synchronized_visibility"
+                        )
+                        if isinstance(data.get("collaboration_round"), dict)
+                        else None
+                    ),
                     "tool_request_count": data.get("tool_request_count"),
                     "tool_execution_count": data.get("tool_execution_count"),
                     "event_count": data.get("event_count"),
                     "broker_result_count": data.get("broker_result_count"),
-                    "pending_broker_request_count": data.get("pending_broker_request_count"),
-                    "direct_execution_violation_count": data.get("direct_execution_violation_count"),
+                    "pending_broker_request_count": data.get(
+                        "pending_broker_request_count"
+                    ),
+                    "direct_execution_violation_count": data.get(
+                        "direct_execution_violation_count"
+                    ),
                     "provider_error": data.get("provider_error"),
                     "recommendation_count": data.get("recommendation_count"),
                     "errors": errors[:20],
                     "warnings": warnings[:20],
                 }
             )
-            if kind == "agent_gpu_parallel_report" and passed is True and int(data.get("recommendation_count") or 0) > 0:
+            if (
+                kind == "agent_gpu_parallel_report"
+                and passed is True
+                and int(data.get("recommendation_count") or 0) > 0
+            ):
                 gpu_primary_advisory_succeeded = True
             if kind == "gpu1_primary_advisory" and passed is True:
                 gpu_primary_advisory_succeeded = True
 
-        if kind in {
-            "deterministic_recommendation_synthesizer",
-            "agent_review_decision_loop",
-            "agent_review_patch_plan",
-        } and passed is True:
-            if int(data.get("recommendation_count") or 0) > 0 or int(data.get("patch_plan_count") or 0) > 0:
+        if (
+            kind
+            in {
+                "deterministic_recommendation_synthesizer",
+                "agent_review_decision_loop",
+                "agent_review_patch_plan",
+            }
+            and passed is True
+        ):
+            if (
+                int(data.get("recommendation_count") or 0) > 0
+                or int(data.get("patch_plan_count") or 0) > 0
+            ):
                 deterministic_recovery_used = True
 
     provider_failure_detected = any(item.get("passed") is False for item in diagnostics)
@@ -517,19 +636,27 @@ def extract_provider_diagnostics_summary(repo_root: Path, report_paths: list[str
         "provider_failure_detected": provider_failure_detected,
         "deterministic_recovery_used": deterministic_recovery_used,
         "diagnostics": diagnostics,
-        **classify_provider_advisory_state({
-            "provider_execution_seen": provider_execution_seen,
-            "gpu_primary_advisory_succeeded": gpu_primary_advisory_succeeded,
-            "provider_failure_detected": provider_failure_detected,
-            "deterministic_recovery_used": deterministic_recovery_used,
-            "diagnostics": diagnostics,
-        }),
+        **classify_provider_advisory_state(
+            {
+                "provider_execution_seen": provider_execution_seen,
+                "gpu_primary_advisory_succeeded": gpu_primary_advisory_succeeded,
+                "provider_failure_detected": provider_failure_detected,
+                "deterministic_recovery_used": deterministic_recovery_used,
+                "diagnostics": diagnostics,
+            }
+        ),
     }
 
 
-def classify_provider_advisory_state(provider_diagnostics: dict[str, Any]) -> dict[str, Any]:
+def classify_provider_advisory_state(
+    provider_diagnostics: dict[str, Any],
+) -> dict[str, Any]:
     # Classify provider state without hiding recovered/degraded runs.
-    diagnostics = provider_diagnostics.get("diagnostics") if isinstance(provider_diagnostics, dict) else []
+    diagnostics = (
+        provider_diagnostics.get("diagnostics")
+        if isinstance(provider_diagnostics, dict)
+        else []
+    )
     diagnostics = diagnostics if isinstance(diagnostics, list) else []
     failure_reasons: list[str] = []
     degraded_components: list[str] = []
@@ -574,7 +701,9 @@ def classify_provider_advisory_state(provider_diagnostics: dict[str, Any]) -> di
     }
 
 
-def extract_peer_mesh_product_state(provider_diagnostics: dict[str, Any]) -> dict[str, Any]:
+def extract_peer_mesh_product_state(
+    provider_diagnostics: dict[str, Any],
+) -> dict[str, Any]:
     """Derive product-facing peer-mesh state from existing provider diagnostics."""
 
     operational_lanes: list[str] = []
@@ -590,9 +719,21 @@ def extract_peer_mesh_product_state(provider_diagnostics: dict[str, Any]) -> dic
         if not isinstance(item, dict):
             continue
         kind = str(item.get("kind") or "")
-        classifications = item.get("classifications") if isinstance(item.get("classifications"), list) else []
-        mesh = item.get("peer_mesh_visibility") if isinstance(item.get("peer_mesh_visibility"), dict) else {}
-        support = item.get("npu_support_lane") if isinstance(item.get("npu_support_lane"), dict) else {}
+        classifications = (
+            item.get("classifications")
+            if isinstance(item.get("classifications"), list)
+            else []
+        )
+        mesh = (
+            item.get("peer_mesh_visibility")
+            if isinstance(item.get("peer_mesh_visibility"), dict)
+            else {}
+        )
+        support = (
+            item.get("npu_support_lane")
+            if isinstance(item.get("npu_support_lane"), dict)
+            else {}
+        )
         if kind == "gpu1_primary_advisory" and item.get("passed") is True:
             add_unique(operational_lanes, "gpu1_ollama_primary_advisory")
         if kind == "gpu0_peer_response":
@@ -601,15 +742,24 @@ def extract_peer_mesh_product_state(provider_diagnostics: dict[str, Any]) -> dic
                 add_unique(support_lanes, "gpu0_openvino_numeric_tool_peer")
             if "gpu0_peer_semantic_model_unconfigured" in classifications:
                 add_unique(degraded_lanes, "gpu0_semantic_companion_model_unconfigured")
-        if kind == "agent_runtime_tool_broker" and int(item.get("tool_execution_count") or 0) > 0:
+        if (
+            kind == "agent_runtime_tool_broker"
+            and int(item.get("tool_execution_count") or 0) > 0
+        ):
             add_unique(operational_lanes, "runtime_tool_broker")
-            source_classification = str(item.get("source_classification") or item.get("source") or "")
+            source_classification = str(
+                item.get("source_classification") or item.get("source") or ""
+            )
             if "gpu0" in source_classification:
                 add_unique(support_lanes, "gpu0_brokered_tool_supply")
             if "npu" in source_classification:
                 add_unique(support_lanes, "npu_brokered_tool_supply")
         if kind == "ai_peer_exchange":
-            for lane in item.get("peer_mesh_operational_lanes", []) if isinstance(item.get("peer_mesh_operational_lanes"), list) else []:
+            for lane in (
+                item.get("peer_mesh_operational_lanes", [])
+                if isinstance(item.get("peer_mesh_operational_lanes"), list)
+                else []
+            ):
                 add_unique(operational_lanes, str(lane))
             if mesh.get("gpu0_tool_requests_broker_consumed") is True:
                 add_unique(support_lanes, "gpu0_brokered_tool_supply")
@@ -619,12 +769,17 @@ def extract_peer_mesh_product_state(provider_diagnostics: dict[str, Any]) -> dic
                 add_unique(degraded_lanes, "npu_semantic_provider_slow_or_degraded")
             if support.get("product_pass_blocker") is True:
                 add_unique(product_blockers, "npu_support_lane_marked_product_blocker")
-        if kind == "provider_runtime_heap_telemetry" and int(item.get("event_count") or 0) > 0:
+        if (
+            kind == "provider_runtime_heap_telemetry"
+            and int(item.get("event_count") or 0) > 0
+        ):
             add_unique(operational_lanes, "provider_runtime_heap_blackboard")
             if int(item.get("broker_result_count") or 0) > 0:
                 add_unique(support_lanes, "provider_runtime_heap_broker_results")
             if int(item.get("direct_execution_violation_count") or 0) > 0:
-                add_unique(product_blockers, "provider_runtime_heap_direct_execution_violation")
+                add_unique(
+                    product_blockers, "provider_runtime_heap_direct_execution_violation"
+                )
     if operational_lanes and "deterministic_scripts" not in operational_lanes:
         add_unique(operational_lanes, "deterministic_scripts")
     return {
@@ -638,7 +793,9 @@ def extract_peer_mesh_product_state(provider_diagnostics: dict[str, Any]) -> dic
     }
 
 
-def extract_provider_broker_loop_product_state(provider_diagnostics: dict[str, Any]) -> dict[str, Any]:
+def extract_provider_broker_loop_product_state(
+    provider_diagnostics: dict[str, Any],
+) -> dict[str, Any]:
     """Derive provider-broker loop product state from existing provider diagnostics."""
 
     for item in provider_diagnostics.get("diagnostics", []):
@@ -650,13 +807,21 @@ def extract_provider_broker_loop_product_state(provider_diagnostics: dict[str, A
                 "seen": True,
                 "active": loop.get("active"),
                 "controlled_executor": loop.get("controlled_executor"),
-                "direct_tool_execution_allowed": loop.get("direct_tool_execution_allowed"),
+                "direct_tool_execution_allowed": loop.get(
+                    "direct_tool_execution_allowed"
+                ),
                 "broker_tool_execution_count": loop.get("broker_tool_execution_count"),
-                "gpu0_broker_tool_execution_count": loop.get("gpu0_broker_tool_execution_count"),
-                "npu_broker_tool_execution_count": loop.get("npu_broker_tool_execution_count"),
+                "gpu0_broker_tool_execution_count": loop.get(
+                    "gpu0_broker_tool_execution_count"
+                ),
+                "npu_broker_tool_execution_count": loop.get(
+                    "npu_broker_tool_execution_count"
+                ),
                 "npu_non_blocking": loop.get("npu_non_blocking"),
                 "npu_product_pass_blocker": loop.get("npu_product_pass_blocker"),
-                "deterministic_scripts_heavy_audit_authority": loop.get("deterministic_scripts_heavy_audit_authority"),
+                "deterministic_scripts_heavy_audit_authority": loop.get(
+                    "deterministic_scripts_heavy_audit_authority"
+                ),
                 "product_pass_blockers": loop.get("product_pass_blockers", []),
                 "topology": loop.get("topology", []),
             }
@@ -664,10 +829,13 @@ def extract_provider_broker_loop_product_state(provider_diagnostics: dict[str, A
     heap_items = [
         item
         for item in provider_diagnostics.get("diagnostics", [])
-        if isinstance(item, dict) and item.get("kind") == "provider_runtime_heap_telemetry"
+        if isinstance(item, dict)
+        and item.get("kind") == "provider_runtime_heap_telemetry"
     ]
     if heap_items:
-        broker_result_count = sum(int(item.get("broker_result_count") or 0) for item in heap_items)
+        broker_result_count = sum(
+            int(item.get("broker_result_count") or 0) for item in heap_items
+        )
         return {
             "seen": True,
             "active": any(int(item.get("event_count") or 0) > 0 for item in heap_items),
@@ -724,9 +892,13 @@ def build_final_summary(
     patch_plan_summary = extract_full_run_patch_plan_summary(repo_root, report_paths)
     provider_diagnostics = extract_provider_diagnostics_summary(repo_root, report_paths)
     peer_mesh_product_state = extract_peer_mesh_product_state(provider_diagnostics)
-    provider_broker_loop_product_state = extract_provider_broker_loop_product_state(provider_diagnostics)
+    provider_broker_loop_product_state = extract_provider_broker_loop_product_state(
+        provider_diagnostics
+    )
     tool_capabilities = runtime_tool_capabilities()
-    tool_requests = facts.get("tool_requests_executed_or_proposed") or default_tool_requests()
+    tool_requests = (
+        facts.get("tool_requests_executed_or_proposed") or default_tool_requests()
+    )
     remaining_gaps = build_remaining_gaps(missing_reports, missing_artifacts, facts)
     passed = not (
         facts.get("patch_application_performed")
@@ -751,21 +923,45 @@ def build_final_summary(
         "peer_mesh_product_state": peer_mesh_product_state,
         "provider_broker_loop_product_state": provider_broker_loop_product_state,
         "provider_broker_loop_active": provider_broker_loop_product_state.get("active"),
-        "provider_broker_loop_controlled_executor": provider_broker_loop_product_state.get("controlled_executor"),
-        "provider_broker_loop_broker_execution_count": provider_broker_loop_product_state.get("broker_tool_execution_count"),
-        "provider_broker_loop_gpu0_broker_execution_count": provider_broker_loop_product_state.get("gpu0_broker_tool_execution_count"),
-        "provider_broker_loop_npu_broker_execution_count": provider_broker_loop_product_state.get("npu_broker_tool_execution_count"),
-        "provider_broker_loop_product_blockers": provider_broker_loop_product_state.get("product_pass_blockers", []),
-        "peer_mesh_operational_lanes": peer_mesh_product_state.get("operational_lanes", []),
+        "provider_broker_loop_controlled_executor": provider_broker_loop_product_state.get(
+            "controlled_executor"
+        ),
+        "provider_broker_loop_broker_execution_count": provider_broker_loop_product_state.get(
+            "broker_tool_execution_count"
+        ),
+        "provider_broker_loop_gpu0_broker_execution_count": provider_broker_loop_product_state.get(
+            "gpu0_broker_tool_execution_count"
+        ),
+        "provider_broker_loop_npu_broker_execution_count": provider_broker_loop_product_state.get(
+            "npu_broker_tool_execution_count"
+        ),
+        "provider_broker_loop_product_blockers": provider_broker_loop_product_state.get(
+            "product_pass_blockers", []
+        ),
+        "peer_mesh_operational_lanes": peer_mesh_product_state.get(
+            "operational_lanes", []
+        ),
         "peer_mesh_support_lanes": peer_mesh_product_state.get("support_lanes", []),
         "peer_mesh_degraded_lanes": peer_mesh_product_state.get("degraded_lanes", []),
-        "peer_mesh_product_blockers": peer_mesh_product_state.get("product_blockers", []),
-        "gpu_primary_advisory_succeeded": bool(provider_diagnostics.get("gpu_primary_advisory_succeeded")),
-        "provider_failure_detected": bool(provider_diagnostics.get("provider_failure_detected")),
+        "peer_mesh_product_blockers": peer_mesh_product_state.get(
+            "product_blockers", []
+        ),
+        "gpu_primary_advisory_succeeded": bool(
+            provider_diagnostics.get("gpu_primary_advisory_succeeded")
+        ),
+        "provider_failure_detected": bool(
+            provider_diagnostics.get("provider_failure_detected")
+        ),
         "provider_advisory_state": provider_diagnostics.get("provider_advisory_state"),
-        "provider_failure_reasons": provider_diagnostics.get("provider_failure_reasons", []),
-        "degraded_provider_components": provider_diagnostics.get("degraded_provider_components", []),
-        "deterministic_recovery_used": bool(provider_diagnostics.get("deterministic_recovery_used")),
+        "provider_failure_reasons": provider_diagnostics.get(
+            "provider_failure_reasons", []
+        ),
+        "degraded_provider_components": provider_diagnostics.get(
+            "degraded_provider_components", []
+        ),
+        "deterministic_recovery_used": bool(
+            provider_diagnostics.get("deterministic_recovery_used")
+        ),
         "patch_plan_summary": patch_plan_summary,
         "patch_plan_summary_seen": bool(patch_plan_summary.get("seen")),
         "patch_plan_count": patch_plan_summary.get("patch_plan_count", 0),
@@ -773,8 +969,12 @@ def build_final_summary(
         "patch_application_performed": bool(facts.get("patch_application_performed")),
         "source_writes_performed": bool(facts.get("source_writes_performed")),
         "sqlite_write_performed": bool(facts.get("sqlite_write_performed")),
-        "persistent_memory_write_performed": bool(facts.get("persistent_memory_write_performed")),
-        "blender_runtime_execution_performed": bool(facts.get("blender_runtime_execution_performed")),
+        "persistent_memory_write_performed": bool(
+            facts.get("persistent_memory_write_performed")
+        ),
+        "blender_runtime_execution_performed": bool(
+            facts.get("blender_runtime_execution_performed")
+        ),
         "artifact_paths_considered": artifact_paths,
         "recursive_defaults": recursive_defaults or {},
         "chunked_file_index": chunked_file_index or [],
@@ -800,28 +1000,56 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
     lines.append("## Provider diagnostics")
     lines.append("")
     provider = summary.get("provider_diagnostics") or {}
-    lines.append(f"- Provider execution seen: `{provider.get('provider_execution_seen')}`")
-    lines.append(f"- GPU primary advisory succeeded: `{provider.get('gpu_primary_advisory_succeeded')}`")
-    lines.append(f"- Provider failure detected: `{provider.get('provider_failure_detected')}`")
-    lines.append(f"- Deterministic recovery used: `{provider.get('deterministic_recovery_used')}`")
-    lines.append(f"- Provider advisory state: `{provider.get('provider_advisory_state')}`")
+    lines.append(
+        f"- Provider execution seen: `{provider.get('provider_execution_seen')}`"
+    )
+    lines.append(
+        f"- GPU primary advisory succeeded: `{provider.get('gpu_primary_advisory_succeeded')}`"
+    )
+    lines.append(
+        f"- Provider failure detected: `{provider.get('provider_failure_detected')}`"
+    )
+    lines.append(
+        f"- Deterministic recovery used: `{provider.get('deterministic_recovery_used')}`"
+    )
+    lines.append(
+        f"- Provider advisory state: `{provider.get('provider_advisory_state')}`"
+    )
     reasons = provider.get("provider_failure_reasons") or []
     if reasons:
         lines.append("- Provider failure reasons:")
         for reason in reasons[:12]:
             lines.append(f"  - {reason}")
-    peer_mesh_state = summary.get("peer_mesh_product_state") if isinstance(summary.get("peer_mesh_product_state"), dict) else {}
+    peer_mesh_state = (
+        summary.get("peer_mesh_product_state")
+        if isinstance(summary.get("peer_mesh_product_state"), dict)
+        else {}
+    )
     if peer_mesh_state:
         lines.append("")
         lines.append("## Peer mesh product state")
         lines.append("")
-        lines.append(f"- Peer mesh operational lanes: `{peer_mesh_state.get('operational_lanes')}`")
-        lines.append(f"- Peer mesh support lanes: `{peer_mesh_state.get('support_lanes')}`")
-        lines.append(f"- Peer mesh degraded lanes: `{peer_mesh_state.get('degraded_lanes')}`")
-        lines.append(f"- Peer mesh product blockers: `{peer_mesh_state.get('product_blockers')}`")
-        lines.append(f"- Legacy usable lanes are workload quality only: `{peer_mesh_state.get('legacy_usable_lanes_are_workload_quality_only')}`")
-        lines.append(f"- NPU degraded is product blocker: `{peer_mesh_state.get('npu_degraded_is_product_blocker')}`")
-        lines.append(f"- NPU heavy audit authority: `{peer_mesh_state.get('npu_heavy_audit_authority')}`")
+        lines.append(
+            f"- Peer mesh operational lanes: `{peer_mesh_state.get('operational_lanes')}`"
+        )
+        lines.append(
+            f"- Peer mesh support lanes: `{peer_mesh_state.get('support_lanes')}`"
+        )
+        lines.append(
+            f"- Peer mesh degraded lanes: `{peer_mesh_state.get('degraded_lanes')}`"
+        )
+        lines.append(
+            f"- Peer mesh product blockers: `{peer_mesh_state.get('product_blockers')}`"
+        )
+        lines.append(
+            f"- Legacy usable lanes are workload quality only: `{peer_mesh_state.get('legacy_usable_lanes_are_workload_quality_only')}`"
+        )
+        lines.append(
+            f"- NPU degraded is product blocker: `{peer_mesh_state.get('npu_degraded_is_product_blocker')}`"
+        )
+        lines.append(
+            f"- NPU heavy audit authority: `{peer_mesh_state.get('npu_heavy_audit_authority')}`"
+        )
         lines.append("")
     for item in provider.get("diagnostics", [])[:12]:
         lines.append(
@@ -839,11 +1067,17 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
     lines.append(f"- Seen: `{patch_summary.get('seen')}`")
     lines.append(f"- Source: `{patch_summary.get('source')}`")
     lines.append(f"- Patch plan count: `{patch_summary.get('patch_plan_count')}`")
-    lines.append(f"- Manual review required: `{patch_summary.get('manual_review_required')}`")
-    lines.append(f"- Patch application performed: `{patch_summary.get('patch_application_performed')}`")
+    lines.append(
+        f"- Manual review required: `{patch_summary.get('manual_review_required')}`"
+    )
+    lines.append(
+        f"- Patch application performed: `{patch_summary.get('patch_application_performed')}`"
+    )
     for item in patch_summary.get("top_items", [])[:20]:
         if isinstance(item, dict):
-            lines.append(f"- `{item.get('id') or item.get('recommendation_id')}` status=`{item.get('status')}` targets=`{item.get('target_files')}`")
+            lines.append(
+                f"- `{item.get('id') or item.get('recommendation_id')}` status=`{item.get('status')}` targets=`{item.get('target_files')}`"
+            )
     lines.append("")
     lines.append("## Tools available")
     lines.append("")
@@ -864,7 +1098,9 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
     lines.append("## Tool requests executed or proposed")
     lines.append("")
     for request in summary.get("tool_requests_executed_or_proposed", []):
-        lines.append(f"- {request.get('id')}: {request.get('tool')} - {request.get('reason')}")
+        lines.append(
+            f"- {request.get('id')}: {request.get('tool')} - {request.get('reason')}"
+        )
     lines.append("")
     lines.append("## Reports generated")
     lines.append("")
@@ -896,8 +1132,12 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
     lines.append("")
     recursive_defaults = summary.get("recursive_defaults") or {}
     lines.append(f"- Enabled: `{recursive_defaults.get('enabled')}`")
-    lines.append(f"- Discovered reports: `{len(recursive_defaults.get('discovered_reports') or [])}`")
-    lines.append(f"- Discovered artifacts: `{len(recursive_defaults.get('discovered_artifacts') or [])}`")
+    lines.append(
+        f"- Discovered reports: `{len(recursive_defaults.get('discovered_reports') or [])}`"
+    )
+    lines.append(
+        f"- Discovered artifacts: `{len(recursive_defaults.get('discovered_artifacts') or [])}`"
+    )
     lines.append("")
     lines.append("## Chunked large JSON/Markdown files")
     lines.append("")
@@ -909,7 +1149,9 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
                 f"chunks={item.get('chunk_count')} chunk_size={item.get('chunk_size_lines')}"
             )
             for chunk in item.get("chunks", []):
-                lines.append(f"  - {chunk.get('chunk_id')} -> next: {chunk.get('next_chunk_id') or 'END'}")
+                lines.append(
+                    f"  - {chunk.get('chunk_id')} -> next: {chunk.get('next_chunk_id') or 'END'}"
+                )
     else:
         lines.append("- No JSON/Markdown file above the chunk threshold was detected.")
     lines.append("")
@@ -938,8 +1180,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--stamp", default=None)
     parser.add_argument("--basename", default=None)
     parser.add_argument("--output-dir", default="docs/LOCAL_VALIDATION_EVIDENCE")
-    parser.add_argument("--task-md", default="docs/LOCAL_AI_TASKS/shared-runtime-toolbox-ai-to-ai-next-task-2026-05-03.md")
-    parser.add_argument("--architecture-md", default="docs/LOCAL_AI_TASKS/shared-runtime-toolbox-orchestration-architecture.md")
+    parser.add_argument(
+        "--task-md",
+        default="docs/LOCAL_AI_TASKS/shared-runtime-toolbox-ai-to-ai-next-task-2026-05-03.md",
+    )
+    parser.add_argument(
+        "--architecture-md",
+        default="docs/LOCAL_AI_TASKS/shared-runtime-toolbox-orchestration-architecture.md",
+    )
     parser.add_argument("--orchestrator-report", action="append", default=[])
     parser.add_argument("--gpu-report", action="append", default=[])
     parser.add_argument("--sync-report", action="append", default=[])
@@ -953,12 +1201,37 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--validation-output", default=None)
     parser.add_argument("--max-included-artifact-chars", type=int, default=14000)
     parser.add_argument("--max-included-artifacts", type=int, default=40)
-    parser.add_argument("--no-recursive-defaults", action="store_true", help="Disable bounded recursive default discovery for stamped JSON/Markdown files.")
-    parser.add_argument("--recursive-report-root", action="append", default=[], help="Extra recursive root for stamped JSON reports; repeatable or comma-separated.")
-    parser.add_argument("--recursive-artifact-root", action="append", default=[], help="Extra recursive root for stamped Markdown/JSON artifacts; repeatable or comma-separated.")
-    parser.add_argument("--recursive-include-unstamped", action="store_true", help="Allow recursive discovery of files without the stamp in their path. Use only on narrow roots.")
-    parser.add_argument("--recursive-max-files", type=int, default=DEFAULT_RECURSIVE_MAX_FILES)
-    parser.add_argument("--chunk-large-files-lines", type=int, default=DEFAULT_CHUNK_LINES, help="Build pointer-style chunk metadata for JSON/Markdown files above this line count. Set 0 to disable.")
+    parser.add_argument(
+        "--no-recursive-defaults",
+        action="store_true",
+        help="Disable bounded recursive default discovery for stamped JSON/Markdown files.",
+    )
+    parser.add_argument(
+        "--recursive-report-root",
+        action="append",
+        default=[],
+        help="Extra recursive root for stamped JSON reports; repeatable or comma-separated.",
+    )
+    parser.add_argument(
+        "--recursive-artifact-root",
+        action="append",
+        default=[],
+        help="Extra recursive root for stamped Markdown/JSON artifacts; repeatable or comma-separated.",
+    )
+    parser.add_argument(
+        "--recursive-include-unstamped",
+        action="store_true",
+        help="Allow recursive discovery of files without the stamp in their path. Use only on narrow roots.",
+    )
+    parser.add_argument(
+        "--recursive-max-files", type=int, default=DEFAULT_RECURSIVE_MAX_FILES
+    )
+    parser.add_argument(
+        "--chunk-large-files-lines",
+        type=int,
+        default=DEFAULT_CHUNK_LINES,
+        help="Build pointer-style chunk metadata for JSON/Markdown files above this line count. Set 0 to disable.",
+    )
     return parser.parse_args(argv)
 
 
@@ -977,8 +1250,15 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
         list(args.code_interpreter_report or []),
         list(args.python_syntax_report or []),
     )
-    report_candidates = coalesce_list(explicit_reports, report_templates_for_stamp(stamp))
-    reports, missing_reports = existing_paths(repo_root, report_candidates, label="report", include_missing_optional=bool(args.include_missing_optional))
+    report_candidates = coalesce_list(
+        explicit_reports, report_templates_for_stamp(stamp)
+    )
+    reports, missing_reports = existing_paths(
+        repo_root,
+        report_candidates,
+        label="report",
+        include_missing_optional=bool(args.include_missing_optional),
+    )
 
     initial_bundle_paths = [
         repo_relative(output_dir / f"{basename}.json", repo_root),
@@ -991,12 +1271,25 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
         report_declared_artifacts,
         artifact_templates_for_stamp(stamp),
     )
-    artifacts, missing_artifacts = existing_paths(repo_root, artifact_candidates, label="artifact", include_missing_optional=bool(args.include_missing_optional))
+    artifacts, missing_artifacts = existing_paths(
+        repo_root,
+        artifact_candidates,
+        label="artifact",
+        include_missing_optional=bool(args.include_missing_optional),
+    )
 
-    recursive_report_roots = [] if args.no_recursive_defaults else list(DEFAULT_RECURSIVE_REPORT_ROOTS)
-    recursive_artifact_roots = [] if args.no_recursive_defaults else list(DEFAULT_RECURSIVE_ARTIFACT_ROOTS)
-    recursive_report_roots = coalesce_list(recursive_report_roots, list(args.recursive_report_root or []))
-    recursive_artifact_roots = coalesce_list(recursive_artifact_roots, list(args.recursive_artifact_root or []))
+    recursive_report_roots = (
+        [] if args.no_recursive_defaults else list(DEFAULT_RECURSIVE_REPORT_ROOTS)
+    )
+    recursive_artifact_roots = (
+        [] if args.no_recursive_defaults else list(DEFAULT_RECURSIVE_ARTIFACT_ROOTS)
+    )
+    recursive_report_roots = coalesce_list(
+        recursive_report_roots, list(args.recursive_report_root or [])
+    )
+    recursive_artifact_roots = coalesce_list(
+        recursive_artifact_roots, list(args.recursive_artifact_root or [])
+    )
 
     summary = build_final_summary(
         repo_root=repo_root,
@@ -1009,8 +1302,12 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
         missing_artifacts=missing_artifacts,
     )
     final_json, final_md = write_final_summary(repo_root, summary)
-    reports_with_summary = coalesce_list(reports, [repo_relative(final_json, repo_root)])
-    artifacts_with_summary = coalesce_list(artifacts, [repo_relative(final_md, repo_root)])
+    reports_with_summary = coalesce_list(
+        reports, [repo_relative(final_json, repo_root)]
+    )
+    artifacts_with_summary = coalesce_list(
+        artifacts, [repo_relative(final_md, repo_root)]
+    )
 
     bundle, outputs_text = build_bundle(
         repo_root,
@@ -1030,7 +1327,9 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
         int(args.chunk_large_files_lines),
     )
     bundle_paths = outputs_text.splitlines()
-    summary["compact_bundle_paths"] = [repo_relative(Path(path), repo_root) for path in bundle_paths]
+    summary["compact_bundle_paths"] = [
+        repo_relative(Path(path), repo_root) for path in bundle_paths
+    ]
     summary["recursive_defaults"] = bundle.get("recursive_default_discovery", {})
     summary["chunked_file_index"] = bundle.get("artifact_chunk_index", [])
     final_json, final_md = write_final_summary(repo_root, summary)
@@ -1061,7 +1360,9 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
     if args.validate_bundle:
         bundle_json = output_dir / f"{basename}.json"
         validation_report = validate_github_evidence_bundles(repo_root, [bundle_json])
-        validation_output = args.validation_output or f"output/validation/{basename}_validation.json"
+        validation_output = (
+            args.validation_output or f"output/validation/{basename}_validation.json"
+        )
         validation_output_path = resolve_output_path(repo_root, validation_output)
         write_json_report(validation_report, validation_output_path)
 
@@ -1070,20 +1371,33 @@ def build_shared_toolbox_bundle(args: argparse.Namespace) -> dict[str, Any]:
         "kind": "shared_toolbox_ai_to_ai_bundle_builder_result",
         "repo_root": str(repo_root),
         "stamp": stamp,
-        "passed": bool(summary.get("passed")) and (validation_report is None or bool(validation_report.get("passed"))),
+        "passed": bool(summary.get("passed"))
+        and (validation_report is None or bool(validation_report.get("passed"))),
         "final_summary_json": repo_relative(final_json, repo_root),
         "final_summary_markdown": repo_relative(final_md, repo_root),
-        "bundle_outputs": [repo_relative(Path(path), repo_root) for path in bundle_paths],
-        "validation_output": repo_relative(validation_output_path, repo_root) if validation_output_path else None,
+        "bundle_outputs": [
+            repo_relative(Path(path), repo_root) for path in bundle_paths
+        ],
+        "validation_output": (
+            repo_relative(validation_output_path, repo_root)
+            if validation_output_path
+            else None
+        ),
         "bundle_decision": bundle.get("decision"),
-        "provider_execution_performed": bool(summary.get("provider_execution_performed")),
+        "provider_execution_performed": bool(
+            summary.get("provider_execution_performed")
+        ),
         "patch_application_performed": bool(summary.get("patch_application_performed")),
         "sqlite_write_performed": bool(summary.get("sqlite_write_performed")),
-        "persistent_memory_write_performed": bool(summary.get("persistent_memory_write_performed")),
+        "persistent_memory_write_performed": bool(
+            summary.get("persistent_memory_write_performed")
+        ),
         "recursive_default_discovery": bundle.get("recursive_default_discovery", {}),
         "artifact_chunk_index": bundle.get("artifact_chunk_index", []),
-        "errors": list(summary.get("errors") or []) + list((validation_report or {}).get("errors") or []),
-        "warnings": list(summary.get("warnings") or []) + list((validation_report or {}).get("warnings") or []),
+        "errors": list(summary.get("errors") or [])
+        + list((validation_report or {}).get("errors") or []),
+        "warnings": list(summary.get("warnings") or [])
+        + list((validation_report or {}).get("warnings") or []),
         "missing_reports": missing_reports,
         "missing_artifacts": missing_artifacts,
     }

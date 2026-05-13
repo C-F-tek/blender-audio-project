@@ -14,17 +14,18 @@ It is still non-destructive:
 - no persistent memory promotion;
 - no Blender runtime execution.
 """
+
 from __future__ import annotations
 
 try:
-    from Tools.ai.schema_repair_context import build_schema_repair_context_stack
+    from tools.ai.schema_repair_context import build_schema_repair_context_stack
 except ImportError:
     import sys as _schema_repair_sys
 
     _schema_repair_repo_root = Path(__file__).resolve().parents[2]
     if str(_schema_repair_repo_root) not in _schema_repair_sys.path:
         _schema_repair_sys.path.insert(0, str(_schema_repair_repo_root))
-    from Tools.ai.schema_repair_context import build_schema_repair_context_stack  # type: ignore
+    from tools.ai.schema_repair_context import build_schema_repair_context_stack  # type: ignore
 
 import argparse
 import json
@@ -36,46 +37,65 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests
-except ImportError:  # Script-style execution from Tools/ai.
+    from tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests
+except ImportError:  # Script-style execution from tools/ai.
     from runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
 
 try:
-    from Tools.ai.gpu_planner_json_contract import (
+    from tools.ai.gpu_planner_json_contract import (
         result_to_dict,
         validate_model_response_contract,
         validate_recommendation_object,
         validate_tool_request_object,
     )
-    from Tools.ai.runtime_tool_guidance import (
+    from tools.ai.runtime_tool_guidance import (
         ALLOWED_RUNTIME_TOOLS,
         TOOL_REQUEST_DECISION_GUIDE,
         build_provider_tool_guidance_payload,
     )
-    from Tools.npu.ollama_runtime import DEFAULT_BASE_URL, OllamaModelManager, normalize_base_url
-except ImportError:  # Script-style execution from Tools/ai.
+    from Tools.npu.ollama_runtime import (
+        DEFAULT_BASE_URL,
+        OllamaModelManager,
+        normalize_base_url,
+    )
+except ImportError:  # Script-style execution from tools/ai.
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.gpu_planner_json_contract import (  # type: ignore
+    from tools.ai.gpu_planner_json_contract import (  # type: ignore
         result_to_dict,
         validate_model_response_contract,
         validate_recommendation_object,
         validate_tool_request_object,
     )
-    from Tools.ai.runtime_tool_guidance import (  # type: ignore
+    from tools.ai.runtime_tool_guidance import (  # type: ignore
         ALLOWED_RUNTIME_TOOLS,
         TOOL_REQUEST_DECISION_GUIDE,
         build_provider_tool_guidance_payload,
     )
-    from Tools.npu.ollama_runtime import DEFAULT_BASE_URL, OllamaModelManager, normalize_base_url  # type: ignore
+    from Tools.npu.ollama_runtime import (  # type: ignore
+        DEFAULT_BASE_URL,
+        OllamaModelManager,
+        normalize_base_url,
+    )
 
 DEFAULT_EVIDENCE = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
-DEFAULT_REFINED = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.json"
+DEFAULT_REFINED = (
+    "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.json"
+)
 DEFAULT_OUTPUT = "output/ai_pipeline/agent_gpu_deep_planning_review.json"
 DEFAULT_MARKDOWN = "output/ai_pipeline/agent_gpu_deep_planning_review.md"
 TEXT_EXTENSIONS = {".md", ".py", ".ps1", ".sh", ".json", ".yaml", ".yml", ".txt"}
-EXCLUDED_DIRS = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", "renders"}
+EXCLUDED_DIRS = {
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "renders",
+}
 EMPTY_RECOMMENDATION_REASONS = {
     "context_echo_detected",
     "json_parse_failure",
@@ -88,7 +108,6 @@ EMPTY_RECOMMENDATION_REASONS = {
     "repair_attempt_failed",
     "tool_requests_pending",
 }
-
 
 
 @dataclass(frozen=True)
@@ -113,7 +132,11 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        return (
+            path.resolve(strict=False)
+            .relative_to(repo_root.resolve(strict=False))
+            .as_posix()
+        )
     except ValueError:
         return str(path)
 
@@ -136,12 +159,20 @@ def safe_read_text(path: Path, max_chars: int) -> tuple[str, bool, str | None]:
 def context_file(repo_root: Path, path_value: str, max_chars: int) -> ContextFile:
     path = resolve_path(repo_root, path_value)
     if not path.exists() or not path.is_file():
-        return ContextFile(path=repo_rel(path, repo_root), exists=False, chars=0, lines=0, preview="")
+        return ContextFile(
+            path=repo_rel(path, repo_root), exists=False, chars=0, lines=0, preview=""
+        )
     text, truncated, error = safe_read_text(path, max_chars)
     suffix = "\n...[truncated]" if truncated else ""
     if error:
         suffix = f"\n...[read error: {error}]"
-    return ContextFile(path=repo_rel(path, repo_root), exists=True, chars=len(text), lines=len(text.splitlines()), preview=text + suffix)
+    return ContextFile(
+        path=repo_rel(path, repo_root),
+        exists=True,
+        chars=len(text),
+        lines=len(text.splitlines()),
+        preview=text + suffix,
+    )
 
 
 def context_to_dict(item: ContextFile) -> dict[str, Any]:
@@ -166,7 +197,9 @@ def should_include(path: Path, repo_root: Path) -> bool:
     return path.is_file()
 
 
-def collect_repo_context(repo_root: Path, roots: list[str], max_files: int, max_chars_per_file: int) -> list[ContextFile]:
+def collect_repo_context(
+    repo_root: Path, roots: list[str], max_files: int, max_chars_per_file: int
+) -> list[ContextFile]:
     results: list[ContextFile] = []
     seen: set[str] = set()
     for root_value in roots:
@@ -220,17 +253,29 @@ def evidence_ready_for_manual_patch_count(evidence: dict[str, Any]) -> int:
             for key, child in value.items():
                 if key == "ready_for_manual_patch_count" and isinstance(child, int):
                     explicit_counts.append(child)
-                elif key == "ready_count" and isinstance(child, int) and value.get("kind") == "agent_review_evidence_sufficiency":
+                elif (
+                    key == "ready_count"
+                    and isinstance(child, int)
+                    and value.get("kind") == "agent_review_evidence_sufficiency"
+                ):
                     explicit_counts.append(child)
                 visit(child)
             status = value.get("status") or value.get("classification")
-            if isinstance(status, str) and status in {"ready_for_manual_patch", "ready_for_patch_plan"}:
+            if isinstance(status, str) and status in {
+                "ready_for_manual_patch",
+                "ready_for_patch_plan",
+            }:
                 ready_items += 1
             decision = value.get("decision")
-            if isinstance(decision, str) and decision in {"ready_for_manual_patch", "ready_for_patch_plan"}:
+            if isinstance(decision, str) and decision in {
+                "ready_for_manual_patch",
+                "ready_for_patch_plan",
+            }:
                 ready_items += 1
             elif isinstance(decision, dict):
-                ready = decision.get("ready_for_manual_patch") or decision.get("ready_for_patch_plan")
+                ready = decision.get("ready_for_manual_patch") or decision.get(
+                    "ready_for_patch_plan"
+                )
                 if ready is True:
                     ready_items += 1
         elif isinstance(value, list):
@@ -253,7 +298,9 @@ def compact_json(data: Any, max_chars: int) -> str:
 def split_batches(items: list[ContextFile], batch_size: int) -> list[list[ContextFile]]:
     if batch_size <= 0:
         return [items]
-    return [items[index : index + batch_size] for index in range(0, len(items), batch_size)]
+    return [
+        items[index : index + batch_size] for index in range(0, len(items), batch_size)
+    ]
 
 
 def build_prompt(
@@ -367,9 +414,11 @@ def parse_model_json_with_diagnostics(
         **contract,
         "contract": contract,
         "contract_empty_recommendations_reason": contract_result.empty_recommendations_reason,
-        "model_output_schema_mismatch": contract_result.json_ok and not contract_result.schema_ok,
+        "model_output_schema_mismatch": contract_result.json_ok
+        and not contract_result.schema_ok,
         # Legacy field retained for report consumers that still read the old name.
-        "model_output_missing_required_fields": contract_result.json_ok and not contract_result.schema_ok,
+        "model_output_missing_required_fields": contract_result.json_ok
+        and not contract_result.schema_ok,
         # The shared contract parser is strict; repair attempts are not the preferred classifier anymore.
         "repair_attempt_count": 0,
     }
@@ -408,7 +457,6 @@ def _raw_recommendations(parsed: dict[str, Any]) -> list[Any]:
     return recommendations if isinstance(recommendations, list) else []
 
 
-
 DETERMINISTIC_TOOL_FALLBACK_SCHEMA_REASONS = {
     "json_parse_failure",
     "model_output_schema_mismatch",
@@ -436,11 +484,23 @@ def deterministic_tool_fallback_reason_from_parsed(parsed: dict[str, Any]) -> st
         return ""
 
     keys = set(parsed)
-    if keys & {"response", "files", "context_files", "repository_files", "file_previews"}:
-        return "context_echo_detected" if "files" in keys or "context_files" in keys else "model_output_schema_mismatch"
+    if keys & {
+        "response",
+        "files",
+        "context_files",
+        "repository_files",
+        "file_previews",
+    }:
+        return (
+            "context_echo_detected"
+            if "files" in keys or "context_files" in keys
+            else "model_output_schema_mismatch"
+        )
 
     missing = parsed.get("missing_evidence")
-    if isinstance(missing, list) and any(str(item) == "model_response_not_valid_json" for item in missing):
+    if isinstance(missing, list) and any(
+        str(item) == "model_response_not_valid_json" for item in missing
+    ):
         return "json_parse_failure"
 
     next_best_action = str(parsed.get("next_best_action") or "").strip()
@@ -449,7 +509,10 @@ def deterministic_tool_fallback_reason_from_parsed(parsed: dict[str, Any]) -> st
         return "evidence_ready_but_no_tool_requests"
     return ""
 
-def extract_valid_tool_requests(parsed: dict[str, Any], *, max_requests: int = 8) -> tuple[list[dict[str, Any]], list[str]]:
+
+def extract_valid_tool_requests(
+    parsed: dict[str, Any], *, max_requests: int = 8
+) -> tuple[list[dict[str, Any]], list[str]]:
     """Return broker-compatible valid runtime tool requests and validation errors.
 
     This helper does not execute tools. It only reuses the shared GPU planner
@@ -461,7 +524,12 @@ def extract_valid_tool_requests(parsed: dict[str, Any], *, max_requests: int = 8
     if raw_requests in (None, []):
         fallback_reason = deterministic_tool_fallback_reason_from_parsed(parsed)
         if fallback_reason:
-            return deterministic_fallback_tool_requests(fallback_reason, max_requests=max_requests), []
+            return (
+                deterministic_fallback_tool_requests(
+                    fallback_reason, max_requests=max_requests
+                ),
+                [],
+            )
         return [], []
     if not isinstance(raw_requests, list):
         return [], ["top-level tool_requests must be a list"]
@@ -474,7 +542,9 @@ def extract_valid_tool_requests(parsed: dict[str, Any], *, max_requests: int = 8
             errors.extend(item_errors)
             continue
         if len(valid) >= max_requests:
-            errors.append(f"tool_requests[{index}] skipped: max_requests={max_requests} reached")
+            errors.append(
+                f"tool_requests[{index}] skipped: max_requests={max_requests} reached"
+            )
             continue
         valid.append(dict(item))
     return valid, errors
@@ -526,13 +596,19 @@ def recommendation_diagnostics_for_round(
         json_ok=bool(parse_diagnostics.get("json_ok")),
         parse_error=str(parse_diagnostics.get("parse_error") or ""),
         repair_attempt_count=int(parse_diagnostics.get("repair_attempt_count") or 0),
-        model_output_missing_required_fields=bool(parse_diagnostics.get("model_output_missing_required_fields")),
-        model_output_schema_mismatch=bool(parse_diagnostics.get("model_output_schema_mismatch")),
+        model_output_missing_required_fields=bool(
+            parse_diagnostics.get("model_output_missing_required_fields")
+        ),
+        model_output_schema_mismatch=bool(
+            parse_diagnostics.get("model_output_schema_mismatch")
+        ),
         context_echo_detected=bool(parse_diagnostics.get("context_echo_detected")),
         raw_recommendation_candidate_count=raw_count,
         filtered_recommendation_count=filtered_count,
         evidence_ready_for_manual_patch_count_value=evidence_ready_for_manual_patch_count_value,
-        valid_tool_request_count=int(parse_diagnostics.get("valid_tool_request_count") or 0),
+        valid_tool_request_count=int(
+            parse_diagnostics.get("valid_tool_request_count") or 0
+        ),
     )
     return {
         "json_ok": bool(parse_diagnostics.get("json_ok")),
@@ -540,45 +616,81 @@ def recommendation_diagnostics_for_round(
         "schema_ok": bool(parse_diagnostics.get("schema_ok")),
         "schema_errors": list(parse_diagnostics.get("schema_errors") or []),
         "context_echo_detected": bool(parse_diagnostics.get("context_echo_detected")),
-        "model_output_schema_mismatch": bool(parse_diagnostics.get("model_output_schema_mismatch")),
-        "contract_empty_recommendations_reason": str(parse_diagnostics.get("contract_empty_recommendations_reason") or ""),
+        "model_output_schema_mismatch": bool(
+            parse_diagnostics.get("model_output_schema_mismatch")
+        ),
+        "contract_empty_recommendations_reason": str(
+            parse_diagnostics.get("contract_empty_recommendations_reason") or ""
+        ),
         "contract": parse_diagnostics.get("contract", {}),
         "repair_attempt_count": int(parse_diagnostics.get("repair_attempt_count") or 0),
         "raw_recommendation_candidate_count": raw_count,
         "filtered_recommendation_count": filtered_count,
         "recommendation_count": filtered_count,
         "tool_request_count": tool_request_count,
-        "valid_tool_request_count": int(parse_diagnostics.get("valid_tool_request_count") or 0),
-        "invalid_tool_request_count": int(parse_diagnostics.get("invalid_tool_request_count") or 0),
+        "valid_tool_request_count": int(
+            parse_diagnostics.get("valid_tool_request_count") or 0
+        ),
+        "invalid_tool_request_count": int(
+            parse_diagnostics.get("invalid_tool_request_count") or 0
+        ),
         "empty_recommendations_reason": reason,
         "evidence_ready_for_manual_patch_count": evidence_ready_for_manual_patch_count_value,
-        "provider_tool_request_absence_reason": reason
-        if reason == "evidence_ready_but_no_tool_requests"
-        else "",
-        "recommended_next_layer": "build_agent_review_patch_plan.py"
-        if reason in {"evidence_ready_but_no_gpu_plan", "evidence_ready_but_no_tool_requests"}
-        else "",
+        "provider_tool_request_absence_reason": (
+            reason if reason == "evidence_ready_but_no_tool_requests" else ""
+        ),
+        "recommended_next_layer": (
+            "build_agent_review_patch_plan.py"
+            if reason
+            in {"evidence_ready_but_no_gpu_plan", "evidence_ready_but_no_tool_requests"}
+            else ""
+        ),
     }
 
 
-def aggregate_recommendation_diagnostics(rounds: list[dict[str, Any]], evidence: dict[str, Any]) -> dict[str, Any]:
+def aggregate_recommendation_diagnostics(
+    rounds: list[dict[str, Any]], evidence: dict[str, Any]
+) -> dict[str, Any]:
     evidence_ready_count = evidence_ready_for_manual_patch_count(evidence)
-    raw_count = sum(int(round_result.get("raw_recommendation_candidate_count") or 0) for round_result in rounds)
+    raw_count = sum(
+        int(round_result.get("raw_recommendation_candidate_count") or 0)
+        for round_result in rounds
+    )
     filtered_count = len(merge_recommendations(rounds))
-    repair_attempt_count = sum(int(round_result.get("repair_attempt_count") or 0) for round_result in rounds)
-    json_parse_error_count = sum(1 for round_result in rounds if not round_result.get("json_ok", True))
-    context_echo_detected_count = sum(1 for round_result in rounds if round_result.get("context_echo_detected"))
+    repair_attempt_count = sum(
+        int(round_result.get("repair_attempt_count") or 0) for round_result in rounds
+    )
+    json_parse_error_count = sum(
+        1 for round_result in rounds if not round_result.get("json_ok", True)
+    )
+    context_echo_detected_count = sum(
+        1 for round_result in rounds if round_result.get("context_echo_detected")
+    )
     model_output_schema_mismatch_count = sum(
         1
         for round_result in rounds
         if round_result.get("model_output_schema_mismatch")
-        or round_result.get("empty_recommendations_reason") == "model_output_schema_mismatch"
-        or round_result.get("empty_recommendations_reason") == "model_output_missing_required_fields"
+        or round_result.get("empty_recommendations_reason")
+        == "model_output_schema_mismatch"
+        or round_result.get("empty_recommendations_reason")
+        == "model_output_missing_required_fields"
     )
-    tool_request_count = sum(int(round_result.get("tool_request_count") or 0) for round_result in rounds)
-    valid_tool_request_count = sum(int(round_result.get("valid_tool_request_count") or 0) for round_result in rounds)
-    invalid_tool_request_count = sum(int(round_result.get("invalid_tool_request_count") or 0) for round_result in rounds)
-    parse_errors = [str(round_result.get("parse_error")) for round_result in rounds if round_result.get("parse_error")]
+    tool_request_count = sum(
+        int(round_result.get("tool_request_count") or 0) for round_result in rounds
+    )
+    valid_tool_request_count = sum(
+        int(round_result.get("valid_tool_request_count") or 0)
+        for round_result in rounds
+    )
+    invalid_tool_request_count = sum(
+        int(round_result.get("invalid_tool_request_count") or 0)
+        for round_result in rounds
+    )
+    parse_errors = [
+        str(round_result.get("parse_error"))
+        for round_result in rounds
+        if round_result.get("parse_error")
+    ]
 
     reason = ""
     if filtered_count == 0:
@@ -610,12 +722,14 @@ def aggregate_recommendation_diagnostics(rounds: list[dict[str, Any]], evidence:
         "invalid_tool_request_count": invalid_tool_request_count,
         "empty_recommendations_reason": reason,
         "evidence_ready_for_manual_patch_count": evidence_ready_count,
-        "provider_tool_request_absence_reason": reason
-        if reason == "evidence_ready_but_no_tool_requests"
-        else "",
-        "recommended_next_layer": "build_agent_review_patch_plan.py"
-        if evidence_ready_count > 0 or filtered_count > 0
-        else "collect_more_evidence",
+        "provider_tool_request_absence_reason": (
+            reason if reason == "evidence_ready_but_no_tool_requests" else ""
+        ),
+        "recommended_next_layer": (
+            "build_agent_review_patch_plan.py"
+            if evidence_ready_count > 0 or filtered_count > 0
+            else "collect_more_evidence"
+        ),
     }
 
 
@@ -624,12 +738,23 @@ def merge_recommendations(rounds: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen: set[str] = set()
     for round_result in rounds:
         parsed = round_result.get("parsed_response") or {}
-        for rec in parsed.get("recommendations", []) if isinstance(parsed, dict) else []:
+        for rec in (
+            parsed.get("recommendations", []) if isinstance(parsed, dict) else []
+        ):
             if not isinstance(rec, dict):
                 continue
             if validate_recommendation_object(rec, len(merged)):
                 continue
-            key = json.dumps([rec.get("area"), rec.get("status"), rec.get("target_files"), rec.get("proposed_strategy")], sort_keys=True, ensure_ascii=False)
+            key = json.dumps(
+                [
+                    rec.get("area"),
+                    rec.get("status"),
+                    rec.get("target_files"),
+                    rec.get("proposed_strategy"),
+                ],
+                sort_keys=True,
+                ensure_ascii=False,
+            )
             if key in seen:
                 continue
             seen.add(key)
@@ -640,22 +765,42 @@ def merge_recommendations(rounds: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def build_markdown(report: dict[str, Any]) -> str:
     lines = ["# Agent GPU Deep Planning Review", ""]
     lines.append(f"- Passed: `{report['passed']}`")
-    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
-    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
+    lines.append(
+        f"- Provider execution performed: `{report['provider_execution_performed']}`"
+    )
+    lines.append(
+        f"- Patch application performed: `{report['patch_application_performed']}`"
+    )
     lines.append(f"- Model: `{report.get('model_used')}`")
     lines.append(f"- Elapsed seconds: `{report['elapsed_seconds']}`")
     lines.append(f"- Round count: `{report['round_count']}`")
     lines.append(f"- Recommendation count: `{report['recommendation_count']}`")
-    lines.append(f"- Raw recommendation candidates: `{report.get('raw_recommendation_candidate_count')}`")
-    lines.append(f"- Filtered recommendation count: `{report.get('filtered_recommendation_count')}`")
+    lines.append(
+        f"- Raw recommendation candidates: `{report.get('raw_recommendation_candidate_count')}`"
+    )
+    lines.append(
+        f"- Filtered recommendation count: `{report.get('filtered_recommendation_count')}`"
+    )
     lines.append(f"- Tool request count: `{report.get('tool_request_count')}`")
-    lines.append(f"- Valid tool request count: `{report.get('valid_tool_request_count')}`")
-    lines.append(f"- Invalid tool request count: `{report.get('invalid_tool_request_count')}`")
+    lines.append(
+        f"- Valid tool request count: `{report.get('valid_tool_request_count')}`"
+    )
+    lines.append(
+        f"- Invalid tool request count: `{report.get('invalid_tool_request_count')}`"
+    )
     lines.append(f"- JSON parse error count: `{report.get('json_parse_error_count')}`")
-    lines.append(f"- Context echo detected count: `{report.get('context_echo_detected_count')}`")
-    lines.append(f"- Model output schema mismatch count: `{report.get('model_output_schema_mismatch_count')}`")
-    lines.append(f"- Empty recommendations reason: `{report.get('empty_recommendations_reason')}`")
-    lines.append(f"- Evidence ready for manual patch count: `{report.get('evidence_ready_for_manual_patch_count')}`")
+    lines.append(
+        f"- Context echo detected count: `{report.get('context_echo_detected_count')}`"
+    )
+    lines.append(
+        f"- Model output schema mismatch count: `{report.get('model_output_schema_mismatch_count')}`"
+    )
+    lines.append(
+        f"- Empty recommendations reason: `{report.get('empty_recommendations_reason')}`"
+    )
+    lines.append(
+        f"- Evidence ready for manual patch count: `{report.get('evidence_ready_for_manual_patch_count')}`"
+    )
     lines.append("")
     lines.append("## Decision")
     lines.append("")
@@ -678,7 +823,11 @@ def build_markdown(report: dict[str, Any]) -> str:
 def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     evidence = read_json(resolve_path(repo_root, args.evidence))
-    refined = read_json(resolve_path(repo_root, args.refined_review)) if resolve_path(repo_root, args.refined_review).exists() else {}
+    refined = (
+        read_json(resolve_path(repo_root, args.refined_review))
+        if resolve_path(repo_root, args.refined_review).exists()
+        else {}
+    )
     evidence_ready_count = evidence_ready_for_manual_patch_count(evidence)
     context_reports = []
     for report_file in args.report_file:
@@ -686,17 +835,31 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
         if path.exists():
             try:
                 data = read_json(path)
-                context_reports.append({"path": repo_rel(path, repo_root), "kind": data.get("kind"), "passed": data.get("passed"), "summary": data.get("summary", {}), "decision": data.get("decision", {})})
+                context_reports.append(
+                    {
+                        "path": repo_rel(path, repo_root),
+                        "kind": data.get("kind"),
+                        "passed": data.get("passed"),
+                        "summary": data.get("summary", {}),
+                        "decision": data.get("decision", {}),
+                    }
+                )
             except Exception as exc:  # noqa: BLE001
-                context_reports.append({"path": repo_rel(path, repo_root), "error": str(exc)})
+                context_reports.append(
+                    {"path": repo_rel(path, repo_root), "error": str(exc)}
+                )
         else:
-            context_reports.append({"path": repo_rel(path, repo_root), "error": "missing"})
+            context_reports.append(
+                {"path": repo_rel(path, repo_root), "error": "missing"}
+            )
 
     evidence_paths = extract_evidence_files(evidence)
     context_roots = list(args.context_root or []) + evidence_paths
     if not context_roots:
-        context_roots = ["docs", "Tools/ai", "Tools/validation", "Tools/workflow"]
-    context_files = collect_repo_context(repo_root, context_roots, args.max_context_files, args.max_chars_per_file)
+        context_roots = ["docs", "tools/ai", "tools/validation", "tools/workflow"]
+    context_files = collect_repo_context(
+        repo_root, context_roots, args.max_context_files, args.max_chars_per_file
+    )
     batches = split_batches(context_files, args.files_per_round)
 
     start = time.perf_counter()
@@ -732,12 +895,23 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
             "evidence_ready_for_manual_patch_count": evidence_ready_count,
             "recommended_next_layer": "collect_more_evidence",
             "recommendations": [],
-            "decision": {"ready_for_patch_plan": False, "reason": "provider execution not enabled"},
-            "guardrails": {"provider_execution_requires_use_ollama": True, "patch_application_performed": False},
+            "decision": {
+                "ready_for_patch_plan": False,
+                "reason": "provider execution not enabled",
+            },
+            "guardrails": {
+                "provider_execution_requires_use_ollama": True,
+                "patch_application_performed": False,
+            },
         }
 
     base_url = normalize_base_url(args.ollama_base_url or DEFAULT_BASE_URL)
-    with OllamaModelManager(base_url=base_url, keep_alive=args.keep_alive, shutdown_server=False, startup_timeout=args.startup_timeout) as manager:
+    with OllamaModelManager(
+        base_url=base_url,
+        keep_alive=args.keep_alive,
+        shutdown_server=False,
+        startup_timeout=args.startup_timeout,
+    ) as manager:
         for index, batch in enumerate(batches, start=1):
             if index > args.max_rounds:
                 break
@@ -760,11 +934,24 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
             )
             round_start = time.perf_counter()
             try:
-                response, model_used = manager.generate(args.ollama_model, prompt, max_new_tokens=args.max_new_tokens, temperature=args.temperature)
-                parsed, parse_diagnostics = parse_model_json_with_diagnostics(response, evidence_ready_count)
+                response, model_used = manager.generate(
+                    args.ollama_model,
+                    prompt,
+                    max_new_tokens=args.max_new_tokens,
+                    temperature=args.temperature,
+                )
+                parsed, parse_diagnostics = parse_model_json_with_diagnostics(
+                    response, evidence_ready_count
+                )
             except Exception as exc:  # noqa: BLE001 - report-only provider diagnostics.
                 response = ""
-                parsed = {"summary": "provider error", "confidence": "low", "recommendations": [], "missing_evidence": [str(exc)], "next_best_action": "inspect provider error"}
+                parsed = {
+                    "summary": "provider error",
+                    "confidence": "low",
+                    "recommendations": [],
+                    "missing_evidence": [str(exc)],
+                    "next_best_action": "inspect provider error",
+                }
                 parse_diagnostics = {
                     "json_ok": False,
                     "parse_error": f"{type(exc).__name__}: {exc}",
@@ -772,7 +959,9 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
                     "model_output_missing_required_fields": False,
                 }
                 errors.append(f"round {index}: {type(exc).__name__}: {exc}")
-            round_diagnostics = recommendation_diagnostics_for_round(parsed, parse_diagnostics, evidence_ready_count)
+            round_diagnostics = recommendation_diagnostics_for_round(
+                parsed, parse_diagnostics, evidence_ready_count
+            )
             rounds.append(
                 {
                     "round": index,
@@ -788,8 +977,12 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
 
     recommendations = merge_recommendations(rounds)
     diagnostics = aggregate_recommendation_diagnostics(rounds, evidence)
-    ready = [rec for rec in recommendations if rec.get("status") == "ready_for_patch_plan"]
-    needs_context = [rec for rec in recommendations if rec.get("status") == "needs_more_context"]
+    ready = [
+        rec for rec in recommendations if rec.get("status") == "ready_for_patch_plan"
+    ]
+    needs_context = [
+        rec for rec in recommendations if rec.get("status") == "needs_more_context"
+    ]
     fallback_recommended = (
         diagnostics["evidence_ready_for_manual_patch_count"] > 0
         and diagnostics["filtered_recommendation_count"] == 0
@@ -840,7 +1033,10 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--objective", default="Use explicit local GPU/Ollama reasoning to derive the safest next IA-Carmine patch plan from current review evidence.")
+    parser.add_argument(
+        "--objective",
+        default="Use explicit local GPU/Ollama reasoning to derive the safest next IA-Carmine patch plan from current review evidence.",
+    )
     parser.add_argument("--evidence", default=DEFAULT_EVIDENCE)
     parser.add_argument("--refined-review", default=DEFAULT_REFINED)
     parser.add_argument("--report-file", action="append", default=[])
@@ -867,7 +1063,9 @@ def main() -> int:
     markdown_output = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     markdown_output.write_text(build_markdown(report), encoding="utf-8")
     print(
         json.dumps(
@@ -880,15 +1078,25 @@ def main() -> int:
                 "elapsed_seconds": report["elapsed_seconds"],
                 "round_count": report["round_count"],
                 "recommendation_count": report["recommendation_count"],
-                "raw_recommendation_candidate_count": report.get("raw_recommendation_candidate_count"),
-                "filtered_recommendation_count": report.get("filtered_recommendation_count"),
+                "raw_recommendation_candidate_count": report.get(
+                    "raw_recommendation_candidate_count"
+                ),
+                "filtered_recommendation_count": report.get(
+                    "filtered_recommendation_count"
+                ),
                 "tool_request_count": report.get("tool_request_count"),
                 "valid_tool_request_count": report.get("valid_tool_request_count"),
                 "invalid_tool_request_count": report.get("invalid_tool_request_count"),
-                "empty_recommendations_reason": report.get("empty_recommendations_reason"),
-                "evidence_ready_for_manual_patch_count": report.get("evidence_ready_for_manual_patch_count"),
+                "empty_recommendations_reason": report.get(
+                    "empty_recommendations_reason"
+                ),
+                "evidence_ready_for_manual_patch_count": report.get(
+                    "evidence_ready_for_manual_patch_count"
+                ),
                 "ready_for_patch_plan": report["decision"].get("ready_for_patch_plan"),
-                "recommended_next_layer": report["decision"].get("recommended_next_layer"),
+                "recommended_next_layer": report["decision"].get(
+                    "recommended_next_layer"
+                ),
             },
             indent=2,
             ensure_ascii=False,
@@ -899,4 +1107,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
