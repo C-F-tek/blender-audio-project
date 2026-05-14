@@ -12,16 +12,36 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+REPO_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT_FOR_IMPORT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT_FOR_IMPORT))
 
 
 def now_stamp() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
 
+try:
+    from Tools.ai.heap_proposal_gate import (
+        build_operator_decision,
+        gate_proposals,
+        load_allowlist,
+        record_operator_decision,
+    )
+except ImportError:  # pragma: no cover
+    from tools.ai.heap_proposal_gate import (  # type: ignore
+        build_operator_decision,
+        gate_proposals,
+        load_allowlist,
+        record_operator_decision,
+    )
 
 def read_json(path: Path) -> dict[str, Any]:
     try:
@@ -351,6 +371,9 @@ def list_proposals(run_dir: Path) -> list[dict[str, Any]]:
                 ),
                 "implementation_quality": impl,
                 "proposal_progress": progress,
+                "response_file_reference_quality": data.get(
+                    "response_file_reference_quality", {}
+                ),
                 "gpu0_review": data.get("gpu0_review", []),
                 "npu_micro_task_piece": data.get("npu_micro_task_piece", []),
                 "npu_workload_audit": data.get("npu_workload_audit", {}),
@@ -603,7 +626,7 @@ def render_startup_section(
 
 
 def render_markdown(
-    *,
+    decision_block: dict[str, Any],
     repo_root: Path,
     run_dir: Path,
     report: dict[str, Any],
@@ -645,9 +668,27 @@ def render_markdown(
         f"- Provider execution evidence present: `{product_causality.get('provider_execution_evidence_present')}`",
         f"- Proposal artifact count: `{product_causality.get('proposal_artifact_count')}`",
         "",
+        "## Operator decision",
+        "",
+        f"- Decision: `{decision_block.get('decision')}`",
+        f"- Reason: {decision_block.get('reason')}",
+        f"- Accepted proposal count: `{decision_block.get('accepted_count')}`",
+        f"- Rejected proposal count: `{decision_block.get('rejected_count')}`",
+        f"- Source allowlist enforced: `{decision_block.get('allowlist_enforced')}`",
+        f"- Source allowlist path: `{decision_block.get('allowlist_path') or 'none'}`",
+        "",
         "## External heap product causality",
         "",
     ]
+    gate_reasons = (
+        decision_block.get("gate_reasons")
+        if isinstance(decision_block.get("gate_reasons"), list)
+        else []
+    )
+    if gate_reasons:
+        lines.extend(["### Operator gate reasons", ""])
+        lines.extend(f"- {reason}" for reason in gate_reasons[:40])
+        lines.append("")
     reasons = (
         product_causality.get("causality_reasons")
         if isinstance(product_causality.get("causality_reasons"), list)
@@ -837,6 +878,14 @@ def write_documents_package(
         encoding="utf-8",
     )
     written.extend([str(md_path), str(txt_path), str(json_path)])
+    operator_decision = json_data.get("operator_decision")
+    if isinstance(operator_decision, dict):
+        decision_path = record_operator_decision(
+            doc_dir,
+            operator_decision,
+            list(operator_decision.get("targets_considered") or []),
+        )
+        written.append(str(decision_path))
 
     chunk_dir = doc_dir / "proposal_chunks"
     chunk_txt_dir = doc_dir / "proposal_chunks_txt"
@@ -922,7 +971,24 @@ def main() -> int:
         or now_stamp()
     )
 
-    proposals = list_proposals(run_dir)
+    raw_proposals = list_proposals(run_dir)
+    try:
+        similarity_threshold = float(
+            os.getenv("PROPOSAL_SIMILARITY_THRESHOLD", "0.95")
+        )
+    except ValueError:
+        similarity_threshold = 0.95
+    allowlist_path = os.getenv("PROPOSAL_ALLOWLIST_PATH", "config/allowlist.json")
+    allowed_sources, allowlist_enforced, resolved_allowlist_path = load_allowlist(
+        allowlist_path,
+        repo_root,
+    )
+    proposals = gate_proposals(
+        proposals=raw_proposals,
+        allowed_sources=allowed_sources,
+        allowlist_enforced=allowlist_enforced,
+        similarity_threshold=similarity_threshold,
+    )
     provider_reports = list_provider_reports(run_dir)
     blockers = flatten_quality_blockers(report, proposals, startup_manifest)
     gpu0_reviews = collect_gpu0_reviews(proposals, provider_reports)
@@ -935,8 +1001,13 @@ def main() -> int:
         proposals=proposals,
         provider_reports=provider_reports,
     )
-
+    operator_decision = build_operator_decision(
+        proposals=proposals,
+        allowlist_enforced=allowlist_enforced,
+        allowlist_path=resolved_allowlist_path if allowlist_enforced else "",
+    )
     markdown = render_markdown(
+        decision_block=operator_decision,
         repo_root=repo_root,
         run_dir=run_dir,
         report=report,
@@ -977,6 +1048,7 @@ def main() -> int:
         "quality_output_passed": (report.get("metrics") or {}).get(
             "quality_output_passed"
         ),
+        "operator_decision": operator_decision,
         "product_causality": product_causality,
         "product_causality_status": product_causality.get("product_causality_status"),
         "product_causality_passed": product_causality.get("product_causality_passed"),
@@ -991,6 +1063,9 @@ def main() -> int:
                 "reject_reason": item.get("reject_reason"),
                 "implementation_quality": item.get("implementation_quality"),
                 "proposal_progress": item.get("proposal_progress"),
+                "operator_gate_passed": item.get("operator_gate_passed"),
+                "operator_gate_reasons": item.get("operator_gate_reasons"),
+                "operator_gate_targets": item.get("operator_gate_targets"),
                 "gpu0_review": item.get("gpu0_review"),
                 "npu_micro_task_piece": item.get("npu_micro_task_piece"),
                 "npu_workload_audit": item.get("npu_workload_audit"),

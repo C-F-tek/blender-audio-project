@@ -230,3 +230,11 @@ final package exported on success and blocked states
 ```
 
 Until those criteria are stable, the full run remains the product path and the standalone heap lane remains an incubation path. After validation, it should be promoted into the selected run-unica phase set rather than duplicated as another parallel architecture.
+
+The closure run must also emit a run-owned readable final product after composer and external post-run packaging:
+
+```text
+Tools/ai/assemble_heap_final_readable_product.py
+```
+
+The expected operator surface is `FINAL_READABLE_PRODUCT.md`, `FINAL_READABLE_PRODUCT.txt`, `FINAL_READABLE_PRODUCT.json`, `CODE_PRODUCT_FULL_PATCH.md` and the adjacent Documents ZIP produced by the run. A package without this reassembled decision document and full available code product is incomplete evidence, even when proposal chunks and revision context files exist.

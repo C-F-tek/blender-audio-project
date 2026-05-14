@@ -188,6 +188,8 @@ MEMORY_CONTEXT_RELOAD_REQUIREMENTS = {
     "semantic_code_chunks": "semantic_code_reload",
     "ai_context_pack": "context_pack_reload",
     "semantic_evidence_chunks": "semantic_evidence_reload",
+    "virtual_dev_environment": "virtual_dev_environment_reload",
+    "code_execution_matrix": "code_execution_matrix_reload",
     "runtime_debug_lab_execution": "runtime_debug_lab_reload",
 }
 PROPOSAL_ITERATION_MAX_CHARS = 12000
@@ -1784,6 +1786,16 @@ class HeapRuntimeCompletenessGate:
             },
             {"name": "broker", "role": "allowlisted_tool_executor", "available": True},
             {
+                "name": "code_execution_matrix",
+                "role": "allowlisted_compile_test_diff_evidence_lane",
+                "available": True,
+            },
+            {
+                "name": "virtual_dev_environment",
+                "role": "controlled_script_load_debug_probe_environment",
+                "available": True,
+            },
+            {
                 "name": "context_memory",
                 "role": "sqlite_fts_context_pack_semantic_chunks",
                 "available": True,
@@ -1884,6 +1896,9 @@ class HeapRuntimeCompletenessGate:
             "response_file_reference_quality": file_quality,
             "completed_requirements": sorted(self.completed_requirements(events)),
             "missing_requirements": self.missing_requirements(events),
+            "code_execution_matrix_required": self.code_execution_matrix_required(),
+            "code_execution_matrix_passed": self.code_execution_matrix_passed(events),
+            "code_execution_matrix_reports": self.code_execution_matrix_reports(events),
             "runtime_debug_lab_required": self.runtime_debug_lab_required(),
             "runtime_debug_lab_passed": self.runtime_debug_lab_passed(events),
             "runtime_debug_lab_reports": self.runtime_debug_lab_reports(events),
@@ -1911,6 +1926,12 @@ class HeapRuntimeCompletenessGate:
             "",
             "## Runtime debug lab",
             "",
+            f"- Virtual dev environment required: `{product.get('virtual_dev_environment_required')}`",
+            f"- Virtual dev environment passed: `{product.get('virtual_dev_environment_passed')}`",
+            f"- Virtual dev environment reports: `{product.get('virtual_dev_environment_reports')}`",
+            f"- Code execution matrix required: `{product.get('code_execution_matrix_required')}`",
+            f"- Code execution matrix passed: `{product.get('code_execution_matrix_passed')}`",
+            f"- Code execution matrix reports: `{product.get('code_execution_matrix_reports')}`",
             f"- Required: `{product.get('runtime_debug_lab_required')}`",
             f"- Passed: `{product.get('runtime_debug_lab_passed')}`",
             f"- Reports: `{product.get('runtime_debug_lab_reports')}`",
@@ -2000,6 +2021,122 @@ class HeapRuntimeCompletenessGate:
         )
         return any(term in text for term in required_terms)
 
+    def code_execution_matrix_required(self) -> bool:
+        text = f"{self.request_text()} {self.args.objective}".lower()
+        hints = (
+            "codice",
+            "code",
+            "coding",
+            "test",
+            "validazione",
+            "validation",
+            "patch",
+            "proposte concrete",
+            "proposta concreta",
+            "esecuzione",
+            "execution",
+            "heap/universo",
+            "universo",
+        )
+        return self.implementation_output_required() or any(
+            hint in text for hint in hints
+        )
+
+    def code_execution_matrix_targets(self) -> list[str]:
+        candidates = [
+            "Tools/ai/compose_heap_final_proposals.py",
+            "Tools/ai/heap_proposal_gate.py",
+            "Tools/ai/run_heap_runtime_context_closure.py",
+            "Tools/ai/run_heap_runtime_completeness_gate.py",
+            "Tools/ai/run_heap_code_execution_tool.py",
+            "Tools/ai/heap_code_execution_tool_core.py",
+            "Tools/ai/run_heap_virtual_dev_environment.py",
+            "Tools/ai/assemble_heap_final_readable_product.py",
+            "Tools/ai/heap_final_code_product.py",
+            "Tools/ai/heap_final_readable_synthesis.py",
+            "Tools/ai/agent_runtime_tool_broker.py",
+            "Tools/validation/test_proposal_gate.py",
+            "Tools/validation/run_heap_code_execution_tool_smoke.py",
+            "Tools/validation/run_heap_virtual_dev_environment_smoke.py",
+            "Tools/validation/run_heap_final_readable_product_smoke.py",
+        ]
+        return [path for path in candidates if (self.repo_root / path).exists()]
+
+    def virtual_dev_environment_required(self) -> bool:
+        text = f"{self.request_text()} {self.args.objective}".lower()
+        hints = (
+            "ambiente",
+            "debug",
+            "runtime",
+            "svilupp",
+            "caricare",
+            "script",
+            "pointer",
+            "universo",
+            "virtual",
+        )
+        return self.implementation_output_required() or any(hint in text for hint in hints)
+
+    def virtual_dev_environment_targets(self) -> list[str]:
+        return self.code_execution_matrix_targets()
+
+    def virtual_dev_environment_plan_items(
+        self, context_dir: Path, request: str
+    ) -> list[dict[str, Any]]:
+        if not self.virtual_dev_environment_required():
+            return []
+        return [
+            {
+                "stage": 4,
+                "requirement": "virtual_dev_environment",
+                "id": "heap-virtual-dev-environment",
+                "tool": "run_heap_virtual_dev_environment",
+                "args": {
+                    "target_file": self.virtual_dev_environment_targets(),
+                    "validation_script": [
+                        "Tools/validation/run_heap_virtual_dev_environment_smoke.py",
+                        "Tools/validation/run_heap_final_readable_product_smoke.py",
+                    ],
+                    "dynamic_import": True,
+                    "help_probe": True,
+                    "timeout_seconds": min(max(int(self.args.timeout_seconds), 120), 600),
+                    "tail_chars": 5000,
+                },
+                "reason": "provide a controlled development environment where heap tools are loaded, probed, debugged and validated before final composition",
+            }
+        ]
+
+    def code_execution_matrix_plan_items(
+        self, context_dir: Path, request: str
+    ) -> list[dict[str, Any]]:
+        if not self.code_execution_matrix_required():
+            return []
+        matrix_dir = context_dir / "code_execution_matrix"
+        matrix_dir.mkdir(parents=True, exist_ok=True)
+        return [
+            {
+                "stage": 4,
+                "requirement": "code_execution_matrix",
+                "id": "heap-code-execution-matrix",
+                "tool": "run_heap_code_execution_matrix",
+                "args": {
+                    "target_file": self.code_execution_matrix_targets(),
+                    "validation_script": [
+                        "Tools/validation/test_proposal_gate.py",
+                        "Tools/validation/run_heap_code_execution_tool_smoke.py",
+                        "Tools/validation/run_heap_virtual_dev_environment_smoke.py",
+                        "Tools/validation/run_heap_final_readable_product_smoke.py",
+                    ],
+                    "timeout_seconds": min(
+                        max(int(self.args.timeout_seconds), 120), 600
+                    ),
+                    "tail_chars": 5000,
+                    "max_diff_chars": 80000,
+                },
+                "reason": "execute concrete compile/test/diff evidence for heap coding proposals before product acceptance",
+            }
+        ]
+
     def runtime_debug_lab_dir(self) -> Path:
         path = self.runtime_context_dir() / "runtime_debug_lab"
         path.mkdir(parents=True, exist_ok=True)
@@ -2081,11 +2218,117 @@ class HeapRuntimeCompletenessGate:
     def required_requirements_order(self) -> list[str]:
         order = list(REQUIREMENT_ORDER)
         if (
+            self.virtual_dev_environment_required()
+            and "virtual_dev_environment" not in order
+        ):
+            order.append("virtual_dev_environment")
+        if (
+            self.code_execution_matrix_required()
+            and "code_execution_matrix" not in order
+        ):
+            order.append("code_execution_matrix")
+        if (
             self.runtime_debug_lab_required()
             and "runtime_debug_lab_execution" not in order
         ):
             order.append("runtime_debug_lab_execution")
         return order
+
+    def virtual_dev_environment_reports(self, events: list[dict[str, Any]]) -> list[str]:
+        refs: list[str] = []
+        for payload in self.broker_results(events):
+            requirement = str(
+                payload.get("requirement")
+                or self.requirement_for_tool(str(payload.get("tool") or ""))
+            )
+            if requirement != "virtual_dev_environment":
+                continue
+            outputs = (
+                payload.get("outputs")
+                if isinstance(payload.get("outputs"), dict)
+                else {}
+            )
+            for key in ("json_report", "markdown_report"):
+                value = str(outputs.get(key) or "").strip()
+                if value and value not in refs:
+                    refs.append(value)
+        return refs
+
+    def virtual_dev_environment_passed(self, events: list[dict[str, Any]]) -> bool:
+        if not self.virtual_dev_environment_required():
+            return True
+        for payload in self.broker_results(events):
+            requirement = str(
+                payload.get("requirement")
+                or self.requirement_for_tool(str(payload.get("tool") or ""))
+            )
+            if requirement != "virtual_dev_environment":
+                continue
+            if (
+                payload.get("blocked")
+                or safe_int(payload.get("returncode"), default=1) != 0
+            ):
+                continue
+            summary = (
+                payload.get("summary")
+                if isinstance(payload.get("summary"), dict)
+                else {}
+            )
+            if summary.get("passed") is False:
+                continue
+            return True
+        return False
+
+    def code_execution_matrix_reports(self, events: list[dict[str, Any]]) -> list[str]:
+        refs: list[str] = []
+        for payload in self.broker_results(events):
+            requirement = str(
+                payload.get("requirement")
+                or self.requirement_for_tool(str(payload.get("tool") or ""))
+            )
+            if requirement != "code_execution_matrix":
+                continue
+            outputs = (
+                payload.get("outputs")
+                if isinstance(payload.get("outputs"), dict)
+                else {}
+            )
+            for key in (
+                "json_report",
+                "markdown_report",
+                "request_file",
+                "debug_lab_report",
+                "debug_lab_markdown",
+            ):
+                value = str(outputs.get(key) or "").strip()
+                if value and value not in refs:
+                    refs.append(value)
+        return refs
+
+    def code_execution_matrix_passed(self, events: list[dict[str, Any]]) -> bool:
+        if not self.code_execution_matrix_required():
+            return True
+        for payload in self.broker_results(events):
+            requirement = str(
+                payload.get("requirement")
+                or self.requirement_for_tool(str(payload.get("tool") or ""))
+            )
+            if requirement != "code_execution_matrix":
+                continue
+            if (
+                payload.get("blocked")
+                or safe_int(payload.get("returncode"), default=1) != 0
+            ):
+                continue
+            summary = (
+                payload.get("summary")
+                if isinstance(payload.get("summary"), dict)
+                else {}
+            )
+            if summary.get("passed") is False:
+                continue
+            return True
+        return False
 
     def runtime_debug_lab_reports(self, events: list[dict[str, Any]]) -> list[str]:
         refs: list[str] = []
@@ -2274,6 +2517,8 @@ class HeapRuntimeCompletenessGate:
                 "args": {},
                 "reason": "prove validation tool evidence is consumed before arbiter decision",
             },
+            *self.virtual_dev_environment_plan_items(context_dir, request),
+            *self.code_execution_matrix_plan_items(context_dir, request),
             *self.runtime_debug_lab_plan_items(context_dir, request),
         ]
 
@@ -2407,6 +2652,9 @@ class HeapRuntimeCompletenessGate:
                 "evidence_json",
                 "evidence_markdown",
                 "chunk_output_dir",
+                "request_file",
+                "debug_lab_report",
+                "debug_lab_markdown",
             ):
                 value = str(outputs.get(key) or "").strip()
                 if value and value not in refs:
@@ -3002,6 +3250,9 @@ class HeapRuntimeCompletenessGate:
                 "evidence_json",
                 "evidence_markdown",
                 "chunk_output_dir",
+                "request_file",
+                "debug_lab_report",
+                "debug_lab_markdown",
             ):
                 value = str(outputs.get(key) or "").strip()
                 if value:
@@ -3057,10 +3308,25 @@ class HeapRuntimeCompletenessGate:
             ),
             "implementation_quality": self.implementation_quality_report(text, events),
             "proposal_iteration_artifacts": self.proposal_iteration_artifacts(),
+            "virtual_dev_environment_required": self.virtual_dev_environment_required(),
+            "virtual_dev_environment_passed": self.virtual_dev_environment_passed(events),
+            "virtual_dev_environment_reports": self.virtual_dev_environment_reports(events),
+            "code_execution_matrix_required": self.code_execution_matrix_required(),
+            "code_execution_matrix_passed": self.code_execution_matrix_passed(events),
+            "code_execution_matrix_reports": self.code_execution_matrix_reports(events),
         }
 
     def quality_output_passed(self, text: str, events: list[dict[str, Any]]) -> bool:
         signals = self.quality_output_signals(text, events)
+        if (
+            self.virtual_dev_environment_required()
+            and not self.virtual_dev_environment_passed(events)
+        ):
+            return False
+        if self.code_execution_matrix_required() and not self.code_execution_matrix_passed(
+            events
+        ):
+            return False
         if self.runtime_debug_lab_required() and not self.runtime_debug_lab_passed(
             events
         ):
@@ -3578,6 +3844,109 @@ class HeapRuntimeCompletenessGate:
             lines.extend(f"- {item}" for item in candidates[:18])
         return "\n".join(lines)
 
+    def terminal_no_patchable_provider_loop(self) -> dict[str, Any]:
+        """Detect repeated fake-path provider output that should stop revisions."""
+        report = self.latest_proposal_iteration_report()
+        if not report:
+            return {}
+        try:
+            revision = int(report.get("revision") or 0)
+        except (TypeError, ValueError):
+            revision = 0
+        if revision < 1:
+            return {}
+
+        quality = (
+            report.get("response_file_reference_quality")
+            if isinstance(report.get("response_file_reference_quality"), dict)
+            else {}
+        )
+        progress = (
+            report.get("proposal_progress")
+            if isinstance(report.get("proposal_progress"), dict)
+            else {}
+        )
+        implementation = (
+            report.get("implementation_quality")
+            if isinstance(report.get("implementation_quality"), dict)
+            else {}
+        )
+        response_text = str(report.get("response_text") or "")
+        unverified = [
+            str(item)
+            for item in (
+                quality.get("unverified_source_file_refs")
+                or quality.get("unverified_file_refs")
+                or []
+            )
+            if str(item).strip()
+        ]
+        repeated_unverified = [
+            str(item)
+            for item in (progress.get("repeated_unverified_source_refs") or [])
+            if str(item).strip()
+        ]
+        progress_errors = [
+            str(item) for item in (progress.get("errors") or []) if str(item).strip()
+        ]
+        implementation_errors = [
+            str(item)
+            for item in (implementation.get("errors") or [])
+            if str(item).strip()
+        ]
+        placeholder_hits = [
+            str(item)
+            for item in (implementation.get("placeholder_hits") or [])
+            if str(item).strip()
+        ]
+        haystack = "\n".join(
+            [response_text, *unverified, *repeated_unverified, *progress_errors]
+        ).lower()
+        fake_path_detected = any(
+            marker in haystack
+            for marker in (
+                "tools/.../real_existing_file.py",
+                "tools\\...\\real_existing_file.py",
+                "real_existing_file.py",
+                "<id-or-empty>",
+            )
+        )
+        repeated = bool(repeated_unverified) or any(
+            "similarity=" in item.lower() or "too similar" in item.lower()
+            for item in progress_errors
+        )
+        placeholder = bool(placeholder_hits) or any(
+            marker in "\n".join(implementation_errors).lower()
+            for marker in ("placeholder", "todo", "stub")
+        )
+        if not (fake_path_detected and (repeated or placeholder)):
+            return {}
+
+        reason = (
+            "terminal_no_patchable_target: repeated provider output used fake or "
+            "placeholder source paths after deterministic feedback"
+        )
+        feedback = "\n".join(
+            [
+                "EXIT_DECISION=NO_PATCHABLE_TARGET",
+                "BLOCKED_NO_VERIFIED_TARGET_REASON="
+                + reason,
+                "Do not request another GPU1 rewrite for this same unresolved candidate.",
+                "Preserve the rejected chunk as diagnostic evidence and return to deterministic operator review.",
+            ]
+        )
+        return {
+            "terminal_no_patchable_target": True,
+            "revision": revision,
+            "reason": reason,
+            "unverified_source_file_refs": unverified,
+            "repeated_unverified_source_refs": repeated_unverified,
+            "progress_errors": progress_errors,
+            "implementation_errors": implementation_errors,
+            "placeholder_hits": placeholder_hits,
+            "feedback": feedback,
+        }
+
     def proposal_cycle_requires_refinement(
         self, text: str, events: list[dict[str, Any]]
     ) -> bool:
@@ -3628,6 +3997,30 @@ class HeapRuntimeCompletenessGate:
             < int(getattr(self.args, "max_provider_revisions", 0))
             and self.proposal_cycle_requires_refinement(self.response_text(), events)
         ):
+            terminal = self.terminal_no_patchable_provider_loop()
+            if terminal:
+                self.provider_revision_feedback = str(terminal.get("feedback") or "")
+                self.publish(
+                    "deterministic",
+                    "validation_signal",
+                    {
+                        "id": f"{self.stamp}:provider_revision_terminal_no_patchable",
+                        **terminal,
+                    },
+                    target="gpu1",
+                    correlation_id=f"{self.stamp}:terminal-no-patchable",
+                    round_id=round_id,
+                )
+                self.append_heap_exchange_event(
+                    {
+                        "kind": "provider_revision_terminal_no_patchable_target",
+                        "lane": "deterministic_audit",
+                        "round": round_id,
+                        "revision": terminal.get("revision"),
+                        "summary": terminal.get("reason"),
+                    }
+                )
+                break
             self.provider_revision_count += 1
             previous_veto_feedback = self.provider_revision_feedback.strip()
             quality_feedback = self.build_quality_failure_feedback(
@@ -3756,6 +4149,8 @@ class HeapRuntimeCompletenessGate:
             "- Se introduci import, simboli, schema field, CLI flag o contratti, crea PROPAGATION_TASKS e usa BACKTRACK_PROPAGATE.\n"
             "- Dopo la propagazione torna avanti con RESUME_FORWARD usando resume_from_block_id.\n"
             "- Usa BACKLOG_TASKS per il lavoro successivo; il pointer graph mantiene memoria e contesto.\n"
+            "- GPU1 puo' iterare su proposal chunks gia' scritti: se sono corretti ma poveri, non scartarli; arricchiscili con copertura repo, criteri di accettazione, validazioni, rischi e confini di apply.\n"
+            "- La ricchezza finale nasce da COMPOSE/REFINE di piu' pezzi persistenti; ogni revisione deve dichiarare se estende un chunk precedente o crea un nuovo delta.\n"
             "- GPU0 deve verificare path/diff/validazione del delta; NPU deve auditare guardrail e placeholder.\n"
             "- Il delta corrente deve contenere TARGET_FILES repo-relative reali, PATCH_SKETCH e VALIDATION_COMMANDS.\n"
             "- TARGET_FILES e diff header devono usare solo path nella SOURCE_PATH_ALLOWLIST_CONTRACT.\n"
@@ -4337,7 +4732,10 @@ class HeapRuntimeCompletenessGate:
                 events = self.maybe_run_provider_quality_revisions(round_id, events)
             self.critic_step(round_id, events)
             self.arbiter_step(round_id, events)
-            if self.state["product"].get("status") in {"ready", "blocked_with_reason"}:
+            if (
+                self.state["product"].get("status") in {"ready", "blocked_with_reason"}
+                and self.minimum_runtime_depth_satisfied(round_id)
+            ):
                 break
         if self.state["product"].get("status") == "not_ready":
             events = self.read_events()
@@ -4403,6 +4801,20 @@ class HeapRuntimeCompletenessGate:
                 final_response_text, final_events
             ),
             "quality_output_signals": final_quality_signals,
+            "virtual_dev_environment_required": self.virtual_dev_environment_required(),
+            "virtual_dev_environment_passed": self.virtual_dev_environment_passed(
+                final_events
+            ),
+            "virtual_dev_environment_reports": self.virtual_dev_environment_reports(
+                final_events
+            ),
+            "code_execution_matrix_required": self.code_execution_matrix_required(),
+            "code_execution_matrix_passed": self.code_execution_matrix_passed(
+                final_events
+            ),
+            "code_execution_matrix_reports": self.code_execution_matrix_reports(
+                final_events
+            ),
             "runtime_debug_lab_required": self.runtime_debug_lab_required(),
             "runtime_debug_lab_passed": self.runtime_debug_lab_passed(final_events),
             "runtime_debug_lab_reports": self.runtime_debug_lab_reports(final_events),
@@ -4436,6 +4848,12 @@ class HeapRuntimeCompletenessGate:
             ),
             "tool_catalog_evidence_count": 1 if "tool_catalog" in completed else 0,
             "validation_evidence_count": 1 if "validation_evidence" in completed else 0,
+            "virtual_dev_environment_count": (
+                1 if "virtual_dev_environment" in completed else 0
+            ),
+            "code_execution_matrix_count": (
+                1 if "code_execution_matrix" in completed else 0
+            ),
             "gpu1_provider_evidence_count": (
                 1 if "gpu1_provider_planner" in completed else 0
             ),
@@ -4540,6 +4958,22 @@ class HeapRuntimeCompletenessGate:
             )
         if (
             metrics["product_status"] == "ready"
+            and self.virtual_dev_environment_required()
+            and not self.virtual_dev_environment_passed(final_events)
+        ):
+            metric_errors.append(
+                "ready product_status requires virtual development environment passed for debug/runtime requests"
+            )
+        if (
+            metrics["product_status"] == "ready"
+            and self.code_execution_matrix_required()
+            and not self.code_execution_matrix_passed(final_events)
+        ):
+            metric_errors.append(
+                "ready product_status requires code execution matrix passed for coding requests"
+            )
+        if (
+            metrics["product_status"] == "ready"
             and self.runtime_debug_lab_required()
             and not self.runtime_debug_lab_passed(final_events)
         ):
@@ -4599,9 +5033,27 @@ class HeapRuntimeCompletenessGate:
                 "response_file_reference_quality": self.response_file_reference_quality(
                     self.response_text()
                 ),
+                "virtual_dev_environment_required": metrics.get(
+                    "virtual_dev_environment_required"
+                ),
+                "virtual_dev_environment_passed": metrics.get(
+                    "virtual_dev_environment_passed"
+                ),
+                "virtual_dev_environment_reports": metrics.get(
+                    "virtual_dev_environment_reports"
+                ),
                 "runtime_debug_lab_required": metrics.get("runtime_debug_lab_required"),
                 "runtime_debug_lab_passed": metrics.get("runtime_debug_lab_passed"),
                 "runtime_debug_lab_reports": metrics.get("runtime_debug_lab_reports"),
+                "code_execution_matrix_required": metrics.get(
+                    "code_execution_matrix_required"
+                ),
+                "code_execution_matrix_passed": metrics.get(
+                    "code_execution_matrix_passed"
+                ),
+                "code_execution_matrix_reports": metrics.get(
+                    "code_execution_matrix_reports"
+                ),
                 "proposal_iteration_artifacts": metrics.get(
                     "proposal_iteration_artifacts"
                 ),
@@ -4634,6 +5086,18 @@ class HeapRuntimeCompletenessGate:
                 "source_writes_performed": False,
             },
         }
+
+    def minimum_runtime_depth_satisfied(self, round_id: int) -> bool:
+        min_rounds = max(1, int(getattr(self.args, "min_runtime_rounds", 1)))
+        min_proposals = max(0, int(getattr(self.args, "min_proposal_iterations", 0)))
+        proposal_json_count = len(
+            [
+                path
+                for path in self.proposal_iteration_artifacts()
+                if str(path).endswith(".json")
+            ]
+        )
+        return round_id >= min_rounds and proposal_json_count >= min_proposals
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -4718,6 +5182,8 @@ def parse_args() -> argparse.Namespace:
         help="Compatibility flag; complete gate uses its internal readiness tool plan.",
     )
     parser.add_argument("--max-iterations", type=int, default=4)
+    parser.add_argument("--min-runtime-rounds", type=int, default=1)
+    parser.add_argument("--min-proposal-iterations", type=int, default=0)
     parser.add_argument(
         "--max-provider-revisions",
         type=int,
