@@ -61,6 +61,29 @@ def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
     return sys.executable
 
 
+def resolve_repo_file(repo_root: Path, value: str) -> Path:
+    path = Path(value)
+    if not path.is_absolute():
+        path = repo_root / path
+    return path.resolve(strict=False)
+
+
+def load_operator_request(
+    repo_root: Path,
+    inline_request: str,
+    request_file: str,
+) -> tuple[str, str]:
+    if not request_file:
+        return inline_request, ""
+    path = resolve_repo_file(repo_root, request_file)
+    try:
+        return path.read_text(encoding="utf-8-sig"), str(path)
+    except Exception as exc:
+        raise SystemExit(
+            f"cannot read --request-file {path}: {type(exc).__name__}: {exc}"
+        ) from exc
+
+
 def run_command(command: list[str], repo_root: Path) -> dict[str, Any]:
     completed = subprocess.run(
         command,
@@ -226,6 +249,9 @@ def augmented_request(
         + "- Startup context/memory/tool/docs reload has prepared a task-file artifact; consume it as current heap input.\n"
         + "- If startup_reload_degraded=true, carry it as an explicit heap fact and continue with degraded context.\n"
         + "- Write proposal iteration artifacts for every useful partial block.\n"
+        + "- GPU1 may re-open, extend and enrich previously written proposal chunks; a richer final document can be a composed refinement of prior chunks, not only a brand-new answer.\n"
+        + "- When prior chunks are thin but valid, iterate on them by adding concrete targets, acceptance criteria, validation commands, risks and package boundaries.\n"
+        + "- Do not restart from scratch just because the final document needs more depth; cite previous chunk/revision ids when enriching them.\n"
         + "- GPU0 must review/refine/reject proposal chunks using source anchors, quality errors and prior iteration context.\n"
         + "- NPU must produce bounded audit/workload evidence when enabled and that evidence must enter proposal chunks.\n"
         + "- Exit product may be blocked when placeholders/stubs remain.\n"
@@ -389,10 +415,17 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--request", default=DEFAULT_REQUEST)
+    parser.add_argument(
+        "--request-file",
+        default="",
+        help="UTF-8 file containing the operator request. Overrides --request when set.",
+    )
     parser.add_argument("--python-exe", default="")
     parser.add_argument("--stamp", default="")
     parser.add_argument("--budget-minutes", type=int, default=10)
     parser.add_argument("--max-iterations", type=int, default=6)
+    parser.add_argument("--min-runtime-rounds", type=int, default=1)
+    parser.add_argument("--min-proposal-iterations", type=int, default=0)
     parser.add_argument("--max-provider-revisions", type=int, default=6)
     parser.add_argument(
         "--max-rounds",
@@ -427,6 +460,11 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     repo_root = resolve_repo_root(args.repo_root)
+    base_request, operator_request_file = load_operator_request(
+        repo_root,
+        args.request,
+        args.request_file,
+    )
     stamp = args.stamp or now_stamp()
     project_python = resolve_project_python(repo_root, args.python_exe)
     run_dir = (
@@ -446,7 +484,7 @@ def main() -> int:
         args.revision_context,
     )
     heap_request = augmented_request(
-        args.request,
+        base_request,
         revision_context_path=revision_context_path,
         revision_context_payload=revision_context_payload,
         revision_context_max_tasks=args.revision_context_max_tasks,
@@ -561,6 +599,10 @@ def main() -> int:
         str(args.budget_minutes),
         "--max-iterations",
         str(args.max_iterations),
+        "--min-runtime-rounds",
+        str(args.min_runtime_rounds),
+        "--min-proposal-iterations",
+        str(args.min_proposal_iterations),
         "--max-rounds",
         str(args.max_rounds),
         "--max-provider-revisions",
@@ -712,6 +754,10 @@ def main() -> int:
             str(run_dir),
             "--include-rejected-history",
             "--include-peer-blocks",
+            "--max-block-chars",
+            "50000",
+            "--max-blocks",
+            "0",
             "--output",
             str(external_postrun_report),
         ]
@@ -760,6 +806,69 @@ def main() -> int:
         external_postrun_payload.get("pointer_manifest_json", "") or ""
     )
 
+    final_readable_result: dict[str, Any] = {
+        "performed": False,
+        "passed": False,
+        "returncode": None,
+        "report": "",
+        "markdown": "",
+        "text": "",
+        "documents_zip": "",
+        "stdout_tail": "",
+        "stderr_tail": "",
+        "command": [],
+    }
+    final_readable_payload: dict[str, Any] = {}
+    if composer_packaging_performed:
+        final_readable_report = run_dir / "heap_final_readable_product.json"
+        final_readable_markdown = run_dir / "heap_final_readable_product.md"
+        final_readable_text = run_dir / "heap_final_readable_product.txt"
+        final_readable_command = [
+            project_python,
+            "Tools/ai/assemble_heap_final_readable_product.py",
+            "--repo-root",
+            ".",
+            "--run-dir",
+            str(run_dir),
+            "--composer-json",
+            str(run_dir / "heap_final_proposal_composer.json"),
+            "--gate-report",
+            str(report_file),
+            "--output",
+            str(final_readable_report),
+            "--markdown-output",
+            str(final_readable_markdown),
+            "--text-output",
+            str(final_readable_text),
+        ]
+        if composer_documents_dir:
+            final_readable_command.extend(
+                [
+                    "--documents-dir",
+                    composer_documents_dir,
+                    "--zip-documents",
+                ]
+            )
+        completed = run_command(final_readable_command, repo_root)
+        final_readable_payload = load_json(final_readable_report)
+        final_readable_result.update(
+            {
+                "performed": True,
+                "passed": bool(completed.get("passed"))
+                and bool(final_readable_payload.get("passed")),
+                "returncode": completed.get("returncode"),
+                "report": str(final_readable_report),
+                "markdown": str(final_readable_markdown),
+                "text": str(final_readable_text),
+                "documents_zip": str(
+                    final_readable_payload.get("documents_zip", "") or ""
+                ),
+                "stdout_tail": completed.get("stdout_tail", ""),
+                "stderr_tail": completed.get("stderr_tail", ""),
+                "command": final_readable_command,
+            }
+        )
+
     summary = {
         "schema_version": 1,
         "kind": "heap_runtime_context_closure_launcher",
@@ -772,6 +881,7 @@ def main() -> int:
             str(revision_context_path) if revision_context_path else ""
         ),
         "revision_context_loaded": bool(revision_context_payload),
+        "operator_request_file": operator_request_file,
         "request_file": str(heap_request_file),
         "revision_context_task_count": (
             len(revision_context_payload.get("tasks", []))
@@ -792,6 +902,8 @@ def main() -> int:
             else {}
         ),
         "max_iterations_requested": args.max_iterations,
+        "min_runtime_rounds_requested": args.min_runtime_rounds,
+        "min_proposal_iterations_requested": args.min_proposal_iterations,
         "max_rounds_forwarded": args.max_rounds,
         "preflight_performed": not args.skip_preflight,
         "preflight_passed": bool(preflight_result["passed"]),
@@ -873,12 +985,24 @@ def main() -> int:
         "external_long_response_markdown": external_long_response_markdown,
         "external_revision_context_json": external_revision_context_json,
         "external_pointer_manifest_json": external_pointer_manifest_json,
+        "final_readable_product_performed": bool(
+            final_readable_result.get("performed")
+        ),
+        "final_readable_product_passed": bool(final_readable_result.get("passed")),
+        "final_readable_product_report": final_readable_result.get("report", ""),
+        "final_readable_product_markdown": final_readable_result.get("markdown", ""),
+        "final_readable_product_text": final_readable_result.get("text", ""),
+        "final_readable_product_documents_outputs": final_readable_payload.get(
+            "documents_outputs", {}
+        ),
+        "final_readable_product_zip": final_readable_result.get("documents_zip", ""),
         "download_hint": composer_report.get("download_hint", ""),
         "launcher_passed": bool(
             can_continue and heap_result["passed"] and composer_result["passed"]
         ),
         "launcher_packaging_succeeded": bool(
             composer_packaging_performed
+            and final_readable_result.get("passed")
             and (can_continue or fallback_heap_report_written)
         ),
         "preflight_stdout_tail": preflight_result["stdout_tail"],
@@ -890,12 +1014,19 @@ def main() -> int:
         "heap_command": heap_result.get("command", []),
         "composer_command": composer_result.get("command", []),
         "external_postrun_command": external_postrun_result.get("command", []),
+        "final_readable_product_command": final_readable_result.get("command", []),
         "startup_stdout_tail": startup_result["stdout_tail"],
         "startup_stderr_tail": startup_result["stderr_tail"],
         "composer_stdout_tail": composer_result["stdout_tail"],
         "composer_stderr_tail": composer_result["stderr_tail"],
         "external_postrun_stdout_tail": external_postrun_result.get("stdout_tail", ""),
         "external_postrun_stderr_tail": external_postrun_result.get("stderr_tail", ""),
+        "final_readable_product_stdout_tail": final_readable_result.get(
+            "stdout_tail", ""
+        ),
+        "final_readable_product_stderr_tail": final_readable_result.get(
+            "stderr_tail", ""
+        ),
     }
 
     launcher_report = run_dir / "heap_runtime_context_closure_launcher.json"

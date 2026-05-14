@@ -214,6 +214,8 @@ def main() -> int:
         str(causality_json),
         "--output",
         str(long_response_md),
+        "--max-block-chars",
+        str(args.max_block_chars),
     ]
     if args.include_rejected_history:
         long_command.append("--include-rejected-history")

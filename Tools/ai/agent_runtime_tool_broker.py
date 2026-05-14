@@ -583,6 +583,93 @@ def runtime_sqlite_memory(
     }
 
 
+def run_heap_code_execution_matrix(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, str]]:
+    report, markdown = base_outputs(out_dir, request_id, "heap_code_execution_tool")
+    request_output = out_dir / f"{request_id}_heap_code_execution_request.json"
+    debug_report = (
+        repo_root
+        / "output"
+        / "validation"
+        / "heap_code_execution_tool_debug"
+        / f"{request_id}_heap_code_execution_tool_debug_lab.json"
+    )
+    debug_markdown = debug_report.with_suffix(".md")
+    command = [
+        resolve_child_python(repo_root),
+        "Tools/ai/run_heap_code_execution_tool.py",
+        "--repo-root",
+        ".",
+        "--request-output",
+        str(request_output),
+        "--output",
+        str(report),
+        "--markdown-output",
+        str(markdown),
+        "--debug-lab-output",
+        repo_rel(debug_report, repo_root),
+        "--debug-lab-markdown-output",
+        repo_rel(debug_markdown, repo_root),
+    ]
+    for target_file in split_values(args.get("target_file")):
+        command.extend(["--target-file", target_file])
+    for validation_script in split_values(args.get("validation_script")):
+        command.extend(["--validation-script", validation_script])
+    for validation_arg in split_values(args.get("validation_arg")):
+        command.extend(["--validation-arg", validation_arg])
+    for key, flag in (
+        ("timeout_seconds", "--timeout-seconds"),
+        ("tail_chars", "--tail-chars"),
+        ("max_diff_chars", "--max-diff-chars"),
+    ):
+        if args.get(key) is not None:
+            command.extend([flag, str(args[key])])
+    if truthy(args.get("no_execute")):
+        command.append("--no-execute")
+    return command, {
+        "json_report": repo_rel(report, repo_root),
+        "markdown_report": repo_rel(markdown, repo_root),
+        "request_file": repo_rel(request_output, repo_root),
+        "debug_lab_report": repo_rel(debug_report, repo_root),
+        "debug_lab_markdown": repo_rel(debug_markdown, repo_root),
+    }
+
+
+def run_heap_virtual_dev_environment(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, str]]:
+    report, markdown = base_outputs(out_dir, request_id, "heap_virtual_dev_environment")
+    command = [
+        resolve_child_python(repo_root),
+        "Tools/ai/run_heap_virtual_dev_environment.py",
+        "--repo-root",
+        ".",
+        "--output",
+        str(report),
+        "--markdown-output",
+        str(markdown),
+    ]
+    for target_file in split_values(args.get("target_file")):
+        command.extend(["--target-file", target_file])
+    for validation_script in split_values(args.get("validation_script")):
+        command.extend(["--validation-script", validation_script])
+    for key, flag in (
+        ("timeout_seconds", "--timeout-seconds"),
+        ("tail_chars", "--tail-chars"),
+    ):
+        if args.get(key) is not None:
+            command.extend([flag, str(args[key])])
+    if truthy(args.get("dynamic_import")):
+        command.append("--dynamic-import")
+    if truthy(args.get("help_probe")):
+        command.append("--help-probe")
+    return command, {
+        "json_report": repo_rel(report, repo_root),
+        "markdown_report": repo_rel(markdown, repo_root),
+    }
+
+
 TOOL_SPECS: dict[str, ToolSpec] = {
     "build_python_line_count_csv": ToolSpec(
         name="build_python_line_count_csv",
@@ -722,6 +809,33 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "allow_persistent_write",
         ),
         builder=runtime_sqlite_memory,
+    ),
+    "run_heap_code_execution_matrix": ToolSpec(
+        name="run_heap_code_execution_matrix",
+        description="Generate and execute a guarded compile/test/diff matrix for concrete heap code proposals.",
+        allowed_args=(
+            "target_file",
+            "validation_script",
+            "validation_arg",
+            "timeout_seconds",
+            "tail_chars",
+            "max_diff_chars",
+            "no_execute",
+        ),
+        builder=run_heap_code_execution_matrix,
+    ),
+    "run_heap_virtual_dev_environment": ToolSpec(
+        name="run_heap_virtual_dev_environment",
+        description="Probe target scripts in a controlled virtual development environment with AST, import, help, compile and validation evidence.",
+        allowed_args=(
+            "target_file",
+            "validation_script",
+            "timeout_seconds",
+            "tail_chars",
+            "dynamic_import",
+            "help_probe",
+        ),
+        builder=run_heap_virtual_dev_environment,
     ),
 }
 

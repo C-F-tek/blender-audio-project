@@ -1,0 +1,20 @@
+[
+  "Tools/ai/compose_heap_final_proposals.py",
+  "Tools/ai/run_heap_runtime_completeness_gate.py",
+  "Tools/ai/run_heap_runtime_context_closure.py",
+  "Tools/ai/heap_proposal_gate.py",
+  "Tools/ai/agent_runtime_tool_broker.py",
+  "Tools/ai/run_external_heap_postrun_package.py",
+  "Tools/ai/assemble_heap_final_readable_product.py",
+  "Tools/ai/heap_code_execution_tool_core.py",
+  "Tools/ai/heap_final_code_product.py",
+  "Tools/ai/heap_final_readable_synthesis.py",
+  "Tools/ai/run_heap_virtual_dev_environment.py",
+  "Tools/ai/run_heap_code_execution_tool.py",
+  "Tools/validation/test_composer_decision.py",
+  "Tools/validation/test_proposal_gate.py",
+  "Tools/validation/run_heap_final_readable_product_smoke.py",
+  "Tools/validation/run_heap_virtual_dev_environment_smoke.py",
+  "Tools/validation/run_heap_code_execution_tool_smoke.py",
+  "Tools/validation/run_heap_runtime_completeness_gate_smoke.py"
+]
