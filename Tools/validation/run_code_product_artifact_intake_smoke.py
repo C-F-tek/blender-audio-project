@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+"""Smoke-test CODE_PRODUCT_FULL_PATCH intake and safe-apply mode."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+
+def stamp() -> str:
+    return datetime.now().strftime("%Y%m%d-%H%M%S")
+
+
+def write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text.rstrip() + "\n", encoding="utf-8")
+
+
+def write_json(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def run(command: list[str], cwd: Path, timeout: int) -> dict[str, Any]:
+    completed = subprocess.run(
+        command,
+        cwd=cwd,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=timeout,
+    )
+    return {
+        "command": command,
+        "returncode": completed.returncode,
+        "stdout_tail": (completed.stdout or "")[-3000:],
+        "stderr_tail": (completed.stderr or "")[-3000:],
+    }
+
+
+def build_fixture(work_dir: Path) -> tuple[Path, Path]:
+    fixture = work_dir / "fixture_repo"
+    target = fixture / "Tools" / "smoke_target.py"
+    write_text(target, "VALUE = 1\n")
+    subprocess.run(["git", "init"], cwd=fixture, capture_output=True, text=True, check=False)
+    patch = """diff --git a/Tools/smoke_target.py b/Tools/smoke_target.py
+--- a/Tools/smoke_target.py
++++ b/Tools/smoke_target.py
+@@ -1 +1 @@
+-VALUE = 1
++VALUE = 2
+"""
+    code_product = work_dir / "CODE_PRODUCT_FULL_PATCH.md"
+    write_text(
+        code_product,
+        f"""# CODE_PRODUCT_FULL_PATCH
+
+## Code / Patch
+
+### Tools/smoke_target.py
+
+- Git status: `M Tools/smoke_target.py`
+- Implementation status: `developed_change_present`
+- Diff hunks: `1`
+
+```diff
+{patch}
+```
+
+### Tools/new_target.py
+
+- Git status: `?? Tools/new_target.py`
+- Implementation status: `developed_change_present`
+- Diff hunks: `0`
+
+```diff
+new file: Tools/new_target.py
+
+VALUE = 3
+```
+""",
+    )
+    return fixture, code_product
+
+
+def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
+    repo_root = Path(args.repo_root).resolve()
+    work_dir = (
+        Path(args.work_dir).resolve()
+        if args.work_dir
+        else repo_root / "output" / "validation" / f"code_product_intake_smoke_{stamp()}"
+    )
+    fixture, code_product = build_fixture(work_dir)
+    apply_report = work_dir / "apply.json"
+    apply_md = work_dir / "apply.md"
+    verify_report = work_dir / "verify.json"
+    apply_run = run(
+        [
+            sys.executable,
+            str(repo_root / "Tools" / "ai" / "analyze_code_product_artifact.py"),
+            "--repo-root",
+            str(fixture),
+            "--code-product",
+            str(code_product),
+            "--output",
+            str(apply_report),
+            "--markdown-output",
+            str(apply_md),
+            "--apply-safe",
+        ],
+        cwd=repo_root,
+        timeout=max(60, int(args.timeout_seconds)),
+    )
+    verify_run = run(
+        [
+            sys.executable,
+            str(repo_root / "Tools" / "ai" / "analyze_code_product_artifact.py"),
+            "--repo-root",
+            str(fixture),
+            "--code-product",
+            str(code_product),
+            "--output",
+            str(verify_report),
+            "--require-all-integrated",
+        ],
+        cwd=repo_root,
+        timeout=max(60, int(args.timeout_seconds)),
+    )
+    apply_data = json.loads(apply_report.read_text(encoding="utf-8-sig"))
+    verify_data = json.loads(verify_report.read_text(encoding="utf-8-sig"))
+    passed = (
+        apply_run["returncode"] == 0
+        and verify_run["returncode"] == 0
+        and apply_data.get("safe_apply", {}).get("applied_count") == 2
+        and verify_data.get("all_integrated") is True
+        and (fixture / "Tools" / "smoke_target.py").read_text(encoding="utf-8").strip()
+        == "VALUE = 2"
+        and (fixture / "Tools" / "new_target.py").exists()
+    )
+    report = {
+        "schema_version": 1,
+        "kind": "code_product_artifact_intake_smoke",
+        "passed": passed,
+        "work_dir": str(work_dir),
+        "fixture_repo": str(fixture),
+        "code_product": str(code_product),
+        "apply_report": str(apply_report),
+        "verify_report": str(verify_report),
+        "apply_run": apply_run,
+        "verify_run": verify_run,
+        "provider_execution_performed": False,
+        "patch_application_performed": apply_data.get("patch_application_performed"),
+        "source_writes_performed": apply_data.get("source_writes_performed"),
+    }
+    output = Path(args.output).resolve() if args.output else work_dir / "smoke.json"
+    write_json(output, report)
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    return report
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repo-root", default=".")
+    parser.add_argument("--work-dir", default="")
+    parser.add_argument("--output", default="")
+    parser.add_argument("--timeout-seconds", type=int, default=120)
+    return parser.parse_args()
+
+
+def main() -> int:
+    report = run_smoke(parse_args())
+    return 0 if report.get("passed") else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

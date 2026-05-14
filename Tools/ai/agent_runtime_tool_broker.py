@@ -670,6 +670,32 @@ def run_heap_virtual_dev_environment(
     }
 
 
+def analyze_code_product_artifact(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, str]]:
+    report, markdown = base_outputs(out_dir, request_id, "code_product_artifact_intake")
+    command = [
+        resolve_child_python(repo_root),
+        "Tools/ai/analyze_code_product_artifact.py",
+        "--repo-root",
+        ".",
+        "--code-product",
+        str(args.get("code_product") or ""),
+        "--output",
+        str(report),
+        "--markdown-output",
+        str(markdown),
+    ]
+    if truthy(args.get("require_all_integrated")):
+        command.append("--require-all-integrated")
+    if truthy(args.get("apply_safe")) and str(args.get("confirm") or "") == "safe_apply":
+        command.append("--apply-safe")
+    return command, {
+        "json_report": repo_rel(report, repo_root),
+        "markdown_report": repo_rel(markdown, repo_root),
+    }
+
+
 TOOL_SPECS: dict[str, ToolSpec] = {
     "build_python_line_count_csv": ToolSpec(
         name="build_python_line_count_csv",
@@ -837,6 +863,12 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         ),
         builder=run_heap_virtual_dev_environment,
     ),
+    "analyze_code_product_artifact": ToolSpec(
+        name="analyze_code_product_artifact",
+        description="Analyze CODE_PRODUCT_FULL_PATCH artifacts and optionally apply only safe forward-applicable sections.",
+        allowed_args=("code_product", "require_all_integrated", "apply_safe", "confirm"),
+        builder=analyze_code_product_artifact,
+    ),
 }
 
 
@@ -908,6 +940,7 @@ def execute_tool_request(
         "dry_run": dry_run,
         "status": "dry_run_pending" if dry_run else "pending",
         "persistent_memory_write_authorized": False,
+        "code_product_safe_apply_authorized": False,
         "returncode": None,
         "errors": [],
         "warnings": [],
@@ -916,6 +949,7 @@ def execute_tool_request(
         "guardrails": {
             "provider_execution_performed": False,
             "patch_application_performed": False,
+            "source_writes_performed": False,
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
             "persistent_memory_write_count": 0,
@@ -934,6 +968,11 @@ def execute_tool_request(
         and str(request_args.get("scope") or "") == "persistent"
         and truthy(request_args.get("allow_persistent_write"))
         and str(request_args.get("confirm") or "") == "persistent_write"
+    )
+    base_result["code_product_safe_apply_authorized"] = (
+        tool_name == "analyze_code_product_artifact"
+        and truthy(request_args.get("apply_safe"))
+        and str(request_args.get("confirm") or "") == "safe_apply"
     )
 
     spec = TOOL_SPECS.get(tool_name)
@@ -1001,6 +1040,10 @@ def execute_tool_request(
                         report_data.get("patch_application_performed")
                         or guardrails.get("patch_application_performed")
                     ),
+                    "source_writes_performed": bool(
+                        report_data.get("source_writes_performed")
+                        or guardrails.get("source_writes_performed")
+                    ),
                     "sqlite_write_performed": bool(
                         guardrails.get("sqlite_write_performed")
                         or guardrails.get("sqlite_db_committed")
@@ -1064,7 +1107,14 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         item
         for item in results
         if item.get("guardrails", {}).get("provider_execution_performed")
-        or item.get("guardrails", {}).get("patch_application_performed")
+        or (
+            item.get("guardrails", {}).get("patch_application_performed")
+            and not item.get("code_product_safe_apply_authorized")
+        )
+        or (
+            item.get("guardrails", {}).get("source_writes_performed")
+            and not item.get("code_product_safe_apply_authorized")
+        )
         or (
             item.get("guardrails", {}).get("sqlite_write_performed")
             and not item.get("persistent_memory_write_authorized")
@@ -1085,6 +1135,12 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         1
         for item in results
         if item.get("guardrails", {}).get("persistent_memory_write_performed")
+    )
+    source_write_count = sum(
+        1 for item in results if item.get("guardrails", {}).get("source_writes_performed")
+    )
+    patch_application_count = sum(
+        1 for item in results if item.get("guardrails", {}).get("patch_application_performed")
     )
     operational_memory_clear_count = sum(
         1
@@ -1113,8 +1169,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             f"{item.get('id')}: blocked {item.get('errors')}" for item in blocked
         ],
         "provider_execution_performed": False,
-        "patch_application_performed": False,
-        "source_writes_performed": False,
+        "patch_application_performed": patch_application_count > 0,
+        "source_writes_performed": source_write_count > 0,
         "sqlite_write_performed": persistent_memory_write_count > 0,
         "persistent_memory_write_performed": persistent_memory_write_count > 0,
         "operational_sqlite_write_performed": operational_sqlite_write_count > 0,
@@ -1134,7 +1190,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "free_shell_exposed": False,
             "allowlist_enforced": True,
             "provider_execution_performed": False,
-            "patch_application_performed": False,
+            "patch_application_performed": patch_application_count > 0,
+            "source_writes_performed": source_write_count > 0,
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
             "operational_sqlite_write_allowed_under_output": True,
@@ -1162,6 +1219,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         "failed_tool_count",
         "provider_execution_performed",
         "patch_application_performed",
+        "source_writes_performed",
         "sqlite_write_performed",
         "persistent_memory_write_performed",
         "operational_sqlite_write_performed",
