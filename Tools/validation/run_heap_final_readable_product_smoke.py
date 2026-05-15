@@ -108,6 +108,16 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                         "python -m py_compile Tools/ai/run_heap_runtime_context_closure.py"
                     ],
                 },
+                {
+                    "target_file": "Tools/ai/heap_final_code_product.py",
+                    "implementation_status": "verified_target_no_worktree_diff",
+                    "git_status": "",
+                    "diff_hunk_count": 0,
+                    "code_or_patch_sketch": "",
+                    "validation_commands": [
+                        "python -m py_compile Tools/ai/heap_final_code_product.py"
+                    ],
+                },
             ],
         },
     )
@@ -235,6 +245,8 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         and full_code_product.exists()
         and "CODE_PRODUCT_FULL_PATCH" in code_product_body
         and "Tools/ai/assemble_heap_final_readable_product.py" in code_product_body
+        and "Tools/ai/heap_final_code_product.py" not in code_product_body
+        and "[no worktree diff captured]" not in code_product_body
         and zip_path.exists()
         and not missing
     )

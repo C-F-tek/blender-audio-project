@@ -181,6 +181,15 @@ def truncated_prefix(text: str) -> str:
     return text.split("\n...[", 1)[0] if "\n...[" in text else text
 
 
+def payload_truncated(payload: str) -> bool:
+    markers = ("[diff truncated]", "[code product excerpt truncated")
+    for line in str(payload or "").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("...") and any(marker in stripped for marker in markers):
+            return True
+    return False
+
+
 def analyze_section(repo_root: Path, output_dir: Path, item: dict[str, str]) -> dict[str, Any]:
     target = normalize_target(item["target"])
     body = item["body"]
@@ -198,7 +207,7 @@ def analyze_section(repo_root: Path, output_dir: Path, item: dict[str, str]) -> 
         "diff_hunk_count": metadata_value(body, "Diff hunks"),
         "target_exists": exists,
         "payload_chars": len(payload),
-        "payload_truncated": "[diff truncated]" in payload or "[code product excerpt truncated" in payload,
+        "payload_truncated": payload_truncated(payload),
         "status": "unknown",
         "errors": [],
         "warnings": [],

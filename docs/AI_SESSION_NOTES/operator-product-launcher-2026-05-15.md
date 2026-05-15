@@ -52,3 +52,32 @@ Full run evidence:
 - concrete code proposal count: 15
 - final product package: `C:\Users\carmi\Documents\aicarmine_operator_launcher_codex_full_operator_launcher_full_20260515-082944\aicarmine_heap_final_proposals_20260515-083004`
 - code product intake result: 1 broker patch already integrated, 0 forward-safe sections, 14 manual-review/no-diff sections.
+
+## Code product quality correction
+
+The `operator_launcher_full_20260515-082944` product was not acceptable as a
+final code product: it listed 15 matrix targets but 14 sections had no captured
+diff. The good Day 0 reference remains the #300 artifact:
+`C:\Users\carmi\Documents\aicarmine_heap_final_proposals_20260514-195340\CODE_PRODUCT_FULL_PATCH.md`,
+about 4100 lines and 180k characters of actual diff/code.
+
+Correction applied:
+
+- `concrete_code_proposals` now means only targets with real worktree diff or
+  new-file content;
+- verified no-diff targets remain in `verified_targets` evidence;
+- `CODE_PRODUCT_FULL_PATCH.md` renders only effective diff/code sections;
+- the full code product renderer recaptures full worktree diffs when available
+  instead of relying on truncated matrix sketches;
+- intake detects truncation markers only when they are standalone payload markers,
+  not when a source diff contains the marker string as code.
+
+Follow-up run evidence:
+
+- stamp: `operator_launcher_product_quality_20260515-0844`
+- final status: `APPLY_REVIEW_READY`
+- matrix target count: 15
+- verified target count: 15
+- effective code product count: 7
+- final code product: 7 sections, 7 `diff --git` blocks, 0 placeholder sections
+- intake result: 7/7 already integrated, 0 forward-safe sections, 0 needs-review sections.

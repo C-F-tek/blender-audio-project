@@ -13,13 +13,19 @@ from typing import Any
 
 try:
     from tools.ai.heap_final_readable_synthesis import render_markdown
-    from tools.ai.heap_final_code_product import render_full_code_product_markdown
+    from tools.ai.heap_final_code_product import (
+        code_product_items,
+        render_full_code_product_markdown,
+    )
 except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from tools.ai.heap_final_readable_synthesis import render_markdown  # type: ignore
-    from tools.ai.heap_final_code_product import render_full_code_product_markdown  # type: ignore
+    from tools.ai.heap_final_code_product import (  # type: ignore
+        code_product_items,
+        render_full_code_product_markdown,
+    )
 
 
 def now_iso() -> str:
@@ -212,7 +218,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
             )
             documents_zip = str(zip_path_for_later)
 
-    matrix_items = as_list(matrix.get("concrete_code_proposals"))
+    matrix_items = code_product_items(matrix)
     report = {
         "schema_version": 1,
         "kind": "heap_final_readable_product",
@@ -231,6 +237,8 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         ),
         "code_execution_matrix_passed": matrix.get("passed"),
         "concrete_code_proposal_count": len(matrix_items),
+        "matrix_target_count": matrix.get("target_count"),
+        "verified_target_count": matrix.get("verified_target_count"),
         "matrix_report": matrix_path,
         "markdown_output": str(markdown_output),
         "text_output": str(text_output),

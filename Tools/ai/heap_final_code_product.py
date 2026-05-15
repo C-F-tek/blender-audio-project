@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -63,6 +64,67 @@ def truncate_code(text: str, limit: int = 1800) -> str:
     return body[:limit].rstrip() + "\n...[code product excerpt truncated; full file/diff in workspace and matrix report]"
 
 
+def item_has_code_product(item: dict[str, Any]) -> bool:
+    sketch = str(item.get("code_or_patch_sketch") or "").strip()
+    if not sketch or sketch == "[no worktree diff captured]":
+        return False
+    if str(item.get("implementation_status") or "") == "verified_target_no_worktree_diff":
+        return False
+    return True
+
+
+def matrix_repo_root(matrix: dict[str, Any]) -> Path:
+    raw = str(matrix.get("repo_root") or "").strip()
+    return Path(raw).resolve(strict=False) if raw else Path.cwd()
+
+
+def worktree_code_product(repo_root: Path, target: str) -> str:
+    if not target:
+        return ""
+    completed = subprocess.run(
+        ["git", "diff", "--", target],
+        cwd=repo_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    diff = completed.stdout or ""
+    if diff.strip():
+        return diff.rstrip()
+    status = subprocess.run(
+        ["git", "status", "--short", "--", target],
+        cwd=repo_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if (status.stdout or "").strip().startswith("??"):
+        path = repo_root / target
+        try:
+            text = path.read_text(encoding="utf-8-sig", errors="replace")
+        except OSError:
+            text = ""
+        if text.strip():
+            return f"new file: {target}\n\n{text.rstrip()}"
+    return ""
+
+
+def full_code_or_patch(matrix: dict[str, Any], item: dict[str, Any]) -> str:
+    target = str(item.get("target_file") or "")
+    live = worktree_code_product(matrix_repo_root(matrix), target)
+    if live:
+        return live
+    return str(item.get("code_or_patch_sketch") or "").rstrip()
+
+
+def code_product_items(matrix: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        as_dict(item)
+        for item in as_list(matrix.get("concrete_code_proposals"))
+        if isinstance(item, dict) and item_has_code_product(item)
+    ]
+
+
 def render_lab_section(
     *, run_dir: Path, gate: dict[str, Any], matrix: dict[str, Any], matrix_path: str
 ) -> list[str]:
@@ -109,10 +171,10 @@ def render_code_product_section(matrix: dict[str, Any]) -> list[str]:
         "Il patch/code completo disponibile nella matrix viene pubblicato anche come `CODE_PRODUCT_FULL_PATCH.md` nel pacchetto Documents della run.",
         "",
     ]
-    for item in as_list(matrix.get("concrete_code_proposals")):
-        data = as_dict(item)
+    product_items = code_product_items(matrix)
+    for data in product_items:
         target = str(data.get("target_file") or "")
-        sketch = truncate_code(str(data.get("code_or_patch_sketch") or ""))
+        sketch = truncate_code(full_code_or_patch(matrix, data))
         if not target or not sketch:
             continue
         lines.extend(
@@ -128,16 +190,18 @@ def render_code_product_section(matrix: dict[str, Any]) -> list[str]:
                 "",
             ]
         )
-    if len(lines) == 4:
-        lines.extend(["- Nessun code product catturato dalla matrix.", ""])
+    if not product_items:
+        lines.extend(["- Nessun diff/code effettivo catturato dalla matrix.", ""])
     return lines
 
 
 def render_full_code_product_markdown(matrix: dict[str, Any], matrix_path: str) -> str:
+    product_items = code_product_items(matrix)
+    matrix_items = as_list(matrix.get("concrete_code_proposals"))
     lines = [
         "# CODE_PRODUCT_FULL_PATCH",
         "",
-        "Artifact generato dalla run. Contiene il prodotto codice completo disponibile nella code execution matrix; non include i chunk provider respinti dal gate.",
+        "Artifact generato dalla run. Contiene solo diff/code effettivo disponibile nella code execution matrix; non include target verificati senza diff e non include chunk provider respinti dal gate.",
         "",
         "## Provenienza",
         "",
@@ -145,7 +209,9 @@ def render_full_code_product_markdown(matrix: dict[str, Any], matrix_path: str) 
         f"- Matrix passed: `{matrix.get('passed')}`",
         f"- Debug lab report: `{matrix.get('debug_lab_report')}`",
         f"- Debug lab passed: `{matrix.get('debug_lab_passed')}`",
-        f"- Concrete code proposal count: `{len(as_list(matrix.get('concrete_code_proposals')))}`",
+        f"- Matrix concrete proposal count: `{matrix.get('concrete_code_proposal_count', len(matrix_items))}`",
+        f"- Effective code product count: `{len(product_items)}`",
+        f"- Verified target count: `{matrix.get('verified_target_count', matrix.get('target_count'))}`",
         "",
         "## Guardrail",
         "",
@@ -159,10 +225,9 @@ def render_full_code_product_markdown(matrix: dict[str, Any], matrix_path: str) 
     ):
         lines.append(f"- {key}: `{guardrails.get(key)}`")
     lines.extend(["", "## Code / Patch", ""])
-    for item in as_list(matrix.get("concrete_code_proposals")):
-        data = as_dict(item)
+    for data in product_items:
         target = str(data.get("target_file") or "")
-        sketch = str(data.get("code_or_patch_sketch") or "").rstrip()
+        sketch = full_code_or_patch(matrix, data)
         if not target:
             continue
         lines.extend(
@@ -175,11 +240,17 @@ def render_full_code_product_markdown(matrix: dict[str, Any], matrix_path: str) 
                 f"- Validation commands: `{data.get('validation_commands')}`",
                 "",
                 "```diff",
-                sketch or "[no worktree diff captured]",
+                sketch,
                 "```",
                 "",
             ]
         )
-    if not as_list(matrix.get("concrete_code_proposals")):
-        lines.extend(["- Nessun code product catturato dalla matrix.", ""])
+    if not product_items:
+        lines.extend(
+            [
+                "- Nessun diff/code effettivo catturato dalla matrix.",
+                "- Questo artifact non e' un prodotto applicabile: usare la matrix come evidenza, non come patch.",
+                "",
+            ]
+        )
     return "\n".join(lines).rstrip() + "\n"

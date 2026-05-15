@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from tools.ai.heap_final_code_product import (
+    code_product_items,
     render_code_product_section,
     render_lab_section,
 )
@@ -181,9 +182,7 @@ def apply_order(group: str) -> str:
 
 def grouped_matrix_items(matrix: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     grouped: dict[str, list[dict[str, Any]]] = {}
-    for item in as_list(matrix.get("concrete_code_proposals")):
-        if not isinstance(item, dict):
-            continue
+    for item in code_product_items(matrix):
         target = str(item.get("target_file") or "")
         grouped.setdefault(target_group(target), []).append(item)
     return dict(sorted(grouped.items()))
@@ -191,9 +190,8 @@ def grouped_matrix_items(matrix: dict[str, Any]) -> dict[str, list[dict[str, Any
 
 def command_catalog(matrix: dict[str, Any]) -> list[str]:
     commands: list[str] = []
-    for item in as_list(matrix.get("concrete_code_proposals")):
-        if isinstance(item, dict):
-            commands.extend(str(cmd) for cmd in as_list(item.get("validation_commands")))
+    for item in code_product_items(matrix):
+        commands.extend(str(cmd) for cmd in as_list(item.get("validation_commands")))
     return uniq(commands)
 
 

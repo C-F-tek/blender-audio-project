@@ -14,8 +14,8 @@ try:
         build_debug_lab_request,
         default_debug_lab_paths,
         git_diff_excerpt,
+        matrix_target_items,
         now_iso,
-        proposal_items,
         read_json,
         render_markdown,
         resolve_path,
@@ -34,8 +34,8 @@ except ImportError:
         build_debug_lab_request,
         default_debug_lab_paths,
         git_diff_excerpt,
+        matrix_target_items,
         now_iso,
-        proposal_items,
         read_json,
         render_markdown,
         resolve_path,
@@ -133,6 +133,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         git_diff_excerpt(repo_root, target, max(100, int(args.max_diff_chars)))
         for target in target_files
     ]
+    verified_targets = matrix_target_items(target_files, diffs, commands)
+    concrete_proposals = [
+        item
+        for item in verified_targets
+        if item.get("implementation_status") == "developed_change_present"
+        and str(item.get("code_or_patch_sketch") or "").strip()
+    ]
     return {
         "schema_version": 1,
         "kind": "heap_code_execution_tool",
@@ -142,6 +149,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "errors": errors,
         "warnings": [],
         "target_count": len(target_files),
+        "verified_target_count": len(verified_targets),
         "validation_script_count": len(validation_scripts),
         "request_file": repo_rel(repo_root, request_path),
         "debug_lab_report": repo_rel(repo_root, debug_report),
@@ -150,8 +158,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "debug_lab_passed": debug_passed,
         "debug_lab_stdout_tail": debug_stdout,
         "debug_lab_stderr_tail": debug_stderr,
-        "concrete_code_proposal_count": len(target_files),
-        "concrete_code_proposals": proposal_items(target_files, diffs, commands),
+        "concrete_code_proposal_count": len(concrete_proposals),
+        "concrete_code_proposals": concrete_proposals,
+        "verified_targets": verified_targets,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,

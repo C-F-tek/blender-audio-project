@@ -159,8 +159,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     errors: list[str] = []
     if direct["returncode"] != 0 or direct_data.get("passed") is not True:
         errors.append("direct heap code execution tool did not pass")
-    if direct_data.get("concrete_code_proposal_count", 0) < 2:
-        errors.append("direct report did not emit concrete code proposals")
+    if direct_data.get("verified_target_count", 0) < 2:
+        errors.append("direct report did not verify target files")
+    if direct_data.get("concrete_code_proposal_count", 0) > direct_data.get("target_count", 0):
+        errors.append("direct report emitted more concrete proposals than targets")
+    for item in direct_data.get("concrete_code_proposals", []):
+        if item.get("implementation_status") == "verified_target_no_worktree_diff":
+            errors.append("no-diff target leaked into concrete code proposals")
     if broker["returncode"] != 0 or broker_data.get("passed") is not True:
         errors.append("brokered heap code execution matrix did not pass")
     if "run_heap_code_execution_matrix" not in broker_data.get("allowlisted_tools", []):

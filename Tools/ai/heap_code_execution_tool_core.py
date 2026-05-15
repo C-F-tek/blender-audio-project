@@ -252,7 +252,7 @@ def default_debug_lab_paths(repo_root: Path, output: Path) -> tuple[Path, Path]:
     )
 
 
-def proposal_items(
+def matrix_target_items(
     target_files: list[str],
     diffs: list[dict[str, Any]],
     validation_commands: list[str],
@@ -285,6 +285,19 @@ def proposal_items(
     return items
 
 
+def proposal_items(
+    target_files: list[str],
+    diffs: list[dict[str, Any]],
+    validation_commands: list[str],
+) -> list[dict[str, Any]]:
+    return [
+        item
+        for item in matrix_target_items(target_files, diffs, validation_commands)
+        if item.get("implementation_status") == "developed_change_present"
+        and str(item.get("code_or_patch_sketch") or "").strip()
+    ]
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Heap Code Execution Tool", ""]
     for key in (
@@ -311,6 +324,15 @@ def render_markdown(report: dict[str, Any]) -> str:
         if item.get("code_or_patch_sketch"):
             lines.extend(["", "```diff", str(item["code_or_patch_sketch"]), "```"])
         lines.append("")
+    verified = [
+        item
+        for item in report.get("verified_targets", [])
+        if item.get("implementation_status") != "developed_change_present"
+    ]
+    if verified:
+        lines.extend(["", "## Verified Targets Without Code Product", ""])
+        for item in verified:
+            lines.append(f"- `{item.get('target_file')}`: `{item.get('implementation_status')}`")
     if report.get("errors"):
         lines.extend(["## Errors", ""])
         lines.extend(f"- {error}" for error in report["errors"])
