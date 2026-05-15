@@ -344,5 +344,6 @@ Relevant owners:
 | SQLite operational memory | `agent_runtime_sqlite_memory.py` |
 | Tool catalog | `build_agent_agnostic_tool_inventory.py` |
 | Runtime broker | `agent_runtime_tool_broker.py` |
+| Operator product launcher | `operator_product_launcher.py`, `operator_product_launcher_core.py` |
 
 Do not promote this lane into the full run until same-heap GPU1/GPU0/NPU participation, refinement artifacts and final package semantics are validator-backed.
