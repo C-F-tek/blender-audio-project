@@ -116,6 +116,121 @@ def compact_value(value: Any, *, max_chars: int = 2500) -> Any:
     return text[:max_chars] + "\n...[truncated]"
 
 
+GENERATED_OUTPUT_PREFIXES = ("output/", "docs/LOCAL_VALIDATION_EVIDENCE/")
+SOURCE_TREE_PREFIXES = (
+    "Tools/",
+    "tools/",
+    "Scripting/",
+    "config/",
+    "docs/",
+    "README.md",
+    "WORKFLOW.md",
+    "AGENTS.md",
+    "CHATGPT/",
+    "CHATGPT.md",
+)
+
+
+def collect_output_paths(value: Any) -> list[str]:
+    paths: list[str] = []
+    if isinstance(value, str) and value.strip():
+        paths.append(value)
+    elif isinstance(value, list):
+        for item in value:
+            paths.extend(collect_output_paths(item))
+    elif isinstance(value, dict):
+        for item in value.values():
+            paths.extend(collect_output_paths(item))
+    return paths
+
+
+def normalized_child_path(repo_root: Path, value: str) -> str:
+    text = str(value or "").strip().strip("'\"").replace("\\", "/")
+    if not text:
+        return ""
+    path = Path(text)
+    if path.is_absolute():
+        try:
+            text = path.resolve(strict=False).relative_to(
+                repo_root.resolve(strict=False)
+            ).as_posix()
+        except ValueError:
+            text = path.as_posix()
+    return text.lstrip("./")
+
+
+def generated_output_path(path: str) -> bool:
+    return path.startswith(GENERATED_OUTPUT_PREFIXES)
+
+
+def fixture_repo_path(path: str) -> bool:
+    return path.startswith("output/validation/") and "/fixture_repo/" in path
+
+
+def real_source_target_path(path: str) -> bool:
+    return path.startswith(SOURCE_TREE_PREFIXES) and not generated_output_path(path)
+
+
+def collect_normalized_paths(repo_root: Path, *values: Any) -> list[str]:
+    paths: list[str] = []
+    for value in values:
+        for raw in collect_output_paths(value):
+            path = normalized_child_path(repo_root, raw)
+            if path:
+                paths.append(path)
+    return paths
+
+
+def output_owned_artifact_write(
+    repo_root: Path, report_data: dict[str, Any], outputs: dict[str, Any]
+) -> bool:
+    paths = collect_normalized_paths(
+        repo_root,
+        outputs,
+        {
+            "output": report_data.get("output"),
+            "markdown_output": report_data.get("markdown_output"),
+            "json_output": report_data.get("json_output"),
+            "csv_output": report_data.get("csv_output"),
+        },
+    )
+    if not paths:
+        return False
+    if any(real_source_target_path(path) for path in paths):
+        return False
+    return all(generated_output_path(path) or fixture_repo_path(path) for path in paths)
+
+
+def fixture_repo_write(
+    repo_root: Path, report_data: dict[str, Any], outputs: dict[str, Any]
+) -> bool:
+    child_repo_root = normalized_child_path(
+        repo_root, str(report_data.get("repo_root") or "")
+    )
+    if fixture_repo_path(child_repo_root):
+        return True
+    paths = collect_normalized_paths(
+        repo_root,
+        outputs,
+        {
+            "output": report_data.get("output"),
+            "markdown_output": report_data.get("markdown_output"),
+            "json_output": report_data.get("json_output"),
+            "backup_dir": (
+                report_data.get("safe_apply", {}).get("backup_dir")
+                if isinstance(report_data.get("safe_apply"), dict)
+                else None
+            ),
+        },
+    )
+    if not paths:
+        return False
+    all_fixture_or_generated = all(
+        fixture_repo_path(path) or generated_output_path(path) for path in paths
+    )
+    return all_fixture_or_generated and any(fixture_repo_path(path) for path in paths)
+
+
 def validate_request_args(
     tool_name: str, request_args: dict[str, Any], allowed_args: tuple[str, ...]
 ) -> list[str]:
@@ -1030,20 +1145,50 @@ def execute_tool_request(
                 if isinstance(report_data.get("guardrails"), dict)
                 else {}
             )
+            source_writes = bool(
+                report_data.get("source_writes_performed")
+                or guardrails.get("source_writes_performed")
+            )
+            patch_application = bool(
+                report_data.get("patch_application_performed")
+                or guardrails.get("patch_application_performed")
+            )
+            git_write = bool(
+                report_data.get("git_write_performed")
+                or guardrails.get("git_write_performed")
+            )
+            fixture_write = fixture_repo_write(repo_root, report_data, outputs)
+            output_artifact_write = output_owned_artifact_write(
+                repo_root, report_data, outputs
+            )
+            if source_writes and fixture_write:
+                source_writes = False
+                base_result["warnings"].append(
+                    "fixture/output write ignored for source-write guardrail"
+                )
+            elif (
+                source_writes
+                and output_artifact_write
+                and not patch_application
+                and not git_write
+            ):
+                source_writes = False
+                base_result["warnings"].append(
+                    "output-owned artifact write ignored for source-write guardrail"
+                )
+            if patch_application and fixture_write and not git_write:
+                patch_application = False
+                base_result["warnings"].append(
+                    "fixture patch application ignored for patch guardrail"
+                )
             base_result["guardrails"].update(
                 {
                     "provider_execution_performed": bool(
                         report_data.get("provider_execution_performed")
                         or guardrails.get("provider_execution_performed")
                     ),
-                    "patch_application_performed": bool(
-                        report_data.get("patch_application_performed")
-                        or guardrails.get("patch_application_performed")
-                    ),
-                    "source_writes_performed": bool(
-                        report_data.get("source_writes_performed")
-                        or guardrails.get("source_writes_performed")
-                    ),
+                    "patch_application_performed": patch_application,
+                    "source_writes_performed": source_writes,
                     "sqlite_write_performed": bool(
                         guardrails.get("sqlite_write_performed")
                         or guardrails.get("sqlite_db_committed")
@@ -1069,6 +1214,7 @@ def execute_tool_request(
                     "blender_runtime_touched": bool(
                         guardrails.get("blender_runtime_touched")
                     ),
+                    "git_write_performed": git_write,
                 }
             )
     return base_result
