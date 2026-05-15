@@ -81,3 +81,14 @@ Follow-up run evidence:
 - effective code product count: 7
 - final code product: 7 sections, 7 `diff --git` blocks, 0 placeholder sections
 - intake result: 7/7 already integrated, 0 forward-safe sections, 0 needs-review sections.
+
+## Empty code product handling
+
+The launcher cycle check run produced a valid non-applicable
+`CODE_PRODUCT_FULL_PATCH.md`: matrix passed, 15 targets were verified, but
+`Effective code product count` was 0. The intake classifier now treats this as
+`empty_code_product=true`, `passed=true`, `all_integrated=true`, with
+apply-safe as a no-op and no source/patch/git writes.
+
+This keeps malformed artifacts blocked while allowing an intentional "nothing
+to apply" product to close cleanly through the launcher.

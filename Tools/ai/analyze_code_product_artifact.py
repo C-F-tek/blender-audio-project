@@ -123,6 +123,31 @@ def metadata_value(body: str, name: str) -> str:
     return match.group(1).strip() if match else ""
 
 
+def document_metadata_value(text: str, name: str) -> str:
+    pattern = re.compile(rf"^- {re.escape(name)}:\s*`?([^`\n]+)`?", re.MULTILINE)
+    match = pattern.search(text)
+    return match.group(1).strip() if match else ""
+
+
+def document_metadata_int(text: str, name: str) -> int | None:
+    value = document_metadata_value(text, name)
+    if not value:
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        return None
+
+
+def declared_empty_code_product(text: str) -> bool:
+    if document_metadata_int(text, "Effective code product count") == 0:
+        return True
+    return (
+        "# CODE_PRODUCT_FULL_PATCH" in text
+        and "Nessun diff/code effettivo" in text
+    )
+
+
 def code_block(body: str) -> str:
     match = FENCE_RE.search(body)
     return match.group(1).strip("\n") if match else ""
@@ -313,6 +338,7 @@ def analyze(args: argparse.Namespace) -> dict[str, Any]:
         text = ""
     else:
         text = read_text(code_product)
+    empty_code_product = declared_empty_code_product(text)
     raw_sections = split_sections(text)
     sections = [analyze_section(repo_root, output_dir, item) for item in raw_sections]
     initial_status_counts, initial_errors, initial_warnings = summarize_sections(sections)
@@ -331,7 +357,7 @@ def analyze(args: argparse.Namespace) -> dict[str, Any]:
     warnings.extend(section_warnings)
     errors.extend(str(item) for item in safe_apply_report.get("errors", []))
     warnings.extend(str(item) for item in safe_apply_report.get("warnings", []))
-    all_integrated = bool(sections) and all(
+    all_integrated = (not sections and empty_code_product) or bool(sections) and all(
         section.get("status") in INTEGRATED_STATUSES for section in sections
     )
     forward_applicable = sum(
@@ -345,7 +371,9 @@ def analyze(args: argparse.Namespace) -> dict[str, Any]:
         if section.get("status")
         not in {*INTEGRATED_STATUSES, "forward_applicable", "forward_applicable_new_file"}
     )
-    if not sections:
+    if not sections and empty_code_product:
+        warnings.append("code product declares zero effective code sections; nothing to apply")
+    elif not sections:
         errors.append("no target sections found")
     if args.require_all_integrated and not all_integrated:
         errors.append("not all code product sections are already integrated")
@@ -358,13 +386,14 @@ def analyze(args: argparse.Namespace) -> dict[str, Any]:
         "code_product_lines": len(text.splitlines()) if text else 0,
         "code_product_chars": len(text),
         "target_count": len(sections),
+        "empty_code_product": bool(not sections and empty_code_product),
         "status_counts": status_counts,
         "initial_status_counts": initial_status_counts,
         "already_integrated_count": sum(status_counts.get(status, 0) for status in INTEGRATED_STATUSES),
         "forward_applicable_count": forward_applicable,
         "needs_review_count": needs_review,
         "all_integrated": all_integrated,
-        "passed": bool(sections and not errors),
+        "passed": bool((sections or empty_code_product) and not errors),
         "require_all_integrated": bool(args.require_all_integrated),
         "apply_safe_requested": bool(args.apply_safe),
         "safe_apply": safe_apply_report,

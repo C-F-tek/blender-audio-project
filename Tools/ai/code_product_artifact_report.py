@@ -13,6 +13,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Artifact: `{report.get('code_product_path')}`",
         f"- Passed: `{report.get('passed')}`",
         f"- All integrated: `{report.get('all_integrated')}`",
+        f"- Empty code product: `{report.get('empty_code_product')}`",
         f"- Target count: `{report.get('target_count')}`",
         f"- Already integrated: `{report.get('already_integrated_count')}`",
         f"- Forward applicable: `{report.get('forward_applicable_count')}`",
