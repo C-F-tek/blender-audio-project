@@ -92,3 +92,38 @@ apply-safe as a no-op and no source/patch/git writes.
 
 This keeps malformed artifacts blocked while allowing an intentional "nothing
 to apply" product to close cleanly through the launcher.
+
+## Repo-wide refactor/OOB run correction
+
+The launcher full run for a repo-wide refactor/OOB request initially produced an
+empty effective code product because GPU1 repeated a non-allowlisted invented
+path. GPU0/NPU and the deterministic gate rejected it correctly, but the final
+operator artifact was not useful.
+
+Correction applied:
+
+- GPU1 refactor/OOB prompts now require `TARGET_FILES` copied verbatim from the
+  source allowlist;
+- refinement feedback blacklists rejected/non-allowlisted source references;
+- repeated non-allowlisted references can terminate as `NO_PATCHABLE_TARGET`;
+- the final code product renderer includes reviewable worktree source diffs
+  under `Tools/`, `docs/`, and `config/` instead of relying only on matrix
+  target sketches.
+
+Follow-up run evidence:
+
+- stamp: `operator_launcher_repo_refactor_oob_20260515-0950`
+- final status: `APPLY_REVIEW_READY`
+- matrix passed: true
+- effective code product count: 5
+- worktree extra product count: 2
+- final code product: 5 sections, 5 `diff --git` blocks, no empty-product
+  marker
+- launcher intake/apply-safe: 5/5 already integrated, 0 forward-safe sections,
+  0 needs-review sections, no source/patch/git writes.
+
+Older temp artifact check:
+
+- input: `C:\Users\carmi\AppData\Local\Temp\CODE_PRODUCT_FULL_PATCH.md`
+- intake/apply-safe: 7/7 already integrated, 0 forward-safe sections,
+  0 needs-review sections, no source/patch/git writes.

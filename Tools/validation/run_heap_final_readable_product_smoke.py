@@ -77,6 +77,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "schema_version": 1,
             "kind": "heap_code_execution_tool",
             "passed": True,
+            "include_worktree_extras": False,
             "debug_lab_report": repo_rel(repo_root, debug_lab_path),
             "debug_lab_passed": True,
             "target_count": 2,

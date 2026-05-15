@@ -291,6 +291,8 @@ def render_source_allowlist_contract(candidates: list[str]) -> str:
         "SOURCE_PATH_ALLOWLIST_CONTRACT:",
         "- Every TARGET_FILES entry MUST be an exact repo-relative path from Allowed source paths below.",
         "- Every diff header path MUST match the same allowlist; do not cite basenames or invented directories.",
+        "- Copy TARGET_FILES verbatim from Allowed source paths; do not cite non-allowlisted source paths anywhere in the proposal.",
+        "- For refactor/OOB tasks, prefer existing allowed source paths; new files require an explicit operator request.",
         "- Do not invent files such as tools/data_processor/real_existing_file.py or any other non-allowlisted path.",
         "- If no allowed source path is patchable from current evidence, emit EXIT_DECISION=NO_PATCHABLE_TARGET.",
         "- In that case include BLOCKED_NO_VERIFIED_TARGET_REASON and do not output a fake diff.",
@@ -311,6 +313,7 @@ def source_anchor_feedback(
     lines = [
         "SOURCE PATH ANCHORING REQUIRED:",
         "Use only exact repo-relative paths from this allowlist when citing source files.",
+        "Copy TARGET_FILES verbatim from Allowed source paths; do not cite any non-allowlisted source path in prose, evidence or diff headers.",
         "Do not cite basenames unless the exact repo-relative path is also present.",
         "Every TARGET_FILES entry and every diff header path must be one of the allowed source paths below.",
         "If no allowed path fits the evidence, return EXIT_DECISION=NO_PATCHABLE_TARGET with BLOCKED_NO_VERIFIED_TARGET_REASON.",

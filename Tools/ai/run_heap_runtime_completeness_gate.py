@@ -3469,7 +3469,7 @@ class HeapRuntimeCompletenessGate:
         return (
             "Sei GPU1 planner finale e leader operativo nel runtime heap IA-Carmine. "
             "Non rispondere come lista generica: consuma le evidenze brokerate, memoria SQLite/FTS, chunk semantici, context pack e contributi GPU0/NPU già presenti nell'heap. "
-            "Puoi proporre nuovi file solo se li marchi esplicitamente come NUOVO; se la richiesta chiede file esistenti devi citare solo path verificabili nel contesto/repository. "
+            "Per richieste di refactor/OOB lavora su file esistenti: copia TARGET_FILES verbatim dalla SOURCE_PATH_ALLOWLIST_CONTRACT; nuovi file sono ammessi solo se la richiesta operatore li chiede esplicitamente. "
             "Non applicare patch, non inventare file esistenti, non inventare risultati. "
             "Per richieste complesse usa sezioni: interpretazione richiesta; tool/evidence usate; contributo GPU0; contributo NPU; indagine su file reali; output operativo dettagliato; limiti; prossima azione verificabile. "
             f"Richiesta utente: {request}\n"
@@ -3479,7 +3479,7 @@ class HeapRuntimeCompletenessGate:
             f"{source_allowlist_contract}\n"
             f"Feedback qualitativo heap da eventuale giro precedente:\n{revision_feedback}\n"
             "Regola: rispondi come sintesi GPU1 del team heap; se servono file esistenti usa solo i file sorgente candidati verificati, non gli artifact output/validation. Cita i tool storici/runtime consumati quando la richiesta richiede analisi, stato, igiene, tool, repo o output dettagliato.\n"
-            "Per richieste implementative devi produrre un blocco operativo, non consigli generici. Usa sezioni TARGET_FILES, PROBLEM, IMPLEMENTATION_CHANGES, CODE_OR_PATCH_SKETCH, VALIDATION_COMMANDS, RISKS, EXIT_DECISION. Includi almeno un path repo-relative verificato e comandi/patch-level code quando possibile.\n"
+            "Per richieste implementative devi produrre un blocco operativo, non consigli generici. Usa sezioni TARGET_FILES, PROBLEM, IMPLEMENTATION_CHANGES, CODE_OR_PATCH_SKETCH, VALIDATION_COMMANDS, RISKS, EXIT_DECISION. TARGET_FILES deve essere copiato esattamente da Allowed source paths; non citare path non allowlisted nemmeno in PROBLEM/EVIDENCE/PATCH_SKETCH.\n"
             "Risposta finale completa e chiusa:"
         )
 
@@ -3761,6 +3761,11 @@ class HeapRuntimeCompletenessGate:
             if isinstance(report.get("proposal_progress"), dict)
             else {}
         )
+        quality = (
+            report.get("response_file_reference_quality")
+            if isinstance(report.get("response_file_reference_quality"), dict)
+            else {}
+        )
         veto = (
             report.get("cross_lane_veto")
             if isinstance(report.get("cross_lane_veto"), dict)
@@ -3785,6 +3790,10 @@ class HeapRuntimeCompletenessGate:
         placeholder_hits = listify(implementation.get("placeholder_hits"))
         implementation_errors = listify(implementation.get("errors"))
         progress_errors = listify(progress.get("errors"))
+        unverified_refs = listify(
+            quality.get("unverified_source_file_refs")
+            or quality.get("unverified_file_refs")
+        )
         veto_reasons = listify(veto.get("reasons"))
         similarity = parse_similarity(progress.get("similarity"))
 
@@ -3814,6 +3823,7 @@ class HeapRuntimeCompletenessGate:
             "- Produce a materially different proposal chunk, not a paraphrase.",
             "- Remove every TODO/FIXME/pass/placeholder/stub marker from the proposal text.",
             "- Use concrete repo-relative TARGET_FILES only from the allowed concrete source targets below.",
+            "- Copy TARGET_FILES verbatim from the allowed concrete source targets; do not cite rejected refs anywhere in the next proposal.",
             "- Every diff header path must match an allowed concrete source target exactly.",
             "- If the only possible target is unverified or invented, return EXIT_DECISION=NO_PATCHABLE_TARGET instead of inventing a path.",
             "- Never output unresolved angle-bracket placeholders such as <id-or-empty>.",
@@ -3834,6 +3844,11 @@ class HeapRuntimeCompletenessGate:
         if progress_errors:
             lines.append(
                 "- Progress errors to resolve: " + " | ".join(progress_errors[:8])
+            )
+        if unverified_refs:
+            lines.append(
+                "- Rejected/non-allowlisted source refs blacklist: "
+                + ", ".join(unverified_refs[:12])
             )
         if veto_reasons:
             lines.append(
@@ -3919,12 +3934,16 @@ class HeapRuntimeCompletenessGate:
             marker in "\n".join(implementation_errors).lower()
             for marker in ("placeholder", "todo", "stub")
         )
-        if not (fake_path_detected and (repeated or placeholder)):
+        repeated_unverified_loop = bool(repeated_unverified) and repeated
+        if not (
+            (fake_path_detected and (repeated or placeholder))
+            or repeated_unverified_loop
+        ):
             return {}
 
         reason = (
-            "terminal_no_patchable_target: repeated provider output used fake or "
-            "placeholder source paths after deterministic feedback"
+            "terminal_no_patchable_target: repeated provider output used fake, "
+            "placeholder or non-allowlisted source paths after deterministic feedback"
         )
         feedback = "\n".join(
             [

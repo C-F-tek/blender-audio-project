@@ -8,6 +8,15 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+SAFE_PRODUCT_PREFIXES = ("Tools/", "docs/", "config/")
+DENY_PRODUCT_PREFIXES = (
+    "output/",
+    "renders/",
+    "indexAI/",
+    "docs/LOCAL_VALIDATION_EVIDENCE/",
+)
+PRODUCT_SUFFIXES = (".py", ".ps1", ".md", ".json", ".yml", ".yaml", ".toml")
+
 
 def as_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
@@ -73,6 +82,19 @@ def item_has_code_product(item: dict[str, Any]) -> bool:
     return True
 
 
+def normalize_target(value: Any) -> str:
+    return str(value or "").strip().strip("`'\"").replace("\\", "/").lstrip("./")
+
+
+def is_reviewable_product_target(target: str) -> bool:
+    normalized = normalize_target(target)
+    if not normalized or normalized.startswith(DENY_PRODUCT_PREFIXES):
+        return False
+    if not normalized.startswith(SAFE_PRODUCT_PREFIXES):
+        return False
+    return Path(normalized).suffix.lower() in PRODUCT_SUFFIXES
+
+
 def matrix_repo_root(matrix: dict[str, Any]) -> Path:
     raw = str(matrix.get("repo_root") or "").strip()
     return Path(raw).resolve(strict=False) if raw else Path.cwd()
@@ -109,6 +131,75 @@ def worktree_code_product(repo_root: Path, target: str) -> str:
     return ""
 
 
+def diff_hunk_count(payload: str) -> int:
+    return sum(1 for line in str(payload or "").splitlines() if line.startswith("@@ "))
+
+
+def git_status_lines(repo_root: Path) -> list[tuple[str, str]]:
+    completed = subprocess.run(
+        ["git", "status", "--short", "--untracked-files=all"],
+        cwd=repo_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    rows: list[tuple[str, str]] = []
+    for line in (completed.stdout or "").splitlines():
+        if len(line) < 4:
+            continue
+        status = line[:2].strip() or line[:2]
+        target = line[3:].strip()
+        if " -> " in target:
+            target = target.rsplit(" -> ", 1)[-1].strip()
+        normalized = normalize_target(target)
+        if is_reviewable_product_target(normalized):
+            rows.append((status, normalized))
+    return rows
+
+
+def validation_commands_for_target(target: str) -> list[str]:
+    commands: list[str] = []
+    if Path(target).suffix.lower() == ".py":
+        commands.append(f"python -m py_compile {target}")
+    if target in {
+        "Tools/ai/run_heap_runtime_completeness_gate.py",
+        "Tools/ai/heap_source_anchors.py",
+        "Tools/validation/run_heap_source_allowlist_contract_smoke.py",
+    }:
+        commands.append("python Tools/validation/run_heap_source_allowlist_contract_smoke.py")
+    if target in {
+        "Tools/ai/heap_final_code_product.py",
+        "Tools/validation/run_heap_final_readable_product_smoke.py",
+    }:
+        commands.append("python Tools/validation/run_heap_final_readable_product_smoke.py")
+    commands.append("git diff --check")
+    return list(dict.fromkeys(commands))
+
+
+def worktree_product_items(matrix: dict[str, Any], existing_targets: set[str]) -> list[dict[str, Any]]:
+    repo_root = matrix_repo_root(matrix)
+    items: list[dict[str, Any]] = []
+    for status, target in git_status_lines(repo_root):
+        if target in existing_targets:
+            continue
+        payload = worktree_code_product(repo_root, target)
+        if not payload:
+            continue
+        items.append(
+            {
+                "target_file": target,
+                "git_status": f"{status} {target}",
+                "implementation_status": "developed_change_present",
+                "diff_hunk_count": diff_hunk_count(payload),
+                "validation_commands": validation_commands_for_target(target),
+                "code_or_patch_sketch": payload,
+                "source": "worktree_status",
+            }
+        )
+        existing_targets.add(target)
+    return items
+
+
 def full_code_or_patch(matrix: dict[str, Any], item: dict[str, Any]) -> str:
     target = str(item.get("target_file") or "")
     live = worktree_code_product(matrix_repo_root(matrix), target)
@@ -123,6 +214,15 @@ def code_product_items(matrix: dict[str, Any]) -> list[dict[str, Any]]:
         for item in as_list(matrix.get("concrete_code_proposals"))
         if isinstance(item, dict) and item_has_code_product(item)
     ]
+
+
+def full_code_product_items(matrix: dict[str, Any]) -> list[dict[str, Any]]:
+    items = code_product_items(matrix)
+    if matrix.get("include_worktree_extras") is False:
+        return items
+    targets = {normalize_target(item.get("target_file")) for item in items}
+    items.extend(worktree_product_items(matrix, targets))
+    return items
 
 
 def render_lab_section(
@@ -171,7 +271,7 @@ def render_code_product_section(matrix: dict[str, Any]) -> list[str]:
         "Il patch/code completo disponibile nella matrix viene pubblicato anche come `CODE_PRODUCT_FULL_PATCH.md` nel pacchetto Documents della run.",
         "",
     ]
-    product_items = code_product_items(matrix)
+    product_items = full_code_product_items(matrix)
     for data in product_items:
         target = str(data.get("target_file") or "")
         sketch = truncate_code(full_code_or_patch(matrix, data))
@@ -196,7 +296,8 @@ def render_code_product_section(matrix: dict[str, Any]) -> list[str]:
 
 
 def render_full_code_product_markdown(matrix: dict[str, Any], matrix_path: str) -> str:
-    product_items = code_product_items(matrix)
+    product_items = full_code_product_items(matrix)
+    matrix_product_items = code_product_items(matrix)
     matrix_items = as_list(matrix.get("concrete_code_proposals"))
     lines = [
         "# CODE_PRODUCT_FULL_PATCH",
@@ -211,6 +312,7 @@ def render_full_code_product_markdown(matrix: dict[str, Any], matrix_path: str) 
         f"- Debug lab passed: `{matrix.get('debug_lab_passed')}`",
         f"- Matrix concrete proposal count: `{matrix.get('concrete_code_proposal_count', len(matrix_items))}`",
         f"- Effective code product count: `{len(product_items)}`",
+        f"- Worktree extra product count: `{max(0, len(product_items) - len(matrix_product_items))}`",
         f"- Verified target count: `{matrix.get('verified_target_count', matrix.get('target_count'))}`",
         "",
         "## Guardrail",
