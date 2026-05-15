@@ -219,6 +219,18 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
             documents_zip = str(zip_path_for_later)
 
     matrix_items = code_product_items(matrix)
+    provider_decision = str(decision.get("decision") or "")
+    concrete_code_proposal_count = len(matrix_items)
+    if concrete_code_proposal_count > 0:
+        final_document_status = "APPLY_REVIEW_READY"
+    elif provider_decision in {
+        "DIAGNOSTIC_ONLY",
+        "BLOCKED_NO_VERIFIED_TARGET",
+        "NO CONCRETE PATCHABLE PROPOSAL",
+    }:
+        final_document_status = "DIAGNOSTIC_REVIEW_READY"
+    else:
+        final_document_status = "NO_APPLICABLE_CODE_PRODUCT"
     report = {
         "schema_version": 1,
         "kind": "heap_final_readable_product",
@@ -226,7 +238,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "repo_root": str(repo_root),
         "run_dir": str(run_dir),
         "passed": bool(markdown.strip() and markdown_output.exists()),
-        "final_document_status": "APPLY_REVIEW_READY",
+        "final_document_status": final_document_status,
         "decision": decision.get("decision"),
         "product_status": as_dict(gate.get("metrics")).get("product_status"),
         "accepted_provider_proposal_count": count_from_decision(
@@ -236,7 +248,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
             decision, "rejected_count", as_list(decision.get("rejected_proposals"))
         ),
         "code_execution_matrix_passed": matrix.get("passed"),
-        "concrete_code_proposal_count": len(matrix_items),
+        "concrete_code_proposal_count": concrete_code_proposal_count,
         "matrix_target_count": matrix.get("target_count"),
         "verified_target_count": matrix.get("verified_target_count"),
         "matrix_report": matrix_path,

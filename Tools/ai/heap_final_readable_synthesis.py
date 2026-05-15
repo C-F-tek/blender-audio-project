@@ -268,6 +268,36 @@ def render_markdown(
     rejected = int(decision.get("rejected_count") or len(as_list(decision.get("rejected_proposals"))))
     groups = grouped_matrix_items(matrix)
     commands = command_catalog(matrix)
+    concrete_code_proposal_count = int(
+        matrix.get("concrete_code_proposal_count")
+        or sum(len(items) for items in groups.values())
+        or 0
+    )
+    provider_decision = str(decision.get("decision") or "")
+    if concrete_code_proposal_count > 0:
+        final_document_status = "APPLY_REVIEW_READY"
+        final_apply_outcome = "REVIEW_DETERMINISTIC_CODE_ADVANCEMENT"
+        practical_decision = (
+            "applicare/revisionare le modifiche deterministiche elencate sotto; "
+            "non applicare i chunk GPU1."
+        )
+    elif provider_decision in {
+        "DIAGNOSTIC_ONLY",
+        "BLOCKED_NO_VERIFIED_TARGET",
+        "NO CONCRETE PATCHABLE PROPOSAL",
+    }:
+        final_document_status = "DIAGNOSTIC_REVIEW_READY"
+        final_apply_outcome = "NO_APPLICABLE_CODE_PRODUCT"
+        practical_decision = (
+            "usare il documento come diagnostica; non applicare patch perché la matrix "
+            "non contiene diff/code concreto."
+        )
+    else:
+        final_document_status = "NO_APPLICABLE_CODE_PRODUCT"
+        final_apply_outcome = "NO_APPLICABLE_CODE_PRODUCT"
+        practical_decision = (
+            "non applicare patch; manca un prodotto codice concreto verificato."
+        )
     lines = [
         "# IA-Carmine Final Readable Product",
         "",
@@ -275,12 +305,12 @@ def render_markdown(
         "",
         "## Decisione finale",
         "",
-        "- Final document status: `APPLY_REVIEW_READY`.",
-        "- Esito da applicare: `REVIEW_DETERMINISTIC_CODE_ADVANCEMENT`.",
+        f"- Final document status: `{final_document_status}`.",
+        f"- Esito da applicare: `{final_apply_outcome}`.",
         f"- Provider proposal status: `{decision.get('decision') or 'UNKNOWN'}` con accepted `{accepted}` e rejected `{rejected}`.",
         f"- Stato prodotto runtime: `{metrics.get('product_status')}`.",
         f"- Product acceptance provider: `{postrun.get('product_acceptance_passed')}`.",
-        "- Decisione pratica: applicare/revisionare le modifiche deterministiche elencate sotto; non applicare i chunk GPU1.",
+        f"- Decisione pratica: {practical_decision}",
         "",
         "## Piano applicabile",
         "",
@@ -324,7 +354,7 @@ def render_markdown(
             "2. Applicare wiring run/gate/broker, per rendere code matrix e virtual dev requisiti reali della run.",
             "3. Applicare tool report-only e smoke, per avere debug, import, help probe e validator ripetibili.",
             "4. Applicare assembler e synthesis, per generare FINAL_READABLE_PRODUCT.* come decisione deduplicata.",
-            "5. Rieseguire i comandi di validazione e una run completa; accettare solo se final_document_status resta APPLY_REVIEW_READY e provider chunks falsi restano diagnostic-only.",
+            "5. Rieseguire i comandi di validazione e una run completa; accettare APPLY_REVIEW_READY solo quando la matrix contiene diff/code concreto, altrimenti mantenere stato diagnostico/non applicabile.",
             "",
         ]
     )
