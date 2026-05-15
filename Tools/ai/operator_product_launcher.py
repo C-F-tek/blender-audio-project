@@ -21,6 +21,7 @@ try:
         resolve_config,
         run_dir_for,
         run_heap,
+        select_profile,
     )
 except ImportError:  # pragma: no cover
     import sys
@@ -37,6 +38,7 @@ except ImportError:  # pragma: no cover
         resolve_config,
         run_dir_for,
         run_heap,
+        select_profile,
     )
 
 
@@ -53,6 +55,10 @@ class OperatorLauncherApp:
         self.python_exe = tk.StringVar(value=str(cwd / ".venv" / "Scripts" / "python.exe"))
         self.profile = tk.StringVar(value=DEFAULT_PROFILE)
         self.stamp = tk.StringVar(value="")
+        self.startup_max_memory_chars = tk.StringVar(value="")
+        self.startup_max_context_files = tk.StringVar(value="")
+        self.startup_scan_context_files = tk.StringVar(value="")
+        self.startup_max_chars_per_file = tk.StringVar(value="")
         self.code_product = tk.StringVar(value="")
         self.last_report: dict[str, Any] = {}
         self._build()
@@ -80,18 +86,30 @@ class OperatorLauncherApp:
         ttk.Label(frame, text="Intensity").grid(row=6, column=0, sticky="w", pady=2)
         self.profile_combo = ttk.Combobox(frame, textvariable=self.profile, width=40, state="readonly")
         self.profile_combo.grid(row=6, column=1, sticky="w", pady=2)
-        ttk.Label(frame, text="Stamp").grid(row=7, column=0, sticky="w", pady=2)
-        ttk.Entry(frame, textvariable=self.stamp, width=40).grid(row=7, column=1, sticky="w", pady=2)
+        self.profile_combo.bind("<<ComboboxSelected>>", lambda _event: self._sync_profile_defaults())
+        for row, (label, variable) in enumerate(
+            [
+                ("Memory chars", self.startup_max_memory_chars),
+                ("Context files", self.startup_max_context_files),
+                ("Scan files", self.startup_scan_context_files),
+                ("Chars per file", self.startup_max_chars_per_file),
+            ],
+            start=7,
+        ):
+            ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", pady=2)
+            ttk.Entry(frame, textvariable=variable, width=18).grid(row=row, column=1, sticky="w", pady=2)
+        ttk.Label(frame, text="Stamp").grid(row=11, column=0, sticky="w", pady=2)
+        ttk.Entry(frame, textvariable=self.stamp, width=40).grid(row=11, column=1, sticky="w", pady=2)
         buttons = ttk.Frame(frame)
-        buttons.grid(row=8, column=0, columnspan=3, sticky="ew", pady=8)
+        buttons.grid(row=12, column=0, columnspan=3, sticky="ew", pady=8)
         ttk.Button(buttons, text="Build Command", command=self.build_command).pack(side="left", padx=3)
         ttk.Button(buttons, text="Run Full", command=self.run_full).pack(side="left", padx=3)
         ttk.Button(buttons, text="Review Code Product", command=self.review_code_product).pack(side="left", padx=3)
         ttk.Button(buttons, text="Apply Safe", command=self.apply_safe).pack(side="left", padx=3)
         self.log = tk.Text(frame, height=24, width=110, wrap="word")
-        self.log.grid(row=9, column=0, columnspan=3, sticky="nsew")
+        self.log.grid(row=13, column=0, columnspan=3, sticky="nsew")
         frame.columnconfigure(1, weight=1)
-        frame.rowconfigure(9, weight=1)
+        frame.rowconfigure(13, weight=1)
 
     def _browse(self, variable: tk.StringVar, kind: str) -> None:
         value = filedialog.askdirectory() if kind == "dir" else filedialog.askopenfilename()
@@ -104,8 +122,46 @@ class OperatorLauncherApp:
             self.profile_combo["values"] = names
             if self.profile.get() not in names and names:
                 self.profile.set(names[0])
+            self._sync_profile_defaults()
         except Exception as exc:  # noqa: BLE001
             self._log(f"Profile load failed: {type(exc).__name__}: {exc}")
+
+    def _sync_profile_defaults(self) -> None:
+        try:
+            profile = select_profile(Path(self.repo_root.get()), self.profile.get())
+            values = {
+                self.startup_max_memory_chars: profile.get("startup_max_memory_chars"),
+                self.startup_max_context_files: profile.get("startup_max_context_files"),
+                self.startup_scan_context_files: profile.get("startup_scan_context_files"),
+                self.startup_max_chars_per_file: profile.get("startup_max_chars_per_file"),
+            }
+            for variable, value in values.items():
+                variable.set("" if value in (None, "") else str(value))
+        except Exception as exc:  # noqa: BLE001
+            self._log(f"Profile default sync failed: {type(exc).__name__}: {exc}")
+
+    def _int_field(self, label: str, variable: tk.StringVar) -> int | None:
+        raw = variable.get().strip()
+        if not raw:
+            return None
+        value = int(raw)
+        if value <= 0:
+            raise ValueError(f"{label} must be greater than zero")
+        return value
+
+    def profile_overrides(self) -> dict[str, int]:
+        fields = {
+            "startup_max_memory_chars": ("Memory chars", self.startup_max_memory_chars),
+            "startup_max_context_files": ("Context files", self.startup_max_context_files),
+            "startup_scan_context_files": ("Scan files", self.startup_scan_context_files),
+            "startup_max_chars_per_file": ("Chars per file", self.startup_max_chars_per_file),
+        }
+        overrides: dict[str, int] = {}
+        for key, (label, variable) in fields.items():
+            value = self._int_field(label, variable)
+            if value is not None:
+                overrides[key] = value
+        return overrides
 
     def config(self) -> LauncherConfig:
         return LauncherConfig(
@@ -116,6 +172,7 @@ class OperatorLauncherApp:
             profile_name=self.profile.get(),
             python_exe=self.python_exe.get(),
             stamp=self.stamp.get(),
+            profile_overrides=self.profile_overrides(),
         )
 
     def _log(self, text: str) -> None:

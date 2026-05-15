@@ -106,9 +106,9 @@ Correction applied:
   source allowlist;
 - refinement feedback blacklists rejected/non-allowlisted source references;
 - repeated non-allowlisted references can terminate as `NO_PATCHABLE_TARGET`;
-- the final code product renderer includes reviewable worktree source diffs
-  under `Tools/`, `docs/`, and `config/` instead of relying only on matrix
-  target sketches.
+- the first correction temporarily included reviewable worktree source diffs
+  under `Tools/`, `docs/`, and `config/`; this was later narrowed because it
+  could make a provider-empty run look like it had produced code.
 
 Follow-up run evidence:
 
@@ -127,3 +127,45 @@ Older temp artifact check:
 - input: `C:\Users\carmi\AppData\Local\Temp\CODE_PRODUCT_FULL_PATCH.md`
 - intake/apply-safe: 7/7 already integrated, 0 forward-safe sections,
   0 needs-review sections, no source/patch/git writes.
+
+## Launcher context controls and code-product renderer fix
+
+The GUI now exposes editable startup context fields:
+
+- memory chars;
+- context files;
+- scan files;
+- chars per file.
+
+The core launcher accepts the same overrides through CLI flags and forwards
+them into the selected profile. The operator run used `2080` for context and
+scan file limits; startup loaded 700 available context files without
+degradation.
+
+The latest defect was in `CODE_PRODUCT_FULL_PATCH.md`: the renderer could
+include `git status` worktree extras even when the code execution matrix had
+zero concrete proposals. That made a provider-empty run look like product. The
+renderer now includes matrix code products only unless the matrix explicitly
+sets `include_worktree_extras=true`. The final product says
+`Worktree extra inclusion: disabled` by default.
+
+Validation/run evidence:
+
+- stamp: `operator_launcher_product_improvement_docs2080_targetblacklist_20260515-1359`
+- final status: `APPLY_REVIEW_READY`
+- provider proposals: 0 accepted, 2 rejected
+- code execution matrix: passed
+- matrix concrete code products: 2
+- final code product: 2 sections, 2 `diff --git` blocks, worktree extras disabled
+- launcher intake/apply-safe: 2/2 already integrated, no source/patch/git writes
+- provider failure mode: GPU1 still targeted generated evidence
+  `docs/LOCAL_VALIDATION_EVIDENCE/...`; GPU0/NPU/gate rejected it correctly.
+
+Provider hardening applied:
+
+- provider prompt no longer seeds fake `tools/.../real_existing_file.py` paths;
+- provider prompt no longer seeds `<id-or-empty>` pointer placeholders;
+- source anchors exclude `output/`, `renders/`, `indexAI/`, and
+  `docs/LOCAL_VALIDATION_EVIDENCE/`;
+- source allowlist contract and provider prompt explicitly blacklist generated
+  evidence/output prefixes as target files.

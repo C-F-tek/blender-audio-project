@@ -20,7 +20,12 @@ BARE_FILE_REF_PATTERN = re.compile(
 )
 
 SOURCE_CODE_EXTENSIONS = {".py", ".ps1", ".md", ".yml", ".yaml", ".toml"}
-OUTPUT_ARTIFACT_PREFIXES = ("output/", "renders/", "indexAI/code_chunks/")
+OUTPUT_ARTIFACT_PREFIXES = (
+    "output/",
+    "renders/",
+    "indexAI/",
+    "docs/LOCAL_VALIDATION_EVIDENCE/",
+)
 SOURCE_CONTEXT_KEYS = {
     "path",
     "file",
@@ -294,6 +299,7 @@ def render_source_allowlist_contract(candidates: list[str]) -> str:
         "- Copy TARGET_FILES verbatim from Allowed source paths; do not cite non-allowlisted source paths anywhere in the proposal.",
         "- For refactor/OOB tasks, prefer existing allowed source paths; new files require an explicit operator request.",
         "- Do not invent files such as tools/data_processor/real_existing_file.py or any other non-allowlisted path.",
+        "- Never use generated evidence/output prefixes as TARGET_FILES: output/, renders/, indexAI/, docs/LOCAL_VALIDATION_EVIDENCE/.",
         "- If no allowed source path is patchable from current evidence, emit EXIT_DECISION=NO_PATCHABLE_TARGET.",
         "- In that case include BLOCKED_NO_VERIFIED_TARGET_REASON and do not output a fake diff.",
         "- Never emit unresolved angle-bracket placeholders such as <id-or-empty>; use an empty value or a real block id.",
@@ -316,6 +322,7 @@ def source_anchor_feedback(
         "Copy TARGET_FILES verbatim from Allowed source paths; do not cite any non-allowlisted source path in prose, evidence or diff headers.",
         "Do not cite basenames unless the exact repo-relative path is also present.",
         "Every TARGET_FILES entry and every diff header path must be one of the allowed source paths below.",
+        "Never use generated evidence/output prefixes as TARGET_FILES: output/, renders/, indexAI/, docs/LOCAL_VALIDATION_EVIDENCE/.",
         "If no allowed path fits the evidence, return EXIT_DECISION=NO_PATCHABLE_TARGET with BLOCKED_NO_VERIFIED_TARGET_REASON.",
         "Never output unresolved placeholders like <id-or-empty>; use empty values or real block ids.",
     ]

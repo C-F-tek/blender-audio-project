@@ -45,6 +45,16 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
     documents_dir.mkdir(parents=True, exist_ok=True)
     manifest = documents_dir / "DOWNLOADS.txt"
     write_text(manifest, "Smoke package\n")
+    fixture_repo = work_dir / "fixture_repo"
+    (fixture_repo / "Tools" / "ai").mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        ["git", "init"],
+        cwd=fixture_repo,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    write_text(fixture_repo / "Tools" / "ai" / "worktree_extra.py", "print('extra')\n")
 
     matrix_path = run_dir / "broker_bridge" / "tool_outputs" / "smoke_heap_code_execution_tool.json"
     virtual_dev_path = (
@@ -77,7 +87,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "schema_version": 1,
             "kind": "heap_code_execution_tool",
             "passed": True,
-            "include_worktree_extras": False,
+            "repo_root": str(fixture_repo),
             "debug_lab_report": repo_rel(repo_root, debug_lab_path),
             "debug_lab_passed": True,
             "target_count": 2,
@@ -247,6 +257,8 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         and "CODE_PRODUCT_FULL_PATCH" in code_product_body
         and "Tools/ai/assemble_heap_final_readable_product.py" in code_product_body
         and "Tools/ai/heap_final_code_product.py" not in code_product_body
+        and "Tools/ai/worktree_extra.py" not in code_product_body
+        and "Worktree extra inclusion: `disabled`" in code_product_body
         and "[no worktree diff captured]" not in code_product_body
         and zip_path.exists()
         and not missing

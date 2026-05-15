@@ -23,6 +23,7 @@ def main() -> int:
     errors: list[str] = []
     gate = read("Tools/ai/run_heap_runtime_completeness_gate.py")
     anchors = read("Tools/ai/heap_source_anchors.py")
+    provider_probe = read("Tools/ai/run_local_provider_probe.py")
     contract_text = gate + "\n" + anchors
     revision = read("Tools/ai/build_external_heap_revision_context.py")
 
@@ -33,12 +34,17 @@ def main() -> int:
     require("repeated_unverified_loop" in gate, "terminal loop breaker must stop repeated non-allowlisted refs", errors)
     require("EXIT_DECISION=NO_PATCHABLE_TARGET" in gate, "GPU1 prompt must force no-target exit for missing allowlist match", errors)
     require("BLOCKED_NO_VERIFIED_TARGET_REASON" in gate, "GPU1 prompt must require blocked reason field", errors)
+    require('"docs/LOCAL_VALIDATION_EVIDENCE/"' in anchors, "source anchors must exclude generated validation evidence docs", errors)
+    require("generated evidence/output prefixes" in anchors, "source contract must explicitly forbid generated evidence/output target prefixes", errors)
     require("Do not invent files such as tools/data_processor/real_existing_file.py" in contract_text, "GPU1 prompt must explicitly forbid observed invented fixture path", errors)
     require("invented/non-allowlisted source path refs" in gate, "quality report must classify invented source refs", errors)
     require("invented_source_path_refs" in gate, "quality report must expose invented source refs", errors)
     require("veto=invented_source_path_or_non_allowlisted_target" in gate, "NPU review must produce invented path veto", errors)
     require("GPU0 deterministic review: invented_source_path veto" in gate, "GPU0 review must veto invented paths", errors)
     require("<id-or-empty>" in gate and "Never output unresolved angle-bracket placeholders" in gate, "GPU1 prompt must forbid unresolved pointer placeholders", errors)
+    require("tools/.../real_existing_file.py" not in provider_probe, "provider positive prompt must not seed fake paths", errors)
+    require("<id-or-empty>" not in provider_probe, "provider positive prompt must not seed unresolved pointer placeholders", errors)
+    require("docs/LOCAL_VALIDATION_EVIDENCE/" in provider_probe, "provider prompt must explicitly blacklist generated validation evidence docs", errors)
     require('"invented_source_path"' in revision, "revision context must classify invented source path candidates", errors)
     require('"unresolved_pointer_placeholder"' in revision, "revision context must classify pointer placeholders separately", errors)
     require("EXIT_DECISION=NO_PATCHABLE_TARGET invece di inventare path" in revision, "revision runtime instruction must forbid invented paths", errors)

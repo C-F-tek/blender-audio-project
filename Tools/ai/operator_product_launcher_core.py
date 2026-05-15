@@ -51,6 +51,7 @@ class LauncherConfig:
     stamp: str = ""
     revision_context: str = ""
     profiles_file: Path | None = None
+    profile_overrides: dict[str, Any] | None = None
 
 
 def now_stamp() -> str:
@@ -137,6 +138,7 @@ def resolve_config(config: LauncherConfig) -> LauncherConfig:
         stamp=config.stamp or now_stamp(),
         revision_context=config.revision_context,
         profiles_file=config.profiles_file,
+        profile_overrides=dict(config.profile_overrides or {}),
     )
 
 
@@ -147,6 +149,9 @@ def run_dir_for(config: LauncherConfig) -> Path:
 def build_heap_command(config: LauncherConfig) -> list[str]:
     cfg = resolve_config(config)
     profile = select_profile(cfg.repo_root, cfg.profile_name, cfg.profiles_file)
+    for key, value in (cfg.profile_overrides or {}).items():
+        if value not in ("", None):
+            profile[key] = value
     revision_context = cfg.revision_context or str(profile.get("revision_context_mode") or "auto_latest")
     command = [
         cfg.python_exe,
@@ -311,6 +316,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--require-all-integrated", action="store_true")
     parser.add_argument("--list-profiles", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=3600)
+    parser.add_argument("--startup-max-memory-chars", type=int, default=0)
+    parser.add_argument("--startup-max-context-files", type=int, default=0)
+    parser.add_argument("--startup-scan-context-files", type=int, default=0)
+    parser.add_argument("--startup-max-chars-per-file", type=int, default=0)
     return parser.parse_args()
 
 
@@ -332,6 +341,16 @@ def main() -> int:
         python_exe=args.python_exe,
         stamp=stamp,
         revision_context=args.revision_context,
+        profile_overrides={
+            key: value
+            for key, value in {
+                "startup_max_memory_chars": args.startup_max_memory_chars,
+                "startup_max_context_files": args.startup_max_context_files,
+                "startup_scan_context_files": args.startup_scan_context_files,
+                "startup_max_chars_per_file": args.startup_max_chars_per_file,
+            }.items()
+            if value
+        },
     )
     if args.run:
         report = run_heap(config, timeout=args.timeout_seconds)

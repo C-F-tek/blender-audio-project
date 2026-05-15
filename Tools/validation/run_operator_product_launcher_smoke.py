@@ -125,6 +125,11 @@ def main() -> int:
         final_root=work_dir / "documents",
         profile_name="dry_packaging_external_heap",
         stamp="operator_launcher_smoke",
+        profile_overrides={
+            "startup_max_context_files": 2080,
+            "startup_scan_context_files": 2080,
+            "startup_max_chars_per_file": 20000,
+        },
     )
     command = build_heap_command(config)
     resolved = resolve_config(config)
@@ -141,6 +146,9 @@ def main() -> int:
         {"name": "uses_request_file", "passed": "--request-file" in command and str(request_file) in command},
         {"name": "uses_output_dir", "passed": "--output-dir" in command},
         {"name": "uses_documents_root", "passed": "--documents-root" in command},
+        {"name": "uses_context_file_override", "passed": "--startup-max-context-files" in command and "2080" in command},
+        {"name": "uses_scan_file_override", "passed": "--startup-scan-context-files" in command and "2080" in command},
+        {"name": "uses_chars_per_file_override", "passed": "--startup-max-chars-per-file" in command and "20000" in command},
         {"name": "dry_profile_no_provider_generation", "passed": "--allow-provider-generation" not in command},
         {"name": "safe_apply_passed", "passed": apply_report.get("passed") is True},
         {"name": "safe_apply_wrote_two", "passed": apply_report.get("safe_apply", {}).get("applied_count") == 2},

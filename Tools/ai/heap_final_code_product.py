@@ -218,7 +218,7 @@ def code_product_items(matrix: dict[str, Any]) -> list[dict[str, Any]]:
 
 def full_code_product_items(matrix: dict[str, Any]) -> list[dict[str, Any]]:
     items = code_product_items(matrix)
-    if matrix.get("include_worktree_extras") is False:
+    if matrix.get("include_worktree_extras") is not True:
         return items
     targets = {normalize_target(item.get("target_file")) for item in items}
     items.extend(worktree_product_items(matrix, targets))
@@ -299,6 +299,7 @@ def render_full_code_product_markdown(matrix: dict[str, Any], matrix_path: str) 
     product_items = full_code_product_items(matrix)
     matrix_product_items = code_product_items(matrix)
     matrix_items = as_list(matrix.get("concrete_code_proposals"))
+    include_extras = matrix.get("include_worktree_extras") is True
     lines = [
         "# CODE_PRODUCT_FULL_PATCH",
         "",
@@ -311,8 +312,8 @@ def render_full_code_product_markdown(matrix: dict[str, Any], matrix_path: str) 
         f"- Debug lab report: `{matrix.get('debug_lab_report')}`",
         f"- Debug lab passed: `{matrix.get('debug_lab_passed')}`",
         f"- Matrix concrete proposal count: `{matrix.get('concrete_code_proposal_count', len(matrix_items))}`",
-        f"- Effective code product count: `{len(product_items)}`",
-        f"- Worktree extra product count: `{max(0, len(product_items) - len(matrix_product_items))}`",
+        f"- Matrix code product count: `{len(matrix_product_items)}`",
+        f"- Worktree extra inclusion: `{'enabled' if include_extras else 'disabled'}`",
         f"- Verified target count: `{matrix.get('verified_target_count', matrix.get('target_count'))}`",
         "",
         "## Guardrail",
